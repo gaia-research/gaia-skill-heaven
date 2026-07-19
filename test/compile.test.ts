@@ -16,16 +16,18 @@ const fakeSkill: ResolvedSkill = {
 };
 
 describe("claude mappings", () => {
-  it("floor = suppression + zero-server, empty fsPlan", () => {
+  it("floor = suppression + zero-server + project setting-sources + bundled-skills knob, empty fsPlan (T9b)", () => {
     const r = compile({ posture: "floor", harness: "claude", skills: [] });
     expect(r.argv).toEqual([
       "--disable-slash-commands",
       "--strict-mcp-config",
       "--mcp-config",
       '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
     ]);
     expect(r.fsPlan).toEqual([]);
-    expect(r.env).toEqual({});
+    expect(r.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
     expect(r.execSupport).toBe("exec");
   });
 
@@ -36,7 +38,7 @@ describe("claude mappings", () => {
     expect(r.fsPlan).toEqual([]);
   });
 
-  it("curated plugin-dir = setting-sources eviction + --plugin-dir + manifest + skill copies (T6 negative, T8)", () => {
+  it("curated plugin-dir = setting-sources eviction + --plugin-dir + bundled-skills knob + manifest + skill copies (T6 negative, T9)", () => {
     const r = compile({ posture: "curated", harness: "claude", mechanism: "plugin-dir", skills: [fakeSkill] });
     // T6 (2.1.215): --disable-slash-commands eats plugin skills — must NOT be present
     expect(r.argv).not.toContain("--disable-slash-commands");
@@ -44,6 +46,7 @@ describe("claude mappings", () => {
     expect(r.argv).toContain("--strict-mcp-config");
     expect(r.argv).toContain("--plugin-dir");
     expect(r.argv).toContain("$SESSION/heaven-set");
+    expect(r.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
     expect(r.fsPlan[0]).toMatchObject({ kind: "write", path: "$SESSION/heaven-set/.claude-plugin/plugin.json" });
     expect(r.fsPlan[1]).toMatchObject({ kind: "copyDir", to: "$SESSION/heaven-set/skills/impeccable" });
   });

@@ -141,17 +141,23 @@ function compileClaude(
   if (input.posture === "native") {
     argv = []; // P3: exiting = switching, literally — no flags, no env, no fsPlan
   } else if (input.posture === "floor") {
-    argv = [...floorArgv];
+    // T9b (2.1.215): --setting-sources project + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1
+    // stacked on the T2 floor removes the bundled-CLI-skills listing AND the
+    // user-CLAUDE.md residual — observed listing-probe answer: NONE, zero residual.
+    argv = [...floorArgv, "--setting-sources", "project"];
+    env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
     notes.push(
-      "floor is a skills+server floor: user settings/hooks still apply; prompt eviction is M2b (unratified, out of scope).",
+      "floor (T9b route): skills+server floor with zero listing residual. CLAUDE_CODE_DISABLE_BUNDLED_SKILLS is an undocumented env knob (string-probed from the 2.1.215 binary, verified live) — version-pinned, re-verify on CLI upgrades. --setting-sources project also evicts user CLAUDE.md (prompt-content side effect; full prompt eviction remains M2b).",
     );
   } else {
     const mechanism = input.mechanism ?? DEFAULT_CLAUDE_MECHANISM;
     if (mechanism === "plugin-dir") {
       // T6 (2.1.215): --disable-slash-commands eats --plugin-dir skills too, so
-      // curated CANNOT ride on the floor argv. T8: --setting-sources project
+      // curated CANNOT ride on the floor argv. T9: --setting-sources project
       // evicts user-dir skills AND the user CLAUDE.md while --plugin-dir
-      // re-admission stays live; bundled CLI skills remain (residual, noted).
+      // re-admission stays live, and CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1
+      // removes the bundled-CLI-skills residual T8 had — observed listing:
+      // the curated set only.
       argv = [
         "--setting-sources",
         "project",
@@ -161,6 +167,7 @@ function compileClaude(
         "--plugin-dir",
         "$SESSION/heaven-set",
       ];
+      env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
       fsPlan.push({
         kind: "write",
         path: "$SESSION/heaven-set/.claude-plugin/plugin.json",
@@ -179,7 +186,7 @@ function compileClaude(
         fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/heaven-set/skills/${s.id}` });
       }
       notes.push(
-        "curated via --setting-sources project + --plugin-dir (T8). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. Residual: bundled CLI skills (~13 listings) remain; user-dir skills and user CLAUDE.md are evicted.",
+        "curated via --setting-sources project + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 (T9; supersedes T8 — owner vetoed the bundled-skills residual). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. Zero listing residual observed (2/2 runs); the env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
       );
     } else {
       const home = input.homeDir ?? "$HOME";

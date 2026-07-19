@@ -23,7 +23,7 @@ hh-launcher
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
   [--harness claude|pi|codex|cursor|grok]   # default claude
   [--skill <path>]...                   # SKILL.md or its dir; required for curated, rejected otherwise
-  [--mechanism plugin-dir|config-dir]   # claude curated route; default plugin-dir (T8 composition)
+  [--mechanism plugin-dir|config-dir]   # claude curated route; default plugin-dir (T9 composition)
   [--print]                             # compile-only JSON {command, argv, env, fsPlan, notes, doseSummary}
   [-p <text>]                           # headless; omit → interactive (inherited stdio)
   [--model <m>] [--effort <lvl>] [--keep-temp] [-- <passthrough>]
@@ -38,16 +38,19 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 | Posture | claude (2.1.215) | pi (0.80.10) | codex / cursor / grok |
 |---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}'` | `--no-skills` (see race caveat below) | recipe only (`--print`) |
-| curated | `--setting-sources project --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` (**T8**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
+| curated | `--setting-sources project --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
 | native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
 
 **Why curated does not ride on the floor flags (T6, resolved 2026-07-19):**
 on Claude Code 2.1.215, `--disable-slash-commands` suppresses `--plugin-dir`
-skills too, so the M0 caveat resolved **negative**. The shipped route (T8)
-uses `--setting-sources project` for eviction (drops user-dir skills *and* the
-user CLAUDE.md) while `--plugin-dir` re-admits the curated set. Residual: the
-bundled CLI skills (~13 listings) remain — recorded in every compile's `notes`.
+skills too, so the M0 caveat resolved **negative**. The frozen route (T9;
+supersedes T8 after the owner vetoed its bundled-skills residual) uses
+`--setting-sources project` for eviction (drops user-dir skills *and* the user
+CLAUDE.md), `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` to remove the bundled CLI
+skills, and `--plugin-dir` to re-admit the curated set — zero listing residual
+observed. ⚠️ The env knob is **undocumented** (string-probed from the 2.1.215
+binary); it is version-pinned evidence — re-verify on every CLI upgrade.
 The `config-dir` mechanism (T3/T7 route) is kept behind `--mechanism config-dir`
 for reproducibility; note it is **auth-blocked on macOS** (Keychain-scoped
 credentials).
@@ -57,10 +60,15 @@ intermittent discovery race on 0.80.10 (2 of ~9 headless floor runs still
 listed skills). Benchmark floor runs on pi must assert the listing probe and
 discard leak runs. Curated (`--no-skills --skill`) was clean in every run.
 
-**Known floor residual:** floor is a *skills+server* floor. User settings,
-hooks, and memory files still apply — a user `~/.claude/CLAUDE.md` that names
-a skill will still surface that name in a listing probe. Prompt eviction is
-M2b and unratified; `tokens.system` stays `null` in every record.
+**Known floor residual (T9b/T10):** the T9b floor observes `NONE` — the
+bundled skills and the user-CLAUDE.md leak are gone (`--setting-sources
+project` also evicts user memory files as a side effect). What remains, in
+every arm including vanilla, are the built-in CLI slash commands (`/help`,
+`/code-review`, …): they are not skills, survive every suppression knob
+(`CLAUDE_CODE_DISABLE_POLICY_SKILLS` does NOT remove them — T10 negative), and
+are intermittently volunteered by the model, so strict `^NONE$` floor probes
+keep such runs as honest endpoint failures. Full prompt eviction is M2b and
+unratified; `tokens.system` stays `null` in every record.
 
 ## Dose summary
 
