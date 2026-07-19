@@ -1,0 +1,12 @@
+{
+  "generatedBy": "gaia-research scripts/hell-heaven-bench/census.ts (M1)",
+  "tokenizer": "chars4",
+  "record": {
+    "id": "impeccable",
+    "source": ".agents/skills/impeccable/SKILL.md",
+    "standingTokens": 227,
+    "invocationTokens": 5917,
+    "overstatement": 26.07,
+    "contentSha256": "14c4642368557af1f7bbaaac0aa184b791e6d70665dfd8fc53d8d4124f81abb8"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "hh-launcher",
+  "version": "0.0.0",
+  "description": "Working-name launcher-shaped profile compiler for Skill Heaven postures (M2). Name is OPEN item 8 — do not brand.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "hh-launcher": "./bin/hh-launcher.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "launcher": "tsx src/cli.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
