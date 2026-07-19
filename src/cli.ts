@@ -1,4 +1,4 @@
-// hh-launcher CLI (working name — OPEN item 8; flag vocabulary provisional
+// skill-heaven CLI (working name — OPEN item 8; flag vocabulary provisional
 // pending N4/N5). See README for the full surface.
 
 import { writeFileSync } from "node:fs";
@@ -132,7 +132,7 @@ export function main(argv: string[]): number {
   if (args.posture === "curated") {
     const d = compiled.doseSummary;
     console.error(
-      `[hh-launcher] curated loadout dose (${d.tokenizer}): standing=${d.standingTotal} invocation=${d.invocationTotal} ` +
+      `[skill-heaven] curated loadout dose (${d.tokenizer}): standing=${d.standingTotal} invocation=${d.invocationTotal} ` +
         `(${d.skills.map((s) => `${s.id}: ${s.standingTokens}/${s.invocationTokens}`).join(", ")})`,
     );
   }
@@ -140,7 +140,7 @@ export function main(argv: string[]): number {
   if (args.print || compiled.execSupport === "recipe") {
     if (!args.print) {
       console.error(
-        `[hh-launcher] ${args.harness}: verified cells allow recipe only — printing the compiled profile (as if --print)`,
+        `[skill-heaven] ${args.harness}: verified cells allow recipe only — printing the compiled profile (as if --print)`,
       );
     }
     console.log(JSON.stringify({ ...compiled, execSupport: undefined, recipe: compiled.execSupport === "recipe" }, null, 2));
@@ -148,7 +148,7 @@ export function main(argv: string[]): number {
   }
 
   const result = exec(compiled, { keepTemp: args.keepTemp });
-  if (result.keptTemp) console.error(`[hh-launcher] kept temp dir: ${result.sessionDir}`);
+  if (result.keptTemp) console.error(`[skill-heaven] kept temp dir: ${result.sessionDir}`);
 
   if (args.record) {
     if (result.stdout === null) throw new Error("--record requires headless output");
@@ -179,19 +179,19 @@ export function main(argv: string[]): number {
     const json = JSON.stringify(record);
     if (args.record.recordOut) writeFileSync(args.record.recordOut, json + "\n");
     console.log(json);
-    if (resultText !== undefined) console.error(`[hh-launcher] result: ${resultText.trim()}`);
+    if (resultText !== undefined) console.error(`[skill-heaven] result: ${resultText.trim()}`);
   } else if (result.stdout !== null) {
     process.stdout.write(result.stdout);
   }
   return result.status;
 }
 
-const isMain = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("hh-launcher.mjs");
+const isMain = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("skill-heaven.mjs");
 if (isMain) {
   try {
     process.exit(main(process.argv.slice(2)));
   } catch (e) {
-    console.error(`hh-launcher: ${(e as Error).message}`);
+    console.error(`skill-heaven: ${(e as Error).message}`);
     process.exit(2);
   }
 }

@@ -1,11 +1,11 @@
 {
-  "name": "hh-launcher",
+  "name": "skill-heaven",
   "version": "0.0.0",
-  "description": "Working-name launcher-shaped profile compiler for Skill Heaven postures (M2). Name is OPEN item 8 — do not brand.",
+  "description": "Strip your agent's context bloat — run clean. Skill Heaven profile compiler + research driver (per-harness doors: claude-heaven, pi-heaven, …).",
   "private": true,
   "type": "module",
   "bin": {
-    "hh-launcher": "./bin/hh-launcher.mjs"
+    "skill-heaven": "./bin/skill-heaven.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -1,23 +1,34 @@
-# hh-launcher (working name)
+# skill-heaven
 
-Launcher-shaped profile compiler for **Skill Heaven** postures — M2 of the
-Hell/Heaven benchmark program. Launcher UX outside, M0-verified in-harness
-mechanics inside: it **composes flags and execs; it never stashes, restores, or
-mutates shared state** (P3). The only writes are inside a disposable
-`mkdtemp` session dir (crash-safe by construction, AT-H2).
+**Strip your agent's context bloat — run clean.**
 
-> **Naming:** `hh-launcher` is a deliberately unbranded working name. The real
-> repo/binary name is OPEN item 8 in `gaia-research/founder/RATIFICATION.md`
-> (pends N4/N5 + persona lane). Do not brand or publish under this name.
+The Skill Heaven monorepo: shared profile-compiler engine + per-harness doors
+(`claude-heaven`, `pi-heaven`, …). The `skill-heaven` bin itself is the
+**research driver** — `--print` recipes, `--record` benchmark arms — for the
+Hell/Heaven benchmark program
+([gaia-research#62](https://github.com/gaia-research/gaia-research/issues/62)).
+Launcher UX outside, M0-verified in-harness mechanics inside: it **composes
+flags and execs; it never stashes, restores, or mutates shared state** (P3).
+The only writes are inside a disposable `mkdtemp` session dir (crash-safe by
+construction, AT-H2).
+
+> **Naming ratified 2026-07-20** (RATIFICATION N8/N9, RFC
+> [gaia-research#68](https://github.com/gaia-research/gaia-research/issues/68)):
+> this repo is the product monorepo and doubles as the plugin marketplace;
+> user-facing installables are the per-harness doors. Monorepo package layout
+> (`packages/core`, `packages/claude-heaven`, `packages/pi-heaven`) is the next
+> restructure — today the engine lives at the root, seeded from the retired
+> `hh-launcher` working checkout. Not yet published to npm.
 >
-> **Decision authority:** `gaia-research/founder/RATIFICATION.md` (D1/D6/D7).
+> **Decision authority:** `gaia-research/founder/RATIFICATION.md`
+> (D1/D6/D7 + N8/N9/D10/D11).
 > Plan: `gaia-research/docs/plans/m2-heaven-launcher-plan.md`.
 > Evidence: `gaia-research/docs/labs/harness-capability-matrix.md`.
 
 ## Usage
 
 ```
-hh-launcher
+skill-heaven
   --posture floor|curated|native        # default floor (P1 vocabulary)
   [--level off|low]                     # aliases: off→floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
