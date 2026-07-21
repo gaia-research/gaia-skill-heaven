@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22' # contract: wrangler-adjacent tooling + workspaces assume >=22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      # D6 cross-repo gate: a record emitted by core must pass gaia-research's
+      # ledger validator (the validator never moves — it stays upstream, D6).
+      - name: Checkout gaia-research (upstream ledger validator)
+        uses: actions/checkout@v4
+        with:
+          repository: gaia-research/gaia-research
+          path: .gaia-research # public repo; no token needed
+      - name: Emit a core record and validate it upstream (D6)
+        run: |
+          npx tsx packages/core/scripts/emit-sample-record.ts > rec.jsonl
+          cat rec.jsonl
+          npx tsx .gaia-research/scripts/hell-heaven-bench/ledger.ts validate --file rec.jsonl
