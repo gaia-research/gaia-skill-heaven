@@ -21,10 +21,10 @@ construction, AT-H2).
 
 The Hell Heaven (HH) Index — a per-skill hellHeaven stamp, benchmarked, not
 guessed — is the research that keeps the slider honest.
-[Read the benchmark method →](https://research.gaiaskilltree.com/research/hh-benchmark)
-*(WIP, help wanted)* ·
-[Vision ↗](https://github.com/gaia-research/gaia-research/blob/main/VISION.md) ·
-[Mission ↗](https://github.com/gaia-research/gaia-research/blob/main/MISSION.md)
+
+[![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20help%20wanted-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
+[![Vision ↗](https://img.shields.io/badge/Vision%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/VISION.md)
+[![Mission ↗](https://img.shields.io/badge/Mission%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/MISSION.md)
 
 ---
 
