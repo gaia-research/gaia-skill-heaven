@@ -1,5 +1,8 @@
 # skill-heaven
 
+> **WORK IN PROGRESS** — progress markers and benchmark results live in the research repo at
+> [research.gaiaskilltree.com](https://research.gaiaskilltree.com).
+
 **Strip your agent's context bloat — run clean.**
 
 The Skill Heaven monorepo: shared profile-compiler engine + per-harness doors
@@ -11,6 +14,19 @@ Launcher UX outside, M0-verified in-harness mechanics inside: it **composes
 flags and execs; it never stashes, restores, or mutates shared state** (P3).
 The only writes are inside a disposable `mkdtemp` session dir (crash-safe by
 construction, AT-H2).
+
+---
+
+![skill-heaven site — WORK IN PROGRESS · HELL HEAVEN INDEX banner over the headline "STOP INSTALLING SKILLS. START SUMMONING THEM."](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
+
+The Hell Heaven (HH) Index — a per-skill hellHeaven stamp, benchmarked, not
+guessed — is the research that keeps the slider honest.
+[Read the benchmark method → /research/hh-benchmark](https://research.gaiaskilltree.com/research/hh-benchmark)
+*(WIP, help wanted)* ·
+[Vision ↗](https://github.com/gaia-research/gaia-research/blob/main/VISION.md) ·
+[Mission ↗](https://github.com/gaia-research/gaia-research/blob/main/MISSION.md)
+
+---
 
 > **Naming ratified 2026-07-20** (RATIFICATION N8/N9, RFC
 > [gaia-research#68](https://github.com/gaia-research/gaia-research/issues/68)):
