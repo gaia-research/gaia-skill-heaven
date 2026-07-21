@@ -1,0 +1,17 @@
+{
+  "name": "skill-heaven",
+  "version": "0.0.0",
+  "description": "Skill Heaven profile compiler + research driver (the skill-heaven bin: --print recipes, --record benchmark arms). The engine the per-harness doors are built on.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "skill-heaven": "./bin/skill-heaven.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "launcher": "tsx src/cli.ts"
+  }
+}

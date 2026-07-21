@@ -1,18 +1,19 @@
 {
-  "name": "skill-heaven",
+  "name": "skill-heaven-monorepo",
   "version": "0.0.0",
-  "description": "Strip your agent's context bloat — run clean. Skill Heaven profile compiler + research driver (per-harness doors: claude-heaven, pi-heaven, …).",
+  "description": "Skill Heaven monorepo — shared profile-compiler engine (packages/core) + per-harness doors (claude-heaven, pi-heaven, …). Doubles as the plugin marketplace.",
   "private": true,
   "type": "module",
-  "bin": {
-    "skill-heaven": "./bin/skill-heaven.mjs"
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "test": "vitest run",
-    "launcher": "tsx src/cli.ts"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "launcher": "npm -w skill-heaven run launcher --"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

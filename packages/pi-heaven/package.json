@@ -1,0 +1,10 @@
+{
+  "name": "pi-heaven",
+  "version": "0.0.0",
+  "description": "pi-heaven — the pi door to Skill Heaven (vanguard; WS5). Stub: name + intent only, no code claims yet.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
+}

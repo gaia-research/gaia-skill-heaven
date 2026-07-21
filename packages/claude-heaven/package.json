@@ -1,0 +1,10 @@
+{
+  "name": "claude-heaven",
+  "version": "0.0.0",
+  "description": "claude-heaven — the Claude Code door to Skill Heaven: native-default launcher, posture slider (/skill-heaven, /skill-hell), and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4).",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
+}
