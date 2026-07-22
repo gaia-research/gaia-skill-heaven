@@ -30,7 +30,7 @@ guessed — is the research that keeps the slider honest.
 
 > **Naming ratified 2026-07-20** (RATIFICATION N8/N9, RFC
 > [gaia-research#68](https://github.com/gaia-research/gaia-research/issues/68)):
-> this repo is the product monorepo and doubles as the plugin marketplace;
+> this repo is the product monorepo and doubles as the Claude Code plugin marketplace;
 > user-facing installables are the per-harness doors. Monorepo package layout
 > (`packages/core` engine, `packages/claude-heaven` + `packages/pi-heaven`
 > doors) landed in WS2; the engine (seeded from the retired `hh-launcher`

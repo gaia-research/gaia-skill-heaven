@@ -1,5 +1,8 @@
 {
   "name": "claude-heaven",
   "description": "The Claude Code door to Skill Heaven — native-default launcher, posture slider (/skill-heaven, /skill-hell), and standing-dose statusline. WORK IN PROGRESS (WS4): no commands wired yet.",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "author": {
+    "name": "Gaia Research"
+  }
 }

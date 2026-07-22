@@ -1,7 +1,7 @@
 {
   "name": "skill-heaven-monorepo",
   "version": "0.0.0",
-  "description": "Skill Heaven monorepo — shared profile-compiler engine (packages/core) + per-harness doors (claude-heaven, pi-heaven, …). Doubles as the plugin marketplace.",
+  "description": "Skill Heaven monorepo — shared profile-compiler engine (packages/core) + per-harness doors (claude-heaven, pi-heaven, …). Doubles as the Claude Code plugin marketplace (.claude-plugin/marketplace.json).",
   "private": true,
   "type": "module",
   "workspaces": [

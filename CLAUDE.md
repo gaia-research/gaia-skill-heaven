@@ -5,7 +5,10 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 ## What this is
 
 `skill-heaven` is the **product monorepo** for the Skill Heaven system and
-doubles as the plugin marketplace. Two layers:
+doubles as the **Claude Code plugin marketplace** (root
+`.claude-plugin/marketplace.json`; lists the Claude Code door `claude-heaven`).
+Per-harness doors for other harnesses (`pi-heaven`, …) ship through their own
+harness's channel, not this manifest. Two layers:
 
 - **`packages/core`** — the shared profile-compiler engine and the
   **`skill-heaven` research driver** bin (`--print` recipes, `--record`

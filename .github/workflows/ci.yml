@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gaia-research/gaia-research
+          ref: main # D6 validator-of-record lives on main; pin for reproducibility
           path: .gaia-research # public repo; no token needed
       - name: Emit a core record and validate it upstream (D6)
         run: |
