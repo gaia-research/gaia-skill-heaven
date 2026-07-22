@@ -4,7 +4,18 @@
   "description": "claude-heaven — the Claude Code door to Skill Heaven: native-default launcher, posture slider (/skill-heaven, /skill-hell), and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4).",
   "private": true,
   "type": "module",
+  "bin": {
+    "claude-heaven": "./bin/claude-heaven.mjs",
+    "claude-heaven-statusline": "./bin/statusline.mjs"
+  },
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "launch": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "skill-heaven": "*"
   }
 }
