@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "skill-heaven",
+  "description": "The Claude Code plugin marketplace for the Skill Heaven system — per-harness doors built on the shared skill-heaven core. Claude Code door: claude-heaven.",
+  "owner": {
+    "name": "Gaia Research"
+  },
+  "plugins": [
+    {
+      "name": "claude-heaven",
+      "source": "./packages/claude-heaven/plugin",
+      "description": "The Claude Code door to Skill Heaven — native-default launcher, posture slider (/skill-heaven, /skill-hell), and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4): no commands wired yet.",
+      "version": "0.0.0"
+    }
+  ]
+}

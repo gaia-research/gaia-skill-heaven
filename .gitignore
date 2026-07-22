@@ -1,1 +1,11 @@
 node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+.DS_Store
+
+# CI-only scratch from the D6 cross-repo gate (never committed)
+.gaia-research/
+rec.jsonl
