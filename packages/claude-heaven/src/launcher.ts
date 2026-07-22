@@ -7,15 +7,18 @@
 // later steps; this step only proves the native door + the standing-dose readout.
 
 import { join } from "node:path";
-import type { Posture } from "skill-heaven";
+import { HELL_LEVELS, type Posture } from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import type { ProfileManifest } from "./statusline.js";
 
 // P2 (LOCKED): the Hell lane is gated. Every user-facing surface hard-errors on
-// med…max; /skill-hell is a locked door, not an activator, until Hell is proven
-// safe. off/low are heaven-lane aliases (off→floor, low→curated) — out of scope
-// for slice 1, which ships native only.
-export const GATED_LEVELS = new Set(["med", "high", "xhigh", "max"]);
+// the Hell levels; /skill-hell is a locked door, not an activator, until Hell is
+// proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
+// this gate can never drift from the engine's definition — if a Hell level is
+// ever added/renamed upstream (e.g. the pending N4 "ultra"), the gate follows
+// automatically. off/low are heaven-lane aliases (off→floor, low→curated) — out
+// of scope for slice 1, which ships native only.
+export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 
 export interface LaunchOptions {
   home?: string;
@@ -57,6 +60,7 @@ export function planNativeLaunch(opts: LaunchOptions): LaunchPlan {
     standingTokens: census.standingTotal,
     skillCount: census.skillCount,
     scope: census.scope,
+    ...(census.incomplete ? { incomplete: true } : {}),
     launcherLocked: true, // launched via claude-heaven → the subtractive floor is reachable
     ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
   };

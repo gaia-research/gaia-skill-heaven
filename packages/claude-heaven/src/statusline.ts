@@ -21,6 +21,10 @@ export interface ProfileManifest {
   skillCount: number;
   /** census scope disclosure, e.g. "user+project" (see census.ts) */
   scope: string;
+  /** true when a skill root existed but couldn't be read — standingTokens is a
+   * floor, not a complete count. Rendered as a trailing "+" so the readout never
+   * presents an under-count as exact (B4). */
+  incomplete?: boolean;
   /** true when launched via the claude-heaven launcher (the subtractive floor is
    * reachable); false under vanilla claude. Consumed by the WS4-step-2 picker. */
   launcherLocked: boolean;
@@ -45,7 +49,8 @@ export function formatTokens(n: number): string {
 }
 
 export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
-  const parts = [`⚡ ${manifest.posture} · ${formatTokens(manifest.standingTokens)} standing`];
+  const floor = manifest.incomplete ? "+" : "";
+  const parts = [`⚡ ${manifest.posture} · ${formatTokens(manifest.standingTokens)}${floor} standing`];
   const pct = input?.context_window?.used_percentage;
   if (typeof pct === "number" && Number.isFinite(pct)) {
     parts.push(`${Math.round(pct)}% ctx`);

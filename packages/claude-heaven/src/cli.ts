@@ -4,7 +4,7 @@
 // plan without spawning claude (and without needing claude installed).
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,8 +44,11 @@ function statuslineBinPath(): string {
 export function run(argv: string[]): number {
   const args = parseArgs(argv);
 
-  // P2 gate first — never compose a gated posture.
+  // P2 gate first — never compose a gated (Hell-lane) posture.
   assertLevelAllowed(args.level);
+  // Slice 1 is native-only. A non-native posture, OR any non-gated level (off/low
+  // are heaven-lane aliases for floor/curated), implies a posture slice 1 doesn't
+  // build yet — reject explicitly rather than silently ignore the flag.
   if (args.posture !== "native") {
     process.stderr.write(
       `claude-heaven slice 1 launches native only (got --posture ${args.posture}). ` +
@@ -53,18 +56,23 @@ export function run(argv: string[]): number {
     );
     return 2;
   }
+  if (args.level !== undefined) {
+    process.stderr.write(
+      `claude-heaven slice 1 launches native only; --level ${args.level} (heaven-lane) has no effect yet. ` +
+        `Level selection lands in WS4 step 2 (/skill-heaven).\n`,
+    );
+    return 2;
+  }
 
-  const sessionDir = mkdtempSync(join(tmpdir(), "claude-heaven-"));
   const plan = planNativeLaunch({
-    sessionDir,
+    sessionDir: "<print>", // placeholder; --print never writes to disk
     statuslineBin: statuslineBinPath(),
     claudeArgs: args.claudeArgs,
   });
 
-  writeFileSync(plan.manifestPath, `${JSON.stringify(plan.manifest, null, 2)}\n`);
-  writeFileSync(plan.settingsPath, `${JSON.stringify(plan.settings, null, 2)}\n`);
-
   if (args.print) {
+    // Dry run: show the plan (incl. the exact manifest + settings that WOULD be
+    // written) without touching disk — no temp dir to leak.
     process.stdout.write(
       `${JSON.stringify(
         {
@@ -72,11 +80,13 @@ export function run(argv: string[]): number {
           standingTokens: plan.manifest.standingTokens,
           skillCount: plan.manifest.skillCount,
           scope: plan.manifest.scope,
+          incomplete: plan.manifest.incomplete ?? false,
           launcherLocked: plan.manifest.launcherLocked,
           command: plan.command,
           argv: plan.argv,
           env: plan.env,
-          sessionDir,
+          manifest: plan.manifest,
+          settings: plan.settings,
         },
         null,
         2,
@@ -85,20 +95,36 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  const r = spawnSync(plan.command, plan.argv, {
-    stdio: "inherit",
-    env: { ...process.env, ...plan.env },
-  });
-  if (r.error) {
-    const err = r.error as NodeJS.ErrnoException;
-    if (err.code === "ENOENT") {
-      process.stderr.write(`claude-heaven: could not find the \`claude\` binary on PATH.\n`);
-      return 127;
+  // Real launch: write manifest + settings to a fresh temp dir, and remove it
+  // once claude exits (spawnSync is synchronous). Nothing touches ~/.claude (P3);
+  // nothing is left behind.
+  const sessionDir = mkdtempSync(join(tmpdir(), "claude-heaven-"));
+  try {
+    const live = planNativeLaunch({
+      sessionDir,
+      statuslineBin: statuslineBinPath(),
+      claudeArgs: args.claudeArgs,
+    });
+    writeFileSync(live.manifestPath, `${JSON.stringify(live.manifest, null, 2)}\n`);
+    writeFileSync(live.settingsPath, `${JSON.stringify(live.settings, null, 2)}\n`);
+
+    const r = spawnSync(live.command, live.argv, {
+      stdio: "inherit",
+      env: { ...process.env, ...live.env },
+    });
+    if (r.error) {
+      const err = r.error as NodeJS.ErrnoException;
+      if (err.code === "ENOENT") {
+        process.stderr.write(`claude-heaven: could not find the \`claude\` binary on PATH.\n`);
+        return 127;
+      }
+      process.stderr.write(`claude-heaven: failed to launch claude: ${err.message}\n`);
+      return 1;
     }
-    process.stderr.write(`claude-heaven: failed to launch claude: ${err.message}\n`);
-    return 1;
+    return r.status ?? 1;
+  } finally {
+    rmSync(sessionDir, { recursive: true, force: true });
   }
-  return r.status ?? 1;
 }
 
 const isMain = process.argv[1]?.endsWith("cli.ts");

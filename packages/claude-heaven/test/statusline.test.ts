@@ -35,6 +35,10 @@ describe("renderStatusline", () => {
     expect(renderStatusline(manifest({ posture: "floor", standingTokens: 0 }))).toBe("⚡ floor · 0 standing");
     expect(renderStatusline(manifest({ posture: "curated", standingTokens: 57 }))).toBe("⚡ curated · 57 standing");
   });
+  it("marks an incomplete census with a trailing + (floor, not exact)", () => {
+    expect(renderStatusline(manifest({ incomplete: true }))).toBe("⚡ native · 14.2k+ standing");
+    expect(renderStatusline(manifest({ incomplete: true, standingTokens: 57 }))).toBe("⚡ native · 57+ standing");
+  });
   it("appends live ctx% as a SEPARATE readout when present", () => {
     expect(renderStatusline(manifest(), { context_window: { used_percentage: 22.7 } })).toBe("⚡ native · 14.2k standing · 23% ctx");
   });

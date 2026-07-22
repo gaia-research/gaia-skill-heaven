@@ -20,15 +20,21 @@ claude-heaven -- -p "hi"      # everything after `--` passes through to claude
   lane) **hard-error** (P2).
 - **Standing-dose statusline** — renders `⚡ native · 4.8k standing` (`+ NN% ctx`
   when Claude passes live context-window usage). The standing number is
-  **census-derived** over the launched profile (gate (b)): reuses core
-  `resolveSkill` → `makeListingLine` → `tokenize(chars4)`, so it cross-checks
-  `scripts/hell-heaven-bench/census.ts` by construction. The live `ctx%` is
-  whole-session running usage — a **separate** readout, never conflated with the
-  standing dose (B1 two-number discipline).
+  **census-derived** over the launched profile (gate (b)): the **per-skill** dose
+  reuses core `resolveSkill` → `makeListingLine` → `tokenize(chars4)`, the exact
+  formula the bench uses (vendored + fixture-tested in `packages/core`), so each
+  skill's number is byte-identical to `scripts/hell-heaven-bench/census.ts`. The
+  **aggregate** here dedupes by skill **id** (user scope shadows project — the
+  "one listing line per name" model), which differs from the bench script's
+  content-hash dedupe; a test asserts the total equals the sum of core
+  `resolveSkill` doses. The live `ctx%` is whole-session running usage — a
+  **separate** readout, never conflated with the standing dose (B1).
   - **Census scope (disclosed):** user (`~/.claude/skills`) + project
     (`.claude/skills`). Bundled CLI skills and plugin-provided skills are **not
     yet counted** — the manifest carries `scope` so the readout never silently
-    overclaims. Widening scope is a tracked follow-up and must not become
+    overclaims. If a root exists but can't be read, the census sets `incomplete`
+    and the statusline shows a trailing `+` (`4.8k+`) — an under-count is never
+    presented as exact. Widening scope is a tracked follow-up and must not become
     load-bearing marketing copy until its own coverage check lands.
 
 ### Architecture split (launcher vs. plugin)

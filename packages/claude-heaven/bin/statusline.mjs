@@ -11,7 +11,16 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = join(here, "..", "src", "statusline-cli.ts");
 const require = createRequire(import.meta.url);
-const tsxCli = join(dirname(require.resolve("tsx/package.json")), "dist/cli.mjs");
+
+// Hot path (runs every render). If tsx can't be resolved — e.g. this door was
+// installed standalone, outside the monorepo's hoisted node_modules — degrade to
+// an EMPTY segment rather than throwing and breaking the user's prompt.
+let tsxCli;
+try {
+  tsxCli = join(dirname(require.resolve("tsx/package.json")), "dist/cli.mjs");
+} catch {
+  process.exit(0);
+}
 
 const r = spawnSync(process.execPath, [tsxCli, cli, ...process.argv.slice(2)], { stdio: "inherit" });
 process.exit(r.status ?? 1);

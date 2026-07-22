@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -41,11 +41,36 @@ describe("censusStandingDose", () => {
     expect(c.skills.map((s) => s.id).sort()).toEqual(["alpha", "beta"]);
   });
 
-  it("records a missing root as exists:false, count 0, without throwing", () => {
+  it("records a missing root as exists:false, readable:true, not incomplete", () => {
     const missing = join(emptyRoot, "does-not-exist");
     const c = censusStandingDose([missing]);
     expect(c.standingTotal).toBe(0);
-    expect(c.roots[0]).toMatchObject({ root: missing, exists: false, skillCount: 0 });
+    expect(c.roots[0]).toMatchObject({ root: missing, exists: false, readable: true, skillCount: 0 });
+    expect(c.incomplete).toBe(false); // absent ≠ unreadable
+  });
+
+  it("flags an unreadable (but existing) root as incomplete — a 0 it did not verify", () => {
+    // chmod 000 makes readdir throw EACCES for a non-root user. Root bypasses
+    // perms, so skip there; also skip if the chmod didn't actually block us.
+    const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
+    if (isRoot) return;
+    const locked = mkdtempSync(join(tmpdir(), "ch-census-locked-"));
+    writeSkill(join(locked, "hidden"), "hidden", "unreadable skill");
+    chmodSync(locked, 0o000);
+    try {
+      readdirSync(locked);
+      return; // chmod didn't block (unusual fs) — skip rather than assert falsely
+    } catch {
+      /* good: it's unreadable */
+    }
+    try {
+      const c = censusStandingDose([locked]);
+      expect(c.roots[0]).toMatchObject({ exists: true, readable: false, skillCount: 0 });
+      expect(c.incomplete).toBe(true);
+    } finally {
+      chmodSync(locked, 0o700);
+      rmSync(locked, { recursive: true, force: true });
+    }
   });
 
   it("de-dupes by id across roots (first root wins)", () => {

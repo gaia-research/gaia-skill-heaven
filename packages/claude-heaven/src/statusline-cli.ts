@@ -20,6 +20,11 @@ function loadManifest(path: string | undefined): ProfileManifest | null {
 }
 
 function readStdin(): string {
+  // Claude Code writes-then-closes stdin before invoking the statusline command
+  // (matrix gate (b), GB-1), so a blocking read is safe there. Guard the other
+  // cases: an interactive TTY (manual testing, a future interactive invocation)
+  // would never close fd 0 and a synchronous read would hang the render tick.
+  if (process.stdin.isTTY) return "";
   try {
     return readFileSync(0, "utf-8"); // fd 0; empty string if nothing piped
   } catch {
