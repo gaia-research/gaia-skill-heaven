@@ -6,7 +6,14 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    // The plugin's renderer must run dependency-free once the door is installed
+    // from the marketplace, so it ships as plain ESM rather than TypeScript.
+    // checkJs + JSDoc keeps it under the same type discipline as src/.
+    "allowJs": true,
+    "checkJs": true
   },
-  "include": ["packages/*/src", "packages/*/test"]
+  "include": ["packages/*/src", "packages/*/test", "packages/*/scripts", "packages/*/plugin/scripts"],
+  // Vendored third-party scripts inside test fixtures are data, not our source.
+  "exclude": ["node_modules", "packages/*/test/fixtures"]
 }
