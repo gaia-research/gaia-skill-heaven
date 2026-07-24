@@ -1,0 +1,10 @@
+{
+  "schema": "claude-heaven/p2-gate@1",
+  "source": "skill-heaven HELL_LEVELS",
+  "gatedLevels": [
+    "med",
+    "high",
+    "xhigh",
+    "max"
+  ]
+}
