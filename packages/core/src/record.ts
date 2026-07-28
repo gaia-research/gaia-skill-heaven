@@ -3,14 +3,19 @@
 //
 // Field discipline (binding):
 //   tokens.system          = null   (M2a unratified — never measured here)
-//   floor  → skillStanding = 0, skillInvocation = 0 BY CONSTRUCTION (matches
-//            existing placebo records: zero skills loaded is a real zero)
+//   either floor → skillStanding = 0, skillInvocation = 0 BY CONSTRUCTION
+//            (matches existing placebo records: zero skills loaded is a real
+//            zero). Both floors load zero skills; what separates them is the
+//            door, whose cost is a standing cost inside perTurn and is NOT
+//            attributable to any skill. Every floor record is tagged
+//            `floor=benchmark` or `floor=product` in notes so the two arms
+//            cannot be pooled (V5-5/B1).
 //   curated→ skillStanding = chars4 sum; skillInvocation = null + note
 //            (stream-json invocation instrumentation is a follow-up)
 //   perTurn = input + cache_creation + cache_read + output from usage
 //            (the summation formula, documented in README §record)
 
-import type { Posture } from "./compile.js";
+import { floorOf, type Posture } from "./compile.js";
 import type { ResolvedSkill } from "./skills.js";
 import { LEDGER_SCHEMA, validateRecord, type Arm, type LedgerRecord } from "./vendor/ledger-record.js";
 
@@ -57,10 +62,24 @@ export function assembleRecord(args: {
 }): LedgerRecord {
   const { opts, posture, skills } = args;
   if (opts.arm === "placebo" && posture !== "floor") {
-    throw new Error("--arm placebo is only allowed for --posture floor (own-placebo anchoring, B2)");
+    throw new Error(
+      "--arm placebo is only allowed for --posture floor, the doorless benchmark floor (own-placebo anchoring, B2). " +
+        "The product floor retains a control surface, so it can never stand in as the placebo-of-record; record it as --arm heaven.",
+    );
   }
-  const floor = posture === "floor";
+  const floorKind = floorOf(posture);
+  const floor = floorKind !== null;
   const noteParts: string[] = [];
+  // FLOOR SPLIT (V5-5): every floor record says WHICH floor produced it, in a
+  // stable, greppable form, so the benchmark and product arms can never be
+  // pooled at analysis time (B1 — priced separately, never averaged into one
+  // number). hh-ledger/v1 has no posture field and this repo does not own that
+  // contract, so the tag rides `notes` until the schema carries it upstream.
+  if (floorKind === "benchmark") {
+    noteParts.push("floor=benchmark (doorless; the placebo-of-record, B2). Separate arm from floor=product — never averaged (B1).");
+  } else if (floorKind === "product") {
+    noteParts.push("floor=product (doorful; retains the minimum control surface). Separate arm from floor=benchmark — never averaged (B1).");
+  }
   if (!floor) noteParts.push("skillInvocation null: stream-json invocation instrumentation is a follow-up (M2).");
   if (args.notes) noteParts.push(args.notes);
 
