@@ -9,7 +9,7 @@
     {
       "name": "claude-heaven",
       "source": "./packages/claude-heaven/plugin",
-      "description": "The Claude Code door to Skill Heaven — native-default launcher, posture slider (/skill-heaven, /skill-hell), and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4): no commands wired yet.",
+      "description": "The Claude Code door to Skill Heaven — native-default launcher, posture slider (/skill-heaven), and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4): /skill-hell, the locked Hell door, lands in step 3.",
       "version": "0.0.0"
     }
   ]

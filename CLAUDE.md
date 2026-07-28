@@ -49,7 +49,7 @@ dependencies — keep it that way.**
   upgrade.**
 - **P2 — hell is gated.** Every surface hard-errors on `med|high|xhigh|max`;
   `/skill-hell` is a **locked door**, not an activator, until P2 opens — and it
-  is shown in *all* modes (D13).
+  is shown in *all* modes, which is P2's own "gated, and visibly so" reading.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or
   skills. The only writes live inside a disposable `mkdtemp` session dir.
@@ -79,6 +79,23 @@ dependencies — keep it that way.**
   temp dirs (`.gitignore` covers these).
 - **Stay in your lane** — don't touch the Milim tree or unrelated
   `gaia-research` surfaces from this repo.
+
+### Merge verb (per-repo, and it is not the same one everywhere)
+
+- **This repo squashes.** `gh pr merge <n> --squash --delete-branch`. A merge
+  commit is **blocked by a branch protection ruleset on `main`** —
+  `gh pr merge --merge` fails with `GraphQL: Merge commits are not allowed on
+  this repository`.
+- **`gaia-skill-tree` and `gaia-research` are the inverse** — merge commits,
+  not squash. `gaia-skill-tree` has squash disabled outright; `gaia-research`
+  follows the merge-commit convention its release auto-sync classifies. Agents
+  routinely work across all three in one session, so **check the verb per repo,
+  never per project.**
+- **Check before merging:**
+  `gh api repos/<owner>/<repo> --jq '{squash:.allow_squash_merge,merge:.allow_merge_commit,rebase:.allow_rebase_merge}'`.
+  Treat that as a floor, not the answer: **a ruleset on `main` can be stricter
+  than repo settings report.** This repo is exactly that case — the API says
+  `merge:true`, the ruleset rejects merge commits anyway.
 
 ## Where decisions and evidence live (this repo is downstream of them)
 

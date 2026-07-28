@@ -1,7 +1,7 @@
 // The claude-heaven launch PLAN — pure, so it is unit-testable without spawning
 // claude or touching disk. cli.ts turns a plan into files + a process.
 //
-// SLICE 1 = NATIVE DEFAULT (WS4 step 1, D10): claude at native posture, nothing
+// SLICE 1 = NATIVE DEFAULT (WS4 step 1, P1): claude at native posture, nothing
 // evicted, nothing summoned, no flags injected beyond the session-scoped
 // statusline wiring. The subtractive floor / curated postures are launched by
 // later steps; this step only proves the native door + the standing-dose readout.
@@ -66,7 +66,8 @@ export function planNativeLaunch(opts: LaunchOptions): LaunchPlan {
   };
 
   // Session-scoped settings: ONLY the statusline command. No eviction /
-  // suppression flags — native is claude untouched (D10). Loaded via
+  // suppression flags — native is claude untouched (P1: native is the default,
+  // untouched posture). Loaded via
   // `--settings <file>`, so ~/.claude is never mutated (P3).
   const settings = {
     statusLine: { type: "command", command: opts.statuslineBin },

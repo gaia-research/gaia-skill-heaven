@@ -37,7 +37,10 @@ guessed — is the research that keeps the slider honest.
 > working checkout) now lives in `packages/core`. Not yet published to npm.
 >
 > **Decision authority:** `gaia-research/founder/RATIFICATION.md`
-> (D1/D6/D7 + N8/N9/D10/D11).
+> (D1/D6/D8/D9/D12 + N8/N9 + P1/P2/P3 + B1–B5).
+> Ids are never reused, so a citation here is only ever to a live entry. The
+> retired ids — D7, D10, D11 and D13 — appear nowhere in this repo except in
+> notes that say they are retired; a test enforces it.
 > Plan: `gaia-research/docs/plans/m2-heaven-launcher-plan.md`.
 > Evidence: `gaia-research/docs/labs/harness-capability-matrix.md`.
 

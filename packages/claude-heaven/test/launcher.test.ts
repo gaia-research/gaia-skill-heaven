@@ -41,7 +41,7 @@ describe("planNativeLaunch", () => {
     expect(typeof p.manifest.standingTokens).toBe("number");
   });
 
-  it("injects NO eviction/suppression flags — native is claude untouched (D10)", () => {
+  it("injects NO eviction/suppression flags — native is claude untouched (P1)", () => {
     const p = plan();
     const argvStr = p.argv.join(" ");
     expect(argvStr).not.toMatch(/--setting-sources/);
