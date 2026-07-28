@@ -86,7 +86,17 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  * `resume` is a function of the session id so the printed command is exact.
  * A notch with no `resume` is never presented as something the user can run.
  *
- * TWO STOPS THE STEP-2 DRAFT LISTED AND THIS SET DOES NOT:
+ * STOPS THE STEP-2 DRAFT LISTED AND THIS SET DOES NOT — recorded, not silently
+ * dropped, so nobody re-adds them from memory:
+ *   - `lean` and `add-ons`. RETIRED as slider stops by founder ruling (V5-6
+ *     follow-up, 2026-07-29): neither is a ratified term and neither is a
+ *     posture — core's `POSTURES` is `floor | product-floor | curated | native`,
+ *     and these two were in-session flag moves wearing posture clothing on a
+ *     shipped control surface. Unratified vocabulary does not get a notch. They
+ *     are `banned` in the federation lexicon with no replacement: the CONCEPT is
+ *     gone from this surface, not renamed. `/skill-heaven lean` now falls through
+ *     to the ordinary "no notch called …" path — deliberately, because a bespoke
+ *     explanation would keep the retired word alive in shipped copy.
  *   - the doorless BENCHMARK `floor` — no door by ruling (F6), see the header.
  *   - `restraint`, the below-vanilla behavioral notch. It shipped as a
  *     "coming — research" row on D13's authority. D13 is retired, gate (e) is
@@ -107,26 +117,11 @@ export const NOTCHES = [
     kind: "gated",
   },
   {
-    id: "add-ons",
-    label: "add-ons",
-    blurb: "Stack extra skills on top of this session — additive, cheap, reliable.",
-    kind: "physical",
-    resume: (/** @type {string} */ sid) => `claude --resume ${sid} --plugin-dir <your-plugin-dir>`,
-  },
-  {
     id: "native",
     label: "native",
     blurb: "Your setup as-is — every skill you have installed.",
     kind: "physical",
     resume: (/** @type {string} */ sid) => `claude --resume ${sid}`,
-  },
-  {
-    id: "lean",
-    label: "lean",
-    blurb:
-      "Sheds project/settings weight. Does NOT remove your personal skills — those are launcher-locked.",
-    kind: "physical",
-    resume: (/** @type {string} */ sid) => `claude --resume ${sid} --setting-sources project`,
   },
   {
     id: "product-floor",
@@ -259,7 +254,8 @@ export function renderSlider(opts = {}) {
   // and an implied offer at worst.
   let hasMoves = false;
   for (const notch of NOTCHES) {
-    const rows = notchLines(notch, notchState(notch, launched), sid, target, launchedNote);
+    const state = notchState(notch, launched);
+    const rows = notchLines(notch, state, sid, target, launchedNote);
     if (rows.some((r) => /^\s+→ /.test(r))) hasMoves = true;
     lines.push(...rows);
   }

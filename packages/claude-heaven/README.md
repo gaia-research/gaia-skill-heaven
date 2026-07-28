@@ -49,7 +49,7 @@ monorepo marketplace, gate (d)).
 
 ```
 /skill-heaven            # render the slider
-/skill-heaven lean       # render it with one notch called out
+/skill-heaven native     # render it with one notch called out
 ```
 
 The active **downward** control, summonable anytime. It renders where the
@@ -60,9 +60,17 @@ session itself.
 - **Upward-only, launcher-locked below (D12).** Gate (a) came back **NEGATIVE**
   for in-session subtractive recomposition: on a continued session no flag or
   flag-combination evicts user/global skills. So the **clean room** notch is
-  reachable **only at boot, via the `claude-heaven` launcher**. Every other stop
-  (`lean`, `native`, `add-ons`) is reachable in either direction and prints a
-  real `claude --resume …` command.
+  reachable **only at boot**. `native` is reachable in either direction and
+  prints a real `claude --resume …` command.
+- **Only ratified postures get a stop.** The notch set is `hell` (the gated lane
+  marker core owns) plus postures core actually knows. An earlier draft carried
+  **`lean`** and **`add-ons`** stops; both are **retired** — neither is a
+  ratified term and neither is a posture, so they were in-session flag moves
+  wearing posture clothing on a shipped control surface. They are gone with **no
+  replacement**: the concept, not just the word. `/skill-heaven lean` gets the
+  ordinary "no notch called …" miss rather than a bespoke explanation, so the
+  retired word does not survive in shipped copy. A test holds the whole notch set
+  against core's `POSTURES`.
 - **The clean room is the PRODUCT floor, not the benchmark floor (V5-5).** Since
   the floor split landed, `POSTURES` carries both. The slider's clean room is
   **`product-floor`** — T9b minus `--disable-slash-commands`, the door priced at
@@ -90,8 +98,6 @@ session itself.
 - **No magic respawn (D12 / B4).** Nothing in this surface claims a slash command
   can restart the process, because nothing can, and D12 rules the in-session
   control upward-only. The printed commands are for the user to run.
-- **`lean` is labelled honestly.** It sheds project/settings weight; it does
-  **not** remove personal skills (gate (a) row C). The copy says so.
 - **No behavioral notch ships.** An earlier draft carried a below-vanilla
   `restraint` row rendered as *"coming — research"*, on the authority of the now
   **retired D13**. D13 was retired 2026-07-24 (never-reused list), gate (e) is

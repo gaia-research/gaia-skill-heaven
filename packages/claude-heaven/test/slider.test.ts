@@ -139,7 +139,7 @@ describe("locked-notch upsell (D12)", () => {
     expect(silenceStderr(() => run(["--print", "--posture", "product-floor"]))).toBe(2);
 
     // …and no rendered mode may print a claude-heaven --posture the CLI refuses.
-    const targets = ["", ...NOTCHES.map((n: { id: string }) => n.id), "floor", "turbo"];
+    const targets = ["", ...NOTCHES.map((n: { id: string }) => n.id), "floor", "lean", "turbo"];
     for (const manifest of [null, nativeManifest, productFloorManifest, benchmarkFloorManifest]) {
       for (const target of targets) {
         const text = render({ manifest, target });
@@ -168,9 +168,12 @@ describe("the floor split (V5-5): the slider targets the PRODUCT floor", () => {
     expect(NOTCHES.map((n: { id: string }) => n.id)).toContain("product-floor");
     expect(NOTCHES.map((n: { id: string }) => n.id)).not.toContain("floor");
     // Every notch id the slider ships must be a posture core actually knows, or
-    // a lane marker core owns (`hell` is gated by P2, `add-ons`/`lean` are
-    // in-session moves rather than compile postures).
-    for (const id of ["product-floor", "native"]) expect(POSTURES).toContain(id);
+    // the one lane marker core owns (`hell`, gated by P2). Nothing else gets a
+    // stop — that rule is what retired `lean` and `add-ons`.
+    for (const notch of NOTCHES as { id: string }[]) {
+      if (notch.id === "hell") continue;
+      expect(POSTURES, `${notch.id} is not a ratified posture`).toContain(notch.id);
+    }
   });
 
   it("explains the doorless benchmark floor instead of pretending the name is unknown", () => {
@@ -206,6 +209,35 @@ describe("the floor split (V5-5): the slider targets the PRODUCT floor", () => {
     for (const f of files) {
       const body = readFileSync(f, "utf-8");
       expect(body, `${f} must not compose a benchmark arm`).not.toContain("--arm");
+    }
+  });
+
+  it("ships no `lean` and no `add-ons` stop, in the set or in the copy (V5-6 follow-up)", () => {
+    // Founder ruling: both are RETIRED as slider stops. Neither is a ratified
+    // term and neither is a posture — they were in-session flag moves wearing
+    // posture clothing on a shipped control surface. Recorded here (and as a
+    // `banned` lexicon entry with no replacement) so nobody re-adds them from
+    // memory. The old flags they stood for must not survive in the copy either.
+    const ids = NOTCHES.map((n: { id: string }) => n.id);
+    expect(ids).not.toContain("lean");
+    expect(ids).not.toContain("add-ons");
+    for (const manifest of [null, nativeManifest, productFloorManifest]) {
+      const text = render({ manifest });
+      expect(text).not.toMatch(/\blean\b/i);
+      expect(text).not.toMatch(/add-ons/i);
+      expect(text).not.toContain("--setting-sources");
+      expect(text).not.toContain("--plugin-dir");
+    }
+  });
+
+  it("gives a retired stop no bespoke explanation — it is simply not a notch", () => {
+    // The `floor` path explains itself because `floor` is a real posture with no
+    // door. `lean` is not a posture at all, so it gets the ordinary miss: a
+    // bespoke message would keep the retired word alive in shipped copy.
+    for (const retired of ["lean", "add-ons"]) {
+      const text = render({ manifest: nativeManifest, target: retired });
+      expect(text).toContain(`no notch called "${retired}"`);
+      expect(text).not.toContain("you asked for this one");
     }
   });
 
@@ -253,19 +285,31 @@ describe("no retired decision id survives anywhere in the repo (D9 / V5-6)", () 
 
 describe("reachable notches print an exact, runnable command", () => {
   it("uses the real session id when the harness provides one", () => {
-    const text = render({ manifest: nativeManifest, sessionId: "abc-def" });
-    expect(text).toContain("→ claude --resume abc-def --setting-sources project");
-    expect(text).toContain("→ claude --resume abc-def --plugin-dir <your-plugin-dir>");
+    // From the product floor, `native` is the one stop that is genuinely
+    // reachable in-session, and it prints the exact command.
+    const text = render({ manifest: productFloorManifest, sessionId: "abc-def" });
+    expect(text).toContain("→ claude --resume abc-def");
   });
 
   it("falls back to a placeholder + the resume-picker hint with no session id", () => {
-    const text = render({ manifest: nativeManifest, sessionId: "" });
+    const text = render({ manifest: productFloorManifest, sessionId: "" });
     expect(text).toContain("claude --resume <session-id>");
     expect(text).toContain("pick this conversation from the list");
   });
 
-  it("labels `lean` honestly — it does not remove personal skills (gate (a) row C)", () => {
-    expect(render({ manifest: nativeManifest })).toContain("Does NOT remove your personal skills");
+  it("prints a `→` command for reachable stops and for nothing else", () => {
+    // Every arrow line must be a command the user can actually run: a resume for
+    // a reachable stop. A locked stop prints its reason and no command at all.
+    for (const manifest of [null, nativeManifest, productFloorManifest]) {
+      for (const line of render({ manifest })
+        .split("\n")
+        .filter((l) => /^\s+→ /.test(l))) {
+        expect(line, `unrunnable arrow line: ${line}`).toMatch(/^\s+→ claude --resume /);
+      }
+    }
+    // Native launch: everything above is gated, everything below is boot-only,
+    // so there is no move to offer and the slider offers none.
+    expect(render({ manifest: nativeManifest })).not.toMatch(/^\s+→ /m);
   });
 
   it("marks the launched posture and does not offer it as a move", () => {
@@ -344,8 +388,10 @@ describe("manifest contract with the launcher", () => {
 
 describe("argument handling", () => {
   it("accepts plain notch names and points at the row", () => {
-    expect(normalizeTarget("  LEAN ")).toBe("lean");
-    expect(render({ manifest: nativeManifest, target: "lean" })).toContain("you asked for this one");
+    expect(normalizeTarget("  NATIVE ")).toBe("native");
+    expect(render({ manifest: nativeManifest, target: "native" })).toContain(
+      "you asked for this one",
+    );
   });
 
   it("refuses to interpret anything exotic as a notch, and never reflects it back", () => {
