@@ -14,7 +14,7 @@ claude-heaven --print         # shows the launch plan (census, argv) — no spaw
 claude-heaven -- -p "hi"      # everything after `--` passes through to claude
 ```
 
-- **Native default (D10).** `claude-heaven` runs Claude Code **untouched** — no
+- **Native default (P1/P3).** `claude-heaven` runs Claude Code **untouched** — no
   eviction, no summoning, no flags injected beyond the statusline. It writes a
   session-scoped `--settings` file + a profile manifest to a **temp dir** and
   execs `claude`; `~/.claude` is never mutated (P3). Levels `med…max` (the Hell
@@ -63,18 +63,32 @@ session itself.
   reachable **only at boot, via the `claude-heaven` launcher**. Every other stop
   (`lean`, `native`, `add-ons`) is reachable in either direction and prints a
   real `claude --resume …` command.
-- **Locked-notch upsell (D13).** Under vanilla `claude` — and under any
+- **The clean room is the PRODUCT floor, not the benchmark floor (V5-5).** Since
+  the floor split landed, `POSTURES` carries both. The slider's clean room is
+  **`product-floor`** — T9b minus `--disable-slash-commands`, the door priced at
+  **+515 tok** (F7). The doorless **benchmark** `floor` is the
+  **placebo-of-record (B2)** and has no door to slide (F6), so it is
+  deliberately **not a notch**; the footer says so instead of hiding it, and
+  `/skill-heaven floor` gets that explanation rather than "unknown notch". The
+  two floors are always priced as **separate arms (B1)** — never averaged. No
+  path in this package records a benchmark arm at all; `--arm placebo` lives in
+  core's CLI and is valid only at `--posture floor` (a test pins the absence).
+- **Locked-notch upsell (D12).** Under vanilla `claude` — and under any
   `claude-heaven` session that did not launch there — the clean room renders
   `⊘` with *"relaunch via `claude-heaven` to unlock the clean room"*. A session
-  that launched at the floor sees it `●` unlocked instead.
-- **No magic respawn (D10).** Nothing in this surface claims a slash command can
-  restart the process, because nothing can. The printed commands are for the
-  user to run.
+  that launched at the **product floor** sees it `●` unlocked instead.
+- **No magic respawn (D12 / B4).** Nothing in this surface claims a slash command
+  can restart the process, because nothing can, and D12 rules the in-session
+  control upward-only. The printed commands are for the user to run.
 - **`lean` is labelled honestly.** It sheds project/settings weight; it does
   **not** remove personal skills (gate (a) row C). The copy says so.
-- **The behavioral notch stays research (D13 / gate (e)).** `restraint` — the
-  below-vanilla, `grill-me`-class notch — renders as *"coming — research"* and
-  is never a working stop. Gate (e) is UNVERIFIED; nothing here rides it.
+- **No behavioral notch ships.** An earlier draft carried a below-vanilla
+  `restraint` row rendered as *"coming — research"*, on the authority of the now
+  **retired D13**. D13 was retired 2026-07-24 (never-reused list), gate (e) is
+  still UNVERIFIED, and RATIFICATION.md OPEN 1 has an open proposal that behavioral
+  restraint is *behavioral, not positional* — possibly not a notch at all. The
+  row is gone rather than re-bound to nothing. Its absence is not a ruling on
+  where restraint eventually lives; OPEN 1 and OPEN 3 stay open.
 - **P2 is enforced, not restated.** `med|high|xhigh|max` and `hell` get a hard
   refusal with no slider and no route around it. The gated list is
   **machine-copied** from core's `HELL_LEVELS` into `plugin/data/p2-gate.json`
@@ -116,13 +130,14 @@ so **re-verify on every Claude Code upgrade**. The upstream evidence matrix
 | F6 | plugin command under the **T9b floor route** | ❌ **NEGATIVE** — `Unknown command`. `--disable-slash-commands` suppresses plugin **commands** as well as plugin skills, so the clean room as currently composed **has no door** |
 | F7 | plugin command under **T9b minus `--disable-slash-commands`** | ✅ works. 20,176 tok vs T9b 19,661 vs native 28,379 → **+515 tok** to keep the door open, still −28.9% off native |
 
-**Consequence, flagged not fixed.** F6 means "launch at the floor, then use the
-slider" is currently unreachable: at the T9b floor `/skill-heaven` does not
-exist. F7 is a candidate route that keeps the door for +515 tok — but changing
-the floor route is a ratified-T9b decision and an owner call, so **core's
-`compile()` is untouched here**. The slider itself is complete for every launch
-posture (the floor-launch path is unit-tested and probed with a synthetic floor
-manifest); the launcher simply cannot emit `--posture floor` yet.
+**Consequence, since resolved upstream.** F6 meant "launch at the floor, then
+use the slider" was unreachable: at the T9b floor `/skill-heaven` does not
+exist. That was an owner call, and the owner made it — **V5-5** split the floor
+in two and **PR #14** landed it in `packages/core`. The doorless floor keeps its
+byte-frozen T9b route as the placebo-of-record; the **F7 route is now a real,
+separately-named posture**, `product-floor`. This package's slider targets that
+one. Core's `compile()` is still untouched *from here* — the split was made
+upstream, on its own ratification, exactly as D9 requires.
 
 **Zero-mutation check:** `~/.claude/skills` (67 entries) diffed clean before and
 after every probe; `~/.claude/settings.json` SHA-256 unchanged; no new

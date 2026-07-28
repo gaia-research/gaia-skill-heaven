@@ -47,12 +47,18 @@ export function run(argv: string[]): number {
   // P2 gate first — never compose a gated (Hell-lane) posture.
   assertLevelAllowed(args.level);
   // Slice 1 is native-only. A non-native posture, OR any non-gated level (off/low
-  // are heaven-lane aliases for floor/curated), implies a posture slice 1 doesn't
-  // build yet — reject explicitly rather than silently ignore the flag.
+  // are heaven-lane aliases for the floors/curated), implies a posture slice 1
+  // doesn't build yet — reject explicitly rather than silently ignore the flag.
+  //
+  // Note which floor this door will eventually launch: `product-floor`, the
+  // doorful one (V5-5). The doorless benchmark `floor` is the placebo-of-record
+  // (B2) and is core's to compose for a measurement run — a door that launched
+  // it would be launching a session it cannot then talk to (F6).
   if (args.posture !== "native") {
     process.stderr.write(
       `claude-heaven slice 1 launches native only (got --posture ${args.posture}). ` +
-        `The floor/curated postures land in WS4 step 2 (/skill-heaven).\n`,
+        `The product-floor/curated postures land in a later WS4 slice. ` +
+        `The benchmark floor is not a door posture — it runs from core, for benchmark runs only.\n`,
     );
     return 2;
   }

@@ -1,4 +1,12 @@
-// The /skill-heaven posture slider renderer (WS4 step 2, D12/D13).
+// The /skill-heaven posture slider renderer (WS4 step 2).
+//
+// BOUND BY: D12 · P1 · P2 · P3 · B1 · B2 · B4 · D6 · D9.
+// (The original step-2 draft cited D13. D13 was RETIRED on 2026-07-24 and its id
+// is on RATIFICATION.md's never-reused list, so nothing here may lean on it —
+// re-bound by founder ruling V5-6. What the retired D13 was doing the work for
+// is now split across D12, which actually rules the locked clean room, and P2,
+// which rules the locked Hell notch. See the `restraint` note below for the half
+// of the retired D13 that had no live authority left at all.)
 //
 // ZERO DEPENDENCIES BY NECESSITY. Once claude-heaven is installed from the
 // marketplace there is no node_modules next to it, so this file must run on
@@ -12,12 +20,28 @@
 //     renders), so the two readouts cannot disagree.
 //
 // WHAT THIS SURFACE MAY CLAIM (claim-discipline table, B4). It renders posture
-// and prints commands; it never restarts anything ("no magic respawn", D10) and
-// never implies it can. The clean room is launcher-locked (D12: gate (a) came
+// and prints commands; it never restarts anything and never implies it can —
+// D12 rules that an in-session control moves posture UPWARD only, so a surface
+// that implied an in-session subtraction would be claiming a transition the
+// harness cannot perform. The clean room is launcher-locked (D12: gate (a) came
 // back NEGATIVE — no flag combination evicts user/global skills on a continued
-// session), so the floor notch is a visibly locked upsell everywhere except a
-// session that launched there. The below-vanilla behavioral notch (D13) is
-// gate-(e)-UNVERIFIED and renders as "coming — research", never as a stop.
+// session), so it is a visibly locked upsell everywhere except a session that
+// launched there.
+//
+// THE TWO FLOORS (V5-5, landed in PR #14). `POSTURES` now carries BOTH `floor`
+// and `product-floor`, and this slider's clean-room notch is `product-floor`:
+//   - `floor` is the DOORLESS BENCHMARK floor, the placebo-of-record (B2). F6
+//     established that `--disable-slash-commands` suppresses plugin commands
+//     too, so at `floor` THIS COMMAND DOES NOT EXIST. The benchmark floor is
+//     deliberately not a notch: a slider cannot offer a door to a posture that
+//     has none, and priced as its own arm (B1) it must never be pooled with the
+//     product floor.
+//   - `product-floor` is the DOORFUL PRODUCT floor — T9b minus
+//     `--disable-slash-commands`, the door costing +515 tok (F7). It is the only
+//     clean room reachable by a session that can run `/skill-heaven` at all.
+// Nothing here records a benchmark arm: the placebo arm flag belongs to core's
+// CLI, at the benchmark floor and nowhere else, and no path in this package
+// composes one (a test pins the absence).
 //
 // PLUGIN-PATH NOTE (probed on 2.1.216): ${CLAUDE_PLUGIN_ROOT} is interpolated
 // into the *command markdown*, but is NOT exported to the bash child, so this
@@ -41,26 +65,37 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  * @property {boolean} [launcherLocked]
  */
 
-/** @typedef {"launched" | "reachable" | "locked" | "research"} NotchState */
+/** @typedef {"launched" | "reachable" | "locked"} NotchState */
 
 /**
  * @typedef {object} Notch
  * @property {string} id
  * @property {string} label
  * @property {string} blurb
- * @property {"physical" | "gated" | "behavioral"} kind
+ * @property {"physical" | "gated"} kind
  * @property {string} [lockedNote]
  * @property {(sid: string) => string} [resume]
  */
 
 /**
- * The slider, top (most context) to bottom (least). Only `floor` is
+ * The slider, top (most context) to bottom (least). Only `product-floor` is
  * launcher-locked: gate (a) established that every other physical stop is
  * reachable on a continued session in either direction, and that user/global
  * skill eviction is reachable at boot only.
  *
  * `resume` is a function of the session id so the printed command is exact.
  * A notch with no `resume` is never presented as something the user can run.
+ *
+ * TWO STOPS THE STEP-2 DRAFT LISTED AND THIS SET DOES NOT:
+ *   - the doorless BENCHMARK `floor` — no door by ruling (F6), see the header.
+ *   - `restraint`, the below-vanilla behavioral notch. It shipped as a
+ *     "coming — research" row on D13's authority. D13 is retired, gate (e) is
+ *     still UNVERIFIED, and RATIFICATION.md OPEN 1 has an unresolved proposal
+ *     that behavioral restraint is "behavioral, not positional" — i.e. possibly
+ *     not a notch at all. Rendering it as the bottom rung would encode that
+ *     provisional mapping in a constant, which OPEN 3 rules out explicitly. Its
+ *     absence here is NOT a ruling on where restraint eventually lives; it is
+ *     this surface declining to make one. Nothing else in the repo rides it.
  */
 /** @type {Notch[]} */
 export const NOTCHES = [
@@ -94,25 +129,18 @@ export const NOTCHES = [
     resume: (/** @type {string} */ sid) => `claude --resume ${sid} --setting-sources project`,
   },
   {
-    id: "floor",
+    id: "product-floor",
     label: "clean room",
-    blurb: "Evicts your personal skills, MCP servers and bundled skills.",
+    blurb: "Evicts your personal skills, MCP servers and bundled skills — keeps this door.",
     lockedNote: "Launcher-locked — relaunch via `claude-heaven` to unlock the clean room.",
     kind: "physical",
-  },
-  {
-    id: "restraint",
-    label: "restraint",
-    blurb: "Below vanilla, behaviourally: restrains USE of skills still in context.",
-    lockedNote: "coming — research (gate (e) unverified; not a working stop).",
-    kind: "behavioral",
   },
 ];
 
 // Single-column glyphs only — a double-width emoji would break the label gutter
 // in a terminal, and this text is rendered verbatim.
 /** @type {Record<NotchState, string>} */
-const STATE_MARK = { launched: "●", reachable: "○", locked: "⊘", research: "⋯" };
+const STATE_MARK = { launched: "●", reachable: "○", locked: "⊘" };
 const LABEL_WIDTH = 12;
 const ROW_INDENT = " ".repeat(3 + 1 + 2 + LABEL_WIDTH);
 
@@ -208,7 +236,15 @@ export function renderSlider(opts = {}) {
   lines.push("   ▼ less context", "", ...footer(launched, sid));
 
   if (target !== "" && !NOTCHES.some((n) => n.id === target)) {
-    lines.push("", `   (no notch called ${quoteTarget(target)} — the slider above is the whole set.)`);
+    // `floor` is a real posture that is deliberately not a notch. Say why rather
+    // than pretending the name means nothing — refusal transparency.
+    lines.push(
+      "",
+      target === "floor"
+        ? "   (`floor` is the benchmark floor: no slash commands, so no door and no slider.\n" +
+          "   The clean room you can reach from here is the product floor, above.)"
+        : `   (no notch called ${quoteTarget(target)} — the slider above is the whole set.)`,
+    );
   }
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
@@ -255,13 +291,18 @@ function sessionLine(manifest) {
   );
 }
 
-/** @param {Notch} notch @param {string} launched @returns {NotchState} */
+/**
+ * `launched === "floor"` (the doorless benchmark floor) cannot occur in
+ * practice — this command does not exist there (F6) — so it deliberately
+ * matches no notch and the clean room stays locked, which is the honest
+ * rendering for a session that somehow reports a posture with no door.
+ * @param {Notch} notch @param {string} launched @returns {NotchState}
+ */
 function notchState(notch, launched) {
-  if (notch.kind === "behavioral") return "research";
   if (notch.kind === "gated") return "locked";
   if (notch.id === launched) return "launched";
   // D12: the clean room is composed at boot and cannot be reached mid-session.
-  if (notch.id === "floor") return "locked";
+  if (notch.id === "product-floor") return "locked";
   return "reachable";
 }
 
@@ -273,7 +314,7 @@ function notchLines(notch, state, sid, target, launchedNote) {
   const pointer = notch.id === target ? "  ← you asked for this one" : "";
   const out = [`   ${STATE_MARK[state]}  ${notch.label.padEnd(LABEL_WIDTH)}${notch.blurb}${pointer}`];
   if (state === "launched") out.push(`${ROW_INDENT}${launchedNote}`);
-  if (state === "locked" || state === "research") out.push(`${ROW_INDENT}${notch.lockedNote}`);
+  if (state === "locked") out.push(`${ROW_INDENT}${notch.lockedNote}`);
   if (state === "reachable" && notch.resume) out.push(`${ROW_INDENT}→ ${notch.resume(sid || "<session-id>")}`);
   return out;
 }
@@ -281,10 +322,16 @@ function notchLines(notch, state, sid, target, launchedNote) {
 /** @param {string} launched @param {string} sid */
 function footer(launched, sid) {
   const out = [
-    "   The slider moves this session UP from the posture it launched at. The clean",
-    "   room — the only posture that evicts your personal skills, MCP servers and",
-    "   bundled skills — is composed at boot by the `claude-heaven` launcher and",
-    "   cannot be reached mid-session.",
+    "   The slider moves this session UP from the posture it launched at. It cannot",
+    "   take anything out of a session that is already running. The clean room — the",
+    "   only posture that evicts your personal skills, MCP servers and bundled",
+    "   skills — is composed at boot by the `claude-heaven` launcher and cannot be",
+    "   reached mid-session.",
+    "",
+    "   There is a floor below the clean room, and it is not on this slider: the",
+    "   benchmark floor runs with slash commands off, so this command does not exist",
+    "   there. It is the measurement placebo, not a place to sit — and the two floors",
+    "   are always priced as separate arms, never averaged.",
     "",
     "   Running a → command starts a RESUMED session that carries this conversation",
     "   forward. This command cannot restart Claude Code for you — run it yourself.",
@@ -296,7 +343,7 @@ function footer(launched, sid) {
       "   `claude --resume` and pick this conversation from the list.)",
     );
   }
-  if (launched !== "floor") {
+  if (launched !== "product-floor") {
     out.push(
       "",
       "   Two numbers, never one: `standing` above is the listing-line dose you pay",

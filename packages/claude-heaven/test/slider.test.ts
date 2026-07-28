@@ -3,11 +3,12 @@
 // is installed from the marketplace — so these tests import the shipped .mjs
 // directly rather than a TypeScript mirror of it.
 
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { HELL_LEVELS } from "skill-heaven";
+import { HELL_LEVELS, POSTURES } from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
 import { planNativeLaunch } from "../src/launcher.js";
 import { formatTokens as formatTokensTs } from "../src/statusline.js";
@@ -21,6 +22,8 @@ import {
   renderSlider,
 } from "../plugin/scripts/render-slider.mjs";
 
+const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
+
 const nativeManifest = {
   schema: "claude-heaven/profile@1",
   posture: "native",
@@ -30,7 +33,11 @@ const nativeManifest = {
   launcherLocked: true,
 } as const;
 
-const floorManifest = { ...nativeManifest, posture: "floor" } as const;
+const productFloorManifest = { ...nativeManifest, posture: "product-floor" } as const;
+// The doorless benchmark floor. This command does not exist there (F6), so this
+// manifest is a "cannot happen" input kept as a regression guard: the renderer
+// must not treat it as a launched clean room.
+const benchmarkFloorManifest = { ...nativeManifest, posture: "floor" } as const;
 
 const render = (opts: Record<string, unknown> = {}) =>
   renderSlider({ sessionId: "sess-123", ...opts }).text as string;
@@ -65,8 +72,8 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
     expect(renderSlider({ target: "native", gatedLevels: null }).refused).toBe(false);
   });
 
-  it("renders the hell notch as a locked door in every mode (D13)", () => {
-    for (const manifest of [null, nativeManifest, floorManifest]) {
+  it("renders the hell notch as a locked door in every mode (P2)", () => {
+    for (const manifest of [null, nativeManifest, productFloorManifest]) {
       const text = render({ manifest });
       expect(text).toMatch(/⊘ {2}hell {8}/);
       expect(text).toMatch(/LOCKED \(P2\)/);
@@ -74,7 +81,7 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
   });
 });
 
-describe("locked-notch upsell (D12/D13)", () => {
+describe("locked-notch upsell (D12)", () => {
   it("locks the clean room under vanilla claude, with the ratified copy", () => {
     const text = render({ manifest: null });
     expect(text).toMatch(/⊘ {2}clean room/);
@@ -87,15 +94,15 @@ describe("locked-notch upsell (D12/D13)", () => {
     expect(text).toContain("relaunch via `claude-heaven` to unlock the clean room");
   });
 
-  it("unlocks the clean room for a session that launched at the floor", () => {
-    const text = render({ manifest: floorManifest });
+  it("unlocks the clean room for a session that launched at the product floor", () => {
+    const text = render({ manifest: productFloorManifest });
     expect(text).toMatch(/● {2}clean room/);
     expect(text).not.toContain("relaunch via `claude-heaven` to unlock the clean room");
     expect(text).toContain("you launched here");
   });
 
-  it("never claims a slash command can restart the process (no magic respawn, D10)", () => {
-    for (const manifest of [null, nativeManifest, floorManifest]) {
+  it("never claims a slash command can restart the process (D12 / B4)", () => {
+    for (const manifest of [null, nativeManifest, productFloorManifest]) {
       const text = render({ manifest });
       expect(text).toContain("cannot restart Claude Code for you");
       expect(text).not.toMatch(/restart(ing)? (the session|for you) automatically/i);
@@ -104,15 +111,82 @@ describe("locked-notch upsell (D12/D13)", () => {
   });
 });
 
-describe("the behavioral notch stays research-only (D13 / gate (e))", () => {
-  it("renders as `coming — research` and never as a reachable stop", () => {
+describe("the floor split (V5-5): the slider targets the PRODUCT floor", () => {
+  it("names product-floor as the clean-room notch, and lists no benchmark floor", () => {
+    expect(NOTCHES.map((n: { id: string }) => n.id)).toContain("product-floor");
+    expect(NOTCHES.map((n: { id: string }) => n.id)).not.toContain("floor");
+    // Every notch id the slider ships must be a posture core actually knows, or
+    // a lane marker core owns (`hell` is gated by P2, `add-ons`/`lean` are
+    // in-session moves rather than compile postures).
+    for (const id of ["product-floor", "native"]) expect(POSTURES).toContain(id);
+  });
+
+  it("explains the doorless benchmark floor instead of pretending the name is unknown", () => {
+    const text = render({ manifest: nativeManifest, target: "floor" });
+    expect(text).toContain("no slash commands, so no door and no slider");
+    expect(text).not.toMatch(/no notch called "floor"/);
+    // and it must not print a command that would take the user to it
+    expect(text).not.toContain("--disable-slash-commands");
+  });
+
+  it("never renders the benchmark floor as a launched or reachable stop", () => {
+    // Cannot happen in practice (F6); guarded anyway.
+    const text = render({ manifest: benchmarkFloorManifest });
+    expect(text).toMatch(/⊘ {2}clean room/);
+    expect(text).not.toContain("you launched here");
+  });
+
+  it("prices the two floors as separate arms and never averages them (B1/B2)", () => {
     const text = render({ manifest: nativeManifest });
-    expect(text).toMatch(/⋯ {2}restraint/);
-    expect(text).toContain("coming — research");
-    expect(text).toContain("not a working stop");
-    // The restraint row must carry no runnable command.
-    const row = text.split("\n").findIndex((l) => l.includes("restraint"));
-    expect(text.split("\n")[row + 1]).not.toContain("claude --resume");
+    expect(text).toContain("priced as separate arms, never averaged");
+    expect(text).toContain("measurement placebo, not a place to sit");
+  });
+
+  it("records no benchmark arm anywhere in claude-heaven — placebo is core's, at --posture floor", () => {
+    // `--arm placebo` hard-errors on product-floor upstream. The guard that keeps
+    // this package from ever tripping it is that it has no arm-recording path at
+    // all; assert that rather than trusting a comment.
+    const root = PKG;
+    const files = [
+      ...readdirSync(join(root, "src")).map((f) => join(root, "src", f)),
+      ...readdirSync(join(root, "plugin", "scripts")).map((f) => join(root, "plugin", "scripts", f)),
+    ].filter((f) => /\.(ts|mjs)$/.test(f));
+    for (const f of files) {
+      const body = readFileSync(f, "utf-8");
+      expect(body, `${f} must not compose a benchmark arm`).not.toContain("--arm");
+    }
+  });
+
+  it("drops the retired-D13 behavioral notch entirely — no research row, no ⋯ state", () => {
+    for (const manifest of [null, nativeManifest, productFloorManifest]) {
+      const text = render({ manifest });
+      expect(text).not.toContain("restraint");
+      expect(text).not.toContain("⋯");
+      expect(text).not.toContain("coming — research");
+    }
+    expect(NOTCHES.map((n: { id: string }) => n.id)).not.toContain("restraint");
+  });
+});
+
+describe("no retired decision id survives on this surface (D9 / V5-6)", () => {
+  it("cites no id on RATIFICATION.md's never-reused list", () => {
+    const RETIRED = ["D7", "D10", "D11", "D13"];
+    const files = [
+      "plugin/scripts/render-slider.mjs",
+      "plugin/commands/skill-heaven.md",
+      "plugin/data/p2-gate.json",
+      "src/cli.ts",
+      "README.md",
+    ];
+    for (const rel of files) {
+      const body = readFileSync(join(PKG, rel), "utf-8");
+      for (const id of RETIRED) {
+        // A retired id may only appear as an explicit retirement note.
+        for (const line of body.split("\n").filter((l) => new RegExp(`\\b${id}\\b`).test(l))) {
+          expect(line, `${rel}: ${id} is retired — re-bind it`).toMatch(/RETIRED|retired/);
+        }
+      }
+    }
   });
 });
 
