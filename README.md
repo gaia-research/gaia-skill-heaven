@@ -45,11 +45,14 @@ guessed — is the research that keeps the slider honest.
 
 ```
 skill-heaven
-  --posture floor|curated|native        # default floor (P1 vocabulary)
+  --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
+                                        # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
+                                        # product-floor = the DOORFUL product floor (claude only)
   [--level off|low]                     # aliases: off→floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
   [--harness claude|pi|codex|cursor|grok]   # default claude
   [--skill <path>]...                   # SKILL.md or its dir; required for curated, rejected otherwise
+  [--door-plugin-dir <dir>]             # product-floor only; mounts the caller's door plugin
   [--mechanism plugin-dir|config-dir]   # claude curated route; default plugin-dir (T9 composition)
   [--print]                             # compile-only JSON {command, argv, env, fsPlan, notes, doseSummary}
   [-p <text>]                           # headless; omit → interactive (inherited stdio)
@@ -67,7 +70,34 @@ N5 closes** — mechanics are fixed, spelling may change.
 |---|---|---|---|
 | floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
 | curated | `--setting-sources project --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
+| product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) |
 | native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
+
+### The floor split (founder ruling V5-5, 2026-07-28)
+
+There are **two floors** and they are different objects — measured and named
+separately, priced as **separate arms (B1), never averaged into one number**.
+
+- **`floor` — the doorless BENCHMARK floor.** Byte-frozen at T9b and the
+  **placebo-of-record (B2)**. F6: `--disable-slash-commands` suppresses plugin
+  *commands* as well as plugin skills, so `/skill-heaven` does not exist here —
+  "the clean room as currently composed has no door". That is the ruling, not a
+  defect. `--arm placebo` is accepted **only** for this posture.
+- **`product-floor` — the doorful PRODUCT floor.** T9b minus that one flag, so
+  the minimum control surface survives. F7 prices the door at **+515 tok**
+  (20,176 vs the benchmark floor's 19,661), still **−28.9%** off native's
+  28,379 (claude 2.1.216, probed 2026-07-24). It retains a control surface, so
+  it can never stand in as the placebo; it records as `--arm heaven`.
+
+The evidence numbers are recorded once in `FLOOR_EVIDENCE` (`packages/core/src/compile.ts`)
+and are never re-derived. Every floor record is tagged `floor=benchmark` or
+`floor=product` in `notes`, so the two arms cannot be pooled at analysis time.
+`product-floor` has a verified cell on **claude only**; on any other harness it
+hard-errors rather than guessing one into existence (M0 discipline).
+
+`--door-plugin-dir` is caller-supplied on purpose: core does not assume which
+package the door ships in. Omit it and `product-floor` still compiles — the
+route permits a door, mounting one is the door package's business.
 
 **Why curated does not ride on the floor flags (T6, resolved 2026-07-19):**
 on Claude Code 2.1.215, `--disable-slash-commands` suppresses `--plugin-dir`
@@ -112,13 +142,19 @@ emits an event array; the final `type:"result"` event carries `result` +
 `usage`), and emits an `hh-ledger/v1` record on stdout (and `--record-out`).
 
 - `tokens.system` = `null` always (M2a unratified).
-- floor → `skillStanding`/`skillInvocation` = `0` **by construction**.
+- either floor → `skillStanding`/`skillInvocation` = `0` **by construction**
+  (both load zero skills; the door is a standing cost inside `perTurn`, not a
+  skill cost).
 - curated → `skillStanding` = chars4 sum; `skillInvocation` = `null` + note
   (stream-json invocation instrumentation is a follow-up).
 - `perTurn` = `input_tokens + cache_creation_input_tokens +
   cache_read_input_tokens + output_tokens` from the result event's `usage`;
   `null` if usage is unparsable (unmeasured, never 0).
-- `--arm placebo` is only accepted for floor (own-placebo anchoring, B2).
+- `--arm placebo` is only accepted for the **doorless benchmark** floor
+  (own-placebo anchoring, B2). `product-floor` is refused.
+- Floor records carry a leading `floor=benchmark` / `floor=product` tag in
+  `notes`. `hh-ledger/v1` has no posture field and this repo does not own that
+  contract, so the tag rides `notes` until the schema carries it upstream.
 - No `seed` field can ever be emitted (the vendored validator rejects it).
 
 Appending to the ledger of record happens in `gaia-research`:

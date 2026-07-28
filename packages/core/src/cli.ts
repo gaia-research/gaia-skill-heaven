@@ -2,7 +2,7 @@
 // pending N4/N5). See README for the full surface.
 
 import { writeFileSync } from "node:fs";
-import { compile, HARNESSES, HELL_LEVELS, LEVEL_ALIASES, MECHANISMS, POSTURES, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
+import { compile, HARNESSES, HELL_LEVELS, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
@@ -13,6 +13,7 @@ interface CliArgs {
   harness: Harness;
   mechanism?: Mechanism;
   skillPaths: string[];
+  doorPluginDir?: string;
   print: boolean;
   prompt?: string;
   model?: string;
@@ -28,6 +29,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let harness: Harness = "claude";
   let mechanism: Mechanism | undefined;
   const skillPaths: string[] = [];
+  let doorPluginDir: string | undefined;
   let print = false;
   let prompt: string | undefined;
   let model: string | undefined;
@@ -53,10 +55,16 @@ export function parseArgs(argv: string[]): CliArgs {
     const a = argv[i];
     if (a === "--") { passthrough.push(...argv.slice(i + 1)); break; }
     else if (a === "--posture") {
-      const v = need(a, ++i);
-      if (!POSTURES.includes(v as Posture)) throw new Error(`--posture must be one of ${POSTURES.join("|")}`);
+      const raw = need(a, ++i);
+      // "benchmark-floor" is the unambiguous spelling of the doorless floor;
+      // "floor" remains its canonical value (V5-5 floor split).
+      const v = POSTURE_ALIASES[raw] ?? raw;
+      if (!POSTURES.includes(v as Posture)) {
+        throw new Error(`--posture must be one of ${POSTURES.join("|")} (alias: benchmark-floor = floor)`);
+      }
       posture = v as Posture;
-    } else if (a === "--level") level = need(a, ++i);
+    } else if (a === "--door-plugin-dir") doorPluginDir = need(a, ++i);
+    else if (a === "--level") level = need(a, ++i);
     else if (a === "--harness") {
       const v = need(a, ++i);
       if (!HARNESSES.includes(v as Harness)) throw new Error(`--harness must be one of ${HARNESSES.join("|")}`);
@@ -106,10 +114,19 @@ export function parseArgs(argv: string[]): CliArgs {
     if (prompt === undefined) throw new Error("--record is headless-only: -p <text> is required");
     if (!benchmarkId || !task) throw new Error("--record requires --benchmark-id and --task");
     if (!Number.isInteger(repeat) || repeat < 0) throw new Error("--repeat must be a non-negative integer");
+    // B2/V5-5: the placebo-of-record is the DOORLESS floor and only the doorless
+    // floor. The product floor keeps a control surface, so it can never stand in
+    // as the placebo — and the two floors are never averaged into one arm (B1).
+    if (arm === "placebo" && posture !== "floor") {
+      throw new Error(
+        `--arm placebo is only valid with --posture floor, the doorless benchmark floor (got ${posture}). ` +
+          "The product floor is a separate arm (B1) and is recorded as --arm heaven.",
+      );
+    }
     recordOpts = { benchmarkId, task, arm, repeatIndex: repeat, endpointRegex, recordOut, note };
   }
 
-  return { posture, harness, mechanism, skillPaths, print, prompt, model, effort, keepTemp, passthrough, record: recordOpts };
+  return { posture, harness, mechanism, skillPaths, doorPluginDir, print, prompt, model, effort, keepTemp, passthrough, record: recordOpts };
 }
 
 export function main(argv: string[]): number {
@@ -126,8 +143,18 @@ export function main(argv: string[]): number {
     prompt: args.prompt,
     jsonOutput: !!args.record,
     passthrough: args.passthrough,
+    doorPluginDir: args.doorPluginDir,
   };
   const compiled = compile(input);
+
+  // The two floors are named separately on every surface that reports them
+  // (V5-5/B1) — a reader must never have to guess which floor a run was.
+  const kind = floorOf(args.posture);
+  if (kind === "benchmark") {
+    console.error("[skill-heaven] benchmark floor (doorless) — the placebo-of-record. Not the product floor; never average the two.");
+  } else if (kind === "product") {
+    console.error("[skill-heaven] product floor (doorful) — retains the minimum control surface. Its own arm, priced separately from the benchmark floor.");
+  }
 
   if (args.posture === "curated") {
     const d = compiled.doseSummary;

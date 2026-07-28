@@ -6,8 +6,61 @@
 
 import type { ResolvedSkill } from "./skills.js";
 
-export const POSTURES = ["floor", "curated", "native"] as const;
+// THE FLOOR SPLIT (founder ruling V5-5, 2026-07-28).
+//
+// There are TWO floors and they are different objects. F6 proved they cannot be
+// the same one: `--disable-slash-commands` at the ratified T9b floor suppresses
+// plugin COMMANDS as well as plugin skills, so `/skill-heaven` does not exist
+// there — "the clean room as currently composed has no door".
+//
+//   "floor"          the BENCHMARK floor. Completely doorless. It is the
+//                    placebo-of-record (B2) and its route is byte-frozen at
+//                    T9b — nothing in this split touches it.
+//   "product-floor"  the DOORFUL floor. T9b minus `--disable-slash-commands`,
+//                    so the minimum control surface survives. F7 prices the
+//                    door at +515 tok (20,176 vs 19,661), still -28.9% off
+//                    native's 28,379.
+//
+// They are measured and named separately and priced as SEPARATE ARMS (B1).
+// Never average them into one number, and never let one stand in for the other:
+// the placebo-of-record is the doorless floor and only the doorless floor.
+export const POSTURES = ["floor", "product-floor", "curated", "native"] as const;
 export type Posture = (typeof POSTURES)[number];
+
+/** Which floor a posture is, or null when it is not a floor at all. */
+export type FloorKind = "benchmark" | "product";
+
+export function floorOf(posture: Posture): FloorKind | null {
+  if (posture === "floor") return "benchmark";
+  if (posture === "product-floor") return "product";
+  return null;
+}
+
+// Unambiguous spellings, so no surface has to rely on a bare "floor" meaning
+// one of the two. `floor` is retained as the benchmark floor's canonical value
+// (it is what the ratified T9b route and every existing placebo record call it).
+export const POSTURE_ALIASES: Record<string, Posture> = {
+  "benchmark-floor": "floor",
+};
+
+// F6/F7, PR #4, Claude Code 2.1.216, probed 2026-07-24. Recorded here so no
+// surface re-derives or re-guesses these numbers; a test asserts the arithmetic
+// and that no averaged floor number is exported.
+export const FLOOR_EVIDENCE = {
+  finding: "F6/F7",
+  harness: { name: "claude", version: "2.1.216" },
+  probedAt: "2026-07-24",
+  /** native standing dose, same harness */
+  nativeTokens: 28379,
+  /** the doorless benchmark floor (T9b) — placebo-of-record */
+  benchmarkFloorTokens: 19661,
+  /** the doorful product floor (T9b minus --disable-slash-commands) */
+  productFloorTokens: 20176,
+  /** what the door costs, priced on its own and never folded into either floor */
+  doorTokens: 515,
+  /** product floor vs native, one decimal, as reported in F7 */
+  productFloorVsNativePct: -28.9,
+} as const;
 
 export const HARNESSES = ["claude", "pi", "codex", "cursor", "grok"] as const;
 export type Harness = (typeof HARNESSES)[number];
@@ -47,6 +100,12 @@ export interface CompileInput {
   jsonOutput?: boolean; // force --output-format json (record mode)
   passthrough?: string[];
   homeDir?: string; // for config-dir credential copy; "$HOME" placeholder default
+  // product-floor only: the caller's own door plugin dir, mounted with
+  // --plugin-dir. Caller-supplied on purpose — core does not know, and must not
+  // assume, which package the door ships in (the package topology is
+  // deliberately open; V5-4). Omit it and product-floor still compiles: the
+  // route permits a door, mounting one is the door package's business.
+  doorPluginDir?: string;
 }
 
 export interface CompileResult {
@@ -82,6 +141,21 @@ export function compile(input: CompileInput): CompileResult {
   }
   if (posture !== "curated" && skills.length > 0) {
     throw new Error(`--skill is only valid with --posture curated (got posture ${posture})`);
+  }
+  if (input.doorPluginDir && posture !== "product-floor") {
+    throw new Error(
+      `doorPluginDir is only valid with --posture product-floor (got posture ${posture}) — ` +
+        "the benchmark floor is doorless by ruling (V5-5/B2) and curated mounts its own set",
+    );
+  }
+  // M0 discipline: the doorful floor exists as a measured cell on claude only
+  // (F7, 2.1.216). No other harness has a probed doorless/doorful distinction,
+  // so refuse rather than guess one into existence (D8).
+  if (posture === "product-floor" && harness !== "claude") {
+    throw new Error(
+      `--posture product-floor has no verified cell for harness ${harness} — only claude was probed (F7, 2.1.216). ` +
+        "Refusing to guess (M0 discipline); use --posture floor, or add the row to the harness capability matrix first.",
+    );
   }
 
   const base: Omit<CompileResult, "command" | "argv" | "execSupport"> = {
@@ -147,8 +221,31 @@ function compileClaude(
     argv = [...floorArgv, "--setting-sources", "project"];
     env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
     notes.push(
-      "floor (T9b route): skills+server floor with zero listing residual. CLAUDE_CODE_DISABLE_BUNDLED_SKILLS is an undocumented env knob (string-probed from the 2.1.215 binary, verified live) — version-pinned, re-verify on CLI upgrades. --setting-sources project also evicts user CLAUDE.md (prompt-content side effect; full prompt eviction remains M2b).",
+      "floor (T9b route) = the BENCHMARK floor: completely doorless, the placebo-of-record (B2, V5-5). skills+server floor with zero listing residual. F6: --disable-slash-commands suppresses plugin COMMANDS too, so /skill-heaven does not exist here — that is intended, not a defect. CLAUDE_CODE_DISABLE_BUNDLED_SKILLS is an undocumented env knob (string-probed from the 2.1.215 binary, verified live) — version-pinned, re-verify on CLI upgrades. --setting-sources project also evicts user CLAUDE.md (prompt-content side effect; full prompt eviction remains M2b).",
     );
+  } else if (input.posture === "product-floor") {
+    // F7 (2.1.216): T9b MINUS --disable-slash-commands. Dropping that one flag
+    // is what keeps the door: the plugin command resolves and /skill-heaven
+    // exists. Priced at +515 tok (20,176 vs T9b's 19,661), still -28.9% off
+    // native's 28,379. This is a SEPARATE ARM from the benchmark floor (B1) —
+    // the two are never averaged, and this one is never the placebo.
+    argv = [
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
+    ];
+    env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
+    if (input.doorPluginDir) argv.push("--plugin-dir", input.doorPluginDir);
+    notes.push(
+      `product-floor (F7 route) = the DOORFUL floor: T9b minus --disable-slash-commands, retaining the minimum control surface. Door priced at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
+    );
+    if (!input.doorPluginDir) {
+      notes.push(
+        "no doorPluginDir supplied: the route permits a door but none is mounted. Mounting one is the door package's call (core does not assume a package topology).",
+      );
+    }
   } else {
     const mechanism = input.mechanism ?? DEFAULT_CLAUDE_MECHANISM;
     if (mechanism === "plugin-dir") {
