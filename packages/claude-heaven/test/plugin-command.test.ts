@@ -66,7 +66,7 @@ describe("/skill-heaven command definition", () => {
     expect(command).toMatch(/If the block is a `⛔` refusal, print the refusal and nothing else/);
   });
 
-  it("never claims the command can restart Claude Code (no magic respawn, D10)", () => {
+  it("never claims the command can restart Claude Code (D12 / B4)", () => {
     expect(command.replace(/\s+/g, " ")).toContain("Nothing can restart Claude Code from inside a session");
     expect(command).not.toMatch(/\b(relaunch|restart)(ing)? (it|the session|claude) for (you|them)\b/i);
   });

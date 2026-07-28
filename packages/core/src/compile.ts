@@ -383,7 +383,8 @@ function compileCursor(
   return { command: "cursor-agent", argv, env, fsPlan: base.fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
 }
 
-// grok — in scope per D7, starting from zero. v0.2.103 probe: no skills
+// grok — in harness scope per the capability matrix, which owns coverage,
+// starting from zero. v0.2.103 probe: no skills
 // surface (no --no-skills / skill flags in `grok --help`; config via
 // ~/.grok/config.toml; plugins exist). No verified suppression/readmission
 // mechanism — do not guess (M0 discipline): recipe is a stub that says so.
@@ -394,7 +395,7 @@ function compileGrok(
   if (input.posture !== "native") {
     throw new Error(
       "grok: no verified skills-suppression/re-admission mechanism (v0.2.103 --help probe found no skills surface). " +
-        "Refusing to guess (D7 / M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
+        "Refusing to guess (M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
         "Only --posture native compiles for grok today.",
     );
   }

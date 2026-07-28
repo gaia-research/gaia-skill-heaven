@@ -1,5 +1,6 @@
 // The statusline segment — the ambient posture + standing-dose readout that
-// creates the "pain moment" (D10). Pure render, unit-tested; all IO lives in
+// creates the "pain moment" (N8: the user reaches for this when it hurts).
+// Pure render, unit-tested; all IO lives in
 // statusline-cli.ts so this stays deterministic.
 //
 // TWO NUMBERS, TWO SCOPES (matrix gate (b), B1). `standing` is the skills-only

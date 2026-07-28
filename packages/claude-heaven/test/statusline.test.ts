@@ -28,7 +28,7 @@ describe("formatTokens", () => {
 });
 
 describe("renderStatusline", () => {
-  it("renders the D10 shape at native", () => {
+  it("renders the native-posture shape (P1)", () => {
     expect(renderStatusline(manifest())).toBe("⚡ native · 14.2k standing");
   });
   it("reflects the launched posture verbatim", () => {

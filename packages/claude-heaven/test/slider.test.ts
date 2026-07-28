@@ -168,18 +168,27 @@ describe("the floor split (V5-5): the slider targets the PRODUCT floor", () => {
   });
 });
 
-describe("no retired decision id survives on this surface (D9 / V5-6)", () => {
+describe("no retired decision id survives anywhere in the repo (D9 / V5-6)", () => {
   it("cites no id on RATIFICATION.md's never-reused list", () => {
+    // A PR citing a retired decision id is a defect (Federation Invariant 4).
+    // Ids are never reused, so a retired id resolves to nothing — the whole
+    // point of the never-reused rule. This walks the repo rather than a list,
+    // so a new file cannot reintroduce one unnoticed.
     const RETIRED = ["D7", "D10", "D11", "D13"];
-    const files = [
-      "plugin/scripts/render-slider.mjs",
-      "plugin/commands/skill-heaven.md",
-      "plugin/data/p2-gate.json",
-      "src/cli.ts",
-      "README.md",
-    ];
+    const REPO = join(PKG, "..", "..");
+    const SKIP = new Set(["node_modules", ".git", "dist", "coverage"]);
+    /** @returns every source/doc file in the repo */
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+        if (SKIP.has(e.name)) return [];
+        const full = join(dir, e.name);
+        if (e.isDirectory()) return walk(full);
+        return /\.(ts|mjs|md|json)$/.test(e.name) && e.name !== "package-lock.json" ? [full] : [];
+      });
+    const files = walk(REPO);
+    expect(files.length).toBeGreaterThan(20);
     for (const rel of files) {
-      const body = readFileSync(join(PKG, rel), "utf-8");
+      const body = readFileSync(rel, "utf-8");
       for (const id of RETIRED) {
         // A retired id may only appear as an explicit retirement note.
         for (const line of body.split("\n").filter((l) => new RegExp(`\\b${id}\\b`).test(l))) {

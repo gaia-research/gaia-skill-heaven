@@ -49,7 +49,7 @@ dependencies — keep it that way.**
   upgrade.**
 - **P2 — hell is gated.** Every surface hard-errors on `med|high|xhigh|max`;
   `/skill-hell` is a **locked door**, not an activator, until P2 opens — and it
-  is shown in *all* modes (D13).
+  is shown in *all* modes, which is P2's own "gated, and visibly so" reading.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or
   skills. The only writes live inside a disposable `mkdtemp` session dir.
