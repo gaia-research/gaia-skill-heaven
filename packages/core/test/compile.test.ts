@@ -109,11 +109,14 @@ describe("the floor split (V5-5)", () => {
   it("mounts a caller-supplied door plugin dir, and only on the product floor", () => {
     const r = compile({ posture: "product-floor", harness: "claude", skills: [], doorPluginDir: "/opt/door" });
     expect(r.argv.slice(-2)).toEqual(["--plugin-dir", "/opt/door"]);
-    for (const p of ["floor", "curated", "native"] as const) {
+    for (const p of ["floor", "native"] as const) {
       expect(() => compile({ posture: p, harness: "claude", skills: [], doorPluginDir: "/opt/door" })).toThrow(
-        /product-floor/,
+        /only valid with --posture product-floor/,
       );
     }
+    expect(() =>
+      compile({ posture: "curated", harness: "claude", skills: [fakeSkill], doorPluginDir: "/opt/door" }),
+    ).toThrow(/only valid with --posture product-floor/);
   });
 
   it("F6/F7 evidence is recorded, not re-derived — and no averaged floor number exists", () => {
@@ -275,10 +278,12 @@ describe("record assembly discipline", () => {
     });
     validateRecord(bench);
     validateRecord(product);
-    expect(bench.notes).toMatch(/floor=benchmark/);
-    expect(product.notes).toMatch(/floor=product/);
-    expect(bench.notes).not.toMatch(/floor=product/);
-    expect(product.notes).not.toMatch(/floor=benchmark \(/);
+    // the tag leads the note, so a record's own floor is unambiguous even
+    // though each note also names the arm it must never be pooled with
+    expect(bench.notes).toMatch(/^floor=benchmark \(doorless/);
+    expect(product.notes).toMatch(/^floor=product \(doorful/);
+    expect(bench.notes).toMatch(/never averaged \(B1\)/);
+    expect(product.notes).toMatch(/never averaged \(B1\)/);
     // both floors load zero skills — the door is not a skill cost
     expect(product.tokens).toEqual({ system: null, skillStanding: 0, skillInvocation: 0, perTurn: 119 });
     expect(product.arm).toBe("heaven");
