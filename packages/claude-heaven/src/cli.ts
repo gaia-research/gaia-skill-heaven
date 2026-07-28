@@ -10,6 +10,20 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertLevelAllowed, planNativeLaunch } from "./launcher.js";
 
+/**
+ * The postures this door can actually compose today — the ONE place the answer
+ * lives. Every surface that offers a `claude-heaven` relaunch must check against
+ * this set: offering a relaunch the CLI then refuses is claiming a transition
+ * the harness cannot perform (KC7), which is a broken affordance whichever way
+ * you look at it.
+ *
+ * Slice 1 is native-only. Widening this set is a product decision — it is not a
+ * copy edit, and no surface may pre-empt it by advertising the wider set.
+ * `plugin/scripts/render-slider.mjs` carries the matching `RELAUNCH_OFFERS`, and
+ * a test asserts the two cannot drift apart.
+ */
+export const LAUNCHABLE_POSTURES: readonly string[] = ["native"];
+
 interface CliArgs {
   print: boolean;
   posture: string;
@@ -54,7 +68,7 @@ export function run(argv: string[]): number {
   // doorful one (V5-5). The doorless benchmark `floor` is the placebo-of-record
   // (B2) and is core's to compose for a measurement run — a door that launched
   // it would be launching a session it cannot then talk to (F6).
-  if (args.posture !== "native") {
+  if (!LAUNCHABLE_POSTURES.includes(args.posture)) {
     process.stderr.write(
       `claude-heaven slice 1 launches native only (got --posture ${args.posture}). ` +
         `The product-floor/curated postures land in a later WS4 slice. ` +

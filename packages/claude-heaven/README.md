@@ -73,10 +73,20 @@ session itself.
   two floors are always priced as **separate arms (B1)** — never averaged. No
   path in this package records a benchmark arm at all; `--arm placebo` lives in
   core's CLI and is valid only at `--posture floor` (a test pins the absence).
-- **Locked-notch upsell (D12).** Under vanilla `claude` — and under any
-  `claude-heaven` session that did not launch there — the clean room renders
-  `⊘` with *"relaunch via `claude-heaven` to unlock the clean room"*. A session
-  that launched at the **product floor** sees it `●` unlocked instead.
+- **Locked-notch upsell (D12) — locked, with no command behind it.** Under
+  vanilla `claude`, and under any `claude-heaven` session that did not launch
+  there, the clean room renders `⊘` and says *why*: composed at boot, never
+  mid-session, and **no launcher builds it yet**. A session that launched at the
+  **product floor** sees it `●` unlocked instead.
+  - An earlier draft told the locked session to *"relaunch via `claude-heaven`"*
+    — but `src/cli.ts` refuses every `--posture` outside `LAUNCHABLE_POSTURES`
+    (native only, this slice) with a non-zero exit. Offering a door the tool then
+    slams is claiming a transition the harness cannot perform (**KC7**). Of the
+    two honest fixes — stop offering it, or widen what the CLI accepts — widening
+    is a product decision nobody has ruled on, so the offer is gone. The renderer
+    prints a relaunch **only** for a posture in its `RELAUNCH_OFFERS` map (empty
+    today), and a test runs the **real CLI validator** over every entry, so the
+    affordance and the validator cannot drift apart again.
 - **No magic respawn (D12 / B4).** Nothing in this surface claims a slash command
   can restart the process, because nothing can, and D12 rules the in-session
   control upward-only. The printed commands are for the user to run.

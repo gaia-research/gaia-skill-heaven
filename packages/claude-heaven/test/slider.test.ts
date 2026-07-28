@@ -10,10 +10,12 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { HELL_LEVELS, POSTURES } from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
+import { LAUNCHABLE_POSTURES, run } from "../src/cli.js";
 import { planNativeLaunch } from "../src/launcher.js";
 import { formatTokens as formatTokensTs } from "../src/statusline.js";
 import {
   NOTCHES,
+  RELAUNCH_OFFERS,
   formatTokens,
   isLaunchManifest,
   loadManifest,
@@ -38,6 +40,20 @@ const productFloorManifest = { ...nativeManifest, posture: "product-floor" } as 
 // manifest is a "cannot happen" input kept as a regression guard: the renderer
 // must not treat it as a launched clean room.
 const benchmarkFloorManifest = { ...nativeManifest, posture: "floor" } as const;
+
+/** Runs the real CLI without letting its diagnostics pollute the test log. */
+function silenceStderr(fn: () => number): number {
+  const outw = process.stdout.write.bind(process.stdout);
+  const errw = process.stderr.write.bind(process.stderr);
+  (process.stdout.write as unknown as (s: string) => boolean) = () => true;
+  (process.stderr.write as unknown as (s: string) => boolean) = () => true;
+  try {
+    return fn();
+  } finally {
+    process.stdout.write = outw;
+    process.stderr.write = errw;
+  }
+}
 
 const render = (opts: Record<string, unknown> = {}) =>
   renderSlider({ sessionId: "sess-123", ...opts }).text as string;
@@ -82,23 +98,59 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
 });
 
 describe("locked-notch upsell (D12)", () => {
-  it("locks the clean room under vanilla claude, with the ratified copy", () => {
+  it("locks the clean room under vanilla claude, and says why", () => {
     const text = render({ manifest: null });
     expect(text).toMatch(/⊘ {2}clean room/);
-    expect(text).toContain("relaunch via `claude-heaven` to unlock the clean room");
+    expect(text).toContain("Composed at boot, never mid-session");
   });
 
   it("locks the clean room under a claude-heaven launch that did not launch there", () => {
     const text = render({ manifest: nativeManifest });
     expect(text).toMatch(/⊘ {2}clean room/);
-    expect(text).toContain("relaunch via `claude-heaven` to unlock the clean room");
+    expect(text).toContain("Composed at boot, never mid-session");
   });
 
   it("unlocks the clean room for a session that launched at the product floor", () => {
     const text = render({ manifest: productFloorManifest });
     expect(text).toMatch(/● {2}clean room/);
-    expect(text).not.toContain("relaunch via `claude-heaven` to unlock the clean room");
+    expect(text).not.toContain("Composed at boot, never mid-session");
     expect(text).toContain("you launched here");
+  });
+
+  it("offers no relaunch the launcher would refuse (KC7) — checked against the real validator", () => {
+    // The affordance bug this pins: the slider used to tell a locked clean-room
+    // session to "relaunch via `claude-heaven`", while src/cli.ts refuses every
+    // --posture outside LAUNCHABLE_POSTURES with exit 2. Offering a door the
+    // tool slams is claiming a transition the harness cannot perform.
+    //
+    // Both directions are held, so the copy and the validator cannot drift:
+    //   (1) every relaunch this surface may print must be a posture the CLI takes;
+    //   (2) the clean room is NOT such a posture today, so nothing is printed for it.
+    for (const [notchId, build] of Object.entries(RELAUNCH_OFFERS)) {
+      expect(LAUNCHABLE_POSTURES, `${notchId} is offered but the launcher refuses it`).toContain(
+        notchId,
+      );
+      // run the REAL validator, not a mirror of it
+      expect(silenceStderr(() => run(["--print", "--posture", notchId]))).toBe(0);
+      expect(typeof build).toBe("function");
+    }
+
+    expect(LAUNCHABLE_POSTURES).not.toContain("product-floor");
+    expect(silenceStderr(() => run(["--print", "--posture", "product-floor"]))).toBe(2);
+
+    // …and no rendered mode may print a claude-heaven --posture the CLI refuses.
+    const targets = ["", ...NOTCHES.map((n: { id: string }) => n.id), "floor", "turbo"];
+    for (const manifest of [null, nativeManifest, productFloorManifest, benchmarkFloorManifest]) {
+      for (const target of targets) {
+        const text = render({ manifest, target });
+        expect(text).not.toContain("relaunch via `claude-heaven`");
+        for (const m of text.matchAll(/claude-heaven\b[^\n]*?--posture\s+([a-z-]+)/g)) {
+          expect(LAUNCHABLE_POSTURES, `offered --posture ${m[1]} is refused by the CLI`).toContain(
+            m[1],
+          );
+        }
+      }
+    }
   });
 
   it("never claims a slash command can restart the process (D12 / B4)", () => {

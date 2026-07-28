@@ -132,10 +132,33 @@ export const NOTCHES = [
     id: "product-floor",
     label: "clean room",
     blurb: "Evicts your personal skills, MCP servers and bundled skills — keeps this door.",
-    lockedNote: "Launcher-locked — relaunch via `claude-heaven` to unlock the clean room.",
+    lockedNote: "Composed at boot, never mid-session (D12) — and no launcher builds it yet.",
     kind: "physical",
   },
 ];
+
+/**
+ * Postures this surface may print a `claude-heaven` relaunch command for,
+ * keyed by notch id.
+ *
+ * EMPTY ON PURPOSE, and it is not an oversight. `src/cli.ts` refuses every
+ * `--posture` outside `LAUNCHABLE_POSTURES` (native only, in this slice) with a
+ * non-zero exit. A slider that said "relaunch via `claude-heaven` to unlock the
+ * clean room" was offering a door the tool then slams: the user runs it, gets
+ * `exit 2`, and the surface has claimed a transition the harness cannot perform
+ * (KC7). Two honest resolutions existed — stop offering it, or widen what the
+ * CLI accepts — and widening is a product decision nobody has ruled on, so this
+ * offers nothing.
+ *
+ * The clean room stays a visibly locked notch that says WHY it is locked; it
+ * simply no longer points at a command that fails. A test walks every rendered
+ * mode and asserts that every `claude-heaven --posture <p>` this file could
+ * print is accepted by the real CLI validator, so the affordance and the
+ * validator cannot drift apart again.
+ *
+ * @type {Record<string, (sid: string) => string>}
+ */
+export const RELAUNCH_OFFERS = {};
 
 // Single-column glyphs only — a double-width emoji would break the label gutter
 // in a terminal, and this text is rendered verbatim.
@@ -230,10 +253,17 @@ export function renderSlider(opts = {}) {
     : "← you are here (vanilla claude)";
 
   const lines = ["⚡ Skill Heaven — posture slider", `   ${sessionLine(manifest)}`, "", "   ▲ more context"];
+  // Whether this render actually prints a `→` command. The footer's
+  // run-it-yourself paragraph is about those commands, so it is printed only
+  // when they exist — copy that explains an absent affordance is noise at best
+  // and an implied offer at worst.
+  let hasMoves = false;
   for (const notch of NOTCHES) {
-    lines.push(...notchLines(notch, notchState(notch, launched), sid, target, launchedNote));
+    const rows = notchLines(notch, notchState(notch, launched), sid, target, launchedNote);
+    if (rows.some((r) => /^\s+→ /.test(r))) hasMoves = true;
+    lines.push(...rows);
   }
-  lines.push("   ▼ less context", "", ...footer(launched, sid));
+  lines.push("   ▼ less context", "", ...footer(launched, sid, hasMoves));
 
   if (target !== "" && !NOTCHES.some((n) => n.id === target)) {
     // `floor` is a real posture that is deliberately not a notch. Say why rather
@@ -314,29 +344,54 @@ function notchLines(notch, state, sid, target, launchedNote) {
   const pointer = notch.id === target ? "  ← you asked for this one" : "";
   const out = [`   ${STATE_MARK[state]}  ${notch.label.padEnd(LABEL_WIDTH)}${notch.blurb}${pointer}`];
   if (state === "launched") out.push(`${ROW_INDENT}${launchedNote}`);
-  if (state === "locked") out.push(`${ROW_INDENT}${notch.lockedNote}`);
+  if (state === "locked") {
+    out.push(`${ROW_INDENT}${notch.lockedNote}`);
+    // A relaunch is printed ONLY for a posture the launcher actually composes
+    // (see RELAUNCH_OFFERS). Empty today, so a locked notch prints a reason and
+    // no command — never a command the CLI would refuse.
+    const offer = RELAUNCH_OFFERS[notch.id];
+    if (offer) out.push(`${ROW_INDENT}→ ${offer(sid || "<session-id>")}`);
+  }
   if (state === "reachable" && notch.resume) out.push(`${ROW_INDENT}→ ${notch.resume(sid || "<session-id>")}`);
   return out;
 }
 
-/** @param {string} launched @param {string} sid */
-function footer(launched, sid) {
+/** @param {string} launched @param {string} sid @param {boolean} hasMoves */
+function footer(launched, sid, hasMoves) {
   const out = [
     "   The slider moves this session UP from the posture it launched at. It cannot",
-    "   take anything out of a session that is already running. The clean room — the",
-    "   only posture that evicts your personal skills, MCP servers and bundled",
-    "   skills — is composed at boot by the `claude-heaven` launcher and cannot be",
-    "   reached mid-session.",
+    "   take anything out of a session that is already running.",
+  ];
+  // Only explain the locked clean room to a session that is not already in it.
+  if (launched !== "product-floor") {
+    out.push(
+      "   The clean room — the only posture that evicts your personal skills, MCP",
+      "   servers and bundled skills — is composed at boot, never mid-session, and no",
+      "   launcher builds it yet. So it is shown, locked, with no command behind it:",
+      "   this surface will not hand you a relaunch that the tool then refuses.",
+    );
+  }
+  out.push(
     "",
     "   There is a floor below the clean room, and it is not on this slider: the",
     "   benchmark floor runs with slash commands off, so this command does not exist",
     "   there. It is the measurement placebo, not a place to sit — and the two floors",
     "   are always priced as separate arms, never averaged.",
     "",
-    "   Running a → command starts a RESUMED session that carries this conversation",
-    "   forward. This command cannot restart Claude Code for you — run it yourself.",
-  ];
-  if (!sid) {
+  );
+  out.push(
+    ...(hasMoves
+      ? [
+          "   Running a → command starts a RESUMED session that carries this conversation",
+          "   forward. This command cannot restart Claude Code for you — run it yourself.",
+        ]
+      : [
+          "   No move is on offer from here, and this command",
+          "   cannot restart Claude Code for you in any case: it will not print a command",
+          "   that the tool would then refuse.",
+        ]),
+  );
+  if (hasMoves && !sid) {
     out.push(
       "",
       "   (no session id in the environment — substitute your own, or run",
