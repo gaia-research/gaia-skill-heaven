@@ -12,7 +12,7 @@ import { HELL_LEVELS, POSTURES } from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
 import { LAUNCHABLE_POSTURES, run } from "../src/cli.js";
 import { planNativeLaunch } from "../src/launcher.js";
-import { formatTokens as formatTokensTs } from "../src/statusline.js";
+import { formatTokens as formatTokensTs, renderStatusline } from "../src/statusline.js";
 import {
   POSTURE_ROWS,
   RELAUNCH_OFFERS,
@@ -471,8 +471,28 @@ describe("reachable rows print an exact, runnable command", () => {
 describe("standing-dose readout", () => {
   it("reports the launch manifest's dose with scope disclosed, two numbers never one (B1)", () => {
     const text = render({ manifest: nativeManifest });
-    expect(text).toContain("4.8k standing (user+project scope)");
+    expect(text).toContain("4.8k standing (user+project scope");
     expect(text).toContain("charged separately, on invoke");
+  });
+
+  // KC2 (Issue #9): a scope NAME ("user+project scope") does not tell a
+  // reader what is missing — the exclusion itself must be spelled out so
+  // nobody has to already know census.ts to understand the number is partial.
+  it("discloses bundled and plugin-provided skills as excluded, not just the scope name (KC2)", () => {
+    const text = render({ manifest: nativeManifest });
+    expect(text).toContain(
+      "4.8k standing (user+project scope — bundled CLI skills and plugin-provided skills are not counted)",
+    );
+  });
+
+  // A "session" scope (curated/product-floor) enumerates the launched skill
+  // set exactly — nothing is excluded there, so the caveat must NOT appear;
+  // printing it would be a false claim, the opposite defect this KC exists to
+  // prevent.
+  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope: "session" } });
+    expect(text).toContain("4.8k standing (session scope)");
+    expect(text).not.toMatch(/not counted/);
   });
 
   it("marks an incomplete census with a trailing + rather than presenting it as exact (B4)", () => {
@@ -489,6 +509,34 @@ describe("standing-dose readout", () => {
     for (const n of [0, 57, 999, 1000, 4823, 14200, -1, Number.NaN]) {
       expect(formatTokens(n)).toBe(formatTokensTs(n));
     }
+  });
+
+  // KC2 (Issue #9): two renderers, two mediums, one honest fact. The statusline
+  // strip gets the compact form and this surface gets the fuller sentence, but
+  // BOTH must name the same two exclusions whenever scope is "user+project" —
+  // and NEITHER may claim an exclusion when scope is "session" (fully
+  // enumerated). A future edit that adds the caveat to one renderer and
+  // forgets the other fails here, not in a founder review.
+  it("agrees with the statusline renderer on WHEN the exclusion is disclosed (KC2 parity)", () => {
+    const partialProfile = { schema: "claude-heaven/profile@1", posture: "native", standingTokens: 4823, skillCount: 12, scope: "user+project", launcherLocked: true } as const;
+    const fullProfile = { ...partialProfile, scope: "session" } as const;
+
+    // Isolate the `session:` line — the render also has an unrelated "clean
+    // room ... bundled skills" row blurb (what product-floor evicts), which
+    // would false-positive a whole-text match either way.
+    const sessionLineOf = (text: string) => text.split("\n").find((l) => l.trim().startsWith("session:")) ?? "";
+
+    const statuslinePartial = renderStatusline(partialProfile);
+    const postureLinePartial = sessionLineOf(render({ manifest: partialProfile }));
+    expect(statuslinePartial).toMatch(/bundled/i);
+    expect(statuslinePartial).toMatch(/plugin/i);
+    expect(postureLinePartial).toMatch(/bundled/i);
+    expect(postureLinePartial).toMatch(/plugin/i);
+
+    const statuslineFull = renderStatusline(fullProfile);
+    const postureLineFull = sessionLineOf(render({ manifest: fullProfile }));
+    expect(statuslineFull).not.toMatch(/bundled|plugin/i);
+    expect(postureLineFull).not.toMatch(/bundled|plugin/i);
   });
 });
 

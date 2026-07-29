@@ -49,9 +49,23 @@ export function formatTokens(n: number): string {
   return `${(n / 1000).toFixed(1)}k`;
 }
 
+/** Compact exclusion disclosure (KC2) — appended ONLY when the census could not
+ * see the whole picture. `scope: "user+project"` (native launches) is a
+ * partial census: bundled CLI skills and plugin-provided skills are not
+ * counted (see census.ts header). `scope: "session"` (curated/product-floor)
+ * enumerates the launched set exactly — nothing is excluded there, so
+ * appending a caveat would itself be dishonest. The narrow statusline strip
+ * gets the compact form; `/skill-heaven`'s session line carries the fuller
+ * sentence (render-posture.mjs `sessionLine`). */
+function scopeCaveat(scope: string): string {
+  return scope === "user+project" ? " (excl. bundled/plugin)" : "";
+}
+
 export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
   const floor = manifest.incomplete ? "+" : "";
-  const parts = [`⚡ ${manifest.posture} · ${formatTokens(manifest.standingTokens)}${floor} standing`];
+  const parts = [
+    `⚡ ${manifest.posture} · ${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`,
+  ];
   const pct = input?.context_window?.used_percentage;
   if (typeof pct === "number" && Number.isFinite(pct)) {
     parts.push(`${Math.round(pct)}% ctx`);

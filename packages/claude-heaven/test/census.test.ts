@@ -81,4 +81,19 @@ describe("censusStandingDose", () => {
     expect(c.roots[1].skillCount).toBe(0); // second root's alpha was a dup
     rmSync(second, { recursive: true, force: true });
   });
+
+  // KC2 (Issue #9): the literal "user+project" is the join point two
+  // independent downstream renderers key off (src/statusline.ts's
+  // `scopeCaveat`, plugin/scripts/render-posture.mjs's `scopeNote`) to decide
+  // whether to disclose bundled/plugin skills as excluded. Neither renderer
+  // re-derives this from census.ts's roots — they branch on the string value
+  // alone — so a silent rename here would silently drop the KC2 disclosure on
+  // BOTH surfaces with no test in either renderer file catching it (their
+  // tests hand-construct manifests, they don't call censusStandingDose). This
+  // pins the literal so a rename fails loudly, here, first.
+  it("emits the exact scope literal the KC2 disclosure logic keys off, even for zero roots", () => {
+    const c = censusStandingDose([]);
+    expect(c.scope).toBe("user+project");
+    expect(c.standingTotal).toBe(0);
+  });
 });

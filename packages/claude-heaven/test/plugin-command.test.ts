@@ -7,10 +7,12 @@
 // not price a skill as one number, and may not advertise a surface that does not
 // exist yet.
 
-import { existsSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { makeListingLine, tokenize } from "skill-heaven";
 import { buildP2Gate, p2GatePath, serializeP2Gate } from "../scripts/generate-p2-gate.js";
 
@@ -115,5 +117,57 @@ describe("door manifests", () => {
     for (const description of [pluginJson.description, entry.description]) {
       expect(description).toMatch(/step 3/);
     }
+  });
+});
+
+// KC2 (Issue #9, Program 1 Arc I). This is the FULL invocation path: the real
+// `/skill-heaven` command shells out to `node render-posture.mjs`, so a unit
+// test that only imports the .mjs's exported functions (see posture.test.ts)
+// never proves the disclosure survives an actual process invocation. Spawning
+// the real script through the real env-var contract (CLAUDE_HEAVEN_PROFILE) is
+// what the command markdown above actually runs.
+describe("standing-dose disclosure survives the real process invocation (KC2)", () => {
+  const rendererPath = join(PLUGIN, "scripts", "render-posture.mjs");
+  let dir: string;
+
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), "ch-plugin-kc2-"));
+  });
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+  function runRenderer(manifest: Record<string, unknown>): string {
+    const manifestPath = join(dir, `${Math.random().toString(36).slice(2)}.json`);
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+    const r = spawnSync(process.execPath, [rendererPath], {
+      env: { ...process.env, CLAUDE_HEAVEN_PROFILE: manifestPath },
+      encoding: "utf-8",
+      timeout: 20000,
+    });
+    expect(r.status).toBe(0);
+    return r.stdout;
+  }
+
+  it("discloses bundled/plugin exclusion for a user+project (native) launch", () => {
+    const text = runRenderer({
+      schema: "claude-heaven/profile@1",
+      posture: "native",
+      standingTokens: 4823,
+      skillCount: 12,
+      scope: "user+project",
+      launcherLocked: true,
+    });
+    expect(text).toContain("bundled CLI skills and plugin-provided skills are not counted");
+  });
+
+  it("does not fabricate an exclusion for a fully-enumerated session scope", () => {
+    const text = runRenderer({
+      schema: "claude-heaven/profile@1",
+      posture: "product-floor",
+      standingTokens: 0,
+      skillCount: 0,
+      scope: "session",
+      launcherLocked: true,
+    });
+    expect(text).not.toMatch(/not counted/);
   });
 });

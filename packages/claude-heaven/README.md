@@ -43,24 +43,35 @@ claude-heaven --posture product-floor
   session-scoped `--settings` file + a profile manifest to a **temp dir** and
   execs `claude`; `~/.claude` is never mutated (P3). Levels `med…max` (the Hell
   lane) **hard-error** (P2).
-- **Standing-dose statusline** — renders `⚡ native · 4.8k standing` (`+ NN% ctx`
-  when Claude passes live context-window usage). The standing number is
-  **census-derived** over the launched profile (gate (b)): the **per-skill** dose
-  reuses core `resolveSkill` → `makeListingLine` → `tokenize(chars4)`, the exact
-  formula the bench uses (vendored + fixture-tested in `packages/core`), so each
-  skill's number is byte-identical to `scripts/hell-heaven-bench/census.ts`. The
+- **Standing-dose statusline** — renders
+  `⚡ native · 4.8k standing (excl. bundled/plugin)` (`+ NN% ctx` when Claude
+  passes live context-window usage). The standing number is **census-derived**
+  over the launched profile (gate (b)): the **per-skill** dose reuses core
+  `resolveSkill` → `makeListingLine` → `tokenize(chars4)`, the exact formula the
+  bench uses (vendored + fixture-tested in `packages/core`), so each skill's
+  number is byte-identical to `scripts/hell-heaven-bench/census.ts`. The
   **aggregate** here dedupes by skill **id** (user scope shadows project — the
   "one listing line per name" model), which differs from the bench script's
   content-hash dedupe; a test asserts the total equals the sum of core
   `resolveSkill` doses. The live `ctx%` is whole-session running usage — a
   **separate** readout, never conflated with the standing dose (B1).
-  - **Census scope (disclosed):** user (`~/.claude/skills`) + project
-    (`.claude/skills`). Bundled CLI skills and plugin-provided skills are **not
-    yet counted** — the manifest carries `scope` so the readout never silently
-    overclaims. If a root exists but can't be read, the census sets `incomplete`
-    and the statusline shows a trailing `+` (`4.8k+`) — an under-count is never
-    presented as exact. Widening scope is a tracked follow-up and must not become
-    load-bearing marketing copy until its own coverage check lands.
+  - **Census scope (disclosed, KC2 — Issue #9):** user (`~/.claude/skills`) +
+    project (`.claude/skills`). Bundled CLI skills and plugin-provided skills
+    are **not yet counted, and every surface that renders the standing dose
+    says so** — a scope *name* alone ("user+project scope") does not tell a
+    reader what is missing, so the exclusion itself is spelled out, not just
+    implied: the statusline strip carries the compact `(excl. bundled/plugin)`
+    form, `/skill-heaven`'s session line carries the fuller sentence
+    ("`bundled CLI skills and plugin-provided skills are not counted`"), and
+    this README states it in full. This is a **skills-only, two-root** figure —
+    never "everything in context" — and non-native postures (`curated`,
+    `product-floor`) carry `scope: "session"` instead: those enumerate the
+    launched set exactly, so no exclusion caveat is shown there (one would be a
+    false claim, not an honest one). If a root exists but can't be read, the
+    census sets `incomplete` and the statusline shows a trailing `+` (`4.8k+`)
+    — an under-count is never presented as exact. Widening scope (counting
+    bundled or plugin-provided skills) is a tracked follow-up and must not
+    become load-bearing marketing copy until its own coverage check lands.
 
 ### Architecture split (launcher vs. plugin)
 
