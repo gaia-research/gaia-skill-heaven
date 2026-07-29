@@ -86,6 +86,11 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  * @property {"physical" | "gated"} kind
  * @property {string} [lockedNote]
  * @property {(sid: string) => string} [resume]
+ * @property {(sid: string) => string} [relaunch] a BOOT command for this row —
+ *   printed only if the row id is also in the machine-copied launchable list.
+ *   A row may only carry one if the BARE command is accepted by the CLI: a
+ *   posture that needs further arguments to compile (curated needs `--skill`)
+ *   has no bare command to print, and gets no `relaunch`.
  */
 
 /**
@@ -112,11 +117,17 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  *     line (never "unknown"), and the footer carries the shipped mechanism
  *     fact: slash commands are off there, so this command does not exist there.
  *   - `curated`. Its standing is OPEN (founder ruling R3, 2026-07-29, and
- *     RATIFICATION OPEN 1) and nothing composes it (`LAUNCHABLE_POSTURES` in
- *     src/cli.ts is native-only), so it gets no row and — deliberately — no
- *     status claim in any rendered string: asking for it by name gets the same
- *     "not offered here" line as any other core-known posture name. A test
- *     pins that a core-known name is never rendered as an unknown word.
+ *     RATIFICATION OPEN 1), so it gets no row and — deliberately — no status
+ *     claim in any rendered string: asking for it by name gets the same "not
+ *     offered here" line as any other core-known posture name. A test pins that
+ *     a core-known name is never rendered as an unknown word. The launcher now
+ *     composes it (`LAUNCHABLE_POSTURES` in src/cli.ts), which changes nothing
+ *     here for two independent reasons: adding a row is a ruling on an OPEN
+ *     posture that this surface has no standing to make, and a curated launch
+ *     needs a `--skill <path>` per skill — arguments this surface cannot know.
+ *     A bare `claude-heaven --posture curated` is REFUSED by the CLI, so
+ *     printing one would be exactly the KC7 defect the offers map exists to
+ *     prevent. The curated door is the CLI; it is not an affordance here.
  *   - `restraint`, the below-vanilla behavioral stop. It shipped as a
  *     "coming — research" row on D13's authority. D13 is retired, gate (e) is
  *     still UNVERIFIED, and RATIFICATION.md OPEN 1 has an unresolved proposal
@@ -147,33 +158,67 @@ export const POSTURE_ROWS = [
     id: "product-floor",
     label: "clean room",
     blurb: "Evicts your personal skills, MCP servers and bundled skills — keeps this door.",
-    lockedNote: "Composed at boot, never mid-session (D12) — and no launcher builds it yet.",
+    lockedNote: "Composed at boot, never mid-session (D12) — so it starts a new session:",
     kind: "physical",
+    relaunch: () => "claude-heaven --posture product-floor",
   },
 ];
 
 /**
- * Postures this surface may print a `claude-heaven` relaunch command for,
- * keyed by row id.
+ * The one sentence D12 forces onto every relaunch offer.
  *
- * EMPTY ON PURPOSE, and it is not an oversight. `src/cli.ts` refuses every
- * `--posture` outside `LAUNCHABLE_POSTURES` (native only, in this slice) with a
- * non-zero exit. Copy that said "relaunch via `claude-heaven` to unlock the
- * clean room" was offering a door the tool then slams: the user runs it, gets
- * `exit 2`, and the surface has claimed a transition the harness cannot perform
- * (KC7). Two honest resolutions existed — stop offering it, or widen what the
- * CLI accepts — and widening is a product decision nobody has ruled on, so this
- * offers nothing.
- *
- * The clean room stays a visibly locked row that says WHY it is locked; it
- * simply no longer points at a command that fails. A test walks every rendered
- * mode and asserts that every `claude-heaven --posture <p>` this file could
- * print is accepted by the real CLI validator, so the affordance and the
- * validator cannot drift apart again.
- *
- * @type {Record<string, (sid: string) => string>}
+ * D12 (CURRENT): an in-session control can move posture upward (additive) and
+ * carry conversation history, but cannot descend BELOW its launch composition —
+ * subtractive recomposition and history survival are mutually exclusive. The
+ * clean room is below native, so reaching it is a BOOT, and a boot is a new
+ * session. Printing the command without saying so would be offering a door while
+ * silently dropping the user's conversation: KC7 — /skill-heaven never claims a
+ * transition the harness cannot perform — is exactly the invariant that forbids
+ * it. Not decoration; do not trim it to fit.
  */
-export const RELAUNCH_OFFERS = {};
+const RELAUNCH_CAVEAT = "(a new session — this conversation does not carry over)";
+
+/**
+ * Postures this surface may print a `claude-heaven` relaunch command for, keyed
+ * by row id.
+ *
+ * DERIVED, NEVER HAND-LISTED. It is the intersection of two things: rows that
+ * carry a bare `relaunch` command, and `LAUNCHABLE_POSTURES` from src/cli.ts —
+ * machine-copied into plugin/data/p2-gate.json by scripts/generate-p2-gate.ts,
+ * because this file cannot import the CLI once installed from the marketplace.
+ *
+ * The bug this shape prevents: the surface used to tell a locked clean-room
+ * session to "relaunch via `claude-heaven` to unlock the clean room" while
+ * src/cli.ts refused every `--posture` outside `LAUNCHABLE_POSTURES` with
+ * `exit 2`. Offering a door the tool slams is claiming a transition the harness
+ * cannot perform (KC7). Deriving the offers from the capability list means the
+ * affordance cannot outlive the capability: drop a posture from the CLI array,
+ * regenerate the artifact, and the offer withdraws itself.
+ *
+ * FAILS CLOSED. Unreadable artifact → no offers → locked rows print their reason
+ * and no command, which is the pre-existing honest rendering.
+ *
+ * A test walks every rendered mode and asserts that every
+ * `claude-heaven --posture <p>` this file could print is accepted by the real
+ * CLI validator, so the affordance and the validator cannot drift apart.
+ *
+ * @param {string[] | null} [launchable]
+ * @returns {Record<string, (sid: string) => string>}
+ */
+export function buildRelaunchOffers(launchable) {
+  const allowed = (launchable === undefined ? readLaunchablePostures() : launchable) ?? [];
+  /** @type {Record<string, (sid: string) => string>} */
+  const out = {};
+  for (const row of POSTURE_ROWS) {
+    if (row.kind !== "physical" || !row.relaunch) continue;
+    if (!allowed.includes(row.id)) continue;
+    out[row.id] = row.relaunch;
+  }
+  return out;
+}
+
+/** @type {Record<string, (sid: string) => string>} */
+export const RELAUNCH_OFFERS = buildRelaunchOffers();
 
 // Single-column glyphs only — a double-width emoji would break the label gutter
 // in a terminal, and this text is rendered verbatim.
@@ -212,6 +257,25 @@ export function readKnownPostures(/** @type {string} */ dataDir = join(HERE, "..
     const parsed = JSON.parse(readFileSync(join(dataDir, "p2-gate.json"), "utf-8"));
     const postures = parsed?.postures;
     if (Array.isArray(postures) && postures.every((p) => typeof p === "string")) return postures;
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
+/**
+ * Reads the machine-copied `LAUNCHABLE_POSTURES` from the same artifact — the
+ * postures src/cli.ts will actually compose. Used for one thing: gating which
+ * rows may print a relaunch command (KC7). Degrades to `null` → no offers at
+ * all, which is the fail-closed direction: a locked row with no command claims
+ * nothing, a command the CLI refuses claims a transition it cannot perform.
+ * @returns {string[] | null} null when the artifact is missing or corrupt.
+ */
+export function readLaunchablePostures(/** @type {string} */ dataDir = join(HERE, "..", "data")) {
+  try {
+    const parsed = JSON.parse(readFileSync(join(dataDir, "p2-gate.json"), "utf-8"));
+    const launchable = parsed?.launchablePostures;
+    if (Array.isArray(launchable) && launchable.every((p) => typeof p === "string")) return launchable;
   } catch {
     /* fall through */
   }
@@ -291,18 +355,22 @@ export function renderPosture(opts = {}) {
     : "← you are here (vanilla claude)";
 
   const lines = ["⚡ Skill Heaven — posture", `   ${sessionLine(manifest)}`, "", "   ▲ more context"];
-  // Whether this render actually prints a `→` command. The footer's
-  // run-it-yourself paragraph is about those commands, so it is printed only
-  // when they exist — copy that explains an absent affordance is noise at best
-  // and an implied offer at worst.
-  let hasMoves = false;
+  // WHICH KINDS of `→` command this render actually prints. The footer explains
+  // them, and the two kinds do OPPOSITE things to the conversation: a resume
+  // carries it, a relaunch does not (D12). Tracking them separately is what
+  // stops the footer from making the resume promise over a relaunch command.
+  // Copy that explains an absent affordance is noise at best and an implied
+  // offer at worst, so neither paragraph prints unless its command does.
+  let hasResume = false;
+  let hasRelaunch = false;
   for (const row of POSTURE_ROWS) {
     const state = rowState(row, launched);
     const rendered = rowLines(row, state, sid, target, launchedNote);
-    if (rendered.some((r) => /^\s+→ /.test(r))) hasMoves = true;
-    lines.push(...rendered);
+    if (rendered.resume) hasResume = true;
+    if (rendered.relaunch) hasRelaunch = true;
+    lines.push(...rendered.lines);
   }
-  lines.push("   ▼ less context", "", ...footer(launched, sid, hasMoves));
+  lines.push("   ▼ less context", "", ...footer(launched, sid, hasResume, hasRelaunch));
 
   if (target !== "" && !POSTURE_ROWS.some((r) => r.id === target)) {
     // ONE rule, no per-name prose (founder ruling, 2026-07-29): a name core
@@ -383,25 +451,40 @@ function rowState(row, launched) {
 /**
  * @param {PostureRow} row @param {RowState} state @param {string} sid
  * @param {string | null} target @param {string} launchedNote
+ * @returns {{ lines: string[], resume: boolean, relaunch: boolean }} which kinds
+ * of command this row printed, so the footer describes only what is on screen.
  */
 function rowLines(row, state, sid, target, launchedNote) {
   const pointer = row.id === target ? "  ← you asked for this one" : "";
-  const out = [`   ${STATE_MARK[state]}  ${row.label.padEnd(LABEL_WIDTH)}${row.blurb}${pointer}`];
-  if (state === "launched") out.push(`${ROW_INDENT}${launchedNote}`);
+  const lines = [`   ${STATE_MARK[state]}  ${row.label.padEnd(LABEL_WIDTH)}${row.blurb}${pointer}`];
+  let resume = false;
+  let relaunch = false;
+  if (state === "launched") lines.push(`${ROW_INDENT}${launchedNote}`);
   if (state === "locked") {
-    out.push(`${ROW_INDENT}${row.lockedNote}`);
+    lines.push(`${ROW_INDENT}${row.lockedNote}`);
     // A relaunch is printed ONLY for a posture the launcher actually composes
-    // (see RELAUNCH_OFFERS). Empty today, so a locked row prints a reason and
-    // no command — never a command the CLI would refuse.
+    // (see RELAUNCH_OFFERS) — never a command the CLI would refuse. And never
+    // without the D12 caveat on the very next line: a relaunch is a boot, and a
+    // boot does not carry this conversation.
     const offer = RELAUNCH_OFFERS[row.id];
-    if (offer) out.push(`${ROW_INDENT}→ ${offer(sid || "<session-id>")}`);
+    if (offer) {
+      lines.push(`${ROW_INDENT}→ ${offer(sid || "<session-id>")}`);
+      lines.push(`${ROW_INDENT}  ${RELAUNCH_CAVEAT}`);
+      relaunch = true;
+    }
   }
-  if (state === "reachable" && row.resume) out.push(`${ROW_INDENT}→ ${row.resume(sid || "<session-id>")}`);
-  return out;
+  if (state === "reachable" && row.resume) {
+    lines.push(`${ROW_INDENT}→ ${row.resume(sid || "<session-id>")}`);
+    resume = true;
+  }
+  return { lines, resume, relaunch };
 }
 
-/** @param {string} launched @param {string} sid @param {boolean} hasMoves */
-function footer(launched, sid, hasMoves) {
+/**
+ * @param {string} launched @param {string} sid
+ * @param {boolean} hasResume @param {boolean} hasRelaunch
+ */
+function footer(launched, sid, hasResume, hasRelaunch) {
   const out = [
     "   A session moves UP only, from the posture it launched at: nothing can be",
     "   taken out of a session that is already running.",
@@ -410,9 +493,13 @@ function footer(launched, sid, hasMoves) {
   if (launched !== "product-floor") {
     out.push(
       "   The clean room — the only posture that evicts your personal skills, MCP",
-      "   servers and bundled skills — is composed at boot, never mid-session, and no",
-      "   launcher builds it yet. So it is shown, locked, with no command behind it:",
-      "   this surface will not hand you a relaunch that the tool then refuses.",
+      "   servers and bundled skills — is composed at boot, never mid-session. It is",
+      hasRelaunch
+        ? "   shown locked here, with the command that BOOTS one: that is a fresh session,"
+        : "   shown locked here, with no command behind it: nothing on this surface will",
+      hasRelaunch
+        ? "   and this conversation stays where it is."
+        : "   hand you a relaunch that the tool then refuses.",
     );
   }
   out.push(
@@ -423,19 +510,33 @@ function footer(launched, sid, hasMoves) {
     "   are always priced as separate arms, never averaged.",
     "",
   );
+  // The two kinds of → command do OPPOSITE things to this conversation, so each
+  // is described only when it is actually on screen, and never in the other's
+  // words. D12: a resume carries history and cannot subtract; a boot subtracts
+  // and cannot carry history. There is no command that does both.
+  if (hasResume) {
+    out.push(
+      "   A `claude --resume` command starts a RESUMED session that carries this",
+      "   conversation forward.",
+    );
+  }
+  if (hasRelaunch) {
+    out.push(
+      "   A `claude-heaven` command BOOTS a new session at a posture that cannot be",
+      "   reached from inside this one. It does not carry this conversation: nothing",
+      "   here can subtract from a running session and keep its history.",
+    );
+  }
   out.push(
-    ...(hasMoves
-      ? [
-          "   Running a → command starts a RESUMED session that carries this conversation",
-          "   forward. This command cannot restart Claude Code for you — run it yourself.",
-        ]
+    ...(hasResume || hasRelaunch
+      ? ["   Either way, this command cannot restart Claude Code for you — run it yourself."]
       : [
           "   No move is on offer from here, and this command",
           "   cannot restart Claude Code for you in any case: it will not print a command",
           "   that the tool would then refuse.",
         ]),
   );
-  if (hasMoves && !sid) {
+  if (hasResume && !sid) {
     out.push(
       "",
       "   (no session id in the environment — substitute your own, or run",

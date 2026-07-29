@@ -27,10 +27,15 @@ function silenceStderr(fn: () => number): number {
 
 describe("parseArgs", () => {
   it("defaults to native, print off", () => {
-    expect(parseArgs([])).toEqual({ print: false, posture: "native", level: undefined, claudeArgs: [] });
+    expect(parseArgs([])).toEqual({ print: false, posture: "native", level: undefined, skills: [], claudeArgs: [] });
   });
   it("captures --print, --posture, --level", () => {
     expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({ print: true, posture: "native", level: "off" });
+  });
+  it("collects --skill repeatably, and does not leak it to claude", () => {
+    const a = parseArgs(["--posture", "curated", "--skill", "/a", "--skill", "/b"]);
+    expect(a.skills).toEqual(["/a", "/b"]);
+    expect(a.claudeArgs).toEqual([]);
   });
   it("routes everything after -- to claude, plus unknown flags", () => {
     expect(parseArgs(["--", "-p", "hi"]).claudeArgs).toEqual(["-p", "hi"]);

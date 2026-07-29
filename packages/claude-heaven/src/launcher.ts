@@ -1,13 +1,29 @@
-// The claude-heaven launch PLAN — pure, so it is unit-testable without spawning
-// claude or touching disk. cli.ts turns a plan into files + a process.
+// The claude-heaven launch PLAN — pure enough to unit-test without spawning
+// claude: it reads skill sources (census / resolveSkill) but writes nothing.
+// cli.ts turns a plan into files + a process.
 //
-// SLICE 1 = NATIVE DEFAULT (WS4 step 1, P1): claude at native posture, nothing
-// evicted, nothing summoned, no flags injected beyond the session-scoped
-// statusline wiring. The subtractive floor / curated postures are launched by
-// later steps; this step only proves the native door + the standing-dose readout.
+// NATIVE is still the default posture: claude as-is, nothing evicted, nothing
+// summoned, no flags injected beyond the session-scoped statusline wiring (P1).
+//
+// The non-native postures are NOT composed here. They are composed by core's
+// `compile()` — the one place the empirically probed, version-pinned routes
+// live — and this module only:
+//   (a) resolves --skill paths into core's ResolvedSkill shape,
+//   (b) substitutes core's "$SESSION" placeholder with the real session dir,
+//   (c) appends the session `--settings` file so the statusline still wires up,
+//   (d) writes a manifest describing WHAT WAS ACTUALLY LAUNCHED.
+// Nothing here re-derives a route, invents a flag, or edits the compiled argv.
+// If a posture's composition is wrong, it is wrong in packages/core.
 
 import { join } from "node:path";
-import { HELL_LEVELS, type Posture } from "skill-heaven";
+import {
+  compile,
+  HELL_LEVELS,
+  resolveSkill,
+  type FsOp,
+  type Posture,
+  type ResolvedSkill,
+} from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import type { ProfileManifest } from "./statusline.js";
 
@@ -16,15 +32,27 @@ import type { ProfileManifest } from "./statusline.js";
 // proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
 // this gate can never drift from the engine's definition — if a Hell level is
 // ever added/renamed upstream (e.g. the pending N4 "ultra"), the gate follows
-// automatically. off/low are heaven-lane aliases (off→floor, low→curated) — out
-// of scope for slice 1, which ships native only.
+// automatically. off/low are heaven-lane aliases (off→floor, low→curated); the
+// launcher takes `--posture`, not those aliases, whose vocabulary is provisional
+// (N3, pending N4/N5).
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 
 export interface LaunchOptions {
+  /** default "native" */
+  posture?: Posture;
+  /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
+  skillPaths?: string[];
   home?: string;
   projectDir?: string;
-  sessionDir: string; // temp dir for manifest + settings (P3: never shared config)
+  /** session dir for manifest + settings + the materialized set (P3: never
+   * shared config). Pass "$SESSION" for a dry run — nothing is written, and the
+   * printed plan then carries core's own placeholder rather than a fake path. */
+  sessionDir: string;
   statuslineBin: string; // absolute path to the statusline bin Claude will run
+  /** the door's own plugin dir, so `/skill-heaven` survives at product-floor.
+   * Core takes this for product-floor only (it does not assume a package
+   * topology); passing it anywhere else is a compile-time error upstream. */
+  doorPluginDir?: string;
   createdAt?: string;
   claudeArgs?: string[]; // passthrough to claude (after our flags)
 }
@@ -38,49 +66,134 @@ export interface LaunchPlan {
   command: string;
   argv: string[];
   env: Record<string, string>; // additions only (never removals)
+  /** core's fsPlan, already substituted for this session dir. Empty for native.
+   * cli.ts materializes it; nothing outside the session dir is ever touched (P3). */
+  fsPlan: FsOp[];
+  /** core's compile notes, carried verbatim so the evidence travels with the plan. */
+  notes: string[];
 }
 
 /** P2 gate: reject the Hell lane before it can compose anything. */
 export function assertLevelAllowed(level: string | undefined): void {
   if (level && GATED_LEVELS.has(level)) {
     throw new Error(
-      `level "${level}" is Hell-lane and gated (P2): /skill-hell is a locked door until Hell is proven safe. claude-heaven slice 1 launches native only.`,
+      `level "${level}" is Hell-lane and gated (P2): /skill-hell is a locked door until Hell is proven safe. claude-heaven composes Heaven-lane postures only.`,
     );
   }
 }
 
-export function planNativeLaunch(opts: LaunchOptions): LaunchPlan {
-  const census = censusStandingDose(nativeSkillRoots({ home: opts.home, projectDir: opts.projectDir }));
+const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION", sessionDir);
+
+/**
+ * Plan a launch at any posture this door composes.
+ *
+ * MANIFEST HONESTY. `posture`, `standingTokens`, `skillCount` and `scope` describe
+ * the session that is actually being launched — never what native would have
+ * been. Both the statusline and the `/skill-heaven` session line read this one
+ * file; a manifest that lied would make both surfaces lie at once.
+ */
+export function planLaunch(opts: LaunchOptions): LaunchPlan {
+  const posture: Posture = opts.posture ?? "native";
   const manifestPath = join(opts.sessionDir, "profile.json");
   const settingsPath = join(opts.sessionDir, "settings.json");
 
-  const manifest: ProfileManifest = {
-    schema: "claude-heaven/profile@1",
-    posture: "native",
-    standingTokens: census.standingTotal,
-    skillCount: census.skillCount,
-    scope: census.scope,
-    ...(census.incomplete ? { incomplete: true } : {}),
-    launcherLocked: true, // launched via claude-heaven → the subtractive floor is reachable
-    ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
-  };
-
-  // Session-scoped settings: ONLY the statusline command. No eviction /
-  // suppression flags — native is claude untouched (P1: native is the default,
-  // untouched posture). Loaded via
-  // `--settings <file>`, so ~/.claude is never mutated (P3).
+  // Session-scoped settings: ONLY the statusline command. Loaded via
+  // `--settings <file>`, so ~/.claude is never mutated (P3). `--settings` is an
+  // explicit-provision channel, separate from `--setting-sources` (which selects
+  // among user/project/local) — so it survives the eviction flags core composes
+  // for the non-native postures.
   const settings = {
     statusLine: { type: "command", command: opts.statuslineBin },
   };
 
+  if (posture === "native") {
+    const census = censusStandingDose(
+      nativeSkillRoots({ home: opts.home, projectDir: opts.projectDir }),
+    );
+    const manifest: ProfileManifest = {
+      schema: "claude-heaven/profile@1",
+      posture: "native",
+      standingTokens: census.standingTotal,
+      skillCount: census.skillCount,
+      scope: census.scope,
+      ...(census.incomplete ? { incomplete: true } : {}),
+      launcherLocked: true, // launched via claude-heaven → a subtractive posture is reachable
+      ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
+    };
+    return {
+      posture: "native",
+      manifest,
+      manifestPath,
+      settingsPath,
+      settings,
+      command: "claude",
+      // No eviction / suppression flags — native is claude untouched (P1).
+      argv: ["--settings", settingsPath, ...(opts.claudeArgs ?? [])],
+      env: { CLAUDE_HEAVEN_PROFILE: manifestPath },
+      fsPlan: [],
+      notes: [],
+    };
+  }
+
+  // Non-native: core composes it. Skill ids come from frontmatter `name`,
+  // falling back to the directory name (core's resolveSkill).
+  const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((p) => resolveSkill(p));
+  const compiled = compile({
+    posture,
+    harness: "claude",
+    skills,
+    // Product-floor keeps slash commands, which is only worth anything if the
+    // door is actually mounted: `--setting-sources project` drops the user-scope
+    // install. Core rejects this field for every other posture, so it is passed
+    // for product-floor and nowhere else.
+    ...(posture === "product-floor" && opts.doorPluginDir
+      ? { doorPluginDir: opts.doorPluginDir }
+      : {}),
+  });
+
+  const env: Record<string, string> = { CLAUDE_HEAVEN_PROFILE: manifestPath };
+  for (const [k, v] of Object.entries(compiled.env)) env[k] = substSession(v, opts.sessionDir);
+
+  const manifest: ProfileManifest = {
+    schema: "claude-heaven/profile@1",
+    posture,
+    // The composed session's real standing dose: the curated set and nothing
+    // else (zero listing residual observed on the T9 route), or zero at
+    // product-floor, which admits no skills at all. NOT a native census.
+    standingTokens: compiled.doseSummary.standingTotal,
+    skillCount: skills.length,
+    // "session" — the profile IS the session set, enumerated exactly rather
+    // than censused, so there is no partial-coverage caveat to disclose here
+    // (native's "user+project" says what it could not see; this one saw all of it).
+    scope: "session",
+    launcherLocked: true,
+    ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
+  };
+
   return {
-    posture: "native",
+    posture,
     manifest,
     manifestPath,
     settingsPath,
     settings,
-    command: "claude",
-    argv: ["--settings", settingsPath, ...(opts.claudeArgs ?? [])],
-    env: { CLAUDE_HEAVEN_PROFILE: manifestPath },
+    command: compiled.command,
+    argv: [
+      ...compiled.argv.map((a) => substSession(a, opts.sessionDir)),
+      "--settings",
+      settingsPath,
+      ...(opts.claudeArgs ?? []),
+    ],
+    env,
+    fsPlan: compiled.fsPlan.map((op) =>
+      op.kind === "write"
+        ? { ...op, path: substSession(op.path, opts.sessionDir) }
+        : { ...op, from: substSession(op.from, opts.sessionDir), to: substSession(op.to, opts.sessionDir) },
+    ),
+    notes: compiled.notes,
   };
+}
+
+/** Back-compat alias for the native path (the door's default posture). */
+export function planNativeLaunch(opts: Omit<LaunchOptions, "posture" | "skillPaths">): LaunchPlan {
+  return planLaunch({ ...opts, posture: "native" });
 }

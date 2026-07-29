@@ -1,14 +1,16 @@
-// claude-heaven CLI (WS4 slice 1). Launches claude at NATIVE posture with the
-// standing-dose statusline wired via a session-scoped --settings file. Writes
-// only to a fresh temp dir (P3: zero shared-config mutation). `--print` shows the
-// plan without spawning claude (and without needing claude installed).
+// claude-heaven CLI. Launches claude at a composed posture with the
+// standing-dose statusline wired via a session-scoped --settings file. Every
+// write lands in a fresh temp dir (P3: zero shared-config mutation) — including
+// the materialized curated set. `--print` shows the plan without spawning claude
+// (and without needing claude installed).
 
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertLevelAllowed, planNativeLaunch } from "./launcher.js";
+import { materialize, type Posture } from "skill-heaven";
+import { assertLevelAllowed, planLaunch } from "./launcher.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
@@ -17,17 +19,31 @@ import { assertLevelAllowed, planNativeLaunch } from "./launcher.js";
  * the harness cannot perform (KC7), which is a broken affordance whichever way
  * you look at it.
  *
- * Slice 1 is native-only. Widening this set is a product decision — it is not a
- * copy edit, and no surface may pre-empt it by advertising the wider set.
- * `plugin/scripts/render-posture.mjs` carries the matching `RELAUNCH_OFFERS`,
- * and a test asserts the two cannot drift apart.
+ * `plugin/scripts/render-posture.mjs` derives its `RELAUNCH_OFFERS` from a
+ * MACHINE-COPY of this array (scripts/generate-p2-gate.ts → plugin/data), never
+ * from a hand-written list, and a test asserts the two cannot drift apart.
+ *
+ * REMOVING A POSTURE IS ONE LINE: delete its entry below and regenerate the
+ * artifact. Nothing else keys off a specific member — the renderer intersects
+ * this list with its rows, and the launcher dispatches on core's `POSTURES`.
+ *
+ * WHAT IS DELIBERATELY ABSENT: the doorless benchmark `floor`. It is the
+ * placebo-of-record (B2) and core's to compose for measurement runs only — F6
+ * established that `--disable-slash-commands` suppresses plugin COMMANDS too, so
+ * a door that launched it would be launching a session it cannot then talk to.
  */
-export const LAUNCHABLE_POSTURES: readonly string[] = ["native"];
+export const LAUNCHABLE_POSTURES: readonly string[] = [
+  "native",
+  "curated",
+  "product-floor",
+];
 
 interface CliArgs {
   print: boolean;
   posture: string;
   level?: string;
+  /** --skill <path>, repeatable */
+  skills: string[];
   claudeArgs: string[];
 }
 
@@ -35,6 +51,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let print = false;
   let posture = "native";
   let level: string | undefined;
+  const skills: string[] = [];
   const claudeArgs: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -44,15 +61,22 @@ export function parseArgs(argv: string[]): CliArgs {
     } else if (a === "--print") print = true;
     else if (a === "--posture") posture = argv[++i] ?? "";
     else if (a === "--level") level = argv[++i];
-    else claudeArgs.push(a);
+    else if (a === "--skill") {
+      const p = argv[++i];
+      if (p !== undefined) skills.push(p);
+    } else claudeArgs.push(a);
   }
-  return { print, posture, level, claudeArgs };
+  return { print, posture, level, skills, claudeArgs };
 }
 
 /** Absolute path to the statusline bin shipped alongside this CLI. */
 function statuslineBinPath(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "..", "bin", "statusline.mjs");
+  return join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "statusline.mjs");
+}
+
+/** Absolute path to the door's own plugin dir (the one carrying /skill-heaven). */
+function doorPluginDir(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), "..", "plugin");
 }
 
 export function run(argv: string[]): number {
@@ -60,39 +84,46 @@ export function run(argv: string[]): number {
 
   // P2 gate first — never compose a gated (Hell-lane) posture.
   assertLevelAllowed(args.level);
-  // Slice 1 is native-only. A non-native posture, OR any non-gated level (off/low
-  // are heaven-lane aliases for the floors/curated), implies a posture slice 1
-  // doesn't build yet — reject explicitly rather than silently ignore the flag.
-  //
-  // Note which floor this door will eventually launch: `product-floor`, the
-  // doorful one (V5-5). The doorless benchmark `floor` is the placebo-of-record
-  // (B2) and is core's to compose for a measurement run — a door that launched
-  // it would be launching a session it cannot then talk to (F6).
+
   if (!LAUNCHABLE_POSTURES.includes(args.posture)) {
     process.stderr.write(
-      `claude-heaven slice 1 launches native only (got --posture ${args.posture}). ` +
-        `The product-floor/curated postures land in a later WS4 slice. ` +
+      `claude-heaven does not launch --posture ${args.posture}. ` +
+        `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
         `The benchmark floor is not a door posture — it runs from core, for benchmark runs only.\n`,
     );
     return 2;
   }
   if (args.level !== undefined) {
+    // off/low are heaven-lane aliases whose vocabulary is provisional (N3,
+    // pending N4/N5). Reject rather than silently ignore the flag: --posture is
+    // the ratified selector.
     process.stderr.write(
-      `claude-heaven slice 1 launches native only; --level ${args.level} (heaven-lane) has no effect yet. ` +
-        `Level selection lands in WS4 step 2 (/skill-heaven).\n`,
+      `claude-heaven selects postures with --posture, not --level (got --level ${args.level}).\n`,
     );
     return 2;
   }
 
-  const plan = planNativeLaunch({
-    sessionDir: "<print>", // placeholder; --print never writes to disk
-    statuslineBin: statuslineBinPath(),
-    claudeArgs: args.claudeArgs,
-  });
+  const posture = args.posture as Posture;
 
   if (args.print) {
-    // Dry run: show the plan (incl. the exact manifest + settings that WOULD be
-    // written) without touching disk — no temp dir to leak.
+    // Dry run: show the plan (incl. the exact manifest, settings and fsPlan that
+    // WOULD be written) without touching disk — no temp dir to leak. The session
+    // dir stays core's own "$SESSION" placeholder so the printed paths say what
+    // they are instead of pretending to be real.
+    let plan;
+    try {
+      plan = planLaunch({
+        posture,
+        skillPaths: args.skills,
+        sessionDir: "$SESSION",
+        statuslineBin: statuslineBinPath(),
+        doorPluginDir: doorPluginDir(),
+        claudeArgs: args.claudeArgs,
+      });
+    } catch (e) {
+      process.stderr.write(`claude-heaven: ${(e as Error).message}\n`);
+      return 2;
+    }
     process.stdout.write(
       `${JSON.stringify(
         {
@@ -105,6 +136,8 @@ export function run(argv: string[]): number {
           command: plan.command,
           argv: plan.argv,
           env: plan.env,
+          fsPlan: plan.fsPlan,
+          notes: plan.notes,
           manifest: plan.manifest,
           settings: plan.settings,
         },
@@ -115,16 +148,27 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // Real launch: write manifest + settings to a fresh temp dir, and remove it
-  // once claude exits (spawnSync is synchronous). Nothing touches ~/.claude (P3);
-  // nothing is left behind.
+  // Real launch: materialize the fsPlan and write manifest + settings into a
+  // fresh temp dir, then remove it once claude exits (spawnSync is synchronous).
+  // Nothing touches ~/.claude and no skill source is mutated — copyDir reads the
+  // source and writes the session copy (P3). Nothing is left behind.
   const sessionDir = mkdtempSync(join(tmpdir(), "claude-heaven-"));
   try {
-    const live = planNativeLaunch({
-      sessionDir,
-      statuslineBin: statuslineBinPath(),
-      claudeArgs: args.claudeArgs,
-    });
+    let live;
+    try {
+      live = planLaunch({
+        posture,
+        skillPaths: args.skills,
+        sessionDir,
+        statuslineBin: statuslineBinPath(),
+        doorPluginDir: doorPluginDir(),
+        claudeArgs: args.claudeArgs,
+      });
+      materialize(live.fsPlan, sessionDir);
+    } catch (e) {
+      process.stderr.write(`claude-heaven: ${(e as Error).message}\n`);
+      return 2;
+    }
     writeFileSync(live.manifestPath, `${JSON.stringify(live.manifest, null, 2)}\n`);
     writeFileSync(live.settingsPath, `${JSON.stringify(live.settings, null, 2)}\n`);
 

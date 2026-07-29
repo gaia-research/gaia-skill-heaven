@@ -16,12 +16,14 @@ import { formatTokens as formatTokensTs } from "../src/statusline.js";
 import {
   POSTURE_ROWS,
   RELAUNCH_OFFERS,
+  buildRelaunchOffers,
   formatTokens,
   isLaunchManifest,
   loadManifest,
   normalizeTarget,
   readGatedLevels,
   readKnownPostures,
+  readLaunchablePostures,
   renderPosture,
 } from "../plugin/scripts/render-posture.mjs";
 
@@ -89,6 +91,25 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
     expect(readKnownPostures()).toEqual([...POSTURES]);
   });
 
+  it("keeps the shipped launchable list byte-identical to the CLI's LAUNCHABLE_POSTURES", () => {
+    // Third machine-copy on the same artifact, for the same reason: the plugin
+    // cannot import src/cli.ts once installed. This is the freshness gate that
+    // makes removing a posture from the CLI a one-line change — the offer this
+    // surface prints is derived from the copy, so it withdraws with it.
+    expect(readLaunchablePostures()).toEqual([...LAUNCHABLE_POSTURES]);
+  });
+
+  it("derives the relaunch offers from that list, and offers nothing without it", () => {
+    // Fail-closed: no readable capability list => no offers at all. A locked row
+    // with no command claims nothing; a command the CLI refuses claims a
+    // transition the harness cannot perform (KC7).
+    expect(buildRelaunchOffers(null)).toEqual({});
+    expect(buildRelaunchOffers([])).toEqual({});
+    expect(Object.keys(buildRelaunchOffers(["product-floor"]))).toEqual(["product-floor"]);
+    // …and a launchable posture with no row still gets no offer.
+    expect(buildRelaunchOffers(["curated"])).toEqual({});
+  });
+
   it("fails CLOSED when the gate artifact is unreadable", () => {
     // Unknown gate list => anything that is not a known heaven row is refused,
     // rather than a Hell posture being rendered as available.
@@ -139,13 +160,31 @@ describe("locked clean room (D12)", () => {
       expect(LAUNCHABLE_POSTURES, `${rowId} is offered but the launcher refuses it`).toContain(
         rowId,
       );
-      // run the REAL validator, not a mirror of it
+      // run the REAL validator, not a mirror of it — and on the BARE command,
+      // which is what this surface prints. A posture that needs more arguments
+      // to compile has no bare command and must not be offered.
       expect(silenceStderr(() => run(["--print", "--posture", rowId]))).toBe(0);
       expect(typeof build).toBe("function");
     }
 
-    expect(LAUNCHABLE_POSTURES).not.toContain("product-floor");
-    expect(silenceStderr(() => run(["--print", "--posture", "product-floor"]))).toBe(2);
+    // The clean room is now composed by the launcher, so it is offered — with
+    // its D12 caveat, asserted separately below.
+    expect(LAUNCHABLE_POSTURES).toContain("product-floor");
+    expect(silenceStderr(() => run(["--print", "--posture", "product-floor"]))).toBe(0);
+    expect(Object.keys(RELAUNCH_OFFERS)).toContain("product-floor");
+
+    // The doorless benchmark floor is not a door posture and never becomes one
+    // (F6/B2): core composes it for measurement runs only.
+    expect(LAUNCHABLE_POSTURES).not.toContain("floor");
+    expect(silenceStderr(() => run(["--print", "--posture", "floor"]))).toBe(2);
+    expect(Object.keys(RELAUNCH_OFFERS)).not.toContain("floor");
+
+    // Curated IS launchable, and is still never offered here: a curated launch
+    // needs a `--skill <path>` per skill, so the BARE command this surface would
+    // print is refused. Launchable is necessary for an offer, not sufficient.
+    expect(LAUNCHABLE_POSTURES).toContain("curated");
+    expect(silenceStderr(() => run(["--print", "--posture", "curated"]))).toBe(2);
+    expect(Object.keys(RELAUNCH_OFFERS)).not.toContain("curated");
 
     // …and no rendered mode may print a claude-heaven --posture the CLI refuses.
     const targets = [
@@ -200,9 +239,11 @@ describe("the floor split (V5-5): the clean room is the PRODUCT floor", () => {
       expect(r.refused).toBe(false); // heaven-lane, not a P2 refusal
       expect(r.text).toContain(`\`${target}\` is not offered here`);
       expect(r.text).not.toContain(`nothing called "${target}"`);
-      // no command is printed for a door that does not exist (KC7)
-      expect(r.text).not.toMatch(/claude-heaven\b[^\n]*--posture/);
-      expect(r.text).not.toMatch(new RegExp(`→ [^\\n]*${target}`));
+      // No command is printed FOR THE REQUESTED posture (KC7). Anchored on the
+      // exact name: the clean room's own offer is `--posture product-floor`, and
+      // a substring match on "floor" would hit it and assert the wrong thing.
+      expect(r.text).not.toMatch(new RegExp(`--posture ${target}(\\s|$)`, "m"));
+      expect(r.text).not.toMatch(new RegExp(`→ [^\\n]*(?<![\\w-])${target}(?![\\w-])`));
       // and no status claim that would need re-ratifying (R3)
       expect(r.text).not.toMatch(/real posture|ratified|later (WS4 )?slice|coming/i);
     }
@@ -370,20 +411,53 @@ describe("reachable rows print an exact, runnable command", () => {
     expect(text).toContain("pick this conversation from the list");
   });
 
-  it("prints a `→` command for reachable stops and for nothing else", () => {
-    // Every arrow line must be a command the user can actually run: a resume
-    // for a reachable stop. A locked stop prints its reason and no command at
-    // all.
+  it("prints only the two runnable command shapes, and nothing else", () => {
+    // Every arrow line must be a command the user can actually run, and there
+    // are exactly two shapes: a `claude --resume` for a stop reachable from
+    // this session, and a `claude-heaven --posture <p>` BOOT for a locked stop
+    // the launcher composes. Anything else is an affordance with no mechanism.
     for (const manifest of [null, nativeManifest, productFloorManifest]) {
       for (const line of render({ manifest })
         .split("\n")
         .filter((l) => /^\s+→ /.test(l))) {
-        expect(line, `unrunnable arrow line: ${line}`).toMatch(/^\s+→ claude --resume /);
+        expect(line, `unrunnable arrow line: ${line}`).toMatch(
+          /^\s+→ (claude --resume |claude-heaven --posture )/,
+        );
       }
     }
-    // Native launch: everything above is gated, everything below is boot-only,
-    // so there is no move to offer and none is offered.
-    expect(render({ manifest: nativeManifest })).not.toMatch(/^\s+→ /m);
+  });
+
+  it("never prints a relaunch without the D12 no-history caveat on the next line", () => {
+    // D12: a boot cannot carry this conversation. Offering the door while
+    // silently dropping the user's history is the KC7 defect in its purest
+    // form — the command is honest, the omission is not.
+    for (const manifest of [null, nativeManifest, benchmarkFloorManifest]) {
+      const lines = render({ manifest }).split("\n");
+      const relaunches = lines.filter((l) => /^\s+→ claude-heaven /.test(l));
+      expect(relaunches.length, "the clean room is composed, so it is offered").toBeGreaterThan(0);
+      for (const line of relaunches) {
+        expect(lines[lines.indexOf(line) + 1]).toContain(
+          "a new session — this conversation does not carry over",
+        );
+      }
+    }
+  });
+
+  it("never promises a relaunch carries the conversation forward", () => {
+    // The footer used to make one blanket claim about every `→` command
+    // ("starts a RESUMED session that carries this conversation forward").
+    // With a boot command on screen that sentence would be false for it, so
+    // the two kinds are described separately and only when present.
+    const nativeText = render({ manifest: nativeManifest }); // relaunch, no resume
+    expect(nativeText).not.toMatch(/carries this[\s\n]+conversation forward/);
+    expect(nativeText).toContain("It does not carry this conversation");
+    expect(nativeText).toContain("cannot restart Claude Code for you");
+
+    // From the clean room, `native` is genuinely resumable, and that promise is
+    // true for it.
+    const floorText = render({ manifest: productFloorManifest }); // resume, no relaunch
+    expect(floorText).toMatch(/carries this[\s\n]+conversation forward/);
+    expect(floorText).not.toContain("It does not carry this conversation");
   });
 
   it("marks the launched posture and does not offer it as a move", () => {
