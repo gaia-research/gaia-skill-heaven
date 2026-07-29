@@ -58,7 +58,7 @@
 // into the *command markdown*, but is NOT exported to the bash child, so this
 // script locates its own data dir via import.meta.url rather than the env var.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -571,5 +571,16 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   return 0;
 }
 
-const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+// KC1 fresh-environment check caught this: the textbook `import.meta.url ===
+// pathToFileURL(process.argv[1]).href` idiom compares a REALPATH-resolved
+// import.meta.url against the RAW argv[1] path. On macOS (and in some
+// container/sandbox setups) both `/tmp` and `/var` are symlinks to
+// `/private/tmp` / `/private/var` — so a plugin cache path that happens to
+// route through either one makes the two sides disagree, `invokedDirectly`
+// comes back false, `main()` never runs, and the command silently prints
+// nothing (exit 0, empty stdout — no error a user or a naive check would
+// catch). Resolving argv[1] through realpath before comparing closes that
+// gap; verify-marketplace-install.mjs pins this by running the script from a
+// symlink-routed temp dir and asserting on real stdout content.
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (invokedDirectly) main();
