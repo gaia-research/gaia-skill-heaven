@@ -69,12 +69,24 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 ## Posture mappings (what actually gets composed)
 
-| Posture | claude (2.1.215) | pi (0.80.10) | codex / cursor / grok |
-|---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
-| curated | `--setting-sources project --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
-| product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) |
-| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
+| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.145.0) | cursor / grok |
+|---|---|---|---|---|
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | `$CODEX_HOME` scoping, live exec (see caveat below) | recipe only (`--print`) |
+| curated | `--setting-sources project --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9**) | `--no-skills --skill <dir>…` | `$CODEX_HOME` scoping + skill dirs copied in, live exec (see caveat below) | recipe only; grok hard-errors (no mechanism exists) |
+| product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) | — (no probed cell) |
+| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing, live exec | nothing / recipe |
+
+**codex moved off the recipe track (A2, 2026-07-29).** The per-session
+`-c 'skills.config=[{path="<abs>",enabled=false}]'` scoping cell resolved
+(matrix G1-skills-config-override, codex 0.145.0, gaia-research PR #133; a
+targeted fixture skill was confirmed to drop out of the model-visible
+listing — 74→73 entries, 2/2 byte-identical, nothing written to
+`config.toml`) — `execSupport` is now `"exec"` for codex. **Caveat:** the
+current `$CODEX_HOME`-scoping mechanism does not itself use that `-c` route
+and does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`,
+or bundled system skills (separate roots per the matrix's Skill discovery
+row) — a live `--posture floor --harness codex` run is not yet a verified-empty
+surface. Tracked as a known gap in `compileCodex`, not fixed as part of A2.
 
 ### The floor split (founder ruling V5-5, 2026-07-28)
 

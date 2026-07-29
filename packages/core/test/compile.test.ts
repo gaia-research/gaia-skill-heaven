@@ -158,12 +158,18 @@ describe("pi mappings", () => {
   });
 });
 
-describe("recipe harnesses", () => {
-  it("codex compiles a recipe with CODEX_HOME scoping", () => {
+describe("exec harnesses", () => {
+  // A2 (2026-07-29): the per-session `-c 'skills.config=[{path=…,enabled=false}]'`
+  // scoping cell this used to gate on has resolved (matrix G1-skills-config-override,
+  // codex 0.145.0, gaia-research PR #133) — codex moved off the recipe track.
+  it("codex compiles for live exec with CODEX_HOME scoping", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
-    expect(r.execSupport).toBe("recipe");
+    expect(r.execSupport).toBe("exec");
     expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
   });
+});
+
+describe("recipe harnesses", () => {
   it("cursor compiles a recipe with CURSOR_CONFIG_DIR", () => {
     const r = compile({ posture: "floor", harness: "cursor", skills: [] });
     expect(r.execSupport).toBe("recipe");

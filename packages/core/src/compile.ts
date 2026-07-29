@@ -335,9 +335,28 @@ function compilePi(
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }
 
-// codex — recipe from matrix cells: $CODEX_HOME scoping + per-skill
-// config.toml toggles. Stays a recipe unless the per-session -c scoping cell
-// verifies (M2 plan §4); probe results recorded in the matrix.
+// codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles. The
+// per-session `-c` scoping cell this comment used to gate on has RESOLVED:
+// `-c 'skills.config=[{path="<abs SKILL.md>",enabled=false}]'` reaches the
+// skills surface per-invocation, no restart, nothing written to config.toml
+// (codex 0.145.0; gaia-research PR #133, harness-capability-matrix.md row
+// "Skills listing suppressible per-session?" / G1-skills-config-override:
+// 2/2 reproduced upstream, re-confirmed independently here via `codex debug
+// prompt-input` — a targeted fixture skill dropped out of the model-visible
+// listing (74→73 entries) with zero other entries changed, 2/2 byte-identical
+// reps, on codex-cli 0.145.0). execSupport is now "exec".
+//
+// CAVEAT (bring-along, not fixed here): the matrix's own "Skill discovery"
+// row documents codex skill roots beyond $CODEX_HOME — `.agents/skills`
+// (repo, cwd→root scan), `~/.agents/skills` (user), `/etc/codex/skills`,
+// bundled system skills. $CODEX_HOME scoping alone does not evict any of
+// these; the "empty skills surface" note below was verified false in the
+// same probe (a fresh, config.toml-less $CODEX_HOME still surfaced 74
+// skills, most of them from `~/.agents/skills`, none of them scoped by
+// CODEX_HOME at all). A real `--posture floor --harness codex` exec today
+// will not be an empty surface. Left as-is: fixing it means computing `-c`
+// disables for every discovered skill root at compile time, which is a
+// mechanism redesign outside A2's scope, not a stale-claim correction.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -354,7 +373,7 @@ function compileCodex(
       to: "$SESSION/codex/auth.json",
     });
     notes.push(
-      "codex recipe: $CODEX_HOME scoping gives an empty skills surface (floor); curated adds skill dirs under $CODEX_HOME. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
+      "codex: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. Per-session skills-config scoping is now empirically verified (matrix G1-skills-config-override, codex 0.145.0, 2026-07-29) — execSupport: exec. CAVEAT: $CODEX_HOME scoping alone does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row) — floor is not yet a verified-empty surface on codex.",
     );
     if (input.posture === "curated") {
       for (const s of input.skills) {
@@ -365,7 +384,7 @@ function compileCodex(
   if (input.model) argv.push("-m", input.model);
   if (input.prompt !== undefined) argv.push(input.prompt);
   if (input.passthrough?.length) argv.push(...input.passthrough);
-  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
+  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "exec" };
 }
 
 // cursor — documented-recipe track regardless (rules are tracked files;
