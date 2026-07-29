@@ -98,6 +98,16 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  *     to the ordinary "no notch called …" path — deliberately, because a bespoke
  *     explanation would keep the retired word alive in shipped copy.
  *   - the doorless BENCHMARK `floor` — no door by ruling (F6), see the header.
+ *   - `curated`, the hand-gated posture (P1). It is a real, ratified posture —
+ *     unlike `lean`/`add-ons` — but nothing composes it yet: the launcher is
+ *     native-only (`LAUNCHABLE_POSTURES` in src/cli.ts), so a curated notch
+ *     would be a stop with no door behind it in every mode, exactly the locked
+ *     upsell shape the clean room already carries — except the clean room is
+ *     the product's own pitch and curated is not, and RATIFICATION OPEN 1's
+ *     posture-set collision is still unresolved. So: no notch, recorded here
+ *     rather than silently absent. Asking for it by name gets an honest
+ *     explanation (a real posture name is never rendered as an unknown word),
+ *     and a test pins that property for every core posture.
  *   - `restraint`, the below-vanilla behavioral notch. It shipped as a
  *     "coming — research" row on D13's authority. D13 is retired, gate (e) is
  *     still UNVERIFIED, and RATIFICATION.md OPEN 1 has an unresolved proposal
@@ -262,14 +272,19 @@ export function renderSlider(opts = {}) {
   lines.push("   ▼ less context", "", ...footer(launched, sid, hasMoves));
 
   if (target !== "" && !NOTCHES.some((n) => n.id === target)) {
-    // `floor` is a real posture that is deliberately not a notch. Say why rather
-    // than pretending the name means nothing — refusal transparency.
+    // `floor` and `curated` are real postures that are deliberately not notches.
+    // Say why rather than pretending the name means nothing — refusal
+    // transparency: a real posture name is never rendered as an unknown word.
     lines.push(
       "",
       target === "floor"
         ? "   (`floor` is the benchmark floor: no slash commands, so no door and no slider.\n" +
           "   The clean room you can reach from here is the product floor, above.)"
-        : `   (no notch called ${quoteTarget(target)} — the slider above is the whole set.)`,
+        : target === "curated"
+          ? "   (`curated` is a real posture, but no launcher composes it yet, so it has no\n" +
+            "   stop on this slider — and no command is printed for a door that does not\n" +
+            "   exist.)"
+          : `   (no notch called ${quoteTarget(target)} — the slider above is the whole set.)`,
     );
   }
   return { text: `${lines.join("\n")}\n`, refused: false };

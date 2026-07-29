@@ -139,7 +139,13 @@ describe("locked-notch upsell (D12)", () => {
     expect(silenceStderr(() => run(["--print", "--posture", "product-floor"]))).toBe(2);
 
     // …and no rendered mode may print a claude-heaven --posture the CLI refuses.
-    const targets = ["", ...NOTCHES.map((n: { id: string }) => n.id), "floor", "lean", "turbo"];
+    const targets = [
+      "",
+      ...NOTCHES.map((n: { id: string }) => n.id),
+      ...POSTURES,
+      "lean",
+      "turbo",
+    ];
     for (const manifest of [null, nativeManifest, productFloorManifest, benchmarkFloorManifest]) {
       for (const target of targets) {
         const text = render({ manifest, target });
@@ -182,6 +188,34 @@ describe("the floor split (V5-5): the slider targets the PRODUCT floor", () => {
     expect(text).not.toMatch(/no notch called "floor"/);
     // and it must not print a command that would take the user to it
     expect(text).not.toContain("--disable-slash-commands");
+  });
+
+  it("explains the curated posture instead of pretending the name is unknown", () => {
+    // `curated` is a real, ratified posture (P1) with no door yet: the launcher
+    // is native-only, and OPEN 1's posture-set collision is unresolved, so the
+    // slider ships no curated stop. Asking for it by name still gets the honest
+    // answer, and no command — a door that does not exist is never printed (KC7).
+    const r = renderSlider({ sessionId: "sess-123", manifest: nativeManifest, target: "curated" });
+    expect(r.refused).toBe(false); // heaven-lane, not a P2 refusal
+    expect(r.text).toContain("no launcher composes it yet");
+    expect(r.text).not.toMatch(/no notch called "curated"/);
+    expect(r.text).not.toMatch(/claude-heaven\b[^\n]*--posture/);
+    expect(r.text).not.toMatch(/→ [^\n]*curated/);
+  });
+
+  it("never renders a real posture name as an unknown word (refusal transparency)", () => {
+    // The generalized property behind the `floor` and `curated` branches: every
+    // posture core ships is either a notch on the slider or gets a bespoke
+    // honest explanation. If a posture is ever added upstream without slider
+    // handling, this fails rather than shipping "no notch called <posture>".
+    const notchIds = NOTCHES.map((n: { id: string }) => n.id);
+    for (const posture of POSTURES) {
+      if (notchIds.includes(posture)) continue;
+      const text = render({ manifest: nativeManifest, target: posture });
+      expect(text, `${posture} is a real posture rendered as an unknown word`).not.toContain(
+        `no notch called "${posture}"`,
+      );
+    }
   });
 
   it("never renders the benchmark floor as a launched or reachable stop", () => {
