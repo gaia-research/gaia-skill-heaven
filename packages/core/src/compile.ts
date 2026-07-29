@@ -283,7 +283,12 @@ function compileClaude(
         fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/heaven-set/skills/${s.id}` });
       }
       notes.push(
-        "curated via --setting-sources project + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 (T9; supersedes T8 — owner vetoed the bundled-skills residual). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. Zero listing residual observed (2/2 runs); the env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
+        "curated via --setting-sources project + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 (T9; supersedes T8 — owner vetoed the bundled-skills residual). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. " +
+          "KC4 probe (claude 2.1.220, 2026-07-29, 2/2 live runs, packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) found this route is NOT zero-listing-residual as previously logged here: " +
+          "(a) --setting-sources project keeps <cwd>/.claude/skills LIVE — a project-scope skill was observed in the session:init `skills` array alongside the curated set; " +
+          "(b) a skill named `doctor` was observed in that same array in every scenario tested, independent of CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 and independent of project scope — the env knob does not suppress it. " +
+          "No marketplace-plugin skill leakage was observed (system:init `plugins` showed only heaven-set in every run). " +
+          "The env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
       );
     } else {
       const home = input.homeDir ?? "$HOME";
