@@ -1,16 +1,16 @@
 ---
-description: "Show the Skill Heaven posture slider: where this session sits, what it costs, how to move it."
+description: "Show Skill Heaven postures: where this session sits, what it costs, how to move it."
 allowed-tools: Bash(node:*)
 ---
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-slider.mjs" '$ARGUMENTS'`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-posture.mjs" '$ARGUMENTS'`
 
 Print the block above **verbatim** inside a fenced code block, then stop.
 
 Rules for this reply (they are the product's claim discipline, not style
 preferences):
 
-- Do not reword, summarise, re-order, translate or "improve" the slider. Its
+- Do not reword, summarise, re-order, translate or "improve" the block. Its
   wording is reviewed copy; every hedge in it is load-bearing.
 - Do not add posture, token or savings numbers of your own. The only numbers
   allowed here are the ones the block already contains.

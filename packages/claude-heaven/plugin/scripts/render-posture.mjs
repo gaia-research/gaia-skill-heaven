@@ -1,20 +1,28 @@
-// The /skill-heaven posture slider renderer (WS4 step 2).
+// The /skill-heaven posture renderer (WS4 step 2).
 //
 // BOUND BY: D12 · P1 · P2 · P3 · B1 · B2 · B4 · D6 · D9.
 // (The original step-2 draft cited D13. D13 was RETIRED on 2026-07-24 and its id
 // is on RATIFICATION.md's never-reused list, so nothing here may lean on it —
 // re-bound by founder ruling V5-6. What the retired D13 was doing the work for
 // is now split across D12, which actually rules the locked clean room, and P2,
-// which rules the locked Hell notch. See the `restraint` note below for the half
+// which rules the locked Hell row. See the `restraint` note below for the half
 // of the retired D13 that had no live authority left at all.)
+//
+// THE CONTROL HAS NO NOUN — deliberately. `slider` and `notch` are banned in
+// the federation lexicon (retired 2026-07-24, oracle N1/N5), and their listed
+// replacements (`ladder`/`rung`) name the off…max ladder, which this surface is
+// not — it is the mode/posture control, whose name is OPEN (founder ruling R2,
+// 2026-07-29: "term or name is open, but the method is locked"). Until a name
+// is ratified, rendered copy lists the postures and describes moves without
+// naming the widget. Do not coin one here.
 //
 // ZERO DEPENDENCIES BY NECESSITY. Once claude-heaven is installed from the
 // marketplace there is no node_modules next to it, so this file must run on
 // plain Node with only `node:` builtins — it cannot import `skill-heaven`. Two
 // consequences, both handled rather than hidden:
-//   - the P2 (Hell-lane) gate list is MACHINE-copied from core's HELL_LEVELS
-//     into ../data/p2-gate.json by scripts/generate-p2-gate.ts, and a freshness
-//     test byte-checks it (no hand-authored literal);
+//   - the P2 (Hell-lane) gate list AND the core posture list are MACHINE-copied
+//     from core into ../data/p2-gate.json by scripts/generate-p2-gate.ts, and a
+//     freshness test byte-checks the artifact (no hand-authored literal);
 //   - the standing dose is NOT recensused here — it is read from the launch
 //     manifest the launcher already wrote (the same manifest the statusline
 //     renders), so the two readouts cannot disagree.
@@ -29,16 +37,19 @@
 // launched there.
 //
 // THE TWO FLOORS (V5-5, landed in PR #14). `POSTURES` now carries BOTH `floor`
-// and `product-floor`, and this slider's clean-room notch is `product-floor`:
+// and `product-floor`, and the clean-room row here is `product-floor`:
 //   - `floor` is the DOORLESS BENCHMARK floor, the placebo-of-record (B2). F6
 //     established that `--disable-slash-commands` suppresses plugin commands
 //     too, so at `floor` THIS COMMAND DOES NOT EXIST. The benchmark floor is
-//     deliberately not a notch: a slider cannot offer a door to a posture that
-//     has none, and priced as its own arm (B1) it must never be pooled with the
-//     product floor.
+//     deliberately not a row: this surface cannot offer a door to a posture
+//     that has none, and priced as its own arm (B1) it must never be pooled
+//     with the product floor.
 //   - `product-floor` is the DOORFUL PRODUCT floor — T9b minus
-//     `--disable-slash-commands`, the door costing +515 tok (F7). It is the only
-//     clean room reachable by a session that can run `/skill-heaven` at all.
+//     `--disable-slash-commands`, the door costing +515 tok (F7). It is the
+//     only clean room reachable by a session that can run `/skill-heaven` at
+//     all. Per founder ruling R1 (2026-07-29) `clean-room` and `product-floor`
+//     are two names for one thing — the cleanest launchable posture; neither
+//     name retires the other.
 // Nothing here records a benchmark arm: the placebo arm flag belongs to core's
 // CLI, at the benchmark floor and nowhere else, and no path in this package
 // composes one (a test pins the absence).
@@ -65,10 +76,10 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  * @property {boolean} [launcherLocked]
  */
 
-/** @typedef {"launched" | "reachable" | "locked"} NotchState */
+/** @typedef {"launched" | "reachable" | "locked"} RowState */
 
 /**
- * @typedef {object} Notch
+ * @typedef {object} PostureRow
  * @property {string} id
  * @property {string} label
  * @property {string} blurb
@@ -78,37 +89,46 @@ const SESSION_ENV = "CLAUDE_CODE_SESSION_ID";
  */
 
 /**
- * The slider, top (most context) to bottom (least). Only `product-floor` is
+ * The rows, top (most context) to bottom (least). Only `product-floor` is
  * launcher-locked: gate (a) established that every other physical stop is
  * reachable on a continued session in either direction, and that user/global
  * skill eviction is reachable at boot only.
  *
  * `resume` is a function of the session id so the printed command is exact.
- * A notch with no `resume` is never presented as something the user can run.
+ * A row with no `resume` is never presented as something the user can run.
  *
- * STOPS THE STEP-2 DRAFT LISTED AND THIS SET DOES NOT — recorded, not silently
+ * NAMES THE STEP-2 DRAFT LISTED AND THIS SET DOES NOT — recorded, not silently
  * dropped, so nobody re-adds them from memory:
- *   - `lean` and `add-ons`. RETIRED as slider stops by founder ruling (V5-6
- *     follow-up, 2026-07-29): neither is a ratified term and neither is a
- *     posture — core's `POSTURES` is `floor | product-floor | curated | native`,
- *     and these two were in-session flag moves wearing posture clothing on a
- *     shipped control surface. Unratified vocabulary does not get a notch. They
- *     are `banned` in the federation lexicon with no replacement: the CONCEPT is
- *     gone from this surface, not renamed. `/skill-heaven lean` now falls through
- *     to the ordinary "no notch called …" path — deliberately, because a bespoke
- *     explanation would keep the retired word alive in shipped copy.
+ *   - `lean` and `add-ons`. RETIRED as stops by founder ruling (V5-6 follow-up,
+ *     2026-07-29): neither is a ratified term and neither is a posture — they
+ *     were in-session flag moves wearing posture clothing on a shipped control
+ *     surface. Unratified vocabulary does not get a row. They are `banned` in
+ *     the federation lexicon with no replacement: the CONCEPT is gone from this
+ *     surface, not renamed. `/skill-heaven lean` falls through to the ordinary
+ *     unknown-name path — deliberately, because a bespoke explanation would
+ *     keep the retired word alive in shipped copy.
  *   - the doorless BENCHMARK `floor` — no door by ruling (F6), see the header.
- *   - `restraint`, the below-vanilla behavioral notch. It shipped as a
+ *     It is core-known, so asking for it by name gets the "not offered here"
+ *     line (never "unknown"), and the footer carries the shipped mechanism
+ *     fact: slash commands are off there, so this command does not exist there.
+ *   - `curated`. Its standing is OPEN (founder ruling R3, 2026-07-29, and
+ *     RATIFICATION OPEN 1) and nothing composes it (`LAUNCHABLE_POSTURES` in
+ *     src/cli.ts is native-only), so it gets no row and — deliberately — no
+ *     status claim in any rendered string: asking for it by name gets the same
+ *     "not offered here" line as any other core-known posture name. A test
+ *     pins that a core-known name is never rendered as an unknown word.
+ *   - `restraint`, the below-vanilla behavioral stop. It shipped as a
  *     "coming — research" row on D13's authority. D13 is retired, gate (e) is
  *     still UNVERIFIED, and RATIFICATION.md OPEN 1 has an unresolved proposal
  *     that behavioral restraint is "behavioral, not positional" — i.e. possibly
- *     not a notch at all. Rendering it as the bottom rung would encode that
- *     provisional mapping in a constant, which OPEN 3 rules out explicitly. Its
- *     absence here is NOT a ruling on where restraint eventually lives; it is
- *     this surface declining to make one. Nothing else in the repo rides it.
+ *     not a posture stop at all. Rendering it as the bottom row would encode
+ *     that provisional mapping in a constant, which OPEN 3 rules out
+ *     explicitly. Its absence here is NOT a ruling on where restraint
+ *     eventually lives; it is this surface declining to make one. Nothing else
+ *     in the repo rides it.
  */
-/** @type {Notch[]} */
-export const NOTCHES = [
+/** @type {PostureRow[]} */
+export const POSTURE_ROWS = [
   {
     id: "hell",
     label: "hell",
@@ -134,18 +154,18 @@ export const NOTCHES = [
 
 /**
  * Postures this surface may print a `claude-heaven` relaunch command for,
- * keyed by notch id.
+ * keyed by row id.
  *
  * EMPTY ON PURPOSE, and it is not an oversight. `src/cli.ts` refuses every
  * `--posture` outside `LAUNCHABLE_POSTURES` (native only, in this slice) with a
- * non-zero exit. A slider that said "relaunch via `claude-heaven` to unlock the
+ * non-zero exit. Copy that said "relaunch via `claude-heaven` to unlock the
  * clean room" was offering a door the tool then slams: the user runs it, gets
  * `exit 2`, and the surface has claimed a transition the harness cannot perform
  * (KC7). Two honest resolutions existed — stop offering it, or widen what the
  * CLI accepts — and widening is a product decision nobody has ruled on, so this
  * offers nothing.
  *
- * The clean room stays a visibly locked notch that says WHY it is locked; it
+ * The clean room stays a visibly locked row that says WHY it is locked; it
  * simply no longer points at a command that fails. A test walks every rendered
  * mode and asserts that every `claude-heaven --posture <p>` this file could
  * print is accepted by the real CLI validator, so the affordance and the
@@ -157,7 +177,7 @@ export const RELAUNCH_OFFERS = {};
 
 // Single-column glyphs only — a double-width emoji would break the label gutter
 // in a terminal, and this text is rendered verbatim.
-/** @type {Record<NotchState, string>} */
+/** @type {Record<RowState, string>} */
 const STATE_MARK = { launched: "●", reachable: "○", locked: "⊘" };
 const LABEL_WIDTH = 12;
 const ROW_INDENT = " ".repeat(3 + 1 + 2 + LABEL_WIDTH);
@@ -177,6 +197,27 @@ export function readGatedLevels(/** @type {string} */ dataDir = join(HERE, "..",
   return null;
 }
 
+/**
+ * Reads the machine-copied core posture list from the same artifact (see
+ * scripts/generate-p2-gate.ts). Used for one thing only: a core-known posture
+ * name with no row is answered with "not offered here" rather than rendered as
+ * an unknown word (refusal transparency) — with NO further claim about it.
+ * Degrades to `null`: without the list an unmatched name gets the unknown-name
+ * line, which claims nothing either. (P2 safety does not ride on this list —
+ * gating fails closed via readGatedLevels above, checked first.)
+ * @returns {string[] | null} null when the artifact is missing or corrupt.
+ */
+export function readKnownPostures(/** @type {string} */ dataDir = join(HERE, "..", "data")) {
+  try {
+    const parsed = JSON.parse(readFileSync(join(dataDir, "p2-gate.json"), "utf-8"));
+    const postures = parsed?.postures;
+    if (Array.isArray(postures) && postures.every((p) => typeof p === "string")) return postures;
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
 /** 14200 -> "14.2k"; sub-1k stays exact. Mirrors src/statusline.ts formatTokens
  * (a parity test pins the two together). */
 /** @param {unknown} n */
@@ -191,8 +232,8 @@ export function formatTokens(n) {
  * before substituting it into a command's bash line (probed on 2.1.216), so
  * whatever lands here is inert text — but it is echoed back to the user, so
  * anything exotic is dropped rather than interpreted or reflected.
- * @returns {string | null} the notch name, "" for "no target", or null for
- * "not a notch name" (never echoed back).
+ * @returns {string | null} the posture name, "" for "no target", or null for
+ * "not a posture name" (never echoed back).
  */
 export function normalizeTarget(/** @type {unknown} */ raw) {
   const s = String(raw ?? "").trim().toLowerCase();
@@ -229,60 +270,67 @@ export function loadManifest(path = process.env[PROFILE_ENV]) {
  * @param {object} [opts]
  * @param {LaunchManifest | null} [opts.manifest] launch manifest; null under vanilla claude
  * @param {string} [opts.sessionId] CLAUDE_CODE_SESSION_ID
- * @param {string} [opts.target] the notch the user asked for
+ * @param {string} [opts.target] the posture the user asked for
  * @param {string[] | null} [opts.gatedLevels] machine-copied Hell-lane levels
+ * @param {string[] | null} [opts.knownPostures] machine-copied core posture list
  * @returns {{ text: string, refused: boolean }}
  */
-export function renderSlider(opts = {}) {
+export function renderPosture(opts = {}) {
   const manifest = opts.manifest ?? null;
   const gated = opts.gatedLevels === undefined ? readGatedLevels() : opts.gatedLevels;
+  const known = opts.knownPostures === undefined ? readKnownPostures() : opts.knownPostures;
   const target = normalizeTarget(opts.target);
   const sid = opts.sessionId || "";
   const launched = manifest?.posture ?? "native";
 
-  // P2 first — never render a slider around a Hell-lane request.
+  // P2 first — never render the posture list around a Hell-lane request.
   if (isGatedTarget(target, gated)) return { text: refusal(target), refused: true };
 
   const launchedNote = manifest
     ? "← you launched here (via claude-heaven)"
     : "← you are here (vanilla claude)";
 
-  const lines = ["⚡ Skill Heaven — posture slider", `   ${sessionLine(manifest)}`, "", "   ▲ more context"];
+  const lines = ["⚡ Skill Heaven — posture", `   ${sessionLine(manifest)}`, "", "   ▲ more context"];
   // Whether this render actually prints a `→` command. The footer's
   // run-it-yourself paragraph is about those commands, so it is printed only
   // when they exist — copy that explains an absent affordance is noise at best
   // and an implied offer at worst.
   let hasMoves = false;
-  for (const notch of NOTCHES) {
-    const state = notchState(notch, launched);
-    const rows = notchLines(notch, state, sid, target, launchedNote);
-    if (rows.some((r) => /^\s+→ /.test(r))) hasMoves = true;
-    lines.push(...rows);
+  for (const row of POSTURE_ROWS) {
+    const state = rowState(row, launched);
+    const rendered = rowLines(row, state, sid, target, launchedNote);
+    if (rendered.some((r) => /^\s+→ /.test(r))) hasMoves = true;
+    lines.push(...rendered);
   }
   lines.push("   ▼ less context", "", ...footer(launched, sid, hasMoves));
 
-  if (target !== "" && !NOTCHES.some((n) => n.id === target)) {
-    // `floor` is a real posture that is deliberately not a notch. Say why rather
-    // than pretending the name means nothing — refusal transparency.
+  if (target !== "" && !POSTURE_ROWS.some((r) => r.id === target)) {
+    // ONE rule, no per-name prose (founder ruling, 2026-07-29): a name core
+    // knows as a posture is "not offered here" — with no claim about what it
+    // is or when that might change — and anything else is unknown. A
+    // core-known posture name is never rendered as an unknown word (refusal
+    // transparency); nothing here asserts a status that would need
+    // re-ratifying when one moves.
+    const coreKnown = target !== null && (known ?? []).includes(target);
     lines.push(
       "",
-      target === "floor"
-        ? "   (`floor` is the benchmark floor: no slash commands, so no door and no slider.\n" +
-          "   The clean room you can reach from here is the product floor, above.)"
-        : `   (no notch called ${quoteTarget(target)} — the slider above is the whole set.)`,
+      coreKnown
+        ? `   (\`${target}\` is not offered here — the postures above are the whole set on\n` +
+          "   this surface.)"
+        : `   (nothing called ${quoteTarget(target)} here — the postures above are the whole set.)`,
     );
   }
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
 
 /** null target = unparseable. Fail CLOSED: without a readable gate list we
- * cannot tell a Heaven notch from a Hell level, so refuse anything unknown
+ * cannot tell a Heaven posture from a Hell level, so refuse anything unknown
  * rather than risk rendering a Hell stop as available (P2). */
 /** @param {string | null} target @param {string[] | null} gated */
 function isGatedTarget(target, gated) {
   if (target === "") return false;
   if (target === "hell") return true;
-  if (gated === null) return !NOTCHES.some((n) => n.id === target);
+  if (gated === null) return !POSTURE_ROWS.some((r) => r.id === target);
   return target !== null && gated.includes(target);
 }
 
@@ -320,43 +368,43 @@ function sessionLine(manifest) {
 /**
  * `launched === "floor"` (the doorless benchmark floor) cannot occur in
  * practice — this command does not exist there (F6) — so it deliberately
- * matches no notch and the clean room stays locked, which is the honest
+ * matches no row and the clean room stays locked, which is the honest
  * rendering for a session that somehow reports a posture with no door.
- * @param {Notch} notch @param {string} launched @returns {NotchState}
+ * @param {PostureRow} row @param {string} launched @returns {RowState}
  */
-function notchState(notch, launched) {
-  if (notch.kind === "gated") return "locked";
-  if (notch.id === launched) return "launched";
+function rowState(row, launched) {
+  if (row.kind === "gated") return "locked";
+  if (row.id === launched) return "launched";
   // D12: the clean room is composed at boot and cannot be reached mid-session.
-  if (notch.id === "product-floor") return "locked";
+  if (row.id === "product-floor") return "locked";
   return "reachable";
 }
 
 /**
- * @param {Notch} notch @param {NotchState} state @param {string} sid
+ * @param {PostureRow} row @param {RowState} state @param {string} sid
  * @param {string | null} target @param {string} launchedNote
  */
-function notchLines(notch, state, sid, target, launchedNote) {
-  const pointer = notch.id === target ? "  ← you asked for this one" : "";
-  const out = [`   ${STATE_MARK[state]}  ${notch.label.padEnd(LABEL_WIDTH)}${notch.blurb}${pointer}`];
+function rowLines(row, state, sid, target, launchedNote) {
+  const pointer = row.id === target ? "  ← you asked for this one" : "";
+  const out = [`   ${STATE_MARK[state]}  ${row.label.padEnd(LABEL_WIDTH)}${row.blurb}${pointer}`];
   if (state === "launched") out.push(`${ROW_INDENT}${launchedNote}`);
   if (state === "locked") {
-    out.push(`${ROW_INDENT}${notch.lockedNote}`);
+    out.push(`${ROW_INDENT}${row.lockedNote}`);
     // A relaunch is printed ONLY for a posture the launcher actually composes
-    // (see RELAUNCH_OFFERS). Empty today, so a locked notch prints a reason and
+    // (see RELAUNCH_OFFERS). Empty today, so a locked row prints a reason and
     // no command — never a command the CLI would refuse.
-    const offer = RELAUNCH_OFFERS[notch.id];
+    const offer = RELAUNCH_OFFERS[row.id];
     if (offer) out.push(`${ROW_INDENT}→ ${offer(sid || "<session-id>")}`);
   }
-  if (state === "reachable" && notch.resume) out.push(`${ROW_INDENT}→ ${notch.resume(sid || "<session-id>")}`);
+  if (state === "reachable" && row.resume) out.push(`${ROW_INDENT}→ ${row.resume(sid || "<session-id>")}`);
   return out;
 }
 
 /** @param {string} launched @param {string} sid @param {boolean} hasMoves */
 function footer(launched, sid, hasMoves) {
   const out = [
-    "   The slider moves this session UP from the posture it launched at. It cannot",
-    "   take anything out of a session that is already running.",
+    "   A session moves UP only, from the posture it launched at: nothing can be",
+    "   taken out of a session that is already running.",
   ];
   // Only explain the locked clean room to a session that is not already in it.
   if (launched !== "product-floor") {
@@ -369,7 +417,7 @@ function footer(launched, sid, hasMoves) {
   }
   out.push(
     "",
-    "   There is a floor below the clean room, and it is not on this slider: the",
+    "   There is a floor below the clean room, and it is not offered here: the",
     "   benchmark floor runs with slash commands off, so this command does not exist",
     "   there. It is the measurement placebo, not a place to sit — and the two floors",
     "   are always priced as separate arms, never averaged.",
@@ -405,7 +453,7 @@ function footer(launched, sid, hasMoves) {
 }
 
 export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
-  const { text } = renderSlider({
+  const { text } = renderPosture({
     manifest: loadManifest(),
     sessionId: process.env[SESSION_ENV],
     target: argv.join(" "),

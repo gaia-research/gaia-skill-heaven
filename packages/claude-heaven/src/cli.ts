@@ -19,8 +19,8 @@ import { assertLevelAllowed, planNativeLaunch } from "./launcher.js";
  *
  * Slice 1 is native-only. Widening this set is a product decision — it is not a
  * copy edit, and no surface may pre-empt it by advertising the wider set.
- * `plugin/scripts/render-slider.mjs` carries the matching `RELAUNCH_OFFERS`, and
- * a test asserts the two cannot drift apart.
+ * `plugin/scripts/render-posture.mjs` carries the matching `RELAUNCH_OFFERS`,
+ * and a test asserts the two cannot drift apart.
  */
 export const LAUNCHABLE_POSTURES: readonly string[] = ["native"];
 

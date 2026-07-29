@@ -1,6 +1,6 @@
 {
   "name": "claude-heaven",
-  "description": "The Claude Code door to Skill Heaven — native-default launcher, posture slider (/skill-heaven), and standing-dose statusline. WORK IN PROGRESS (WS4): /skill-hell, the locked Hell door, lands in step 3.",
+  "description": "The Claude Code door to Skill Heaven — native-default launcher, the /skill-heaven posture command, and standing-dose statusline. WORK IN PROGRESS (WS4): /skill-hell, the locked Hell door, lands in step 3.",
   "version": "0.0.0",
   "author": {
     "name": "Gaia Research"

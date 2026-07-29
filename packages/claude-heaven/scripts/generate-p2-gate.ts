@@ -15,20 +15,25 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HELL_LEVELS } from "skill-heaven";
+import { HELL_LEVELS, POSTURES } from "skill-heaven";
 
 export interface P2Gate {
   schema: "claude-heaven/p2-gate@1";
   /** Provenance, so a reader of the generated file knows not to hand-edit it. */
-  source: "skill-heaven HELL_LEVELS";
+  source: "skill-heaven HELL_LEVELS + POSTURES";
   gatedLevels: string[];
+  /** Core's posture list, machine-copied for one renderer purpose: a core-known
+   * posture name with no row is answered "not offered here", never rendered as
+   * an unknown word. Carries no status claim about any entry. */
+  postures: string[];
 }
 
 export function buildP2Gate(): P2Gate {
   return {
     schema: "claude-heaven/p2-gate@1",
-    source: "skill-heaven HELL_LEVELS",
+    source: "skill-heaven HELL_LEVELS + POSTURES",
     gatedLevels: [...HELL_LEVELS],
+    postures: [...POSTURES],
   };
 }
 
