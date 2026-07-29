@@ -34,13 +34,13 @@ describe("statusline bin (IO path)", () => {
   it("renders standing + live ctx from a manifest and piped JSON", () => {
     const { status, stdout } = runStatusline({ CLAUDE_HEAVEN_PROFILE: manifestPath }, '{"context_window":{"used_percentage":23}}');
     expect(status).toBe(0);
-    expect(stdout).toBe("⚡ native · 4.8k standing · 23% ctx");
+    expect(stdout).toBe("⚡ native · 4.8k standing (excl. bundled/plugin) · 23% ctx");
   });
 
   it("renders standing only when stdin is empty (does not hang)", () => {
     const { status, stdout } = runStatusline({ CLAUDE_HEAVEN_PROFILE: manifestPath }, "");
     expect(status).toBe(0);
-    expect(stdout).toBe("⚡ native · 4.8k standing");
+    expect(stdout).toBe("⚡ native · 4.8k standing (excl. bundled/plugin)");
   });
 
   it("emits nothing when no profile env is set (mis-wired = silent, not noisy)", () => {

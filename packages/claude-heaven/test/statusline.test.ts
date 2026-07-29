@@ -29,23 +29,43 @@ describe("formatTokens", () => {
 
 describe("renderStatusline", () => {
   it("renders the native-posture shape (P1)", () => {
-    expect(renderStatusline(manifest())).toBe("⚡ native · 14.2k standing");
+    expect(renderStatusline(manifest())).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
   });
   it("reflects the launched posture verbatim", () => {
-    expect(renderStatusline(manifest({ posture: "floor", standingTokens: 0 }))).toBe("⚡ floor · 0 standing");
-    expect(renderStatusline(manifest({ posture: "curated", standingTokens: 57 }))).toBe("⚡ curated · 57 standing");
+    expect(renderStatusline(manifest({ posture: "floor", standingTokens: 0 }))).toBe(
+      "⚡ floor · 0 standing (excl. bundled/plugin)",
+    );
+    expect(renderStatusline(manifest({ posture: "curated", standingTokens: 57 }))).toBe(
+      "⚡ curated · 57 standing (excl. bundled/plugin)",
+    );
   });
   it("marks an incomplete census with a trailing + (floor, not exact)", () => {
-    expect(renderStatusline(manifest({ incomplete: true }))).toBe("⚡ native · 14.2k+ standing");
-    expect(renderStatusline(manifest({ incomplete: true, standingTokens: 57 }))).toBe("⚡ native · 57+ standing");
+    expect(renderStatusline(manifest({ incomplete: true }))).toBe("⚡ native · 14.2k+ standing (excl. bundled/plugin)");
+    expect(renderStatusline(manifest({ incomplete: true, standingTokens: 57 }))).toBe(
+      "⚡ native · 57+ standing (excl. bundled/plugin)",
+    );
   });
   it("appends live ctx% as a SEPARATE readout when present", () => {
-    expect(renderStatusline(manifest(), { context_window: { used_percentage: 22.7 } })).toBe("⚡ native · 14.2k standing · 23% ctx");
+    expect(renderStatusline(manifest(), { context_window: { used_percentage: 22.7 } })).toBe(
+      "⚡ native · 14.2k standing (excl. bundled/plugin) · 23% ctx",
+    );
   });
   it("omits ctx when the field is absent or non-numeric", () => {
-    expect(renderStatusline(manifest(), {})).toBe("⚡ native · 14.2k standing");
-    expect(renderStatusline(manifest(), { context_window: {} })).toBe("⚡ native · 14.2k standing");
-    expect(renderStatusline(manifest(), null)).toBe("⚡ native · 14.2k standing");
+    expect(renderStatusline(manifest(), {})).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
+    expect(renderStatusline(manifest(), { context_window: {} })).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
+    expect(renderStatusline(manifest(), null)).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
+  });
+
+  // KC2 (Issue #9): the exclusion caveat is scope-conditional, not
+  // unconditional decoration — a "session" scope (curated/product-floor)
+  // enumerates the launched skill set exactly, so appending "excl.
+  // bundled/plugin" there would itself be a false claim, not an honest one.
+  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
+    expect(renderStatusline(manifest({ scope: "session" }))).toBe("⚡ native · 14.2k standing");
+  });
+  it("never renders the standing dose without SOME scope word or the exclusion caveat", () => {
+    // user+project scope must always disclose what it could not see.
+    expect(renderStatusline(manifest({ scope: "user+project" }))).toMatch(/excl\. bundled\/plugin/);
   });
 });
 

@@ -420,6 +420,24 @@ function refusal(target) {
   ].join("\n");
 }
 
+/**
+ * KC2 (Issue #9): a scope NAME alone ("user+project scope") tells a reader
+ * what the census is called, not what it is missing — an exclusion cannot be
+ * inferred from a label by someone who has not read census.ts. `scope:
+ * "user+project"` (native launches) is a partial census: bundled CLI skills
+ * and plugin-provided skills are not counted. `scope: "session"`
+ * (curated/product-floor) enumerates the launched set exactly — nothing is
+ * excluded there, so appending the caveat would itself be a false claim. This
+ * surface has room for the full sentence; the statusline strip gets the
+ * compact form (src/statusline.ts `scopeCaveat`).
+ * @param {string} scope
+ */
+function scopeNote(scope) {
+  return scope === "user+project"
+    ? `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`
+    : `(${scope} scope)`;
+}
+
 /** @param {LaunchManifest | null} manifest */
 function sessionLine(manifest) {
   if (!manifest) {
@@ -434,7 +452,7 @@ function sessionLine(manifest) {
       : "";
   return (
     `session: launched at ${manifest.posture} · ${skills}` +
-    `${formatTokens(manifest.standingTokens)}${floor} standing (${manifest.scope} scope)`
+    `${formatTokens(manifest.standingTokens)}${floor} standing ${scopeNote(manifest.scope)}`
   );
 }
 
