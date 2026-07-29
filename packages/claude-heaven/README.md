@@ -1,7 +1,7 @@
 # claude-heaven
 
 > **WORK IN PROGRESS (WS4).** Step 1 (native-default launcher + statusline) and
-> step 2 (the `/skill-heaven` posture slider) are live; `/skill-hell` — the
+> step 2 (the `/skill-heaven` posture command) are live; `/skill-hell` — the
 > locked Hell door — lands in step 3.
 
 The Claude Code **door** to Skill Heaven.
@@ -45,43 +45,57 @@ the **launcher** — it is the only thing that runs before the session exists.
 In-session **slash commands** ship in the `plugin/` dir (installable via the
 monorepo marketplace, gate (d)).
 
-## Step 2 — `/skill-heaven`, the posture slider ✅
+## Step 2 — `/skill-heaven`, the posture command ✅
 
 ```
-/skill-heaven            # render the slider
-/skill-heaven native     # render it with one notch called out
+/skill-heaven            # render the postures
+/skill-heaven native     # render with one posture pointed out
 ```
 
 The active **downward** control, summonable anytime. It renders where the
 session sits, what its standing dose is, and the **exact command** for each
-notch it can actually reach — and it never pretends to be able to move the
+posture it can actually reach — and it never pretends to be able to move the
 session itself.
 
 - **Upward-only, launcher-locked below (D12).** Gate (a) came back **NEGATIVE**
   for in-session subtractive recomposition: on a continued session no flag or
-  flag-combination evicts user/global skills. So the **clean room** notch is
+  flag-combination evicts user/global skills. So the **clean room** is
   reachable **only at boot**. `native` is reachable in either direction and
   prints a real `claude --resume …` command.
-- **Only ratified postures get a stop.** The notch set is `hell` (the gated lane
+- **Only ratified postures get a row.** The row set is `hell` (the gated lane
   marker core owns) plus postures core actually knows. An earlier draft carried
   **`lean`** and **`add-ons`** stops; both are **retired** — neither is a
   ratified term and neither is a posture, so they were in-session flag moves
   wearing posture clothing on a shipped control surface. They are gone with **no
   replacement**: the concept, not just the word. `/skill-heaven lean` gets the
-  ordinary "no notch called …" miss rather than a bespoke explanation, so the
-  retired word does not survive in shipped copy. A test holds the whole notch set
-  against core's `POSTURES`.
+  ordinary unknown-name miss rather than a bespoke explanation, so the retired
+  word does not survive in shipped copy. A test holds the whole row set against
+  core's `POSTURES`.
+- **The control has no noun — deliberately.** The step-2 draft's names for this
+  surface and for its stops are both banned in the federation lexicon (retired
+  2026-07-24, oracle N1/N5), and the listed replacements (`ladder`/`rung`) name
+  the `off…max` ladder — a *different* control. The name of this surface is
+  open (founder ruling R2, 2026-07-29), so the copy lists the postures and
+  describes moves without naming the widget, and the internals say "row".
+- **A core-known posture name is never an unknown word.** One rule, no per-name
+  prose: a name in core's `POSTURES` that has no row answers "not offered
+  here" — with no claim about what it is or when that might change (`curated`'s
+  standing is open, founder ruling R3) — and anything else is unknown. The
+  posture list is machine-copied beside the P2 gate list into
+  `plugin/data/p2-gate.json`; a freshness test byte-checks it.
 - **The clean room is the PRODUCT floor, not the benchmark floor (V5-5).** Since
-  the floor split landed, `POSTURES` carries both. The slider's clean room is
+  the floor split landed, `POSTURES` carries both. The clean room here is
   **`product-floor`** — T9b minus `--disable-slash-commands`, the door priced at
   **+515 tok** (F7). The doorless **benchmark** `floor` is the
   **placebo-of-record (B2)** and has no door to slide (F6), so it is
-  deliberately **not a notch**; the footer says so instead of hiding it, and
-  `/skill-heaven floor` gets that explanation rather than "unknown notch". The
+  deliberately **not a row**; the footer states the shipped mechanism fact —
+  slash commands are off there, so this command does not exist there — and
+  `/skill-heaven floor` answers "not offered here" rather than rendering a real
+  posture name as an unknown word. The
   two floors are always priced as **separate arms (B1)** — never averaged. No
   path in this package records a benchmark arm at all; `--arm placebo` lives in
   core's CLI and is valid only at `--posture floor` (a test pins the absence).
-- **Locked-notch upsell (D12) — locked, with no command behind it.** Under
+- **Locked clean-room upsell (D12) — locked, with no command behind it.** Under
   vanilla `claude`, and under any `claude-heaven` session that did not launch
   there, the clean room renders `⊘` and says *why*: composed at boot, never
   mid-session, and **no launcher builds it yet**. A session that launched at the
@@ -98,35 +112,37 @@ session itself.
 - **No magic respawn (D12 / B4).** Nothing in this surface claims a slash command
   can restart the process, because nothing can, and D12 rules the in-session
   control upward-only. The printed commands are for the user to run.
-- **No behavioral notch ships.** An earlier draft carried a below-vanilla
+- **No behavioral row ships.** An earlier draft carried a below-vanilla
   `restraint` row rendered as *"coming — research"*, on the authority of the now
   **retired D13**. D13 was retired 2026-07-24 (never-reused list), gate (e) is
   still UNVERIFIED, and RATIFICATION.md OPEN 1 has an open proposal that behavioral
-  restraint is *behavioral, not positional* — possibly not a notch at all. The
+  restraint is *behavioral, not positional* — possibly not a posture stop at
+  all. The
   row is gone rather than re-bound to nothing. Its absence is not a ruling on
   where restraint eventually lives; OPEN 1 and OPEN 3 stay open.
 - **P2 is enforced, not restated.** `med|high|xhigh|max` and `hell` get a hard
-  refusal with no slider and no route around it. The gated list is
+  refusal with no posture list and no route around it. The gated list is
   **machine-copied** from core's `HELL_LEVELS` into `plugin/data/p2-gate.json`
   (regenerate with `npx tsx packages/claude-heaven/scripts/generate-p2-gate.ts`;
   a test byte-checks freshness, so adding a Hell level upstream fails CI here).
   If that artifact is ever unreadable the renderer **fails closed**.
-- **One standing number, one source.** The slider does not re-census: it reads
+- **One standing number, one source.** This surface does not re-census: it reads
   the launch manifest the launcher wrote — the same file the statusline renders
   — so the two readouts cannot disagree. Under vanilla `claude` there is no
   manifest, and it says so rather than inventing a number.
-- **Self-dose:** the command's own standing line prices at **27 tok** (30 with a
+- **Self-dose:** the command's own standing line prices at **24 tok** (28 with a
   plugin-name-prefixed id), inside the ≈31 tok gate (c) budget; a test holds it
   there.
 
 ### Why the renderer is plain `.mjs`
 
-`plugin/scripts/render-slider.mjs` runs with **zero dependencies** — once the
+`plugin/scripts/render-posture.mjs` runs with **zero dependencies** — once the
 door is installed from the marketplace there is no `node_modules` beside it, so
 it cannot import `skill-heaven`. It is still typechecked (`checkJs` + JSDoc) and
 unit-tested directly, and the two things it would otherwise have to duplicate
-from core — the P2 gate list and the standing dose — are a generated artifact
-and a file the launcher writes, never hand-copied values.
+from core — the P2 gate list plus the core posture list, and the standing dose
+— are a generated artifact and a file the launcher writes, never hand-copied
+values.
 
 ### Harness probes behind step 2 (M0)
 
@@ -147,12 +163,11 @@ so **re-verify on every Claude Code upgrade**. The upstream evidence matrix
 | F7 | plugin command under **T9b minus `--disable-slash-commands`** | ✅ works. 20,176 tok vs T9b 19,661 vs native 28,379 → **+515 tok** to keep the door open, still −28.9% off native |
 
 **Consequence, since resolved upstream.** F6 meant "launch at the floor, then
-use the slider" was unreachable: at the T9b floor `/skill-heaven` does not
+adjust from inside" was unreachable: at the T9b floor `/skill-heaven` does not
 exist. That was an owner call, and the owner made it — **V5-5** split the floor
 in two and **PR #14** landed it in `packages/core`. The doorless floor keeps its
 byte-frozen T9b route as the placebo-of-record; the **F7 route is now a real,
-separately-named posture**, `product-floor`. This package's slider targets that
-one. Core's `compile()` is still untouched *from here* — the split was made
+separately-named posture**, `product-floor`. This package targets that one. Core's `compile()` is still untouched *from here* — the split was made
 upstream, on its own ratification, exactly as D9 requires.
 
 **Zero-mutation check:** `~/.claude/skills` (67 entries) diffed clean before and
@@ -162,8 +177,8 @@ after every probe; `~/.claude/settings.json` SHA-256 unchanged; no new
 ## Coming next (WS4 step 3)
 
 - **`/skill-hell`** — a **locked door** shown in **all** modes (P2); surfaces
-  benchmark status and opens only when Hell is proven safe. The slider already
-  renders the Hell notch as that locked door; step 3 gives it its own summonable
+  benchmark status and opens only when Hell is proven safe. `/skill-heaven`
+  already renders the Hell row as that locked door; step 3 gives it its own summonable
   command.
 
 Built on `packages/core` (the `skill-heaven` engine). Per N9, marketing weight

@@ -55,9 +55,17 @@ describe("/skill-heaven command definition", () => {
     // Probed on 2.1.216: ${CLAUDE_PLUGIN_ROOT} is substituted into the command
     // markdown (it is NOT exported to the bash child), and $ARGUMENTS is
     // shell-escaped before substitution.
-    expect(command).toContain('node "${CLAUDE_PLUGIN_ROOT}/scripts/render-slider.mjs"');
+    expect(command).toContain('node "${CLAUDE_PLUGIN_ROOT}/scripts/render-posture.mjs"');
     expect(command).toContain("'$ARGUMENTS'");
-    expect(existsSync(join(PLUGIN, "scripts", "render-slider.mjs"))).toBe(true);
+    expect(existsSync(join(PLUGIN, "scripts", "render-posture.mjs"))).toBe(true);
+  });
+
+  it("names the control with no noun — no banned lexicon word in the command copy", () => {
+    // `slider`/`notch` are banned (retired 2026-07-24, oracle N1/N5); their
+    // replacements name the off…max ladder, a different control; and the name
+    // of this surface is OPEN (founder ruling R2). So the command markdown
+    // carries none of them, and no coined substitute either.
+    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bladder\b|\brung(s)?\b|\bpicker\b/i);
   });
 
   it("pins the rendered block as verbatim, un-embellished copy", () => {
@@ -91,6 +99,12 @@ describe("door manifests", () => {
     for (const description of [pluginJson.description, entry.description]) {
       expect(description).not.toMatch(/no commands wired yet/i);
       expect(description).toContain("/skill-heaven");
+    }
+  });
+
+  it("carries no banned lexicon word in any door description", () => {
+    for (const description of [pluginJson.description, entry.description]) {
+      expect(description).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bladder\b|\brung(s)?\b|\bpicker\b/i);
     }
   });
 
