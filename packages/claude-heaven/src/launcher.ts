@@ -164,14 +164,30 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
   const manifest: ProfileManifest = {
     schema: "claude-heaven/profile@1",
     posture,
-    // The composed session's real standing dose: the curated set and nothing
-    // else (zero listing residual observed on the T9 route), or zero at
-    // product-floor, which admits no skills at all. NOT a native census.
+    // The composed session's real standing dose: the tokens compile() priced
+    // for the curated set (or zero at product-floor, which admits no skills at
+    // all). NOT a native census.
+    //
+    // KC4 CORRECTION (2026-07-29, packages/claude-heaven/scripts/
+    // probe-kc4-listing-residual.sh, 2/2 live runs, claude 2.1.220): the T9
+    // route this comment used to call "zero listing residual" is NOT zero —
+    // a project-scope skill (<cwd>/.claude/skills, kept live by
+    // --setting-sources project) and a bundled skill named `doctor`
+    // (unaffected by CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1) both showed up
+    // alongside the curated set in a real session's skill listing. See
+    // compile.ts's curated note for the full finding.
     standingTokens: compiled.doseSummary.standingTotal,
     skillCount: skills.length,
     // "session" — the profile IS the session set, enumerated exactly rather
     // than censused, so there is no partial-coverage caveat to disclose here
     // (native's "user+project" says what it could not see; this one saw all of it).
+    //
+    // KC4 OPEN QUESTION FOR KC2 (do not silently trust this branch): the "no
+    // caveat" claim above is now contradicted by the KC4 probe cited just
+    // above — curated sessions CAN show skills outside the enumerated set
+    // (project scope + `doctor`). Whether "session" scope keeps emitting no
+    // caveat, or gains one, is a product decision outside this measurement
+    // task's remit; it is NOT settled by this comment alone.
     scope: "session",
     launcherLocked: true,
     ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
