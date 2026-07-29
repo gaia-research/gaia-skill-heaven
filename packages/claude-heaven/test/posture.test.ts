@@ -124,6 +124,18 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
       expect(text).toMatch(/LOCKED \(P2\)/);
     }
   });
+
+  // KC6 (Issue #12): the Hell refusal must read as the POLICY class, not just
+  // as a bare "locked" that could be misread as "harness cannot do this" — a
+  // reader must be able to tell, from the text alone, that a key exists here
+  // and could turn, as opposed to the clean-room lock (D12) below, where none
+  // does.
+  it("marks the Hell refusal as a policy hold, not a harness limit (KC6)", () => {
+    const r = renderPosture({ target: "med" });
+    expect(r.refused).toBe(true);
+    expect(r.text).toContain("policy hold, not a harness limit");
+    expect(r.text).not.toContain("harness limit: no flag");
+  });
 });
 
 describe("locked clean room (D12)", () => {
@@ -144,6 +156,18 @@ describe("locked clean room (D12)", () => {
     expect(text).toMatch(/● {2}clean room/);
     expect(text).not.toContain("Composed at boot, never mid-session");
     expect(text).toContain("you launched here");
+  });
+
+  // KC6 (Issue #12): D12's lock is the OTHER refusal class — harness-
+  // incapable, not policy. Gate (a) came back NEGATIVE: no flag combination
+  // reaches this on a running session, so unlike Hell there is no key that a
+  // future decision could turn. The text must say so, and must not borrow the
+  // Hell row's policy vocabulary.
+  it("marks the clean-room lock as a harness limit, not a policy hold (KC6)", () => {
+    const text = render({ manifest: null });
+    expect(text).toContain("not a policy hold, a harness limit");
+    expect(text).toContain("no flag or flag-combination evicts skills on a running session");
+    expect(text).not.toContain("gated (P2)");
   });
 
   it("offers no relaunch the launcher would refuse (KC7) — checked against the real validator", () => {
@@ -288,6 +312,14 @@ describe("the floor split (V5-5): the clean room is the PRODUCT floor", () => {
     const text = render({ manifest: nativeManifest });
     expect(text).toContain("slash commands off, so this command does not exist");
     expect(text).not.toContain("--disable-slash-commands");
+  });
+
+  // KC6 (Issue #12): the benchmark floor's absence is the harness-incapable
+  // class too — there is no door composed there at all (F6), so nothing was
+  // withheld from the user by a decision.
+  it("marks the benchmark floor's absence as a harness fact, not a policy choice (KC6)", () => {
+    const text = render({ manifest: nativeManifest });
+    expect(text).toContain("a harness fact, not a policy choice");
   });
 
   it("prices the two floors as separate arms and never averages them (B1/B2)", () => {

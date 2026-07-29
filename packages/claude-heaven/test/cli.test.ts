@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { CURATED_DOOR_ABSENCE_NOTE } from "../src/launcher.js";
 import { parseArgs, run } from "../src/cli.js";
 
 /** A real skill dir with real bytes — core's own compile fixture. */
@@ -33,6 +35,20 @@ function silenceStderr(fn: () => number): number {
   (process.stderr.write as unknown as (s: string) => boolean) = () => true;
   try {
     return fn();
+  } finally {
+    process.stderr.write = orig;
+  }
+}
+
+function captureStderr(fn: () => number): { code: number; err: string } {
+  const chunks: string[] = [];
+  const orig = process.stderr.write.bind(process.stderr);
+  (process.stderr.write as unknown as (s: string) => boolean) = (s: string) => {
+    chunks.push(s);
+    return true;
+  };
+  try {
+    return { code: fn(), err: chunks.join("") };
   } finally {
     process.stderr.write = orig;
   }
@@ -133,5 +149,81 @@ describe("run", () => {
     expect(
       silenceStderr(() => run(["--print", "--posture", "curated", "--skill", "/nope/not/here"])),
     ).toBe(2);
+  });
+});
+
+// KC6 (Issue #12): a refusal must say which of two unlike things it is —
+// withheld by policy (a key exists, could turn) or harness-incapable (no key
+// exists at all). The Hell-lane refusal already reads as policy ("gated
+// (P2)"); the floor refusal must read as the OTHER class, explicitly, not
+// just as a bare "not launchable" that a reader could mistake for either.
+describe("refusal honesty (KC6)", () => {
+  it("marks the floor refusal as harness-incapable, not policy — and cites F6", () => {
+    const { code, err } = captureStderr(() => run(["--posture", "floor"]));
+    expect(code).toBe(2);
+    expect(err).toContain("not a policy hold");
+    expect(err).toMatch(/P2 gates the Hell lane\s+only/);
+    expect(err).toContain("F6");
+    expect(err).toContain("no door to open at this posture");
+  });
+
+  it("does not claim the F6/harness-incapable framing for a plain unknown posture", () => {
+    // "nonsense" is not core-known at all — a different, un-classed failure
+    // (bad input), not a claim about capability or policy.
+    const { code, err } = captureStderr(() => run(["--posture", "nonsense"]));
+    expect(code).toBe(2);
+    expect(err).toContain('unknown --posture "nonsense"');
+    expect(err).not.toContain("F6");
+    expect(err).not.toContain("policy hold");
+  });
+
+  it("distinguishes the Hell-lane refusal (policy) from the floor refusal (harness-incapable)", () => {
+    // assertLevelAllowed throws directly (P2 gate, checked before anything
+    // else in run()) — it is never caught into a stderr write, so the
+    // existing convention throughout this suite is `toThrow`, not stderr
+    // capture.
+    let hell = "";
+    try {
+      run(["--level", "max"]);
+    } catch (e) {
+      hell = (e as Error).message;
+    }
+    const floor = captureStderr(() => run(["--posture", "floor"])).err;
+    expect(hell).toContain("withheld by policy, not a harness limit");
+    expect(floor).toContain("not a policy hold");
+    // Neither borrows the other's vocabulary.
+    expect(hell).not.toContain("harness-incapable");
+    expect(floor).not.toMatch(/gated \(P2\)/);
+  });
+
+  it("prints the curated door-absence disclosure to stderr before the process could ever spawn claude, and --print carries it in notes instead", () => {
+    // A real (non---print) curated launch is NOT exercised here — it would
+    // spawn a real `claude` process with stdio: "inherit", which is unsafe to
+    // run from an automated test. Instead this pins the SOURCE shape: the
+    // disclosure constant is referenced, and it appears before the spawnSync
+    // call, so the message is guaranteed to reach the user's terminal while
+    // the door still exists to print it (KC6) — and --print's JSON exposes
+    // the same fact through `notes`, checked below without spawning anything.
+    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts"), "utf-8");
+    const noteRefIdx = src.indexOf("CURATED_DOOR_ABSENCE_NOTE");
+    const spawnIdx = src.indexOf("spawnSync(live.command");
+    expect(noteRefIdx).toBeGreaterThan(-1);
+    expect(spawnIdx).toBeGreaterThan(-1);
+    expect(noteRefIdx, "disclosure must be printed before claude could spawn").toBeLessThan(spawnIdx);
+
+    const { code, out } = captureStdout(() =>
+      run(["--print", "--posture", "curated", "--skill", FIXTURE]),
+    );
+    expect(code).toBe(0);
+    const plan = JSON.parse(out);
+    expect(plan.notes.join(" ")).toContain(CURATED_DOOR_ABSENCE_NOTE);
+  });
+
+  it("carries no curated door-absence note for postures where the door is not at stake", () => {
+    const { out: nativeOut } = captureStdout(() => run(["--print"]));
+    expect(JSON.parse(nativeOut).notes.join(" ")).not.toContain("does not exist inside this curated session");
+
+    const { out: floorOut } = captureStdout(() => run(["--print", "--posture", "product-floor"]));
+    expect(JSON.parse(floorOut).notes.join(" ")).not.toContain("does not exist inside this curated session");
   });
 });

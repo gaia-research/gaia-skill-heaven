@@ -154,6 +154,8 @@ export function compile(input: CompileInput): CompileResult {
   if (posture === "product-floor" && harness !== "claude") {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude was probed (F7, 2.1.216). ` +
+        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has " +
+        "verified whether this composes here at all, so there is nothing to withhold or grant a key to. " +
         "Refusing to guess (M0 discipline); use --posture floor, or add the row to the harness capability matrix first.",
     );
   }
@@ -400,6 +402,8 @@ function compileGrok(
   if (input.posture !== "native") {
     throw new Error(
       "grok: no verified skills-suppression/re-admission mechanism (v0.2.103 --help probe found no skills surface). " +
+        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only) — nothing about " +
+        "grok is being withheld by decision; no one has found a way to do it yet, verified or otherwise. " +
         "Refusing to guess (M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
         "Only --posture native compiles for grok today.",
     );

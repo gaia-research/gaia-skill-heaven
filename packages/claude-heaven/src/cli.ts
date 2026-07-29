@@ -9,8 +9,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { materialize, type Posture } from "skill-heaven";
-import { assertLevelAllowed, planLaunch } from "./launcher.js";
+import { materialize, POSTURES, type Posture } from "skill-heaven";
+import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
@@ -86,11 +86,33 @@ export function run(argv: string[]): number {
   assertLevelAllowed(args.level);
 
   if (!LAUNCHABLE_POSTURES.includes(args.posture)) {
-    process.stderr.write(
-      `claude-heaven does not launch --posture ${args.posture}. ` +
-        `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
-        `The benchmark floor is not a door posture — it runs from core, for benchmark runs only.\n`,
-    );
+    // KC6: a refusal must say which of two unlike things it is. `floor` is
+    // core-known but harness-incapable FOR A DOOR SPECIFICALLY — not withheld
+    // by policy (nothing here decided to keep it from you), and not even a
+    // capability gap in claude itself: F6 established `--disable-slash-commands`
+    // suppresses plugin COMMANDS as well as plugin skills, so a door launched
+    // there has no /skill-heaven to talk to. There is no key to turn; the door
+    // does not exist at that address. Anything else here is simply not a
+    // posture core knows at all — a plain unknown-input error, neither class.
+    if (args.posture === "floor") {
+      process.stderr.write(
+        `claude-heaven cannot launch --posture floor: this is not a policy hold (P2 gates the Hell lane ` +
+          `only) — the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
+          `so a claude-heaven session launched there would have no /skill-heaven to talk to. There is no ` +
+          `door to open at this posture; it is core's to compose, for benchmark runs only: ` +
+          `\`skill-heaven --posture floor\`.\n`,
+      );
+    } else if ((POSTURES as readonly string[]).includes(args.posture)) {
+      process.stderr.write(
+        `claude-heaven does not launch --posture ${args.posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
+          `core knows this posture, but this door has no composition wired for it.\n`,
+      );
+    } else {
+      process.stderr.write(
+        `claude-heaven: unknown --posture "${args.posture}" — not a posture core knows at all. ` +
+          `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}.\n`,
+      );
+    }
     return 2;
   }
   if (args.level !== undefined) {
@@ -171,6 +193,15 @@ export function run(argv: string[]): number {
     }
     writeFileSync(live.manifestPath, `${JSON.stringify(live.manifest, null, 2)}\n`);
     writeFileSync(live.settingsPath, `${JSON.stringify(live.settings, null, 2)}\n`);
+
+    // KC6: disclose the curated door-absence HERE, on the CLI's own terminal,
+    // because this is the last surface where the door still exists to say so.
+    // Once claude spawns, the session is the whole world for the user, and
+    // nothing inside a curated session can print this for itself (that IS the
+    // gap being disclosed). --print readers already get this in `notes`.
+    if (posture === "curated") {
+      process.stderr.write(`${CURATED_DOOR_ABSENCE_NOTE}\n`);
+    }
 
     const r = spawnSync(live.command, live.argv, {
       stdio: "inherit",

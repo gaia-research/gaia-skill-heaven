@@ -140,6 +140,21 @@ describe("the floor split (V5-5)", () => {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
+
+  // KC6 (Issue #12): this refusal is the harness-incapable class — nobody has
+  // verified the composition, so there is nothing decided to withhold. It
+  // must say that explicitly, not just "no verified cell", which alone could
+  // be misread as "not verified [and therefore not permitted]".
+  it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
+    let msg = "";
+    try {
+      compile({ posture: "product-floor", harness: "pi", skills: [] });
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("harness-capability gap, not a policy hold");
+    expect(msg).not.toMatch(/gated \(P2\)/);
+  });
 });
 
 describe("pi mappings", () => {
@@ -173,6 +188,20 @@ describe("recipe harnesses", () => {
     expect(() => compile({ posture: "floor", harness: "grok", skills: [] })).toThrow(/grok/);
     expect(compile({ posture: "native", harness: "grok", skills: [] }).execSupport).toBe("recipe");
   });
+
+  // KC6 (Issue #12): same class as the product-floor harness-cell refusal
+  // above — no verified mechanism exists at all, which is not a decision to
+  // withhold anything.
+  it("marks the grok refusal as a capability gap, not a policy hold (KC6)", () => {
+    let msg = "";
+    try {
+      compile({ posture: "floor", harness: "grok", skills: [] });
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("harness-capability gap, not a policy hold");
+    expect(msg).not.toMatch(/gated \(P2\)/);
+  });
 });
 
 describe("posture/skill validation", () => {
@@ -196,6 +225,20 @@ describe("cli level lane", () => {
     for (const l of ["med", "high", "xhigh", "max"]) {
       expect(() => parseArgs(["--level", l])).toThrow(/hell lane .*gated/i);
     }
+  });
+
+  // KC6 (Issue #12): the policy-class refusal, on the research CLI's own
+  // --level lane too — must not read like the harness-incapable class covered
+  // above (product-floor/grok: "harness-capability gap, not a policy hold").
+  it("marks the hell-lane refusal as a policy hold, not a harness limit (KC6)", () => {
+    let msg = "";
+    try {
+      parseArgs(["--level", "max"]);
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("withheld by policy, not a harness limit");
+    expect(msg).not.toContain("harness-capability gap");
   });
   it("contradiction between --posture and --level errors", () => {
     expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
