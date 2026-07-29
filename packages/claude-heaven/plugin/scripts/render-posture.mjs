@@ -426,7 +426,12 @@ function sessionLine(manifest) {
     return "session: vanilla claude — no launch manifest, so no standing-dose readout here.";
   }
   const floor = manifest.incomplete ? "+" : "";
-  const skills = typeof manifest.skillCount === "number" ? `${manifest.skillCount} skills, ` : "";
+  // A curated set of exactly one is now reachable, so the plural is no longer
+  // safe to hard-code.
+  const skills =
+    typeof manifest.skillCount === "number"
+      ? `${manifest.skillCount} skill${manifest.skillCount === 1 ? "" : "s"}, `
+      : "";
   return (
     `session: launched at ${manifest.posture} · ${skills}` +
     `${formatTokens(manifest.standingTokens)}${floor} standing (${manifest.scope} scope)`
@@ -529,7 +534,7 @@ function footer(launched, sid, hasResume, hasRelaunch) {
   }
   out.push(
     ...(hasResume || hasRelaunch
-      ? ["   Either way, this command cannot restart Claude Code for you — run it yourself."]
+      ? ["   This command cannot restart Claude Code for you — run it yourself."]
       : [
           "   No move is on offer from here, and this command",
           "   cannot restart Claude Code for you in any case: it will not print a command",

@@ -1,18 +1,42 @@
 # claude-heaven
 
 > **WORK IN PROGRESS (WS4).** Step 1 (native-default launcher + statusline) and
-> step 2 (the `/skill-heaven` posture command) are live; `/skill-hell` — the
-> locked Hell door — lands in step 3.
+> step 2 (the `/skill-heaven` posture command) are live, and the launcher now
+> composes `curated` and `product-floor` as well as `native`; `/skill-hell` —
+> the locked Hell door — lands in step 3.
 
 The Claude Code **door** to Skill Heaven.
 
-## Step 1 — native-default launcher + standing-dose statusline ✅
+## The launcher — native by default, composed postures on request ✅
 
 ```bash
 claude-heaven                 # launches `claude` at native posture + statusline
 claude-heaven --print         # shows the launch plan (census, argv) — no spawn
 claude-heaven -- -p "hi"      # everything after `--` passes through to claude
+
+# the composed postures (the door calls core's compiler; it composes nothing itself)
+claude-heaven --posture curated --skill ./skills/impeccable [--skill …]
+claude-heaven --posture product-floor
 ```
+
+- **`--posture`** takes `native` (default), `curated`, or `product-floor`. The
+  doorless benchmark **`floor` is refused**: F6 established that
+  `--disable-slash-commands` suppresses plugin *commands* too, so a door that
+  launched it would be launching a session it cannot then talk to. It is core's
+  to compose, for measurement runs only.
+- **`--skill <path>`** is repeatable and takes a `SKILL.md` or its directory.
+  Required by `curated`, rejected everywhere else — a dropped `--skill` would
+  hand you a session quietly missing the skills you asked for. The id comes from
+  frontmatter `name`, falling back to the directory name (core's `resolveSkill`).
+- **Everything is composed by `packages/core`.** The launcher calls `compile()`,
+  substitutes core's `$SESSION` placeholder, `materialize()`s the returned
+  `fsPlan` into the session temp dir, and appends its own `--settings` file for
+  the statusline. It never edits the compiled argv: if a route is wrong, it is
+  wrong in core. `--print` shows the `fsPlan` and core's route notes verbatim.
+- **P3 holds at every posture.** Every write lands in the session temp dir,
+  including the materialized curated set — `copyDir` reads the source skill and
+  writes the session copy, so no skill source is ever mutated, and `~/.claude` is
+  never touched.
 
 - **Native default (P1/P3).** `claude-heaven` runs Claude Code **untouched** — no
   eviction, no summoning, no flags injected beyond the statusline. It writes a
@@ -40,7 +64,7 @@ claude-heaven -- -p "hi"      # everything after `--` passes through to claude
 
 ### Architecture split (launcher vs. plugin)
 
-Boot-time wiring (the statusline now; the subtractive floor later) is owned by
+Boot-time wiring (the statusline, and the subtractive postures) is owned by
 the **launcher** — it is the only thing that runs before the session exists.
 In-session **slash commands** ship in the `plugin/` dir (installable via the
 monorepo marketplace, gate (d)).
@@ -95,20 +119,38 @@ session itself.
   two floors are always priced as **separate arms (B1)** — never averaged. No
   path in this package records a benchmark arm at all; `--arm placebo` lives in
   core's CLI and is valid only at `--posture floor` (a test pins the absence).
-- **Locked clean-room upsell (D12) — locked, with no command behind it.** Under
-  vanilla `claude`, and under any `claude-heaven` session that did not launch
-  there, the clean room renders `⊘` and says *why*: composed at boot, never
-  mid-session, and **no launcher builds it yet**. A session that launched at the
-  **product floor** sees it `●` unlocked instead.
+- **Locked clean-room upsell (D12) — locked, with the boot command behind it.**
+  Under vanilla `claude`, and under any `claude-heaven` session that did not
+  launch there, the clean room renders `⊘` and says *why*: composed at boot,
+  never mid-session. A session that launched at the **product floor** sees it
+  `●` unlocked instead.
   - An earlier draft told the locked session to *"relaunch via `claude-heaven`"*
-    — but `src/cli.ts` refuses every `--posture` outside `LAUNCHABLE_POSTURES`
-    (native only, this slice) with a non-zero exit. Offering a door the tool then
-    slams is claiming a transition the harness cannot perform (**KC7**). Of the
-    two honest fixes — stop offering it, or widen what the CLI accepts — widening
-    is a product decision nobody has ruled on, so the offer is gone. The renderer
-    prints a relaunch **only** for a posture in its `RELAUNCH_OFFERS` map (empty
-    today), and a test runs the **real CLI validator** over every entry, so the
-    affordance and the validator cannot drift apart again.
+    while `src/cli.ts` refused every `--posture` outside `LAUNCHABLE_POSTURES`
+    with a non-zero exit. Offering a door the tool then slams is claiming a
+    transition the harness cannot perform (**KC7**). Of the two honest fixes —
+    stop offering it, or widen what the CLI accepts — the offer was withdrawn
+    until the CLI was widened. It has been, so the offer is back, and
+    it is **derived** rather than hand-listed: `RELAUNCH_OFFERS` is the
+    intersection of rows carrying a bare relaunch command with a machine-copy of
+    `LAUNCHABLE_POSTURES` in `plugin/data/p2-gate.json`. Drop a posture from the
+    CLI array, regenerate, and the offer withdraws itself — the affordance
+    cannot outlive the capability. A test runs the **real CLI validator** over
+    every entry, and the renderer **fails closed** to no offers at all if the
+    artifact is unreadable.
+  - **Every printed relaunch carries the D12 caveat** on the very next line:
+    *"(a new session — this conversation does not carry over)"*. D12 makes
+    subtractive recomposition and history survival mutually exclusive, so a boot
+    into the clean room **cannot** bring the conversation. Printing the command
+    without saying so would be offering a door while silently dropping the
+    user's history — the KC7 defect in its purest form. The footer describes the
+    two command shapes separately for the same reason: `claude --resume` carries
+    the conversation, `claude-heaven` does not, and no single sentence is true of
+    both.
+  - **`curated` is launchable but still not offered here.** A curated launch
+    needs a `--skill <path>` per skill, so the bare command this surface would
+    print is **refused** by the CLI — offering it would be the very defect the
+    offers map exists to prevent. Its row status also stays **open** (R3); the
+    curated door is the CLI, not an affordance on this surface.
 - **No magic respawn (D12 / B4).** Nothing in this surface claims a slash command
   can restart the process, because nothing can, and D12 rules the in-session
   control upward-only. The printed commands are for the user to run.
