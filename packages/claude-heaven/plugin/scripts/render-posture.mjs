@@ -158,7 +158,13 @@ export const POSTURE_ROWS = [
     id: "product-floor",
     label: "clean room",
     blurb: "Evicts your personal skills, MCP servers and bundled skills — keeps this door.",
-    lockedNote: "Composed at boot, never mid-session (D12) — so it starts a new session:",
+    // KC6: this is the harness-incapable class, not a policy hold — say so.
+    // Gate (a) came back NEGATIVE: no flag or flag-combination evicts
+    // user/global skills on a running session, so there is no key that a
+    // future decision could turn; only a boot reaches it.
+    lockedNote:
+      "Composed at boot, never mid-session (D12) — not a policy hold, a harness limit: no flag or " +
+      "flag-combination evicts skills on a running session. So it starts a new session:",
     kind: "physical",
     relaunch: () => "claude-heaven --posture product-floor",
   },
@@ -415,6 +421,8 @@ function refusal(target) {
     "",
     "   /skill-hell is a locked door, not an activator: the Hell lane opens only",
     "   when it is proven safe — benchmark status and the ledger link live there.",
+    "   This is a policy hold, not a harness limit: the mechanism is composable",
+    "   today and the key can turn once that bar is met.",
     "   /skill-heaven is the Heaven-lane control and will not compose a Hell posture.",
     "",
   ].join("\n");
@@ -529,8 +537,9 @@ function footer(launched, sid, hasResume, hasRelaunch) {
     "",
     "   There is a floor below the clean room, and it is not offered here: the",
     "   benchmark floor runs with slash commands off, so this command does not exist",
-    "   there. It is the measurement placebo, not a place to sit — and the two floors",
-    "   are always priced as separate arms, never averaged.",
+    "   there — a harness fact, not a policy choice: there is no key to turn, only a",
+    "   route with no door on it. It is the measurement placebo, not a place to sit",
+    "   — and the two floors are always priced as separate arms, never averaged.",
     "",
   );
   // The two kinds of → command do OPPOSITE things to this conversation, so each

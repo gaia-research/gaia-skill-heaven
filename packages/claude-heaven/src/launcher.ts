@@ -37,6 +37,37 @@ import type { ProfileManifest } from "./statusline.js";
 // (N3, pending N4/N5).
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 
+// KC6 (Issue #12): a refusal must say WHICH of two unlike things it is —
+// withheld by policy (a key exists, and could turn) or incapable in the
+// harness (no key exists at all, the surface would be lying if it acted
+// otherwise). Conflating them tells a "locked" story where the truth is
+// "impossible", which implies a way in that does not exist.
+//
+// KC6 honesty disclosure (flagged, not improvised around, in PR #18's "Known
+// gap"): a curated launch composes `--setting-sources project`, which drops
+// the user-scope plugin install, and core mounts ONLY $SESSION/heaven-set as
+// the sole --plugin-dir — the door's own plugin is never re-admitted. So
+// `/skill-heaven`, this door's own posture control, does not exist inside a
+// curated session. This is neither of the two refusal classes: it is not
+// withheld by policy (P2 gates the Hell lane only, and nothing here is a
+// trust-coverage decision), and it is not proven harness-incapable either —
+// `--plugin-dir` is documented as repeatable, so mounting the door alongside
+// the curated set would likely work. Core rejects a second `doorPluginDir`
+// for anything but `product-floor` (an unprobed composition), so it is left
+// undone rather than guessed (M0 discipline) — same restraint as the rest of
+// this door. Disclosed HERE, at compose time, because this is the last
+// surface where the door still exists to say so: once the session is
+// running, there is nothing inside it that can print this for itself.
+export const CURATED_DOOR_ABSENCE_NOTE =
+  "claude-heaven: /skill-heaven does not exist inside this curated session — " +
+  "--setting-sources project drops the user-scope plugin install and only " +
+  "$SESSION/heaven-set (the curated set) is mounted via --plugin-dir, so the " +
+  "door itself is never re-admitted. Not withheld by policy, and not proven " +
+  "impossible either: mounting the door alongside the curated set is an " +
+  "unprobed composition (core rejects a second --plugin-dir for anything but " +
+  "product-floor), so it is left undone rather than guessed. Use --posture " +
+  "product-floor if you need /skill-heaven to survive in-session.";
+
 export interface LaunchOptions {
   /** default "native" */
   posture?: Posture;
@@ -77,7 +108,10 @@ export interface LaunchPlan {
 export function assertLevelAllowed(level: string | undefined): void {
   if (level && GATED_LEVELS.has(level)) {
     throw new Error(
-      `level "${level}" is Hell-lane and gated (P2): /skill-hell is a locked door until Hell is proven safe. claude-heaven composes Heaven-lane postures only.`,
+      `level "${level}" is Hell-lane and gated (P2) — withheld by policy, not a harness limit: it is ` +
+        `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
+        `door, not an activator: the key exists and can turn once that bar is met. claude-heaven composes ` +
+        `Heaven-lane postures only.`,
     );
   }
 }
@@ -196,7 +230,10 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
         ? { ...op, path: substSession(op.path, opts.sessionDir) }
         : { ...op, from: substSession(op.from, opts.sessionDir), to: substSession(op.to, opts.sessionDir) },
     ),
-    notes: compiled.notes,
+    // KC6: the curated door-absence disclosure travels with the plan itself
+    // (surfaced by --print's JSON and printed to stderr by a real launch in
+    // cli.ts), same as every other compose-time note core hands back.
+    notes: [...compiled.notes, ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : [])],
   };
 }
 

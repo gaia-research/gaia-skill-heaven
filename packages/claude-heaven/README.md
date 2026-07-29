@@ -227,6 +227,67 @@ upstream, on its own ratification, exactly as D9 requires.
 after every probe; `~/.claude/settings.json` SHA-256 unchanged; no new
 `~/.claude` entries; no leftover session temp dirs; `git status` clean.
 
+## KC6 — every refusal says which kind of "no" it is (Issue #12)
+
+Two refusals used to read alike and are not alike:
+
+1. **Gated by policy.** The Hell lane (`med|high|xhigh|max`, `/skill-hell`) is
+   technically composable but deliberately locked behind P2 until it is proven
+   safe. A key exists and can turn. Every Hell-lane refusal — `assertLevelAllowed`
+   in `src/launcher.ts`, the `--level` lane in core's `src/cli.ts`, and
+   `refusal()` in `plugin/scripts/render-posture.mjs` — now says **"withheld by
+   policy, not a harness limit"** (or the row equivalent, **"policy hold, not a
+   harness limit"**) in the message itself, not just in a comment.
+2. **The harness cannot do it.** No key exists at all — nothing was decided to
+   withhold. Three instances, all now labeled the same way in their own text:
+   - The doorless benchmark `floor` is not launchable by `claude-heaven`
+     (`src/cli.ts`): F6 established `--disable-slash-commands` suppresses
+     plugin **commands** too, so a door launched there has nothing to talk to.
+     The refusal says **"not a policy hold"** and cites F6 by name.
+   - The clean room (`product-floor`) is reachable only at **boot**, never
+     mid-session (D12): gate (a) came back NEGATIVE — no flag combination
+     evicts skills on a running session. The locked row and the footer both
+     say **"not a policy hold, a harness limit"**.
+   - `product-floor` on a non-`claude` harness, and every non-native posture on
+     `grok` (`packages/core/src/compile.ts`): no verified cell / mechanism
+     exists. Both refusals now say **"harness-capability gap, not a policy
+     hold"**.
+
+Telling a user "locked" when the truth is "impossible" implies a key that does
+not exist; telling them "impossible" when it is policy hides a decision behind
+physics. Every refusal surface above now says which one it is, in its own
+printed text — not only in source comments a user never sees.
+
+### The curated door-absence disclosure
+
+A **known honesty exposure**, flagged (not improvised around) in PR #18: a
+curated launch composes `--setting-sources project`, which drops the
+user-scope plugin install, and core mounts **only** `$SESSION/heaven-set` as
+the sole `--plugin-dir` — the door's own plugin is never re-admitted. So
+`/skill-heaven` does not exist inside a curated session. This is **neither**
+of the two refusal classes above: it is not withheld by policy, and it is not
+proven harness-incapable either (`--plugin-dir` is documented as repeatable,
+so mounting the door alongside the curated set would likely work) — core just
+refuses to guess an unprobed composition (M0 discipline), same restraint as
+everywhere else in this door.
+
+Once a curated session is running, nothing inside it can disclose this —
+that is the exposure. So it is disclosed **at compose time**, the last moment
+the door still exists to say so:
+
+- `planLaunch()` (`src/launcher.ts`) appends the disclosure to the plan's
+  `notes`, so `--print`'s JSON carries it for anyone inspecting the plan
+  before launch.
+- A **real** (non-`--print`) curated launch (`src/cli.ts`) prints the same
+  note to stderr, on the CLI's own terminal, immediately before `claude`
+  spawns — the only point left where the user is still looking at
+  `claude-heaven` rather than at the session it started.
+
+Nothing here mounts a second `--plugin-dir` to make `/skill-heaven` appear in
+a curated session — that would be inventing a mechanism core has not probed.
+Use `--posture product-floor` if in-session posture control matters more than
+a curated skill set for a given session.
+
 ## Coming next (WS4 step 3)
 
 - **`/skill-hell`** — a **locked door** shown in **all** modes (P2); surfaces
