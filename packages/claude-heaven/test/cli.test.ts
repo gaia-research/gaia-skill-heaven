@@ -1,5 +1,18 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parseArgs, run } from "../src/cli.js";
+
+/** A real skill dir with real bytes — core's own compile fixture. */
+const FIXTURE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "core",
+  "test",
+  "fixtures",
+  "impeccable-skill",
+);
 
 function captureStdout(fn: () => number): { code: number; out: string } {
   const chunks: string[] = [];
@@ -61,12 +74,64 @@ describe("run", () => {
     expect(() => run(["--level", "max"])).toThrow(/gated \(P2\)/);
   });
 
-  it("refuses non-native postures in slice 1 (exit 2, no spawn)", () => {
+  it("refuses the doorless benchmark floor — it is core's, for measurement runs (exit 2)", () => {
+    // F6: --disable-slash-commands suppresses plugin COMMANDS too, so a door
+    // that launched it would be launching a session it cannot then talk to.
     expect(silenceStderr(() => run(["--posture", "floor"]))).toBe(2);
+    expect(silenceStderr(() => run(["--posture", "nonsense"]))).toBe(2);
   });
 
-  it("refuses a non-gated level too, rather than silently ignoring it (exit 2)", () => {
+  it("refuses a level, rather than silently ignoring it (exit 2)", () => {
     expect(silenceStderr(() => run(["--level", "low"]))).toBe(2);
     expect(silenceStderr(() => run(["--level", "off"]))).toBe(2);
+  });
+
+  it("--print composes a real curated plan: T9 argv, the env knob, and an fsPlan", () => {
+    const { code, out } = captureStdout(() =>
+      run(["--print", "--posture", "curated", "--skill", FIXTURE]),
+    );
+    expect(code).toBe(0);
+    const plan = JSON.parse(out);
+    expect(plan.posture).toBe("curated");
+    expect(plan.skillCount).toBe(1);
+    expect(plan.standingTokens).toBeGreaterThan(0);
+    expect(plan.argv).toContain("--plugin-dir");
+    expect(plan.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
+    // the fsPlan IS the mechanism: a plugin manifest + the copied set
+    expect(plan.fsPlan.map((op: { kind: string }) => op.kind)).toEqual(["write", "copyDir"]);
+    // core's evidence travels with the plan rather than being restated by the door
+    expect(plan.notes.join(" ")).toContain("T9");
+    // --print writes nothing, so it leaks no temp dir and needs no claude binary
+    expect(plan.argv.join(" ")).toContain("$SESSION");
+  });
+
+  it("--print composes product-floor with the door mounted and an empty profile", () => {
+    const { code, out } = captureStdout(() => run(["--print", "--posture", "product-floor"]));
+    expect(code).toBe(0);
+    const plan = JSON.parse(out);
+    expect(plan.posture).toBe("product-floor");
+    expect(plan.standingTokens).toBe(0);
+    expect(plan.argv).not.toContain("--disable-slash-commands");
+    expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*claude-heaven\/plugin/);
+    expect(plan.fsPlan).toEqual([]);
+  });
+
+  it("refuses a curated launch with no --skill instead of composing an empty set (exit 2)", () => {
+    // The bare command a surface might be tempted to print. It must fail here so
+    // no surface can offer it (KC7).
+    expect(silenceStderr(() => run(["--print", "--posture", "curated"]))).toBe(2);
+  });
+
+  it("refuses --skill at a posture that cannot admit skills, rather than dropping it", () => {
+    expect(
+      silenceStderr(() => run(["--print", "--posture", "product-floor", "--skill", FIXTURE])),
+    ).toBe(2);
+    expect(silenceStderr(() => run(["--print", "--posture", "native", "--skill", FIXTURE]))).toBe(2);
+  });
+
+  it("reports an unreadable skill path as an error, not as a silently smaller set", () => {
+    expect(
+      silenceStderr(() => run(["--print", "--posture", "curated", "--skill", "/nope/not/here"])),
+    ).toBe(2);
   });
 });

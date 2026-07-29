@@ -107,6 +107,13 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
   };
 
   if (posture === "native") {
+    // Mirrors core's `--skill is only valid with --posture curated` guard, which
+    // native alone never reaches because native never calls compile(). Silently
+    // dropping the flag would hand the user a session missing the skills they
+    // asked for, and no error saying so.
+    if (opts.skillPaths?.length) {
+      throw new Error("--skill is only valid with --posture curated (got posture native)");
+    }
     const census = censusStandingDose(
       nativeSkillRoots({ home: opts.home, projectDir: opts.projectDir }),
     );

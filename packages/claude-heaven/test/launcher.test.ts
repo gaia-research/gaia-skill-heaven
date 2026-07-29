@@ -1,8 +1,21 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { assertLevelAllowed, planNativeLaunch } from "../src/launcher.js";
+import { materialize, resolveSkill } from "skill-heaven";
+import { assertLevelAllowed, planLaunch, planNativeLaunch } from "../src/launcher.js";
+
+/** A real skill dir with real bytes — core's own compile fixture. */
+const FIXTURE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "core",
+  "test",
+  "fixtures",
+  "impeccable-skill",
+);
 
 let sessionDir: string;
 let home: string;
@@ -61,5 +74,145 @@ describe("planNativeLaunch", () => {
   it("passes through extra claude args after our flags", () => {
     const p = planNativeLaunch({ home, projectDir: home, sessionDir, statuslineBin: "/abs/s.mjs", claudeArgs: ["-p", "hi"] });
     expect(p.argv).toEqual(["--settings", join(sessionDir, "settings.json"), "-p", "hi"]);
+  });
+
+  it("plans no filesystem work at all — native evicts nothing, so it summons nothing", () => {
+    expect(plan().fsPlan).toEqual([]);
+  });
+});
+
+describe("planLaunch(curated) — the door calling core's compiler", () => {
+  const plan = (opts: Record<string, unknown> = {}) =>
+    planLaunch({
+      posture: "curated",
+      skillPaths: [FIXTURE],
+      sessionDir,
+      statuslineBin: "/abs/statusline.mjs",
+      ...opts,
+    });
+
+  it("carries core's T9 route verbatim — the door composes nothing of its own", () => {
+    // If this list ever needs editing here, the change belongs in packages/core.
+    // The door's ONLY additions are the session --settings file (statusline) and
+    // the $SESSION substitution.
+    const p = plan();
+    expect(p.command).toBe("claude");
+    expect(p.argv.slice(0, 7)).toEqual([
+      "--setting-sources",
+      "project",
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--plugin-dir",
+      join(sessionDir, "heaven-set"),
+    ]);
+    expect(p.argv.slice(7)).toEqual(["--settings", join(sessionDir, "settings.json")]);
+    // The undocumented, string-probed, version-pinned knob. Do not "clean up".
+    expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
+    expect(p.env.CLAUDE_HEAVEN_PROFILE).toBe(join(sessionDir, "profile.json"));
+    // T6 was NEGATIVE: this flag eats plugin-provided skills, so curated must
+    // never carry it.
+    expect(p.argv).not.toContain("--disable-slash-commands");
+    // No "$SESSION" placeholder may survive into a spawn.
+    expect(JSON.stringify([p.argv, p.env, p.fsPlan])).not.toContain("$SESSION");
+  });
+
+  it("writes a manifest describing what was LAUNCHED, not what native would have been", () => {
+    // Both the statusline and the /skill-heaven session line read this one file.
+    const p = plan();
+    const resolved = resolveSkill(FIXTURE);
+    expect(p.manifest.posture).toBe("curated");
+    expect(p.manifest.skillCount).toBe(1);
+    expect(p.manifest.standingTokens).toBe(resolved.standingTokens);
+    expect(p.manifest.scope).toBe("session");
+    expect(p.manifest.incomplete).toBeUndefined(); // the set is enumerated, not censused
+    expect(p.manifest.launcherLocked).toBe(true);
+  });
+
+  it("takes the skill id from frontmatter `name`, not the directory name", () => {
+    const p = plan();
+    const copy = p.fsPlan.find((op) => op.kind === "copyDir");
+    // dir is "impeccable-skill"; frontmatter name is "impeccable"
+    expect(copy && "to" in copy && copy.to).toBe(join(sessionDir, "heaven-set", "skills", "impeccable"));
+  });
+
+  it("materializes into the session dir and mutates NOTHING outside it (P3)", () => {
+    const session = mkdtempSync(join(tmpdir(), "ch-materialize-"));
+    const before = readdirSync(FIXTURE).sort();
+    const beforeMtime = statSync(join(FIXTURE, "SKILL.md")).mtimeMs;
+    try {
+      const p = planLaunch({
+        posture: "curated",
+        skillPaths: [FIXTURE],
+        sessionDir: session,
+        statuslineBin: "/abs/statusline.mjs",
+      });
+      materialize(p.fsPlan, session);
+
+      // the plugin manifest that makes --plugin-dir resolve
+      const pluginJson = join(session, "heaven-set", ".claude-plugin", "plugin.json");
+      expect(existsSync(pluginJson)).toBe(true);
+      expect(JSON.parse(readFileSync(pluginJson, "utf-8")).name).toBe("heaven-set");
+      // the curated set itself, with real bytes
+      const copied = join(session, "heaven-set", "skills", "impeccable", "SKILL.md");
+      expect(readFileSync(copied, "utf-8")).toBe(readFileSync(join(FIXTURE, "SKILL.md"), "utf-8"));
+
+      // every planned path is inside the session dir — no exceptions
+      for (const op of p.fsPlan) {
+        const to = op.kind === "write" ? op.path : op.to;
+        expect(to.startsWith(session), `${to} escapes the session dir`).toBe(true);
+      }
+      // the source skill is READ, never written
+      expect(readdirSync(FIXTURE).sort()).toEqual(before);
+      expect(statSync(join(FIXTURE, "SKILL.md")).mtimeMs).toBe(beforeMtime);
+    } finally {
+      rmSync(session, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses to compose a curated session with no skills (core's guard, surfaced)", () => {
+    expect(() => plan({ skillPaths: [] })).toThrow(/requires at least one --skill/);
+  });
+
+  it("refuses --skill at a posture that cannot admit skills", () => {
+    expect(() =>
+      planLaunch({
+        posture: "product-floor",
+        skillPaths: [FIXTURE],
+        sessionDir,
+        statuslineBin: "/abs/s.mjs",
+      }),
+    ).toThrow(/only valid with --posture curated/);
+  });
+});
+
+describe("planLaunch(product-floor) — the doorful floor", () => {
+  const plan = () =>
+    planLaunch({
+      posture: "product-floor",
+      sessionDir,
+      statuslineBin: "/abs/statusline.mjs",
+      doorPluginDir: "/abs/door-plugin",
+    });
+
+  it("keeps slash commands AND mounts the door, or the surviving door is theoretical", () => {
+    // F7's whole point: product-floor is T9b MINUS --disable-slash-commands, so
+    // /skill-heaven exists. But --setting-sources project drops the user-scope
+    // plugin install, so the door has to be mounted explicitly or the posture
+    // keeps a command surface with no command on it.
+    const p = plan();
+    expect(p.argv).not.toContain("--disable-slash-commands");
+    expect(p.argv).toContain("--plugin-dir");
+    expect(p.argv).toContain("/abs/door-plugin");
+    expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
+    expect(p.fsPlan).toEqual([]); // nothing to summon: the clean room admits no skills
+  });
+
+  it("reports an empty profile honestly rather than echoing native's census", () => {
+    const p = plan();
+    expect(p.manifest.posture).toBe("product-floor");
+    expect(p.manifest.standingTokens).toBe(0);
+    expect(p.manifest.skillCount).toBe(0);
+    expect(p.manifest.scope).toBe("session");
   });
 });
