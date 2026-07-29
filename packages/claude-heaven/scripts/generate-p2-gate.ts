@@ -16,24 +16,32 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HELL_LEVELS, POSTURES } from "skill-heaven";
+import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 
 export interface P2Gate {
   schema: "claude-heaven/p2-gate@1";
   /** Provenance, so a reader of the generated file knows not to hand-edit it. */
-  source: "skill-heaven HELL_LEVELS + POSTURES";
+  source: "skill-heaven HELL_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES";
   gatedLevels: string[];
   /** Core's posture list, machine-copied for one renderer purpose: a core-known
    * posture name with no row is answered "not offered here", never rendered as
    * an unknown word. Carries no status claim about any entry. */
   postures: string[];
+  /** src/cli.ts's LAUNCHABLE_POSTURES, machine-copied for the same reason the
+   * other two lists are: the renderer cannot import the CLI once installed. The
+   * renderer prints a relaunch ONLY for a row whose id is in here (KC7), so
+   * dropping a posture from the CLI array + regenerating this file withdraws the
+   * offer with it — the affordance cannot outlive the capability. */
+  launchablePostures: string[];
 }
 
 export function buildP2Gate(): P2Gate {
   return {
     schema: "claude-heaven/p2-gate@1",
-    source: "skill-heaven HELL_LEVELS + POSTURES",
+    source: "skill-heaven HELL_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
     gatedLevels: [...HELL_LEVELS],
     postures: [...POSTURES],
+    launchablePostures: [...LAUNCHABLE_POSTURES],
   };
 }
 
