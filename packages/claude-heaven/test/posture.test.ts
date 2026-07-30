@@ -517,14 +517,15 @@ describe("standing-dose readout", () => {
     );
   });
 
-  // A "session" scope (curated/product-floor) enumerates the launched skill
-  // set exactly — nothing is excluded there, so the caveat must NOT appear;
-  // printing it would be a false claim, the opposite defect this KC exists to
-  // prevent.
-  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
+  // A3/KC4 correction: a "session" scope (curated/product-floor) enumerates
+  // the launched skill SET exactly, but a bundled `doctor` skill was MEASURED
+  // to survive every posture (probe-kc4-listing-residual.sh) — a permanent,
+  // founder-ruled harness residual, not a defect this door can fix. The old
+  // "nothing excluded" claim for session scope was false; this caveat
+  // replaces it.
+  it("discloses the doctor residual for a fully-enumerated session scope", () => {
     const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope: "session" } });
-    expect(text).toContain("4.8k standing (session scope)");
-    expect(text).not.toMatch(/not counted/);
+    expect(text).toContain("4.8k standing (session scope — bundled `doctor` skill is not counted");
   });
 
   it("marks an incomplete census with a trailing + rather than presenting it as exact (B4)", () => {
@@ -543,13 +544,15 @@ describe("standing-dose readout", () => {
     }
   });
 
-  // KC2 (Issue #9): two renderers, two mediums, one honest fact. The statusline
-  // strip gets the compact form and this surface gets the fuller sentence, but
-  // BOTH must name the same two exclusions whenever scope is "user+project" —
-  // and NEITHER may claim an exclusion when scope is "session" (fully
-  // enumerated). A future edit that adds the caveat to one renderer and
-  // forgets the other fails here, not in a founder review.
-  it("agrees with the statusline renderer on WHEN the exclusion is disclosed (KC2 parity)", () => {
+  // KC2 (Issue #9), corrected under A3/KC4: two renderers, two mediums, one
+  // honest fact. BOTH must name the same exclusions whenever scope is
+  // "user+project" (bundled AND plugin-provided skills), and BOTH must now
+  // ALSO disclose the measured `doctor` residual whenever scope is "session"
+  // (bundled, but not plugin-provided — no plugin leak was ever measured). A
+  // future edit that adds a caveat to one renderer and forgets the other, or
+  // that silently drops the session-scope caveat again, fails here rather
+  // than in a founder review.
+  it("agrees with the statusline renderer on WHAT is disclosed for each scope (KC2 parity)", () => {
     const partialProfile = { schema: "claude-heaven/profile@1", posture: "native", standingTokens: 4823, skillCount: 12, scope: "user+project", launcherLocked: true } as const;
     const fullProfile = { ...partialProfile, scope: "session" } as const;
 
@@ -567,8 +570,10 @@ describe("standing-dose readout", () => {
 
     const statuslineFull = renderStatusline(fullProfile);
     const postureLineFull = sessionLineOf(render({ manifest: fullProfile }));
-    expect(statuslineFull).not.toMatch(/bundled|plugin/i);
-    expect(postureLineFull).not.toMatch(/bundled|plugin/i);
+    expect(statuslineFull).toMatch(/bundled/i);
+    expect(statuslineFull).not.toMatch(/plugin/i);
+    expect(postureLineFull).toMatch(/bundled/i);
+    expect(postureLineFull).not.toMatch(/plugin/i);
   });
 });
 

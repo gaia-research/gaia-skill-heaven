@@ -246,6 +246,22 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     expect(p.manifest.scope).toBe("session");
   });
 
+  // A3 (orchestrator-measured, 2026-07-30): product-floor's argv still names
+  // `--setting-sources project` (unchanged by the KC4 clean-room fix, which
+  // touched curated only) — the same allowlist shape KC4 found leaky. A live
+  // probe with a planted project-scope marker skill in cwd showed it (and
+  // `doctor`) alongside product-floor's session listing, 2/2 reps. Changing
+  // the composition is a founder call (F7 is a measured benchmark arm) and is
+  // deliberately NOT made here — but `standingTokens: 0` must not be
+  // presented as an exact, complete count for a posture that can silently
+  // carry skills this number never prices. `incomplete: true` marks it a
+  // floor, not an exact zero — the same mechanism native's census already
+  // uses for "could not fully verify this number" (never print an
+  // optimistic, unconditional zero when the true dose is not knowable).
+  it("marks the dose incomplete — a floor, not an exact zero (unresolved project-scope leak)", () => {
+    expect(plan().manifest.incomplete).toBe(true);
+  });
+
   // KC6: the door-absence disclosure is curated-specific — product-floor is
   // exactly the posture that keeps the door (F7's whole point), so carrying
   // the note here would be a false claim, the opposite defect.

@@ -56,12 +56,14 @@ describe("renderStatusline", () => {
     expect(renderStatusline(manifest(), null)).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
   });
 
-  // KC2 (Issue #9): the exclusion caveat is scope-conditional, not
-  // unconditional decoration — a "session" scope (curated/product-floor)
-  // enumerates the launched skill set exactly, so appending "excl.
-  // bundled/plugin" there would itself be a false claim, not an honest one.
-  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
-    expect(renderStatusline(manifest({ scope: "session" }))).toBe("⚡ native · 14.2k standing");
+  // A3/KC4 correction: "session" scope (curated/product-floor) enumerates the
+  // launched skill SET exactly, but a bundled `doctor` skill was MEASURED
+  // (packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) to survive
+  // every posture regardless of CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 — a
+  // permanent, founder-ruled harness residual. The old behavior (no caveat at
+  // all for "session") asserted a coverage claim this measurement disproved.
+  it("discloses the doctor residual for a fully-enumerated session scope", () => {
+    expect(renderStatusline(manifest({ scope: "session" }))).toBe("⚡ native · 14.2k standing (excl. bundled doctor)");
   });
   it("never renders the standing dose without SOME scope word or the exclusion caveat", () => {
     // user+project scope must always disclose what it could not see.

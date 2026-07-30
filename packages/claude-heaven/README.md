@@ -261,8 +261,10 @@ printed text — not only in source comments a user never sees.
 ### The curated door-absence disclosure
 
 A **known honesty exposure**, flagged (not improvised around) in PR #18: a
-curated launch composes `--setting-sources project`, which drops the
-user-scope plugin install, and core mounts **only** `$SESSION/heaven-set` as
+curated launch composes `--setting-sources ''` (an intentionally empty
+allowlist — the KC4 clean-room fix, 2026-07-30, superseding the earlier
+`--setting-sources project`), which drops **every** setting-sourced install,
+user scope included, and core mounts **only** `$SESSION/heaven-set` as
 the sole `--plugin-dir` — the door's own plugin is never re-admitted. So
 `/skill-heaven` does not exist inside a curated session. This is **neither**
 of the two refusal classes above: it is not withheld by policy, and it is not

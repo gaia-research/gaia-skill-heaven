@@ -49,16 +49,29 @@ export function formatTokens(n: number): string {
   return `${(n / 1000).toFixed(1)}k`;
 }
 
-/** Compact exclusion disclosure (KC2) — appended ONLY when the census could not
- * see the whole picture. `scope: "user+project"` (native launches) is a
- * partial census: bundled CLI skills and plugin-provided skills are not
- * counted (see census.ts header). `scope: "session"` (curated/product-floor)
- * enumerates the launched set exactly — nothing is excluded there, so
- * appending a caveat would itself be dishonest. The narrow statusline strip
- * gets the compact form; `/skill-heaven`'s session line carries the fuller
- * sentence (render-posture.mjs `sessionLine`). */
+/** Compact exclusion disclosure (KC2, corrected under A3/KC4). `scope:
+ * "user+project"` (native launches) is a partial census: bundled CLI skills
+ * and plugin-provided skills are not counted (see census.ts header). `scope:
+ * "session"` (curated/product-floor) enumerates the launched skill SET
+ * exactly, but the session's skill LISTING is not exact: a bundled skill
+ * named `doctor` survives `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` regardless
+ * of posture — a founder-ruled, permanent, harness-level residual, measured
+ * live by packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
+ * (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's curated
+ * note). The old "session scope has nothing to disclose" claim this
+ * replaces was FALSE — see launcher.ts's KC4 correction. This caveat's
+ * wording assumes the concurrent fix to the curated composition (dropping
+ * the project-scope leak the same probe found) has landed, so `doctor` is
+ * the only residual; if that fix has not landed, this under-discloses —
+ * see the PR body for the dependency.
+ *
+ * The narrow statusline strip gets the compact form; `/skill-heaven`'s
+ * session line carries the fuller sentence (render-posture.mjs
+ * `sessionLine` / `scopeNote`) — keep both in sync. */
 function scopeCaveat(scope: string): string {
-  return scope === "user+project" ? " (excl. bundled/plugin)" : "";
+  if (scope === "user+project") return " (excl. bundled/plugin)";
+  if (scope === "session") return " (excl. bundled doctor)";
+  return "";
 }
 
 export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {

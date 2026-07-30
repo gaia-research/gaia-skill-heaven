@@ -429,21 +429,29 @@ function refusal(target) {
 }
 
 /**
- * KC2 (Issue #9): a scope NAME alone ("user+project scope") tells a reader
- * what the census is called, not what it is missing — an exclusion cannot be
- * inferred from a label by someone who has not read census.ts. `scope:
- * "user+project"` (native launches) is a partial census: bundled CLI skills
- * and plugin-provided skills are not counted. `scope: "session"`
- * (curated/product-floor) enumerates the launched set exactly — nothing is
- * excluded there, so appending the caveat would itself be a false claim. This
- * surface has room for the full sentence; the statusline strip gets the
- * compact form (src/statusline.ts `scopeCaveat`).
+ * KC2 (Issue #9), corrected under A3/KC4: a scope NAME alone ("user+project
+ * scope") tells a reader what the census is called, not what it is missing —
+ * an exclusion cannot be inferred from a label by someone who has not read
+ * census.ts. `scope: "user+project"` (native launches) is a partial census:
+ * bundled CLI skills and plugin-provided skills are not counted. `scope:
+ * "session"` (curated/product-floor) enumerates the launched skill SET
+ * exactly, but the session's skill LISTING is not exact either: a bundled
+ * skill named `doctor` survives `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1`
+ * regardless of posture — a founder-ruled, permanent, harness-level residual
+ * measured live by packages/claude-heaven/scripts/probe-kc4-listing-
+ * residual.sh (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's
+ * curated note). The prior "nothing is excluded" claim for `session` was
+ * false — see src/launcher.ts's KC4 correction for the full history.
  * @param {string} scope
  */
 function scopeNote(scope) {
-  return scope === "user+project"
-    ? `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`
-    : `(${scope} scope)`;
+  if (scope === "user+project") {
+    return `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`;
+  }
+  if (scope === "session") {
+    return `(${scope} scope — bundled \`doctor\` skill is not counted; a harness limitation, not this door's choice — see KC4)`;
+  }
+  return `(${scope} scope)`;
 }
 
 /** @param {LaunchManifest | null} manifest */
