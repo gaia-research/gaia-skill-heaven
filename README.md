@@ -81,9 +81,15 @@ surface not proven clean.** The per-session `-c 'skills.config=[{path="<abs>",
 enabled=false}]'` scoping cell this table used to gate on HAS resolved: it
 reaches the skills surface per-invocation on codex-cli 0.145.0, no restart,
 nothing written to `config.toml` (gaia-research PR #133, matrix
-G1-skills-config-override, 2/2 reproduced upstream; independently re-probed
-here at 74→73 entries, exactly the targeted fixture, zero others changed, 2/2
-byte-identical). That is no longer the open question. codex nonetheless stays
+G1-skills-config-override, 2/2 reproduced upstream: the committed run record
+`gaia-research/scripts/hell-heaven-bench/harness-probes/runs/codex-g1-2026-07-29.run.json`
+shows **67→66 entries** — the targeted fixture skill absent, all 66 others
+unchanged, `input_tokens` 18,986→18,925, 2/2 byte-identical, on codex-cli
+0.145.0. **Correction, 2026-07-31:** this line previously read "74→73
+entries." That figure did not match the PR #133 / G1-skills-config-override
+record it cited and was never itself backed by a separate committed probe —
+a citation error, not a second measurement, fixed here rather than silently
+restated). That is no longer the open question. codex nonetheless stays
 a recipe: `$CODEX_HOME` scoping does not evict `.agents/skills` (repo,
 cwd→root scan), `~/.agents/skills` (user — confirmed 70 entries on this
 machine), `/etc/codex/skills`, or bundled system skills (separate roots per
