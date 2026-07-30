@@ -108,15 +108,21 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
       ...opts,
     });
 
-  it("carries core's T9 route verbatim — the door composes nothing of its own", () => {
+  it("carries core's KC4 clean-room route verbatim — the door composes nothing of its own", () => {
     // If this list ever needs editing here, the change belongs in packages/core.
     // The door's ONLY additions are the session --settings file (statusline) and
     // the $SESSION substitution.
+    //
+    // KC4 (2026-07-30): --setting-sources is an ALLOWLIST. core moved off T9's
+    // `--setting-sources project` (which kept project-scope skills live — the
+    // measured residual) to an EMPTY value, which is structurally "no ambient
+    // sources" rather than the flag being omitted (which would restore the
+    // full bundled listing). See packages/core/src/compile.ts and README.md.
     const p = plan();
     expect(p.command).toBe("claude");
     expect(p.argv.slice(0, 7)).toEqual([
       "--setting-sources",
-      "project",
+      "",
       "--strict-mcp-config",
       "--mcp-config",
       '{"mcpServers":{}}',

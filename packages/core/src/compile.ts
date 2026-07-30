@@ -252,14 +252,29 @@ function compileClaude(
     const mechanism = input.mechanism ?? DEFAULT_CLAUDE_MECHANISM;
     if (mechanism === "plugin-dir") {
       // T6 (2.1.215): --disable-slash-commands eats --plugin-dir skills too, so
-      // curated CANNOT ride on the floor argv. T9: --setting-sources project
-      // evicts user-dir skills AND the user CLAUDE.md while --plugin-dir
-      // re-admission stays live, and CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1
-      // removes the bundled-CLI-skills residual T8 had — observed listing:
-      // the curated set only.
+      // curated CANNOT ride on the floor argv.
+      //
+      // KC4 (2026-07-29/30): `--setting-sources project` was T9's route, but
+      // `--setting-sources` is an ALLOWLIST — naming `project` explicitly KEEPS
+      // project-scope skills live, which is exactly the residual KC4 measured
+      // (probe-kc4-listing-residual.sh, claude 2.1.220: cwd's project-scope
+      // skill showed up in system:init `skills` alongside the curated set).
+      // Founder ruling: curated is a personal-profile clean room + the caller's
+      // own named skills, never a benchmark arm — so a project-scope leak is
+      // not tolerable. Fix is `--setting-sources ''` — an EMPTY VALUE, not the
+      // flag omitted. Omitting the flag entirely restores the full ~68-entry
+      // bundled listing; empty-string is structurally "no ambient sources" and
+      // was chosen over `local` because a clean `local` listing on one machine
+      // only proves that machine had no local-scope skills, not that the route
+      // is clean in general. `--plugin-dir` is a separate flag (not a setting
+      // source), so the curated set still mounts under an empty allowlist.
+      // CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 still removes the bundled-CLI-skills
+      // residual T8 had. Re-probed clean (see KC4 note below); the sole
+      // remaining residual is `doctor`, which survives the env knob and is an
+      // upstream harness limitation the founder has ruled stays as-is.
       argv = [
         "--setting-sources",
-        "project",
+        "",
         "--strict-mcp-config",
         "--mcp-config",
         '{"mcpServers":{}}',
@@ -285,11 +300,9 @@ function compileClaude(
         fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/heaven-set/skills/${s.id}` });
       }
       notes.push(
-        "curated via --setting-sources project + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 (T9; supersedes T8 — owner vetoed the bundled-skills residual). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. " +
-          "KC4 probe (claude 2.1.220, 2026-07-29, 2/2 live runs, packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) found this route is NOT zero-listing-residual as previously logged here: " +
-          "(a) --setting-sources project keeps <cwd>/.claude/skills LIVE — a project-scope skill was observed in the session:init `skills` array alongside the curated set; " +
-          "(b) a skill named `doctor` was observed in that same array in every scenario tested, independent of CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 and independent of project scope — the env knob does not suppress it. " +
-          "No marketplace-plugin skill leakage was observed (system:init `plugins` showed only heaven-set in every run). " +
+        "curated via --setting-sources '' (empty allowlist) + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1. T9 (--setting-sources project) is SUPERSEDED as of KC4 (2026-07-30): naming `project` keeps project-scope skills live (an allowlist, not a suppression flag), which is the residual KC4 measured. T6 remains NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. " +
+          "KC4 re-probe (claude 2.1.220, packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) with the empty-value composition: system:init `skills` array contains only the curated marker plus `doctor` — no project-scope leak, no marketplace-plugin leak (system:init `plugins` showed only heaven-set). " +
+          "`doctor` survives CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 in every scenario tested — an upstream harness limitation (founder-ruled acceptable residual), not a composition defect. " +
           "The env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
       );
     } else {
