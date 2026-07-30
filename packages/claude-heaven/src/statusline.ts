@@ -20,7 +20,11 @@ export interface ProfileManifest {
   /** census-derived standing dose (chars4 tokens) over the launched profile */
   standingTokens: number;
   skillCount: number;
-  /** census scope disclosure, e.g. "user+project" (see census.ts) */
+  /** census scope disclosure, e.g. "user+project" or "session" (see
+   * census.ts). Typed as plain `string`, not a union — a third scope can be
+   * added upstream without this field's type forcing every reader to update
+   * in lockstep. That is exactly why `scopeCaveat` below must fail closed on
+   * an unrecognized value (A5c): nothing here stops one from arriving. */
   scope: string;
   /** true when a skill root existed but couldn't be read — standingTokens is a
    * floor, not a complete count. Rendered as a trailing "+" so the readout never
@@ -65,13 +69,18 @@ export function formatTokens(n: number): string {
  * the only residual; if that fix has not landed, this under-discloses —
  * see the PR body for the dependency.
  *
- * The narrow statusline strip gets the compact form; `/skill-heaven`'s
- * session line carries the fuller sentence (render-posture.mjs
- * `sessionLine` / `scopeNote`) — keep both in sync. */
+ * A5c fail-closed: this is an explicit allowlist, not an
+ * `expected ? caveat : ""` optimistic default. Any scope value this function
+ * does not recognize — including a future third scope nobody has named yet —
+ * renders a "coverage unknown" caveat rather than silence, matching the
+ * fail-closed discipline `readGatedLevels`/`readLaunchablePostures` already
+ * use elsewhere in this door. The narrow statusline strip gets the compact
+ * form; `/skill-heaven`'s session line carries the fuller sentence
+ * (render-posture.mjs `sessionLine` / `scopeNote`) — keep both in sync. */
 function scopeCaveat(scope: string): string {
   if (scope === "user+project") return " (excl. bundled/plugin)";
   if (scope === "session") return " (excl. bundled doctor)";
-  return "";
+  return " (coverage unknown)";
 }
 
 export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {

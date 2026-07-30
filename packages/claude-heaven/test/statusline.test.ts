@@ -69,6 +69,15 @@ describe("renderStatusline", () => {
     // user+project scope must always disclose what it could not see.
     expect(renderStatusline(manifest({ scope: "user+project" }))).toMatch(/excl\. bundled\/plugin/);
   });
+
+  // A5c (fail closed): scopeCaveat is an explicit allowlist. A scope value
+  // this door has never named must still render a caveat — never silence —
+  // so a future third scope cannot accidentally read as "nothing excluded".
+  it("fails closed on an unrecognized scope: discloses 'coverage unknown', never silence", () => {
+    const text = renderStatusline(manifest({ scope: "some-future-scope" }));
+    expect(text).toBe("⚡ native · 14.2k standing (coverage unknown)");
+    expect(text).not.toBe("⚡ native · 14.2k standing");
+  });
 });
 
 describe("parseStatuslineInput", () => {

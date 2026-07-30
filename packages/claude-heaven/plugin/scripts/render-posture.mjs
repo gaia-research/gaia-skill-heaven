@@ -442,6 +442,13 @@ function refusal(target) {
  * residual.sh (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's
  * curated note). The prior "nothing is excluded" claim for `session` was
  * false — see src/launcher.ts's KC4 correction for the full history.
+ *
+ * A5c fail-closed: explicit allowlist, not an `expected ? note : bare-label`
+ * optimistic default — an unrecognized scope must still disclose that its
+ * coverage is unknown rather than rendering as if it excluded nothing, same
+ * discipline as `readGatedLevels`/`readLaunchablePostures` above. This
+ * surface carries the full sentence; the statusline strip gets the compact
+ * form (src/statusline.ts `scopeCaveat`) — keep both in sync.
  * @param {string} scope
  */
 function scopeNote(scope) {
@@ -451,7 +458,7 @@ function scopeNote(scope) {
   if (scope === "session") {
     return `(${scope} scope — bundled \`doctor\` skill is not counted; a harness limitation, not this door's choice — see KC4)`;
   }
-  return `(${scope} scope)`;
+  return `(${scope} scope — coverage unknown; this door does not yet know what this scope excludes)`;
 }
 
 /** @param {LaunchManifest | null} manifest */

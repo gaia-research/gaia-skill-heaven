@@ -528,6 +528,15 @@ describe("standing-dose readout", () => {
     expect(text).toContain("4.8k standing (session scope — bundled `doctor` skill is not counted");
   });
 
+  // A5c (fail closed): scopeNote is an explicit allowlist. A scope value this
+  // door has never named must still disclose that its coverage is unknown —
+  // never render as if it excluded nothing.
+  it("fails closed on an unrecognized scope: discloses 'coverage unknown', never silence", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope: "some-future-scope" } });
+    expect(text).toContain("4.8k standing (some-future-scope scope — coverage unknown");
+    expect(text).not.toContain("4.8k standing (some-future-scope scope)");
+  });
+
   it("marks an incomplete census with a trailing + rather than presenting it as exact (B4)", () => {
     expect(render({ manifest: { ...nativeManifest, incomplete: true } })).toContain("4.8k+ standing");
   });
