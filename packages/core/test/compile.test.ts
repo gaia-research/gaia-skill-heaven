@@ -184,6 +184,15 @@ describe("pi mappings", () => {
 });
 
 describe("recipe harnesses", () => {
+  // A2 (2026-07-29/30): the per-session `-c 'skills.config=[{path=…,
+  // enabled=false}]'` scoping cell this used to gate on HAS resolved (matrix
+  // G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) —
+  // that is no longer the open question. codex stays a recipe anyway because
+  // $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`,
+  // `/etc/codex/skills`, or bundled system skills (matrix Skill discovery
+  // row), so neither floor nor curated is yet a verified-clean surface —
+  // the resolved mechanism does not make the resulting surface a floor.
+  // execSupport intentionally stays "recipe" (deferred, not flipped).
   it("codex compiles a recipe with CODEX_HOME scoping", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
     expect(r.execSupport).toBe("recipe");

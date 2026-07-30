@@ -76,6 +76,29 @@ N5 closes** — mechanics are fixed, spelling may change.
 | product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) |
 | native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
 
+**codex stays on the recipe track (A2, 2026-07-29/30) — mechanism resolved,
+surface not proven clean.** The per-session `-c 'skills.config=[{path="<abs>",
+enabled=false}]'` scoping cell this table used to gate on HAS resolved: it
+reaches the skills surface per-invocation on codex-cli 0.145.0, no restart,
+nothing written to `config.toml` (gaia-research PR #133, matrix
+G1-skills-config-override, 2/2 reproduced upstream; independently re-probed
+here at 74→73 entries, exactly the targeted fixture, zero others changed, 2/2
+byte-identical). That is no longer the open question. codex nonetheless stays
+a recipe: `$CODEX_HOME` scoping does not evict `.agents/skills` (repo,
+cwd→root scan), `~/.agents/skills` (user — confirmed 70 entries on this
+machine), `/etc/codex/skills`, or bundled system skills (separate roots per
+the matrix's own Skill discovery row), and the resolved `-c` cell only
+suppresses skills it is explicitly told about — it does not compute a disable
+entry for every skill discovered across every root. So a live codex exec
+today would not be an empty (floor) or curated (clean-room) surface; the
+mechanism is proven, but the resulting surface is not a floor. `execSupport`
+is deliberately left `"recipe"` — flipping it is a mechanism redesign
+(computing `-c` disables for every discovered root at compile time), not a
+stale-claim correction, and is out of scope here. `cursor` and `grok` are
+untouched: cursor stays on the documented-recipe track (tracked
+`.cursor/rules` cannot be suppressed per-session); grok still has no verified
+skills-suppression mechanism and correctly refuses rather than guesses.
+
 ### The floor split (founder ruling V5-5, 2026-07-28)
 
 There are **two floors** and they are different objects — measured and named

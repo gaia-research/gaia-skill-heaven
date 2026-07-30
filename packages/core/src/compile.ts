@@ -350,9 +350,37 @@ function compilePi(
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }
 
-// codex — recipe from matrix cells: $CODEX_HOME scoping + per-skill
-// config.toml toggles. Stays a recipe unless the per-session -c scoping cell
-// verifies (M2 plan §4); probe results recorded in the matrix.
+// codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.
+//
+// A2 (2026-07-29/30): the per-session `-c` scoping cell this comment used to
+// gate on HAS resolved — `-c 'skills.config=[{path="<abs SKILL.md>",
+// enabled=false}]'` reaches the skills surface per-invocation, no restart,
+// nothing written to config.toml (codex-cli 0.145.0; gaia-research PR #133,
+// harness-capability-matrix.md row "Skills listing suppressible per-session?"
+// / G1-skills-config-override: 2/2 reproduced upstream; independently
+// re-probed at 74→73 entries, exactly the targeted fixture, zero others
+// changed, 2/2 byte-identical). That is no longer the open question.
+//
+// The reason codex STAYS A RECIPE is a different one: the matrix's own
+// "Skill discovery" row documents codex skill roots beyond $CODEX_HOME —
+// `.agents/skills` (repo, cwd→root scan), `~/.agents/skills` (user),
+// `/etc/codex/skills`, and bundled system skills. $CODEX_HOME scoping alone
+// does not evict any of them (confirmed independently: `~/.agents/skills`
+// alone holds 70 entries on this machine), and the per-session `-c` cell
+// above only suppresses skills named in that one flag — it does not compute
+// a disable entry for every skill discovered across every root. So a live
+// `--posture floor --harness codex` exec today would not be an empty
+// surface, and a live `--posture curated` exec would not be a clean room
+// either: both would leak the other roots' skills into the model-visible
+// listing. exec.ts:43 refuses to spawn anything whose execSupport isn't
+// "exec", and cli.ts:169 prints a recipe instead of running — that refusal
+// is what keeps a research driver from spawning a codex "floor" that is
+// actually near-native and recording a benchmark under a posture the
+// session never had. So: the mechanism is proven, but the resulting surface
+// is not a floor — execSupport stays "recipe" until the other skill roots
+// are computed into the `-c` disable set too (a mechanism redesign, not a
+// stale-claim correction, and out of scope here). Probe results recorded in
+// the matrix.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -369,7 +397,7 @@ function compileCodex(
       to: "$SESSION/codex/auth.json",
     });
     notes.push(
-      "codex recipe: $CODEX_HOME scoping gives an empty skills surface (floor); curated adds skill dirs under $CODEX_HOME. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
+      "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
     );
     if (input.posture === "curated") {
       for (const s of input.skills) {
