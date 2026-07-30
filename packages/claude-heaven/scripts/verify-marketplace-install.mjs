@@ -16,6 +16,16 @@
 //   2. `scripts/render-posture.mjs` runs standalone under plain `node`, with
 //      no `node_modules` beside it, and produces the real posture block.
 //
+// A5a: the copy source itself is now READ from marketplace.json's `source`
+// field (`resolvePluginSource`, above `verifyMarketplaceInstall`) rather than
+// hardcoded. A hardcoded `join(PKG_ROOT, "plugin")` only proved "this layout
+// runs standalone" — a narrower claim than KC1's "installs cleanly from the
+// marketplace", which is a claim about what the manifest routes to, not
+// about what happens to exist on disk. If `source` ever drifts (typo, path
+// move, a second plugin entry) a hardcoded path keeps copying the correct
+// hand-picked directory and stays green while a real install breaks; reading
+// `source` makes that drift a loud, specific failure instead.
+//
 // A negative control ("the command didn't error") is not a positive result,
 // so this asserts on actual stdout content, not just exit codes.
 //
@@ -30,17 +40,65 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = join(HERE, ".."); // packages/claude-heaven
-const PLUGIN_SRC = join(PKG_ROOT, "plugin");
+const REPO_ROOT = join(PKG_ROOT, "..", ".."); // packages/claude-heaven/../.. -> repo root
+const DEFAULT_MARKETPLACE_PATH = join(REPO_ROOT, ".claude-plugin", "marketplace.json");
+const PLUGIN_NAME = "claude-heaven"; // this package's entry name in marketplace.json
 
 /** Everything a real marketplace install must NOT bring along. If any of
  * these leak into the copy, the "fresh environment" is a fiction. */
 const FORBIDDEN_SIBLINGS = ["node_modules", "src", "bin", "package.json", "tsconfig.json"];
 
 /**
+ * A5a (KC1 narrowness fix): resolve the plugin source dir FROM
+ * marketplace.json's `source` field, rather than asserting the layout
+ * independently. Every failure mode is a specific, loud error rather than a
+ * silent fallback to a hardcoded path — a manifest that lies must FAIL this
+ * check, not be quietly worked around.
+ * @param {string} marketplacePath
+ * @param {string} repoRoot
+ * @param {string} pluginName
+ * @returns {{ ok: true, path: string } | { ok: false, error: string }}
+ */
+export function resolvePluginSource(
+  marketplacePath = DEFAULT_MARKETPLACE_PATH,
+  repoRoot = REPO_ROOT,
+  pluginName = PLUGIN_NAME,
+) {
+  if (!existsSync(marketplacePath)) {
+    return { ok: false, error: `marketplace.json not found at ${marketplacePath} — cannot verify a marketplace install without the manifest it installs from` };
+  }
+  /** @type {any} */
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(marketplacePath, "utf-8"));
+  } catch (/** @type {any} */ err) {
+    return { ok: false, error: `marketplace.json at ${marketplacePath} did not parse as JSON: ${err.message}` };
+  }
+  const entry = Array.isArray(manifest?.plugins)
+    ? manifest.plugins.find((/** @type {any} */ p) => p && p.name === pluginName)
+    : undefined;
+  if (!entry) {
+    return { ok: false, error: `marketplace.json has no plugin entry named "${pluginName}" (checked ${marketplacePath})` };
+  }
+  if (typeof entry.source !== "string" || entry.source.length === 0) {
+    return { ok: false, error: `marketplace.json's "${pluginName}" entry has no (or an empty) "source" field (checked ${marketplacePath})` };
+  }
+  const resolved = join(repoRoot, entry.source);
+  if (!existsSync(resolved)) {
+    return { ok: false, error: `marketplace.json's "${pluginName}" source "${entry.source}" resolves to ${resolved}, which does not exist` };
+  }
+  return { ok: true, path: resolved };
+}
+
+/**
  * @param {(msg: string) => void} log
+ * @param {{ marketplacePath?: string, repoRoot?: string, pluginName?: string }} [opts]
+ *   Test-only overrides for resolvePluginSource's inputs — production callers
+ *   (the CLI entry below, and the wrapping vitest suite's default case) rely
+ *   on the real repo defaults.
  * @returns {{ ok: boolean, failures: string[] }}
  */
-export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg) => {}) {
+export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg) => {}, opts = {}) {
   /** @type {string[]} */
   const failures = [];
   /** @param {boolean} cond @param {string} msg */
@@ -53,10 +111,18 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
     }
   };
 
-  if (!existsSync(PLUGIN_SRC)) {
-    failures.push(`plugin source dir missing: ${PLUGIN_SRC}`);
+  // A5a: derive the plugin source FROM marketplace.json's `source` field —
+  // never assert the layout independently. A missing/unparseable manifest, a
+  // missing plugin entry, a missing `source`, or a `source` that resolves
+  // nowhere are all loud, specific failures here, not a silent fallback.
+  const resolution = resolvePluginSource(opts.marketplacePath, opts.repoRoot, opts.pluginName);
+  if (!resolution.ok) {
+    log(`  FAIL ${resolution.error}`);
+    failures.push(resolution.error);
     return { ok: false, failures };
   }
+  const PLUGIN_SRC = resolution.path;
+  log(`Plugin source resolved from marketplace.json's "source" field -> ${PLUGIN_SRC}`);
 
   // A clean temp dir with NO repo around it — the closest thing to a real
   // user's plugin cache we can build without an actual `claude plugin
