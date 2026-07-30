@@ -33,10 +33,10 @@
 // Wrapped in CI by: packages/claude-heaven/test/verify-marketplace-install.test.ts
 
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = join(HERE, ".."); // packages/claude-heaven
@@ -223,8 +223,41 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
   return { ok: failures.length === 0, failures };
 }
 
-const invokedDirectly = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
-if (invokedDirectly) {
+/**
+ * A5b: this script carried the exact bug class KC1 exists to catch. The
+ * textbook `import.meta.url === \`file://${process.argv[1]}\`` idiom compares
+ * a REALPATH-resolved import.meta.url against the RAW argv[1] path — weaker
+ * than even the pre-fix idiom elsewhere in this door. On macOS (and some
+ * container/sandbox setups) both `/tmp` and `/var` are symlinks to
+ * `/private/tmp` / `/private/var`, so a plugin-cache path routed through
+ * either one makes the two sides disagree: `invokedDirectly` comes back
+ * false, the check body never runs, and the command exits 0 having verified
+ * nothing — silently. That is precisely the failure render-posture.mjs hit
+ * (see its header comment) and precisely what this script's own KC1 check
+ * exists to catch elsewhere; it must not carry the bug itself.
+ *
+ * Realpathing argv[1] closes that gap, matching render-posture.mjs's fixed
+ * idiom — but a naive copy of that idiom introduces a NEW failure: under
+ * `import()` (as this module's own test suite does) with a `process.argv[1]`
+ * that does not exist on disk, `realpathSync` throws ENOENT uncaught, where
+ * the old (buggy) string-compare code silently evaluated to `false`. A
+ * missing/unresolvable argv[1] must not be able to crash an import of this
+ * module — it just means "this was not a direct invocation".
+ * @returns {boolean}
+ */
+function isInvokedDirectly() {
+  if (!process.argv[1]) return false;
+  /** @type {string} */
+  let real;
+  try {
+    real = realpathSync(process.argv[1]);
+  } catch {
+    return false; // argv[1] doesn't resolve on disk — cannot be a direct invocation of THIS file
+  }
+  return import.meta.url === pathToFileURL(real).href;
+}
+
+if (isInvokedDirectly()) {
   const { ok, failures } = verifyMarketplaceInstall((msg) => process.stdout.write(`${msg}\n`));
   if (ok) {
     process.stdout.write("\nKC1 fresh-environment check: PASS\n");

@@ -14,11 +14,15 @@
 // below are on the actual rendered content, mirroring what the script itself
 // checks internally.
 
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { fileURLToPath } from "node:url";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolvePluginSource, verifyMarketplaceInstall } from "../scripts/verify-marketplace-install.mjs";
+
+const SCRIPT_PATH = fileURLToPath(new URL("../scripts/verify-marketplace-install.mjs", import.meta.url));
 
 describe("KC1: marketplace install, verified from a fresh environment", () => {
   it("passes every check when the plugin dir is copied in isolation and run standalone", () => {
@@ -106,5 +110,50 @@ describe("A5a: plugin source is read FROM marketplace.json, not asserted indepen
     const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
     expect(resolution.ok).toBe(true);
     if (resolution.ok) expect(resolution.path).toBe(join(repoRoot, "packages", "claude-heaven", "plugin"));
+  });
+});
+
+// A5b (Issue #8): the invocation guard that decides whether the CLI body runs
+// at all must not carry the class of bug KC1 exists to catch. "Assert on
+// content, never on exit status alone" is the whole lesson of the original
+// bug (render-posture.mjs silently printing nothing at exit 0) — so these
+// prove BOTH directions on real content/behavior, not on exit codes alone.
+describe("A5b: the invokedDirectly guard is symlink-safe and does not throw on a bogus argv[1]", () => {
+  it("direct invocation (`node verify-marketplace-install.mjs`) actually renders content", () => {
+    const stdout = execFileSync(process.execPath, [SCRIPT_PATH], { encoding: "utf-8" });
+    // Content, not just "didn't throw" or "exit 0" — the exact defect class
+    // this script exists to catch (an old, weaker guard silently ran nothing).
+    expect(stdout).toContain("KC1 fresh-environment check: PASS");
+  });
+
+  it("import() with a bogus argv[1] neither throws nor renders anything", async () => {
+    const originalArgv1 = process.argv[1];
+    process.argv[1] = "/definitely/does/not/exist/verify-marketplace-install.mjs";
+    const writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((code?: number) => {
+      // If the guard is wrong, this branch would tear down the test runner
+      // for real; failing the assertion instead makes the wrong direction a
+      // normal test failure rather than a crashed suite.
+      throw new Error(`process.exit(${code}) called during import() — the guard ran the CLI body when it must not have`);
+    }) as never);
+
+    try {
+      // Cache-bust: a bare re-import of the same specifier would hit ESM's
+      // module cache and skip top-level execution entirely, proving nothing.
+      // @vite-ignore: the specifier is intentionally dynamic (cache-bust
+      // query varies per run) — Vite's static import-graph analysis can't
+      // (and shouldn't) resolve it ahead of time.
+      const specifier = `${SCRIPT_PATH.replace(/\\/g, "/")}?a5b-bogus-argv-${Date.now()}`;
+      await expect(import(/* @vite-ignore */ specifier)).resolves.toBeDefined();
+    } finally {
+      process.argv[1] = originalArgv1;
+      writeSpy.mockRestore();
+      exitSpy.mockRestore();
+    }
+
+    // Neither throws (asserted above via `.resolves`) NOR renders: the CLI
+    // body's distinctive output must never have been written.
+    const written = writeSpy.mock.calls.map((c) => String(c[0])).join("");
+    expect(written).not.toContain("KC1 fresh-environment check");
   });
 });
