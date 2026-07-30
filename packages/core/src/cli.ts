@@ -97,7 +97,9 @@ export function parseArgs(argv: string[]): CliArgs {
   if (level !== undefined) {
     if ((HELL_LEVELS as readonly string[]).includes(level)) {
       throw new Error(
-        `--level ${level}: the hell lane (med|high|xhigh|max) is gated (P2) and its level mapping is OPEN item 3 — refusing to launch`,
+        `--level ${level}: the hell lane (med|high|xhigh|max) is gated (P2) — withheld by policy, not a ` +
+          `harness limit: it is technically composable but deliberately locked until Hell is proven safe. ` +
+          `Its level mapping is also OPEN item 3 — refusing to launch`,
       );
     }
     const aliased = LEVEL_ALIASES[level];

@@ -12,7 +12,7 @@ import { HELL_LEVELS, POSTURES } from "skill-heaven";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
 import { LAUNCHABLE_POSTURES, run } from "../src/cli.js";
 import { planNativeLaunch } from "../src/launcher.js";
-import { formatTokens as formatTokensTs } from "../src/statusline.js";
+import { formatTokens as formatTokensTs, renderStatusline } from "../src/statusline.js";
 import {
   POSTURE_ROWS,
   RELAUNCH_OFFERS,
@@ -124,6 +124,18 @@ describe("P2 gate (the Hell lane is gated on every surface)", () => {
       expect(text).toMatch(/LOCKED \(P2\)/);
     }
   });
+
+  // KC6 (Issue #12): the Hell refusal must read as the POLICY class, not just
+  // as a bare "locked" that could be misread as "harness cannot do this" — a
+  // reader must be able to tell, from the text alone, that a key exists here
+  // and could turn, as opposed to the clean-room lock (D12) below, where none
+  // does.
+  it("marks the Hell refusal as a policy hold, not a harness limit (KC6)", () => {
+    const r = renderPosture({ target: "med" });
+    expect(r.refused).toBe(true);
+    expect(r.text).toContain("policy hold, not a harness limit");
+    expect(r.text).not.toContain("harness limit: no flag");
+  });
 });
 
 describe("locked clean room (D12)", () => {
@@ -144,6 +156,18 @@ describe("locked clean room (D12)", () => {
     expect(text).toMatch(/● {2}clean room/);
     expect(text).not.toContain("Composed at boot, never mid-session");
     expect(text).toContain("you launched here");
+  });
+
+  // KC6 (Issue #12): D12's lock is the OTHER refusal class — harness-
+  // incapable, not policy. Gate (a) came back NEGATIVE: no flag combination
+  // reaches this on a running session, so unlike Hell there is no key that a
+  // future decision could turn. The text must say so, and must not borrow the
+  // Hell row's policy vocabulary.
+  it("marks the clean-room lock as a harness limit, not a policy hold (KC6)", () => {
+    const text = render({ manifest: null });
+    expect(text).toContain("not a policy hold, a harness limit");
+    expect(text).toContain("no flag or flag-combination evicts skills on a running session");
+    expect(text).not.toContain("gated (P2)");
   });
 
   it("offers no relaunch the launcher would refuse (KC7) — checked against the real validator", () => {
@@ -288,6 +312,14 @@ describe("the floor split (V5-5): the clean room is the PRODUCT floor", () => {
     const text = render({ manifest: nativeManifest });
     expect(text).toContain("slash commands off, so this command does not exist");
     expect(text).not.toContain("--disable-slash-commands");
+  });
+
+  // KC6 (Issue #12): the benchmark floor's absence is the harness-incapable
+  // class too — there is no door composed there at all (F6), so nothing was
+  // withheld from the user by a decision.
+  it("marks the benchmark floor's absence as a harness fact, not a policy choice (KC6)", () => {
+    const text = render({ manifest: nativeManifest });
+    expect(text).toContain("a harness fact, not a policy choice");
   });
 
   it("prices the two floors as separate arms and never averages them (B1/B2)", () => {
@@ -471,8 +503,64 @@ describe("reachable rows print an exact, runnable command", () => {
 describe("standing-dose readout", () => {
   it("reports the launch manifest's dose with scope disclosed, two numbers never one (B1)", () => {
     const text = render({ manifest: nativeManifest });
-    expect(text).toContain("4.8k standing (user+project scope)");
+    expect(text).toContain("4.8k standing (user+project scope");
     expect(text).toContain("charged separately, on invoke");
+  });
+
+  // KC2 (Issue #9): a scope NAME ("user+project scope") does not tell a
+  // reader what is missing — the exclusion itself must be spelled out so
+  // nobody has to already know census.ts to understand the number is partial.
+  it("discloses bundled and plugin-provided skills as excluded, not just the scope name (KC2)", () => {
+    const text = render({ manifest: nativeManifest });
+    expect(text).toContain(
+      "4.8k standing (user+project scope — bundled CLI skills and plugin-provided skills are not counted)",
+    );
+  });
+
+  // A3/KC4 correction: a "session" scope (curated/product-floor) enumerates
+  // the launched skill SET exactly, but a bundled `doctor` skill was MEASURED
+  // to survive every posture (probe-kc4-listing-residual.sh) — a permanent,
+  // founder-ruled harness residual, not a defect this door can fix. The old
+  // "nothing excluded" claim for session scope was false; this caveat
+  // replaces it.
+  // Vehicle is `curated`, not `product-floor`: both carry scope "session", but
+  // product-floor now takes its own branch in sessionLine (its dominant
+  // exclusion is project scope, not `doctor`), so it can no longer be used to
+  // exercise the scope-keyed path. Using it here tested the branch, not the note.
+  it("discloses the doctor residual for a fully-enumerated session scope", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "curated", scope: "session" } });
+    expect(text).toContain("4.8k standing (session scope — bundled `doctor` skill is not counted");
+  });
+
+  // P8: product-floor is "off" — the nearest zero the harness can be LAUNCHED
+  // at — and it currently inherits project-scope skills from cwd (measured 2/2,
+  // claude 2.1.220), an amount that scales with the user's repo. The scope-keyed
+  // note under-discloses that: it names `doctor` and omits the larger omission.
+  // This must stay in step with src/statusline.ts's product-floor branch; the
+  // two surfaces describing the same posture differently is the defect.
+  it("names project scope for product-floor and prints NO token figure", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope: "session" } });
+    expect(text).toContain("0 of your own skills selected");
+    expect(text).toContain("project-scope skills in this directory are still loaded");
+    expect(text).toContain("not knowable from here");
+    // A number here would imply a measurement we do not have.
+    expect(text).not.toContain("4.8k standing");
+  });
+  it("keeps product-floor's session line stable across scope values", () => {
+    for (const scope of ["session", "user+project", "some-future-scope"]) {
+      const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope } });
+      expect(text).toContain("project-scope skills in this directory are still loaded");
+      expect(text).not.toContain("4.8k standing");
+    }
+  });
+
+  // A5c (fail closed): scopeNote is an explicit allowlist. A scope value this
+  // door has never named must still disclose that its coverage is unknown —
+  // never render as if it excluded nothing.
+  it("fails closed on an unrecognized scope: discloses 'coverage unknown', never silence", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "curated", scope: "some-future-scope" } });
+    expect(text).toContain("4.8k standing (some-future-scope scope — coverage unknown");
+    expect(text).not.toContain("4.8k standing (some-future-scope scope)");
   });
 
   it("marks an incomplete census with a trailing + rather than presenting it as exact (B4)", () => {
@@ -489,6 +577,38 @@ describe("standing-dose readout", () => {
     for (const n of [0, 57, 999, 1000, 4823, 14200, -1, Number.NaN]) {
       expect(formatTokens(n)).toBe(formatTokensTs(n));
     }
+  });
+
+  // KC2 (Issue #9), corrected under A3/KC4: two renderers, two mediums, one
+  // honest fact. BOTH must name the same exclusions whenever scope is
+  // "user+project" (bundled AND plugin-provided skills), and BOTH must now
+  // ALSO disclose the measured `doctor` residual whenever scope is "session"
+  // (bundled, but not plugin-provided — no plugin leak was ever measured). A
+  // future edit that adds a caveat to one renderer and forgets the other, or
+  // that silently drops the session-scope caveat again, fails here rather
+  // than in a founder review.
+  it("agrees with the statusline renderer on WHAT is disclosed for each scope (KC2 parity)", () => {
+    const partialProfile = { schema: "claude-heaven/profile@1", posture: "native", standingTokens: 4823, skillCount: 12, scope: "user+project", launcherLocked: true } as const;
+    const fullProfile = { ...partialProfile, scope: "session" } as const;
+
+    // Isolate the `session:` line — the render also has an unrelated "clean
+    // room ... bundled skills" row blurb (what product-floor evicts), which
+    // would false-positive a whole-text match either way.
+    const sessionLineOf = (text: string) => text.split("\n").find((l) => l.trim().startsWith("session:")) ?? "";
+
+    const statuslinePartial = renderStatusline(partialProfile);
+    const postureLinePartial = sessionLineOf(render({ manifest: partialProfile }));
+    expect(statuslinePartial).toMatch(/bundled/i);
+    expect(statuslinePartial).toMatch(/plugin/i);
+    expect(postureLinePartial).toMatch(/bundled/i);
+    expect(postureLinePartial).toMatch(/plugin/i);
+
+    const statuslineFull = renderStatusline(fullProfile);
+    const postureLineFull = sessionLineOf(render({ manifest: fullProfile }));
+    expect(statuslineFull).toMatch(/bundled/i);
+    expect(statuslineFull).not.toMatch(/plugin/i);
+    expect(postureLineFull).toMatch(/bundled/i);
+    expect(postureLineFull).not.toMatch(/plugin/i);
   });
 });
 

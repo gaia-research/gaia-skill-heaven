@@ -154,6 +154,8 @@ export function compile(input: CompileInput): CompileResult {
   if (posture === "product-floor" && harness !== "claude") {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude was probed (F7, 2.1.216). ` +
+        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has " +
+        "verified whether this composes here at all, so there is nothing to withhold or grant a key to. " +
         "Refusing to guess (M0 discipline); use --posture floor, or add the row to the harness capability matrix first.",
     );
   }
@@ -250,14 +252,29 @@ function compileClaude(
     const mechanism = input.mechanism ?? DEFAULT_CLAUDE_MECHANISM;
     if (mechanism === "plugin-dir") {
       // T6 (2.1.215): --disable-slash-commands eats --plugin-dir skills too, so
-      // curated CANNOT ride on the floor argv. T9: --setting-sources project
-      // evicts user-dir skills AND the user CLAUDE.md while --plugin-dir
-      // re-admission stays live, and CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1
-      // removes the bundled-CLI-skills residual T8 had — observed listing:
-      // the curated set only.
+      // curated CANNOT ride on the floor argv.
+      //
+      // KC4 (2026-07-29/30): `--setting-sources project` was T9's route, but
+      // `--setting-sources` is an ALLOWLIST — naming `project` explicitly KEEPS
+      // project-scope skills live, which is exactly the residual KC4 measured
+      // (probe-kc4-listing-residual.sh, claude 2.1.220: cwd's project-scope
+      // skill showed up in system:init `skills` alongside the curated set).
+      // Founder ruling: curated is a personal-profile clean room + the caller's
+      // own named skills, never a benchmark arm — so a project-scope leak is
+      // not tolerable. Fix is `--setting-sources ''` — an EMPTY VALUE, not the
+      // flag omitted. Omitting the flag entirely restores the full ~68-entry
+      // bundled listing; empty-string is structurally "no ambient sources" and
+      // was chosen over `local` because a clean `local` listing on one machine
+      // only proves that machine had no local-scope skills, not that the route
+      // is clean in general. `--plugin-dir` is a separate flag (not a setting
+      // source), so the curated set still mounts under an empty allowlist.
+      // CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 still removes the bundled-CLI-skills
+      // residual T8 had. Re-probed clean (see KC4 note below); the sole
+      // remaining residual is `doctor`, which survives the env knob and is an
+      // upstream harness limitation the founder has ruled stays as-is.
       argv = [
         "--setting-sources",
-        "project",
+        "",
         "--strict-mcp-config",
         "--mcp-config",
         '{"mcpServers":{}}',
@@ -283,7 +300,10 @@ function compileClaude(
         fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/heaven-set/skills/${s.id}` });
       }
       notes.push(
-        "curated via --setting-sources project + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 (T9; supersedes T8 — owner vetoed the bundled-skills residual). T6 was NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. Zero listing residual observed (2/2 runs); the env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
+        "curated via --setting-sources '' (empty allowlist) + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1. T9 (--setting-sources project) is SUPERSEDED as of KC4 (2026-07-30): naming `project` keeps project-scope skills live (an allowlist, not a suppression flag), which is the residual KC4 measured. T6 remains NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. " +
+          "KC4 re-probe (claude 2.1.220, packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) with the empty-value composition: system:init `skills` array contains only the curated marker plus `doctor` — no project-scope leak, no marketplace-plugin leak (system:init `plugins` showed only heaven-set). " +
+          "`doctor` survives CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 in every scenario tested — an upstream harness limitation (founder-ruled acceptable residual), not a composition defect. " +
+          "The env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
       );
     } else {
       const home = input.homeDir ?? "$HOME";
@@ -330,9 +350,42 @@ function compilePi(
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }
 
-// codex — recipe from matrix cells: $CODEX_HOME scoping + per-skill
-// config.toml toggles. Stays a recipe unless the per-session -c scoping cell
-// verifies (M2 plan §4); probe results recorded in the matrix.
+// codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.
+//
+// A2 (2026-07-29/30): the per-session `-c` scoping cell this comment used to
+// gate on HAS resolved — `-c 'skills.config=[{path="<abs SKILL.md>",
+// enabled=false}]'` reaches the skills surface per-invocation, no restart,
+// nothing written to config.toml (codex-cli 0.145.0; gaia-research PR #133,
+// harness-capability-matrix.md row "Skills listing suppressible per-session?"
+// / G1-skills-config-override: 2/2 reproduced upstream. Committed run record
+// gaia-research/scripts/hell-heaven-bench/harness-probes/runs/
+// codex-g1-2026-07-29.run.json shows 67→66 entries — targeted fixture skill
+// absent, all 66 others unchanged, input_tokens 18,986→18,925, 2/2
+// byte-identical. Correction, 2026-07-31: this comment previously read
+// "74→73 entries" — that figure never matched the PR #133 / G1 row it cited
+// and traced to no separate committed probe; a citation error, fixed here.
+// That is no longer the open question.
+//
+// The reason codex STAYS A RECIPE is a different one: the matrix's own
+// "Skill discovery" row documents codex skill roots beyond $CODEX_HOME —
+// `.agents/skills` (repo, cwd→root scan), `~/.agents/skills` (user),
+// `/etc/codex/skills`, and bundled system skills. $CODEX_HOME scoping alone
+// does not evict any of them (confirmed independently: `~/.agents/skills`
+// alone holds 70 entries on this machine), and the per-session `-c` cell
+// above only suppresses skills named in that one flag — it does not compute
+// a disable entry for every skill discovered across every root. So a live
+// `--posture floor --harness codex` exec today would not be an empty
+// surface, and a live `--posture curated` exec would not be a clean room
+// either: both would leak the other roots' skills into the model-visible
+// listing. exec.ts:43 refuses to spawn anything whose execSupport isn't
+// "exec", and cli.ts:169 prints a recipe instead of running — that refusal
+// is what keeps a research driver from spawning a codex "floor" that is
+// actually near-native and recording a benchmark under a posture the
+// session never had. So: the mechanism is proven, but the resulting surface
+// is not a floor — execSupport stays "recipe" until the other skill roots
+// are computed into the `-c` disable set too (a mechanism redesign, not a
+// stale-claim correction, and out of scope here). Probe results recorded in
+// the matrix.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -349,7 +402,7 @@ function compileCodex(
       to: "$SESSION/codex/auth.json",
     });
     notes.push(
-      "codex recipe: $CODEX_HOME scoping gives an empty skills surface (floor); curated adds skill dirs under $CODEX_HOME. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
+      "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
     );
     if (input.posture === "curated") {
       for (const s of input.skills) {
@@ -395,6 +448,8 @@ function compileGrok(
   if (input.posture !== "native") {
     throw new Error(
       "grok: no verified skills-suppression/re-admission mechanism (v0.2.103 --help probe found no skills surface). " +
+        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only) — nothing about " +
+        "grok is being withheld by decision; no one has found a way to do it yet, verified or otherwise. " +
         "Refusing to guess (M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
         "Only --posture native compiles for grok today.",
     );

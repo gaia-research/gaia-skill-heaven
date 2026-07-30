@@ -38,13 +38,23 @@ describe("claude mappings", () => {
     expect(r.fsPlan).toEqual([]);
   });
 
-  it("curated plugin-dir = setting-sources eviction + --plugin-dir + bundled-skills knob + manifest + skill copies (T6 negative, T9)", () => {
+  it("curated plugin-dir = empty setting-sources allowlist + --plugin-dir + bundled-skills knob + manifest + skill copies (KC4 clean room, T6 negative)", () => {
     const r = compile({ posture: "curated", harness: "claude", mechanism: "plugin-dir", skills: [fakeSkill] });
     // T6 (2.1.215): --disable-slash-commands eats plugin skills — must NOT be present
     expect(r.argv).not.toContain("--disable-slash-commands");
-    expect(r.argv.join(" ")).toContain("--setting-sources project");
+    // KC4 (2026-07-30): --setting-sources is an ALLOWLIST. Naming "project"
+    // explicitly KEEPS project-scope skills live — that was the measured
+    // residual. The flag must still be passed, with an EMPTY value — that is
+    // structurally different from omitting the flag (which restores the full
+    // bundled listing).
+    const settingSourcesIdx = r.argv.indexOf("--setting-sources");
+    expect(settingSourcesIdx).toBeGreaterThanOrEqual(0);
+    expect(r.argv[settingSourcesIdx + 1]).toBe("");
+    expect(r.argv).not.toContain("project");
     expect(r.argv).toContain("--strict-mcp-config");
     expect(r.argv).toContain("--plugin-dir");
+    // --plugin-dir is a flag, not a setting source, so the curated set still
+    // mounts under the empty allowlist.
     expect(r.argv).toContain("$SESSION/heaven-set");
     expect(r.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
     expect(r.fsPlan[0]).toMatchObject({ kind: "write", path: "$SESSION/heaven-set/.claude-plugin/plugin.json" });
@@ -140,6 +150,21 @@ describe("the floor split (V5-5)", () => {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
+
+  // KC6 (Issue #12): this refusal is the harness-incapable class — nobody has
+  // verified the composition, so there is nothing decided to withhold. It
+  // must say that explicitly, not just "no verified cell", which alone could
+  // be misread as "not verified [and therefore not permitted]".
+  it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
+    let msg = "";
+    try {
+      compile({ posture: "product-floor", harness: "pi", skills: [] });
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("harness-capability gap, not a policy hold");
+    expect(msg).not.toMatch(/gated \(P2\)/);
+  });
 });
 
 describe("pi mappings", () => {
@@ -159,6 +184,15 @@ describe("pi mappings", () => {
 });
 
 describe("recipe harnesses", () => {
+  // A2 (2026-07-29/30): the per-session `-c 'skills.config=[{path=…,
+  // enabled=false}]'` scoping cell this used to gate on HAS resolved (matrix
+  // G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) —
+  // that is no longer the open question. codex stays a recipe anyway because
+  // $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`,
+  // `/etc/codex/skills`, or bundled system skills (matrix Skill discovery
+  // row), so neither floor nor curated is yet a verified-clean surface —
+  // the resolved mechanism does not make the resulting surface a floor.
+  // execSupport intentionally stays "recipe" (deferred, not flipped).
   it("codex compiles a recipe with CODEX_HOME scoping", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
     expect(r.execSupport).toBe("recipe");
@@ -172,6 +206,20 @@ describe("recipe harnesses", () => {
   it("grok refuses floor/curated (no verified mechanism) but allows native", () => {
     expect(() => compile({ posture: "floor", harness: "grok", skills: [] })).toThrow(/grok/);
     expect(compile({ posture: "native", harness: "grok", skills: [] }).execSupport).toBe("recipe");
+  });
+
+  // KC6 (Issue #12): same class as the product-floor harness-cell refusal
+  // above — no verified mechanism exists at all, which is not a decision to
+  // withhold anything.
+  it("marks the grok refusal as a capability gap, not a policy hold (KC6)", () => {
+    let msg = "";
+    try {
+      compile({ posture: "floor", harness: "grok", skills: [] });
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("harness-capability gap, not a policy hold");
+    expect(msg).not.toMatch(/gated \(P2\)/);
   });
 });
 
@@ -196,6 +244,20 @@ describe("cli level lane", () => {
     for (const l of ["med", "high", "xhigh", "max"]) {
       expect(() => parseArgs(["--level", l])).toThrow(/hell lane .*gated/i);
     }
+  });
+
+  // KC6 (Issue #12): the policy-class refusal, on the research CLI's own
+  // --level lane too — must not read like the harness-incapable class covered
+  // above (product-floor/grok: "harness-capability gap, not a policy hold").
+  it("marks the hell-lane refusal as a policy hold, not a harness limit (KC6)", () => {
+    let msg = "";
+    try {
+      parseArgs(["--level", "max"]);
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("withheld by policy, not a harness limit");
+    expect(msg).not.toContain("harness-capability gap");
   });
   it("contradiction between --posture and --level errors", () => {
     expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);

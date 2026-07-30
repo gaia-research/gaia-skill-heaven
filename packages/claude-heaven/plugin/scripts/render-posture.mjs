@@ -58,7 +58,7 @@
 // into the *command markdown*, but is NOT exported to the bash child, so this
 // script locates its own data dir via import.meta.url rather than the env var.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -158,7 +158,13 @@ export const POSTURE_ROWS = [
     id: "product-floor",
     label: "clean room",
     blurb: "Evicts your personal skills, MCP servers and bundled skills — keeps this door.",
-    lockedNote: "Composed at boot, never mid-session (D12) — so it starts a new session:",
+    // KC6: this is the harness-incapable class, not a policy hold — say so.
+    // Gate (a) came back NEGATIVE: no flag or flag-combination evicts
+    // user/global skills on a running session, so there is no key that a
+    // future decision could turn; only a boot reaches it.
+    lockedNote:
+      "Composed at boot, never mid-session (D12) — not a policy hold, a harness limit: no flag or " +
+      "flag-combination evicts skills on a running session. So it starts a new session:",
     kind: "physical",
     relaunch: () => "claude-heaven --posture product-floor",
   },
@@ -415,15 +421,69 @@ function refusal(target) {
     "",
     "   /skill-hell is a locked door, not an activator: the Hell lane opens only",
     "   when it is proven safe — benchmark status and the ledger link live there.",
+    "   This is a policy hold, not a harness limit: the mechanism is composable",
+    "   today and the key can turn once that bar is met.",
     "   /skill-heaven is the Heaven-lane control and will not compose a Hell posture.",
     "",
   ].join("\n");
+}
+
+/**
+ * KC2 (Issue #9), corrected under A3/KC4: a scope NAME alone ("user+project
+ * scope") tells a reader what the census is called, not what it is missing —
+ * an exclusion cannot be inferred from a label by someone who has not read
+ * census.ts. `scope: "user+project"` (native launches) is a partial census:
+ * bundled CLI skills and plugin-provided skills are not counted. `scope:
+ * "session"` (curated/product-floor) enumerates the launched skill SET
+ * exactly, but the session's skill LISTING is not exact either: a bundled
+ * skill named `doctor` survives `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1`
+ * regardless of posture — a founder-ruled, permanent, harness-level residual
+ * measured live by packages/claude-heaven/scripts/probe-kc4-listing-
+ * residual.sh (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's
+ * curated note). The prior "nothing is excluded" claim for `session` was
+ * false — see src/launcher.ts's KC4 correction for the full history.
+ *
+ * A5c fail-closed: explicit allowlist, not an `expected ? note : bare-label`
+ * optimistic default — an unrecognized scope must still disclose that its
+ * coverage is unknown rather than rendering as if it excluded nothing, same
+ * discipline as `readGatedLevels`/`readLaunchablePostures` above. This
+ * surface carries the full sentence; the statusline strip gets the compact
+ * form (src/statusline.ts `scopeCaveat`) — keep both in sync.
+ * @param {string} scope
+ */
+function scopeNote(scope) {
+  if (scope === "user+project") {
+    return `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`;
+  }
+  if (scope === "session") {
+    return `(${scope} scope — bundled \`doctor\` skill is not counted; a harness limitation, not this door's choice — see KC4)`;
+  }
+  return `(${scope} scope — coverage unknown; this door does not yet know what this scope excludes)`;
 }
 
 /** @param {LaunchManifest | null} manifest */
 function sessionLine(manifest) {
   if (!manifest) {
     return "session: vanilla claude — no launch manifest, so no standing-dose readout here.";
+  }
+  // `product-floor` is scope "session" like curated, but its exclusions are NOT
+  // curated's, so the scope-keyed note under-discloses it: the big omission is
+  // project scope, not `doctor`. Under P8 this posture is "off" — the nearest
+  // zero the harness can be LAUNCHED at — and it currently inherits
+  // project-scope skills from cwd (measured 2/2, claude 2.1.220), an amount that
+  // scales with the user's repo. So no token figure belongs here at all.
+  //
+  // This mirrors src/statusline.ts's product-floor branch on purpose: that file
+  // keys on POSTURE while `scopeNote` below keys on SCOPE, and the two surfaces
+  // must never disagree about the same posture. If the composition is fixed to
+  // drop project scope, delete this branch and the generic form returns.
+  if (manifest.posture === "product-floor") {
+    return (
+      `session: launched at ${manifest.posture} · 0 of your own skills selected — but ` +
+      "project-scope skills in this directory are still loaded, so the standing dose is " +
+      "not zero and is not knowable from here. The bundled `doctor` skill is not counted " +
+      "either (a harness limitation, not this door's choice — see KC4)."
+    );
   }
   const floor = manifest.incomplete ? "+" : "";
   // A curated set of exactly one is now reachable, so the plural is no longer
@@ -434,7 +494,7 @@ function sessionLine(manifest) {
       : "";
   return (
     `session: launched at ${manifest.posture} · ${skills}` +
-    `${formatTokens(manifest.standingTokens)}${floor} standing (${manifest.scope} scope)`
+    `${formatTokens(manifest.standingTokens)}${floor} standing ${scopeNote(manifest.scope)}`
   );
 }
 
@@ -511,8 +571,9 @@ function footer(launched, sid, hasResume, hasRelaunch) {
     "",
     "   There is a floor below the clean room, and it is not offered here: the",
     "   benchmark floor runs with slash commands off, so this command does not exist",
-    "   there. It is the measurement placebo, not a place to sit — and the two floors",
-    "   are always priced as separate arms, never averaged.",
+    "   there — a harness fact, not a policy choice: there is no key to turn, only a",
+    "   route with no door on it. It is the measurement placebo, not a place to sit",
+    "   — and the two floors are always priced as separate arms, never averaged.",
     "",
   );
   // The two kinds of → command do OPPOSITE things to this conversation, so each
@@ -571,5 +632,16 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   return 0;
 }
 
-const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+// KC1 fresh-environment check caught this: the textbook `import.meta.url ===
+// pathToFileURL(process.argv[1]).href` idiom compares a REALPATH-resolved
+// import.meta.url against the RAW argv[1] path. On macOS (and in some
+// container/sandbox setups) both `/tmp` and `/var` are symlinks to
+// `/private/tmp` / `/private/var` — so a plugin cache path that happens to
+// route through either one makes the two sides disagree, `invokedDirectly`
+// comes back false, `main()` never runs, and the command silently prints
+// nothing (exit 0, empty stdout — no error a user or a naive check would
+// catch). Resolving argv[1] through realpath before comparing closes that
+// gap; verify-marketplace-install.mjs pins this by running the script from a
+// symlink-routed temp dir and asserting on real stdout content.
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (invokedDirectly) main();

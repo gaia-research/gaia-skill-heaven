@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { materialize, resolveSkill } from "skill-heaven";
-import { assertLevelAllowed, planLaunch, planNativeLaunch } from "../src/launcher.js";
+import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch, planNativeLaunch } from "../src/launcher.js";
 
 /** A real skill dir with real bytes — core's own compile fixture. */
 const FIXTURE = join(
@@ -39,6 +39,23 @@ describe("assertLevelAllowed (P2)", () => {
     expect(() => assertLevelAllowed("off")).not.toThrow();
     expect(() => assertLevelAllowed("low")).not.toThrow();
     expect(() => assertLevelAllowed(undefined)).not.toThrow();
+  });
+
+  // KC6 (Issue #12): the Hell-lane refusal is the POLICY class — it must say
+  // so explicitly, not just cite "(P2)" and leave a reader to infer what kind
+  // of "no" that is. Distinguished from the harness-incapable class covered
+  // in cli.test.ts's "refusal honesty (KC6)" describe block (the floor
+  // refusal, and the product-floor/grok harness checks in compile.test.ts).
+  it("marks itself as a policy hold, not a harness limit (KC6)", () => {
+    try {
+      assertLevelAllowed("max");
+      throw new Error("expected assertLevelAllowed to throw");
+    } catch (e) {
+      const msg = (e as Error).message;
+      expect(msg).toContain("withheld by policy, not a harness limit");
+      expect(msg).toContain("technically composable");
+      expect(msg).not.toContain("harness-incapable");
+    }
   });
 });
 
@@ -91,15 +108,21 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
       ...opts,
     });
 
-  it("carries core's T9 route verbatim — the door composes nothing of its own", () => {
+  it("carries core's KC4 clean-room route verbatim — the door composes nothing of its own", () => {
     // If this list ever needs editing here, the change belongs in packages/core.
     // The door's ONLY additions are the session --settings file (statusline) and
     // the $SESSION substitution.
+    //
+    // KC4 (2026-07-30): --setting-sources is an ALLOWLIST. core moved off T9's
+    // `--setting-sources project` (which kept project-scope skills live — the
+    // measured residual) to an EMPTY value, which is structurally "no ambient
+    // sources" rather than the flag being omitted (which would restore the
+    // full bundled listing). See packages/core/src/compile.ts and README.md.
     const p = plan();
     expect(p.command).toBe("claude");
     expect(p.argv.slice(0, 7)).toEqual([
       "--setting-sources",
-      "project",
+      "",
       "--strict-mcp-config",
       "--mcp-config",
       '{"mcpServers":{}}',
@@ -184,6 +207,19 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
       }),
     ).toThrow(/only valid with --posture curated/);
   });
+
+  // KC6 (Issue #12 / the "known gap" flagged in PR #18): curated evicts the
+  // user-scope plugin install and mounts only $SESSION/heaven-set, so
+  // claude-heaven's own /skill-heaven does not exist inside a curated
+  // session. Nothing inside that session can disclose this for itself, so it
+  // must travel in the plan's own notes — the one channel both --print and a
+  // real launch (cli.ts) both read.
+  it("discloses that /skill-heaven does not exist inside a curated session (KC6)", () => {
+    const p = plan();
+    expect(p.notes.join(" ")).toContain(CURATED_DOOR_ABSENCE_NOTE);
+    // Honest about what it is NOT: neither policy-gated nor proven impossible.
+    expect(p.notes.join(" ")).toContain("Not withheld by policy, and not proven impossible either");
+  });
 });
 
 describe("planLaunch(product-floor) — the doorful floor", () => {
@@ -214,5 +250,28 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     expect(p.manifest.standingTokens).toBe(0);
     expect(p.manifest.skillCount).toBe(0);
     expect(p.manifest.scope).toBe("session");
+  });
+
+  // A3 (orchestrator-measured, 2026-07-30): product-floor's argv still names
+  // `--setting-sources project` (unchanged by the KC4 clean-room fix, which
+  // touched curated only) — the same allowlist shape KC4 found leaky. A live
+  // probe with a planted project-scope marker skill in cwd showed it (and
+  // `doctor`) alongside product-floor's session listing, 2/2 reps. Changing
+  // the composition is a founder call (F7 is a measured benchmark arm) and is
+  // deliberately NOT made here — but `standingTokens: 0` must not be
+  // presented as an exact, complete count for a posture that can silently
+  // carry skills this number never prices. `incomplete: true` marks it a
+  // floor, not an exact zero — the same mechanism native's census already
+  // uses for "could not fully verify this number" (never print an
+  // optimistic, unconditional zero when the true dose is not knowable).
+  it("marks the dose incomplete — a floor, not an exact zero (unresolved project-scope leak)", () => {
+    expect(plan().manifest.incomplete).toBe(true);
+  });
+
+  // KC6: the door-absence disclosure is curated-specific — product-floor is
+  // exactly the posture that keeps the door (F7's whole point), so carrying
+  // the note here would be a false claim, the opposite defect.
+  it("carries no curated door-absence note — this posture keeps the door", () => {
+    expect(plan().notes.join(" ")).not.toContain(CURATED_DOOR_ABSENCE_NOTE);
   });
 });
