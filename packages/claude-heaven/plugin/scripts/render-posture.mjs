@@ -466,6 +466,25 @@ function sessionLine(manifest) {
   if (!manifest) {
     return "session: vanilla claude — no launch manifest, so no standing-dose readout here.";
   }
+  // `product-floor` is scope "session" like curated, but its exclusions are NOT
+  // curated's, so the scope-keyed note under-discloses it: the big omission is
+  // project scope, not `doctor`. Under P8 this posture is "off" — the nearest
+  // zero the harness can be LAUNCHED at — and it currently inherits
+  // project-scope skills from cwd (measured 2/2, claude 2.1.220), an amount that
+  // scales with the user's repo. So no token figure belongs here at all.
+  //
+  // This mirrors src/statusline.ts's product-floor branch on purpose: that file
+  // keys on POSTURE while `scopeNote` below keys on SCOPE, and the two surfaces
+  // must never disagree about the same posture. If the composition is fixed to
+  // drop project scope, delete this branch and the generic form returns.
+  if (manifest.posture === "product-floor") {
+    return (
+      `session: launched at ${manifest.posture} · 0 of your own skills selected — but ` +
+      "project-scope skills in this directory are still loaded, so the standing dose is " +
+      "not zero and is not knowable from here. The bundled `doctor` skill is not counted " +
+      "either (a harness limitation, not this door's choice — see KC4)."
+    );
+  }
   const floor = manifest.incomplete ? "+" : "";
   // A curated set of exactly one is now reachable, so the plural is no longer
   // safe to hard-code.
