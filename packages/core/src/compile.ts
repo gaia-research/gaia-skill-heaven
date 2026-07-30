@@ -357,9 +357,14 @@ function compilePi(
 // enabled=false}]'` reaches the skills surface per-invocation, no restart,
 // nothing written to config.toml (codex-cli 0.145.0; gaia-research PR #133,
 // harness-capability-matrix.md row "Skills listing suppressible per-session?"
-// / G1-skills-config-override: 2/2 reproduced upstream; independently
-// re-probed at 74→73 entries, exactly the targeted fixture, zero others
-// changed, 2/2 byte-identical). That is no longer the open question.
+// / G1-skills-config-override: 2/2 reproduced upstream. Committed run record
+// gaia-research/scripts/hell-heaven-bench/harness-probes/runs/
+// codex-g1-2026-07-29.run.json shows 67→66 entries — targeted fixture skill
+// absent, all 66 others unchanged, input_tokens 18,986→18,925, 2/2
+// byte-identical. Correction, 2026-07-31: this comment previously read
+// "74→73 entries" — that figure never matched the PR #133 / G1 row it cited
+// and traced to no separate committed probe; a citation error, fixed here.
+// That is no longer the open question.
 //
 // The reason codex STAYS A RECIPE is a different one: the matrix's own
 // "Skill discovery" row documents codex skill roots beyond $CODEX_HOME —
