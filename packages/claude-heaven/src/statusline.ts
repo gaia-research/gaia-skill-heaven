@@ -83,11 +83,36 @@ function scopeCaveat(scope: string): string {
   return " (coverage unknown)";
 }
 
-export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
+/** The standing phrase.
+ *
+ * Every posture but one reads as "<n> standing", where a trailing `+` means the
+ * census could not see everything and `n` is therefore a floor, not a total
+ * (native: `14.2k+ standing`). That convention is unchanged.
+ *
+ * `product-floor` is the exception, by founder copy ruling (2026-07-30). It
+ * selects NO skills, so its token count is always 0 — and `0+ standing` was
+ * technically honest and practically unreadable: nobody infers from it that the
+ * real figure is "zero of your own, plus however much project scope carries."
+ * The two parts are named instead. This is not cosmetic — the posture inherits
+ * project-scope skills from cwd (measured 2/2 byte-identical on claude 2.1.220:
+ * `["pf-project-marker","doctor"]` with a planted marker vs `["doctor"]` in a
+ * clean dir), so the amount is UNBOUNDED and varies per repo. A number would
+ * imply a measurement we do not have.
+ *
+ * Note this drops the compact `(excl. bundled doctor)` caveat for this one
+ * posture: "+ project scope" already says the count is not the whole story,
+ * which is the substantive disclosure, and `doctor` is a constant residual
+ * disclosed at every other posture and in `/skill-heaven`'s fuller session
+ * line. If the composition is ever fixed to drop project scope, this branch
+ * should go away and the generic form returns. */
+function standingPhrase(manifest: ProfileManifest): string {
+  if (manifest.posture === "product-floor") return "0 selected + project scope";
   const floor = manifest.incomplete ? "+" : "";
-  const parts = [
-    `⚡ ${manifest.posture} · ${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`,
-  ];
+  return `${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`;
+}
+
+export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
+  const parts = [`⚡ ${manifest.posture} · ${standingPhrase(manifest)}`];
   const pct = input?.context_window?.used_percentage;
   if (typeof pct === "number" && Number.isFinite(pct)) {
     parts.push(`${Math.round(pct)}% ctx`);

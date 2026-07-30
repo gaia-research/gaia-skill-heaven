@@ -45,6 +45,38 @@ describe("renderStatusline", () => {
       "⚡ native · 57+ standing (excl. bundled/plugin)",
     );
   });
+  // Founder copy ruling (2026-07-30). `product-floor` selects no skills, so its
+  // count is always 0 — and the generic `0+ standing` form was unreadable: it
+  // never conveyed that the real figure is "zero of your own, plus however much
+  // project scope carries". The posture DOES inherit project-scope skills from
+  // cwd (measured 2/2 on claude 2.1.220), so the amount is unbounded per repo
+  // and no number can honestly stand there.
+  it("names both parts for product-floor instead of printing a bare 0", () => {
+    expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, scope: "session" }))).toBe(
+      "⚡ product-floor · 0 selected + project scope",
+    );
+    // The unreadable form must not come back.
+    expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, scope: "session" }))).not.toMatch(
+      /0\+ standing/,
+    );
+  });
+  it("keeps product-floor's phrase stable regardless of incomplete or scope", () => {
+    // Neither the census-incompleteness marker nor the scope allowlist may
+    // reintroduce a misleading number for this posture.
+    for (const extra of [{ incomplete: true }, { scope: "user+project" }, { scope: "some-future-scope" }]) {
+      expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, ...extra }))).toBe(
+        "⚡ product-floor · 0 selected + project scope",
+      );
+    }
+  });
+  it("leaves the trailing-+ census convention intact for every other posture", () => {
+    // Regression guard: the product-floor branch must not leak into the generic
+    // path. native/curated/floor keep "<n>[+] standing<caveat>".
+    expect(renderStatusline(manifest({ incomplete: true }))).toBe("⚡ native · 14.2k+ standing (excl. bundled/plugin)");
+    expect(renderStatusline(manifest({ posture: "floor", standingTokens: 0, incomplete: true }))).toBe(
+      "⚡ floor · 0+ standing (excl. bundled/plugin)",
+    );
+  });
   it("appends live ctx% as a SEPARATE readout when present", () => {
     expect(renderStatusline(manifest(), { context_window: { used_percentage: 22.7 } })).toBe(
       "⚡ native · 14.2k standing (excl. bundled/plugin) · 23% ctx",
