@@ -159,7 +159,13 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
     expect(text).toContain("bundled CLI skills and plugin-provided skills are not counted");
   });
 
-  it("does not fabricate an exclusion for a fully-enumerated session scope", () => {
+  // A3/KC4 correction: a "session" scope enumerates the launched skill SET
+  // exactly, but a bundled `doctor` skill was MEASURED to survive every
+  // posture (probe-kc4-listing-residual.sh) — a permanent, founder-ruled
+  // harness residual. The old assertion here ("not counted" never appears)
+  // encoded the disproven "session has nothing to disclose" claim; it now
+  // asserts the opposite: the residual IS disclosed, honestly.
+  it("discloses the measured doctor residual for a fully-enumerated session scope", () => {
     const text = runRenderer({
       schema: "claude-heaven/profile@1",
       posture: "product-floor",
@@ -168,6 +174,6 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
       scope: "session",
       launcherLocked: true,
     });
-    expect(text).not.toMatch(/not counted/);
+    expect(text).toMatch(/`doctor`.*not counted/);
   });
 });

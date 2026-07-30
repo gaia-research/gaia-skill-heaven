@@ -45,6 +45,38 @@ describe("renderStatusline", () => {
       "⚡ native · 57+ standing (excl. bundled/plugin)",
     );
   });
+  // Founder copy ruling (2026-07-30). `product-floor` selects no skills, so its
+  // count is always 0 — and the generic `0+ standing` form was unreadable: it
+  // never conveyed that the real figure is "zero of your own, plus however much
+  // project scope carries". The posture DOES inherit project-scope skills from
+  // cwd (measured 2/2 on claude 2.1.220), so the amount is unbounded per repo
+  // and no number can honestly stand there.
+  it("names both parts for product-floor instead of printing a bare 0", () => {
+    expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, scope: "session" }))).toBe(
+      "⚡ product-floor · 0 selected + project scope",
+    );
+    // The unreadable form must not come back.
+    expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, scope: "session" }))).not.toMatch(
+      /0\+ standing/,
+    );
+  });
+  it("keeps product-floor's phrase stable regardless of incomplete or scope", () => {
+    // Neither the census-incompleteness marker nor the scope allowlist may
+    // reintroduce a misleading number for this posture.
+    for (const extra of [{ incomplete: true }, { scope: "user+project" }, { scope: "some-future-scope" }]) {
+      expect(renderStatusline(manifest({ posture: "product-floor", standingTokens: 0, ...extra }))).toBe(
+        "⚡ product-floor · 0 selected + project scope",
+      );
+    }
+  });
+  it("leaves the trailing-+ census convention intact for every other posture", () => {
+    // Regression guard: the product-floor branch must not leak into the generic
+    // path. native/curated/floor keep "<n>[+] standing<caveat>".
+    expect(renderStatusline(manifest({ incomplete: true }))).toBe("⚡ native · 14.2k+ standing (excl. bundled/plugin)");
+    expect(renderStatusline(manifest({ posture: "floor", standingTokens: 0, incomplete: true }))).toBe(
+      "⚡ floor · 0+ standing (excl. bundled/plugin)",
+    );
+  });
   it("appends live ctx% as a SEPARATE readout when present", () => {
     expect(renderStatusline(manifest(), { context_window: { used_percentage: 22.7 } })).toBe(
       "⚡ native · 14.2k standing (excl. bundled/plugin) · 23% ctx",
@@ -56,16 +88,27 @@ describe("renderStatusline", () => {
     expect(renderStatusline(manifest(), null)).toBe("⚡ native · 14.2k standing (excl. bundled/plugin)");
   });
 
-  // KC2 (Issue #9): the exclusion caveat is scope-conditional, not
-  // unconditional decoration — a "session" scope (curated/product-floor)
-  // enumerates the launched skill set exactly, so appending "excl.
-  // bundled/plugin" there would itself be a false claim, not an honest one.
-  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
-    expect(renderStatusline(manifest({ scope: "session" }))).toBe("⚡ native · 14.2k standing");
+  // A3/KC4 correction: "session" scope (curated/product-floor) enumerates the
+  // launched skill SET exactly, but a bundled `doctor` skill was MEASURED
+  // (packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) to survive
+  // every posture regardless of CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 — a
+  // permanent, founder-ruled harness residual. The old behavior (no caveat at
+  // all for "session") asserted a coverage claim this measurement disproved.
+  it("discloses the doctor residual for a fully-enumerated session scope", () => {
+    expect(renderStatusline(manifest({ scope: "session" }))).toBe("⚡ native · 14.2k standing (excl. bundled doctor)");
   });
   it("never renders the standing dose without SOME scope word or the exclusion caveat", () => {
     // user+project scope must always disclose what it could not see.
     expect(renderStatusline(manifest({ scope: "user+project" }))).toMatch(/excl\. bundled\/plugin/);
+  });
+
+  // A5c (fail closed): scopeCaveat is an explicit allowlist. A scope value
+  // this door has never named must still render a caveat — never silence —
+  // so a future third scope cannot accidentally read as "nothing excluded".
+  it("fails closed on an unrecognized scope: discloses 'coverage unknown', never silence", () => {
+    const text = renderStatusline(manifest({ scope: "some-future-scope" }));
+    expect(text).toBe("⚡ native · 14.2k standing (coverage unknown)");
+    expect(text).not.toBe("⚡ native · 14.2k standing");
   });
 });
 

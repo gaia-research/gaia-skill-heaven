@@ -429,27 +429,61 @@ function refusal(target) {
 }
 
 /**
- * KC2 (Issue #9): a scope NAME alone ("user+project scope") tells a reader
- * what the census is called, not what it is missing — an exclusion cannot be
- * inferred from a label by someone who has not read census.ts. `scope:
- * "user+project"` (native launches) is a partial census: bundled CLI skills
- * and plugin-provided skills are not counted. `scope: "session"`
- * (curated/product-floor) enumerates the launched set exactly — nothing is
- * excluded there, so appending the caveat would itself be a false claim. This
- * surface has room for the full sentence; the statusline strip gets the
- * compact form (src/statusline.ts `scopeCaveat`).
+ * KC2 (Issue #9), corrected under A3/KC4: a scope NAME alone ("user+project
+ * scope") tells a reader what the census is called, not what it is missing —
+ * an exclusion cannot be inferred from a label by someone who has not read
+ * census.ts. `scope: "user+project"` (native launches) is a partial census:
+ * bundled CLI skills and plugin-provided skills are not counted. `scope:
+ * "session"` (curated/product-floor) enumerates the launched skill SET
+ * exactly, but the session's skill LISTING is not exact either: a bundled
+ * skill named `doctor` survives `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1`
+ * regardless of posture — a founder-ruled, permanent, harness-level residual
+ * measured live by packages/claude-heaven/scripts/probe-kc4-listing-
+ * residual.sh (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's
+ * curated note). The prior "nothing is excluded" claim for `session` was
+ * false — see src/launcher.ts's KC4 correction for the full history.
+ *
+ * A5c fail-closed: explicit allowlist, not an `expected ? note : bare-label`
+ * optimistic default — an unrecognized scope must still disclose that its
+ * coverage is unknown rather than rendering as if it excluded nothing, same
+ * discipline as `readGatedLevels`/`readLaunchablePostures` above. This
+ * surface carries the full sentence; the statusline strip gets the compact
+ * form (src/statusline.ts `scopeCaveat`) — keep both in sync.
  * @param {string} scope
  */
 function scopeNote(scope) {
-  return scope === "user+project"
-    ? `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`
-    : `(${scope} scope)`;
+  if (scope === "user+project") {
+    return `(${scope} scope — bundled CLI skills and plugin-provided skills are not counted)`;
+  }
+  if (scope === "session") {
+    return `(${scope} scope — bundled \`doctor\` skill is not counted; a harness limitation, not this door's choice — see KC4)`;
+  }
+  return `(${scope} scope — coverage unknown; this door does not yet know what this scope excludes)`;
 }
 
 /** @param {LaunchManifest | null} manifest */
 function sessionLine(manifest) {
   if (!manifest) {
     return "session: vanilla claude — no launch manifest, so no standing-dose readout here.";
+  }
+  // `product-floor` is scope "session" like curated, but its exclusions are NOT
+  // curated's, so the scope-keyed note under-discloses it: the big omission is
+  // project scope, not `doctor`. Under P8 this posture is "off" — the nearest
+  // zero the harness can be LAUNCHED at — and it currently inherits
+  // project-scope skills from cwd (measured 2/2, claude 2.1.220), an amount that
+  // scales with the user's repo. So no token figure belongs here at all.
+  //
+  // This mirrors src/statusline.ts's product-floor branch on purpose: that file
+  // keys on POSTURE while `scopeNote` below keys on SCOPE, and the two surfaces
+  // must never disagree about the same posture. If the composition is fixed to
+  // drop project scope, delete this branch and the generic form returns.
+  if (manifest.posture === "product-floor") {
+    return (
+      `session: launched at ${manifest.posture} · 0 of your own skills selected — but ` +
+      "project-scope skills in this directory are still loaded, so the standing dose is " +
+      "not zero and is not knowable from here. The bundled `doctor` skill is not counted " +
+      "either (a harness limitation, not this door's choice — see KC4)."
+    );
   }
   const floor = manifest.incomplete ? "+" : "";
   // A curated set of exactly one is now reachable, so the plural is no longer

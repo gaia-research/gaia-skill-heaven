@@ -44,27 +44,33 @@ export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 // "impossible", which implies a way in that does not exist.
 //
 // KC6 honesty disclosure (flagged, not improvised around, in PR #18's "Known
-// gap"): a curated launch composes `--setting-sources project`, which drops
-// the user-scope plugin install, and core mounts ONLY $SESSION/heaven-set as
-// the sole --plugin-dir — the door's own plugin is never re-admitted. So
-// `/skill-heaven`, this door's own posture control, does not exist inside a
-// curated session. This is neither of the two refusal classes: it is not
-// withheld by policy (P2 gates the Hell lane only, and nothing here is a
-// trust-coverage decision), and it is not proven harness-incapable either —
-// `--plugin-dir` is documented as repeatable, so mounting the door alongside
-// the curated set would likely work. Core rejects a second `doorPluginDir`
-// for anything but `product-floor` (an unprobed composition), so it is left
-// undone rather than guessed (M0 discipline) — same restraint as the rest of
-// this door. Disclosed HERE, at compose time, because this is the last
-// surface where the door still exists to say so: once the session is
-// running, there is nothing inside it that can print this for itself.
+// gap"), UPDATED for the KC4 clean-room fix (2026-07-30, dev/kc4-clean-room):
+// a curated launch now composes `--setting-sources ''` (an intentionally
+// EMPTY allowlist — the fix for KC4's project-scope leak; supersedes T9's
+// `--setting-sources project`). An empty allowlist drops EVERY
+// setting-sourced install, user scope included, so the conclusion below is
+// unchanged (if anything, more firmly true than under the old flag value):
+// core mounts ONLY $SESSION/heaven-set as the sole --plugin-dir — the door's
+// own plugin is never re-admitted. So `/skill-heaven`, this door's own
+// posture control, does not exist inside a curated session. This is neither
+// of the two refusal classes: it is not withheld by policy (P2 gates the
+// Hell lane only, and nothing here is a trust-coverage decision), and it is
+// not proven harness-incapable either — `--plugin-dir` is documented as
+// repeatable, so mounting the door alongside the curated set would likely
+// work. Core rejects a second `doorPluginDir` for anything but
+// `product-floor` (an unprobed composition), so it is left undone rather
+// than guessed (M0 discipline) — same restraint as the rest of this door.
+// Disclosed HERE, at compose time, because this is the last surface where
+// the door still exists to say so: once the session is running, there is
+// nothing inside it that can print this for itself.
 export const CURATED_DOOR_ABSENCE_NOTE =
   "claude-heaven: /skill-heaven does not exist inside this curated session — " +
-  "--setting-sources project drops the user-scope plugin install and only " +
-  "$SESSION/heaven-set (the curated set) is mounted via --plugin-dir, so the " +
-  "door itself is never re-admitted. Not withheld by policy, and not proven " +
-  "impossible either: mounting the door alongside the curated set is an " +
-  "unprobed composition (core rejects a second --plugin-dir for anything but " +
+  "--setting-sources '' (an intentionally empty allowlist) drops every " +
+  "setting-sourced install, user scope included, and only $SESSION/heaven-set " +
+  "(the curated set) is mounted via --plugin-dir, so the door itself is " +
+  "never re-admitted. Not withheld by policy, and not proven impossible " +
+  "either: mounting the door alongside the curated set is an unprobed " +
+  "composition (core rejects a second --plugin-dir for anything but " +
   "product-floor), so it is left undone rather than guessed. Use --posture " +
   "product-floor if you need /skill-heaven to survive in-session.";
 
@@ -199,29 +205,74 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     schema: "claude-heaven/profile@1",
     posture,
     // The composed session's real standing dose: the tokens compile() priced
-    // for the curated set (or zero at product-floor, which admits no skills at
-    // all). NOT a native census.
+    // for the curated set (zero skills submitted at product-floor, since
+    // product-floor takes no --skill — but see the `incomplete` note below:
+    // zero PRICED skills is not the same claim as zero skills PRESENT in the
+    // session, and this comment used to conflate the two). NOT a native
+    // census.
     //
-    // KC4 CORRECTION (2026-07-29, packages/claude-heaven/scripts/
+    // KC4 CORRECTION (2026-07-29/30, packages/claude-heaven/scripts/
     // probe-kc4-listing-residual.sh, 2/2 live runs, claude 2.1.220): the T9
-    // route this comment used to call "zero listing residual" is NOT zero —
+    // route this comment used to call "zero listing residual" was NOT zero —
     // a project-scope skill (<cwd>/.claude/skills, kept live by
-    // --setting-sources project) and a bundled skill named `doctor`
+    // `--setting-sources project`) and a bundled skill named `doctor`
     // (unaffected by CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1) both showed up
     // alongside the curated set in a real session's skill listing. See
     // compile.ts's curated note for the full finding.
+    //
+    // CURATED — RESOLVED (dev/kc4-clean-room, 2026-07-30, verified by a
+    // second probe run + full suite green): curated now composes
+    // `--setting-sources ''` (an intentionally empty allowlist) instead of
+    // `project`, which was an ALLOWLIST that kept project scope live, not a
+    // suppression flag. Re-probed 2/2: `skills = ["heaven-set:<id>", "doctor"]`
+    // — the project-scope leak is gone; `doctor` is the one remaining,
+    // founder-ruled-permanent residual. `scopeCaveat`/`scopeNote` disclose it
+    // for `scope: "session"` below (A3). This fix lands on this same
+    // integration branch via a separate PR — if that PR has not merged by
+    // the time this one does, curated's real residual is still the wider
+    // pre-fix set, and the "doctor only" caveat text under-discloses until
+    // it lands; check the integration branch's compile.ts before trusting
+    // this comment at face value.
+    //
+    // PRODUCT-FLOOR — NOT RESOLVED, DELIBERATELY OUT OF SCOPE HERE: unlike
+    // curated, product-floor's composition still names `--setting-sources
+    // project` (F7 route, unchanged) — the SAME allowlist shape KC4 found
+    // leaky, un-probed for product-floor specifically but structurally
+    // identical to what leaked under curated. A live probe (2026-07-30,
+    // orchestrator-run, 2/2 byte-identical reps, claude 2.1.220) confirms it:
+    // a planted project-scope marker skill in cwd shows up in product-floor's
+    // session:init `skills` array alongside `doctor`. Changing product-floor's
+    // composition is a founder call (it is a measured benchmark arm, F7 —
+    // altering it invalidates a recorded number) and is explicitly NOT made
+    // here. What IS fixed here: `standingTokens: 0` was being presented as an
+    // exact, complete count for a posture that can silently carry
+    // project-scope skills this number never prices. `incomplete: true`
+    // below marks that honestly — the existing "floor, not exact" idiom
+    // (see census.ts / statusline.ts's trailing "+") — rather than printing
+    // an optimistic, unconditional zero.
     standingTokens: compiled.doseSummary.standingTotal,
     skillCount: skills.length,
-    // "session" — the profile IS the session set, enumerated exactly rather
-    // than censused, so there is no partial-coverage caveat to disclose here
-    // (native's "user+project" says what it could not see; this one saw all of it).
+    // product-floor cannot rule out a project-scope leak (see above) — mark
+    // the dose as a floor, not an exact count, using the same mechanism
+    // native's census already uses for "we could not fully verify this
+    // number." Curated is NOT marked incomplete: the KC4 fix closes its
+    // project-scope leak, and its one remaining residual (`doctor`) is a
+    // known, permanent exclusion disclosed via the scope caveat text
+    // instead (A3) — a fixed, always-true exclusion, not a floor.
+    ...(posture === "product-floor" ? { incomplete: true } : {}),
+    // "session" — the profile IS the session's SET (what was admitted to the
+    // curated skill dir), enumerated exactly rather than censused. That is
+    // NOT the same claim as "nothing else appears in a session's skill
+    // LISTING" — the KC4 correction above measured that curated sessions
+    // CAN show skills outside this enumerated set, and product-floor still
+    // can too (see above). The comment that used to sit here asserted a
+    // zero-residual claim this measurement had already disproven — that
+    // assertion has been removed, not repeated.
     //
-    // KC4 OPEN QUESTION FOR KC2 (do not silently trust this branch): the "no
-    // caveat" claim above is now contradicted by the KC4 probe cited just
-    // above — curated sessions CAN show skills outside the enumerated set
-    // (project scope + `doctor`). Whether "session" scope keeps emitting no
-    // caveat, or gains one, is a product decision outside this measurement
-    // task's remit; it is NOT settled by this comment alone.
+    // A3 (Issue #9 follow-up): the "session" scope now DOES render an
+    // exclusion caveat — src/statusline.ts `scopeCaveat` and render-
+    // posture.mjs `scopeNote` both disclose the `doctor` residual for this
+    // scope value.
     scope: "session",
     launcherLocked: true,
     ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),

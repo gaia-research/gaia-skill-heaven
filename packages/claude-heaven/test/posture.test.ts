@@ -517,14 +517,50 @@ describe("standing-dose readout", () => {
     );
   });
 
-  // A "session" scope (curated/product-floor) enumerates the launched skill
-  // set exactly — nothing is excluded there, so the caveat must NOT appear;
-  // printing it would be a false claim, the opposite defect this KC exists to
-  // prevent.
-  it("omits the exclusion caveat for a fully-enumerated session scope", () => {
+  // A3/KC4 correction: a "session" scope (curated/product-floor) enumerates
+  // the launched skill SET exactly, but a bundled `doctor` skill was MEASURED
+  // to survive every posture (probe-kc4-listing-residual.sh) — a permanent,
+  // founder-ruled harness residual, not a defect this door can fix. The old
+  // "nothing excluded" claim for session scope was false; this caveat
+  // replaces it.
+  // Vehicle is `curated`, not `product-floor`: both carry scope "session", but
+  // product-floor now takes its own branch in sessionLine (its dominant
+  // exclusion is project scope, not `doctor`), so it can no longer be used to
+  // exercise the scope-keyed path. Using it here tested the branch, not the note.
+  it("discloses the doctor residual for a fully-enumerated session scope", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "curated", scope: "session" } });
+    expect(text).toContain("4.8k standing (session scope — bundled `doctor` skill is not counted");
+  });
+
+  // P8: product-floor is "off" — the nearest zero the harness can be LAUNCHED
+  // at — and it currently inherits project-scope skills from cwd (measured 2/2,
+  // claude 2.1.220), an amount that scales with the user's repo. The scope-keyed
+  // note under-discloses that: it names `doctor` and omits the larger omission.
+  // This must stay in step with src/statusline.ts's product-floor branch; the
+  // two surfaces describing the same posture differently is the defect.
+  it("names project scope for product-floor and prints NO token figure", () => {
     const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope: "session" } });
-    expect(text).toContain("4.8k standing (session scope)");
-    expect(text).not.toMatch(/not counted/);
+    expect(text).toContain("0 of your own skills selected");
+    expect(text).toContain("project-scope skills in this directory are still loaded");
+    expect(text).toContain("not knowable from here");
+    // A number here would imply a measurement we do not have.
+    expect(text).not.toContain("4.8k standing");
+  });
+  it("keeps product-floor's session line stable across scope values", () => {
+    for (const scope of ["session", "user+project", "some-future-scope"]) {
+      const text = render({ manifest: { ...nativeManifest, posture: "product-floor", scope } });
+      expect(text).toContain("project-scope skills in this directory are still loaded");
+      expect(text).not.toContain("4.8k standing");
+    }
+  });
+
+  // A5c (fail closed): scopeNote is an explicit allowlist. A scope value this
+  // door has never named must still disclose that its coverage is unknown —
+  // never render as if it excluded nothing.
+  it("fails closed on an unrecognized scope: discloses 'coverage unknown', never silence", () => {
+    const text = render({ manifest: { ...nativeManifest, posture: "curated", scope: "some-future-scope" } });
+    expect(text).toContain("4.8k standing (some-future-scope scope — coverage unknown");
+    expect(text).not.toContain("4.8k standing (some-future-scope scope)");
   });
 
   it("marks an incomplete census with a trailing + rather than presenting it as exact (B4)", () => {
@@ -543,13 +579,15 @@ describe("standing-dose readout", () => {
     }
   });
 
-  // KC2 (Issue #9): two renderers, two mediums, one honest fact. The statusline
-  // strip gets the compact form and this surface gets the fuller sentence, but
-  // BOTH must name the same two exclusions whenever scope is "user+project" —
-  // and NEITHER may claim an exclusion when scope is "session" (fully
-  // enumerated). A future edit that adds the caveat to one renderer and
-  // forgets the other fails here, not in a founder review.
-  it("agrees with the statusline renderer on WHEN the exclusion is disclosed (KC2 parity)", () => {
+  // KC2 (Issue #9), corrected under A3/KC4: two renderers, two mediums, one
+  // honest fact. BOTH must name the same exclusions whenever scope is
+  // "user+project" (bundled AND plugin-provided skills), and BOTH must now
+  // ALSO disclose the measured `doctor` residual whenever scope is "session"
+  // (bundled, but not plugin-provided — no plugin leak was ever measured). A
+  // future edit that adds a caveat to one renderer and forgets the other, or
+  // that silently drops the session-scope caveat again, fails here rather
+  // than in a founder review.
+  it("agrees with the statusline renderer on WHAT is disclosed for each scope (KC2 parity)", () => {
     const partialProfile = { schema: "claude-heaven/profile@1", posture: "native", standingTokens: 4823, skillCount: 12, scope: "user+project", launcherLocked: true } as const;
     const fullProfile = { ...partialProfile, scope: "session" } as const;
 
@@ -567,8 +605,10 @@ describe("standing-dose readout", () => {
 
     const statuslineFull = renderStatusline(fullProfile);
     const postureLineFull = sessionLineOf(render({ manifest: fullProfile }));
-    expect(statuslineFull).not.toMatch(/bundled|plugin/i);
-    expect(postureLineFull).not.toMatch(/bundled|plugin/i);
+    expect(statuslineFull).toMatch(/bundled/i);
+    expect(statuslineFull).not.toMatch(/plugin/i);
+    expect(postureLineFull).toMatch(/bundled/i);
+    expect(postureLineFull).not.toMatch(/plugin/i);
   });
 });
 
