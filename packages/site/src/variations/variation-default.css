@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─────────────────────────────────────────────────────────────────────────
+   VariationDefault — "White on black. Restraint."
+   Swiss/typographic, developer-first. Pure white/grey/black, one prism accent.
+   All classes prefixed .vd- to avoid collisions.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.vd {
+  display: block;
+  background: var(--sh-void);
+  color: var(--sh-lumen);
+  min-height: 100vh;
+}
+
+.vd-wrap {
+  width: 100%;
+  max-width: var(--sh-maxw);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 48px);
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.vd-hero {
+  padding: clamp(96px, 18vh, 200px) 0 clamp(72px, 12vh, 132px);
+}
+
+.vd-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 clamp(28px, 5vw, 44px);
+  font-family: var(--sh-font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--sh-lumen-dim);
+}
+
+.vd-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sh-prism-gradient);
+  box-shadow: 0 0 12px rgba(124, 92, 255, 0.6);
+}
+
+.vd-display {
+  margin: 0;
+  font-family: var(--sh-font-display);
+  font-weight: 700;
+  font-size: clamp(2.6rem, 7vw, 5.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--sh-lumen);
+  max-width: 18ch;
+}
+
+.vd-line {
+  display: block;
+}
+
+.vd-sub {
+  margin: clamp(28px, 4vw, 40px) 0 0;
+  max-width: 60ch;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--sh-lumen-dim);
+}
+
+.vd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  margin-top: clamp(36px, 5vw, 52px);
+}
+
+.vd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sh-font-display);
+  font-weight: 500;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  transition: transform 0.25s var(--sh-ease), border-color 0.25s var(--sh-ease),
+    background 0.25s var(--sh-ease), color 0.25s var(--sh-ease);
+}
+
+.vd-btn--solid {
+  padding: 13px 26px;
+  border-radius: 999px;
+  background: var(--sh-lumen);
+  color: var(--sh-void);
+  border: 1px solid var(--sh-lumen);
+}
+
+.vd-btn--solid:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.vd-btn--ghost {
+  padding: 13px 6px;
+  color: var(--sh-lumen);
+  border: 1px solid transparent;
+}
+
+.vd-btn--ghost:hover {
+  color: var(--sh-lumen);
+}
+
+.vd-arrow {
+  display: inline-block;
+  transition: transform 0.25s var(--sh-ease);
+  color: var(--sh-lumen-dim);
+}
+
+.vd-btn--ghost:hover .vd-arrow {
+  transform: translateX(5px);
+  color: var(--sh-lumen);
+}
+
+/* ── The single spectrum moment ───────────────────────────────────────── */
+.vd-rule {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: var(--sh-prism-gradient);
+  opacity: 0.85;
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.vd-section {
+  padding: clamp(64px, 11vh, 120px) 0;
+}
+
+.vd-lead {
+  max-width: 62ch;
+  margin: 0 0 clamp(32px, 5vw, 52px);
+}
+
+.vd-h2 {
+  margin: 0;
+  font-family: var(--sh-font-display);
+  font-weight: 500;
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--sh-lumen);
+}
+
+.vd-lead__note {
+  margin: 14px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--sh-lumen-dim);
+}
+
+/* ── 3 command cards ───────────────────────────────────────────────────── */
+.vd-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.vd-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(22px, 3vw, 32px);
+  border: 1px solid var(--sh-line);
+  border-radius: var(--sh-radius);
+  background: var(--sh-abyss);
+  transition: transform 0.25s var(--sh-ease), border-color 0.25s var(--sh-ease),
+    background 0.25s var(--sh-ease);
+}
+
+.vd-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--sh-line-strong);
+  background: var(--sh-ink);
+}
+
+.vd-card__label {
+  font-family: var(--sh-font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sh-lumen-faint);
+}
+
+.vd-card__cmd {
+  font-family: var(--sh-font-mono);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--sh-lumen);
+}
+
+.vd-card__desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--sh-lumen-dim);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.vd-footer {
+  border-top: 1px solid var(--sh-line);
+  padding: clamp(32px, 5vw, 48px) 0;
+}
+
+.vd-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vd-wordmark {
+  font-family: var(--sh-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--sh-lumen);
+}
+
+.vd-footer__note {
+  font-family: var(--sh-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--sh-lumen-faint);
+}
+
+/* ── Motion — staggered hero entrance ──────────────────────────────────── */
+.vd-stagger {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: vd-rise 0.7s var(--sh-ease) forwards;
+  animation-delay: calc(var(--i, 0) * 0.09s + 0.05s);
+}
+
+@keyframes vd-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 820px) {
+  .vd-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-stagger {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

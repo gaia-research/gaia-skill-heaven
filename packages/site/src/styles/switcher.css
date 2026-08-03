@@ -1,0 +1,63 @@
+/* Fixed prototype switcher chrome — sits above every variation. */
+.sh-switcher {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: rgba(5, 6, 10, 0.72);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--sh-line);
+  font-family: var(--sh-font-mono);
+  font-size: 12px;
+}
+
+.sh-switcher__brand {
+  color: var(--sh-lumen-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sh-switcher__tabs {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sh-switcher__tab {
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: var(--sh-lumen-dim);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--sh-ease);
+}
+
+.sh-switcher__tab:hover {
+  color: var(--sh-lumen);
+  border-color: var(--sh-line-strong);
+}
+
+.sh-switcher__tab--active {
+  color: var(--sh-void);
+  background: var(--sh-lumen);
+  font-weight: 600;
+}
+
+.sh-switcher__hint {
+  color: var(--sh-lumen-faint);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 640px) {
+  .sh-switcher__hint,
+  .sh-switcher__brand {
+    display: none;
+  }
+  .sh-switcher__tabs {
+    margin: 0 auto;
+  }
+}
