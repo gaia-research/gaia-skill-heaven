@@ -5,6 +5,7 @@
    under .vha (Hero A) or .vhb (Hero B); shared page-level rules and
    keyframes live under the vh- stem.
    ═══════════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Big+Shoulders+Display:wght@100..900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 body.vh-hero-page {
   margin: 0;
@@ -297,6 +298,14 @@ body.vh-hero-page {
 .vha-word {
   position: relative;
   transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms linear;
+}
+.vha-word--split-top,
+.vha-word--split-bottom,
+.vha-word--sm {
+  /* Override .vha-word's position:relative — these three stay absolute like
+     the design source, or they fall into flow and inflate the bottom-anchored
+     stack's height, shoving HEAVEN/HELL upward. */
+  position: absolute;
 }
 .vha-word--split-top {
   clip-path: inset(0 0 53% 0);
