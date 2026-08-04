@@ -1,9 +1,12 @@
 # DESIGN.md — Skill Heaven landing prototype
 
-> **Prototype, not the product.** Six hero variations behind a preview switcher
-> (`src/components/Switcher.tsx`). All share one content source
+> **Prototype, not the product.** Eight hero variations behind a preview
+> switcher (`src/components/Switcher.tsx`). All share one content source
 > (`src/content.ts`) and the real, measured token figures — messaging stays
-> constant while the visual world changes per route.
+> constant while the visual world changes per route. The exception is Hero
+> A/B (below): a separately-authored design-tool prototype with its own
+> copy and its own risk-ladder framing, ported in as-is rather than rebuilt
+> against `content.ts`.
 
 ## How the newer three were derived (impeccable provenance)
 
@@ -28,16 +31,30 @@ impeccable will use our pegs."*
   deliberately. The Instrument serif was swapped off the "overused" list
   (Fraunces → Spectral) to clear its flag.
 
-## The six routes
+## The eight routes
+
+`#/hero-a` is the current winner — `/` and any unmatched route redirect there
+(`src/main.tsx`). Hero A/B are ported from an external design-tool prototype
+(`src/variations/hero/useHeroEngine.ts` — the shared 5-act, wheel/keyboard/
+touch-driven state machine both routes render), not derived from the pegs/
+impeccable process described below; the other six routes are unchanged.
 
 | Route | Name | World |
 |---|---|---|
-| `#/overdrive` | **Overdrive** (v1, current winner) | Kinetic `SKILL / HEAVEN` typeset, glass wing, angel katana, scroll-world parallax, Heaven→Hell glitch slice. |
+| `#/hero-a` | **Hero A · Reredos** (current winner) | Full-viewport 5-act scrollytelling piece. Centered, monumental `SKILL / HEAVEN` typeset behind Lucy, symmetric single wing, katana slash on Act III. Act V hands off to a live 7-rung risk ladder (OFF..MAX, ULTRA sealed past the firebreak) driving Heaven/Hell/Ultra. |
+| `#/hero-b` | **Hero B · Guillotine** | Same engine as Hero A, asymmetric frame-cropped layout: Lucy bleeds off the bottom-right corner, edge-to-edge `HELL` wordmark, vertical rail labels ("COMPOSED · NOT INSTALLED" / "SLASH TO SUMMON"). |
+| `#/overdrive` | **Overdrive** (v1, prior winner) | Kinetic `SKILL / HEAVEN` typeset, glass wing, angel katana, scroll-world parallax, Heaven→Hell glitch slice. |
 | `#/manifesto` | **Wood-Type Manifesto** | 1914 letterpress conviction. Dark-on-light "paper." Oversized imperative verbs `SUMMON THEM. / RESTRAIN. / BREAK LOOSE`, numbered ordinals (01 SUMMON / 02 ENTER / 03 GATED), `//` ticker. A red blade slices diagonally mid-scroll and **destroys the grid** — restraint vs the fall. One accent (a single warm red), no gradients, no glow. |
 | `#/instrument` | **Honest Instrument** | Nixie-tube lab counter. Six CSS glass tubes glow the real standing dose **20176** on a machined chassis; `−28.9% vs native`. Interactive posture rail lights per-posture readouts. Serif headline "Numbers you can summon." Proves the **two-number honest-dosing / HH-Index** value. Amber-on-black, reverent; Hell = a cold tamper flicker. |
 | `#/onebit` | **One-Bit Invert** | Classic 1-bit OS desktop. Dithered wallpaper, real window chrome (`HEAVEN.app`, `PROJECTS`, `POSTURES` control panel, `WELCOME.md`), desktop icons, gated `HELL.app` (a locked door raising a 1-bit alert dialog). Heaven→Hell is a **literal `filter: invert()`** — the invert *is* the material. Strictly monochrome. |
 | `#/prism` | **Prism** | Luminance / prismatic. Lucy as a translucent glass-shard figure, holographic hair, refracting halo. |
 | `#/default` | **Default** | White-on-black Swiss restraint. One prism accent. |
+
+**Known deviation:** Hero A/B render Lucy from a raster image
+(`src/assets/lucy-hero.jpg`) rather than the pure-SVG `Art.tsx` primitives
+every other route uses. That breaks the "no external image assets" rule
+`Art.tsx` states for the rest of the set; kept as an explicit, owner-approved
+exception for these two routes rather than silently ported past review.
 
 ## Shared contract
 

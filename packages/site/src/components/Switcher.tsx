@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom'
 
-// Fixed prototype switcher so the reviewer can flip between the 3 variations.
+// Fixed prototype switcher so the reviewer can flip between the variations.
 // Not part of the real landing page — a preview harness only.
 const VARIATIONS = [
+  { to: '/hero-a', label: 'Hero A', hint: 'Reredos · centered monumental wordmark · (current winner)' },
+  { to: '/hero-b', label: 'Hero B', hint: 'Guillotine · asymmetric, frame-cropped' },
   { to: '/overdrive', label: 'Overdrive', hint: 'Landing-page overdrive · scroll-world · (v1)' },
   { to: '/manifesto', label: 'Manifesto', hint: 'Wood-type · imperative verbs · slice destroys grid' },
   { to: '/instrument', label: 'Instrument', hint: 'Nixie counter · honest two-number dosing' },
@@ -29,7 +31,7 @@ export function Switcher() {
           </NavLink>
         ))}
       </div>
-      <span className="sh-switcher__hint">pick 1 of 3</span>
+      <span className="sh-switcher__hint">pick 1 of {VARIATIONS.length}</span>
     </div>
   )
 }
