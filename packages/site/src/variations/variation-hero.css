@@ -31,6 +31,14 @@ body.vh-hero-page {
 .vha,
 .vhb {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
+  /* Time scale for act-driven transitions, written imperatively from
+     useHeroEngine's wheel/touch/keyboard handlers based on recent scroll
+     velocity (1 = full cinematic pacing, down to a per-variant floor).
+     Every act-transition duration below multiplies through this so a fast
+     scroll breezes through the choreography instead of forcing the visitor
+     to sit through full-length transitions on every act. Deliberate clicks
+     (dots, rungs) reset it to 1 before triggering their own transition. */
+  --vh-t: 1;
 }
 
 .vha a,
@@ -160,7 +168,7 @@ body.vh-hero-page {
 .vhb-dot {
   display: block;
   height: 1px;
-  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all calc(400ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vha-rung-btn,
@@ -270,7 +278,7 @@ body.vh-hero-page {
   top: 50%;
   height: 2px;
   transform-origin: 50% 50%;
-  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms linear;
+  transition: transform calc(620ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(200ms * var(--vh-t)) linear;
   pointer-events: none;
 }
 
@@ -326,7 +334,7 @@ body.vh-hero-page {
 }
 .vha-word {
   position: relative;
-  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms linear;
+  transition: transform calc(900ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(250ms * var(--vh-t)) linear;
 }
 .vha-word--split-top,
 .vha-word--split-bottom,
@@ -338,16 +346,16 @@ body.vh-hero-page {
 }
 .vha-word--split-top {
   clip-path: inset(0 0 53% 0);
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(200ms * var(--vh-t)) linear;
 }
 .vha-word--split-bottom {
   clip-path: inset(47% 0 0 0);
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(200ms * var(--vh-t)) linear;
 }
 .vha-word--sm {
   top: 50%;
   translate: 0 -50%;
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 120ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(120ms * var(--vh-t)) linear;
 }
 .vha-hell {
   top: 50%;
@@ -357,7 +365,7 @@ body.vh-hero-page {
   font-size: 19vw;
   line-height: 0.78;
   letter-spacing: -0.02em;
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 120ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(120ms * var(--vh-t)) linear;
 }
 .vha-ultra {
   top: 50%;
@@ -368,7 +376,7 @@ body.vh-hero-page {
   padding-left: 0.52em;
   color: #c81e1e;
   transform: translateY(4.5vw);
-  transition: opacity 300ms linear;
+  transition: opacity calc(300ms * var(--vh-t)) linear;
 }
 
 /* ── Hero B · Guillotine — edge-to-edge, frame-cropped ──────────────────── */
@@ -404,15 +412,15 @@ body.vh-hero-page {
   transform-origin: 50% 100%;
 }
 .vhb-word {
-  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms linear;
+  transition: transform calc(900ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(250ms * var(--vh-t)) linear;
 }
 .vhb-word--split-top {
   clip-path: polygon(0 0, 100% 0, 100% 26%, 0 78%);
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(200ms * var(--vh-t)) linear;
 }
 .vhb-word--split-bottom {
   clip-path: polygon(0 78%, 100% 26%, 100% 100%, 0 100%);
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(200ms * var(--vh-t)) linear;
 }
 .vhb-hell {
   left: 8vw;
@@ -425,7 +433,7 @@ body.vh-hero-page {
   letter-spacing: 0.06em;
   display: flex;
   justify-content: space-between;
-  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 120ms linear;
+  transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(120ms * var(--vh-t)) linear;
 }
 .vhb-ultra {
   left: 8.4vw;
@@ -437,7 +445,7 @@ body.vh-hero-page {
   letter-spacing: 0.52em;
   padding-left: 0.52em;
   color: #c81e1e;
-  transition: opacity 300ms linear;
+  transition: opacity calc(300ms * var(--vh-t)) linear;
 }
 
 @media (prefers-reduced-motion: reduce) {

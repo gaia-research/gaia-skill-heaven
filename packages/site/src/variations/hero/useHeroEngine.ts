@@ -142,6 +142,10 @@ export type HeroVals = ReturnType<typeof computeVals>
 // `variant` is fixed per route (Hero A = 'a', Hero B = 'b') — each is its own
 // switcher entry now, so unlike the source design tool there is no in-page
 // A/B toggle to reproduce.
+// Below this speed-scale, a crossing reads as noise rather than an impact —
+// suppress the flash/glitch treatment and just cut.
+const FLASH_FLOOR = 0.45
+
 export function useHeroEngine(variant: 'a' | 'b') {
   const [act, setAct] = useState(0)
   const [flash, setFlash] = useState<0 | 1 | 2>(0)
@@ -157,25 +161,96 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const accRef = useRef(0)
   const lockRef = useRef(0)
   const touchYRef = useRef<number | null>(null)
+  const touchTsRef = useRef(0)
   const glitchIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const flashT1Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const flashT2Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  // Fast scrolling should breeze through the choreography instead of forcing
+  // every act transition to play at full cinematic length. `--vh-t` is a time
+  // scale (1 = full pacing) written imperatively to the root element so every
+  // `calc(<duration> * var(--vh-t))` in variation-hero.css speeds up with it —
+  // no React re-render per input event. Hero A paints far more per frame
+  // (blend layer, filtered Lucy, perspective ground) than Hero B, so it gets a
+  // harder floor: under fast scroll its long interpolations would stall
+  // rather than play, so snapping beats a half-framerate crossfade.
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const speedRef = useRef(0) // EWMA, px/ms
+  const lastTsRef = useRef(0)
+  const decayRef = useRef<number | undefined>(undefined)
+  const FLOOR = variant === 'a' ? 0.22 : 0.32
+  const V_SLOW = 1.2
+  const V_FAST = 6.0
+
+  const scaleFor = (v: number) =>
+    prefersReducedMotion() ? 1 : Math.max(FLOOR, Math.min(1, 1 - ((v - V_SLOW) / (V_FAST - V_SLOW)) * (1 - FLOOR)))
+
+  const setScale = useCallback((t: number) => {
+    rootRef.current?.style.setProperty('--vh-t', t.toFixed(3))
+  }, [])
+
+  // Eases --vh-t back to 1 once input has been quiet for a beat, so the last
+  // fast transition doesn't leave the page permanently sped up.
+  const armDecay = useCallback(() => {
+    if (decayRef.current != null) return
+    const step = () => {
+      const current = Number(rootRef.current?.style.getPropertyValue('--vh-t') || 1)
+      const next = current + (1 - current) * 0.08
+      if (next > 0.99) {
+        setScale(1)
+        decayRef.current = undefined
+        return
+      }
+      setScale(next)
+      decayRef.current = requestAnimationFrame(step)
+    }
+    decayRef.current = requestAnimationFrame(step)
+  }, [setScale])
+
+  const registerInput = useCallback(
+    (inst: number, now: number) => {
+      const dt = now - lastTsRef.current
+      lastTsRef.current = now
+      speedRef.current = dt > 400 ? inst : speedRef.current * 0.7 + inst * 0.3
+      const t = scaleFor(speedRef.current)
+      setScale(t)
+      if (decayRef.current != null) {
+        cancelAnimationFrame(decayRef.current)
+        decayRef.current = undefined
+      }
+      armDecay()
+      return t
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [armDecay, setScale],
+  )
 
   useEffect(() => {
     document.body.classList.add('vh-hero-page')
     return () => document.body.classList.remove('vh-hero-page')
   }, [])
 
-  const go = useCallback((n: number) => {
+  useEffect(
+    () => () => {
+      if (decayRef.current != null) cancelAnimationFrame(decayRef.current)
+    },
+    [],
+  )
+
+  const go = useCallback((n: number, opts?: { steps?: number; t?: number }) => {
     const nextAct = Math.max(0, Math.min(N - 1, n))
     const from = actRef.current
     if (nextAct === from) return
+    const steps = opts?.steps ?? 1
+    const t = opts?.t ?? 1
     const crossing = (from < 3 && nextAct >= 3) || (from >= 3 && nextAct < 3)
     // Scrolling into ENTER arrives in Hell — the ladder's High rung, not Off.
     if (nextAct === N - 1 && from < N - 1 && LADDER[stopRef.current].lane === 'h') {
       setStop(3)
     }
-    if (crossing && !prefersReducedMotion()) {
+    // A multi-act jump or a fast-enough scroll turns the crossing flash — an
+    // impact frame meant for a single crossing — into noise. Cut instead.
+    if (crossing && steps === 1 && t >= FLASH_FLOOR && !prefersReducedMotion()) {
       setAct(nextAct)
       setFlash(1)
       clearTimeout(flashT1Ref.current)
@@ -188,63 +263,87 @@ export function useHeroEngine(variant: 'a' | 'b') {
   }, [])
 
   // Crossing the ladder's heaven/hell line at act 5 repaints the whole page,
-  // so it gets the same violence as the scroll-driven impact frame.
-  const pickStop = useCallback((i: number) => {
-    const wasHeaven = LADDER[stopRef.current].lane === 'h'
-    const isHeaven = LADDER[i].lane === 'h'
-    const crossing = actRef.current === N - 1 && wasHeaven !== isHeaven
-    setStop(i)
-    if (!crossing || prefersReducedMotion()) return
-    clearInterval(glitchIntervalRef.current)
-    let n = 0
-    setGlitch(1)
-    setFlash(1)
-    glitchIntervalRef.current = setInterval(() => {
-      n += 1
-      if (n > 6) {
-        clearInterval(glitchIntervalRef.current)
-        setGlitch(0)
-        setFlash(0)
-        return
-      }
-      setGlitch(n % 2 ? 2 : 1)
-      setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
-    }, 46)
-  }, [])
+  // so it gets the same violence as the scroll-driven impact frame. Rung
+  // clicks are a deliberate action, not a scroll gesture — always run at
+  // full pacing.
+  const pickStop = useCallback(
+    (i: number) => {
+      setScale(1)
+      const wasHeaven = LADDER[stopRef.current].lane === 'h'
+      const isHeaven = LADDER[i].lane === 'h'
+      const crossing = actRef.current === N - 1 && wasHeaven !== isHeaven
+      setStop(i)
+      if (!crossing || prefersReducedMotion()) return
+      clearInterval(glitchIntervalRef.current)
+      let n = 0
+      setGlitch(1)
+      setFlash(1)
+      glitchIntervalRef.current = setInterval(() => {
+        n += 1
+        if (n > 6) {
+          clearInterval(glitchIntervalRef.current)
+          setGlitch(0)
+          setFlash(0)
+          return
+        }
+        setGlitch(n % 2 ? 2 : 1)
+        setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
+      }, 46)
+    },
+    [setScale],
+  )
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const now = Date.now()
+      // A new gesture after a pause starts cinematic — don't let a stale EWMA
+      // from a prior fast scroll bleed into it.
+      const dt = Math.max(8, now - lastTsRef.current)
+      const inst = dt > 400 ? Math.abs(e.deltaY) / 16 : Math.abs(e.deltaY) / dt
+      const t = registerInput(inst, now)
       if (now < lockRef.current) return
       accRef.current += e.deltaY
       if (Math.abs(accRef.current) > 48) {
         const dir = accRef.current > 0 ? 1 : -1
         const steps = Math.min(N - 1, Math.max(1, Math.round(Math.abs(accRef.current) / 190)))
-        go(actRef.current + dir * steps)
+        go(actRef.current + dir * steps, { steps, t })
         accRef.current = 0
-        lockRef.current = now + (steps > 1 ? 400 : 620)
+        // The lock scales with the same time-scale as the CSS, so a fast
+        // scroller isn't rate-limited back to normal pacing by the gate even
+        // once the transitions themselves are breezing through. Floor keeps
+        // one gesture from firing several acts on an inertial trackpad tail.
+        lockRef.current = now + Math.max(120, (steps > 1 ? 400 : 620) * t)
       }
     }
     const onKey = (e: KeyboardEvent) => {
+      const now = Date.now()
+      // Key-repeat while a key is held fires every ~30ms — treat that
+      // cadence as scroll velocity too so holding an arrow also compresses.
+      const dt = now - lastTsRef.current
+      const t = registerInput(dt > 0 && dt < 400 ? 100 / dt : 0, now)
       if (['ArrowDown', 'PageDown', ' ', 'ArrowRight'].includes(e.key)) {
         e.preventDefault()
-        go(actRef.current + 1)
+        go(actRef.current + 1, { t })
       }
       if (['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key)) {
         e.preventDefault()
-        go(actRef.current - 1)
+        go(actRef.current - 1, { t })
       }
     }
     const onTouchStart = (e: TouchEvent) => {
       touchYRef.current = e.touches[0].clientY
+      touchTsRef.current = Date.now()
     }
     const onTouchEnd = (e: TouchEvent) => {
       if (touchYRef.current == null) return
       const dy = touchYRef.current - e.changedTouches[0].clientY
+      const now = Date.now()
+      const elapsed = Math.max(16, now - touchTsRef.current)
+      const t = registerInput(Math.abs(dy) / elapsed, now)
       if (Math.abs(dy) > 40) {
         const steps = Math.min(N - 1, Math.max(1, Math.round(Math.abs(dy) / 260)))
-        go(actRef.current + (dy > 0 ? steps : -steps))
+        go(actRef.current + (dy > 0 ? steps : -steps), { steps, t })
       }
       touchYRef.current = null
     }
@@ -262,7 +361,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
       clearTimeout(flashT2Ref.current)
       clearInterval(glitchIntervalRef.current)
     }
-  }, [go])
+  }, [go, registerInput])
 
   // Ultra's overdrive: a periodic double-flash (red sheet → white sheet) with
   // a small glitch shear on the wordmark, looping while Ultra stays selected.
@@ -293,7 +392,12 @@ export function useHeroEngine(variant: 'a' | 'b') {
     aria: 'Act ' + (i + 1),
     w: i === act ? 26 : 12,
     c: i === act ? v.fg : v.dim,
-    pick: () => go(i),
+    // A dot click is a deliberate jump, not a scroll gesture — always run at
+    // full pacing regardless of how fast the visitor was just scrolling.
+    pick: () => {
+      setScale(1)
+      go(i)
+    },
   }))
 
   const rungs = LADDER.map((r, i) => {
@@ -314,5 +418,5 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   })
 
-  return { v, dots, rungs }
+  return { v, dots, rungs, rootRef }
 }

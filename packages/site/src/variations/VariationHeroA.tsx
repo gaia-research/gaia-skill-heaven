@@ -14,10 +14,11 @@ import './variation-hero.css'
 // ─────────────────────────────────────────────────────────────────────────
 
 export function VariationHeroA() {
-  const { v, dots, rungs } = useHeroEngine('a')
+  const { v, dots, rungs, rootRef } = useHeroEngine('a')
 
   return (
     <div
+      ref={rootRef}
       className="vha"
       style={{
         position: 'fixed',
@@ -40,7 +41,7 @@ export function VariationHeroA() {
           backgroundImage: `linear-gradient(to right,${v.hair} 1px,transparent 1px),linear-gradient(to bottom,${v.hair} 1px,transparent 1px)`,
           backgroundSize: '5% 12%',
           transformOrigin: '50% 100%',
-          transition: 'transform 900ms cubic-bezier(.16,1,.3,1),opacity 700ms linear',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(700ms * var(--vh-t)) linear',
           transform: `perspective(900px) rotateX(72deg) scale(${v.mGround})`,
           opacity: v.oGround,
           WebkitMaskImage: 'radial-gradient(ellipse at 50% 100%,#000,transparent 78%)',
@@ -57,7 +58,7 @@ export function VariationHeroA() {
           width: 'min(92vw,1500px)',
           height: '70vh',
           translate: '-50% -50%',
-          transition: 'transform 900ms cubic-bezier(.16,1,.3,1),opacity 600ms linear',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
           transform: `scale(${v.mWing})`,
           opacity: v.oWing,
         }}
@@ -103,7 +104,7 @@ export function VariationHeroA() {
           translate: '-50% -50%',
           border: `1.5px solid ${v.fg}`,
           borderRadius: '50%',
-          transition: 'transform 900ms cubic-bezier(.16,1,.3,1),opacity 600ms linear',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
           transform: `scale(${v.mWing}) rotate(${v.haloRot}deg)`,
           opacity: v.oHalo,
         }}
@@ -117,7 +118,7 @@ export function VariationHeroA() {
           bottom: 0,
           height: '92vh',
           translate: '-50% 0',
-          transition: 'transform 900ms cubic-bezier(.16,1,.3,1)',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateY(${v.lucyY}vh) scale(${v.mLucy})`,
         }}
       >
@@ -129,7 +130,7 @@ export function VariationHeroA() {
             height: '92vh',
             width: 'auto',
             mixBlendMode: v.lucyBlend,
-            transition: 'filter 0ms,opacity 600ms linear',
+            transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
             opacity: v.oLucy,
             filter: v.lucyFilter,
           }}
@@ -153,7 +154,7 @@ export function VariationHeroA() {
           width: 'min(78vw,1180px)',
           height: 44,
           translate: '-50% -50%',
-          transition: 'transform 700ms cubic-bezier(.16,1,.3,1),opacity 400ms linear',
+          transition: 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear',
           transform: `rotate(-28deg) translateX(${v.bladeX}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
         }}
@@ -179,7 +180,7 @@ export function VariationHeroA() {
           bottom: `calc(9vh + ${v.typeUp}vh)`,
           textAlign: 'center',
           pointerEvents: 'none',
-          transition: 'bottom 700ms cubic-bezier(.16,1,.3,1)',
+          transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)`,
         }}
       >
@@ -285,7 +286,7 @@ export function VariationHeroA() {
           width: 'min(90vw,660px)',
           zIndex: 6,
           textAlign: 'center',
-          transition: 'opacity 500ms linear,transform 700ms cubic-bezier(.16,1,.3,1)',
+          transition: 'opacity calc(500ms * var(--vh-t)) linear,transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           opacity: v.oCta,
           transform: `translateY(${v.ctaY}px)`,
           pointerEvents: v.ctaPE,
