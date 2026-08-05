@@ -176,14 +176,37 @@ body.vh-hero-page {
   justify-content: flex-end;
   gap: 7px;
 }
+/* `height` is a LAYOUT property, so transitioning it is a main-thread animation:
+   every frame re-lays-out and repaints the whole CTA subtree, for all seven
+   rungs at once. Hero A's main thread is already saturated per frame (the
+   full-viewport mix-blend-mode scan layer, the blended + `filter: invert()`
+   Lucy layer, the perspective+mask ground plane, 19-23vw type), so the shrink
+   of a just-deselected rung could stall for hundreds of milliseconds. Clicking
+   three or four hell rungs in a row therefore left several of them frozen
+   part-way down — all reading as "selected" — while the label colour and the
+   CTA note, which are plain React commits rather than transitions, already
+   showed the single correct selection. (Hero B paints far less per frame, which
+   is why the identical markup never showed it there.)
+
+   Fix: only the rung that is *becoming* selected eases its height. Every other
+   rung has no height transition at all, so it drops back to 13px in the very
+   same style commit that moves the note — no animation to stall, and the ladder
+   cannot show two tall rungs no matter how blocked the main thread is.
+
+   `background` stays untransitioned in both states: a solid colour and a
+   repeating-linear-gradient are not interpolable. */
 .vha-rung,
 .vhb-rung {
   display: block;
-  /* background switches between a solid color and a repeating-linear-gradient
-     depending on selection — those value types can't be interpolated, so
-     transitioning it (via `all`) risks a stale paint under compositing load
-     where the old gradient stays visible until an unrelated repaint fires.
-     Snap background instantly; keep height/opacity/border smooth. */
+  /* The bar is a flex item in .vha-rung-btn's 58px column. Without this it
+     inherits flex-shrink:1, so anything that makes the label taller (a user
+     minimum-font-size, a missing webfont, a wrapped label) silently squashes
+     the bar below the height set on it. */
+  flex: 0 0 auto;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vha-rung--sel,
+.vhb-rung--sel {
   transition: height 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }

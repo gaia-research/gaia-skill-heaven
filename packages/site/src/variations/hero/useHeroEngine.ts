@@ -302,6 +302,10 @@ export function useHeroEngine(variant: 'a' | 'b') {
     return {
       label: r.label,
       h: sel ? 38 : 13,
+      // Only the rung that is becoming selected eases its height; every other
+      // rung snaps back to 13px in the same commit that moves the label and the
+      // CTA note. See the note on `.vha-rung` in variation-hero.css.
+      sel,
       bg: r.lane === 'h' ? '#0A0A0A' : sel ? 'repeating-linear-gradient(135deg,' + ink + ' 0 2px,#FFFFFF 2px 5px)' : '#FFFFFF',
       line: r.lane === 'h' ? '#FFFFFF' : ink,
       op: sel ? 1 : 0.42,

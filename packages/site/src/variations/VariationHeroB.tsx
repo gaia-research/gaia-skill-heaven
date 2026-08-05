@@ -186,7 +186,14 @@ export function VariationHeroB() {
       <div
         aria-hidden="true"
         className="vhb-scan"
-        style={{ opacity: v.oScan, background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)` }}
+        style={{
+          // See VariationHeroA: a full-viewport mix-blend-mode layer costs a
+          // blend group every frame even at opacity 0. Only paint it while a
+          // glitch/overdrive pulse is actually running.
+          display: v.oScan ? 'block' : 'none',
+          opacity: v.oScan,
+          background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)`,
+        }}
       />
 
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -235,7 +242,10 @@ export function VariationHeroB() {
         <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', marginBottom: 12 }}>
           {rungs.map((r, i) => (
             <button key={i} onClick={r.pick} aria-label={r.label} className="vhb-rung-btn">
-              <span className="vhb-rung" style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }} />
+              <span
+                className={r.sel ? 'vhb-rung vhb-rung--sel' : 'vhb-rung'}
+                style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
+              />
               <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
             </button>
           ))}

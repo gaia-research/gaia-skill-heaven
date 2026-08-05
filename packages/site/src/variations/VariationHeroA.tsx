@@ -241,7 +241,16 @@ export function VariationHeroA() {
       <div
         aria-hidden="true"
         className="vha-scan"
-        style={{ opacity: v.oScan, background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)` }}
+        style={{
+          // mix-blend-mode on a full-viewport layer forces the whole hero into a
+          // blend group every frame, even at opacity 0. The scanlines only exist
+          // during a glitch/overdrive pulse, so keep the layer out of the paint
+          // tree the rest of the time — this is most of Hero A's idle paint cost
+          // over Hero B's, and it is what let the rung transitions starve.
+          display: v.oScan ? 'block' : 'none',
+          opacity: v.oScan,
+          background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)`,
+        }}
       />
 
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -290,7 +299,10 @@ export function VariationHeroA() {
         <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', marginBottom: 12 }}>
           {rungs.map((r, i) => (
             <button key={i} onClick={r.pick} aria-label={r.label} className="vha-rung-btn">
-              <span className="vha-rung" style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }} />
+              <span
+                className={r.sel ? 'vha-rung vha-rung--sel' : 'vha-rung'}
+                style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
+              />
               <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
             </button>
           ))}
