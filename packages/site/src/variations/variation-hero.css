@@ -179,7 +179,13 @@ body.vh-hero-page {
 .vha-rung,
 .vhb-rung {
   display: block;
-  transition: all 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* background switches between a solid color and a repeating-linear-gradient
+     depending on selection — those value types can't be interpolated, so
+     transitioning it (via `all`) risks a stale paint under compositing load
+     where the old gradient stays visible until an unrelated repaint fires.
+     Snap background instantly; keep height/opacity/border smooth. */
+  transition: height 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vha-chip,
