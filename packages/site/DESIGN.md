@@ -1,5 +1,11 @@
 # DESIGN.md — Skill Heaven landing prototype
 
+> **Persona note (N7, 2026-08-06).** The figure named **Lucy** throughout this
+> internal doc is the line's **internal working name only**. Its design is
+> final, but the **public name is reserved and undecided** — never hard-code it
+> in shipped copy or user-facing code. **Milim is the Gaia Research lab mascot,
+> not this line's persona.**
+
 > **Prototype, not the product.** Eight hero variations behind a preview
 > switcher (`src/components/Switcher.tsx`). All share one content source
 > (`src/content.ts`) and the real, measured token figures — messaging stays

@@ -15,5 +15,7 @@
   },
   "include": ["packages/*/src", "packages/*/test", "packages/*/scripts", "packages/*/plugin/scripts"],
   // Vendored third-party scripts inside test fixtures are data, not our source.
-  "exclude": ["node_modules", "packages/*/test/fixtures"]
+  // packages/site is a Vite+React app with its own tsconfig (bundler moduleResolution +
+  // jsx:react-jsx) — it must not be checked under the root NodeNext rules.
+  "exclude": ["node_modules", "packages/*/test/fixtures", "packages/site"]
 }

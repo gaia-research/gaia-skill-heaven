@@ -149,14 +149,14 @@ export function VariationManifesto() {
         </div>
       </div>
 
-      {/* ── Posture slider (rendered inline, wood-type idiom) ───────────── */}
+      {/* ── Entropy ladder (rendered inline, wood-type idiom) ───────────── */}
       <section className="vm-section" id="vm-method">
         <div className="vm-wrap">
           <header className="vm-lead">
             <span className="vm-lead__ord" aria-hidden="true">A.</span>
-            <h2 className="vm-h2">DIAL THE POSTURE.</h2>
+            <h2 className="vm-h2">CLIMB THE LADDER.</h2>
             <p className="vm-lead__note">
-              Floor to native — every stop priced honestly. Standing (paid each
+              Off to native — every rung priced honestly. Standing (paid each
               session) and invocation (paid on invoke) are always two numbers,
               never one.
             </p>

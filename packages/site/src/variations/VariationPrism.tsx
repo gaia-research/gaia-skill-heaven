@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HEADLINE, COMMANDS, CTA } from '../content'
 import { HarnessChooser } from '../components/HarnessChooser'
-import { PostureSlider } from '../components/PostureSlider'
+import { EntropyLadder } from '../components/EntropyLadder'
 import { PrismDefs, GlassWing, AngelKatana, Halo } from '../components/Art'
 import './variation-prism.css'
 
@@ -127,12 +127,12 @@ export function VariationPrism() {
             <p className="vp-section__eyebrow">POSTURE</p>
             <h2 className="vp-section__title">Choose how clean you run.</h2>
             <p className="vp-section__lede">
-              Slide from the byte-frozen floor to your harness as shipped. Every
+              Climb from off to your harness as shipped. Every
               stop is priced honestly — standing and invocation, never one number.
             </p>
           </div>
           <div className="vp-slab">
-            <PostureSlider />
+            <EntropyLadder />
           </div>
         </div>
       </section>
