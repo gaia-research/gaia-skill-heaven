@@ -5,15 +5,42 @@
 // stdin degrades to a minimal/no segment rather than breaking the user's prompt.
 
 import { readFileSync } from "node:fs";
-import { isProfileManifest, parseStatuslineInput, renderStatusline, type ProfileManifest } from "./statusline.js";
+import { join } from "node:path";
+import {
+  isHellSessionManifest,
+  isProfileManifest,
+  parseStatuslineInput,
+  renderStatusline,
+  type HellSessionManifest,
+  type ProfileManifest,
+} from "./statusline.js";
 
 const PROFILE_ENV = "CLAUDE_HEAVEN_PROFILE";
+const HELL_SESSION_ENV = "GAIA_HELL_SESSION";
+const HELL_MANIFEST_FILE = "session.json";
 
 function loadManifest(path: string | undefined): ProfileManifest | null {
   if (!path) return null;
   try {
     const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
     return isProfileManifest(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// Reads gaia-hell's own session.json directly off disk — no subprocess, no
+// network (the statusline runs on every prompt render, so this must stay
+// cheap), and no session is ever created here: unlike `gaia-hell path`,
+// resolveSession() would materialize a fresh session root as a side effect
+// of merely asking, which a passive statusline read must never do. Absent or
+// unreadable degrades silently to no segment, same discipline as the profile
+// manifest above.
+function loadHellManifest(sessionRoot: string | undefined): HellSessionManifest | null {
+  if (!sessionRoot) return null;
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(sessionRoot, HELL_MANIFEST_FILE), "utf-8"));
+    return isHellSessionManifest(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -38,7 +65,8 @@ export function main(): void {
   // Emit nothing so a mis-wired statusline is silent, not noisy/misleading.
   if (!manifest) return;
   const input = parseStatuslineInput(readStdin());
-  process.stdout.write(renderStatusline(manifest, input));
+  const hellManifest = loadHellManifest(process.env[HELL_SESSION_ENV]);
+  process.stdout.write(renderStatusline(manifest, input, hellManifest));
 }
 
 main();
