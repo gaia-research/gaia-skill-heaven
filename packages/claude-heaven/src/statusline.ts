@@ -111,12 +111,18 @@ function standingPhrase(manifest: ProfileManifest): string {
   return `${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`;
 }
 
-export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
+export function renderStatusline(
+  manifest: ProfileManifest,
+  input?: StatuslineInput | null,
+  hellManifest?: HellSessionManifest | null,
+): string {
   const parts = [`⚡ ${manifest.posture} · ${standingPhrase(manifest)}`];
   const pct = input?.context_window?.used_percentage;
   if (typeof pct === "number" && Number.isFinite(pct)) {
     parts.push(`${Math.round(pct)}% ctx`);
   }
+  const hellSegment = renderHellSegment(hellManifest ?? null);
+  if (hellSegment) parts.push(hellSegment);
   return parts.join(" · ");
 }
 
@@ -129,6 +135,42 @@ export function parseStatuslineInput(raw: string): StatuslineInput | null {
   } catch {
     return null;
   }
+}
+
+/** A skill materialized into this session's gaia-hell summon root (session.json
+ * at GAIA_HELL_SESSION). Only the fields the statusline segment needs. */
+export interface HellSummonedSkill {
+  id: string;
+}
+
+/** The subset of gaia-hell's session.json this door reads. */
+export interface HellSessionManifest {
+  skills: HellSummonedSkill[];
+}
+
+/** Validate just enough to render safely — same minimal-shape discipline as
+ * isProfileManifest above. */
+export function isHellSessionManifest(value: unknown): value is HellSessionManifest {
+  if (!value || typeof value !== "object") return false;
+  const m = value as Record<string, unknown>;
+  return Array.isArray(m.skills) && m.skills.every((s) => s && typeof s === "object" && typeof (s as { id?: unknown }).id === "string");
+}
+
+/** "mattpocock/grill-me" -> "grill-me". Falls back to the whole id if there is
+ * no "/" (never throws on an unexpected id shape). */
+function hellSlug(skillId: string): string {
+  const slug = skillId.split("/").pop();
+  return slug || skillId;
+}
+
+/** The compact "hell: <skill>[ +N]" segment (minimal by founder request: no
+ * colours, no bars, no token counts — just which skill). Empty string when
+ * nothing has been summoned this session, so callers can omit the joiner. */
+export function renderHellSegment(manifest: HellSessionManifest | null): string {
+  if (!manifest || manifest.skills.length === 0) return "";
+  const [first, ...rest] = manifest.skills;
+  const extra = rest.length > 0 ? ` +${rest.length}` : "";
+  return `hell: ${hellSlug(first.id)}${extra}`;
 }
 
 const MANIFEST_KEYS: Array<keyof ProfileManifest> = ["schema", "posture", "standingTokens", "skillCount", "scope", "launcherLocked"];
