@@ -420,6 +420,32 @@ function compilePi(
 // are computed into the `-c` disable set too (a mechanism redesign, not a
 // stale-claim correction, and out of scope here). Probe results recorded in
 // the matrix.
+//
+// RE-PROBED (2026-08-07, WP4, packages/codex-heaven/PROBE.md, codex-cli
+// 0.146.0): before writing any codex-heaven door code, per M0 discipline.
+// A2's per-session `-c 'skills.config=[...]'` toggle still holds on 0.146.0
+// (46-item baseline listing, minus exactly the one disabled skill, 10,092 ->
+// 10,058 tokens used). The "STAYS A RECIPE" reasoning above is now backed by
+// fresh, direct evidence, not just inference from the matrix's skill-roots
+// row: `--ignore-user-config --ignore-rules` together do NOT suppress the
+// listing to NONE — they swap it for a DIFFERENT, larger (~70-item) listing
+// (a distinct skill root becomes visible once the config pointing at the
+// baseline set is ignored), 10,092 -> 6,294 tokens. That is a second root
+// switching in, not eviction. No cell tried gets anywhere near an empty
+// surface, so execSupport stays "recipe" — this is a re-confirmation, not a
+// promotion (D8: the negative result is the finding).
+//
+// PRODUCT-FLOOR (informed by the same re-probe): no branch for it here,
+// deliberately. "Product-floor" means the nearest a user can launch at while
+// the door still resolves — but no composition observed in the 0.146.0
+// re-probe gets codex CLOSER to zero while leaving a door reachable; the
+// only flags that move the token count at all (`--ignore-user-config
+// --ignore-rules`) do it by swapping to an unrelated, comparably-sized skill
+// root, not by shrinking the session's own set. That is not a verified
+// product-floor cell by any reading, so `compile()`'s own
+// `PRODUCT_FLOOR_VERIFIED_HARNESSES` gate (only "claude" and "pi") is left
+// unchanged — codex is not added to it. Same M0 refusal as grok: nothing is
+// withheld by policy, nobody has found a real cell yet.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
