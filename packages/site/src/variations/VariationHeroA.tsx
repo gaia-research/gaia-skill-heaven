@@ -174,7 +174,7 @@ export function VariationHeroA() {
           <span style={{ display: 'block', width: 'min(10vw,132px)', height: 1, background: v.hair2 }} />
           <span
             className="vha-eyebrow"
-            style={{ fontSize: 'clamp(24px,3.5vw,52px)', textShadow: `0 0 26px ${v.bg},0 0 9px ${v.bg}` }}
+            style={{ fontSize: 'clamp(22px,2.5vw,40px)', textShadow: `0 0 26px ${v.bg},0 0 9px ${v.bg}` }}
           >
             SKILL
           </span>

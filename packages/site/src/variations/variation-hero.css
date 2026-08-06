@@ -428,7 +428,9 @@ body.vh-hero-page {
   top: 0;
   font-family: 'Big Shoulders Display', Archivo, sans-serif;
   font-weight: 900;
-  font-size: 23vw;
+  /* Keep the wordmark monumental, but let viewport height win on ultrawide
+     screens so it does not become a wall over Lucy's face. */
+  font-size: min(23vw, 30vh, 42rem);
   line-height: 0.8;
   letter-spacing: -0.01em;
 }
@@ -462,7 +464,7 @@ body.vh-hero-page {
   translate: 0 -50%;
   font-family: Archivo, sans-serif;
   font-variation-settings: 'wdth' 125, 'wght' 900;
-  font-size: 19vw;
+  font-size: min(19vw, 27vh, 34rem);
   line-height: 0.78;
   letter-spacing: -0.02em;
   transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(120ms * var(--vh-t)) linear;
