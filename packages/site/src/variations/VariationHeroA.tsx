@@ -1,4 +1,5 @@
-import lucyHero from '../assets/lucy-hero.jpg'
+import lucyHero from '../assets/lucy-hero.png'
+import { HeroAssetRouter, useHeroAssetVariation } from './hero/HeroAssetRouter'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
 
@@ -15,6 +16,8 @@ import './variation-hero.css'
 
 export function VariationHeroA() {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
+  const { assets, variation, selectVariation } = useHeroAssetVariation()
+  const assetFilter = v.bg === '#FFFFFF' ? 'invert(1)' : 'none'
 
   return (
     <div
@@ -29,6 +32,8 @@ export function VariationHeroA() {
         color: v.fg,
       }}
     >
+      <HeroAssetRouter variation={variation} onChange={selectVariation} />
+
       <div
         aria-hidden="true"
         style={{
@@ -63,34 +68,20 @@ export function VariationHeroA() {
           opacity: v.oWing,
         }}
       >
-        <div
-          className="vha-slot"
-          style={{
-            left: '2%',
-            top: '4%',
-            width: '30%',
-            height: '90%',
-            clipPath: 'polygon(4% 10%,74% 0,100% 36%,84% 100%,0 70%)',
-            border: `1px solid ${v.hair}`,
-            background: `repeating-linear-gradient(128deg,${v.stripe} 0 7px,transparent 7px 16px)`,
-          }}
-        >
-          <span style={{ fontSize: 10, letterSpacing: '.28em', color: v.dim }}>WING · PNG</span>
-        </div>
-        <div
-          className="vha-slot"
-          style={{
-            right: '2%',
-            top: '4%',
-            width: '30%',
-            height: '90%',
-            clipPath: 'polygon(96% 10%,26% 0,0 36%,16% 100%,100% 70%)',
-            border: `1px solid ${v.hair}`,
-            background: `repeating-linear-gradient(52deg,${v.stripe} 0 7px,transparent 7px 16px)`,
-          }}
-        >
-          <span style={{ fontSize: 10, letterSpacing: '.28em', color: v.dim }}>WING · PNG</span>
-        </div>
+        <img
+          className="vh-asset vha-wing vha-wing--left"
+          src={assets.wingLeft}
+          alt=""
+          draggable={false}
+          style={{ filter: assetFilter }}
+        />
+        <img
+          className="vh-asset vha-wing vha-wing--right"
+          src={assets.wingRight}
+          alt=""
+          draggable={false}
+          style={{ filter: assetFilter }}
+        />
       </div>
 
       <div
@@ -147,29 +138,24 @@ export function VariationHeroA() {
 
       <div
         aria-hidden="true"
+        className="vh-sword-frame"
         style={{
           position: 'absolute',
           left: '50%',
           top: '56%',
           width: 'min(78vw,1180px)',
-          height: 44,
           translate: '-50% -50%',
           transition: 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear',
           transform: `rotate(-28deg) translateX(${v.bladeX}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
         }}
       >
-        <div
-          className="vha-slot vha-slot--blade"
-          style={{
-            inset: 0,
-            clipPath: 'polygon(0 42%,86% 0,100% 46%,86% 100%,0 62%)',
-            border: `1px solid ${v.hair2}`,
-            background: `repeating-linear-gradient(90deg,${v.stripe} 0 7px,transparent 7px 15px)`,
-          }}
-        >
-          <span style={{ fontSize: 10, letterSpacing: '.28em', color: v.dim }}>SWORD · PNG</span>
-        </div>
+        <img className="vh-asset vh-asset--sword" src={assets.sword} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img className="vh-asset vh-asset--sword-debris" src={assets.swordDebris} alt="" draggable={false} style={{ filter: assetFilter }} />
+      </div>
+
+      <div className="vh-slash-arc vha-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
+        <img src={assets.slashArc} alt="" draggable={false} style={{ filter: assetFilter }} />
       </div>
 
       <div

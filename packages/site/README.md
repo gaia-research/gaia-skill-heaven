@@ -24,6 +24,23 @@ measured token figures, so messaging stays consistent while the visual
 treatment differs. Every variation shows `/skill-hell` as a locked, gated door
 (P2) and never averages doses into one number.
 
+## Hero art router
+
+Hero A and Hero B expose the same `WING + SWORD` selector. It swaps the matched
+wing pair, katana, tip debris, and impact arc together and persists the choice
+in the hash route:
+
+```text
+#/hero-a?variation=1
+#/hero-a?variation=2
+#/hero-a?variation=3
+#/hero-b?variation=1
+```
+
+The commissioned RGBA PNG layers live under
+`src/assets/hero-commission/v01/`, `v02/`, and `v03/`; the `workbench/` folder
+keeps the keyed source intermediates separate from the production handoff.
+
 ## Run
 
 ```bash

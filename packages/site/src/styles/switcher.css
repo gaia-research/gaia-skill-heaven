@@ -47,6 +47,11 @@
   font-weight: 600;
 }
 
+.sh-switcher__tab--active:hover,
+.sh-switcher__tab--active:focus-visible {
+  color: var(--sh-void);
+}
+
 .sh-switcher__hint {
   color: var(--sh-lumen-faint);
   letter-spacing: 0.08em;

@@ -50,11 +50,11 @@ impeccable process described below; the other six routes are unchanged.
 | `#/prism` | **Prism** | Luminance / prismatic. Lucy as a translucent glass-shard figure, holographic hair, refracting halo. |
 | `#/default` | **Default** | White-on-black Swiss restraint. One prism accent. |
 
-**Known deviation:** Hero A/B render Lucy from a raster image
-(`src/assets/lucy-hero.jpg`) rather than the pure-SVG `Art.tsx` primitives
-every other route uses. That breaks the "no external image assets" rule
-`Art.tsx` states for the rest of the set; kept as an explicit, owner-approved
-exception for these two routes rather than silently ported past review.
+**Known deviation:** Hero A/B render Lucy from a transparent raster cutout
+(`src/assets/lucy-hero.png`) rather than the pure-SVG `Art.tsx` primitives every
+other route uses. The original JPG remains in the asset folder as provenance;
+the production route uses the Gaia-prepared RGBA cutout so the page background
+can invert cleanly behind her.
 
 ## Shared contract
 

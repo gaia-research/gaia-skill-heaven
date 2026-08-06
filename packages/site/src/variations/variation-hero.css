@@ -84,32 +84,132 @@ body.vh-hero-page {
   }
 }
 
-/* ── Shared small pieces (identical rules under both roots) ────────────── */
-/* Pending-art slots: labeled placeholder boxes standing in for the wing/
-   sword PNGs that will land as separate art assets. */
-.vha-slot,
-.vhb-slot {
+/* ── Hero commission layers + asset variation router ───────────────────── */
+.vh-asset {
+  display: block;
   position: absolute;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.vha-wing {
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  max-width: none;
+}
+.vha-wing--left {
+  left: 2%;
+}
+.vha-wing--right {
+  right: 2%;
+}
+
+.vhb-wings-frame {
+  position: absolute;
+}
+.vhb-wing {
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  max-width: none;
+}
+
+.vh-asset--sword,
+.vh-asset--sword-debris {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.vh-sword-frame {
+  aspect-ratio: 3600 / 700;
+}
+
+.vh-slash-arc {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  width: min(64vw, 860px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity calc(280ms * var(--vh-t)) linear;
+}
+.vh-slash-arc img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.vha-slash-arc {
+  transform: rotate(-18deg);
+}
+.vhb-slash-arc {
+  top: 43%;
+  width: min(70vw, 920px);
+  transform: rotate(-28deg);
+}
+
+.vh-asset-router {
+  position: absolute;
+  top: 54px;
+  right: 8vw;
+  z-index: 30;
   display: flex;
-}
-.vha-slot {
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 9%;
-}
-.vha-slot--blade {
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 0;
-  padding-left: 6%;
+  gap: 12px;
+  padding: 7px 9px 7px 11px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  backdrop-filter: blur(12px);
+  font-size: 9px;
+  line-height: 1.15;
+  letter-spacing: 0.16em;
+  pointer-events: auto;
 }
-.vhb-slot--wing {
-  align-items: flex-end;
-  padding: 0 0 8% 14%;
+.vh-asset-router__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  white-space: nowrap;
 }
-.vhb-slot--blade {
-  align-items: center;
-  padding-left: 5%;
+.vh-asset-router__label {
+  font-weight: 600;
+}
+.vh-asset-router__name {
+  color: color-mix(in srgb, currentColor 52%, transparent);
+  letter-spacing: 0.08em;
+}
+.vh-asset-router__buttons {
+  display: flex;
+  gap: 4px;
+}
+.vh-asset-router__button {
+  min-width: 32px;
+  padding: 5px 6px 4px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+.vh-asset-router__button:hover,
+.vh-asset-router__button:focus-visible {
+  border-color: currentColor;
+  outline: none;
+}
+.vh-asset-router__button--selected {
+  border-color: currentColor;
+  box-shadow: inset 0 -2px currentColor;
+  font-weight: 700;
 }
 
 .vha-tear,

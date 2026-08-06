@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useHeroAssetVariation } from '../variations/hero/HeroAssetRouter'
 
 // Fixed prototype switcher so the reviewer can flip between the variations.
 // Not part of the real landing page — a preview harness only.
@@ -14,6 +15,8 @@ const VARIATIONS = [
 ]
 
 export function Switcher() {
+  const { variation } = useHeroAssetVariation()
+
   return (
     <div className="sh-switcher" role="navigation" aria-label="Prototype variation switcher">
       <span className="sh-switcher__brand">SKILL HEAVEN · prototype</span>
@@ -21,7 +24,7 @@ export function Switcher() {
         {VARIATIONS.map((v) => (
           <NavLink
             key={v.to}
-            to={v.to}
+            to={v.to === '/hero-a' || v.to === '/hero-b' ? `${v.to}?variation=${variation}` : v.to}
             title={v.hint}
             className={({ isActive }) =>
               'sh-switcher__tab' + (isActive ? ' sh-switcher__tab--active' : '')
