@@ -1,4 +1,5 @@
-import lucyHero from '../assets/lucy-hero.jpg'
+import lucyHero from '../assets/lucy-hero.png'
+import { HeroAssetRouter, useHeroAssetVariation } from './hero/HeroAssetRouter'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
 
@@ -13,6 +14,8 @@ import './variation-hero.css'
 
 export function VariationHeroB() {
   const { v, dots, rungs, rootRef } = useHeroEngine('b')
+  const { assets, variation, selectVariation } = useHeroAssetVariation()
+  const assetFilter = v.bg === '#FFFFFF' ? 'invert(1)' : 'none'
 
   return (
     <div
@@ -27,6 +30,8 @@ export function VariationHeroB() {
         color: v.fg,
       }}
     >
+      <HeroAssetRouter variation={variation} onChange={selectVariation} />
+
       <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, background: v.hair2 }} />
       <div aria-hidden="true" style={{ position: 'absolute', left: '8vw', top: 0, bottom: 0, width: 1, background: v.hair, transition: 'opacity calc(600ms * var(--vh-t)) linear', opacity: v.oGround }} />
       <div aria-hidden="true" style={{ position: 'absolute', right: '8vw', top: 0, bottom: 0, width: 1, background: v.hair, transition: 'opacity calc(600ms * var(--vh-t)) linear', opacity: v.oGround }} />
@@ -68,49 +73,42 @@ export function VariationHeroB() {
 
       <div
         aria-hidden="true"
-        className="vhb-slot vhb-slot--wing"
+        className="vhb-wings-frame"
         style={{
           left: '-6vw',
           top: '14vh',
           width: '44vw',
           height: '64vh',
           clipPath: 'polygon(0 18%,78% 0,100% 40%,72% 100%,6% 82%)',
-          border: `1px solid ${v.hair2}`,
-          background: `repeating-linear-gradient(128deg,${v.stripe} 0 7px,transparent 7px 15px)`,
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
           transform: `scale(${v.mWing})`,
           transformOrigin: '0% 50%',
           opacity: v.oWing,
         }}
       >
-        <span style={{ fontSize: 10, letterSpacing: '.28em', color: v.dim }}>WING · PNG</span>
+        <img className="vh-asset vhb-wing" src={assets.wingLeft} alt="" draggable={false} style={{ filter: assetFilter }} />
       </div>
 
       <div
         aria-hidden="true"
+        className="vh-sword-frame"
         style={{
           position: 'absolute',
           left: '-8vw',
           bottom: '6vh',
           width: '96vw',
-          height: 52,
           transformOrigin: '0% 100%',
           transition: 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear',
           transform: `rotate(-38deg) translateX(${v.bladeXB}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
         }}
       >
-        <div
-          className="vhb-slot vhb-slot--blade"
-          style={{
-            inset: 0,
-            clipPath: 'polygon(0 44%,88% 0,100% 48%,88% 100%,0 60%)',
-            border: `1px solid ${v.hair2}`,
-            background: `repeating-linear-gradient(90deg,${v.stripe} 0 7px,transparent 7px 15px)`,
-          }}
-        >
-          <span style={{ fontSize: 10, letterSpacing: '.28em', color: v.dim }}>SWORD · PNG</span>
-        </div>
+        <img className="vh-asset vh-asset--sword" src={assets.sword} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img className="vh-asset vh-asset--sword-debris" src={assets.swordDebris} alt="" draggable={false} style={{ filter: assetFilter }} />
+      </div>
+
+      <div className="vh-slash-arc vhb-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
+        <img src={assets.slashArc} alt="" draggable={false} style={{ filter: assetFilter }} />
       </div>
 
       <div style={{ position: 'absolute', left: '8vw', top: '9vh', display: 'flex', alignItems: 'baseline', gap: 14, pointerEvents: 'none' }}>

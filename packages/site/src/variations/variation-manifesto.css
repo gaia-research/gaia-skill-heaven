@@ -1,0 +1,605 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VARIATION: MANIFESTO — wood-type letterpress conviction (1914).
+   INVERTED on purpose: near-black condensed type on a luminous paper field.
+   Pure ink, pure paper, one accent (a single warm letterpress red) used ONLY
+   for the hell/destroy state. No gradient text, no glow, no prismatic fills.
+   Every selector is scoped under .vm; every class is vm-; keyframes are vm-.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.vm {
+  /* Local palette — paper + ink, one red. Built off the global tokens. */
+  --vm-paper: var(--sh-lumen);        /* #f7f8ff — the luminous field */
+  --vm-paper-2: #eceef6;              /* recessed paper */
+  --vm-ink: var(--sh-void);           /* #05060a — true wood-type black */
+  --vm-ink-soft: #1c1f2b;             /* softened ink for body copy */
+  --vm-ink-faint: #52566a;            /* captions / tertiary */
+  --vm-rule: rgba(5, 6, 10, 0.18);    /* hairline on paper */
+  --vm-rule-strong: rgba(5, 6, 10, 0.42);
+  --vm-red: #c0261f;                  /* the ONE accent — destroy state only */
+
+  /* --hell (0..1) + --p written by the scroll hook; safe defaults here. */
+  --hell: 0;
+  --p: 0;
+
+  position: relative;
+  min-height: 100vh;
+  background: var(--vm-paper);
+  color: var(--vm-ink);
+  font-family: var(--sh-font-body);
+  /* Faint letterpress paper tooth — flat, no glow. */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(5, 6, 10, 0.015) 0,
+      rgba(5, 6, 10, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  overflow-x: hidden;
+}
+
+.vm ::selection {
+  background: var(--vm-ink);
+  color: var(--vm-paper);
+}
+
+.vm-wrap {
+  width: 100%;
+  max-width: var(--sh-maxw);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 56px);
+}
+
+/* ── The diagonal HELL BLADE ──────────────────────────────────────────────
+   A skewed inked bar fixed to the viewport. Its opacity + horizontal travel
+   ride --hell, so it sweeps across as you cross the middle scroll band and
+   retreats as the band heals. Pure transform/opacity — cheap to composite. */
+.vm-blade {
+  position: fixed;
+  inset: -20vh -30vw;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--vm-red);
+  clip-path: polygon(0 46%, 100% 30%, 100% 54%, 0 70%);
+  opacity: calc(var(--hell) * 0.9);
+  transform: translateX(calc((var(--hell) - 0.5) * 60vw)) rotate(-4deg);
+  mix-blend-mode: multiply;
+}
+.vm-blade::after {
+  /* A thin bright edge riding the leading side of the blade — the cut. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 46%, 100% 30%, 100% 32%, 0 48%);
+  background: var(--vm-ink);
+  opacity: 0.5;
+}
+
+/* ══════════════════════ HERO ══════════════════════ */
+.vm-hero {
+  position: relative;
+  padding-block: clamp(72px, 12vh, 152px) clamp(40px, 7vh, 88px);
+  border-bottom: 3px solid var(--vm-ink);
+}
+
+.vm-hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+
+.vm-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 clamp(18px, 4vh, 40px);
+  font-family: var(--sh-font-mono);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--vm-ink-soft);
+  border: 2px solid var(--vm-ink);
+  padding: 8px 14px;
+}
+.vm-mark {
+  color: var(--vm-red);
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* Oversized stacked wood-type verbs. Anton = condensed heavy display. */
+.vm-display {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.vm-verb {
+  font-family: 'Anton', var(--sh-font-display);
+  font-weight: 400;
+  line-height: 0.84;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--vm-ink);
+  font-size: clamp(72px, 16vw, 240px);
+  /* wood-type ink is dense — squeeze the tracking, kill any smoothing gap */
+  -webkit-text-stroke: 0.5px var(--vm-ink);
+}
+.vm-verb--1 .vm-verb__them {
+  color: var(--vm-ink-faint);
+  -webkit-text-stroke: 0;
+}
+.vm-verb--2 {
+  align-self: flex-start;
+  /* sits inside an angled inked panel — type knocks out to paper */
+  color: var(--vm-paper);
+  -webkit-text-stroke: 0;
+  background: var(--vm-ink);
+  padding: 0.04em 0.28em 0.1em;
+  clip-path: polygon(0 0, 100% 6%, 97% 100%, 3% 94%);
+  margin-block: 0.04em;
+}
+/* The hell cut — the "break loose" verb sits on the diagonal slash and is the
+   only place the red lives in the hero. It intensifies with --hell. */
+.vm-slash {
+  display: block;
+  height: 6px;
+  margin-block: 0.14em 0.06em;
+  background: var(--vm-ink);
+  transform: skewY(-2.4deg);
+  transform-origin: left;
+}
+.vm-verb--cut {
+  align-self: flex-end;
+  text-align: right;
+  color: color-mix(in srgb, var(--vm-ink), var(--vm-red) calc(var(--hell) * 100%));
+  transform: skewX(-6deg) translateX(calc(var(--hell) * -1.2%));
+  transform-origin: right;
+}
+
+.vm-sub {
+  max-width: 46ch;
+  margin: clamp(28px, 5vh, 52px) 0 0;
+  font-size: clamp(15px, 1.5vw, 19px);
+  line-height: 1.5;
+  color: var(--vm-ink-soft);
+}
+
+.vm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: clamp(24px, 4vh, 40px);
+}
+.vm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 26px;
+  font-family: var(--sh-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 2px solid var(--vm-ink);
+  transition: background 0.18s var(--sh-ease), color 0.18s var(--sh-ease),
+    transform 0.18s var(--sh-ease);
+}
+.vm-btn--solid {
+  background: var(--vm-ink);
+  color: var(--vm-paper);
+}
+.vm-btn--solid:hover {
+  background: var(--vm-red);
+  border-color: var(--vm-red);
+  transform: translate(-2px, -2px);
+}
+.vm-btn--ghost {
+  background: transparent;
+  color: var(--vm-ink);
+}
+.vm-btn--ghost:hover {
+  background: var(--vm-ink);
+  color: var(--vm-paper);
+}
+.vm-arrow {
+  transition: transform 0.18s var(--sh-ease);
+}
+.vm-btn--ghost:hover .vm-arrow {
+  transform: translateX(4px);
+}
+.vm-btn:focus-visible {
+  outline: 3px solid var(--vm-red);
+  outline-offset: 3px;
+}
+
+/* ── Right rail: numbered ordinals ─────────────────────────────────────── */
+.vm-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 3px solid var(--vm-ink);
+}
+.vm-rail__item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 4px;
+  border-bottom: 1px solid var(--vm-rule);
+}
+.vm-rail__n {
+  font-family: 'Anton', var(--sh-font-display);
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 0.8;
+  color: var(--vm-ink);
+}
+.vm-rail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.vm-rail__verb {
+  font-family: 'Archivo Black', var(--sh-font-display);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.vm-rail__cmd {
+  font-family: var(--sh-font-mono);
+  font-size: 12.5px;
+  color: var(--vm-ink-soft);
+}
+.vm-rail__note {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--vm-ink-faint);
+}
+/* 03 — the gated hell door. Hatch-marked, visibly locked, never an activator. */
+.vm-rail__item--gated {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0,
+      transparent 7px,
+      rgba(192, 38, 31, 0.12) 7px,
+      rgba(192, 38, 31, 0.12) 9px
+    );
+  border: 2px solid var(--vm-red);
+}
+.vm-rail__lock {
+  color: var(--vm-red);
+  letter-spacing: 0;
+}
+.vm-rail__item--gated .vm-rail__n {
+  color: var(--vm-red);
+}
+
+/* ══════════════════════ TICKER ══════════════════════ */
+.vm-ticker {
+  overflow: hidden;
+  background: var(--vm-ink);
+  color: var(--vm-paper);
+  border-block: 3px solid var(--vm-ink);
+  padding-block: 12px;
+  white-space: nowrap;
+}
+.vm-ticker__run {
+  display: inline-flex;
+  will-change: transform;
+  animation: vm-marquee 26s linear infinite;
+}
+.vm-ticker__cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding-inline: 11px 0;
+  font-family: 'Archivo Black', var(--sh-font-display);
+  font-size: clamp(14px, 1.7vw, 20px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.vm-ticker__sep {
+  color: var(--vm-red);
+  padding-inline: 22px;
+}
+@keyframes vm-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ══════════════════════ SECTIONS ══════════════════════ */
+.vm-section {
+  padding-block: clamp(56px, 9vh, 112px);
+  border-bottom: 3px solid var(--vm-ink);
+}
+.vm-lead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 8px 20px;
+  margin-bottom: clamp(32px, 5vh, 56px);
+}
+.vm-lead__ord {
+  font-family: 'Anton', var(--sh-font-display);
+  font-size: clamp(32px, 4vw, 56px);
+  line-height: 0.8;
+  color: var(--vm-red);
+}
+.vm-h2 {
+  margin: 0;
+  font-family: 'Anton', var(--sh-font-display);
+  font-weight: 400;
+  font-size: clamp(38px, 7vw, 96px);
+  line-height: 0.86;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--vm-ink);
+}
+.vm-lead__note {
+  grid-column: 2;
+  max-width: 54ch;
+  margin: 6px 0 0;
+  font-size: clamp(14px, 1.4vw, 17px);
+  line-height: 1.5;
+  color: var(--vm-ink-soft);
+}
+
+/* ── Posture blocks ────────────────────────────────────────────────────── */
+.vm-postures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0;
+  border: 3px solid var(--vm-ink);
+}
+.vm-posture {
+  position: relative;
+  padding: 26px 22px 24px;
+  border-right: 1px solid var(--vm-ink);
+  border-bottom: 1px solid var(--vm-ink);
+  background: var(--vm-paper);
+}
+.vm-posture__ord {
+  font-family: 'Anton', var(--sh-font-display);
+  font-size: 22px;
+  color: var(--vm-ink-faint);
+}
+.vm-posture__label {
+  margin: 6px 0 10px;
+  font-family: 'Archivo Black', var(--sh-font-display);
+  font-size: clamp(20px, 2.4vw, 30px);
+  line-height: 0.98;
+  text-transform: uppercase;
+  color: var(--vm-ink);
+}
+.vm-posture__blurb {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--vm-ink-soft);
+}
+.vm-posture__dose {
+  display: inline-block;
+  font-family: var(--sh-font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--vm-ink);
+  background: var(--vm-paper-2);
+  color: var(--vm-ink);
+}
+
+/* ── Harness grid ──────────────────────────────────────────────────────── */
+.vm-harnesses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.vm-harness {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 20px;
+  border: 2px solid var(--vm-ink);
+  background: var(--vm-paper);
+}
+.vm-harness__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--vm-ink);
+  padding-bottom: 10px;
+}
+.vm-harness__name {
+  margin: 0;
+  font-family: 'Anton', var(--sh-font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.vm-harness__status {
+  font-family: var(--sh-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  padding: 4px 8px;
+  border: 1.5px solid var(--vm-ink);
+  color: var(--vm-ink);
+  white-space: nowrap;
+}
+.vm-harness--flagship .vm-harness__status {
+  background: var(--vm-ink);
+  color: var(--vm-paper);
+}
+.vm-harness__install {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--vm-paper-2);
+  border: 1px solid var(--vm-rule-strong);
+  overflow-x: auto;
+}
+.vm-harness__install code {
+  font-family: var(--sh-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--vm-ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.vm-harness__note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--vm-ink-soft);
+}
+
+/* ── Commands ──────────────────────────────────────────────────────────── */
+.vm-commands {
+  margin: 0;
+  border: 3px solid var(--vm-ink);
+}
+.vm-command {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--vm-ink);
+}
+.vm-command:last-child {
+  border-bottom: 0;
+}
+.vm-command__label {
+  font-family: 'Archivo Black', var(--sh-font-display);
+  font-size: clamp(18px, 2.2vw, 26px);
+  text-transform: uppercase;
+  color: var(--vm-ink);
+}
+.vm-command__cmd {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.vm-command__cmd code {
+  font-family: var(--sh-font-mono);
+  font-size: 14px;
+  color: var(--vm-ink);
+}
+.vm-command--gated {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0,
+      transparent 8px,
+      rgba(192, 38, 31, 0.1) 8px,
+      rgba(192, 38, 31, 0.1) 10px
+    );
+}
+.vm-command__lock {
+  color: var(--vm-red);
+}
+.vm-command__gate {
+  font-family: var(--sh-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  padding: 4px 9px;
+  border: 1.5px solid var(--vm-red);
+  color: var(--vm-red);
+}
+
+/* ══════════════════════ FOOTER ══════════════════════ */
+.vm-footer {
+  padding-block: clamp(36px, 6vh, 64px);
+}
+.vm-footer__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.vm-wordmark {
+  font-family: 'Anton', var(--sh-font-display);
+  font-size: clamp(28px, 4vw, 52px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--vm-ink);
+}
+.vm-footer__note {
+  font-family: var(--sh-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--vm-ink-faint);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE HELL SLICE — where the blade crosses, the section it's over flips to
+   inverted ink/paper and the type looks torn. Driven purely off --hell, so
+   with reduced-motion (scroll unchanged) it still simply reads static paper.
+   ══════════════════════════════════════════════════════════════════════════ */
+.vm-section {
+  position: relative;
+  transition: background 0.2s linear, color 0.2s linear;
+  background: color-mix(in srgb, var(--vm-paper), var(--vm-ink) calc(var(--hell) * 100%));
+}
+/* When the blade is fully over the middle, knock the mid-band section's ink to
+   paper so the type "tears" against the inverted field. */
+.vm-section:nth-of-type(1n) .vm-h2 {
+  color: color-mix(in srgb, var(--vm-ink), var(--vm-paper) calc(var(--hell) * 90%));
+}
+.vm-section .vm-lead__note,
+.vm-section .vm-posture__blurb,
+.vm-section .vm-harness__note {
+  color: color-mix(in srgb, var(--vm-ink-soft), var(--vm-paper) calc(var(--hell) * 80%));
+}
+/* Torn edge overlay on the mid section — a hard diagonal rip in the red. */
+.vm-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    repeating-linear-gradient(
+      -6deg,
+      transparent 0,
+      transparent 26px,
+      rgba(192, 38, 31, 0.9) 26px,
+      rgba(192, 38, 31, 0.9) 28px
+    );
+  clip-path: polygon(0 42%, 100% 26%, 100% 58%, 0 74%);
+  opacity: calc(var(--hell) * var(--hell) * 0.55);
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .vm-hero__grid {
+    grid-template-columns: 1fr;
+  }
+  .vm-rail {
+    border-top: 2px solid var(--vm-ink);
+  }
+  .vm-command {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* Belt-and-braces: the page is fully legible with zero motion. tokens.css
+   already neutralizes animations globally; this makes the intent explicit. */
+@media (prefers-reduced-motion: reduce) {
+  .vm-ticker__run {
+    animation: none;
+  }
+  .vm-blade,
+  .vm-section::before {
+    /* keep the static composition calm when the user opts out of motion */
+    transition: none;
+  }
+}
