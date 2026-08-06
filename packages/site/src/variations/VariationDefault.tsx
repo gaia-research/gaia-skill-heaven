@@ -1,6 +1,6 @@
 import { HEADLINE, COMMANDS, CTA } from '../content'
 import { HarnessChooser } from '../components/HarnessChooser'
-import { PostureSlider } from '../components/PostureSlider'
+import { EntropyLadder } from '../components/EntropyLadder'
 import './variation-default.css'
 
 // "Skill Heaven default — White on black. Restraint."
@@ -74,11 +74,11 @@ export function VariationDefault() {
           <header className="vd-lead">
             <h2 className="vd-h2">Dial in the posture.</h2>
             <p className="vd-lead__note">
-              Floor to native — each stop priced honestly, standing and invocation kept
+              Off to native — each rung priced honestly, standing and invocation kept
               separate. Hell stays gated.
             </p>
           </header>
-          <PostureSlider />
+          <EntropyLadder />
         </div>
       </section>
 

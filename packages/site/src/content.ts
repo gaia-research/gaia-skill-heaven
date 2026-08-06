@@ -24,7 +24,7 @@ export const HARNESSES: Harness[] = [
     name: 'Claude',
     status: 'flagship',
     install: 'claude plugin marketplace add gaia-research/skill-heaven\nclaude plugin install claude-heaven',
-    note: 'The flagship door. Native-default launcher + /skill-heaven posture slider.',
+    note: 'The flagship door. Native-default launcher + the /skill-heaven entropy ladder.',
   },
   {
     id: 'pi',
@@ -56,19 +56,15 @@ export type Posture = {
   dose: string
 }
 
-// The posture slider — floor → curated → native. Two-number doses (standing /
-// invocation) reported honestly; hell lane is gated (P2).
+// The entropy ladder rungs shown on the site (N11): product-floor (`off`) →
+// curated → native. The internal absolute-zero `floor` is a benchmark ruler
+// only and is NOT a user-facing row (P8). Two-number doses (standing /
+// invocation) reported honestly; the hell lane is gated (P2).
 export const POSTURES: Posture[] = [
-  {
-    key: 'floor',
-    label: 'Floor',
-    blurb: 'The doorless benchmark floor. Byte-frozen placebo-of-record. No skills, no door.',
-    dose: '19,661 tok · placebo-of-record',
-  },
   {
     key: 'product-floor',
     label: 'Product floor',
-    blurb: 'The doorful product floor. Minimum control surface survives — the door is +515 tok.',
+    blurb: 'The doorful product floor — "off", the cleanest launchable posture. Minimum control surface survives; the door is +515 tok.',
     dose: '20,176 tok · −28.9% vs native',
   },
   {

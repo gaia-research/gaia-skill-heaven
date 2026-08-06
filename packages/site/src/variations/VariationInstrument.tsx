@@ -118,10 +118,9 @@ export function VariationInstrument() {
   const active = POSTURES.find((p) => p.key === posture) ?? POSTURES[0]
 
   // The lit digits for the small readout mirror the active posture's dose —
-  // real figures only. floor 19,661 / product-floor 20,176; the others are
+  // real figures only. product-floor 20,176; the others are
   // dose *strings*, so the readout shows a dash row and defers to the plate.
   const READOUT: Record<string, string> = {
-    floor: '19661',
     'product-floor': '20176',
     curated: '-----',
     native: '-----',
@@ -184,8 +183,8 @@ export function VariationInstrument() {
             <p className="vi-eyebrow">POSTURE · CALIBRATION</p>
             <h2 className="vi-section__title">Turn the dial. Read the dose.</h2>
             <p className="vi-lede">
-              Four detented positions on a machined rail — from the byte-frozen
-              floor to your harness as shipped. Select one; the readout lights with
+              Three detented positions on a machined rail — from off to your
+              harness as shipped. Select one; the readout lights with
               its measured dose.
             </p>
           </div>

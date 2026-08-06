@@ -17,16 +17,22 @@ benchmark-minded evaluators who scrutinize the Hell/Heaven method.
 
 ## Product Purpose
 
-Skill Heaven strips an AI agent's context bloat so it runs clean. It composes a
-lean, benchmarked skill surface at launch — nothing installed permanently,
-nothing mutated, nothing left behind. Success is a visitor understanding, in
-seconds, that they can summon exactly the skills they need for a session and
-otherwise run at a measured, honest floor.
+Skill Heaven governs an AI agent's **skill entropy** — the disorder a skill
+loadout adds to a session's context (N11). The whole product is one **entropy
+ladder** (`off · low · med · high · xhigh · max · ultra`): a clean, low-entropy
+context at the bottom, a rich, high-entropy one at the top, with quality and
+cost rising together as you climb. It composes a benchmarked skill surface at
+launch — nothing installed permanently, nothing mutated, nothing left behind.
+Success is a visitor understanding, in seconds, that they can summon exactly the
+skills they need for a session and otherwise run at a measured, honest `off`
+(the product-floor).
 
 ## Positioning
 
-The mechanism a neighbor can't truthfully copy: a per-skill **Hell/Heaven (HH)
-Index** — every skill benchmarked, not guessed — plus a launcher that *composes
+The thesis is the **entropy curve** — how quality and cost move together along
+the skill-entropy axis (N11/B6) — *not* a single token-savings headline. Real
+measured figures are cited as evidence, never as the claim. The mechanism a
+neighbor can't truthfully copy: a per-skill **Hell/Heaven (HH) Index** — every skill benchmarked, not guessed — plus a launcher that *composes
 flags and execs; it never stashes, restores, or mutates shared state*. The only
 writes live in a disposable session dir (crash-safe by construction). Doses are
 always reported as two numbers (standing, paid every session; invocation, paid
@@ -37,18 +43,37 @@ on invoke), never averaged into one.
 Used from the terminal inside a coding-agent harness. Install a per-harness
 "door" (Claude's is the flagship `claude-heaven`; Pi is the vanguard; Codex and
 others are recipe-track). Invoke `/skill-heaven` to summon a posture; launch
-`claude-heaven` to enter; `/skill-hell` is a visible but **locked** door.
+`claude-heaven` to enter; `/skill-hell` is a visible but **locked** door. The
+public site lives at **`skill-heaven.dev`**, served from `packages/site` inside
+the `skill-heaven` monorepo (N12).
 
 ## Capabilities and Constraints
 
-- **Posture slider:** floor (doorless benchmark floor, the placebo-of-record) →
-  product-floor (doorful, minimum control surface, +515 tok, −28.9% vs native) →
-  curated (a clean room with exactly the skills you summon) → native (nothing
-  composed; exiting Heaven is just switching back).
-- **Hell is gated (P2):** every surface hard-errors on med|high|xhigh|max;
-  `/skill-hell` is a locked door shown in all modes, not an activator.
+- **The entropy ladder:** one axis measuring skill entropy —
+  `off · low · med · high · xhigh · max · ultra`. Heaven is the low-entropy
+  region (`off · low · med`), Hell the high-entropy region (`high · xhigh ·
+  max`), `ultra` above; up the ladder quality and cost rise together (N11).
+  Mode (Heaven / Hell / Ultra) is a *region* of the ladder, not a second dial.
+  The rungs are discrete, never a continuous fader.
+- **User-facing postures:** product-floor (`off` — the cleanest *launchable*
+  posture, +515 tok, −28.9% vs native) → curated (a clean base plus a
+  hand-picked fraction of your own skills) → native (nothing composed; exiting
+  Heaven is just switching back). The absolute-zero benchmark `floor` is an
+  internal ruler only — never a user-facing row or choice (P8).
+- **Hell is mixture-of-agents for skills, and gated (P2):** the hell lane
+  routes through **gaia mcp** — the deterministic router (D5) — so more
+  summoned skills means more experts in context: better but costlier, raising
+  skill entropy until it isn't worth it. Every surface hard-errors on
+  high|xhigh|max (and ultra); `/skill-hell` is a locked door shown in all
+  modes, not an activator.
 - **Never mutate shared state (P3):** compose + exec only; writes confined to a
   disposable mkdtemp session dir.
+- **Free, with `gaia mcp` bundled (C1/C2):** the doors, the engine, and the
+  `gaia mcp` transport cost nothing; `gaia mcp` defaults to the Gaia Skill Tree
+  as its skill source, no configuration required. Custom / private (non-Gaia)
+  skill trees are a separate, in-progress enterprise product paywalled per MCP
+  usage (C4, working name reserved); whether the free tier is metered is
+  deliberately undecided (C3) — no paywall sits on the free path.
 - Per-harness support varies: Claude/Pi have probed clean surfaces; Codex is
   recipe-track (mechanism proven, surface not yet a clean floor); Grok refuses
   rather than guesses.
@@ -58,9 +83,12 @@ others are recipe-track). Invoke `/skill-heaven` to summon a posture; launch
 
 - Name: **Skill Heaven**; system verbs **summon** (skills), **enter** (a door),
   **break loose** (hell, when it opens).
-- Mascot/figure: **Lucy, the Skill Angel** — in Heaven a luminous, translucent
-  glass-shard angel with prismatic/holographic detail, single oversized wing,
-  and an angel katana; in Hell, a fallen-angel inversion.
+- Persona/figure: **the Skill Angel (public name reserved)** — the line's own
+  persona, distinct from Milim (the Gaia Research lab mascot, N7). Its design is
+  final: in Heaven a luminous, translucent glass-shard angel with
+  prismatic/holographic detail, single oversized wing, and an angel katana; in
+  Hell, a fallen-angel inversion. The public name is undecided and reserved — no
+  user-facing copy or shipped code may hard-code one (N7).
 - Duality: **Heaven ↔ Hell** as the core tension — restraint vs power, the fall
   vs the discipline of not falling. Hell being *gated and visibly so* is a
   product value, not a limitation to hide.
@@ -75,9 +103,11 @@ others are recipe-track). Invoke `/skill-heaven` to summon a posture; launch
   −28.9% vs native) are measured benchmark results, not marketing estimates.
 - Real commands and install flows (`claude plugin marketplace add …`,
   `/skill-heaven`, `claude-heaven`, `/skill-hell`).
-- No customer testimonials, logos, pricing, or press exist yet — future work
-  must not fabricate them.
-- Concept art pegs for Lucy (Heaven and Hell) supplied by the owner as visual
+- No customer testimonials, logos, or press exist yet — future work
+  must not fabricate them. Skill Heaven and Skill Hell are **free** (C1); no paid
+  tier, metering, or enterprise pricing has shipped and the free-tier meter is
+  undecided (C3) — do not present any paywall as live.
+- Concept art pegs for the Skill Angel (Heaven and Hell) supplied by the owner as visual
   reference; not licensed production assets — recreate motifs, don't ship the
   reference images.
 
@@ -91,6 +121,9 @@ others are recipe-track). Invoke `/skill-heaven` to summon a posture; launch
 4. **The doors are the product; the engine is the research instrument.**
 5. **Empirical before load-bearing.** Nothing ships ahead of a probe on a
    pinned harness version.
+6. **One entropy ladder.** The user-facing control is a single skill-entropy
+   axis; modes are regions of it, not a separate dial (N11). Up the ladder,
+   quality and cost rise together.
 
 ## Accessibility & Inclusion
 

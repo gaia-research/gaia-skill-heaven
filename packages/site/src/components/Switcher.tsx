@@ -9,7 +9,7 @@ const VARIATIONS = [
   { to: '/manifesto', label: 'Manifesto', hint: 'Wood-type · imperative verbs · slice destroys grid' },
   { to: '/instrument', label: 'Instrument', hint: 'Nixie counter · honest two-number dosing' },
   { to: '/onebit', label: 'One-Bit', hint: 'One-bit OS · invert is the material' },
-  { to: '/prism', label: 'Prism', hint: 'Luminance · prismatic · Lucy' },
+  { to: '/prism', label: 'Prism', hint: 'Luminance · prismatic · Skill Angel' },
   { to: '/default', label: 'Default', hint: 'White on black · restraint' },
 ]
 
