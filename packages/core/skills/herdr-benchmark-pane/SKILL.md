@@ -1,96 +1,176 @@
 ---
 name: herdr-benchmark-pane
-description: Launch interactive benchmark targets and agent CLI sessions (Claude, claude-heaven, pi-heaven) in a right side-by-side terminal pane using Herdr socket API when operating inside a Herdr terminal multiplexer environment. Use whenever running benchmark probes, side-by-side agent evaluations, or launching Claude inside Herdr.
+description: Run Skill Heaven benchmark probes and side-by-side posture comparisons in visible Herdr panes. Use whenever comparing postures (floor, product-floor, curated, native), doors (claude-heaven, pi-heaven, codex-heaven), or harnesses, and the operator must be able to watch every arm run.
 ---
 
-# Herdr Benchmark & Side-Pane Launcher
+# Herdr Benchmark Pane — side-by-side posture comparison
 
-Use this skill whenever you need to open an interactive target agent (`claude`, `claude-heaven`, `pi-heaven`, `codex`) or run a benchmark probe inside a **Herdr** terminal multiplexer environment.
+Benchmarking is only useful if the operator can see every arm running. This skill covers
+laying out comparison arms in visible panes and collecting their output.
 
-## Hard Rules
-
-1. **Right-Pane Isolation**: All benchmark runs, interactive probes, or secondary agent windows MUST open in a vertical split on the **RIGHT** (`--direction right --ratio 0.5`) of the controlling main window. Never replace or overwrite the controlling agent's active terminal pane.
-2. **Socket-Driven Control**: Always use Herdr's CLI socket interface (`herdr pane split`, `herdr pane send-text`, `herdr pane read`) to orchestrate panes programmatically.
-3. **Pristine Environment**: Ensure workspace directory (`--cwd`) is specified explicitly on split to prevent state leakage across panes.
+For **dispatching coding workers**, use the `herdr-dispatch` skill instead. This one is for
+**measurement**.
 
 ---
 
-## 1. Environment Detection
+## Hard rules
 
-Before attempting pane operations, verify that the Herdr server and socket are responsive:
+1. **Every arm is visible.** One pane per arm, all on screen together. An arm that ran
+   off-screen is not evidence anyone can check.
+2. **Explicit `--cwd` on every split.** Prevents state leaking between arms.
+3. **Never take over the controlling pane.** The orchestrator's pane stays the orchestrator's.
+4. **Arms are priced separately, never averaged.** The doorless benchmark floor and the
+   doorful product floor are different objects (founder ruling V5-5) — do not fold one
+   into the other, and do not report a single blended "floor" number.
+5. **Never report a measurement you did not take.** If an arm did not run, say it did not run.
+
+---
+
+## 0. Verify the environment
 
 ```bash
 herdr status
 ```
 
-If `server.status` is `running` and socket `/Users/marcotiongson/.config/herdr/herdr.sock` exists, proceed with Herdr socket operations.
+Proceed only if `server.status: running`.
 
 ---
 
-## 2. Launching Claude / Target Agent in a Right Side Pane
+## 1. Paths
 
-### Step 1: Query the active main pane
-```bash
-herdr pane current
+The checkout is at `/Users/marcotiongson/skill-heaven`. Door entrypoints:
+
 ```
-*Extract the `pane_id` of the controlling window (e.g. `w1:p3`).*
-
-### Step 2: Split current pane to the right
-```bash
-herdr pane split <MAIN_PANE_ID> --direction right --ratio 0.5 --cwd "$(pwd)"
-```
-*Returns the new right `pane_id` (e.g. `w1:pA`).*
-
-### Step 3: Launch Claude Code or `claude-heaven`
-
-To launch standard Claude Code:
-```bash
-herdr pane send-text <RIGHT_PANE_ID> $'claude\n'
+packages/claude-heaven/bin/claude-heaven.mjs
+packages/pi-heaven/bin/pi-heaven.mjs
+packages/core/bin/skill-heaven.mjs
 ```
 
-To launch `claude-heaven` clean posture:
-```bash
-herdr pane send-text <RIGHT_PANE_ID> $'node /Users/marcotiongson/Documents/skill-heaven/packages/claude-heaven/bin/claude-heaven.mjs\n'
-```
+Resolve these relative to the repo root rather than hardcoding an absolute path — the
+checkout location has moved before and stale absolute paths silently break this skill.
 
-To launch with a specific model (e.g. Opus or Sonnet):
 ```bash
-herdr pane send-text <RIGHT_PANE_ID> $'node /Users/marcotiongson/Documents/skill-heaven/packages/claude-heaven/bin/claude-heaven.mjs --model opus\n'
+REPO="$(git -C . rev-parse --show-toplevel)"
 ```
 
 ---
 
-## 3. Interacting with the Right Pane
+## 2. Lay out the arms
 
-### Inject Prompts / Input
-```bash
-herdr pane send-text <RIGHT_PANE_ID> $'Your prompt here\n'
-herdr pane send-keys <RIGHT_PANE_ID> Enter
-```
+Orchestrator on the left, arms stacked on the right:
 
-### Inspect Output & Terminal Buffer
 ```bash
-herdr pane read <RIGHT_PANE_ID>
-```
+# arm A
+ARM_A=$(herdr pane split --current --direction right --ratio 0.5 --cwd "$REPO" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
 
-### Focus the Right Pane
-```bash
-herdr pane focus <RIGHT_PANE_ID>
-```
-
-### Teardown / Close Pane when Complete
-```bash
-herdr pane close <RIGHT_PANE_ID>
+# arm B, stacked under A
+ARM_B=$(herdr pane split "$ARM_A" --direction down --ratio 0.5 --cwd "$REPO" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
 ```
 
 ---
 
-## 4. Multi-Agent Benchmark Suite Pattern
+## 3. Non-interactive probes — `pane run`
 
-When executing side-by-side comparative benchmarks across postures (e.g. `claude-heaven` vs `native` vs `pi-heaven`):
+For a probe that runs and exits, `pane run` is simpler than starting an agent:
 
-1. **Tab 1 / Left Pane:** Orchestration & Telemetry Controller (Main Agent).
-2. **Right Pane 1 (`--direction right`):** Benchmark Target A (`claude-heaven` posture).
-3. **Right Pane 2 (`--direction down` on Pane 1):** Benchmark Target B (`pi-heaven` or baseline posture).
+```bash
+herdr pane run "$ARM_A" node packages/claude-heaven/bin/claude-heaven.mjs --print
+herdr pane run "$ARM_B" node packages/claude-heaven/bin/claude-heaven.mjs --posture product-floor --print
+```
 
-This layout maintains a clean visual matrix in Herdr while allowing the controlling agent to read output buffers, stream events, and measure standing-dose context bloat across all panes concurrently.
+Read the results:
+
+```bash
+herdr pane read "$ARM_A"
+herdr pane read "$ARM_B"
+```
+
+`--print` emits the compiled plan (argv, env, fsPlan, doseSummary) **without spawning the
+harness**. This is the cheapest way to compare compositions and it costs no model tokens.
+
+---
+
+## 4. Interactive arms — `agent start`
+
+When the arm must be a live session:
+
+```bash
+herdr agent start arm-native --kind claude --pane "$ARM_A" --timeout 120000 \
+  -- --model sonnet
+
+herdr agent start arm-heaven --kind claude --pane "$ARM_B" --timeout 120000 \
+  -- --model sonnet
+```
+
+For a door-launched arm, start a plain shell pane and `pane run` the door binary — the door
+execs the harness itself, so let it do that rather than starting the harness first.
+
+Send the same probe to every arm so the comparison is fair:
+
+```bash
+PROBE="List every skill you have available, by name. If none, say NONE."
+herdr agent prompt arm-native "$PROBE" --wait --until idle --timeout 300000
+herdr agent prompt arm-heaven "$PROBE" --wait --until idle --timeout 300000
+```
+
+Collect:
+
+```bash
+herdr agent read arm-native
+herdr agent read arm-heaven
+```
+
+---
+
+## 5. Standard comparison matrix
+
+| Arm | Command | What it prices |
+|---|---|---|
+| native | `claude-heaven --posture native --print` | the unmodified harness |
+| benchmark floor | `skill-heaven --posture floor --print` | doorless absolute zero — placebo-of-record |
+| product floor | `claude-heaven --posture product-floor --print` | the nearest launchable zero, door open |
+| curated | `claude-heaven --posture curated --skill <dir> --print` | a chosen skill set and nothing else |
+
+The gap between benchmark floor and product floor **is** the door's cost. Report it as its
+own number; never let either floor stand in for the other.
+
+---
+
+## 6. Cross-harness arms
+
+Same probe, different harness, one pane each:
+
+```bash
+herdr pane run "$ARM_A" node packages/claude-heaven/bin/claude-heaven.mjs --posture curated --skill "$SKILL" --print
+herdr pane run "$ARM_B" node packages/pi-heaven/bin/pi-heaven.mjs --posture curated --skill "$SKILL" --print
+```
+
+Harness versions must be recorded with any result — a dose measured on one version does not
+carry to another. Capture them:
+
+```bash
+claude --version; pi --version; codex --version; hermes --version; grok --version
+```
+
+---
+
+## 7. Recording a result
+
+`packages/core/src/record.ts` assembles an `hh-ledger/v1` record via `--record`. Use it rather
+than hand-writing numbers into a document.
+
+Any recorded result must carry: harness name **and version**, date, posture, the exact argv,
+and the observed dose. A result missing its harness version is not admissible.
+
+---
+
+## 8. Teardown
+
+```bash
+herdr pane close "$ARM_A"
+herdr pane close "$ARM_B"
+```
+
+Leave panes open while their output is still evidence the operator has not reviewed.
