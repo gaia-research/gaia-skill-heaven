@@ -148,15 +148,18 @@ export function compile(input: CompileInput): CompileResult {
         "the benchmark floor is doorless by ruling (V5-5/B2) and curated mounts its own set",
     );
   }
-  // M0 discipline: the doorful floor exists as a measured cell on claude only
-  // (F7, 2.1.216). No other harness has a probed doorless/doorful distinction,
-  // so refuse rather than guess one into existence (D8).
-  if (posture === "product-floor" && harness !== "claude") {
+  // M0 discipline: the doorful floor exists as a measured cell on claude (F7,
+  // 2.1.216) and, as of WP2 (PROBE.md, pi 0.83.0, probed 2026-08-07), pi. No
+  // other harness has a probed doorless/doorful distinction, so refuse rather
+  // than guess one into existence (D8).
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi"];
+  if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no verified cell for harness ${harness} — only claude was probed (F7, 2.1.216). ` +
-        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has " +
-        "verified whether this composes here at all, so there is nothing to withhold or grant a key to. " +
-        "Refusing to guess (M0 discipline); use --posture floor, or add the row to the harness capability matrix first.",
+      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216) and ` +
+        "pi (PROBE.md, 0.83.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
+        "Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
+        "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
+        "to the harness capability matrix first.",
     );
   }
 
@@ -336,16 +339,47 @@ function compilePi(
   // pi 0.80.10 quirk (verified 2026-07-19): `--no-skills` immediately followed
   // by `-p` silently loses the suppression (vanilla listing returned); any
   // other ordering yields NONE. Tail args therefore go FIRST.
+  //
+  // CORRECTION (2026-08-07, WP2, packages/pi-heaven/PROBE.md, pi 0.83.0):
+  // re-probed before writing any door code (M0 discipline), per the dispatch
+  // brief's explicit instruction not to silently "fix" this comment on
+  // assumption. Argv order does NOT matter on 0.83.0 — `--no-skills` before
+  // vs. after `-p --no-session` both measured ~4371 totalTokens (repeated)
+  // against an 11271-token unsuppressed baseline, via `--mode json`'s real
+  // token usage (the free-text "list your skills" self-report the quirk was
+  // originally diagnosed with turned out to confabulate under a cheap model
+  // and was NOT used as evidence — see PROBE.md's method note). The 0.80.10
+  // quirk is real history and is not reproduced on 0.83.0. Tail-args-first is
+  // left in place below anyway: it remains correct (harmless-neutral) on
+  // 0.83.0, and `floor`'s route is byte-frozen as the placebo-of-record — this
+  // is the honest correction, not a silent rewrite.
   const argv: string[] = [...tailArgs(input, "pi")];
   const notes = [
     ...base.notes,
-    "pi argv ordering is load-bearing: `--no-skills -p` (adjacent) drops suppression on pi 0.80.10 — launcher emits -p before the skill flags.",
+    "pi argv ordering is load-bearing: `--no-skills -p` (adjacent) drops suppression on pi 0.80.10 — launcher emits -p before the skill flags. CORRECTION (2026-08-07, PROBE.md): re-probed on pi 0.83.0 before writing any door code — order no longer matters there (--no-skills before vs. after -p/--no-session both measured ~4371 totalTokens vs an 11271 baseline, --mode json ground truth). The quirk does not reproduce on 0.83.0; kept here as the historical 0.80.10 finding, not current guidance.",
   ];
   if (input.posture === "floor") {
     argv.push("--no-skills");
   } else if (input.posture === "curated") {
     argv.push("--no-skills");
     for (const s of input.skills) argv.push("--skill", s.dir);
+  } else if (input.posture === "product-floor") {
+    // product-floor (WP2, PROBE.md, pi 0.83.0, probed 2026-08-07) = the
+    // nearest achievable zero a user can actually launch at, with the door
+    // still open: `--no-skills` + `--no-context-files` + `--no-prompt-templates`,
+    // leaving extensions untouched (no `--no-extensions`) since extensions are
+    // pi's door surface (an extension is how a `/skill-heaven`-equivalent
+    // command would be registered here; suppressing them would close the
+    // door, same reasoning as claude's product-floor keeping slash commands).
+    // Measured in PROBE.md (this repo's cwd, which has a tracked 5608-byte
+    // CLAUDE.md and no prompt-template files): unsuppressed baseline 11271
+    // totalTokens → --no-skills alone 4371 → + --no-context-files 2831 (a
+    // further ~1540, isolated to CLAUDE.md discovery) → + --no-prompt-templates:
+    // no additional measured delta in THIS repo (no prompt-template files
+    // here to suppress — not a claim the flag is a no-op elsewhere). These
+    // are cwd-and-date-specific measurements, not a general dose claim;
+    // re-probe before citing any of them as a benchmark arm.
+    argv.push("--no-skills", "--no-context-files", "--no-prompt-templates");
   }
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }

@@ -60,10 +60,10 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
 
   // grok only compiles at posture "native" (M0 discipline — no verified
   // suppression mechanism); product-floor only compiles for harness "claude"
-  // (F7 — only claude was probed). Everything else in POSTURES x HARNESSES is
-  // expected to compile.
+  // (F7) and "pi" (WP2, PROBE.md, 0.83.0) — only those two were probed.
+  // Everything else in POSTURES x HARNESSES is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
-    if (posture === "product-floor" && harness !== "claude") return true;
+    if (posture === "product-floor" && harness !== "claude" && harness !== "pi") return true;
     if (harness === "grok" && posture !== "native") return true;
     return false;
   }
@@ -187,7 +187,7 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
   function materializeEverything(): void {
     for (const posture of POSTURES) {
       for (const harness of HARNESSES) {
-        if (posture === "product-floor" && harness !== "claude") continue;
+        if (posture === "product-floor" && harness !== "claude" && harness !== "pi") continue;
         if (harness === "grok" && posture !== "native") continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {

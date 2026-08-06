@@ -146,7 +146,10 @@ describe("the floor split (V5-5)", () => {
   });
 
   it("product-floor has no verified cell on any other harness — it refuses rather than guesses (M0/D8)", () => {
-    for (const h of ["pi", "codex", "cursor", "grok"] as const) {
+    // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
+    // 0.83.0, 2026-08-07) — see the "pi mappings" describe block below for its
+    // composition. codex/cursor/grok remain unprobed for this posture.
+    for (const h of ["codex", "cursor", "grok"] as const) {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
@@ -158,7 +161,7 @@ describe("the floor split (V5-5)", () => {
   it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
     let msg = "";
     try {
-      compile({ posture: "product-floor", harness: "pi", skills: [] });
+      compile({ posture: "product-floor", harness: "codex", skills: [] });
     } catch (e) {
       msg = (e as Error).message;
     }
@@ -177,6 +180,13 @@ describe("pi mappings", () => {
     const r = compile({ posture: "curated", harness: "pi", skills: [fakeSkill] });
     expect(r.argv).toEqual(["--no-skills", "--skill", "/skills/impeccable"]);
     expect(r.execSupport).toBe("exec");
+  });
+  it("product-floor = --no-skills + --no-context-files + --no-prompt-templates, extensions untouched (WP2, PROBE.md, 0.83.0)", () => {
+    const r = compile({ posture: "product-floor", harness: "pi", skills: [] });
+    expect(r.argv).toEqual(["--no-skills", "--no-context-files", "--no-prompt-templates"]);
+    expect(r.argv).not.toContain("--no-extensions"); // extensions are pi's door surface — left alive
+    expect(r.execSupport).toBe("exec");
+    expect(r.fsPlan).toEqual([]);
   });
   it("native = nothing", () => {
     expect(compile({ posture: "native", harness: "pi", skills: [] }).argv).toEqual([]);
