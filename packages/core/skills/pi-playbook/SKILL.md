@@ -70,7 +70,13 @@ pi --tools read,grep,find,ls -p "Review the code in src/"
 | `--no-context-files` | suppress `AGENTS.md` / `CLAUDE.md` discovery |
 | `--no-prompt-templates` | suppress prompt templates |
 | `--no-tools` / `--tools <list>` / `--exclude-tools <list>` | tool surface |
-| `--thinking <level>` | reasoning dose |
+
+> **`--thinking` is NOT a Skill Heaven mechanism.** It sets how hard the *model* reasons. The
+> Skill Heaven ladder is **skill- and context-scoped** — what is admitted into the session — and
+> is a different axis entirely. The two share level names (`off`, `low`, `medium`, `high`,
+> `xhigh`, `max`) purely by coincidence of vocabulary, and conflating them will produce
+> meaningless benchmark arms. Hold `--thinking` **constant** across arms; it is a control
+> variable, never the thing under test.
 
 The curated posture is `--no-skills` followed by one `--skill <dir>` per admitted skill.
 This is a native primitive, not a workaround — it is why pi is the cleanest door to build after

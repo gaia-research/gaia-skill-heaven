@@ -45,6 +45,11 @@ codex exec --model gpt-5.6-luna -c model_reasoning_effort=low "..."
 
 Reasoning effort defaults to **max**, which is expensive — set it explicitly on every probe.
 
+> **Reasoning effort is NOT a Skill Heaven posture.** It sets how hard the *model* reasons. The
+> Skill Heaven ladder is **skill- and context-scoped** — what is admitted into the session. The
+> two are different axes that happen to share level names. Hold reasoning effort **constant**
+> across benchmark arms; it is a control variable, never the thing under test.
+
 Session guinea pig — "Luna Light":
 
 ```bash
