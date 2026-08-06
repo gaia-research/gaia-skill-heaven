@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { HEADLINE, COMMANDS, CTA } from '../content'
 import { HarnessChooser } from '../components/HarnessChooser'
-import { PostureSlider } from '../components/PostureSlider'
+import { EntropyLadder } from '../components/EntropyLadder'
 import { PrismDefs, GlassWing, AngelKatana, Halo } from '../components/Art'
 import './variation-overdrive.css'
 
@@ -148,11 +148,11 @@ export function VariationOverdrive() {
         <div className="vo-section__head">
           <h3>Choose how clean you run.</h3>
           <p>
-            Slide from the doorless benchmark floor to your native harness. Every
+            Climb from off to your native harness. Every
             stop is priced honestly — standing and invocation, never one number.
           </p>
         </div>
-        <PostureSlider />
+        <EntropyLadder />
       </section>
 
       {/* ── Harness ── */}

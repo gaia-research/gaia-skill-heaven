@@ -21,7 +21,7 @@ export type Lane = 'h' | 'x' | 'u'
 // Hell lane (gated, P2); Ultra is Hell in overdrive, past the token-ceiling
 // firebreak — always shown sealed, never an activator.
 export const LADDER: { label: string; lane: Lane; note: string }[] = [
-  { label: 'OFF', lane: 'h', note: 'floor · no skills, no door' },
+  { label: 'OFF', lane: 'h', note: 'off · cleanest launchable posture' },
   { label: 'LOW', lane: 'h', note: 'curated · only what you summon' },
   { label: 'MED', lane: 'h', note: 'native · your harness as shipped' },
   { label: 'HIGH', lane: 'x', note: 'hell · more surface, priced honestly' },
