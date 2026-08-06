@@ -9,7 +9,7 @@
     {
       "name": "claude-heaven",
       "source": "./packages/claude-heaven/plugin",
-      "description": "The Claude Code door to Skill Heaven — this marketplace install ships the /skill-heaven posture command only. The native-default launcher and standing-dose statusline live in the claude-heaven package's launcher, run from a source checkout — not part of this marketplace install. Built on skill-heaven core. WORK IN PROGRESS (WS4): /skill-hell, the locked Hell door, lands in step 3."
+      "description": "The Claude Code door to Skill Heaven — ships /skill-heaven (posture) and /skill-hell (prototype: summons a skill from the live Gaia registry into this session). Built on skill-heaven core."
     }
   ]
 }

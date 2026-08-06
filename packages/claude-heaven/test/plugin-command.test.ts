@@ -110,12 +110,16 @@ describe("door manifests", () => {
     }
   });
 
-  it("does not advertise /skill-hell as shipped — it lands in step 3", () => {
-    // P2 keeps /skill-hell a locked door, but the door must exist before the
-    // manifests name it as a surface the user can reach.
-    expect(existsSync(join(PLUGIN, "commands", "skill-hell.md"))).toBe(false);
+  it("now advertises /skill-hell now that the summon-engine command surface exists (WP3)", () => {
+    // The P2 gate this comment used to cite is the /skill-heaven posture
+    // ladder's "hell" row (a formal, benchmarked context-budget stop) — a
+    // separate concept from this prototype summon command, which the ladder
+    // row's own lockedNote already pointed to ("see /skill-hell") before
+    // this door existed. See NAMESPACE.md / docs/SKILL-HELL.md.
+    expect(existsSync(join(PLUGIN, "commands", "skill-hell.md"))).toBe(true);
     for (const description of [pluginJson.description, entry.description]) {
-      expect(description).toMatch(/step 3/);
+      expect(description).toContain("/skill-hell");
+      expect(description).not.toMatch(/step 3/);
     }
   });
 });
