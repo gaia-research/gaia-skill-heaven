@@ -12,6 +12,11 @@ suppressible from the command line, so a clean posture composes without mutating
 Verified against **codex-cli 0.146.0**. Re-check `codex --version` before trusting any dose
 measurement.
 
+> **Rule 0 — run codex in a herdr pane, never through your Bash tool.** The operator must be
+> able to see which model and reasoning effort you invoked. `herdr pane run "$PROBE_PANE" codex
+> exec --model … "probe"`, then `herdr pane read "$PROBE_PANE"`. See the `herdr-dispatch` skill.
+> A probe the operator could not see is not evidence.
+
 ---
 
 ## 1. Non-interactive invocation

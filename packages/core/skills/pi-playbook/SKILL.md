@@ -12,6 +12,11 @@ config-directory tricks.
 Verified against **pi 0.83.0**. Re-check `pi --version` before trusting any dose measurement;
 a flag's behaviour has changed across versions before (see §5).
 
+> **Rule 0 — run pi in a herdr pane, never through your Bash tool.** The operator must be able
+> to see which model you invoked. `herdr pane run "$PROBE_PANE" pi --model … "probe"`, then
+> `herdr pane read "$PROBE_PANE"`. See the `herdr-dispatch` skill. A probe the operator could
+> not see is not evidence.
+
 ---
 
 ## 1. Model selection

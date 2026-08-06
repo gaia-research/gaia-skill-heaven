@@ -14,6 +14,31 @@ for **read-only scouting**. Anything that writes code, commits, or opens a PR go
 
 ---
 
+## Rule 0 — every harness invocation runs in a pane
+
+**Never invoke `claude`, `pi`, `codex`, `hermes`, or `grok` through your Bash tool.**
+Run them in a herdr pane so the full argv — especially `--model` — appears on screen.
+
+A probe the operator could not see is not evidence. This applies to workers as much as to
+orchestrators, and it is the single most common thing a dispatched worker gets wrong.
+
+Create one probe pane and reuse it:
+
+```bash
+PROBE_PANE=$(herdr pane split --current --direction down --ratio 0.4 --cwd "$PWD" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
+
+herdr pane run "$PROBE_PANE" pi --model openai-codex/gpt-5.6-luna:low --print --no-session "probe text"
+herdr pane read "$PROBE_PANE"
+```
+
+Record the pane id alongside any result you rely on, so the run stays auditable.
+
+Ordinary shell work — `git`, `npm`, `node`, `curl`, file inspection — stays on the Bash tool.
+The rule is about **harness invocations**, where the model identity is the thing at stake.
+
+---
+
 ## 0. Verify the environment
 
 ```bash
