@@ -19,6 +19,20 @@ harness's channel, not this manifest. Two layers:
   (WS4); `pi-heaven` is the vanguard (WS5). Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
+**Core product model — one entropy ladder (N11).** The user-facing dial is a
+single axis, `off · low · med · high · xhigh · max · ultra`, measuring **skill
+entropy** — the disorder a skill loadout adds to a session's context. **Heaven
+is the low-entropy region** (`off · low · med`), **Hell the high-entropy
+region** (`high · xhigh · max`), **`ultra` above**; a mode is a *region* of the
+ladder, not a second orthogonal dial. Up the ladder quality and cost rise
+together — **Skill Hell routes summons through gaia mcp as a mixture-of-agents
+for skills** (D5), so more summoned skills mean more experts in context, better
+until it isn't. The benchmark shapes the **entropy curve** (quality and cost vs
+skill entropy), not a token-savings headline (B6); hell-safe eligibility is
+read from the Skill Tree stamps, not measured live. Public domain:
+[`skill-heaven.dev`](https://skill-heaven.dev), served from `packages/site`
+(N12).
+
 ## Layout
 
 ```
