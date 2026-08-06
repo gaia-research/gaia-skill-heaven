@@ -12,8 +12,8 @@ v01/slash-arc.png      2600 × 2600
 ```
 
 `v02/` and `v03/` contain the same five layer names and dimensions. The
-workbench sources and keyed intermediates live under `workbench/`; the files
-inside `v01/`, `v02/`, and `v03/` are the production handoff layers.
+Local workbench sources and keyed intermediates are ignored; the files inside
+`v01/`, `v02/`, and `v03/` are the production handoff layers.
 
 The final PNGs are grayscale-only RGBA with transparent corners and no baked
 background, shadow, or glow. The sword debris and impact arc are intentionally

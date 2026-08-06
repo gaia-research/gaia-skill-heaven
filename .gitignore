@@ -2,6 +2,11 @@ node_modules/
 dist/
 coverage/
 *.log
+
+# Commission workbench contains raw and intermediate assets; production files
+# live in the sibling v01/v02/v03 folders.
+packages/site/src/assets/hero-commission/workbench/
+
 .env
 .env.*
 .DS_Store

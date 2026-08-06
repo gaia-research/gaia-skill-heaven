@@ -38,8 +38,8 @@ in the hash route:
 ```
 
 The commissioned RGBA PNG layers live under
-`src/assets/hero-commission/v01/`, `v02/`, and `v03/`; the `workbench/` folder
-keeps the keyed source intermediates separate from the production handoff.
+`src/assets/hero-commission/v01/`, `v02/`, and `v03/`. Local commission
+workbench files are ignored; only the production handoff layers are routed.
 
 ## Run
 
