@@ -1,10 +1,20 @@
 {
   "name": "pi-heaven",
   "version": "0.0.0",
-  "description": "pi-heaven — the pi door to Skill Heaven (vanguard; WS5). Stub: name + intent only, no code claims yet.",
+  "description": "pi-heaven — the pi door to Skill Heaven: floor/product-floor/curated/native posture launcher built on pi's --no-skills / --skill primitives. Built on skill-heaven core. PROTOTYPE (WS5).",
   "private": true,
   "type": "module",
+  "bin": {
+    "pi-heaven": "./bin/pi-heaven.mjs"
+  },
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "launch": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "skill-heaven": "*"
   }
 }
