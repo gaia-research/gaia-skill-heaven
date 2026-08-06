@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Skill Heaven marketing landing page — prototype (3 hero variations behind a switcher). Vite + React + TS. Not a product package.",
+  "description": "Skill Heaven marketing landing page — Hero A production default with Hero B retained. Vite + React + TS. Not a product package.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

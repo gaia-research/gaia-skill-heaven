@@ -1,5 +1,5 @@
 import lucyHero from '../assets/lucy-hero.png'
-import { HeroAssetRouter, useHeroAssetVariation } from './hero/HeroAssetRouter'
+import { HERO_ASSETS } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
 
@@ -14,7 +14,7 @@ import './variation-hero.css'
 
 export function VariationHeroB() {
   const { v, dots, rungs, rootRef } = useHeroEngine('b')
-  const { assets, variation, selectVariation } = useHeroAssetVariation()
+  const assets = HERO_ASSETS
   const assetFilter = v.bg === '#FFFFFF' ? 'invert(1)' : 'none'
 
   return (
@@ -30,8 +30,6 @@ export function VariationHeroB() {
         color: v.fg,
       }}
     >
-      <HeroAssetRouter variation={variation} onChange={selectVariation} />
-
       <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, background: v.hair2 }} />
       <div aria-hidden="true" style={{ position: 'absolute', left: '8vw', top: 0, bottom: 0, width: 1, background: v.hair, transition: 'opacity calc(600ms * var(--vh-t)) linear', opacity: v.oGround }} />
       <div aria-hidden="true" style={{ position: 'absolute', right: '8vw', top: 0, bottom: 0, width: 1, background: v.hair, transition: 'opacity calc(600ms * var(--vh-t)) linear', opacity: v.oGround }} />
