@@ -1,6 +1,7 @@
-import lucyHero from '../assets/lucy-hero.jpg'
-import { useHeroEngine } from './hero/useHeroEngine'
-import './variation-hero.css'
+// ARCHIVED: Hero A — runner-up. Hero B won. Kept for reference.
+import lucyHero from '../../assets/lucy-hero.jpg'
+import { useHeroEngine } from '../hero/useHeroEngine'
+import './variation-hero.css' // archived alongside this file
 
 // ─────────────────────────────────────────────────────────────────────────
 // VARIATION: HERO A · REREDOS
