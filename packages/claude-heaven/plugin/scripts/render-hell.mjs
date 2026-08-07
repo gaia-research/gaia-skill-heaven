@@ -1,4 +1,4 @@
-// The /skill-hell renderer. Shells out to the gaia-hell summon engine
+// The /skill-hell renderer. Shells out to the skill-hell summon engine
 // (resolved by resolve-hell.mjs) for the user's intent, then prints the
 // minimal header the founder asked for — which skill was summoned, nothing
 // more — followed by the skill's real SKILL.md body, so the skill is
@@ -21,7 +21,7 @@ import { pathToFileURL } from "node:url";
 import { HellEngineNotFoundError, resolveHellEngine } from "./resolve-hell.mjs";
 
 const LABEL_WIDTH = 8;
-const PREFIX_WIDTH = 2 + LABEL_WIDTH + 2; // matches gaia-hell's own printSkillLine gutter
+const PREFIX_WIDTH = 2 + LABEL_WIDTH + 2; // matches skill-hell's own printSkillLine gutter
 const SUMMON_TIMEOUT_MS = 30_000;
 
 /** @param {number | undefined} value */
@@ -66,7 +66,7 @@ function renderFileCount(winner) {
 
 /** @param {{ query?: string, skipped?: Array<{ id: string, reason: string }> }} outcome @param {string} fallbackQuery */
 function renderNoMatch(outcome, fallbackQuery) {
-  const lines = [`gaia-hell: no skill could be summoned for "${outcome.query ?? fallbackQuery}".`];
+  const lines = [`skill-hell: no skill could be summoned for "${outcome.query ?? fallbackQuery}".`];
   for (const skip of outcome.skipped ?? []) {
     lines.push(`  skipped ${skip.id}: ${skip.reason}`);
   }
@@ -80,7 +80,7 @@ function renderNoMatch(outcome, fallbackQuery) {
 export function renderHell(argv) {
   const intent = argv.join(" ").trim();
   if (!intent) {
-    return { text: "gaia-hell: no intent given — usage: /skill-hell <intent>\n", ok: false };
+    return { text: "skill-hell: no intent given — usage: /skill-hell <intent>\n", ok: false };
   }
 
   let engine;
@@ -88,7 +88,7 @@ export function renderHell(argv) {
     engine = resolveHellEngine();
   } catch (error) {
     if (error instanceof HellEngineNotFoundError) return { text: `${error.message}\n`, ok: false };
-    return { text: `gaia-hell: could not resolve the summon engine: ${errorMessage(error)}\n`, ok: false };
+    return { text: `skill-hell: could not resolve the summon engine: ${errorMessage(error)}\n`, ok: false };
   }
 
   const result = spawnSync(engine.command, [...engine.args, "summon", intent, "--json"], {
@@ -98,7 +98,7 @@ export function renderHell(argv) {
 
   if (result.error) {
     return {
-      text: `gaia-hell: could not run the summon engine (${engine.binPath}): ${errorMessage(result.error)}\n`,
+      text: `skill-hell: could not run the summon engine (${engine.binPath}): ${errorMessage(result.error)}\n`,
       ok: false,
     };
   }
@@ -109,7 +109,7 @@ export function renderHell(argv) {
   } catch {
     const stderr = (result.stderr ?? "").trim();
     return {
-      text: `gaia-hell: engine returned unreadable output.${stderr ? `\n${stderr}` : ""}\n`,
+      text: `skill-hell: engine returned unreadable output.${stderr ? `\n${stderr}` : ""}\n`,
       ok: false,
     };
   }
@@ -127,7 +127,7 @@ export function renderHell(argv) {
     body = readFileSync(skillFile, "utf-8");
   } catch (error) {
     return {
-      text: `gaia-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${errorMessage(error)}\n`,
+      text: `skill-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${errorMessage(error)}\n`,
       ok: false,
     };
   }

@@ -30,7 +30,7 @@ resources or descend to a cleaner posture in a running conversation.
 
 ### `/skill-hell <intent>`
 
-Resolves the `gaia-hell` engine, summons the best matching skill, displays its
+Resolves the `skill-hell` engine, summons the best matching skill, displays its
 identity and install cost (timing always paired with cold/warm cache state), and
 injects the materialized `SKILL.md` body into the current model context. It then
 uses pi's `resources_discover` + `ctx.reload()` surface to add that skill natively
@@ -39,10 +39,10 @@ to the running session. The winner path is a directory; the extension loads
 
 Engine resolution order is:
 
-1. `$GAIA_HELL_BIN`
-2. `gaia-hell` on `PATH`
-3. `$GAIA_MCP_HOME/dist/bin/gaia-hell.js`
-4. `~/gaia-mcp/dist/bin/gaia-hell.js`
+1. `$SKILL_HELL_BIN`
+2. `skill-hell` on `PATH`
+3. `$GAIA_MCP_HOME/dist/bin/skill-hell.js`
+4. `~/gaia-mcp/dist/bin/skill-hell.js`
 
 ## Load the extension without the launcher
 
@@ -55,7 +55,7 @@ pi --extension packages/pi-heaven/extension/pi-heaven.ts
 Or install the package through pi's package channel and let its `pi.extensions`
 manifest load the same file. Without a launcher manifest, `/skill-heaven`
 honestly reports a vanilla pi session; `/skill-hell` remains available because
-it does not depend on posture handoff. When no `GAIA_HELL_SESSION` is supplied,
+it does not depend on posture handoff. When no `SKILL_HELL_SESSION` is supplied,
 the extension creates one for the life of the pi process so materialized skill
 directories survive resource reloads, then closes it when pi quits.
 
