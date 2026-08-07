@@ -219,9 +219,9 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     handler: async (_args, ctx) => {
       const { manifest, error } = loadManifest();
       const loadedSkillCount = ctx.getSystemPromptOptions().skills?.length ?? 0;
-      pi.appendEntry(outputEntry, {
-        content: renderPosture(manifest, loadedSkillCount, error),
-      });
+      const rendered = renderPosture(manifest, loadedSkillCount, error);
+      pi.appendEntry(outputEntry, { content: rendered });
+      ctx.ui.setWidget(outputEntry, rendered.split("\n"));
     },
   });
 
@@ -285,9 +285,11 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         return;
       }
 
-      const rendered = `${renderSummonedHeader(winner)}\n\n${body}`;
+      const header = renderSummonedHeader(winner);
+      const rendered = `${header}\n\n${body}`;
       pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
       pi.appendEntry(outputEntry, { content: rendered });
+      ctx.ui.setWidget(outputEntry, header.split("\n"));
       pi.sendMessage({
         customType: messageType,
         content: rendered,
