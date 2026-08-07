@@ -207,11 +207,44 @@ Leave a pane open if its output is still evidence the operator has not reviewed.
 
 ---
 
-## 6. Anti-patterns
+## 6. Fan-out inside a worker
+
+**Two herdr pane workers at a time** is the orchestrator's limit and it does not change. But a
+`pi` worker may fan out **inside** its own pane to `worker-luna` subagents for mechanical work.
+That does not add a third pane worker — it parallelises within one.
+
+```
+subagent tool, parallel mode:
+  { tasks: [ { agent: "worker-luna", task: "..." }, { agent: "worker-luna", task: "..." } ] }
+```
+
+`worker-luna` is GPT-5.6 Luna Medium in an isolated context window. A single call takes at most
+8 tasks and runs 4 concurrently — batch anything larger.
+
+**Fan out the mundane:** run one probe cell, repeat a cell to check reproducibility, count
+entries in a file, enumerate flags from `--help`, grep a tree for a symbol.
+
+**Keep centrally:** deciding what to probe, interpreting results, judging whether a finding
+licenses a claim, and all authorship — `PROBE.md`, compile routes, door code.
+
+This is the shape that pays off in probe campaigns: the campaign is mostly repetition, the
+conclusions are not. Give each task the exact argv and the exact value to report back — a task
+told to "investigate X" returns prose; one told to "run this twice and report the integer after
+`Total:`" returns data.
+
+A fan-out is visible in its parent's pane, which is how Rule 0 survives a nesting level.
+**Never move work off-pane in order to parallelise it.**
+
+---
+
+## 7. Anti-patterns
 
 - **Dispatching real work to a hidden in-harness subagent.** Scouting only.
 - **Omitting `--cwd` on split.** The worker inherits your directory and edits the wrong tree.
 - **A brief with no return shape.** You get a wall of prose instead of a result.
 - **Batching commits.** A worker that dies with uncommitted work loses all of it.
-- **More than two concurrent workers.** Panes get unreadable and review quality drops.
+- **More than two concurrent pane workers.** Panes get unreadable and review quality drops.
+  Parallelise with fan-out inside a worker (§6), not with a third pane.
+- **Fanning out judgement.** A `worker-luna` asked to decide something will decide it confidently
+  and you will not know it was wrong until it is expensive.
 - **Re-doing a worker's output yourself.** Fix the brief and re-dispatch, or send a follow-up.

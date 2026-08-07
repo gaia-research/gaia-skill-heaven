@@ -74,6 +74,45 @@ Full detail: `packages/core/skills/herdr-dispatch/SKILL.md`.
 self-reported token counts — it reads persisted harness session logs and prices against
 LiteLLM's catalog. See `packages/core/skills/cost-measurement/SKILL.md`.
 
+## Fan-out — parallelise mechanical probes, keep judgement central
+
+Probe campaigns are the slow part of building a door, and most of a campaign is **mundane**:
+run this argv, count the skills, repeat it twice, report the number. That work parallelises.
+Deciding *what* to probe and *what the result means* does not.
+
+**If you are a `pi` worker, you may fan out to `worker-luna` subagents for mechanical probe
+work.** There is no cap on how many you use across a task.
+
+```
+subagent tool, parallel mode:
+  { tasks: [ { agent: "worker-luna", task: "..." }, { agent: "worker-luna", task: "..." } ] }
+```
+
+`worker-luna` is GPT-5.6 Luna Medium in an isolated context. The extension caps a single call at
+8 tasks with 4 running concurrently — batch larger sweeps.
+
+**What to fan out:** running one probe cell, repeating a cell to check reproducibility, counting
+entries in a snapshot file, enumerating flags from `--help`, checking whether a path exists,
+grepping a source tree for a symbol.
+
+**What NOT to fan out — this stays with you:**
+
+- deciding which cells the probe campaign needs
+- interpreting a result, especially a negative one
+- judging whether a finding licenses `execSupport: "exec"`
+- writing `PROBE.md`, the compile route, or any door code
+- anything where being wrong is expensive and being fast is not valuable
+
+Give each fan-out task the **exact argv** and the **exact thing to report back**. A subagent
+asked to "investigate skill suppression" will return prose; one asked to "run this command twice
+and report the integer after `Total:` from each run" returns data you can use.
+
+**Visibility still holds.** A fan-out runs inside your pane, so the operator sees it — that is
+what keeps Rule 0 intact through a nesting level. Do not move work off-pane to parallelise it.
+
+Orchestrator-level concurrency is unchanged: **two herdr pane workers at a time.** Fan-out
+happens *inside* one of those two, it does not add a third.
+
 ## Non-negotiables (decision authority: `gaia-research/founder/RATIFICATION.md`)
 
 - **M0 discipline** — nothing load-bearing ships ahead of an empirical probe on
