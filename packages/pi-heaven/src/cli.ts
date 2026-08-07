@@ -5,9 +5,10 @@
 // plan without spawning pi (and without needing pi installed).
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
@@ -15,6 +16,32 @@ import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js
 // consistent, verified working against pi 0.83.0 (PROBE.md). Only applied
 // when the caller does not pass --model.
 const DEFAULT_MODEL = "openai-codex/gpt-5.6-luna:low";
+const PROFILE_ENV = "PI_HEAVEN_PROFILE";
+const PROFILE_FILE = "pi-heaven-profile.json";
+const BUNDLED_EXTENSION = join(dirname(fileURLToPath(import.meta.url)), "..", "extension", "pi-heaven.ts");
+
+function piArgsWithDoor(posture: string, piArgs: string[]): string[] {
+  // The benchmark floor is intentionally doorless. Do not add the extension
+  // there: changing that route would invalidate the placebo-of-record.
+  return posture === "floor" ? piArgs : ["--extension", BUNDLED_EXTENSION, ...piArgs];
+}
+
+function profileManifest(plan: ReturnType<typeof planLaunch>): string {
+  return `${JSON.stringify(
+    {
+      schema: "pi-heaven/profile@1",
+      posture: plan.posture,
+      command: plan.command,
+      argv: plan.argv,
+      // Native admits ambient skills that the launcher does not enumerate.
+      // The extension reports pi's live loaded count instead of calling zero.
+      admittedSkillCount: plan.posture === "native" ? null : plan.skillCount,
+      notes: plan.notes,
+    },
+    null,
+    2,
+  )}\n`;
+}
 
 interface CliArgs {
   print: boolean;
@@ -95,7 +122,7 @@ export function run(argv: string[]): number {
         skillPaths: args.skills,
         model,
         sessionDir: "$SESSION",
-        piArgs: args.piArgs,
+        piArgs: piArgsWithDoor(posture, args.piArgs),
       });
     } catch (e) {
       process.stderr.write(`pi-heaven: ${(e as Error).message}\n`);
@@ -108,7 +135,10 @@ export function run(argv: string[]): number {
           skillCount: plan.skillCount,
           command: plan.command,
           argv: plan.argv,
-          env: plan.env,
+          env:
+            posture === "floor"
+              ? plan.env
+              : { ...plan.env, [PROFILE_ENV]: `$SESSION/${PROFILE_FILE}` },
           fsPlan: plan.fsPlan,
           notes: plan.notes,
           execSupport: plan.execSupport,
@@ -132,9 +162,15 @@ export function run(argv: string[]): number {
         skillPaths: args.skills,
         model,
         sessionDir,
-        piArgs: args.piArgs,
+        piArgs: piArgsWithDoor(posture, args.piArgs),
       });
       materialize(live.fsPlan, sessionDir);
+      if (posture !== "floor") {
+        writeFileSync(join(sessionDir, PROFILE_FILE), profileManifest(live), {
+          encoding: "utf8",
+          mode: 0o600,
+        });
+      }
     } catch (e) {
       process.stderr.write(`pi-heaven: ${(e as Error).message}\n`);
       return 2;
@@ -147,9 +183,11 @@ export function run(argv: string[]): number {
       return 2;
     }
 
+    const profileEnv =
+      posture === "floor" ? {} : { [PROFILE_ENV]: join(sessionDir, PROFILE_FILE) };
     const r = spawnSync(live.command, live.argv, {
       stdio: "inherit",
-      env: { ...process.env, ...live.env },
+      env: { ...process.env, ...live.env, ...profileEnv },
     });
     if (r.error) {
       const err = r.error as NodeJS.ErrnoException;
