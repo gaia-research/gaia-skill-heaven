@@ -49,10 +49,11 @@ durable transcript surface. Pi's extension API also exposes:
 - `ctx.ui.custom(...)`: temporary custom TUI components, not the right primitive
   for lasting command output.
 
-Accordingly the commands use displayed custom messages. This is especially
-important for `/skill-hell`: the summoned `SKILL.md` body can be injected into the
-current model context directly, rather than merely printed as an ephemeral
-notification.
+Accordingly the commands append rendered transcript entries for durable output.
+`/skill-hell` separately sends a non-displayed custom message containing the
+summoned `SKILL.md`; that message participates in the current model context
+without duplicating the full body onscreen. A small persistent widget keeps the
+summon identity and install cost visible across the resource reload.
 
 ## Mid-session skill loading
 

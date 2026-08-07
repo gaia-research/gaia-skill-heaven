@@ -231,9 +231,8 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       const { manifest, error } = loadManifest();
       const loadedSkillCount = ctx.getSystemPromptOptions().skills?.length ?? 0;
       const rendered = renderPosture(manifest, loadedSkillCount, error);
-      const widgetLines = rendered.split("\n");
-      pi.appendEntry(outputEntry, { content: rendered, widgetLines });
-      ctx.ui.setWidget(outputEntry, widgetLines);
+      pi.appendEntry(outputEntry, { content: rendered });
+      ctx.ui.setWidget(outputEntry, undefined);
     },
   });
 
