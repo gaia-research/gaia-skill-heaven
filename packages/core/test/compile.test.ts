@@ -153,9 +153,9 @@ describe("the floor split (V5-5)", () => {
 
   it("product-floor has no verified cell on any other harness — it refuses rather than guesses (M0/D8)", () => {
     // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
-    // 0.83.0, 2026-08-07) — see the "pi mappings" describe block below for its
-    // composition. codex/cursor/grok remain unprobed for this posture.
-    for (const h of ["codex", "cursor", "grok"] as const) {
+    // 0.83.0, 2026-08-07), and grok joined it in WP12 (PROBE.md, 0.2.118).
+    // codex/cursor remain unprobed for this posture.
+    for (const h of ["codex", "cursor"] as const) {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
@@ -219,23 +219,34 @@ describe("recipe harnesses", () => {
     expect(r.execSupport).toBe("recipe");
     expect(r.env.CURSOR_CONFIG_DIR).toBe("$SESSION/cursor-config");
   });
-  it("grok refuses floor/curated (no verified mechanism) but allows native", () => {
-    expect(() => compile({ posture: "floor", harness: "grok", skills: [] })).toThrow(/grok/);
-    expect(compile({ posture: "native", harness: "grok", skills: [] }).execSupport).toBe("recipe");
-  });
+  it("grok composes pinned recipe routes and leaves native untouched", () => {
+    const floor = compile({ posture: "floor", harness: "grok", skills: [] });
+    expect(floor.env.GROK_HOME).toBe("$SESSION/grok");
+    expect(floor.argv).toEqual(["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"]);
+    expect(floor.fsPlan).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/grok/auth.json" }),
+        expect.objectContaining({ kind: "write", path: "$SESSION/grok/config.toml" }),
+      ]),
+    );
+    expect(floor.execSupport).toBe("recipe");
 
-  // KC6 (Issue #12): same class as the product-floor harness-cell refusal
-  // above — no verified mechanism exists at all, which is not a decision to
-  // withhold anything.
-  it("marks the grok refusal as a capability gap, not a policy hold (KC6)", () => {
-    let msg = "";
-    try {
-      compile({ posture: "floor", harness: "grok", skills: [] });
-    } catch (e) {
-      msg = (e as Error).message;
-    }
-    expect(msg).toContain("harness-capability gap, not a policy hold");
-    expect(msg).not.toMatch(/gated \(P2\)/);
+    const product = compile({ posture: "product-floor", harness: "grok", skills: [] });
+    expect(product.execSupport).toBe("recipe");
+    expect(product.notes.join(" ")).toMatch(/plugin surface left available/i);
+
+    const curated = compile({ posture: "curated", harness: "grok", skills: [fakeSkill] });
+    expect(curated.fsPlan).toContainEqual({
+      kind: "copyDir",
+      from: "/skills/impeccable",
+      to: "$SESSION/grok/skills/impeccable",
+    });
+
+    const native = compile({ posture: "native", harness: "grok", skills: [] });
+    expect(native.argv).toEqual([]);
+    expect(native.env).toEqual({});
+    expect(native.fsPlan).toEqual([]);
+    expect(native.execSupport).toBe("recipe");
   });
 });
 

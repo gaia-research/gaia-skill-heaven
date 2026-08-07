@@ -1,0 +1,19 @@
+{
+  "name": "grok-heaven",
+  "version": "0.0.0",
+  "description": "grok-heaven — the Grok door to Skill Heaven: session-scoped floor/product-floor/curated/native posture recipes. Built on skill-heaven core. PROTOTYPE (WP12).",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "grok-heaven": "./bin/grok-heaven.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "launch": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "skill-heaven": "*"
+  }
+}
