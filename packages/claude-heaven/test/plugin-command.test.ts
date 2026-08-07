@@ -14,7 +14,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { makeListingLine, tokenize } from "skill-heaven";
-import { buildP2Gate, p2GatePath, serializeP2Gate } from "../scripts/generate-p2-gate.js";
+import {
+  buildLadderArtifact,
+  ladderArtifactPath,
+  serializeLadderArtifact,
+} from "../scripts/generate-ladder.js";
 
 const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(PKG, "plugin");
@@ -79,11 +83,13 @@ describe("/skill-heaven command definition", () => {
   });
 });
 
-describe("P2 gate artifact", () => {
+describe("ladder artifact", () => {
   it("is byte-identical to a fresh generation from core", () => {
     // Regenerate with:
-    //   npx tsx packages/claude-heaven/scripts/generate-p2-gate.ts
-    expect(readFileSync(p2GatePath(), "utf-8")).toBe(serializeP2Gate(buildP2Gate()));
+    //   npx tsx packages/claude-heaven/scripts/generate-ladder.ts
+    expect(readFileSync(ladderArtifactPath(), "utf-8")).toBe(
+      serializeLadderArtifact(buildLadderArtifact()),
+    );
   });
 });
 

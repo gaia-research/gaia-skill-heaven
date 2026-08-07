@@ -29,33 +29,23 @@ afterAll(() => {
   rmSync(home, { recursive: true, force: true });
 });
 
-describe("assertLevelAllowed (P2)", () => {
-  it("hard-errors on the Hell lane (med…max)", () => {
-    for (const lvl of ["med", "high", "xhigh", "max"]) {
-      expect(() => assertLevelAllowed(lvl)).toThrow(/gated \(P2\)/);
+describe("assertLevelAllowed", () => {
+  it("allows every ratified Heaven and Hell rung", () => {
+    for (const level of ["off", "low", "med", "high", "xhigh", "max"]) {
+      expect(() => assertLevelAllowed(level)).not.toThrow();
     }
-  });
-  it("allows heaven-lane aliases and no level", () => {
-    expect(() => assertLevelAllowed("off")).not.toThrow();
-    expect(() => assertLevelAllowed("low")).not.toThrow();
     expect(() => assertLevelAllowed(undefined)).not.toThrow();
   });
 
-  // KC6 (Issue #12): the Hell-lane refusal is the POLICY class — it must say
-  // so explicitly, not just cite "(P2)" and leave a reader to infer what kind
-  // of "no" that is. Distinguished from the harness-incapable class covered
-  // in cli.test.ts's "refusal honesty (KC6)" describe block (the floor
-  // refusal, and the product-floor/grok harness checks in compile.test.ts).
-  it("marks itself as a policy hold, not a harness limit (KC6)", () => {
+  it("refuses ultra as unratified, never as P2-gated", () => {
+    let message = "";
     try {
-      assertLevelAllowed("max");
-      throw new Error("expected assertLevelAllowed to throw");
-    } catch (e) {
-      const msg = (e as Error).message;
-      expect(msg).toContain("withheld by policy, not a harness limit");
-      expect(msg).toContain("technically composable");
-      expect(msg).not.toContain("harness-incapable");
+      assertLevelAllowed("ultra");
+    } catch (error) {
+      message = (error as Error).message;
     }
+    expect(message).toContain("UNRATIFIED");
+    expect(message).not.toMatch(/P2|gated/i);
   });
 });
 

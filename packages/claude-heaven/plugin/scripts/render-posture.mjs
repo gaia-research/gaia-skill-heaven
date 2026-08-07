@@ -1,43 +1,39 @@
-// Zero-dependency renderer for `/skill-heaven`.
-//
-// The ladder is the interface. Claude cannot remove context from a running
-// session (D12), and Claude Code 2.1.224 exposes no mid-session skill-load
-// command. The chooser therefore marks direction honestly and emits exact
-// launch commands; it never pretends the slash command changed the process.
+// Zero-dependency renderer for `/skill-heaven`, the subtractive half of the
+// ladder. Heaven is selected at boot; this renderer never claims to recompose a
+// running process.
 
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const PROFILE_ENV = "CLAUDE_HEAVEN_PROFILE";
+const here = dirname(fileURLToPath(import.meta.url));
+const profileEnv = "CLAUDE_HEAVEN_PROFILE";
 
 /**
  * @typedef {object} LaunchManifest
  * @property {string} posture
  * @property {number} standingTokens
- * @property {number} [skillCount]
  * @property {string} scope
  * @property {boolean} [incomplete]
  */
 
-/** @typedef {{ levels: string[], gated: string[], unratified: string[] }} LadderData */
+/** @typedef {{ heaven: string[], hell: string[], unratified: string[] }} LadderData */
 
 /** @returns {LadderData | null} */
-export function readLadderData(dataDir = join(HERE, "..", "data")) {
+export function readLadderData(dataDir = join(here, "..", "data")) {
   try {
-    const value = JSON.parse(readFileSync(join(dataDir, "p2-gate.json"), "utf8"));
+    const value = JSON.parse(readFileSync(join(dataDir, "ladder.json"), "utf8"));
     if (
-      Array.isArray(value?.levels) &&
-      Array.isArray(value?.gatedLevels) &&
+      Array.isArray(value?.heavenLevels) &&
+      Array.isArray(value?.hellLevels) &&
       Array.isArray(value?.unratifiedLevels) &&
-      [...value.levels, ...value.gatedLevels, ...value.unratifiedLevels].every(
+      [...value.heavenLevels, ...value.hellLevels, ...value.unratifiedLevels].every(
         (entry) => typeof entry === "string",
       )
     ) {
       return {
-        levels: value.levels,
-        gated: value.gatedLevels,
+        heaven: value.heavenLevels,
+        hell: value.hellLevels,
         unratified: value.unratifiedLevels,
       };
     }
@@ -47,13 +43,8 @@ export function readLadderData(dataDir = join(HERE, "..", "data")) {
   return null;
 }
 
-/** @returns {string[] | null} */
-export function readGatedLevels(dataDir = join(HERE, "..", "data")) {
-  return readLadderData(dataDir)?.gated ?? null;
-}
-
-/** 14200 -> "14.2k"; sub-1k stays exact. */
-export function formatTokens(/** @type {unknown} */ value) {
+/** @param {unknown} value */
+export function formatTokens(value) {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return "?";
   if (value < 1000) return String(Math.round(value));
   return `${(value / 1000).toFixed(1)}k`;
@@ -79,7 +70,7 @@ export function isLaunchManifest(value) {
 }
 
 /** @returns {LaunchManifest | null} */
-export function loadManifest(path = process.env[PROFILE_ENV]) {
+export function loadManifest(path = process.env[profileEnv]) {
   if (!path) return null;
   try {
     const value = JSON.parse(readFileSync(path, "utf8"));
@@ -93,6 +84,7 @@ export function loadManifest(path = process.env[PROFILE_ENV]) {
 export function levelForPosture(posture) {
   if (posture === "product-floor") return "off";
   if (posture === "curated") return "low";
+  if (posture === "native") return "med";
   return null;
 }
 
@@ -102,9 +94,8 @@ function launchCommand(level) {
   return `claude-heaven --level ${level}`;
 }
 
-/** @param {LaunchManifest | null} manifest */
-function scopeNote(manifest) {
-  if (!manifest) return "session: no launch manifest · previewing the launcher default: off";
+/** @param {LaunchManifest} manifest */
+function sessionLine(manifest) {
   const plus = manifest.incomplete ? "+" : "";
   const dose = `${formatTokens(manifest.standingTokens)}${plus} standing`;
   if (manifest.scope === "user+project") {
@@ -116,16 +107,6 @@ function scopeNote(manifest) {
   return `session: ${manifest.posture} · ${dose} · scope coverage unknown`;
 }
 
-/** @param {string | null} target */
-function refusal(target) {
-  const shown = target && target !== "hell" ? `"${target}"` : "that rung";
-  return [
-    `⛔ ${shown} is Hell-lane and gated (P2).`,
-    "   /skill-hell is a locked door, not an activator. This is a policy hold, not a harness limit.",
-    "",
-  ].join("\n");
-}
-
 /**
  * @param {object} [options]
  * @param {LaunchManifest | null} [options.manifest]
@@ -135,62 +116,64 @@ function refusal(target) {
  */
 export function renderPosture(options = {}) {
   const manifest = options.manifest ?? null;
-  const data = options.data === undefined ? readLadderData() : options.data;
   const target = normalizeTarget(options.target);
+  const data = options.data === undefined ? readLadderData() : options.data;
 
-  // Missing generated policy data must never make a gated rung actionable.
   if (!data) {
+    return { text: "⛔ ladder policy data is unavailable; refusing all moves (fail-closed).\n", refused: true };
+  }
+
+  if (!manifest) {
     return {
-      text: "⛔ ladder policy data is unavailable; refusing all moves (fail-closed).\n",
-      refused: true,
+      text: [
+        "⚡ Skill Heaven · off · low · med",
+        "   Heaven rungs are boot-time decisions and this session was not launched by claude-heaven.",
+        "   Start one with: → claude-heaven --level low --skill <path>",
+        "   This command did not change the running session.",
+        "",
+      ].join("\n"),
+      refused: false,
     };
   }
-  if (target === "hell" || (target !== null && data.gated.includes(target))) {
-    return { text: refusal(target), refused: true };
+
+  if (target !== null && data.hell.includes(target)) {
+    return {
+      text: `↗ ${target} belongs to the additive half. Arm it with: /skill-hell ${target}\n`,
+      refused: false,
+    };
+  }
+  if (target !== null && data.unratified.includes(target)) {
+    return { text: `⛔ ${target} is UNRATIFIED — no approved summon budget exists.\n`, refused: true };
   }
 
-  const current = manifest ? levelForPosture(manifest.posture) : "off";
-  const currentIndex = current === null ? data.levels.length : data.levels.indexOf(current);
-  const lines = ["⚡ Skill Heaven", `   ${scopeNote(manifest)}`, "", "   off · low · med · high · xhigh · max · ultra", ""];
+  const current = levelForPosture(manifest.posture);
+  const currentIndex = current === null ? data.heaven.length : data.heaven.indexOf(current);
+  const lines = ["⚡ Skill Heaven · off · low · med", `   ${sessionLine(manifest)}`, ""];
 
-  for (const [index, level] of data.levels.entries()) {
-    const pointer = target === level ? "  ← selected" : "";
-    if (data.gated.includes(level)) {
-      lines.push(`   ⊘ ${level.padEnd(6)} Hell: additive context · LOCKED (P2)${pointer}`);
-    } else if (data.unratified.includes(level)) {
-      lines.push(`   ⊘ ${level.padEnd(6)} unratified · no approved product mapping${pointer}`);
-    } else if (level === current) {
-      const effect = level === "off" ? "near-empty; keeps this door" : "curated skills only";
-      lines.push(`   ● ${level.padEnd(6)} ${effect} · current${pointer}`);
+  for (const [index, level] of data.heaven.entries()) {
+    const selected = target === level ? "  ← selected" : "";
+    if (level === current) {
+      const meaning = level === "off" ? "near-empty; door open" : level === "low" ? "named skills only" : "native setup";
+      lines.push(`   ● ${level.padEnd(4)} ${meaning} · current${selected}`);
     } else if (index < currentIndex) {
-      lines.push(
-        `   ⊘ ${level.padEnd(6)} DOWNWARD LOCKED (D12) · relaunch: ${launchCommand(level)}${pointer}`,
-      );
+      lines.push(`   ⊘ ${level.padEnd(4)} DOWNWARD LOCKED (D12) · relaunch: ${launchCommand(level)}${selected}`);
     } else {
-      lines.push(`   ○ ${level.padEnd(6)} upward · → ${launchCommand(level)} (new session)${pointer}`);
+      lines.push(`   ○ ${level.padEnd(4)} upward · → ${launchCommand(level)} (new session)${selected}`);
     }
   }
 
-  if (target !== "" && (target === null || !data.levels.includes(target))) {
-    lines.push("", "   Unknown rung. Choose off, low, med, high, xhigh, max, or ultra.");
+  if (target !== "" && (target === null || !data.heaven.includes(target))) {
+    lines.push("", "   Unknown Heaven rung. Choose off, low, or med.");
   }
-
-  lines.push(
-    "",
-    "   → emits a launch command; Claude cannot load a skill natively into this running session.",
-    "   Downward moves stay locked because running-session context cannot be evicted (D12).",
-  );
+  lines.push("", "   Downward moves stay locked: a running session cannot evict context (D12).");
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
 
 export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
-  process.stdout.write(
-    renderPosture({ manifest: loadManifest(), target: argv.join(" ") }).text,
-  );
+  process.stdout.write(renderPosture({ manifest: loadManifest(), target: argv.join(" ") }).text);
   return 0;
 }
 
 const invokedDirectly =
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+  process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (invokedDirectly) main();

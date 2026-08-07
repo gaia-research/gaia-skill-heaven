@@ -198,25 +198,19 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
         log("--- actual stdout of the standalone run ---");
         for (const line of stdout.split("\n")) log(`  | ${line}`);
         log("--- end stdout ---");
-        assert(stdout.includes("Skill Heaven"), "output contains the ladder chooser header");
-        assert(stdout.includes("off · low · med · high · xhigh · max · ultra"), "output renders the complete ladder");
-        assert(stdout.includes("● off"), "output previews the launcher's off default as current");
-        assert(stdout.includes("○ low") && stdout.includes("--level low --skill <path>"), "output makes the upward low move actionable");
-        assert(stdout.includes("LOCKED (P2)"), "output keeps the Hell rungs locked");
-        // No CLAUDE_HEAVEN_PROFILE env var was set. The standalone smoke test
-        // previews the launcher default and says explicitly that no manifest
-        // exists; it must not fabricate a standing-dose number.
-        assert(
-          stdout.includes("no launch manifest") && !stdout.includes(" standing"),
-          "without a launch manifest, output labels the default preview and invents no standing dose",
-        );
+        assert(stdout.includes("Skill Heaven"), "output contains the Heaven chooser header");
+        assert(stdout.includes("off · low · med"), "output renders only the Heaven half");
+        assert(!stdout.match(/high|xhigh|max|ultra/), "output does not render Hell rungs");
+        assert(stdout.includes("boot-time decisions"), "output explains that Heaven requires a launcher");
+        assert(stdout.includes("--level low --skill <path>"), "output gives the exact launcher exit");
+        assert(stdout.includes("did not change"), "output never implies the running session changed");
       }
     }
 
-    // --- data/p2-gate.json shipped, so the script isn't reading it from ---
+    // --- data/ladder.json shipped, so the script isn't reading it from ---
     // --- outside the copied dir (would be a false pass off the real repo) ---
-    const gatePath = join(installedPluginRoot, "data", "p2-gate.json");
-    assert(existsSync(gatePath), "data/p2-gate.json shipped inside the copied plugin (script does not reach back into the repo for it)");
+    const ladderPath = join(installedPluginRoot, "data", "ladder.json");
+    assert(existsSync(ladderPath), "data/ladder.json shipped inside the copied plugin (script does not reach back into the repo for it)");
   } finally {
     rmSync(fresh, { recursive: true, force: true });
   }

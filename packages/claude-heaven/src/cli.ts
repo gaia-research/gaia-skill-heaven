@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LADDER_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
@@ -19,9 +19,9 @@ import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./lau
  * the harness cannot perform (KC7), which is a broken affordance whichever way
  * you look at it.
  *
- * `plugin/scripts/render-posture.mjs` derives its `RELAUNCH_OFFERS` from a
- * MACHINE-COPY of this array (scripts/generate-p2-gate.ts → plugin/data), never
- * from a hand-written list, and a test asserts the two cannot drift apart.
+ * The zero-dependency plugin gets a machine-copy of this array through
+ * scripts/generate-ladder.ts → plugin/data/ladder.json, and a freshness test
+ * asserts the artifact cannot drift.
  *
  * REMOVING A POSTURE IS ONE LINE: delete its entry below and regenerate the
  * artifact. Nothing else keys off a specific member — the renderer intersects
@@ -90,8 +90,9 @@ function helpText(): string {
   return [
     "Usage: claude-heaven [--level <level>] [options] [-- <claude args...>]",
     "",
-    `  --level <level>    Ladder rung: ${LADDER_LEVELS.join("|")} (default: off)`,
-    "                     med..max are P2-gated; ultra is unratified",
+    `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
+    `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
+    "                     ultra is unratified",
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
@@ -109,16 +110,24 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // P2 gate first — never compose a gated (Hell-lane) posture.
+  // Ultra has no ratified product mapping. Hell rungs are handled below as
+  // live summon budgets, never boot postures.
   assertLevelAllowed(args.level);
 
   let posture = args.posture;
   if (args.level !== undefined) {
     const aliased = LEVEL_ALIASES[args.level];
     if (!aliased) {
-      process.stderr.write(
-        `claude-heaven: unknown --level "${args.level}" — choose ${LADDER_LEVELS.join("|")}, or native.\n`,
-      );
+      if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
+        process.stderr.write(
+          `claude-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+            `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
+        );
+      } else {
+        process.stderr.write(
+          `claude-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`,
+        );
+      }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
@@ -141,8 +150,8 @@ export function run(argv: string[]): number {
     // posture core knows at all — a plain unknown-input error, neither class.
     if (posture === "floor") {
       process.stderr.write(
-        `claude-heaven cannot launch --posture floor: this is not a policy hold (P2 gates the Hell lane ` +
-          `only) — the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
+        `claude-heaven cannot launch --posture floor: this is not a policy hold — ` +
+          `the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
           `so a claude-heaven session launched there would have no /skill-heaven to talk to. There is no ` +
           `door to open at this posture; it is core's to compose, for benchmark runs only: ` +
           `\`skill-heaven --posture floor\`.\n`,

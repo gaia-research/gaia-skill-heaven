@@ -18,7 +18,6 @@
 import { join } from "node:path";
 import {
   compile,
-  HELL_LEVELS,
   UNRATIFIED_LEVELS,
   resolveSkill,
   type FsOp,
@@ -28,15 +27,8 @@ import {
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import type { ProfileManifest } from "./statusline.js";
 
-// P2 (LOCKED): the Hell lane is gated. Every user-facing surface hard-errors on
-// the Hell levels; /skill-hell is a locked door, not an activator, until Hell is
-// proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
-// this gate can never drift from the engine's definition — if a Hell level is
-// ever added/renamed upstream (e.g. the pending N4 "ultra"), the gate follows
-// automatically. off/low are heaven-lane aliases (off→product-floor, low→curated);
-// the CLI resolves them before handing a canonical `--posture` to this launcher.
-// Their vocabulary is provisional (N3, pending N4/N5).
-export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
+// Ultra has no ratified product meaning. Hell rungs are live summon budgets,
+// not launcher postures; the CLI routes users to /skill-hell for those.
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
 // KC6 (Issue #12): a refusal must say WHICH of two unlike things it is —
@@ -112,19 +104,11 @@ export interface LaunchPlan {
   notes: string[];
 }
 
-/** P2 gate: reject the Hell lane before it can compose anything. */
+/** Refuse only values with no ratified product meaning. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && GATED_LEVELS.has(level)) {
-    throw new Error(
-      `level "${level}" is Hell-lane and gated (P2) — withheld by policy, not a harness limit: it is ` +
-        `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
-        `door, not an activator: the key exists and can turn once that bar is met. claude-heaven composes ` +
-        `Heaven-lane postures only.`,
-    );
-  }
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
-      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
         `product mapping to compose, so claude-heaven refuses rather than guessing.`,
     );
   }

@@ -9,7 +9,6 @@ import { realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   compile,
-  HELL_LEVELS,
   LEVEL_ALIASES,
   UNRATIFIED_LEVELS,
   resolveSkill,
@@ -19,36 +18,19 @@ import {
   type ResolvedSkill,
 } from "skill-heaven";
 
-// P2 (LOCKED): the Hell lane is gated. Every user-facing surface hard-errors on
-// the Hell levels; /skill-hell is a locked door, not an activator, until Hell is
-// proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
-// this gate can never drift from the engine's definition. Wording mirrors
-// claude-heaven's and pi-heaven's gate verbatim (only the door name changes) —
-// the refusal reads the same on every door.
-export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
-/** P2 gate: reject the Hell lane before it can compose anything. */
+/** Refuse only values with no ratified product meaning. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && GATED_LEVELS.has(level)) {
-    throw new Error(
-      `level "${level}" is Hell-lane and gated (P2) — withheld by policy, not a harness limit: it is ` +
-        `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
-        `door, not an activator: the key exists and can turn once that bar is met. codex-heaven composes ` +
-        `Heaven-lane postures only.`,
-    );
-  }
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
-      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
         `product mapping to compose, so codex-heaven refuses rather than guessing.`,
     );
   }
 }
 
-/** Resolve a --level alias (off/low) to its posture, or undefined if the value
- * is not a known alias — callers must treat that as a hard error, not a
- * silent fallthrough. Gated levels are rejected earlier by assertLevelAllowed. */
+/** Resolve a Heaven --level alias to its posture, or undefined. */
 export function resolveLevelAlias(level: string): Posture | undefined {
   return LEVEL_ALIASES[level];
 }

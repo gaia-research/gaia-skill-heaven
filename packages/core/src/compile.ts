@@ -75,12 +75,14 @@ export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 // The user-facing ladder. `native` remains an explicit escape hatch through
 // LEVEL_ALIASES, but is not a rung: it means "leave my setup untouched".
 export const LADDER_LEVELS = ["off", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export const HEAVEN_LEVELS = ["off", "low", "med"] as const;
 export const LEVEL_ALIASES: Record<string, Posture> = {
   off: "product-floor",
   low: "curated",
+  med: "native",
   native: "native",
 };
-export const HELL_LEVELS = ["med", "high", "xhigh", "max"] as const;
+export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
 export const UNRATIFIED_LEVELS = ["ultra"] as const;
 
 export type FsOp =

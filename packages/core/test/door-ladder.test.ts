@@ -27,6 +27,20 @@ function captureStdout(fn: () => number): { code: number; out: string } {
   }
 }
 
+function captureStderr(fn: () => number): { code: number; err: string } {
+  const chunks: string[] = [];
+  const original = process.stderr.write.bind(process.stderr);
+  (process.stderr.write as unknown as (text: string) => boolean) = (text: string) => {
+    chunks.push(text);
+    return true;
+  };
+  try {
+    return { code: fn(), err: chunks.join("") };
+  } finally {
+    process.stderr.write = original;
+  }
+}
+
 describe("ladder-first door contract", () => {
   for (const [name, parse, run] of doors) {
     it(`${name} defaults to off/product-floor`, () => {
@@ -40,18 +54,25 @@ describe("ladder-first door contract", () => {
       const result = captureStdout(() => run(["--help"]));
       expect(result.code).toBe(0);
       expect(result.out).toContain("--level <level>");
-      expect(result.out).toContain("off|low|med|high|xhigh|max|ultra (default: off)");
+      expect(result.out).toContain("off|low|med (default: off)");
+      expect(result.out).toContain("Hell (high|xhigh|max) is armed live with /skill-hell");
       expect(result.out).toContain("--level native");
 
-      const native = captureStdout(() => run(["--level", "native", "--print"]));
-      expect(native.code).toBe(0);
-      expect(JSON.parse(native.out).posture).toBe("native");
+      for (const level of ["med", "native"]) {
+        const native = captureStdout(() => run(["--level", level, "--print"]));
+        expect(native.code).toBe(0);
+        expect(JSON.parse(native.out).posture).toBe("native");
+      }
     });
 
-    it(`${name} distinguishes the P2 gate from unratified ultra`, () => {
-      expect(() => run(["--level", "max", "--print"])).toThrow(/gated \(P2\)/);
-      expect(() => run(["--level", "ultra", "--print"])).toThrow(/not ratified/);
-      expect(() => run(["--level", "ultra", "--print"])).toThrow(/not the P2 Hell-lane gate/i);
+    it(`${name} routes Hell live and distinguishes unratified ultra`, () => {
+      const hell = captureStderr(() => run(["--level", "max", "--print"]));
+      expect(hell.code).toBe(2);
+      expect(hell.err).toContain("live Hell summon budget");
+      expect(hell.err).toContain("/skill-hell max");
+      expect(hell.err).not.toMatch(/P2|gated|policy/i);
+
+      expect(() => run(["--level", "ultra", "--print"])).toThrow(/UNRATIFIED/);
     });
   }
 });

@@ -4,7 +4,6 @@
 
 import {
   compile,
-  HELL_LEVELS,
   LEVEL_ALIASES,
   UNRATIFIED_LEVELS,
   resolveSkill,
@@ -14,23 +13,13 @@ import {
   type ResolvedSkill,
 } from "skill-heaven";
 
-// P2 (LOCKED): sourced from core so every door refuses the same Hell levels.
-export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
-/** P2 gate: reject the Hell lane before it can compose anything. */
+/** Refuse only values with no ratified product meaning. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && GATED_LEVELS.has(level)) {
-    throw new Error(
-      `level "${level}" is Hell-lane and gated (P2) — withheld by policy, not a harness limit: it is ` +
-        `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
-        `door, not an activator: the key exists and can turn once that bar is met. hermes-heaven composes ` +
-        `Heaven-lane postures only.`,
-    );
-  }
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
-      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
         `product mapping to compose, so hermes-heaven refuses rather than guessing.`,
     );
   }
