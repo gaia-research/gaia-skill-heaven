@@ -96,6 +96,18 @@ The `$GROK_HOME/bundled/skills` ignore is load-bearing: a fresh home seeded 21 b
 
 The probe also tried `[plugins].disabled` plain names, `@marketplace` names, `user/...` names, and `"*"`. Plain observed names suppressed the observed plugin skills; the other spellings/wildcard did not. The plugin inventory is therefore an open portability boundary, not a reason to mutate global plugin state.
 
+## Product-floor composition
+
+The nearest launchable product composition used the same session config and auth copy but omitted `[plugins].disabled`, leaving the installed plugin surface as the door. Exact cells, repeated twice each:
+
+```text
+GROK_HOME=/tmp/grok-heaven-product-final grok inspect
+GROK_HOME=/tmp/grok-heaven-product-final grok --cwd /tmp/grok-heaven-project-scope inspect
+GROK_HOME=/tmp/grok-heaven-product-final grok -p "Reply with exactly: OK"
+```
+
+Both listing cells reported **`Skills (9)`** (the observed plugin skills: eight Rock skills plus the disabled frontend listing), including when the disposable project Claude skill was present. Both answer cells exited 0 and printed `OK`. This preserves the plugin/door surface but remains recipe-only in the compiled door because the portable installed-plugin inventory is not demonstrated.
+
 ## Curated readmission
 
 A disposable `SKILL.md` named `grok-heaven-path-probe` was copied to `$GROK_HOME/skills/grok-heaven-path-probe` in the same clean-room config. Exact cells, repeated twice:
