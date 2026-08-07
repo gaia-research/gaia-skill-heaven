@@ -66,12 +66,13 @@ claude-heaven --posture product-floor
     this README states it in full. This is a **skills-only, two-root** figure —
     never "everything in context" — and non-native postures (`curated`,
     `product-floor`) carry `scope: "session"` instead: those enumerate the
-    launched set exactly, so no exclusion caveat is shown there (one would be a
-    false claim, not an honest one). If a root exists but can't be read, the
-    census sets `incomplete` and the statusline shows a trailing `+` (`4.8k+`)
-    — an under-count is never presented as exact. Widening scope (counting
-    bundled or plugin-provided skills) is a tracked follow-up and must not
-    become load-bearing marketing copy until its own coverage check lands.
+    launched set exactly, and the session listing caveat discloses the bundled
+    `doctor` residual that survives the harness's suppression knob. If a root
+    exists but can't be read, the census sets `incomplete` and the statusline
+    shows a trailing `+` (`4.8k+`) — an under-count is never presented as exact.
+    Widening scope (counting bundled or plugin-provided skills) is a tracked
+    follow-up and must not become load-bearing marketing copy until its own
+    coverage check lands.
 
 ### Architecture split (launcher vs. plugin)
 
@@ -120,9 +121,10 @@ session itself.
   `plugin/data/p2-gate.json`; a freshness test byte-checks it.
 - **The clean room is the PRODUCT floor, not the benchmark floor (V5-5).** Since
   the floor split landed, `POSTURES` carries both. The clean room here is
-  **`product-floor`** — T9b minus `--disable-slash-commands`, the door priced at
-  **+515 tok** (F7). The doorless **benchmark** `floor` is the
-  **placebo-of-record (B2)** and has no door to slide (F6), so it is
+  **`product-floor`** — the doorful route keeps `--disable-slash-commands`
+  absent and uses P8's empty setting-sources allowlist, with the locked F7
+  evidence pricing the door at **+515 tok**. The doorless **benchmark** `floor`
+  is the **placebo-of-record (B2)** and has no door to slide (F6), so it is
   deliberately **not a row**; the footer states the shipped mechanism fact —
   slash commands are off there, so this command does not exist there — and
   `/skill-heaven floor` answers "not offered here" rather than rendering a real
@@ -220,8 +222,9 @@ adjust from inside" was unreachable: at the T9b floor `/skill-heaven` does not
 exist. That was an owner call, and the owner made it — **V5-5** split the floor
 in two and **PR #14** landed it in `packages/core`. The doorless floor keeps its
 byte-frozen T9b route as the placebo-of-record; the **F7 route is now a real,
-separately-named posture**, `product-floor`. This package targets that one. Core's `compile()` is still untouched *from here* — the split was made
-upstream, on its own ratification, exactly as D9 requires.
+separately-named posture**, `product-floor`. This package targets that one. Core's
+`compile()` remains the single source of route composition; this package never
+re-derives its flags, exactly as D9 requires.
 
 **Zero-mutation check:** `~/.claude/skills` (67 entries) diffed clean before and
 after every probe; `~/.claude/settings.json` SHA-256 unchanged; no new

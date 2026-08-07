@@ -73,7 +73,7 @@ N5 closes** — mechanics are fixed, spelling may change.
 |---|---|---|---|
 | floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
 | curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
-| product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) |
+| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | — (no probed cell) | — (no probed cell) |
 | native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
 
 **codex stays on the recipe track (A2, 2026-07-29/30) — mechanism resolved,
@@ -115,11 +115,12 @@ separately, priced as **separate arms (B1), never averaged into one number**.
   *commands* as well as plugin skills, so `/skill-heaven` does not exist here —
   "the clean room as currently composed has no door". That is the ruling, not a
   defect. `--arm placebo` is accepted **only** for this posture.
-- **`product-floor` — the doorful PRODUCT floor.** T9b minus that one flag, so
-  the minimum control surface survives. F7 prices the door at **+515 tok**
-  (20,176 vs the benchmark floor's 19,661), still **−28.9%** off native's
-  28,379 (claude 2.1.216, probed 2026-07-24). It retains a control surface, so
-  it can never stand in as the placebo; it records as `--arm heaven`.
+- **`product-floor` — the doorful PRODUCT floor.** It keeps the minimum
+  control surface and, under P8, uses an empty `--setting-sources` allowlist so
+  project scope is not admitted. The locked F7 evidence prices the door at
+  **+515 tok** (20,176 vs the benchmark floor's 19,661), still **−28.9%** off
+  native's 28,379 (claude 2.1.216, probed 2026-07-24). It retains a control
+  surface, so it can never stand in as the placebo; it records as `--arm heaven`.
 
 The evidence numbers are recorded once in `FLOOR_EVIDENCE` (`packages/core/src/compile.ts`)
 and are never re-derived. Every floor record is tagged `floor=benchmark` or
@@ -234,11 +235,10 @@ composition. No other entry was observed in either scenario.
 
 **KC4 now closes as PASSING**: curated mode's listing residual is `doctor`
 only — the single founder-permitted residual — with the project-scope leak
-eliminated. `launcher.ts`'s `scope: "session"` manifest field and any
-KC2-owned disclosure copy that referenced the old `--setting-sources project`
-composition or the non-zero-residual finding may need a matching update; that
-surface is out of this change's scope (owned separately) and is flagged here,
-not edited here.
+eliminated. `launcher.ts`'s `scope: "session"` manifest field and the KC2
+statusline/`/skill-heaven` disclosures now describe that remaining bundled
+residual. P8 applies the same empty allowlist to product-floor, so project
+scope is excluded there too.
 
 **pi caveat (P1):** `--no-skills` floor was verified live but shows an
 intermittent discovery race on 0.80.10 (2 of ~9 headless floor runs still

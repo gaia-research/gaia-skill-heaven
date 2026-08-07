@@ -44,12 +44,14 @@
 //     deliberately not a row: this surface cannot offer a door to a posture
 //     that has none, and priced as its own arm (B1) it must never be pooled
 //     with the product floor.
-//   - `product-floor` is the DOORFUL PRODUCT floor — T9b minus
-//     `--disable-slash-commands`, the door costing +515 tok (F7). It is the
-//     only clean room reachable by a session that can run `/skill-heaven` at
-//     all. Per founder ruling R1 (2026-07-29) `clean-room` and `product-floor`
-//     are two names for one thing — the cleanest launchable posture; neither
-//     name retires the other.
+//   - `product-floor` is the DOORFUL PRODUCT floor — it keeps
+//     `--disable-slash-commands` absent, and its P8 composition uses an empty
+//     setting-sources allowlist so project scope is not admitted. The door
+//     costs +515 tok in the locked F7 evidence. It is the only clean room
+//     reachable by a session that can run `/skill-heaven` at all. Per founder
+//     ruling R1 (2026-07-29) `clean-room` and `product-floor` are two names for
+//     one thing — the cleanest launchable posture; neither name retires the
+//     other.
 // Nothing here records a benchmark arm: the placebo arm flag belongs to core's
 // CLI, at the benchmark floor and nowhere else, and no path in this package
 // composes one (a test pins the absence).
@@ -440,8 +442,9 @@ function refusal(target) {
  * regardless of posture — a founder-ruled, permanent, harness-level residual
  * measured live by packages/claude-heaven/scripts/probe-kc4-listing-
  * residual.sh (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's
- * curated note). The prior "nothing is excluded" claim for `session` was
- * false — see src/launcher.ts's KC4 correction for the full history.
+ * curated note). Both curated and product-floor use an empty setting-sources
+ * allowlist, so project-scope skills are not part of this disclosure; the
+ * bundled `doctor` residual remains and is called out below.
  *
  * A5c fail-closed: explicit allowlist, not an `expected ? note : bare-label`
  * optimistic default — an unrecognized scope must still disclose that its
@@ -466,25 +469,10 @@ function sessionLine(manifest) {
   if (!manifest) {
     return "session: vanilla claude — no launch manifest, so no standing-dose readout here.";
   }
-  // `product-floor` is scope "session" like curated, but its exclusions are NOT
-  // curated's, so the scope-keyed note under-discloses it: the big omission is
-  // project scope, not `doctor`. Under P8 this posture is "off" — the nearest
-  // zero the harness can be LAUNCHED at — and it currently inherits
-  // project-scope skills from cwd (measured 2/2, claude 2.1.220), an amount that
-  // scales with the user's repo. So no token figure belongs here at all.
-  //
-  // This mirrors src/statusline.ts's product-floor branch on purpose: that file
-  // keys on POSTURE while `scopeNote` below keys on SCOPE, and the two surfaces
-  // must never disagree about the same posture. If the composition is fixed to
-  // drop project scope, delete this branch and the generic form returns.
-  if (manifest.posture === "product-floor") {
-    return (
-      `session: launched at ${manifest.posture} · 0 of your own skills selected — but ` +
-      "project-scope skills in this directory are still loaded, so the standing dose is " +
-      "not zero and is not knowable from here. The bundled `doctor` skill is not counted " +
-      "either (a harness limitation, not this door's choice — see KC4)."
-    );
-  }
+  // Both curated and product-floor use `scope: "session"`: their selected
+  // skill sets are enumerated exactly, and the empty setting-sources allowlist
+  // keeps project scope out of product-floor. The generic line below therefore
+  // stays in sync with src/statusline.ts and its bundled `doctor` caveat.
   const floor = manifest.incomplete ? "+" : "";
   // A curated set of exactly one is now reachable, so the plural is no longer
   // safe to hard-code.
