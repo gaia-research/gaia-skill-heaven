@@ -151,11 +151,11 @@ describe("the floor split (V5-5)", () => {
     expect(Object.values(e)).not.toContain(mean);
   });
 
-  it("product-floor has no verified cell on any other harness — it refuses rather than guesses (M0/D8)", () => {
+  it("product-floor has no verified cell on cursor — it refuses rather than guesses (M0/D8)", () => {
     // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
-    // 0.83.0, 2026-08-07), and grok joined it in WP12 (PROBE.md, 0.2.118).
-    // codex/cursor remain unprobed for this posture.
-    for (const h of ["codex", "cursor"] as const) {
+    // 0.83.0, 2026-08-07); codex joined in WP14 (PROBE.md, 0.146.0), and
+    // grok joined in WP12 (PROBE.md, 0.2.118). Cursor remains unprobed.
+    for (const h of ["cursor"] as const) {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
@@ -167,7 +167,7 @@ describe("the floor split (V5-5)", () => {
   it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
     let msg = "";
     try {
-      compile({ posture: "product-floor", harness: "codex", skills: [] });
+      compile({ posture: "product-floor", harness: "cursor", skills: [] });
     } catch (e) {
       msg = (e as Error).message;
     }
@@ -199,20 +199,20 @@ describe("pi mappings", () => {
   });
 });
 
-describe("recipe harnesses", () => {
-  // A2 (2026-07-29/30): the per-session `-c 'skills.config=[{path=…,
-  // enabled=false}]'` scoping cell this used to gate on HAS resolved (matrix
-  // G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) —
-  // that is no longer the open question. codex stays a recipe anyway because
-  // $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`,
-  // `/etc/codex/skills`, or bundled system skills (matrix Skill discovery
-  // row), so neither floor nor curated is yet a verified-clean surface —
-  // the resolved mechanism does not make the resulting surface a floor.
-  // execSupport intentionally stays "recipe" (deferred, not flipped).
-  it("codex compiles a recipe with CODEX_HOME scoping", () => {
+describe("non-native harness mappings", () => {
+  it("codex compiles an exec route with session-scoped exact-path discovery", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
-    expect(r.execSupport).toBe("recipe");
+    expect(r.execSupport).toBe("exec");
     expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
+    expect(r.argv).toEqual([
+      "exec",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--sandbox",
+      "read-only",
+      "--ignore-rules",
+    ]);
+    expect(r.notes.join(" ")).toMatch(/skills\/list/i);
   });
   it("cursor compiles a recipe with CURSOR_CONFIG_DIR", () => {
     const r = compile({ posture: "floor", harness: "cursor", skills: [] });

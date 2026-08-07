@@ -60,13 +60,15 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
 
   // Grok's non-native postures are pinned recipe routes (WP12), just like
   // Hermes' recipe route. Product-floor compiles for harness "claude" (F7),
-  // "pi" (WP2), "hermes" (WP7), and "grok" (WP12); codex/cursor remain
-  // capability gaps. Everything else in POSTURES x HARNESSES is expected to compile.
+  // "pi" (WP2), "codex" (WP14), "hermes" (WP7), and "grok" (WP12);
+  // cursor remains a capability gap. Everything else in POSTURES x HARNESSES
+  // is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
     if (
       posture === "product-floor" &&
       harness !== "claude" &&
       harness !== "pi" &&
+      harness !== "codex" &&
       harness !== "hermes" &&
       harness !== "grok"
     )
@@ -193,7 +195,14 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
   function materializeEverything(): void {
     for (const posture of POSTURES) {
       for (const harness of HARNESSES) {
-        if (posture === "product-floor" && harness !== "claude" && harness !== "pi" && harness !== "hermes") continue;
+        if (
+          posture === "product-floor" &&
+          harness !== "claude" &&
+          harness !== "pi" &&
+          harness !== "codex" &&
+          harness !== "hermes"
+        )
+          continue;
         if (harness === "grok" && posture !== "native") continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {

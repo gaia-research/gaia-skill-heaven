@@ -50,7 +50,7 @@ guessed — is the research that keeps the product honest.
 skill-heaven
   --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
                                         # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
-                                        # product-floor = the DOORFUL product floor (claude only)
+                                        # product-floor = the DOORFUL product floor (verified on claude + codex; others vary)
   [--level off|low]                     # aliases: off→product-floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
   [--harness claude|pi|codex|cursor|grok]   # default claude
@@ -69,41 +69,24 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 ## Posture mappings (what actually gets composed)
 
-| Posture | claude (2.1.215) | pi (0.80.10) | codex / cursor / grok |
-|---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
-| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
-| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | — (no probed cell) | — (no probed cell) |
-| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
+| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | cursor / grok |
+|---|---|---|---|---|
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | recipe only (`--print`) |
+| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | recipe only; grok hard-errors (no mechanism exists) |
+| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | — (no probed cell) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | — (no probed cell) |
+| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | nothing / recipe |
 
-**codex stays on the recipe track (A2, 2026-07-29/30) — mechanism resolved,
-surface not proven clean.** The per-session `-c 'skills.config=[{path="<abs>",
-enabled=false}]'` scoping cell this table used to gate on HAS resolved: it
-reaches the skills surface per-invocation on codex-cli 0.145.0, no restart,
-nothing written to `config.toml` (gaia-research PR #133, matrix
-G1-skills-config-override, 2/2 reproduced upstream: the committed run record
-`gaia-research/scripts/hell-heaven-bench/harness-probes/runs/codex-g1-2026-07-29.run.json`
-shows **67→66 entries** — the targeted fixture skill absent, all 66 others
-unchanged, `input_tokens` 18,986→18,925, 2/2 byte-identical, on codex-cli
-0.145.0. **Correction, 2026-07-31:** this line previously read "74→73
-entries." That figure did not match the PR #133 / G1-skills-config-override
-record it cited and was never itself backed by a separate committed probe —
-a citation error, not a second measurement, fixed here rather than silently
-restated). That is no longer the open question. codex nonetheless stays
-a recipe: `$CODEX_HOME` scoping does not evict `.agents/skills` (repo,
-cwd→root scan), `~/.agents/skills` (user — confirmed 70 entries on this
-machine), `/etc/codex/skills`, or bundled system skills (separate roots per
-the matrix's own Skill discovery row), and the resolved `-c` cell only
-suppresses skills it is explicitly told about — it does not compute a disable
-entry for every skill discovered across every root. So a live codex exec
-today would not be an empty (floor) or curated (clean-room) surface; the
-mechanism is proven, but the resulting surface is not a floor. `execSupport`
-is deliberately left `"recipe"` — flipping it is a mechanism redesign
-(computing `-c` disables for every discovered root at compile time), not a
-stale-claim correction, and is out of scope here. `cursor` and `grok` are
-untouched: cursor stays on the documented-recipe track (tracked
-`.cursor/rules` cannot be suppressed per-session); grok still has no verified
-skills-suppression mechanism and correctly refuses rather than guesses.
+**codex-heaven is now an exec door (WP14, codex-cli 0.146.0).** The earlier
+flag-only negative remains recorded in `packages/codex-heaven/PROBE.md`:
+`CODEX_HOME` and `--ignore-user-config` do not evict independent roots. The
+launcher closes that gap without mutating `~/.codex`: after copying auth and
+materializing any curated skills, it asks Codex's disk-backed app-server
+`skills/list` for exact paths, writes session-local `skills.config` disables
+for every non-readmitted path, and then spawns `codex exec`. Repeated hard
+counts were 76 discovered / 0 enabled in the composed floor, versus 90 / 45
+in the baseline app-server scan; the real scoped launch authenticated and
+answered. Cursor remains recipe-only because tracked `.cursor/rules` cannot
+be suppressed per-session; grok remains recipe-only pending a portable route.
 
 ### The floor split (founder ruling V5-5, 2026-07-28)
 
