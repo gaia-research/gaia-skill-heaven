@@ -198,16 +198,17 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
         log("--- actual stdout of the standalone run ---");
         for (const line of stdout.split("\n")) log(`  | ${line}`);
         log("--- end stdout ---");
-        assert(stdout.includes("Skill Heaven"), "output contains the posture block header");
-        assert(stdout.includes("native"), "output renders the 'native' posture row");
-        assert(stdout.includes("clean room"), "output renders the 'clean room' (product-floor) posture row");
-        assert(stdout.includes("hell"), "output renders the locked 'hell' row");
-        // No CLAUDE_HEAVEN_PROFILE env var was set (this is a session with no
-        // launcher-written manifest, i.e. vanilla claude) — the script must
-        // say so honestly rather than fabricate a standing-dose number.
+        assert(stdout.includes("Skill Heaven"), "output contains the ladder chooser header");
+        assert(stdout.includes("off · low · med · high · xhigh · max · ultra"), "output renders the complete ladder");
+        assert(stdout.includes("● off"), "output previews the launcher's off default as current");
+        assert(stdout.includes("○ low") && stdout.includes("--level low --skill <path>"), "output makes the upward low move actionable");
+        assert(stdout.includes("LOCKED (P2)"), "output keeps the Hell rungs locked");
+        // No CLAUDE_HEAVEN_PROFILE env var was set. The standalone smoke test
+        // previews the launcher default and says explicitly that no manifest
+        // exists; it must not fabricate a standing-dose number.
         assert(
-          stdout.includes("vanilla claude"),
-          "with no launch manifest present, output honestly reports 'vanilla claude' rather than inventing a standing dose",
+          stdout.includes("no launch manifest") && !stdout.includes(" standing"),
+          "without a launch manifest, output labels the default preview and invents no standing dose",
         );
       }
     }

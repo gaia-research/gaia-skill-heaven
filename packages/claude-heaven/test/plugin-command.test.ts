@@ -62,12 +62,9 @@ describe("/skill-heaven command definition", () => {
     expect(existsSync(join(PLUGIN, "scripts", "render-posture.mjs"))).toBe(true);
   });
 
-  it("names the control with no noun — no banned lexicon word in the command copy", () => {
-    // `slider`/`notch` are banned (retired 2026-07-24, oracle N1/N5); their
-    // replacements name the off…max ladder, a different control; and the name
-    // of this surface is OPEN (founder ruling R2). So the command markdown
-    // carries none of them, and no coined substitute either.
-    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bladder\b|\brung(s)?\b|\bpicker\b/i);
+  it("uses the founder-ratified ladder vocabulary, never the retired control words", () => {
+    expect(command).toMatch(/\bladder\b.*\brung\b/i);
+    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bpicker\b/i);
   });
 
   it("pins the rendered block as verbatim, un-embellished copy", () => {

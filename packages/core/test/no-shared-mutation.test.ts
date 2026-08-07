@@ -60,18 +60,11 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
 
   // Grok's non-native postures are pinned recipe routes (WP12), just like
   // Hermes' recipe route. Product-floor compiles for harness "claude" (F7),
-  // "pi" (WP2), "hermes" (WP7), and "grok" (WP12); codex/cursor remain
-  // capability gaps. Everything else in POSTURES x HARNESSES is expected to compile.
+  // "pi" (WP2), "hermes" (WP7), "grok" (WP12), and as an explicitly
+  // unverified print-only recipe for codex. Cursor remains a capability gap.
+  // Everything else in POSTURES x HARNESSES is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
-    if (
-      posture === "product-floor" &&
-      harness !== "claude" &&
-      harness !== "pi" &&
-      harness !== "hermes" &&
-      harness !== "grok"
-    )
-      return true;
-    return false;
+    return posture === "product-floor" && harness === "cursor";
   }
 
   let opsChecked = 0;

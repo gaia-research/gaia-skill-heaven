@@ -1,5 +1,5 @@
 ---
-description: "Show Skill Heaven postures: where this session sits, what it costs, how to move it."
+description: "Choose a Skill Heaven ladder rung and get the exact launch command."
 allowed-tools: Bash(node:*)
 ---
 
