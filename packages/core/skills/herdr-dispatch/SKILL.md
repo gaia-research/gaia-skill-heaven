@@ -196,14 +196,36 @@ herdr agent prompt <NAME> "Build failed on X. Fix it, commit, push, report the S
 
 That is the main advantage of a pane worker over a one-shot subagent — the context survives.
 
-When finished:
+### Stash, don't close
+
+A finished worker's pane is often still **evidence** — its probe output, its final report, the
+argv it actually ran. Closing it destroys that. But leaving it in the working tab crowds out the
+live workers.
+
+Move it to an archive tab instead:
+
+```bash
+# once per session
+herdr tab create --label "heaven-archive" --cwd /path/to/repo
+# the response carries a root pane; read its tab_id
+ARCH=$(herdr pane get <ROOT_PANE_ID> \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['pane']['tab_id'])")
+
+# then stash any finished pane
+herdr pane move <PANE_ID> --tab "$ARCH" --split down --ratio 0.5
+```
+
+The working tab stays at orchestrator + two live workers; everything finished is one tab away,
+scrollback intact.
+
+**Stash** a pane whose output is evidence the operator has not reviewed, that recorded a probe,
+or that a follow-up dispatch might need to refer back to. **Close** a pane that was pure
+scaffolding — a shell that ran one `ls`, an agent that died at startup, a duplicate.
 
 ```bash
 herdr agent release-agent <PANE_ID>   # release lifecycle authority
 herdr pane close <PANE_ID>
 ```
-
-Leave a pane open if its output is still evidence the operator has not reviewed.
 
 ---
 
