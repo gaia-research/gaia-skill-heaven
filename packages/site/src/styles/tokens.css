@@ -1,0 +1,107 @@
+:root {
+  /* ── Skill Heaven — Luminance / Prismatic motif ─────────────────────────
+     Deliberately NOT the gaia-research README palette (#ff4fa3 / #00e5ff).
+     This is a new, prismatic system: near-black canvas, luminous white type,
+     and a refracted spectrum used only for accent/impact. Hell inverts it. */
+
+  /* Canvas — Heaven default: white on black */
+  --sh-void:        #05060a;   /* deepest background */
+  --sh-abyss:       #0a0c14;   /* raised panels */
+  --sh-ink:         #10121d;   /* cards */
+  --sh-line:        rgba(255, 255, 255, 0.08);
+  --sh-line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Luminance — the white the whole page is built on */
+  --sh-lumen:       #f7f8ff;   /* primary text, "halo white" */
+  --sh-lumen-dim:   #a9adc4;   /* secondary text */
+  --sh-lumen-faint: #6b6f88;   /* tertiary / captions */
+
+  /* Prismatic spectrum — refracted accents (used sparingly, as light split) */
+  --sh-prism-1:     #7c5cff;   /* violet */
+  --sh-prism-2:     #4d7bff;   /* indigo */
+  --sh-prism-3:     #37d6e0;   /* aqua */
+  --sh-prism-4:     #58f2a6;   /* mint */
+  --sh-prism-5:     #ffd84d;   /* gold */
+  --sh-prism-6:     #ff7ac2;   /* rose */
+
+  --sh-prism-gradient: linear-gradient(
+    100deg,
+    var(--sh-prism-1) 0%,
+    var(--sh-prism-2) 22%,
+    var(--sh-prism-3) 44%,
+    var(--sh-prism-4) 62%,
+    var(--sh-prism-5) 82%,
+    var(--sh-prism-6) 100%
+  );
+
+  /* Hell — the inversion: black on white, no color, only impact */
+  --sh-hell-bg:     #f4f4f2;
+  --sh-hell-ink:    #050505;
+  --sh-hell-line:   rgba(0, 0, 0, 0.14);
+
+  /* Type */
+  --sh-font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --sh-font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --sh-font-mono:    'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* Rhythm */
+  --sh-maxw: 1180px;
+  --sh-radius: 14px;
+  --sh-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--sh-void);
+  color: var(--sh-lumen);
+  font-family: var(--sh-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--sh-prism-1);
+  color: var(--sh-void);
+}
+
+/* Prismatic text fill — shared helper for luminous spectrum headings */
+.sh-prism-text {
+  background: var(--sh-prism-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Respect reduced motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
