@@ -28,6 +28,38 @@ guessed — is the research that keeps the product honest.
 
 ---
 
+## The ladder
+
+Entropy runs on one line of seven rungs — but it is served by **two commands**, because the two
+halves are not the same kind of thing.
+
+![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs the launcher. Hell is additive and holds high (the default), xhigh, max, and ultra (unratified); it is served by /skill-hell and needs only the plugin.](docs/assets/entropy-ladder.svg)
+
+**Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
+*withheld*. A running session cannot un-load what it already loaded, so that is a decision only
+boot can make — which is why `/skill-heaven` needs the launcher, and says so plainly when it was
+not used.
+
+**Hell is additive.** `high` through `ultra` differ by how freely skills are *summoned in*, and
+every harness can add context to a live session. That is why `/skill-hell` works anywhere the
+plugin or extension is installed, launcher or not.
+
+The line between them is a capability boundary, not a policy one.
+
+| | rungs | maps to | command | needs |
+|---|---|---|---|---|
+| **Heaven** | `off` · `low` · `med` | `product-floor` · `curated` · `native` | `/skill-heaven` | the launcher |
+| **Hell** | `high` · `xhigh` · `max` · `ultra` | a summon budget, not a posture | `/skill-hell` | only the plugin |
+
+`high` is the default. `ultra` is unratified and refuses as such rather than pretending to be
+gated. `floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and
+is never user-selectable.
+
+Full flow, including every branch: **[docs/LADDER-FLOW.md](docs/LADDER-FLOW.md)**. The diagram is
+generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`, never the SVG.
+
+---
+
 > **Naming ratified 2026-07-20** (RATIFICATION N8/N9, RFC
 > [gaia-research#68](https://github.com/gaia-research/gaia-research/issues/68)):
 > this repo is the product monorepo and doubles as the Claude Code plugin marketplace;
