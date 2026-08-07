@@ -1,9 +1,13 @@
-import { readFileSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { delimiter, join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 
 const profileEnv = "PI_HEAVEN_PROFILE";
 const messageType = "pi-heaven";
+const summonedSkillEntry = "pi-heaven-summoned-skill";
+const summonTimeoutMs = 30_000;
 
 interface LaunchManifest {
   schema: "pi-heaven/profile@1";
@@ -46,6 +50,101 @@ function loadManifest(): { manifest: LaunchManifest | null; error?: string } {
 
 function formatInvocation(command: string, argv: string[]): string {
   return [command, ...argv].map((part) => JSON.stringify(part)).join(" ");
+}
+
+interface HellEngine {
+  command: string;
+  args: string[];
+  binPath: string;
+}
+
+interface SummonedSkill {
+  id: string;
+  level: string;
+  trustMagnitude?: number;
+  path: string;
+  fileCount?: number;
+  cache?: string;
+  cacheState?: string;
+  totalSeconds?: number;
+}
+
+interface SummonOutcome {
+  query?: string;
+  summoned?: SummonedSkill[];
+  skipped?: Array<{ id: string; reason: string }>;
+}
+
+function executableOnPath(name: string): string | null {
+  for (const dir of (process.env.PATH ?? "").split(delimiter)) {
+    if (!dir) continue;
+    const candidate = join(dir, name);
+    try {
+      accessSync(candidate, constants.X_OK);
+      return candidate;
+    } catch {
+      // Keep searching.
+    }
+  }
+  return null;
+}
+
+function asEngine(binPath: string): HellEngine {
+  return binPath.endsWith(".js")
+    ? { command: process.execPath, args: [binPath], binPath }
+    : { command: binPath, args: [], binPath };
+}
+
+function resolveHellEngine(): HellEngine {
+  const checked: string[] = [];
+  const explicit = process.env.GAIA_HELL_BIN;
+  if (explicit) {
+    if (existsSync(explicit)) return asEngine(explicit);
+    checked.push(`$GAIA_HELL_BIN — set to ${explicit}, but nothing exists there`);
+  } else {
+    checked.push("$GAIA_HELL_BIN — not set");
+  }
+
+  const onPath = executableOnPath("gaia-hell");
+  if (onPath) return asEngine(onPath);
+  checked.push("`gaia-hell` on $PATH — not found");
+
+  const gaiaMcpHome = process.env.GAIA_MCP_HOME;
+  if (gaiaMcpHome) {
+    const candidate = join(gaiaMcpHome, "dist", "bin", "gaia-hell.js");
+    if (existsSync(candidate)) return asEngine(candidate);
+    checked.push(`$GAIA_MCP_HOME/dist/bin/gaia-hell.js — not found at ${candidate}`);
+  } else {
+    checked.push("$GAIA_MCP_HOME — not set");
+  }
+
+  const fallback = join(homedir(), "gaia-mcp", "dist", "bin", "gaia-hell.js");
+  if (existsSync(fallback)) return asEngine(fallback);
+  checked.push(`~/gaia-mcp/dist/bin/gaia-hell.js — not found at ${fallback}`);
+
+  throw new Error(
+    [
+      "gaia-hell binary not found. Checked, in order:",
+      ...checked.map((line, index) => `  ${index + 1}. ${line}`),
+    ].join("\n"),
+  );
+}
+
+function renderSummonedHeader(winner: SummonedSkill): string {
+  const trust = typeof winner.trustMagnitude === "number" ? winner.trustMagnitude.toFixed(1) : "n/a";
+  const cache = winner.cache ?? winner.cacheState;
+  const cost =
+    typeof winner.totalSeconds === "number" && cache
+      ? `  (${winner.totalSeconds.toFixed(2)}s, ${cache})`
+      : "";
+  const files =
+    typeof winner.fileCount === "number"
+      ? `  (${winner.fileCount} file${winner.fileCount === 1 ? "" : "s"})`
+      : "";
+  return [
+    `  ${"summoned".padEnd(8)}  ${winner.id}  ${winner.level}  TM ${trust}${cost}`,
+    `${" ".repeat(12)}-> ${winner.path}${files}`,
+  ].join("\n");
 }
 
 function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number, error?: string): string {
@@ -103,6 +202,18 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     return new Text(theme.fg("customMessageText", content), outputPad, 1);
   });
 
+  pi.on("resources_discover", (_event, ctx) => {
+    const skillPaths = new Set<string>();
+    for (const entry of ctx.sessionManager.getBranch()) {
+      if (entry.type !== "custom" || entry.customType !== summonedSkillEntry) continue;
+      const data = entry.data as { path?: unknown } | undefined;
+      if (typeof data?.path !== "string") continue;
+      const skillFile = join(data.path, "SKILL.md");
+      if (existsSync(skillFile)) skillPaths.add(skillFile);
+    }
+    return { skillPaths: [...skillPaths] };
+  });
+
   pi.registerCommand("skill-heaven", {
     description: "Show this session's Skill Heaven posture",
     handler: async (_args, ctx) => {
@@ -113,6 +224,81 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         content: renderPosture(manifest, loadedSkillCount, error),
         display: true,
       });
+    },
+  });
+
+  pi.registerCommand("skill-hell", {
+    description: "Summon the best matching skill for an intent",
+    handler: async (args, ctx) => {
+      const intent = args.trim();
+      if (!intent) {
+        ctx.ui.notify("gaia-hell: no intent given — usage: /skill-hell <intent>", "error");
+        return;
+      }
+
+      let engine: HellEngine;
+      try {
+        engine = resolveHellEngine();
+      } catch (error) {
+        ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
+        return;
+      }
+
+      const result = await pi.exec(
+        engine.command,
+        [...engine.args, "summon", intent, "--limit", "1", "--json"],
+        { timeout: summonTimeoutMs },
+      );
+      if (result.code !== 0) {
+        const detail = result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`;
+        ctx.ui.notify(`gaia-hell: summon failed (${engine.binPath}): ${detail}`, "error");
+        return;
+      }
+
+      let outcome: SummonOutcome;
+      try {
+        outcome = JSON.parse(result.stdout) as SummonOutcome;
+      } catch {
+        const detail = result.stderr.trim();
+        ctx.ui.notify(`gaia-hell: engine returned unreadable output.${detail ? ` ${detail}` : ""}`, "error");
+        return;
+      }
+
+      const winner = outcome.summoned?.[0];
+      if (!winner) {
+        const lines = [`gaia-hell: no skill could be summoned for "${outcome.query ?? intent}".`];
+        for (const skipped of outcome.skipped ?? []) {
+          lines.push(`skipped ${skipped.id}: ${skipped.reason}`);
+        }
+        ctx.ui.notify(lines.join("\n"), "error");
+        return;
+      }
+
+      const skillFile = join(winner.path, "SKILL.md");
+      let body: string;
+      try {
+        body = readFileSync(skillFile, "utf8");
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        ctx.ui.notify(
+          `gaia-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${detail}`,
+          "error",
+        );
+        return;
+      }
+
+      pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
+      pi.sendMessage({
+        customType: messageType,
+        content: `${renderSummonedHeader(winner)}\n\n${body}`,
+        display: true,
+      });
+
+      // Reload is terminal for a command handler. The persisted custom entry is
+      // read by the new extension instance's resources_discover hook, which
+      // adds the materialized SKILL.md to pi's native skill resources.
+      await ctx.reload();
+      return;
     },
   });
 }
