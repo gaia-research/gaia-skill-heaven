@@ -51,7 +51,7 @@ skill-heaven
   --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
                                         # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
                                         # product-floor = the DOORFUL product floor (claude only)
-  [--level off|low]                     # aliases: off→floor, low→curated;
+  [--level off|low]                     # aliases: off→product-floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
   [--harness claude|pi|codex|cursor|grok]   # default claude
   [--skill <path>]...                   # SKILL.md or its dir; required for curated, rejected otherwise

@@ -116,8 +116,8 @@ export function run(argv: string[]): number {
     return 2;
   }
   if (args.level !== undefined) {
-    // off/low are heaven-lane aliases whose vocabulary is provisional (N3,
-    // pending N4/N5). Reject rather than silently ignore the flag: --posture is
+    // off/low are heaven-lane aliases (off→product-floor, low→curated) whose
+    // vocabulary is provisional (N3, pending N4/N5). Reject rather than silently ignore the flag: --posture is
     // the ratified selector.
     process.stderr.write(
       `claude-heaven selects postures with --posture, not --level (got --level ${args.level}).\n`,

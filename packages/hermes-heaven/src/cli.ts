@@ -56,7 +56,7 @@ export function run(argv: string[]): number {
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
       process.stderr.write(
-        `hermes-heaven: unknown --level "${args.level}" — known aliases: off, low (off→floor, low→curated). ` +
+        `hermes-heaven: unknown --level "${args.level}" — known aliases: off, low (off→product-floor, low→curated). ` +
           `Hell-lane levels (med, high, xhigh, max) are gated (P2) and refused before reaching here.\n`,
       );
       return 2;

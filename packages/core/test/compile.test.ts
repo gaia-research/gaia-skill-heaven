@@ -252,8 +252,8 @@ describe("cli level lane", () => {
   it("defaults to floor", () => {
     expect(parseArgs([]).posture).toBe("floor");
   });
-  it("--level off → floor, --level low → curated", () => {
-    expect(parseArgs(["--level", "off"]).posture).toBe("floor");
+  it("--level off → product-floor, --level low → curated", () => {
+    expect(parseArgs(["--level", "off"]).posture).toBe("product-floor");
     expect(parseArgs(["--level", "low"]).posture).toBe("curated");
   });
   it("hell levels hard-error (P2)", () => {
@@ -277,7 +277,8 @@ describe("cli level lane", () => {
   });
   it("contradiction between --posture and --level errors", () => {
     expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
-    expect(parseArgs(["--posture", "floor", "--level", "off"]).posture).toBe("floor");
+    expect(() => parseArgs(["--posture", "floor", "--level", "off"])).toThrow(/contradicts/);
+    expect(parseArgs(["--posture", "product-floor", "--level", "off"]).posture).toBe("product-floor");
   });
   it("--record demands headless + ids", () => {
     expect(() => parseArgs(["--record"])).toThrow(/headless/);

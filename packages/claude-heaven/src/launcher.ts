@@ -32,7 +32,7 @@ import type { ProfileManifest } from "./statusline.js";
 // proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
 // this gate can never drift from the engine's definition — if a Hell level is
 // ever added/renamed upstream (e.g. the pending N4 "ultra"), the gate follows
-// automatically. off/low are heaven-lane aliases (off→floor, low→curated); the
+// automatically. off/low are heaven-lane aliases (off→product-floor, low→curated); the
 // launcher takes `--posture`, not those aliases, whose vocabulary is provisional
 // (N3, pending N4/N5).
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);

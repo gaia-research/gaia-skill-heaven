@@ -74,7 +74,7 @@ export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
 // Heaven-lane levels only; med..max are the gated hell lane (P2, mapping OPEN
 // item 3). Vocabulary per N3; provisional pending N4/N5.
-export const LEVEL_ALIASES: Record<string, Posture> = { off: "floor", low: "curated" };
+export const LEVEL_ALIASES: Record<string, Posture> = { off: "product-floor", low: "curated" };
 export const HELL_LEVELS = ["med", "high", "xhigh", "max"] as const;
 
 export type FsOp =
