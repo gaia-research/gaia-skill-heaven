@@ -1,6 +1,7 @@
 import { accessSync, constants, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import type {
   ExtensionAPI,
   ExtensionCommandContext,
@@ -65,8 +66,11 @@ interface HellEngine {
 
 interface SummonedSkill {
   id: string;
-  level: string;
+  name?: string;
+  level?: string;
   trustMagnitude?: number;
+  trust?: Record<string, unknown>;
+  trustFields?: Record<string, unknown>;
   path: string;
   fileCount?: number;
   cache?: string;
@@ -154,73 +158,85 @@ async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<
   process.env[ownedHellSessionEnv] = sessionPath;
 }
 
-function renderSummonedHeader(winner: SummonedSkill): string {
-  const trust = typeof winner.trustMagnitude === "number" ? winner.trustMagnitude.toFixed(1) : "n/a";
-  const cache = winner.cache ?? winner.cacheState;
-  const cost =
-    typeof winner.totalSeconds === "number" && cache
-      ? `  (${winner.totalSeconds.toFixed(2)}s, ${cache})`
-      : "";
-  const files =
-    typeof winner.fileCount === "number"
-      ? `  (${winner.fileCount} file${winner.fileCount === 1 ? "" : "s"})`
-      : "";
+export const rungBudgets = {
+  high: { count: 1, relevance: "best relevant match only" },
+  xhigh: { count: 3, relevance: "matches within 10% of the best score" },
+  max: { count: 5, relevance: "matches within 25% of the best score" },
+} as const;
+
+type HellLevel = keyof typeof rungBudgets;
+
+export function renderHellChooser(): string {
   return [
-    `  ${"summoned".padEnd(8)}  ${winner.id}  ${winner.level}  TM ${trust}${cost}`,
-    `${" ".repeat(12)}-> ${winner.path}${files}`,
+    "🔥 Skill Hell · high · xhigh · max · ultra",
+    "",
+    "   ● high    default · 1 skill/gap · tight relevance",
+    "   ○ xhigh   3 skills/gap · within 10% of the best score",
+    "   ○ max     5 skills/gap · within 25% of the best score",
+    "   ⊘ ultra   UNRATIFIED · no approved summon budget",
+    "",
+    "   Select a rung to arm the lane; any other text manually summons for that intent.",
   ].join("\n");
+}
+
+function renderArmed(level: HellLevel): string {
+  const budget = rungBudgets[level];
+  return [
+    `🔥 Skill Hell armed: ${level}`,
+    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap · ${budget.relevance}`,
+    "   Summon only for a real gap; the lane remains armed afterward.",
+    `   engine seam: summon --limit ${budget.count}; automatic gap detection remains a harness integration seam.`,
+  ].join("\n");
+}
+
+export function renderSummonedCard(winner: SummonedSkill): string {
+  const identity = winner.name ?? winner.id;
+  const lines = [`┌ summoned · ${identity}`];
+  if (winner.name && winner.id !== winner.name) lines.push(`   id: ${winner.id}`);
+  const trust = winner.trustFields ?? winner.trust ??
+    (typeof winner.trustMagnitude === "number" ? { trustMagnitude: winner.trustMagnitude } : undefined);
+  for (const [name, value] of Object.entries(trust ?? {})) {
+    if (["string", "number", "boolean"].includes(typeof value)) lines.push(`   ${name}: ${String(value)}`);
+  }
+  const cache = winner.cacheState ?? winner.cache;
+  if (typeof winner.totalSeconds === "number" && cache) {
+    lines.push(`   install: ${winner.totalSeconds.toFixed(2)}s · ${cache}`);
+  }
+  if (typeof winner.fileCount === "number") lines.push(`   files: ${winner.fileCount}`);
+  lines.push(`   path: ${winner.path}`);
+  lines.push(`   inspect: ${pathToFileURL(join(winner.path, "SKILL.md")).href}`);
+  lines.push("└");
+  return lines.join("\n");
 }
 
 function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number, error?: string): string {
   if (!manifest) {
     return [
-      "⚡ Skill Heaven — posture",
-      "   session: vanilla pi — no pi-heaven launch manifest.",
-      `   skills admitted by pi now: ${loadedSkillCount}`,
+      "⚡ Skill Heaven · off · low · med",
+      "   Heaven rungs are boot-time decisions and this session was not launched by pi-heaven.",
+      "   Start one with: → pi-heaven --level low --skill <path>",
+      "   This command did not change the running session.",
       ...(error ? [`   manifest error: ${error}`] : []),
-      "",
-      "   ⊘  hell          LOCKED (P2). /skill-hell is a locked door, not an activator.",
-      "",
-      "   No boot posture can be inferred from this session. This command does not",
-      "   offer subtractive recomposition: nothing can be taken out of a session",
-      "   that is already running.",
     ].join("\n");
   }
 
+  const current =
+    manifest.posture === "product-floor" ? "off" : manifest.posture === "curated" ? "low" : "med";
   const planned =
     manifest.admittedSkillCount === null
-      ? "not knowable by the launcher for native posture"
+      ? "ambient/native"
       : String(manifest.admittedSkillCount);
-  const lines = [
-    "⚡ Skill Heaven — posture",
-    `   session: launched at ${manifest.posture} via pi-heaven`,
+  return [
+    "⚡ Skill Heaven · off · low · med",
+    `   session: launched at ${current} via pi-heaven · ${loadedSkillCount} loaded now · ${planned} planned`,
     `   argv: ${formatInvocation(manifest.command, manifest.argv)}`,
-    `   skills admitted by pi now: ${loadedSkillCount} (planned at boot: ${planned})`,
-    "",
-    "   compiler notes (verbatim):",
-    ...manifest.notes.map((note) => `   - ${note}`),
-    "",
-    "   ⊘  hell          LOCKED (P2). /skill-hell is a locked door, not an activator.",
-  ];
-
-  if (manifest.posture !== "floor") {
-    lines.push(
-      "   ⊘  cleaner       Composed at boot, never mid-session (D12) — not a policy",
-      "                     hold, a harness limit: no in-session command removes",
-      "                     already loaded resources while preserving this conversation.",
-    );
-  }
-
-  lines.push(
-    "",
-    "   A session moves UP only, from the posture it launched at: nothing can be",
-    "   taken out of a session that is already running. This command reports the",
-    "   launch composition; it cannot restart or recompose pi for you.",
-  );
-  return lines.join("\n");
+    "   Heaven changes are boot-time choices; relaunch to move downward (D12).",
+  ].join("\n");
 }
 
 export default function piHeavenExtension(pi: ExtensionAPI) {
+  let armedLevel: HellLevel = "high";
+
   pi.registerEntryRenderer<{ content: string; widgetLines?: string[] }>(outputEntry, (entry, _options, theme) => {
     return new Text(theme.fg("customMessageText", entry.data?.content ?? ""), 1, 1);
   });
@@ -272,13 +288,26 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("skill-hell", {
-    description: "Summon the best matching skill for an intent",
+    description: "Arm additive skill summoning, or manually summon for an intent",
     handler: async (args: string, ctx: ExtensionCommandContext) => {
-      const intent = args.trim();
-      if (!intent) {
-        ctx.ui.notify("skill-hell: no intent given — usage: /skill-hell <intent>", "error");
+      const input = args.trim();
+      if (!input) {
+        pi.appendEntry(outputEntry, { content: renderHellChooser() });
+        ctx.ui.setWidget(outputEntry, undefined);
         return;
       }
+      if (input === "ultra") {
+        ctx.ui.notify("ultra is UNRATIFIED — no approved summon budget exists", "error");
+        return;
+      }
+      if (input in rungBudgets) {
+        armedLevel = input as HellLevel;
+        const rendered = renderArmed(armedLevel);
+        pi.appendEntry(outputEntry, { content: rendered, widgetLines: rendered.split("\n") });
+        ctx.ui.setWidget(outputEntry, rendered.split("\n"));
+        return;
+      }
+      const intent = input;
 
       let engine: HellEngine;
       try {
@@ -297,7 +326,7 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
 
       const result = await pi.exec(
         engine.command,
-        [...engine.args, "summon", intent, "--limit", "1", "--json"],
+        [...engine.args, "summon", intent, "--limit", String(rungBudgets[armedLevel].count), "--json"],
         { timeout: summonTimeoutMs },
       );
       if (result.code !== 0) {
@@ -315,8 +344,8 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         return;
       }
 
-      const winner = outcome.summoned?.[0];
-      if (!winner) {
+      const winners = outcome.summoned ?? [];
+      if (!winners.length) {
         const lines = [`skill-hell: no skill could be summoned for "${outcome.query ?? intent}".`];
         for (const skipped of outcome.skipped ?? []) {
           lines.push(`skipped ${skipped.id}: ${skipped.reason}`);
@@ -325,23 +354,23 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         return;
       }
 
-      const skillFile = join(winner.path, "SKILL.md");
-      let body: string;
-      try {
-        body = readFileSync(skillFile, "utf8");
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        ctx.ui.notify(
-          `skill-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${detail}`,
-          "error",
-        );
-        return;
+      for (const winner of winners) {
+        const skillFile = join(winner.path, "SKILL.md");
+        if (!existsSync(skillFile)) {
+          ctx.ui.notify(
+            `skill-hell: summoned ${winner.id} but its materialized SKILL.md is unavailable at ${skillFile}`,
+            "error",
+          );
+          return;
+        }
       }
 
-      const header = renderSummonedHeader(winner);
-      const rendered = `${header}\n\n${body}`;
-      pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
-      const widgetLines = header.split("\n");
+      const cards = winners.map((winner) => renderSummonedCard(winner));
+      for (const winner of winners) {
+        pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
+      }
+      const rendered = cards.join("\n\n");
+      const widgetLines = rendered.split("\n");
       pi.appendEntry(outputEntry, { content: rendered, widgetLines });
       ctx.ui.setWidget(outputEntry, widgetLines);
       pi.sendMessage({
