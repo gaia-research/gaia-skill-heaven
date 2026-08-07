@@ -74,6 +74,17 @@ Full detail: `packages/core/skills/herdr-dispatch/SKILL.md`.
 self-reported token counts — it reads persisted harness session logs and prices against
 LiteLLM's catalog. See `packages/core/skills/cost-measurement/SKILL.md`.
 
+## Adding a door for a new harness
+
+**Read `packages/core/skills/harness-door-pattern/SKILL.md` first.** Five doors have been built
+and the work is the same shape every time — most of the cost is the probe, not the code.
+
+The short version: every harness hides its skills in one of about four places (allowlist flag
+that reads like a suppression flag · native evict/readmit · config-home env var · already seeded
+onto disk). Identify the class and you have most of the answer. The skill carries the per-harness
+evidence, the probe methodology (self-report confabulates — use hard signals), the door package
+shape, and nine traps that have each already cost time.
+
 ## Fan-out — parallelise mechanical probes, keep judgement central
 
 Probe campaigns are the slow part of building a door, and most of a campaign is **mundane**:

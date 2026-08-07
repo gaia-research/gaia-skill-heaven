@@ -17,6 +17,10 @@ measurement.
 > exec --model … "probe"`, then `herdr pane read "$PROBE_PANE"`. See the `herdr-dispatch` skill.
 > A probe the operator could not see is not evidence.
 
+> **Building the door?** Read `packages/core/skills/harness-door-pattern/SKILL.md` first — it
+> carries the suppression-mechanism taxonomy, the probe methodology, and the traps. This playbook
+> is the harness-specific detail underneath it.
+
 ---
 
 ## 1. Non-interactive invocation
