@@ -8,6 +8,7 @@ const profileEnv = "PI_HEAVEN_PROFILE";
 const messageType = "pi-heaven";
 const outputEntry = "pi-heaven-output";
 const summonedSkillEntry = "pi-heaven-summoned-skill";
+const ownedHellSessionEnv = "PI_HEAVEN_OWNS_HELL_SESSION";
 const summonTimeoutMs = 30_000;
 
 interface LaunchManifest {
@@ -131,6 +132,25 @@ function resolveHellEngine(): HellEngine {
   );
 }
 
+async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<void> {
+  if (process.env.GAIA_HELL_SESSION) return;
+  const result = await pi.exec(engine.command, [...engine.args, "path"], { timeout: summonTimeoutMs });
+  if (result.code !== 0) {
+    const detail = result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`;
+    throw new Error(`gaia-hell: could not create a persistent summon session: ${detail}`);
+  }
+  const sessionPath = result.stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .at(-1);
+  if (!sessionPath || !existsSync(join(sessionPath, "session.json"))) {
+    throw new Error("gaia-hell: path did not return a usable session directory");
+  }
+  process.env.GAIA_HELL_SESSION = sessionPath;
+  process.env[ownedHellSessionEnv] = sessionPath;
+}
+
 function renderSummonedHeader(winner: SummonedSkill): string {
   const trust = typeof winner.trustMagnitude === "number" ? winner.trustMagnitude.toFixed(1) : "n/a";
   const cache = winner.cache ?? winner.cacheState;
@@ -213,6 +233,18 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     }
   });
 
+  pi.on("session_shutdown", async (event) => {
+    const ownedSession = process.env[ownedHellSessionEnv];
+    if (event.reason !== "quit" || !ownedSession || process.env.GAIA_HELL_SESSION !== ownedSession) return;
+    try {
+      const engine = resolveHellEngine();
+      await pi.exec(engine.command, [...engine.args, "close"], { timeout: summonTimeoutMs });
+    } finally {
+      delete process.env.GAIA_HELL_SESSION;
+      delete process.env[ownedHellSessionEnv];
+    }
+  });
+
   pi.on("resources_discover", (_event, ctx) => {
     const skillPaths = new Set<string>();
     for (const entry of ctx.sessionManager.getBranch()) {
@@ -248,6 +280,13 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       let engine: HellEngine;
       try {
         engine = resolveHellEngine();
+      } catch (error) {
+        ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
+        return;
+      }
+
+      try {
+        await ensureHellSession(pi, engine);
       } catch (error) {
         ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
         return;

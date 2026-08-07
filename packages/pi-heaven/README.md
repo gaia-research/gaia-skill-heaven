@@ -55,7 +55,9 @@ pi --extension packages/pi-heaven/extension/pi-heaven.ts
 Or install the package through pi's package channel and let its `pi.extensions`
 manifest load the same file. Without a launcher manifest, `/skill-heaven`
 honestly reports a vanilla pi session; `/skill-hell` remains available because
-it does not depend on posture handoff.
+it does not depend on posture handoff. When no `GAIA_HELL_SESSION` is supplied,
+the extension creates one for the life of the pi process so materialized skill
+directories survive resource reloads, then closes it when pi quits.
 
 See [EXTENSION.md](EXTENSION.md) for the pi 0.83.0 API findings and #31 design
 reasoning, and [PROBE.md](PROBE.md) for the posture-route evidence.
