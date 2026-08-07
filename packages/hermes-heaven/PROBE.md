@@ -63,6 +63,16 @@ hermes -z "List every skill you have available, by name. If none, say NONE." \
 
 Both runs returned the same 108 installed names. One ended `Total: 108 skills.` and one added a conversational offer instead of a count. **The names agreed; formatting did not.** User-config suppression does not suppress the skills index.
 
+### `--ignore-user-config --ignore-rules` composition
+
+```
+hermes -z "List every skill you have available, by name. If none, say NONE." \
+  --ignore-user-config --ignore-rules \
+  --provider openai-codex --model gpt-5.4 --reasoning low
+```
+
+Both runs returned the same 108 installed names. One added a conversational offer and one ended `Total: 108`. **The names agreed; formatting did not.** This composition suppresses user config plus auto-injected rules/memory/preloaded bodies while preserving plugins and MCP, but does not suppress the skills index.
+
 ## Harder structured signals
 
 ```
