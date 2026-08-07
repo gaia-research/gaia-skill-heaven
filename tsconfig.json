@@ -13,7 +13,13 @@
     "allowJs": true,
     "checkJs": true
   },
-  "include": ["packages/*/src", "packages/*/test", "packages/*/scripts", "packages/*/plugin/scripts"],
+  "include": [
+    "packages/*/src",
+    "packages/*/extension",
+    "packages/*/test",
+    "packages/*/scripts",
+    "packages/*/plugin/scripts"
+  ],
   // Vendored third-party scripts inside test fixtures are data, not our source.
   "exclude": ["node_modules", "packages/*/test/fixtures"]
 }
