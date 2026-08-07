@@ -62,7 +62,7 @@ export const FLOOR_EVIDENCE = {
   productFloorVsNativePct: -28.9,
 } as const;
 
-export const HARNESSES = ["claude", "pi", "codex", "cursor", "grok"] as const;
+export const HARNESSES = ["claude", "pi", "codex", "hermes", "cursor", "grok"] as const;
 export type Harness = (typeof HARNESSES)[number];
 
 export const MECHANISMS = ["plugin-dir", "config-dir"] as const;
@@ -150,13 +150,16 @@ export function compile(input: CompileInput): CompileResult {
   }
   // M0 discipline: the doorful floor exists as a measured cell on claude (F7,
   // 2.1.216) and, as of WP2 (PROBE.md, pi 0.83.0, probed 2026-08-07), pi. No
-  // other harness has a probed doorless/doorful distinction, so refuse rather
-  // than guess one into existence (D8).
-  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi"];
+  // Hermes 0.20.0 also has a probed best-effort distinction: --safe-mode is
+  // the maximal benchmark floor, while --ignore-user-config --ignore-rules
+  // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
+  // installed-skills index; compileHermes discloses that negative result and
+  // remains recipe-only.
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "hermes"];
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216) and ` +
-        "pi (PROBE.md, 0.83.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
+      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
+        "pi (PROBE.md, 0.83.0), and hermes (PROBE.md, 0.20.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
         "Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
@@ -177,6 +180,8 @@ export function compile(input: CompileInput): CompileResult {
       return compilePi(input, base);
     case "codex":
       return compileCodex(input, base);
+    case "hermes":
+      return compileHermes(input, base);
     case "cursor":
       return compileCursor(input, base);
     case "grok":
@@ -382,6 +387,78 @@ function compilePi(
     argv.push("--no-skills", "--no-context-files", "--no-prompt-templates");
   }
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
+}
+
+// Hermes Agent 0.20.0 — verified clean-room routes
+// (packages/hermes-heaven/PROBE.md, 2026-08-07).
+//
+// The original probe correctly found that --safe-mode/--ignore-rules/
+// --ignore-user-config do not suppress the 108-name installed-skills index.
+// Source inspection explains why: skill-index construction is gated by the
+// three tools in the `skills` toolset, independently of those customization
+// flags. An explicit --toolsets allowlist without `skills` suppresses the
+// index. For curated, a scoped HERMES_HOME with the no-seeding marker and
+// session-copied skill dirs produced exactly the copied skill and preloaded it
+// by resolved name. Every route below was repeated and authenticated.
+function compileHermes(
+  input: CompileInput,
+  base: Omit<CompileResult, "command" | "argv" | "execSupport">,
+): CompileResult {
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
+  const notes = [...base.notes];
+  const argv: string[] =
+    input.prompt === undefined
+      ? []
+      : input.posture === "curated"
+        ? ["chat", "-q", input.prompt, "--quiet"]
+        : ["-z", input.prompt];
+  const skillsLessToolsets = "terminal,web,file";
+
+  if (input.posture === "floor") {
+    argv.push("--toolsets", skillsLessToolsets, "--safe-mode");
+    notes.push(
+      "Hermes 0.20.0 benchmark floor: explicit terminal,web,file toolset allowlist omits the skills toolset, so the implementation never builds the skills index; --safe-mode additionally suppresses user config, context files/memory, plugins, and MCP. Repeated authenticated probes answered successfully with identical prompt-side usage. No priced dose is claimed.",
+    );
+  } else if (input.posture === "product-floor") {
+    argv.push("--toolsets", skillsLessToolsets, "--ignore-user-config", "--ignore-rules");
+    notes.push(
+      "Hermes 0.20.0 product floor: the verified terminal,web,file allowlist omits the skills toolset/index; --ignore-user-config --ignore-rules suppresses behavioral config and context files/memory while leaving plugins/MCP available as the door-capable control surface. Repeated authenticated probes answered successfully. No priced dose is claimed.",
+    );
+  } else if (input.posture === "curated") {
+    env.HERMES_HOME = "$SESSION/hermes";
+    fsPlan.push(
+      {
+        kind: "copyFileIfExists",
+        from: `${input.homeDir ?? "$HOME"}/.hermes/auth.json`,
+        to: "$SESSION/hermes/auth.json",
+      },
+      { kind: "write", path: "$SESSION/hermes/.no-bundled-skills", contents: "" },
+    );
+    for (const skill of input.skills) {
+      fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/hermes/skills/${skill.id}` });
+      argv.push("--skills", skill.id);
+    }
+    argv.push("--safe-mode");
+    notes.push(
+      "Hermes 0.20.0 curated clean room: session-scoped HERMES_HOME receives only auth.json, the .no-bundled-skills marker, and copies of the named skill directories. --skills then preloads each resolved name; --safe-mode suppresses other customizations. Hard listing probes showed exactly one copied local skill and zero bundled skills, and the copied marker skill loaded under safe mode twice. config.yaml is deliberately not copied, avoiding re-imported behavioral customizations. For headless curated runs core uses `hermes chat -q --quiet`, because Hermes 0.20.0's top-level -z oneshot path does not pass --skills through.",
+    );
+  } else {
+    notes.push("Hermes native posture is untouched.");
+  }
+
+  if (input.model) argv.push("--model", input.model);
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+
+  return {
+    command: "hermes",
+    argv,
+    env,
+    fsPlan,
+    notes,
+    doseSummary: base.doseSummary,
+    execSupport: "exec",
+  };
 }
 
 // codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.
