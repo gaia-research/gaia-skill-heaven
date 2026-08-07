@@ -1,0 +1,19 @@
+{
+  "name": "hermes-heaven",
+  "version": "0.0.0",
+  "description": "hermes-heaven — the Hermes door to Skill Heaven: an honest recipe-only prototype for floor/product-floor/curated/native postures. Built on skill-heaven core. PROTOTYPE (WP7).",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "hermes-heaven": "./bin/hermes-heaven.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "launch": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "skill-heaven": "*"
+  }
+}
