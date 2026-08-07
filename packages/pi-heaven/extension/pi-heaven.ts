@@ -6,6 +6,7 @@ import { Text } from "@earendil-works/pi-tui";
 
 const profileEnv = "PI_HEAVEN_PROFILE";
 const messageType = "pi-heaven";
+const outputEntry = "pi-heaven-output";
 const summonedSkillEntry = "pi-heaven-summoned-skill";
 const summonTimeoutMs = 30_000;
 
@@ -197,9 +198,8 @@ function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number
 }
 
 export default function piHeavenExtension(pi: ExtensionAPI) {
-  pi.registerMessageRenderer(messageType, (message, { outputPad }, theme) => {
-    const content = typeof message.content === "string" ? message.content : "(unsupported message content)";
-    return new Text(theme.fg("customMessageText", content), outputPad, 1);
+  pi.registerEntryRenderer<{ content: string }>(outputEntry, (entry, _options, theme) => {
+    return new Text(theme.fg("customMessageText", entry.data?.content ?? ""), 1, 1);
   });
 
   pi.on("resources_discover", (_event, ctx) => {
@@ -219,10 +219,8 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     handler: async (_args, ctx) => {
       const { manifest, error } = loadManifest();
       const loadedSkillCount = ctx.getSystemPromptOptions().skills?.length ?? 0;
-      pi.sendMessage({
-        customType: messageType,
+      pi.appendEntry(outputEntry, {
         content: renderPosture(manifest, loadedSkillCount, error),
-        display: true,
       });
     },
   });
@@ -287,11 +285,13 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         return;
       }
 
+      const rendered = `${renderSummonedHeader(winner)}\n\n${body}`;
       pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
+      pi.appendEntry(outputEntry, { content: rendered });
       pi.sendMessage({
         customType: messageType,
-        content: `${renderSummonedHeader(winner)}\n\n${body}`,
-        display: true,
+        content: rendered,
+        display: false,
       });
 
       // Reload is terminal for a command handler. The persisted custom entry is
