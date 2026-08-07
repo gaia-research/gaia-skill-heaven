@@ -389,53 +389,75 @@ function compilePi(
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }
 
-// Hermes Agent 0.20.0 — best-effort recipe only (packages/hermes-heaven/PROBE.md).
+// Hermes Agent 0.20.0 — verified clean-room routes
+// (packages/hermes-heaven/PROBE.md, 2026-08-07).
 //
-// The 2026-08-07 probe found a real structural limitation: --safe-mode,
-// --ignore-rules, --ignore-user-config, and the composed
-// --ignore-user-config --ignore-rules route all left the complete 108-name
-// installed-skills index model-visible in repeated runs. --skills accepts
-// installed names/bundle aliases, not arbitrary directories (a disposable
-// marker skill passed by absolute path returned NONE twice). Consequently no
-// verified clean floor or suppress-all-then-readmit curated route exists.
-// These argv are honest best-effort recipes and are never spawned by exec.ts.
+// The original probe correctly found that --safe-mode/--ignore-rules/
+// --ignore-user-config do not suppress the 108-name installed-skills index.
+// Source inspection explains why: skill-index construction is gated by the
+// three tools in the `skills` toolset, independently of those customization
+// flags. An explicit --toolsets allowlist without `skills` suppresses the
+// index. For curated, a scoped HERMES_HOME with the no-seeding marker and
+// session-copied skill dirs produced exactly the copied skill and preloaded it
+// by resolved name. Every route below was repeated and authenticated.
 function compileHermes(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
 ): CompileResult {
-  const argv: string[] = [];
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
   const notes = [...base.notes];
+  const argv: string[] =
+    input.prompt === undefined
+      ? []
+      : input.posture === "curated"
+        ? ["chat", "-q", input.prompt, "--quiet"]
+        : ["-z", input.prompt];
+  const skillsLessToolsets = "terminal,web,file";
 
   if (input.posture === "floor") {
-    argv.push("--safe-mode");
+    argv.push("--toolsets", skillsLessToolsets, "--safe-mode");
     notes.push(
-      "Hermes 0.20.0 benchmark-floor recipe: --safe-mode is maximal documented suppression (user config, rules/memory, plugins, MCP), but repeated probes still exposed the complete 108-name installed-skills index. This is not an absolute zero and no token dose was measured.",
+      "Hermes 0.20.0 benchmark floor: explicit terminal,web,file toolset allowlist omits the skills toolset, so the implementation never builds the skills index; --safe-mode additionally suppresses user config, context files/memory, plugins, and MCP. Repeated authenticated probes answered successfully with identical prompt-side usage. No priced dose is claimed.",
     );
   } else if (input.posture === "product-floor") {
-    argv.push("--ignore-user-config", "--ignore-rules");
+    argv.push("--toolsets", skillsLessToolsets, "--ignore-user-config", "--ignore-rules");
     notes.push(
-      "Hermes 0.20.0 product-floor recipe: --ignore-user-config --ignore-rules suppresses user config and auto-injected rules/memory/preloaded bodies while preserving plugins/MCP as the door-capable control surface. Two probes still exposed all 108 installed skill names, so this is best-effort rather than a clean floor; no token dose was measured.",
+      "Hermes 0.20.0 product floor: the verified terminal,web,file allowlist omits the skills toolset/index; --ignore-user-config --ignore-rules suppresses behavioral config and context files/memory while leaving plugins/MCP available as the door-capable control surface. Repeated authenticated probes answered successfully. No priced dose is claimed.",
     );
   } else if (input.posture === "curated") {
-    argv.push("--ignore-user-config");
-    for (const skill of input.skills) argv.push("--skills", skill.id);
+    env.HERMES_HOME = "$SESSION/hermes";
+    fsPlan.push(
+      {
+        kind: "copyFileIfExists",
+        from: `${input.homeDir ?? "$HOME"}/.hermes/auth.json`,
+        to: "$SESSION/hermes/auth.json",
+      },
+      { kind: "write", path: "$SESSION/hermes/.no-bundled-skills", contents: "" },
+    );
+    for (const skill of input.skills) {
+      fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/hermes/skills/${skill.id}` });
+      argv.push("--skills", skill.id);
+    }
+    argv.push("--safe-mode");
     notes.push(
-      "Hermes 0.20.0 curated recipe is structurally constrained: --skills admits installed names/bundle aliases, not the supplied arbitrary directories. The recipe requests each resolved skill id by name, so it only works when matching skills are already installed in the active Hermes profile. --safe-mode/--ignore-rules cannot be stacked because they also skip preloaded skills, and the ambient skills index plus project rules/memory remain; this is not suppress-all-then-readmit and is recipe-only.",
+      "Hermes 0.20.0 curated clean room: session-scoped HERMES_HOME receives only auth.json, the .no-bundled-skills marker, and copies of the named skill directories. --skills then preloads each resolved name; --safe-mode suppresses other customizations. Hard listing probes showed exactly one copied local skill and zero bundled skills, and the copied marker skill loaded under safe mode twice. config.yaml is deliberately not copied, avoiding re-imported behavioral customizations. For headless curated runs core uses `hermes chat -q --quiet`, because Hermes 0.20.0's top-level -z oneshot path does not pass --skills through.",
     );
   } else {
-    notes.push("Hermes native posture is untouched, but remains recipe-only because this prototype route is not licensed for live exec.");
+    notes.push("Hermes native posture is untouched.");
   }
 
   if (input.model) argv.push("--model", input.model);
-  if (input.prompt !== undefined) argv.push("-z", input.prompt);
   if (input.passthrough?.length) argv.push(...input.passthrough);
 
   return {
-    ...base,
-    notes,
     command: "hermes",
     argv,
-    execSupport: "recipe",
+    env,
+    fsPlan,
+    notes,
+    doseSummary: base.doseSummary,
+    execSupport: "exec",
   };
 }
 
