@@ -16,14 +16,15 @@ harness's channel, not this manifest. Two layers:
   TypeScript ESM.
 - **`packages/claude-heaven`**, **`packages/pi-heaven`** — the per-harness
   **doors** (the user-facing installables). `claude-heaven` is the flagship
-  (WS4); `pi-heaven` is the vanguard (WS5). Per N9 the marketing weight is on
+  (WS4); `pi-heaven` is the vanguard (WS5). Every door defaults to the `off`
+  ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
 ## Layout
 
 ```
 packages/core/           engine + skill-heaven bin + vendored pure helpers (src/vendor) + parity fixture/tests
-packages/claude-heaven/  Claude Code door (native-default launcher, /skill-heaven + /skill-hell, statusline) — WIP (WS4)
+packages/claude-heaven/  Claude Code door (off-default launcher, /skill-heaven chooser + /skill-hell, statusline) — WIP (WS4)
 packages/pi-heaven/      pi door — stub (WS5)
 ```
 
