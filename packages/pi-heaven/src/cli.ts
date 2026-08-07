@@ -110,17 +110,14 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // P2 gate first — never compose a gated (Hell-lane) level. Same wording and
-  // uncaught-throw behavior as claude-heaven (packages/claude-heaven/src/
-  // cli.ts + src/launcher.ts's assertLevelAllowed) — the refusal reads the
-  // same on every door.
+  // Ultra is the sole unratified rung. Ratified Hell levels route below to
+  // the live /skill-hell surface instead of being treated as postures.
   assertLevelAllowed(args.level);
 
   let posture = args.posture;
   if (args.level !== undefined) {
-    // Unlike claude-heaven (which refuses --level outright — --posture is its
-    // ratified selector), pi-heaven implements off/low as working aliases per
-    // the WP2 brief. Gated levels never reach here (refused above).
+    // Heaven aliases select boot postures. Hell levels have no posture mapping
+    // and are routed to /skill-hell below.
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
       if ((HELL_LEVELS as readonly string[]).includes(args.level)) {

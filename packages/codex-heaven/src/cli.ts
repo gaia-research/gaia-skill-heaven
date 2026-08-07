@@ -85,9 +85,8 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // P2 gate first — never compose a gated (Hell-lane) level. Same wording and
-  // uncaught-throw behavior as claude-heaven and pi-heaven — the refusal
-  // reads the same on every door.
+  // Ultra is the sole unratified rung. Ratified Hell levels route below to
+  // the live /skill-hell surface instead of being treated as postures.
   assertLevelAllowed(args.level);
 
   let posture = args.posture;

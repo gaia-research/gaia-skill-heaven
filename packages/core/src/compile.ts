@@ -167,7 +167,7 @@ export function compile(input: CompileInput): CompileResult {
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );

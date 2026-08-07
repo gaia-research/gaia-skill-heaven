@@ -47,8 +47,8 @@ export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 // core mounts ONLY $SESSION/heaven-set as the sole --plugin-dir — the door's
 // own plugin is never re-admitted. So `/skill-heaven`, this door's own
 // posture control, does not exist inside a curated session. This is neither
-// of the two refusal classes: it is not withheld by policy (P2 gates the
-// Hell lane only, and nothing here is a trust-coverage decision), and it is
+// of the two refusal classes: it is not withheld by policy (Hell is a live
+// additive lane, and nothing here is a trust-coverage decision), and it is
 // not proven harness-incapable either — `--plugin-dir` is documented as
 // repeatable, so mounting the door alongside the curated set would likely
 // work. Core rejects a second `doorPluginDir` for anything but
