@@ -198,8 +198,19 @@ function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number
 }
 
 export default function piHeavenExtension(pi: ExtensionAPI) {
-  pi.registerEntryRenderer<{ content: string }>(outputEntry, (entry, _options, theme) => {
+  pi.registerEntryRenderer<{ content: string; widgetLines?: string[] }>(outputEntry, (entry, _options, theme) => {
     return new Text(theme.fg("customMessageText", entry.data?.content ?? ""), 1, 1);
+  });
+
+  pi.on("session_start", (_event, ctx) => {
+    const latestOutput = [...ctx.sessionManager.getBranch()]
+      .reverse()
+      .find((entry) => entry.type === "custom" && entry.customType === outputEntry);
+    if (latestOutput?.type !== "custom") return;
+    const data = latestOutput.data as { widgetLines?: unknown } | undefined;
+    if (Array.isArray(data?.widgetLines) && data.widgetLines.every((line) => typeof line === "string")) {
+      ctx.ui.setWidget(outputEntry, data.widgetLines as string[]);
+    }
   });
 
   pi.on("resources_discover", (_event, ctx) => {
@@ -220,8 +231,9 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       const { manifest, error } = loadManifest();
       const loadedSkillCount = ctx.getSystemPromptOptions().skills?.length ?? 0;
       const rendered = renderPosture(manifest, loadedSkillCount, error);
-      pi.appendEntry(outputEntry, { content: rendered });
-      ctx.ui.setWidget(outputEntry, rendered.split("\n"));
+      const widgetLines = rendered.split("\n");
+      pi.appendEntry(outputEntry, { content: rendered, widgetLines });
+      ctx.ui.setWidget(outputEntry, widgetLines);
     },
   });
 
@@ -288,8 +300,9 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       const header = renderSummonedHeader(winner);
       const rendered = `${header}\n\n${body}`;
       pi.appendEntry(summonedSkillEntry, { path: winner.path, id: winner.id });
-      pi.appendEntry(outputEntry, { content: rendered });
-      ctx.ui.setWidget(outputEntry, header.split("\n"));
+      const widgetLines = header.split("\n");
+      pi.appendEntry(outputEntry, { content: rendered, widgetLines });
+      ctx.ui.setWidget(outputEntry, widgetLines);
       pi.sendMessage({
         customType: messageType,
         content: rendered,
