@@ -2,6 +2,9 @@
 // module resolves --skill paths, substitutes session placeholders, and carries
 // the plan to the CLI. It never writes shared Grok state.
 
+import { readdirSync, realpathSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import {
   compile,
   HELL_LEVELS,
@@ -57,9 +60,53 @@ export interface LaunchPlan {
 const subst = (value: string, sessionDir: string): string =>
   value.replaceAll("$SESSION", sessionDir).replaceAll("$CWD", process.cwd());
 
+function formatIgnoreEntries(paths: string[]): string {
+  return paths.map((path) => `  ${JSON.stringify(path)},`).join("\n");
+}
+
+function discoverSymlinkIgnores(): string[] {
+  const root = join(homedir(), ".agents", "skills");
+  try {
+    return readdirSync(root).flatMap((name) => {
+      const path = join(root, name);
+      try {
+        const target = realpathSync(path);
+        return target === path ? [] : [target];
+      } catch {
+        return [];
+      }
+    });
+  } catch {
+    return [];
+  }
+}
+
+function discoverAncestorIgnores(): string[] {
+  const roots = [".grok", ".agents", ".claude", ".cursor"];
+  const paths: string[] = [];
+  let current = process.cwd();
+  while (true) {
+    for (const root of roots) paths.push(join(current, root, "skills"));
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return paths;
+}
+
+function substituteConfig(value: string, sessionDir: string): string {
+  const symlinkIgnores = discoverSymlinkIgnores();
+  return subst(value, sessionDir)
+    .replace(
+      '  "$SYMLINK_IGNORES",\n',
+      formatIgnoreEntries(symlinkIgnores) + (symlinkIgnores.length ? "\n" : ""),
+    )
+    .replace('  "$ANCESTOR_IGNORES"\n', formatIgnoreEntries(discoverAncestorIgnores()) + "\n");
+}
+
 function substituteFsOp(op: FsOp, sessionDir: string): FsOp {
   if (op.kind === "write") {
-    return { ...op, path: subst(op.path, sessionDir), contents: subst(op.contents, sessionDir) };
+    return { ...op, path: subst(op.path, sessionDir), contents: substituteConfig(op.contents, sessionDir) };
   }
   return { ...op, from: subst(op.from, sessionDir), to: subst(op.to, sessionDir) };
 }

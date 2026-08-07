@@ -597,7 +597,9 @@ ignore = [
   "$CWD/.agents/skills",
   "$CWD/.claude/skills",
   "$CWD/.cursor/skills",
-  "$SESSION/grok/bundled/skills"
+  "$SESSION/grok/bundled/skills",
+  "$SYMLINK_IGNORES",
+  "$ANCESTOR_IGNORES"
 ]
 
 [plugins]
