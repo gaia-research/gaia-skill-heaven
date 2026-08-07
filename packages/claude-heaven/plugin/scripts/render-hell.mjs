@@ -16,6 +16,7 @@
 
 import { readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { HellEngineNotFoundError, resolveHellEngine } from "./resolve-hell.mjs";
 
@@ -29,12 +30,38 @@ function formatTrustMagnitude(value) {
 }
 
 /**
- * @param {{ id: string, level: string, trustMagnitude?: number, path: string }} winner
+ * `winner.path` is the materialized skill DIRECTORY, not a file. Summon has
+ * install parity with `gaia install`: it clones the source repo and brings down
+ * the whole skill dir (SKILL.md plus reference/, scripts/, fixtures). Read
+ * SKILL.md from inside it — never read the path itself.
+ *
+ * @param {{ id: string, level: string, trustMagnitude?: number, path: string,
+ *           fileCount?: number, cache?: string, totalSeconds?: number }} winner
  */
 function renderHeader(winner) {
-  const head = `  ${"summoned".padEnd(LABEL_WIDTH)}  ${winner.id}  ${winner.level}  TM ${formatTrustMagnitude(winner.trustMagnitude)}`;
-  const pointer = `${" ".repeat(PREFIX_WIDTH)}-> ${winner.path}`;
+  const head = `  ${"summoned".padEnd(LABEL_WIDTH)}  ${winner.id}  ${winner.level}  TM ${formatTrustMagnitude(winner.trustMagnitude)}${renderCost(winner)}`;
+  const pointer = `${" ".repeat(PREFIX_WIDTH)}-> ${winner.path}${renderFileCount(winner)}`;
   return `${head}\n${pointer}`;
+}
+
+/**
+ * Install time plus whether the repo cache was cold or warm. The two differ by
+ * roughly an order of magnitude, so a timing shown without its cache state
+ * cannot be interpreted — never print one without the other.
+ *
+ * @param {{ cache?: string, totalSeconds?: number }} winner
+ */
+function renderCost(winner) {
+  const parts = [];
+  if (typeof winner.totalSeconds === "number") parts.push(`${winner.totalSeconds.toFixed(2)}s`);
+  if (winner.cache) parts.push(winner.cache);
+  return parts.length ? `  (${parts.join(", ")})` : "";
+}
+
+/** @param {{ fileCount?: number }} winner */
+function renderFileCount(winner) {
+  if (typeof winner.fileCount !== "number") return "";
+  return `  (${winner.fileCount} file${winner.fileCount === 1 ? "" : "s"})`;
 }
 
 /** @param {{ query?: string, skipped?: Array<{ id: string, reason: string }> }} outcome @param {string} fallbackQuery */
@@ -92,12 +119,15 @@ export function renderHell(argv) {
     return { text: `${renderNoMatch(outcome, intent)}\n`, ok: false };
   }
 
+  // winner.path is the skill DIRECTORY (install parity). Read SKILL.md from
+  // inside it; reading the directory itself raises EISDIR.
+  const skillFile = join(winner.path, "SKILL.md");
   let body;
   try {
-    body = readFileSync(winner.path, "utf-8");
+    body = readFileSync(skillFile, "utf-8");
   } catch (error) {
     return {
-      text: `gaia-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${winner.path}: ${errorMessage(error)}\n`,
+      text: `gaia-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${errorMessage(error)}\n`,
       ok: false,
     };
   }
