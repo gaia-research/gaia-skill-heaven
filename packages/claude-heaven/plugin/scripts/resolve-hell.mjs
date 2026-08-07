@@ -1,5 +1,5 @@
-// Locates the gaia-hell summon-engine binary (lives in the sibling `gaia-mcp`
-// repo, built to dist/bin/gaia-hell.js — see docs/SKILL-HELL.md there). This
+// Locates the skill-hell summon-engine binary (lives in the sibling `gaia-mcp`
+// repo, built to dist/bin/skill-hell.js — see docs/SKILL-HELL.md there). This
 // package never imports that repo (D6-style boundary: it is a sibling
 // product, not a vendored dependency), so discovery happens at runtime
 // against whatever the operator has on disk.
@@ -23,12 +23,12 @@ export class HellEngineNotFoundError extends Error {
   constructor(/** @type {string[]} */ checked) {
     super(
       [
-        "gaia-hell binary not found. Checked, in order:",
+        "skill-hell binary not found. Checked, in order:",
         ...checked.map((line, i) => `  ${i + 1}. ${line}`),
         "",
         "Fix one of:",
-        "  - export GAIA_HELL_BIN=/path/to/gaia-hell        (or .../gaia-hell.js)",
-        "  - put gaia-hell on PATH (e.g. npm link in the gaia-mcp checkout)",
+        "  - export SKILL_HELL_BIN=/path/to/skill-hell        (or .../skill-hell.js)",
+        "  - put skill-hell on PATH (e.g. npm link in the gaia-mcp checkout)",
         "  - export GAIA_MCP_HOME=/path/to/gaia-mcp          (a built checkout)",
         "  - build gaia-mcp at ~/gaia-mcp                    (npm run build)",
       ].join("\n"),
@@ -47,7 +47,7 @@ export class HellEngineNotFoundError extends Error {
 function toEngine(binPath, source) {
   // A `.js` file is not directly executable via spawn on every platform (no
   // shebang guarantee once copied/symlinked), so run it through the same
-  // Node that is running this script. Anything else (a real `gaia-hell`
+  // Node that is running this script. Anything else (a real `skill-hell`
   // executable found on PATH or named explicitly) is invoked directly.
   if (binPath.endsWith(".js")) {
     return { command: process.execPath, args: [binPath], source, binPath };
@@ -71,11 +71,11 @@ function findOnPath(name, pathEnv) {
 }
 
 /**
- * Resolves the gaia-hell binary, first hit wins:
- *   1. $GAIA_HELL_BIN
- *   2. `gaia-hell` on $PATH
- *   3. $GAIA_MCP_HOME/dist/bin/gaia-hell.js
- *   4. ~/gaia-mcp/dist/bin/gaia-hell.js
+ * Resolves the skill-hell binary, first hit wins:
+ *   1. $SKILL_HELL_BIN
+ *   2. `skill-hell` on $PATH
+ *   3. $GAIA_MCP_HOME/dist/bin/skill-hell.js
+ *   4. ~/gaia-mcp/dist/bin/skill-hell.js
  * Throws HellEngineNotFoundError (never silently no-ops) if none resolve.
  * @param {{ env?: NodeJS.ProcessEnv, home?: string }} [opts]
  * @returns {HellEngine}
@@ -85,30 +85,30 @@ export function resolveHellEngine(opts = {}) {
   const home = opts.home ?? homedir();
   const checked = [];
 
-  const explicit = env.GAIA_HELL_BIN;
+  const explicit = env.SKILL_HELL_BIN;
   if (explicit) {
-    if (existsSync(explicit)) return toEngine(explicit, "GAIA_HELL_BIN");
-    checked.push(`$GAIA_HELL_BIN — set to ${explicit}, but nothing exists there`);
+    if (existsSync(explicit)) return toEngine(explicit, "SKILL_HELL_BIN");
+    checked.push(`$SKILL_HELL_BIN — set to ${explicit}, but nothing exists there`);
   } else {
-    checked.push("$GAIA_HELL_BIN — not set");
+    checked.push("$SKILL_HELL_BIN — not set");
   }
 
-  const onPath = findOnPath("gaia-hell", env.PATH ?? "");
+  const onPath = findOnPath("skill-hell", env.PATH ?? "");
   if (onPath) return toEngine(onPath, "PATH");
-  checked.push("`gaia-hell` on $PATH — not found");
+  checked.push("`skill-hell` on $PATH — not found");
 
   const mcpHome = env.GAIA_MCP_HOME;
   if (mcpHome) {
-    const candidate = join(mcpHome, "dist", "bin", "gaia-hell.js");
+    const candidate = join(mcpHome, "dist", "bin", "skill-hell.js");
     if (existsSync(candidate)) return toEngine(candidate, "GAIA_MCP_HOME");
-    checked.push(`$GAIA_MCP_HOME/dist/bin/gaia-hell.js — not found at ${candidate}`);
+    checked.push(`$GAIA_MCP_HOME/dist/bin/skill-hell.js — not found at ${candidate}`);
   } else {
     checked.push("$GAIA_MCP_HOME — not set");
   }
 
-  const fallback = join(home, "gaia-mcp", "dist", "bin", "gaia-hell.js");
+  const fallback = join(home, "gaia-mcp", "dist", "bin", "skill-hell.js");
   if (existsSync(fallback)) return toEngine(fallback, "~/gaia-mcp");
-  checked.push(`~/gaia-mcp/dist/bin/gaia-hell.js — not found at ${fallback}`);
+  checked.push(`~/gaia-mcp/dist/bin/skill-hell.js — not found at ${fallback}`);
 
   throw new HellEngineNotFoundError(checked);
 }

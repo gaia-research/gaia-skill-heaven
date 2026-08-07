@@ -102,45 +102,45 @@ function asEngine(binPath: string): HellEngine {
 
 function resolveHellEngine(): HellEngine {
   const checked: string[] = [];
-  const explicit = process.env.GAIA_HELL_BIN;
+  const explicit = process.env.SKILL_HELL_BIN;
   if (explicit) {
     if (existsSync(explicit)) return asEngine(explicit);
-    checked.push(`$GAIA_HELL_BIN — set to ${explicit}, but nothing exists there`);
+    checked.push(`$SKILL_HELL_BIN — set to ${explicit}, but nothing exists there`);
   } else {
-    checked.push("$GAIA_HELL_BIN — not set");
+    checked.push("$SKILL_HELL_BIN — not set");
   }
 
-  const onPath = executableOnPath("gaia-hell");
+  const onPath = executableOnPath("skill-hell");
   if (onPath) return asEngine(onPath);
-  checked.push("`gaia-hell` on $PATH — not found");
+  checked.push("`skill-hell` on $PATH — not found");
 
   const gaiaMcpHome = process.env.GAIA_MCP_HOME;
   if (gaiaMcpHome) {
-    const candidate = join(gaiaMcpHome, "dist", "bin", "gaia-hell.js");
+    const candidate = join(gaiaMcpHome, "dist", "bin", "skill-hell.js");
     if (existsSync(candidate)) return asEngine(candidate);
-    checked.push(`$GAIA_MCP_HOME/dist/bin/gaia-hell.js — not found at ${candidate}`);
+    checked.push(`$GAIA_MCP_HOME/dist/bin/skill-hell.js — not found at ${candidate}`);
   } else {
     checked.push("$GAIA_MCP_HOME — not set");
   }
 
-  const fallback = join(homedir(), "gaia-mcp", "dist", "bin", "gaia-hell.js");
+  const fallback = join(homedir(), "gaia-mcp", "dist", "bin", "skill-hell.js");
   if (existsSync(fallback)) return asEngine(fallback);
-  checked.push(`~/gaia-mcp/dist/bin/gaia-hell.js — not found at ${fallback}`);
+  checked.push(`~/gaia-mcp/dist/bin/skill-hell.js — not found at ${fallback}`);
 
   throw new Error(
     [
-      "gaia-hell binary not found. Checked, in order:",
+      "skill-hell binary not found. Checked, in order:",
       ...checked.map((line, index) => `  ${index + 1}. ${line}`),
     ].join("\n"),
   );
 }
 
 async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<void> {
-  if (process.env.GAIA_HELL_SESSION) return;
+  if (process.env.SKILL_HELL_SESSION) return;
   const result = await pi.exec(engine.command, [...engine.args, "path"], { timeout: summonTimeoutMs });
   if (result.code !== 0) {
     const detail = result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`;
-    throw new Error(`gaia-hell: could not create a persistent summon session: ${detail}`);
+    throw new Error(`skill-hell: could not create a persistent summon session: ${detail}`);
   }
   const sessionPath = result.stdout
     .split("\n")
@@ -148,9 +148,9 @@ async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<
     .filter(Boolean)
     .at(-1);
   if (!sessionPath || !existsSync(join(sessionPath, "session.json"))) {
-    throw new Error("gaia-hell: path did not return a usable session directory");
+    throw new Error("skill-hell: path did not return a usable session directory");
   }
-  process.env.GAIA_HELL_SESSION = sessionPath;
+  process.env.SKILL_HELL_SESSION = sessionPath;
   process.env[ownedHellSessionEnv] = sessionPath;
 }
 
@@ -238,12 +238,12 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
 
   pi.on("session_shutdown", async (event) => {
     const ownedSession = process.env[ownedHellSessionEnv];
-    if (event.reason !== "quit" || !ownedSession || process.env.GAIA_HELL_SESSION !== ownedSession) return;
+    if (event.reason !== "quit" || !ownedSession || process.env.SKILL_HELL_SESSION !== ownedSession) return;
     try {
       const engine = resolveHellEngine();
       await pi.exec(engine.command, [...engine.args, "close"], { timeout: summonTimeoutMs });
     } finally {
-      delete process.env.GAIA_HELL_SESSION;
+      delete process.env.SKILL_HELL_SESSION;
       delete process.env[ownedHellSessionEnv];
     }
   });
@@ -276,7 +276,7 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     handler: async (args: string, ctx: ExtensionCommandContext) => {
       const intent = args.trim();
       if (!intent) {
-        ctx.ui.notify("gaia-hell: no intent given — usage: /skill-hell <intent>", "error");
+        ctx.ui.notify("skill-hell: no intent given — usage: /skill-hell <intent>", "error");
         return;
       }
 
@@ -302,7 +302,7 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       );
       if (result.code !== 0) {
         const detail = result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`;
-        ctx.ui.notify(`gaia-hell: summon failed (${engine.binPath}): ${detail}`, "error");
+        ctx.ui.notify(`skill-hell: summon failed (${engine.binPath}): ${detail}`, "error");
         return;
       }
 
@@ -311,13 +311,13 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
         outcome = JSON.parse(result.stdout) as SummonOutcome;
       } catch {
         const detail = result.stderr.trim();
-        ctx.ui.notify(`gaia-hell: engine returned unreadable output.${detail ? ` ${detail}` : ""}`, "error");
+        ctx.ui.notify(`skill-hell: engine returned unreadable output.${detail ? ` ${detail}` : ""}`, "error");
         return;
       }
 
       const winner = outcome.summoned?.[0];
       if (!winner) {
-        const lines = [`gaia-hell: no skill could be summoned for "${outcome.query ?? intent}".`];
+        const lines = [`skill-hell: no skill could be summoned for "${outcome.query ?? intent}".`];
         for (const skipped of outcome.skipped ?? []) {
           lines.push(`skipped ${skipped.id}: ${skipped.reason}`);
         }
@@ -332,7 +332,7 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         ctx.ui.notify(
-          `gaia-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${detail}`,
+          `skill-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${detail}`,
           "error",
         );
         return;

@@ -16,7 +16,7 @@ import {
 } from "./statusline.js";
 
 const PROFILE_ENV = "CLAUDE_HEAVEN_PROFILE";
-const HELL_SESSION_ENV = "GAIA_HELL_SESSION";
+const HELL_SESSION_ENV = "SKILL_HELL_SESSION";
 const HELL_MANIFEST_FILE = "session.json";
 
 function loadManifest(path: string | undefined): ProfileManifest | null {
@@ -29,9 +29,9 @@ function loadManifest(path: string | undefined): ProfileManifest | null {
   }
 }
 
-// Reads gaia-hell's own session.json directly off disk — no subprocess, no
+// Reads skill-hell's own session.json directly off disk — no subprocess, no
 // network (the statusline runs on every prompt render, so this must stay
-// cheap), and no session is ever created here: unlike `gaia-hell path`,
+// cheap), and no session is ever created here: unlike `skill-hell path`,
 // resolveSession() would materialize a fresh session root as a side effect
 // of merely asking, which a passive statusline read must never do. Absent or
 // unreadable degrades silently to no segment, same discipline as the profile
