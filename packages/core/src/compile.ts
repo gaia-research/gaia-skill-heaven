@@ -161,11 +161,11 @@ export function compile(input: CompileInput): CompileResult {
   // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
   // installed-skills index; compileHermes discloses that negative result and
   // remains recipe-only.
-  const PRODUCT_FLOOR_ROUTES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok"];
-  if (posture === "product-floor" && !PRODUCT_FLOOR_ROUTES.includes(harness)) {
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok"];
+  if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no route for harness ${harness} — claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) have probed routes; codex has an explicitly unverified, print-only recipe backed by its negative probe. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
+      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -466,68 +466,14 @@ function compileHermes(
   };
 }
 
-// codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.
-//
-// A2 (2026-07-29/30): the per-session `-c` scoping cell this comment used to
-// gate on HAS resolved — `-c 'skills.config=[{path="<abs SKILL.md>",
-// enabled=false}]'` reaches the skills surface per-invocation, no restart,
-// nothing written to config.toml (codex-cli 0.145.0; gaia-research PR #133,
-// harness-capability-matrix.md row "Skills listing suppressible per-session?"
-// / G1-skills-config-override: 2/2 reproduced upstream. Committed run record
-// gaia-research/scripts/hell-heaven-bench/harness-probes/runs/
-// codex-g1-2026-07-29.run.json shows 67→66 entries — targeted fixture skill
-// absent, all 66 others unchanged, input_tokens 18,986→18,925, 2/2
-// byte-identical. Correction, 2026-07-31: this comment previously read
-// "74→73 entries" — that figure never matched the PR #133 / G1 row it cited
-// and traced to no separate committed probe; a citation error, fixed here.
-// That is no longer the open question.
-//
-// The reason codex STAYS A RECIPE is a different one: the matrix's own
-// "Skill discovery" row documents codex skill roots beyond $CODEX_HOME —
-// `.agents/skills` (repo, cwd→root scan), `~/.agents/skills` (user),
-// `/etc/codex/skills`, and bundled system skills. $CODEX_HOME scoping alone
-// does not evict any of them (confirmed independently: `~/.agents/skills`
-// alone holds 70 entries on this machine), and the per-session `-c` cell
-// above only suppresses skills named in that one flag — it does not compute
-// a disable entry for every skill discovered across every root. So a live
-// `--posture floor --harness codex` exec today would not be an empty
-// surface, and a live `--posture curated` exec would not be a clean room
-// either: both would leak the other roots' skills into the model-visible
-// listing. exec.ts:43 refuses to spawn anything whose execSupport isn't
-// "exec", and cli.ts:169 prints a recipe instead of running — that refusal
-// is what keeps a research driver from spawning a codex "floor" that is
-// actually near-native and recording a benchmark under a posture the
-// session never had. So: the mechanism is proven, but the resulting surface
-// is not a floor — execSupport stays "recipe" until the other skill roots
-// are computed into the `-c` disable set too (a mechanism redesign, not a
-// stale-claim correction, and out of scope here). Probe results recorded in
-// the matrix.
-//
-// RE-PROBED (2026-08-07, WP4, packages/codex-heaven/PROBE.md, codex-cli
-// 0.146.0): before writing any codex-heaven door code, per M0 discipline.
-// A2's per-session `-c 'skills.config=[...]'` toggle still holds on 0.146.0
-// (46-item baseline listing, minus exactly the one disabled skill, 10,092 ->
-// 10,058 tokens used). The "STAYS A RECIPE" reasoning above is now backed by
-// fresh, direct evidence, not just inference from the matrix's skill-roots
-// row: `--ignore-user-config --ignore-rules` together do NOT suppress the
-// listing to NONE — they swap it for a DIFFERENT, larger (~70-item) listing
-// (a distinct skill root becomes visible once the config pointing at the
-// baseline set is ignored), 10,092 -> 6,294 tokens. That is a second root
-// switching in, not eviction. No cell tried gets anywhere near an empty
-// surface, so execSupport stays "recipe" — this is a re-confirmation, not a
-// promotion (D8: the negative result is the finding).
-//
-// PRODUCT-FLOOR (informed by the same re-probe): no branch for it here,
-// deliberately. "Product-floor" means the nearest a user can launch at while
-// the door still resolves — but no composition observed in the 0.146.0
-// re-probe gets codex CLOSER to zero while leaving a door reachable; the
-// only flags that move the token count at all (`--ignore-user-config
-// --ignore-rules`) do it by swapping to an unrelated, comparably-sized skill
-// root, not by shrinking the session's own set. That is not a verified
-// product-floor cell by any reading, so `compile()`'s own
-// `PRODUCT_FLOOR_VERIFIED_HARNESSES` gate (only "claude" and "pi") is left
-// unchanged — codex is not added to it. Same M0 refusal as grok: nothing is
-// withheld by policy, nobody has found a real cell yet.
+// Codex 0.146.0 — config-home scoping plus a session-local exact-path disable
+// set. The older flag-only negative remains important: CODEX_HOME alone does
+// not evict .agents/skills, user roots, bundled system skills, or other roots.
+// WP14 (packages/codex-heaven/PROBE.md, pane w8:p11) proved the missing step:
+// ask the pinned app-server skills/list instrument for every path after the
+// scoped home is materialized, then write skills.config entries for every
+// path except named curated readmissions. The door performs that dynamic step;
+// compile() remains pure and only describes the isolation argv/fsPlan.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -536,28 +482,35 @@ function compileCodex(
   const fsPlan = [...base.fsPlan];
   const notes = [...base.notes];
   const argv: string[] = ["exec"];
+
   if (input.posture !== "native") {
+    argv.push(
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--sandbox",
+      "read-only",
+      "--ignore-rules",
+    );
     env.CODEX_HOME = "$SESSION/codex";
     fsPlan.push({
       kind: "copyFileIfExists",
       from: `${input.homeDir ?? "$HOME"}/.codex/auth.json`,
       to: "$SESSION/codex/auth.json",
     });
-    notes.push(
-      input.posture === "product-floor"
-        ? "codex product-floor is an explicitly unverified, print-only recipe. The 0.146.0 negative probe found no composition that approaches zero while preserving a door: $CODEX_HOME does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills. It is emitted so the ladder-first default fails honestly into a recipe rather than silently launching native; it is NOT evidence of a clean product floor and the launcher will not spawn it."
-        : "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
-    );
     if (input.posture === "curated") {
-      for (const s of input.skills) {
-        fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/codex/skills/${s.id}` });
+      for (const skill of input.skills) {
+        fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/codex/skills/${skill.id}` });
       }
     }
+    notes.push(
+      `codex-cli 0.146.0 live route: the launcher copies auth.json into session-scoped CODEX_HOME, materializes curated skills when requested, asks app-server skills/list for exact discovered SKILL.md paths, and writes a session-local skills.config disable entry for every non-readmitted path before spawning. The flag-only negative remains true; dynamic exact-path discovery is the WP14 license. ${input.posture === "product-floor" ? "Codex has no separate in-session door/plugin surface, so product-floor uses the same verified clean-room composition as floor." : "No shared ~/.codex state is mutated."}`,
+    );
   }
+
   if (input.model) argv.push("-m", input.model);
   if (input.prompt !== undefined) argv.push(input.prompt);
   if (input.passthrough?.length) argv.push(...input.passthrough);
-  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
+  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "exec" };
 }
 
 // cursor — documented-recipe track regardless (rules are tracked files;
@@ -581,43 +534,21 @@ function compileCursor(
 }
 
 // Grok 0.2.118 — session-scoped config route, pinned by packages/grok-heaven/
-// PROBE.md. Grok has no --no-skills primitive. GROK_HOME does evict Grok's
-// own user config, but Claude-compatible roots, project roots, bundled skills,
-// and installed plugins remain independent surfaces. The config below is the
-// strongest composition actually observed: it ignores the ambient skill roots,
-// disables the observed plugin names on the benchmark machine, and leaves the
-// session bundled root out. It intentionally stays recipe-only: there is no
-// portable wildcard for arbitrary symlinked roots or an unknown plugin inventory.
+// PROBE.md. GROK_HOME scopes auth/config, but Grok can read several
+// Claude-compatible roots and plugin skills. The door starts with this minimal
+// session config, then launcher code asks `grok inspect --json` for the exact
+// paths and observed plugin names and rewrites this file inside the session.
 const grokSkillFlags = ["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"];
 
-const grokCleanConfig = `[compat.claude]
+const grokBaseConfig = `[compat.claude]
 skills = false
 
 [compat.cursor]
 skills = false
 
 [skills]
-ignore = [
-  "~/.agents/skills",
-  "~/.claude/skills",
-  "~/.cursor/skills",
-  "$CWD/.grok/skills",
-  "$CWD/.agents/skills",
-  "$CWD/.claude/skills",
-  "$CWD/.cursor/skills",
-  "$SESSION/grok/bundled/skills",
-  "$SYMLINK_IGNORES",
-  "$ANCESTOR_IGNORES"
-]
-
-[plugins]
-disabled = ["frontend-design", "rock-favor", "claude-heaven"]
+ignore = []
 `;
-
-const grokProductConfig = grokCleanConfig.replace(
-  '\n[plugins]\ndisabled = ["frontend-design", "rock-favor", "claude-heaven"]\n',
-  "\n",
-);
 
 function tailGrok(input: CompileInput): string[] {
   const argv: string[] = [];
@@ -647,11 +578,7 @@ function compileGrok(
       to: "$SESSION/grok/auth.json",
     });
 
-    if (input.posture === "floor" || input.posture === "curated") {
-      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokCleanConfig });
-    } else {
-      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokProductConfig });
-    }
+    fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokBaseConfig });
 
     argv = [...grokSkillFlags];
     if (input.posture === "curated") {
@@ -659,15 +586,15 @@ function compileGrok(
         fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/grok/skills/${skill.id}` });
       }
       notes.push(
-        "grok curated recipe (0.2.118): session-scoped GROK_HOME receives auth.json, a clean-room config, and only the named skill directories. The pinned probe reached Skills (1) and loaded a marker skill, but this remains recipe-only because unknown plugin inventories and symlinked roots have no portable wildcard suppression.",
+        "grok curated exec route (WP14, 0.2.118): session-scoped GROK_HOME receives auth.json, the named skill directories, and a dynamic inspect-derived exact-path ignore config. Four discovery passes reached exactly one readmitted canary skill and answered successfully twice; observed plugin names are disabled only in this session.",
       );
     } else if (input.posture === "floor") {
       notes.push(
-        "grok floor recipe (0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, ambient-root ignores, and observed-plugin disable entries. The pinned config reached Skills (0) twice and answered OK twice; path/plugin inventory is not a universal exec license, so this remains recipe-only.",
+        "grok floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, iterative inspect-derived exact-path ignores, and session-local disables for the observed plugin names. Repeated pinned scans reached Skills (0) and answered successfully; no global plugin state is mutated.",
       );
     } else {
       notes.push(
-        "grok product-floor recipe (0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with ambient roots ignored but the installed plugin surface left available as the door. The pinned composition reached Skills (9) and answered OK twice; plugin inventories vary, so this remains recipe-only.",
+        "grok product-floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with iterative inspect-derived exact-path ignores while leaving observed plugins as the door surface. Repeated pinned scans reached the 9-skill plugin surface and answered successfully; the route does not claim zero plugin skills.",
       );
     }
   }
@@ -680,6 +607,6 @@ function compileGrok(
     argv,
     env,
     fsPlan,
-    execSupport: "recipe",
+    execSupport: "exec",
   };
 }

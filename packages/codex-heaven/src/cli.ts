@@ -5,17 +5,18 @@
 // shows the plan without spawning codex (and without needing codex
 // installed).
 //
-// Every posture compiles as a RECIPE today (../PROBE.md, codex-cli 0.146.0):
-// no CLI flag or env var suppresses codex's several independent
-// skill-discovery roots at once, so a real (non --print) launch always
-// refuses — same shape as pi-heaven's recipe-posture refusal.
+// Non-native postures perform WP14's session-local exact-path discovery after
+// materializing CODEX_HOME and before spawning codex. --print remains pure and
+// shows the compiled route; a real launch asks codex app-server skills/list for
+// the paths present in that disposable session, writes its skills.config there,
+// and then starts the verified clean-room process.
 
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LADDER_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
-import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
+import { assertLevelAllowed, planLaunch, prepareCodexSession, resolveLevelAlias } from "./launcher.js";
 
 interface CliArgs {
   help: boolean;
@@ -166,6 +167,7 @@ export function run(argv: string[]): number {
         codexArgs: args.codexArgs,
       });
       materialize(live.fsPlan, sessionDir);
+      prepareCodexSession(live);
     } catch (e) {
       process.stderr.write(`codex-heaven: ${(e as Error).message}\n`);
       return 2;

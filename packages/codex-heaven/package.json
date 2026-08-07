@@ -1,7 +1,7 @@
 {
   "name": "codex-heaven",
   "version": "0.0.0",
-  "description": "codex-heaven — the codex door to Skill Heaven: posture launcher over codex's $CODEX_HOME scoping and per-session skills.config toggle. Built on skill-heaven core. PROTOTYPE (WP4). Every posture compiles as a recipe today (PROBE.md, codex-cli 0.146.0) — no verified live exec.",
+  "description": "codex-heaven — the codex door to Skill Heaven: posture launcher over session-scoped CODEX_HOME and exact-path skills.config discovery. Built on skill-heaven core. PROTOTYPE (WP14, codex-cli 0.146.0).",
   "private": true,
   "type": "module",
   "bin": {

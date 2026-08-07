@@ -1,13 +1,14 @@
-// grok-heaven CLI. Grok's non-native routes are recipes because the pinned
-// clean-room composition depends on ambient path/plugin inventory (../PROBE.md).
-// --print shows the session-scoped plan without spawning Grok.
+// grok-heaven CLI. Grok's non-native routes perform WP14's session-local
+// inspect/config composition after materializing GROK_HOME. --print shows the
+// compiled plan without spawning Grok; a real launch discovers exact paths and
+// observed plugin names before spawning the verified route.
 
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LADDER_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
-import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
+import { assertLevelAllowed, planLaunch, prepareGrokSession, resolveLevelAlias } from "./launcher.js";
 
 interface CliArgs {
   help: boolean;
@@ -148,6 +149,7 @@ export function run(argv: string[]): number {
         grokArgs: args.grokArgs,
       });
       materialize(live.fsPlan, sessionDir);
+      prepareGrokSession(live);
     } catch (error) {
       process.stderr.write(`grok-heaven: ${(error as Error).message}\n`);
       return 2;

@@ -102,3 +102,109 @@ itself produce a clean `floor` or a leak-free `curated` set.
 full reasoning — this probe adds fresh, version-pinned (0.146.0) evidence for exactly that
 conclusion rather than overturning it. A negative result is a first-class finding here (D8): the
 honest outcome of Step A1 is "still cannot be spawned cleanly," not a promotion to `exec`.
+
+## WP14 — exact-path clean-room re-probe (2026-08-07)
+
+The earlier negative is retained above: isolation flags alone still do not suppress the
+independent roots. WP14 answered the specific remaining gap rather than erasing that finding.
+Codex 0.146.0's app-server exposes a disk-backed `skills/list` method with each discovered
+`SKILL.md` path and an `enabled` field. This is the hard instrument for this cell; no model
+self-report was used for the count. All cells below ran in visible pane **`w8:p11`**, twice.
+
+The baseline app-server cell was:
+
+```text
+codex app-server --stdio
+  initialize(clientInfo=wp14, experimentalApi=true)
+  initialized
+  skills/list(cwds=["/Users/marcotiongson/sh-wt-exec"], forceReload=true)
+```
+
+Literal repeated output:
+
+```text
+CODEX_APP_BASELINE_COUNT=90
+CODEX_APP_BASELINE_ENABLED=45
+CODEX_APP_BASELINE_REPEAT_COUNT=90
+CODEX_APP_BASELINE_REPEAT_ENABLED=45
+```
+
+The composed cell created a disposable `$SCOPE/codex`, copied
+`$HOME/.codex/auth.json` into it (**4224 bytes**), ran the same `skills/list` against that
+scoped home, generated one `[[skills.config]]` `enabled = false` entry for each exact path
+reported by that scan, and then rescanned. Literal output from both repetitions:
+
+```text
+CODEX_SCOPED_COUNT=76
+CODEX_SCOPED_ENABLED=76
+CODEX_SCOPED_SCOPES=system,user
+CODEX_DISABLE_ENTRIES=76
+CODEX_AUTH_BYTES=    4224
+CODEX_COMPOSED_COUNT=76
+CODEX_COMPOSED_ENABLED=0
+```
+
+The config entries are generated from Codex's own discovered paths, so this closes the old
+"other roots are not computed" gap without assuming a portable root list. The total metadata
+count remains 76, but **zero** entries are enabled; that distinction is the hard result. No
+shared `~/.codex` file was written; each scope was removed after the cell.
+
+A real scoped inference followed each composed scan:
+
+```text
+CODEX_HOME="$SCOPE/codex" codex exec --skip-git-repo-check --ephemeral \
+  --sandbox read-only --ignore-rules --model gpt-5.6-luna \
+  -c model_reasoning_effort=low "Reply with exactly: CODEX_COMPOSED_OK"
+```
+
+Both visible launches authenticated and exited 0:
+
+```text
+CODEX_COMPOSED_OK
+tokens used
+1,802
+CODEX_COMPOSED_STATUS=0
+```
+
+For curated readmission, a disposable `wp14-canary` skill was copied under the scoped
+`CODEX_HOME/skills`, the same exact-path scan disabled every other result, and macOS `/tmp`
+was canonicalized to `/private/tmp` before matching. Both repetitions reported:
+
+```text
+CODEX_CURATED_DISCOVERED=77
+CODEX_CURATED_DISABLED=76
+CODEX_CURATED_COUNT=77
+CODEX_CURATED_ENABLED=1
+CODEX_CURATED_ENABLED_NAMES=wp14-canary
+CODEX_CURATED_OK
+tokens used
+1,951
+CODEX_CURATED_STATUS=0
+```
+
+**WP14 conclusion:** the route is now licensed for live exec when the launcher performs the
+same session-local sequence: copy auth, materialize curated skills, ask `skills/list` for exact
+discovered paths, write session-local `skills.config` disables for every non-readmitted path,
+then spawn `codex exec`. The old flag-only negative remains true and is not a license by itself;
+the dynamic exact-path discovery is what closes it. `execSupport` may move to `"exec"` only for
+this composed launcher route, not for a bare `$CODEX_HOME` or `--ignore-user-config` recipe.
+
+### Door smoke test
+
+After the probe was recorded, the actual door was launched in the same visible pane
+**`w8:p11`**:
+
+```text
+node packages/codex-heaven/bin/codex-heaven.mjs --posture product-floor \
+  --model gpt-5.6-luna -- -c model_reasoning_effort=low \
+  "Reply with exactly: CODEX_HEAVEN_OK"
+```
+
+The launcher performed the session-local discovery/config write, then spawned Codex and
+returned:
+
+```text
+CODEX_HEAVEN_OK
+tokens used
+1,594
+```

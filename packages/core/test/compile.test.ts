@@ -151,11 +151,13 @@ describe("the floor split (V5-5)", () => {
     expect(Object.values(e)).not.toContain(mean);
   });
 
-  it("keeps codex product-floor print-only and explicit about its negative probe", () => {
-    const plan = compile({ posture: "product-floor", harness: "codex", skills: [] });
-    expect(plan.execSupport).toBe("recipe");
-    expect(plan.notes.join(" ")).toContain("explicitly unverified, print-only recipe");
-    expect(plan.notes.join(" ")).toContain("NOT evidence of a clean product floor");
+  it("product-floor has no verified cell on cursor — it refuses rather than guesses (M0/D8)", () => {
+    // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
+    // 0.83.0, 2026-08-07); codex joined in WP14 (PROBE.md, 0.146.0), and
+    // grok joined in WP12 (PROBE.md, 0.2.118). Cursor remains unprobed.
+    for (const h of ["cursor"] as const) {
+      expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
+    }
   });
 
   // KC6 (Issue #12): cursor still has no product-floor route at all. That is a
@@ -195,27 +197,27 @@ describe("pi mappings", () => {
   });
 });
 
-describe("recipe harnesses", () => {
-  // A2 (2026-07-29/30): the per-session `-c 'skills.config=[{path=…,
-  // enabled=false}]'` scoping cell this used to gate on HAS resolved (matrix
-  // G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) —
-  // that is no longer the open question. codex stays a recipe anyway because
-  // $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`,
-  // `/etc/codex/skills`, or bundled system skills (matrix Skill discovery
-  // row), so neither floor nor curated is yet a verified-clean surface —
-  // the resolved mechanism does not make the resulting surface a floor.
-  // execSupport intentionally stays "recipe" (deferred, not flipped).
-  it("codex compiles a recipe with CODEX_HOME scoping", () => {
+describe("non-native harness mappings", () => {
+  it("codex compiles an exec route with session-scoped exact-path discovery", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
-    expect(r.execSupport).toBe("recipe");
+    expect(r.execSupport).toBe("exec");
     expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
+    expect(r.argv).toEqual([
+      "exec",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--sandbox",
+      "read-only",
+      "--ignore-rules",
+    ]);
+    expect(r.notes.join(" ")).toMatch(/skills\/list/i);
   });
   it("cursor compiles a recipe with CURSOR_CONFIG_DIR", () => {
     const r = compile({ posture: "floor", harness: "cursor", skills: [] });
     expect(r.execSupport).toBe("recipe");
     expect(r.env.CURSOR_CONFIG_DIR).toBe("$SESSION/cursor-config");
   });
-  it("grok composes pinned recipe routes and leaves native untouched", () => {
+  it("grok composes pinned exec routes and leaves native untouched", () => {
     const floor = compile({ posture: "floor", harness: "grok", skills: [] });
     expect(floor.env.GROK_HOME).toBe("$SESSION/grok");
     expect(floor.argv).toEqual(["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"]);
@@ -225,11 +227,11 @@ describe("recipe harnesses", () => {
         expect.objectContaining({ kind: "write", path: "$SESSION/grok/config.toml" }),
       ]),
     );
-    expect(floor.execSupport).toBe("recipe");
+    expect(floor.execSupport).toBe("exec");
 
     const product = compile({ posture: "product-floor", harness: "grok", skills: [] });
-    expect(product.execSupport).toBe("recipe");
-    expect(product.notes.join(" ")).toMatch(/plugin surface left available/i);
+    expect(product.execSupport).toBe("exec");
+    expect(product.notes.join(" ")).toMatch(/plugins as the door surface/i);
 
     const curated = compile({ posture: "curated", harness: "grok", skills: [fakeSkill] });
     expect(curated.fsPlan).toContainEqual({
@@ -242,7 +244,7 @@ describe("recipe harnesses", () => {
     expect(native.argv).toEqual([]);
     expect(native.env).toEqual({});
     expect(native.fsPlan).toEqual([]);
-    expect(native.execSupport).toBe("recipe");
+    expect(native.execSupport).toBe("exec");
   });
 });
 

@@ -1,16 +1,12 @@
-// The codex-heaven launch PLAN — pure enough to unit-test without spawning
-// codex: it reads skill sources (resolveSkill) but writes nothing. cli.ts
-// turns a plan into files + a process.
-//
-// The non-native postures are NOT composed here. They are composed by core's
-// `compile()` — the one place the empirically probed, version-pinned codex
-// route lives (see ../PROBE.md) — and this module only:
-//   (a) resolves --skill paths into core's ResolvedSkill shape,
-//   (b) substitutes core's "$SESSION" placeholder with the real session dir,
-//   (c) hands back core's compiled plan.
-// Nothing here re-derives a route, invents a flag, or edits the compiled argv.
-// If a posture's composition is wrong, it is wrong in packages/core.
+// The codex-heaven launch plan resolves skill sources and carries core's
+// version-pinned argv/fsPlan to the CLI. The real launcher has one additional
+// session-only step: after materializing CODEX_HOME, prepareCodexSession asks
+// codex app-server for exact discovered skill paths and writes the disable set
+// into that disposable home. It never edits shared state or the compiled argv.
 
+import { spawnSync } from "node:child_process";
+import { realpathSync, rmSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import {
   compile,
   HELL_LEVELS,
@@ -77,19 +73,125 @@ export interface LaunchPlan {
   argv: string[];
   env: Record<string, string>; // additions only (never removals)
   /** core's fsPlan, already substituted for this session dir. cli.ts
-   * materializes it; nothing outside the session dir is ever touched (P3). */
+   * materializes it before the dynamic skills/list composition; nothing outside
+   * the session dir is ever touched (P3). */
   fsPlan: FsOp[];
   /** core's compile notes, carried verbatim so the evidence travels with the plan. */
   notes: string[];
   skillCount: number;
-  /** "recipe" at every posture today (../PROBE.md, codex-cli 0.146.0) — no
-   * combination of isolation flags reaches a verified-clean skill surface, so
-   * core never marks a codex route "exec". cli.ts refuses to spawn when this
-   * is not "exec", same as pi-heaven's recipe-posture refusal. */
+  /** The resolved names copied into the session for curated readmission. */
+  skillIds: string[];
+  /** The cwd used by Codex's project-scope skill discovery. */
+  workingDirectory: string;
+  /** WP14's exact-path discovery licenses live exec on codex-cli 0.146.0. */
   execSupport: CompileResult["execSupport"];
 }
 
 const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION", sessionDir);
+
+function parseWorkingDirectory(args: string[]): string {
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+    if (arg === "-C" || arg === "--cd") {
+      const value = args[index + 1];
+      if (value) return resolve(value);
+    }
+    if (arg.startsWith("--cd=")) return resolve(arg.slice("--cd=".length));
+  }
+  return process.cwd();
+}
+
+interface CodexSkillMetadata {
+  path: string;
+  enabled: boolean;
+}
+
+function canonicalPath(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
+  }
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+function discoverCodexSkills(home: string, cwd: string): CodexSkillMetadata[] {
+  const requestPath = join(home, ".skill-list-request.jsonl");
+  const request = [
+    {
+      method: "initialize",
+      id: 1,
+      params: {
+        clientInfo: { name: "codex-heaven", version: "0.0.0" },
+        capabilities: { experimentalApi: true },
+      },
+    },
+    { method: "initialized" },
+    { method: "skills/list", id: 2, params: { cwds: [cwd], forceReload: true } },
+  ]
+    .map((message) => JSON.stringify(message))
+    .join("\n");
+  writeFileSync(requestPath, `${request}\n`);
+
+  try {
+    // app-server performs the disk scan asynchronously. Keep stdin open long
+    // enough for the response, while keeping every write under CODEX_HOME.
+    const shell = `{ cat ${shellQuote(requestPath)}; sleep 3; } | codex app-server --stdio`;
+    const result = spawnSync("sh", ["-c", shell], {
+      cwd,
+      env: { ...process.env, CODEX_HOME: home },
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    if (result.error) throw new Error(`could not run codex skills/list: ${result.error.message}`);
+    if (result.status !== 0) {
+      const detail = String(result.stderr || "").trim();
+      throw new Error(`codex skills/list failed${detail ? `: ${detail}` : ""}`);
+    }
+
+    const rows = String(result.stdout || "")
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line) as { id?: number; result?: { data?: Array<{ skills?: CodexSkillMetadata[] }> } });
+    const response = rows.find((row) => row.id === 2)?.result;
+    const skills = response?.data?.flatMap((entry) => entry.skills ?? []);
+    if (!skills) throw new Error("codex skills/list returned no skill data");
+    return skills;
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new Error(`codex skills/list returned invalid JSON: ${error.message}`);
+    throw error;
+  } finally {
+    rmSync(requestPath, { force: true });
+  }
+}
+
+/**
+ * Complete WP14's dynamic Codex composition after the base fsPlan is materialized.
+ * The app-server scan is intentionally outside core's pure compile() function:
+ * --print remains a dry plan, while a real door launch discovers the exact roots
+ * present in this session and writes only the disposable CODEX_HOME config.
+ */
+export function prepareCodexSession(plan: LaunchPlan): void {
+  if (plan.command !== "codex" || plan.posture === "native") return;
+  const home = plan.env.CODEX_HOME;
+  if (!home) throw new Error("codex session is missing CODEX_HOME");
+
+  const readmitted = new Set(
+    plan.skillIds.map((id) => canonicalPath(join(home, "skills", id, "SKILL.md"))),
+  );
+  const discovered = discoverCodexSkills(home, plan.workingDirectory);
+  const config = discovered
+    .filter((skill) => !readmitted.has(canonicalPath(skill.path)))
+    .map(
+      (skill) =>
+        `[[skills.config]]\npath = ${JSON.stringify(skill.path)}\nenabled = false\n`,
+    )
+    .join("\n");
+  writeFileSync(join(home, "config.toml"), config);
+}
 
 /** Plan a launch at any posture core composes for codex (see ../PROBE.md for what was verified). */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
@@ -119,6 +221,8 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     ),
     notes: compiled.notes,
     skillCount: skills.length,
+    skillIds: skills.map((skill) => skill.id),
+    workingDirectory: parseWorkingDirectory(opts.codexArgs ?? []),
     execSupport: compiled.execSupport,
   };
 }
