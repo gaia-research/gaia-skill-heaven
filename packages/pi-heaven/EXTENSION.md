@@ -14,9 +14,8 @@ re-check these findings when pi is upgraded.
 - The extension owns in-session presentation and additive summoning. It registers
   `/skill-heaven` and `/skill-hell` without editing user or project pi state.
 - A user who does not use the launcher can load the extension directly. In that
-  case `/skill-heaven` must report that no pi-heaven launch manifest exists;
-  `/skill-hell` remains useful because engine resolution is independent of the
-  launcher.
+  case `/skill-heaven` names the exact launcher command and says it changed
+  nothing; `/skill-hell` remains useful because Hell needs only the extension.
 
 This split follows pi's native resource model instead of pretending a command can
 recompose a running process. The launcher is the posture boundary; the extension
@@ -50,10 +49,10 @@ durable transcript surface. Pi's extension API also exposes:
   for lasting command output.
 
 Accordingly the commands append rendered transcript entries for durable output.
-`/skill-hell` separately sends a non-displayed custom message containing the
-summoned `SKILL.md`; that message participates in the current model context
-without duplicating the full body onscreen. A small persistent widget keeps the
-summon identity and install cost visible across the resource reload.
+`/skill-hell` sends a non-displayed **card** containing identity, published trust
+fields, paired install timing/cache state, file count, path, and inspect link.
+It never pastes the full body. A persistent widget keeps the card visible across
+the resource reload.
 
 ## Mid-session skill loading
 
@@ -73,10 +72,13 @@ directories. Source inspection also shows extension-contributed paths are
 extended after the initial `--no-skills` set is built, preserving the intended
 upward-only behavior even from a floor launch.
 
-The command also injects the full `SKILL.md` body as a custom message before the
-reload. That gives the current conversation immediate full-body context while
-the resource reload adds pi's native skill listing/command and keeps the whole
-materialized directory available to relative references and scripts.
+A card-only probe (2026-08-07, visible pane `w8:p14`, model
+`openai-codex/gpt-5.6-luna:low`) summoned a two-file canary, showed
+`wp16-card-probe` in pi's native skill list after reload, read its sibling
+`reference/proof.txt`, and returned exactly `CARD_ONLY_OK:7319`. The body was
+not sent as a custom message. This licenses card-only output on pi: native
+resource reload makes the skill usable while the whole directory preserves
+relative references and scripts.
 
 This is additive only. The extension offers no mid-session path for removing
 ambient skills or descending to a cleaner posture.
@@ -84,8 +86,9 @@ ambient skills or descending to a cleaner posture.
 ## Difference from Claude Code
 
 Claude Code plugins declare commands as markdown files whose shell command prints
-text. Posture state is handed to a dependency-free renderer through an
-environment variable, and summoning can only place the body in the conversation.
+text. Claude has no native mid-session resource reload; its card acts as a
+listing entry and tells the agent to read the materialized directory. A matching
+card-only probe succeeded there too (pane `w8:p13`).
 
 Pi loads executable TypeScript extensions. They register commands directly,
 render durable custom messages, inject those messages into model context, persist

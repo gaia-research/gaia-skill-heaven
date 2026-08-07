@@ -9,7 +9,7 @@
     {
       "name": "claude-heaven",
       "source": "./packages/claude-heaven/plugin",
-      "description": "The Claude Code door to Skill Heaven — ships /skill-heaven (posture) and /skill-hell (prototype: summons a skill from the live Gaia registry into this session). Built on skill-heaven core."
+      "description": "The Claude Code door to Skill Heaven — /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning. Built on skill-heaven core."
     }
   ]
 }

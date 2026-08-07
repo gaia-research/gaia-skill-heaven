@@ -6,7 +6,7 @@ The pi door to Skill Heaven: a boot-time launcher plus live-session extension.
 
 ```bash
 pi-heaven                                  # off/product-floor (default)
-pi-heaven --level native                   # pi untouched
+pi-heaven --level med                      # pi untouched (= native)
 pi-heaven --level low --skill /path/to/skill
 pi-heaven --print
 ```
@@ -22,20 +22,21 @@ disposable session directory.
 
 ### `/skill-heaven`
 
-Reports the launched profile, exact argv, and current loaded-skill count. It
-does not remove resources from a running conversation.
+Owns only `off · low · med`. Without a launcher manifest it gives an exact
+`pi-heaven` command and says it changed nothing. Heaven is a boot-time choice.
 
-### `/skill-hell <intent>`
+### `/skill-hell`
 
-Resolves the `skill-hell` engine, summons the best matching skill, displays its
-identity and install cost (timing always paired with cold/warm cache state), and
-injects the materialized `SKILL.md` body into the current model context. It then
-uses pi's `resources_discover` + `ctx.reload()` surface to add that skill natively
-to the running session. The winner path is a directory; the extension loads
-`SKILL.md` from inside it, preserving sibling `reference/` and `scripts/` files.
+Owns `high · xhigh · max · ultra`, works without a launcher, and defaults to
+`high`. Ratified rungs arm bounded per-gap summon budgets; `ultra` refuses as
+unratified, not gated. `/skill-hell <intent>` remains the manual path.
 
-The Hell ladder rungs (`med` and above) remain P2-gated; this command stays a
-locked-door surface until policy opens.
+Arrivals are cards, not pasted bodies. The extension persists each materialized
+directory, returns its `SKILL.md` through `resources_discover`, and calls
+`ctx.reload()`, preserving sibling references and scripts. A card-only probe on
+pi with `openai-codex/gpt-5.6-luna:low` in visible pane `w8:p14` showed
+`wp16-card-probe` in the native skill list after reload, read a sibling
+reference, and returned exactly `CARD_ONLY_OK:7319`.
 
 Engine resolution order:
 
@@ -56,7 +57,7 @@ pi --extension packages/pi-heaven/extension/pi-heaven.ts
 
 Or install the package through pi's package channel and let its `pi.extensions`
 manifest load the same file. Without a launcher manifest, `/skill-heaven`
-honestly reports a vanilla pi session; `/skill-hell` remains available because
+points to the launcher without claiming a change; `/skill-hell` remains available because
 it does not depend on posture handoff. When no `SKILL_HELL_SESSION` is supplied,
 the extension creates one for the life of the pi process so materialized skill
 directories survive resource reloads, then closes it when pi quits.

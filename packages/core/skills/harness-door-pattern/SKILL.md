@@ -140,8 +140,9 @@ packages/<name>-heaven/
   PROBE.md              the evidence
 ```
 
-`src/cli.ts` supports: `--posture floor|product-floor|curated|native`, `--level off|low`
-(with `med|high|xhigh|max` hard-erroring at the P2 gate — **match an existing door's refusal
+`src/cli.ts` supports: `--posture floor|product-floor|curated|native`,
+`--level off|low|med` (`med` maps to native; `high|xhigh|max` route users to
+live `/skill-hell`; `ultra` refuses as unratified — **match an existing door's
 wording and exit code exactly**), `--skill <path>` repeatable, `--model`, `--print`, and `--`
 passthrough.
 

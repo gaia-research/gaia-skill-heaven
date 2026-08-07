@@ -1,6 +1,6 @@
 {
   "name": "claude-heaven",
-  "description": "The Claude Code door to Skill Heaven — this marketplace install ships /skill-heaven (posture) and /skill-hell (prototype: summons a skill from the live Gaia registry into this session). The native-default launcher and standing-dose statusline live in the claude-heaven package's launcher, run from a source checkout — not part of this marketplace install.",
+  "description": "The Claude Code door to Skill Heaven — /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning. The off-default launcher and standing-dose statusline live in the claude-heaven package.",
   "author": {
     "name": "Gaia Research"
   }

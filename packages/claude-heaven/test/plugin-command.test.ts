@@ -75,6 +75,7 @@ describe("/skill-heaven command definition", () => {
     expect(command).toMatch(/verbatim/i);
     expect(command).toMatch(/Do not add posture, token or savings numbers of your own/);
     expect(command).toMatch(/If the block is a `⛔` refusal, print the refusal and nothing else/);
+    expect(command.replace(/\s+/g, " ")).toContain("Do not route around an unratified rung");
   });
 
   it("never claims the command can restart Claude Code (D12 / B4)", () => {

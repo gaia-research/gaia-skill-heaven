@@ -1,7 +1,7 @@
 {
   "name": "claude-heaven",
   "version": "0.0.0",
-  "description": "claude-heaven — the Claude Code door to Skill Heaven: off-default ladder launcher, /skill-heaven chooser, and standing-dose statusline. Built on skill-heaven core. WORK IN PROGRESS (WS4).",
+  "description": "claude-heaven — the Claude Code door to Skill Heaven: off-default launcher, boot-time /skill-heaven, live /skill-hell, and standing-dose statusline. Built on skill-heaven core.",
   "private": true,
   "type": "module",
   "bin": {

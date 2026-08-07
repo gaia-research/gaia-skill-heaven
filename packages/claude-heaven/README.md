@@ -6,7 +6,7 @@ The Claude Code door to Skill Heaven.
 
 ```bash
 claude-heaven                                  # off/product-floor (default)
-claude-heaven --level native                   # Claude untouched
+claude-heaven --level med                      # Claude untouched (= native)
 claude-heaven --level low --skill ./my-skill  # curated clean room
 claude-heaven --print                          # inspect; do not spawn
 claude-heaven -- --model sonnet                # pass through after --
@@ -22,25 +22,32 @@ Every write is session-scoped: the launcher materializes core's plan, profile
 manifest, and statusline settings in a disposable temp directory. It never
 edits `~/.claude`, project skills, or source skill directories (P3).
 
-## `/skill-heaven`: the ladder chooser
+## `/skill-heaven`: the boot-time half
 
-`/skill-heaven` now shows `off · low · med · high · xhigh · max · ultra`, marks
-the current/default rung, and makes permitted upward choices actionable.
-Downward choices remain visibly locked by D12 and include the exact relaunch
-command. `med…max` remain locked by P2; `ultra` is separately labeled
-unratified.
+`/skill-heaven` shows only `off · low · med`; `med` is native and unlocked.
+Downward choices remain visibly locked by D12 and include exact relaunch
+commands. Without a launcher manifest it gives the exact `claude-heaven`
+command and explicitly says it changed nothing.
 
-Claude cannot natively load a skill into a running session. This was checked
-against Claude Code 2.1.224's exposed command surface in visible probe pane
-`w8:p0` (2026-08-07): `--help` exposes boot-time skill/plugin/settings controls
-and resume, but no load/reload skill command. Therefore the chooser emits exact
-`claude-heaven --level …` launch commands and says they start a new session; it
-does not fake an in-session move. `/skill-hell`'s Claude hand-off remains body
-injection into context, not native resource discovery.
+## `/skill-hell`: the live additive half
 
-The renderer is zero-dependency `.mjs`, because a marketplace-installed plugin
-has no adjacent `node_modules`. Its ladder and gate lists are generated from
-core into `plugin/data/p2-gate.json` and freshness-tested.
+`/skill-hell` works anywhere the plugin is installed. Bare invocation shows
+`high · xhigh · max · ultra` with `high` as default. `high`, `xhigh`, and `max`
+arm bounded per-gap summon budgets; `ultra` alone refuses because it is
+unratified, never gated. `/skill-hell <intent>` remains the advanced manual
+path.
+
+Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
+paired install timing/cache state, file count, path, and inspect link. Claude
+cannot register a native skill after boot, so the card is its listing entry and
+the agent reads the materialized directory from disk. A card-only probe on
+Claude Code 2.1.224 in visible pane `w8:p13` read `SKILL.md` plus a sibling
+reference and returned exactly `CARD_ONLY_OK:7319`; the body is therefore no
+longer pasted.
+
+The renderers are zero-dependency `.mjs`, because a marketplace-installed
+plugin has no adjacent `node_modules`. Ladder policy is generated from core into
+`plugin/data/ladder.json` and freshness-tested.
 
 ## Standing-dose disclosure
 
@@ -49,13 +56,13 @@ user + project skills and explicitly excludes bundled/plugin skills. Session
 scope explicitly discloses the bundled `doctor` residual. Standing and
 invocation doses remain separate.
 
-## Policy boundaries
+## Boundaries
 
-- `med|high|xhigh|max`: hard refusal, P2 policy gate.
-- `ultra`: hard refusal because it has no ratified product mapping, not because
-  of P2.
+- Heaven: `off|low|med`, boot-time launcher choices.
+- Hell: `high|xhigh|max`, live and additive; not P2-gated.
+- `ultra`: hard refusal because it has no ratified product mapping.
 - `floor`: benchmark-only, doorless posture.
-- `native`: always available explicitly with `--level native`.
+- `native`: `med`; `--level native` remains a compatibility spelling.
 
 Evidence for the pinned compositions remains in core compiler notes and the
 probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md).
