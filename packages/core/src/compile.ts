@@ -62,7 +62,7 @@ export const FLOOR_EVIDENCE = {
   productFloorVsNativePct: -28.9,
 } as const;
 
-export const HARNESSES = ["claude", "pi", "codex", "cursor", "grok"] as const;
+export const HARNESSES = ["claude", "pi", "codex", "hermes", "cursor", "grok"] as const;
 export type Harness = (typeof HARNESSES)[number];
 
 export const MECHANISMS = ["plugin-dir", "config-dir"] as const;
@@ -150,13 +150,16 @@ export function compile(input: CompileInput): CompileResult {
   }
   // M0 discipline: the doorful floor exists as a measured cell on claude (F7,
   // 2.1.216) and, as of WP2 (PROBE.md, pi 0.83.0, probed 2026-08-07), pi. No
-  // other harness has a probed doorless/doorful distinction, so refuse rather
-  // than guess one into existence (D8).
-  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi"];
+  // Hermes 0.20.0 also has a probed best-effort distinction: --safe-mode is
+  // the maximal benchmark floor, while --ignore-user-config --ignore-rules
+  // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
+  // installed-skills index; compileHermes discloses that negative result and
+  // remains recipe-only.
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "hermes"];
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216) and ` +
-        "pi (PROBE.md, 0.83.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
+      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
+        "pi (PROBE.md, 0.83.0), and hermes (PROBE.md, 0.20.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
         "Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
@@ -177,6 +180,8 @@ export function compile(input: CompileInput): CompileResult {
       return compilePi(input, base);
     case "codex":
       return compileCodex(input, base);
+    case "hermes":
+      return compileHermes(input, base);
     case "cursor":
       return compileCursor(input, base);
     case "grok":
@@ -382,6 +387,56 @@ function compilePi(
     argv.push("--no-skills", "--no-context-files", "--no-prompt-templates");
   }
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
+}
+
+// Hermes Agent 0.20.0 — best-effort recipe only (packages/hermes-heaven/PROBE.md).
+//
+// The 2026-08-07 probe found a real structural limitation: --safe-mode,
+// --ignore-rules, --ignore-user-config, and the composed
+// --ignore-user-config --ignore-rules route all left the complete 108-name
+// installed-skills index model-visible in repeated runs. --skills accepts
+// installed names/bundle aliases, not arbitrary directories (a disposable
+// marker skill passed by absolute path returned NONE twice). Consequently no
+// verified clean floor or suppress-all-then-readmit curated route exists.
+// These argv are honest best-effort recipes and are never spawned by exec.ts.
+function compileHermes(
+  input: CompileInput,
+  base: Omit<CompileResult, "command" | "argv" | "execSupport">,
+): CompileResult {
+  const argv: string[] = [];
+  const notes = [...base.notes];
+
+  if (input.posture === "floor") {
+    argv.push("--safe-mode");
+    notes.push(
+      "Hermes 0.20.0 benchmark-floor recipe: --safe-mode is maximal documented suppression (user config, rules/memory, plugins, MCP), but repeated probes still exposed the complete 108-name installed-skills index. This is not an absolute zero and no token dose was measured.",
+    );
+  } else if (input.posture === "product-floor") {
+    argv.push("--ignore-user-config", "--ignore-rules");
+    notes.push(
+      "Hermes 0.20.0 product-floor recipe: --ignore-user-config --ignore-rules suppresses user config and auto-injected rules/memory/preloaded bodies while preserving plugins/MCP as the door-capable control surface. Two probes still exposed all 108 installed skill names, so this is best-effort rather than a clean floor; no token dose was measured.",
+    );
+  } else if (input.posture === "curated") {
+    argv.push("--ignore-user-config");
+    for (const skill of input.skills) argv.push("--skills", skill.id);
+    notes.push(
+      "Hermes 0.20.0 curated recipe is structurally constrained: --skills admits installed names/bundle aliases, not the supplied arbitrary directories. The recipe requests each resolved skill id by name, so it only works when matching skills are already installed in the active Hermes profile. --safe-mode/--ignore-rules cannot be stacked because they also skip preloaded skills, and the ambient skills index plus project rules/memory remain; this is not suppress-all-then-readmit and is recipe-only.",
+    );
+  } else {
+    notes.push("Hermes native posture is untouched, but remains recipe-only because this prototype route is not licensed for live exec.");
+  }
+
+  if (input.model) argv.push("--model", input.model);
+  if (input.prompt !== undefined) argv.push("-z", input.prompt);
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+
+  return {
+    ...base,
+    notes,
+    command: "hermes",
+    argv,
+    execSupport: "recipe",
+  };
 }
 
 // codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.

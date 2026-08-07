@@ -59,11 +59,11 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
   const skill = resolveSkill(join(fixturesDir, "impeccable-skill"));
 
   // grok only compiles at posture "native" (M0 discipline — no verified
-  // suppression mechanism); product-floor only compiles for harness "claude"
-  // (F7) and "pi" (WP2, PROBE.md, 0.83.0) — only those two were probed.
+  // suppression mechanism); product-floor compiles for harness "claude"
+  // (F7), "pi" (WP2), and recipe-only "hermes" (WP7) — those were probed.
   // Everything else in POSTURES x HARNESSES is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
-    if (posture === "product-floor" && harness !== "claude" && harness !== "pi") return true;
+    if (posture === "product-floor" && harness !== "claude" && harness !== "pi" && harness !== "hermes") return true;
     if (harness === "grok" && posture !== "native") return true;
     return false;
   }
@@ -187,7 +187,7 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
   function materializeEverything(): void {
     for (const posture of POSTURES) {
       for (const harness of HARNESSES) {
-        if (posture === "product-floor" && harness !== "claude" && harness !== "pi") continue;
+        if (posture === "product-floor" && harness !== "claude" && harness !== "pi" && harness !== "hermes") continue;
         if (harness === "grok" && posture !== "native") continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {
