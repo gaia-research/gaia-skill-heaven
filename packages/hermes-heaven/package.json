@@ -1,7 +1,7 @@
 {
   "name": "hermes-heaven",
   "version": "0.0.0",
-  "description": "hermes-heaven — the Hermes door to Skill Heaven: an honest recipe-only prototype for floor/product-floor/curated/native postures. Built on skill-heaven core. PROTOTYPE (WP7).",
+  "description": "hermes-heaven — the Hermes door to Skill Heaven: verified floor/product-floor/curated/native posture launcher with a session-scoped curated profile. Built on skill-heaven core. PROTOTYPE (WP8).",
   "private": true,
   "type": "module",
   "bin": {

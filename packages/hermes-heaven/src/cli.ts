@@ -1,7 +1,7 @@
-// hermes-heaven CLI. Hermes 0.20.0 exposes useful best-effort posture flags,
-// but no probe reached a clean skills surface and --skills cannot admit an
-// arbitrary directory. Every posture is therefore recipe-only: --print shows
-// the honest plan, while a real launch refuses rather than mislabeling a run.
+// hermes-heaven CLI. Hermes 0.20.0 clean-room routes are verified in
+// ../PROBE.md: floor/product-floor omit the skills toolset, while curated
+// copies arbitrary skill directories into a session-scoped HERMES_HOME.
+// --print shows the plan; real launches materialize only session-local files.
 
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";

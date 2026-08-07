@@ -1,6 +1,6 @@
 // The hermes-heaven launch plan. Core owns every posture composition; this
-// module resolves --skill paths, substitutes $SESSION, and carries the honest
-// recipe-only result back to the CLI. It never writes shared Hermes state.
+// module resolves --skill paths, substitutes $SESSION, and carries core's
+// verified plan back to the CLI. It never writes shared Hermes state.
 
 import {
   compile,
@@ -35,10 +35,10 @@ export function resolveLevelAlias(level: string): Posture | undefined {
 export interface LaunchOptions {
   /** default "native" */
   posture?: Posture;
-  /** --skill <path>, repeatable. Hermes can only request matching installed names. */
+  /** --skill <path>, repeatable. Curated copies each directory into the scoped profile. */
   skillPaths?: string[];
   model?: string;
-  /** Pass "$SESSION" for dry-run output. Hermes currently emits no fsPlan. */
+  /** Pass "$SESSION" for dry-run output. Curated fsPlan writes only below it. */
   sessionDir: string;
   hermesArgs?: string[];
 }
@@ -56,7 +56,7 @@ export interface LaunchPlan {
 
 const substSession = (value: string, sessionDir: string) => value.replaceAll("$SESSION", sessionDir);
 
-/** Plan a Hermes recipe grounded in ../PROBE.md. */
+/** Plan a verified Hermes launch grounded in ../PROBE.md. */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
   const posture: Posture = opts.posture ?? "native";
   const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((path) => resolveSkill(path));
