@@ -16,10 +16,10 @@ import type { ResolvedSkill } from "./skills.js";
 //   "floor"          the BENCHMARK floor. Completely doorless. It is the
 //                    placebo-of-record (B2) and its route is byte-frozen at
 //                    T9b — nothing in this split touches it.
-//   "product-floor"  the DOORFUL floor. T9b minus `--disable-slash-commands`,
-//                    so the minimum control surface survives. F7 prices the
-//                    door at +515 tok (20,176 vs 19,661), still -28.9% off
-//                    native's 28,379.
+//   "product-floor"  the DOORFUL floor. It keeps the minimum control surface;
+//                    P8 also uses an empty setting-sources allowlist so project
+//                    scope is not admitted. F7 prices the door at +515 tok
+//                    (20,176 vs 19,661), still -28.9% off native's 28,379.
 //
 // They are measured and named separately and priced as SEPARATE ARMS (B1).
 // Never average them into one number, and never let one stand in for the other:
@@ -74,7 +74,7 @@ export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
 // Heaven-lane levels only; med..max are the gated hell lane (P2, mapping OPEN
 // item 3). Vocabulary per N3; provisional pending N4/N5.
-export const LEVEL_ALIASES: Record<string, Posture> = { off: "floor", low: "curated" };
+export const LEVEL_ALIASES: Record<string, Posture> = { off: "product-floor", low: "curated" };
 export const HELL_LEVELS = ["med", "high", "xhigh", "max"] as const;
 
 export type FsOp =
@@ -244,12 +244,12 @@ function compileClaude(
       "--mcp-config",
       '{"mcpServers":{}}',
       "--setting-sources",
-      "project",
+      "",
     ];
     env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
     if (input.doorPluginDir) argv.push("--plugin-dir", input.doorPluginDir);
     notes.push(
-      `product-floor (F7 route) = the DOORFUL floor: T9b minus --disable-slash-commands, retaining the minimum control surface. Door priced at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
+      `product-floor (F7 route, P8 scope fix) = the DOORFUL floor: retaining the minimum control surface and using --setting-sources '' so project scope is not admitted. F7's locked evidence prices the door at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
     );
     if (!input.doorPluginDir) {
       notes.push(

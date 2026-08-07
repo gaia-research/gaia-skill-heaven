@@ -53,7 +53,7 @@ export function formatTokens(n: number): string {
   return `${(n / 1000).toFixed(1)}k`;
 }
 
-/** Compact exclusion disclosure (KC2, corrected under A3/KC4). `scope:
+/** Compact exclusion disclosure (KC2, corrected under A3/KC4/P8). `scope:
  * "user+project"` (native launches) is a partial census: bundled CLI skills
  * and plugin-provided skills are not counted (see census.ts header). `scope:
  * "session"` (curated/product-floor) enumerates the launched skill SET
@@ -62,12 +62,9 @@ export function formatTokens(n: number): string {
  * of posture — a founder-ruled, permanent, harness-level residual, measured
  * live by packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
  * (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's curated
- * note). The old "session scope has nothing to disclose" claim this
- * replaces was FALSE — see launcher.ts's KC4 correction. This caveat's
- * wording assumes the concurrent fix to the curated composition (dropping
- * the project-scope leak the same probe found) has landed, so `doctor` is
- * the only residual; if that fix has not landed, this under-discloses —
- * see the PR body for the dependency.
+ * note). Both curated and product-floor now use an empty setting-sources
+ * allowlist, so project-scope skills are not part of this session disclosure;
+ * `doctor` is the remaining disclosed residual.
  *
  * A5c fail-closed: this is an explicit allowlist, not an
  * `expected ? caveat : ""` optimistic default. Any scope value this function
@@ -85,28 +82,13 @@ function scopeCaveat(scope: string): string {
 
 /** The standing phrase.
  *
- * Every posture but one reads as "<n> standing", where a trailing `+` means the
+ * Every posture reads as "<n> standing", where a trailing `+` means the
  * census could not see everything and `n` is therefore a floor, not a total
- * (native: `14.2k+ standing`). That convention is unchanged.
- *
- * `product-floor` is the exception, by founder copy ruling (2026-07-30). It
- * selects NO skills, so its token count is always 0 — and `0+ standing` was
- * technically honest and practically unreadable: nobody infers from it that the
- * real figure is "zero of your own, plus however much project scope carries."
- * The two parts are named instead. This is not cosmetic — the posture inherits
- * project-scope skills from cwd (measured 2/2 byte-identical on claude 2.1.220:
- * `["pf-project-marker","doctor"]` with a planted marker vs `["doctor"]` in a
- * clean dir), so the amount is UNBOUNDED and varies per repo. A number would
- * imply a measurement we do not have.
- *
- * Note this drops the compact `(excl. bundled doctor)` caveat for this one
- * posture: "+ project scope" already says the count is not the whole story,
- * which is the substantive disclosure, and `doctor` is a constant residual
- * disclosed at every other posture and in `/skill-heaven`'s fuller session
- * line. If the composition is ever fixed to drop project scope, this branch
- * should go away and the generic form returns. */
+ * (native: `14.2k+ standing`). Session-scoped curated and product-floor
+ * manifests enumerate their selected set, while `scopeCaveat` discloses the
+ * bundled `doctor` residual measured in the live listing.
+ */
 function standingPhrase(manifest: ProfileManifest): string {
-  if (manifest.posture === "product-floor") return "0 selected + project scope";
   const floor = manifest.incomplete ? "+" : "";
   return `${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`;
 }
