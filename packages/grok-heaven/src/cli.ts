@@ -6,12 +6,14 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { materialize, POSTURES, type Posture } from "skill-heaven";
+import { LADDER_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
 interface CliArgs {
+  help: boolean;
   print: boolean;
   posture: string;
+  postureProvided: boolean;
   level?: string;
   skills: string[];
   model?: string;
@@ -19,8 +21,10 @@ interface CliArgs {
 }
 
 export function parseArgs(argv: string[]): CliArgs {
+  let help = false;
   let print = false;
-  let posture = "native";
+  let posture = "product-floor";
+  let postureProvided = false;
   let level: string | undefined;
   let model: string | undefined;
   const skills: string[] = [];
@@ -31,8 +35,12 @@ export function parseArgs(argv: string[]): CliArgs {
     if (arg === "--") {
       grokArgs.push(...argv.slice(index + 1));
       break;
-    } else if (arg === "--print") print = true;
-    else if (arg === "--posture") posture = argv[++index] ?? "";
+    } else if (arg === "--help" || arg === "-h") help = true;
+    else if (arg === "--print") print = true;
+    else if (arg === "--posture") {
+      posture = argv[++index] ?? "";
+      postureProvided = true;
+    }
     else if (arg === "--level") level = argv[++index];
     else if (arg === "--model") model = argv[++index];
     else if (arg === "--skill") {
@@ -41,11 +49,32 @@ export function parseArgs(argv: string[]): CliArgs {
     } else grokArgs.push(arg);
   }
 
-  return { print, posture, level, skills, model, grokArgs };
+  return { help, print, posture, postureProvided, level, skills, model, grokArgs };
+}
+
+function helpText(): string {
+  return [
+    "Usage: grok-heaven [--level <level>] [options] [-- <grok args...>]",
+    "",
+    `  --level <level>    Ladder rung: ${LADDER_LEVELS.join("|")} (default: off)`,
+    "                     med..max are P2-gated; ultra is unratified",
+    "  --level native     Explicitly keep the user's native setup",
+    "  --skill <path>     Skill for low/curated (repeatable)",
+    "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
+    "  --model <model>    Select a Grok model",
+    "  --print            Print the composed recipe without launching",
+    "  -h, --help         Show this help",
+    "",
+  ].join("\n");
 }
 
 export function run(argv: string[]): number {
   const args = parseArgs(argv);
+
+  if (args.help) {
+    process.stdout.write(helpText());
+    return 0;
+  }
 
   // Keep the refusal and uncaught-throw exit behavior identical to pi-heaven.
   assertLevelAllowed(args.level);
@@ -55,9 +84,12 @@ export function run(argv: string[]): number {
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
       process.stderr.write(
-        `grok-heaven: unknown --level "${args.level}" — known aliases: off, low (off→product-floor, low→curated). ` +
-          `Hell-lane levels (med, high, xhigh, max) are gated (P2) and refused before reaching here.\n`,
+        `grok-heaven: unknown --level "${args.level}" — choose ${LADDER_LEVELS.join("|")}, or native.\n`,
       );
+      return 2;
+    }
+    if (args.postureProvided && posture !== aliased) {
+      process.stderr.write(`grok-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
       return 2;
     }
     posture = aliased;

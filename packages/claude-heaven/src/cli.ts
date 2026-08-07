@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
+import { LADDER_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
@@ -39,6 +39,7 @@ export const LAUNCHABLE_POSTURES: readonly string[] = [
 ];
 
 interface CliArgs {
+  help: boolean;
   print: boolean;
   posture: string;
   postureProvided: boolean;
@@ -49,8 +50,9 @@ interface CliArgs {
 }
 
 export function parseArgs(argv: string[]): CliArgs {
+  let help = false;
   let print = false;
-  let posture = "native";
+  let posture = "product-floor";
   let postureProvided = false;
   let level: string | undefined;
   const skills: string[] = [];
@@ -60,7 +62,8 @@ export function parseArgs(argv: string[]): CliArgs {
     if (a === "--") {
       claudeArgs.push(...argv.slice(i + 1));
       break;
-    } else if (a === "--print") print = true;
+    } else if (a === "--help" || a === "-h") help = true;
+    else if (a === "--print") print = true;
     else if (a === "--posture") {
       posture = argv[++i] ?? "";
       postureProvided = true;
@@ -70,7 +73,7 @@ export function parseArgs(argv: string[]): CliArgs {
       if (p !== undefined) skills.push(p);
     } else claudeArgs.push(a);
   }
-  return { print, posture, postureProvided, level, skills, claudeArgs };
+  return { help, print, posture, postureProvided, level, skills, claudeArgs };
 }
 
 /** Absolute path to the statusline bin shipped alongside this CLI. */
@@ -83,8 +86,28 @@ function doorPluginDir(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "plugin");
 }
 
+function helpText(): string {
+  return [
+    "Usage: claude-heaven [--level <level>] [options] [-- <claude args...>]",
+    "",
+    `  --level <level>    Ladder rung: ${LADDER_LEVELS.join("|")} (default: off)`,
+    "                     med..max are P2-gated; ultra is unratified",
+    "  --level native     Explicitly keep the user's native setup",
+    "  --skill <path>     Skill for low/curated (repeatable)",
+    "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
+    "  --print            Print the composed plan without launching",
+    "  -h, --help         Show this help",
+    "",
+  ].join("\n");
+}
+
 export function run(argv: string[]): number {
   const args = parseArgs(argv);
+
+  if (args.help) {
+    process.stdout.write(helpText());
+    return 0;
+  }
 
   // P2 gate first — never compose a gated (Hell-lane) posture.
   assertLevelAllowed(args.level);
@@ -94,7 +117,7 @@ export function run(argv: string[]): number {
     const aliased = LEVEL_ALIASES[args.level];
     if (!aliased) {
       process.stderr.write(
-        `claude-heaven: unknown --level "${args.level}" — known aliases: off, low (off→product-floor, low→curated).\n`,
+        `claude-heaven: unknown --level "${args.level}" — choose ${LADDER_LEVELS.join("|")}, or native.\n`,
       );
       return 2;
     }

@@ -55,10 +55,11 @@ function captureStderr(fn: () => number): { code: number; err: string } {
 }
 
 describe("parseArgs", () => {
-  it("defaults to native, print off", () => {
+  it("defaults to off/product-floor, print off", () => {
     expect(parseArgs([])).toEqual({
+      help: false,
       print: false,
-      posture: "native",
+      posture: "product-floor",
       postureProvided: false,
       level: undefined,
       skills: [],
@@ -89,7 +90,7 @@ describe("run", () => {
     const { code, out } = captureStdout(() => run(["--print"]));
     expect(code).toBe(0);
     const plan = JSON.parse(out);
-    expect(plan.posture).toBe("native");
+    expect(plan.posture).toBe("product-floor");
     expect(plan.launcherLocked).toBe(true);
     expect(plan.command).toBe("claude");
     // the exact manifest that WOULD be written is shown inline (no temp dir)

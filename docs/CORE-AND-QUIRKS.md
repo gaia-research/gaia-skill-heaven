@@ -47,6 +47,26 @@ under test.
 - `med`…`max` → Skill Hell — progressively more *summoned* context (currently P2-gated)
 - `ultra` → unratified
 
+The ladder is the primary product interface on every door:
+
+```bash
+<door>-heaven                         # defaults to --level off
+<door>-heaven --level off
+<door>-heaven --level low --skill /path/to/skill
+<door>-heaven --level native          # explicitly leave the user's setup untouched
+<door>-heaven --help                  # ladder first; postures are compatibility vocabulary
+```
+
+`med|high|xhigh|max` are accepted as rung names and hard-refused by P2. `ultra`
+is accepted so the surface can say the honest thing: it is **unratified**, which
+is distinct from the P2 gate. `--posture` remains available for benchmark and
+compatibility invocations, but is not the product's lead vocabulary.
+
+A bare launcher selects `off`/`product-floor`. Claude, pi, and Hermes have live
+exec routes. Codex and Grok keep their existing recipe-only honesty boundary:
+their bare command selects off but refuses to spawn, while `--print` emits the
+plan and its negative-probe caveat. None silently falls back to `native`.
+
 ### 2. Postures
 
 `floor` · `product-floor` · `curated` · `native`. `floor` is the doorless benchmark
@@ -59,6 +79,9 @@ arms and never averaged — the gap between them *is* the door's cost.
 - **P3** — never mutate shared state. Everything materializes into an `mkdtemp` session dir via
   `fsPlan` with a `$SESSION` placeholder, and is removed after.
 - **D12** — upward-only. No mid-session recomposition into a cleaner posture.
+  Claude Code 2.1.224 exposes no native mid-session skill-load command (visible
+  help probe, pane `w8:p0`, 2026-08-07), so Claude's `/skill-heaven` chooser
+  emits exact launch commands rather than faking an in-session transition.
 - **D8 / M0** — nothing ships ahead of a probe on a pinned harness version. Negative results are
   first-class.
 
@@ -111,7 +134,7 @@ Adding a harness means filling one row and writing one `PROBE.md`. Nothing in co
 | **config home** | — | — | `CODEX_HOME` | `HERMES_HOME` | `GROK_HOME` |
 | **auth copy needed** | no | no | **yes** | yes | likely |
 | **rule files** | `CLAUDE.md` | `--no-context-files` | `--ignore-rules` | `--ignore-rules` (AGENTS/SOUL/.cursorrules) | tbd |
-| **mid-session skill load** | **no** | **yes** | tbd | tbd | tbd |
+| **mid-session skill load** | **no** (2.1.224 help probe, `w8:p0`) | **yes** | tbd | tbd | tbd |
 | **reads other harnesses' dirs** | no | no | no | no | **yes — reads `.claude`** |
 | **probe instrument** | listing probe | `--mode json` totalTokens | `tokens used` line | snapshot file / canary | **`grok inspect`** |
 | **door cost** | +515 tok | ~1,762 tok | unmeasured | unmeasured | unmeasured |

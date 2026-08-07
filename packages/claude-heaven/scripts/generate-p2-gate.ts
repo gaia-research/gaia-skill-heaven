@@ -15,14 +15,16 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HELL_LEVELS, POSTURES } from "skill-heaven";
+import { HELL_LEVELS, LADDER_LEVELS, POSTURES, UNRATIFIED_LEVELS } from "skill-heaven";
 import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 
 export interface P2Gate {
   schema: "claude-heaven/p2-gate@1";
   /** Provenance, so a reader of the generated file knows not to hand-edit it. */
-  source: "skill-heaven HELL_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES";
+  source: "skill-heaven LADDER_LEVELS + HELL_LEVELS + UNRATIFIED_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES";
+  levels: string[];
   gatedLevels: string[];
+  unratifiedLevels: string[];
   /** Core's posture list, machine-copied for one renderer purpose: a core-known
    * posture name with no row is answered "not offered here", never rendered as
    * an unknown word. Carries no status claim about any entry. */
@@ -38,8 +40,10 @@ export interface P2Gate {
 export function buildP2Gate(): P2Gate {
   return {
     schema: "claude-heaven/p2-gate@1",
-    source: "skill-heaven HELL_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
+    source: "skill-heaven LADDER_LEVELS + HELL_LEVELS + UNRATIFIED_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
+    levels: [...LADDER_LEVELS],
     gatedLevels: [...HELL_LEVELS],
+    unratifiedLevels: [...UNRATIFIED_LEVELS],
     postures: [...POSTURES],
     launchablePostures: [...LAUNCHABLE_POSTURES],
   };
