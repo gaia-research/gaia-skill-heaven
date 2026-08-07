@@ -528,43 +528,21 @@ function compileCursor(
 }
 
 // Grok 0.2.118 — session-scoped config route, pinned by packages/grok-heaven/
-// PROBE.md. Grok has no --no-skills primitive. GROK_HOME does evict Grok's
-// own user config, but Claude-compatible roots, project roots, bundled skills,
-// and installed plugins remain independent surfaces. The config below is the
-// strongest composition actually observed: it ignores the ambient skill roots,
-// disables the observed plugin names on the benchmark machine, and leaves the
-// session bundled root out. It intentionally stays recipe-only: there is no
-// portable wildcard for arbitrary symlinked roots or an unknown plugin inventory.
+// PROBE.md. GROK_HOME scopes auth/config, but Grok can read several
+// Claude-compatible roots and plugin skills. The door starts with this minimal
+// session config, then launcher code asks `grok inspect --json` for the exact
+// paths and observed plugin names and rewrites this file inside the session.
 const grokSkillFlags = ["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"];
 
-const grokCleanConfig = `[compat.claude]
+const grokBaseConfig = `[compat.claude]
 skills = false
 
 [compat.cursor]
 skills = false
 
 [skills]
-ignore = [
-  "~/.agents/skills",
-  "~/.claude/skills",
-  "~/.cursor/skills",
-  "$CWD/.grok/skills",
-  "$CWD/.agents/skills",
-  "$CWD/.claude/skills",
-  "$CWD/.cursor/skills",
-  "$SESSION/grok/bundled/skills",
-  "$SYMLINK_IGNORES",
-  "$ANCESTOR_IGNORES"
-]
-
-[plugins]
-disabled = ["frontend-design", "rock-favor", "claude-heaven"]
+ignore = []
 `;
-
-const grokProductConfig = grokCleanConfig.replace(
-  '\n[plugins]\ndisabled = ["frontend-design", "rock-favor", "claude-heaven"]\n',
-  "\n",
-);
 
 function tailGrok(input: CompileInput): string[] {
   const argv: string[] = [];
@@ -594,11 +572,7 @@ function compileGrok(
       to: "$SESSION/grok/auth.json",
     });
 
-    if (input.posture === "floor" || input.posture === "curated") {
-      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokCleanConfig });
-    } else {
-      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokProductConfig });
-    }
+    fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokBaseConfig });
 
     argv = [...grokSkillFlags];
     if (input.posture === "curated") {
@@ -606,15 +580,15 @@ function compileGrok(
         fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/grok/skills/${skill.id}` });
       }
       notes.push(
-        "grok curated recipe (0.2.118): session-scoped GROK_HOME receives auth.json, a clean-room config, and only the named skill directories. The pinned probe reached Skills (1) and loaded a marker skill, but this remains recipe-only because unknown plugin inventories and symlinked roots have no portable wildcard suppression.",
+        "grok curated exec route (WP14, 0.2.118): session-scoped GROK_HOME receives auth.json, the named skill directories, and a dynamic inspect-derived exact-path ignore config. Four discovery passes reached exactly one readmitted canary skill and answered successfully twice; observed plugin names are disabled only in this session.",
       );
     } else if (input.posture === "floor") {
       notes.push(
-        "grok floor recipe (0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, ambient-root ignores, and observed-plugin disable entries. The pinned config reached Skills (0) twice and answered OK twice; path/plugin inventory is not a universal exec license, so this remains recipe-only.",
+        "grok floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, iterative inspect-derived exact-path ignores, and session-local disables for the observed plugin names. Repeated pinned scans reached Skills (0) and answered successfully; no global plugin state is mutated.",
       );
     } else {
       notes.push(
-        "grok product-floor recipe (0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with ambient roots ignored but the installed plugin surface left available as the door. The pinned composition reached Skills (9) and answered OK twice; plugin inventories vary, so this remains recipe-only.",
+        "grok product-floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with iterative inspect-derived exact-path ignores while leaving observed plugins as the door surface. Repeated pinned scans reached the 9-skill plugin surface and answered successfully; the route does not claim zero plugin skills.",
       );
     }
   }
@@ -627,6 +601,6 @@ function compileGrok(
     argv,
     env,
     fsPlan,
-    execSupport: "recipe",
+    execSupport: "exec",
   };
 }

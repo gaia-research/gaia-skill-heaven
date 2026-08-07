@@ -69,12 +69,12 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 ## Posture mappings (what actually gets composed)
 
-| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | cursor / grok |
-|---|---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | recipe only (`--print`) |
-| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | recipe only; grok hard-errors (no mechanism exists) |
-| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | — (no probed cell) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | — (no probed cell) |
-| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | nothing / recipe |
+| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | cursor | grok (0.2.118) |
+|---|---|---|---|---|---|
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | recipe only (`--print`) | iterative `inspect --json` exact-path ignores + observed plugin disables (**WP14**) |
+| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | recipe only | same discovery, readmitting named `$GROK_HOME/skills/<id>` dirs (**WP14**) |
+| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | `--no-skills --no-context-files --no-prompt-templates` (**WP2**) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | recipe only (`--print`) | exact-path ignores leave observed plugins as the door surface (**WP14**) |
+| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | nothing | `grok` untouched |
 
 **codex-heaven is now an exec door (WP14, codex-cli 0.146.0).** The earlier
 flag-only negative remains recorded in `packages/codex-heaven/PROBE.md`:
@@ -86,7 +86,8 @@ for every non-readmitted path, and then spawns `codex exec`. Repeated hard
 counts were 76 discovered / 0 enabled in the composed floor, versus 90 / 45
 in the baseline app-server scan; the real scoped launch authenticated and
 answered. Cursor remains recipe-only because tracked `.cursor/rules` cannot
-be suppressed per-session; grok remains recipe-only pending a portable route.
+be suppressed per-session. Grok now uses the same dynamic inspect-derived route
+(WP14), with product-floor intentionally retaining the observed plugin surface.
 
 ### The floor split (founder ruling V5-5, 2026-07-28)
 
@@ -108,8 +109,8 @@ separately, priced as **separate arms (B1), never averaged into one number**.
 The evidence numbers are recorded once in `FLOOR_EVIDENCE` (`packages/core/src/compile.ts`)
 and are never re-derived. Every floor record is tagged `floor=benchmark` or
 `floor=product` in `notes`, so the two arms cannot be pooled at analysis time.
-`product-floor` has a verified cell on **claude only**; on any other harness it
-hard-errors rather than guessing one into existence (M0 discipline).
+`product-floor` has verified cells on **claude, pi, codex, hermes, and grok**;
+only cursor hard-errors rather than guessing one into existence (M0 discipline).
 
 `--door-plugin-dir` is caller-supplied on purpose: core does not assume which
 package the door ships in. Omit it and `product-floor` still compiles — the

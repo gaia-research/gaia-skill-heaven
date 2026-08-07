@@ -219,7 +219,7 @@ describe("non-native harness mappings", () => {
     expect(r.execSupport).toBe("recipe");
     expect(r.env.CURSOR_CONFIG_DIR).toBe("$SESSION/cursor-config");
   });
-  it("grok composes pinned recipe routes and leaves native untouched", () => {
+  it("grok composes pinned exec routes and leaves native untouched", () => {
     const floor = compile({ posture: "floor", harness: "grok", skills: [] });
     expect(floor.env.GROK_HOME).toBe("$SESSION/grok");
     expect(floor.argv).toEqual(["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"]);
@@ -229,11 +229,11 @@ describe("non-native harness mappings", () => {
         expect.objectContaining({ kind: "write", path: "$SESSION/grok/config.toml" }),
       ]),
     );
-    expect(floor.execSupport).toBe("recipe");
+    expect(floor.execSupport).toBe("exec");
 
     const product = compile({ posture: "product-floor", harness: "grok", skills: [] });
-    expect(product.execSupport).toBe("recipe");
-    expect(product.notes.join(" ")).toMatch(/plugin surface left available/i);
+    expect(product.execSupport).toBe("exec");
+    expect(product.notes.join(" ")).toMatch(/plugins as the door surface/i);
 
     const curated = compile({ posture: "curated", harness: "grok", skills: [fakeSkill] });
     expect(curated.fsPlan).toContainEqual({
@@ -246,7 +246,7 @@ describe("non-native harness mappings", () => {
     expect(native.argv).toEqual([]);
     expect(native.env).toEqual({});
     expect(native.fsPlan).toEqual([]);
-    expect(native.execSupport).toBe("recipe");
+    expect(native.execSupport).toBe("exec");
   });
 });
 

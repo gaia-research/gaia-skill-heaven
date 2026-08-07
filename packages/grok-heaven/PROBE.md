@@ -122,3 +122,101 @@ GROK_HOME=/tmp/grok-heaven-curated-final grok -p "/grok-heaven-path-probe"
 ## Conclusion
 
 `GROK_HOME` is a real session-scoping lever and auth survives when copied. Project Claude skills are not removed by compatibility-off, but exact `[skills].ignore` entries remove them without changing `--cwd`. A pinned-machine config can reach zero and a curated copy can reach exactly one, yet there is no verified portable all-plugin/absolute-path wildcard route. Floor/product-floor/curated therefore compile as **recipes**, not live exec routes; native remains untouched. `--no-memory`, `--no-subagents`, `--no-plan`, and `--disable-web-search` are documented session flags and are included in the recipes, but no dose is inferred from them.
+
+## WP14 — inspect-derived exact-path route (2026-08-07)
+
+The earlier negative is retained above: a static wildcard is not demonstrated, and a single
+compatibility toggle is not eviction. WP14 tested the route the brief called for: create a
+session-scoped `GROK_HOME`, copy auth (**1678 bytes**), ask Grok's disk enumerator
+`grok inspect --json` for every discovered skill's `source.path`, and write exact path/parent
+entries into `[skills].ignore`. No `grok plugin disable` command or global mutation was used.
+All load-bearing cells below ran in visible pane **`w8:p12`**, with each composition repeated
+twice.
+
+A one-pass exact-path attempt is a useful negative finding. Starting from the scoped report
+(79 skills: 70 user, 9 plugin), ignoring the 79 exact `SKILL.md` paths (or their 79 parent
+directories) left 44 skills: 35 user skills from the newly exposed `.claude/skills` root and
+all 9 plugin skills. Exact entries must therefore be accumulated across discovery passes, and
+plugin skills need the observed plugin names in `[plugins].disabled` for the benchmark floor.
+
+The final iterative floor cell kept the config entirely inside the disposable home. Literal
+output from both repetitions:
+
+```text
+GROK_ITER_ROUND=1 COUNT=79 SOURCES=plugin:9,user:70
+GROK_ITER_IGNORE_TOTAL=158 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=2 COUNT=35 SOURCES=user:35
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=3 COUNT=0 SOURCES=
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=4 COUNT=0 SOURCES=
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_FINAL_COUNT=0
+GROK_ITER_FINAL_SOURCES=
+GROK_ITER_FINAL_NAMES=
+GROK_ITER_OK
+GROK_ITER_STATUS=0
+```
+
+The product-floor arm intentionally leaves observed plugins as the door surface and does not
+claim zero skills. Both repetitions agreed:
+
+```text
+GROK_ITER_ROUND=1 COUNT=79 SOURCES=plugin:9,user:70
+GROK_ITER_IGNORE_TOTAL=158 GROK_ITER_PLUGIN_DISABLE_TOTAL=0
+GROK_ITER_ROUND=2 COUNT=44 SOURCES=plugin:9,user:35
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=0
+GROK_ITER_ROUND=3 COUNT=9 SOURCES=plugin:9
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=0
+GROK_ITER_ROUND=4 COUNT=9 SOURCES=plugin:9
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=0
+GROK_ITER_FINAL_COUNT=9
+GROK_ITER_FINAL_SOURCES=plugin:9
+GROK_ITER_FINAL_NAMES=frontend-design,clear-rock-cache,resave-rock-route,rock-api,rock-favor,rock-merge-duplicates,rock-rostering-assignments,rock-ssh,rock-workflow-forms
+GROK_ITER_OK
+GROK_ITER_STATUS=0
+```
+
+Curated readmission copied a disposable `grok-heaven-path-probe` skill into
+`GROK_HOME/skills`, excluded its canonical path from the dynamic ignores, and disabled the
+observed plugin names. Both repetitions agreed:
+
+```text
+GROK_ITER_ROUND=1 COUNT=80 SOURCES=plugin:9,user:71
+GROK_ITER_IGNORE_TOTAL=158 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=2 COUNT=36 SOURCES=user:36
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=3 COUNT=1 SOURCES=user:1
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_ROUND=4 COUNT=1 SOURCES=user:1
+GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
+GROK_ITER_FINAL_COUNT=1
+GROK_ITER_FINAL_SOURCES=user:1
+GROK_ITER_FINAL_NAMES=grok-heaven-path-probe
+GROK_ITER_OK
+GROK_ITER_STATUS=0
+```
+
+**WP14 conclusion:** discovery is reproducible on Grok 0.2.118, auth survives, and the exact
+inspect-derived session config closes the old root/plugin gap. Floor reaches zero, product-floor
+launches with its 9-skill installed-plugin door surface, and curated reaches exactly one named
+skill. This licenses `execSupport: "exec"` for the composed launcher route. The old negative
+still applies to a bare static config or wildcard; the launcher must re-discover and accumulate
+exact paths each session, and only the benchmark/curated arms may disable the observed plugin
+names.
+
+### Door smoke test
+
+After the WP14 probe, the actual door was launched in visible pane **`w8:p12`**:
+
+```text
+node packages/grok-heaven/bin/grok-heaven.mjs --posture product-floor -- \
+  -p "Reply with exactly: GROK_HEAVEN_OK"
+```
+
+The launcher performed the iterative inspect/config composition and spawned Grok; the session
+returned:
+
+```text
+GROK_HEAVEN_OK
+```

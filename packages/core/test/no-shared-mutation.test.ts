@@ -58,10 +58,10 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
   const fixturesDir = join(import.meta.dirname, "fixtures");
   const skill = resolveSkill(join(fixturesDir, "impeccable-skill"));
 
-  // Grok's non-native postures are pinned recipe routes (WP12), just like
-  // Hermes' recipe route. Product-floor compiles for harness "claude" (F7),
-  // "pi" (WP2), "codex" (WP14), "hermes" (WP7), and "grok" (WP12);
-  // cursor remains a capability gap. Everything else in POSTURES x HARNESSES
+  // Grok's non-native postures now use the WP14 inspect-derived exec route;
+  // Hermes remains a recipe route. Product-floor compiles for harness
+  // "claude" (F7), "pi" (WP2), "codex" (WP14), "hermes" (WP7), and "grok"
+  // (WP12/WP14); cursor remains a capability gap. Everything else in POSTURES x HARNESSES
   // is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
     if (
@@ -203,7 +203,6 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
           harness !== "hermes"
         )
           continue;
-        if (harness === "grok" && posture !== "native") continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {
           const skills: ResolvedSkill[] = posture === "curated" ? [skill] : [];

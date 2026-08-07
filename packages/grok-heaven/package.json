@@ -1,7 +1,7 @@
 {
   "name": "grok-heaven",
   "version": "0.0.0",
-  "description": "grok-heaven — the Grok door to Skill Heaven: session-scoped floor/product-floor/curated/native posture recipes. Built on skill-heaven core. PROTOTYPE (WP12).",
+  "description": "grok-heaven — the Grok door to Skill Heaven: session-scoped inspect-derived floor/product-floor/curated/native posture routes. Built on skill-heaven core. PROTOTYPE (WP14, Grok 0.2.118).",
   "private": true,
   "type": "module",
   "bin": {
