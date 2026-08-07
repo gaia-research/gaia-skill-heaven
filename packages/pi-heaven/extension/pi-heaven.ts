@@ -1,7 +1,10 @@
 import { accessSync, constants, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type {
+  ExtensionAPI,
+  ExtensionCommandContext,
+} from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 
 const profileEnv = "PI_HEAVEN_PROFILE";
@@ -270,7 +273,7 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
 
   pi.registerCommand("skill-hell", {
     description: "Summon the best matching skill for an intent",
-    handler: async (args, ctx) => {
+    handler: async (args: string, ctx: ExtensionCommandContext) => {
       const intent = args.trim();
       if (!intent) {
         ctx.ui.notify("gaia-hell: no intent given — usage: /skill-hell <intent>", "error");

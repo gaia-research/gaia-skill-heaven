@@ -15,11 +15,20 @@
   },
   "include": [
     "packages/*/src",
-    "packages/*/extension",
     "packages/*/test",
     "packages/*/scripts",
     "packages/*/plugin/scripts"
   ],
   // Vendored third-party scripts inside test fixtures are data, not our source.
-  "exclude": ["node_modules", "packages/*/test/fixtures"]
+  //
+  // `packages/*/extension` is excluded deliberately. A harness extension imports
+  // that harness's own SDK (pi's `@earendil-works/pi-coding-agent`), which ships
+  // with the harness, not with this repo — and this repo has no runtime
+  // dependencies and keeps it that way. The harness type-checks its own extension
+  // against its own SDK when it loads it; our tsc cannot, and should not pretend to.
+  "exclude": [
+    "node_modules",
+    "packages/*/test/fixtures",
+    "packages/*/extension"
+  ]
 }
