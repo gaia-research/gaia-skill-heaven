@@ -244,7 +244,7 @@ function compileClaude(
       "--mcp-config",
       '{"mcpServers":{}}',
       "--setting-sources",
-      "project",
+      "",
     ];
     env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
     if (input.doorPluginDir) argv.push("--plugin-dir", input.doorPluginDir);

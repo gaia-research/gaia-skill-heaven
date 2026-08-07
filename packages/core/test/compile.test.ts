@@ -96,11 +96,17 @@ describe("the floor split (V5-5)", () => {
     expect(floorOf("floor")).toBe("benchmark");
   });
 
-  it("the product floor is T9b minus --disable-slash-commands (F7) — that one flag is the door", () => {
-    const bench = compile({ posture: "floor", harness: "claude", skills: [] });
+  it("the product floor keeps the door and uses an empty setting-sources allowlist (P8)", () => {
     const product = compile({ posture: "product-floor", harness: "claude", skills: [] });
+    expect(product.argv).toEqual([
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "",
+    ]);
     expect(product.argv).not.toContain("--disable-slash-commands");
-    expect(product.argv).toEqual(bench.argv.filter((a) => a !== "--disable-slash-commands"));
+    expect(product.argv).not.toContain("project");
     expect(product.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
     expect(product.execSupport).toBe("exec");
     expect(floorOf("product-floor")).toBe("product");
