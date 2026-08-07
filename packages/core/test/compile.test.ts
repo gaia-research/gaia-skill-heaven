@@ -151,23 +151,19 @@ describe("the floor split (V5-5)", () => {
     expect(Object.values(e)).not.toContain(mean);
   });
 
-  it("product-floor has no verified cell on any other harness — it refuses rather than guesses (M0/D8)", () => {
-    // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
-    // 0.83.0, 2026-08-07), and grok joined it in WP12 (PROBE.md, 0.2.118).
-    // codex/cursor remain unprobed for this posture.
-    for (const h of ["codex", "cursor"] as const) {
-      expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
-    }
+  it("keeps codex product-floor print-only and explicit about its negative probe", () => {
+    const plan = compile({ posture: "product-floor", harness: "codex", skills: [] });
+    expect(plan.execSupport).toBe("recipe");
+    expect(plan.notes.join(" ")).toContain("explicitly unverified, print-only recipe");
+    expect(plan.notes.join(" ")).toContain("NOT evidence of a clean product floor");
   });
 
-  // KC6 (Issue #12): this refusal is the harness-incapable class — nobody has
-  // verified the composition, so there is nothing decided to withhold. It
-  // must say that explicitly, not just "no verified cell", which alone could
-  // be misread as "not verified [and therefore not permitted]".
+  // KC6 (Issue #12): cursor still has no product-floor route at all. That is a
+  // harness-capability gap, not a policy hold.
   it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
     let msg = "";
     try {
-      compile({ posture: "product-floor", harness: "codex", skills: [] });
+      compile({ posture: "product-floor", harness: "cursor", skills: [] });
     } catch (e) {
       msg = (e as Error).message;
     }

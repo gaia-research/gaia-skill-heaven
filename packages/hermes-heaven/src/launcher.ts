@@ -6,6 +6,7 @@ import {
   compile,
   HELL_LEVELS,
   LEVEL_ALIASES,
+  UNRATIFIED_LEVELS,
   resolveSkill,
   type CompileResult,
   type FsOp,
@@ -15,6 +16,7 @@ import {
 
 // P2 (LOCKED): sourced from core so every door refuses the same Hell levels.
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
+export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
 /** P2 gate: reject the Hell lane before it can compose anything. */
 export function assertLevelAllowed(level: string | undefined): void {
@@ -26,6 +28,12 @@ export function assertLevelAllowed(level: string | undefined): void {
         `Heaven-lane postures only.`,
     );
   }
+  if (level && UNRATIFIED.has(level)) {
+    throw new Error(
+      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+        `product mapping to compose, so hermes-heaven refuses rather than guessing.`,
+    );
+  }
 }
 
 export function resolveLevelAlias(level: string): Posture | undefined {
@@ -33,7 +41,7 @@ export function resolveLevelAlias(level: string): Posture | undefined {
 }
 
 export interface LaunchOptions {
-  /** default "native" */
+  /** default "product-floor" (`--level off`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated copies each directory into the scoped profile. */
   skillPaths?: string[];
@@ -58,7 +66,7 @@ const substSession = (value: string, sessionDir: string) => value.replaceAll("$S
 
 /** Plan a verified Hermes launch grounded in ../PROBE.md. */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
-  const posture: Posture = opts.posture ?? "native";
+  const posture: Posture = opts.posture ?? "product-floor";
   const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((path) => resolveSkill(path));
 
   const compiled = compile({

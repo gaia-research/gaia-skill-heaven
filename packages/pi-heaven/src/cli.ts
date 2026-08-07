@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { materialize, POSTURES, type Posture } from "skill-heaven";
+import { LADDER_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
 // Guinea-pig model for this prototype (WP2 dispatch brief) — cheap and
@@ -44,8 +44,10 @@ function profileManifest(plan: ReturnType<typeof planLaunch>): string {
 }
 
 interface CliArgs {
+  help: boolean;
   print: boolean;
   posture: string;
+  postureProvided: boolean;
   level?: string;
   /** --skill <path>, repeatable */
   skills: string[];
@@ -54,8 +56,10 @@ interface CliArgs {
 }
 
 export function parseArgs(argv: string[]): CliArgs {
+  let help = false;
   let print = false;
-  let posture = "native";
+  let posture = "product-floor";
+  let postureProvided = false;
   let level: string | undefined;
   let model: string | undefined;
   const skills: string[] = [];
@@ -65,8 +69,12 @@ export function parseArgs(argv: string[]): CliArgs {
     if (a === "--") {
       piArgs.push(...argv.slice(i + 1));
       break;
-    } else if (a === "--print") print = true;
-    else if (a === "--posture") posture = argv[++i] ?? "";
+    } else if (a === "--help" || a === "-h") help = true;
+    else if (a === "--print") print = true;
+    else if (a === "--posture") {
+      posture = argv[++i] ?? "";
+      postureProvided = true;
+    }
     else if (a === "--level") level = argv[++i];
     else if (a === "--model") model = argv[++i];
     else if (a === "--skill") {
@@ -74,11 +82,32 @@ export function parseArgs(argv: string[]): CliArgs {
       if (p !== undefined) skills.push(p);
     } else piArgs.push(a);
   }
-  return { print, posture, level, skills, model, piArgs };
+  return { help, print, posture, postureProvided, level, skills, model, piArgs };
+}
+
+function helpText(): string {
+  return [
+    "Usage: pi-heaven [--level <level>] [options] [-- <pi args...>]",
+    "",
+    `  --level <level>    Ladder rung: ${LADDER_LEVELS.join("|")} (default: off)`,
+    "                     med..max are P2-gated; ultra is unratified",
+    "  --level native     Explicitly keep the user's native setup",
+    "  --skill <path>     Skill for low/curated (repeatable)",
+    "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
+    "  --model <model>    Override the default model",
+    "  --print            Print the composed plan without launching",
+    "  -h, --help         Show this help",
+    "",
+  ].join("\n");
 }
 
 export function run(argv: string[]): number {
   const args = parseArgs(argv);
+
+  if (args.help) {
+    process.stdout.write(helpText());
+    return 0;
+  }
 
   // P2 gate first — never compose a gated (Hell-lane) level. Same wording and
   // uncaught-throw behavior as claude-heaven (packages/claude-heaven/src/
@@ -94,9 +123,12 @@ export function run(argv: string[]): number {
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
       process.stderr.write(
-        `pi-heaven: unknown --level "${args.level}" — known aliases: off, low (off→product-floor, low→curated). ` +
-          `Hell-lane levels (med, high, xhigh, max) are gated (P2) and refused before reaching here.\n`,
+        `pi-heaven: unknown --level "${args.level}" — choose ${LADDER_LEVELS.join("|")}, or native.\n`,
       );
+      return 2;
+    }
+    if (args.postureProvided && posture !== aliased) {
+      process.stderr.write(`pi-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
       return 2;
     }
     posture = aliased;

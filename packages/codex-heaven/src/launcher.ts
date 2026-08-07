@@ -15,6 +15,7 @@ import {
   compile,
   HELL_LEVELS,
   LEVEL_ALIASES,
+  UNRATIFIED_LEVELS,
   resolveSkill,
   type CompileResult,
   type FsOp,
@@ -29,6 +30,7 @@ import {
 // claude-heaven's and pi-heaven's gate verbatim (only the door name changes) —
 // the refusal reads the same on every door.
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
+export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
 /** P2 gate: reject the Hell lane before it can compose anything. */
 export function assertLevelAllowed(level: string | undefined): void {
@@ -38,6 +40,12 @@ export function assertLevelAllowed(level: string | undefined): void {
         `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
         `door, not an activator: the key exists and can turn once that bar is met. codex-heaven composes ` +
         `Heaven-lane postures only.`,
+    );
+  }
+  if (level && UNRATIFIED.has(level)) {
+    throw new Error(
+      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+        `product mapping to compose, so codex-heaven refuses rather than guessing.`,
     );
   }
 }
@@ -50,7 +58,7 @@ export function resolveLevelAlias(level: string): Posture | undefined {
 }
 
 export interface LaunchOptions {
-  /** default "native" */
+  /** default "product-floor" (`--level off`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
   skillPaths?: string[];
@@ -85,7 +93,7 @@ const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION",
 
 /** Plan a launch at any posture core composes for codex (see ../PROBE.md for what was verified). */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
-  const posture: Posture = opts.posture ?? "native";
+  const posture: Posture = opts.posture ?? "product-floor";
   const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((p) => resolveSkill(p));
 
   const compiled = compile({

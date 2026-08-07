@@ -72,10 +72,16 @@ export type Mechanism = (typeof MECHANISMS)[number];
 // docs/labs/harness-capability-matrix.md rows T6/T7).
 export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
-// Heaven-lane levels only; med..max are the gated hell lane (P2, mapping OPEN
-// item 3). Vocabulary per N3; provisional pending N4/N5.
-export const LEVEL_ALIASES: Record<string, Posture> = { off: "product-floor", low: "curated" };
+// The user-facing ladder. `native` remains an explicit escape hatch through
+// LEVEL_ALIASES, but is not a rung: it means "leave my setup untouched".
+export const LADDER_LEVELS = ["off", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export const LEVEL_ALIASES: Record<string, Posture> = {
+  off: "product-floor",
+  low: "curated",
+  native: "native",
+};
 export const HELL_LEVELS = ["med", "high", "xhigh", "max"] as const;
+export const UNRATIFIED_LEVELS = ["ultra"] as const;
 
 export type FsOp =
   | { kind: "write"; path: string; contents: string }
@@ -155,11 +161,11 @@ export function compile(input: CompileInput): CompileResult {
   // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
   // installed-skills index; compileHermes discloses that negative result and
   // remains recipe-only.
-  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "hermes", "grok"];
-  if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
+  const PRODUCT_FLOOR_ROUTES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok"];
+  if (posture === "product-floor" && !PRODUCT_FLOOR_ROUTES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
+      `--posture product-floor has no route for harness ${harness} — claude (F7, 2.1.216), ` +
+        "pi (PROBE.md, 0.83.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) have probed routes; codex has an explicitly unverified, print-only recipe backed by its negative probe. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -538,7 +544,9 @@ function compileCodex(
       to: "$SESSION/codex/auth.json",
     });
     notes.push(
-      "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
+      input.posture === "product-floor"
+        ? "codex product-floor is an explicitly unverified, print-only recipe. The 0.146.0 negative probe found no composition that approaches zero while preserving a door: $CODEX_HOME does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills. It is emitted so the ladder-first default fails honestly into a recipe rather than silently launching native; it is NOT evidence of a clean product floor and the launcher will not spawn it."
+        : "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
     );
     if (input.posture === "curated") {
       for (const s of input.skills) {

@@ -2,8 +2,8 @@
 // claude: it reads skill sources (census / resolveSkill) but writes nothing.
 // cli.ts turns a plan into files + a process.
 //
-// NATIVE is still the default posture: claude as-is, nothing evicted, nothing
-// summoned, no flags injected beyond the session-scoped statusline wiring (P1).
+// PRODUCT-FLOOR is the default posture: the smallest launchable session that
+// keeps the door. Native remains available explicitly.
 //
 // The non-native postures are NOT composed here. They are composed by core's
 // `compile()` — the one place the empirically probed, version-pinned routes
@@ -19,6 +19,7 @@ import { join } from "node:path";
 import {
   compile,
   HELL_LEVELS,
+  UNRATIFIED_LEVELS,
   resolveSkill,
   type FsOp,
   type Posture,
@@ -36,6 +37,7 @@ import type { ProfileManifest } from "./statusline.js";
 // the CLI resolves them before handing a canonical `--posture` to this launcher.
 // Their vocabulary is provisional (N3, pending N4/N5).
 export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
+export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
 // KC6 (Issue #12): a refusal must say WHICH of two unlike things it is —
 // withheld by policy (a key exists, and could turn) or incapable in the
@@ -75,7 +77,7 @@ export const CURATED_DOOR_ABSENCE_NOTE =
   "product-floor if you need /skill-heaven to survive in-session.";
 
 export interface LaunchOptions {
-  /** default "native" */
+  /** default "product-floor" (`--level off`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
   skillPaths?: string[];
@@ -120,6 +122,12 @@ export function assertLevelAllowed(level: string | undefined): void {
         `Heaven-lane postures only.`,
     );
   }
+  if (level && UNRATIFIED.has(level)) {
+    throw new Error(
+      `level "${level}" is not ratified. This is not the P2 Hell-lane gate: ultra has no approved ` +
+        `product mapping to compose, so claude-heaven refuses rather than guessing.`,
+    );
+  }
 }
 
 const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION", sessionDir);
@@ -133,7 +141,7 @@ const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION",
  * file; a manifest that lied would make both surfaces lie at once.
  */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
-  const posture: Posture = opts.posture ?? "native";
+  const posture: Posture = opts.posture ?? "product-floor";
   const manifestPath = join(opts.sessionDir, "profile.json");
   const settingsPath = join(opts.sessionDir, "settings.json");
 
