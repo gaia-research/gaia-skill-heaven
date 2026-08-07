@@ -71,14 +71,30 @@ ARM_B=$(herdr pane split "$ARM_A" --direction down --ratio 0.5 --cwd "$REPO" \
 
 ---
 
-## 3. Non-interactive probes — `pane run`
+## 3. Non-interactive probes
 
-For a probe that runs and exits, `pane run` is simpler than starting an agent:
+For a probe that runs and exits, you do not need to start an agent in the pane.
+
+**`pane run` takes argv as separate tokens and does NOT preserve shell quoting.** It is fine for
+a command with no quoted arguments:
 
 ```bash
 herdr pane run "$ARM_A" node packages/claude-heaven/bin/claude-heaven.mjs --print
 herdr pane run "$ARM_B" node packages/claude-heaven/bin/claude-heaven.mjs --posture product-floor --print
 ```
+
+**The moment your command contains a quoted prompt, use `pane send-text`** with a trailing
+newline inside the quotes. `pane run` will split the prompt into separate arguments, and a shell
+glob character in it (`(`, `*`, `?`) will fail outright:
+
+```bash
+herdr pane send-text "$ARM_A" 'pi --model openai-codex/gpt-5.6-luna:low -p --no-session "List every skill you can see."
+'
+herdr pane read "$ARM_A"
+```
+
+This has silently corrupted probes before — a split prompt still returns a plausible-looking
+answer to a question you did not ask.
 
 Read the results:
 

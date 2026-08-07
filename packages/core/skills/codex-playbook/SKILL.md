@@ -13,9 +13,15 @@ Verified against **codex-cli 0.146.0**. Re-check `codex --version` before trusti
 measurement.
 
 > **Rule 0 — run codex in a herdr pane, never through your Bash tool.** The operator must be
-> able to see which model and reasoning effort you invoked. `herdr pane run "$PROBE_PANE" codex
-> exec --model … "probe"`, then `herdr pane read "$PROBE_PANE"`. See the `herdr-dispatch` skill.
-> A probe the operator could not see is not evidence.
+> able to see which model and reasoning effort you invoked. A probe the operator could not see is
+> not evidence. Use `pane send-text` with a trailing newline **inside** the quotes — **not**
+> `pane run`, which splits argv on whitespace and destroys quoted prompts:
+>
+> ```bash
+> herdr pane send-text "$PROBE_PANE" 'codex exec --model gpt-5.6-luna -c model_reasoning_effort=low "probe text"
+> '
+> herdr pane read "$PROBE_PANE"
+> ```
 
 > **Building the door?** Read `packages/core/skills/harness-door-pattern/SKILL.md` first — it
 > carries the suppression-mechanism taxonomy, the probe methodology, and the traps. This playbook
@@ -168,10 +174,12 @@ codex exec resume --last "follow-up instruction"
 
 ## 7. codex-heaven status
 
-`compileCodex()` exists in `packages/core/src/compile.ts` but is **recipe-only** — it emits a
-plan and never spawns. Moving it to `exec` requires an M0 probe on the pinned version, recorded
-before the route changes. Do not flip `execSupport` on the strength of this document; flip it on
-the strength of a probe you ran.
+`packages/codex-heaven/` ships as of 2026-08-07, with its probe recorded in
+`packages/codex-heaven/PROBE.md` on codex-cli 0.146.0.
+
+The discipline that got it there still applies to any route change: `execSupport` moves on the
+strength of **a probe you ran**, on a pinned version, recorded before the route changes — never
+on the strength of this document.
 
 ---
 

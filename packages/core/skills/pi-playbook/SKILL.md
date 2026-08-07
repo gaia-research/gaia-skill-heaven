@@ -12,10 +12,16 @@ config-directory tricks.
 Verified against **pi 0.83.0**. Re-check `pi --version` before trusting any dose measurement;
 a flag's behaviour has changed across versions before (see §5).
 
-> **Rule 0 — run pi in a herdr pane, never through your Bash tool.** The operator must be able
-> to see which model you invoked. `herdr pane run "$PROBE_PANE" pi --model … "probe"`, then
-> `herdr pane read "$PROBE_PANE"`. See the `herdr-dispatch` skill. A probe the operator could
-> not see is not evidence.
+> **Rule 0 — run pi in a herdr pane, never through your Bash tool.** The operator must be able to
+> see which model you invoked. A probe the operator could not see is not evidence. Use
+> `pane send-text` with a trailing newline **inside** the quotes — **not** `pane run`, which
+> splits argv on whitespace and destroys quoted prompts:
+>
+> ```bash
+> herdr pane send-text "$PROBE_PANE" 'pi --model openai-codex/gpt-5.6-luna:low -p --no-session "probe text"
+> '
+> herdr pane read "$PROBE_PANE"
+> ```
 
 > **Building the door?** Read `packages/core/skills/harness-door-pattern/SKILL.md` first — it
 > carries the suppression-mechanism taxonomy, the probe methodology, and the traps. This playbook
