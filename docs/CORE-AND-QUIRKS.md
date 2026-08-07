@@ -74,6 +74,20 @@ Search → untuned rank (relevance **gates**, rating **orders**) → clone → v
 the whole skill directory → session-lock → GC → payload cache. Harness-agnostic by construction:
 it produces a **directory on disk**. What a harness does with that directory is a quirk.
 
+**It is also tree-agnostic, and that is deliberate** (founder, 2026-08-07). The same summon will
+eventually point at a different tree — a user's own, an enterprise's, anything. The registry is
+a *parameter*, not part of the engine's identity. The plumbing already reflects this: the source
+URLs are env-overridable (`GAIA_REGISTRY_URL`, `GAIA_NAMED_SKILLS_URL`), so pointing summon at
+another tree is configuration, not a fork.
+
+This is why the tool is named **`summon`** and not `gaia_summon`. A tool name carrying the tree's
+name would be a lie the moment the tree changes. Same reasoning retires the `gaia_*` prototype
+names generally (`gaia.mcp` lexicon, D4 — the ratified surface is `search_skills` + `summon`);
+the three published v0.1.0 names stay only because renaming a live public interface is a breaking
+change a lexicon entry does not authorise.
+
+**Rule of thumb for anything new on this surface: name the capability, never the tree.**
+
 ### 6. Measurement
 
 `gaia-research/skill-cost` is the canonical cost basis — persisted harness session logs priced
