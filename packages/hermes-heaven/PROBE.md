@@ -197,4 +197,6 @@ HERMES_HOME="$SESS/hermes" hermes chat -q "What is the path-probe marker? ..." \
 → HERMES_PATH_SKILL_LOADED
 ```
 
+The exact curated composition also succeeded twice with `--safe-mode` added alongside `--skills hermes-heaven-path-probe`. This demonstrates that Hermes 0.20.0's implementation still applies an explicit CLI preload under safe mode, despite the help text claiming `--ignore-rules` (which safe mode implies) skips preloaded skills.
+
 **Revised conclusion:** Hermes has a verified clean floor through an explicit toolset allowlist that omits `skills`, without filesystem work. Scoped `HERMES_HOME` plus the opt-out marker is independently verified at 0 skills and enables a true curated route by copying arbitrary skill directories into the scoped profile, then preloading them by resolved name. These routes authenticate and answer, licensing live exec; no token dose is claimed.
