@@ -151,7 +151,14 @@ export function renderPosture(options = {}) {
 
   const current = manifest ? levelForPosture(manifest.posture) : "off";
   const currentIndex = current === null ? data.levels.length : data.levels.indexOf(current);
-  const lines = ["⚡ Skill Heaven", `   ${scopeNote(manifest)}`, "", "   off · low · med · high · xhigh · max · ultra", ""];
+  const lines = [
+    "⚡ Skill Heaven",
+    "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
+    `   ${scopeNote(manifest)}`,
+    "",
+    "   off · low · med · high · xhigh · max · ultra",
+    "",
+  ];
 
   for (const [index, level] of data.levels.entries()) {
     const pointer = target === level ? "  ← selected" : "";

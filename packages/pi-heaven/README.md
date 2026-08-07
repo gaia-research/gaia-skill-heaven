@@ -1,5 +1,7 @@
 # pi-heaven
 
+> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+
 The pi door to Skill Heaven: a boot-time launcher plus live-session extension.
 
 ## Launch
@@ -48,14 +50,10 @@ Engine resolution order:
 
 No user or project pi state is edited (P3).
 
-From this repository:
-
-```bash
-pi --extension packages/pi-heaven/extension/pi-heaven.ts
-```
-
-Or install the package through pi's package channel and let its `pi.extensions`
-manifest load the same file. Without a launcher manifest, `/skill-heaven`
+From a source checkout, the launcher loads the extension automatically. It can
+also be inspected directly in pi's package manifest at
+`packages/pi-heaven/extension/pi-heaven.ts`. The npm-ready package is not yet
+published, and it never bundles the pi harness. Without a launcher manifest, `/skill-heaven`
 honestly reports a vanilla pi session; `/skill-hell` remains available because
 it does not depend on posture handoff. When no `SKILL_HELL_SESSION` is supplied,
 the extension creates one for the life of the pi process so materialized skill

@@ -1,6 +1,8 @@
 # skill-heaven
 
-> **WORK IN PROGRESS** — progress markers and benchmark results live in the research repo at
+> **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
+> Interfaces, flags, postures, and command surfaces may change. Progress markers
+> and benchmark results live at
 > [research.gaiaskilltree.com](https://research.gaiaskilltree.com).
 
 **Strip your agent's context bloat — run clean.**
@@ -14,6 +16,58 @@ Launcher UX outside, M0-verified in-harness mechanics inside: it **composes
 flags and execs; it never stashes, restores, or mutates shared state** (P3).
 The only writes are inside a disposable `mkdtemp` session dir (crash-safe by
 construction, AT-H2).
+
+## Try the working prototype
+
+> **WORKING PROTOTYPE — actively tested for public use.** Node 22 or newer is
+> required. The launchers use your existing harness binaries; they never bundle
+> Claude Code, pi, Codex, Grok, or Hermes.
+
+### Claude plugin
+
+Installs `/skill-heaven` and `/skill-hell` from this repository's marketplace:
+
+```bash
+claude plugin marketplace add gaia-research/skill-heaven
+claude plugin install claude-heaven@skill-heaven
+```
+
+`/skill-hell` also requires the separately shipped summon engine
+`@gaia-research/mcp >= 0.2.0`:
+
+```bash
+npm install -g @gaia-research/mcp
+```
+
+### Five launcher doors from source
+
+Source checkout is the recommended install path until the npm-ready `0.1.0`
+packages are founder-published. These commands inspect the composed plans and do
+not start a harness:
+
+```bash
+git clone https://github.com/gaia-research/skill-heaven
+cd skill-heaven
+npm install
+
+node packages/claude-heaven/bin/claude-heaven.mjs --print
+node packages/pi-heaven/bin/pi-heaven.mjs --print
+node packages/codex-heaven/bin/codex-heaven.mjs --print
+node packages/grok-heaven/bin/grok-heaven.mjs --print
+node packages/hermes-heaven/bin/hermes-heaven.mjs --print
+```
+
+For a curated Claude launch, provide a real skill directory or `SKILL.md`:
+
+```bash
+node packages/claude-heaven/bin/claude-heaven.mjs \
+  --level low --skill /path/to/skill --print
+```
+
+After publication, the package entry points are ready for
+`npx --yes skill-heaven@0.1.0 --posture product-floor --print` and
+`npx --yes <door>@0.1.0 --print`; this repository does not publish them
+automatically.
 
 ---
 
@@ -82,10 +136,10 @@ generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`
 skill-heaven
   --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
                                         # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
-                                        # product-floor = the DOORFUL product floor (verified on claude + codex; others vary)
+                                        # product-floor = the DOORFUL product floor (verified on all five launcher harnesses)
   [--level off|low]                     # aliases: off→product-floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
-  [--harness claude|pi|codex|cursor|grok]   # default claude
+  [--harness claude|pi|codex|cursor|grok|hermes]   # default claude
   [--skill <path>]...                   # SKILL.md or its dir; required for curated, rejected otherwise
   [--door-plugin-dir <dir>]             # product-floor only; mounts the caller's door plugin
   [--mechanism plugin-dir|config-dir]   # claude curated route; default plugin-dir (T9 composition)
@@ -328,4 +382,5 @@ npm test          # vitest: 30 tests incl. the parity fixture
 npm run launcher -- --posture floor --print
 ```
 
-Node ≥ 22, TypeScript ESM, zero runtime dependencies.
+Node ≥ 22, TypeScript ESM. Published package entry points carry only the `tsx`
+runtime loader; harnesses are never package dependencies.

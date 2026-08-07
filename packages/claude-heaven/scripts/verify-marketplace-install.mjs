@@ -33,7 +33,7 @@
 // Wrapped in CI by: packages/claude-heaven/test/verify-marketplace-install.test.ts
 
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -217,6 +217,50 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
     // --- outside the copied dir (would be a false pass off the real repo) ---
     const gatePath = join(installedPluginRoot, "data", "p2-gate.json");
     assert(existsSync(gatePath), "data/p2-gate.json shipped inside the copied plugin (script does not reach back into the repo for it)");
+
+    // --- /skill-hell's complete standalone route ships and renders success ---
+    const hellCommandPath = join(installedPluginRoot, "commands", "skill-hell.md");
+    const hellRenderer = join(installedPluginRoot, "scripts", "render-hell.mjs");
+    const hellResolver = join(installedPluginRoot, "scripts", "resolve-hell.mjs");
+    assert(existsSync(hellCommandPath), "commands/skill-hell.md shipped");
+    assert(existsSync(hellRenderer), "scripts/render-hell.mjs shipped");
+    assert(existsSync(hellResolver), "scripts/resolve-hell.mjs shipped");
+    if (existsSync(hellCommandPath)) {
+      const hellCommand = readFileSync(hellCommandPath, "utf-8");
+      assert(
+        hellCommand.includes('${CLAUDE_PLUGIN_ROOT}/scripts/render-hell.mjs'),
+        "skill-hell command references its renderer through ${CLAUDE_PLUGIN_ROOT}",
+      );
+    }
+    if (existsSync(hellRenderer) && existsSync(hellResolver)) {
+      const fakeSkill = join(fresh, "fake-skill");
+      mkdirSync(fakeSkill);
+      writeFileSync(join(fakeSkill, "SKILL.md"), "# Marketplace verification skill\n");
+      const fakeEngine = join(fresh, "skill-hell");
+      writeFileSync(
+        fakeEngine,
+        `#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({summoned:[{id:"verify-skill",level:"high",trustMagnitude:1,path:${JSON.stringify(fakeSkill)}}]}))\n`,
+      );
+      chmodSync(fakeEngine, 0o755);
+      let hellStdout = "";
+      let hellRanOk = false;
+      try {
+        hellStdout = execFileSync(process.execPath, [hellRenderer, "verification intent"], {
+          cwd: fresh,
+          env: { PATH: process.env.PATH, SKILL_HELL_BIN: fakeEngine },
+          encoding: "utf-8",
+        });
+        hellRanOk = true;
+      } catch (/** @type {any} */ err) {
+        failures.push(`render-hell.mjs failed against the standalone fake engine: ${err.message}`);
+      }
+      assert(hellRanOk, "scripts/render-hell.mjs runs standalone through its shipped resolver");
+      if (hellRanOk) {
+        assert(hellStdout.startsWith("  summoned"), "successful /skill-hell output preserves the summoned first line");
+        assert(hellStdout.includes("WORKING PROTOTYPE · actively tested for public use"), "successful /skill-hell output discloses public prototype status");
+        assert(hellStdout.includes("# Marketplace verification skill"), "successful /skill-hell output includes the materialized SKILL.md body");
+      }
+    }
   } finally {
     rmSync(fresh, { recursive: true, force: true });
   }

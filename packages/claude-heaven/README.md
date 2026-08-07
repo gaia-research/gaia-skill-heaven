@@ -1,6 +1,20 @@
 # claude-heaven
 
-The Claude Code door to Skill Heaven.
+> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+
+The Claude Code door to Skill Heaven. The marketplace plugin requires the
+external `@gaia-research/mcp >= 0.2.0` summon engine for `/skill-hell`.
+
+## Install
+
+```bash
+claude plugin marketplace add gaia-research/skill-heaven
+claude plugin install claude-heaven@skill-heaven
+npm install -g @gaia-research/mcp@^0.2.0
+```
+
+The marketplace install contains the two commands, not the launcher or a Claude
+Code harness. Use the source-checkout path in the root README for the launcher.
 
 ## Launch
 

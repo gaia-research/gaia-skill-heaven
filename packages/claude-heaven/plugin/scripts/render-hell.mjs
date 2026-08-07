@@ -41,7 +41,8 @@ function formatTrustMagnitude(value) {
 function renderHeader(winner) {
   const head = `  ${"summoned".padEnd(LABEL_WIDTH)}  ${winner.id}  ${winner.level}  TM ${formatTrustMagnitude(winner.trustMagnitude)}${renderCost(winner)}`;
   const pointer = `${" ".repeat(PREFIX_WIDTH)}-> ${winner.path}${renderFileCount(winner)}`;
-  return `${head}\n${pointer}`;
+  const status = `${" ".repeat(PREFIX_WIDTH)}status  WORKING PROTOTYPE · actively tested for public use · interfaces may change`;
+  return `${head}\n${pointer}\n${status}`;
 }
 
 /**

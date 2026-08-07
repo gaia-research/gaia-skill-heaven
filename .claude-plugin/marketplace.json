@@ -9,7 +9,7 @@
     {
       "name": "claude-heaven",
       "source": "./packages/claude-heaven/plugin",
-      "description": "The Claude Code door to Skill Heaven — ships /skill-heaven (posture) and /skill-hell (prototype: summons a skill from the live Gaia registry into this session). Built on skill-heaven core."
+      "description": "Working prototype of the Claude Code door to Skill Heaven, actively tested for public use — ships /skill-heaven (posture) and /skill-hell (summons a skill from the live Gaia registry into this session). Interfaces may change. Built on skill-heaven core."
     }
   ]
 }
