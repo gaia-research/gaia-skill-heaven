@@ -13,6 +13,11 @@ claude plugin install claude-heaven@skill-heaven
 npm install -g @gaia-research/mcp@^0.2.0
 ```
 
+The engine release is still founder-gated: the registry currently serves
+`@gaia-research/mcp@0.1.0`, which does not include `skill-hell`. Until `0.2.0`
+is published, the marketplace's `/skill-heaven` command works but `/skill-hell`
+cannot complete a public install.
+
 The marketplace install contains the two commands, not the launcher or a Claude
 Code harness. Use the source-checkout path in the root README for the launcher.
 

@@ -36,8 +36,13 @@ claude plugin install claude-heaven@skill-heaven
 `@gaia-research/mcp >= 0.2.0`:
 
 ```bash
-npm install -g @gaia-research/mcp
+npm install -g @gaia-research/mcp@^0.2.0
 ```
+
+That engine release is still founder-gated. The registry currently serves
+`0.1.0`, which has no `skill-hell` binary, so the command above becomes usable
+only after `0.2.0` is published; until then `/skill-heaven` works but
+`/skill-hell` cannot complete a public marketplace install.
 
 ### Five launcher doors from source
 
@@ -155,12 +160,12 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 ## Posture mappings (what actually gets composed)
 
-| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | cursor | grok (0.2.118) |
-|---|---|---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | recipe only (`--print`) | iterative `inspect --json` exact-path ignores + observed plugin disables (**WP14**) |
-| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | recipe only | same discovery, readmitting named `$GROK_HOME/skills/<id>` dirs (**WP14**) |
-| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | `--no-skills --no-context-files --no-prompt-templates` (**WP2**) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | recipe only (`--print`) | exact-path ignores leave observed plugins as the door surface (**WP14**) |
-| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | nothing | `grok` untouched |
+| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | hermes (0.20.0) | cursor | grok (0.2.118) |
+|---|---|---|---|---|---|---|
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | `--toolsets terminal,web,file --safe-mode` (**WP8**) | recipe only (`--print`) | iterative `inspect --json` exact-path ignores + observed plugin disables (**WP14**) |
+| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | session `HERMES_HOME`, auth copy, `.no-bundled-skills`, named skill copies + `--skills <id> --safe-mode` (**WP8**) | recipe only | same discovery, readmitting named `$GROK_HOME/skills/<id>` dirs (**WP14**) |
+| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | `--no-skills --no-context-files --no-prompt-templates` (**WP2**) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | `--toolsets terminal,web,file --ignore-user-config --ignore-rules` (**WP8**) | recipe only (`--print`) | exact-path ignores leave observed plugins as the door surface (**WP14**) |
+| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | `hermes` untouched | nothing | `grok` untouched |
 
 **codex-heaven is now an exec door (WP14, codex-cli 0.146.0).** The earlier
 flag-only negative remains recorded in `packages/codex-heaven/PROBE.md`:
@@ -378,7 +383,7 @@ validator. Parity is enforced two ways:
 
 ```bash
 npm install
-npm test          # vitest: 30 tests incl. the parity fixture
+npm test          # full Vitest suite, including the parity fixture
 npm run launcher -- --posture floor --print
 ```
 
