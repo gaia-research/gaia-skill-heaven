@@ -56,10 +56,22 @@ function captureStderr(fn: () => number): { code: number; err: string } {
 
 describe("parseArgs", () => {
   it("defaults to native, print off", () => {
-    expect(parseArgs([])).toEqual({ print: false, posture: "native", level: undefined, skills: [], claudeArgs: [] });
+    expect(parseArgs([])).toEqual({
+      print: false,
+      posture: "native",
+      postureProvided: false,
+      level: undefined,
+      skills: [],
+      claudeArgs: [],
+    });
   });
   it("captures --print, --posture, --level", () => {
-    expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({ print: true, posture: "native", level: "off" });
+    expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({
+      print: true,
+      posture: "native",
+      postureProvided: true,
+      level: "off",
+    });
   });
   it("collects --skill repeatably, and does not leak it to claude", () => {
     const a = parseArgs(["--posture", "curated", "--skill", "/a", "--skill", "/b"]);
@@ -97,9 +109,11 @@ describe("run", () => {
     expect(silenceStderr(() => run(["--posture", "nonsense"]))).toBe(2);
   });
 
-  it("refuses a level, rather than silently ignoring it (exit 2)", () => {
-    expect(silenceStderr(() => run(["--level", "low"]))).toBe(2);
-    expect(silenceStderr(() => run(["--level", "off"]))).toBe(2);
+  it("resolves --level off to the product floor and rejects contradictions", () => {
+    const { code, out } = captureStdout(() => run(["--level", "off", "--print"]));
+    expect(code).toBe(0);
+    expect(JSON.parse(out).posture).toBe("product-floor");
+    expect(silenceStderr(() => run(["--posture", "floor", "--level", "off"]))).toBe(2);
   });
 
   it("--print composes a real curated plan: T9 argv, the env knob, and an fsPlan", () => {

@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { materialize, POSTURES, type Posture } from "skill-heaven";
+import { LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
@@ -41,6 +41,7 @@ export const LAUNCHABLE_POSTURES: readonly string[] = [
 interface CliArgs {
   print: boolean;
   posture: string;
+  postureProvided: boolean;
   level?: string;
   /** --skill <path>, repeatable */
   skills: string[];
@@ -50,6 +51,7 @@ interface CliArgs {
 export function parseArgs(argv: string[]): CliArgs {
   let print = false;
   let posture = "native";
+  let postureProvided = false;
   let level: string | undefined;
   const skills: string[] = [];
   const claudeArgs: string[] = [];
@@ -59,14 +61,16 @@ export function parseArgs(argv: string[]): CliArgs {
       claudeArgs.push(...argv.slice(i + 1));
       break;
     } else if (a === "--print") print = true;
-    else if (a === "--posture") posture = argv[++i] ?? "";
-    else if (a === "--level") level = argv[++i];
+    else if (a === "--posture") {
+      posture = argv[++i] ?? "";
+      postureProvided = true;
+    } else if (a === "--level") level = argv[++i];
     else if (a === "--skill") {
       const p = argv[++i];
       if (p !== undefined) skills.push(p);
     } else claudeArgs.push(a);
   }
-  return { print, posture, level, skills, claudeArgs };
+  return { print, posture, postureProvided, level, skills, claudeArgs };
 }
 
 /** Absolute path to the statusline bin shipped alongside this CLI. */
@@ -85,7 +89,25 @@ export function run(argv: string[]): number {
   // P2 gate first — never compose a gated (Hell-lane) posture.
   assertLevelAllowed(args.level);
 
-  if (!LAUNCHABLE_POSTURES.includes(args.posture)) {
+  let posture = args.posture;
+  if (args.level !== undefined) {
+    const aliased = LEVEL_ALIASES[args.level];
+    if (!aliased) {
+      process.stderr.write(
+        `claude-heaven: unknown --level "${args.level}" — known aliases: off, low (off→product-floor, low→curated).\n`,
+      );
+      return 2;
+    }
+    if (args.postureProvided && posture !== aliased) {
+      process.stderr.write(
+        `claude-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`,
+      );
+      return 2;
+    }
+    posture = aliased;
+  }
+
+  if (!LAUNCHABLE_POSTURES.includes(posture)) {
     // KC6: a refusal must say which of two unlike things it is. `floor` is
     // core-known but harness-incapable FOR A DOOR SPECIFICALLY — not withheld
     // by policy (nothing here decided to keep it from you), and not even a
@@ -94,7 +116,7 @@ export function run(argv: string[]): number {
     // there has no /skill-heaven to talk to. There is no key to turn; the door
     // does not exist at that address. Anything else here is simply not a
     // posture core knows at all — a plain unknown-input error, neither class.
-    if (args.posture === "floor") {
+    if (posture === "floor") {
       process.stderr.write(
         `claude-heaven cannot launch --posture floor: this is not a policy hold (P2 gates the Hell lane ` +
           `only) — the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
@@ -102,30 +124,21 @@ export function run(argv: string[]): number {
           `door to open at this posture; it is core's to compose, for benchmark runs only: ` +
           `\`skill-heaven --posture floor\`.\n`,
       );
-    } else if ((POSTURES as readonly string[]).includes(args.posture)) {
+    } else if ((POSTURES as readonly string[]).includes(posture)) {
       process.stderr.write(
-        `claude-heaven does not launch --posture ${args.posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
+        `claude-heaven does not launch --posture ${posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
           `core knows this posture, but this door has no composition wired for it.\n`,
       );
     } else {
       process.stderr.write(
-        `claude-heaven: unknown --posture "${args.posture}" — not a posture core knows at all. ` +
+        `claude-heaven: unknown --posture "${posture}" — not a posture core knows at all. ` +
           `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}.\n`,
       );
     }
     return 2;
   }
-  if (args.level !== undefined) {
-    // off/low are heaven-lane aliases (off→product-floor, low→curated) whose
-    // vocabulary is provisional (N3, pending N4/N5). Reject rather than silently ignore the flag: --posture is
-    // the ratified selector.
-    process.stderr.write(
-      `claude-heaven selects postures with --posture, not --level (got --level ${args.level}).\n`,
-    );
-    return 2;
-  }
 
-  const posture = args.posture as Posture;
+  const selectedPosture = posture as Posture;
 
   if (args.print) {
     // Dry run: show the plan (incl. the exact manifest, settings and fsPlan that
@@ -135,7 +148,7 @@ export function run(argv: string[]): number {
     let plan;
     try {
       plan = planLaunch({
-        posture,
+        posture: selectedPosture,
         skillPaths: args.skills,
         sessionDir: "$SESSION",
         statuslineBin: statuslineBinPath(),
@@ -179,7 +192,7 @@ export function run(argv: string[]): number {
     let live;
     try {
       live = planLaunch({
-        posture,
+        posture: selectedPosture,
         skillPaths: args.skills,
         sessionDir,
         statuslineBin: statuslineBinPath(),
