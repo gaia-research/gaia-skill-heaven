@@ -58,13 +58,19 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
   const fixturesDir = join(import.meta.dirname, "fixtures");
   const skill = resolveSkill(join(fixturesDir, "impeccable-skill"));
 
-  // grok only compiles at posture "native" (M0 discipline — no verified
-  // suppression mechanism); product-floor compiles for harness "claude"
-  // (F7), "pi" (WP2), and recipe-only "hermes" (WP7) — those were probed.
-  // Everything else in POSTURES x HARNESSES is expected to compile.
+  // Grok's non-native postures are pinned recipe routes (WP12), just like
+  // Hermes' recipe route. Product-floor compiles for harness "claude" (F7),
+  // "pi" (WP2), "hermes" (WP7), and "grok" (WP12); codex/cursor remain
+  // capability gaps. Everything else in POSTURES x HARNESSES is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
-    if (posture === "product-floor" && harness !== "claude" && harness !== "pi" && harness !== "hermes") return true;
-    if (harness === "grok" && posture !== "native") return true;
+    if (
+      posture === "product-floor" &&
+      harness !== "claude" &&
+      harness !== "pi" &&
+      harness !== "hermes" &&
+      harness !== "grok"
+    )
+      return true;
     return false;
   }
 

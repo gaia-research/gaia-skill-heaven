@@ -155,12 +155,11 @@ export function compile(input: CompileInput): CompileResult {
   // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
   // installed-skills index; compileHermes discloses that negative result and
   // remains recipe-only.
-  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "hermes"];
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "hermes", "grok"];
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), and hermes (PROBE.md, 0.20.0) were probed. This is a harness-capability gap, not a policy hold (P2 gates the " +
-        "Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
+        "pi (PROBE.md, 0.83.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -573,31 +572,104 @@ function compileCursor(
   return { command: "cursor-agent", argv, env, fsPlan: base.fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
 }
 
-// grok — in harness scope per the capability matrix, which owns coverage,
-// starting from zero. v0.2.103 probe: no skills
-// surface (no --no-skills / skill flags in `grok --help`; config via
-// ~/.grok/config.toml; plugins exist). No verified suppression/readmission
-// mechanism — do not guess (M0 discipline): recipe is a stub that says so.
+// Grok 0.2.118 — session-scoped config route, pinned by packages/grok-heaven/
+// PROBE.md. Grok has no --no-skills primitive. GROK_HOME does evict Grok's
+// own user config, but Claude-compatible roots, project roots, bundled skills,
+// and installed plugins remain independent surfaces. The config below is the
+// strongest composition actually observed: it ignores the ambient skill roots,
+// disables the observed plugin names on the benchmark machine, and leaves the
+// session bundled root out. It intentionally stays recipe-only: there is no
+// portable wildcard for arbitrary symlinked roots or an unknown plugin inventory.
+const grokSkillFlags = ["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"];
+
+const grokCleanConfig = `[compat.claude]
+skills = false
+
+[compat.cursor]
+skills = false
+
+[skills]
+ignore = [
+  "~/.agents/skills",
+  "~/.claude/skills",
+  "~/.cursor/skills",
+  "$CWD/.grok/skills",
+  "$CWD/.agents/skills",
+  "$CWD/.claude/skills",
+  "$CWD/.cursor/skills",
+  "$SESSION/grok/bundled/skills"
+]
+
+[plugins]
+disabled = ["frontend-design", "rock-favor", "claude-heaven"]
+`;
+
+const grokProductConfig = grokCleanConfig.replace(
+  '\n[plugins]\ndisabled = ["frontend-design", "rock-favor", "claude-heaven"]\n',
+  "\n",
+);
+
+function tailGrok(input: CompileInput): string[] {
+  const argv: string[] = [];
+  if (input.model) argv.push("-m", input.model);
+  if (input.prompt !== undefined) argv.push("-p", input.prompt);
+  if (input.jsonOutput) argv.push("--output-format", "json");
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+  return argv;
+}
+
 function compileGrok(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
 ): CompileResult {
-  if (input.posture !== "native") {
-    throw new Error(
-      "grok: no verified skills-suppression/re-admission mechanism (v0.2.103 --help probe found no skills surface). " +
-        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only) — nothing about " +
-        "grok is being withheld by decision; no one has found a way to do it yet, verified or otherwise. " +
-        "Refusing to guess (M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
-        "Only --posture native compiles for grok today.",
-    );
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
+  const notes = [...base.notes];
+  let argv: string[] = [];
+
+  if (input.posture === "native") {
+    notes.push("grok native posture is untouched: no GROK_HOME override, config copy, or suppression flags.");
+  } else {
+    env.GROK_HOME = "$SESSION/grok";
+    fsPlan.push({
+      kind: "copyFileIfExists",
+      from: `${input.homeDir ?? "$HOME"}/.grok/auth.json`,
+      to: "$SESSION/grok/auth.json",
+    });
+
+    if (input.posture === "floor" || input.posture === "curated") {
+      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokCleanConfig });
+    } else {
+      fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokProductConfig });
+    }
+
+    argv = [...grokSkillFlags];
+    if (input.posture === "curated") {
+      for (const skill of input.skills) {
+        fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/grok/skills/${skill.id}` });
+      }
+      notes.push(
+        "grok curated recipe (0.2.118): session-scoped GROK_HOME receives auth.json, a clean-room config, and only the named skill directories. The pinned probe reached Skills (1) and loaded a marker skill, but this remains recipe-only because unknown plugin inventories and symlinked roots have no portable wildcard suppression.",
+      );
+    } else if (input.posture === "floor") {
+      notes.push(
+        "grok floor recipe (0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, ambient-root ignores, and observed-plugin disable entries. The pinned config reached Skills (0) twice and answered OK twice; path/plugin inventory is not a universal exec license, so this remains recipe-only.",
+      );
+    } else {
+      notes.push(
+        "grok product-floor recipe (0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with ambient roots ignored but the installed plugin surface left available as the door. The pinned composition reached Skills (9) and answered OK twice; plugin inventories vary, so this remains recipe-only.",
+      );
+    }
   }
-  const notes = [
-    ...base.notes,
-    "grok v0.2.103: native posture only — no skill-discovery/suppression flags found (--help probe); capability-matrix grok column tracks the open cells.",
-  ];
-  const argv: string[] = [];
-  if (input.model) argv.push("-m", input.model);
-  if (input.prompt !== undefined) argv.push("-p", input.prompt);
-  if (input.passthrough?.length) argv.push(...input.passthrough);
-  return { ...base, notes, command: "grok", argv, execSupport: "recipe" };
+
+  argv.push(...tailGrok(input));
+  return {
+    ...base,
+    notes,
+    command: "grok",
+    argv,
+    env,
+    fsPlan,
+    execSupport: "recipe",
+  };
 }
