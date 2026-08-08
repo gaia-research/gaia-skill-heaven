@@ -27,7 +27,9 @@ describe("one-command installer", () => {
   });
 
   it("registers the Claude plugin idempotently and tracks only installer-owned state", () => {
-    expect(installer).toContain("claude plugin marketplace add gaia-research/skill-heaven");
+    expect(installer).toContain(
+      "claude plugin marketplace add https://github.com/gaia-research/skill-heaven.git",
+    );
     expect(installer).toContain('claude plugin update "$PLUGIN_ID"');
     expect(installer).toContain(".claude-plugin-managed");
     expect(installer).toContain(".claude-marketplace-managed");

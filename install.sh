@@ -220,7 +220,7 @@ if command -v claude >/dev/null 2>&1; then
   if marketplace_is_configured; then
     claude plugin marketplace update "$MARKETPLACE"
   else
-    claude plugin marketplace add gaia-research/skill-heaven
+    claude plugin marketplace add https://github.com/gaia-research/skill-heaven.git
     touch "$MARKETPLACE_MANAGED"
   fi
 
@@ -234,7 +234,7 @@ if command -v claude >/dev/null 2>&1; then
 else
   say "Claude Code was not detected, so no harness was installed and plugin registration is deferred."
   say "After installing Claude Code yourself, register the already-delivered plugin with:"
-  say "  claude plugin marketplace add gaia-research/skill-heaven"
+  say "  claude plugin marketplace add https://github.com/gaia-research/skill-heaven.git"
   say "  claude plugin install --scope user $PLUGIN_ID"
 fi
 
