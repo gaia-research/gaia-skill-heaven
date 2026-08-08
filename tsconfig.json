@@ -26,6 +26,9 @@
   // with the harness, not with this repo — and this repo has no runtime
   // dependencies and keeps it that way. The harness type-checks its own extension
   // against its own SDK when it loads it; our tsc cannot, and should not pretend to.
+  //
+  // packages/site is a Vite+React app with its own tsconfig (bundler
+  // moduleResolution + jsx:react-jsx) and must not be checked under NodeNext.
   "exclude": [
     "node_modules",
     "packages/*/test/fixtures",

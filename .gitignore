@@ -3,6 +3,11 @@ dist/
 coverage/
 *.log
 *.tsbuildinfo
+
+# Commission workbench contains raw and intermediate assets; production files
+# live in the sibling v01/v02/v03 folders.
+packages/site/src/assets/hero-commission/workbench/
+
 .env
 .env.*
 .DS_Store
@@ -10,3 +15,9 @@ coverage/
 # CI-only scratch from the D6 cross-repo gate (never committed)
 .gaia-research/
 rec.jsonl
+
+# Landing-page prototype: generated preview screenshots (regenerate locally)
+packages/site/preview/
+
+# TS incremental build info
+*.tsbuildinfo

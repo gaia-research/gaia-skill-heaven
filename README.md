@@ -7,6 +7,19 @@
 
 **Strip your agent's context bloat — run clean.**
 
+**One entropy ladder is the whole mental model (RATIFICATION N11).** The
+user-facing dial is a single axis — `off · low · med · high · xhigh · max ·
+ultra` — measuring **skill entropy**: the disorder a skill loadout adds to a
+session's context. **Heaven is the low-entropy region** (`off · low · med`),
+**Hell the high-entropy region** (`high · xhigh · max`), with **`ultra`
+above**. A mode is a *region* of the one ladder, not a separate orthogonal
+dial. Up the ladder **quality and cost rise together** — **Skill Hell routes
+summons through gaia mcp as a mixture-of-agents for skills** (D5): a
+deterministic router summons skills into context on demand, so more summoned
+skills mean more experts in play, better until it isn't. Public domain:
+[`skill-heaven.dev`](https://skill-heaven.dev), served from `packages/site`
+(N12).
+
 The Skill Heaven monorepo: shared profile-compiler engine + per-harness doors
 (`claude-heaven`, `pi-heaven`, …). The `skill-heaven` bin itself is the
 **research driver** — `--print` recipes, `--record` benchmark arms — for the
@@ -79,7 +92,11 @@ automatically.
 ![skill-heaven site — WORK IN PROGRESS · HELL HEAVEN INDEX banner over the headline "STOP INSTALLING SKILLS. START SUMMONING THEM."](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
 
 The Hell Heaven (HH) Index — a per-skill hellHeaven stamp, benchmarked, not
-guessed — is the research that keeps the product honest.
+guessed — is the research that keeps the product honest. The benchmark's
+priority is the **general entropy curve** — how quality and cost move along the
+skill-entropy axis — not a token-savings headline (B6); higher entropy is not
+directly benchmarkable per run, so **hell-safe eligibility is read from the
+Skill Tree stamps**, not measured live.
 
 [![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20help%20wanted-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
 [![Vision ↗](https://img.shields.io/badge/Vision%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md)
