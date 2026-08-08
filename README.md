@@ -49,13 +49,13 @@ claude plugin install claude-heaven@skill-heaven
 `@gaia-research/mcp >= 0.2.0`:
 
 ```bash
-npm install -g @gaia-research/mcp@^0.2.0
+npm install -g @gaia-research/mcp@^0.3.0
 ```
 
-That engine release is still founder-gated. The registry currently serves
-`0.1.0`, which has no `skill-hell` binary, so the command above becomes usable
-only after `0.2.0` is published; until then `/skill-heaven` works but
-`/skill-hell` cannot complete a public marketplace install.
+Published and verified: `0.3.0` is on npm and ships the `skill-hell` binary.
+A clean install resolves it and summons for real — trust fields, paired
+install timing and cache state, materialized path, and an inspect link.
+(`0.1.0`, the previous release, had no `skill-hell` binary at all.)
 
 ### Five launcher doors from source
 

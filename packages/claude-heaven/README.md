@@ -10,13 +10,13 @@ external `@gaia-research/mcp >= 0.2.0` summon engine for `/skill-hell`.
 ```bash
 claude plugin marketplace add gaia-research/skill-heaven
 claude plugin install claude-heaven@skill-heaven
-npm install -g @gaia-research/mcp@^0.2.0
+npm install -g @gaia-research/mcp@^0.3.0
 ```
 
-The engine release is still founder-gated: the registry currently serves
-`@gaia-research/mcp@0.1.0`, which does not include `skill-hell`. Until `0.2.0`
-is published, the marketplace's `/skill-heaven` command works but `/skill-hell`
-cannot complete a public install.
+The engine is published: `@gaia-research/mcp@0.3.0` is on npm and ships the
+`skill-hell` binary, so both marketplace commands complete a public install.
+The earlier `0.1.0` had no `skill-hell` binary, which is why the version floor
+above is not cosmetic.
 
 The marketplace install contains the two commands, not the launcher or a Claude
 Code harness. Use the source-checkout path in the root README for the launcher.

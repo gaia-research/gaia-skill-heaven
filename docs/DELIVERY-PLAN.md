@@ -1,5 +1,11 @@
 # Delivery + Install Plan
 
+> **STATUS UPDATE — 2026-08-08.** The blocker this plan was written around is
+> **cleared**: `@gaia-research/mcp@0.3.0` is published and ships the `skill-hell`
+> binary, verified by a clean install that summoned a real skill. References
+> below to `0.1.0` being the newest published engine, and to that release being
+> founder-gated, are historical. The launcher doors remain unpublished, so the
+> source-checkout and one-command installer paths are still the install story.
 > **This is a working prototype, not a finished product.** Everything below ships
 > something a stranger can run. None of it is a stable interface, a support
 > commitment, or a versioned API. Flag names, postures, and command surfaces are
