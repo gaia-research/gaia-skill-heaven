@@ -2,24 +2,23 @@
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Claude Code door to Skill Heaven. The marketplace plugin requires the
-external `@gaia-research/mcp >= 0.2.0` summon engine for `/skill-hell`.
+The Claude Code door to Skill Heaven. The marketplace plugin uses the published
+`@gaia-research/mcp@0.3.0` summon engine for `/skill-hell`.
 
 ## Install
 
+The repository's one-command installer delivers this launcher, all four sibling
+doors, the working summon engine, and the Claude plugin:
+
 ```bash
-claude plugin marketplace add gaia-research/skill-heaven
-claude plugin install claude-heaven@skill-heaven
-npm install -g @gaia-research/mcp@^0.3.0
+curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
 ```
 
-The engine is published: `@gaia-research/mcp@0.3.0` is on npm and ships the
-`skill-hell` binary, so both marketplace commands complete a public install.
-The earlier `0.1.0` had no `skill-hell` binary, which is why the version floor
-above is not cosmetic.
-
-The marketplace install contains the two commands, not the launcher or a Claude
-Code harness. Use the source-checkout path in the root README for the launcher.
+It uses the user's own Claude Code binary and never installs a harness. When
+`claude` is already on `PATH`, the same run registers the marketplace plugin and
+makes `/skill-heaven` and `/skill-hell` available; otherwise it prints the exact
+deferred registration commands. The launcher doors remain source-built rather
+than npm-published. See the root README for PATH, update, and uninstall details.
 
 ## Launch
 
