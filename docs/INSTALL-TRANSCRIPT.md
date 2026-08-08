@@ -1,7 +1,9 @@
 # WP18 install transcript
 
-Visible herdr pane: `w8:p1B`  
-Clean test root: `/private/tmp/skill-heaven-wp18-final`  
+Visible herdr pane: `w8:p1B`
+
+Clean test root: `/private/tmp/skill-heaven-wp18-final`
+
 Remote script: branch copy byte-identical to reviewed `install.sh` at commit
 `27d92cc56f06685d8fe13951901022ef5e64e4c4`.
 
