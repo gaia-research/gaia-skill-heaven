@@ -53,7 +53,7 @@ export function formatTokens(n: number): string {
   return `${(n / 1000).toFixed(1)}k`;
 }
 
-/** Compact exclusion disclosure (KC2, corrected under A3/KC4). `scope:
+/** Compact exclusion disclosure (KC2, corrected under A3/KC4/P8). `scope:
  * "user+project"` (native launches) is a partial census: bundled CLI skills
  * and plugin-provided skills are not counted (see census.ts header). `scope:
  * "session"` (curated/product-floor) enumerates the launched skill SET
@@ -62,12 +62,9 @@ export function formatTokens(n: number): string {
  * of posture — a founder-ruled, permanent, harness-level residual, measured
  * live by packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
  * (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's curated
- * note). The old "session scope has nothing to disclose" claim this
- * replaces was FALSE — see launcher.ts's KC4 correction. This caveat's
- * wording assumes the concurrent fix to the curated composition (dropping
- * the project-scope leak the same probe found) has landed, so `doctor` is
- * the only residual; if that fix has not landed, this under-discloses —
- * see the PR body for the dependency.
+ * note). Both curated and product-floor now use an empty setting-sources
+ * allowlist, so project-scope skills are not part of this session disclosure;
+ * `doctor` is the remaining disclosed residual.
  *
  * A5c fail-closed: this is an explicit allowlist, not an
  * `expected ? caveat : ""` optimistic default. Any scope value this function
@@ -85,38 +82,29 @@ function scopeCaveat(scope: string): string {
 
 /** The standing phrase.
  *
- * Every posture but one reads as "<n> standing", where a trailing `+` means the
+ * Every posture reads as "<n> standing", where a trailing `+` means the
  * census could not see everything and `n` is therefore a floor, not a total
- * (native: `14.2k+ standing`). That convention is unchanged.
- *
- * `product-floor` is the exception, by founder copy ruling (2026-07-30). It
- * selects NO skills, so its token count is always 0 — and `0+ standing` was
- * technically honest and practically unreadable: nobody infers from it that the
- * real figure is "zero of your own, plus however much project scope carries."
- * The two parts are named instead. This is not cosmetic — the posture inherits
- * project-scope skills from cwd (measured 2/2 byte-identical on claude 2.1.220:
- * `["pf-project-marker","doctor"]` with a planted marker vs `["doctor"]` in a
- * clean dir), so the amount is UNBOUNDED and varies per repo. A number would
- * imply a measurement we do not have.
- *
- * Note this drops the compact `(excl. bundled doctor)` caveat for this one
- * posture: "+ project scope" already says the count is not the whole story,
- * which is the substantive disclosure, and `doctor` is a constant residual
- * disclosed at every other posture and in `/skill-heaven`'s fuller session
- * line. If the composition is ever fixed to drop project scope, this branch
- * should go away and the generic form returns. */
+ * (native: `14.2k+ standing`). Session-scoped curated and product-floor
+ * manifests enumerate their selected set, while `scopeCaveat` discloses the
+ * bundled `doctor` residual measured in the live listing.
+ */
 function standingPhrase(manifest: ProfileManifest): string {
-  if (manifest.posture === "product-floor") return "0 selected + project scope";
   const floor = manifest.incomplete ? "+" : "";
   return `${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`;
 }
 
-export function renderStatusline(manifest: ProfileManifest, input?: StatuslineInput | null): string {
+export function renderStatusline(
+  manifest: ProfileManifest,
+  input?: StatuslineInput | null,
+  hellManifest?: HellSessionManifest | null,
+): string {
   const parts = [`⚡ ${manifest.posture} · ${standingPhrase(manifest)}`];
   const pct = input?.context_window?.used_percentage;
   if (typeof pct === "number" && Number.isFinite(pct)) {
     parts.push(`${Math.round(pct)}% ctx`);
   }
+  const hellSegment = renderHellSegment(hellManifest ?? null);
+  if (hellSegment) parts.push(hellSegment);
   return parts.join(" · ");
 }
 
@@ -129,6 +117,42 @@ export function parseStatuslineInput(raw: string): StatuslineInput | null {
   } catch {
     return null;
   }
+}
+
+/** A skill materialized into this session's skill-hell summon root (session.json
+ * at SKILL_HELL_SESSION). Only the fields the statusline segment needs. */
+export interface HellSummonedSkill {
+  id: string;
+}
+
+/** The subset of skill-hell's session.json this door reads. */
+export interface HellSessionManifest {
+  skills: HellSummonedSkill[];
+}
+
+/** Validate just enough to render safely — same minimal-shape discipline as
+ * isProfileManifest above. */
+export function isHellSessionManifest(value: unknown): value is HellSessionManifest {
+  if (!value || typeof value !== "object") return false;
+  const m = value as Record<string, unknown>;
+  return Array.isArray(m.skills) && m.skills.every((s) => s && typeof s === "object" && typeof (s as { id?: unknown }).id === "string");
+}
+
+/** "mattpocock/grill-me" -> "grill-me". Falls back to the whole id if there is
+ * no "/" (never throws on an unexpected id shape). */
+function hellSlug(skillId: string): string {
+  const slug = skillId.split("/").pop();
+  return slug || skillId;
+}
+
+/** The compact "hell: <skill>[ +N]" segment (minimal by founder request: no
+ * colours, no bars, no token counts — just which skill). Empty string when
+ * nothing has been summoned this session, so callers can omit the joiner. */
+export function renderHellSegment(manifest: HellSessionManifest | null): string {
+  if (!manifest || manifest.skills.length === 0) return "";
+  const [first, ...rest] = manifest.skills;
+  const extra = rest.length > 0 ? ` +${rest.length}` : "";
+  return `hell: ${hellSlug(first.id)}${extra}`;
 }
 
 const MANIFEST_KEYS: Array<keyof ProfileManifest> = ["schema", "posture", "standingTokens", "skillCount", "scope", "launcherLocked"];

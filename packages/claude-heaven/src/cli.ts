@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
@@ -19,9 +19,9 @@ import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./lau
  * the harness cannot perform (KC7), which is a broken affordance whichever way
  * you look at it.
  *
- * `plugin/scripts/render-posture.mjs` derives its `RELAUNCH_OFFERS` from a
- * MACHINE-COPY of this array (scripts/generate-p2-gate.ts → plugin/data), never
- * from a hand-written list, and a test asserts the two cannot drift apart.
+ * The zero-dependency plugin gets a machine-copy of this array through
+ * scripts/generate-ladder.ts → plugin/data/ladder.json, and a freshness test
+ * asserts the artifact cannot drift.
  *
  * REMOVING A POSTURE IS ONE LINE: delete its entry below and regenerate the
  * artifact. Nothing else keys off a specific member — the renderer intersects
@@ -39,8 +39,10 @@ export const LAUNCHABLE_POSTURES: readonly string[] = [
 ];
 
 interface CliArgs {
+  help: boolean;
   print: boolean;
   posture: string;
+  postureProvided: boolean;
   level?: string;
   /** --skill <path>, repeatable */
   skills: string[];
@@ -48,8 +50,10 @@ interface CliArgs {
 }
 
 export function parseArgs(argv: string[]): CliArgs {
+  let help = false;
   let print = false;
-  let posture = "native";
+  let posture = "product-floor";
+  let postureProvided = false;
   let level: string | undefined;
   const skills: string[] = [];
   const claudeArgs: string[] = [];
@@ -58,15 +62,18 @@ export function parseArgs(argv: string[]): CliArgs {
     if (a === "--") {
       claudeArgs.push(...argv.slice(i + 1));
       break;
-    } else if (a === "--print") print = true;
-    else if (a === "--posture") posture = argv[++i] ?? "";
-    else if (a === "--level") level = argv[++i];
+    } else if (a === "--help" || a === "-h") help = true;
+    else if (a === "--print") print = true;
+    else if (a === "--posture") {
+      posture = argv[++i] ?? "";
+      postureProvided = true;
+    } else if (a === "--level") level = argv[++i];
     else if (a === "--skill") {
       const p = argv[++i];
       if (p !== undefined) skills.push(p);
     } else claudeArgs.push(a);
   }
-  return { print, posture, level, skills, claudeArgs };
+  return { help, print, posture, postureProvided, level, skills, claudeArgs };
 }
 
 /** Absolute path to the statusline bin shipped alongside this CLI. */
@@ -79,13 +86,60 @@ function doorPluginDir(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "plugin");
 }
 
+function helpText(): string {
+  return [
+    "Usage: claude-heaven [--level <level>] [options] [-- <claude args...>]",
+    "",
+    `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
+    `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
+    "                     ultra is unratified",
+    "  --level native     Explicitly keep the user's native setup",
+    "  --skill <path>     Skill for low/curated (repeatable)",
+    "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
+    "  --print            Print the composed plan without launching",
+    "  -h, --help         Show this help",
+    "",
+  ].join("\n");
+}
+
 export function run(argv: string[]): number {
   const args = parseArgs(argv);
 
-  // P2 gate first — never compose a gated (Hell-lane) posture.
+  if (args.help) {
+    process.stdout.write(helpText());
+    return 0;
+  }
+
+  // Ultra has no ratified product mapping. Hell rungs are handled below as
+  // live summon budgets, never boot postures.
   assertLevelAllowed(args.level);
 
-  if (!LAUNCHABLE_POSTURES.includes(args.posture)) {
+  let posture = args.posture;
+  if (args.level !== undefined) {
+    const aliased = LEVEL_ALIASES[args.level];
+    if (!aliased) {
+      if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
+        process.stderr.write(
+          `claude-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+            `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
+        );
+      } else {
+        process.stderr.write(
+          `claude-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`,
+        );
+      }
+      return 2;
+    }
+    if (args.postureProvided && posture !== aliased) {
+      process.stderr.write(
+        `claude-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`,
+      );
+      return 2;
+    }
+    posture = aliased;
+  }
+
+  if (!LAUNCHABLE_POSTURES.includes(posture)) {
     // KC6: a refusal must say which of two unlike things it is. `floor` is
     // core-known but harness-incapable FOR A DOOR SPECIFICALLY — not withheld
     // by policy (nothing here decided to keep it from you), and not even a
@@ -94,38 +148,29 @@ export function run(argv: string[]): number {
     // there has no /skill-heaven to talk to. There is no key to turn; the door
     // does not exist at that address. Anything else here is simply not a
     // posture core knows at all — a plain unknown-input error, neither class.
-    if (args.posture === "floor") {
+    if (posture === "floor") {
       process.stderr.write(
-        `claude-heaven cannot launch --posture floor: this is not a policy hold (P2 gates the Hell lane ` +
-          `only) — the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
+        `claude-heaven cannot launch --posture floor: this is not a policy hold — ` +
+          `the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
           `so a claude-heaven session launched there would have no /skill-heaven to talk to. There is no ` +
           `door to open at this posture; it is core's to compose, for benchmark runs only: ` +
           `\`skill-heaven --posture floor\`.\n`,
       );
-    } else if ((POSTURES as readonly string[]).includes(args.posture)) {
+    } else if ((POSTURES as readonly string[]).includes(posture)) {
       process.stderr.write(
-        `claude-heaven does not launch --posture ${args.posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
+        `claude-heaven does not launch --posture ${posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
           `core knows this posture, but this door has no composition wired for it.\n`,
       );
     } else {
       process.stderr.write(
-        `claude-heaven: unknown --posture "${args.posture}" — not a posture core knows at all. ` +
+        `claude-heaven: unknown --posture "${posture}" — not a posture core knows at all. ` +
           `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}.\n`,
       );
     }
     return 2;
   }
-  if (args.level !== undefined) {
-    // off/low are heaven-lane aliases whose vocabulary is provisional (N3,
-    // pending N4/N5). Reject rather than silently ignore the flag: --posture is
-    // the ratified selector.
-    process.stderr.write(
-      `claude-heaven selects postures with --posture, not --level (got --level ${args.level}).\n`,
-    );
-    return 2;
-  }
 
-  const posture = args.posture as Posture;
+  const selectedPosture = posture as Posture;
 
   if (args.print) {
     // Dry run: show the plan (incl. the exact manifest, settings and fsPlan that
@@ -135,7 +180,7 @@ export function run(argv: string[]): number {
     let plan;
     try {
       plan = planLaunch({
-        posture,
+        posture: selectedPosture,
         skillPaths: args.skills,
         sessionDir: "$SESSION",
         statuslineBin: statuslineBinPath(),
@@ -179,7 +224,7 @@ export function run(argv: string[]): number {
     let live;
     try {
       live = planLaunch({
-        posture,
+        posture: selectedPosture,
         skillPaths: args.skills,
         sessionDir,
         statuslineBin: statuslineBinPath(),

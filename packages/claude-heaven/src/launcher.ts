@@ -2,8 +2,8 @@
 // claude: it reads skill sources (census / resolveSkill) but writes nothing.
 // cli.ts turns a plan into files + a process.
 //
-// NATIVE is still the default posture: claude as-is, nothing evicted, nothing
-// summoned, no flags injected beyond the session-scoped statusline wiring (P1).
+// PRODUCT-FLOOR is the default posture: the smallest launchable session that
+// keeps the door. Native remains available explicitly.
 //
 // The non-native postures are NOT composed here. They are composed by core's
 // `compile()` — the one place the empirically probed, version-pinned routes
@@ -18,7 +18,7 @@
 import { join } from "node:path";
 import {
   compile,
-  HELL_LEVELS,
+  UNRATIFIED_LEVELS,
   resolveSkill,
   type FsOp,
   type Posture,
@@ -27,15 +27,9 @@ import {
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import type { ProfileManifest } from "./statusline.js";
 
-// P2 (LOCKED): the Hell lane is gated. Every user-facing surface hard-errors on
-// the Hell levels; /skill-hell is a locked door, not an activator, until Hell is
-// proven safe. Sourced from core's canonical HELL_LEVELS (NOT re-listed here) so
-// this gate can never drift from the engine's definition — if a Hell level is
-// ever added/renamed upstream (e.g. the pending N4 "ultra"), the gate follows
-// automatically. off/low are heaven-lane aliases (off→floor, low→curated); the
-// launcher takes `--posture`, not those aliases, whose vocabulary is provisional
-// (N3, pending N4/N5).
-export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
+// Ultra has no ratified product meaning. Hell rungs are live summon budgets,
+// not launcher postures; the CLI routes users to /skill-hell for those.
+export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
 // KC6 (Issue #12): a refusal must say WHICH of two unlike things it is —
 // withheld by policy (a key exists, and could turn) or incapable in the
@@ -53,12 +47,12 @@ export const GATED_LEVELS: ReadonlySet<string> = new Set(HELL_LEVELS);
 // core mounts ONLY $SESSION/heaven-set as the sole --plugin-dir — the door's
 // own plugin is never re-admitted. So `/skill-heaven`, this door's own
 // posture control, does not exist inside a curated session. This is neither
-// of the two refusal classes: it is not withheld by policy (P2 gates the
-// Hell lane only, and nothing here is a trust-coverage decision), and it is
+// of the two refusal classes: it is not withheld by policy (Hell is a live
+// additive lane, and nothing here is a trust-coverage decision), and it is
 // not proven harness-incapable either — `--plugin-dir` is documented as
 // repeatable, so mounting the door alongside the curated set would likely
 // work. Core rejects a second `doorPluginDir` for anything but
-// `product-floor` (an unprobed composition), so it is left undone rather
+// `product-floor` (the doorful composition), so it is left undone rather
 // than guessed (M0 discipline) — same restraint as the rest of this door.
 // Disclosed HERE, at compose time, because this is the last surface where
 // the door still exists to say so: once the session is running, there is
@@ -75,7 +69,7 @@ export const CURATED_DOOR_ABSENCE_NOTE =
   "product-floor if you need /skill-heaven to survive in-session.";
 
 export interface LaunchOptions {
-  /** default "native" */
+  /** default "product-floor" (`--level off`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
   skillPaths?: string[];
@@ -110,14 +104,12 @@ export interface LaunchPlan {
   notes: string[];
 }
 
-/** P2 gate: reject the Hell lane before it can compose anything. */
+/** Refuse only values with no ratified product meaning. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && GATED_LEVELS.has(level)) {
+  if (level && UNRATIFIED.has(level)) {
     throw new Error(
-      `level "${level}" is Hell-lane and gated (P2) — withheld by policy, not a harness limit: it is ` +
-        `technically composable but deliberately locked until Hell is proven safe. /skill-hell is a locked ` +
-        `door, not an activator: the key exists and can turn once that bar is met. claude-heaven composes ` +
-        `Heaven-lane postures only.`,
+      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
+        `product mapping to compose, so claude-heaven refuses rather than guessing.`,
     );
   }
 }
@@ -133,7 +125,7 @@ const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION",
  * file; a manifest that lied would make both surfaces lie at once.
  */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
-  const posture: Posture = opts.posture ?? "native";
+  const posture: Posture = opts.posture ?? "product-floor";
   const manifestPath = join(opts.sessionDir, "profile.json");
   const settingsPath = join(opts.sessionDir, "settings.json");
 
@@ -190,9 +182,10 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     harness: "claude",
     skills,
     // Product-floor keeps slash commands, which is only worth anything if the
-    // door is actually mounted: `--setting-sources project` drops the user-scope
-    // install. Core rejects this field for every other posture, so it is passed
-    // for product-floor and nowhere else.
+    // door is actually mounted: its empty `--setting-sources` allowlist drops
+    // setting-sourced installs, so the caller-supplied door plugin is mounted
+    // explicitly. Core rejects this field for every other posture, so it is
+    // passed for product-floor and nowhere else.
     ...(posture === "product-floor" && opts.doorPluginDir
       ? { doorPluginDir: opts.doorPluginDir }
       : {}),
@@ -204,12 +197,9 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
   const manifest: ProfileManifest = {
     schema: "claude-heaven/profile@1",
     posture,
-    // The composed session's real standing dose: the tokens compile() priced
-    // for the curated set (zero skills submitted at product-floor, since
-    // product-floor takes no --skill — but see the `incomplete` note below:
-    // zero PRICED skills is not the same claim as zero skills PRESENT in the
-    // session, and this comment used to conflate the two). NOT a native
-    // census.
+    // The composed session's real standing dose: compile()'s dose summary
+    // covers the explicitly submitted skill set (zero skills at product-floor,
+    // which takes no --skill). It is not a native census.
     //
     // KC4 CORRECTION (2026-07-29/30, packages/claude-heaven/scripts/
     // probe-kc4-listing-residual.sh, 2/2 live runs, claude 2.1.220): the T9
@@ -221,58 +211,25 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     // compile.ts's curated note for the full finding.
     //
     // CURATED — RESOLVED (dev/kc4-clean-room, 2026-07-30, verified by a
-    // second probe run + full suite green): curated now composes
-    // `--setting-sources ''` (an intentionally empty allowlist) instead of
-    // `project`, which was an ALLOWLIST that kept project scope live, not a
-    // suppression flag. Re-probed 2/2: `skills = ["heaven-set:<id>", "doctor"]`
-    // — the project-scope leak is gone; `doctor` is the one remaining,
-    // founder-ruled-permanent residual. `scopeCaveat`/`scopeNote` disclose it
-    // for `scope: "session"` below (A3). This fix lands on this same
-    // integration branch via a separate PR — if that PR has not merged by
-    // the time this one does, curated's real residual is still the wider
-    // pre-fix set, and the "doctor only" caveat text under-discloses until
-    // it lands; check the integration branch's compile.ts before trusting
-    // this comment at face value.
+    // second probe run + full suite green): curated composes
+    // `--setting-sources ''` (an intentionally empty allowlist), so the
+    // project-scope leak is gone. Re-probed 2/2:
+    // `skills = ["heaven-set:<id>", "doctor"]` — `doctor` is the one
+    // remaining, founder-ruled-permanent residual. `scopeCaveat`/`scopeNote`
+    // disclose it for `scope: "session"` below (A3).
     //
-    // PRODUCT-FLOOR — NOT RESOLVED, DELIBERATELY OUT OF SCOPE HERE: unlike
-    // curated, product-floor's composition still names `--setting-sources
-    // project` (F7 route, unchanged) — the SAME allowlist shape KC4 found
-    // leaky, un-probed for product-floor specifically but structurally
-    // identical to what leaked under curated. A live probe (2026-07-30,
-    // orchestrator-run, 2/2 byte-identical reps, claude 2.1.220) confirms it:
-    // a planted project-scope marker skill in cwd shows up in product-floor's
-    // session:init `skills` array alongside `doctor`. Changing product-floor's
-    // composition is a founder call (it is a measured benchmark arm, F7 —
-    // altering it invalidates a recorded number) and is explicitly NOT made
-    // here. What IS fixed here: `standingTokens: 0` was being presented as an
-    // exact, complete count for a posture that can silently carry
-    // project-scope skills this number never prices. `incomplete: true`
-    // below marks that honestly — the existing "floor, not exact" idiom
-    // (see census.ts / statusline.ts's trailing "+") — rather than printing
-    // an optimistic, unconditional zero.
+    // PRODUCT-FLOOR — P8: this route now uses the same
+    // `--setting-sources ''` empty allowlist as curated, so project-scope
+    // skills are not admitted. The zero submitted skills are therefore exact
+    // for this posture's selected set; the `scope: "session"` disclosures
+    // below still call out the measured bundled `doctor` residual.
     standingTokens: compiled.doseSummary.standingTotal,
     skillCount: skills.length,
-    // product-floor cannot rule out a project-scope leak (see above) — mark
-    // the dose as a floor, not an exact count, using the same mechanism
-    // native's census already uses for "we could not fully verify this
-    // number." Curated is NOT marked incomplete: the KC4 fix closes its
-    // project-scope leak, and its one remaining residual (`doctor`) is a
-    // known, permanent exclusion disclosed via the scope caveat text
-    // instead (A3) — a fixed, always-true exclusion, not a floor.
-    ...(posture === "product-floor" ? { incomplete: true } : {}),
-    // "session" — the profile IS the session's SET (what was admitted to the
-    // curated skill dir), enumerated exactly rather than censused. That is
-    // NOT the same claim as "nothing else appears in a session's skill
-    // LISTING" — the KC4 correction above measured that curated sessions
-    // CAN show skills outside this enumerated set, and product-floor still
-    // can too (see above). The comment that used to sit here asserted a
-    // zero-residual claim this measurement had already disproven — that
-    // assertion has been removed, not repeated.
-    //
-    // A3 (Issue #9 follow-up): the "session" scope now DOES render an
-    // exclusion caveat — src/statusline.ts `scopeCaveat` and render-
-    // posture.mjs `scopeNote` both disclose the `doctor` residual for this
-    // scope value.
+    // "session" — the profile is the session's explicitly selected skill SET,
+    // enumerated exactly rather than censused. The session listing can still
+    // include the bundled `doctor` residual; src/statusline.ts `scopeCaveat`
+    // and render-posture.mjs `scopeNote` disclose it for both curated and
+    // product-floor.
     scope: "session",
     launcherLocked: true,
     ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),

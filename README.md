@@ -1,6 +1,8 @@
 # skill-heaven
 
-> **WORK IN PROGRESS** — progress markers and benchmark results live in the research repo at
+> **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
+> Interfaces, flags, postures, and command surfaces may change. Progress markers
+> and benchmark results live at
 > [research.gaiaskilltree.com](https://research.gaiaskilltree.com).
 
 **Strip your agent's context bloat — run clean.**
@@ -28,6 +30,63 @@ flags and execs; it never stashes, restores, or mutates shared state** (P3).
 The only writes are inside a disposable `mkdtemp` session dir (crash-safe by
 construction, AT-H2).
 
+## Try the working prototype
+
+> **WORKING PROTOTYPE — actively tested for public use.** Node 22 or newer is
+> required. The launchers use your existing harness binaries; they never bundle
+> Claude Code, pi, Codex, Grok, or Hermes.
+
+### Claude plugin
+
+Installs `/skill-heaven` and `/skill-hell` from this repository's marketplace:
+
+```bash
+claude plugin marketplace add gaia-research/skill-heaven
+claude plugin install claude-heaven@skill-heaven
+```
+
+`/skill-hell` also requires the separately shipped summon engine
+`@gaia-research/mcp >= 0.2.0`:
+
+```bash
+npm install -g @gaia-research/mcp@^0.3.0
+```
+
+Published and verified: `0.3.0` is on npm and ships the `skill-hell` binary.
+A clean install resolves it and summons for real — trust fields, paired
+install timing and cache state, materialized path, and an inspect link.
+(`0.1.0`, the previous release, had no `skill-hell` binary at all.)
+
+### Five launcher doors from source
+
+Source checkout is the recommended install path until the npm-ready `0.1.0`
+packages are founder-published. These commands inspect the composed plans and do
+not start a harness:
+
+```bash
+git clone https://github.com/gaia-research/skill-heaven
+cd skill-heaven
+npm install
+
+node packages/claude-heaven/bin/claude-heaven.mjs --print
+node packages/pi-heaven/bin/pi-heaven.mjs --print
+node packages/codex-heaven/bin/codex-heaven.mjs --print
+node packages/grok-heaven/bin/grok-heaven.mjs --print
+node packages/hermes-heaven/bin/hermes-heaven.mjs --print
+```
+
+For a curated Claude launch, provide a real skill directory or `SKILL.md`:
+
+```bash
+node packages/claude-heaven/bin/claude-heaven.mjs \
+  --level low --skill /path/to/skill --print
+```
+
+After publication, the package entry points are ready for
+`npx --yes skill-heaven@0.1.0 --posture product-floor --print` and
+`npx --yes <door>@0.1.0 --print`; this repository does not publish them
+automatically.
+
 ---
 
 ![skill-heaven site — WORK IN PROGRESS · HELL HEAVEN INDEX banner over the headline "STOP INSTALLING SKILLS. START SUMMONING THEM."](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
@@ -42,6 +101,38 @@ Skill Tree stamps**, not measured live.
 [![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20help%20wanted-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
 [![Vision ↗](https://img.shields.io/badge/Vision%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md)
 [![Mission ↗](https://img.shields.io/badge/Mission%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md)
+
+---
+
+## The ladder
+
+Entropy runs on one line of seven rungs — but it is served by **two commands**, because the two
+halves are not the same kind of thing.
+
+![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs the launcher. Hell is additive and holds high (the default), xhigh, max, and ultra (unratified); it is served by /skill-hell and needs only the plugin.](docs/assets/entropy-ladder.svg)
+
+**Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
+*withheld*. A running session cannot un-load what it already loaded, so that is a decision only
+boot can make — which is why `/skill-heaven` needs the launcher, and says so plainly when it was
+not used.
+
+**Hell is additive.** `high` through `ultra` differ by how freely skills are *summoned in*, and
+every harness can add context to a live session. That is why `/skill-hell` works anywhere the
+plugin or extension is installed, launcher or not.
+
+The line between them is a capability boundary, not a policy one.
+
+| | rungs | maps to | command | needs |
+|---|---|---|---|---|
+| **Heaven** | `off` · `low` · `med` | `product-floor` · `curated` · `native` | `/skill-heaven` | the launcher |
+| **Hell** | `high` · `xhigh` · `max` · `ultra` | a summon budget, not a posture | `/skill-hell` | only the plugin |
+
+`high` is the default. `ultra` is unratified and refuses as such rather than pretending to be
+gated. `floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and
+is never user-selectable.
+
+Full flow, including every branch: **[docs/LADDER-FLOW.md](docs/LADDER-FLOW.md)**. The diagram is
+generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`, never the SVG.
 
 ---
 
@@ -67,10 +158,10 @@ Skill Tree stamps**, not measured live.
 skill-heaven
   --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
                                         # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
-                                        # product-floor = the DOORFUL product floor (claude only)
-  [--level off|low]                     # aliases: off→floor, low→curated;
+                                        # product-floor = the DOORFUL product floor (verified on all five launcher harnesses)
+  [--level off|low]                     # aliases: off→product-floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
-  [--harness claude|pi|codex|cursor|grok]   # default claude
+  [--harness claude|pi|codex|cursor|grok|hermes]   # default claude
   [--skill <path>]...                   # SKILL.md or its dir; required for curated, rejected otherwise
   [--door-plugin-dir <dir>]             # product-floor only; mounts the caller's door plugin
   [--mechanism plugin-dir|config-dir]   # claude curated route; default plugin-dir (T9 composition)
@@ -86,41 +177,25 @@ N5 closes** — mechanics are fixed, spelling may change.
 
 ## Posture mappings (what actually gets composed)
 
-| Posture | claude (2.1.215) | pi (0.80.10) | codex / cursor / grok |
-|---|---|---|---|
-| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | recipe only (`--print`) |
-| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | recipe only; grok hard-errors (no mechanism exists) |
-| product-floor | floor's flags **minus** `--disable-slash-commands`, plus optional `--plugin-dir <door>` + the same env knob (**F7**) | — (no probed cell) | — (no probed cell) |
-| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | nothing / recipe |
+| Posture | claude (2.1.215) | pi (0.80.10) | codex (0.146.0) | hermes (0.20.0) | cursor | grok (0.2.118) |
+|---|---|---|---|---|---|---|
+| floor | `--disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources project` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**T9b**) | `--no-skills` (see race caveat below) | session `CODEX_HOME`, auth copy, `skills/list` exact-path disables (**WP14**) | `--toolsets terminal,web,file --safe-mode` (**WP8**) | recipe only (`--print`) | iterative `inspect --json` exact-path ignores + observed plugin disables (**WP14**) |
+| curated | `--setting-sources '' --strict-mcp-config --mcp-config '{}' --plugin-dir $SESSION/heaven-set` + env `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` (**KC4 clean room, 2026-07-30; supersedes T9**) | `--no-skills --skill <dir>…` | same discovery, readmitting named `$CODEX_HOME/skills/<id>` dirs (**WP14**) | session `HERMES_HOME`, auth copy, `.no-bundled-skills`, named skill copies + `--skills <id> --safe-mode` (**WP8**) | recipe only | same discovery, readmitting named `$GROK_HOME/skills/<id>` dirs (**WP14**) |
+| product-floor | `--strict-mcp-config --mcp-config '{"mcpServers":{}}' --setting-sources ''` (P8 empty allowlist), plus optional `--plugin-dir <door>` + the same env knob (**F7 evidence**) | `--no-skills --no-context-files --no-prompt-templates` (**WP2**) | same verified clean-room composition as floor; Codex has no separate in-session door surface (**WP14**) | `--toolsets terminal,web,file --ignore-user-config --ignore-rules` (**WP8**) | recipe only (`--print`) | exact-path ignores leave observed plugins as the door surface (**WP14**) |
+| native | nothing — no flags, no env, no fsPlan (P3: exiting = switching) | nothing | `codex exec` untouched | `hermes` untouched | nothing | `grok` untouched |
 
-**codex stays on the recipe track (A2, 2026-07-29/30) — mechanism resolved,
-surface not proven clean.** The per-session `-c 'skills.config=[{path="<abs>",
-enabled=false}]'` scoping cell this table used to gate on HAS resolved: it
-reaches the skills surface per-invocation on codex-cli 0.145.0, no restart,
-nothing written to `config.toml` (gaia-research PR #133, matrix
-G1-skills-config-override, 2/2 reproduced upstream: the committed run record
-`gaia-research/scripts/hell-heaven-bench/harness-probes/runs/codex-g1-2026-07-29.run.json`
-shows **67→66 entries** — the targeted fixture skill absent, all 66 others
-unchanged, `input_tokens` 18,986→18,925, 2/2 byte-identical, on codex-cli
-0.145.0. **Correction, 2026-07-31:** this line previously read "74→73
-entries." That figure did not match the PR #133 / G1-skills-config-override
-record it cited and was never itself backed by a separate committed probe —
-a citation error, not a second measurement, fixed here rather than silently
-restated). That is no longer the open question. codex nonetheless stays
-a recipe: `$CODEX_HOME` scoping does not evict `.agents/skills` (repo,
-cwd→root scan), `~/.agents/skills` (user — confirmed 70 entries on this
-machine), `/etc/codex/skills`, or bundled system skills (separate roots per
-the matrix's own Skill discovery row), and the resolved `-c` cell only
-suppresses skills it is explicitly told about — it does not compute a disable
-entry for every skill discovered across every root. So a live codex exec
-today would not be an empty (floor) or curated (clean-room) surface; the
-mechanism is proven, but the resulting surface is not a floor. `execSupport`
-is deliberately left `"recipe"` — flipping it is a mechanism redesign
-(computing `-c` disables for every discovered root at compile time), not a
-stale-claim correction, and is out of scope here. `cursor` and `grok` are
-untouched: cursor stays on the documented-recipe track (tracked
-`.cursor/rules` cannot be suppressed per-session); grok still has no verified
-skills-suppression mechanism and correctly refuses rather than guesses.
+**codex-heaven is now an exec door (WP14, codex-cli 0.146.0).** The earlier
+flag-only negative remains recorded in `packages/codex-heaven/PROBE.md`:
+`CODEX_HOME` and `--ignore-user-config` do not evict independent roots. The
+launcher closes that gap without mutating `~/.codex`: after copying auth and
+materializing any curated skills, it asks Codex's disk-backed app-server
+`skills/list` for exact paths, writes session-local `skills.config` disables
+for every non-readmitted path, and then spawns `codex exec`. Repeated hard
+counts were 76 discovered / 0 enabled in the composed floor, versus 90 / 45
+in the baseline app-server scan; the real scoped launch authenticated and
+answered. Cursor remains recipe-only because tracked `.cursor/rules` cannot
+be suppressed per-session. Grok now uses the same dynamic inspect-derived route
+(WP14), with product-floor intentionally retaining the observed plugin surface.
 
 ### The floor split (founder ruling V5-5, 2026-07-28)
 
@@ -132,17 +207,18 @@ separately, priced as **separate arms (B1), never averaged into one number**.
   *commands* as well as plugin skills, so `/skill-heaven` does not exist here —
   "the clean room as currently composed has no door". That is the ruling, not a
   defect. `--arm placebo` is accepted **only** for this posture.
-- **`product-floor` — the doorful PRODUCT floor.** T9b minus that one flag, so
-  the minimum control surface survives. F7 prices the door at **+515 tok**
-  (20,176 vs the benchmark floor's 19,661), still **−28.9%** off native's
-  28,379 (claude 2.1.216, probed 2026-07-24). It retains a control surface, so
-  it can never stand in as the placebo; it records as `--arm heaven`.
+- **`product-floor` — the doorful PRODUCT floor.** It keeps the minimum
+  control surface and, under P8, uses an empty `--setting-sources` allowlist so
+  project scope is not admitted. The locked F7 evidence prices the door at
+  **+515 tok** (20,176 vs the benchmark floor's 19,661), still **−28.9%** off
+  native's 28,379 (claude 2.1.216, probed 2026-07-24). It retains a control
+  surface, so it can never stand in as the placebo; it records as `--arm heaven`.
 
 The evidence numbers are recorded once in `FLOOR_EVIDENCE` (`packages/core/src/compile.ts`)
 and are never re-derived. Every floor record is tagged `floor=benchmark` or
 `floor=product` in `notes`, so the two arms cannot be pooled at analysis time.
-`product-floor` has a verified cell on **claude only**; on any other harness it
-hard-errors rather than guessing one into existence (M0 discipline).
+`product-floor` has verified cells on **claude, pi, codex, hermes, and grok**;
+only cursor hard-errors rather than guessing one into existence (M0 discipline).
 
 `--door-plugin-dir` is caller-supplied on purpose: core does not assume which
 package the door ships in. Omit it and `product-floor` still compiles — the
@@ -251,11 +327,10 @@ composition. No other entry was observed in either scenario.
 
 **KC4 now closes as PASSING**: curated mode's listing residual is `doctor`
 only — the single founder-permitted residual — with the project-scope leak
-eliminated. `launcher.ts`'s `scope: "session"` manifest field and any
-KC2-owned disclosure copy that referenced the old `--setting-sources project`
-composition or the non-zero-residual finding may need a matching update; that
-surface is out of this change's scope (owned separately) and is flagged here,
-not edited here.
+eliminated. `launcher.ts`'s `scope: "session"` manifest field and the KC2
+statusline/`/skill-heaven` disclosures now describe that remaining bundled
+residual. P8 applies the same empty allowlist to product-floor, so project
+scope is excluded there too.
 
 **pi caveat (P1):** `--no-skills` floor was verified live but shows an
 intermittent discovery race on 0.80.10 (2 of ~9 headless floor runs still
@@ -325,8 +400,9 @@ validator. Parity is enforced two ways:
 
 ```bash
 npm install
-npm test          # vitest: 30 tests incl. the parity fixture
+npm test          # full Vitest suite, including the parity fixture
 npm run launcher -- --posture floor --print
 ```
 
-Node ≥ 22, TypeScript ESM, zero runtime dependencies.
+Node ≥ 22, TypeScript ESM. Published package entry points carry only the `tsx`
+runtime loader; harnesses are never package dependencies.

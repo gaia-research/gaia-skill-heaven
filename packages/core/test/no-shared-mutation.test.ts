@@ -58,13 +58,21 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
   const fixturesDir = join(import.meta.dirname, "fixtures");
   const skill = resolveSkill(join(fixturesDir, "impeccable-skill"));
 
-  // grok only compiles at posture "native" (M0 discipline — no verified
-  // suppression mechanism); product-floor only compiles for harness "claude"
-  // (F7 — only claude was probed). Everything else in POSTURES x HARNESSES is
-  // expected to compile.
+  // Grok's non-native postures now use the WP14 inspect-derived exec route;
+  // Hermes remains a recipe route. Product-floor compiles for harness
+  // "claude" (F7), "pi" (WP2), "codex" (WP14), "hermes" (WP7), and "grok"
+  // (WP12/WP14); cursor remains a capability gap. Everything else in POSTURES x HARNESSES
+  // is expected to compile.
   function expectedToThrow(posture: string, harness: string): boolean {
-    if (posture === "product-floor" && harness !== "claude") return true;
-    if (harness === "grok" && posture !== "native") return true;
+    if (
+      posture === "product-floor" &&
+      harness !== "claude" &&
+      harness !== "pi" &&
+      harness !== "codex" &&
+      harness !== "hermes" &&
+      harness !== "grok"
+    )
+      return true;
     return false;
   }
 
@@ -187,8 +195,14 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
   function materializeEverything(): void {
     for (const posture of POSTURES) {
       for (const harness of HARNESSES) {
-        if (posture === "product-floor" && harness !== "claude") continue;
-        if (harness === "grok" && posture !== "native") continue;
+        if (
+          posture === "product-floor" &&
+          harness !== "claude" &&
+          harness !== "pi" &&
+          harness !== "codex" &&
+          harness !== "hermes"
+        )
+          continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {
           const skills: ResolvedSkill[] = posture === "curated" ? [skill] : [];

@@ -16,10 +16,10 @@ import type { ResolvedSkill } from "./skills.js";
 //   "floor"          the BENCHMARK floor. Completely doorless. It is the
 //                    placebo-of-record (B2) and its route is byte-frozen at
 //                    T9b — nothing in this split touches it.
-//   "product-floor"  the DOORFUL floor. T9b minus `--disable-slash-commands`,
-//                    so the minimum control surface survives. F7 prices the
-//                    door at +515 tok (20,176 vs 19,661), still -28.9% off
-//                    native's 28,379.
+//   "product-floor"  the DOORFUL floor. It keeps the minimum control surface;
+//                    P8 also uses an empty setting-sources allowlist so project
+//                    scope is not admitted. F7 prices the door at +515 tok
+//                    (20,176 vs 19,661), still -28.9% off native's 28,379.
 //
 // They are measured and named separately and priced as SEPARATE ARMS (B1).
 // Never average them into one number, and never let one stand in for the other:
@@ -62,7 +62,7 @@ export const FLOOR_EVIDENCE = {
   productFloorVsNativePct: -28.9,
 } as const;
 
-export const HARNESSES = ["claude", "pi", "codex", "cursor", "grok"] as const;
+export const HARNESSES = ["claude", "pi", "codex", "hermes", "cursor", "grok"] as const;
 export type Harness = (typeof HARNESSES)[number];
 
 export const MECHANISMS = ["plugin-dir", "config-dir"] as const;
@@ -72,10 +72,18 @@ export type Mechanism = (typeof MECHANISMS)[number];
 // docs/labs/harness-capability-matrix.md rows T6/T7).
 export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
-// Heaven-lane levels only; med..max are the gated hell lane (P2, mapping OPEN
-// item 3). Vocabulary per N3; provisional pending N4/N5.
-export const LEVEL_ALIASES: Record<string, Posture> = { off: "floor", low: "curated" };
-export const HELL_LEVELS = ["med", "high", "xhigh", "max"] as const;
+// The user-facing ladder. `native` remains an explicit escape hatch through
+// LEVEL_ALIASES, but is not a rung: it means "leave my setup untouched".
+export const LADDER_LEVELS = ["off", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export const HEAVEN_LEVELS = ["off", "low", "med"] as const;
+export const LEVEL_ALIASES: Record<string, Posture> = {
+  off: "product-floor",
+  low: "curated",
+  med: "native",
+  native: "native",
+};
+export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
+export const UNRATIFIED_LEVELS = ["ultra"] as const;
 
 export type FsOp =
   | { kind: "write"; path: string; contents: string }
@@ -148,15 +156,20 @@ export function compile(input: CompileInput): CompileResult {
         "the benchmark floor is doorless by ruling (V5-5/B2) and curated mounts its own set",
     );
   }
-  // M0 discipline: the doorful floor exists as a measured cell on claude only
-  // (F7, 2.1.216). No other harness has a probed doorless/doorful distinction,
-  // so refuse rather than guess one into existence (D8).
-  if (posture === "product-floor" && harness !== "claude") {
+  // M0 discipline: the doorful floor exists as a measured cell on claude (F7,
+  // 2.1.216) and, as of WP2 (PROBE.md, pi 0.83.0, probed 2026-08-07), pi. No
+  // Hermes 0.20.0 also has a probed best-effort distinction: --safe-mode is
+  // the maximal benchmark floor, while --ignore-user-config --ignore-rules
+  // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
+  // installed-skills index; compileHermes discloses that negative result and
+  // remains recipe-only.
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok"];
+  if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
-      `--posture product-floor has no verified cell for harness ${harness} — only claude was probed (F7, 2.1.216). ` +
-        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only): nobody has " +
-        "verified whether this composes here at all, so there is nothing to withhold or grant a key to. " +
-        "Refusing to guess (M0 discipline); use --posture floor, or add the row to the harness capability matrix first.",
+      `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
+        "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
+        "to the harness capability matrix first.",
     );
   }
 
@@ -174,6 +187,8 @@ export function compile(input: CompileInput): CompileResult {
       return compilePi(input, base);
     case "codex":
       return compileCodex(input, base);
+    case "hermes":
+      return compileHermes(input, base);
     case "cursor":
       return compileCursor(input, base);
     case "grok":
@@ -236,12 +251,12 @@ function compileClaude(
       "--mcp-config",
       '{"mcpServers":{}}',
       "--setting-sources",
-      "project",
+      "",
     ];
     env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
     if (input.doorPluginDir) argv.push("--plugin-dir", input.doorPluginDir);
     notes.push(
-      `product-floor (F7 route) = the DOORFUL floor: T9b minus --disable-slash-commands, retaining the minimum control surface. Door priced at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
+      `product-floor (F7 route, P8 scope fix) = the DOORFUL floor: retaining the minimum control surface and using --setting-sources '' so project scope is not admitted. F7's locked evidence prices the door at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
     );
     if (!input.doorPluginDir) {
       notes.push(
@@ -336,56 +351,131 @@ function compilePi(
   // pi 0.80.10 quirk (verified 2026-07-19): `--no-skills` immediately followed
   // by `-p` silently loses the suppression (vanilla listing returned); any
   // other ordering yields NONE. Tail args therefore go FIRST.
+  //
+  // CORRECTION (2026-08-07, WP2, packages/pi-heaven/PROBE.md, pi 0.83.0):
+  // re-probed before writing any door code (M0 discipline), per the dispatch
+  // brief's explicit instruction not to silently "fix" this comment on
+  // assumption. Argv order does NOT matter on 0.83.0 — `--no-skills` before
+  // vs. after `-p --no-session` both measured ~4371 totalTokens (repeated)
+  // against an 11271-token unsuppressed baseline, via `--mode json`'s real
+  // token usage (the free-text "list your skills" self-report the quirk was
+  // originally diagnosed with turned out to confabulate under a cheap model
+  // and was NOT used as evidence — see PROBE.md's method note). The 0.80.10
+  // quirk is real history and is not reproduced on 0.83.0. Tail-args-first is
+  // left in place below anyway: it remains correct (harmless-neutral) on
+  // 0.83.0, and `floor`'s route is byte-frozen as the placebo-of-record — this
+  // is the honest correction, not a silent rewrite.
   const argv: string[] = [...tailArgs(input, "pi")];
   const notes = [
     ...base.notes,
-    "pi argv ordering is load-bearing: `--no-skills -p` (adjacent) drops suppression on pi 0.80.10 — launcher emits -p before the skill flags.",
+    "pi argv ordering is load-bearing: `--no-skills -p` (adjacent) drops suppression on pi 0.80.10 — launcher emits -p before the skill flags. CORRECTION (2026-08-07, PROBE.md): re-probed on pi 0.83.0 before writing any door code — order no longer matters there (--no-skills before vs. after -p/--no-session both measured ~4371 totalTokens vs an 11271 baseline, --mode json ground truth). The quirk does not reproduce on 0.83.0; kept here as the historical 0.80.10 finding, not current guidance.",
   ];
   if (input.posture === "floor") {
     argv.push("--no-skills");
   } else if (input.posture === "curated") {
     argv.push("--no-skills");
     for (const s of input.skills) argv.push("--skill", s.dir);
+  } else if (input.posture === "product-floor") {
+    // product-floor (WP2, PROBE.md, pi 0.83.0, probed 2026-08-07) = the
+    // nearest achievable zero a user can actually launch at, with the door
+    // still open: `--no-skills` + `--no-context-files` + `--no-prompt-templates`,
+    // leaving extensions untouched (no `--no-extensions`) since extensions are
+    // pi's door surface (an extension is how a `/skill-heaven`-equivalent
+    // command would be registered here; suppressing them would close the
+    // door, same reasoning as claude's product-floor keeping slash commands).
+    // Measured in PROBE.md (this repo's cwd, which has a tracked 5608-byte
+    // CLAUDE.md and no prompt-template files): unsuppressed baseline 11271
+    // totalTokens → --no-skills alone 4371 → + --no-context-files 2831 (a
+    // further ~1540, isolated to CLAUDE.md discovery) → + --no-prompt-templates:
+    // no additional measured delta in THIS repo (no prompt-template files
+    // here to suppress — not a claim the flag is a no-op elsewhere). These
+    // are cwd-and-date-specific measurements, not a general dose claim;
+    // re-probe before citing any of them as a benchmark arm.
+    argv.push("--no-skills", "--no-context-files", "--no-prompt-templates");
   }
   return { ...base, notes, command: "pi", argv, execSupport: "exec" };
 }
 
-// codex — $CODEX_HOME scoping + per-skill config.toml/`-c` toggles.
+// Hermes Agent 0.20.0 — verified clean-room routes
+// (packages/hermes-heaven/PROBE.md, 2026-08-07).
 //
-// A2 (2026-07-29/30): the per-session `-c` scoping cell this comment used to
-// gate on HAS resolved — `-c 'skills.config=[{path="<abs SKILL.md>",
-// enabled=false}]'` reaches the skills surface per-invocation, no restart,
-// nothing written to config.toml (codex-cli 0.145.0; gaia-research PR #133,
-// harness-capability-matrix.md row "Skills listing suppressible per-session?"
-// / G1-skills-config-override: 2/2 reproduced upstream. Committed run record
-// gaia-research/scripts/hell-heaven-bench/harness-probes/runs/
-// codex-g1-2026-07-29.run.json shows 67→66 entries — targeted fixture skill
-// absent, all 66 others unchanged, input_tokens 18,986→18,925, 2/2
-// byte-identical. Correction, 2026-07-31: this comment previously read
-// "74→73 entries" — that figure never matched the PR #133 / G1 row it cited
-// and traced to no separate committed probe; a citation error, fixed here.
-// That is no longer the open question.
-//
-// The reason codex STAYS A RECIPE is a different one: the matrix's own
-// "Skill discovery" row documents codex skill roots beyond $CODEX_HOME —
-// `.agents/skills` (repo, cwd→root scan), `~/.agents/skills` (user),
-// `/etc/codex/skills`, and bundled system skills. $CODEX_HOME scoping alone
-// does not evict any of them (confirmed independently: `~/.agents/skills`
-// alone holds 70 entries on this machine), and the per-session `-c` cell
-// above only suppresses skills named in that one flag — it does not compute
-// a disable entry for every skill discovered across every root. So a live
-// `--posture floor --harness codex` exec today would not be an empty
-// surface, and a live `--posture curated` exec would not be a clean room
-// either: both would leak the other roots' skills into the model-visible
-// listing. exec.ts:43 refuses to spawn anything whose execSupport isn't
-// "exec", and cli.ts:169 prints a recipe instead of running — that refusal
-// is what keeps a research driver from spawning a codex "floor" that is
-// actually near-native and recording a benchmark under a posture the
-// session never had. So: the mechanism is proven, but the resulting surface
-// is not a floor — execSupport stays "recipe" until the other skill roots
-// are computed into the `-c` disable set too (a mechanism redesign, not a
-// stale-claim correction, and out of scope here). Probe results recorded in
-// the matrix.
+// The original probe correctly found that --safe-mode/--ignore-rules/
+// --ignore-user-config do not suppress the 108-name installed-skills index.
+// Source inspection explains why: skill-index construction is gated by the
+// three tools in the `skills` toolset, independently of those customization
+// flags. An explicit --toolsets allowlist without `skills` suppresses the
+// index. For curated, a scoped HERMES_HOME with the no-seeding marker and
+// session-copied skill dirs produced exactly the copied skill and preloaded it
+// by resolved name. Every route below was repeated and authenticated.
+function compileHermes(
+  input: CompileInput,
+  base: Omit<CompileResult, "command" | "argv" | "execSupport">,
+): CompileResult {
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
+  const notes = [...base.notes];
+  const argv: string[] =
+    input.prompt === undefined
+      ? []
+      : input.posture === "curated"
+        ? ["chat", "-q", input.prompt, "--quiet"]
+        : ["-z", input.prompt];
+  const skillsLessToolsets = "terminal,web,file";
+
+  if (input.posture === "floor") {
+    argv.push("--toolsets", skillsLessToolsets, "--safe-mode");
+    notes.push(
+      "Hermes 0.20.0 benchmark floor: explicit terminal,web,file toolset allowlist omits the skills toolset, so the implementation never builds the skills index; --safe-mode additionally suppresses user config, context files/memory, plugins, and MCP. Repeated authenticated probes answered successfully with identical prompt-side usage. No priced dose is claimed.",
+    );
+  } else if (input.posture === "product-floor") {
+    argv.push("--toolsets", skillsLessToolsets, "--ignore-user-config", "--ignore-rules");
+    notes.push(
+      "Hermes 0.20.0 product floor: the verified terminal,web,file allowlist omits the skills toolset/index; --ignore-user-config --ignore-rules suppresses behavioral config and context files/memory while leaving plugins/MCP available as the door-capable control surface. Repeated authenticated probes answered successfully. No priced dose is claimed.",
+    );
+  } else if (input.posture === "curated") {
+    env.HERMES_HOME = "$SESSION/hermes";
+    fsPlan.push(
+      {
+        kind: "copyFileIfExists",
+        from: `${input.homeDir ?? "$HOME"}/.hermes/auth.json`,
+        to: "$SESSION/hermes/auth.json",
+      },
+      { kind: "write", path: "$SESSION/hermes/.no-bundled-skills", contents: "" },
+    );
+    for (const skill of input.skills) {
+      fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/hermes/skills/${skill.id}` });
+      argv.push("--skills", skill.id);
+    }
+    argv.push("--safe-mode");
+    notes.push(
+      "Hermes 0.20.0 curated clean room: session-scoped HERMES_HOME receives only auth.json, the .no-bundled-skills marker, and copies of the named skill directories. --skills then preloads each resolved name; --safe-mode suppresses other customizations. Hard listing probes showed exactly one copied local skill and zero bundled skills, and the copied marker skill loaded under safe mode twice. config.yaml is deliberately not copied, avoiding re-imported behavioral customizations. For headless curated runs core uses `hermes chat -q --quiet`, because Hermes 0.20.0's top-level -z oneshot path does not pass --skills through.",
+    );
+  } else {
+    notes.push("Hermes native posture is untouched.");
+  }
+
+  if (input.model) argv.push("--model", input.model);
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+
+  return {
+    command: "hermes",
+    argv,
+    env,
+    fsPlan,
+    notes,
+    doseSummary: base.doseSummary,
+    execSupport: "exec",
+  };
+}
+
+// Codex 0.146.0 — config-home scoping plus a session-local exact-path disable
+// set. The older flag-only negative remains important: CODEX_HOME alone does
+// not evict .agents/skills, user roots, bundled system skills, or other roots.
+// WP14 (packages/codex-heaven/PROBE.md, pane w8:p11) proved the missing step:
+// ask the pinned app-server skills/list instrument for every path after the
+// scoped home is materialized, then write skills.config entries for every
+// path except named curated readmissions. The door performs that dynamic step;
+// compile() remains pure and only describes the isolation argv/fsPlan.
 function compileCodex(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -394,26 +484,35 @@ function compileCodex(
   const fsPlan = [...base.fsPlan];
   const notes = [...base.notes];
   const argv: string[] = ["exec"];
+
   if (input.posture !== "native") {
+    argv.push(
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--sandbox",
+      "read-only",
+      "--ignore-rules",
+    );
     env.CODEX_HOME = "$SESSION/codex";
     fsPlan.push({
       kind: "copyFileIfExists",
       from: `${input.homeDir ?? "$HOME"}/.codex/auth.json`,
       to: "$SESSION/codex/auth.json",
     });
-    notes.push(
-      "codex recipe: $CODEX_HOME scoping (floor); curated adds skill dirs under $CODEX_HOME. The per-session `-c 'skills.config=[...]'` scoping cell is now empirically verified (matrix G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) — the mechanism itself is proven, live exec. Stays a recipe anyway: $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`, `/etc/codex/skills`, or bundled system skills (matrix Skill discovery row), so neither floor nor curated is yet a verified-clean surface on codex. Doc-verified + probe evidence only — launcher does not spawn codex (recipe track).",
-    );
     if (input.posture === "curated") {
-      for (const s of input.skills) {
-        fsPlan.push({ kind: "copyDir", from: s.dir, to: `$SESSION/codex/skills/${s.id}` });
+      for (const skill of input.skills) {
+        fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/codex/skills/${skill.id}` });
       }
     }
+    notes.push(
+      `codex-cli 0.146.0 live route: the launcher copies auth.json into session-scoped CODEX_HOME, materializes curated skills when requested, asks app-server skills/list for exact discovered SKILL.md paths, and writes a session-local skills.config disable entry for every non-readmitted path before spawning. The flag-only negative remains true; dynamic exact-path discovery is the WP14 license. ${input.posture === "product-floor" ? "Codex has no separate in-session door/plugin surface, so product-floor uses the same verified clean-room composition as floor." : "No shared ~/.codex state is mutated."}`,
+    );
   }
+
   if (input.model) argv.push("-m", input.model);
   if (input.prompt !== undefined) argv.push(input.prompt);
   if (input.passthrough?.length) argv.push(...input.passthrough);
-  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
+  return { command: "codex", argv, env, fsPlan, notes, doseSummary: base.doseSummary, execSupport: "exec" };
 }
 
 // cursor — documented-recipe track regardless (rules are tracked files;
@@ -436,31 +535,80 @@ function compileCursor(
   return { command: "cursor-agent", argv, env, fsPlan: base.fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
 }
 
-// grok — in harness scope per the capability matrix, which owns coverage,
-// starting from zero. v0.2.103 probe: no skills
-// surface (no --no-skills / skill flags in `grok --help`; config via
-// ~/.grok/config.toml; plugins exist). No verified suppression/readmission
-// mechanism — do not guess (M0 discipline): recipe is a stub that says so.
+// Grok 0.2.118 — session-scoped config route, pinned by packages/grok-heaven/
+// PROBE.md. GROK_HOME scopes auth/config, but Grok can read several
+// Claude-compatible roots and plugin skills. The door starts with this minimal
+// session config, then launcher code asks `grok inspect --json` for the exact
+// paths and observed plugin names and rewrites this file inside the session.
+const grokSkillFlags = ["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"];
+
+const grokBaseConfig = `[compat.claude]
+skills = false
+
+[compat.cursor]
+skills = false
+
+[skills]
+ignore = []
+`;
+
+function tailGrok(input: CompileInput): string[] {
+  const argv: string[] = [];
+  if (input.model) argv.push("-m", input.model);
+  if (input.prompt !== undefined) argv.push("-p", input.prompt);
+  if (input.jsonOutput) argv.push("--output-format", "json");
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+  return argv;
+}
+
 function compileGrok(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
 ): CompileResult {
-  if (input.posture !== "native") {
-    throw new Error(
-      "grok: no verified skills-suppression/re-admission mechanism (v0.2.103 --help probe found no skills surface). " +
-        "This is a harness-capability gap, not a policy hold (P2 gates the Hell lane only) — nothing about " +
-        "grok is being withheld by decision; no one has found a way to do it yet, verified or otherwise. " +
-        "Refusing to guess (M0 discipline) — see the grok column in gaia-research docs/labs/harness-capability-matrix.md. " +
-        "Only --posture native compiles for grok today.",
-    );
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
+  const notes = [...base.notes];
+  let argv: string[] = [];
+
+  if (input.posture === "native") {
+    notes.push("grok native posture is untouched: no GROK_HOME override, config copy, or suppression flags.");
+  } else {
+    env.GROK_HOME = "$SESSION/grok";
+    fsPlan.push({
+      kind: "copyFileIfExists",
+      from: `${input.homeDir ?? "$HOME"}/.grok/auth.json`,
+      to: "$SESSION/grok/auth.json",
+    });
+
+    fsPlan.push({ kind: "write", path: "$SESSION/grok/config.toml", contents: grokBaseConfig });
+
+    argv = [...grokSkillFlags];
+    if (input.posture === "curated") {
+      for (const skill of input.skills) {
+        fsPlan.push({ kind: "copyDir", from: skill.dir, to: `$SESSION/grok/skills/${skill.id}` });
+      }
+      notes.push(
+        "grok curated exec route (WP14, 0.2.118): session-scoped GROK_HOME receives auth.json, the named skill directories, and a dynamic inspect-derived exact-path ignore config. Four discovery passes reached exactly one readmitted canary skill and answered successfully twice; observed plugin names are disabled only in this session.",
+      );
+    } else if (input.posture === "floor") {
+      notes.push(
+        "grok floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json, --no-memory, --no-subagents, --no-plan, --disable-web-search, iterative inspect-derived exact-path ignores, and session-local disables for the observed plugin names. Repeated pinned scans reached Skills (0) and answered successfully; no global plugin state is mutated.",
+      );
+    } else {
+      notes.push(
+        "grok product-floor exec route (WP14, 0.2.118): GROK_HOME plus auth.json and the documented suppression flags, with iterative inspect-derived exact-path ignores while leaving observed plugins as the door surface. Repeated pinned scans reached the 9-skill plugin surface and answered successfully; the route does not claim zero plugin skills.",
+      );
+    }
   }
-  const notes = [
-    ...base.notes,
-    "grok v0.2.103: native posture only — no skill-discovery/suppression flags found (--help probe); capability-matrix grok column tracks the open cells.",
-  ];
-  const argv: string[] = [];
-  if (input.model) argv.push("-m", input.model);
-  if (input.prompt !== undefined) argv.push("-p", input.prompt);
-  if (input.passthrough?.length) argv.push(...input.passthrough);
-  return { ...base, notes, command: "grok", argv, execSupport: "recipe" };
+
+  argv.push(...tailGrok(input));
+  return {
+    ...base,
+    notes,
+    command: "grok",
+    argv,
+    env,
+    fsPlan,
+    execSupport: "exec",
+  };
 }

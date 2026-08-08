@@ -10,7 +10,7 @@ export function Switcher() {
 
   return (
     <div className="sh-switcher" role="navigation" aria-label="Prototype variation switcher">
-      <span className="sh-switcher__brand">SKILL HEAVEN · prototype</span>
+      <span className="sh-switcher__brand">SKILL HEAVEN · WORKING PROTOTYPE · ACTIVELY TESTED FOR PUBLIC USE</span>
       <div className="sh-switcher__tabs">
         {VARIATIONS.map((v) => (
           <NavLink

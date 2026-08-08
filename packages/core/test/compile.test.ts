@@ -96,11 +96,17 @@ describe("the floor split (V5-5)", () => {
     expect(floorOf("floor")).toBe("benchmark");
   });
 
-  it("the product floor is T9b minus --disable-slash-commands (F7) — that one flag is the door", () => {
-    const bench = compile({ posture: "floor", harness: "claude", skills: [] });
+  it("the product floor keeps the door and uses an empty setting-sources allowlist (P8)", () => {
     const product = compile({ posture: "product-floor", harness: "claude", skills: [] });
+    expect(product.argv).toEqual([
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "",
+    ]);
     expect(product.argv).not.toContain("--disable-slash-commands");
-    expect(product.argv).toEqual(bench.argv.filter((a) => a !== "--disable-slash-commands"));
+    expect(product.argv).not.toContain("project");
     expect(product.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
     expect(product.execSupport).toBe("exec");
     expect(floorOf("product-floor")).toBe("product");
@@ -145,20 +151,21 @@ describe("the floor split (V5-5)", () => {
     expect(Object.values(e)).not.toContain(mean);
   });
 
-  it("product-floor has no verified cell on any other harness — it refuses rather than guesses (M0/D8)", () => {
-    for (const h of ["pi", "codex", "cursor", "grok"] as const) {
+  it("product-floor has no verified cell on cursor — it refuses rather than guesses (M0/D8)", () => {
+    // pi joined claude as a verified product-floor cell in WP2 (PROBE.md, pi
+    // 0.83.0, 2026-08-07); codex joined in WP14 (PROBE.md, 0.146.0), and
+    // grok joined in WP12 (PROBE.md, 0.2.118). Cursor remains unprobed.
+    for (const h of ["cursor"] as const) {
       expect(() => compile({ posture: "product-floor", harness: h, skills: [] })).toThrow(/no verified cell/);
     }
   });
 
-  // KC6 (Issue #12): this refusal is the harness-incapable class — nobody has
-  // verified the composition, so there is nothing decided to withhold. It
-  // must say that explicitly, not just "no verified cell", which alone could
-  // be misread as "not verified [and therefore not permitted]".
+  // KC6 (Issue #12): cursor still has no product-floor route at all. That is a
+  // harness-capability gap, not a policy hold.
   it("marks the harness-cell refusal as a capability gap, not a policy hold (KC6)", () => {
     let msg = "";
     try {
-      compile({ posture: "product-floor", harness: "pi", skills: [] });
+      compile({ posture: "product-floor", harness: "cursor", skills: [] });
     } catch (e) {
       msg = (e as Error).message;
     }
@@ -178,48 +185,66 @@ describe("pi mappings", () => {
     expect(r.argv).toEqual(["--no-skills", "--skill", "/skills/impeccable"]);
     expect(r.execSupport).toBe("exec");
   });
+  it("product-floor = --no-skills + --no-context-files + --no-prompt-templates, extensions untouched (WP2, PROBE.md, 0.83.0)", () => {
+    const r = compile({ posture: "product-floor", harness: "pi", skills: [] });
+    expect(r.argv).toEqual(["--no-skills", "--no-context-files", "--no-prompt-templates"]);
+    expect(r.argv).not.toContain("--no-extensions"); // extensions are pi's door surface — left alive
+    expect(r.execSupport).toBe("exec");
+    expect(r.fsPlan).toEqual([]);
+  });
   it("native = nothing", () => {
     expect(compile({ posture: "native", harness: "pi", skills: [] }).argv).toEqual([]);
   });
 });
 
-describe("recipe harnesses", () => {
-  // A2 (2026-07-29/30): the per-session `-c 'skills.config=[{path=…,
-  // enabled=false}]'` scoping cell this used to gate on HAS resolved (matrix
-  // G1-skills-config-override, codex-cli 0.145.0, gaia-research PR #133) —
-  // that is no longer the open question. codex stays a recipe anyway because
-  // $CODEX_HOME scoping does not evict `.agents/skills`, `~/.agents/skills`,
-  // `/etc/codex/skills`, or bundled system skills (matrix Skill discovery
-  // row), so neither floor nor curated is yet a verified-clean surface —
-  // the resolved mechanism does not make the resulting surface a floor.
-  // execSupport intentionally stays "recipe" (deferred, not flipped).
-  it("codex compiles a recipe with CODEX_HOME scoping", () => {
+describe("non-native harness mappings", () => {
+  it("codex compiles an exec route with session-scoped exact-path discovery", () => {
     const r = compile({ posture: "floor", harness: "codex", skills: [] });
-    expect(r.execSupport).toBe("recipe");
+    expect(r.execSupport).toBe("exec");
     expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
+    expect(r.argv).toEqual([
+      "exec",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--sandbox",
+      "read-only",
+      "--ignore-rules",
+    ]);
+    expect(r.notes.join(" ")).toMatch(/skills\/list/i);
   });
   it("cursor compiles a recipe with CURSOR_CONFIG_DIR", () => {
     const r = compile({ posture: "floor", harness: "cursor", skills: [] });
     expect(r.execSupport).toBe("recipe");
     expect(r.env.CURSOR_CONFIG_DIR).toBe("$SESSION/cursor-config");
   });
-  it("grok refuses floor/curated (no verified mechanism) but allows native", () => {
-    expect(() => compile({ posture: "floor", harness: "grok", skills: [] })).toThrow(/grok/);
-    expect(compile({ posture: "native", harness: "grok", skills: [] }).execSupport).toBe("recipe");
-  });
+  it("grok composes pinned exec routes and leaves native untouched", () => {
+    const floor = compile({ posture: "floor", harness: "grok", skills: [] });
+    expect(floor.env.GROK_HOME).toBe("$SESSION/grok");
+    expect(floor.argv).toEqual(["--no-memory", "--no-subagents", "--no-plan", "--disable-web-search"]);
+    expect(floor.fsPlan).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/grok/auth.json" }),
+        expect.objectContaining({ kind: "write", path: "$SESSION/grok/config.toml" }),
+      ]),
+    );
+    expect(floor.execSupport).toBe("exec");
 
-  // KC6 (Issue #12): same class as the product-floor harness-cell refusal
-  // above — no verified mechanism exists at all, which is not a decision to
-  // withhold anything.
-  it("marks the grok refusal as a capability gap, not a policy hold (KC6)", () => {
-    let msg = "";
-    try {
-      compile({ posture: "floor", harness: "grok", skills: [] });
-    } catch (e) {
-      msg = (e as Error).message;
-    }
-    expect(msg).toContain("harness-capability gap, not a policy hold");
-    expect(msg).not.toMatch(/gated \(P2\)/);
+    const product = compile({ posture: "product-floor", harness: "grok", skills: [] });
+    expect(product.execSupport).toBe("exec");
+    expect(product.notes.join(" ")).toMatch(/plugins as the door surface/i);
+
+    const curated = compile({ posture: "curated", harness: "grok", skills: [fakeSkill] });
+    expect(curated.fsPlan).toContainEqual({
+      kind: "copyDir",
+      from: "/skills/impeccable",
+      to: "$SESSION/grok/skills/impeccable",
+    });
+
+    const native = compile({ posture: "native", harness: "grok", skills: [] });
+    expect(native.argv).toEqual([]);
+    expect(native.env).toEqual({});
+    expect(native.fsPlan).toEqual([]);
+    expect(native.execSupport).toBe("exec");
   });
 });
 
@@ -236,32 +261,29 @@ describe("cli level lane", () => {
   it("defaults to floor", () => {
     expect(parseArgs([]).posture).toBe("floor");
   });
-  it("--level off → floor, --level low → curated", () => {
-    expect(parseArgs(["--level", "off"]).posture).toBe("floor");
+  it("maps the complete Heaven half: off → product-floor, low → curated, med → native", () => {
+    expect(parseArgs(["--level", "off"]).posture).toBe("product-floor");
     expect(parseArgs(["--level", "low"]).posture).toBe("curated");
+    expect(parseArgs(["--level", "med"]).posture).toBe("native");
   });
-  it("hell levels hard-error (P2)", () => {
-    for (const l of ["med", "high", "xhigh", "max"]) {
-      expect(() => parseArgs(["--level", l])).toThrow(/hell lane .*gated/i);
+  it("routes Hell budgets to /skill-hell rather than P2-locking them", () => {
+    for (const level of ["high", "xhigh", "max"]) {
+      expect(() => parseArgs(["--level", level])).toThrow(/live Hell summon budget.*\/skill-hell/i);
+      try {
+        parseArgs(["--level", level]);
+      } catch (error) {
+        expect((error as Error).message).not.toMatch(/P2|gated|policy/i);
+      }
     }
   });
 
-  // KC6 (Issue #12): the policy-class refusal, on the research CLI's own
-  // --level lane too — must not read like the harness-incapable class covered
-  // above (product-floor/grok: "harness-capability gap, not a policy hold").
-  it("marks the hell-lane refusal as a policy hold, not a harness limit (KC6)", () => {
-    let msg = "";
-    try {
-      parseArgs(["--level", "max"]);
-    } catch (e) {
-      msg = (e as Error).message;
-    }
-    expect(msg).toContain("withheld by policy, not a harness limit");
-    expect(msg).not.toContain("harness-capability gap");
+  it("refuses ultra as unratified", () => {
+    expect(() => parseArgs(["--level", "ultra"])).toThrow(/UNRATIFIED/);
   });
   it("contradiction between --posture and --level errors", () => {
     expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
-    expect(parseArgs(["--posture", "floor", "--level", "off"]).posture).toBe("floor");
+    expect(() => parseArgs(["--posture", "floor", "--level", "off"])).toThrow(/contradicts/);
+    expect(parseArgs(["--posture", "product-floor", "--level", "off"]).posture).toBe("product-floor");
   });
   it("--record demands headless + ids", () => {
     expect(() => parseArgs(["--record"])).toThrow(/headless/);
@@ -269,8 +291,8 @@ describe("cli level lane", () => {
     const ok = parseArgs(["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"]);
     expect(ok.record).toMatchObject({ benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 0 });
   });
-  it("--arm rejects hell/ultra", () => {
-    expect(() => parseArgs(["--arm", "hell"])).toThrow(/gated/);
+  it("--arm remains a benchmark enum, separate from live Hell budgets", () => {
+    expect(() => parseArgs(["--arm", "hell"])).toThrow(/heaven or placebo/);
   });
   it("--posture product-floor parses; benchmark-floor is an alias for floor", () => {
     expect(parseArgs(["--posture", "product-floor"]).posture).toBe("product-floor");

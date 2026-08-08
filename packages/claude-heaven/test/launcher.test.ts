@@ -29,33 +29,23 @@ afterAll(() => {
   rmSync(home, { recursive: true, force: true });
 });
 
-describe("assertLevelAllowed (P2)", () => {
-  it("hard-errors on the Hell lane (med…max)", () => {
-    for (const lvl of ["med", "high", "xhigh", "max"]) {
-      expect(() => assertLevelAllowed(lvl)).toThrow(/gated \(P2\)/);
+describe("assertLevelAllowed", () => {
+  it("allows every ratified Heaven and Hell rung", () => {
+    for (const level of ["off", "low", "med", "high", "xhigh", "max"]) {
+      expect(() => assertLevelAllowed(level)).not.toThrow();
     }
-  });
-  it("allows heaven-lane aliases and no level", () => {
-    expect(() => assertLevelAllowed("off")).not.toThrow();
-    expect(() => assertLevelAllowed("low")).not.toThrow();
     expect(() => assertLevelAllowed(undefined)).not.toThrow();
   });
 
-  // KC6 (Issue #12): the Hell-lane refusal is the POLICY class — it must say
-  // so explicitly, not just cite "(P2)" and leave a reader to infer what kind
-  // of "no" that is. Distinguished from the harness-incapable class covered
-  // in cli.test.ts's "refusal honesty (KC6)" describe block (the floor
-  // refusal, and the product-floor/grok harness checks in compile.test.ts).
-  it("marks itself as a policy hold, not a harness limit (KC6)", () => {
+  it("refuses ultra as unratified, never as P2-gated", () => {
+    let message = "";
     try {
-      assertLevelAllowed("max");
-      throw new Error("expected assertLevelAllowed to throw");
-    } catch (e) {
-      const msg = (e as Error).message;
-      expect(msg).toContain("withheld by policy, not a harness limit");
-      expect(msg).toContain("technically composable");
-      expect(msg).not.toContain("harness-incapable");
+      assertLevelAllowed("ultra");
+    } catch (error) {
+      message = (error as Error).message;
     }
+    expect(message).toContain("UNRATIFIED");
+    expect(message).not.toMatch(/P2|gated/i);
   });
 });
 
@@ -232,12 +222,15 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     });
 
   it("keeps slash commands AND mounts the door, or the surviving door is theoretical", () => {
-    // F7's whole point: product-floor is T9b MINUS --disable-slash-commands, so
-    // /skill-heaven exists. But --setting-sources project drops the user-scope
-    // plugin install, so the door has to be mounted explicitly or the posture
-    // keeps a command surface with no command on it.
+    // F7's whole point: product-floor keeps --disable-slash-commands absent, so
+    // /skill-heaven exists. P8 also uses an empty setting-sources allowlist, so
+    // the door has to be mounted explicitly or the posture keeps a command
+    // surface with no command on it.
     const p = plan();
     expect(p.argv).not.toContain("--disable-slash-commands");
+    const settingSourcesIdx = p.argv.indexOf("--setting-sources");
+    expect(settingSourcesIdx).toBeGreaterThanOrEqual(0);
+    expect(p.argv[settingSourcesIdx + 1]).toBe("");
     expect(p.argv).toContain("--plugin-dir");
     expect(p.argv).toContain("/abs/door-plugin");
     expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
@@ -252,20 +245,10 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     expect(p.manifest.scope).toBe("session");
   });
 
-  // A3 (orchestrator-measured, 2026-07-30): product-floor's argv still names
-  // `--setting-sources project` (unchanged by the KC4 clean-room fix, which
-  // touched curated only) — the same allowlist shape KC4 found leaky. A live
-  // probe with a planted project-scope marker skill in cwd showed it (and
-  // `doctor`) alongside product-floor's session listing, 2/2 reps. Changing
-  // the composition is a founder call (F7 is a measured benchmark arm) and is
-  // deliberately NOT made here — but `standingTokens: 0` must not be
-  // presented as an exact, complete count for a posture that can silently
-  // carry skills this number never prices. `incomplete: true` marks it a
-  // floor, not an exact zero — the same mechanism native's census already
-  // uses for "could not fully verify this number" (never print an
-  // optimistic, unconditional zero when the true dose is not knowable).
-  it("marks the dose incomplete — a floor, not an exact zero (unresolved project-scope leak)", () => {
-    expect(plan().manifest.incomplete).toBe(true);
+  // P8: product-floor now uses the empty setting-sources allowlist, so the
+  // project-scope leak is closed and the zero selected-skill dose is exact.
+  it("does not mark the selected-skill dose incomplete after the P8 scope fix", () => {
+    expect(plan().manifest.incomplete).toBeUndefined();
   });
 
   // KC6: the door-absence disclosure is curated-specific — product-floor is

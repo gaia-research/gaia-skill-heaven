@@ -14,7 +14,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { makeListingLine, tokenize } from "skill-heaven";
-import { buildP2Gate, p2GatePath, serializeP2Gate } from "../scripts/generate-p2-gate.js";
+import {
+  buildLadderArtifact,
+  ladderArtifactPath,
+  serializeLadderArtifact,
+} from "../scripts/generate-ladder.js";
 
 const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(PKG, "plugin");
@@ -62,18 +66,16 @@ describe("/skill-heaven command definition", () => {
     expect(existsSync(join(PLUGIN, "scripts", "render-posture.mjs"))).toBe(true);
   });
 
-  it("names the control with no noun — no banned lexicon word in the command copy", () => {
-    // `slider`/`notch` are banned (retired 2026-07-24, oracle N1/N5); their
-    // replacements name the off…max ladder, a different control; and the name
-    // of this surface is OPEN (founder ruling R2). So the command markdown
-    // carries none of them, and no coined substitute either.
-    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bladder\b|\brung(s)?\b|\bpicker\b/i);
+  it("uses the founder-ratified ladder vocabulary, never the retired control words", () => {
+    expect(command).toMatch(/\bladder\b.*\brung\b/i);
+    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bpicker\b/i);
   });
 
   it("pins the rendered block as verbatim, un-embellished copy", () => {
     expect(command).toMatch(/verbatim/i);
     expect(command).toMatch(/Do not add posture, token or savings numbers of your own/);
     expect(command).toMatch(/If the block is a `⛔` refusal, print the refusal and nothing else/);
+    expect(command.replace(/\s+/g, " ")).toContain("Do not route around an unratified rung");
   });
 
   it("never claims the command can restart Claude Code (D12 / B4)", () => {
@@ -82,11 +84,13 @@ describe("/skill-heaven command definition", () => {
   });
 });
 
-describe("P2 gate artifact", () => {
+describe("ladder artifact", () => {
   it("is byte-identical to a fresh generation from core", () => {
     // Regenerate with:
-    //   npx tsx packages/claude-heaven/scripts/generate-p2-gate.ts
-    expect(readFileSync(p2GatePath(), "utf-8")).toBe(serializeP2Gate(buildP2Gate()));
+    //   npx tsx packages/claude-heaven/scripts/generate-ladder.ts
+    expect(readFileSync(ladderArtifactPath(), "utf-8")).toBe(
+      serializeLadderArtifact(buildLadderArtifact()),
+    );
   });
 });
 
@@ -97,8 +101,10 @@ describe("door manifests", () => {
   );
   const entry = marketplace.plugins.find((p: { name: string }) => p.name === "claude-heaven");
 
-  it("stops advertising the door as command-less now that /skill-heaven ships", () => {
+  it("labels both public manifests as an actively tested working prototype", () => {
     for (const description of [pluginJson.description, entry.description]) {
+      expect(description).toMatch(/working prototype/i);
+      expect(description).toMatch(/actively tested for public use/i);
       expect(description).not.toMatch(/no commands wired yet/i);
       expect(description).toContain("/skill-heaven");
     }
@@ -110,12 +116,16 @@ describe("door manifests", () => {
     }
   });
 
-  it("does not advertise /skill-hell as shipped — it lands in step 3", () => {
-    // P2 keeps /skill-hell a locked door, but the door must exist before the
-    // manifests name it as a surface the user can reach.
-    expect(existsSync(join(PLUGIN, "commands", "skill-hell.md"))).toBe(false);
+  it("now advertises /skill-hell now that the summon-engine command surface exists (WP3)", () => {
+    // The P2 gate this comment used to cite is the /skill-heaven posture
+    // ladder's "hell" row (a formal, benchmarked context-budget stop) — a
+    // separate concept from this prototype summon command, which the ladder
+    // row's own lockedNote already pointed to ("see /skill-hell") before
+    // this door existed. See NAMESPACE.md / docs/SKILL-HELL.md.
+    expect(existsSync(join(PLUGIN, "commands", "skill-hell.md"))).toBe(true);
     for (const description of [pluginJson.description, entry.description]) {
-      expect(description).toMatch(/step 3/);
+      expect(description).toContain("/skill-hell");
+      expect(description).not.toMatch(/step 3/);
     }
   });
 });

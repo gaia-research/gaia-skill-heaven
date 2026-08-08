@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 *.log
+*.tsbuildinfo
 
 # Commission workbench contains raw and intermediate assets; production files
 # live in the sibling v01/v02/v03 folders.

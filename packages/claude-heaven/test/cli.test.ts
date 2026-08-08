@@ -55,11 +55,24 @@ function captureStderr(fn: () => number): { code: number; err: string } {
 }
 
 describe("parseArgs", () => {
-  it("defaults to native, print off", () => {
-    expect(parseArgs([])).toEqual({ print: false, posture: "native", level: undefined, skills: [], claudeArgs: [] });
+  it("defaults to off/product-floor, print off", () => {
+    expect(parseArgs([])).toEqual({
+      help: false,
+      print: false,
+      posture: "product-floor",
+      postureProvided: false,
+      level: undefined,
+      skills: [],
+      claudeArgs: [],
+    });
   });
   it("captures --print, --posture, --level", () => {
-    expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({ print: true, posture: "native", level: "off" });
+    expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({
+      print: true,
+      posture: "native",
+      postureProvided: true,
+      level: "off",
+    });
   });
   it("collects --skill repeatably, and does not leak it to claude", () => {
     const a = parseArgs(["--posture", "curated", "--skill", "/a", "--skill", "/b"]);
@@ -77,7 +90,7 @@ describe("run", () => {
     const { code, out } = captureStdout(() => run(["--print"]));
     expect(code).toBe(0);
     const plan = JSON.parse(out);
-    expect(plan.posture).toBe("native");
+    expect(plan.posture).toBe("product-floor");
     expect(plan.launcherLocked).toBe(true);
     expect(plan.command).toBe("claude");
     // the exact manifest that WOULD be written is shown inline (no temp dir)
@@ -86,8 +99,12 @@ describe("run", () => {
     expect(plan).not.toHaveProperty("sessionDir");
   });
 
-  it("rejects a gated Hell-lane level (P2) before spawning", () => {
-    expect(() => run(["--level", "max"])).toThrow(/gated \(P2\)/);
+  it("routes a Hell budget to the live /skill-hell surface", () => {
+    const { code, err } = captureStderr(() => run(["--level", "max"]));
+    expect(code).toBe(2);
+    expect(err).toContain("live Hell summon budget, not a boot posture");
+    expect(err).toContain("/skill-hell max");
+    expect(err).not.toMatch(/P2|gated/i);
   });
 
   it("refuses the doorless benchmark floor — it is core's, for measurement runs (exit 2)", () => {
@@ -97,9 +114,11 @@ describe("run", () => {
     expect(silenceStderr(() => run(["--posture", "nonsense"]))).toBe(2);
   });
 
-  it("refuses a level, rather than silently ignoring it (exit 2)", () => {
-    expect(silenceStderr(() => run(["--level", "low"]))).toBe(2);
-    expect(silenceStderr(() => run(["--level", "off"]))).toBe(2);
+  it("resolves --level off to the product floor and rejects contradictions", () => {
+    const { code, out } = captureStdout(() => run(["--level", "off", "--print"]));
+    expect(code).toBe(0);
+    expect(JSON.parse(out).posture).toBe("product-floor");
+    expect(silenceStderr(() => run(["--posture", "floor", "--level", "off"]))).toBe(2);
   });
 
   it("--print composes a real curated plan: T9 argv, the env knob, and an fsPlan", () => {
@@ -162,7 +181,6 @@ describe("refusal honesty (KC6)", () => {
     const { code, err } = captureStderr(() => run(["--posture", "floor"]));
     expect(code).toBe(2);
     expect(err).toContain("not a policy hold");
-    expect(err).toMatch(/P2 gates the Hell lane\s+only/);
     expect(err).toContain("F6");
     expect(err).toContain("no door to open at this posture");
   });
@@ -177,23 +195,14 @@ describe("refusal honesty (KC6)", () => {
     expect(err).not.toContain("policy hold");
   });
 
-  it("distinguishes the Hell-lane refusal (policy) from the floor refusal (harness-incapable)", () => {
-    // assertLevelAllowed throws directly (P2 gate, checked before anything
-    // else in run()) — it is never caught into a stderr write, so the
-    // existing convention throughout this suite is `toThrow`, not stderr
-    // capture.
-    let hell = "";
-    try {
-      run(["--level", "max"]);
-    } catch (e) {
-      hell = (e as Error).message;
-    }
+  it("distinguishes Hell routing from the floor's harness limitation", () => {
+    const hell = captureStderr(() => run(["--level", "max"])).err;
     const floor = captureStderr(() => run(["--posture", "floor"])).err;
-    expect(hell).toContain("withheld by policy, not a harness limit");
+    expect(hell).toContain("live Hell summon budget");
+    expect(hell).toContain("/skill-hell max");
+    expect(hell).not.toMatch(/policy|P2|gated/i);
     expect(floor).toContain("not a policy hold");
-    // Neither borrows the other's vocabulary.
-    expect(hell).not.toContain("harness-incapable");
-    expect(floor).not.toMatch(/gated \(P2\)/);
+    expect(floor).toContain("F6");
   });
 
   it("prints the curated door-absence disclosure to stderr before the process could ever spawn claude, and --print carries it in notes instead", () => {
