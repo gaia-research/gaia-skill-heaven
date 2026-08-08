@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'packages/site/**'
+      - 'install.sh'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -30,6 +31,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm -w @skill-heaven/site run build
+      - name: Publish the one-command installer at /install.sh
+        run: cp install.sh packages/site/dist/install.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -36,56 +36,58 @@ construction, AT-H2).
 > required. The launchers use your existing harness binaries; they never bundle
 > Claude Code, pi, Codex, Grok, or Hermes.
 
-### Claude plugin
-
-Installs `/skill-heaven` and `/skill-hell` from this repository's marketplace:
+### Install everything in one command
 
 ```bash
-claude plugin marketplace add gaia-research/skill-heaven
-claude plugin install claude-heaven@skill-heaven
+curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
 ```
 
-`/skill-hell` also requires the separately shipped summon engine
-`@gaia-research/mcp >= 0.2.0`:
+That one command installs `claude-heaven`, `pi-heaven`, `codex-heaven`,
+`hermes-heaven`, and `grok-heaven`; the working `skill-hell` engine from
+published `@gaia-research/mcp@0.3.0`; and, when the user's own `claude` binary
+is present, the Claude marketplace plugin that provides `/skill-heaven` and
+`/skill-hell`. It never installs Claude Code, pi, Codex, Hermes, or Grok. If
+Claude Code is absent, the doors and engine still install and the script prints
+the exact two plugin-registration commands to run after the user installs that
+harness themselves.
+
+**Why `curl | sh`:** the five door packages deliberately are not published to
+npm, while this repository already has a first-party HTTPS home on GitHub
+Pages. A reviewed POSIX `install.sh` can therefore fetch the public source,
+install all source-built doors and the published engine under one user-owned
+directory, and perform an idempotent update without pretending an `npx` package
+exists. The script checks Node 22+ and every prerequisite before changing the
+install, and the URL is directly inspectable before execution.
+
+The default bin directory is `$HOME/.local/share/skill-heaven/bin`. The
+installer prints this exact line when it is not already on `PATH` and never
+edits a shell rc file:
 
 ```bash
-npm install -g @gaia-research/mcp@^0.3.0
+export PATH="$HOME/.local/share/skill-heaven/bin:$PATH"
 ```
 
-Published and verified: `0.3.0` is on npm and ships the `skill-hell` binary.
-A clean install resolves it and summons for real — trust fields, paired
-install timing and cache state, materialized path, and an inspect link.
-(`0.1.0`, the previous release, had no `skill-hell` binary at all.)
-
-### Five launcher doors from source
-
-Source checkout is the recommended install path until the npm-ready `0.1.0`
-packages are founder-published. These commands inspect the composed plans and do
-not start a harness:
+Inspect every composed plan without starting a harness:
 
 ```bash
-git clone https://github.com/gaia-research/skill-heaven
-cd skill-heaven
-npm install
-
-node packages/claude-heaven/bin/claude-heaven.mjs --print
-node packages/pi-heaven/bin/pi-heaven.mjs --print
-node packages/codex-heaven/bin/codex-heaven.mjs --print
-node packages/grok-heaven/bin/grok-heaven.mjs --print
-node packages/hermes-heaven/bin/hermes-heaven.mjs --print
+claude-heaven --print
+pi-heaven --print
+codex-heaven --print
+hermes-heaven --print
+grok-heaven --print
+skill-hell --help
 ```
 
-For a curated Claude launch, provide a real skill directory or `SKILL.md`:
+Re-run the install one-liner to update. Uninstall everything the installer owns,
+including the Claude plugin and marketplace only when it added them, with:
 
 ```bash
-node packages/claude-heaven/bin/claude-heaven.mjs \
-  --level low --skill /path/to/skill --print
+$HOME/.local/share/skill-heaven/uninstall.sh
 ```
 
-After publication, the package entry points are ready for
-`npx --yes skill-heaven@0.1.0 --posture product-floor --print` and
-`npx --yes <door>@0.1.0 --print`; this repository does not publish them
-automatically.
+The installer uses a source archive because the npm-ready `0.1.0` door packages
+remain unpublished; it does not publish them or install a harness as a side
+effect.
 
 ---
 
