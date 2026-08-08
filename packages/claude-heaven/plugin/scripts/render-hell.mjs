@@ -19,6 +19,7 @@ export const RUNG_BUDGETS = {
 function chooser() {
   return [
     "🔥 Skill Hell · high · xhigh · max · ultra",
+    "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
     "",
     "   ● high    default · 1 skill/gap · tight relevance",
     "   ○ xhigh   3 skills/gap · within 10% of the best score",
@@ -93,6 +94,7 @@ export function renderCard(winner) {
     lines.push(`   path: ${path}`);
     lines.push(`   inspect: ${pathToFileURL(join(path, "SKILL.md")).href}`);
   }
+  lines.push("   status: WORKING PROTOTYPE · actively tested for public use");
   lines.push("└");
   return lines.join("\n");
 }

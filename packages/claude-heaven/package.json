@@ -1,8 +1,7 @@
 {
   "name": "claude-heaven",
-  "version": "0.0.0",
-  "description": "claude-heaven — the Claude Code door to Skill Heaven: off-default launcher, boot-time /skill-heaven, live /skill-hell, and standing-dose statusline. Built on skill-heaven core.",
-  "private": true,
+  "version": "0.1.0",
+  "description": "claude-heaven \u2014 the Claude Code door to Skill Heaven: off-default ladder launcher, /skill-heaven chooser, live /skill-hell, and standing-dose statusline. Built on skill-heaven core. WORKING PROTOTYPE, actively tested for public use.",
   "type": "module",
   "bin": {
     "claude-heaven": "./bin/claude-heaven.mjs",
@@ -16,6 +15,7 @@
     "launch": "tsx src/cli.ts"
   },
   "dependencies": {
-    "skill-heaven": "*"
+    "skill-heaven": "^0.1.0",
+    "tsx": "^4.19.0"
   }
 }

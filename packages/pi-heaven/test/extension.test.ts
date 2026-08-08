@@ -3,7 +3,7 @@ import {
   renderHellChooser,
   renderSummonedCard,
   rungBudgets,
-} from "../extension/pi-heaven.js";
+} from "../src/hell-presentation.js";
 
 describe("pi Skill Hell presentation", () => {
   it("shares the founder-ruled chooser and bounded budgets", () => {

@@ -1,5 +1,7 @@
 # hermes-heaven
 
+> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+
 The Hermes door to Skill Heaven.
 
 ```bash

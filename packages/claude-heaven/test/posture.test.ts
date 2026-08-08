@@ -1,10 +1,11 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { HEAVEN_LEVELS, HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-heaven";
 import { buildLadderArtifact } from "../scripts/generate-ladder.js";
 import { run } from "../src/cli.js";
+import { renderHell } from "../plugin/scripts/render-hell.mjs";
 import {
   formatTokens,
   isLaunchManifest,
@@ -72,6 +73,7 @@ describe("/skill-heaven owns only the subtractive half", () => {
     const text = renderPosture().text;
     expect(text).toContain("off · low · med");
     expect(text).toContain("boot-time decisions");
+    expect(text).toContain("WORKING PROTOTYPE · actively tested for public use");
     expect(text).toContain("claude-heaven --level low --skill <path>");
     expect(text).toContain("did not change the running session");
     expect(text).not.toMatch(/high|xhigh|max|ultra/);
@@ -119,6 +121,37 @@ describe("/skill-heaven owns only the subtractive half", () => {
       "bundled CLI skills and plugin-provided skills are not counted",
     );
     expect(renderPosture({ manifest: productFloor }).text).toContain("bundled `doctor` skill is not counted");
+  });
+});
+
+describe("/skill-hell successful header", () => {
+  it("keeps summoned first and discloses public prototype status", () => {
+    const dir = mkdtempSync(join(tmpdir(), "hell-renderer-"));
+    dirs.push(dir);
+    const skillDir = join(dir, "skill");
+    mkdirSync(skillDir);
+    writeFileSync(join(skillDir, "SKILL.md"), "# Tiny test skill\n");
+    const engine = join(dir, "skill-hell");
+    writeFileSync(
+      engine,
+      `#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({summoned:[{id:"tiny",level:"high",trustMagnitude:1,path:${JSON.stringify(skillDir)}}]}))\n`,
+    );
+    chmodSync(engine, 0o755);
+
+    const previous = process.env.SKILL_HELL_BIN;
+    process.env.SKILL_HELL_BIN = engine;
+    try {
+      const result = renderHell(["test intent"]);
+      expect(result.ok).toBe(true);
+      // The card format replaced the old flat "  summoned <id>" header when the
+      // ladder split landed: identity first, then only the fields the tree
+      // actually published.
+      expect(result.text.startsWith("┌ summoned · ")).toBe(true);
+      expect(result.text).toContain("status: WORKING PROTOTYPE · actively tested for public use");
+    } finally {
+      if (previous === undefined) delete process.env.SKILL_HELL_BIN;
+      else process.env.SKILL_HELL_BIN = previous;
+    }
   });
 });
 

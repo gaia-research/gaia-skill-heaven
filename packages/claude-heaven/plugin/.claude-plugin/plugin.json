@@ -1,6 +1,6 @@
 {
   "name": "claude-heaven",
-  "description": "The Claude Code door to Skill Heaven — /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning. The off-default launcher and standing-dose statusline live in the claude-heaven package.",
+  "description": "Working prototype of the Claude Code door to Skill Heaven, actively tested for public use \u2014 /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning from a live tree. Interfaces may change. The off-default launcher and standing-dose statusline live in the claude-heaven package's launcher, run from a source checkout \u2014 not part of this marketplace install.",
   "author": {
     "name": "Gaia Research"
   }

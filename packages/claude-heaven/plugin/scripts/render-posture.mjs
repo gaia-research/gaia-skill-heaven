@@ -127,6 +127,7 @@ export function renderPosture(options = {}) {
     return {
       text: [
         "⚡ Skill Heaven · off · low · med",
+        "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
         "   Heaven rungs are boot-time decisions and this session was not launched by claude-heaven.",
         "   Start one with: → claude-heaven --level low --skill <path>",
         "   This command did not change the running session.",
@@ -148,7 +149,12 @@ export function renderPosture(options = {}) {
 
   const current = levelForPosture(manifest.posture);
   const currentIndex = current === null ? data.heaven.length : data.heaven.indexOf(current);
-  const lines = ["⚡ Skill Heaven · off · low · med", `   ${sessionLine(manifest)}`, ""];
+  const lines = [
+    "⚡ Skill Heaven · off · low · med",
+    "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
+    `   ${sessionLine(manifest)}`,
+    "",
+  ];
 
   for (const [index, level] of data.heaven.entries()) {
     const selected = target === level ? "  ← selected" : "";

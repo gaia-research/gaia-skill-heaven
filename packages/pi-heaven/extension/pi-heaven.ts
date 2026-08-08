@@ -2,6 +2,14 @@ import { accessSync, constants, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+  type HellLevel,
+  type SummonedSkill,
+  renderArmed,
+  renderHellChooser,
+  renderSummonedCard,
+  rungBudgets,
+} from "../src/hell-presentation.js";
 import type {
   ExtensionAPI,
   ExtensionCommandContext,
@@ -62,20 +70,6 @@ interface HellEngine {
   command: string;
   args: string[];
   binPath: string;
-}
-
-interface SummonedSkill {
-  id: string;
-  name?: string;
-  level?: string;
-  trustMagnitude?: number;
-  trust?: Record<string, unknown>;
-  trustFields?: Record<string, unknown>;
-  path: string;
-  fileCount?: number;
-  cache?: string;
-  cacheState?: string;
-  totalSeconds?: number;
 }
 
 interface SummonOutcome {
@@ -158,56 +152,6 @@ async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<
   process.env[ownedHellSessionEnv] = sessionPath;
 }
 
-export const rungBudgets = {
-  high: { count: 1, relevance: "best relevant match only" },
-  xhigh: { count: 3, relevance: "matches within 10% of the best score" },
-  max: { count: 5, relevance: "matches within 25% of the best score" },
-} as const;
-
-type HellLevel = keyof typeof rungBudgets;
-
-export function renderHellChooser(): string {
-  return [
-    "🔥 Skill Hell · high · xhigh · max · ultra",
-    "",
-    "   ● high    default · 1 skill/gap · tight relevance",
-    "   ○ xhigh   3 skills/gap · within 10% of the best score",
-    "   ○ max     5 skills/gap · within 25% of the best score",
-    "   ⊘ ultra   UNRATIFIED · no approved summon budget",
-    "",
-    "   Select a rung to arm the lane; any other text manually summons for that intent.",
-  ].join("\n");
-}
-
-function renderArmed(level: HellLevel): string {
-  const budget = rungBudgets[level];
-  return [
-    `🔥 Skill Hell armed: ${level}`,
-    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap · ${budget.relevance}`,
-    "   Summon only for a real gap; the lane remains armed afterward.",
-    `   engine seam: summon --limit ${budget.count}; automatic gap detection remains a harness integration seam.`,
-  ].join("\n");
-}
-
-export function renderSummonedCard(winner: SummonedSkill): string {
-  const identity = winner.name ?? winner.id;
-  const lines = [`┌ summoned · ${identity}`];
-  if (winner.name && winner.id !== winner.name) lines.push(`   id: ${winner.id}`);
-  const trust = winner.trustFields ?? winner.trust ??
-    (typeof winner.trustMagnitude === "number" ? { trustMagnitude: winner.trustMagnitude } : undefined);
-  for (const [name, value] of Object.entries(trust ?? {})) {
-    if (["string", "number", "boolean"].includes(typeof value)) lines.push(`   ${name}: ${String(value)}`);
-  }
-  const cache = winner.cacheState ?? winner.cache;
-  if (typeof winner.totalSeconds === "number" && cache) {
-    lines.push(`   install: ${winner.totalSeconds.toFixed(2)}s · ${cache}`);
-  }
-  if (typeof winner.fileCount === "number") lines.push(`   files: ${winner.fileCount}`);
-  lines.push(`   path: ${winner.path}`);
-  lines.push(`   inspect: ${pathToFileURL(join(winner.path, "SKILL.md")).href}`);
-  lines.push("└");
-  return lines.join("\n");
-}
 
 function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number, error?: string): string {
   if (!manifest) {
@@ -387,3 +331,6 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     },
   });
 }
+
+export { renderArmed, renderHellChooser, renderSummonedCard, rungBudgets };
+export type { HellLevel, SummonedSkill };

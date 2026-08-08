@@ -101,8 +101,10 @@ describe("door manifests", () => {
   );
   const entry = marketplace.plugins.find((p: { name: string }) => p.name === "claude-heaven");
 
-  it("stops advertising the door as command-less now that /skill-heaven ships", () => {
+  it("labels both public manifests as an actively tested working prototype", () => {
     for (const description of [pluginJson.description, entry.description]) {
+      expect(description).toMatch(/working prototype/i);
+      expect(description).toMatch(/actively tested for public use/i);
       expect(description).not.toMatch(/no commands wired yet/i);
       expect(description).toContain("/skill-heaven");
     }

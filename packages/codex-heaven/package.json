@@ -1,8 +1,7 @@
 {
   "name": "codex-heaven",
-  "version": "0.0.0",
-  "description": "codex-heaven — the codex door to Skill Heaven: posture launcher over session-scoped CODEX_HOME and exact-path skills.config discovery. Built on skill-heaven core. PROTOTYPE (WP14, codex-cli 0.146.0).",
-  "private": true,
+  "version": "0.1.0",
+  "description": "codex-heaven \u2014 the codex door to Skill Heaven: posture launcher over session-scoped CODEX_HOME and exact-path skills.config discovery. Built on skill-heaven core. PROTOTYPE (WP14, codex-cli 0.146.0).",
   "type": "module",
   "bin": {
     "codex-heaven": "./bin/codex-heaven.mjs"
@@ -15,6 +14,7 @@
     "launch": "tsx src/cli.ts"
   },
   "dependencies": {
-    "skill-heaven": "*"
+    "skill-heaven": "^0.1.0",
+    "tsx": "^4.19.0"
   }
 }

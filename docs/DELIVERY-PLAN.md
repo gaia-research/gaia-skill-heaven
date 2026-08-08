@@ -81,35 +81,23 @@ Verified working from a clean checkout.
 Each door execs the user's own installed `claude` / `pi` / `codex` / `grok` /
 `hermes`. No harness is bundled or vendored.
 
-**Why not `npx` today — and the exact cost of unlocking it.** `npx` is
-acceptable in principle and is the right destination, but it does not work right
-now and the reason is concrete rather than stylistic:
+**`npx` packaging gap closed; publication remains founder-only.** Core and all
+five doors are public-package-ready at `0.1.0`. Each package directly depends on
+`tsx`, and each door depends on `skill-heaven@^0.1.0`. Clean tarball installs
+were run for all six entry points, and every `--print` succeeded. `pi-heaven`
+keeps the runtime `pi-tui` peer but marks the type-only pi harness peer optional;
+a clean install contains no `pi` binary and never bundles a harness.
 
-1. All six packages are `"private": true` at version `0.0.0`. `npm publish`
-   refuses them.
-2. Every `bin/*.mjs` shim resolves `tsx` at runtime, but `tsx` is only a
-   **root devDependency**. It is not a dependency of `core` or of any door.
+After founder-approved publication — core first, then doors — verify with:
 
-Point 2 is the real blocker and it is proven, not predicted. Packing
-`packages/core` and installing the tarball into a clean directory produces:
-
+```bash
+npx --yes skill-heaven@0.1.0 --posture product-floor --print
+npx --yes <door>@0.1.0 --print
 ```
-Error: Cannot find module 'tsx/package.json'
-    at .../node_modules/skill-heaven/bin/skill-heaven.mjs:13:37
-```
-
-A published door would install cleanly and then crash on first run. Do not
-publish the doors until that is fixed. The unlock is small and is the
-recommended follow-up, not part of this plan:
-
-- remove `"private": true` from `packages/core` and each door
-- add `"tsx": "^4.19.0"` to `dependencies` (not devDependencies) in each
-- give them a real version
 
 The npm names `skill-heaven`, `claude-heaven`, `pi-heaven`, `codex-heaven`,
-`grok-heaven`, and `hermes-heaven` are all currently unregistered — checked
-against the live registry. Worth claiming before someone else does, but that is
-a separate decision from shipping.
+`grok-heaven`, and `hermes-heaven` were unregistered when this plan was written.
+Do not publish from an implementation session.
 
 ### The pi extension
 
@@ -142,34 +130,38 @@ plugin's hell renderer/resolver. Nothing else in this plan works without it.
 1. **[FOUNDER]** Open the PR from `integration/program-3-prototypes` → `main`
    and review it. This is a frontend- and product-surface-bearing merge; it does
    not land on green CI alone.
-2. **Merge with a merge commit — do not force-push, do not rebase `main` onto
-   the branch.** `main` holds three site commits (`9708725`, `ddc3155`,
-   `b3a3ace`) that the integration branch does not have. A merge commit keeps
-   `packages/site`; overwriting `main` deletes it.
-3. Confirm after merge: `packages/site` still present, and
+2. Reconcile `main`'s pruned `packages/site` into the delivery branch before
+   opening the PR. Resolve the real overlaps by preserving integration's newer
+   product README, regenerating `package-lock.json`, and keeping both
+   `packages/*/extension` and `packages/site` in `tsconfig.json` exclusions.
+3. **[FOUNDER] Squash-merge the reviewed PR**, matching this repository's
+   branch rules (`gh pr merge <n> --squash --delete-branch`). Never force-push
+   or rebase `main`. A squash applies the branch diff to the existing `main`;
+   it does not delete the reconciled site.
+4. Confirm after merge: `packages/site` still present, and
    `packages/claude-heaven/plugin/commands/skill-hell.md` now present.
 
 ### P2 — publish `@gaia-research/mcp@0.2.0` (gaia-mcp)
 
 The pipeline already exists and is correct. Nothing needs building.
 
-4. **[FOUNDER]** Merge release-please PR
+5. **[FOUNDER]** Merge release-please PR
    [#8](https://github.com/gaia-research/gaia-mcp/pull/8)
    (`chore(main): release mcp 0.2.0`) into `main`. Currently open and
    `MERGEABLE`.
-5. Automated: `.github/workflows/release.yml` runs `validate` (Node 22.14.0 and
+6. Automated: `.github/workflows/release.yml` runs `validate` (Node 22.14.0 and
    24), then `release_please` cuts the tag and GitHub Release.
-6. **[FOUNDER]** Approve the `npm` deployment environment. The `publish` job
+7. **[FOUNDER]** Approve the `npm` deployment environment. The `publish` job
    runs under GitHub Environment `npm`, which carries a `required_reviewers`
    protection rule (reviewers: `mbtiongson1`, `nova-gaia`, `milim-gaia`).
    The run pauses until one of them clicks approve in the Actions tab.
    **Keep this gate.** Publishing uses npm trusted publishing over OIDC — there
    is no `NPM_TOKEN` — and the environment approval is the only human check
    between a merge and a public package.
-7. Automated: the job re-runs checks, `npm pack --dry-run`, appends the
+8. Automated: the job re-runs checks, `npm pack --dry-run`, appends the
    compatibility table to the Release, generates a CycloneDX SBOM, and runs
    `npm publish --access public`.
-8. Verify: `npm view @gaia-research/mcp version` returns `0.2.0`, and
+9. Verify: `npm view @gaia-research/mcp version` returns `0.2.0`, and
    `npm view @gaia-research/mcp bin` lists **both** `gaia-mcp` and `skill-hell`.
    If `skill-hell` is missing, stop — the plugin's `/skill-hell` will not
    resolve for anyone.
@@ -179,12 +171,12 @@ The pipeline already exists and is correct. Nothing needs building.
 See section 4. Do this after P1 so the workflow lands on a `main` that already
 has everything.
 
-9. **[FOUNDER]** Flip the Pages source to GitHub Actions in repo settings (one
+10. **[FOUNDER]** Flip the Pages source to GitHub Actions in repo settings (one
    click, not scriptable through the normal flow).
 
 ### P4 — smoke-test as a stranger
 
-10. On a machine that is **not** the dev box, and with `~/gaia-mcp` absent:
+11. On a machine that is **not** the dev box, and with `~/gaia-mcp` absent:
     run the two plugin commands from section 1, then `/skill-heaven` and
     `/skill-hell` in a fresh Claude Code session. `~/gaia-mcp` absent is the
     point — it forces resolution through `PATH` (rule 2) rather than the
@@ -270,7 +262,7 @@ A stranger must not be able to miss it. These are the specific surfaces:
 | Surface | State |
 |---|---|
 | `README.md` (repo root, first line under the title) | Already carries a **WORK IN PROGRESS** blockquote. Keep it; add "working prototype" wording so the phrase itself appears. |
-| The landing page, persistent bar | Already renders `SKILL HEAVEN · prototype` in the fixed `Switcher` bar on every route (`src/components/Switcher.tsx`). No change needed. |
+| The landing page, persistent bar | Renders `SKILL HEAVEN · WORKING PROTOTYPE · ACTIVELY TESTED FOR PUBLIC USE` in the fixed `Switcher` bar on every route (`src/components/Switcher.tsx`). |
 | Marketplace plugin description (`.claude-plugin/marketplace.json`) | Currently says "prototype" only about `/skill-hell`. Widen it to the plugin as a whole. |
 | `plugin/.claude-plugin/plugin.json` description | Same — shown by `claude plugin details`. |
 | `/skill-heaven` and `/skill-hell` command output | The renderers already print hedged, reviewed copy. Add one prototype line to the header block of each. |
@@ -286,8 +278,9 @@ prototype. That is the one place a stranger definitely looks.
 
 Honest gaps a stranger will hit:
 
-- **The launcher doors are not installable without a git clone.** No `npx`, no
-  global install. Blocked on the `tsx` dependency fix above.
+- **The launcher doors are not published yet.** Their `0.1.0` tarballs and
+  runtime loader are clean-install verified, but `npx` waits on founder-approved
+  npm publication. Source checkout is the working path today.
 - **Cursor has no door.** Recipe-only, by design and by evidence.
 - **The pi extension has no standalone install.** Source checkout only.
 - **Windows and Linux are unprobed.** Everything to date ran on one macOS
@@ -303,8 +296,8 @@ Honest gaps a stranger will hit:
   locked rung. A stranger running `/skill-heaven` sees the older gate data. This
   is display drift in `plugin/data/p2-gate.json`, not a mechanism bug — but it
   is the first thing the command prints, so it is worth a look before P4.
-- **No versioning on the doors at all.** Everything is `0.0.0`. There is no way
-  for a user to report which build they are on (issue #34's audit-trail
+- **No automated door release pipeline yet.** Packages carry `0.1.0`, but
+  publication, updates, and rollback remain manual (issue #34's audit-trail
   criterion).
 
 ---

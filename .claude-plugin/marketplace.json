@@ -9,7 +9,7 @@
     {
       "name": "claude-heaven",
       "source": "./packages/claude-heaven/plugin",
-      "description": "The Claude Code door to Skill Heaven — /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning. Built on skill-heaven core."
+      "description": "Working prototype of the Claude Code door to Skill Heaven, actively tested for public use \u2014 /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning from a live tree. Interfaces may change. Built on skill-heaven core."
     }
   ]
 }

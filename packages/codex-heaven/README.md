@@ -1,5 +1,7 @@
 # codex-heaven
 
+> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+
 The Codex door to Skill Heaven.
 
 ```bash
@@ -13,9 +15,9 @@ The ladder is the primary interface. See
 rung description and policy status. `--posture` remains available for benchmark
 and compatibility use.
 
-Codex remains recipe-only. The 0.146.0 negative probe found no portable way to
-suppress all independent skill roots, and no verified composition approaches a
-product floor while preserving a door. The default therefore selects
-`off`/`product-floor` but does **not** claim it can launch one: `--print` labels
-the recipe explicitly unverified, and a real invocation refuses rather than
-silently falling back to native. See [PROBE.md](PROBE.md).
+Codex 0.146.0 has a verified live exec route. The launcher creates a
+session-scoped `CODEX_HOME`, copies only authentication material, asks the
+app-server `skills/list` endpoint for exact discovered paths, and writes exact
+path disables into the disposable session. Curated mode readmits only the named
+skills. It then spawns `codex exec`; no shared Codex state is edited. `--print`
+shows this composition without starting Codex. See [PROBE.md](PROBE.md).

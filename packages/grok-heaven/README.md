@@ -1,5 +1,7 @@
 # grok-heaven
 
+> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+
 The Grok door to Skill Heaven.
 
 ```bash
@@ -13,9 +15,9 @@ The ladder is the primary interface. See
 rung description and policy status. `--posture` remains available for benchmark
 and compatibility use.
 
-Grok's non-native routes remain recipe-only because portable suppression depends
-on ambient path and plugin inventory. The default selects off and `--print`
-emits the session-scoped plan; a real launch refuses instead of overstating the
-pinned probe as a universal exec license. Grok also reads foreign Claude skill
-directories, so its context surface is not self-contained. See
-[PROBE.md](PROBE.md).
+Grok 0.2.118 has a verified live exec route. The launcher derives the observed
+skill and plugin inventory from `grok inspect --json`, writes exact-path ignores
+only inside a disposable session profile, and readmits named skills for curated
+mode. Product-floor intentionally retains the observed plugin surface so the
+door remains available; it is not the doorless benchmark floor. `--print` shows
+the inspect-derived composition without starting Grok. See [PROBE.md](PROBE.md).
