@@ -261,28 +261,24 @@ describe("cli level lane", () => {
   it("defaults to floor", () => {
     expect(parseArgs([]).posture).toBe("floor");
   });
-  it("--level off → product-floor, --level low → curated", () => {
+  it("maps the complete Heaven half: off → product-floor, low → curated, med → native", () => {
     expect(parseArgs(["--level", "off"]).posture).toBe("product-floor");
     expect(parseArgs(["--level", "low"]).posture).toBe("curated");
+    expect(parseArgs(["--level", "med"]).posture).toBe("native");
   });
-  it("hell levels hard-error (P2)", () => {
-    for (const l of ["med", "high", "xhigh", "max"]) {
-      expect(() => parseArgs(["--level", l])).toThrow(/hell lane .*gated/i);
+  it("routes Hell budgets to /skill-hell rather than P2-locking them", () => {
+    for (const level of ["high", "xhigh", "max"]) {
+      expect(() => parseArgs(["--level", level])).toThrow(/live Hell summon budget.*\/skill-hell/i);
+      try {
+        parseArgs(["--level", level]);
+      } catch (error) {
+        expect((error as Error).message).not.toMatch(/P2|gated|policy/i);
+      }
     }
   });
 
-  // KC6 (Issue #12): the policy-class refusal, on the research CLI's own
-  // --level lane too — must not read like the harness-incapable class covered
-  // above (product-floor/grok: "harness-capability gap, not a policy hold").
-  it("marks the hell-lane refusal as a policy hold, not a harness limit (KC6)", () => {
-    let msg = "";
-    try {
-      parseArgs(["--level", "max"]);
-    } catch (e) {
-      msg = (e as Error).message;
-    }
-    expect(msg).toContain("withheld by policy, not a harness limit");
-    expect(msg).not.toContain("harness-capability gap");
+  it("refuses ultra as unratified", () => {
+    expect(() => parseArgs(["--level", "ultra"])).toThrow(/UNRATIFIED/);
   });
   it("contradiction between --posture and --level errors", () => {
     expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
@@ -295,8 +291,8 @@ describe("cli level lane", () => {
     const ok = parseArgs(["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"]);
     expect(ok.record).toMatchObject({ benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 0 });
   });
-  it("--arm rejects hell/ultra", () => {
-    expect(() => parseArgs(["--arm", "hell"])).toThrow(/gated/);
+  it("--arm remains a benchmark enum, separate from live Hell budgets", () => {
+    expect(() => parseArgs(["--arm", "hell"])).toThrow(/heaven or placebo/);
   });
   it("--posture product-floor parses; benchmark-floor is an alias for floor", () => {
     expect(parseArgs(["--posture", "product-floor"]).posture).toBe("product-floor");

@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-heaven";
-import { buildP2Gate } from "../scripts/generate-p2-gate.js";
+import { HEAVEN_LEVELS, HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-heaven";
+import { buildLadderArtifact } from "../scripts/generate-ladder.js";
 import { run } from "../src/cli.js";
 import {
   formatTokens,
@@ -48,15 +48,16 @@ function silenceStderr(fn: () => number): number {
 }
 
 describe("generated ladder policy", () => {
-  it("machine-copies every ladder, gate, and ratification list from core", () => {
-    const artifact = buildP2Gate();
+  it("machine-copies the founder-ruled Heaven/Hell split from core", () => {
+    const artifact = buildLadderArtifact();
     expect(artifact.levels).toEqual(LADDER_LEVELS);
-    expect(artifact.gatedLevels).toEqual(HELL_LEVELS);
+    expect(artifact.heavenLevels).toEqual(HEAVEN_LEVELS);
+    expect(artifact.hellLevels).toEqual(HELL_LEVELS);
     expect(artifact.unratifiedLevels).toEqual(UNRATIFIED_LEVELS);
     expect(readLadderData()).toEqual({
-      levels: [...LADDER_LEVELS],
-      gated: [...HELL_LEVELS],
-      unratified: [...UNRATIFIED_LEVELS],
+      heaven: ["off", "low", "med"],
+      hell: ["high", "xhigh", "max"],
+      unratified: ["ultra"],
     });
   });
 
@@ -66,51 +67,54 @@ describe("generated ladder policy", () => {
   });
 });
 
-describe("/skill-heaven ladder chooser", () => {
-  it("previews the new off default and makes low actionable", () => {
+describe("/skill-heaven owns only the subtractive half", () => {
+  it("without a launcher names the dead end and its exact exit", () => {
     const text = renderPosture().text;
-    expect(text).toContain("off · low · med · high · xhigh · max · ultra");
-    expect(text).toContain("● off");
-    expect(text).toContain("○ low");
+    expect(text).toContain("off · low · med");
+    expect(text).toContain("boot-time decisions");
     expect(text).toContain("claude-heaven --level low --skill <path>");
-    expect(text.split("\n").length).toBeLessThanOrEqual(18);
+    expect(text).toContain("did not change the running session");
+    expect(text).not.toMatch(/high|xhigh|max|ultra/);
   });
 
-  it("marks off as current in a default launcher session", () => {
+  it("marks off current and makes low and med actionable", () => {
     const text = renderPosture({ manifest: productFloor }).text;
-    expect(text).toMatch(/● off\s+near-empty; keeps this door · current/);
-    expect(text).toMatch(/○ low\s+upward/);
+    expect(text).toMatch(/● off\s+near-empty; door open · current/);
+    expect(text).toMatch(/○ low\s+upward.*--level low --skill <path>/);
+    expect(text).toMatch(/○ med\s+upward.*--level med/);
   });
 
-  it("locks only the downward move from low and emits the exact relaunch", () => {
+  it("maps med to native, the unlocked top of Heaven", () => {
+    const text = renderPosture({ manifest: native }).text;
+    expect(levelForPosture("native")).toBe("med");
+    expect(text).toMatch(/● med\s+native setup · current/);
+    expect(text).not.toMatch(/med.*LOCKED \(P2\)/);
+    const result = captureStdout(() => run(["--level", "med", "--print"]));
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.out).posture).toBe("native");
+  });
+
+  it("keeps downward moves D12-locked with exact relaunch commands", () => {
     const text = renderPosture({ manifest: low }).text;
-    expect(text).toMatch(/⊘ off\s+DOWNWARD LOCKED \(D12\).*claude-heaven --level off/);
-    expect(text).toMatch(/● low\s+curated skills only · current/);
+    expect(text).toMatch(/⊘ off\s+DOWNWARD LOCKED \(D12\).*--level off/);
     expect(silenceStderr(() => run(["--level", "off", "--print"]))).toBe(0);
   });
 
-  it("keeps every Hell rung P2-gated and ultra distinctly unratified", () => {
-    const text = renderPosture({ manifest: productFloor }).text;
-    for (const level of HELL_LEVELS) expect(text).toMatch(new RegExp(`⊘ ${level}\\s+Hell.*LOCKED \\(P2\\)`));
-    expect(text).toMatch(/⊘ ultra\s+unratified · no approved product mapping/);
+  it("routes Hell selections to /skill-hell instead of locking them", () => {
+    const result = renderPosture({ manifest: productFloor, target: "high" });
+    expect(result.refused).toBe(false);
+    expect(result.text).toBe("↗ high belongs to the additive half. Arm it with: /skill-hell high\n");
+    expect(result.text).not.toMatch(/P2|locked/i);
   });
 
-  it("returns the existing P2 refusal for a selected Hell rung", () => {
-    const result = renderPosture({ manifest: productFloor, target: "max" });
+  it("keeps ultra distinctly unratified", () => {
+    const result = renderPosture({ manifest: productFloor, target: "ultra" });
     expect(result.refused).toBe(true);
-    expect(result.text).toContain('"max" is Hell-lane and gated (P2)');
-    expect(result.text).toContain("policy hold, not a harness limit");
-    expect(result.text).not.toContain("off · low");
+    expect(result.text).toContain("UNRATIFIED");
+    expect(result.text).not.toContain("P2");
   });
 
-  it("points at a selected Heaven rung without claiming it moved", () => {
-    const text = renderPosture({ manifest: productFloor, target: "low" }).text;
-    expect(text).toMatch(/○ low.*← selected/);
-    expect(text).toContain("emits a launch command");
-    expect(text).toContain("cannot load a skill natively into this running session");
-  });
-
-  it("keeps native and session-scope standing-dose exclusions honest", () => {
+  it("preserves standing-dose exclusions", () => {
     expect(renderPosture({ manifest: native }).text).toContain(
       "bundled CLI skills and plugin-provided skills are not counted",
     );
@@ -119,16 +123,17 @@ describe("/skill-heaven ladder chooser", () => {
 });
 
 describe("renderer input boundaries", () => {
-  it("maps only ladder-backed postures", () => {
+  it("maps all and only Heaven postures", () => {
     expect(levelForPosture("product-floor")).toBe("off");
     expect(levelForPosture("curated")).toBe("low");
-    expect(levelForPosture("native")).toBeNull();
+    expect(levelForPosture("native")).toBe("med");
+    expect(levelForPosture("floor")).toBeNull();
   });
 
-  it("normalizes plain rung names and drops exotic input", () => {
-    expect(normalizeTarget(" LOW ")).toBe("low");
+  it("normalizes plain names and drops exotic input", () => {
+    expect(normalizeTarget(" MED ")).toBe("med");
     expect(normalizeTarget("$(id)")).toBeNull();
-    expect(renderPosture({ target: "$(id)" }).text).not.toContain("$(id)");
+    expect(renderPosture({ manifest: productFloor, target: "$(id)" }).text).not.toContain("$(id)");
   });
 
   it("formats doses and validates manifests", () => {
@@ -150,3 +155,17 @@ describe("renderer input boundaries", () => {
     expect(loadManifest(join(dir, "missing.json"))).toBeNull();
   });
 });
+
+function captureStdout(fn: () => number): { code: number; out: string } {
+  const chunks: string[] = [];
+  const original = process.stdout.write.bind(process.stdout);
+  (process.stdout.write as unknown as (text: string) => boolean) = (text: string) => {
+    chunks.push(text);
+    return true;
+  };
+  try {
+    return { code: fn(), out: chunks.join("") };
+  } finally {
+    process.stdout.write = original;
+  }
+}

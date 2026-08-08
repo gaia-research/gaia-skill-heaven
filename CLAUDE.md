@@ -133,9 +133,11 @@ happens *inside* one of those two, it does not add a third.
   **undocumented, version-pinned** env knob
   (`CLAUDE_CODE_DISABLE_BUNDLED_SKILLS`) — **re-verify on every Claude Code
   upgrade.**
-- **P2 — hell is gated.** Every surface hard-errors on `med|high|xhigh|max`;
-  `/skill-hell` is a **locked door**, not an activator, until P2 opens — and it
-  is shown in *all* modes, which is P2's own "gated, and visibly so" reading.
+- **Two ladder halves (founder ruling, `docs/LADDER-FLOW.md`).** Heaven is
+  `off|low|med` (`med = native`) and is selected at boot. Hell is
+  `high|xhigh|max|ultra`, additive, and works live through `/skill-hell`;
+  `high` is the default. Hell is not P2-gated. Only `ultra` refuses, because it
+  is unratified — never describe that as a gate.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or
   skills. The only writes live inside a disposable `mkdtemp` session dir.

@@ -1,88 +1,115 @@
-// The /skill-hell renderer. Shells out to the skill-hell summon engine
-// (resolved by resolve-hell.mjs) for the user's intent, then prints the
-// minimal header the founder asked for — which skill was summoned, nothing
-// more — followed by the skill's real SKILL.md body, so the skill is
-// genuinely in context for the rest of this session with no restart.
-//
-// ZERO DEPENDENCIES, same reason as resolve-hell.mjs and render-posture.mjs.
-//
-// Founder requirement: /skill-hell works whether or not claude-heaven or
-// pi-heaven launched the session. This file never reads a door's launch
-// manifest or session directory — only the engine's own --json output.
-//
-// Always exits 0: this is a display surface invoked from a slash command,
-// and a non-zero exit risks the harness dropping the very text that carries
-// an honest failure message (mirrors render-posture.mjs's main()).
+// Zero-dependency renderer for `/skill-hell`, the additive half of the ladder.
+// Bare invocation shows the chooser; a rung arms an ambient summon budget; any
+// other text keeps the advanced manual-summon path.
 
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { HellEngineNotFoundError, resolveHellEngine } from "./resolve-hell.mjs";
 
-const LABEL_WIDTH = 8;
-const PREFIX_WIDTH = 2 + LABEL_WIDTH + 2; // matches skill-hell's own printSkillLine gutter
-const SUMMON_TIMEOUT_MS = 30_000;
+const summonTimeoutMs = 30_000;
 
-/** @param {number | undefined} value */
-function formatTrustMagnitude(value) {
-  return typeof value === "number" ? value.toFixed(1) : "n/a";
+export const RUNG_BUDGETS = {
+  high: { count: 1, band: "tight", relevance: "best relevant match only" },
+  xhigh: { count: 3, band: "balanced", relevance: "matches within 10% of the best score" },
+  max: { count: 5, band: "wide", relevance: "matches within 25% of the best score" },
+};
+
+function chooser() {
+  return [
+    "🔥 Skill Hell · high · xhigh · max · ultra",
+    "",
+    "   ● high    default · 1 skill/gap · tight relevance",
+    "   ○ xhigh   3 skills/gap · within 10% of the best score",
+    "   ○ max     5 skills/gap · within 25% of the best score",
+    "   ⊘ ultra   UNRATIFIED · no approved summon budget",
+    "",
+    "   Select a rung to arm the lane: /skill-hell high|xhigh|max",
+    "   Advanced manual path: /skill-hell <intent>",
+    "",
+  ].join("\n");
 }
 
-/**
- * `winner.path` is the materialized skill DIRECTORY, not a file. Summon has
- * install parity with `gaia install`: it clones the source repo and brings down
- * the whole skill dir (SKILL.md plus reference/, scripts/, fixtures). Read
- * SKILL.md from inside it — never read the path itself.
- *
- * @param {{ id: string, level: string, trustMagnitude?: number, path: string,
- *           fileCount?: number, cache?: string, totalSeconds?: number }} winner
- */
-function renderHeader(winner) {
-  const head = `  ${"summoned".padEnd(LABEL_WIDTH)}  ${winner.id}  ${winner.level}  TM ${formatTrustMagnitude(winner.trustMagnitude)}${renderCost(winner)}`;
-  const pointer = `${" ".repeat(PREFIX_WIDTH)}-> ${winner.path}${renderFileCount(winner)}`;
-  return `${head}\n${pointer}`;
+/** @param {keyof typeof RUNG_BUDGETS} level */
+function armed(level) {
+  const budget = RUNG_BUDGETS[level];
+  return [
+    `🔥 Skill Hell armed: ${level}`,
+    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap · ${budget.relevance}`,
+    "   Summon only when the agent hits a real gap; the lane remains armed afterward.",
+    `   engine seam: summon --limit ${budget.count}; relevance-band filtering awaits the engine's bounded multi-summon contract.`,
+    "",
+  ].join("\n");
 }
 
-/**
- * Install time plus whether the repo cache was cold or warm. The two differ by
- * roughly an order of magnitude, so a timing shown without its cache state
- * cannot be interpreted — never print one without the other.
- *
- * @param {{ cache?: string, totalSeconds?: number }} winner
- */
-function renderCost(winner) {
-  const parts = [];
-  if (typeof winner.totalSeconds === "number") parts.push(`${winner.totalSeconds.toFixed(2)}s`);
-  if (winner.cache) parts.push(winner.cache);
-  return parts.length ? `  (${parts.join(", ")})` : "";
+/** @param {Record<string, unknown>} winner */
+function trustLines(winner) {
+  const source =
+    winner.trustFields && typeof winner.trustFields === "object"
+      ? winner.trustFields
+      : winner.trust && typeof winner.trust === "object"
+        ? winner.trust
+        : typeof winner.trustMagnitude === "number"
+          ? { trustMagnitude: winner.trustMagnitude }
+          : null;
+  if (!source) return [];
+  return Object.entries(/** @type {Record<string, unknown>} */ (source))
+    .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
+    .map(([name, value]) => `   ${name}: ${String(value)}`);
 }
 
-/** @param {{ fileCount?: number }} winner */
-function renderFileCount(winner) {
-  if (typeof winner.fileCount !== "number") return "";
-  return `  (${winner.fileCount} file${winner.fileCount === 1 ? "" : "s"})`;
+/** @param {Record<string, unknown>} winner */
+function costLine(winner) {
+  const state =
+    typeof winner.cacheState === "string"
+      ? winner.cacheState
+      : typeof winner.cache === "string"
+        ? winner.cache
+        : null;
+  return typeof winner.totalSeconds === "number" && state
+    ? `   install: ${winner.totalSeconds.toFixed(2)}s · ${state}`
+    : null;
 }
 
-/** @param {{ query?: string, skipped?: Array<{ id: string, reason: string }> }} outcome @param {string} fallbackQuery */
-function renderNoMatch(outcome, fallbackQuery) {
-  const lines = [`skill-hell: no skill could be summoned for "${outcome.query ?? fallbackQuery}".`];
-  for (const skip of outcome.skipped ?? []) {
-    lines.push(`  skipped ${skip.id}: ${skip.reason}`);
+/** @param {Record<string, unknown>} winner */
+export function renderCard(winner) {
+  const path = typeof winner.path === "string" ? winner.path : "";
+  const identity =
+    typeof winner.name === "string"
+      ? winner.name
+      : typeof winner.id === "string"
+        ? winner.id
+        : "summoned skill";
+  const lines = [`┌ summoned · ${identity}`];
+  if (typeof winner.id === "string" && winner.id !== identity) lines.push(`   id: ${winner.id}`);
+  lines.push(...trustLines(winner));
+  const cost = costLine(winner);
+  if (cost) lines.push(cost);
+  if (typeof winner.fileCount === "number") {
+    lines.push(`   files: ${winner.fileCount}`);
   }
+  if (path) {
+    lines.push(`   path: ${path}`);
+    lines.push(`   inspect: ${pathToFileURL(join(path, "SKILL.md")).href}`);
+  }
+  lines.push("└");
+  return lines.join("\n");
+}
+
+/** @param {{ query?: string, skipped?: Array<{ id: string, reason: string }> }} outcome @param {string} intent */
+function noMatch(outcome, intent) {
+  const lines = [`skill-hell: no skill could be summoned for "${outcome.query ?? intent}".`];
+  for (const skipped of outcome.skipped ?? []) lines.push(`  skipped ${skipped.id}: ${skipped.reason}`);
   return lines.join("\n");
 }
 
 /**
- * @param {string[]} argv
+ * @param {string} intent
+ * @param {keyof typeof RUNG_BUDGETS} level
  * @returns {{ text: string, ok: boolean }}
  */
-export function renderHell(argv) {
-  const intent = argv.join(" ").trim();
-  if (!intent) {
-    return { text: "skill-hell: no intent given — usage: /skill-hell <intent>\n", ok: false };
-  }
-
+function summon(intent, level) {
   let engine;
   try {
     engine = resolveHellEngine();
@@ -91,11 +118,12 @@ export function renderHell(argv) {
     return { text: `skill-hell: could not resolve the summon engine: ${errorMessage(error)}\n`, ok: false };
   }
 
-  const result = spawnSync(engine.command, [...engine.args, "summon", intent, "--json"], {
-    encoding: "utf-8",
-    timeout: SUMMON_TIMEOUT_MS,
-  });
-
+  const budget = RUNG_BUDGETS[level];
+  const result = spawnSync(
+    engine.command,
+    [...engine.args, "summon", intent, "--limit", String(budget.count), "--json"],
+    { encoding: "utf8", timeout: summonTimeoutMs },
+  );
   if (result.error) {
     return {
       text: `skill-hell: could not run the summon engine (${engine.binPath}): ${errorMessage(result.error)}\n`,
@@ -108,31 +136,50 @@ export function renderHell(argv) {
     outcome = JSON.parse(result.stdout);
   } catch {
     const stderr = (result.stderr ?? "").trim();
-    return {
-      text: `skill-hell: engine returned unreadable output.${stderr ? `\n${stderr}` : ""}\n`,
-      ok: false,
-    };
+    return { text: `skill-hell: engine returned unreadable output.${stderr ? `\n${stderr}` : ""}\n`, ok: false };
   }
 
-  const winner = outcome.summoned?.[0];
-  if (!winner) {
-    return { text: `${renderNoMatch(outcome, intent)}\n`, ok: false };
+  const winners = Array.isArray(outcome.summoned) ? outcome.summoned : [];
+  if (!winners.length) return { text: `${noMatch(outcome, intent)}\n`, ok: false };
+
+  for (const winner of winners) {
+    if (typeof winner?.path !== "string" || !existsSync(join(winner.path, "SKILL.md"))) {
+      return {
+        text: `skill-hell: summoned ${winner?.id ?? "a skill"} but its materialized SKILL.md is unavailable.\n`,
+        ok: false,
+      };
+    }
+  }
+  return {
+    text: `${winners.map((/** @type {Record<string, unknown>} */ winner) => renderCard(winner)).join("\n\n")}\n`,
+    ok: true,
+  };
+}
+
+/**
+ * @param {string[]} argv
+ * @returns {{ text: string, ok: boolean }}
+ */
+export function renderHell(argv) {
+  if (!argv.length || !argv.join(" ").trim()) return { text: chooser(), ok: true };
+
+  if (argv[0] === "--summon-level") {
+    const level = argv[1];
+    const intent = argv.slice(2).join(" ").trim();
+    if (!(level in RUNG_BUDGETS) || !intent) {
+      return { text: "skill-hell: internal summon usage: --summon-level high|xhigh|max <intent>\n", ok: false };
+    }
+    return summon(intent, /** @type {keyof typeof RUNG_BUDGETS} */ (level));
   }
 
-  // winner.path is the skill DIRECTORY (install parity). Read SKILL.md from
-  // inside it; reading the directory itself raises EISDIR.
-  const skillFile = join(winner.path, "SKILL.md");
-  let body;
-  try {
-    body = readFileSync(skillFile, "utf-8");
-  } catch (error) {
-    return {
-      text: `skill-hell: summoned ${winner.id} but could not read its materialized SKILL.md at ${skillFile}: ${errorMessage(error)}\n`,
-      ok: false,
-    };
+  const input = argv.join(" ").trim();
+  if (input === "ultra") {
+    return { text: "⛔ ultra is UNRATIFIED — no approved summon budget exists.\n", ok: false };
   }
-
-  return { text: `${renderHeader(winner)}\n\n${body}\n`, ok: true };
+  if (input in RUNG_BUDGETS) {
+    return { text: armed(/** @type {keyof typeof RUNG_BUDGETS} */ (input)), ok: true };
+  }
+  return summon(input, "high");
 }
 
 /** @param {unknown} error */
@@ -141,14 +188,10 @@ function errorMessage(error) {
 }
 
 export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
-  const { text } = renderHell(argv);
-  process.stdout.write(text);
+  process.stdout.write(renderHell(argv).text);
   return 0;
 }
 
-// Same realpath-vs-raw-argv guard as render-posture.mjs (KC1): a plugin
-// cache path routed through a macOS /tmp or /var symlink makes the naive
-// `import.meta.url === pathToFileURL(argv[1]).href` check disagree, which
-// would silently skip main() and print nothing.
-const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+const invokedDirectly =
+  process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (invokedDirectly) main();

@@ -44,7 +44,10 @@ under test.
 
 - `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
-- `med`…`max` → Skill Hell — progressively more *summoned* context (currently P2-gated)
+- `med` → `native` — the user's setup untouched; top of Heaven
+- `high` → Skill Hell default — one best match per capability gap
+- `xhigh` → Skill Hell — up to three matches in the balanced relevance band
+- `max` → Skill Hell — up to five matches in the wide relevance band
 - `ultra` → unratified
 
 The ladder is the primary product interface on every door:
@@ -57,10 +60,12 @@ The ladder is the primary product interface on every door:
 <door>-heaven --help                  # ladder first; postures are compatibility vocabulary
 ```
 
-`med|high|xhigh|max` are accepted as rung names and hard-refused by P2. `ultra`
-is accepted so the surface can say the honest thing: it is **unratified**, which
-is distinct from the P2 gate. `--posture` remains available for benchmark and
-compatibility invocations, but is not the product's lead vocabulary.
+The ladder has two capability-defined halves; [LADDER-FLOW.md](LADDER-FLOW.md)
+is authoritative. Launchers own subtractive `off|low|med`. `/skill-hell` owns
+additive `high|xhigh|max|ultra` and defaults to `high`, with no launcher
+requirement. Hell is not P2-gated. `ultra` alone refuses because it is
+**unratified**. `--posture` remains available for benchmark and compatibility
+invocations, but is not the product's lead vocabulary.
 
 A bare launcher selects `off`/`product-floor`. Claude, pi, and Hermes have live
 exec routes. Codex and Grok keep their existing recipe-only honesty boundary:
@@ -75,7 +80,8 @@ arms and never averaged — the gap between them *is* the door's cost.
 
 ### 3. Guarantees
 
-- **P2** — the Hell lane is gated. A refusal is a policy hold, not a harness limit, and says so.
+- **Ladder split** — Heaven is boot-time subtraction; Hell is live addition.
+  Only `ultra` refuses, as unratified rather than gated.
 - **P3** — never mutate shared state. Everything materializes into an `mkdtemp` session dir via
   `fsPlan` with a `$SESSION` placeholder, and is removed after.
 - **D12** — upward-only. No mid-session recomposition into a cleaner posture.
@@ -141,9 +147,12 @@ Adding a harness means filling one row and writing one `PROBE.md`. Nothing in co
 
 Two entries in that table are load-bearing product facts, not trivia:
 
-- **pi can load a summoned skill mid-session; Claude cannot.** So `/skill-hell` on pi genuinely
-  *loads* the skill, while on Claude it pastes the body into context. Same command, different
-  depth. The core does not care — it hands over a directory either way.
+- **pi can load a summoned skill mid-session; Claude cannot.** On pi,
+  `resources_discover` + reload makes it a native skill. On Claude, the card is
+  the listing entry and points the agent at the whole materialized directory.
+  Card-only probes succeeded on both harnesses (Claude pane `w8:p13`, pi pane
+  `w8:p14`, 2026-08-07): each read a sibling reference and returned
+  `CARD_ONLY_OK:7319` without a pasted body.
 - **Grok reads Claude's skill directories.** A harness's context is not necessarily its own.
   Never assume the sources are self-contained; enumerate them.
 
@@ -167,13 +176,13 @@ The summon engine is entirely harness-agnostic. Only the **hand-off** is a quirk
 
 | harness | how a summoned skill enters the session |
 |---|---|
-| claude | `/skill-hell` prints the SKILL.md body into context |
-| pi | extension loads the directory via resource discovery + reload — a real skill |
+| claude | card points to the whole materialized directory; the agent reads `SKILL.md` from disk |
+| pi | card plus resource discovery + reload loads the directory as a real native skill |
 | codex / hermes / grok | tbd; likely place the directory into the scoped config home |
 
-The `med…max` rungs will differ only in **how much** is summoned, never in the mechanism. That
-is the property worth protecting: if a rung ever needs harness-specific logic, the summon
-contract has leaked.
+The `high…max` rungs differ only in summon budget, never in the hand-off mechanism. That is the
+property worth protecting: if a rung ever needs harness-specific logic, the summon contract has
+leaked.
 
 ---
 
@@ -181,8 +190,8 @@ contract has leaked.
 
 - `ultra` is unratified. It exists as a ledger arm and, coincidentally, as a level name in
   Hermes' reasoning dial — which is **not** evidence about our rung.
-- The `med…max` rungs are P2-gated and compose nothing yet. Wiring them to the summon engine is
-  what turns a gate into a product.
+- Relevance-band filtering is the remaining engine seam. Doors already pass bounded
+  `--limit` counts (high 1, xhigh 3, max 5); the engine must enforce the declared score bands.
 - Delivery is `npx`, shipping **the launcher and never a harness** — the door execs whatever the
   user already has on `PATH`. Consequence: the harness version is the user's and can move under
   us, so a door should report the version it actually launched. A dose is a statement about a

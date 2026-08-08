@@ -1,6 +1,6 @@
 {
-  "schema": "claude-heaven/p2-gate@1",
-  "source": "skill-heaven LADDER_LEVELS + HELL_LEVELS + UNRATIFIED_LEVELS + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
+  "schema": "claude-heaven/ladder@1",
+  "source": "skill-heaven ladder constants + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
   "levels": [
     "off",
     "low",
@@ -10,8 +10,12 @@
     "max",
     "ultra"
   ],
-  "gatedLevels": [
-    "med",
+  "heavenLevels": [
+    "off",
+    "low",
+    "med"
+  ],
+  "hellLevels": [
     "high",
     "xhigh",
     "max"

@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LADDER_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
 // Guinea-pig model for this prototype (WP2 dispatch brief) — cheap and
@@ -89,8 +89,9 @@ function helpText(): string {
   return [
     "Usage: pi-heaven [--level <level>] [options] [-- <pi args...>]",
     "",
-    `  --level <level>    Ladder rung: ${LADDER_LEVELS.join("|")} (default: off)`,
-    "                     med..max are P2-gated; ultra is unratified",
+    `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
+    `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
+    "                     ultra is unratified",
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
@@ -109,22 +110,24 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // P2 gate first — never compose a gated (Hell-lane) level. Same wording and
-  // uncaught-throw behavior as claude-heaven (packages/claude-heaven/src/
-  // cli.ts + src/launcher.ts's assertLevelAllowed) — the refusal reads the
-  // same on every door.
+  // Ultra is the sole unratified rung. Ratified Hell levels route below to
+  // the live /skill-hell surface instead of being treated as postures.
   assertLevelAllowed(args.level);
 
   let posture = args.posture;
   if (args.level !== undefined) {
-    // Unlike claude-heaven (which refuses --level outright — --posture is its
-    // ratified selector), pi-heaven implements off/low as working aliases per
-    // the WP2 brief. Gated levels never reach here (refused above).
+    // Heaven aliases select boot postures. Hell levels have no posture mapping
+    // and are routed to /skill-hell below.
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
-      process.stderr.write(
-        `pi-heaven: unknown --level "${args.level}" — choose ${LADDER_LEVELS.join("|")}, or native.\n`,
-      );
+      if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
+        process.stderr.write(
+          `pi-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+            `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
+        );
+      } else {
+        process.stderr.write(`pi-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
+      }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
