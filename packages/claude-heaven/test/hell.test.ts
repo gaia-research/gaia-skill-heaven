@@ -99,7 +99,18 @@ describe("manual summon cards", () => {
   it("omits trust and cost fields that the tree did not publish", () => {
     const text = renderCard({ name: "Identity only", path: join(root, "skill") });
     expect(text).toContain("summoned · Identity only");
-    expect(text).not.toMatch(/TM|n\/a|trust|install:/i);
+
+    // Assert on the card's LABELS, not on substrings anywhere in the text. The
+    // card embeds an absolute path, and a loose case-insensitive /TM/ matches
+    // the literal "tm" in Linux's /tmp — so the obvious version of this test
+    // passes on macOS (/var/folders/.../T/) and fails for every Linux user.
+    const labels = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => /^[A-Za-z][\w ]*:/.test(line))
+      .map((line) => line.split(":")[0]);
+    expect(labels).toEqual(["path", "inspect", "status"]);
+    expect(text).not.toContain("n/a");
   });
 
   it("never shows timing without cache state or cache state without timing", () => {
