@@ -46,7 +46,9 @@ under test.
 - `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
 - `med` → `native` — the user's setup untouched; top of Heaven
-- `high` · `xhigh` · `max` · `ultra` → P2-gated Hell labels; none has a current product mapping
+- `high` → default usable additive-prototype level
+- `xhigh` · `max` → broader usable additive-prototype levels; no fixed public count contract
+- `ultra` → unratified
 
 The ladder is the primary product interface on every door:
 
@@ -58,12 +60,13 @@ The ladder is the primary product interface on every door:
 <door>-heaven --help                  # ladder first; postures are compatibility vocabulary
 ```
 
-Launchers own the current subtractive choices `off|low|med`.
-`high|xhigh|max|ultra` remain P2-gated Hell labels: no default, summon-count,
-score-band, or routing contract is currently ratified for them. The published
-`skill-hell` prototype can materialize a requested skill, but that manual
-capability is not the Hell ladder. `--posture` remains available for benchmark
-and compatibility invocations, but is not the product's lead vocabulary.
+Launchers own the current subtractive choices `off|low|med`. The published
+`skill-hell` prototype owns the usable additive levels: `high` is the default,
+while `xhigh` and `max` broaden the requested summoning behavior. This is a
+product mapping, but not a fixed per-rung count, score-band, HH score, or
+routing-eligibility contract. `ultra` remains unratified. `--posture` remains
+available for benchmark and compatibility invocations, but is not the product's
+lead vocabulary.
 
 A bare launcher selects `off`/`product-floor`. Execution support is
 harness- and version-specific: consult each door's probe rather than inferring a
@@ -78,8 +81,9 @@ arms and never averaged — the gap between them *is* the door's cost.
 
 ### 3. Guarantees
 
-- **Ladder split** — Heaven is the current boot-time subtraction surface. Hell
-  labels remain P2-gated; a manual summon is not a ratified Hell-ladder hand-off.
+- **Ladder split** — Heaven is the boot-time subtraction surface; Hell is the
+  usable additive prototype, defaulting to `high`. This does not establish HH
+  scoring, routing eligibility, or a fixed per-rung count contract.
 - **P3** — never mutate shared state. Everything materializes into an `mkdtemp` session dir via
   `fsPlan` with a `$SESSION` placeholder, and is removed after.
 - **D12** — upward-only. No mid-session recomposition into a cleaner posture.
@@ -186,16 +190,17 @@ universal live-execution route:
 | pi | card plus resource discovery + reload loads the directory as a real native skill |
 | codex / hermes / grok | tbd; likely place the directory into the scoped config home |
 
-The current engine accepts a caller-supplied `--limit`, but no Hell rung is
-ratified as a count, score band, routing rule, or harness hand-off. HH scoring,
-routing eligibility, and relevance-band filtering remain unshipped.
+The current engine accepts a caller-supplied `--limit`; the usable prototype
+maps `high`, `xhigh`, and `max` to progressively broader additive requests, but
+does not publish fixed per-rung counts or score bands. HH scoring, routing
+eligibility, and relevance-band filtering remain unshipped.
 
 ---
 
 ## Open
 
-- Hell activation remains P2-gated. The level names do not yet establish a
-  product default, count, score band, routing policy, or hand-off contract.
+- `ultra` remains unratified. The usable Hell prototype does not establish a
+  fixed count, score band, HH score, or routing-eligibility policy for its levels.
 - Relevance-band filtering and routing eligibility are open engine seams.
 - Delivery is `npx`, shipping **the launcher and never a harness** — the door execs whatever the
   user already has on `PATH`. Consequence: the harness version is the user's and can move under

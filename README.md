@@ -122,26 +122,27 @@ Skill Tree stamp is a live admission decision.
 Entropy runs on one line of seven rungs — but it is served by **two commands**, because the two
 halves are not the same kind of thing.
 
-![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell labels high, xhigh, max, and ultra remain P2-gated rather than a current product ladder.](docs/assets/entropy-ladder.svg)
+![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell is additive in the current prototype: high is the default, xhigh and max broaden the request, and ultra remains unratified.](docs/assets/entropy-ladder.svg)
 
 **Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
 *withheld*. A running session cannot un-load what it already loaded, so that is a decision only
 boot can make — which is why `/skill-heaven` needs the launcher, and says so plainly when it was
 not used.
 
-**Hell is not a current product ladder.** `high`, `xhigh`, `max`, and `ultra`
-are ratified level names, but P2 keeps Hell activation gated pending its evidence
-and owner-ratification conditions. This repository does not assign them a default,
-a summon count, a score band, or a routing meaning.
+**Hell is additive in the current prototype.** `high` is its default entry;
+`xhigh` and `max` broaden the requested summoning behavior; `ultra` remains
+unratified. The prototype is usable now, but it does not publish a fixed
+per-rung count, score band, HH score, or routing-eligibility contract.
 
 | | current product choices | status |
 |---|---|---|
 | **Heaven** | `off` · `low` · `med` | launchable through `/skill-heaven` |
-| **Hell** | `high` · `xhigh` · `max` · `ultra` | P2-gated; no current product mapping |
+| **Hell** | `high` · `xhigh` · `max` | usable additive prototype through `/skill-hell`; `high` is the default |
+| **Ultra** | `ultra` | unratified |
 
 `floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and is never
-user-selectable. The published `skill-hell` prototype can materialize a requested skill, but that
-manual capability does not activate or ratify the Hell ladder.
+user-selectable. The published `skill-hell` prototype can materialize a requested skill; that
+usable path is not an HH routing or admission system.
 
 Full flow, including every branch: **[docs/LADDER-FLOW.md](docs/LADDER-FLOW.md)**. The diagram is
 generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`, never the SVG.

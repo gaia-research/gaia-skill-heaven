@@ -50,13 +50,15 @@ Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-heaven`
 command and explicitly says it changed nothing.
 
-## `/skill-hell`: manual prototype path
+## `/skill-hell`: usable additive prototype
 
 In a Claude Code session where this plugin and a resolvable `skill-hell`
-binary are installed, `/skill-hell <intent>` can materialize a requested skill
-for the card-based hand-off. This manual prototype path is not a ratified Hell
-ladder: `high · xhigh · max · ultra` remain P2-gated labels with no current
-default, summon-count, score-band, or routing contract.
+binary are installed, `/skill-hell` exposes `high · xhigh · max · ultra`.
+`high` is the default usable level; `xhigh` and `max` broaden the requested
+summoning behavior; `ultra` remains unratified. `/skill-hell <intent>`
+materializes a requested skill for the card-based hand-off. The prototype does
+not publish fixed per-rung counts or score bands, HH scoring, or a routing-
+eligibility contract.
 
 Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
 paired install timing/cache state, file count, path, and inspect link. Claude
@@ -80,7 +82,7 @@ invocation doses remain separate.
 ## Boundaries
 
 - Heaven: `off|low|med`, boot-time launcher choices.
-- Hell labels: `high|xhigh|max|ultra` remain P2-gated; the manual summon path does not assign them product behavior.
+- Hell: `high|xhigh|max` are usable additive-prototype levels; `high` is the default. `ultra` remains unratified.
 - The rich MCP package has four tools (`gaia_search`, `gaia_inspect`, `summon`,
   `gaia_status`); it is not an implemented or measured D4 thin two-tool profile.
 - Hell/Heaven scoring, routing eligibility, and content-hash admission or
