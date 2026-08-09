@@ -3,9 +3,10 @@
 Five doors in, the boundary is clear enough to name. This document fixes it, so that adding
 harness six is *additive* — a quirks table entry and a probe, not a redesign.
 
-**The rule:** the core owns the ladder, the postures, the guarantees, and the summon engine.
-A harness owns only *how* it is asked to suppress things. If a change to one harness touches
-core, that is a signal the core abstraction is wrong, not that the harness is special.
+**The rule:** the core owns the ladder, the postures, and the guarantees; it
+consumes the independently released summon engine. A harness owns only *how*
+it is asked to suppress things. If a change to one harness touches core, that
+is a signal the core abstraction is wrong, not that the harness is special.
 
 ---
 
@@ -45,9 +46,9 @@ under test.
 - `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
 - `med` → `native` — the user's setup untouched; top of Heaven
-- `high` → Skill Hell default — one best match per capability gap
-- `xhigh` → Skill Hell — up to three matches in the balanced relevance band
-- `max` → Skill Hell — up to five matches in the wide relevance band
+- `high` → Skill Hell default — request one match per capability gap
+- `xhigh` → Skill Hell — request up to three matches
+- `max` → Skill Hell — request up to five matches
 - `ultra` → unratified
 
 The ladder is the primary product interface on every door:
@@ -61,16 +62,17 @@ The ladder is the primary product interface on every door:
 ```
 
 The ladder has two capability-defined halves; [LADDER-FLOW.md](LADDER-FLOW.md)
-is authoritative. Launchers own subtractive `off|low|med`. `/skill-hell` owns
-additive `high|xhigh|max|ultra` and defaults to `high`, with no launcher
-requirement. Hell is not P2-gated. `ultra` alone refuses because it is
-**unratified**. `--posture` remains available for benchmark and compatibility
-invocations, but is not the product's lead vocabulary.
+is authoritative. Launchers own subtractive `off|low|med`. In the product
+model, `/skill-hell` owns additive `high|xhigh|max|ultra` and defaults to
+`high`; a live hand-off is only claimed where the relevant harness has evidence.
+Hell is not P2-gated. `ultra` alone refuses because it is **unratified**.
+`--posture` remains available for benchmark and compatibility invocations, but
+is not the product's lead vocabulary.
 
-A bare launcher selects `off`/`product-floor`. Claude, pi, and Hermes have live
-exec routes. Codex and Grok keep their existing recipe-only honesty boundary:
-their bare command selects off but refuses to spawn, while `--print` emits the
-plan and its negative-probe caveat. None silently falls back to `native`.
+A bare launcher selects `off`/`product-floor`. Execution support is
+harness- and version-specific: consult each door's probe rather than inferring a
+universal live route from the five source-built door commands. `--print` emits
+the plan and its caveats; no door silently falls back to `native`.
 
 ### 2. Postures
 
@@ -80,7 +82,8 @@ arms and never averaged — the gap between them *is* the door's cost.
 
 ### 3. Guarantees
 
-- **Ladder split** — Heaven is boot-time subtraction; Hell is live addition.
+- **Ladder split** — Heaven is boot-time subtraction; Hell is the additive
+  product lane. A live hand-off remains a per-harness evidenced capability.
   Only `ultra` refuses, as unratified rather than gated.
 - **P3** — never mutate shared state. Everything materializes into an `mkdtemp` session dir via
   `fsPlan` with a `$SESSION` placeholder, and is removed after.
@@ -99,21 +102,27 @@ honest state, not a failure.
 
 ### 5. The summon engine (`gaia-mcp`)
 
-Search → untuned rank (relevance **gates**, rating **orders**) → clone → validate → materialize
-the whole skill directory → session-lock → GC → payload cache. Harness-agnostic by construction:
-it produces a **directory on disk**. What a harness does with that directory is a quirk.
+The published [`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
+prototype is an independent package. Its current rich Registry/Bond surface is
+`gaia_search`, `gaia_inspect`, `summon`, and `gaia_status`.
 
-**It is also tree-agnostic, and that is deliberate** (founder, 2026-08-07). The same summon will
-eventually point at a different tree — a user's own, an enterprise's, anything. The registry is
-a *parameter*, not part of the engine's identity. The plumbing already reflects this: the source
-URLs are env-overridable (`GAIA_REGISTRY_URL`, `GAIA_NAMED_SKILLS_URL`), so pointing summon at
-another tree is configuration, not a fork.
+Its `summon` flow is: search → untuned candidate ordering → clone/validate →
+materialize the whole skill directory → session lock → GC → payload cache. It
+produces a directory on disk; what a harness can do with that directory is a
+quirk and needs its own evidence.
 
-This is why the tool is named **`summon`** and not `gaia_summon`. A tool name carrying the tree's
-name would be a lie the moment the tree changes. Same reasoning retires the `gaia_*` prototype
-names generally (`gaia.mcp` lexicon, D4 — the ratified surface is `search_skills` + `summon`);
-the three published v0.1.0 names stay only because renaming a live public interface is a breaking
-change a lexicon entry does not authorise.
+The source URLs are env-overridable as `TREE_URL` and `TREE_NAMED_URL`, so the
+engine can be configured against another tree without a fork.
+
+`summon` is the current tool name; `gaia_summon` is not a current package tool.
+D4's thin `search_skills` + `summon` Heaven/Summon profile is a separate
+profile/dose constraint. It does not make the rich package an implemented or
+measured two-tool profile, and it does not deprecate `gaia_search`,
+`gaia_inspect`, or `gaia_status`.
+
+The prototype does **not** ship Hell/Heaven scoring, routing eligibility, or
+content-hash admission or verification. Its displayed per-invocation ordering
+must not be presented as any of those systems.
 
 **Rule of thumb for anything new on this surface: name the capability, never the tree.**
 
@@ -172,7 +181,9 @@ leaking and that is worth fixing before the sixth door bakes it in.
 
 ## Skill Hell across harnesses
 
-The summon engine is entirely harness-agnostic. Only the **hand-off** is a quirk:
+The summon engine's temporary directory contract is harness-agnostic. The
+**hand-off** is a quirk, and this table is not a claim that every door has a
+universal live-execution route:
 
 | harness | how a summoned skill enters the session |
 |---|---|
@@ -180,9 +191,9 @@ The summon engine is entirely harness-agnostic. Only the **hand-off** is a quirk
 | pi | card plus resource discovery + reload loads the directory as a real native skill |
 | codex / hermes / grok | tbd; likely place the directory into the scoped config home |
 
-The `high…max` rungs differ only in summon budget, never in the hand-off mechanism. That is the
-property worth protecting: if a rung ever needs harness-specific logic, the summon contract has
-leaked.
+The `high…max` rungs request only a summon count. The current engine accepts
+`--limit`; relevance-band filtering and any HH scoring or routing-eligibility
+meaning remain unshipped. A rung never proves a harness-specific live hand-off.
 
 ---
 
@@ -190,8 +201,9 @@ leaked.
 
 - `ultra` is unratified. It exists as a ledger arm and, coincidentally, as a level name in
   Hermes' reasoning dial — which is **not** evidence about our rung.
-- Relevance-band filtering is the remaining engine seam. Doors already pass bounded
-  `--limit` counts (high 1, xhigh 3, max 5); the engine must enforce the declared score bands.
+- Relevance-band filtering is an open engine seam. Doors can pass bounded
+  `--limit` counts (high 1, xhigh 3, max 5), but the engine does not yet enforce
+  declared score bands or a routing-eligibility policy.
 - Delivery is `npx`, shipping **the launcher and never a harness** — the door execs whatever the
   user already has on `PATH`. Consequence: the harness version is the user's and can move under
   us, so a door should report the version it actually launched. A dose is a statement about a

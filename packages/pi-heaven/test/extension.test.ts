@@ -8,9 +8,9 @@ import {
 describe("pi Skill Hell presentation", () => {
   it("shares the founder-ruled chooser and bounded budgets", () => {
     expect(rungBudgets).toEqual({
-      high: { count: 1, relevance: "best relevant match only" },
-      xhigh: { count: 3, relevance: "matches within 10% of the best score" },
-      max: { count: 5, relevance: "matches within 25% of the best score" },
+      high: { count: 1, relevance: "up to 1 result" },
+      xhigh: { count: 3, relevance: "up to 3 results; no score band yet" },
+      max: { count: 5, relevance: "up to 5 results; no score band yet" },
     });
     const chooser = renderHellChooser();
     expect(chooser).toContain("● high    default");

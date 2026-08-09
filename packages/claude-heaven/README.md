@@ -2,8 +2,11 @@
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Claude Code door to Skill Heaven. The marketplace plugin uses the published
-`@gaia-research/mcp@0.3.0` summon engine for `/skill-hell`.
+The Claude Code door to Skill Heaven. Its `/skill-hell` command resolves a
+`skill-hell` executable supplied by the published
+[`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
+prototype. Direct public use should select `@latest`, for example
+`npx --yes skill-hell@latest summon "code review" --card`.
 
 ## Install
 
@@ -49,11 +52,13 @@ command and explicitly says it changed nothing.
 
 ## `/skill-hell`: the live additive half
 
-`/skill-hell` works anywhere the plugin is installed. Bare invocation shows
-`high · xhigh · max · ultra` with `high` as default. `high`, `xhigh`, and `max`
-arm bounded per-gap summon budgets; `ultra` alone refuses because it is
-unratified, never gated. `/skill-hell <intent>` remains the advanced manual
-path.
+In a Claude Code session where this plugin and a resolvable `skill-hell`
+binary are installed, `/skill-hell` exposes `high · xhigh · max · ultra` with
+`high` as default. `high`, `xhigh`, and `max` request bounded per-gap summon
+counts; the current engine accepts `summon --limit N`, but does not yet
+implement the claimed relevance bands as a scoring or routing-eligibility
+contract. `ultra` alone refuses because it is unratified, never gated.
+`/skill-hell <intent>` remains the advanced manual path.
 
 Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
 paired install timing/cache state, file count, path, and inspect link. Claude
@@ -77,7 +82,11 @@ invocation doses remain separate.
 ## Boundaries
 
 - Heaven: `off|low|med`, boot-time launcher choices.
-- Hell: `high|xhigh|max`, live and additive; not P2-gated.
+- Hell: `high|xhigh|max`, additive in this Claude plugin's documented path; not P2-gated.
+- The rich MCP package has four tools (`gaia_search`, `gaia_inspect`, `summon`,
+  `gaia_status`); it is not an implemented or measured D4 thin two-tool profile.
+- Hell/Heaven scoring, routing eligibility, and content-hash admission or
+  verification are not shipped.
 - `ultra`: hard refusal because it has no ratified product mapping.
 - `floor`: benchmark-only, doorless posture.
 - `native`: `med`; `--level native` remains a compatibility spelling.

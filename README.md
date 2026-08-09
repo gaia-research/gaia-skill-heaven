@@ -13,10 +13,14 @@ ultra` — measuring **skill entropy**: the disorder a skill loadout adds to a
 session's context. **Heaven is the low-entropy region** (`off · low · med`),
 **Hell the high-entropy region** (`high · xhigh · max`), with **`ultra`
 above**. A mode is a *region* of the one ladder, not a separate orthogonal
-dial. Up the ladder **quality and cost rise together** — **Skill Hell routes
-summons through gaia mcp as a mixture-of-agents for skills** (D5): a
-deterministic router summons skills into context on demand, so more summoned
-skills mean more experts in play, better until it isn't. Public domain:
+dial. Skill Hell can ask the published prototype to materialize a matching
+skill into a temporary session on demand. The current
+[`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
+package is a rich four-tool Registry/Bond surface (`gaia_search`,
+`gaia_inspect`, `summon`, `gaia_status`), not an implemented or measured D4
+thin `search_skills` + `summon` profile. Hell/Heaven scoring, routing
+eligibility, and content-hash admission or verification are not shipped.
+Public domain:
 [`skill-heaven.dev`](https://skill-heaven.dev), served from `packages/site`
 (N12).
 
@@ -43,13 +47,20 @@ curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
 ```
 
 That one command installs `claude-heaven`, `pi-heaven`, `codex-heaven`,
-`hermes-heaven`, and `grok-heaven`; the working `skill-hell` engine from
-published `@gaia-research/mcp@0.3.0`; and, when the user's own `claude` binary
-is present, the Claude marketplace plugin that provides `/skill-heaven` and
-`/skill-hell`. It never installs Claude Code, pi, Codex, Hermes, or Grok. If
-Claude Code is absent, the doors and engine still install and the script prints
-the exact two plugin-registration commands to run after the user installs that
-harness themselves.
+`hermes-heaven`, and `grok-heaven`; a working `skill-hell` binary from the
+published `@gaia-research/mcp@latest` package; and, when the user's own `claude`
+binary is present, the Claude marketplace plugin that provides `/skill-heaven`
+and `/skill-hell`. It never installs Claude Code, pi, Codex, Hermes, or Grok.
+If Claude Code is absent, the doors and engine still install and the script
+prints the exact two plugin-registration commands to run after the user
+installs that harness themselves.
+
+For a direct, one-shot engine invocation outside the installer, use the
+npx-friendly alias at the current tag:
+
+```bash
+npx --yes skill-hell@latest summon "code review" --card
+```
 
 **Why `curl | sh`:** the five door packages deliberately are not published to
 npm, while this repository already has a first-party HTTPS home on GitHub
@@ -75,7 +86,7 @@ pi-heaven --print
 codex-heaven --print
 hermes-heaven --print
 grok-heaven --print
-skill-hell --help
+skill-hell summon "code review" --card
 ```
 
 Re-run the install one-liner to update. Uninstall everything the installer owns,
@@ -85,20 +96,20 @@ including the Claude plugin and marketplace only when it added them, with:
 $HOME/.local/share/skill-heaven/uninstall.sh
 ```
 
-The installer uses a source archive because the npm-ready `0.1.0` door packages
-remain unpublished; it does not publish them or install a harness as a side
-effect.
+The installer uses a source archive because the door packages remain
+unpublished source artifacts; their local manifest versions are not public
+release lines. It does not publish them or install a harness as a side effect.
 
 ---
 
 ![skill-heaven site — WORK IN PROGRESS · HELL HEAVEN INDEX banner over the headline "STOP INSTALLING SKILLS. START SUMMONING THEM."](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
 
-The Hell Heaven (HH) Index — a per-skill hellHeaven stamp, benchmarked, not
-guessed — is the research that keeps the product honest. The benchmark's
-priority is the **general entropy curve** — how quality and cost move along the
-skill-entropy axis — not a token-savings headline (B6); higher entropy is not
-directly benchmarkable per run, so **hell-safe eligibility is read from the
-Skill Tree stamps**, not measured live.
+The Hell/Heaven (HH) Index is a research question, not a current engine
+admission system. The benchmark's priority is the **general entropy curve** —
+how quality and cost move along the skill-entropy axis — not a token-savings
+headline (B6). The current summon prototype does **not** ship per-skill HH
+scores, routing eligibility, or content-hash admission or verification, so no
+Skill Tree stamp is a live admission decision.
 
 [![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20help%20wanted-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
 [![Vision ↗](https://img.shields.io/badge/Vision%20%E2%86%97-gaia--research-00e5ff?style=flat-square)](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md)
@@ -111,23 +122,25 @@ Skill Tree stamps**, not measured live.
 Entropy runs on one line of seven rungs — but it is served by **two commands**, because the two
 halves are not the same kind of thing.
 
-![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs the launcher. Hell is additive and holds high (the default), xhigh, max, and ultra (unratified); it is served by /skill-hell and needs only the plugin.](docs/assets/entropy-ladder.svg)
+![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell is additive in the product model and holds high (the default), xhigh, max, and ultra (unratified); the documented Claude path uses /skill-hell, while other harness hand-offs remain per-door evidence.](docs/assets/entropy-ladder.svg)
 
 **Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
 *withheld*. A running session cannot un-load what it already loaded, so that is a decision only
 boot can make — which is why `/skill-heaven` needs the launcher, and says so plainly when it was
 not used.
 
-**Hell is additive.** `high` through `ultra` differ by how freely skills are *summoned in*, and
-every harness can add context to a live session. That is why `/skill-hell` works anywhere the
-plugin or extension is installed, launcher or not.
+**Hell is additive in the product model.** `high` through `ultra` describe
+how freely skills may be *summoned in*. The documented live path is the Claude
+plugin's card-based hand-off; a package or plugin existing for another harness
+does not itself prove a universal live-execution path. Each harness needs its
+own probe-backed hand-off evidence.
 
 The line between them is a capability boundary, not a policy one.
 
 | | rungs | maps to | command | needs |
 |---|---|---|---|---|
 | **Heaven** | `off` · `low` · `med` | `product-floor` · `curated` · `native` | `/skill-heaven` | the launcher |
-| **Hell** | `high` · `xhigh` · `max` · `ultra` | a summon budget, not a posture | `/skill-hell` | only the plugin |
+| **Hell** | `high` · `xhigh` · `max` · `ultra` | a requested summon budget, not a posture | `/skill-hell` | documented through the Claude plugin; other hand-offs are per-door |
 
 `high` is the default. `ultra` is unratified and refuses as such rather than pretending to be
 gated. `floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and
@@ -160,7 +173,7 @@ generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`
 skill-heaven
   --posture floor|product-floor|curated|native   # default floor (P1 vocabulary)
                                         # floor = the DOORLESS benchmark floor (alias: benchmark-floor)
-                                        # product-floor = the DOORFUL product floor (verified on all five launcher harnesses)
+                                        # product-floor = the DOORFUL product floor; execution evidence is per harness
   [--level off|low]                     # aliases: off→product-floor, low→curated;
                                         # med|high|xhigh|max = hard error (hell lane gated, P2)
   [--harness claude|pi|codex|cursor|grok|hermes]   # default claude
@@ -219,8 +232,9 @@ separately, priced as **separate arms (B1), never averaged into one number**.
 The evidence numbers are recorded once in `FLOOR_EVIDENCE` (`packages/core/src/compile.ts`)
 and are never re-derived. Every floor record is tagged `floor=benchmark` or
 `floor=product` in `notes`, so the two arms cannot be pooled at analysis time.
-`product-floor` has verified cells on **claude, pi, codex, hermes, and grok**;
-only cursor hard-errors rather than guessing one into existence (M0 discipline).
+The recorded compositions below are version-pinned, per-harness evidence;
+they are not a universal guarantee that every door can execute live. Cursor
+hard-errors rather than guessing a route into existence (M0 discipline).
 
 `--door-plugin-dir` is caller-supplied on purpose: core does not assume which
 package the door ships in. Omit it and `product-floor` still compiles — the

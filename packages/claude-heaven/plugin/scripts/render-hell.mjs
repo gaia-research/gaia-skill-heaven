@@ -11,9 +11,9 @@ import { HellEngineNotFoundError, resolveHellEngine } from "./resolve-hell.mjs";
 const summonTimeoutMs = 30_000;
 
 export const RUNG_BUDGETS = {
-  high: { count: 1, band: "tight", relevance: "best relevant match only" },
-  xhigh: { count: 3, band: "balanced", relevance: "matches within 10% of the best score" },
-  max: { count: 5, band: "wide", relevance: "matches within 25% of the best score" },
+  high: { count: 1, band: "tight", relevance: "up to 1 result" },
+  xhigh: { count: 3, band: "balanced", relevance: "up to 3 results; no score band yet" },
+  max: { count: 5, band: "wide", relevance: "up to 5 results; no score band yet" },
 };
 
 function chooser() {
@@ -21,9 +21,9 @@ function chooser() {
     "🔥 Skill Hell · high · xhigh · max · ultra",
     "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
     "",
-    "   ● high    default · 1 skill/gap · tight relevance",
-    "   ○ xhigh   3 skills/gap · within 10% of the best score",
-    "   ○ max     5 skills/gap · within 25% of the best score",
+    "   ● high    default · up to 1 result/gap",
+    "   ○ xhigh   up to 3 results/gap · no score band yet",
+    "   ○ max     up to 5 results/gap · no score band yet",
     "   ⊘ ultra   UNRATIFIED · no approved summon budget",
     "",
     "   Select a rung to arm the lane: /skill-hell high|xhigh|max",

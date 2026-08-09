@@ -3,10 +3,13 @@
 > **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
 > Interfaces, flags, postures, and command surfaces may change.
 
-Status: all five launcher doors and both Claude commands are on `main`; GitHub
-Pages is live; and published `@gaia-research/mcp@0.3.0` supplies a working
-`skill-hell` binary. The launcher packages are deliberately not published to
-npm. The one-command installer is therefore the public delivery path.
+Status: five source-built launcher commands and both Claude commands are on
+`main`; GitHub Pages is live; and the published
+[`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
+rich package supplies the `skill-hell` engine surface. The launcher packages
+are deliberately not published to npm. The one-command installer is therefore
+the public delivery path; live execution remains a per-harness, probe-backed
+claim rather than a five-door universal guarantee.
 
 ## 1. How a stranger installs everything
 
@@ -21,7 +24,7 @@ The command installs:
 - `codex-heaven`
 - `hermes-heaven`
 - `grok-heaven`
-- `skill-hell` from published `@gaia-research/mcp@0.3.0`
+- a `skill-hell` binary from the published `@gaia-research/mcp@latest` package
 - the `claude-heaven@skill-heaven` Claude plugin, when the user's own `claude`
   binary is already on `PATH`
 
@@ -87,16 +90,31 @@ change to the script triggers a deployment.
 ### Door source
 
 The installer downloads the public `main` source archive and runs the package
-lock's production install. The six npm-ready package manifests remain at
-`0.1.0`, but publication remains founder-only and is not part of this delivery.
-No installer step publishes them.
+lock's production install. The source-only door manifests remain unpublished;
+their local `0.1.0` values are not public release claims. No installer step
+publishes a door or a harness.
 
 ### Summon engine
 
-`@gaia-research/mcp@0.3.0` is public and its npm `bin` map includes both
-`gaia-mcp` and `skill-hell`. The installer pins that verified version, installs
-it locally under the Skill Heaven directory rather than into npm's global
-prefix, and refuses an engine package that lacks an executable `skill-hell`.
+The current rich engine package is
+[`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0),
+whose npm `bin` map includes `gaia-mcp` and `skill-hell`. For direct public
+use, select the current alias or the rich package binary explicitly:
+
+```bash
+npx --yes skill-hell@latest summon "code review" --card
+npx --yes --package=@gaia-research/mcp@latest skill-hell summon "code review" --card
+```
+
+The installer resolves `@gaia-research/mcp@latest` locally under the Skill
+Heaven directory rather than npm's global prefix and refuses an engine package
+that lacks an executable `skill-hell`. `skill-hell@latest` is the npx-friendly alias; the two-bin rich
+package must not be invoked without an explicit binary selection.
+
+The current package has four tools — `gaia_search`, `gaia_inspect`, `summon`,
+and `gaia_status`. That rich surface is not the implemented or measured D4
+thin `search_skills` + `summon` profile. Hell/Heaven scoring, routing
+eligibility, and content-hash admission or verification are not shipped.
 
 ### Claude plugin
 
@@ -112,13 +130,15 @@ A release candidate is not complete until a visible herdr pane proves all of:
 1. the six command names are absent from a sanitized starting `PATH`;
 2. the real installer runs from a clean `HOME`;
 3. all five `<door> --print` commands return product-floor plans;
-4. `skill-hell` resolves to `@gaia-research/mcp@0.3.0` and performs a real
+4. `skill-hell` resolves to the selected published engine and performs a real
    summon;
 5. a second install updates cleanly;
 6. uninstall removes the five doors, engine, plugin, marketplace, and install
    directory.
 
 WP18's literal run is recorded in [INSTALL-TRANSCRIPT.md](INSTALL-TRANSCRIPT.md).
+Its `@0.3.0` lines are a dated historical transcript, not current installation
+guidance.
 
 ## 4. Honest boundaries
 
@@ -130,10 +150,11 @@ WP18's literal run is recorded in [INSTALL-TRANSCRIPT.md](INSTALL-TRANSCRIPT.md)
 - **Cursor:** recipe-only by M0 evidence; there is no launcher door to install.
 - **pi extension:** ships in the source tree but has no independent install
   surface.
-- **Engine help flag:** `skill-hell@0.3.0 --help` resolves the installed binary
-  and prints usage, but the upstream CLI labels `--help` an unknown command and
-  exits 1. `skill-hell summon "code review" --card` succeeds; the transcript
-  records both results rather than hiding the help-flag behavior.
+- **Engine help flag:** the historically observed `skill-hell --help` path
+  resolves the installed binary and prints usage, but the upstream CLI labels
+  `--help` an unknown command and exits 1. Use
+  `skill-hell summon "code review" --card` for a behavioral check; the dated
+  transcript records both results rather than hiding the help-flag behavior.
 
 ## 5. Issue coverage
 

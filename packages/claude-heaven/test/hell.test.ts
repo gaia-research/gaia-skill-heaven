@@ -50,9 +50,9 @@ describe("/skill-hell chooser and budgets", () => {
 
   it("arms each ratified rung with a bounded per-gap budget", () => {
     expect(RUNG_BUDGETS).toEqual({
-      high: { count: 1, band: "tight", relevance: "best relevant match only" },
-      xhigh: { count: 3, band: "balanced", relevance: "matches within 10% of the best score" },
-      max: { count: 5, band: "wide", relevance: "matches within 25% of the best score" },
+      high: { count: 1, band: "tight", relevance: "up to 1 result" },
+      xhigh: { count: 3, band: "balanced", relevance: "up to 3 results; no score band yet" },
+      max: { count: 5, band: "wide", relevance: "up to 5 results; no score band yet" },
     });
     for (const [level, budget] of Object.entries(RUNG_BUDGETS)) {
       const text = renderHell([level]).text;
