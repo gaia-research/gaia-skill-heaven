@@ -122,29 +122,26 @@ Skill Tree stamp is a live admission decision.
 Entropy runs on one line of seven rungs — but it is served by **two commands**, because the two
 halves are not the same kind of thing.
 
-![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell is additive in the product model and holds high (the default), xhigh, max, and ultra (unratified); the documented Claude path uses /skill-hell, while other harness hand-offs remain per-door evidence.](docs/assets/entropy-ladder.svg)
+![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell labels high, xhigh, max, and ultra remain P2-gated rather than a current product ladder.](docs/assets/entropy-ladder.svg)
 
 **Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
 *withheld*. A running session cannot un-load what it already loaded, so that is a decision only
 boot can make — which is why `/skill-heaven` needs the launcher, and says so plainly when it was
 not used.
 
-**Hell is additive in the product model.** `high` through `ultra` describe
-how freely skills may be *summoned in*. The documented live path is the Claude
-plugin's card-based hand-off; a package or plugin existing for another harness
-does not itself prove a universal live-execution path. Each harness needs its
-own probe-backed hand-off evidence.
+**Hell is not a current product ladder.** `high`, `xhigh`, `max`, and `ultra`
+are ratified level names, but P2 keeps Hell activation gated pending its evidence
+and owner-ratification conditions. This repository does not assign them a default,
+a summon count, a score band, or a routing meaning.
 
-The line between them is a capability boundary, not a policy one.
+| | current product choices | status |
+|---|---|---|
+| **Heaven** | `off` · `low` · `med` | launchable through `/skill-heaven` |
+| **Hell** | `high` · `xhigh` · `max` · `ultra` | P2-gated; no current product mapping |
 
-| | rungs | maps to | command | needs |
-|---|---|---|---|---|
-| **Heaven** | `off` · `low` · `med` | `product-floor` · `curated` · `native` | `/skill-heaven` | the launcher |
-| **Hell** | `high` · `xhigh` · `max` · `ultra` | a requested summon budget, not a posture | `/skill-hell` | documented through the Claude plugin; other hand-offs are per-door |
-
-`high` is the default. `ultra` is unratified and refuses as such rather than pretending to be
-gated. `floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and
-is never user-selectable.
+`floor` is **not on the ladder** — it is the byte-frozen benchmark placebo-of-record and is never
+user-selectable. The published `skill-hell` prototype can materialize a requested skill, but that
+manual capability does not activate or ratify the Hell ladder.
 
 Full flow, including every branch: **[docs/LADDER-FLOW.md](docs/LADDER-FLOW.md)**. The diagram is
 generated from the site's own design tokens — edit `scripts/gen-ladder-svg.py`, never the SVG.

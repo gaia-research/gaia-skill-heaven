@@ -30,12 +30,12 @@ export interface SummonedSkill {
 }
 
 /** Hell rungs are a summon budget, not a posture — how many skills one capability
- *  gap may pull. Score-band filtering is not implemented. `ultra` is absent because
- *  it is unratified: there is no approved budget to give it. */
+ *  gap may pull, and how wide the relevance band is. `ultra` is absent because it
+ *  is unratified: there is no approved budget to give it. */
 export const rungBudgets = {
-  high: { count: 1, relevance: "up to 1 result" },
-  xhigh: { count: 3, relevance: "up to 3 results; no score band yet" },
-  max: { count: 5, relevance: "up to 5 results; no score band yet" },
+  high: { count: 1, relevance: "best relevant match only" },
+  xhigh: { count: 3, relevance: "matches within 10% of the best score" },
+  max: { count: 5, relevance: "matches within 25% of the best score" },
 } as const;
 
 export type HellLevel = keyof typeof rungBudgets;
@@ -48,9 +48,9 @@ export function renderHellChooser(): string {
     "🔥 Skill Hell · high · xhigh · max · ultra",
     PROTOTYPE_NOTE,
     "",
-    "   ● high    default · up to 1 result/gap",
-    "   ○ xhigh   up to 3 results/gap · no score band yet",
-    "   ○ max     up to 5 results/gap · no score band yet",
+    "   ● high    default · 1 skill/gap · tight relevance",
+    "   ○ xhigh   3 skills/gap · within 10% of the best score",
+    "   ○ max     5 skills/gap · within 25% of the best score",
     "   ⊘ ultra   UNRATIFIED · no approved summon budget",
     "",
     "   Select a rung to arm the lane; any other text manually summons for that intent.",

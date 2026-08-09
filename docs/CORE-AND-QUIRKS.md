@@ -46,10 +46,7 @@ under test.
 - `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
 - `med` → `native` — the user's setup untouched; top of Heaven
-- `high` → Skill Hell default — request one match per capability gap
-- `xhigh` → Skill Hell — request up to three matches
-- `max` → Skill Hell — request up to five matches
-- `ultra` → unratified
+- `high` · `xhigh` · `max` · `ultra` → P2-gated Hell labels; none has a current product mapping
 
 The ladder is the primary product interface on every door:
 
@@ -61,13 +58,12 @@ The ladder is the primary product interface on every door:
 <door>-heaven --help                  # ladder first; postures are compatibility vocabulary
 ```
 
-The ladder has two capability-defined halves; [LADDER-FLOW.md](LADDER-FLOW.md)
-is authoritative. Launchers own subtractive `off|low|med`. In the product
-model, `/skill-hell` owns additive `high|xhigh|max|ultra` and defaults to
-`high`; a live hand-off is only claimed where the relevant harness has evidence.
-Hell is not P2-gated. `ultra` alone refuses because it is **unratified**.
-`--posture` remains available for benchmark and compatibility invocations, but
-is not the product's lead vocabulary.
+Launchers own the current subtractive choices `off|low|med`.
+`high|xhigh|max|ultra` remain P2-gated Hell labels: no default, summon-count,
+score-band, or routing contract is currently ratified for them. The published
+`skill-hell` prototype can materialize a requested skill, but that manual
+capability is not the Hell ladder. `--posture` remains available for benchmark
+and compatibility invocations, but is not the product's lead vocabulary.
 
 A bare launcher selects `off`/`product-floor`. Execution support is
 harness- and version-specific: consult each door's probe rather than inferring a
@@ -82,9 +78,8 @@ arms and never averaged — the gap between them *is* the door's cost.
 
 ### 3. Guarantees
 
-- **Ladder split** — Heaven is boot-time subtraction; Hell is the additive
-  product lane. A live hand-off remains a per-harness evidenced capability.
-  Only `ultra` refuses, as unratified rather than gated.
+- **Ladder split** — Heaven is the current boot-time subtraction surface. Hell
+  labels remain P2-gated; a manual summon is not a ratified Hell-ladder hand-off.
 - **P3** — never mutate shared state. Everything materializes into an `mkdtemp` session dir via
   `fsPlan` with a `$SESSION` placeholder, and is removed after.
 - **D12** — upward-only. No mid-session recomposition into a cleaner posture.
@@ -191,19 +186,17 @@ universal live-execution route:
 | pi | card plus resource discovery + reload loads the directory as a real native skill |
 | codex / hermes / grok | tbd; likely place the directory into the scoped config home |
 
-The `high…max` rungs request only a summon count. The current engine accepts
-`--limit`; relevance-band filtering and any HH scoring or routing-eligibility
-meaning remain unshipped. A rung never proves a harness-specific live hand-off.
+The current engine accepts a caller-supplied `--limit`, but no Hell rung is
+ratified as a count, score band, routing rule, or harness hand-off. HH scoring,
+routing eligibility, and relevance-band filtering remain unshipped.
 
 ---
 
 ## Open
 
-- `ultra` is unratified. It exists as a ledger arm and, coincidentally, as a level name in
-  Hermes' reasoning dial — which is **not** evidence about our rung.
-- Relevance-band filtering is an open engine seam. Doors can pass bounded
-  `--limit` counts (high 1, xhigh 3, max 5), but the engine does not yet enforce
-  declared score bands or a routing-eligibility policy.
+- Hell activation remains P2-gated. The level names do not yet establish a
+  product default, count, score band, routing policy, or hand-off contract.
+- Relevance-band filtering and routing eligibility are open engine seams.
 - Delivery is `npx`, shipping **the launcher and never a harness** — the door execs whatever the
   user already has on `PATH`. Consequence: the harness version is the user's and can move under
   us, so a door should report the version it actually launched. A dose is a statement about a

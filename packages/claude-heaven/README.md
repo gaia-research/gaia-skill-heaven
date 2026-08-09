@@ -50,15 +50,13 @@ Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-heaven`
 command and explicitly says it changed nothing.
 
-## `/skill-hell`: the live additive half
+## `/skill-hell`: manual prototype path
 
 In a Claude Code session where this plugin and a resolvable `skill-hell`
-binary are installed, `/skill-hell` exposes `high · xhigh · max · ultra` with
-`high` as default. `high`, `xhigh`, and `max` request bounded per-gap summon
-counts; the current engine accepts `summon --limit N`, but does not yet
-implement the claimed relevance bands as a scoring or routing-eligibility
-contract. `ultra` alone refuses because it is unratified, never gated.
-`/skill-hell <intent>` remains the advanced manual path.
+binary are installed, `/skill-hell <intent>` can materialize a requested skill
+for the card-based hand-off. This manual prototype path is not a ratified Hell
+ladder: `high · xhigh · max · ultra` remain P2-gated labels with no current
+default, summon-count, score-band, or routing contract.
 
 Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
 paired install timing/cache state, file count, path, and inspect link. Claude
@@ -82,12 +80,11 @@ invocation doses remain separate.
 ## Boundaries
 
 - Heaven: `off|low|med`, boot-time launcher choices.
-- Hell: `high|xhigh|max`, additive in this Claude plugin's documented path; not P2-gated.
+- Hell labels: `high|xhigh|max|ultra` remain P2-gated; the manual summon path does not assign them product behavior.
 - The rich MCP package has four tools (`gaia_search`, `gaia_inspect`, `summon`,
   `gaia_status`); it is not an implemented or measured D4 thin two-tool profile.
 - Hell/Heaven scoring, routing eligibility, and content-hash admission or
   verification are not shipped.
-- `ultra`: hard refusal because it has no ratified product mapping.
 - `floor`: benchmark-only, doorless posture.
 - `native`: `med`; `--level native` remains a compatibility spelling.
 
