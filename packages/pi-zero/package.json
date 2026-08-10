@@ -1,10 +1,10 @@
 {
-  "name": "pi-heaven",
+  "name": "pi-zero",
   "version": "0.1.0",
-  "description": "pi-heaven \u2014 the pi door to Skill Heaven: floor/product-floor/curated/native posture launcher built on pi's --no-skills / --skill primitives. Built on skill-heaven core. PROTOTYPE (WS5).",
+  "description": "pi-zero \u2014 the pi door to Skill Zero: floor/product-floor/curated/native posture launcher built on pi's --no-skills / --skill primitives. Built on skill-zero core. PROTOTYPE (WS5).",
   "type": "module",
   "bin": {
-    "pi-heaven": "./bin/pi-heaven.mjs"
+    "pi-zero": "./bin/pi-zero.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -14,7 +14,7 @@
     "launch": "tsx src/cli.ts"
   },
   "dependencies": {
-    "skill-heaven": "^0.1.0",
+    "skill-zero": "^0.1.0",
     "tsx": "^4.19.0"
   },
   "peerDependencies": {
@@ -23,7 +23,7 @@
   },
   "pi": {
     "extensions": [
-      "./extension/pi-heaven.ts"
+      "./extension/pi-zero.ts"
     ]
   },
   "peerDependenciesMeta": {
