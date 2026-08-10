@@ -66,7 +66,7 @@ can invert cleanly behind her.
 
 - `src/content.ts` — `HEADLINE`, `HARNESSES`, `POSTURES` (real two-number
   doses: floor 19,661 tok; product-floor 20,176 tok / −28.9% vs native),
-  `COMMANDS` (`/skill-heaven` · `claude-heaven` · `/skill-hell`), `CTA`.
+  `COMMANDS` (`/skill-heaven` · `claude-zero` · `/skill-hell`), `CTA`.
 - `src/styles/tokens.css` — the Luminance/Prismatic tokens (deliberately **not**
   the research-repo pink/cyan). Each variation may override locally; every
   selector is scoped under a per-variation root (`.vo .vm .vi .vb .vp .vd-…`) to
@@ -85,7 +85,7 @@ can invert cleanly behind her.
 ## Regenerate the previews
 
 ```bash
-npm -w @skill-heaven/site run dev            # :5178
+npm -w @gaia-skill-heaven/site run dev            # :5178
 # then, with Playwright resolvable (PW_ENTRY or an installed `playwright`):
 node packages/site/scripts/shots.mjs         # the original three
 node packages/site/scripts/shots-new.mjs     # the newer three

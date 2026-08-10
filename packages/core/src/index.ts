@@ -1,5 +1,5 @@
-// Public surface of the skill-heaven core engine — the seam the per-harness
-// doors (claude-heaven, pi-heaven, …) build on. Keep this deliberately small;
+// Public surface of the skill-zero core engine — the seam the per-harness
+// doors (claude-zero, pi-zero, …) build on. Keep this deliberately small;
 // door packages should reach for the composed helpers here, not deep-import
 // engine internals.
 

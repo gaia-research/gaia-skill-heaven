@@ -22,11 +22,11 @@ product vocabulary.
 
 | Door | Harness | Status |
 |---|---|---|
-| claude-heaven | Claude Code | shipped; polishing |
-| pi-heaven | pi | building |
-| codex-heaven | Codex CLI | building |
-| hermes-heaven | Hermes | building |
-| grok-heaven | Grok | stretch |
+| claude-zero | Claude Code | shipped; polishing |
+| pi-zero | pi | building |
+| codex-zero | Codex CLI | building |
+| hermes-zero | Hermes | building |
+| grok-zero | Grok | stretch |
 
 ## Benchmarking visibility
 

@@ -1,7 +1,7 @@
 {
-  "name": "skill-heaven-monorepo",
+  "name": "gaia-skill-heaven-monorepo",
   "version": "0.0.0",
-  "description": "Skill Heaven monorepo — shared profile-compiler engine (packages/core) + per-harness doors (claude-heaven, pi-heaven, …). Doubles as the Claude Code plugin marketplace (.claude-plugin/marketplace.json).",
+  "description": "gaia-skill-heaven monorepo — the Skill Zero launcher engine (packages/core, npm skill-zero) + per-harness doors (claude-zero, pi-zero, …), all under the Skill Heaven umbrella runtime brand. Doubles as the Claude Code plugin marketplace (.claude-plugin/marketplace.json).",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -13,7 +13,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "launcher": "npm -w skill-heaven run launcher --"
+    "launcher": "npm -w skill-zero run launcher --"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

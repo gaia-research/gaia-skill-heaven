@@ -81,8 +81,8 @@ def build():
     p.append(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
         f'viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="The entropy ladder. '
-        f'Heaven is subtractive and holds off, low, and med (which equals native); it is served '
-        f'by slash skill-heaven and needs the launcher. Hell is additive and holds high (the '
+        f'Heaven holds off, low, and med (which equals native); it is served '
+        f'by slash skill-heaven and needs the Skill Zero launcher. Hell is additive and holds high (the '
         f'default), xhigh, max, and ultra (unratified); it is served by slash skill-hell and '
         f'needs only the plugin.">'
     )

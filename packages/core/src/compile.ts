@@ -316,7 +316,7 @@ function compileClaude(
       }
       notes.push(
         "curated via --setting-sources '' (empty allowlist) + --plugin-dir + CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1. T9 (--setting-sources project) is SUPERSEDED as of KC4 (2026-07-30): naming `project` keeps project-scope skills live (an allowlist, not a suppression flag), which is the residual KC4 measured. T6 remains NEGATIVE on 2.1.215: --disable-slash-commands suppresses plugin-provided skills too, so curated does not use it. " +
-          "KC4 re-probe (claude 2.1.220, packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) with the empty-value composition: system:init `skills` array contains only the curated marker plus `doctor` — no project-scope leak, no marketplace-plugin leak (system:init `plugins` showed only heaven-set). " +
+          "KC4 re-probe (claude 2.1.220, packages/claude-zero/scripts/probe-kc4-listing-residual.sh) with the empty-value composition: system:init `skills` array contains only the curated marker plus `doctor` — no project-scope leak, no marketplace-plugin leak (system:init `plugins` showed only heaven-set). " +
           "`doctor` survives CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 in every scenario tested — an upstream harness limitation (founder-ruled acceptable residual), not a composition defect. " +
           "The env knob is undocumented (string-probed from the 2.1.215 binary) — version-pinned, re-verify on CLI upgrades.",
       );
@@ -352,7 +352,7 @@ function compilePi(
   // by `-p` silently loses the suppression (vanilla listing returned); any
   // other ordering yields NONE. Tail args therefore go FIRST.
   //
-  // CORRECTION (2026-08-07, WP2, packages/pi-heaven/PROBE.md, pi 0.83.0):
+  // CORRECTION (2026-08-07, WP2, packages/pi-zero/PROBE.md, pi 0.83.0):
   // re-probed before writing any door code (M0 discipline), per the dispatch
   // brief's explicit instruction not to silently "fix" this comment on
   // assumption. Argv order does NOT matter on 0.83.0 — `--no-skills` before
@@ -397,7 +397,7 @@ function compilePi(
 }
 
 // Hermes Agent 0.20.0 — verified clean-room routes
-// (packages/hermes-heaven/PROBE.md, 2026-08-07).
+// (packages/hermes-zero/PROBE.md, 2026-08-07).
 //
 // The original probe correctly found that --safe-mode/--ignore-rules/
 // --ignore-user-config do not suppress the 108-name installed-skills index.
@@ -471,7 +471,7 @@ function compileHermes(
 // Codex 0.146.0 — config-home scoping plus a session-local exact-path disable
 // set. The older flag-only negative remains important: CODEX_HOME alone does
 // not evict .agents/skills, user roots, bundled system skills, or other roots.
-// WP14 (packages/codex-heaven/PROBE.md, pane w8:p11) proved the missing step:
+// WP14 (packages/codex-zero/PROBE.md, pane w8:p11) proved the missing step:
 // ask the pinned app-server skills/list instrument for every path after the
 // scoped home is materialized, then write skills.config entries for every
 // path except named curated readmissions. The door performs that dynamic step;
@@ -535,7 +535,7 @@ function compileCursor(
   return { command: "cursor-agent", argv, env, fsPlan: base.fsPlan, notes, doseSummary: base.doseSummary, execSupport: "recipe" };
 }
 
-// Grok 0.2.118 — session-scoped config route, pinned by packages/grok-heaven/
+// Grok 0.2.118 — session-scoped config route, pinned by packages/grok-zero/
 // PROBE.md. GROK_HOME scopes auth/config, but Grok can read several
 // Claude-compatible roots and plugin skills. The door starts with this minimal
 // session config, then launcher code asks `grok inspect --json` for the exact

@@ -1,194 +1,113 @@
-![The entropy ladder. Heaven is subtractive and holds off, low, and med (which equals native); it is served by /skill-heaven and needs a launcher. Hell is additive in the current prototype: high is the default, xhigh and max broaden the request, and ultra remains unratified.](docs/assets/entropy-ladder.svg)
+![Skill Heaven decides what enters your agent's session. Skill Zero is the finished launcher that starts a harness clean (off, low, med); Heaven is the converge summon that curates the right few skills; Hell is the exploratory summon that reaches for more capability; Ultra is the future auto-switch across them.](docs/assets/entropy-ladder.svg)
 
 # Skill Heaven
 
-**Run your AI coding agent with less context bloat, or deliberately summon more capability when you need it.**
-Skill Heaven is an experimental launcher for AI coding harnesses including **Claude Code, Codex, Pi, Hermes, and Grok**.
+**Your AI coding agent is carrying skills it isn't using. Skill Heaven decides what actually enters a session — so the agent runs on the few skills that help, not the forty it's ignoring.**
 
-Instead of permanently installing more and more skills into every session, Skill Heaven lets you control how much skill context your agent starts with.
+Skill Heaven is the runtime layer for AI coding harnesses (**Claude Code, Codex, Pi, Hermes, Grok**). Instead of treating skills as permanent installs, it treats them as something you *start clean* and *summon on purpose*:
 
-> **Working prototype**
->
-> Skill Heaven is actively being tested for public use. Commands and behavior may still change.
+- **Skill Zero** — the launcher. Start any harness with a clean, minimal context in one command (`claude-zero`, `pi-zero`, …). This is finished and usable today.
+- **Heaven** — the *converge* summon: bring back only the right few skills for the task at hand.
+- **Hell** — the *exploratory* summon: reach out into the evidenced skill world for more capability when you need it (`skill-hell`).
+- **Ultra** — the future auto-switch that moves between converging and exploring for you.
 
-### Gaia Ecosystem
+Skill Zero is the part you can use right now. Heaven, Hell, and Ultra are the summon directions of the same runtime — the behavior research (the **HH Index**) is still in the works.
+
+> Repo: `gaia-research/gaia-skill-heaven` — the Skill Heaven monorepo and Claude Code plugin marketplace.
+
+### Gaia ecosystem
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
-[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
 ---
 
-## Why Skill Heaven?
+## Why you'd want this
 
-Agent sessions accumulate context quickly:
+Every skill, rule file, and plugin your agent loads spends context you're paying for — and dilutes the ones that matter. Skill Heaven's answer:
 
-- installed skills
-- project instructions
-- plugins
-- tool definitions
-- harness-specific defaults
+1. **Start from Zero.** Launch the harness with a clean baseline instead of your whole catalogue.
+2. **Summon toward Heaven.** Add back the small, curated set the task actually needs.
+3. **Reach into Hell when you must.** Explore the wider evidenced skill world for capability you don't have yet.
 
-Sometimes you want all of that.
-
-Sometimes you want almost none of it.
-
-Skill Heaven gives you a simple spectrum for controlling that tradeoff:
-
-```text
-HEAVEN                                      HELL
-cleaner                                      richer
-context                                      context
-
-off ─── low ─── med ─── high ─── xhigh ─── max ─── ultra
-```
-
-**Heaven** removes or limits ambient skill context before the agent starts.
-
-**Hell** adds skills on demand when you want more capability.
-
-`ultra` is experimental and not yet part of the stable product.
+You stay in charge — Skill Heaven never mutates your real config. It composes a temporary session and tears it down when you exit.
 
 ---
 
 ## Install
 
-Requires **Node.js 22 or newer**.
+Requires **Node.js 22+**. Installs the launcher doors plus the Hell summon door:
 
 ```bash
-curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 ```
-
-This installs the Skill Heaven launchers:
 
 ```text
-claude-heaven
-codex-heaven
-pi-heaven
-hermes-heaven
-grok-heaven
-skill-hell
+claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero   skill-hell
 ```
 
-Skill Heaven **does not install the agent harnesses themselves**. You still install Claude Code, Codex, Pi, Hermes, or Grok normally.
-
-The default install location is:
+The installer does **not** install the harnesses themselves — install Claude Code, Codex, Pi, Hermes, or Grok as usual. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if needed:
 
 ```bash
-$HOME/.local/share/skill-heaven/bin
-```
-
-If needed, add it to your `PATH`:
-
-```bash
-export PATH="$HOME/.local/share/skill-heaven/bin:$PATH"
-```
-
-Re-run the installer anytime to update.
-
----
-
-## Quick start
-
-Launch Claude Code with a cleaner environment:
-
-```bash
-claude-heaven
-```
-
-Or Codex:
-
-```bash
-codex-heaven
-```
-
-Pi:
-
-```bash
-pi-heaven
-```
-
-Hermes:
-
-```bash
-hermes-heaven
-```
-
-Grok:
-
-```bash
-grok-heaven
-```
-
-Want to see what the launcher would do without actually starting the agent?
-
-```bash
-claude-heaven --print
-codex-heaven --print
-pi-heaven --print
-hermes-heaven --print
-grok-heaven --print
+export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
 ```
 
 ---
 
-## Summon a skill
+## Start clean — Skill Zero
 
-Skill Hell is the additive side of the system.
+Launch your harness with a clean context:
 
-Instead of loading everything up front, ask for capability when you need it:
+```bash
+claude-zero          # or: codex-zero · pi-zero · hermes-zero · grok-zero
+```
+
+See exactly what a launch will compose, without spawning anything:
+
+```bash
+claude-zero --print
+```
+
+Pick how clean you want to start with `--level`:
+
+| Level | You get |
+|---|---|
+| `off` | The cleanest launchable start for that harness |
+| `low` | Clean, then only the skills you name (`--skill ./skills/my-skill`) |
+| `med` | Your normal, native harness |
+
+```bash
+# start clean, then admit just one skill
+claude-zero --level low --skill ./skills/my-skill
+```
+
+Skill suppression differs per harness, so Skill Zero is **fail-closed**: if it can't give you a genuinely clean launch, it tells you instead of pretending.
+
+---
+
+## Summon more — the Heaven and Hell directions
+
+A clean start is only half of Skill Heaven. Once you're launched, you *summon* capability back in — in one of two directions:
+
+- **Heaven — converge.** Curate toward the right few skills for the task. *(In-session `/skill-heaven`; the automated routing is HH-Index research, in the works.)*
+- **Hell — explore.** Reach into the wider evidenced skill world for capability you don't already have. This is live today as the `skill-hell` summon door:
 
 ```bash
 skill-hell summon "code review" --card
-```
-
-You can also run the published engine directly:
-
-```bash
+# or straight from npm:
 npx --yes skill-hell@latest summon "code review" --card
 ```
 
-The current Skill Hell implementation is a **prototype summon system**. It does not yet use Hell/Heaven benchmark scores to automatically decide which skills are safe or optimal to load.
+`skill-hell` is the **exploratory side of Skill Heaven** — a per-session summon, not an install. It brings a skill into context once and leaves nothing behind. Today it's a manual surface; it does not yet auto-route from HH-Index results.
 
----
+The launcher also ships the in-session command set for the whole runtime surface:
 
-## Heaven levels
-
-The user-facing Heaven controls are intentionally small:
-
-| Level | What it means |
-|---|---|
-| `off` | Start from the cleanest supported product environment |
-| `low` | Start clean, then admit only a curated skill set |
-| `med` | Use the harness normally |
-
-The exact mechanics differ between harnesses because Claude, Codex, Pi, Hermes, and Grok expose different ways to control skills and configuration.
-
-Skill Heaven handles those differences for you.
-
----
-
-## Load specific skills
-
-For a curated launch, provide one or more `SKILL.md` files or skill directories:
-
-```bash
-skill-heaven \
-  --posture curated \
-  --harness claude \
-  --skill ./skills/my-skill
+```text
+/skill-zero     start / re-compose a clean launch
+/skill-heaven   converge — curate the right few
+/skill-hell     explore — summon more capability
+/skill-ultra    auto-switch (future)
 ```
-
-You can inspect the resulting launch plan first:
-
-```bash
-skill-heaven \
-  --posture curated \
-  --harness claude \
-  --skill ./skills/my-skill \
-  --print
-```
-
-For most users, the per-harness commands such as `claude-heaven` are the simpler entry point.
 
 ---
 
@@ -203,77 +122,50 @@ For most users, the per-harness commands such as `claude-heaven` are the simpler
 | Grok | Supported |
 | Cursor | Recipe / inspection only |
 
-Skill suppression is not equally powerful on every harness.
-
-Skill Heaven favors **fail-closed behavior**: if a clean launch cannot be performed reliably, it should tell you rather than pretending the environment is clean.
-
 ---
 
 ## How it works
 
-Skill Heaven does not modify your normal agent installation.
+Skill Zero never touches your normal agent installation. For each launch it creates a temporary session, composes the right harness flags and config, starts the original harness binary, and removes the temp state when the session exits. Your real configuration stays exactly as it was.
 
-The launcher creates a temporary session environment, composes the appropriate harness flags and configuration, and starts the original harness binary.
-
-Your normal configuration remains intact.
-
-Temporary Skill Heaven sessions are designed to be disposable.
+Under the hood the launcher composes named postures — `product-floor` (cleanest launchable), `curated` (only what you name), `native` (untouched), and an internal benchmark `floor`. `--level` is the user-facing dial over those.
 
 ---
 
-## The Hell / Heaven Index
+## HH Index — the behavior research *(in the works)*
 
-Skill Heaven is also part of an ongoing research project studying what happens as agents receive progressively more skill context.
+Heaven, Hell, and Ultra aren't just summon buttons — they're a behavioral axis Skill Heaven is measuring. The **Hell-Heaven (HH) Index** asks:
 
-The question is simple:
+> **When does adding capability actually help, and when does it just add context entropy?**
 
-> **When does adding more capability help, and when does it just add context entropy?**
+That research lives in `gaia-research` and is still in progress. The launcher does **not** yet auto-route skills from HH-Index results.
 
-The research measures quality, cost, and behavior across the Heaven → Hell spectrum.
-
-The current launcher does **not** automatically route skills using these benchmark results yet.
-
-[![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20help%20wanted-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
+[![Read the benchmark method →](https://img.shields.io/badge/Read%20the%20benchmark%20method%20%E2%86%92-WIP%20%C2%B7%20axis%20%2F%20research-ff4fa3?style=flat-square)](https://research.gaiaskilltree.com/research/hh-benchmark)
 
 ---
 
-![Skill Heaven site preview](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
+![Skill Heaven site preview](https://raw.githubusercontent.com/gaia-research/gaia-skill-heaven/main/docs/assets/site-preview.png)
 
 ---
 
 ## Uninstall
 
 ```bash
-$HOME/.local/share/skill-heaven/uninstall.sh
+$HOME/.local/share/gaia-skill-heaven/uninstall.sh
 ```
 
-This removes files installed by the Skill Heaven installer.
+## Docs & links
 
----
-
-## Research & project docs
-
-Want the deeper machinery?
-
+- [Vision](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md) · [Mission](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md)
 - [Hell / Heaven benchmark](https://research.gaiaskilltree.com/research/hh-benchmark)
-- [Gaia Skill Tree](https://gaiaskilltree.com/)
-- [Gaia Research](https://research.gaiaskilltree.com/)
-- [Vision](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md)
-- [Mission](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md)
-
-Implementation details, harness probes, benchmark recording, launcher composition, and historical design decisions live under `docs/` and the individual package documentation.
-
----
+- [Gaia Skill Tree](https://gaiaskilltree.com/) · [Gaia Research](https://research.gaiaskilltree.com/)
 
 ## Development
 
 ```bash
 npm install
 npm test
-npm run launcher -- --posture floor --print
+npm run launcher -- --level off --print
 ```
 
-Skill Heaven uses Node.js 22+ and TypeScript ESM.
-
-Harnesses are never installed as package dependencies.
-
+Node.js **22+**, TypeScript ESM. No harness binaries are installed as dependencies.

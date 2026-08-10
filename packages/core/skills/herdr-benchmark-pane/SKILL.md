@@ -1,6 +1,6 @@
 ---
 name: herdr-benchmark-pane
-description: Run Skill Heaven benchmark probes and side-by-side posture comparisons in visible Herdr panes. Use whenever comparing postures (floor, product-floor, curated, native), doors (claude-heaven, pi-heaven, codex-heaven), or harnesses, and the operator must be able to watch every arm run.
+description: Run Skill Heaven benchmark probes and side-by-side posture comparisons in visible Herdr panes. Use whenever comparing postures (floor, product-floor, curated, native), doors (claude-zero, pi-zero, codex-zero), or harnesses, and the operator must be able to watch every arm run.
 ---
 
 # Herdr Benchmark Pane — side-by-side posture comparison
@@ -38,12 +38,12 @@ Proceed only if `server.status: running`.
 
 ## 1. Paths
 
-The checkout is at `/Users/marcotiongson/skill-heaven`. Door entrypoints:
+The checkout is at `/Users/marcotiongson/gaia-skill-heaven`. Door entrypoints:
 
 ```
-packages/claude-heaven/bin/claude-heaven.mjs
-packages/pi-heaven/bin/pi-heaven.mjs
-packages/core/bin/skill-heaven.mjs
+packages/claude-zero/bin/claude-zero.mjs
+packages/pi-zero/bin/pi-zero.mjs
+packages/core/bin/skill-zero.mjs
 ```
 
 Resolve these relative to the repo root rather than hardcoding an absolute path — the
@@ -79,8 +79,8 @@ For a probe that runs and exits, you do not need to start an agent in the pane.
 a command with no quoted arguments:
 
 ```bash
-herdr pane run "$ARM_A" node packages/claude-heaven/bin/claude-heaven.mjs --print
-herdr pane run "$ARM_B" node packages/claude-heaven/bin/claude-heaven.mjs --posture product-floor --print
+herdr pane run "$ARM_A" node packages/claude-zero/bin/claude-zero.mjs --print
+herdr pane run "$ARM_B" node packages/claude-zero/bin/claude-zero.mjs --posture product-floor --print
 ```
 
 **The moment your command contains a quoted prompt, use `pane send-text`** with a trailing
@@ -116,7 +116,7 @@ When the arm must be a live session:
 herdr agent start arm-native --kind claude --pane "$ARM_A" --timeout 120000 \
   -- --model sonnet
 
-herdr agent start arm-heaven --kind claude --pane "$ARM_B" --timeout 120000 \
+herdr agent start arm-zero --kind claude --pane "$ARM_B" --timeout 120000 \
   -- --model sonnet
 ```
 
@@ -128,14 +128,14 @@ Send the same probe to every arm so the comparison is fair:
 ```bash
 PROBE="List every skill you have available, by name. If none, say NONE."
 herdr agent prompt arm-native "$PROBE" --wait --until idle --timeout 300000
-herdr agent prompt arm-heaven "$PROBE" --wait --until idle --timeout 300000
+herdr agent prompt arm-zero "$PROBE" --wait --until idle --timeout 300000
 ```
 
 Collect:
 
 ```bash
 herdr agent read arm-native
-herdr agent read arm-heaven
+herdr agent read arm-zero
 ```
 
 ---
@@ -144,10 +144,10 @@ herdr agent read arm-heaven
 
 | Arm | Command | What it prices |
 |---|---|---|
-| native | `claude-heaven --posture native --print` | the unmodified harness |
-| benchmark floor | `skill-heaven --posture floor --print` | doorless absolute zero — placebo-of-record |
-| product floor | `claude-heaven --posture product-floor --print` | the nearest launchable zero, door open |
-| curated | `claude-heaven --posture curated --skill <dir> --print` | a chosen skill set and nothing else |
+| native | `claude-zero --posture native --print` | the unmodified harness |
+| benchmark floor | `skill-zero --posture floor --print` | doorless absolute zero — placebo-of-record |
+| product floor | `claude-zero --posture product-floor --print` | the nearest launchable zero, door open |
+| curated | `claude-zero --posture curated --skill <dir> --print` | a chosen skill set and nothing else |
 
 The gap between benchmark floor and product floor **is** the door's cost. Report it as its
 own number; never let either floor stand in for the other.
@@ -159,8 +159,8 @@ own number; never let either floor stand in for the other.
 Same probe, different harness, one pane each:
 
 ```bash
-herdr pane run "$ARM_A" node packages/claude-heaven/bin/claude-heaven.mjs --posture curated --skill "$SKILL" --print
-herdr pane run "$ARM_B" node packages/pi-heaven/bin/pi-heaven.mjs --posture curated --skill "$SKILL" --print
+herdr pane run "$ARM_A" node packages/claude-zero/bin/claude-zero.mjs --posture curated --skill "$SKILL" --print
+herdr pane run "$ARM_B" node packages/pi-zero/bin/pi-zero.mjs --posture curated --skill "$SKILL" --print
 ```
 
 Harness versions must be recorded with any result — a dose measured on one version does not

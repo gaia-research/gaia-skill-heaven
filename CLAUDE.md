@@ -1,22 +1,22 @@
-# CLAUDE.md — skill-heaven
+# CLAUDE.md — gaia-skill-heaven
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## What this is
 
-`skill-heaven` is the **product monorepo** for the Skill Heaven system and
+`gaia-skill-heaven` is the **product monorepo** for the Skill Heaven system and
 doubles as the **Claude Code plugin marketplace** (root
-`.claude-plugin/marketplace.json`; lists the Claude Code door `claude-heaven`).
-Per-harness doors for other harnesses (`pi-heaven`, …) ship through their own
+`.claude-plugin/marketplace.json`; lists the Claude Code door `claude-zero`).
+Per-harness doors for other harnesses (`pi-zero`, …) ship through their own
 harness's channel, not this manifest. Two layers:
 
 - **`packages/core`** — the shared profile-compiler engine and the
-  **`skill-heaven` research driver** bin (`--print` recipes, `--record`
+  **`skill-zero` launcher/research driver** bin (`--print` recipes, `--record`
   benchmark arms for the Hell/Heaven benchmark). Zero runtime dependencies;
   TypeScript ESM.
-- **`packages/claude-heaven`**, **`packages/pi-heaven`** — the per-harness
-  **doors** (the user-facing installables). `claude-heaven` is the flagship
-  (WS4); `pi-heaven` is the vanguard (WS5). Every door defaults to the `off`
+- **`packages/claude-zero`**, **`packages/pi-zero`** — the per-harness
+  **doors** (the user-facing installables). `claude-zero` is the flagship
+  (WS4); `pi-zero` is the vanguard (WS5). Every door defaults to the `off`
   ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
@@ -37,9 +37,9 @@ read from the Skill Tree stamps, not measured live. Public domain:
 ## Layout
 
 ```
-packages/core/           engine + skill-heaven bin + vendored pure helpers (src/vendor) + parity fixture/tests
-packages/claude-heaven/  Claude Code door (off-default launcher, /skill-heaven chooser + /skill-hell, statusline) — WIP (WS4)
-packages/pi-heaven/      pi door — stub (WS5)
+packages/core/           engine + skill-zero bin + vendored pure helpers (src/vendor) + parity fixture/tests
+packages/claude-zero/    Claude Code door (off-default launcher, /skill-heaven chooser + /skill-hell, statusline) — WIP (WS4)
+packages/pi-zero/        pi door — WIP/prototype (WS5)
 ```
 
 ## Commands
@@ -48,7 +48,7 @@ packages/pi-heaven/      pi door — stub (WS5)
 npm install
 npm test          # vitest across all packages (incl. the cross-repo parity fixture)
 npm run typecheck # tsc --noEmit over packages/*
-npm run launcher -- --posture floor --print   # drive the core skill-heaven bin
+npm run launcher -- --posture floor --print   # drive the core skill-zero bin
 ```
 
 Node **≥ 22** (npm workspaces + the wider tooling assume it). **No runtime

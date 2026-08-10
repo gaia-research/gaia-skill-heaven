@@ -1,15 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "skill-heaven",
-  "description": "The Claude Code plugin marketplace for the Skill Heaven system — per-harness doors built on the shared skill-heaven core. Claude Code door: claude-heaven.",
+  "name": "gaia-skill-heaven",
+  "description": "The Claude Code plugin marketplace for gaia-skill-heaven — the Skill Heaven umbrella runtime brand. It ships claude-zero, the Skill Zero launcher door, while keeping /skill-hell framed as the live Hell summon door under the same umbrella.",
   "owner": {
     "name": "Gaia Research"
   },
   "plugins": [
     {
-      "name": "claude-heaven",
-      "source": "./packages/claude-heaven/plugin",
-      "description": "Working prototype of the Claude Code door to Skill Heaven, actively tested for public use \u2014 /skill-heaven owns boot-time off|low|med; /skill-hell owns live high|xhigh|max|ultra and card-based summoning from a live tree. Interfaces may change. Built on skill-heaven core."
+      "name": "claude-zero",
+      "source": "./packages/claude-zero/plugin",
+      "description": "Working prototype of the Claude Code door to Skill Zero under the Skill Heaven umbrella, actively tested for public use — /skill-zero owns boot-time off|low|med; the launcher also ships the axis commands /skill-heaven, /skill-hell, and /skill-ultra, with /skill-hell as the live Hell summon door. Interfaces may change. Built on skill-zero core."
     }
   ]
 }

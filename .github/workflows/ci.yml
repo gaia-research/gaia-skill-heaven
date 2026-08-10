@@ -16,7 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm -w @skill-heaven/site run build
+      - run: npm -w @gaia-skill-heaven/site run build
       - run: npm test
 
       # D6 cross-repo gate: a record emitted by core must pass gaia-research's

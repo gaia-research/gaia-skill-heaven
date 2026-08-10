@@ -6,7 +6,7 @@ export const HEADLINE = {
   kicker: 'HELL · HEAVEN · INDEX',
   line1: 'STOP INSTALLING SKILLS.',
   line2: 'START SUMMONING THEM.',
-  sub: "Strip your agent's context bloat. Run clean. Skill Heaven composes a lean, benchmarked skill surface at launch — nothing installed, nothing mutated, nothing left behind.",
+  sub: "Strip your agent's context bloat. Run clean. Skill Zero composes a lean, benchmarked skill surface at launch under the Skill Heaven umbrella — nothing installed, nothing mutated, nothing left behind.",
 }
 
 export type Harness = {
@@ -23,28 +23,28 @@ export const HARNESSES: Harness[] = [
     id: 'claude',
     name: 'Claude',
     status: 'flagship',
-    install: 'claude plugin marketplace add gaia-research/skill-heaven\nclaude plugin install claude-heaven@skill-heaven',
-    note: 'The flagship door. Native-default launcher + the /skill-heaven entropy ladder.',
+    install: 'claude plugin marketplace add gaia-research/gaia-skill-heaven\nclaude plugin install claude-zero@gaia-skill-heaven',
+    note: 'The flagship Skill Zero door + the /skill-heaven entropy ladder.',
   },
   {
     id: 'pi',
     name: 'Pi',
     status: 'vanguard',
-    install: 'pi install pi-heaven',
+    install: 'pi install pi-zero',
     note: 'The vanguard door. --no-skills clean floor, curated skill mounts.',
   },
   {
     id: 'codex',
     name: 'Codex',
     status: 'recipe',
-    install: 'skill-heaven --harness codex --print',
+    install: 'skill-zero --harness codex --print',
     note: 'Recipe track — per-session skills-config override, surface not yet proven clean.',
   },
   {
     id: 'hermes',
     name: 'Hermes-agent',
     status: 'recipe',
-    install: 'skill-heaven --harness hermes --print',
+    install: 'skill-zero --harness hermes --print',
     note: 'Recipe track — compile-only recipe today.',
   },
 ]
@@ -83,11 +83,11 @@ export const POSTURES: Posture[] = [
 
 export const COMMANDS = {
   invoke: '/skill-heaven',
-  launch: 'claude-heaven',
+  launch: 'claude-zero',
   break: '/skill-hell',
 }
 
 export const CTA = {
-  primary: 'Enter Skill Heaven',
+  primary: 'Launch Skill Zero',
   secondary: 'Read the benchmark method',
 }

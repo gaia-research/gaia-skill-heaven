@@ -1,0 +1,19 @@
+{
+  "name": "hermes-zero",
+  "version": "0.1.0",
+  "description": "hermes-zero \u2014 the Hermes door to Skill Zero: verified floor/product-floor/curated/native posture launcher with a session-scoped curated profile. Built on skill-zero core. PROTOTYPE (WP8).",
+  "type": "module",
+  "bin": {
+    "hermes-zero": "./bin/hermes-zero.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "launch": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "skill-zero": "^0.1.0",
+    "tsx": "^4.19.0"
+  }
+}
