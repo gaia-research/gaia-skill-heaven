@@ -1,9 +1,16 @@
-# skill-heaven
+# Skill Heaven
+
+This is a LAUNCHER being actively tested for all your harnesses. Works with Claude, Codex, Pi, and Hermes agents.
 
 > **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
 > Interfaces, flags, postures, and command surfaces may change. Progress markers
 > and benchmark results live at
 > [research.gaiaskilltree.com](https://research.gaiaskilltree.com).
+
+### Gaia Ecosystem
+[![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
+[![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/)
 
 **Strip your agent's context bloat — run clean.**
 
