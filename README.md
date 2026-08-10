@@ -9,7 +9,7 @@ Skill Zero currently targets **Claude Code, Codex, Pi, Hermes, and Grok**. It gi
 ### Gaia Ecosystem
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
-[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
 ---
 
@@ -98,22 +98,22 @@ grok-zero --print
 You can also drive the shared engine directly:
 
 ```bash
-skill-zero --harness claude --posture product-floor --print
+skill-zero --harness claude --level off --print
 ```
 
 ---
 
-## Skill Zero postures
+## Skill Zero levels and postures
 
-Skill Zero keeps the launcher surface intentionally small:
+Skill Zero keeps the launcher surface intentionally small. Its user-facing levels are Heaven rungs:
 
-| Level | Meaning |
-|---|---|
-| `off` | Launch the cleanest supported product floor |
-| `low` | Launch clean, then admit only the skills you name |
-| `med` | Keep the harness native |
+| Level | Posture mechanic | Meaning |
+|---|---|---|
+| `off` | `product-floor` | Launch the cleanest supported product floor |
+| `low` | `curated` | Launch clean, then admit only the skills you name |
+| `med` | `native` | Keep the harness native |
 
-Under the hood those map onto the posture mechanics already implemented in this repo:
+Under the hood those levels map onto the posture mechanics already implemented in this repo:
 
 - **floor** — benchmark-only doorless floor
 - **product-floor** — the smallest launchable zero surface that keeps the door
@@ -121,6 +121,17 @@ Under the hood those map onto the posture mechanics already implemented in this 
 - **native** — your normal harness setup
 
 The exact route differs by harness, but the product meaning stays the same: Skill Zero composes a temporary session environment instead of mutating your shared config.
+
+The per-harness doors also ship the in-session command set for navigating the runtime surface:
+
+```text
+/skill-heaven
+/skill-zero
+/skill-hell
+/skill-ultra
+```
+
+Heaven is the convergent, curated summon direction; Hell is exploratory summon; Ultra is the future auto-switch across those directions. Skill Zero owns the launch-time reduction to a cleaner starting context.
 
 ---
 
@@ -130,7 +141,7 @@ For a curated launch, provide one or more `SKILL.md` files or skill directories:
 
 ```bash
 skill-zero \
-  --posture curated \
+  --level low \
   --harness claude \
   --skill ./skills/my-skill
 ```
@@ -139,7 +150,7 @@ Inspect first if you want the exact plan:
 
 ```bash
 skill-zero \
-  --posture curated \
+  --level low \
   --harness claude \
   --skill ./skills/my-skill \
   --print
@@ -233,7 +244,7 @@ $HOME/.local/share/gaia-skill-heaven/uninstall.sh
 ```bash
 npm install
 npm test
-npm run launcher -- --posture floor --print
+npm run launcher -- --level off --print
 ```
 
 Node.js **22+**. TypeScript ESM. No harness binaries are installed as package dependencies.
