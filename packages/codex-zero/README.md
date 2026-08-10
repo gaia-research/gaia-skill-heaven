@@ -2,7 +2,7 @@
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Codex door to Skill Heaven.
+The Codex door to Skill Zero under the Skill Heaven umbrella.
 
 ```bash
 codex-zero --print                              # off/product-floor default

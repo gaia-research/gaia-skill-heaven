@@ -41,11 +41,11 @@ on invoke), never averaged into one.
 ## Operating Context
 
 Used from the terminal inside a coding-agent harness. Install a per-harness
-"door" (Claude's is the flagship `claude-heaven`; Pi is the vanguard; Codex and
+"door" (Claude's is the flagship `claude-zero`; Pi is the vanguard; Codex and
 others are recipe-track). Invoke `/skill-heaven` to summon a posture; launch
-`claude-heaven` to enter; `/skill-hell` is a visible but **locked** door. The
+`claude-zero` to enter; `/skill-hell` is a visible but **locked** door. The
 public site lives at **`skill-heaven.dev`**, served from `packages/site` inside
-the `skill-heaven` monorepo (N12).
+the `gaia-skill-heaven` monorepo (N12).
 
 ## Capabilities and Constraints
 
@@ -102,7 +102,7 @@ the `skill-heaven` monorepo (N12).
 - Real posture token figures above (floor 19,661 tok; product-floor 20,176 tok;
   −28.9% vs native) are measured benchmark results, not marketing estimates.
 - Real commands and install flows (`claude plugin marketplace add …`,
-  `/skill-heaven`, `claude-heaven`, `/skill-hell`).
+  `/skill-heaven`, `claude-zero`, `/skill-hell`).
 - No customer testimonials, logos, or press exist yet — future work
   must not fabricate them. Skill Heaven and Skill Hell are **free** (C1); no paid
   tier, metering, or enterprise pricing has shipped and the free-tier meter is

@@ -48,7 +48,7 @@ export function HarnessChooser() {
             <code>/skill-heaven</code> to invoke
           </span>
           <span className="sh-chooser__cmd">
-            <code>claude-heaven</code> to launch
+            <code>claude-zero</code> to launch
           </span>
           <span className="sh-chooser__cmd sh-chooser__cmd--break">
             <code>/skill-hell</code> to break loose

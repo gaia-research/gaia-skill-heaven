@@ -1,7 +1,7 @@
-# @skill-heaven/site — landing page
+# @gaia-skill-heaven/site — landing page
 
 > Marketing landing page for Skill Heaven. It is separate from the engine
-> (`packages/core`) and the doors (`packages/claude-heaven`, `packages/pi-heaven`).
+> (`packages/core`) and the doors (`packages/claude-zero`, `packages/pi-zero`).
 
 The pages site ships two retained hero directions:
 
@@ -17,9 +17,9 @@ part of the site.
 ## Run
 
 ```bash
-npm -w @skill-heaven/site run dev      # dev server on :5178
-npm -w @skill-heaven/site run build    # production build → dist/
-npm -w @skill-heaven/site run preview  # serve the build
+npm -w @gaia-skill-heaven/site run dev      # dev server on :5178
+npm -w @gaia-skill-heaven/site run build    # production build → dist/
+npm -w @gaia-skill-heaven/site run preview  # serve the build
 ```
 
 ## Design system

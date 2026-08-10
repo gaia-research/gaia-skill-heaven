@@ -1,6 +1,6 @@
 ---
 name: pi-playbook
-description: Drive the pi CLI as a benchmark target or dispatched worker. Use when running pi probes, comparing pi postures, launching pi-heaven, or handing work to a pi agent. Covers the flag surface that maps onto Skill Heaven mechanisms, model selection, and non-interactive invocation.
+description: Drive the pi CLI as a benchmark target or dispatched worker. Use when running pi probes, comparing pi postures, launching pi-zero, or handing work to a pi agent. Covers the flag surface that maps onto Skill Heaven mechanisms, model selection, and non-interactive invocation.
 ---
 
 # pi Playbook
@@ -117,7 +117,7 @@ meaningless.
 `packages/core/src/compile.ts` carries a note pinned to **pi 0.80.10**: `--no-skills`
 immediately followed by `-p` silently lost the suppression, so the launcher emits tail args
 first. Whether this still reproduces on 0.83.0 is recorded in
-`packages/pi-heaven/PROBE.md` — read that file rather than assuming either way.
+`packages/pi-zero/PROBE.md` — read that file rather than assuming either way.
 
 The general rule: **argv ordering is load-bearing on pi**. When a probe gives an unexpected
 result, try reordering before concluding a flag does not work.

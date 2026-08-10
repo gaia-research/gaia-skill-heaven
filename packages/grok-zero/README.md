@@ -2,7 +2,7 @@
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Grok door to Skill Heaven.
+The Grok door to Skill Zero under the Skill Heaven umbrella.
 
 ```bash
 grok-zero --print                              # off/product-floor default

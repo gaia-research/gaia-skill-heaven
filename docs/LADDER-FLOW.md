@@ -21,10 +21,10 @@ kind of thing.
 
 Not a policy choice — a capability one.
 
-**Heaven is subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
-*withheld*. A running session cannot un-load what it already loaded (D12), so choosing a Heaven
-rung is a decision that can only be made **at boot**. That is why `/skill-heaven` requires the
-launcher: without one, there is no boot to configure, and the honest answer is to say so.
+**Skill Zero's low-entropy boot modes are subtractive.** `off`, `low`, and `med` differ by how much of your ambient setup is
+*withheld*. A running session cannot un-load what it already loaded (D12), so choosing one of these
+rungs is a decision that can only be made **at boot**. That is why `/skill-heaven` requires the
+Skill Zero launcher: without one, there is no boot to configure, and the honest answer is to say so.
 
 **Hell is additive.** `high` through `ultra` differ by how freely skills are *summoned in*.
 Adding context to a live session is something every harness can do. That is why `/skill-hell`
@@ -58,8 +58,8 @@ saw a launcher.
 flowchart TD
     A([user types a command]) --> B{which command?}
 
-    B -->|/skill-heaven| C{launched via a<br/>heaven launcher?}
-    C -->|no| D["`tell them how to launch<br/>**claude-heaven --level low**<br/>— do not pretend to change anything`"]
+    B -->|/skill-heaven| C{launched via<br/>Skill Zero?}
+    C -->|no| D["`tell them how to launch<br/>**claude-zero --level low**<br/>— do not pretend to change anything`"]
     C -->|yes| E[chooser: off · low · med]
     E --> F{direction?}
     F -->|upward| G[apply — additive, allowed in-session]

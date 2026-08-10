@@ -128,7 +128,7 @@ founder as a gold mine for exactly this class of problem.
 
 ## The door package shape
 
-Identical across `pi-heaven`, `codex-heaven`, `hermes-heaven`, `grok-heaven`. Copy the nearest
+Identical across `pi-zero`, `codex-zero`, `hermes-zero`, `grok-zero`. Copy the nearest
 existing door rather than starting fresh — pick by mechanism class, not alphabetically.
 
 ```
@@ -149,7 +149,7 @@ passthrough.
 The compile route goes in `packages/core/src/compile.ts`: add the harness to `HARNESSES`, add a
 `compile<Name>()` case to the switch, and return `execSupport: "exec"` **only if your probe
 licenses it**. `"recipe"` — emit a plan, never spawn — is an honest, acceptable outcome and is
-where codex-heaven sat for weeks.
+where codex-zero sat for weeks.
 
 ### Posture definitions
 

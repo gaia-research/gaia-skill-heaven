@@ -9,7 +9,7 @@ Skill Zero currently targets **Claude Code, Codex, Pi, Hermes, and Grok**. It gi
 ### Gaia Ecosystem
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
-[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
 ---
 
@@ -206,7 +206,7 @@ That axis/research work is still **in the works** and lives in `gaia-research`. 
 
 ---
 
-![Skill Heaven site preview](https://raw.githubusercontent.com/gaia-research/skill-heaven/main/docs/assets/site-preview.png)
+![Skill Heaven site preview](https://raw.githubusercontent.com/gaia-research/gaia-skill-heaven/main/docs/assets/site-preview.png)
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: codex-playbook
-description: Drive the Codex CLI as a benchmark target or dispatched worker. Use when running codex probes, comparing codex postures, building codex-heaven, or handing work to a codex agent. Covers non-interactive exec, sandbox and config isolation, model and reasoning-effort selection, and the per-session skills toggle.
+description: Drive the Codex CLI as a benchmark target or dispatched worker. Use when running codex probes, comparing codex postures, building codex-zero, or handing work to a codex agent. Covers non-interactive exec, sandbox and config isolation, model and reasoning-effort selection, and the per-session skills toggle.
 ---
 
 # Codex Playbook
@@ -172,10 +172,10 @@ codex exec resume --last "follow-up instruction"
 
 ---
 
-## 7. codex-heaven status
+## 7. codex-zero status
 
-`packages/codex-heaven/` ships as of 2026-08-07, with its probe recorded in
-`packages/codex-heaven/PROBE.md` on codex-cli 0.146.0.
+`packages/codex-zero/` ships as of 2026-08-07, with its probe recorded in
+`packages/codex-zero/PROBE.md` on codex-cli 0.146.0.
 
 The discipline that got it there still applies to any route change: `execSupport` moves on the
 strength of **a probe you ran**, on a pinned version, recorded before the route changes — never

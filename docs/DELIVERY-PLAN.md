@@ -14,18 +14,18 @@ claim rather than a five-door universal guarantee.
 ## 1. How a stranger installs everything
 
 ```bash
-curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 ```
 
 The command installs:
 
-- `claude-heaven`
-- `pi-heaven`
-- `codex-heaven`
-- `hermes-heaven`
-- `grok-heaven`
+- `claude-zero`
+- `pi-zero`
+- `codex-zero`
+- `hermes-zero`
+- `grok-zero`
 - a `skill-hell` binary from the published `@gaia-research/mcp@latest` package
-- the `claude-heaven@skill-heaven` Claude plugin, when the user's own `claude`
+- the `claude-zero@gaia-skill-heaven` Claude plugin, when the user's own `claude`
   binary is already on `PATH`
 
 It never installs Claude Code, pi, Codex, Hermes, or Grok. A missing harness
@@ -44,7 +44,7 @@ source is inspectable at the same URL before execution.
 
 ### Install boundary and PATH
 
-The default installation is `$HOME/.local/share/skill-heaven`; source, runtime
+The default installation is `$HOME/.local/share/gaia-skill-heaven`; source, runtime
 dependencies, engine, bins, ownership markers, and uninstaller all stay under
 that directory. Claude plugin registration uses Claude Code's own supported
 plugin commands and is ownership-tracked so uninstall never removes a plugin or
@@ -54,7 +54,7 @@ The script does not edit shell startup files. If needed, it prints the exact
 line:
 
 ```bash
-export PATH="$HOME/.local/share/skill-heaven/bin:$PATH"
+export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
 ```
 
 Each door execs only a harness the user already owns. `--print` composes a plan
@@ -67,7 +67,7 @@ reinstalls the pinned working engine, updates the marketplace, and updates the
 plugin instead of duplicating it.
 
 ```bash
-$HOME/.local/share/skill-heaven/uninstall.sh
+$HOME/.local/share/gaia-skill-heaven/uninstall.sh
 ```
 
 Uninstall removes all five doors, the locally installed engine, the install
@@ -75,14 +75,14 @@ directory, and only installer-owned Claude plugin state. The equivalent remote
 path is:
 
 ```bash
-curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh -s -- --uninstall
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh -s -- --uninstall
 ```
 
 ## 2. Delivery surfaces
 
 ### GitHub Pages
 
-`https://gaia-research.github.io/skill-heaven/` is live and serves the Vite
+`https://gaia-research.github.io/gaia-skill-heaven/` is live and serves the Vite
 site with relative assets. `.github/workflows/pages.yml` copies the reviewed
 root `install.sh` byte-for-byte into the Pages artifact as `/install.sh`; a
 change to the script triggers a deployment.
@@ -118,8 +118,8 @@ eligibility, and content-hash admission or verification are not shipped.
 
 ### Claude plugin
 
-The repository is the `skill-heaven` Claude marketplace. Registration installs
-`claude-heaven@skill-heaven`, which supplies `/skill-heaven` and `/skill-hell`.
+The repository is the `gaia-skill-heaven` Claude marketplace. Registration installs
+`claude-zero@gaia-skill-heaven`, which supplies `/skill-heaven` and `/skill-hell`.
 The installer uses an HTTPS marketplace URL so public installation does not
 depend on GitHub SSH credentials.
 
