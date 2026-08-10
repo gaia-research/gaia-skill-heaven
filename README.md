@@ -1,4 +1,6 @@
-# skill-heaven
+# Skill Heaven
+
+This is a LAUNCHER being actively tested for all your harnesses. Works with Claude, Codex, Pi, and Hermes agents.
 
 > **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
 > Interfaces, flags, postures, and command surfaces may change. Progress markers
