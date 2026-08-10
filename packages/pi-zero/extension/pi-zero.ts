@@ -16,15 +16,15 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 
-const profileEnv = "PI_HEAVEN_PROFILE";
-const messageType = "pi-heaven";
-const outputEntry = "pi-heaven-output";
-const summonedSkillEntry = "pi-heaven-summoned-skill";
-const ownedHellSessionEnv = "PI_HEAVEN_OWNS_HELL_SESSION";
+const profileEnv = "PI_ZERO_PROFILE";
+const messageType = "pi-zero";
+const outputEntry = "pi-zero-output";
+const summonedSkillEntry = "pi-zero-summoned-skill";
+const ownedHellSessionEnv = "PI_ZERO_OWNS_HELL_SESSION";
 const summonTimeoutMs = 30_000;
 
 interface LaunchManifest {
-  schema: "pi-heaven/profile@1";
+  schema: "pi-zero/profile@1";
   posture: string;
   command: string;
   argv: string[];
@@ -36,7 +36,7 @@ function isLaunchManifest(value: unknown): value is LaunchManifest {
   if (!value || typeof value !== "object") return false;
   const manifest = value as Record<string, unknown>;
   return (
-    manifest.schema === "pi-heaven/profile@1" &&
+    manifest.schema === "pi-zero/profile@1" &&
     typeof manifest.posture === "string" &&
     typeof manifest.command === "string" &&
     Array.isArray(manifest.argv) &&
@@ -93,9 +93,18 @@ function executableOnPath(name: string): string | null {
 }
 
 function asEngine(binPath: string): HellEngine {
-  return binPath.endsWith(".js")
-    ? { command: process.execPath, args: [binPath], binPath }
-    : { command: binPath, args: [], binPath };
+  if (binPath.endsWith(".js")) {
+    return { command: process.execPath, args: [binPath], binPath };
+  }
+  try {
+    const head = readFileSync(binPath, "utf8").slice(0, 128);
+    if (/^#!.*\bnode\b/.test(head)) {
+      return { command: process.execPath, args: [binPath], binPath };
+    }
+  } catch {
+    // Fall back to direct execution and let pi surface the failure if needed.
+  }
+  return { command: binPath, args: [], binPath };
 }
 
 function resolveHellEngine(): HellEngine {
@@ -156,9 +165,9 @@ async function ensureHellSession(pi: ExtensionAPI, engine: HellEngine): Promise<
 function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number, error?: string): string {
   if (!manifest) {
     return [
-      "⚡ Skill Heaven · off · low · med",
-      "   Heaven rungs are boot-time decisions and this session was not launched by pi-heaven.",
-      "   Start one with: → pi-heaven --level low --skill <path>",
+      "⚡ Skill Zero · off · low · med",
+      "   Skill Zero postures are boot-time decisions and this session was not launched by pi-zero.",
+      "   Start one with: → pi-zero --level low --skill <path>",
       "   This command did not change the running session.",
       ...(error ? [`   manifest error: ${error}`] : []),
     ].join("\n");
@@ -171,14 +180,14 @@ function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number
       ? "ambient/native"
       : String(manifest.admittedSkillCount);
   return [
-    "⚡ Skill Heaven · off · low · med",
-    `   session: launched at ${current} via pi-heaven · ${loadedSkillCount} loaded now · ${planned} planned`,
+    "⚡ Skill Zero · off · low · med",
+    `   session: launched at ${current} via pi-zero · ${loadedSkillCount} loaded now · ${planned} planned`,
     `   argv: ${formatInvocation(manifest.command, manifest.argv)}`,
-    "   Heaven changes are boot-time choices; relaunch to move downward (D12).",
+    "   Skill Zero changes are boot-time choices; relaunch to move downward (D12).",
   ].join("\n");
 }
 
-export default function piHeavenExtension(pi: ExtensionAPI) {
+export default function piZeroExtension(pi: ExtensionAPI) {
   let armedLevel: HellLevel = "high";
 
   pi.registerEntryRenderer<{ content: string; widgetLines?: string[] }>(outputEntry, (entry, _options, theme) => {
@@ -220,8 +229,8 @@ export default function piHeavenExtension(pi: ExtensionAPI) {
     return { skillPaths: [...skillPaths] };
   });
 
-  pi.registerCommand("skill-heaven", {
-    description: "Show this session's Skill Heaven posture",
+  pi.registerCommand("skill-zero", {
+    description: "Show this session's Skill Zero posture",
     handler: async (_args, ctx) => {
       const { manifest, error } = loadManifest();
       const loadedSkillCount = ctx.getSystemPromptOptions().skills?.length ?? 0;

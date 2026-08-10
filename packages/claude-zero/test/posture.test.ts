@@ -2,7 +2,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { HEAVEN_LEVELS, HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-zero";
 import { buildLadderArtifact } from "../scripts/generate-ladder.js";
 import { run } from "../src/cli.js";
 import { renderHell } from "../plugin/scripts/render-hell.mjs";
@@ -17,7 +17,7 @@ import {
 } from "../plugin/scripts/render-posture.mjs";
 
 const productFloor = {
-  schema: "claude-heaven/profile@1",
+  schema: "claude-zero/profile@1",
   posture: "product-floor",
   standingTokens: 0,
   skillCount: 0,
@@ -68,15 +68,16 @@ describe("generated ladder policy", () => {
   });
 });
 
-describe("/skill-heaven owns only the subtractive half", () => {
+describe("/skill-zero owns only the subtractive half", () => {
   it("without a launcher names the dead end and its exact exit", () => {
     const text = renderPosture().text;
     expect(text).toContain("off · low · med");
     expect(text).toContain("boot-time decisions");
     expect(text).toContain("WORKING PROTOTYPE · actively tested for public use");
-    expect(text).toContain("claude-heaven --level low --skill <path>");
+    expect(text).toContain("claude-zero --level low --skill <path>");
     expect(text).toContain("did not change the running session");
-    expect(text).not.toMatch(/high|xhigh|max|ultra/);
+    expect(text).toContain("/skill-heaven · /skill-hell · /skill-ultra");
+    expect(text).not.toContain("🔥 Skill Hell");
   });
 
   it("marks off current and makes low and med actionable", () => {

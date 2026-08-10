@@ -12,10 +12,10 @@
 // dose. No statusline-input field isolates the standing number (GB-3), which is
 // exactly why standing must come from the census, not from stdin.
 
-import type { Posture } from "skill-heaven";
+import type { Posture } from "skill-zero";
 
 export interface ProfileManifest {
-  schema: "claude-heaven/profile@1";
+  schema: "claude-zero/profile@1";
   posture: Posture;
   /** census-derived standing dose (chars4 tokens) over the launched profile */
   standingTokens: number;
@@ -30,7 +30,7 @@ export interface ProfileManifest {
    * floor, not a complete count. Rendered as a trailing "+" so the readout never
    * presents an under-count as exact (B4). */
   incomplete?: boolean;
-  /** true when launched via the claude-heaven launcher (the subtractive floor is
+  /** true when launched via the claude-zero launcher (the subtractive floor is
    * reachable); false under vanilla claude. Consumed by the WS4-step-2 picker. */
   launcherLocked: boolean;
   createdAt?: string;
@@ -60,7 +60,7 @@ export function formatTokens(n: number): string {
  * exactly, but the session's skill LISTING is not exact: a bundled skill
  * named `doctor` survives `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1` regardless
  * of posture — a founder-ruled, permanent, harness-level residual, measured
- * live by packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
+ * live by packages/claude-zero/scripts/probe-kc4-listing-residual.sh
  * (2/2 runs, claude 2.1.220; see packages/core/src/compile.ts's curated
  * note). Both curated and product-floor now use an empty setting-sources
  * allowlist, so project-scope skills are not part of this session disclosure;
@@ -72,7 +72,7 @@ export function formatTokens(n: number): string {
  * renders a "coverage unknown" caveat rather than silence, matching the
  * fail-closed discipline `readGatedLevels`/`readLaunchablePostures` already
  * use elsewhere in this door. The narrow statusline strip gets the compact
- * form; `/skill-heaven`'s session line carries the fuller sentence
+ * form; `/skill-zero`'s session line carries the fuller sentence
  * (render-posture.mjs `sessionLine` / `scopeNote`) — keep both in sync. */
 function scopeCaveat(scope: string): string {
   if (scope === "user+project") return " (excl. bundled/plugin)";
@@ -162,7 +162,7 @@ export function isProfileManifest(value: unknown): value is ProfileManifest {
   if (!value || typeof value !== "object") return false;
   const m = value as Record<string, unknown>;
   return (
-    m.schema === "claude-heaven/profile@1" &&
+    m.schema === "claude-zero/profile@1" &&
     typeof m.posture === "string" &&
     typeof m.standingTokens === "number" &&
     typeof m.skillCount === "number" &&

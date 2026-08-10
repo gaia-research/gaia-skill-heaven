@@ -1,8 +1,8 @@
-// KC1 (Issue #8): "claude-heaven installs cleanly from the marketplace,
+// KC1 (Issue #8): "claude-zero installs cleanly from the marketplace,
 // verified from a fresh environment."
 //
 // .claude-plugin/marketplace.json declares this plugin's `source` as
-// `./packages/claude-heaven/plugin` — a marketplace install copies ONLY that
+// `./packages/claude-zero/plugin` — a marketplace install copies ONLY that
 // directory. This wraps scripts/verify-marketplace-install.mjs, which does
 // the actual work: copy `plugin/` into a clean temp dir with no repo and no
 // node_modules beside it, then prove the shipped command file resolves its
@@ -66,50 +66,50 @@ describe("A5a: plugin source is read FROM marketplace.json, not asserted indepen
 
   it("FAILS when source points somewhere that does not exist — the fix's whole point", () => {
     const marketplacePath = writeMarketplace({
-      plugins: [{ name: "claude-heaven", source: "./this-directory-does-not-exist" }],
+      plugins: [{ name: "claude-zero", source: "./this-directory-does-not-exist" }],
     });
 
-    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
+    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-zero");
     expect(resolution.ok).toBe(false);
     if (!resolution.ok) {
       expect(resolution.error).toMatch(/does not exist/);
     }
 
     const lines: string[] = [];
-    const { ok, failures } = verifyMarketplaceInstall((msg) => lines.push(msg), { marketplacePath, repoRoot, pluginName: "claude-heaven" });
+    const { ok, failures } = verifyMarketplaceInstall((msg) => lines.push(msg), { marketplacePath, repoRoot, pluginName: "claude-zero" });
     expect(ok).toBe(false);
     expect(failures.some((f) => f.includes("does not exist"))).toBe(true);
   });
 
   it("FAILS loudly when marketplace.json is missing", () => {
     const marketplacePath = join(repoRoot, ".claude-plugin", "marketplace.json"); // never written
-    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
+    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-zero");
     expect(resolution.ok).toBe(false);
     if (!resolution.ok) expect(resolution.error).toMatch(/not found/);
   });
 
   it("FAILS loudly when marketplace.json is unparseable", () => {
     const marketplacePath = writeMarketplace("{ not json");
-    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
+    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-zero");
     expect(resolution.ok).toBe(false);
     if (!resolution.ok) expect(resolution.error).toMatch(/did not parse as JSON/);
   });
 
   it("FAILS loudly when the plugin entry has no source field", () => {
-    const marketplacePath = writeMarketplace({ plugins: [{ name: "claude-heaven" }] });
-    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
+    const marketplacePath = writeMarketplace({ plugins: [{ name: "claude-zero" }] });
+    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-zero");
     expect(resolution.ok).toBe(false);
     if (!resolution.ok) expect(resolution.error).toMatch(/no \(or an empty\) "source" field/);
   });
 
   it("SUCCEEDS when source correctly resolves to a real directory", () => {
-    mkdirSync(join(repoRoot, "packages", "claude-heaven", "plugin"), { recursive: true });
+    mkdirSync(join(repoRoot, "packages", "claude-zero", "plugin"), { recursive: true });
     const marketplacePath = writeMarketplace({
-      plugins: [{ name: "claude-heaven", source: "./packages/claude-heaven/plugin" }],
+      plugins: [{ name: "claude-zero", source: "./packages/claude-zero/plugin" }],
     });
-    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-heaven");
+    const resolution = resolvePluginSource(marketplacePath, repoRoot, "claude-zero");
     expect(resolution.ok).toBe(true);
-    if (resolution.ok) expect(resolution.path).toBe(join(repoRoot, "packages", "claude-heaven", "plugin"));
+    if (resolution.ok) expect(resolution.path).toBe(join(repoRoot, "packages", "claude-zero", "plugin"));
   });
 });
 

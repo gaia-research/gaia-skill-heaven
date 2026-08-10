@@ -1,4 +1,4 @@
-// The hermes-heaven launch plan. Core owns every posture composition; this
+// The hermes-zero launch plan. Core owns every posture composition; this
 // module resolves --skill paths, substitutes $SESSION, and carries core's
 // verified plan back to the CLI. It never writes shared Hermes state.
 
@@ -11,7 +11,7 @@ import {
   type FsOp,
   type Posture,
   type ResolvedSkill,
-} from "skill-heaven";
+} from "skill-zero";
 
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
@@ -20,7 +20,7 @@ export function assertLevelAllowed(level: string | undefined): void {
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
       `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so hermes-heaven refuses rather than guessing.`,
+        `product mapping to compose, so hermes-zero refuses rather than guessing.`,
     );
   }
 }

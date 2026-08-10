@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// pi-heaven launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
+// pi-zero launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
 // package location so it works under workspace hoisting (mirrors core's
-// skill-heaven.mjs / claude-heaven's claude-heaven.mjs).
+// skill-zero.mjs / claude-zero's claude-zero.mjs).
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -15,7 +15,7 @@ let tsxCli;
 try {
   tsxCli = join(dirname(require.resolve("tsx/package.json")), "dist/cli.mjs");
 } catch {
-  process.stderr.write("pi-heaven: could not resolve tsx (is the package installed with its dependencies?)\n");
+  process.stderr.write("pi-zero: could not resolve tsx (is the package installed with its dependencies?)\n");
   process.exit(1);
 }
 

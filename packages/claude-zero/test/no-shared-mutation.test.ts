@@ -1,14 +1,14 @@
-// Issue #11 (P1) — Verify zero shared-state mutation (P3), claude-heaven door.
+// Issue #11 (P1) — Verify zero shared-state mutation (P3), claude-zero door.
 //
 // KC5 (verbatim): "No shared config or skill directory is mutated (P3),
 // verified by before/after diff."
 //
 // This complements packages/core/test/no-shared-mutation.test.ts, which
 // covers compile()/materialize() across every posture x harness x mechanism
-// at the ENGINE level. This file covers the claude-heaven DOOR specifically:
+// at the ENGINE level. This file covers the claude-zero DOOR specifically:
 // `planNativeLaunch`/`planLaunch` (src/launcher.ts), the census reads native
 // depends on (src/census.ts), and — for the non-native postures — the real
-// write sequence a live `claude-heaven` launch performs (materialize(fsPlan,
+// write sequence a live `claude-zero` launch performs (materialize(fsPlan,
 // sessionDir) + the manifest/settings writeFileSync calls, reproduced from
 // cli.ts's `run()` without importing or editing that file, which stays on the
 // do-not-touch list).
@@ -36,7 +36,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { materialize } from "skill-heaven";
+import { materialize } from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
 import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 import { planLaunch, planNativeLaunch } from "../src/launcher.js";
@@ -70,7 +70,7 @@ function writeSkill(dir: string, name: string, description: string): void {
   writeFileSync(join(dir, "SKILL.md"), `---\nname: ${name}\ndescription: ${description}\n---\n# ${name}\nbody\n`);
 }
 
-describe("KC5 (claude-heaven door): before/after fixture diff for the native launch plan", () => {
+describe("KC5 (claude-zero door): before/after fixture diff for the native launch plan", () => {
   let fixtureRoot: string;
   let home: string;
   let project: string;
@@ -82,7 +82,7 @@ describe("KC5 (claude-heaven door): before/after fixture diff for the native lau
     writeSkill(join(home, ".claude", "skills", "home-skill"), "home-skill", "lives in the fixture home");
     writeSkill(join(project, ".claude", "skills", "project-skill"), "project-skill", "lives in the fixture project");
     // Other shared roots KC5 names, present but irrelevant to this door —
-    // included so the diff also proves the claude-heaven door doesn't reach
+    // included so the diff also proves the claude-zero door doesn't reach
     // into them either.
     mkdirSync(join(home, ".codex"), { recursive: true });
     writeFileSync(join(home, ".codex", "auth.json"), '{"auth":"fixture"}\n');
@@ -122,7 +122,7 @@ describe("KC5 (claude-heaven door): before/after fixture diff for the native lau
       // Reproduces cli.ts's `run()` real-launch write step verbatim (that
       // file is on the do-not-touch list — reproduced here rather than
       // imported/edited) — the two writeFileSync calls are the ONLY disk
-      // writes a real `claude-heaven` launch performs.
+      // writes a real `claude-zero` launch performs.
       writeFileSync(plan.manifestPath, `${JSON.stringify(plan.manifest, null, 2)}\n`);
       writeFileSync(plan.settingsPath, `${JSON.stringify(plan.settings, null, 2)}\n`);
 
@@ -169,7 +169,7 @@ describe("KC5 (claude-heaven door): before/after fixture diff for the native lau
   });
 });
 
-describe("KC5 (claude-heaven door): before/after fixture diff for the curated & product-floor launch plans", () => {
+describe("KC5 (claude-zero door): before/after fixture diff for the curated & product-floor launch plans", () => {
   // The gap this block closes: PR #18 widened src/cli.ts's LAUNCHABLE_POSTURES
   // from ["native"] to ["native", "curated", "product-floor"]. The `curated`
   // route is the one that actually writes: it composes
@@ -202,7 +202,7 @@ describe("KC5 (claude-heaven door): before/after fixture diff for the curated & 
     writeFileSync(join(home, ".pi", "config.toml"), "# fixture pi config\n");
     mkdirSync(join(home, ".grok"), { recursive: true });
     mkdirSync(join(home, ".cursor"), { recursive: true });
-    // A separate "door" dir (stands in for claude-heaven's own bundled plugin
+    // A separate "door" dir (stands in for claude-zero's own bundled plugin
     // dir, cli.ts's doorPluginDir()) — product-floor takes this as a caller
     // path only (argv passthrough), never an fsPlan target; included in the
     // diff to prove that holds.

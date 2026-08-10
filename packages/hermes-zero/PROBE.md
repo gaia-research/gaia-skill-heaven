@@ -89,11 +89,11 @@ reported 108 enabled skills, with each name, source, trust, and status. `hermes 
 
 ## Can `--skills` admit an arbitrary directory?
 
-A disposable directory `/tmp/hermes-heaven-probe-skill` contained a valid `SKILL.md` whose only special instruction was to answer a marker question with `HERMES_PATH_SKILL_LOADED`. Exact probe, twice:
+A disposable directory `/tmp/hermes-zero-probe-skill` contained a valid `SKILL.md` whose only special instruction was to answer a marker question with `HERMES_PATH_SKILL_LOADED`. Exact probe, twice:
 
 ```
 hermes -z "What is the path-probe marker? Reply with only the marker, or NONE if no path-probe skill is loaded." \
-  --skills /tmp/hermes-heaven-probe-skill \
+  --skills /tmp/hermes-zero-probe-skill \
   --provider openai-codex --model gpt-5.4 --reasoning low
 → NONE
 → NONE
@@ -124,7 +124,7 @@ Installed Hermes 0.20.0 source shows:
 - `model_tools.py:391-424`: explicit `--toolsets` is an allowlist.
 - `~/.hermes/.skills_prompt_snapshot.json` contains exactly 108 skill entries, matching `hermes skills list`.
 
-This also establishes a documentation/behaviour mismatch: `--ignore-rules` help claims it skips “preloaded skills,” but the implementation only sets context-file/memory skips. A direct scoped-home `hermes chat --skills hermes-heaven-path-probe --ignore-rules ...` probe still loaded the marker skill and returned `HERMES_PATH_SKILL_LOADED` twice.
+This also establishes a documentation/behaviour mismatch: `--ignore-rules` help claims it skips “preloaded skills,” but the implementation only sets context-file/memory skips. A direct scoped-home `hermes chat --skills hermes-zero-path-probe --ignore-rules ...` probe still loaded the marker skill and returned `HERMES_PATH_SKILL_LOADED` twice.
 
 ### Lever 1 — omit the `skills` toolset
 
@@ -187,16 +187,16 @@ Scoped-home inference returned `NONE` twice for the skill-list prompt and `OK` t
 
 ### Curated directory placement
 
-Copying the disposable marker directory to `$SESS/hermes/skills/hermes-heaven-path-probe` changed the hard listing to `0 hub-installed, 0 builtin, 1 local — 1 enabled, 0 disabled` twice. Unlike `-z` (whose `hermes_cli/oneshot.py` path does not accept/pass a skills argument despite the top-level help), the normal chat path preloaded the copied skill correctly:
+Copying the disposable marker directory to `$SESS/hermes/skills/hermes-zero-path-probe` changed the hard listing to `0 hub-installed, 0 builtin, 1 local — 1 enabled, 0 disabled` twice. Unlike `-z` (whose `hermes_cli/oneshot.py` path does not accept/pass a skills argument despite the top-level help), the normal chat path preloaded the copied skill correctly:
 
 ```
 HERMES_HOME="$SESS/hermes" hermes chat -q "What is the path-probe marker? ..." \
-  --skills hermes-heaven-path-probe --provider openai-codex --model gpt-5.4 \
+  --skills hermes-zero-path-probe --provider openai-codex --model gpt-5.4 \
   --reasoning low --quiet
 → HERMES_PATH_SKILL_LOADED
 → HERMES_PATH_SKILL_LOADED
 ```
 
-The exact curated composition also succeeded twice with `--safe-mode` added alongside `--skills hermes-heaven-path-probe`. This demonstrates that Hermes 0.20.0's implementation still applies an explicit CLI preload under safe mode, despite the help text claiming `--ignore-rules` (which safe mode implies) skips preloaded skills.
+The exact curated composition also succeeded twice with `--safe-mode` added alongside `--skills hermes-zero-path-probe`. This demonstrates that Hermes 0.20.0's implementation still applies an explicit CLI preload under safe mode, despite the help text claiming `--ignore-rules` (which safe mode implies) skips preloaded skills.
 
 **Revised conclusion:** Hermes has a verified clean floor through an explicit toolset allowlist that omits `skills`, without filesystem work. Scoped `HERMES_HOME` plus the opt-out marker is independently verified at 0 skills and enables a true curated route by copying arbitrary skill directories into the scoped profile, then preloading them by resolved name. These routes authenticate and answer, licensing live exec; no token dose is claimed.

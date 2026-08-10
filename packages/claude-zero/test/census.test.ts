@@ -2,7 +2,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync }
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { resolveSkill } from "skill-heaven";
+import { resolveSkill } from "skill-zero";
 import { censusStandingDose } from "../src/census.js";
 
 let root: string;

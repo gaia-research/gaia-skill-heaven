@@ -1,4 +1,4 @@
-// codex-heaven CLI. Launches codex at a composed posture. Every write lands
+// codex-zero CLI. Launches codex at a composed posture. Every write lands
 // in a fresh temp dir (P3: zero shared-config mutation) — core's compiled
 // fsPlan copies auth.json in and, at curated, skill dirs under
 // $SESSION/codex; nothing outside the session dir is ever touched. `--print`
@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
 import { assertLevelAllowed, planLaunch, prepareCodexSession, resolveLevelAlias } from "./launcher.js";
 
 interface CliArgs {
@@ -62,7 +62,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
 function helpText(): string {
   return [
-    "Usage: codex-heaven [--level <level>] [options] [-- <codex args...>]",
+    "Usage: codex-zero [--level <level>] [options] [-- <codex args...>]",
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
@@ -91,23 +91,23 @@ export function run(argv: string[]): number {
 
   let posture = args.posture;
   if (args.level !== undefined) {
-    // Like pi-heaven (and unlike claude-heaven, whose --posture is its sole
-    // ratified selector), codex-heaven implements off/low as working
+    // Like pi-zero (and unlike claude-zero, whose --posture is its sole
+    // ratified selector), codex-zero implements off/low as working
     // aliases. Gated levels never reach here (refused above).
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
       if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
         process.stderr.write(
-          `codex-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+          `codex-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
             `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
         );
       } else {
-        process.stderr.write(`codex-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
+        process.stderr.write(`codex-zero: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
       }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
-      process.stderr.write(`codex-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
+      process.stderr.write(`codex-zero: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
       return 2;
     }
     posture = aliased;
@@ -115,7 +115,7 @@ export function run(argv: string[]): number {
 
   if (!(POSTURES as readonly string[]).includes(posture)) {
     process.stderr.write(
-      `codex-heaven: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
+      `codex-zero: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
     );
     return 2;
   }
@@ -134,7 +134,7 @@ export function run(argv: string[]): number {
         codexArgs: args.codexArgs,
       });
     } catch (e) {
-      process.stderr.write(`codex-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`codex-zero: ${(e as Error).message}\n`);
       return 2;
     }
     process.stdout.write(
@@ -160,7 +160,7 @@ export function run(argv: string[]): number {
   // into a fresh temp dir, spawn codex, then remove it once codex exits
   // (spawnSync is synchronous). Nothing touches the user's real ~/.codex
   // (P3) — codex reads its scoped $CODEX_HOME from the session dir only.
-  const sessionDir = mkdtempSync(join(tmpdir(), "codex-heaven-"));
+  const sessionDir = mkdtempSync(join(tmpdir(), "codex-zero-"));
   try {
     let live;
     try {
@@ -174,13 +174,13 @@ export function run(argv: string[]): number {
       materialize(live.fsPlan, sessionDir);
       prepareCodexSession(live);
     } catch (e) {
-      process.stderr.write(`codex-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`codex-zero: ${(e as Error).message}\n`);
       return 2;
     }
 
     if (live.execSupport !== "exec") {
       process.stderr.write(
-        `codex-heaven: ${live.posture} compiled as a recipe (cells not verified for live exec — see ../PROBE.md) — use --print.\n`,
+        `codex-zero: ${live.posture} compiled as a recipe (cells not verified for live exec — see ../PROBE.md) — use --print.\n`,
       );
       return 2;
     }
@@ -192,10 +192,10 @@ export function run(argv: string[]): number {
     if (r.error) {
       const err = r.error as NodeJS.ErrnoException;
       if (err.code === "ENOENT") {
-        process.stderr.write(`codex-heaven: could not find the \`codex\` binary on PATH.\n`);
+        process.stderr.write(`codex-zero: could not find the \`codex\` binary on PATH.\n`);
         return 127;
       }
-      process.stderr.write(`codex-heaven: failed to launch codex: ${err.message}\n`);
+      process.stderr.write(`codex-zero: failed to launch codex: ${err.message}\n`);
       return 1;
     }
     return r.status ?? 1;

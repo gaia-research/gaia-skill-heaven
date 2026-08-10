@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { parseArgs as parseClaude, run as runClaude } from "../../claude-heaven/src/cli.js";
-import { parseArgs as parsePi, run as runPi } from "../../pi-heaven/src/cli.js";
-import { parseArgs as parseCodex, run as runCodex } from "../../codex-heaven/src/cli.js";
-import { parseArgs as parseHermes, run as runHermes } from "../../hermes-heaven/src/cli.js";
-import { parseArgs as parseGrok, run as runGrok } from "../../grok-heaven/src/cli.js";
+import { parseArgs as parseClaude, run as runClaude } from "../../claude-zero/src/cli.js";
+import { parseArgs as parsePi, run as runPi } from "../../pi-zero/src/cli.js";
+import { parseArgs as parseCodex, run as runCodex } from "../../codex-zero/src/cli.js";
+import { parseArgs as parseHermes, run as runHermes } from "../../hermes-zero/src/cli.js";
+import { parseArgs as parseGrok, run as runGrok } from "../../grok-zero/src/cli.js";
 
 const doors = [
-  ["claude-heaven", parseClaude, runClaude],
-  ["pi-heaven", parsePi, runPi],
-  ["codex-heaven", parseCodex, runCodex],
-  ["hermes-heaven", parseHermes, runHermes],
-  ["grok-heaven", parseGrok, runGrok],
+  ["claude-zero", parseClaude, runClaude],
+  ["pi-zero", parsePi, runPi],
+  ["codex-zero", parseCodex, runCodex],
+  ["hermes-zero", parseHermes, runHermes],
+  ["grok-zero", parseGrok, runGrok],
 ] as const;
 
 function captureStdout(fn: () => number): { code: number; out: string } {

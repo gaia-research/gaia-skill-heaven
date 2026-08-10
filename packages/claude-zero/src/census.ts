@@ -15,7 +15,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { resolveSkill } from "skill-heaven";
+import { resolveSkill } from "skill-zero";
 
 export interface CensusedSkill {
   id: string;

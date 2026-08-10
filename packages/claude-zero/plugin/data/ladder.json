@@ -1,6 +1,6 @@
 {
-  "schema": "claude-heaven/ladder@1",
-  "source": "skill-heaven ladder constants + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
+  "schema": "claude-zero/ladder@1",
+  "source": "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES",
   "levels": [
     "off",
     "low",

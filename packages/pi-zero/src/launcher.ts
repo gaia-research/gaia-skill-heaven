@@ -1,4 +1,4 @@
-// The pi-heaven launch PLAN — pure enough to unit-test without spawning pi:
+// The pi-zero launch PLAN — pure enough to unit-test without spawning pi:
 // it reads skill sources (resolveSkill) but writes nothing. cli.ts turns a
 // plan into files + a process.
 //
@@ -20,7 +20,7 @@ import {
   type FsOp,
   type Posture,
   type ResolvedSkill,
-} from "skill-heaven";
+} from "skill-zero";
 
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
@@ -29,7 +29,7 @@ export function assertLevelAllowed(level: string | undefined): void {
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
       `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so pi-heaven refuses rather than guessing.`,
+        `product mapping to compose, so pi-zero refuses rather than guessing.`,
     );
   }
 }

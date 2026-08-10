@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Statusline segment shim: runs ../src/statusline-cli.ts through tsx. Resolves
 // tsx by package location so it works under workspace hoisting (mirrors core's
-// skill-heaven.mjs). Claude Code invokes this as the statusLine.command; stdin
+// skill-zero.mjs). Claude Code invokes this as the statusLine.command; stdin
 // is inherited so the CLI can read the statusline JSON.
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";

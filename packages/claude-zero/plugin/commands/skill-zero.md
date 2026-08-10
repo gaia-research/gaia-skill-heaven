@@ -1,5 +1,5 @@
 ---
-description: "Choose a Skill Heaven ladder rung and get the exact launch command."
+description: "Choose a Skill Zero ladder rung and get the exact launch command."
 allowed-tools: Bash(node:*)
 ---
 

@@ -1,13 +1,13 @@
-# codex-heaven
+# codex-zero
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
 The Codex door to Skill Heaven.
 
 ```bash
-codex-heaven --print                              # off/product-floor default
-codex-heaven --level native --print               # explicit native recipe
-codex-heaven --level low --skill /path/to/skill --print
+codex-zero --print                              # off/product-floor default
+codex-zero --level native --print               # explicit native recipe
+codex-zero --level low --skill /path/to/skill --print
 ```
 
 The ladder is the primary interface. See

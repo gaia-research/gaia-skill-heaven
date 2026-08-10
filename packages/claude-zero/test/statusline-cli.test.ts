@@ -25,27 +25,27 @@ beforeAll(() => {
   manifestPath = join(dir, "profile.json");
   writeFileSync(
     manifestPath,
-    JSON.stringify({ schema: "claude-heaven/profile@1", posture: "native", standingTokens: 4802, skillCount: 67, scope: "user+project", launcherLocked: true }),
+    JSON.stringify({ schema: "claude-zero/profile@1", posture: "native", standingTokens: 4802, skillCount: 67, scope: "user+project", launcherLocked: true }),
   );
 });
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("statusline bin (IO path)", () => {
   it("renders standing + live ctx from a manifest and piped JSON", () => {
-    const { status, stdout } = runStatusline({ CLAUDE_HEAVEN_PROFILE: manifestPath }, '{"context_window":{"used_percentage":23}}');
+    const { status, stdout } = runStatusline({ CLAUDE_ZERO_PROFILE: manifestPath }, '{"context_window":{"used_percentage":23}}');
     expect(status).toBe(0);
     expect(stdout).toBe("⚡ native · 4.8k standing (excl. bundled/plugin) · 23% ctx");
   });
 
   it("renders standing only when stdin is empty (does not hang)", () => {
-    const { status, stdout } = runStatusline({ CLAUDE_HEAVEN_PROFILE: manifestPath }, "");
+    const { status, stdout } = runStatusline({ CLAUDE_ZERO_PROFILE: manifestPath }, "");
     expect(status).toBe(0);
     expect(stdout).toBe("⚡ native · 4.8k standing (excl. bundled/plugin)");
   });
 
   it("emits nothing when no profile env is set (mis-wired = silent, not noisy)", () => {
     const env = { ...process.env };
-    delete env.CLAUDE_HEAVEN_PROFILE;
+    delete env.CLAUDE_ZERO_PROFILE;
     const r = spawnSync(process.execPath, [BIN], { input: "{}", env, encoding: "utf-8", timeout: 20000 });
     expect(r.status).toBe(0);
     expect(r.stdout ?? "").toBe("");
@@ -54,7 +54,7 @@ describe("statusline bin (IO path)", () => {
   it("emits nothing for a malformed manifest file (degrades, never throws)", () => {
     const bad = join(dir, "bad.json");
     writeFileSync(bad, "{ not valid json");
-    const { status, stdout } = runStatusline({ CLAUDE_HEAVEN_PROFILE: bad }, "{}");
+    const { status, stdout } = runStatusline({ CLAUDE_ZERO_PROFILE: bad }, "{}");
     expect(status).toBe(0);
     expect(stdout).toBe("");
   });

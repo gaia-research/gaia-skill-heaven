@@ -1,4 +1,4 @@
-// skill-heaven CLI (working name — OPEN item 8; flag vocabulary provisional
+// skill-zero CLI (working name — OPEN item 8; flag vocabulary provisional
 // pending N4/N5). See README for the full surface.
 
 import { writeFileSync } from "node:fs";
@@ -155,15 +155,15 @@ export function main(argv: string[]): number {
   // (V5-5/B1) — a reader must never have to guess which floor a run was.
   const kind = floorOf(args.posture);
   if (kind === "benchmark") {
-    console.error("[skill-heaven] benchmark floor (doorless) — the placebo-of-record. Not the product floor; never average the two.");
+    console.error("[skill-zero] benchmark floor (doorless) — the placebo-of-record. Not the product floor; never average the two.");
   } else if (kind === "product") {
-    console.error("[skill-heaven] product floor (doorful) — retains the minimum control surface. Its own arm, priced separately from the benchmark floor.");
+    console.error("[skill-zero] product floor (doorful) — retains the minimum control surface. Its own arm, priced separately from the benchmark floor.");
   }
 
   if (args.posture === "curated") {
     const d = compiled.doseSummary;
     console.error(
-      `[skill-heaven] curated loadout dose (${d.tokenizer}): standing=${d.standingTotal} invocation=${d.invocationTotal} ` +
+      `[skill-zero] curated loadout dose (${d.tokenizer}): standing=${d.standingTotal} invocation=${d.invocationTotal} ` +
         `(${d.skills.map((s) => `${s.id}: ${s.standingTokens}/${s.invocationTokens}`).join(", ")})`,
     );
   }
@@ -171,7 +171,7 @@ export function main(argv: string[]): number {
   if (args.print || compiled.execSupport === "recipe") {
     if (!args.print) {
       console.error(
-        `[skill-heaven] ${args.harness}: verified cells allow recipe only — printing the compiled profile (as if --print)`,
+        `[skill-zero] ${args.harness}: verified cells allow recipe only — printing the compiled profile (as if --print)`,
       );
     }
     console.log(JSON.stringify({ ...compiled, execSupport: undefined, recipe: compiled.execSupport === "recipe" }, null, 2));
@@ -179,7 +179,7 @@ export function main(argv: string[]): number {
   }
 
   const result = exec(compiled, { keepTemp: args.keepTemp });
-  if (result.keptTemp) console.error(`[skill-heaven] kept temp dir: ${result.sessionDir}`);
+  if (result.keptTemp) console.error(`[skill-zero] kept temp dir: ${result.sessionDir}`);
 
   if (args.record) {
     if (result.stdout === null) throw new Error("--record requires headless output");
@@ -210,19 +210,19 @@ export function main(argv: string[]): number {
     const json = JSON.stringify(record);
     if (args.record.recordOut) writeFileSync(args.record.recordOut, json + "\n");
     console.log(json);
-    if (resultText !== undefined) console.error(`[skill-heaven] result: ${resultText.trim()}`);
+    if (resultText !== undefined) console.error(`[skill-zero] result: ${resultText.trim()}`);
   } else if (result.stdout !== null) {
     process.stdout.write(result.stdout);
   }
   return result.status;
 }
 
-const isMain = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("skill-heaven.mjs");
+const isMain = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("skill-zero.mjs");
 if (isMain) {
   try {
     process.exit(main(process.argv.slice(2)));
   } catch (e) {
-    console.error(`skill-heaven: ${(e as Error).message}`);
+    console.error(`skill-zero: ${(e as Error).message}`);
     process.exit(2);
   }
 }

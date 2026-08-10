@@ -1,4 +1,4 @@
-# pi-heaven extension design (#31)
+# pi-zero extension design (#31)
 
 Evidence below is from the installed `@earendil-works/pi-coding-agent` 0.83.0 API,
 its type declarations, and its shipped extension examples. It is version-specific:
@@ -6,15 +6,15 @@ re-check these findings when pi is upgraded.
 
 ## Delivery model
 
-`pi-heaven` is both a launcher and an extension.
+`pi-zero` is both a launcher and an extension.
 
 - The launcher owns boot-time posture composition. It writes a disposable launch
-  manifest, exports its path as `PI_HEAVEN_PROFILE`, and adds the bundled
+  manifest, exports its path as `PI_ZERO_PROFILE`, and adds the bundled
   extension with `--extension`. Subtractive posture changes remain boot-only.
 - The extension owns in-session presentation and additive summoning. It registers
-  `/skill-heaven` and `/skill-hell` without editing user or project pi state.
+  `/skill-zero` and `/skill-hell` without editing user or project pi state.
 - A user who does not use the launcher can load the extension directly. In that
-  case `/skill-heaven` names the exact launcher command and says it changed
+  case `/skill-zero` names the exact launcher command and says it changed
   nothing; `/skill-hell` remains useful because Hell needs only the extension.
 
 This split follows pi's native resource model instead of pretending a command can
@@ -26,9 +26,9 @@ is the live-session door.
 The launcher writes a versioned JSON manifest inside its `mkdtemp` session
 directory. The manifest records the posture, composed argv, admitted skill count,
 and the compiler's notes verbatim. It then passes only the manifest path through
-`PI_HEAVEN_PROFILE`.
+`PI_ZERO_PROFILE`.
 
-The extension validates and reads that file for `/skill-heaven`. The compiler
+The extension validates and reads that file for `/skill-zero`. The compiler
 notes are the capability disclosure: the command does not paraphrase them or
 turn cwd/date/version-specific evidence into a broader claim. The session temp
 directory is removed only after pi exits, so the manifest remains readable for

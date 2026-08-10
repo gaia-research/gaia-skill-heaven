@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { materialize, resolveSkill } from "skill-heaven";
+import { materialize, resolveSkill } from "skill-zero";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch, planNativeLaunch } from "../src/launcher.js";
 
 /** A real skill dir with real bytes — core's own compile fixture. */
@@ -57,7 +57,7 @@ describe("planNativeLaunch", () => {
     expect(p.posture).toBe("native");
     expect(p.manifest.posture).toBe("native");
     expect(p.manifest.launcherLocked).toBe(true);
-    expect(p.manifest.schema).toBe("claude-heaven/profile@1");
+    expect(p.manifest.schema).toBe("claude-zero/profile@1");
     expect(typeof p.manifest.standingTokens).toBe("number");
   });
 
@@ -75,7 +75,7 @@ describe("planNativeLaunch", () => {
     const p = plan();
     expect(p.argv).toEqual(["--settings", join(sessionDir, "settings.json")]);
     expect(p.settings).toEqual({ statusLine: { type: "command", command: "/abs/statusline.mjs" } });
-    expect(p.env.CLAUDE_HEAVEN_PROFILE).toBe(join(sessionDir, "profile.json"));
+    expect(p.env.CLAUDE_ZERO_PROFILE).toBe(join(sessionDir, "profile.json"));
   });
 
   it("passes through extra claude args after our flags", () => {
@@ -110,19 +110,19 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
     // full bundled listing). See packages/core/src/compile.ts and README.md.
     const p = plan();
     expect(p.command).toBe("claude");
-    expect(p.argv.slice(0, 7)).toEqual([
+    expect(p.argv.slice(0, 6)).toEqual([
       "--setting-sources",
       "",
       "--strict-mcp-config",
       "--mcp-config",
       '{"mcpServers":{}}',
       "--plugin-dir",
-      join(sessionDir, "heaven-set"),
     ]);
+    expect(p.argv[6]?.replace(/\\/g, "/")).toBe(join(sessionDir, "heaven-set").replace(/\\/g, "/"));
     expect(p.argv.slice(7)).toEqual(["--settings", join(sessionDir, "settings.json")]);
     // The undocumented, string-probed, version-pinned knob. Do not "clean up".
     expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
-    expect(p.env.CLAUDE_HEAVEN_PROFILE).toBe(join(sessionDir, "profile.json"));
+    expect(p.env.CLAUDE_ZERO_PROFILE).toBe(join(sessionDir, "profile.json"));
     // T6 was NEGATIVE: this flag eats plugin-provided skills, so curated must
     // never carry it.
     expect(p.argv).not.toContain("--disable-slash-commands");
@@ -131,7 +131,7 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
   });
 
   it("writes a manifest describing what was LAUNCHED, not what native would have been", () => {
-    // Both the statusline and the /skill-heaven session line read this one file.
+    // Both the statusline and the /skill-zero session line read this one file.
     const p = plan();
     const resolved = resolveSkill(FIXTURE);
     expect(p.manifest.posture).toBe("curated");
@@ -146,7 +146,9 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
     const p = plan();
     const copy = p.fsPlan.find((op) => op.kind === "copyDir");
     // dir is "impeccable-skill"; frontmatter name is "impeccable"
-    expect(copy && "to" in copy && copy.to).toBe(join(sessionDir, "heaven-set", "skills", "impeccable"));
+    expect(copy && "to" in copy && copy.to && copy.to.replace(/\\/g, "/")).toBe(
+      join(sessionDir, "heaven-set", "skills", "impeccable").replace(/\\/g, "/"),
+    );
   });
 
   it("materializes into the session dir and mutates NOTHING outside it (P3)", () => {
@@ -200,11 +202,11 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
 
   // KC6 (Issue #12 / the "known gap" flagged in PR #18): curated evicts the
   // user-scope plugin install and mounts only $SESSION/heaven-set, so
-  // claude-heaven's own /skill-heaven does not exist inside a curated
+  // claude-zero's own /skill-zero does not exist inside a curated
   // session. Nothing inside that session can disclose this for itself, so it
   // must travel in the plan's own notes — the one channel both --print and a
   // real launch (cli.ts) both read.
-  it("discloses that /skill-heaven does not exist inside a curated session (KC6)", () => {
+  it("discloses that /skill-zero does not exist inside a curated session (KC6)", () => {
     const p = plan();
     expect(p.notes.join(" ")).toContain(CURATED_DOOR_ABSENCE_NOTE);
     // Honest about what it is NOT: neither policy-gated nor proven impossible.
@@ -223,7 +225,7 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
 
   it("keeps slash commands AND mounts the door, or the surviving door is theoretical", () => {
     // F7's whole point: product-floor keeps --disable-slash-commands absent, so
-    // /skill-heaven exists. P8 also uses an empty setting-sources allowlist, so
+    // /skill-zero exists. P8 also uses an empty setting-sources allowlist, so
     // the door has to be mounted explicitly or the posture keeps a command
     // surface with no command on it.
     const p = plan();

@@ -1,14 +1,14 @@
-# hermes-heaven
+# hermes-zero
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
 The Hermes door to Skill Heaven.
 
 ```bash
-hermes-heaven                                  # off/product-floor (default)
-hermes-heaven --level native                   # Hermes untouched
-hermes-heaven --level low --skill /path/to/skill
-hermes-heaven --print
+hermes-zero                                  # off/product-floor (default)
+hermes-zero --level native                   # Hermes untouched
+hermes-zero --level low --skill /path/to/skill
+hermes-zero --print
 ```
 
 The ladder is the primary interface. See

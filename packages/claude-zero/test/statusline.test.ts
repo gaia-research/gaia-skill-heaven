@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatTokens, isProfileManifest, parseStatuslineInput, renderStatusline, type ProfileManifest } from "../src/statusline.js";
 
 const manifest = (over: Partial<ProfileManifest> = {}): ProfileManifest => ({
-  schema: "claude-heaven/profile@1",
+  schema: "claude-zero/profile@1",
   posture: "native",
   standingTokens: 14200,
   skillCount: 42,
@@ -80,7 +80,7 @@ describe("renderStatusline", () => {
 
   // A3/KC4/P8: "session" scope (curated/product-floor) enumerates the
   // launched skill SET exactly, but a bundled `doctor` skill was MEASURED
-  // (packages/claude-heaven/scripts/probe-kc4-listing-residual.sh) to survive
+  // (packages/claude-zero/scripts/probe-kc4-listing-residual.sh) to survive
   // every posture regardless of CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 — a
   // permanent, founder-ruled harness residual.
   it("discloses the doctor residual for session-scoped postures", () => {

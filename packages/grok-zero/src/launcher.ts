@@ -1,4 +1,4 @@
-// The grok-heaven launch plan. Core owns the version-pinned Grok route; this
+// The grok-zero launch plan. Core owns the version-pinned Grok route; this
 // module resolves --skill paths, substitutes session placeholders, and carries
 // the plan to the CLI. It never writes shared Grok state.
 
@@ -15,7 +15,7 @@ import {
   type FsOp,
   type Posture,
   type ResolvedSkill,
-} from "skill-heaven";
+} from "skill-zero";
 
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
@@ -24,7 +24,7 @@ export function assertLevelAllowed(level: string | undefined): void {
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
       `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so grok-heaven refuses rather than guessing.`,
+        `product mapping to compose, so grok-zero refuses rather than guessing.`,
     );
   }
 }

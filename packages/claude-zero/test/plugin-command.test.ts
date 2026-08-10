@@ -1,4 +1,4 @@
-// The shipped plugin surface: the /skill-heaven command definition, the
+// The shipped plugin surface: the /skill-zero command definition, the
 // generated P2 gate artifact, and the manifests that describe the door.
 //
 // These are copy tests. WS4 acceptance says the copy is reviewed against the
@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { makeListingLine, tokenize } from "skill-heaven";
+import { makeListingLine, tokenize } from "skill-zero";
 import {
   buildLadderArtifact,
   ladderArtifactPath,
@@ -22,10 +22,10 @@ import {
 
 const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(PKG, "plugin");
-const commandPath = join(PLUGIN, "commands", "skill-heaven.md");
+const commandPath = join(PLUGIN, "commands", "skill-zero.md");
 const command = readFileSync(commandPath, "utf-8");
 
-/** gate (c): the priced budget for /skill-heaven's own standing line. The
+/** gate (c): the priced budget for /skill-zero's own standing line. The
  * command's self-dose must not exceed the budget the gate set, including the
  * ~4-tok allowance for a plugin-name-prefixed listing id. */
 const GATE_C_BUDGET_TOKENS = 31;
@@ -41,7 +41,7 @@ function frontmatter(md: string): Record<string, string> {
   return out;
 }
 
-describe("/skill-heaven command definition", () => {
+describe("/skill-zero command definition", () => {
   const fm = frontmatter(command);
 
   it("declares a description and the narrowest tool grant it needs", () => {
@@ -51,7 +51,7 @@ describe("/skill-heaven command definition", () => {
   });
 
   it("prices at or under the gate (c) budget, prefixed and unprefixed", () => {
-    for (const id of ["skill-heaven", "claude-heaven:skill-heaven"]) {
+    for (const id of ["skill-zero", "claude-zero:skill-zero"]) {
       const dose = tokenize(makeListingLine(id, fm.description), "chars4");
       expect(dose, `${id} self-dose`).toBeLessThanOrEqual(GATE_C_BUDGET_TOKENS);
     }
@@ -87,7 +87,7 @@ describe("/skill-heaven command definition", () => {
 describe("ladder artifact", () => {
   it("is byte-identical to a fresh generation from core", () => {
     // Regenerate with:
-    //   npx tsx packages/claude-heaven/scripts/generate-ladder.ts
+    //   npx tsx packages/claude-zero/scripts/generate-ladder.ts
     expect(readFileSync(ladderArtifactPath(), "utf-8")).toBe(
       serializeLadderArtifact(buildLadderArtifact()),
     );
@@ -99,14 +99,14 @@ describe("door manifests", () => {
   const marketplace = JSON.parse(
     readFileSync(join(PKG, "..", "..", ".claude-plugin", "marketplace.json"), "utf-8"),
   );
-  const entry = marketplace.plugins.find((p: { name: string }) => p.name === "claude-heaven");
+  const entry = marketplace.plugins.find((p: { name: string }) => p.name === "claude-zero");
 
   it("labels both public manifests as an actively tested working prototype", () => {
     for (const description of [pluginJson.description, entry.description]) {
       expect(description).toMatch(/working prototype/i);
       expect(description).toMatch(/actively tested for public use/i);
       expect(description).not.toMatch(/no commands wired yet/i);
-      expect(description).toContain("/skill-heaven");
+      expect(description).toContain("/skill-zero");
     }
   });
 
@@ -117,7 +117,7 @@ describe("door manifests", () => {
   });
 
   it("now advertises /skill-hell now that the summon-engine command surface exists (WP3)", () => {
-    // The P2 gate this comment used to cite is the /skill-heaven posture
+    // The P2 gate this comment used to cite is the /skill-zero posture
     // ladder's "hell" row (a formal, benchmarked context-budget stop) — a
     // separate concept from this prototype summon command, which the ladder
     // row's own lockedNote already pointed to ("see /skill-hell") before
@@ -131,10 +131,10 @@ describe("door manifests", () => {
 });
 
 // KC2 (Issue #9, Program 1 Arc I). This is the FULL invocation path: the real
-// `/skill-heaven` command shells out to `node render-posture.mjs`, so a unit
+// `/skill-zero` command shells out to `node render-posture.mjs`, so a unit
 // test that only imports the .mjs's exported functions (see posture.test.ts)
 // never proves the disclosure survives an actual process invocation. Spawning
-// the real script through the real env-var contract (CLAUDE_HEAVEN_PROFILE) is
+// the real script through the real env-var contract (CLAUDE_ZERO_PROFILE) is
 // what the command markdown above actually runs.
 describe("standing-dose disclosure survives the real process invocation (KC2)", () => {
   const rendererPath = join(PLUGIN, "scripts", "render-posture.mjs");
@@ -149,7 +149,7 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
     const manifestPath = join(dir, `${Math.random().toString(36).slice(2)}.json`);
     writeFileSync(manifestPath, JSON.stringify(manifest));
     const r = spawnSync(process.execPath, [rendererPath], {
-      env: { ...process.env, CLAUDE_HEAVEN_PROFILE: manifestPath },
+      env: { ...process.env, CLAUDE_ZERO_PROFILE: manifestPath },
       encoding: "utf-8",
       timeout: 20000,
     });
@@ -159,7 +159,7 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
 
   it("discloses bundled/plugin exclusion for a user+project (native) launch", () => {
     const text = runRenderer({
-      schema: "claude-heaven/profile@1",
+      schema: "claude-zero/profile@1",
       posture: "native",
       standingTokens: 4823,
       skillCount: 12,
@@ -177,7 +177,7 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
   // asserts the opposite: the residual IS disclosed, honestly.
   it("discloses the measured doctor residual for a fully-enumerated session scope", () => {
     const text = runRenderer({
-      schema: "claude-heaven/profile@1",
+      schema: "claude-zero/profile@1",
       posture: "product-floor",
       standingTokens: 0,
       skillCount: 0,

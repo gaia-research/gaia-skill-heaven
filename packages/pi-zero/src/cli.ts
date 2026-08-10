@@ -1,4 +1,4 @@
-// pi-heaven CLI. Launches pi at a composed posture. Every write lands in a
+// pi-zero CLI. Launches pi at a composed posture. Every write lands in a
 // fresh temp dir (P3: zero shared-config mutation), for symmetry with the
 // other doors — pi's compiled fsPlan is empty at every posture verified so
 // far (../PROBE.md), so nothing is written there today. `--print` shows the
@@ -9,16 +9,16 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
 // Guinea-pig model for this prototype (WP2 dispatch brief) — cheap and
 // consistent, verified working against pi 0.83.0 (PROBE.md). Only applied
 // when the caller does not pass --model.
 const DEFAULT_MODEL = "openai-codex/gpt-5.6-luna:low";
-const PROFILE_ENV = "PI_HEAVEN_PROFILE";
-const PROFILE_FILE = "pi-heaven-profile.json";
-const BUNDLED_EXTENSION = join(dirname(fileURLToPath(import.meta.url)), "..", "extension", "pi-heaven.ts");
+const PROFILE_ENV = "PI_ZERO_PROFILE";
+const PROFILE_FILE = "pi-zero-profile.json";
+const BUNDLED_EXTENSION = join(dirname(fileURLToPath(import.meta.url)), "..", "extension", "pi-zero.ts");
 
 function piArgsWithDoor(posture: string, piArgs: string[]): string[] {
   // The benchmark floor is intentionally doorless. Do not add the extension
@@ -29,7 +29,7 @@ function piArgsWithDoor(posture: string, piArgs: string[]): string[] {
 function profileManifest(plan: ReturnType<typeof planLaunch>): string {
   return `${JSON.stringify(
     {
-      schema: "pi-heaven/profile@1",
+      schema: "pi-zero/profile@1",
       posture: plan.posture,
       command: plan.command,
       argv: plan.argv,
@@ -87,7 +87,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
 function helpText(): string {
   return [
-    "Usage: pi-heaven [--level <level>] [options] [-- <pi args...>]",
+    "Usage: pi-zero [--level <level>] [options] [-- <pi args...>]",
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
@@ -122,16 +122,16 @@ export function run(argv: string[]): number {
     if (!aliased) {
       if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
         process.stderr.write(
-          `pi-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+          `pi-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
             `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
         );
       } else {
-        process.stderr.write(`pi-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
+        process.stderr.write(`pi-zero: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
       }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
-      process.stderr.write(`pi-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
+      process.stderr.write(`pi-zero: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
       return 2;
     }
     posture = aliased;
@@ -139,7 +139,7 @@ export function run(argv: string[]): number {
 
   if (!(POSTURES as readonly string[]).includes(posture)) {
     process.stderr.write(
-      `pi-heaven: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
+      `pi-zero: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
     );
     return 2;
   }
@@ -160,7 +160,7 @@ export function run(argv: string[]): number {
         piArgs: piArgsWithDoor(posture, args.piArgs),
       });
     } catch (e) {
-      process.stderr.write(`pi-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`pi-zero: ${(e as Error).message}\n`);
       return 2;
     }
     process.stdout.write(
@@ -188,7 +188,7 @@ export function run(argv: string[]): number {
   // Real launch: materialize the (currently always empty) fsPlan into a fresh
   // temp dir, spawn pi, then remove it once pi exits (spawnSync is
   // synchronous). Nothing touches the user's real pi config (P3).
-  const sessionDir = mkdtempSync(join(tmpdir(), "pi-heaven-"));
+  const sessionDir = mkdtempSync(join(tmpdir(), "pi-zero-"));
   try {
     let live;
     try {
@@ -207,13 +207,13 @@ export function run(argv: string[]): number {
         });
       }
     } catch (e) {
-      process.stderr.write(`pi-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`pi-zero: ${(e as Error).message}\n`);
       return 2;
     }
 
     if (live.execSupport !== "exec") {
       process.stderr.write(
-        `pi-heaven: ${live.posture} compiled as a recipe (cells not verified for live exec) — use --print.\n`,
+        `pi-zero: ${live.posture} compiled as a recipe (cells not verified for live exec) — use --print.\n`,
       );
       return 2;
     }
@@ -227,10 +227,10 @@ export function run(argv: string[]): number {
     if (r.error) {
       const err = r.error as NodeJS.ErrnoException;
       if (err.code === "ENOENT") {
-        process.stderr.write(`pi-heaven: could not find the \`pi\` binary on PATH.\n`);
+        process.stderr.write(`pi-zero: could not find the \`pi\` binary on PATH.\n`);
         return 127;
       }
-      process.stderr.write(`pi-heaven: failed to launch pi: ${err.message}\n`);
+      process.stderr.write(`pi-zero: failed to launch pi: ${err.message}\n`);
       return 1;
     }
     return r.status ?? 1;

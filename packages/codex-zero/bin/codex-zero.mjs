@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// codex-heaven launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
+// codex-zero launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
 // package location so it works under workspace hoisting (mirrors core's
-// skill-heaven.mjs / claude-heaven's and pi-heaven's shims).
+// skill-zero.mjs / claude-zero's and pi-zero's shims).
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -15,7 +15,7 @@ let tsxCli;
 try {
   tsxCli = join(dirname(require.resolve("tsx/package.json")), "dist/cli.mjs");
 } catch {
-  process.stderr.write("codex-heaven: could not resolve tsx (is the package installed with its dependencies?)\n");
+  process.stderr.write("codex-zero: could not resolve tsx (is the package installed with its dependencies?)\n");
   process.exit(1);
 }
 

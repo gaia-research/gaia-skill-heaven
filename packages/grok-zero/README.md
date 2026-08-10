@@ -1,13 +1,13 @@
-# grok-heaven
+# grok-zero
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
 The Grok door to Skill Heaven.
 
 ```bash
-grok-heaven --print                              # off/product-floor default
-grok-heaven --level native --print               # explicit native
-grok-heaven --level low --skill /path/to/skill --print
+grok-zero --print                              # off/product-floor default
+grok-zero --level native --print               # explicit native
+grok-zero --level low --skill /path/to/skill --print
 ```
 
 The ladder is the primary interface. See

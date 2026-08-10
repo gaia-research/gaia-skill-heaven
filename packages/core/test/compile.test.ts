@@ -89,7 +89,7 @@ describe("claude mappings", () => {
 describe("the floor split (V5-5)", () => {
   it("the benchmark floor is byte-frozen at T9b and stays doorless (F6)", () => {
     const r = compile({ posture: "floor", harness: "claude", skills: [] });
-    // F6: this flag is what suppresses plugin COMMANDS, so /skill-heaven does
+    // F6: this flag is what suppresses plugin COMMANDS, so /skill-zero does
     // not exist here. That is the ruling, not a bug — do not remove it.
     expect(r.argv).toContain("--disable-slash-commands");
     expect(r.argv).not.toContain("--plugin-dir");

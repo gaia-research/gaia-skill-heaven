@@ -1,5 +1,5 @@
 #!/bin/sh
-# Skill Heaven "install everything" installer.
+# Skill Heaven installer for the Skill Zero launcher doors.
 # POSIX sh; tested on macOS. Installs source-built doors and the summon engine
 # under one user-owned directory, then registers the Claude plugin when Claude
 # Code is already available. It never installs a harness.
@@ -32,7 +32,7 @@ usage() {
 Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
        $0 --uninstall
 
-Installs the WORKING PROTOTYPE's five launcher doors, @gaia-research/mcp@0.3.0
+Installs the WORKING PROTOTYPE's five Skill Zero launcher doors, @gaia-research/mcp@0.3.0
 (skill-hell), and the Claude plugin when the user's own claude binary is on PATH.
 No harness is installed. Set SKILL_HEAVEN_HOME to override:
   $INSTALL_HOME
@@ -113,7 +113,7 @@ case ${1:-} in
 esac
 
 say "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use."
-say "Installing all five doors, the Claude plugin, and the skill-hell summon engine."
+say "Installing all five Skill Zero doors, the Claude plugin, and the skill-hell summon engine under the Skill Heaven umbrella."
 say "Harnesses are never installed; every door uses the user's own harness binary."
 
 missing=
@@ -238,7 +238,7 @@ else
   say "  claude plugin install --scope user $PLUGIN_ID"
 fi
 
-say "Installed launcher doors:"
+say "Installed Skill Zero doors:"
 for door in claude pi codex hermes grok; do
   say "  $door-zero"
 done

@@ -5,7 +5,7 @@
 **Visible evidence pane:** `w8:pQ`
 **Account caveat:** this is the free-tier account without SuperGrok. A failure or missing capability below must not be promoted to a harness limitation when it may be an account-tier limitation.
 
-All load-bearing Grok invocations in this probe were sent to the visible herdr pane with `herdr pane send-text`; the exact output files used while probing were under `/tmp/grok-heaven-*` and are disposable.
+All load-bearing Grok invocations in this probe were sent to the visible herdr pane with `herdr pane send-text`; the exact output files used while probing were under `/tmp/grok-zero-*` and are disposable.
 
 ## Baseline and scoped home
 
@@ -40,12 +40,12 @@ Both scoped runs agreed on count/source: **70 user** skills from `~/.agents/skil
 
 ## Project scope
 
-A disposable git repo `/tmp/grok-heaven-project-scope` contained `.claude/skills/project-marker/SKILL.md`; `/tmp/grok-heaven-bare-scope` had no `.claude/` directory. Exact cells, each repeated twice:
+A disposable git repo `/tmp/grok-zero-project-scope` contained `.claude/skills/project-marker/SKILL.md`; `/tmp/grok-zero-bare-scope` had no `.claude/` directory. Exact cells, each repeated twice:
 
 ```text
-grok --cwd /tmp/grok-heaven-project-scope inspect
-grok --cwd /tmp/grok-heaven-bare-scope inspect
-GROK_HOME="$SCOPE" grok --cwd /tmp/grok-heaven-project-scope inspect
+grok --cwd /tmp/grok-zero-project-scope inspect
+grok --cwd /tmp/grok-zero-bare-scope inspect
+GROK_HOME="$SCOPE" grok --cwd /tmp/grok-zero-project-scope inspect
 ```
 
 Results:
@@ -56,7 +56,7 @@ bare home:     Skills (110)
 scoped home:   Skills (80), └ project-marker ... project [claude]
 ```
 
-`GROK_CLAUDE_SKILLS_ENABLED=false` and a scoped `[compat.claude] skills = false` config both kept the marker listed as `[disabled]` (80 skills), so compatibility-off is not listing eviction. A scoped config with `[skills] ignore = ["/tmp/grok-heaven-project-scope/.claude/skills"]` removed the marker (79 skills) twice. **Conclusion:** project skills can be evicted without changing `--cwd` when the launcher writes an exact discovered-path ignore entry; compatibility-off alone cannot. There is no demonstrated generic wildcard that safely covers arbitrary external/plugin roots.
+`GROK_CLAUDE_SKILLS_ENABLED=false` and a scoped `[compat.claude] skills = false` config both kept the marker listed as `[disabled]` (80 skills), so compatibility-off is not listing eviction. A scoped config with `[skills] ignore = ["/tmp/grok-zero-project-scope/.claude/skills"]` removed the marker (79 skills) twice. **Conclusion:** project skills can be evicted without changing `--cwd` when the launcher writes an exact discovered-path ignore entry; compatibility-off alone cannot. There is no demonstrated generic wildcard that safely covers arbitrary external/plugin roots.
 
 ## Scoped session usability
 
@@ -85,14 +85,14 @@ ignore = [
   "/Users/marcotiongson/.claude/skills",
   "/Users/marcotiongson/Documents/gaia-research/.claude/skills",
   "/Users/marcotiongson/Documents/pi-config/skills/pi-config",
-  "/tmp/grok-heaven-floor-final/bundled/skills",
-  "/tmp/grok-heaven-project-scope/.claude/skills"
+  "/tmp/grok-zero-floor-final/bundled/skills",
+  "/tmp/grok-zero-project-scope/.claude/skills"
 ]
 [plugins]
-disabled = ["frontend-design", "rock-favor", "claude-heaven"]
+disabled = ["frontend-design", "rock-favor", "claude-zero"]
 ```
 
-The `$GROK_HOME/bundled/skills` ignore is load-bearing: a fresh home seeded 21 bundled skills after its first start. With that session path ignored, exact `GROK_HOME=/tmp/grok-heaven-floor-final grok inspect` runs reported **`Skills (0)`** twice; the same composition with `--cwd /tmp/grok-heaven-project-scope` also reported **`Skills (0)`** twice. `GROK_HOME=... grok -p "Reply with exactly: OK"` answered `OK` twice. This is a verified pinned-machine composition, but its absolute path and installed-plugin inventory are not portable evidence of a universal route; the implementation stays recipe-only for non-native postures rather than guessing.
+The `$GROK_HOME/bundled/skills` ignore is load-bearing: a fresh home seeded 21 bundled skills after its first start. With that session path ignored, exact `GROK_HOME=/tmp/grok-zero-floor-final grok inspect` runs reported **`Skills (0)`** twice; the same composition with `--cwd /tmp/grok-zero-project-scope` also reported **`Skills (0)`** twice. `GROK_HOME=... grok -p "Reply with exactly: OK"` answered `OK` twice. This is a verified pinned-machine composition, but its absolute path and installed-plugin inventory are not portable evidence of a universal route; the implementation stays recipe-only for non-native postures rather than guessing.
 
 The probe also tried `[plugins].disabled` plain names, `@marketplace` names, `user/...` names, and `"*"`. Plain observed names suppressed the observed plugin skills; the other spellings/wildcard did not. The plugin inventory is therefore an open portability boundary, not a reason to mutate global plugin state.
 
@@ -101,23 +101,23 @@ The probe also tried `[plugins].disabled` plain names, `@marketplace` names, `us
 The nearest launchable product composition used the same session config and auth copy but omitted `[plugins].disabled`, leaving the installed plugin surface as the door. Exact cells, repeated twice each:
 
 ```text
-GROK_HOME=/tmp/grok-heaven-product-final grok inspect
-GROK_HOME=/tmp/grok-heaven-product-final grok --cwd /tmp/grok-heaven-project-scope inspect
-GROK_HOME=/tmp/grok-heaven-product-final grok -p "Reply with exactly: OK"
+GROK_HOME=/tmp/grok-zero-product-final grok inspect
+GROK_HOME=/tmp/grok-zero-product-final grok --cwd /tmp/grok-zero-project-scope inspect
+GROK_HOME=/tmp/grok-zero-product-final grok -p "Reply with exactly: OK"
 ```
 
 Both listing cells reported **`Skills (9)`** (the observed plugin skills: eight Rock skills plus the disabled frontend listing), including when the disposable project Claude skill was present. Both answer cells exited 0 and printed `OK`. This preserves the plugin/door surface but remains recipe-only in the compiled door because the portable installed-plugin inventory is not demonstrated.
 
 ## Curated readmission
 
-A disposable `SKILL.md` named `grok-heaven-path-probe` was copied to `$GROK_HOME/skills/grok-heaven-path-probe` in the same clean-room config. Exact cells, repeated twice:
+A disposable `SKILL.md` named `grok-zero-path-probe` was copied to `$GROK_HOME/skills/grok-zero-path-probe` in the same clean-room config. Exact cells, repeated twice:
 
 ```text
-GROK_HOME=/tmp/grok-heaven-curated-final grok inspect
-GROK_HOME=/tmp/grok-heaven-curated-final grok -p "/grok-heaven-path-probe"
+GROK_HOME=/tmp/grok-zero-curated-final grok inspect
+GROK_HOME=/tmp/grok-zero-curated-final grok -p "/grok-zero-path-probe"
 ```
 
-`grok inspect` reported **`Skills (1)`** and the literal source line `grok-heaven-path-probe user` in both runs. Both inference runs emitted the marker `GROK_PATH_SKILL_LOADED`; one added a short preamble, so exact prose did not byte-match, but discovery and marker agreement did. **Curated directory placement: yes**, with a session-scoped `GROK_HOME/skills/<name>` copy. No token dose was measured or claimed.
+`grok inspect` reported **`Skills (1)`** and the literal source line `grok-zero-path-probe user` in both runs. Both inference runs emitted the marker `GROK_PATH_SKILL_LOADED`; one added a short preamble, so exact prose did not byte-match, but discovery and marker agreement did. **Curated directory placement: yes**, with a session-scoped `GROK_HOME/skills/<name>` copy. No token dose was measured or claimed.
 
 ## Conclusion
 
@@ -177,7 +177,7 @@ GROK_ITER_OK
 GROK_ITER_STATUS=0
 ```
 
-Curated readmission copied a disposable `grok-heaven-path-probe` skill into
+Curated readmission copied a disposable `grok-zero-path-probe` skill into
 `GROK_HOME/skills`, excluded its canonical path from the dynamic ignores, and disabled the
 observed plugin names. Both repetitions agreed:
 
@@ -192,7 +192,7 @@ GROK_ITER_ROUND=4 COUNT=1 SOURCES=user:1
 GROK_ITER_IGNORE_TOTAL=228 GROK_ITER_PLUGIN_DISABLE_TOTAL=3
 GROK_ITER_FINAL_COUNT=1
 GROK_ITER_FINAL_SOURCES=user:1
-GROK_ITER_FINAL_NAMES=grok-heaven-path-probe
+GROK_ITER_FINAL_NAMES=grok-zero-path-probe
 GROK_ITER_OK
 GROK_ITER_STATUS=0
 ```
@@ -210,7 +210,7 @@ names.
 After the WP14 probe, the actual door was launched in visible pane **`w8:p12`**:
 
 ```text
-node packages/grok-heaven/bin/grok-heaven.mjs --posture product-floor -- \
+node packages/grok-zero/bin/grok-zero.mjs --posture product-floor -- \
   -p "Reply with exactly: GROK_HEAVEN_OK"
 ```
 

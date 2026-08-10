@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// grok-heaven launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
+// grok-zero launcher shim: runs ../src/cli.ts through tsx. Resolves tsx by
 // package location so it works under workspace hoisting.
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
@@ -14,7 +14,7 @@ let tsxCli;
 try {
   tsxCli = join(dirname(require.resolve("tsx/package.json")), "dist/cli.mjs");
 } catch {
-  process.stderr.write("grok-heaven: could not resolve tsx (is the package installed with its dependencies?)\n");
+  process.stderr.write("grok-zero: could not resolve tsx (is the package installed with its dependencies?)\n");
   process.exit(1);
 }
 

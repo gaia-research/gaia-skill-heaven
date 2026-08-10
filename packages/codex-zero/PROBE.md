@@ -195,7 +195,7 @@ After the probe was recorded, the actual door was launched in the same visible p
 **`w8:p11`**:
 
 ```text
-node packages/codex-heaven/bin/codex-heaven.mjs --posture product-floor \
+node packages/codex-zero/bin/codex-zero.mjs --posture product-floor \
   --model gpt-5.6-luna -- -c model_reasoning_effort=low \
   "Reply with exactly: CODEX_HEAVEN_OK"
 ```

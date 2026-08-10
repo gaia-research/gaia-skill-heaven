@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # KC4 probe — "curated mode shows zero listing residual" (GAIA Roadmap v5,
-# Program 1, Arc I, gaia-research/skill-heaven issue #10).
+# Program 1, Arc I, gaia-research/gaia-skill-heaven issue #10).
 #
 # WHAT THIS MEASURES. compile()'s "curated" route for the claude harness
 # composes:
@@ -11,8 +11,8 @@
 # unknown flags are rejected before auth, so a clean parse proves the flags are
 # valid, not that anything actually loaded. A nonexistent --plugin-dir parses
 # identically. This script does NOT repeat that mistake: it launches a real
-# `claude` process (via the actual claude-heaven CLI door, i.e.
-# packages/claude-heaven/src/cli.ts -> core's compile()) and reads the
+# `claude` process (via the actual claude-zero CLI door, i.e.
+# packages/claude-zero/src/cli.ts -> core's compile()) and reads the
 # harness's own `system:init` stream-json event, which enumerates
 # `skills`/`plugins` BEFORE any model call or auth check runs. That event is
 # ground truth from the harness itself, not a self-report the model could get
@@ -31,7 +31,7 @@
 #       `--setting-sources project`, cwd has the planted project marker.
 #       Causal isolation: if the project marker disappears here, `--setting-
 #       sources project` is confirmed as the specific cause of any S1 leak.
-#   S4  native posture (via claude-heaven CLI), cwd has the planted project
+#   S4  native posture (via claude-zero CLI), cwd has the planted project
 #       marker. Reference baseline — shows the full, uncurated listing so S1/
 #       S2/S3 can be read against it.
 #
@@ -40,8 +40,8 @@
 # get a fresh $PROBE_ROOT (timestamped) so nothing is overwritten either.
 #
 # USAGE
-#   packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
-#   KC4_PROBE_ROOT=/some/dir packages/claude-heaven/scripts/probe-kc4-listing-residual.sh
+#   packages/claude-zero/scripts/probe-kc4-listing-residual.sh
+#   KC4_PROBE_ROOT=/some/dir packages/claude-zero/scripts/probe-kc4-listing-residual.sh
 #
 # Requires: node/npx (tsx resolves via the workspace), jq. Does not require an
 # authenticated `claude` session — see NOTE ON AUTH below.
@@ -56,8 +56,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-CLAUDE_HEAVEN_PKG="$REPO_ROOT/packages/claude-heaven"
-CLAUDE_HEAVEN_CLI="$CLAUDE_HEAVEN_PKG/src/cli.ts"
+CLAUDE_ZERO_PKG="$REPO_ROOT/packages/claude-zero"
+CLAUDE_ZERO_CLI="$CLAUDE_ZERO_PKG/src/cli.ts"
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "probe-kc4-listing-residual: jq is required but not on PATH" >&2
@@ -195,13 +195,13 @@ run_scenario() {
 
 # S1 — curated, cwd has the planted project-scope marker. THE headline test.
 run_scenario S1 curated-with-project-marker "$PROJECT_WITH_MARKER" \
-  npx --prefix "$CLAUDE_HEAVEN_PKG" tsx "$CLAUDE_HEAVEN_CLI" \
+  npx --prefix "$CLAUDE_ZERO_PKG" tsx "$CLAUDE_ZERO_CLI" \
     --posture curated --skill "$CURATED_SKILL_DIR" --
 
 # S2 — curated, cwd is a clean project (no .claude/skills at all). Isolates
 # residual that ISN'T explained by project scope.
 run_scenario S2 curated-clean-project "$PROJECT_CLEAN" \
-  npx --prefix "$CLAUDE_HEAVEN_PKG" tsx "$CLAUDE_HEAVEN_CLI" \
+  npx --prefix "$CLAUDE_ZERO_PKG" tsx "$CLAUDE_ZERO_CLI" \
     --posture curated --skill "$CURATED_SKILL_DIR" --
 
 # S3 — raw `claude`, same plugin-dir mount as S1, WITHOUT
@@ -211,7 +211,7 @@ mkdir -p "$S3_SESSION/heaven-set/skills" "$S3_SESSION/heaven-set/.claude-plugin"
 cat > "$S3_SESSION/heaven-set/.claude-plugin/plugin.json" <<'EOF'
 {
   "name": "heaven-set",
-  "description": "Session-scoped curated skill set (Skill Heaven launcher) — S3 manual replica",
+  "description": "Session-scoped curated skill set (Skill Zero launcher) — S3 manual replica",
   "version": "0.0.0"
 }
 EOF
@@ -224,7 +224,7 @@ run_scenario S3 no-setting-sources-project "$PROJECT_WITH_MARKER" \
 
 # S4 — native, cwd has the planted project-scope marker. Reference baseline.
 run_scenario S4 native-with-project-marker "$PROJECT_WITH_MARKER" \
-  npx --prefix "$CLAUDE_HEAVEN_PKG" tsx "$CLAUDE_HEAVEN_CLI" \
+  npx --prefix "$CLAUDE_ZERO_PKG" tsx "$CLAUDE_ZERO_CLI" \
     --posture native --
 
 echo "== Done =="

@@ -1,8 +1,8 @@
 // Generates the ladder policy artifact consumed by the zero-dependency plugin
-// renderers. Once marketplace-installed they cannot import skill-heaven, so the
+// renderers. Once marketplace-installed they cannot import skill-zero, so the
 // canonical lists are machine-copied and freshness-tested.
 //
-//   npx tsx packages/claude-heaven/scripts/generate-ladder.ts
+//   npx tsx packages/claude-zero/scripts/generate-ladder.ts
 
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,12 +13,12 @@ import {
   LADDER_LEVELS,
   POSTURES,
   UNRATIFIED_LEVELS,
-} from "skill-heaven";
+} from "skill-zero";
 import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 
 export interface LadderArtifact {
-  schema: "claude-heaven/ladder@1";
-  source: "skill-heaven ladder constants + POSTURES, claude-heaven LAUNCHABLE_POSTURES";
+  schema: "claude-zero/ladder@1";
+  source: "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES";
   levels: string[];
   heavenLevels: string[];
   hellLevels: string[];
@@ -29,8 +29,8 @@ export interface LadderArtifact {
 
 export function buildLadderArtifact(): LadderArtifact {
   return {
-    schema: "claude-heaven/ladder@1",
-    source: "skill-heaven ladder constants + POSTURES, claude-heaven LAUNCHABLE_POSTURES",
+    schema: "claude-zero/ladder@1",
+    source: "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES",
     levels: [...LADDER_LEVELS],
     heavenLevels: [...HEAVEN_LEVELS],
     hellLevels: [...HELL_LEVELS],

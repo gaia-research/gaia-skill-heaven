@@ -1,6 +1,6 @@
 // IO entry for the statusline segment. Claude Code pipes its statusline JSON on
 // stdin and renders our stdout (matrix gate (b), GB-1). We read the launched
-// profile manifest from $CLAUDE_HEAVEN_PROFILE (written by the launcher) and the
+// profile manifest from $CLAUDE_ZERO_PROFILE (written by the launcher) and the
 // live context-window usage from stdin. Never throws: a broken manifest or empty
 // stdin degrades to a minimal/no segment rather than breaking the user's prompt.
 
@@ -15,7 +15,7 @@ import {
   type ProfileManifest,
 } from "./statusline.js";
 
-const PROFILE_ENV = "CLAUDE_HEAVEN_PROFILE";
+const PROFILE_ENV = "CLAUDE_ZERO_PROFILE";
 const HELL_SESSION_ENV = "SKILL_HELL_SESSION";
 const HELL_MANIFEST_FILE = "session.json";
 
@@ -61,7 +61,7 @@ function readStdin(): string {
 
 export function main(): void {
   const manifest = loadManifest(process.env[PROFILE_ENV]);
-  // No manifest → we are not inside a claude-heaven launch (or it is malformed).
+  // No manifest → we are not inside a claude-zero launch (or it is malformed).
   // Emit nothing so a mis-wired statusline is silent, not noisy/misleading.
   if (!manifest) return;
   const input = parseStatuslineInput(readStdin());

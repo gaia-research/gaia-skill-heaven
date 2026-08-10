@@ -5,15 +5,15 @@
 // against whatever the operator has on disk.
 //
 // ZERO DEPENDENCIES BY NECESSITY, same reason as render-posture.mjs: once
-// claude-heaven is installed from the marketplace there is no node_modules
+// claude-zero is installed from the marketplace there is no node_modules
 // next to it, so this file runs on plain Node with only `node:` builtins.
 //
-// Founder requirement: /skill-hell must work whether or not claude-heaven or
-// pi-heaven launched the session — so resolution never reads a door's launch
+// Founder requirement: /skill-hell must work whether or not claude-zero or
+// pi-zero launched the session — so resolution never reads a door's launch
 // manifest or session directory, only environment + filesystem facts that
 // hold regardless of which harness (or none) is running.
 
-import { accessSync, constants, existsSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 
@@ -47,10 +47,20 @@ export class HellEngineNotFoundError extends Error {
 function toEngine(binPath, source) {
   // A `.js` file is not directly executable via spawn on every platform (no
   // shebang guarantee once copied/symlinked), so run it through the same
-  // Node that is running this script. Anything else (a real `skill-hell`
-  // executable found on PATH or named explicitly) is invoked directly.
+  // Node that is running this script. The same applies to shebang-marked node
+  // scripts without a `.js` suffix (the test seam and some user installs use
+  // exactly that shape), especially on Windows where spawn cannot rely on the
+  // kernel honoring the shebang.
   if (binPath.endsWith(".js")) {
     return { command: process.execPath, args: [binPath], source, binPath };
+  }
+  try {
+    const head = readFileSync(binPath, "utf8").slice(0, 128);
+    if (/^#!.*\bnode\b/.test(head)) {
+      return { command: process.execPath, args: [binPath], source, binPath };
+    }
+  } catch {
+    // If the file is unreadable here, let the direct spawn path surface it.
   }
   return { command: binPath, args: [], source, binPath };
 }

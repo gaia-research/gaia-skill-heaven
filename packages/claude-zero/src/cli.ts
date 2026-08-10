@@ -1,4 +1,4 @@
-// claude-heaven CLI. Launches claude at a composed posture with the
+// claude-zero CLI. Launches claude at a composed posture with the
 // standing-dose statusline wired via a session-scoped --settings file. Every
 // write lands in a fresh temp dir (P3: zero shared-config mutation) — including
 // the materialized curated set. `--print` shows the plan without spawning claude
@@ -9,12 +9,12 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HEAVEN_LEVELS, HELL_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-zero";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
- * lives. Every surface that offers a `claude-heaven` relaunch must check against
+ * lives. Every surface that offers a `claude-zero` relaunch must check against
  * this set: offering a relaunch the CLI then refuses is claiming a transition
  * the harness cannot perform (KC7), which is a broken affordance whichever way
  * you look at it.
@@ -81,14 +81,14 @@ function statuslineBinPath(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "statusline.mjs");
 }
 
-/** Absolute path to the door's own plugin dir (the one carrying /skill-heaven). */
+/** Absolute path to the door's own plugin dir (the one carrying /skill-zero). */
 function doorPluginDir(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "plugin");
 }
 
 function helpText(): string {
   return [
-    "Usage: claude-heaven [--level <level>] [options] [-- <claude args...>]",
+    "Usage: claude-zero [--level <level>] [options] [-- <claude args...>]",
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
@@ -120,19 +120,19 @@ export function run(argv: string[]): number {
     if (!aliased) {
       if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
         process.stderr.write(
-          `claude-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+          `claude-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
             `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
         );
       } else {
         process.stderr.write(
-          `claude-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`,
+          `claude-zero: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`,
         );
       }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
       process.stderr.write(
-        `claude-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`,
+        `claude-zero: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`,
       );
       return 2;
     }
@@ -145,25 +145,25 @@ export function run(argv: string[]): number {
     // by policy (nothing here decided to keep it from you), and not even a
     // capability gap in claude itself: F6 established `--disable-slash-commands`
     // suppresses plugin COMMANDS as well as plugin skills, so a door launched
-    // there has no /skill-heaven to talk to. There is no key to turn; the door
+    // there has no /skill-zero to talk to. There is no key to turn; the door
     // does not exist at that address. Anything else here is simply not a
     // posture core knows at all — a plain unknown-input error, neither class.
     if (posture === "floor") {
       process.stderr.write(
-        `claude-heaven cannot launch --posture floor: this is not a policy hold — ` +
+        `claude-zero cannot launch --posture floor: this is not a policy hold — ` +
           `the doorless benchmark floor suppresses plugin commands as well as plugin skills (F6), ` +
-          `so a claude-heaven session launched there would have no /skill-heaven to talk to. There is no ` +
+          `so a claude-zero session launched there would have no /skill-zero to talk to. There is no ` +
           `door to open at this posture; it is core's to compose, for benchmark runs only: ` +
-          `\`skill-heaven --posture floor\`.\n`,
+          `\`skill-zero --posture floor\`.\n`,
       );
     } else if ((POSTURES as readonly string[]).includes(posture)) {
       process.stderr.write(
-        `claude-heaven does not launch --posture ${posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
+        `claude-zero does not launch --posture ${posture}. Launchable: ${LAUNCHABLE_POSTURES.join(", ")}. ` +
           `core knows this posture, but this door has no composition wired for it.\n`,
       );
     } else {
       process.stderr.write(
-        `claude-heaven: unknown --posture "${posture}" — not a posture core knows at all. ` +
+        `claude-zero: unknown --posture "${posture}" — not a posture core knows at all. ` +
           `Launchable: ${LAUNCHABLE_POSTURES.join(", ")}.\n`,
       );
     }
@@ -188,7 +188,7 @@ export function run(argv: string[]): number {
         claudeArgs: args.claudeArgs,
       });
     } catch (e) {
-      process.stderr.write(`claude-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`claude-zero: ${(e as Error).message}\n`);
       return 2;
     }
     process.stdout.write(
@@ -219,7 +219,7 @@ export function run(argv: string[]): number {
   // fresh temp dir, then remove it once claude exits (spawnSync is synchronous).
   // Nothing touches ~/.claude and no skill source is mutated — copyDir reads the
   // source and writes the session copy (P3). Nothing is left behind.
-  const sessionDir = mkdtempSync(join(tmpdir(), "claude-heaven-"));
+  const sessionDir = mkdtempSync(join(tmpdir(), "claude-zero-"));
   try {
     let live;
     try {
@@ -233,7 +233,7 @@ export function run(argv: string[]): number {
       });
       materialize(live.fsPlan, sessionDir);
     } catch (e) {
-      process.stderr.write(`claude-heaven: ${(e as Error).message}\n`);
+      process.stderr.write(`claude-zero: ${(e as Error).message}\n`);
       return 2;
     }
     writeFileSync(live.manifestPath, `${JSON.stringify(live.manifest, null, 2)}\n`);
@@ -255,10 +255,10 @@ export function run(argv: string[]): number {
     if (r.error) {
       const err = r.error as NodeJS.ErrnoException;
       if (err.code === "ENOENT") {
-        process.stderr.write(`claude-heaven: could not find the \`claude\` binary on PATH.\n`);
+        process.stderr.write(`claude-zero: could not find the \`claude\` binary on PATH.\n`);
         return 127;
       }
-      process.stderr.write(`claude-heaven: failed to launch claude: ${err.message}\n`);
+      process.stderr.write(`claude-zero: failed to launch claude: ${err.message}\n`);
       return 1;
     }
     return r.status ?? 1;

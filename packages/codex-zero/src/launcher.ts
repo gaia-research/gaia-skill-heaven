@@ -1,4 +1,4 @@
-// The codex-heaven launch plan resolves skill sources and carries core's
+// The codex-zero launch plan resolves skill sources and carries core's
 // version-pinned argv/fsPlan to the CLI. The real launcher has one additional
 // session-only step: after materializing CODEX_HOME, prepareCodexSession asks
 // codex app-server for exact discovered skill paths and writes the disable set
@@ -16,7 +16,7 @@ import {
   type FsOp,
   type Posture,
   type ResolvedSkill,
-} from "skill-heaven";
+} from "skill-zero";
 
 export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 
@@ -25,7 +25,7 @@ export function assertLevelAllowed(level: string | undefined): void {
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
       `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so codex-heaven refuses rather than guessing.`,
+        `product mapping to compose, so codex-zero refuses rather than guessing.`,
     );
   }
 }
@@ -107,7 +107,7 @@ function discoverCodexSkills(home: string, cwd: string): CodexSkillMetadata[] {
       method: "initialize",
       id: 1,
       params: {
-        clientInfo: { name: "codex-heaven", version: "0.0.0" },
+        clientInfo: { name: "codex-zero", version: "0.0.0" },
         capabilities: { experimentalApi: true },
       },
     },

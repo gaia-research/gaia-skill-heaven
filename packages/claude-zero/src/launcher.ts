@@ -1,4 +1,4 @@
-// The claude-heaven launch PLAN — pure enough to unit-test without spawning
+// The claude-zero launch PLAN — pure enough to unit-test without spawning
 // claude: it reads skill sources (census / resolveSkill) but writes nothing.
 // cli.ts turns a plan into files + a process.
 //
@@ -23,7 +23,7 @@ import {
   type FsOp,
   type Posture,
   type ResolvedSkill,
-} from "skill-heaven";
+} from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import type { ProfileManifest } from "./statusline.js";
 
@@ -45,7 +45,7 @@ export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 // setting-sourced install, user scope included, so the conclusion below is
 // unchanged (if anything, more firmly true than under the old flag value):
 // core mounts ONLY $SESSION/heaven-set as the sole --plugin-dir — the door's
-// own plugin is never re-admitted. So `/skill-heaven`, this door's own
+// own plugin is never re-admitted. So `/skill-zero`, this door's own
 // posture control, does not exist inside a curated session. This is neither
 // of the two refusal classes: it is not withheld by policy (Hell is a live
 // additive lane, and nothing here is a trust-coverage decision), and it is
@@ -58,7 +58,7 @@ export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
 // the door still exists to say so: once the session is running, there is
 // nothing inside it that can print this for itself.
 export const CURATED_DOOR_ABSENCE_NOTE =
-  "claude-heaven: /skill-heaven does not exist inside this curated session — " +
+  "claude-zero: /skill-zero does not exist inside this curated session — " +
   "--setting-sources '' (an intentionally empty allowlist) drops every " +
   "setting-sourced install, user scope included, and only $SESSION/heaven-set " +
   "(the curated set) is mounted via --plugin-dir, so the door itself is " +
@@ -66,7 +66,7 @@ export const CURATED_DOOR_ABSENCE_NOTE =
   "either: mounting the door alongside the curated set is an unprobed " +
   "composition (core rejects a second --plugin-dir for anything but " +
   "product-floor), so it is left undone rather than guessed. Use --posture " +
-  "product-floor if you need /skill-heaven to survive in-session.";
+  "product-floor if you need /skill-zero to survive in-session.";
 
 export interface LaunchOptions {
   /** default "product-floor" (`--level off`) */
@@ -80,7 +80,7 @@ export interface LaunchOptions {
    * printed plan then carries core's own placeholder rather than a fake path. */
   sessionDir: string;
   statuslineBin: string; // absolute path to the statusline bin Claude will run
-  /** the door's own plugin dir, so `/skill-heaven` survives at product-floor.
+  /** the door's own plugin dir, so `/skill-zero` survives at product-floor.
    * Core takes this for product-floor only (it does not assume a package
    * topology); passing it anywhere else is a compile-time error upstream. */
   doorPluginDir?: string;
@@ -109,7 +109,7 @@ export function assertLevelAllowed(level: string | undefined): void {
   if (level && UNRATIFIED.has(level)) {
     throw new Error(
       `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so claude-heaven refuses rather than guessing.`,
+        `product mapping to compose, so claude-zero refuses rather than guessing.`,
     );
   }
 }
@@ -121,7 +121,7 @@ const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION",
  *
  * MANIFEST HONESTY. `posture`, `standingTokens`, `skillCount` and `scope` describe
  * the session that is actually being launched — never what native would have
- * been. Both the statusline and the `/skill-heaven` session line read this one
+ * been. Both the statusline and the `/skill-zero` session line read this one
  * file; a manifest that lied would make both surfaces lie at once.
  */
 export function planLaunch(opts: LaunchOptions): LaunchPlan {
@@ -150,13 +150,13 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       nativeSkillRoots({ home: opts.home, projectDir: opts.projectDir }),
     );
     const manifest: ProfileManifest = {
-      schema: "claude-heaven/profile@1",
+      schema: "claude-zero/profile@1",
       posture: "native",
       standingTokens: census.standingTotal,
       skillCount: census.skillCount,
       scope: census.scope,
       ...(census.incomplete ? { incomplete: true } : {}),
-      launcherLocked: true, // launched via claude-heaven → a subtractive posture is reachable
+      launcherLocked: true, // launched via claude-zero → a subtractive posture is reachable
       ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
     };
     return {
@@ -168,7 +168,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       command: "claude",
       // No eviction / suppression flags — native is claude untouched (P1).
       argv: ["--settings", settingsPath, ...(opts.claudeArgs ?? [])],
-      env: { CLAUDE_HEAVEN_PROFILE: manifestPath },
+      env: { CLAUDE_ZERO_PROFILE: manifestPath },
       fsPlan: [],
       notes: [],
     };
@@ -191,17 +191,17 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       : {}),
   });
 
-  const env: Record<string, string> = { CLAUDE_HEAVEN_PROFILE: manifestPath };
+  const env: Record<string, string> = { CLAUDE_ZERO_PROFILE: manifestPath };
   for (const [k, v] of Object.entries(compiled.env)) env[k] = substSession(v, opts.sessionDir);
 
   const manifest: ProfileManifest = {
-    schema: "claude-heaven/profile@1",
+    schema: "claude-zero/profile@1",
     posture,
     // The composed session's real standing dose: compile()'s dose summary
     // covers the explicitly submitted skill set (zero skills at product-floor,
     // which takes no --skill). It is not a native census.
     //
-    // KC4 CORRECTION (2026-07-29/30, packages/claude-heaven/scripts/
+    // KC4 CORRECTION (2026-07-29/30, packages/claude-zero/scripts/
     // probe-kc4-listing-residual.sh, 2/2 live runs, claude 2.1.220): the T9
     // route this comment used to call "zero listing residual" was NOT zero —
     // a project-scope skill (<cwd>/.claude/skills, kept live by

@@ -94,7 +94,7 @@ describe("run", () => {
     expect(plan.launcherLocked).toBe(true);
     expect(plan.command).toBe("claude");
     // the exact manifest that WOULD be written is shown inline (no temp dir)
-    expect(plan.manifest.schema).toBe("claude-heaven/profile@1");
+    expect(plan.manifest.schema).toBe("claude-zero/profile@1");
     expect(plan.settings).toEqual({ statusLine: { type: "command", command: expect.stringContaining("statusline.mjs") } });
     expect(plan).not.toHaveProperty("sessionDir");
   });
@@ -147,7 +147,7 @@ describe("run", () => {
     expect(plan.posture).toBe("product-floor");
     expect(plan.standingTokens).toBe(0);
     expect(plan.argv).not.toContain("--disable-slash-commands");
-    expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*claude-heaven\/plugin/);
+    expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*claude-zero[\\/]plugin/);
     expect(plan.fsPlan).toEqual([]);
   });
 

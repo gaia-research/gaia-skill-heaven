@@ -1,4 +1,4 @@
-// Zero-dependency renderer for `/skill-heaven`, the subtractive half of the
+// Zero-dependency renderer for `/skill-zero`, the subtractive half of the
 // ladder. Heaven is selected at boot; this renderer never claims to recompose a
 // running process.
 
@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const profileEnv = "CLAUDE_HEAVEN_PROFILE";
+const profileEnv = "CLAUDE_ZERO_PROFILE";
 
 /**
  * @typedef {object} LaunchManifest
@@ -62,7 +62,7 @@ export function isLaunchManifest(value) {
   if (!value || typeof value !== "object") return false;
   const manifest = /** @type {Record<string, unknown>} */ (value);
   return (
-    manifest.schema === "claude-heaven/profile@1" &&
+    manifest.schema === "claude-zero/profile@1" &&
     typeof manifest.posture === "string" &&
     typeof manifest.standingTokens === "number" &&
     typeof manifest.scope === "string"
@@ -90,8 +90,8 @@ export function levelForPosture(posture) {
 
 /** @param {string} level */
 function launchCommand(level) {
-  if (level === "low") return "claude-heaven --level low --skill <path>";
-  return `claude-heaven --level ${level}`;
+  if (level === "low") return "claude-zero --level low --skill <path>";
+  return `claude-zero --level ${level}`;
 }
 
 /** @param {LaunchManifest} manifest */
@@ -126,10 +126,11 @@ export function renderPosture(options = {}) {
   if (!manifest) {
     return {
       text: [
-        "⚡ Skill Heaven · off · low · med",
+        "⚡ Skill Zero · off · low · med",
         "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
-        "   Heaven rungs are boot-time decisions and this session was not launched by claude-heaven.",
-        "   Start one with: → claude-heaven --level low --skill <path>",
+        "   Skill Zero postures are boot-time decisions and this session was not launched by claude-zero.",
+        "   Start one with: → claude-zero --level low --skill <path>",
+        "   Axis commands shipped by this launcher: /skill-heaven · /skill-hell · /skill-ultra.",
         "   This command did not change the running session.",
         "",
       ].join("\n"),
@@ -150,7 +151,7 @@ export function renderPosture(options = {}) {
   const current = levelForPosture(manifest.posture);
   const currentIndex = current === null ? data.heaven.length : data.heaven.indexOf(current);
   const lines = [
-    "⚡ Skill Heaven · off · low · med",
+    "⚡ Skill Zero · off · low · med",
     "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
     `   ${sessionLine(manifest)}`,
     "",
@@ -171,7 +172,8 @@ export function renderPosture(options = {}) {
   if (target !== "" && (target === null || !data.heaven.includes(target))) {
     lines.push("", "   Unknown Heaven rung. Choose off, low, or med.");
   }
-  lines.push("", "   Downward moves stay locked: a running session cannot evict context (D12).");
+  lines.push("", "   Axis commands shipped by this launcher: /skill-heaven · /skill-hell · /skill-ultra.");
+  lines.push("   Downward moves stay locked: a running session cannot evict context (D12).");
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
 

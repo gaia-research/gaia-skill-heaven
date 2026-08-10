@@ -1,4 +1,4 @@
-// hermes-heaven CLI. Hermes 0.20.0 clean-room routes are verified in
+// hermes-zero CLI. Hermes 0.20.0 clean-room routes are verified in
 // ../PROBE.md: floor/product-floor omit the skills toolset, while curated
 // copies arbitrary skill directories into a session-scoped HERMES_HOME.
 // --print shows the plan; real launches materialize only session-local files.
@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-heaven";
+import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
 import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
 
 interface CliArgs {
@@ -55,7 +55,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
 function helpText(): string {
   return [
-    "Usage: hermes-heaven [--level <level>] [options] [-- <hermes args...>]",
+    "Usage: hermes-zero [--level <level>] [options] [-- <hermes args...>]",
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
@@ -78,7 +78,7 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // Keep the refusal and uncaught-throw exit behavior identical to pi-heaven.
+  // Keep the refusal and uncaught-throw exit behavior identical to pi-zero.
   assertLevelAllowed(args.level);
 
   let posture = args.posture;
@@ -87,16 +87,16 @@ export function run(argv: string[]): number {
     if (!aliased) {
       if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
         process.stderr.write(
-          `hermes-heaven: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
+          `hermes-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
             `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
         );
       } else {
-        process.stderr.write(`hermes-heaven: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
+        process.stderr.write(`hermes-zero: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);
       }
       return 2;
     }
     if (args.postureProvided && posture !== aliased) {
-      process.stderr.write(`hermes-heaven: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
+      process.stderr.write(`hermes-zero: --level ${args.level} (= ${aliased}) contradicts --posture ${posture}.\n`);
       return 2;
     }
     posture = aliased;
@@ -104,7 +104,7 @@ export function run(argv: string[]): number {
 
   if (!(POSTURES as readonly string[]).includes(posture)) {
     process.stderr.write(
-      `hermes-heaven: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
+      `hermes-zero: unknown --posture "${posture}" — not a posture core knows at all. Known: ${POSTURES.join(", ")}.\n`,
     );
     return 2;
   }
@@ -120,7 +120,7 @@ export function run(argv: string[]): number {
         hermesArgs: args.hermesArgs,
       });
     } catch (error) {
-      process.stderr.write(`hermes-heaven: ${(error as Error).message}\n`);
+      process.stderr.write(`hermes-zero: ${(error as Error).message}\n`);
       return 2;
     }
 
@@ -143,7 +143,7 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  const sessionDir = mkdtempSync(join(tmpdir(), "hermes-heaven-"));
+  const sessionDir = mkdtempSync(join(tmpdir(), "hermes-zero-"));
   try {
     let live;
     try {
@@ -156,13 +156,13 @@ export function run(argv: string[]): number {
       });
       materialize(live.fsPlan, sessionDir);
     } catch (error) {
-      process.stderr.write(`hermes-heaven: ${(error as Error).message}\n`);
+      process.stderr.write(`hermes-zero: ${(error as Error).message}\n`);
       return 2;
     }
 
     if (live.execSupport !== "exec") {
       process.stderr.write(
-        `hermes-heaven: ${live.posture} compiled as a recipe (cells not verified for clean live exec — see ../PROBE.md) — use --print.\n`,
+        `hermes-zero: ${live.posture} compiled as a recipe (cells not verified for clean live exec — see ../PROBE.md) — use --print.\n`,
       );
       return 2;
     }
@@ -174,10 +174,10 @@ export function run(argv: string[]): number {
     if (result.error) {
       const error = result.error as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
-        process.stderr.write("hermes-heaven: could not find the `hermes` binary on PATH.\n");
+        process.stderr.write("hermes-zero: could not find the `hermes` binary on PATH.\n");
         return 127;
       }
-      process.stderr.write(`hermes-heaven: failed to launch hermes: ${error.message}\n`);
+      process.stderr.write(`hermes-zero: failed to launch hermes: ${error.message}\n`);
       return 1;
     }
     return result.status ?? 1;
