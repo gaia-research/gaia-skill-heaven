@@ -5,6 +5,11 @@
 > and benchmark results live at
 > [research.gaiaskilltree.com](https://research.gaiaskilltree.com).
 
+### Gaia Ecosystem
+[![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
+[![Research](https://img.shields.io/badge/Research-gaia--research%2Fgaia--research-ec4899)](https://github.com/gaia-research/gaia-research)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/#/hero-a)
+
 **Strip your agent's context bloat — run clean.**
 
 **One entropy ladder is the whole mental model (RATIFICATION N11).** The
