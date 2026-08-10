@@ -1,16 +1,16 @@
-# pi-heaven
+# pi-zero
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The pi door to Skill Heaven: a boot-time launcher plus live-session extension.
+The pi door to Skill Zero under the Skill Heaven umbrella: a boot-time launcher plus live-session extension.
 
 ## Launch
 
 ```bash
-pi-heaven                                  # off/product-floor (default)
-pi-heaven --level med                      # pi untouched (= native)
-pi-heaven --level low --skill /path/to/skill
-pi-heaven --print
+pi-zero                                  # off/product-floor (default)
+pi-zero --level med                      # pi untouched (= native)
+pi-zero --level low --skill /path/to/skill
+pi-zero --print
 ```
 
 The ladder is the primary interface. See
@@ -22,10 +22,10 @@ disposable session directory.
 
 ## Session commands
 
-### `/skill-heaven`
+### `/skill-zero`
 
 Owns only `off · low · med`. Without a launcher manifest it gives an exact
-`pi-heaven` command and says it changed nothing. Heaven is a boot-time choice.
+`pi-zero` command and says it changed nothing. Heaven is a boot-time choice.
 
 ### `/skill-hell`
 
@@ -53,8 +53,8 @@ No user or project pi state is edited (P3).
 
 From a source checkout, the launcher loads the extension automatically. It can
 also be inspected directly in pi's package manifest at
-`packages/pi-heaven/extension/pi-heaven.ts`. The npm-ready package is not yet
-published, and it never bundles the pi harness. Without a launcher manifest, `/skill-heaven`
+`packages/pi-zero/extension/pi-zero.ts`. The npm-ready package is not yet
+published, and it never bundles the pi harness. Without a launcher manifest, `/skill-zero`
 points to the launcher without claiming a change; `/skill-hell` remains available because
 it does not depend on posture handoff. When no `SKILL_HELL_SESSION` is supplied,
 the extension creates one for the life of the pi process so materialized skill

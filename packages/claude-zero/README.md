@@ -1,8 +1,8 @@
-# claude-heaven
+# claude-zero
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Claude Code door to Skill Heaven. Its `/skill-hell` command resolves a
+The Claude Code door to Skill Zero under the Skill Heaven umbrella. Its `/skill-hell` command resolves a
 `skill-hell` executable supplied by the published
 [`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
 prototype. Direct public use should select `@latest`, for example
@@ -14,23 +14,23 @@ The repository's one-command installer delivers this launcher, all four sibling
 doors, the working summon engine, and the Claude plugin:
 
 ```bash
-curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 ```
 
 It uses the user's own Claude Code binary and never installs a harness. When
 `claude` is already on `PATH`, the same run registers the marketplace plugin and
-makes `/skill-heaven` and `/skill-hell` available; otherwise it prints the exact
+makes `/skill-zero` and `/skill-hell` available; otherwise it prints the exact
 deferred registration commands. The launcher doors remain source-built rather
 than npm-published. See the root README for PATH, update, and uninstall details.
 
 ## Launch
 
 ```bash
-claude-heaven                                  # off/product-floor (default)
-claude-heaven --level med                      # Claude untouched (= native)
-claude-heaven --level low --skill ./my-skill  # curated clean room
-claude-heaven --print                          # inspect; do not spawn
-claude-heaven -- --model sonnet                # pass through after --
+claude-zero                                  # off/product-floor (default)
+claude-zero --level med                      # Claude untouched (= native)
+claude-zero --level low --skill ./my-skill  # curated clean room
+claude-zero --print                          # inspect; do not spawn
+claude-zero -- --model sonnet                # pass through after --
 ```
 
 The ladder is the primary interface. See
@@ -43,11 +43,11 @@ Every write is session-scoped: the launcher materializes core's plan, profile
 manifest, and statusline settings in a disposable temp directory. It never
 edits `~/.claude`, project skills, or source skill directories (P3).
 
-## `/skill-heaven`: the boot-time half
+## `/skill-zero`: the boot-time half
 
-`/skill-heaven` shows only `off · low · med`; `med` is native and unlocked.
+`/skill-zero` shows only `off · low · med`; `med` is native and unlocked.
 Downward choices remain visibly locked by D12 and include exact relaunch
-commands. Without a launcher manifest it gives the exact `claude-heaven`
+commands. Without a launcher manifest it gives the exact `claude-zero`
 command and explicitly says it changed nothing.
 
 ## `/skill-hell`: usable additive prototype
