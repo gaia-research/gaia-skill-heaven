@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm -w @skill-heaven/site run build
+      - run: npm -w @gaia-skill-heaven/site run build
       - name: Publish the one-command installer at /install.sh
         run: cp install.sh packages/site/dist/install.sh
       - uses: actions/configure-pages@v5

@@ -6,15 +6,15 @@
 
 set -eu
 
-PROGRAM=skill-heaven-install
-DEFAULT_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}/skill-heaven
+PROGRAM=gaia-skill-heaven-install
+DEFAULT_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}/gaia-skill-heaven
 INSTALL_HOME=${SKILL_HEAVEN_HOME:-$DEFAULT_HOME}
 BIN_DIR=$INSTALL_HOME/bin
 SOURCE_REF=${SKILL_HEAVEN_REF:-main}
-SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/skill-heaven/tar.gz/$SOURCE_REF"}
+SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/gaia-skill-heaven/tar.gz/$SOURCE_REF"}
 MCP_SPEC=${SKILL_HELL_PACKAGE:-"@gaia-research/mcp@0.3.0"}
-PLUGIN_ID=claude-heaven@skill-heaven
-MARKETPLACE=skill-heaven
+PLUGIN_ID=claude-zero@gaia-skill-heaven
+MARKETPLACE=gaia-skill-heaven
 PLUGIN_MANAGED=$INSTALL_HOME/.claude-plugin-managed
 MARKETPLACE_MANAGED=$INSTALL_HOME/.claude-marketplace-managed
 
@@ -29,7 +29,7 @@ fail() {
 
 usage() {
   cat <<EOF
-Usage: curl -fsSL https://gaia-research.github.io/skill-heaven/install.sh | sh
+Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
        $0 --uninstall
 
 Installs the WORKING PROTOTYPE's five launcher doors, @gaia-research/mcp@0.3.0
@@ -48,7 +48,7 @@ plugin_is_installed() {
   if node -e '
     const fs = require("node:fs");
     const plugins = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    process.exit(plugins.some((plugin) => plugin.id === "claude-heaven@skill-heaven") ? 0 : 1);
+    process.exit(plugins.some((plugin) => plugin.id === "claude-zero@gaia-skill-heaven") ? 0 : 1);
   ' "$plugin_json"; then
     rm -f "$plugin_json"
     return 0
@@ -136,8 +136,8 @@ fi
 
 INSTALL_PARENT=$(dirname "$INSTALL_HOME")
 mkdir -p "$INSTALL_PARENT"
-STAGE=$(mktemp -d "$INSTALL_PARENT/.skill-heaven-install.XXXXXX")
-OLD=$INSTALL_PARENT/.skill-heaven-old.$$
+STAGE=$(mktemp -d "$INSTALL_PARENT/.gaia-skill-heaven-install.XXXXXX")
+OLD=$INSTALL_PARENT/.gaia-skill-heaven-old.$$
 cleanup() {
   rm -rf "$STAGE" "$OLD"
 }
@@ -151,7 +151,7 @@ tar -xzf "$ARCHIVE" -C "$STAGE/source" --strip-components=1 || fail "downloaded 
 rm -f "$ARCHIVE"
 
 for door in claude pi codex hermes grok; do
-  [ -f "$STAGE/source/packages/$door-heaven/bin/$door-heaven.mjs" ] || fail "source archive is missing $door-heaven; nothing was installed."
+  [ -f "$STAGE/source/packages/$door-zero/bin/$door-zero.mjs" ] || fail "source archive is missing $door-zero; nothing was installed."
 done
 
 say "Installing launcher runtime dependencies ..."
@@ -169,15 +169,15 @@ ENGINE_PACKAGE=$STAGE/engine/node_modules/@gaia-research/mcp/package.json
 ENGINE_VERSION=$(node -p 'require(process.argv[1]).version' "$ENGINE_PACKAGE")
 
 for door in claude pi codex hermes grok; do
-  ln -s "../source/packages/$door-heaven/bin/$door-heaven.mjs" "$STAGE/bin/$door-heaven"
+  ln -s "../source/packages/$door-zero/bin/$door-zero.mjs" "$STAGE/bin/$door-zero"
 done
 ln -s ../engine/node_modules/.bin/skill-hell "$STAGE/bin/skill-hell"
 cat >"$STAGE/uninstall.sh" <<'EOF'
 #!/bin/sh
 set -eu
 ROOT=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
-PLUGIN_ID=claude-heaven@skill-heaven
-MARKETPLACE=skill-heaven
+PLUGIN_ID=claude-zero@gaia-skill-heaven
+MARKETPLACE=gaia-skill-heaven
 
 printf '%s\n' "Skill Heaven working prototype — uninstalling everything from $ROOT"
 if [ -f "$ROOT/.claude-plugin-managed" ]; then
@@ -212,15 +212,15 @@ if [ -d "$INSTALL_HOME" ]; then
   mv "$INSTALL_HOME" "$OLD"
 fi
 mv "$STAGE" "$INSTALL_HOME"
-STAGE=$INSTALL_PARENT/.skill-heaven-stage-moved.$$
+STAGE=$INSTALL_PARENT/.gaia-skill-heaven-stage-moved.$$
 rm -rf "$OLD"
 
 if command -v claude >/dev/null 2>&1; then
-  say "Claude Code detected; installing its /skill-heaven and /skill-hell plugin ..."
+  say "Claude Code detected; installing its /skill-zero and /skill-hell plugin ..."
   if marketplace_is_configured; then
     claude plugin marketplace update "$MARKETPLACE"
   else
-    claude plugin marketplace add https://github.com/gaia-research/skill-heaven.git
+    claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git
     touch "$MARKETPLACE_MANAGED"
   fi
 
@@ -230,17 +230,17 @@ if command -v claude >/dev/null 2>&1; then
     claude plugin install --scope user "$PLUGIN_ID"
     touch "$PLUGIN_MANAGED"
   fi
-  say "Claude plugin ready: /skill-heaven and /skill-hell."
+  say "Claude plugin ready: /skill-zero and /skill-hell."
 else
   say "Claude Code was not detected, so no harness was installed and plugin registration is deferred."
   say "After installing Claude Code yourself, register the already-delivered plugin with:"
-  say "  claude plugin marketplace add https://github.com/gaia-research/skill-heaven.git"
+  say "  claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git"
   say "  claude plugin install --scope user $PLUGIN_ID"
 fi
 
 say "Installed launcher doors:"
 for door in claude pi codex hermes grok; do
-  say "  $door-heaven"
+  say "  $door-zero"
 done
 say "Installed summon engine: skill-hell (@gaia-research/mcp@$ENGINE_VERSION)"
 
