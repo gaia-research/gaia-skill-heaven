@@ -9,8 +9,8 @@ This is a LAUNCHER being actively tested for all your harnesses. Works with Clau
 
 ### Gaia Ecosystem
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
-[![Research](https://img.shields.io/badge/Research-gaia--research%2Fgaia--research-ec4899)](https://github.com/gaia-research/gaia-research)
-[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/#/hero-a)
+[![Research](https://img.shields.io/badge/Research-gaia--research%2Fgaia--research-ec4899)](https://research.gaiaskilltree.com/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven_Preview-gaia--research.github.io%2Fskill--heaven-a58ae0)](https://gaia-research.github.io/skill-heaven/)
 
 **Strip your agent's context bloat — run clean.**
 
