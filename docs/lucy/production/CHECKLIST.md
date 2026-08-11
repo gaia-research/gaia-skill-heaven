@@ -56,5 +56,5 @@ Legend: `[ ]` pending, `[x]` complete, `[!]` blocked after the one allowed call.
 - [x] No production PNG exists outside the single authority master.
 - [x] All 57 workbench PNGs are present in `lucy-masters-backup` as-is.
 - [!] Editable body/uniform/front-hair/rear-hair source layers cannot be recovered from flattened one-shot masters; state assembly manifests record the available production-equivalent components.
-- [ ] Final WebPs, documents, helpers, and checklist committed and pushed.
-- [ ] Draft PR body reports complete, blocked, and deferred assets honestly.
+- [x] Final WebPs, documents, helpers, and checklist committed and pushed.
+- [x] Draft PR body reports complete and blocked assets honestly; no production asset is deferred.
