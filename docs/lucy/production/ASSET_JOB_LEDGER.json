@@ -7,13 +7,13 @@
     "regenerationAllowed": false
   },
   "jobs": [
-    { "id": "GEN-01", "name": "Ultra primary homepage master", "priority": "P0", "status": "briefed" },
-    { "id": "GEN-02", "name": "Heaven alternate homepage master", "priority": "P0", "status": "briefed" },
-    { "id": "GEN-03", "name": "Zero canonical master", "priority": "P0", "status": "briefed" },
-    { "id": "GEN-04", "name": "Hell canonical master and white plate", "priority": "P0", "status": "briefed" },
-    { "id": "GEN-05", "name": "Neutral reusable model master", "priority": "P1", "status": "briefed" },
-    { "id": "GEN-06", "name": "Face, eye, and expression atlas", "priority": "P1", "status": "briefed" },
-    { "id": "GEN-07", "name": "Wing and shard component atlas", "priority": "P1", "status": "briefed" },
-    { "id": "GEN-08", "name": "Ribbon and optical-effects atlas", "priority": "P2", "status": "briefed" }
+    { "id": "GEN-01", "name": "Ultra primary homepage master", "priority": "P0", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-01.md" },
+    { "id": "GEN-02", "name": "Heaven alternate homepage master", "priority": "P0", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-02.md" },
+    { "id": "GEN-03", "name": "Zero canonical master", "priority": "P0", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-03.md" },
+    { "id": "GEN-04", "name": "Hell canonical master and white plate", "priority": "P0", "status": "complete_after_deterministic_inversion", "receipt": "runs/GEN-04.md" },
+    { "id": "GEN-05", "name": "Neutral reusable model master", "priority": "P1", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-05.md" },
+    { "id": "GEN-06", "name": "Face, eye, and expression atlas", "priority": "P1", "status": "complete_with_documented_deviation", "receipt": "runs/GEN-06.md" },
+    { "id": "GEN-07", "name": "Wing and shard component atlas", "priority": "P1", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-07.md" },
+    { "id": "GEN-08", "name": "Ribbon and optical-effects atlas", "priority": "P2", "status": "complete_with_documented_blocks", "receipt": "runs/GEN-08.md" }
   ]
 }

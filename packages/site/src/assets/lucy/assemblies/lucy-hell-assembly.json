@@ -1,0 +1,17 @@
+{
+  "state": "hell",
+  "assembly_status": "flattened-state assembly; no editable character layer separation",
+  "body_skin": "flattened subject only; not independently recoverable",
+  "uniform": "flattened subject only; not independently recoverable",
+  "front_hair": "flattened subject only; not independently recoverable",
+  "rear_hair": "flattened subject only; not independently recoverable",
+  "lighting_shadow": "baked into flattened subject; reusable FX only is separable",
+  "subject": "states/lucy-hell.webp",
+  "eyes": "components/eyes/lucy-eyes-hell.webp",
+  "ribbon": "components/ribbons/lucy-ribbon-hell.webp",
+  "wings": "components/wings/lucy-wing-hell-{left,right,pair}.webp",
+  "shards": "components/shards/lucy-shard-{01..20}.webp; lucy-shard-cluster-hell.webp",
+  "katana": "components/katana/lucy-katana-{neutral-steel,left,right}.webp",
+  "tear": "identity/lucy-red-tear.webp",
+  "fx": "fx/lucy-{particles,caustics,aura,glass-dust,shard-trail}-inverted.webp"
+}

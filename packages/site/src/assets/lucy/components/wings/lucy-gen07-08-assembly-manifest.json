@@ -1,0 +1,31 @@
+{
+  "source": "GEN-07 / GEN-08 frozen one-shot atlases",
+  "extraction": "chroma removal then fixed atlas bounding boxes; see scripts/assets/lucy-gen07-08-export.mjs",
+  "wings": {
+    "heaven": {
+      "left": "lucy-wing-heaven-left.webp",
+      "right": "lucy-wing-heaven-right.webp",
+      "pair": "lucy-wing-heaven-pair.webp"
+    },
+    "hell": {
+      "left": "lucy-wing-hell-left.webp",
+      "right": "lucy-wing-hell-right.webp",
+      "pair": "lucy-wing-hell-pair.webp"
+    },
+    "ultra": {
+      "left": "lucy-wing-ultra-left.webp",
+      "right": "lucy-wing-ultra-right.webp",
+      "pair": "lucy-wing-ultra-pair.webp"
+    }
+  },
+  "ribbons": [
+    "zero",
+    "heaven",
+    "hell",
+    "ultra",
+    "airflow-01",
+    "airflow-02",
+    "airflow-03",
+    "airflow-04"
+  ]
+}

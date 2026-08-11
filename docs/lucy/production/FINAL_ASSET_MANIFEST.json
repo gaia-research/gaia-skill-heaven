@@ -1,0 +1,3188 @@
+{
+  "schema": "lucy-production-final-manifest/v1",
+  "generatedAt": "2026-08-11T21:17:17.413Z",
+  "validator": "scripts/assets/validate-lucy-assets.mjs",
+  "productionRoot": "packages/site/src/assets/lucy",
+  "files": [
+    {
+      "path": "assemblies/lucy-heaven-assembly.json",
+      "bytes": 1014,
+      "type": "json",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "assemblies/lucy-hell-assembly.json",
+      "bytes": 982,
+      "type": "json",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "assemblies/lucy-ultra-assembly.json",
+      "bytes": 1027,
+      "type": "json",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "assemblies/lucy-zero-assembly.json",
+      "bytes": 978,
+      "type": "json",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "authority/lucy-character-sheet-master.png",
+      "bytes": 2437102,
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "alpha": false,
+      "reopened": false
+    },
+    {
+      "path": "authority/lucy-original-reference.jpg",
+      "bytes": 151578,
+      "type": "jpg",
+      "width": 1024,
+      "height": 1536,
+      "alpha": false,
+      "reopened": false
+    },
+    {
+      "path": "backgrounds/lucy-bg-heaven-desktop.webp",
+      "bytes": 60878,
+      "type": "webp",
+      "width": 2560,
+      "height": 1440,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "backgrounds/lucy-bg-hell-desktop.webp",
+      "bytes": 38672,
+      "type": "webp",
+      "width": 2560,
+      "height": 1440,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "backgrounds/lucy-bg-ultra-desktop.webp",
+      "bytes": 57166,
+      "type": "webp",
+      "width": 2560,
+      "height": 1440,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "backgrounds/lucy-bg-zero-desktop.webp",
+      "bytes": 42998,
+      "type": "webp",
+      "width": 2560,
+      "height": 1440,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-01.webp",
+      "bytes": 140000,
+      "type": "webp",
+      "width": 329,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-02.webp",
+      "bytes": 140120,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-03.webp",
+      "bytes": 140396,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-04.webp",
+      "bytes": 141486,
+      "type": "webp",
+      "width": 329,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-05.webp",
+      "bytes": 140592,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-06.webp",
+      "bytes": 141930,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-07.webp",
+      "bytes": 139996,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-08.webp",
+      "bytes": 140270,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/expressions/lucy-expression-09.webp",
+      "bytes": 145756,
+      "type": "webp",
+      "width": 345,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/eyes/lucy-eyes-heaven.webp",
+      "bytes": 140396,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/eyes/lucy-eyes-hell.webp",
+      "bytes": 141486,
+      "type": "webp",
+      "width": 329,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/eyes/lucy-eyes-ultra.webp",
+      "bytes": 140592,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/eyes/lucy-eyes-zero-blank.webp",
+      "bytes": 140120,
+      "type": "webp",
+      "width": 328,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/eyes/lucy-eyes-zero-closed.webp",
+      "bytes": 140000,
+      "type": "webp",
+      "width": 329,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-dual.webp",
+      "bytes": 245738,
+      "type": "webp",
+      "width": 2000,
+      "height": 1200,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-handle.webp",
+      "bytes": 30946,
+      "type": "webp",
+      "width": 520,
+      "height": 320,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-left.webp",
+      "bytes": 61136,
+      "type": "webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-neutral-steel.webp",
+      "bytes": 60816,
+      "type": "webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-right.webp",
+      "bytes": 60816,
+      "type": "webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-01.webp",
+      "bytes": 23236,
+      "type": "webp",
+      "width": 500,
+      "height": 85,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-02.webp",
+      "bytes": 26752,
+      "type": "webp",
+      "width": 500,
+      "height": 85,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-03.webp",
+      "bytes": 29182,
+      "type": "webp",
+      "width": 500,
+      "height": 85,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-01.webp",
+      "bytes": 57296,
+      "type": "webp",
+      "width": 370,
+      "height": 230,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-02.webp",
+      "bytes": 37778,
+      "type": "webp",
+      "width": 250,
+      "height": 230,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-03.webp",
+      "bytes": 52718,
+      "type": "webp",
+      "width": 360,
+      "height": 230,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-04.webp",
+      "bytes": 57666,
+      "type": "webp",
+      "width": 430,
+      "height": 230,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-heaven.webp",
+      "bytes": 74010,
+      "type": "webp",
+      "width": 380,
+      "height": 220,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-hell.webp",
+      "bytes": 69368,
+      "type": "webp",
+      "width": 390,
+      "height": 220,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-ultra.webp",
+      "bytes": 64672,
+      "type": "webp",
+      "width": 370,
+      "height": 220,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-zero.webp",
+      "bytes": 49592,
+      "type": "webp",
+      "width": 360,
+      "height": 220,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-01.webp",
+      "bytes": 15972,
+      "type": "webp",
+      "width": 65,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-02.webp",
+      "bytes": 14898,
+      "type": "webp",
+      "width": 70,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-03.webp",
+      "bytes": 14226,
+      "type": "webp",
+      "width": 73,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-04.webp",
+      "bytes": 7534,
+      "type": "webp",
+      "width": 55,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-05.webp",
+      "bytes": 10092,
+      "type": "webp",
+      "width": 55,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-06.webp",
+      "bytes": 6926,
+      "type": "webp",
+      "width": 55,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-07.webp",
+      "bytes": 7328,
+      "type": "webp",
+      "width": 40,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-08.webp",
+      "bytes": 4924,
+      "type": "webp",
+      "width": 40,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-09.webp",
+      "bytes": 8440,
+      "type": "webp",
+      "width": 38,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-10.webp",
+      "bytes": 5670,
+      "type": "webp",
+      "width": 38,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-11.webp",
+      "bytes": 2526,
+      "type": "webp",
+      "width": 38,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-12.webp",
+      "bytes": 3256,
+      "type": "webp",
+      "width": 38,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-13.webp",
+      "bytes": 1630,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-14.webp",
+      "bytes": 2612,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-15.webp",
+      "bytes": 5062,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-16.webp",
+      "bytes": 5536,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-17.webp",
+      "bytes": 4676,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-18.webp",
+      "bytes": 3308,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-19.webp",
+      "bytes": 214,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-20.webp",
+      "bytes": 7916,
+      "type": "webp",
+      "width": 34,
+      "height": 165,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-cluster-heaven.webp",
+      "bytes": 199518,
+      "type": "webp",
+      "width": 520,
+      "height": 570,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-cluster-hell.webp",
+      "bytes": 215282,
+      "type": "webp",
+      "width": 500,
+      "height": 570,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/shards/lucy-shard-cluster-ultra.webp",
+      "bytes": 193040,
+      "type": "webp",
+      "width": 500,
+      "height": 570,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-gen07-08-assembly-manifest.json",
+      "bytes": 784,
+      "type": "json",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "components/wings/lucy-wing-heaven-left.webp",
+      "bytes": 95920,
+      "type": "webp",
+      "width": 286,
+      "height": 416,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-heaven-pair.webp",
+      "bytes": 191200,
+      "type": "webp",
+      "width": 604,
+      "height": 416,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-heaven-right.webp",
+      "bytes": 90090,
+      "type": "webp",
+      "width": 270,
+      "height": 416,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-hell-left.webp",
+      "bytes": 90228,
+      "type": "webp",
+      "width": 240,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-hell-pair.webp",
+      "bytes": 178548,
+      "type": "webp",
+      "width": 523,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-hell-right.webp",
+      "bytes": 85440,
+      "type": "webp",
+      "width": 235,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-ultra-left.webp",
+      "bytes": 95428,
+      "type": "webp",
+      "width": 252,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-ultra-pair.webp",
+      "bytes": 188938,
+      "type": "webp",
+      "width": 576,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "components/wings/lucy-wing-ultra-right.webp",
+      "bytes": 90136,
+      "type": "webp",
+      "width": 276,
+      "height": 430,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-cyan.webp",
+      "bytes": 19590,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-gold.webp",
+      "bytes": 23604,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-heaven.webp",
+      "bytes": 19590,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-hell.webp",
+      "bytes": 23524,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-inverted.webp",
+      "bytes": 23524,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-ultra.webp",
+      "bytes": 23604,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-aura-zero.webp",
+      "bytes": 19590,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-caustics-cyan.webp",
+      "bytes": 23374,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-caustics-gold.webp",
+      "bytes": 35328,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-caustics-inverted.webp",
+      "bytes": 36508,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-chromatic-aberration-streak.webp",
+      "bytes": 36508,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-cyan-white-bloom.webp",
+      "bytes": 19590,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-glass-dust-cyan.webp",
+      "bytes": 14822,
+      "type": "webp",
+      "width": 500,
+      "height": 75,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-glass-dust-gold.webp",
+      "bytes": 15578,
+      "type": "webp",
+      "width": 500,
+      "height": 75,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-glass-dust-inverted.webp",
+      "bytes": 17528,
+      "type": "webp",
+      "width": 500,
+      "height": 75,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-glass-flecks.webp",
+      "bytes": 21162,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-glass-reflection.webp",
+      "bytes": 23374,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-hell-red-fragments.webp",
+      "bytes": 29258,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-light-streaks.webp",
+      "bytes": 23374,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-micro-shards.webp",
+      "bytes": 21162,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-optical-filaments.webp",
+      "bytes": 23374,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-particles-cyan.webp",
+      "bytes": 21162,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-particles-gold.webp",
+      "bytes": 22546,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-particles-inverted.webp",
+      "bytes": 29258,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-rainbow-edge-flare.webp",
+      "bytes": 49736,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-refraction-arc.webp",
+      "bytes": 52718,
+      "type": "webp",
+      "width": 360,
+      "height": 230,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-shard-trail-cyan.webp",
+      "bytes": 10942,
+      "type": "webp",
+      "width": 500,
+      "height": 100,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-shard-trail-gold.webp",
+      "bytes": 11042,
+      "type": "webp",
+      "width": 500,
+      "height": 100,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-shard-trail-inverted.webp",
+      "bytes": 12684,
+      "type": "webp",
+      "width": 500,
+      "height": 100,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-spectral-band.webp",
+      "bytes": 35328,
+      "type": "webp",
+      "width": 500,
+      "height": 90,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-spectral-specks.webp",
+      "bytes": 21162,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "fx/lucy-ultra-gold-sparks.webp",
+      "bytes": 22546,
+      "type": "webp",
+      "width": 500,
+      "height": 120,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "hero/lucy-heaven-alternate.webp",
+      "bytes": 716234,
+      "type": "webp",
+      "width": 1402,
+      "height": 1122,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "hero/lucy-heaven-desktop-wide.webp",
+      "bytes": 514122,
+      "type": "webp",
+      "width": 2560,
+      "height": 1080,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "hero/lucy-ultra-desktop-wide.webp",
+      "bytes": 418168,
+      "type": "webp",
+      "width": 2560,
+      "height": 1080,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "hero/lucy-ultra-primary.webp",
+      "bytes": 668878,
+      "type": "webp",
+      "width": 1536,
+      "height": 1024,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-avatar-heaven.webp",
+      "bytes": 76568,
+      "type": "webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-avatar-zero.webp",
+      "bytes": 60870,
+      "type": "webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-diamond-eye.svg",
+      "bytes": 1012,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-diamond-eye.webp",
+      "bytes": 23702,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-divider-heaven.webp",
+      "bytes": 118728,
+      "type": "webp",
+      "width": 1920,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-divider-hell.webp",
+      "bytes": 112724,
+      "type": "webp",
+      "width": 1920,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-divider-ultra.webp",
+      "bytes": 102174,
+      "type": "webp",
+      "width": 1920,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-divider-zero.webp",
+      "bytes": 99930,
+      "type": "webp",
+      "width": 1920,
+      "height": 240,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-horizontal-header.webp",
+      "bytes": 403018,
+      "type": "webp",
+      "width": 2400,
+      "height": 720,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-red-tear.svg",
+      "bytes": 919,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-red-tear.webp",
+      "bytes": 7396,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-state-icon-heaven.svg",
+      "bytes": 1021,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-state-icon-heaven.webp",
+      "bytes": 42854,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-state-icon-hell.svg",
+      "bytes": 954,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-state-icon-hell.webp",
+      "bytes": 18012,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-state-icon-ultra.svg",
+      "bytes": 996,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-state-icon-ultra.webp",
+      "bytes": 42914,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-state-icon-zero.svg",
+      "bytes": 937,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-state-icon-zero.webp",
+      "bytes": 16714,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-wing-heaven.svg",
+      "bytes": 918,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-wing-heaven.webp",
+      "bytes": 24040,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-wing-hell.svg",
+      "bytes": 916,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-wing-hell.webp",
+      "bytes": 22624,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "identity/lucy-wing-ultra.svg",
+      "bytes": 918,
+      "type": "svg",
+      "width": null,
+      "height": null,
+      "alpha": null,
+      "reopened": false
+    },
+    {
+      "path": "identity/lucy-wing-ultra.webp",
+      "bytes": 22872,
+      "type": "webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "mobile/lucy-heaven-hero-1440x2560.webp",
+      "bytes": 562448,
+      "type": "webp",
+      "width": 1440,
+      "height": 2560,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "mobile/lucy-ultra-hero-1440x2560.webp",
+      "bytes": 556510,
+      "type": "webp",
+      "width": 1440,
+      "height": 2560,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "models/lucy-neutral.webp",
+      "bytes": 385140,
+      "type": "webp",
+      "width": 692,
+      "height": 1442,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "portraits/lucy-heaven.webp",
+      "bytes": 981566,
+      "type": "webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "portraits/lucy-hell.webp",
+      "bytes": 689398,
+      "type": "webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "portraits/lucy-neutral.webp",
+      "bytes": 140000,
+      "type": "webp",
+      "width": 329,
+      "height": 418,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "portraits/lucy-ultra.webp",
+      "bytes": 914178,
+      "type": "webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "portraits/lucy-zero.webp",
+      "bytes": 910840,
+      "type": "webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "social/lucy-og-1200x630.webp",
+      "bytes": 165052,
+      "type": "webp",
+      "width": 1200,
+      "height": 630,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "social/lucy-portrait-1080x1350.webp",
+      "bytes": 337040,
+      "type": "webp",
+      "width": 1080,
+      "height": 1350,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "social/lucy-square-1080.webp",
+      "bytes": 330302,
+      "type": "webp",
+      "width": 1080,
+      "height": 1080,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "social/lucy-story-1080x1920.webp",
+      "bytes": 438146,
+      "type": "webp",
+      "width": 1080,
+      "height": 1920,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "states/lucy-heaven.webp",
+      "bytes": 716234,
+      "type": "webp",
+      "width": 1402,
+      "height": 1122,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/lucy-hell-white.webp",
+      "bytes": 848602,
+      "type": "webp",
+      "width": 1024,
+      "height": 1536,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "states/lucy-hell.webp",
+      "bytes": 1277150,
+      "type": "webp",
+      "width": 1024,
+      "height": 1536,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/lucy-ultra.webp",
+      "bytes": 668878,
+      "type": "webp",
+      "width": 1536,
+      "height": 1024,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/lucy-zero.webp",
+      "bytes": 1360144,
+      "type": "webp",
+      "width": 1024,
+      "height": 1536,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/panels/lucy-heaven-panel.webp",
+      "bytes": 506740,
+      "type": "webp",
+      "width": 1024,
+      "height": 1280,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/panels/lucy-hell-panel.webp",
+      "bytes": 683674,
+      "type": "webp",
+      "width": 1024,
+      "height": 1280,
+      "alpha": false,
+      "reopened": true
+    },
+    {
+      "path": "states/panels/lucy-ultra-panel.webp",
+      "bytes": 419062,
+      "type": "webp",
+      "width": 1024,
+      "height": 1280,
+      "alpha": true,
+      "reopened": true
+    },
+    {
+      "path": "states/panels/lucy-zero-panel.webp",
+      "bytes": 539622,
+      "type": "webp",
+      "width": 1024,
+      "height": 1280,
+      "alpha": false,
+      "reopened": true
+    }
+  ],
+  "countsByType": {
+    "jpg": 1,
+    "json": 5,
+    "png": 1,
+    "svg": 9,
+    "webp": 139
+  },
+  "requiredReceipts": [
+    "DERIVATIVES.md",
+    "GEN-01.md",
+    "GEN-02.md",
+    "GEN-03.md",
+    "GEN-04.md",
+    "GEN-05.md",
+    "GEN-06.md",
+    "GEN-07.md",
+    "GEN-08.md"
+  ],
+  "missingReceipts": [],
+  "requiredPaths": [
+    {
+      "path": "authority/lucy-character-sheet-master.png",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1536,
+        "height": 1024,
+        "alpha": false
+      }
+    },
+    {
+      "path": "authority/lucy-original-reference.jpg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1536,
+        "alpha": false
+      }
+    },
+    {
+      "path": "hero/lucy-ultra-primary.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1536,
+        "height": 1024,
+        "alpha": true
+      }
+    },
+    {
+      "path": "hero/lucy-ultra-desktop-wide.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1080
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1080,
+        "alpha": false
+      }
+    },
+    {
+      "path": "hero/lucy-heaven-alternate.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1402,
+        "height": 1122,
+        "alpha": true
+      }
+    },
+    {
+      "path": "hero/lucy-heaven-desktop-wide.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1080
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1080,
+        "alpha": false
+      }
+    },
+    {
+      "path": "states/lucy-zero.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1536,
+        "alpha": true
+      }
+    },
+    {
+      "path": "states/lucy-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1402,
+        "height": 1122,
+        "alpha": true
+      }
+    },
+    {
+      "path": "states/lucy-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1536,
+        "alpha": true
+      }
+    },
+    {
+      "path": "states/lucy-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1536,
+        "height": 1024,
+        "alpha": true
+      }
+    },
+    {
+      "path": "states/lucy-hell-white.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1536,
+        "alpha": false
+      }
+    },
+    {
+      "path": "states/panels/lucy-zero-panel.webp",
+      "dimensions": {
+        "ratio": [
+          4,
+          5
+        ]
+      },
+      "note": "production plan specifies 4:5",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1280,
+        "alpha": false
+      }
+    },
+    {
+      "path": "states/panels/lucy-heaven-panel.webp",
+      "dimensions": {
+        "ratio": [
+          4,
+          5
+        ]
+      },
+      "note": "production plan specifies 4:5",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1280,
+        "alpha": true
+      }
+    },
+    {
+      "path": "states/panels/lucy-hell-panel.webp",
+      "dimensions": {
+        "ratio": [
+          4,
+          5
+        ]
+      },
+      "note": "production plan specifies 4:5",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1280,
+        "alpha": false
+      }
+    },
+    {
+      "path": "states/panels/lucy-ultra-panel.webp",
+      "dimensions": {
+        "ratio": [
+          4,
+          5
+        ]
+      },
+      "note": "production plan specifies 4:5",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1280,
+        "alpha": true
+      }
+    },
+    {
+      "path": "models/lucy-neutral.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 692,
+        "height": 1442,
+        "alpha": true
+      }
+    },
+    {
+      "path": "portraits/lucy-neutral.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 329,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "portraits/lucy-zero.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1024,
+        "alpha": true
+      }
+    },
+    {
+      "path": "portraits/lucy-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1024,
+        "alpha": true
+      }
+    },
+    {
+      "path": "portraits/lucy-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1024,
+        "alpha": false
+      }
+    },
+    {
+      "path": "portraits/lucy-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1024,
+        "height": 1024,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-01.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 329,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-02.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-03.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-04.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 329,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-05.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-06.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-07.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-08.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/expressions/lucy-expression-09.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 345,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/eyes/lucy-eyes-zero-closed.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 329,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/eyes/lucy-eyes-zero-blank.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/eyes/lucy-eyes-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/eyes/lucy-eyes-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 329,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/eyes/lucy-eyes-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 328,
+        "height": 418,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/hair/lucy-hair-neutral.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/hair/lucy-hair-upward.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/hair/lucy-hair-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/hair/lucy-hair-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-zero.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 360,
+        "height": 220,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 380,
+        "height": 220,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 390,
+        "height": 220,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 370,
+        "height": 220,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-01.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 370,
+        "height": 230,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-02.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 250,
+        "height": 230,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-03.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 360,
+        "height": 230,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/ribbons/lucy-ribbon-airflow-04.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 430,
+        "height": 230,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-heaven-left.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 286,
+        "height": 416,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-heaven-right.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 270,
+        "height": 416,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-hell-left.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 240,
+        "height": 430,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-hell-right.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 235,
+        "height": 430,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-ultra-left.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 252,
+        "height": 430,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/wings/lucy-wing-ultra-right.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 276,
+        "height": 430,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-01.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 65,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-02.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 70,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-03.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 73,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-04.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 55,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-05.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 55,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-06.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 55,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-07.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 40,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-08.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 40,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-09.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 38,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-10.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 38,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-11.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 38,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-12.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 38,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-13.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-14.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-15.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-16.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-17.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-18.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-19.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/shards/lucy-shard-20.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 34,
+        "height": 165,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-neutral-steel.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1672,
+        "height": 941,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-sheathed.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/katana/lucy-katana-saya.webp",
+      "dimensions": null,
+      "note": null,
+      "present": false,
+      "dimensionsPass": false,
+      "actual": null
+    },
+    {
+      "path": "components/katana/lucy-katana-handle.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 520,
+        "height": 320,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-left.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1672,
+        "height": 941,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-right.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1672,
+        "height": 941,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-dual.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2000,
+        "height": 1200,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-01.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 85,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-02.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 85,
+        "alpha": true
+      }
+    },
+    {
+      "path": "components/katana/lucy-katana-slash-03.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 85,
+        "alpha": true
+      }
+    },
+    {
+      "path": "backgrounds/lucy-bg-zero-desktop.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1440
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1440,
+        "alpha": false
+      }
+    },
+    {
+      "path": "backgrounds/lucy-bg-heaven-desktop.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1440
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1440,
+        "alpha": false
+      }
+    },
+    {
+      "path": "backgrounds/lucy-bg-hell-desktop.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1440
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1440,
+        "alpha": false
+      }
+    },
+    {
+      "path": "backgrounds/lucy-bg-ultra-desktop.webp",
+      "dimensions": {
+        "width": 2560,
+        "height": 1440
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2560,
+        "height": 1440,
+        "alpha": false
+      }
+    },
+    {
+      "path": "fx/lucy-particles-cyan.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 120,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-particles-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 120,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-particles-gold.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 120,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-caustics-cyan.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-caustics-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-caustics-gold.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-aura-cyan.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-aura-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-aura-gold.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 90,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-glass-dust-cyan.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 75,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-glass-dust-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 75,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-glass-dust-gold.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 75,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-shard-trail-cyan.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 100,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-shard-trail-inverted.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 100,
+        "alpha": true
+      }
+    },
+    {
+      "path": "fx/lucy-shard-trail-gold.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 500,
+        "height": 100,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-divider-zero.webp",
+      "dimensions": {
+        "width": 1920,
+        "height": 240
+      },
+      "note": "dimension recorded in GEN-08 receipt",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1920,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-zero.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-zero.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-divider-heaven.webp",
+      "dimensions": {
+        "width": 1920,
+        "height": 240
+      },
+      "note": "dimension recorded in GEN-08 receipt",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1920,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-heaven.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-divider-hell.webp",
+      "dimensions": {
+        "width": 1920,
+        "height": 240
+      },
+      "note": "dimension recorded in GEN-08 receipt",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1920,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-hell.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-divider-ultra.webp",
+      "dimensions": {
+        "width": 1920,
+        "height": 240
+      },
+      "note": "dimension recorded in GEN-08 receipt",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1920,
+        "height": 240,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-ultra.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-state-icon-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-diamond-eye.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-diamond-eye.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-red-tear.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-red-tear.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-wing-heaven.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-wing-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-wing-hell.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-wing-hell.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-wing-ultra.svg",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "identity/lucy-wing-ultra.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 512,
+        "height": 512,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-avatar-zero.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 256,
+        "height": 256,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-avatar-heaven.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 256,
+        "height": 256,
+        "alpha": true
+      }
+    },
+    {
+      "path": "identity/lucy-horizontal-header.webp",
+      "dimensions": null,
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 2400,
+        "height": 720,
+        "alpha": true
+      }
+    },
+    {
+      "path": "social/lucy-og-1200x630.webp",
+      "dimensions": {
+        "width": 1200,
+        "height": 630
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1200,
+        "height": 630,
+        "alpha": false
+      }
+    },
+    {
+      "path": "social/lucy-square-1080.webp",
+      "dimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1080,
+        "height": 1080,
+        "alpha": false
+      }
+    },
+    {
+      "path": "social/lucy-portrait-1080x1350.webp",
+      "dimensions": {
+        "width": 1080,
+        "height": 1350
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1080,
+        "height": 1350,
+        "alpha": false
+      }
+    },
+    {
+      "path": "social/lucy-story-1080x1920.webp",
+      "dimensions": {
+        "width": 1080,
+        "height": 1920
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1080,
+        "height": 1920,
+        "alpha": false
+      }
+    },
+    {
+      "path": "mobile/lucy-ultra-hero-1440x2560.webp",
+      "dimensions": {
+        "width": 1440,
+        "height": 2560
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1440,
+        "height": 2560,
+        "alpha": false
+      }
+    },
+    {
+      "path": "mobile/lucy-heaven-hero-1440x2560.webp",
+      "dimensions": {
+        "width": 1440,
+        "height": 2560
+      },
+      "note": null,
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": 1440,
+        "height": 2560,
+        "alpha": false
+      }
+    },
+    {
+      "path": "assemblies/lucy-zero-assembly.json",
+      "dimensions": null,
+      "note": "completion-rule assembly manifest",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "assemblies/lucy-heaven-assembly.json",
+      "dimensions": null,
+      "note": "completion-rule assembly manifest",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "assemblies/lucy-hell-assembly.json",
+      "dimensions": null,
+      "note": "completion-rule assembly manifest",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    },
+    {
+      "path": "assemblies/lucy-ultra-assembly.json",
+      "dimensions": null,
+      "note": "completion-rule assembly manifest",
+      "present": true,
+      "dimensionsPass": true,
+      "actual": {
+        "width": null,
+        "height": null,
+        "alpha": null
+      }
+    }
+  ],
+  "missingRequiredPaths": [
+    "components/hair/lucy-hair-neutral.webp",
+    "components/hair/lucy-hair-upward.webp",
+    "components/hair/lucy-hair-inverted.webp",
+    "components/hair/lucy-hair-ultra.webp",
+    "components/katana/lucy-katana-sheathed.webp",
+    "components/katana/lucy-katana-saya.webp"
+  ],
+  "dimensionFailures": [],
+  "pngPolicy": {
+    "permitted": "authority/lucy-character-sheet-master.png",
+    "violations": []
+  },
+  "blockedFromReceipts": [
+    {
+      "receipt": "DERIVATIVES.md",
+      "text": "`models/lucy-neutral-zero-open.webp` is blocked. The neutral model and blank-eye cell are flattened, differently framed assets with no defensible facial registration or editable eye mask; compositing would fabricate an unverified face edit."
+    },
+    {
+      "receipt": "DERIVATIVES.md",
+      "text": "Body/skin, uniform, front hair, rear hair, and baked lighting/shadow are irrecoverable as separate layers from every state master. Each state assembly manifest flags this explicitly."
+    },
+    {
+      "receipt": "DERIVATIVES.md",
+      "text": "The current independent wing/ribbon/FX WebPs are mapped in every relevant assembly manifest, but were not inserted into new composites: transparent-preview artifacts in the current atlas WebPs made their pixels unsuitable for promoted composition. The verified isolated state masters already carry their canonical wings, ribbon, shards, and weapons."
+    },
+    {
+      "receipt": "GEN-01.md",
+      "text": "[!] Blocked: no defensible independent `hair/upward` or `hair/ultra` component crop can be separated from the head/body from this flattened one-shot master. No attempt was made to fabricate a layer."
+    },
+    {
+      "receipt": "GEN-01.md",
+      "text": "[!] Blocked: sheathed/saya-specific katana assets are not derivable from the approved unsheathed sword reference and were not exported."
+    },
+    {
+      "receipt": "GEN-02.md",
+      "text": "[!] Blocked: no defensible independent `hair/upward` component crop can be separated from the head/body from this flattened one-shot master. No attempt was made to fabricate a layer."
+    },
+    {
+      "receipt": "GEN-02.md",
+      "text": "[!] Blocked: sheathed/saya-specific katana assets are not derivable from the approved unsheathed sword reference and were not exported."
+    },
+    {
+      "receipt": "GEN-03.md",
+      "text": "No isolated neutral-hair, ribbon, eye, tear, or wing components were exported. GEN-03 is a single merged character render; those sub-elements cannot be isolated without speculative segmentation or repainting, which this job does not permit."
+    },
+    {
+      "receipt": "GEN-04.md",
+      "text": "No isolated inverted-hair, ribbon, tear-only, eye-only, or left/right wing components were exported. GEN-04 is a single merged state render; deriving them would require speculative segmentation/repainting and would not be defensible under the one-shot contract."
+    },
+    {
+      "receipt": "GEN-05.md",
+      "text": "`components/hair/lucy-hair-neutral.webp` is not exported. GEN-05 does not provide a genuinely isolated neutral-hair layer, and guessing a mask would not be defensible under the one-shot contract."
+    },
+    {
+      "receipt": "GEN-05.md",
+      "text": "`components/katana/lucy-katana-sheathed.webp`, `components/katana/lucy-katana-saya.webp`, and `components/katana/lucy-katana-handle.webp` are not exported. A final raw-master inspection confirms the low sheathed katana is present, but its saya runs behind Lucy's legs and the tsuba/handle junction is covered by her right hand. A clean transparent component would require fabricating the hidden geometry or cutting through anatomy. No component PNG/WebP or normal/inverted alpha audit was therefore produced; this is a deliberate block, not an omitted processing step."
+    },
+    {
+      "receipt": "GEN-06.md",
+      "text": "No genuinely isolated neutral-hair component exists in GEN-05/06, so `components/hair/lucy-hair-neutral.webp` is intentionally absent."
+    },
+    {
+      "receipt": "GEN-06.md",
+      "text": "Eye exports remain complete state cells, not speculative eye-only cutouts: the atlas has no separable eye layer and cropping/masking would damage hair, facial, and tear edges."
+    },
+    {
+      "receipt": "GEN-07.md",
+      "text": "Blocked / not claimed: model output is a flattened atlas, not layered PSD/CLIP source. It cannot provide authored per-shard material layers beyond the deterministic crops, and it does not cover Lucy body, uniform, hair, eyes, weapon, tear, or lighting layers because GEN-07 explicitly excludes them."
+    },
+    {
+      "receipt": "GEN-08.md",
+      "text": "Blocked / not claimed: the source is a flattened one-shot atlas, so it does not supply editable layered FX source. The “blue” particle requirement is represented by the cyan/blue Heaven field, named `cyan` to match the production-plan filename vocabulary; separate named blue-only variants were not independently generated and are not claimed. No character, sword, or wing assets are expected from GEN-08 by brief."
+    }
+  ],
+  "releaseGatePass": false
+}
