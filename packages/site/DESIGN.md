@@ -15,44 +15,11 @@ The production authority is the approved character sheet at
 are provenance, not authority. Lucy's anatomy and outfit never transform;
 gravity, eyes, shards, lighting, inversion, and weapon count communicate state.
 
-**Anatomy correction (2026-08-13):** the supplied sheet and v1 Heaven, Hell,
-and Ultra bodies contain a three-leg contamination. The sheet remains authority
-for face, hair, uniform, ribbon, eyes, weapons, shards, colors, and materials,
-but not for pose or limb anatomy. Every new full-body render must have exactly
-two independently traceable legs and two feet. Written anatomy constraints win
-over contaminated raster poses.
-
-**Modesty guard:** ordinary skin, bare legs, and thigh exposure are permitted.
-Visible underwear, under-skirt crotch framing, translucent/parted skirt exposure,
-wardrobe-malfunction silhouettes, and intimate-area focal framing are not. The
-opaque sailor skirt and pose must naturally cover the underwear section. A
-generated master that breaches this guard is rejected and regenerated; it is
-never hidden with a downstream crop.
-
-**Anatomy proportion guide (advisory):** Lucy is slender, not abbreviated or
-needle-limbed. Use the accepted Heaven v2 read as the current reference: long,
-believable legs with hip/thigh volume, a readable knee transition, calf taper,
-and slim ankle/foot; a narrow waist must still connect naturally to ribcage and
-pelvis. Avoid wasp-waist pinching, an overlong torso, tiny pelvis, or a skirt
-concealing an implausibly short hip-to-knee span. This guides judgment rather
-than imposing a numeric rejection threshold.
-
-**Katana authority:** all front-page katana components must follow the approved
-katana panel embedded in `lucy-character-sheet-master.png` and the workbench
-crop `Lucy_Katana_reference.png`. Older Hero A/B commissioned sword rasters are
-provenance only and must not seed new weapon geometry. The approved construction
-is a physically real curved steel blade; dark navy/black handle wrap with pale
-diamond openings; ornate round/slightly floral antique-gold tsuba; dark saya;
-restrained gold fittings; and a small braided/tassel ornament where shown.
-State lighting may reflect on steel but may not turn the weapon into glass or
-energy. Ultra uses two matching copies; Hell is the full inversion of Heaven's
-same registered katana geometry.
-
 | State | Working production color | Non-negotiable treatment |
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
 | Heaven | Blue `#7CC4FF` | Saturated cyan-blue refraction, both diamond eyes open, ordered glass shards. |
-| Hell | Registered full-scene chromatic inversion of Heaven | Heaven's exact pose, anatomy, crop, alpha, hair, uniform, ribbon, katana, wings, shards, and spatial composition are preserved. Every foreground and scene RGB value—including skin—is inverted. Only both closed eyes and exactly one vivid red tear differ semantically; no standalone flat Hell-pink token is canonical. |
+| Hell | Full-scene chromatic inversion | White field, closed eyes and vivid red tear; no standalone flat Hell-pink token is canonical yet. |
 | Ultra | Gold `#FFD24A`–`#F7C84B` | Never inverted; exclusive gold refraction, asymmetric eyes, two matching katanas. |
 
 These values supersede incidental color sampling from older concept images.

@@ -9,52 +9,49 @@ Legend: `[ ]` pending, `[x]` complete, `[!]` blocked after the one allowed call.
 - [x] Original rendering reference retained.
 - [x] All eight paid-generation briefs frozen before dispatch.
 - [x] Workbench and `lucy-masters-backup` excluded from Git.
-- [x] PNG backup automation installed and exercised.
-- [x] Draft PR open with all WIP pushed.
+- [ ] PNG backup automation installed and exercised.
+- [ ] Draft PR open with all WIP pushed.
 
 ## P0 — Homepage first
 
-- [x] GEN-01 Ultra primary passes one-shot self-review.
-- [x] Ultra transparent master and 2560×1080 desktop wide WebP.
-- [x] GEN-02 Heaven alternate passes one-shot self-review.
-- [x] Heaven transparent master and 2560×1080 desktop wide WebP.
-- [x] GEN-03 Zero canonical master.
-- [x] GEN-04 Hell white plate and transparent derivative after user-directed deterministic full-scene inversion.
-- [x] Four matching state panels.
-- [x] All P0 alpha, dimensions, normal render, and inverted render checked.
+- [ ] GEN-01 Ultra primary passes one-shot self-review.
+- [ ] Ultra transparent master and 2560×1080 desktop wide WebP.
+- [ ] GEN-02 Heaven alternate passes one-shot self-review.
+- [ ] Heaven transparent master and 2560×1080 desktop wide WebP.
+- [ ] GEN-03 Zero canonical master.
+- [ ] GEN-04 Hell white plate and transparent derivative.
+- [ ] Four matching state panels.
+- [ ] All P0 alpha, dimensions, normal render, and inverted render checked.
 
 ## P1 — Reusable kit
 
-- [x] GEN-05 neutral model.
-- [x] GEN-06 nine-cell expression/eye atlas and extracted cells; cell 09's three-quarter camera deviation is recorded in its receipt.
-- [x] Five portraits.
-- [!] Four hair derivatives: neither generated masters nor supplied authority contain cleanly separable hair geometry.
-- [x] Four state ribbons plus four airflow/arc variants.
-- [x] GEN-07 six wing sides, three pairs, twenty isolated shards, and state clusters.
-- [x] Katana neutral steel, handle close-up, left/right, dual, and three slash arcs.
-- [!] Katana sheathed and saya: complete geometry is absent or occluded in both generated and supplied authority sources.
-- [!] Neutral model with blank Zero eyes: flattened assets cannot be registered without inventing a face edit.
+- [ ] GEN-05 neutral model.
+- [ ] GEN-06 nine-cell expression/eye atlas and extracted cells.
+- [ ] Five portraits.
+- [ ] Four hair derivatives.
+- [ ] Four state ribbons plus four airflow/arc variants.
+- [ ] GEN-07 six wing sides and at least twenty isolated shards.
+- [ ] Katana neutral steel, sheathed, saya, handle close-up, left/right, dual, and three slash arcs.
 
 ## P2 — Background, FX, identity
 
-- [x] GEN-08 ribbon/optical atlas passes one-shot self-review.
-- [x] Four desktop background plates.
-- [x] Particle, caustic, aura, glass-dust, shard-trail, and named semantic overlays.
-- [x] Four dividers and four state icons.
-- [x] Diamond eye, red tear, and three wing emblems.
-- [x] Zero and Heaven avatars plus horizontal header art.
-- [x] SVG and WebP state icons, diamond eye, red tear, and wing emblems.
+- [ ] GEN-08 ribbon/optical atlas passes one-shot self-review.
+- [ ] Four desktop background plates.
+- [ ] Particle, caustic, aura, glass-dust, and shard-trail overlays.
+- [ ] Four dividers and four state icons.
+- [ ] Diamond eye, red tear, and three wing emblems.
+- [ ] Zero and Heaven avatars plus horizontal header art.
+- [ ] SVG and WebP state icons, diamond eye, red tear, and wing emblems.
 
 ## P3 — Campaign and mobile last
 
-- [x] OG 1200×630, square 1080, portrait 1080×1350, story 1080×1920.
-- [x] Ultra and Heaven 1440×2560 re-authored mobile hero compositions.
+- [ ] OG 1200×630, square 1080, portrait 1080×1350, story 1080×1920.
+- [ ] Ultra and Heaven 1440×2560 mobile hero derivatives.
 
 ## Handoff
 
-- [x] Every `GEN-*`, derivative pass, and authority-recovery pass has a receipt under `runs/`.
-- [x] No production PNG exists outside the single authority master.
-- [x] All 57 workbench PNGs are present in `lucy-masters-backup` as-is.
-- [!] Editable body/uniform/front-hair/rear-hair source layers cannot be recovered from flattened one-shot masters; state assembly manifests record the available production-equivalent components.
-- [x] Final WebPs, documents, helpers, and checklist committed and pushed.
-- [x] Draft PR body reports complete and blocked assets honestly; no production asset is deferred.
+- [ ] Every `GEN-*` has a receipt under `runs/`.
+- [ ] No PNGs tracked outside the single authority master.
+- [ ] All PNG workbench files present in `lucy-masters-backup` as-is.
+- [ ] Final WebPs, documents, helpers, and checklist committed and pushed.
+- [ ] Draft PR body reports complete, blocked, and deferred assets honestly.

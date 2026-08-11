@@ -32,10 +32,6 @@ character. Her anatomy and outfit do not transform between states.
 - Self-review the result once. Continue only with deterministic local
   processing: crop, resize, alpha extraction, cleanup, compositing, inversion,
   color filtering, and WebP export.
-- An owner-authorized candidate brief may define multiple named candidates.
-  Treat each named candidate or bounded edit as its own one-call job. Never add
-  replacements beyond the explicit candidate count, and never promote a
-  candidate before the brief's human selection gate.
 
 ## Storage contract
 
@@ -56,44 +52,17 @@ When a brief says transparent, the final production WebP must contain real
 alpha. No white, black, gray, or colored matte may remain in translucent edges.
 
 1. Request a transparent background in generation.
-2. Inspect the PNG alpha channel itself. A painted checkerboard is opaque art,
-   not transparency, even when the RGB preview looks correct.
+2. Inspect the PNG alpha channel.
 3. If the generator returns an opaque background, accept that one result and
    use deterministic removal. Prefer a flat `#00FF00` chroma field requested in
    the original brief; chroma green is deliberately distant from Lucy's cyan,
    blue, gold, red, silver, and skin palette.
-4. Reject opaque white, gray, scene, simulated transparency, and baked-checker
-   sources at the matte gate. Do not reconstruct a checker into speculative
-   alpha. Never use purple or magenta as a Lucy chroma field.
-5. Run `scripts/assets/lucy-matte-guard.py` for native-alpha validation or
-   verified flat-green extraction. Supply a semantic-region JSON for character
-   masters so face core, head, hair, torso, both arms/hands, both legs/feet,
-   wings, and weapons must each pass alpha-density gates. The face-core region
-   must have at least 70 percent of pixels at alpha 192 or higher and median
-   nonzero alpha of at least 224. Head and hair must also meet the tool's
-   median-alpha floors; nonzero ghost pixels do not count as completeness.
-6. Inspect the generated white, black, mid-gray, light-checker, dark-checker,
-   inverted-RGB checker, and raw-alpha audits for halos, holes, ghost pixels,
-   missing pale features, and contaminated glass edges.
-7. Require zero strong-green and zero strong-magenta pixels in the
-   exterior-connected partial-alpha band. Do not infer completeness from RGB;
-   the alpha silhouette is the authority.
-8. Export a lossless-alpha WebP and re-open it to verify alpha survived.
+4. Inspect normal and inverted checkerboard previews for halos, holes, and
+   contaminated glass edges.
+5. Export a lossless-alpha WebP and re-open it to verify alpha survived.
 
 Chroma is a workbench surface, never a brand color. Do not regenerate because
 alpha removal is inconvenient.
-
-Example fail-closed matte invocation:
-
-```bash
-python3 scripts/assets/lucy-matte-guard.py \
-  --input packages/site/assets/workbench/lucy/JOB/raw.png \
-  --output packages/site/assets/workbench/lucy/JOB/intermediate/alpha.png \
-  --audit-dir packages/site/assets/workbench/lucy/JOB/audit \
-  --report packages/site/assets/workbench/lucy/JOB/matte-report.json \
-  --regions packages/site/assets/workbench/lucy/JOB/semantic-regions.json \
-  --candidate JOB
-```
 
 ## Deterministic processing
 
@@ -114,12 +83,8 @@ crops—are not new image-generation jobs.
   absolutely no shards.
 - **Heaven:** unique falling pose, both diamond eyes open, one katana, ordered
   saturated cyan-blue glass-shard wings.
-- **Hell:** generate a complete Heaven-palette source with both eyes naturally
-  closed and one continuous tear from the eyelid down the full face, then apply
-  one exact full-foreground RGB inversion. The source tear must be the cyan
-  complement that becomes the final vivid red tear. Use one katana and
-  fragmented shards. Never patch eyelids or recolor the tear after inversion;
-  all Hell-related derivatives descend from the untouched inverted master.
+- **Hell:** unique falling pose, both eyes closed, one red tear, one katana,
+  fragmented shards, full-scene chromatic inversion on white.
 - **Ultra:** unique decisive falling pose, one gold diamond eye open, the other
   closed with a red tear, two matching katanas, gold shards, never inverted.
 
@@ -134,25 +99,7 @@ shards with no feathers or membranes.
 - [ ] No text, labels, signature, watermark, frame, or accidental UI.
 - [ ] Full silhouette and required effects are not clipped.
 - [ ] Transparent deliverables have real alpha and no matte/halo.
-- [ ] Head, face, hair, torso, limbs, wings, and weapons have nonzero alpha in
-      their declared semantic regions.
-- [ ] White, black, gray, normal-checker, dark-checker, and inverted previews
-      preserve hair, skin, glass, and steel edges.
-- [ ] Exterior partial-alpha edges contain no strong green or magenta pixels.
-- [ ] The two-pixel interior foreground boundary contains no strong green key
-      spill. This includes opaque hair/glass edge pixels: exact Hell inversion
-      would turn missed green spill into a magenta rim.
-- [ ] For Hell, enforce that green-boundary rule on the pre-inversion source.
-      The final exact-inverted Hell may use the guard's explicit
-      `--exact-inverted-hell` mode only after the source report passes and the
-      inversion report proves full-foreground RGB inversion plus byte-identical
-      alpha. This avoids misclassifying legitimate green produced by inverting
-      canonical source magenta.
-- [ ] Hell inversion receipts must verify the source tear contains vivid cyan
-      pixels in the declared face-core, the exact inversion contains the same
-      number of vivid-red pixels, and the red pixels span at least 35 percent
-      of the face-core height. Human composite review still decides eyelid
-      contact and unbroken eyelid-to-jaw continuity.
+- [ ] Normal and inverted previews preserve hair, skin, glass, and steel edges.
 - [ ] Output dimensions and file paths match the production plan.
 - [ ] Production WebP re-opens successfully and stays within its target size.
 - [ ] Raw PNG was backed up as-is.
