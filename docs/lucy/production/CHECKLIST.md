@@ -9,8 +9,8 @@ Legend: `[ ]` pending, `[x]` complete, `[!]` blocked after the one allowed call.
 - [x] Original rendering reference retained.
 - [x] All eight paid-generation briefs frozen before dispatch.
 - [x] Workbench and `lucy-masters-backup` excluded from Git.
-- [ ] PNG backup automation installed and exercised.
-- [ ] Draft PR open with all WIP pushed.
+- [x] PNG backup automation installed and exercised.
+- [x] Draft PR open with all WIP pushed.
 
 ## P0 — Homepage first
 
