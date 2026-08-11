@@ -1,0 +1,74 @@
+{
+  "name": "Lucy",
+  "role": "Skill Heaven runtime mascot",
+  "tagline": "One girl. Different entropy.",
+  "invariants": {
+    "hair": "shoulder-length silver-white",
+    "uniform": "dark Japanese sailor uniform with prismatic sailor ribbon",
+    "footwear": "barefoot",
+    "weapon": "traditional steel katana",
+    "wingType": "independent floating prism/glass shards",
+    "anatomyTransformsByState": false
+  },
+  "rendering": {
+    "skin": "porcelain baseline with highly saturated pink/cyan reflected light and strong modeled shadows derived from original reference",
+    "activeGravity": "body down, hair and ribbon up",
+    "hairTechnique": [
+      "brilliant white cores",
+      "saturated cyan and electric blue",
+      "controlled pink/violet refraction",
+      "clean dark shadow masses",
+      "bright narrow rim highlights",
+      "semi-transparent glass-like sections",
+      "bottom-to-top optical flow"
+    ]
+  },
+  "states": {
+    "zero": {
+      "meaning": "clean slate / subtractive baseline",
+      "pose": "seated zen on ground",
+      "eyes": "both closed; alternate open eye is blank with subtle prismatic depth",
+      "hair": "gravity down, quiet silver",
+      "ribbon": "subdued cyan/prism",
+      "wings": "none",
+      "katanaCount": 1,
+      "background": "deep black",
+      "accent": "#37D6E0"
+    },
+    "heaven": {
+      "meaning": "convergence / right few",
+      "pose": "unique graceful falling pose",
+      "eyes": "both open diamond irises",
+      "hair": "upward silver-white/cyan/blue prism flow",
+      "ribbon": "upward blue-prismatic flow",
+      "wings": "ordered blue/cyan shard wings",
+      "katanaCount": 1,
+      "background": "near-black",
+      "accent": "#7CC4FF"
+    },
+    "hell": {
+      "meaning": "expansion / beautiful overload",
+      "pose": "unique less-controlled falling pose",
+      "eyes": "both closed",
+      "tear": "single vivid red tear",
+      "hair": "fully inverted upward dark spectrum",
+      "ribbon": "fully inverted",
+      "wings": "highly fragmented inverted shards",
+      "katanaCount": 1,
+      "background": "pure or near-pure white",
+      "fullSceneInversion": true
+    },
+    "ultra": {
+      "meaning": "governance / direction switch",
+      "pose": "unique decisive falling pose",
+      "eyes": "one open gold-prismatic diamond iris; opposite eye closed with red tear",
+      "hair": "upward silver-white prism with exclusive gold interference",
+      "ribbon": "upward prism with gold interference",
+      "wings": "gold-prismatic shard wings",
+      "katanaCount": 2,
+      "background": "deep black",
+      "accentRange": ["#FFD24A", "#F7C84B"],
+      "fullSceneInversion": false
+    }
+  }
+}

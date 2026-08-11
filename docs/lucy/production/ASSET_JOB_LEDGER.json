@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generationPolicy": {
+    "model": "gpt-image-2",
+    "callsPerJob": 1,
+    "variations": 0,
+    "regenerationAllowed": false
+  },
+  "jobs": [
+    { "id": "GEN-01", "name": "Ultra primary homepage master", "priority": "P0", "status": "briefed" },
+    { "id": "GEN-02", "name": "Heaven alternate homepage master", "priority": "P0", "status": "briefed" },
+    { "id": "GEN-03", "name": "Zero canonical master", "priority": "P0", "status": "briefed" },
+    { "id": "GEN-04", "name": "Hell canonical master and white plate", "priority": "P0", "status": "briefed" },
+    { "id": "GEN-05", "name": "Neutral reusable model master", "priority": "P1", "status": "briefed" },
+    { "id": "GEN-06", "name": "Face, eye, and expression atlas", "priority": "P1", "status": "briefed" },
+    { "id": "GEN-07", "name": "Wing and shard component atlas", "priority": "P1", "status": "briefed" },
+    { "id": "GEN-08", "name": "Ribbon and optical-effects atlas", "priority": "P2", "status": "briefed" }
+  ]
+}
