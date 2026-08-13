@@ -24,6 +24,18 @@ composition that makes the covered intimate area a focal point. Never crop or
 paint over a breach. Preserve the rejected raw and permit one replacement call
 for a modesty or two-leg anatomy failure; no unrelated alternatives are allowed.
 
+## Anatomy proportion guide
+
+This is a style guide, not a numeric guard. The owner accepts the new Heaven v2
+leg proportions as the target read. Lucy is slender but her lower body should
+not look short, needle-thin, or disconnected: preserve clear hip-to-thigh
+volume, a readable knee transition, calf taper, and slim ankle/foot. Her narrow
+waist must connect structurally to both ribcage and pelvis. Avoid an overlong
+torso, tiny pelvis, wasp-waist pinching, or a skirt concealing an implausibly
+short hip-to-knee span. Prefer balanced anime fashion proportions with the
+standing-equivalent lower body around half or slightly more of total height,
+allowing natural perspective and pose variation.
+
 ## Call V2-HH-01 — registered Heaven master
 
 Create one complete full-body Heaven Lucy as the single registered source for
@@ -97,6 +109,8 @@ and ribbon, and no inversion. No extra limb, fused foot, phantom knee, detached
 flesh shape, extra weapon, text, feathers, or membrane. Request true alpha with
 the same uniform-green fallback and fractional-matte rules as Heaven. One call;
 one replacement is allowed only if the anatomy or modesty gate fails.
+Use accepted Heaven v2 as the proportional reference; do not solve apparent
+shortness by warping or stretching a rendered body.
 
 ## Required v2 output families
 

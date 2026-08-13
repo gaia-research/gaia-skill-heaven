@@ -29,6 +29,14 @@ opaque sailor skirt and pose must naturally cover the underwear section. A
 generated master that breaches this guard is rejected and regenerated; it is
 never hidden with a downstream crop.
 
+**Anatomy proportion guide (advisory):** Lucy is slender, not abbreviated or
+needle-limbed. Use the accepted Heaven v2 read as the current reference: long,
+believable legs with hip/thigh volume, a readable knee transition, calf taper,
+and slim ankle/foot; a narrow waist must still connect naturally to ribcage and
+pelvis. Avoid wasp-waist pinching, an overlong torso, tiny pelvis, or a skirt
+concealing an implausibly short hip-to-knee span. This guides judgment rather
+than imposing a numeric rejection threshold.
+
 | State | Working production color | Non-negotiable treatment |
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
