@@ -19,7 +19,7 @@ gravity, eyes, shards, lighting, inversion, and weapon count communicate state.
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
 | Heaven | Blue `#7CC4FF` | Saturated cyan-blue refraction, both diamond eyes open, ordered glass shards. |
-| Hell | Full-scene chromatic inversion | White field, closed eyes and vivid red tear; no standalone flat Hell-pink token is canonical yet. |
+| Hell | Registered full-scene chromatic inversion of Heaven | Heaven's exact pose, anatomy, crop, alpha, hair, uniform, ribbon, katana, wings, shards, and spatial composition are preserved. Every foreground and scene RGB value—including skin—is inverted. Only both closed eyes and exactly one vivid red tear differ semantically; no standalone flat Hell-pink token is canonical. |
 | Ultra | Gold `#FFD24A`–`#F7C84B` | Never inverted; exclusive gold refraction, asymmetric eyes, two matching katanas. |
 
 These values supersede incidental color sampling from older concept images.
