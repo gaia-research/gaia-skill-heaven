@@ -15,9 +15,11 @@ Scope: exactly one Heaven/Hell visual and pixel review, plus one separate anatom
   not simply leftover green chroma. Its actual matte defect is hard white
   isolation: alpha contains only 0/255, with no antialiasing, and 10.07% of
   boundary pixels are near-black after inversion.
-- No confirmed extra, duplicated, fused, missing, or detached organs were found
-  in the v1 character masters. Heaven's folded legs are visually congested but
-  resolve to two legs and two feet.
+- The delegated anatomy review initially reported no confirmed extra organs.
+  The owner vetoed that finding after direct inspection: v1 Heaven, Hell, and
+  Ultra exhibit a three-leg contamination inherited by the authority sheet.
+  The owner verdict is final. Those full-body rasters are references for
+  non-anatomy design only and must not seed v2 pose or limb structure.
 
 ## Superseding Heaven / Hell canon
 
@@ -55,6 +57,6 @@ Hell must never be separately generated on chroma.
 
 ## v1 preservation
 
-The immutable reference is commit `3c9834b` on `dev/lucy-brandkit`, draft PR
+The immutable v1 reference is commit `3c9834b` on `dev/lucy-brandkit`, draft PR
 #48. V2 is additive under `packages/site/src/assets/lucy/v2/`; no v1 production
 file or ignored raw is deleted or overwritten.
