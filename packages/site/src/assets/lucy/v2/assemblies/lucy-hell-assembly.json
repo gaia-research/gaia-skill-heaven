@@ -1,0 +1,13 @@
+{
+  "version": "v2",
+  "state": "hell",
+  "master": "masters/lucy-heaven.webp",
+  "counterpart": "masters/lucy-hell.webp",
+  "hell_rule": "exact registered foreground RGB inversion except eyes-plus-one-tear mask",
+  "face_mask": "workbench/lucy/V2-HH-02/intermediate/hell-eye-tear-mask.png (ignored)",
+  "components": [
+    "components/wings/lucy-wing-heaven-pair.webp",
+    "components/ribbons/lucy-ribbon-heaven.webp",
+    "components/shards/lucy-shard-cluster-heaven.webp"
+  ]
+}
