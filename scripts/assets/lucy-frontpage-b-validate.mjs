@@ -1,4 +1,4 @@
-/** Mechanical validator for Variation B; visual results live in the lead guard report. */
+/** Mechanical-only validator for Variation B. Intentionally no image previews. */
 import fs from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -30,8 +30,6 @@ const required = [
   ['backgrounds/lucy-bg-hell-desktop.webp', 2560, 1440], ['backgrounds/lucy-bg-ultra-desktop.webp', 2560, 1440],
   ['social/lucy-og-1200x630.webp', 1200, 630], ['social/lucy-square-1080.webp', 1080, 1080],
   ['social/lucy-portrait-1080x1350.webp', 1080, 1350], ['social/lucy-story-1080x1920.webp', 1080, 1920],
-  ['components/katana/lucy-katana-heaven.webp', 1200, 320], ['components/katana/lucy-katana-hell.webp', 1200, 320],
-  ['components/katana/lucy-katana-sheathed.webp', 1800, 480], ['components/katana/lucy-katana-saya.webp', 1800, 480],
   ['ASSET_MANIFEST.json'],
 ];
 const transparent = ['hero/lucy-primary.webp', 'hero/lucy-alternate.webp', 'identity/lucy-horizontal-header.webp'];
@@ -82,7 +80,7 @@ for (const file of allWebps) {
 const report = [
   '# Front Page Variation B — Mechanical Validation', '',
   `Status: ${failures.length ? 'FAIL' : 'PASS'}`, '',
-  'Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. The original worker performed no visual review; the later lead body/composite review is recorded in LUCY_GUARD_REVIEW.md. FP-KATANA-01 has a separately scoped authority/alpha review.', '',
+  'Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. No visual review was performed by owner instruction.', '',
   `WebP files reopened: ${allWebps.length}`, `Tracked frontpage PNGs: ${pngs.length}`, '', '## Checks', ...checks.map((c) => `- ${c}`), '', '## Failures', ...(failures.length ? failures.map((f) => `- ${f}`) : ['- None']), ''
 ].join('\n');
 const reportPath = path.join(root, 'docs/lucy/production/frontpage/VARIATION_B_VALIDATION.md');

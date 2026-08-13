@@ -2,9 +2,9 @@
 """Materialize Lucy front-page Variation A without modifying character pixels.
 
 This exporter has one generated input: the opaque FRONTPAGE-A atmosphere atlas.
-All Lucy-bearing outputs are direct re-exports or composites of accepted v3
+All Lucy-bearing outputs are direct re-exports or composites of accepted v2
 masters (or the validated v1 Zero/neutral sources).  Hell uses only the
-registered v3 Hell output; no inversion, mask, or character edit occurs here.
+registered v2 Hell output; no inversion, mask, or character edit occurs here.
 """
 from __future__ import annotations
 
@@ -63,9 +63,9 @@ def composite(bg: Image.Image, subject: Image.Image, size: tuple[int, int], scal
 def source(state: str) -> Path:
     return {
         "zero": LUCY / "states/lucy-zero.webp",
-        "heaven": LUCY / "v3/masters/lucy-heaven.webp",
-        "hell": LUCY / "v3/masters/lucy-hell.webp",
-        "ultra": LUCY / "v3/masters/lucy-ultra.webp",
+        "heaven": LUCY / "v2/masters/lucy-heaven.webp",
+        "hell": LUCY / "v2/masters/lucy-hell.webp",
+        "ultra": LUCY / "v2/masters/lucy-ultra.webp",
         "neutral": LUCY / "models/lucy-neutral.webp",
     }[state]
 
@@ -96,7 +96,7 @@ def main() -> None:
     # P0: transparent accepted character references and state/panel exports.
     for state in ("zero", "heaven", "hell", "ultra"):
         export_copy(source(state), f"states/lucy-{state}.webp")
-        panel_source = LUCY / (f"v3/states/panels/lucy-{state}-panel.webp" if state != "zero" else "states/panels/lucy-zero-panel.webp")
+        panel_source = LUCY / (f"v2/states/panels/lucy-{state}-panel.webp" if state != "zero" else "states/panels/lucy-zero-panel.webp")
         export_copy(panel_source, f"states/panels/lucy-{state}-panel.webp", (1024, 1280))
     export_copy(source("heaven"), "hero/lucy-primary.webp")
     export_copy(source("ultra"), "hero/lucy-alternate.webp")
@@ -107,7 +107,7 @@ def main() -> None:
 
     # P1: portraits, expressions and eyes are namespaced re-exports.
     for state in ("neutral", "zero", "heaven", "hell", "ultra"):
-        portrait = LUCY / (f"v3/portraits/lucy-{state}.webp" if state in {"heaven", "hell", "ultra"} else ("portraits/lucy-neutral.webp" if state == "neutral" else "portraits/lucy-zero.webp"))
+        portrait = LUCY / (f"v2/portraits/lucy-{state}.webp" if state in {"heaven", "hell", "ultra"} else ("portraits/lucy-neutral.webp" if state == "neutral" else "portraits/lucy-zero.webp"))
         export_copy(portrait, f"portraits/lucy-{state}.webp", (1024, 1024))
     for path in sorted((LUCY / "components/expressions").glob("*.webp")):
         export_copy(path, f"components/expressions/{path.name}")
@@ -117,8 +117,8 @@ def main() -> None:
     # Eight usable ribbon files: canonical state ribbons plus airflow variants.
     ribbon_sources = [
         LUCY / "components/ribbons/lucy-ribbon-zero.webp",
-        LUCY / "v3/components/ribbons/lucy-ribbon-heaven.webp",
-        LUCY / "v3/components/ribbons/lucy-ribbon-hell.webp",
+        LUCY / "v2/components/ribbons/lucy-ribbon-heaven.webp",
+        LUCY / "v2/components/ribbons/lucy-ribbon-hell.webp",
         LUCY / "components/ribbons/lucy-ribbon-ultra.webp",
         *sorted((LUCY / "components/ribbons").glob("lucy-ribbon-airflow-*.webp")),
     ]
@@ -127,21 +127,18 @@ def main() -> None:
     # Six state wing sides and three assembled pairs; all are established exports.
     for state in ("heaven", "hell", "ultra"):
         for side in ("left", "right", "pair"):
-            candidate = LUCY / f"v3/components/wings/lucy-wing-{state}-{side}.webp"
+            candidate = LUCY / f"v2/components/wings/lucy-wing-{state}-{side}.webp"
             if not candidate.exists():
                 candidate = LUCY / f"components/wings/lucy-wing-{state}-{side}.webp"
             export_copy(candidate, f"components/wings/lucy-wing-{state}-{side}.webp")
     for path in sorted((LUCY / "components/shards").glob("lucy-shard-[0-9][0-9].webp")):
         export_copy(path, f"components/shards/{path.name}")
     for state in ("heaven", "hell", "ultra"):
-        candidate = LUCY / f"v3/components/shards/lucy-shard-cluster-{state}.webp"
+        candidate = LUCY / f"v2/components/shards/lucy-shard-cluster-{state}.webp"
         if not candidate.exists():
             candidate = LUCY / f"components/shards/lucy-shard-cluster-{state}.webp"
         export_copy(candidate, f"components/shards/lucy-shard-cluster-{state}.webp")
-    # Front-page weapon authority is its own one-shot production atlas, not
-    # the retired generic component kit.  Keep both variations sourced from
-    # this exact shared pack on every deterministic rerun.
-    for path in sorted((LUCY / "frontpage/katana-authority-v2").glob("*.webp")):
+    for path in sorted((LUCY / "components/katana").glob("*.webp")):
         export_copy(path, f"components/katana/{path.name}")
 
     # P2: atlas-derived effects only; no output below uses atlas pixels on Lucy.
@@ -158,15 +155,15 @@ def main() -> None:
     for path in sorted((LUCY / "fx").glob("*.webp")):
         export_copy(path, f"fx/reused-{path.name}")
     for state in ("zero", "heaven", "hell", "ultra"):
-        divider = LUCY / (f"v3/identity/lucy-divider-{state}.webp" if state in {"heaven", "hell"} else f"identity/lucy-divider-{state}.webp")
+        divider = LUCY / (f"v2/identity/lucy-divider-{state}.webp" if state in {"heaven", "hell"} else f"identity/lucy-divider-{state}.webp")
         export_copy(divider, f"identity/lucy-divider-{state}.webp")
-        icon = LUCY / (f"v3/identity/lucy-state-icon-{state}.webp" if state in {"heaven", "hell"} else f"identity/lucy-state-icon-{state}.webp")
+        icon = LUCY / (f"v2/identity/lucy-state-icon-{state}.webp" if state in {"heaven", "hell"} else f"identity/lucy-state-icon-{state}.webp")
         export_copy(icon, f"identity/lucy-state-icon-{state}.webp")
     motif_sources = {
         "lucy-diamond-eye.webp": LUCY / "identity/lucy-diamond-eye.webp",
         "lucy-red-tear.webp": LUCY / "identity/lucy-red-tear.webp",
-        "lucy-wing-emblem-heaven.webp": LUCY / "v3/identity/lucy-wing-emblem-heaven.webp",
-        "lucy-wing-emblem-hell.webp": LUCY / "v3/identity/lucy-wing-emblem-hell.webp",
+        "lucy-wing-emblem-heaven.webp": LUCY / "v2/identity/lucy-wing-emblem-heaven.webp",
+        "lucy-wing-emblem-hell.webp": LUCY / "v2/identity/lucy-wing-emblem-hell.webp",
         "lucy-wing-emblem-ultra.webp": LUCY / "identity/lucy-wing-ultra.webp",
     }
     for name, path in motif_sources.items():
@@ -176,7 +173,7 @@ def main() -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)
     export_copy(LUCY / "identity/lucy-avatar-zero.webp", "identity/lucy-avatar-neutral.webp")
-    export_copy(LUCY / "v3/identity/lucy-avatar-heaven.webp", "identity/lucy-avatar-heaven.webp")
+    export_copy(LUCY / "v2/identity/lucy-avatar-heaven.webp", "identity/lucy-avatar-heaven.webp")
     export_copy(LUCY / "identity/lucy-horizontal-header.webp", "identity/lucy-horizontal-header.webp")
 
     # P3 campaign crops use the approved Heaven primary. They are composites,
@@ -200,6 +197,8 @@ def main() -> None:
     gaps = {
         "unavailable": [
             {"asset": "isolated hair layers", "reason": "flattened approved masters only; not fabricated"},
+            {"asset": "sheathed katana", "reason": "no approved isolated source"},
+            {"asset": "saya", "reason": "no approved isolated source"},
         ]
     }
     (OUT / "SOURCE_GAPS.json").write_text(json.dumps(gaps, indent=2) + "\n")
@@ -208,8 +207,7 @@ def main() -> None:
         "variation": "A — Heaven Ascension",
         "paid_generation": {"model": "gpt-image-2", "calls": 1, "raw_atlas": str(ATLAS.relative_to(ROOT))},
         "character_policy": "All Lucy-bearing outputs are direct accepted-master re-exports or non-destructive alpha composites. No character pixel is generated, inverted, recolored, masked, or regenerated in this exporter.",
-        "character_sources": {state: str(source(state).relative_to(ROOT)) for state in ("zero", "heaven", "hell", "ultra", "neutral")},
-        "hell_registration": "v3/masters/lucy-hell.webp is reused as-is; its registered Heaven complement relationship is not changed.",
+        "hell_registration": "v2/masters/lucy-hell.webp is reused as-is; its registered Heaven complement relationship is not changed.",
         "outputs": outputs,
         "source_gaps": "SOURCE_GAPS.json",
     }

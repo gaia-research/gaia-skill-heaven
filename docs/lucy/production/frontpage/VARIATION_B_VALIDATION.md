@@ -2,9 +2,9 @@
 
 Status: PASS
 
-Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. The original worker performed no visual review; the later lead body/composite review is recorded in LUCY_GUARD_REVIEW.md. FP-KATANA-01 has a separately scoped authority/alpha review.
+Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. No visual review was performed by owner instruction.
 
-WebP files reopened: 124
+WebP files reopened: 117
 Tracked frontpage PNGs: 0
 
 ## Checks
@@ -20,10 +20,6 @@ Tracked frontpage PNGs: 0
 - PASS social/lucy-square-1080.webp
 - PASS social/lucy-portrait-1080x1350.webp
 - PASS social/lucy-story-1080x1920.webp
-- PASS components/katana/lucy-katana-heaven.webp
-- PASS components/katana/lucy-katana-hell.webp
-- PASS components/katana/lucy-katana-sheathed.webp
-- PASS components/katana/lucy-katana-saya.webp
 - PASS ASSET_MANIFEST.json
 - PASS alpha hero/lucy-primary.webp
 - PASS alpha hero/lucy-alternate.webp

@@ -1,22 +1,24 @@
 {
   "variation": "B — Ultra Judgment",
-  "contract": "One gpt-image-2 atmospheric atlas; accepted v3 character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.",
+  "contract": "One gpt-image-2 atmospheric atlas; accepted character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.",
   "paidGeneration": {
     "model": "gpt-image-2",
     "calls": 1,
     "raw": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png"
   },
   "sourceGaps": {
-    "isolatedHair": "Unavailable: no accepted separate hair layers exist; not fabricated."
+    "isolatedHair": "Unavailable: no accepted separate hair layers exist; not fabricated.",
+    "sheathedKatana": "Unavailable: no approved sheathed katana asset exists; not fabricated.",
+    "saya": "Unavailable: no approved saya asset exists; not fabricated."
   },
   "assets": [
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary.webp",
-      "source": "packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp"
+      "source": "packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate.webp",
-      "source": "packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp"
+      "source": "packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-zero.webp",
@@ -24,15 +26,15 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-heaven.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/lucy-heaven.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-heaven.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-hell.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/lucy-hell.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-hell.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-ultra.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/lucy-ultra.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-ultra.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-zero-panel.webp",
@@ -40,15 +42,15 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-heaven-panel.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/panels/lucy-heaven-panel.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-heaven-panel.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-hell-panel.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/panels/lucy-hell-panel.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-hell-panel.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-ultra-panel.webp",
-      "source": "packages/site/src/assets/lucy/v3/states/panels/lucy-ultra-panel.webp"
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-ultra-panel.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-neutral.webp",
@@ -60,15 +62,15 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-heaven.webp",
-      "source": "packages/site/src/assets/lucy/v3/portraits/lucy-heaven.webp"
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-heaven.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-hell.webp",
-      "source": "packages/site/src/assets/lucy/v3/portraits/lucy-hell.webp"
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-hell.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-ultra.webp",
-      "source": "packages/site/src/assets/lucy/v3/portraits/lucy-ultra.webp"
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-ultra.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-01.webp",
@@ -128,11 +130,11 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-heaven-diamond-eye.webp",
-      "source": "packages/site/src/assets/lucy/v3/identity/lucy-heaven-diamond-eye.webp"
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-heaven-diamond-eye.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-hell-red-tear.webp",
-      "source": "packages/site/src/assets/lucy/v3/identity/lucy-hell-red-tear.webp"
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-hell-red-tear.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-zero.webp",
@@ -140,11 +142,11 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-heaven.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/ribbons/lucy-ribbon-heaven.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/ribbons/lucy-ribbon-heaven.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-hell.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/ribbons/lucy-ribbon-hell.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/ribbons/lucy-ribbon-hell.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-ultra.webp",
@@ -168,27 +170,27 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-left.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-heaven-left.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-left.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-right.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-heaven-right.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-right.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-pair.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-heaven-pair.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-pair.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-left.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-hell-left.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-left.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-right.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-hell-right.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-right.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-pair.webp",
-      "source": "packages/site/src/assets/lucy/v3/components/wings/lucy-wing-hell-pair.webp"
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-pair.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-ultra-left.webp",
@@ -296,63 +298,35 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-neutral-steel.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-neutral-steel.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-unsheathed.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-unsheathed.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-neutral-steel.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-left.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-left.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-left.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-right.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-right.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-sheathed.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-sheathed.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-saya.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-saya.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-handle.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-handle.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-right.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-dual.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-dual.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-dual.webp"
     },
     {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-zero.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-zero.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-heaven.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-hell.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-ultra.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp"
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-handle.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-handle.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-01.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-01.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-01.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-02.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-02.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-02.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-03.webp",
-      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-03.webp"
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-03.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-avatar-zero.webp",
@@ -360,7 +334,7 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-avatar-heaven.webp",
-      "source": "packages/site/src/assets/lucy/v3/identity/lucy-avatar-heaven.webp"
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-avatar-heaven.webp"
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
@@ -388,25 +362,25 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary-desktop-2560x1080.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 2560,
       "height": 1080
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate-desktop-2560x1080.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
       "width": 2560,
       "height": 1080
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary-mobile-1440x2560.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 1440,
       "height": 2560
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate-mobile-1440x2560.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
       "width": 1440,
       "height": 2560
     },
@@ -586,31 +560,31 @@
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-horizontal-header.webp",
-      "source": "accepted v3 Ultra + Heaven masters, no recolour or paint edits",
+      "source": "accepted v2 Ultra + Heaven masters, no recolour or paint edits",
       "width": 2560,
       "height": 720
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-og-1200x630.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 1200,
       "height": 630
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-square-1080.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 1080,
       "height": 1080
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-portrait-1080x1350.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
       "width": 1080,
       "height": 1350
     },
     {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-story-1080x1920.webp",
-      "source": "accepted character packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 1080,
       "height": 1920
     }
