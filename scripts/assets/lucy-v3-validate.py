@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "packages/site/src/assets/lucy/v3"
 WORK = ROOT / "packages/site/assets/workbench/lucy"
 REPORT = ROOT / "docs/lucy/production/v3/VALIDATION_REPORT.md"
+FACE_BOX = (270, 330, 570, 630)
 
 
 def array(path: Path) -> np.ndarray:
@@ -57,15 +58,30 @@ def green_edge_count(data: np.ndarray) -> int:
     return int((partial & exterior & strong_green).sum())
 
 
+def registered_face_mask(size: tuple[int, int]) -> np.ndarray:
+    """Rebuild the frozen bounded Hell edit mask without workbench inputs."""
+    scale = 4
+    local = Image.new("L", (300 * scale, 300 * scale), 0)
+    draw = ImageDraw.Draw(local)
+    draw.ellipse((65*scale, 116*scale, 142*scale, 187*scale), fill=255)
+    draw.ellipse((134*scale, 100*scale, 225*scale, 177*scale), fill=255)
+    draw.polygon([
+        (86*scale, 154*scale), (121*scale, 151*scale),
+        (130*scale, 205*scale), (115*scale, 239*scale),
+        (96*scale, 207*scale),
+    ], fill=255)
+    local = local.resize((300, 300), Image.Resampling.LANCZOS)
+    full = Image.new("L", size, 0)
+    full.paste(local, FACE_BOX[:2])
+    return np.asarray(full, dtype=np.uint8) > 0
+
+
 def main() -> None:
     manifest = json.loads((OUT / "FINAL_ASSET_MANIFEST.json").read_text())
     heaven = array(OUT / "masters/lucy-heaven.webp")
     hell = array(OUT / "masters/lucy-hell.webp")
     ultra = array(OUT / "masters/lucy-ultra.webp")
-    mask = np.asarray(
-        Image.open(WORK / "V3-HH-02/intermediate/hell-eye-tear-mask.png").convert("L"),
-        dtype=np.uint8,
-    ) > 0
+    mask = registered_face_mask((heaven.shape[1], heaven.shape[0]))
 
     same_dimensions = heaven.shape == hell.shape
     alpha_equal = bool(np.array_equal(heaven[:, :, 3], hell[:, :, 3]))
