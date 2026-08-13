@@ -1,4 +1,4 @@
-import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
+import { HERO_ASSETS } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
 
@@ -13,14 +13,9 @@ import './variation-hero.css'
 // live.
 // ─────────────────────────────────────────────────────────────────────────
 
-export interface VariationHeroProps {
-  /** Character set for reviewer routes; the layout remains Hero A. */
-  assetSet?: string
-}
-
-export function VariationHeroA({ assetSet }: VariationHeroProps) {
+export function VariationHeroA() {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
-  const assets = HERO_ASSET_SETS[normalizeLucyAssetSet(assetSet)][v.lucyState]
+  const assets = HERO_ASSETS[v.lucyState]
 
   return (
     <div

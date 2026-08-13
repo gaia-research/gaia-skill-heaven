@@ -6,7 +6,14 @@
     "raw_atlas": "packages/site/assets/workbench/lucy/FRONTPAGE-A/raw/heaven-ascension-atlas-gpt-image-2-raw.png"
   },
   "character_policy": "All Lucy-bearing outputs are direct accepted-master re-exports or non-destructive alpha composites. No character pixel is generated, inverted, recolored, masked, or regenerated in this exporter.",
-  "hell_registration": "v2/masters/lucy-hell.webp is reused as-is; its registered Heaven complement relationship is not changed.",
+  "character_sources": {
+    "zero": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+    "heaven": "packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp",
+    "hell": "packages/site/src/assets/lucy/v3/masters/lucy-hell.webp",
+    "ultra": "packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp",
+    "neutral": "packages/site/src/assets/lucy/models/lucy-neutral.webp"
+  },
+  "hell_registration": "v3/masters/lucy-hell.webp is reused as-is; its registered Heaven complement relationship is not changed.",
   "outputs": [
     "SOURCE_GAPS.json",
     "backgrounds/lucy-heaven-2560x1440.webp",
@@ -170,27 +177,5 @@
     "states/panels/lucy-ultra-panel.webp",
     "states/panels/lucy-zero-panel.webp"
   ],
-  "source_gaps": "SOURCE_GAPS.json",
-  "katana_authority": {
-    "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2",
-    "job": "FP-KATANA-01",
-    "model": "gpt-image-2",
-    "files": [
-      "lucy-katana-dual.webp",
-      "lucy-katana-handle.webp",
-      "lucy-katana-heaven.webp",
-      "lucy-katana-hell.webp",
-      "lucy-katana-left.webp",
-      "lucy-katana-neutral-steel.webp",
-      "lucy-katana-right.webp",
-      "lucy-katana-saya.webp",
-      "lucy-katana-sheathed.webp",
-      "lucy-katana-slash-01.webp",
-      "lucy-katana-slash-02.webp",
-      "lucy-katana-slash-03.webp",
-      "lucy-katana-ultra.webp",
-      "lucy-katana-unsheathed.webp",
-      "lucy-katana-zero.webp"
-    ]
-  }
+  "source_gaps": "SOURCE_GAPS.json"
 }
