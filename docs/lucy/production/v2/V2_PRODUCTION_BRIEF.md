@@ -1,9 +1,18 @@
 # Lucy Heaven / Hell v2 Frozen Production Brief
 
-This brief is frozen before dispatch. Production uses `gpt-image-2` only. Two
-paid calls are permitted: one new Heaven master and one cropped Hell face edit.
-There are no alternative generations or retries. All other outputs are
-deterministic derivatives.
+Production uses `gpt-image-2` only. Exactly three calls are permitted: the
+owner-accepted new Heaven master, one fresh Ultra master, and one cropped Hell
+face edit. There are no alternative generations or retries. All other outputs
+are deterministic derivatives.
+
+## Contaminated v1 raster authority
+
+The owner identified a three-leg defect in the supplied sheet and every v1
+Heaven, Hell, and Ultra full-body variant. Those rasters remain authority for
+face, shoulder-length hair, sailor uniform, ribbon, eye/state language, katana,
+glass shards, colors, and materials. They are disqualified as pose, limb, hip,
+knee, ankle, or foot anatomy references. Written anatomy below wins. The owner
+directly reviewed the new V2-HH-01 master and accepted its limb count.
 
 ## Call V2-HH-01 — registered Heaven master
 
@@ -64,6 +73,20 @@ iris/sclera/eyelid regions and one narrow tear corridor. Assert a zero-pixel
 diff outside that declared mask against the deterministic Hell base. The red
 tear is the only semantic color restoration.
 
+## Call V2-ULTRA-01 — clean Ultra master
+
+Create one new complete full-body Ultra Lucy using the written anatomy contract
+and non-anatomy design authority. Exactly one head/torso, two arms, two hands,
+two independently traceable legs, and two feet; each leg reads continuously
+from hip through knee and ankle to its own foot. Use an open, unambiguous
+falling silhouette with no compact limb crossing. Ultra has one open gold
+diamond eye, the other closed with exactly one vivid red tear, two matching
+real-steel katanas, gold-prismatic disconnected glass-shard wings, upward hair
+and ribbon, and no inversion. No extra limb, fused foot, phantom knee, detached
+flesh shape, extra weapon, text, feathers, or membrane. Request true alpha with
+the same uniform-green fallback and fractional-matte rules as Heaven. One call;
+no retry.
+
 ## Required v2 output families
 
 All final production files are WebP/SVG/JSON/text below
@@ -86,6 +109,14 @@ All final production files are WebP/SVG/JSON/text below
 - paired state icons, wing emblems, Heaven diamond eye, and Hell red tear
 - `identity/lucy-avatar-{heaven,hell}.webp`
 - paired state assembly manifests and a v2 asset manifest
+- `masters/lucy-ultra.webp`
+- `hero/lucy-ultra-desktop-wide.webp` at 2560×1080
+- `states/lucy-ultra.webp` and `states/panels/lucy-ultra-panel.webp` at 4:5
+- `portraits/lucy-ultra.webp` at 1:1
+- `mobile/lucy-ultra-hero-1440x2560.webp`
+- `backgrounds/lucy-bg-ultra-desktop.webp` at 2560×1440
+- an Ultra assembly manifest using the clean v2 body and defensible gold
+  component/FX vocabulary
 
 Every Heaven/Hell pair must share dimensions, alpha bounds, and composition
 matrix. Except inside the declared eye/tear mask, Hell must pixel-diff exactly

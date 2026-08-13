@@ -15,6 +15,13 @@ The production authority is the approved character sheet at
 are provenance, not authority. Lucy's anatomy and outfit never transform;
 gravity, eyes, shards, lighting, inversion, and weapon count communicate state.
 
+**Anatomy correction (2026-08-13):** the supplied sheet and v1 Heaven, Hell,
+and Ultra bodies contain a three-leg contamination. The sheet remains authority
+for face, hair, uniform, ribbon, eyes, weapons, shards, colors, and materials,
+but not for pose or limb anatomy. Every new full-body render must have exactly
+two independently traceable legs and two feet. Written anatomy constraints win
+over contaminated raster poses.
+
 | State | Working production color | Non-negotiable treatment |
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
