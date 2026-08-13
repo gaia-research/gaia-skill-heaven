@@ -2,28 +2,25 @@
 
 This is the third PR in the stack:
 
-`v1 (#48) ← v3 Heaven/Hell/Ultra (#49) ← front-page assets (#50)`
+`v1 (#48) ← v2 Heaven/Hell/Ultra (#49) ← front-page assets`
 
 The deliverable is two complete front-page composition systems. Each variation
 receives exactly one `gpt-image-2` call for a text-free atmospheric background
-and optical-composition atlas. There are no retries. The original workers did
-not perform a visual review; the lead later completed the requested stack-wide
-guard/source pass documented in `LUCY_GUARD_REVIEW.md`.
+and optical-composition atlas. There are no retries and no visual review pass.
 All character pixels come from accepted masters, preventing new anatomy,
 modesty, face, weapon, or state drift.
 
 ## Shared character authority
 
 - Heaven, registered Hell, and Ultra:
-  `packages/site/src/assets/lucy/v3/masters/`
+  `packages/site/src/assets/lucy/v2/masters/`
 - Zero and neutral:
   existing v1 `states/lucy-zero.webp` and `models/lucy-neutral.webp`; the owner
   reported the three-leg contamination only for v1 Heaven/Hell/Ultra.
-- Expressions, eyes, katanas, FX, and identity motifs use the validated shared
-  or focused authority packs. Flattened v3 ribbon/wing/shard crops remain
-  reference-only and are not consumed by the React hero.
+- Expressions, eyes, ribbons, wings, shards, katanas, FX, and identity motifs:
+  v2 when available, otherwise the validated v1 production export.
 
-Do not regenerate Lucy. Preserve the v3 Hell registration contract.
+Do not regenerate or edit Lucy. Preserve the v2 Hell registration contract.
 Skin exposure is acceptable; underwear/pelvic overexposure is not. Because
 characters are composited from accepted masters, no character guard replacement
 call is available in this batch.
@@ -93,9 +90,8 @@ Variation A primary/alternate is Heaven/Ultra. Variation B is Ultra/Heaven.
 - eight ribbon assets
 - six wing sides plus assembled pairs
 - at least twenty shards and state clusters
-- 15-file `FP-KATANA-01` authority kit: neutral, unsheathed, left/right,
-  sheathed, saya, handle, dual, Zero/Heaven/Hell/Ultra state pieces, and three
-  slash arcs
+- katana neutral/left/right/dual/handle plus three slash arcs; sheathed/saya
+  remain documented source gaps
 
 ### P2 living visual system
 
@@ -118,8 +114,8 @@ Variation A primary/alternate is Heaven/Ultra. Variation B is Ultra/Heaven.
 
 - Raw atlas PNGs live in ignored workbench paths and are backed up as-is.
 - Production contains WebP/SVG/JSON/text only; no front-page PNG is tracked.
-- The original workers performed no visual review. The later requested lead
-  pass reviewed all full-body masters and light/dark alpha composites once.
+- Workers perform no visual review of the generated atlas or final artwork.
+  This is an explicit owner instruction for this batch.
 - Mechanical processing still reopens every WebP, enforces exact dimensions,
   verifies alpha where expected, verifies no tracked PNG, and confirms every
   required path or documented source gap.
