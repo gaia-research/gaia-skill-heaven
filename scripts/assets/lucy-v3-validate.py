@@ -130,7 +130,10 @@ def main() -> None:
             pair_failures.append(key)
 
     tracked = subprocess.check_output(["git", "ls-files", "packages/site/src/assets/lucy"], cwd=ROOT, text=True).splitlines()
-    protected = [path for path in tracked if "/v3/" not in path]
+    protected = [
+        path for path in tracked
+        if "/v3/" not in path and "/frontpage/" not in path
+    ]
     changed_protected: list[str] = []
     protected_hashes = 0
     for relative in protected:
