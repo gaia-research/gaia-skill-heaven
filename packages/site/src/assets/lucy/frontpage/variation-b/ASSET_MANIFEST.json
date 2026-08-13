@@ -1,0 +1,592 @@
+{
+  "variation": "B — Ultra Judgment",
+  "contract": "One gpt-image-2 atmospheric atlas; accepted character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.",
+  "paidGeneration": {
+    "model": "gpt-image-2",
+    "calls": 1,
+    "raw": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png"
+  },
+  "sourceGaps": {
+    "isolatedHair": "Unavailable: no accepted separate hair layers exist; not fabricated.",
+    "sheathedKatana": "Unavailable: no approved sheathed katana asset exists; not fabricated.",
+    "saya": "Unavailable: no approved saya asset exists; not fabricated."
+  },
+  "assets": [
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary.webp",
+      "source": "packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate.webp",
+      "source": "packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-zero.webp",
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-heaven.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-hell.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/lucy-ultra.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/lucy-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-zero-panel.webp",
+      "source": "packages/site/src/assets/lucy/states/panels/lucy-zero-panel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-heaven-panel.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-heaven-panel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-hell-panel.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-hell-panel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/states/panels/lucy-ultra-panel.webp",
+      "source": "packages/site/src/assets/lucy/v2/states/panels/lucy-ultra-panel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-neutral.webp",
+      "source": "packages/site/src/assets/lucy/portraits/lucy-neutral.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-zero.webp",
+      "source": "packages/site/src/assets/lucy/portraits/lucy-zero.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-heaven.webp",
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-hell.webp",
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/portraits/lucy-ultra.webp",
+      "source": "packages/site/src/assets/lucy/v2/portraits/lucy-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-01.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-01.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-02.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-02.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-03.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-03.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-04.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-04.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-05.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-05.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-06.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-06.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-07.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-07.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-08.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-08.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/expressions/lucy-expression-09.webp",
+      "source": "packages/site/src/assets/lucy/components/expressions/lucy-expression-09.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-eyes-zero-closed.webp",
+      "source": "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-closed.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-eyes-zero-blank.webp",
+      "source": "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-blank.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-eyes-heaven.webp",
+      "source": "packages/site/src/assets/lucy/components/eyes/lucy-eyes-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-eyes-hell.webp",
+      "source": "packages/site/src/assets/lucy/components/eyes/lucy-eyes-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-eyes-ultra.webp",
+      "source": "packages/site/src/assets/lucy/components/eyes/lucy-eyes-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-heaven-diamond-eye.webp",
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-heaven-diamond-eye.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/eyes/lucy-hell-red-tear.webp",
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-hell-red-tear.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-zero.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-zero.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-heaven.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/ribbons/lucy-ribbon-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-hell.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/ribbons/lucy-ribbon-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-ultra.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-airflow-01.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-airflow-01.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-airflow-02.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-airflow-02.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-airflow-03.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-airflow-03.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/ribbons/lucy-ribbon-airflow-04.webp",
+      "source": "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-airflow-04.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-left.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-left.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-right.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-right.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-heaven-pair.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-heaven-pair.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-left.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-left.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-right.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-right.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-hell-pair.webp",
+      "source": "packages/site/src/assets/lucy/v2/components/wings/lucy-wing-hell-pair.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-ultra-left.webp",
+      "source": "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-left.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-ultra-right.webp",
+      "source": "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-right.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/wings/lucy-wing-ultra-pair.webp",
+      "source": "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-pair.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-01.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-01.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-02.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-02.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-03.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-03.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-04.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-04.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-05.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-05.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-06.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-06.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-07.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-07.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-08.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-08.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-09.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-09.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-10.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-10.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-11.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-11.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-12.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-12.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-13.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-13.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-14.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-14.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-15.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-15.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-16.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-16.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-17.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-17.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-18.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-18.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-19.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-19.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-20.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-20.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-cluster-heaven.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-cluster-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-cluster-hell.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-cluster-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/shards/lucy-shard-cluster-ultra.webp",
+      "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-cluster-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-neutral-steel.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-neutral-steel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-left.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-left.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-right.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-right.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-dual.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-dual.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-handle.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-handle.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-01.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-01.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-02.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-02.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-03.webp",
+      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-03.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-avatar-zero.webp",
+      "source": "packages/site/src/assets/lucy/identity/lucy-avatar-zero.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-avatar-heaven.webp",
+      "source": "packages/site/src/assets/lucy/v2/identity/lucy-avatar-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-hell-desktop.webp",
+      "source": "exact RGB inversion of packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-zero-desktop.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.515,\"w\":0.455,\"h\":0.42,\"position\":\"centre\"}",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary-desktop-2560x1080.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "width": 2560,
+      "height": 1080
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate-desktop-2560x1080.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "width": 2560,
+      "height": 1080
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-primary-mobile-1440x2560.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "width": 1440,
+      "height": 2560
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/hero/lucy-alternate-mobile-1440x2560.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "width": 1440,
+      "height": 2560
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-particles-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.02,\"y\":0,\"w\":0.96,\"h\":0.085,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-particles-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-filament-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-filament-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-caustics-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.02,\"y\":0,\"w\":0.96,\"h\":0.085,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-caustics-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-flare-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-flare-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-reflection-prismatic.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.02,\"y\":0.93,\"w\":0.96,\"h\":0.07,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-aura-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-aura-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-dust-zero.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.515,\"w\":0.455,\"h\":0.42,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-trail-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.02,\"y\":0.93,\"w\":0.96,\"h\":0.07,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-trail-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-shard-band-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-shard-band-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-fragment-hell.webp",
+      "source": "exact RGB inversion of packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-aura-hell.webp",
+      "source": "exact RGB inversion of packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/fx/lucy-caustics-hell.webp",
+      "source": "exact RGB inversion of packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.945,\"y\":0.05,\"w\":0.055,\"h\":0.88,\"position\":\"centre\"}",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-divider-ultra.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1920,
+      "height": 240
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-divider-heaven.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1920,
+      "height": 240
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-divider-zero.webp",
+      "source": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.04,\"y\":0.515,\"w\":0.455,\"h\":0.42,\"position\":\"centre\"}",
+      "width": 1920,
+      "height": 240
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-divider-hell.webp",
+      "source": "exact RGB inversion of packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png crop {\"x\":0.505,\"y\":0.045,\"w\":0.455,\"h\":0.435,\"position\":\"centre\"}",
+      "width": 1920,
+      "height": 240
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-state-icon-zero.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-state-icon-heaven.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-state-icon-hell.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-state-icon-ultra.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-diamond-eye.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-red-tear.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-wing-emblem-heaven.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-wing-emblem-hell.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-wing-emblem-ultra.svg",
+      "source": "deterministic SVG geometry"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-horizontal-header.webp",
+      "source": "accepted v2 Ultra + Heaven masters, no recolour or paint edits",
+      "width": 2560,
+      "height": 720
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-og-1200x630.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "width": 1200,
+      "height": 630
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-square-1080.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-portrait-1080x1350.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-heaven-desktop.webp",
+      "width": 1080,
+      "height": 1350
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/social/lucy-story-1080x1920.webp",
+      "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
+      "width": 1080,
+      "height": 1920
+    }
+  ]
+}

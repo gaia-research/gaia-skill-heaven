@@ -1,0 +1,11 @@
+{
+  "state": "unavailable-as-isolated-layers",
+  "reason": "Accepted masters are flattened character compositions; no isolated hair source may be fabricated.",
+  "available_character_masters": {
+    "zero": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+    "heaven": "packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp",
+    "hell": "packages/site/src/assets/lucy/v2/masters/lucy-hell.webp",
+    "ultra": "packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp",
+    "neutral": "packages/site/src/assets/lucy/models/lucy-neutral.webp"
+  }
+}
