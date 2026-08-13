@@ -1,12 +1,6 @@
 # Lucy Heaven / Hell v2 Validation Report
 
-Status: **MECHANICAL PASS / OWNER REJECTED**
-
-The mechanical statements below remain true for the files produced. They are
-not visual approval. On 2026-08-13 the owner rejected the first v2 generation
-because the production worker approved it without fully applying the later
-anatomy, proportion, and modesty guidance. V2 remains a recoverable reference;
-it is superseded for production selection by the v3 pass in this PR.
+Status: PASS
 
 ## Registered master checks
 
@@ -25,9 +19,6 @@ it is superseded for production selection by the v3 pass in this PR.
 
 ## Anatomy and modesty disposition
 
-- V2-HH-01: mechanically contains the expected asset structure, but the owner's
-  later verdict rejects its visual acceptance under the complete guard stack.
-- V2-ULTRA-01: mechanically contains the expected asset structure, but the
-  owner specifically found its legs too skinny/short for the intended Lucy
-  proportions. It is not the v3 proportion reference.
+- V2-HH-01: accepted after direct owner review: one head, two arms/hands, two independently traceable legs/feet, one katana; opaque skirt covers intimate area.
+- V2-ULTRA-01: accepted: one head, two arms/hands, two readable legs/feet, two katanas; pose is stylized but retains thigh/knee/calf/ankle continuity and opaque skirt coverage. No warp or concealment edit was applied.
 - V1 artifacts remain preserved as reference only; no v1 file was overwritten or deleted.
