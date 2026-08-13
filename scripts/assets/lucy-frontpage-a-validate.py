@@ -20,6 +20,10 @@ EXACT = {
     "social/lucy-square-1080.webp": (1080, 1080, False),
     "social/lucy-portrait-1080x1350.webp": (1080, 1350, False),
     "social/lucy-story-1080x1920.webp": (1080, 1920, False),
+    "components/katana/lucy-katana-heaven.webp": (1200, 320, True),
+    "components/katana/lucy-katana-hell.webp": (1200, 320, True),
+    "components/katana/lucy-katana-sheathed.webp": (1800, 480, True),
+    "components/katana/lucy-katana-saya.webp": (1800, 480, True),
 }
 
 def main() -> None:
@@ -60,6 +64,7 @@ def main() -> None:
         "",
         f"- Re-opened production WebPs: {checked}",
         "- Visual review: deliberately not performed (explicit owner instruction).",
+        "- Katana exception: FP-KATANA-01 has a separate focused authority/alpha review in KATANA_AUTHORITY_REVIEW.md.",
         "- Character pixels: no generated, inverted, recolored, or masked character output in this batch.",
         "- Registered Hell: reused from v2 without modification.",
         f"- Tracked Variation A PNGs: {len(pngs)}",

@@ -90,8 +90,9 @@ Variation A primary/alternate is Heaven/Ultra. Variation B is Ultra/Heaven.
 - eight ribbon assets
 - six wing sides plus assembled pairs
 - at least twenty shards and state clusters
-- katana neutral/left/right/dual/handle plus three slash arcs; sheathed/saya
-  remain documented source gaps
+- 15-file `FP-KATANA-01` authority kit: neutral, unsheathed, left/right,
+  sheathed, saya, handle, dual, Zero/Heaven/Hell/Ultra state pieces, and three
+  slash arcs
 
 ### P2 living visual system
 

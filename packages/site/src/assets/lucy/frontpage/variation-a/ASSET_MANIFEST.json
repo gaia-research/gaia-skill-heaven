@@ -30,12 +30,19 @@
     "components/hair/INVENTORY.json",
     "components/katana/lucy-katana-dual.webp",
     "components/katana/lucy-katana-handle.webp",
+    "components/katana/lucy-katana-heaven.webp",
+    "components/katana/lucy-katana-hell.webp",
     "components/katana/lucy-katana-left.webp",
     "components/katana/lucy-katana-neutral-steel.webp",
     "components/katana/lucy-katana-right.webp",
+    "components/katana/lucy-katana-saya.webp",
+    "components/katana/lucy-katana-sheathed.webp",
     "components/katana/lucy-katana-slash-01.webp",
     "components/katana/lucy-katana-slash-02.webp",
     "components/katana/lucy-katana-slash-03.webp",
+    "components/katana/lucy-katana-ultra.webp",
+    "components/katana/lucy-katana-unsheathed.webp",
+    "components/katana/lucy-katana-zero.webp",
     "components/ribbons/lucy-ribbon-airflow-01.webp",
     "components/ribbons/lucy-ribbon-airflow-02.webp",
     "components/ribbons/lucy-ribbon-airflow-03.webp",
@@ -163,5 +170,27 @@
     "states/panels/lucy-ultra-panel.webp",
     "states/panels/lucy-zero-panel.webp"
   ],
-  "source_gaps": "SOURCE_GAPS.json"
+  "source_gaps": "SOURCE_GAPS.json",
+  "katana_authority": {
+    "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2",
+    "job": "FP-KATANA-01",
+    "model": "gpt-image-2",
+    "files": [
+      "lucy-katana-dual.webp",
+      "lucy-katana-handle.webp",
+      "lucy-katana-heaven.webp",
+      "lucy-katana-hell.webp",
+      "lucy-katana-left.webp",
+      "lucy-katana-neutral-steel.webp",
+      "lucy-katana-right.webp",
+      "lucy-katana-saya.webp",
+      "lucy-katana-sheathed.webp",
+      "lucy-katana-slash-01.webp",
+      "lucy-katana-slash-02.webp",
+      "lucy-katana-slash-03.webp",
+      "lucy-katana-ultra.webp",
+      "lucy-katana-unsheathed.webp",
+      "lucy-katana-zero.webp"
+    ]
+  }
 }

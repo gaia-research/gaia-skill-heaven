@@ -19,9 +19,9 @@ was present. The fallback is recorded rather than mislabeled.
 
 ## Mechanical results
 
-- Variation A: 143 WebPs reopened; required P0/P3 dimensions and alpha pass;
+- Variation A: 150 WebPs reopened; required P0/P3 dimensions and alpha pass;
   zero production PNGs.
-- Variation B: 117 WebPs reopened; required P0/P3 dimensions and alpha pass;
+- Variation B: 124 WebPs reopened; required P0/P3 dimensions and alpha pass;
   zero production PNGs.
 - Both variation manifests and receipts are present.
 - Both raw atlas PNGs remain under ignored workbench paths and were copied as-is
@@ -30,8 +30,9 @@ was present. The fallback is recorded rather than mislabeled.
   sources are reused; the generated atlases supply atmosphere and FX only.
 - Registered Hell character pixels are unchanged. Hell atmosphere is derived
   as the exact inversion of its variation's Heaven background.
-- Isolated hair, sheathed katana, and saya remain documented source gaps; no
-  geometry was fabricated.
+- Isolated hair remains the only documented component gap. The 15-file
+  `FP-KATANA-01` authority pack supplies sheathed katana and saya to both
+  variations, copied byte-identically from the shared pack.
 
 ## Reproduction
 
