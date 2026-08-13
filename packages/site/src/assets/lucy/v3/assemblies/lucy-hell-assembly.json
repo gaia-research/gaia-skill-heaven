@@ -1,0 +1,12 @@
+{
+  "version": "v3",
+  "state": "hell",
+  "master": "masters/lucy-hell.webp",
+  "counterpart": "masters/lucy-heaven.webp",
+  "hell_rule": "full foreground RGB complement including skin, except bounded two-eyes-plus-one-tear mask",
+  "components": [
+    "components/wings/lucy-wing-hell-pair.webp",
+    "components/ribbons/lucy-ribbon-hell.webp",
+    "components/shards/lucy-shard-cluster-hell.webp"
+  ]
+}
