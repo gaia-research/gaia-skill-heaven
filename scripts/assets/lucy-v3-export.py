@@ -149,7 +149,7 @@ def main() -> None:
     heaven = clean_alpha(rgba(H_DIR / "heaven-accepted-alpha.png"))
     hell_base = inverse(heaven)
     hell, full_mask = hell_face_edit(hell_base)
-    ultra = clean_alpha(rgba(U_DIR / "ultra-rembg.png"))
+    ultra = clean_alpha(rgba(U_DIR / "ultra-checker-rematte.png"))
     png(heaven, H_DIR / "heaven-final-alpha.png")
     png(hell_base, H_DIR / "hell-registered-base-final.png")
     png(hell, F_DIR / "intermediate/hell-final-alpha.png")
@@ -294,6 +294,8 @@ def main() -> None:
         "heaven_source": "V3-HH-01 accepted gpt-image-2 master",
         "hell_source": "exact registered Heaven inversion plus V3-HH-02 bounded face edit",
         "ultra_source": "V3-ULTRA-01 accepted gpt-image-2 master",
+        "ultra_matte_source": "deterministic known-checker rematte from retained V3-ULTRA-01 raw; supersedes headless isnet matte",
+        "ultra_visual_recheck": "PASS on light and dark checker composites after restored head, hair, and gold wings",
         "v1_v2_preserved": True,
         "pair_matrix": matrix,
         "outputs": sorted(made),

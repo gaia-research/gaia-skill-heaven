@@ -99,6 +99,15 @@ def main() -> None:
         "heaven": green_edge_count(heaven),
         "ultra": green_edge_count(ultra),
     }
+    ultra_guard_regions = {
+        "head": (300, 250, 650, 560, 40000),
+        "hair": (250, 40, 720, 450, 20000),
+        "gold_wings": (120, 100, 1000, 750, 150000),
+    }
+    ultra_occupancy = {}
+    for name, (x1, y1, x2, y2, minimum) in ultra_guard_regions.items():
+        count = int((ultra[y1:y2, x1:x2, 3] > 0).sum())
+        ultra_occupancy[name] = {"pixels": count, "minimum": minimum, "pass": count >= minimum}
 
     all_files = [path for path in OUT.rglob("*") if path.is_file()]
     webps = [path for path in all_files if path.suffix.lower() == ".webp"]
@@ -168,6 +177,7 @@ def main() -> None:
         inside_changed > 0,
         all(value > 0 for value in fractional_alpha.values()),
         all(value == 0 for value in green_edges.values()),
+        all(item["pass"] for item in ultra_occupancy.values()),
         not unreadable,
         not production_pngs,
         not missing,
@@ -197,6 +207,8 @@ def main() -> None:
         "## Alpha and export gates", "",
         f"- Fractional-alpha pixels: Heaven {fractional_alpha['heaven']}; Ultra {fractional_alpha['ultra']}.",
         f"- Strong-green exterior partial-alpha pixels: Heaven {green_edges['heaven']}; Ultra {green_edges['ultra']}.",
+        f"- Ultra upper-silhouette occupancy: {'pass' if all(item['pass'] for item in ultra_occupancy.values()) else 'FAIL'} — "
+        + ", ".join(f"{name} {item['pixels']}/{item['minimum']}" for name, item in ultra_occupancy.items()) + ".",
         f"- WebPs reopened: {'pass' if not unreadable else 'FAIL'} — {len(webps)} checked.",
         f"- Registered derivative pairs: {'pass' if not pair_failures else 'FAIL'} — {len(manifest['pair_matrix'])} checked.",
         f"- V3 production PNGs: {'pass' if not production_pngs else 'FAIL'} — {len(production_pngs)}.",
@@ -208,7 +220,8 @@ def main() -> None:
         "## Guard disposition", "",
         "- Heaven: PASS — exactly two traceable long, normally thick legs/feet; two arms/hands; one real-steel katana; structurally connected waist/pelvis; opaque skirt coverage.",
         "- Hell: PASS — same registered Heaven body and geometry; both eyes closed; exactly one vivid red tear; full inversion including skin.",
-        "- Ultra: PASS — exactly two traceable proportionate legs/feet; two arms/hands; two matching real-steel katanas; structurally connected waist/pelvis; opaque skirt coverage.",
+        "- Ultra: PASS after deterministic rematte recovery — one head; restored silver-white hair and gold shard wings; exactly two traceable proportionate legs/feet; two arms/hands; two matching real-steel katanas; structurally connected waist/pelvis; opaque skirt coverage.",
+        "- Ultra recovery note: the first promoted isnet matte erased the head, hair, and wings. It is superseded by the retained-raw known-checker rematte and would now fail the occupancy gate.",
         "- The v1/v2/canonical-sheet full-body poses were not used as anatomy authority.", "",
     ]))
     print(json.dumps({
@@ -218,6 +231,7 @@ def main() -> None:
         "inside_mask_changed": inside_changed,
         "fractional_alpha": fractional_alpha,
         "green_edges": green_edges,
+        "ultra_occupancy": ultra_occupancy,
         "pair_failures": pair_failures,
         "missing": missing + missing_required,
         "changed_protected": changed_protected,

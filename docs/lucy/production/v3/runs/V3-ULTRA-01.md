@@ -1,6 +1,6 @@
 # V3-ULTRA-01 — Ultra master
 
-Status: **PASS / accepted** after one visual self-review. No replacement call.
+Status: **PASS / accepted raw; deterministic matte recovered after owner-stack recheck.** No replacement call.
 
 ## Paid call
 
@@ -27,8 +27,16 @@ Status: **PASS / accepted** after one visual self-review. No replacement call.
   red tear, exactly two complete matching real-steel authority-style katanas,
   gold disconnected shard wings, normal non-inverted skin, no third weapon.
 
-The generated PNG was opaque RGB with a baked light checker field. The retained
-`isnet-general-use` matte created fractional alpha; deterministic cleanup affects
-only the exterior-connected fractional band. Raw/intermediate PNGs were backed
-up as-is. No replacement call was justified.
+The generated PNG was opaque RGB with a baked light checker field. The first
+`isnet-general-use` matte created fractional alpha but incorrectly erased the
+head, hair, and gold wings. That promoted matte is superseded. The accepted raw
+itself passes the anatomy, proportion, modesty, and state guards, so no paid
+replacement was justified.
 
+`scripts/assets/lucy-v3-ultra-rematte.py` deterministically reconstructs the
+known 16 px near-white checker plate, combines its color/luminance difference
+with the retained body matte, rejects detached checker noise, and preserves RGB
+only from the original raw. Light and dark checker composites were reviewed
+after recovery. The validator now requires non-trivial alpha occupancy in the
+head, hair, and gold-wing regions so the original headless promotion fails.
+Raw/intermediate/audit PNGs were backed up as-is.
