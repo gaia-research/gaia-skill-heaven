@@ -22,6 +22,13 @@ but not for pose or limb anatomy. Every new full-body render must have exactly
 two independently traceable legs and two feet. Written anatomy constraints win
 over contaminated raster poses.
 
+**Modesty guard:** ordinary skin, bare legs, and thigh exposure are permitted.
+Visible underwear, under-skirt crotch framing, translucent/parted skirt exposure,
+wardrobe-malfunction silhouettes, and intimate-area focal framing are not. The
+opaque sailor skirt and pose must naturally cover the underwear section. A
+generated master that breaches this guard is rejected and regenerated; it is
+never hidden with a downstream crop.
+
 | State | Working production color | Non-negotiable treatment |
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |

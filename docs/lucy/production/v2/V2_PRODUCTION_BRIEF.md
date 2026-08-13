@@ -14,6 +14,16 @@ glass shards, colors, and materials. They are disqualified as pose, limb, hip,
 knee, ankle, or foot anatomy references. Written anatomy below wins. The owner
 directly reviewed the new V2-HH-01 master and accepted its limb count.
 
+## Modesty gate
+
+Skin, bare legs, and thigh exposure are allowed. The underwear/pelvic section
+must remain naturally covered by the opaque sailor skirt and pose. Reject any
+visible underwear, under-skirt crotch view, low-angle intimate framing,
+transparent or parted skirt exposure, wardrobe-malfunction silhouette, or
+composition that makes the covered intimate area a focal point. Never crop or
+paint over a breach. Preserve the rejected raw and permit one replacement call
+for a modesty or two-leg anatomy failure; no unrelated alternatives are allowed.
+
 ## Call V2-HH-01 — registered Heaven master
 
 Create one complete full-body Heaven Lucy as the single registered source for
@@ -34,6 +44,7 @@ must not resemble flesh or detached anatomy.
 Preserve every hair filament, shard, sword tip, hand, finger, foot, and toe
 inside the canvas with generous padding. No gold, red tear, closed eye, text,
 UI, feathers, membrane, armor, extra character, extra limb, or extra weapon.
+The modesty gate above is mandatory.
 
 Request real transparent background. If unsupported, use one perfectly uniform
 `#00FF00` field with no green subject pixels, bounce, reflection, glass tint,
@@ -85,7 +96,7 @@ real-steel katanas, gold-prismatic disconnected glass-shard wings, upward hair
 and ribbon, and no inversion. No extra limb, fused foot, phantom knee, detached
 flesh shape, extra weapon, text, feathers, or membrane. Request true alpha with
 the same uniform-green fallback and fractional-matte rules as Heaven. One call;
-no retry.
+one replacement is allowed only if the anatomy or modesty gate fails.
 
 ## Required v2 output families
 
