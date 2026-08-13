@@ -2,7 +2,7 @@
  * Deterministic materialization for Front Page Variation B — Ultra Judgment.
  *
  * This script does not generate or alter Lucy artwork. Every character pixel is
- * sourced from the accepted v2 masters (or the explicitly retained v1 Zero /
+ * sourced from the accepted v3 masters (or the explicitly retained v1 Zero /
  * neutral exports). The one paid atlas is used only for opaque atmospheric
  * plates and abstract optical crops.
  */
@@ -89,19 +89,19 @@ async function composite(background, character, output, width, height, config = 
 }
 async function header(output) {
   const width = 2560, height = 720;
-  const ultra = await sharp(src('packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp')).resize(760, 650, { fit: 'contain' }).toBuffer();
-  const heaven = await sharp(src('packages/site/src/assets/lucy/v2/masters/lucy-heaven.webp')).resize(690, 620, { fit: 'contain' }).toBuffer();
+  const ultra = await sharp(src('packages/site/src/assets/lucy/v3/masters/lucy-ultra.webp')).resize(760, 650, { fit: 'contain' }).toBuffer();
+  const heaven = await sharp(src('packages/site/src/assets/lucy/v3/masters/lucy-heaven.webp')).resize(690, 620, { fit: 'contain' }).toBuffer();
   await mkdir(output);
   await sharp({ create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
     .composite([{ input: ultra, left: 240, top: 35 }, { input: heaven, left: 1540, top: 55 }])
     .webp({ lossless: true }).toFile(output);
-  generated.push({ path: path.relative(root, output), source: 'accepted v2 Ultra + Heaven masters, no recolour or paint edits', width, height });
+  generated.push({ path: path.relative(root, output), source: 'accepted v3 Ultra + Heaven masters, no recolour or paint edits', width, height });
 }
 
-const v2 = (...parts) => src('packages/site/src/assets/lucy/v2', ...parts);
+const v3 = (...parts) => src('packages/site/src/assets/lucy/v3', ...parts);
 const v1 = (...parts) => src('packages/site/src/assets/lucy', ...parts);
-const primary = v2('masters/lucy-ultra.webp');
-const alternate = v2('masters/lucy-heaven.webp');
+const primary = v3('masters/lucy-ultra.webp');
+const alternate = v3('masters/lucy-heaven.webp');
 const heavenRegion = { x: 0.505, y: 0.045, w: 0.455, h: 0.435, position: 'centre' };
 const ultraRegion = { x: 0.04, y: 0.045, w: 0.455, h: 0.435, position: 'centre' };
 const zeroRegion = { x: 0.04, y: 0.515, w: 0.455, h: 0.42, position: 'centre' };
@@ -114,28 +114,28 @@ const outerRight = { x: 0.945, y: 0.05, w: 0.055, h: 0.88, position: 'centre' };
 await copy(primary, out('hero/lucy-primary.webp'));
 await copy(alternate, out('hero/lucy-alternate.webp'));
 for (const [state, file] of Object.entries({
-  zero: v1('states/lucy-zero.webp'), heaven: v2('states/lucy-heaven.webp'),
-  hell: v2('states/lucy-hell.webp'), ultra: v2('states/lucy-ultra.webp'),
+  zero: v1('states/lucy-zero.webp'), heaven: v3('states/lucy-heaven.webp'),
+  hell: v3('states/lucy-hell.webp'), ultra: v3('states/lucy-ultra.webp'),
 })) await copy(file, out(`states/lucy-${state}.webp`));
 for (const [state, file] of Object.entries({
-  zero: v1('states/panels/lucy-zero-panel.webp'), heaven: v2('states/panels/lucy-heaven-panel.webp'),
-  hell: v2('states/panels/lucy-hell-panel.webp'), ultra: v2('states/panels/lucy-ultra-panel.webp'),
+  zero: v1('states/panels/lucy-zero-panel.webp'), heaven: v3('states/panels/lucy-heaven-panel.webp'),
+  hell: v3('states/panels/lucy-hell-panel.webp'), ultra: v3('states/panels/lucy-ultra-panel.webp'),
 })) await copy(file, out(`states/panels/lucy-${state}-panel.webp`));
 
 // P1 portraits, expressions, eyes, and modular production reuse.
 for (const [state, file] of Object.entries({
   neutral: v1('portraits/lucy-neutral.webp'), zero: v1('portraits/lucy-zero.webp'),
-  heaven: v2('portraits/lucy-heaven.webp'), hell: v2('portraits/lucy-hell.webp'), ultra: v2('portraits/lucy-ultra.webp'),
+  heaven: v3('portraits/lucy-heaven.webp'), hell: v3('portraits/lucy-hell.webp'), ultra: v3('portraits/lucy-ultra.webp'),
 })) await copy(file, out(`portraits/lucy-${state}.webp`));
 for (let index = 1; index <= 9; index++) await copy(v1(`components/expressions/lucy-expression-${String(index).padStart(2, '0')}.webp`), out(`components/expressions/lucy-expression-${String(index).padStart(2, '0')}.webp`));
 for (const name of ['lucy-eyes-zero-closed.webp', 'lucy-eyes-zero-blank.webp', 'lucy-eyes-heaven.webp', 'lucy-eyes-hell.webp', 'lucy-eyes-ultra.webp']) await copy(v1(`components/eyes/${name}`), out(`components/eyes/${name}`));
-await copy(v2('identity/lucy-heaven-diamond-eye.webp'), out('components/eyes/lucy-heaven-diamond-eye.webp'));
-await copy(v2('identity/lucy-hell-red-tear.webp'), out('components/eyes/lucy-hell-red-tear.webp'));
+await copy(v3('identity/lucy-heaven-diamond-eye.webp'), out('components/eyes/lucy-heaven-diamond-eye.webp'));
+await copy(v3('identity/lucy-hell-red-tear.webp'), out('components/eyes/lucy-hell-red-tear.webp'));
 for (const name of ['lucy-ribbon-zero.webp', 'lucy-ribbon-heaven.webp', 'lucy-ribbon-hell.webp', 'lucy-ribbon-ultra.webp', 'lucy-ribbon-airflow-01.webp', 'lucy-ribbon-airflow-02.webp', 'lucy-ribbon-airflow-03.webp', 'lucy-ribbon-airflow-04.webp']) {
-  const input = name === 'lucy-ribbon-heaven.webp' ? v2(`components/ribbons/${name}`) : name === 'lucy-ribbon-hell.webp' ? v2(`components/ribbons/${name}`) : v1(`components/ribbons/${name}`);
+  const input = name === 'lucy-ribbon-heaven.webp' ? v3(`components/ribbons/${name}`) : name === 'lucy-ribbon-hell.webp' ? v3(`components/ribbons/${name}`) : v1(`components/ribbons/${name}`);
   await copy(input, out(`components/ribbons/${name}`));
 }
-for (const state of ['heaven', 'hell']) for (const side of ['left', 'right', 'pair']) await copy(v2(`components/wings/lucy-wing-${state}-${side}.webp`), out(`components/wings/lucy-wing-${state}-${side}.webp`));
+for (const state of ['heaven', 'hell']) for (const side of ['left', 'right', 'pair']) await copy(v3(`components/wings/lucy-wing-${state}-${side}.webp`), out(`components/wings/lucy-wing-${state}-${side}.webp`));
 for (const side of ['left', 'right', 'pair']) await copy(v1(`components/wings/lucy-wing-ultra-${side}.webp`), out(`components/wings/lucy-wing-ultra-${side}.webp`));
 for (let index = 1; index <= 20; index++) await copy(v1(`components/shards/lucy-shard-${String(index).padStart(2, '0')}.webp`), out(`components/shards/lucy-shard-${String(index).padStart(2, '0')}.webp`));
 for (const state of ['heaven', 'hell', 'ultra']) await copy(v1(`components/shards/lucy-shard-cluster-${state}.webp`), out(`components/shards/lucy-shard-cluster-${state}.webp`));
@@ -182,7 +182,7 @@ await writeSvg(out('identity/lucy-diamond-eye.svg'), svgShell('<path d="m64 12 4
 await writeSvg(out('identity/lucy-red-tear.svg'), svgShell('<path d="M64 18c-17 24-24 38-24 54a24 24 0 0 0 48 0c0-16-7-30-24-54Z" fill="#FF183B"/>'));
 for (const [state, color] of Object.entries({ heaven: '#7CC4FF', hell: '#FF183B', ultra: '#FFD24A' })) await writeSvg(out(`identity/lucy-wing-emblem-${state}.svg`), svgShell(`<path d="M18 91 64 19l46 72-46-22z" fill="${color}"/><path d="m18 91 46-22 46 22-46 18z" fill="${color}" opacity=".55"/>`));
 await copy(v1('identity/lucy-avatar-zero.webp'), out('identity/lucy-avatar-zero.webp'));
-await copy(v2('identity/lucy-avatar-heaven.webp'), out('identity/lucy-avatar-heaven.webp'));
+await copy(v3('identity/lucy-avatar-heaven.webp'), out('identity/lucy-avatar-heaven.webp'));
 await header(out('identity/lucy-horizontal-header.webp'));
 
 // P3 follows Variation B campaign hierarchy: Ultra primary, Heaven alternate.
@@ -194,7 +194,7 @@ await composite(out('backgrounds/lucy-bg-ultra-desktop.webp'), primary, out('soc
 const all = [...copied, ...generated];
 const manifest = {
   variation: 'B — Ultra Judgment',
-  contract: 'One gpt-image-2 atmospheric atlas; accepted character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.',
+  contract: 'One gpt-image-2 atmospheric atlas; accepted v3 character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.',
   paidGeneration: { model: 'gpt-image-2', calls: 1, raw: path.relative(root, atlas) },
   sourceGaps: {
     isolatedHair: 'Unavailable: no accepted separate hair layers exist; not fabricated.'

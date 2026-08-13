@@ -24,13 +24,13 @@ Constraints: absolutely no character, person, face, body, limbs, clothing, hands
 
 - Exporter: `scripts/assets/lucy-frontpage-b-export.mjs`.
 - Validator: `scripts/assets/lucy-frontpage-b-validate.mjs`.
-- All Lucy-bearing outputs reuse accepted v2 Heaven/Hell/Ultra masters and validated v1 Zero/neutral assets. The atlas is used only for opaque background plates and abstract optical crops.
+- All Lucy-bearing outputs reuse accepted v3 Heaven/Hell/Ultra masters and validated v1 Zero/neutral assets. The atlas is used only for opaque background plates and abstract optical crops.
 - The Variation B primary is Ultra and alternate is Heaven. The output set includes P0–P3 hero, state, reusable component, background, identity, and social paths under `packages/site/src/assets/lucy/frontpage/variation-b/`.
-- Hell’s background is a lossless deterministic RGB complement of the generated Heaven plate. This is separate from, and does not change, the registered v2 Hell character master.
+- Hell’s background is a lossless deterministic RGB complement of the generated Heaven plate. This is separate from, and does not change, the registered v3 Hell character master.
 
 ## Owner-directed review constraint
 
-No visual review, image preview, contact sheet, or semantic self-review was performed on the raw atlas or final exports. The only gates run were mechanical file presence, WebP reopen, required dimensions, declared-alpha checks, no front-page PNG check, and exact Heaven/Hell background inversion verification.
+The original worker performed no visual review, image preview, contact sheet, or semantic self-review. A later lead stack pass reviewed the registered bodies and normal/dark transparency composites once. Its result is in `../LUCY_GUARD_REVIEW.md`; the atlas/file gates remain mechanical.
 
 ## Source gaps retained honestly
 

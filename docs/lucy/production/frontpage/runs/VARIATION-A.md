@@ -7,7 +7,7 @@ Status: materialized
 - Model: `gpt-image-2`, via the built-in image generation tool.
 - Paid calls: exactly 1.
 - Raw atlas: `packages/site/assets/workbench/lucy/FRONTPAGE-A/raw/heaven-ascension-atlas-gpt-image-2-raw.png` (ignored, copied as-is to `lucy-masters-backup/`).
-- Visual review: deliberately not performed for the raw atlas or production outputs, per explicit owner instruction. No image/contact-sheet/viewer was used by this worker after generation.
+- Worker visual review: deliberately not performed for the raw atlas or production outputs under the original owner instruction. A later lead stack pass reviewed the v3 bodies and transparency composites; see `../LUCY_GUARD_REVIEW.md`.
 
 ## Frozen prompt
 
@@ -27,8 +27,8 @@ Constraints: absolutely no character, face, body, hand, clothing, skin, hair, we
 
 ## Source and processing contract
 
-- Heaven, Hell, and Ultra character sources: accepted `packages/site/src/assets/lucy/v2/masters/` exports.
-- Hell is copied from `v2/masters/lucy-hell.webp` as-is. Its registered complement relationship with Heaven is not recalculated or altered.
+- Heaven, Hell, and Ultra character sources: accepted `packages/site/src/assets/lucy/v3/masters/` exports.
+- Hell is copied from `v3/masters/lucy-hell.webp` as-is. Its registered complement relationship with Heaven is not recalculated or altered.
 - Zero and neutral are validated v1 `states/lucy-zero.webp` and `models/lucy-neutral.webp` sources.
 - The generated atlas only supplies opaque background/FX zones. It never changes character pixels.
 - `scripts/assets/lucy-frontpage-a-export.py` is the reproducible deterministic exporter.
@@ -45,4 +45,4 @@ Constraints: absolutely no character, face, body, hand, clothing, skin, hair, we
 
 ## Mechanical validation
 
-`docs/lucy/production/frontpage/VARIATION_A_VALIDATION.md` records successful reopening of 143 WebPs, required path/dimension checks, alpha expectations, and zero production PNGs.
+`docs/lucy/production/frontpage/VARIATION_A_VALIDATION.md` records successful reopening of 150 WebPs, required path/dimension checks, alpha expectations, and zero production PNGs.

@@ -1,4 +1,3 @@
-import lucyHero from '../assets/lucy-hero.png'
 import { HERO_ASSETS } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
@@ -16,8 +15,7 @@ import './variation-hero.css'
 
 export function VariationHeroA() {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
-  const assets = HERO_ASSETS
-  const assetFilter = v.bg === '#FFFFFF' ? 'invert(1)' : 'none'
+  const assets = HERO_ASSETS[v.lucyState]
 
   return (
     <div
@@ -57,36 +55,6 @@ export function VariationHeroA() {
         style={{
           position: 'absolute',
           left: '50%',
-          top: '50%',
-          width: 'min(92vw,1500px)',
-          height: '70vh',
-          translate: '-50% -50%',
-          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
-          transform: `scale(${v.mWing})`,
-          opacity: v.oWing,
-        }}
-      >
-        <img
-          className="vh-asset vha-wing vha-wing--left"
-          src={assets.wingLeft}
-          alt=""
-          draggable={false}
-          style={{ filter: assetFilter }}
-        />
-        <img
-          className="vh-asset vha-wing vha-wing--right"
-          src={assets.wingRight}
-          alt=""
-          draggable={false}
-          style={{ filter: assetFilter }}
-        />
-      </div>
-
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: '50%',
           top: '46%',
           width: 'min(72vh,86vw)',
           aspectRatio: '1',
@@ -112,7 +80,7 @@ export function VariationHeroA() {
         }}
       >
         <img
-          src={lucyHero}
+          src={assets.lucy}
           alt=""
           style={{
             display: 'block',
@@ -123,14 +91,6 @@ export function VariationHeroA() {
             opacity: v.oLucy,
             filter: v.lucyFilter,
           }}
-        />
-        <div
-          className="vha-tear"
-          style={{ left: '47.5%', top: '41%', height: '14%', animationDuration: '900ms', opacity: v.oTears }}
-        />
-        <div
-          className="vha-tear"
-          style={{ left: '52.5%', top: '42%', height: '9%', animationDuration: '1200ms', opacity: v.oTears }}
         />
       </div>
 
@@ -148,12 +108,11 @@ export function VariationHeroA() {
           opacity: v.oBlade,
         }}
       >
-        <img className="vh-asset vh-asset--sword" src={assets.sword} alt="" draggable={false} style={{ filter: assetFilter }} />
-        <img className="vh-asset vh-asset--sword-debris" src={assets.swordDebris} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img className="vh-asset vh-asset--sword" src={assets.katana} alt="" draggable={false} />
       </div>
 
       <div className="vh-slash-arc vha-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
-        <img src={assets.slashArc} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img src={assets.slashArc} alt="" draggable={false} />
       </div>
 
       <div

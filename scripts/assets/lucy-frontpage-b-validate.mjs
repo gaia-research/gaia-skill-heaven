@@ -1,4 +1,4 @@
-/** Mechanical-only validator for Variation B. Intentionally no image previews. */
+/** Mechanical validator for Variation B; visual results live in the lead guard report. */
 import fs from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -82,7 +82,7 @@ for (const file of allWebps) {
 const report = [
   '# Front Page Variation B — Mechanical Validation', '',
   `Status: ${failures.length ? 'FAIL' : 'PASS'}`, '',
-  'Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. No broad visual review was performed by owner instruction; FP-KATANA-01 has a separately scoped authority/alpha review.', '',
+  'Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. The original worker performed no visual review; the later lead body/composite review is recorded in LUCY_GUARD_REVIEW.md. FP-KATANA-01 has a separately scoped authority/alpha review.', '',
   `WebP files reopened: ${allWebps.length}`, `Tracked frontpage PNGs: ${pngs.length}`, '', '## Checks', ...checks.map((c) => `- ${c}`), '', '## Failures', ...(failures.length ? failures.map((f) => `- ${f}`) : ['- None']), ''
 ].join('\n');
 const reportPath = path.join(root, 'docs/lucy/production/frontpage/VARIATION_B_VALIDATION.md');

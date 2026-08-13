@@ -52,6 +52,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const lane = LADDER[stop].lane
   // Below act 5 the act owns the palette; at act 5 the ladder does.
   const hell = act >= 3 && !(act === N - 1 && lane === 'h')
+  const lucyState = act === N - 1 && lane === 'u' ? ('ultra' as const) : hell ? ('hell' as const) : ('heaven' as const)
   const camZ = CAM[act]
 
   const bg = hell ? '#FFFFFF' : '#000000'
@@ -64,6 +65,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     bg,
     fg,
     dim,
+    lucyState,
     hair: hell ? 'rgba(10,10,10,.10)' : 'rgba(237,237,234,.09)',
     hair2: hell ? 'rgba(10,10,10,.22)' : 'rgba(237,237,234,.22)',
     stripe: hell ? 'rgba(10,10,10,.09)' : 'rgba(237,237,234,.09)',
@@ -94,16 +96,14 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     hellY: 0,
     hellYB: pick([0, 0, 0, 0, -11]),
     typeUp: pick([0, 0, 0, 0, 28]),
-    oWing: pick([0.5, 0.34, 0.14, 0, 0]),
     oGround: pick([0.55, 0.45, 0.3, 0.2, 0.14]),
     oHalo: pick([0.5, 0.34, 0.14, 0, 0]),
     haloRot: pick([0, -3, -7, -12, -12]),
     lucyY: pick([0, -1.5, -3, 0, 12]),
     lucyXB: pick([0, -1, -2, 1, 6]),
-    lucyBlend: hell ? ('multiply' as const) : ('screen' as const),
-    lucyFilter: hell ? 'invert(1) hue-rotate(180deg) saturate(1.3) contrast(1.06)' : 'contrast(1.04) saturate(1.05)',
-    oTears: pick([0, 0, 0, 1, 0.22]),
-    oLucy: pick([1, 1, 1, 1, 0.14]),
+    lucyBlend: 'normal' as const,
+    lucyFilter: 'none',
+    oLucy: pick([1, 1, 1, 1, 0.88]),
 
     oBlade: pick([0, 1, 0.9, 0, 0]),
     bladeX: pick([-58, -14, 46, 120, 120]),
@@ -171,7 +171,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
   // scale (1 = full pacing) written imperatively to the root element so every
   // `calc(<duration> * var(--vh-t))` in variation-hero.css speeds up with it —
   // no React re-render per input event. Hero A paints far more per frame
-  // (blend layer, filtered Lucy, perspective ground) than Hero B, so it gets a
+  // (full-resolution Lucy, perspective ground) than Hero B, so it gets a
   // harder floor: under fast scroll its long interpolations would stall
   // rather than play, so snapping beats a half-framerate crossfade.
   const rootRef = useRef<HTMLDivElement | null>(null)

@@ -1,4 +1,3 @@
-import lucyHero from '../assets/lucy-hero.png'
 import { HERO_ASSETS } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
@@ -14,8 +13,7 @@ import './variation-hero.css'
 
 export function VariationHeroB() {
   const { v, dots, rungs, rootRef } = useHeroEngine('b')
-  const assets = HERO_ASSETS
-  const assetFilter = v.bg === '#FFFFFF' ? 'invert(1)' : 'none'
+  const assets = HERO_ASSETS[v.lucyState]
 
   return (
     <div
@@ -47,7 +45,7 @@ export function VariationHeroB() {
         }}
       >
         <img
-          src={lucyHero}
+          src={assets.lucy}
           alt=""
           style={{
             display: 'block',
@@ -59,32 +57,6 @@ export function VariationHeroB() {
             filter: v.lucyFilter,
           }}
         />
-        <div
-          className="vhb-tear"
-          style={{ left: '47.5%', top: '38%', height: '13%', animationDuration: '900ms', opacity: v.oTears }}
-        />
-        <div
-          className="vhb-tear"
-          style={{ left: '52.5%', top: '39%', height: '8%', animationDuration: '1200ms', opacity: v.oTears }}
-        />
-      </div>
-
-      <div
-        aria-hidden="true"
-        className="vhb-wings-frame"
-        style={{
-          left: '-6vw',
-          top: '14vh',
-          width: '44vw',
-          height: '64vh',
-          clipPath: 'polygon(0 18%,78% 0,100% 40%,72% 100%,6% 82%)',
-          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
-          transform: `scale(${v.mWing})`,
-          transformOrigin: '0% 50%',
-          opacity: v.oWing,
-        }}
-      >
-        <img className="vh-asset vhb-wing" src={assets.wingLeft} alt="" draggable={false} style={{ filter: assetFilter }} />
       </div>
 
       <div
@@ -101,12 +73,11 @@ export function VariationHeroB() {
           opacity: v.oBlade,
         }}
       >
-        <img className="vh-asset vh-asset--sword" src={assets.sword} alt="" draggable={false} style={{ filter: assetFilter }} />
-        <img className="vh-asset vh-asset--sword-debris" src={assets.swordDebris} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img className="vh-asset vh-asset--sword" src={assets.katana} alt="" draggable={false} />
       </div>
 
       <div className="vh-slash-arc vhb-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
-        <img src={assets.slashArc} alt="" draggable={false} style={{ filter: assetFilter }} />
+        <img src={assets.slashArc} alt="" draggable={false} />
       </div>
 
       <div style={{ position: 'absolute', left: '8vw', top: '9vh', display: 'flex', alignItems: 'baseline', gap: 14, pointerEvents: 'none' }}>

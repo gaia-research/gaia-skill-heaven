@@ -2,7 +2,7 @@
 
 Status: PASS
 
-Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. No broad visual review was performed by owner instruction; FP-KATANA-01 has a separately scoped authority/alpha review.
+Scope: file presence, WebP reopen, exact required dimensions, alpha for declared transparent references, and no tracked frontpage PNG. The original worker performed no visual review; the later lead body/composite review is recorded in LUCY_GUARD_REVIEW.md. FP-KATANA-01 has a separately scoped authority/alpha review.
 
 WebP files reopened: 124
 Tracked frontpage PNGs: 0
