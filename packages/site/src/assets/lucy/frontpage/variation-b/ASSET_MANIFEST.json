@@ -1,5 +1,5 @@
 {
-  "variation": "B — Ultra Judgment",
+  "variation": "B \u2014 Ultra Judgment",
   "contract": "One gpt-image-2 atmospheric atlas; accepted character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.",
   "paidGeneration": {
     "model": "gpt-image-2",
@@ -7,9 +7,7 @@
     "raw": "packages/site/assets/workbench/lucy/FRONTPAGE-B/raw/ultra-judgment-atlas-raw.png"
   },
   "sourceGaps": {
-    "isolatedHair": "Unavailable: no accepted separate hair layers exist; not fabricated.",
-    "sheathedKatana": "Unavailable: no approved sheathed katana asset exists; not fabricated.",
-    "saya": "Unavailable: no approved saya asset exists; not fabricated."
+    "isolatedHair": "Unavailable: no accepted separate hair layers exist; not fabricated."
   },
   "assets": [
     {
@@ -297,38 +295,6 @@
       "source": "packages/site/src/assets/lucy/components/shards/lucy-shard-cluster-ultra.webp"
     },
     {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-neutral-steel.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-neutral-steel.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-left.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-left.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-right.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-right.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-dual.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-dual.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-handle.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-handle.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-01.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-01.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-02.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-02.webp"
-    },
-    {
-      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-03.webp",
-      "source": "packages/site/src/assets/lucy/components/katana/lucy-katana-slash-03.webp"
-    },
-    {
       "path": "packages/site/src/assets/lucy/frontpage/variation-b/identity/lucy-avatar-zero.webp",
       "source": "packages/site/src/assets/lucy/identity/lucy-avatar-zero.webp"
     },
@@ -587,6 +553,88 @@
       "source": "accepted character packages/site/src/assets/lucy/v2/masters/lucy-ultra.webp composited over packages/site/src/assets/lucy/frontpage/variation-b/backgrounds/lucy-bg-ultra-desktop.webp",
       "width": 1080,
       "height": 1920
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-dual.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-dual.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-handle.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-handle.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-heaven.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-hell.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-left.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-left.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-neutral-steel.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-neutral-steel.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-right.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-right.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-saya.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-saya.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-sheathed.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-sheathed.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-01.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-01.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-02.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-02.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-slash-03.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-slash-03.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-ultra.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-unsheathed.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-unsheathed.webp"
+    },
+    {
+      "path": "packages/site/src/assets/lucy/frontpage/variation-b/components/katana/lucy-katana-zero.webp",
+      "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-zero.webp"
     }
-  ]
+  ],
+  "katanaAuthority": {
+    "source": "packages/site/src/assets/lucy/frontpage/katana-authority-v2",
+    "job": "FP-KATANA-01",
+    "model": "gpt-image-2",
+    "files": [
+      "lucy-katana-dual.webp",
+      "lucy-katana-handle.webp",
+      "lucy-katana-heaven.webp",
+      "lucy-katana-hell.webp",
+      "lucy-katana-left.webp",
+      "lucy-katana-neutral-steel.webp",
+      "lucy-katana-right.webp",
+      "lucy-katana-saya.webp",
+      "lucy-katana-sheathed.webp",
+      "lucy-katana-slash-01.webp",
+      "lucy-katana-slash-02.webp",
+      "lucy-katana-slash-03.webp",
+      "lucy-katana-ultra.webp",
+      "lucy-katana-unsheathed.webp",
+      "lucy-katana-zero.webp"
+    ]
+  }
 }

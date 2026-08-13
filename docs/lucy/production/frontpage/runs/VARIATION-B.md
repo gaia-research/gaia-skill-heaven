@@ -35,8 +35,10 @@ No visual review, image preview, contact sheet, or semantic self-review was perf
 ## Source gaps retained honestly
 
 - Separate isolated hair layers are unavailable from the accepted source set.
-- Approved sheathed katana and saya assets are unavailable from the accepted source set.
-- These gaps are recorded in `ASSET_MANIFEST.json`; no substitute pixels were fabricated.
+- All katana components, including sheathed katana and saya, are supplied by
+  `frontpage/katana-authority-v2/` from the one-shot `FP-KATANA-01` atlas;
+  both variations copy those exact WebPs.
+- The isolated-hair gap remains recorded in `ASSET_MANIFEST.json`; no substitute pixels were fabricated.
 
 ## Backup
 

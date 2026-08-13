@@ -139,7 +139,10 @@ for (const state of ['heaven', 'hell']) for (const side of ['left', 'right', 'pa
 for (const side of ['left', 'right', 'pair']) await copy(v1(`components/wings/lucy-wing-ultra-${side}.webp`), out(`components/wings/lucy-wing-ultra-${side}.webp`));
 for (let index = 1; index <= 20; index++) await copy(v1(`components/shards/lucy-shard-${String(index).padStart(2, '0')}.webp`), out(`components/shards/lucy-shard-${String(index).padStart(2, '0')}.webp`));
 for (const state of ['heaven', 'hell', 'ultra']) await copy(v1(`components/shards/lucy-shard-cluster-${state}.webp`), out(`components/shards/lucy-shard-cluster-${state}.webp`));
-for (const name of ['lucy-katana-neutral-steel.webp', 'lucy-katana-left.webp', 'lucy-katana-right.webp', 'lucy-katana-dual.webp', 'lucy-katana-handle.webp', 'lucy-katana-slash-01.webp', 'lucy-katana-slash-02.webp', 'lucy-katana-slash-03.webp']) await copy(v1(`components/katana/${name}`), out(`components/katana/${name}`));
+// Use the one-shot authority atlas for every weapon component.  This keeps
+// Variation B byte-identical to Variation A and prevents a rerun from
+// restoring the retired generic kit.
+for (const name of ['lucy-katana-neutral-steel.webp', 'lucy-katana-unsheathed.webp', 'lucy-katana-left.webp', 'lucy-katana-right.webp', 'lucy-katana-sheathed.webp', 'lucy-katana-saya.webp', 'lucy-katana-handle.webp', 'lucy-katana-dual.webp', 'lucy-katana-zero.webp', 'lucy-katana-heaven.webp', 'lucy-katana-hell.webp', 'lucy-katana-ultra.webp', 'lucy-katana-slash-01.webp', 'lucy-katana-slash-02.webp', 'lucy-katana-slash-03.webp']) await copy(src(`packages/site/src/assets/lucy/frontpage/katana-authority-v2/${name}`), out(`components/katana/${name}`));
 
 // Atlas crops become opaque optical plates only. Hell is the deterministic full inversion of Heaven.
 await cropAtlas(out('backgrounds/lucy-bg-ultra-desktop.webp'), 2560, 1440, ultraRegion);
@@ -194,9 +197,7 @@ const manifest = {
   contract: 'One gpt-image-2 atmospheric atlas; accepted character masters are reused without character-pixel edits. Hell background is exact RGB inversion of the Heaven plate.',
   paidGeneration: { model: 'gpt-image-2', calls: 1, raw: path.relative(root, atlas) },
   sourceGaps: {
-    isolatedHair: 'Unavailable: no accepted separate hair layers exist; not fabricated.',
-    sheathedKatana: 'Unavailable: no approved sheathed katana asset exists; not fabricated.',
-    saya: 'Unavailable: no approved saya asset exists; not fabricated.'
+    isolatedHair: 'Unavailable: no accepted separate hair layers exist; not fabricated.'
   },
   assets: all,
 };

@@ -38,10 +38,10 @@ Constraints: absolutely no character, face, body, hand, clothing, skin, hair, we
 
 - `packages/site/src/assets/lucy/frontpage/variation-a/ASSET_MANIFEST.json`
 - P0: Heaven primary and Ultra alternate desktop/mobile hero composites, transparent master references, four state exports, and four panels.
-- P1: five portraits, namespaced expressions/eyes, eight ribbons, six wing sides plus pairs, 20 shards plus clusters, and katana exports.
+- P1: five portraits, namespaced expressions/eyes, eight ribbons, six wing sides plus pairs, 20 shards plus clusters, and the 15-file FP-KATANA-01 authority pack.
 - P2: four state backgrounds, atlas-derived overlays, reused production FX, dividers, motifs, icons, avatars, and header.
 - P3: OpenGraph, square, portrait, and story exports.
-- Honest component gaps: `SOURCE_GAPS.json` and `components/hair/INVENTORY.json` record isolated hair, sheathed katana, and saya as unavailable rather than fabricating them.
+- `SOURCE_GAPS.json` and `components/hair/INVENTORY.json` record isolated hair as unavailable rather than fabricating it. Sourced `sheathed katana` and `saya` now land from FP-KATANA-01.
 
 ## Mechanical validation
 

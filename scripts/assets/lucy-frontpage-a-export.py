@@ -138,7 +138,10 @@ def main() -> None:
         if not candidate.exists():
             candidate = LUCY / f"components/shards/lucy-shard-cluster-{state}.webp"
         export_copy(candidate, f"components/shards/lucy-shard-cluster-{state}.webp")
-    for path in sorted((LUCY / "components/katana").glob("*.webp")):
+    # Front-page weapon authority is its own one-shot production atlas, not
+    # the retired generic component kit.  Keep both variations sourced from
+    # this exact shared pack on every deterministic rerun.
+    for path in sorted((LUCY / "frontpage/katana-authority-v2").glob("*.webp")):
         export_copy(path, f"components/katana/{path.name}")
 
     # P2: atlas-derived effects only; no output below uses atlas pixels on Lucy.
@@ -197,8 +200,6 @@ def main() -> None:
     gaps = {
         "unavailable": [
             {"asset": "isolated hair layers", "reason": "flattened approved masters only; not fabricated"},
-            {"asset": "sheathed katana", "reason": "no approved isolated source"},
-            {"asset": "saya", "reason": "no approved isolated source"},
         ]
     }
     (OUT / "SOURCE_GAPS.json").write_text(json.dumps(gaps, indent=2) + "\n")

@@ -1,0 +1,275 @@
+{
+  "job": "FP-KATANA-01",
+  "model": "gpt-image-2",
+  "generation_calls": 1,
+  "source": "packages/site/assets/workbench/lucy/FP-KATANA-01/raw-gpt-image-2.png",
+  "authority_inputs": [
+    "packages/site/assets/workbench/lucy-authority/reference_crops/Lucy_Katana_reference.png",
+    "packages/site/src/assets/lucy/authority/lucy-character-sheet-master.png"
+  ],
+  "chroma_key": "#00FF00",
+  "state_contract": {
+    "zero": "neutral geometry with restrained cyan edge reflection",
+    "heaven": "neutral geometry with cyan-blue reflection",
+    "hell": "exact RGB inversion of Heaven; alpha and dimensions identical",
+    "ultra": "matching dual geometry with restrained gold interference",
+    "heaven_hell_exact_inversion": true
+  },
+  "outputs": {
+    "lucy-katana-neutral-steel.webp": {
+      "dimensions": [
+        1200,
+        320
+      ],
+      "alpha": {
+        "transparent_pixels": 368698,
+        "fractional_pixels": 672,
+        "opaque_pixels": 14630,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-unsheathed.webp": {
+      "dimensions": [
+        1800,
+        480
+      ],
+      "alpha": {
+        "transparent_pixels": 824081,
+        "fractional_pixels": 906,
+        "opaque_pixels": 39013,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-left.webp": {
+      "dimensions": [
+        1800,
+        480
+      ],
+      "alpha": {
+        "transparent_pixels": 824081,
+        "fractional_pixels": 906,
+        "opaque_pixels": 39013,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-right.webp": {
+      "dimensions": [
+        1800,
+        480
+      ],
+      "alpha": {
+        "transparent_pixels": 818771,
+        "fractional_pixels": 963,
+        "opaque_pixels": 44266,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-sheathed.webp": {
+      "dimensions": [
+        1800,
+        480
+      ],
+      "alpha": {
+        "transparent_pixels": 813144,
+        "fractional_pixels": 742,
+        "opaque_pixels": 50114,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-saya.webp": {
+      "dimensions": [
+        1800,
+        480
+      ],
+      "alpha": {
+        "transparent_pixels": 810498,
+        "fractional_pixels": 556,
+        "opaque_pixels": 52946,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-handle.webp": {
+      "dimensions": [
+        760,
+        440
+      ],
+      "alpha": {
+        "transparent_pixels": 314385,
+        "fractional_pixels": 404,
+        "opaque_pixels": 19611,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-dual.webp": {
+      "dimensions": [
+        1800,
+        720
+      ],
+      "alpha": {
+        "transparent_pixels": 1244725,
+        "fractional_pixels": 12429,
+        "opaque_pixels": 38846,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-zero.webp": {
+      "dimensions": [
+        1200,
+        320
+      ],
+      "alpha": {
+        "transparent_pixels": 368698,
+        "fractional_pixels": 672,
+        "opaque_pixels": 14630,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-heaven.webp": {
+      "dimensions": [
+        1200,
+        320
+      ],
+      "alpha": {
+        "transparent_pixels": 368698,
+        "fractional_pixels": 672,
+        "opaque_pixels": 14630,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-hell.webp": {
+      "dimensions": [
+        1200,
+        320
+      ],
+      "alpha": {
+        "transparent_pixels": 368698,
+        "fractional_pixels": 672,
+        "opaque_pixels": 14630,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-ultra.webp": {
+      "dimensions": [
+        1800,
+        720
+      ],
+      "alpha": {
+        "transparent_pixels": 1244725,
+        "fractional_pixels": 12429,
+        "opaque_pixels": 38846,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-slash-01.webp": {
+      "dimensions": [
+        720,
+        120
+      ],
+      "alpha": {
+        "transparent_pixels": 75914,
+        "fractional_pixels": 603,
+        "opaque_pixels": 9883,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-slash-02.webp": {
+      "dimensions": [
+        720,
+        120
+      ],
+      "alpha": {
+        "transparent_pixels": 75444,
+        "fractional_pixels": 588,
+        "opaque_pixels": 10368,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "lucy-katana-slash-03.webp": {
+      "dimensions": [
+        720,
+        120
+      ],
+      "alpha": {
+        "transparent_pixels": 75014,
+        "fractional_pixels": 561,
+        "opaque_pixels": 10825,
+        "transparent_corners": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}
