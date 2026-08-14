@@ -1,6 +1,6 @@
 # Lucy Full-Body Guard Review
 
-Status: **PASS after one deterministic Ultra matte recovery.**
+Status: **FAIL — owner rejection supersedes the prior v3 pass.**
 
 ## Review scope
 
@@ -14,26 +14,28 @@ Status: **PASS after one deterministic Ultra matte recovery.**
 | State | Anatomy / modesty | State contract | Alpha / inversion | Result |
 |---|---|---|---|---|
 | Zero | seated anatomy readable; opaque skirt | closed eyes, one katana, no wings or shards | mixed alpha; normal/dark composites clean | PASS |
-| Heaven | one head; 2 arms/hands; 2 legs/feet; covered skirt | two diamond eyes, one steel katana, cyan shard wings | mixed alpha; no strong-green exterior pixels | PASS |
-| Hell | geometry identical to Heaven | closed eyes, one red tear, one katana | byte-identical alpha; full RGB inversion including skin outside bounded face mask | PASS |
-| Ultra | one head; 2 arms/hands; 2 legs/feet; covered skirt | one gold diamond eye, one closed tear eye, two matching katanas, gold wings | recovered known-checker matte; light/dark composites clean | PASS |
+| Heaven | anatomy count was previously accepted | state art present | face/head/hair are present in RGB but ghosted by low alpha; face-core alpha-density gate fails | FAIL |
+| Hell | registered to Heaven | inversion and face edit present | byte-identical defective Heaven alpha; head loss remains | FAIL |
+| Ultra | anatomy count was previously accepted | Ultra state art present | 21,372 strong-magenta exterior partial-alpha pixels | FAIL |
 
 ## Corrected review finding
 
-The first promoted Ultra v3 matte was headless and omitted the light hair and
-gold wings even though the retained raw was complete. It has been superseded by
-`scripts/assets/lucy-v3-ultra-rematte.py`, which uses only the retained raw,
-known checker plate, and retained body matte. No model call or painted geometry
-was added. The v3 validator now has explicit head/hair/gold-wing occupancy gates.
+The prior occupancy-based validator was insufficient. Heaven's nominal head
+occupancy hid a median nonzero alpha of only 38 in the reviewed head/hair ROI,
+while its tight face core has only 6.625 percent of pixels at alpha 192 or
+higher. Ultra's checker reconstruction promoted magenta plate contamination.
+Both failures are now regression controls in
+`scripts/assets/test-lucy-matte-guard.py`.
 
 Zero's source retains green RGB under transparent pixels, which a raw-channel
 viewer can display as green. Its normal and dark composites show that the alpha
 field is valid; this is not a visible production matte.
 
-## Non-blocking brandkit gaps
+## Recovery disposition
 
-- Isolated hair layers remain unavailable.
-- Flattened v3 wing/ribbon/shard crops include adjacent body/effect pixels and
-  are retained as reference-only, not consumed by the React hero.
-- Frozen atmospheric hero composites can show authored atlas panel bars; the
-  live prototype uses true-alpha v3 bodies over layout/CSS instead.
+- All v3 Heaven/Hell/Ultra character pixels and character-bearing derivatives
+  are rejected references, not approved brandkit assets.
+- Character-free background/FX plates, Zero/shared sources, canonical authority,
+  and the authority katana pack remain eligible.
+- V4 is an active three-set owner candidate gate. No downstream rebuild or live
+  import change occurs before owner selection.

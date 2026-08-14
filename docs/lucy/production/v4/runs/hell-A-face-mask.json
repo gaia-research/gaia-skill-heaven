@@ -1,0 +1,9 @@
+{
+  "candidate": "hell-A",
+  "face_crop_size": [370, 370],
+  "shapes": [
+    {"type": "ellipse", "box": [92, 148, 176, 232]},
+    {"type": "ellipse", "box": [174, 136, 263, 224]},
+    {"type": "polygon", "points": [[208, 180], [245, 176], [251, 270], [230, 292], [216, 245]]}
+  ]
+}
