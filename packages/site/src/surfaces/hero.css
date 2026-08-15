@@ -40,7 +40,9 @@
   --hx-faint: rgba(23, 22, 24, 0.44);
   --hx-line: var(--sh-hell-line);
   --hx-line-strong: rgba(23, 22, 24, 0.3);
-  --hx-accent: #b8437f;
+  /* monochrome: the invert carries no colour at all — that is what makes the
+     impact frame land. The character art is exempt; it is already inverted. */
+  --hx-accent: var(--sh-hell-ink);
 }
 
 /* the 46ms shear — steps(3,end), max 8px, nothing eases */
@@ -105,7 +107,9 @@
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
-  align-items: center;
+  /* start-aligned: centring re-flowed the plate whenever the blurb changed
+     line count, so clicking a direction moved the plate you just clicked */
+  align-items: start;
   gap: 0 clamp(16px, 3vw, 48px);
   padding: clamp(18px, 2.4vw, 34px) var(--sh-gutter) 0;
   max-width: var(--sh-maxw);
@@ -119,9 +123,10 @@
 .hx__reg {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: clamp(16px, 3vw, 34px);
-  color: var(--hx-faint);
+  color: var(--hx-dim);
 }
 .hx__reg-cross { width: 13px; height: 13px; flex: none; }
 .hx__reg-cross line { stroke: currentColor; stroke-width: 1; }
@@ -135,6 +140,35 @@
   letter-spacing: 0.24em;
   text-transform: uppercase;
 }
+.hx__reg-text .is-here { color: var(--hx-ink); }
+.hx__reg-text i { font-style: normal; opacity: 0.5; }
+
+.hx__reg-plate {
+  font-family: var(--sh-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--hx-dim);
+  margin-left: auto;
+  padding-left: 18px;
+  border-left: 1px solid var(--hx-line);
+}
+
+/* the one filled element in the chrome */
+.hx__navcta {
+  border: 1px solid var(--hx-ink);
+  background: var(--hx-ink);
+  color: var(--hx-ground);
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  margin-left: 14px;
+  cursor: pointer;
+  transition: background 120ms linear, border-color 120ms linear;
+}
+.hx__navcta:hover { background: var(--hx-accent); border-color: var(--hx-accent); }
 
 .hx__wordmark { display: block; }
 .hx__skill {
@@ -150,6 +184,10 @@
 .hx__state {
   display: block;
   font-family: var(--sh-display);
+  /* Anton ships weight 400 only. Inheriting the h1's 700 makes the browser
+     synthesise bold, which clogs the counters and stops it reading as Anton. */
+  font-weight: 400;
+  font-synthesis-weight: none;
   font-size: clamp(58px, 11.2vw, 158px);
   line-height: 0.82;
   letter-spacing: 0.005em;
@@ -167,6 +205,7 @@
 }
 .hx__blurb {
   margin: 12px 0 0;
+  min-height: 3.1em;
   font-size: 15px;
   line-height: 1.55;
   color: var(--hx-dim);
@@ -242,27 +281,7 @@
   object-fit: contain;
   object-position: bottom center;
 }
-.hx__katana {
-  position: absolute;
-  left: -14%;
-  bottom: 16%;
-  width: 74%;
-  transform: rotate(-27deg);
-  opacity: 0.9;
-  pointer-events: none;
-}
-.hx__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.22;
-  pointer-events: none;
-  transition: opacity var(--sh-impact) linear;
-}
-.hx--hell .hx__bg { opacity: 0.12; }
-
+.hx--hell 
 /* --------------------------------------------------------------------------
    the instrument — direction plates, ladder, slot strip
    -------------------------------------------------------------------------- */
@@ -299,7 +318,7 @@
   border: 0;
   border-right: 1px solid var(--hx-line);
   background: transparent;
-  color: var(--hx-faint);
+  color: var(--hx-dim);
   text-align: left;
   padding: 16px 14px 18px;
   cursor: pointer;
@@ -307,14 +326,23 @@
 }
 .hx__dir:last-child { border-right: 1px solid var(--hx-line); }
 .hx__dir:hover { color: var(--hx-dim); background: var(--hx-line); }
-.hx__dir[aria-selected='true'] { color: var(--hx-ink); }
+.hx__dir[aria-checked='true'] { color: var(--hx-ink); }
 .hx__dir-mark {
   display: block;
   width: 26px; height: 2px;
   background: var(--hx-line-strong);
   margin-bottom: 10px;
 }
-.hx__dir[aria-selected='true'] .hx__dir-mark { background: var(--dir-hue); }
+.hx__dir[aria-checked='true'] .hx__dir-mark {
+  width: 56px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--sh-violet), var(--sh-blue), var(--sh-cyan),
+    var(--sh-mint), var(--sh-rose), var(--sh-magenta)
+  );
+}
+.hx--hell .hx__dir[aria-checked='true'] .hx__dir-mark { background: var(--hx-ink); }
 .hx__dir-cmd {
   display: block;
   font-family: var(--sh-mono);
@@ -324,12 +352,13 @@
 .hx__dir-role {
   display: block;
   font-family: var(--sh-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin-top: 5px;
-  color: var(--hx-faint);
+  color: var(--hx-dim);
 }
+.hx__dir[aria-checked='true'] .hx__dir-role { color: var(--hx-accent); }
 
 /* ladder + readout */
 .hx__gauge {
@@ -338,7 +367,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 108px;
+  min-height: 156px;
 }
 .hx__gauge-head {
   display: flex;
@@ -352,7 +381,7 @@
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--hx-faint);
+  color: var(--hx-dim);
 }
 
 .hx__rungs { display: flex; gap: 0; border: 1px solid var(--hx-line-strong); }
@@ -362,7 +391,7 @@
   border: 0;
   border-right: 1px solid var(--hx-line);
   background: transparent;
-  color: var(--hx-faint);
+  color: var(--hx-dim);
   font-family: var(--sh-mono);
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -415,9 +444,9 @@
 }
 .hx__noladder b { color: var(--hx-ink); font-weight: 500; }
 
-.hx .sh-chip { border-color: var(--hx-line-strong); color: var(--hx-faint); }
-.hx .sh-chip--wip { border-color: rgba(217, 178, 92, 0.55); color: #c9a24f; }
-.hx--hell .sh-chip--wip { border-color: rgba(140, 96, 20, 0.6); color: #7a5510; }
+.hx .sh-chip { border-color: var(--hx-line-strong); color: var(--hx-dim); }
+.hx .sh-chip--wip { border-color: rgba(217, 178, 92, 0.55); color: var(--sh-ultra); }
+.hx--hell .sh-chip--wip { border-color: var(--hx-line-strong); color: var(--hx-ink); }
 
 /* --------------------------------------------------------------------------
    responsive
@@ -429,19 +458,7 @@
     height: clamp(230px, 34vh, 330px);
     margin-bottom: 4px;
   }
-  .hx__katana { display: none; }
-  .hx__thesis {
-  max-width: var(--sh-maxw);
-  margin: 0 auto;
-  padding: 11px var(--sh-gutter) 12px;
-  border-bottom: 1px solid var(--hx-line);
-  font-family: var(--sh-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--hx-dim);
-}
-
+    
 .hx__instrument-inner { grid-template-columns: minmax(0, 1fr); }
   .hx__gauge {
     border-left: 0;
@@ -452,7 +469,7 @@
 
 @media (max-width: 700px) {
   .hx { min-height: auto; }
-  .hx__navlinks { display: none; }
+  .hx__navlinks a { padding: 4px 10px; }
   .hx__dirs { grid-template-columns: repeat(2, 1fr); }
   .hx__dir { border-bottom: 1px solid var(--hx-line); }
   .hx__rungs { flex-wrap: wrap; }
