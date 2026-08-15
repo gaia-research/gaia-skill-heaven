@@ -41,6 +41,7 @@ import {
 } from '../product'
 import '../styles/system.css'
 import './landing.css'
+import { SlashReel } from './SlashReel'
 
 /* -- the commission: real art, no placeholder slots left except the logo -- */
 import lucyZero from '../assets/lucy/v5/masters/lucy-zero.png'
@@ -56,6 +57,7 @@ import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
 import iconHeaven from '../assets/lucy/identity/lucy-state-icon-heaven.svg'
 import iconHell from '../assets/lucy/identity/lucy-state-icon-hell.svg'
 import iconUltra from '../assets/lucy/identity/lucy-state-icon-ultra.svg'
+import brandLogo from '../assets/brand/skill-heaven-logo.png'
 
 const SURFACE_ICON: Record<SurfaceId, string> = {
   zero: iconZero,
@@ -295,9 +297,7 @@ export default function Landing() {
           <a className="lp-nav__back" href="#/" aria-label="Back to the door">
             <span aria-hidden="true">←</span> THE DOOR
           </a>
-          <span className="lp-slot lp-slot--logo" aria-hidden="true">
-            <span>SVG</span>
-          </span>
+          <img className="lp-nav__logo" src={brandLogo} alt="" aria-hidden="true" />
           <span className="lp-nav__name">{SITE.repoName}</span>
           <span className="lp-nav__wip">{SITE.version}</span>
         </div>
@@ -340,6 +340,7 @@ export default function Landing() {
               session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
               it.
             </p>
+            <SlashReel />
           </div>
 
           <div className="lp-dose sh-panel">
@@ -913,14 +914,12 @@ export default function Landing() {
         <div className="lp-foot__cols">
           <div className="lp-foot__brand">
             <div className="lp-foot__mark">
-              <span className="lp-slot lp-slot--logo lp-slot--lg" aria-hidden="true">
-                <span>SVG</span>
-              </span>
+              <img className="lp-foot__logo" src={brandLogo} alt={`${SITE.name} mark`} loading="lazy" decoding="async" />
               <span className="lp-nav__name">{SITE.repoName}</span>
             </div>
             <p className="lp-foot__slot">
-              LOGO SLOT · still open. Prismatic angel, side view, sword lowered — vector, single
-              colour + spectrum refraction.
+              One angel, two directions. Converge toward a plan you approve, or explore a wider
+              search — same door, same session, nothing left behind.
             </p>
           </div>
           <FootCol
