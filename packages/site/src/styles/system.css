@@ -8,9 +8,10 @@
    Shared by every surface. Per-surface files scope under their own prefix.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+/* Self-hosted — never a font CDN. An external stylesheet host is a
+   third-party runtime dependency that blocks first paint and fails closed on
+   restricted networks, and the fallback stack is not the design. */
+@import url('../assets/fonts/fonts.css');
 
 :root {
   /* ---- ground: warm desaturated grey-brown, never #000 ---- */
@@ -206,4 +207,15 @@ button { font-family: inherit; }
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* screen-reader-only, for readouts that must be announced but not shown */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

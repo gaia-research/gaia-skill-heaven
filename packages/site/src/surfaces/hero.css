@@ -1,0 +1,462 @@
+/* ==========================================================================
+   Hero — "The Instrument"
+   A hero you operate, not one you watch. Every selector scoped under .hx
+   so it cannot collide with the landing surface (.lp).
+   ========================================================================== */
+
+.hx {
+  /* ground + ink are swapped wholesale when the explore direction is armed —
+     Hell's canon ground is paper, and the character master is already a
+     full RGB inversion, so the page inverts and the art does not. */
+  --hx-ground: var(--sh-void);
+  --hx-panel: var(--sh-panel);
+  --hx-ink: var(--sh-ink);
+  --hx-dim: var(--sh-ink-dim);
+  --hx-faint: var(--sh-ink-faint);
+  --hx-line: var(--sh-line);
+  --hx-line-strong: var(--sh-line-strong);
+  --hx-accent: var(--sh-zero);
+
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--hx-ground);
+  color: var(--hx-ink);
+  overflow: hidden;
+  /* the impact frame is a cut, never a fade */
+  transition: background var(--sh-impact) linear, color var(--sh-impact) linear;
+}
+
+.hx--zero   { --hx-accent: var(--sh-zero); }
+.hx--heaven { --hx-accent: var(--sh-heaven); }
+.hx--ultra  { --hx-accent: var(--sh-ultra); }
+
+.hx--hell {
+  --hx-ground: var(--sh-hell-paper);
+  --hx-panel: rgba(23, 22, 24, 0.04);
+  --hx-ink: var(--sh-hell-ink);
+  --hx-dim: rgba(23, 22, 24, 0.62);
+  --hx-faint: rgba(23, 22, 24, 0.44);
+  --hx-line: var(--sh-hell-line);
+  --hx-line-strong: rgba(23, 22, 24, 0.3);
+  --hx-accent: #b8437f;
+}
+
+/* the 46ms shear — steps(3,end), max 8px, nothing eases */
+@keyframes hx-shear {
+  0%   { transform: translate3d(0, 0, 0); }
+  33%  { transform: translate3d(-8px, 1px, 0) skewX(4deg); }
+  66%  { transform: translate3d(6px, -2px, 0) skewX(-3deg); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.hx--impact .hx__plate,
+.hx--impact .hx__figure { animation: hx-shear var(--sh-impact) steps(3, end) 1; }
+
+/* --------------------------------------------------------------------------
+   chrome
+   -------------------------------------------------------------------------- */
+.hx__nav {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  padding: 14px var(--sh-gutter);
+  border-bottom: 1px solid var(--hx-line);
+}
+.hx__brand { display: flex; align-items: center; gap: 12px; }
+
+/* logo slot — the one asset still awaiting commission, so it stays a slot */
+.hx__logo {
+  width: 30px; height: 30px;
+  border: 1px dashed var(--hx-line-strong);
+  clip-path: polygon(14% 0, 100% 22%, 86% 100%, 0 76%);
+  background:
+    repeating-linear-gradient(122deg, rgba(165, 138, 224, 0.28) 0 2px, transparent 2px 6px);
+  flex: none;
+}
+.hx__brandname {
+  font-variation-settings: 'wdth' 92, 'wght' 800;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.hx__navlinks { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.hx__navlinks a {
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hx-dim);
+  padding: 4px 14px;
+  border-left: 1px solid var(--hx-line);
+}
+.hx__navlinks a:first-child { border-left: 0; }
+.hx__navlinks a:hover { color: var(--hx-ink); }
+
+/* --------------------------------------------------------------------------
+   body — plate left, figure right
+   -------------------------------------------------------------------------- */
+.hx__body {
+  position: relative;
+  z-index: 4;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0 clamp(16px, 3vw, 48px);
+  padding: clamp(18px, 2.4vw, 34px) var(--sh-gutter) 0;
+  max-width: var(--sh-maxw);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hx__plate { position: relative; z-index: 3; padding-bottom: clamp(14px, 2vw, 26px); }
+
+/* registration row — marks, not a kicker label */
+.hx__reg {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: clamp(16px, 3vw, 34px);
+  color: var(--hx-faint);
+}
+.hx__reg-cross { width: 13px; height: 13px; flex: none; }
+.hx__reg-cross line { stroke: currentColor; stroke-width: 1; }
+.hx__reg-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 1px solid currentColor; flex: none;
+}
+.hx__reg-text {
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.hx__wordmark { display: block; }
+.hx__skill {
+  display: block;
+  font-variation-settings: 'wdth' 112, 'wght' 800;
+  font-size: clamp(18px, 2.5vw, 32px);
+  letter-spacing: 0.055em;
+  line-height: 1;
+  margin-bottom: 0.34em;
+  color: var(--hx-dim);
+  text-transform: uppercase;
+}
+.hx__state {
+  display: block;
+  font-family: var(--sh-display);
+  font-size: clamp(58px, 11.2vw, 158px);
+  line-height: 0.82;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  margin: 0 0 0 -0.045em;
+  color: var(--hx-ink);
+}
+.hx__role {
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--hx-accent);
+  margin-top: 14px;
+}
+.hx__blurb {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--hx-dim);
+  max-width: 46ch;
+}
+
+/* the live command readout */
+.hx__cmd {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--hx-line-strong);
+  background: var(--hx-panel);
+  margin-top: 22px;
+  max-width: 520px;
+}
+.hx__cmd code {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sh-mono);
+  font-size: 13px;
+  padding: 12px 14px;
+  color: var(--hx-ink);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.hx__cmd code b { color: var(--hx-accent); font-weight: 400; }
+.hx__copy {
+  flex: none;
+  border: 0;
+  border-left: 1px solid var(--hx-line-strong);
+  background: transparent;
+  color: var(--hx-dim);
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.hx__copy:hover { color: var(--hx-ink); background: var(--hx-line); }
+
+.hx__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.hx__actions .sh-cta { border-color: var(--hx-ink); background: var(--hx-ink); color: var(--hx-ground); }
+.hx__actions .sh-cta:hover { background: var(--hx-accent); border-color: var(--hx-accent); }
+.hx__actions .sh-cta--ghost { background: transparent; color: var(--hx-ink); border-color: var(--hx-line-strong); }
+.hx__actions .sh-cta--ghost:hover { background: transparent; color: var(--hx-accent); border-color: var(--hx-accent); }
+
+.hx__install {
+  margin-top: 12px;
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--hx-dim);
+  word-break: break-all;
+}
+
+/* --------------------------------------------------------------------------
+   figure — the character carries the state
+   -------------------------------------------------------------------------- */
+.hx__figure {
+  position: relative;
+  align-self: end;
+  justify-self: center;
+  width: 100%;
+  height: clamp(400px, 66vh, 700px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.hx__figure img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom center;
+}
+.hx__katana {
+  position: absolute;
+  left: -14%;
+  bottom: 16%;
+  width: 74%;
+  transform: rotate(-27deg);
+  opacity: 0.9;
+  pointer-events: none;
+}
+.hx__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity var(--sh-impact) linear;
+}
+.hx--hell .hx__bg { opacity: 0.12; }
+
+/* --------------------------------------------------------------------------
+   the instrument — direction plates, ladder, slot strip
+   -------------------------------------------------------------------------- */
+.hx__instrument {
+  position: relative;
+  z-index: 5;
+  border-top: 1px solid var(--hx-line-strong);
+  background: var(--hx-ground);
+}
+.hx__thesis {
+  max-width: var(--sh-maxw);
+  margin: 0 auto;
+  padding: 11px var(--sh-gutter) 12px;
+  border-bottom: 1px solid var(--hx-line);
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hx-dim);
+}
+
+.hx__instrument-inner {
+  max-width: var(--sh-maxw);
+  margin: 0 auto;
+  padding: 0 var(--sh-gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+
+/* direction plates */
+.hx__dirs { display: grid; grid-template-columns: repeat(4, 1fr); }
+.hx__dir {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid var(--hx-line);
+  background: transparent;
+  color: var(--hx-faint);
+  text-align: left;
+  padding: 16px 14px 18px;
+  cursor: pointer;
+  transition: color 60ms linear, background 60ms linear;
+}
+.hx__dir:last-child { border-right: 1px solid var(--hx-line); }
+.hx__dir:hover { color: var(--hx-dim); background: var(--hx-line); }
+.hx__dir[aria-selected='true'] { color: var(--hx-ink); }
+.hx__dir-mark {
+  display: block;
+  width: 26px; height: 2px;
+  background: var(--hx-line-strong);
+  margin-bottom: 10px;
+}
+.hx__dir[aria-selected='true'] .hx__dir-mark { background: var(--dir-hue); }
+.hx__dir-cmd {
+  display: block;
+  font-family: var(--sh-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+}
+.hx__dir-role {
+  display: block;
+  font-family: var(--sh-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 5px;
+  color: var(--hx-faint);
+}
+
+/* ladder + readout */
+.hx__gauge {
+  border-left: 1px solid var(--hx-line-strong);
+  padding: 14px 0 16px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 108px;
+}
+.hx__gauge-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.hx__gauge-title {
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--hx-faint);
+}
+
+.hx__rungs { display: flex; gap: 0; border: 1px solid var(--hx-line-strong); }
+.hx__rung {
+  flex: 1;
+  appearance: none;
+  border: 0;
+  border-right: 1px solid var(--hx-line);
+  background: transparent;
+  color: var(--hx-faint);
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 9px 4px 8px;
+  cursor: pointer;
+  transition: color 60ms linear, background 60ms linear;
+}
+.hx__rung:last-child { border-right: 0; }
+.hx__rung:hover { color: var(--hx-dim); background: var(--hx-line); }
+.hx__rung[aria-checked='true'] {
+  color: var(--hx-ground);
+  background: var(--hx-ink);
+}
+
+/* the slot strip — how many skills may be auto-summoned per gap */
+.hx__slots { display: flex; align-items: center; gap: 7px; margin-top: 13px; flex-wrap: wrap; }
+.hx__slot {
+  width: 26px; height: 9px;
+  border: 1px solid var(--hx-line-strong);
+  flex: none;
+}
+.hx__slot--on { background: var(--hx-accent); border-color: var(--hx-accent); }
+.hx__wip {
+  margin: 9px 0 0;
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  color: var(--hx-dim);
+  max-width: 62ch;
+}
+
+.hx__slot-read {
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--hx-dim);
+  margin-left: 4px;
+}
+
+/* the two surfaces that carry no ladder say so, in the ladder's own place */
+.hx__noladder {
+  border: 1px dashed var(--hx-line-strong);
+  padding: 12px 14px;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--hx-dim);
+}
+.hx__noladder b { color: var(--hx-ink); font-weight: 500; }
+
+.hx .sh-chip { border-color: var(--hx-line-strong); color: var(--hx-faint); }
+.hx .sh-chip--wip { border-color: rgba(217, 178, 92, 0.55); color: #c9a24f; }
+.hx--hell .sh-chip--wip { border-color: rgba(140, 96, 20, 0.6); color: #7a5510; }
+
+/* --------------------------------------------------------------------------
+   responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .hx__body { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .hx__figure {
+    order: -1;
+    height: clamp(230px, 34vh, 330px);
+    margin-bottom: 4px;
+  }
+  .hx__katana { display: none; }
+  .hx__thesis {
+  max-width: var(--sh-maxw);
+  margin: 0 auto;
+  padding: 11px var(--sh-gutter) 12px;
+  border-bottom: 1px solid var(--hx-line);
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hx-dim);
+}
+
+.hx__instrument-inner { grid-template-columns: minmax(0, 1fr); }
+  .hx__gauge {
+    border-left: 0;
+    border-top: 1px solid var(--hx-line);
+    padding: 14px 0 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .hx { min-height: auto; }
+  .hx__navlinks { display: none; }
+  .hx__dirs { grid-template-columns: repeat(2, 1fr); }
+  .hx__dir { border-bottom: 1px solid var(--hx-line); }
+  .hx__rungs { flex-wrap: wrap; }
+  .hx__rung { flex: 1 0 33.333%; border-bottom: 1px solid var(--hx-line); }
+  .hx__blurb { max-width: none; }
+  .hx__cmd code { font-size: 12px; }
+}

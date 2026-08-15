@@ -9,7 +9,7 @@
     {
       "name": "claude-zero",
       "source": "./packages/claude-zero/plugin",
-      "description": "Working prototype of the Claude Code door to Skill Zero under the Skill Heaven umbrella, actively tested for public use — /skill-zero owns boot-time off|low|med; the launcher also ships the axis commands /skill-heaven, /skill-hell, and /skill-ultra, with /skill-hell as the live Hell summon door. Interfaces may change. Built on skill-zero core."
+      "description": "Working prototype of the Claude Code door to Skill Zero under the Skill Heaven umbrella, actively tested for public use — /skill-zero owns boot-time off|low|med and ships /summon by default; the launcher also ships /skill-heaven and /skill-hell, two directions of the same summon sharing one off...max ladder (PROVISIONAL counts/defaults), plus /skill-ultra as the controller with no ladder of its own, with /skill-hell as the live Hell summon door. Interfaces may change. Built on skill-zero core."
     }
   ]
 }

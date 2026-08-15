@@ -20,19 +20,27 @@ harness's channel, not this manifest. Two layers:
   ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
-**Core product model — one entropy ladder (N11).** The user-facing dial is a
-single axis, `off · low · med · high · xhigh · max · ultra`, measuring **skill
-entropy** — the disorder a skill loadout adds to a session's context. **Heaven
-is the low-entropy region** (`off · low · med`), **Hell the high-entropy
-region** (`high · xhigh · max`), **`ultra` above**; a mode is a *region* of the
-ladder, not a second orthogonal dial. Up the ladder quality and cost rise
-together — **Skill Hell routes summons through gaia mcp as a mixture-of-agents
-for skills** (D5), so more summoned skills mean more experts in context, better
-until it isn't. The benchmark shapes the **entropy curve** (quality and cost vs
-skill entropy), not a token-savings headline (B6); hell-safe eligibility is
-read from the Skill Tree stamps, not measured live. Public domain:
-[`skill-heaven.dev`](https://skill-heaven.dev), served from `packages/site`
-(N12).
+**Core product model — one mechanic, four surfaces (N12).** The user-facing
+mechanic is **`/summon`** — one skill into context, one session, nothing
+installed — present in every implementation, at every rung, on every door.
+**Skill Zero ships `/summon` by default** as the product floor, with none of
+the choosing automated. **`/skill-heaven` (converge)** and **`/skill-hell`
+(explore)** are two directions of the same summon over **one shared MCP**,
+and **each carries the same discrete ladder `off · low · med · high · xhigh ·
+max`**, setting **how many skills the agent may auto-summon per capability
+gap** — the ladder is per direction, not one global axis. Per-rung counts and
+per-direction defaults are **PROVISIONAL** until the benchmark lands (working
+mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven defaults
+`low`, Hell defaults `high`). **`/skill-ultra` is the controller** — it picks
+direction and depth per gap and has **no ladder of its own**. Up the ladder
+quality and cost rise together — **Skill Hell routes summons through gaia mcp
+as a mixture-of-agents for skills** (D5), so more summoned skills mean more
+experts in context, better until it isn't. The benchmark shapes the **entropy
+curve** (quality and cost vs skill entropy), not a token-savings headline
+(B6); **Heaven/Hell stamps are not built** — routing falls back to relevance
+ranking, and no surface may present stamp-gated routing as running. Public
+domain: [`skill-heaven.dev`](https://skill-heaven.dev), served from
+`packages/site` (N9/N11).
 
 ## Layout
 
@@ -147,11 +155,19 @@ happens *inside* one of those two, it does not add a third.
   **undocumented, version-pinned** env knob
   (`CLAUDE_CODE_DISABLE_BUNDLED_SKILLS`) — **re-verify on every Claude Code
   upgrade.**
-- **Two ladder halves (founder ruling, `docs/LADDER-FLOW.md`).** Heaven is
-  `off|low|med` (`med = native`) and is selected at boot. Hell is
-  `high|xhigh|max|ultra`, additive, and works live through `/skill-hell`;
-  `high` is the default. Hell is not P2-gated. Only `ultra` refuses, because it
-  is unratified — never describe that as a gate.
+- **One mechanic, four surfaces (founder ruling N12, `docs/LADDER-FLOW.md`).**
+  `/summon` — one skill into context, one session, nothing installed — is
+  present on every door at every rung. Skill Zero ships it by default as the
+  product floor. `/skill-heaven` (converge) and `/skill-hell` (explore) are
+  two directions of the same summon over one shared MCP, and each carries the
+  same discrete ladder `off…max`, setting how many skills the agent may
+  auto-summon per capability gap — PROVISIONAL until the benchmark lands
+  (working mapping `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven
+  defaults `low`, Hell defaults `high`). `/skill-ultra` is the controller over
+  both — it picks direction and depth per gap and has no ladder of its own.
+  Hell is not gated, locked, or refused at any rung; only `/skill-ultra`
+  refuses, because it is unratified — never describe that as a gate.
+  Heaven/Hell stamps are not built; routing falls back to relevance ranking.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or
   skills. The only writes live inside a disposable `mkdtemp` session dir.
