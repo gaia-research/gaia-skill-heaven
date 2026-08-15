@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './hero.css';
 
 import {
+  DOORS,
   INSTALL,
   LADDER_WIP,
   MECHANIC,
@@ -151,8 +152,13 @@ export default function Hero() {
         <div className="hx__navlinks">
           <Link to="/landing">The document</Link>
           <a href={SITE.repoUrl}>GitHub</a>
-          <button className="hx__navcta" type="button" onClick={() => copy(INSTALL.sh, 'nav')}>
-            {copied === 'nav' ? 'copied ⏎' : 'install ⏎'}
+          <button
+            className="hx__navcta"
+            type="button"
+            onClick={() => copy(DOORS[0].launch, 'nav')}
+            title="Copy the launch command for the flagship door"
+          >
+            {copied === 'nav' ? 'copied ⏎' : `${DOORS[0].launch} ⏎`}
           </button>
         </div>
       </nav>
@@ -174,6 +180,7 @@ export default function Hero() {
                 </span>
               ))}
             </span>
+            <span className="hx__reg-bridge" aria-hidden="true" />
             <span className="hx__reg-plate" aria-hidden="true">Plate no. 001</span>
           </div>
 

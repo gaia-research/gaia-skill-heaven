@@ -143,15 +143,19 @@
 .hx__reg-text .is-here { color: var(--hx-ink); }
 .hx__reg-text i { font-style: normal; opacity: 0.5; }
 
+.hx__reg-bridge {
+  flex: 1 1 40px;
+  min-width: 24px;
+  height: 1px;
+  background: var(--hx-line-strong);
+}
 .hx__reg-plate {
   font-family: var(--sh-mono);
   font-size: 9.5px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--hx-dim);
-  margin-left: auto;
-  padding-left: 18px;
-  border-left: 1px solid var(--hx-line);
+  flex: none;
 }
 
 /* the one filled element in the chrome */
@@ -205,7 +209,7 @@
 }
 .hx__blurb {
   margin: 12px 0 0;
-  min-height: 3.1em;
+  min-height: 4.7em;
   font-size: 15px;
   line-height: 1.55;
   color: var(--hx-dim);
@@ -469,7 +473,18 @@
 
 @media (max-width: 700px) {
   .hx { min-height: auto; }
-  .hx__navlinks a { padding: 4px 10px; }
+  .hx__navlinks a { padding: 4px 10px; font-size: 10px; }
+  .hx__navcta { margin-left: 8px; padding: 5px 10px; font-size: 10px; }
+  .hx__nav { padding: 10px var(--sh-gutter); gap: 8px 12px; }
+  /* the reserve exists to stop the CTA stack shifting between states; on a
+     phone the states are read one at a time and the height costs the fold */
+  .hx__blurb { min-height: 0; }
+  .hx__figure { height: clamp(150px, 22vh, 210px); }
+  .hx__reg { margin-bottom: 12px; }
+  .hx__reg-plate, .hx__reg-bridge { display: none; }
+  .hx__cmd { margin-top: 14px; }
+  .hx__actions { margin-top: 12px; }
+  .hx__body { padding-top: 12px; }
   .hx__dirs { grid-template-columns: repeat(2, 1fr); }
   .hx__dir { border-bottom: 1px solid var(--hx-line); }
   .hx__rungs { flex-wrap: wrap; }
