@@ -33,24 +33,18 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const assets = HERO_ASSET_SETS[set][v.lucyState]
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
   // export) and set-C's has an opaque white ground that can't sit on the black
-  // Heaven page. Set-A is the only transparent Heaven with a clear face; the
-  // earlier hair issue is a framing/scale problem, handled by FIG below.
+  // Heaven back on set-A per owner.
   const lucyImg = assets.lucy
   // Hell inverts its wings too (the whole scene is an RGB inversion).
   const wingFilter = v.scene === 'hell' ? 'invert(1)' : 'none'
 
-  // Stroke (outline) + diagonal hatch fill, never a solid fill (owner + the
-  // original). Zero is the exception: bone fill + dark stroke, kept legible.
-  const wordStyle =
-    v.wordFillBg === 'none'
-      ? { color: v.fg, WebkitTextStroke: v.wordStroke }
-      : {
-          color: 'transparent',
-          backgroundImage: v.wordFillBg,
-          WebkitBackgroundClip: 'text' as const,
-          backgroundClip: 'text' as const,
-          WebkitTextStroke: v.wordStroke,
-        }
+  // Photoshop-style: SOLID fill + a coloured TEXT BORDER (stroke). paint-order
+  // keeps the border reading as an outer outline rather than eating the fill.
+  const wordStyle = {
+    color: v.wordFill,
+    WebkitTextStroke: v.wordStroke,
+    paintOrder: 'stroke' as const,
+  }
 
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
@@ -216,24 +210,30 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: `calc(9vh + ${v.typeUp}vh)`,
+          bottom: `calc(3vh + ${v.typeUp}vh)`,
           textAlign: 'center',
           pointerEvents: 'none',
           transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)`,
         }}
       >
-        <div style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, marginBottom: '1.8vh' }}>
-          <span style={{ display: 'block', width: 'min(10vw,132px)', height: 1, background: v.hair2 }} />
+        <div style={{ position: 'relative' }}>
           <span
             className="vha-eyebrow"
-            style={{ fontSize: 'clamp(22px,2.5vw,40px)', textShadow: `0 0 26px ${v.bg},0 0 9px ${v.bg}` }}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: 0,
+              transform: 'translate(-50%, -62%) rotate(-3deg)',
+              zIndex: 7,
+              color: v.fg,
+              fontSize: 'clamp(30px, 4.2vw, 68px)',
+              textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
+              pointerEvents: 'none',
+            }}
           >
             SKILL
           </span>
-          <span style={{ display: 'block', width: 'min(10vw,132px)', height: 1, background: v.hair2 }} />
-        </div>
-        <div style={{ position: 'relative' }}>
           <div className="vha-word" style={{ ...wordStyle, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
           </div>
@@ -360,11 +360,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             type="button"
             className="vha-cta-cmd"
             onClick={() => copy(band.cmd, 'cmd')}
-            style={{ borderColor: v.ctaLine, color: v.fg }}
+            style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
-            <span className="vha-cta-prompt" style={{ color: v.ctaLine }}>$</span>
+            <span className="vha-cta-prompt" style={{ color: v.bg }}>$</span>
             <span className="vha-cta-text">{band.cmd}</span>
-            <span className="vha-cta-tag" style={{ color: v.dim }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
+            <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
           </button>
           <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
           <button
