@@ -57,8 +57,8 @@ const HERO = {
   bone: '#EDEDEA',
   paper: '#F4F2EE',
   inkPanel: '#171618',
-  zeroBg: '#55535A', // grey ground
-  zeroFg: '#F1F0ED', // white figure + type on grey (N13: white-on-grey)
+  zeroBg: '#1B1A1C', // our charcoal token (the established "black-grey", never #000)
+  zeroFg: '#EEEBE6', // bone — white figure + type on charcoal
   ultraBg: '#080604',
   ultraFg: '#F2E4C0',
   cyan: '#5FC2D6', // prismatic palette (Heaven)
@@ -123,17 +123,36 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const fg = P0.fg
   const dim = P0.dim
 
-  // Prismatic is a PALETTE shown as SPLIT LIGHT (a chromatic offset), never a
-  // gradient fill (craft-floor: gradient text is refused). The word keeps its
-  // plain foreground fill; two offset colour ghosts carry the band identity.
-  // Hell carries NO red — its only red is the figure's single tear (canon).
-  const SPLIT = {
-    zero: 'none',
-    heaven: '0.05em 0 rgba(95,194,214,0.9), -0.05em 0 rgba(165,138,224,0.9)',
-    hell: '0.05em 0 rgba(63,174,158,0.85), -0.05em 0 rgba(200,154,63,0.85)',
-    ultra: '0.04em 0 rgba(255,210,74,0.95), -0.04em 0 rgba(255,240,196,0.7)',
+  // Wordmark treatment per band: a text STROKE (the line-art outline) plus a
+  // DIAGONAL HATCH fill — never a solid fill and never a gradient (owner + the
+  // original). Zero is the exception: bone fill + dark stroke so it stays
+  // legible and zen. Hell carries no red.
+  const STROKE = {
+    zero: `1.6px ${HERO.inkPanel}`,
+    heaven: `2px ${HERO.bone}`,
+    hell: `2px ${HERO.ink}`,
+    ultra: `2px ${HERO.gold}`,
   } as const
-  const wordShadow = SPLIT[scene]
+  const HATCH = {
+    zero: 'none',
+    heaven: `repeating-linear-gradient(48deg, ${HERO.cyan} 0 3px, transparent 3px 8px, ${HERO.violet} 8px 11px, transparent 11px 16px, ${HERO.blue} 16px 19px, transparent 19px 24px)`,
+    hell: `repeating-linear-gradient(48deg, ${HERO.hellTeal} 0 3px, transparent 3px 8px, ${HERO.hellAmber} 8px 11px, transparent 11px 16px)`,
+    ultra: `repeating-linear-gradient(48deg, ${HERO.gold} 0 3px, transparent 3px 8px, #FFF0C4 8px 11px, transparent 11px 16px)`,
+  } as const
+  const wordStroke = STROKE[scene]
+  const wordFillBg = HATCH[scene]
+
+  // Per-band figure framing. Each master frames the figure at a different
+  // scale, so a single zoom leaves faces inconsistent. These equalize the
+  // FACE size and offset it toward the upper third (golden-ratio-ish), never
+  // dead centre. PROVISIONAL — tuned against fifth-scene screenshots.
+  const FIG = {
+    zero: { zoom: 2.0, y: -7, origin: '50% 12%' },
+    heaven: { zoom: 3.2, y: -11, origin: '50% 30%' },
+    hell: { zoom: 3.2, y: -11, origin: '50% 30%' },
+    ultra: { zoom: 2.6, y: -8, origin: '50% 22%' },
+  } as const
+  const fig = FIG[scene]
 
   const pick = <T,>(arr: T[]) => arr[act]
 
@@ -143,7 +162,11 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     dim,
     lucyState,
     scene,
-    wordShadow,
+    wordStroke,
+    wordFillBg,
+    figZoom: fig.zoom,
+    figY: fig.y,
+    figOrigin: fig.origin,
     hair: P0.hair,
     hair2: P0.hair2,
     stripe: P0.hair,
@@ -187,7 +210,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     lucyBlend: 'normal' as const,
     lucyFilter:
       scene === 'zero'
-        ? 'grayscale(1) brightness(1.42) contrast(1.02)'
+        ? 'grayscale(1) brightness(1.55) contrast(1.06)'
         : scene === 'ultra'
           ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))'
           : 'none',
