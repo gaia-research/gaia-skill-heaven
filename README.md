@@ -1,4 +1,4 @@
-![Skill Heaven decides what enters your agent's session. Skill Zero is the finished launcher that starts a harness clean (off, low, med); Heaven is the converge summon that curates the right few skills; Hell is the exploratory summon that reaches for more capability; Ultra is the future auto-switch across them.](docs/assets/entropy-ladder.svg)
+![Skill Heaven decides what enters your agent's session, along one line. Skill Zero is the finished launcher that starts a harness clean at the bottom rung (off); Heaven is the converge band that curates the right few skills; Hell is the exploratory band that reaches for more capability; Ultra is the crown rung that picks direction and depth for you.](docs/assets/entropy-ladder.svg)
 
 # Skill Heaven
 
@@ -6,13 +6,13 @@
 
 Skill Heaven is the runtime layer for AI coding harnesses (**Claude Code, Codex, Pi, Hermes, Grok**). Instead of treating skills as permanent installs, it treats them as something you *start clean* and *summon on purpose*:
 
-- **Skill Zero** — the launcher. Start any harness with a clean, minimal context in one command (`claude-zero`, `pi-zero`, …), shipping `/summon` by default. This is finished and usable today.
+- **Skill Zero** — the launcher, and the bottom rung (`off`) of the one line. Start any harness with a clean, minimal context in one command (`claude-zero`, `pi-zero`, …), shipping `/summon` by default. This is finished and usable today.
 - **`/summon`** — the one mechanic underneath everything else: one skill into context, one session, nothing installed. Present at every rung, on every door — Heaven and Hell are just two directions of this same act, over one shared MCP.
-- **Heaven** — the *converge* direction: bring back only the right few skills for the task at hand.
-- **Hell** — the *exploratory* direction: reach out into the evidenced skill world for more capability when you need it (`skill-hell`).
-- **Ultra** — the future controller that picks a direction and depth for you per gap, with no ladder of its own.
+- **Heaven** — the *converge* band (`low · med`): bring back only the right few skills for the task at hand.
+- **Hell** — the *exploratory* band (`high · xhigh · max`): reach out into the evidenced skill world for more capability when you need it (`skill-hell`).
+- **Ultra** — the crown rung (`ultra`): the controller that picks a direction and depth for you per gap, with no sub-ladder of its own.
 
-Heaven and Hell each carry the same discrete ladder — `off · low · med · high · xhigh · max` — setting how many skills the agent may auto-summon per capability gap. Counts and defaults are **PROVISIONAL** until the benchmark lands (working mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven defaults `low`, Hell defaults `high`).
+It is **one ladder — one line** — `off · low · med · high · xhigh · max · ultra` — and the four surfaces are contiguous **bands** on it, read from the rung you sit at. The rung sets how many skills the agent may auto-summon per capability gap. Counts and defaults are **PROVISIONAL** until the benchmark lands (working mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven's rung `low`, Hell's `high`).
 
 Skill Zero is the part you can use right now. Heaven, Hell, and Ultra are the summon directions of the same runtime — the behavior research (the **HH Index**) is still in the works.
 
@@ -106,11 +106,11 @@ npx --yes skill-hell@latest summon "code review" --card
 The launcher also ships the in-session command set for the whole runtime surface:
 
 ```text
-/skill-zero     start / re-compose a clean launch — ships /summon by default
+/skill-zero     start / re-compose a clean launch — the bottom rung (off), ships /summon by default
 /summon         one skill into context, one session, nothing installed — the shared mechanic under everything below
-/skill-heaven   converge — off…max ladder, curate the right few (default low, PROVISIONAL)
-/skill-hell     explore — off…max ladder, summon more capability (default high, PROVISIONAL)
-/skill-ultra    controller — picks direction + depth per gap, no ladder of its own (future)
+/skill-heaven   converge band (low · med) — curate the right few (rung low, PROVISIONAL)
+/skill-hell     explore band (high · xhigh · max) — summon more capability (rung high, PROVISIONAL)
+/skill-ultra    crown rung (ultra) — the controller: picks direction + depth per gap (future)
 ```
 
 ---

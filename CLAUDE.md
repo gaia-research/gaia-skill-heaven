@@ -20,19 +20,23 @@ harness's channel, not this manifest. Two layers:
   ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
-**Core product model — one mechanic, four surfaces (N12).** The user-facing
-mechanic is **`/summon`** — one skill into context, one session, nothing
-installed — present in every implementation, at every rung, on every door.
-**Skill Zero ships `/summon` by default** as the product floor, with none of
-the choosing automated. **`/skill-heaven` (converge)** and **`/skill-hell`
-(explore)** are two directions of the same summon over **one shared MCP**,
-and **each carries the same discrete ladder `off · low · med · high · xhigh ·
-max`**, setting **how many skills the agent may auto-summon per capability
-gap** — the ladder is per direction, not one global axis. Per-rung counts and
-per-direction defaults are **PROVISIONAL** until the benchmark lands (working
-mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven defaults
-`low`, Hell defaults `high`). **`/skill-ultra` is the controller** — it picks
-direction and depth per gap and has **no ladder of its own**. Up the ladder
+**Core product model — one mechanic, one line, four surfaces (N13).** The
+user-facing mechanic is **`/summon`** — one skill into context, one session,
+nothing installed — present in every implementation, at every rung, on every
+door. There is **one ladder — one line** — `off · low · med · high · xhigh ·
+max · ultra`, and the four surfaces are contiguous **bands** on it, read from
+the current rung. **`off` is Skill Zero** (the product floor — ships `/summon`
+by default, none of the choosing automated). **`low · med` is `/skill-heaven`
+(converge)**; **`high · xhigh · max` is `/skill-hell` (explore)** — two
+directions of the same summon over **one shared MCP**, where the rung sets
+**how many skills the agent may auto-summon per capability gap**. **`ultra` is
+Skill Ultra**, the **crown of the one line**: the controller that picks
+direction and depth per gap, rendered as the seventh selectable rung (it has
+no sub-ladder because it *is* the top of the one line). A session sits at
+exactly one rung — there is no separate Heaven and Hell position held at once.
+Per-rung counts and per-band defaults are **PROVISIONAL** until the benchmark
+lands (working mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`;
+Heaven's representative rung `low`, Hell's `high`). Up the line
 quality and cost rise together — **Skill Hell routes summons through gaia mcp
 as a mixture-of-agents for skills** (D5), so more summoned skills mean more
 experts in context, better until it isn't. The benchmark shapes the **entropy
@@ -155,19 +159,21 @@ happens *inside* one of those two, it does not add a third.
   **undocumented, version-pinned** env knob
   (`CLAUDE_CODE_DISABLE_BUNDLED_SKILLS`) — **re-verify on every Claude Code
   upgrade.**
-- **One mechanic, four surfaces (founder ruling N12, `docs/LADDER-FLOW.md`).**
+- **One mechanic, one line, four surfaces (founder ruling N13, `docs/LADDER-FLOW.md`).**
   `/summon` — one skill into context, one session, nothing installed — is
-  present on every door at every rung. Skill Zero ships it by default as the
-  product floor. `/skill-heaven` (converge) and `/skill-hell` (explore) are
-  two directions of the same summon over one shared MCP, and each carries the
-  same discrete ladder `off…max`, setting how many skills the agent may
-  auto-summon per capability gap — PROVISIONAL until the benchmark lands
-  (working mapping `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven
-  defaults `low`, Hell defaults `high`). `/skill-ultra` is the controller over
-  both — it picks direction and depth per gap and has no ladder of its own.
-  Hell is not gated, locked, or refused at any rung, and neither is Ultra —
-  N12 ratified all four surfaces, so nothing on the ladder refuses. What is
-  still outstanding is implementation, not permission.
+  present on every door at every rung. There is one ladder — one line —
+  `off · low · med · high · xhigh · max · ultra`, and the four surfaces are
+  contiguous bands read from the rung: `off` = Skill Zero (ships `/summon` by
+  default as the product floor), `low · med` = `/skill-heaven` (converge),
+  `high · xhigh · max` = `/skill-hell` (explore) — two directions of the same
+  summon over one shared MCP — and `ultra` = Skill Ultra, the crown rung: the
+  controller that picks direction + depth per gap, rendered as the seventh
+  selectable rung with no sub-ladder of its own. A session sits at exactly one
+  rung. PROVISIONAL until the benchmark lands (working mapping `off 0 · low 1
+  · med 2 · high 3 · xhigh 4 · max 5`; Heaven's rung `low`, Hell's `high`).
+  Nothing on the line refuses — Hell is not gated, locked, or sealed at any
+  rung, and neither is Ultra; N13 ratified all four surfaces, so what is
+  outstanding is implementation, not permission.
   Heaven/Hell stamps are not built; routing falls back to relevance ranking.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or
