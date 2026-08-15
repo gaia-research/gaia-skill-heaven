@@ -73,7 +73,13 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   // wash (owner: "even Lucy is rendered monochrome up top"). Hell and Ultra use
   // their own approved masters.
   const lucyState =
-    scene === 'ultra' ? ('ultra' as const) : scene === 'hell' ? ('hell' as const) : ('heaven' as const)
+    scene === 'ultra'
+      ? ('ultra' as const)
+      : scene === 'hell'
+        ? ('hell' as const)
+        : scene === 'zero'
+          ? ('zero' as const)
+          : ('heaven' as const)
   const camZ = CAM[act]
 
   // Four bands, four palettes (N13 motif):
@@ -94,12 +100,17 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const fg = P0.fg
   const dim = P0.dim
 
-  // Wordmark fill per band. Heaven = prismatic; Hell = inverted-spectrum red;
-  // Ultra = gold-lit prism with a red edge; Zero = flat ink, so it stays zen.
-  const PRISM = 'linear-gradient(92deg,#ff4d7d,#ff9d3b,#ffe14d,#5fe08a,#4db8ff,#9b6bff,#ff5bd0)'
-  const PRISM_HELL = 'linear-gradient(92deg,#00b49a,#d94a2a,#e0662a,#c43020,#b2231f,#c40030,#a3104a)'
-  const GOLD = 'linear-gradient(92deg,#ffe6a3,#e0b25c,#fff0c4,#d9b25c,#c8102e,#f0d089)'
-  const wordGrad = scene === 'heaven' ? PRISM : scene === 'hell' ? PRISM_HELL : scene === 'ultra' ? GOLD : 'none'
+  // Prismatic is a PALETTE shown as SPLIT LIGHT (a chromatic offset), never a
+  // gradient fill (craft-floor: gradient text is refused). The word keeps its
+  // plain foreground fill; two offset colour ghosts carry the band identity.
+  // Hell carries NO red — its only red is the figure's single tear (canon).
+  const SPLIT = {
+    zero: 'none',
+    heaven: '0.05em 0 rgba(95,194,214,0.9), -0.05em 0 rgba(165,138,224,0.9)',
+    hell: '0.05em 0 rgba(63,174,158,0.85), -0.05em 0 rgba(200,154,63,0.85)',
+    ultra: '0.04em 0 rgba(255,210,74,0.95), -0.04em 0 rgba(255,240,196,0.7)',
+  } as const
+  const wordShadow = SPLIT[scene]
 
   const pick = <T,>(arr: T[]) => arr[act]
 
@@ -109,7 +120,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     dim,
     lucyState,
     scene,
-    wordGrad,
+    wordShadow,
     hair: P0.hair,
     hair2: P0.hair2,
     stripe: P0.hair,
@@ -131,8 +142,8 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : od === 1 ? -7 : od === 2 ? 5 : 0,
     glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : od === 1 ? -1.6 : od === 2 ? 1.1 : 0,
     oScan: glitch ? 0.5 : od ? 0.34 : 0,
-    odSheet: od === 1 ? '#C81E1E' : od === 2 ? '#D9B25C' : 'transparent',
-    odWedge: od === 1 ? '#D9B25C' : '#C81E1E',
+    odSheet: od === 1 ? '#FFD24A' : od === 2 ? '#171618' : 'transparent',
+    odWedge: od === 1 ? '#171618' : '#FFD24A',
     odOp: od ? (od === 1 ? 0.88 : 1) : 0,
     oSplit: pick([0, 0, 1, 0, 0]),
     splitX: pick([0, 0, 34, 90, 90]),
@@ -151,13 +162,16 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
       scene === 'zero'
         ? 'grayscale(1) contrast(0.94) brightness(1.05)'
         : scene === 'ultra'
-          ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(217,178,92,0.42))'
+          ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))'
           : 'none',
     oLucy: pick([1, 1, 1, 1, 0.88]),
 
     oBlade: pick([0, 1, 0.9, 0, 0]),
     bladeX: pick([-58, -14, 46, 120, 120]),
     bladeXB: pick([-62, -18, 40, 110, 110]),
+    // Horizontal motion blur on the katana, synced to the swing: heavy as it
+    // flies in and out, sharp at the pose. Eases with the blade transition.
+    bladeBlur: pick([0, 12, 5, 18, 0]),
 
     oCut: pick([0, 0, 1, 0.14, 0]),
     cutRot: variant === 'b' ? -38 : -28,
@@ -178,7 +192,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     ctaPE: act === N - 1 ? ('auto' as const) : ('none' as const),
 
     stopNote: LADDER[stop].note,
-    noteTone: lane === 'u' ? '#D9B25C' : dim,
+    noteTone: lane === 'u' ? '#FFD24A' : dim,
     ctaLabel:
       lane === 'z'
         ? 'START CLEAN · SKILL ZERO'
@@ -188,8 +202,8 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
             ? 'ENTER SKILL HELL'
             : 'LET ULTRA DECIDE',
     ctaBg: lane === 'u' ? '#0A0A0A' : lane === 'z' ? 'transparent' : fg,
-    ctaFg: lane === 'u' ? '#D9B25C' : lane === 'z' ? fg : bg,
-    ctaLine: lane === 'u' ? '#C81E1E' : fg,
+    ctaFg: lane === 'u' ? '#FFD24A' : lane === 'z' ? fg : bg,
+    ctaLine: lane === 'u' ? '#FFD24A' : fg,
   }
 }
 
@@ -459,24 +473,11 @@ export function useHeroEngine(variant: 'a' | 'b') {
 
   const rungs = LADDER.map((r, i) => {
     const sel = i === stop
-    // Bar fill carries the band identity, readable on either a dark or a paper
-    // page since the ladder shows at every scene: zero grey, heaven prismatic,
-    // hell inverted-red, ultra gold (hatched red when live).
-    const PRISM_BAR = 'linear-gradient(180deg,#ff4d7d,#ffe14d,#5fe08a,#4db8ff,#9b6bff)'
-    const bg =
-      r.lane === 'z'
-        ? '#9a98a0'
-        : r.lane === 'h'
-          ? PRISM_BAR
-          : r.lane === 'x'
-            ? sel
-              ? 'repeating-linear-gradient(135deg,#c43020 0 2px,#f4f2ee 2px 5px)'
-              : '#c43020'
-            : sel
-              ? 'repeating-linear-gradient(135deg,#d9b25c 0 2px,#c81e1e 2px 5px)'
-              : '#d9b25c'
-    const accent =
-      r.lane === 'z' ? '#57555b' : r.lane === 'x' ? '#c43020' : r.lane === 'u' ? '#d9b25c' : '#8ea6ff'
+    // Flat palette per rung — no gradient, no red. The ladder IS the palette:
+    // zero ink-grey · heaven cyan + violet (prismatic) · hell the inverted,
+    // non-red side (teal · blue · amber) · ultra gold.
+    const RUNG_HUE = ['#8b8890', '#5fc2d6', '#a58ae0', '#3f9b8a', '#4f86b8', '#c89a3f', '#ffd24a']
+    const hue = RUNG_HUE[i]
     return {
       label: r.label,
       h: sel ? 38 : 13,
@@ -484,10 +485,10 @@ export function useHeroEngine(variant: 'a' | 'b') {
       // rung snaps back to 13px in the same commit that moves the label and the
       // CTA note. See the note on `.vha-rung` in variation-hero.css.
       sel,
-      bg,
-      line: accent,
-      op: sel ? 1 : 0.42,
-      tone: sel ? accent : v.dim,
+      bg: hue,
+      line: hue,
+      op: sel ? 1 : 0.38,
+      tone: sel ? hue : v.dim,
       pick: () => pickStop(i),
     }
   })

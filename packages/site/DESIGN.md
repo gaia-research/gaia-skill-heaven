@@ -69,17 +69,17 @@ purpose — the hero is operated, the document is read.
 
 Two rules that are easy to break:
 
-- **The document spectrum appears as split light, never as a fill** — the 56px
-  2px rule under a section number or a selected direction plate, the footer
-  band, the section marker. On `/landing` and `/instrument`, never a gradient
-  background or gradient body text. **(The animated hero is the exception:** it
-  fills the state word with the band's spectrum by design — see the four bands
-  above.)
-- **Hell is the inverted spectrum, not a colourless void.** The Hell *page* is
-  the document inverted (paper + ink flip), and the Hell *spectrum* is the
-  prism inverted, which reads red. The impact frame lands because the whole
-  page flips; the character art needs no correction because the Hell master is
-  *itself* a full RGB inversion — the page flips and the art does not.
+- **The spectrum appears as split light, never as a fill** — on every surface.
+  The 56px 2px rule under a section number or a selected direction plate, the
+  footer band, the section marker, and the hero's state word all carry the
+  palette as split light or a plain fill. Never a gradient background, never
+  gradient body text.
+- **Hell is the inverted palette, and it carries no UI red.** The Hell *page*
+  is the document inverted (paper + ink flip) and the Hell palette is the prism
+  inverted; its only red is the figure's single tear (canon). The impact frame
+  lands because the whole page flips; the character art needs no correction
+  because the Hell master is *itself* a full RGB inversion — the page flips and
+  the art does not.
 
 **Faint (`#67635f`) is a hairline value, not a text value.** At 2.9:1 on
 charcoal and 2.7:1 on paper it fails the 4.5:1 body floor. Both surfaces use

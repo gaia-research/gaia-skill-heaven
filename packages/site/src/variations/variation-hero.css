@@ -5,7 +5,7 @@
    under .vha (Hero A) or .vhb (Hero B); shared page-level rules and
    keyframes live under the vh- stem.
    ═══════════════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Big+Shoulders+Display:wght@100..900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import '../assets/fonts/fonts.css';
 
 body.vh-hero-page {
   margin: 0;
@@ -251,11 +251,12 @@ body.vh-hero-page {
 
 .vha-eyebrow,
 .vhb-eyebrow {
-  font-family: Archivo, sans-serif;
-  font-variation-settings: 'wdth' 100, 'wght' 700;
-  letter-spacing: 0.3em;
-  padding-left: 0.3em;
+  font-family: 'Permanent Marker', 'Archivo', cursive;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  padding-left: 0;
   line-height: 1;
+  text-transform: none;
 }
 .vhb-eyebrow {
   font-size: clamp(13px, 1.5vw, 22px);
@@ -351,23 +352,23 @@ body.vh-hero-page {
 .vha-chip--heaven,
 .vhb-chip--heaven {
   flex: 2;
-  background: linear-gradient(92deg, #ff4d7d, #ff9d3b, #ffe14d, #5fe08a, #4db8ff, #9b6bff);
+  background: #7cc4ff;
   color: #0a0a0a;
   border: none;
 }
 .vha-chip--hell,
 .vhb-chip--hell {
   flex: 3;
-  background: #c43020;
-  color: #fff;
-  border: 1px solid #c43020;
+  background: #171618;
+  color: #efece7;
+  border: 1px solid #171618;
 }
 .vha-chip--ultra,
 .vhb-chip--ultra {
   flex: 1;
-  background: #0a0a0a;
-  color: #d9b25c;
-  border: 1px solid #c81e1e;
+  background: #ffd24a;
+  color: #0a0a0a;
+  border: none;
   font-size: 9px;
   letter-spacing: 0.2em;
   padding-left: 0.2em;

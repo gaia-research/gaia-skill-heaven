@@ -36,19 +36,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
   const assets = HERO_ASSET_SETS[normalizeLucyAssetSet(assetSet)][v.lucyState]
 
-  // Per-band wordmark fill: prismatic (heaven), inverted-red (hell), gold
-  // (ultra), flat ink (zero). Applied as a clipped text gradient; when the
-  // band has no gradient the word falls back to the scene foreground.
-  const gradText =
-    v.wordGrad === 'none'
-      ? { color: v.fg }
-      : {
-          backgroundImage: v.wordGrad,
-          WebkitBackgroundClip: 'text' as const,
-          backgroundClip: 'text' as const,
-          color: 'transparent',
-          WebkitTextFillColor: 'transparent' as const,
-        }
+  // White/foreground fill by default; the prismatic identity rides the split-
+  // light shadow only (a chromatic offset, never a gradient fill). Zero has no
+  // split — it stays zen.
+  const wordStyle = {
+    color: v.fg,
+    textShadow: v.wordShadow === 'none' ? 'none' : v.wordShadow,
+  }
 
   return (
     <div
@@ -115,13 +109,14 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             zIndex: 0,
             transition:
               'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
-            transform: `scale(${v.mWing})`,
+            transform: `scale(${(Number(v.mWing) * 1.7).toFixed(3)})`,
+            transformOrigin: '50% 6%',
             opacity: v.oLucy * 0.82,
             filter: v.lucyFilter,
           }}
         >
           <img
-            src={WINGS[v.lucyState]}
+            src={WINGS[v.lucyState as 'heaven' | 'hell' | 'ultra']}
             alt=""
             draggable={false}
             style={{ display: 'block', height: '100%', width: 'auto' }}
@@ -138,7 +133,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           height: '92vh',
           translate: '-50% 0',
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateY(${v.lucyY}vh) scale(${v.mLucy})`,
+          transform: `translateY(${v.lucyY}vh) scale(${(Number(v.mLucy) * 1.75).toFixed(3)})`,
+          transformOrigin: '50% 5%',
         }}
       >
         <img
@@ -165,9 +161,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           top: '56%',
           width: 'min(78vw,1180px)',
           translate: '-50% -50%',
-          transition: 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear',
+          transition:
+            'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
           transform: `rotate(-28deg) translateX(${v.bladeX}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
+          filter: v.bladeBlur ? `blur(${v.bladeBlur}px)` : 'none',
         }}
       >
         <img className="vh-asset vh-asset--sword" src={assets.katana} alt="" draggable={false} />
@@ -200,37 +198,37 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           <span style={{ display: 'block', width: 'min(10vw,132px)', height: 1, background: v.hair2 }} />
         </div>
         <div style={{ position: 'relative' }}>
-          <div className="vha-word" style={{ ...gradText, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
+          <div className="vha-word" style={{ ...wordStyle, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--split-top"
-            style={{ ...gradText, transform: `scale(${v.mType}) translateX(${v.splitX}px)`, opacity: v.oSplit }}
+            style={{ ...wordStyle, transform: `scale(${v.mType}) translateX(${v.splitX}px)`, opacity: v.oSplit }}
           >
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--split-bottom"
-            style={{ ...gradText, transform: `scale(${v.mType}) translateX(-${v.splitX}px)`, opacity: v.oSplit }}
+            style={{ ...wordStyle, transform: `scale(${v.mType}) translateX(-${v.splitX}px)`, opacity: v.oSplit }}
           >
             HEAVEN
           </div>
-          <div className="vha-hell" style={{ ...gradText, transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
             HELL
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ ...gradText, transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
+            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ color: v.fg, transform: `scale(${v.hellScale})`, opacity: v.oZero }}
+            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oZero }}
           >
             ZERO
           </div>
-          <div className="vha-hell" style={{ ...gradText, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
             ULTRA
           </div>
         </div>
