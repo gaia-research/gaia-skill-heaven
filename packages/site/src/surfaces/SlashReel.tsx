@@ -49,19 +49,19 @@ export function SlashReel() {
         if (n >= TOTAL) {
           setClean(true)
           mode = 'holding'
-          timer.current = window.setTimeout(tick, 2100)
+          timer.current = window.setTimeout(tick, 1600)
           return
         }
-        timer.current = window.setTimeout(tick, 300)
+        timer.current = window.setTimeout(tick, 280)
       } else {
         setClean(false)
         setCut(0)
         n = 0
         mode = 'cutting'
-        timer.current = window.setTimeout(tick, 760)
+        timer.current = window.setTimeout(tick, 640)
       }
     }
-    timer.current = window.setTimeout(tick, 900)
+    timer.current = window.setTimeout(tick, 800)
     return () => window.clearTimeout(timer.current)
   }, [])
 
