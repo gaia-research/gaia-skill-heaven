@@ -19,35 +19,27 @@ import hellMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp'
 import ultraMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp';
 
 
-import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp';
-import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp';
-import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp';
-import bgUltra from '../assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp';
 
 /**
  * Approved character art, per state. The Hell master is already a full
  * RGB inversion of Heaven — the page inverts around it, the art never does.
  * Zero carries no wings, by canon.
  */
-const ART: Record<SurfaceId, { figure: string; bg: string; alt: string }> = {
+const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   zero: {
     figure: zeroMaster,
-    bg: bgZero,
     alt: 'The line’s figure in its Zero state — seated, eyes closed, no wings, one katana at rest.',
   },
   heaven: {
     figure: heavenMaster,
-    bg: bgHeaven,
     alt: 'The line’s figure in its Heaven state — falling with gravity inverted, both diamond eyes open, ordered glass shards.',
   },
   hell: {
     figure: hellMaster,
-    bg: bgHell,
     alt: 'The line’s figure in its Hell state — the Heaven render fully inverted, eyes closed, a single red tear.',
   },
   ultra: {
     figure: ultraMaster,
-    bg: bgUltra,
     alt: 'The line’s figure in its Ultra state — gold refraction, one diamond eye open and one closed, two matching katanas.',
   },
 };
@@ -112,6 +104,23 @@ export default function Hero() {
     [activeRung, setRung],
   );
 
+  const onDirKey = useCallback(
+    (e: React.KeyboardEvent) => {
+      const ids = SURFACES.map((s) => s.id);
+      const i = ids.indexOf(dir);
+      let next = i;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % ids.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + ids.length) % ids.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = ids.length - 1;
+      else return;
+      e.preventDefault();
+      pick(ids[next]);
+      (e.currentTarget.children[next] as HTMLElement | undefined)?.focus();
+    },
+    [dir, pick],
+  );
+
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).then(
       () => {
@@ -133,8 +142,6 @@ export default function Hero() {
 
   return (
     <div className={`hx hx--${dir}${impact ? ' hx--impact' : ''}`}>
-      <div className="hx__bg" style={{ backgroundImage: `url(${art.bg})` }} aria-hidden="true" />
-
       <nav className="hx__nav">
         <div className="hx__brand">
           <span className="hx__logo" role="img" aria-label="Logo slot — mark pending commission" />
@@ -144,6 +151,9 @@ export default function Hero() {
         <div className="hx__navlinks">
           <Link to="/landing">The document</Link>
           <a href={SITE.repoUrl}>GitHub</a>
+          <button className="hx__navcta" type="button" onClick={() => copy(INSTALL.sh, 'nav')}>
+            {copied === 'nav' ? 'copied ⏎' : 'install ⏎'}
+          </button>
         </div>
       </nav>
 
@@ -156,7 +166,15 @@ export default function Hero() {
             </svg>
             <span className="hx__reg-dot" aria-hidden="true" />
             <span className="hx__reg-dot" aria-hidden="true" />
-            <span className="hx__reg-text">One mechanic · four surfaces</span>
+            <span className="hx__reg-text" aria-hidden="true">
+              {SURFACES.map((s, i) => (
+                <span key={s.id} className={s.id === dir ? 'is-here' : undefined}>
+                  {i > 0 && <i> · </i>}
+                  {s.name.replace('Skill ', '')}
+                </span>
+              ))}
+            </span>
+            <span className="hx__reg-plate" aria-hidden="true">Plate no. 001</span>
           </div>
 
           <h1 className="hx__wordmark">
@@ -195,15 +213,21 @@ export default function Hero() {
       <div className="hx__instrument">
         <p className="hx__thesis">{MECHANIC.line}</p>
         <div className="hx__instrument-inner">
-          <div className="hx__dirs" role="tablist" aria-label="Product surface">
+          <div
+            className="hx__dirs"
+            role="radiogroup"
+            aria-label="Product surface"
+            onKeyDown={onDirKey}
+          >
             {SURFACES.map((s) => (
               <button
                 key={s.id}
                 className="hx__dir"
                 style={{ ['--dir-hue' as string]: s.hue }}
-                role="tab"
+                role="radio"
                 type="button"
-                aria-selected={s.id === dir}
+                aria-checked={s.id === dir}
+                tabIndex={s.id === dir ? 0 : -1}
                 onClick={() => pick(s.id)}
               >
                 <span className="hx__dir-mark" aria-hidden="true" />

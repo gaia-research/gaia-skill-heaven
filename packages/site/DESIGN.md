@@ -1,147 +1,198 @@
-# DESIGN.md — Skill Heaven landing prototype
+# DESIGN.md — the Skill Heaven site
 
-> **Persona note (N7, 2026-08-06).** The figure named **Lucy** throughout this
-> internal doc is the line's **internal working name only**. Its design is
-> final, but the **public name is reserved and undecided** — never hard-code it
-> in shipped copy or user-facing code. **Milim is the Gaia Research lab mascot,
-> not this line's persona.**
+Written from the built world, not ahead of it. Two production surfaces share
+one visual system:
 
-## Lucy visual authority and state color canon
-
-The production authority is the approved character sheet at
-`src/assets/lucy/authority/lucy-character-sheet-master.png`, interpreted with
-`docs/lucy/authority/LUCY_CANONICAL_CHARACTER_SHEET.md` and
-`docs/lucy/authority/lucy-canon.json`. Earlier hero assets and iteration sheets
-are provenance, not authority. Lucy's anatomy and outfit never transform;
-gravity, eyes, shards, lighting, inversion, and weapon count communicate state.
-
-**Anatomy correction (2026-08-13):** the supplied sheet and v1 Heaven, Hell,
-and Ultra bodies contain a three-leg contamination. The sheet remains authority
-for face, hair, uniform, ribbon, eyes, weapons, shards, colors, and materials,
-but not for pose or limb anatomy. Every new full-body render must have exactly
-two independently traceable legs and two feet. Written anatomy constraints win
-over contaminated raster poses.
-
-**Modesty guard:** ordinary skin, bare legs, and thigh exposure are permitted.
-Visible underwear, under-skirt crotch framing, translucent/parted skirt exposure,
-wardrobe-malfunction silhouettes, and intimate-area focal framing are not. The
-opaque sailor skirt and pose must naturally cover the underwear section. A
-generated master that breaches this guard is rejected and regenerated; it is
-never hidden with a downstream crop.
-
-**Anatomy proportion guide (advisory):** Lucy is slender, not abbreviated or
-needle-limbed. Use the accepted Heaven v2 read as the current reference: long,
-believable legs with hip/thigh volume, a readable knee transition, calf taper,
-and slim ankle/foot; a narrow waist must still connect naturally to ribcage and
-pelvis. Avoid wasp-waist pinching, an overlong torso, tiny pelvis, or a skirt
-concealing an implausibly short hip-to-knee span. This guides judgment rather
-than imposing a numeric rejection threshold.
-
-**Katana authority:** all front-page katana components must follow the approved
-katana panel embedded in `lucy-character-sheet-master.png` and the workbench
-crop `Lucy_Katana_reference.png`. Older Hero A/B commissioned sword rasters are
-provenance only and must not seed new weapon geometry. The approved construction
-is a physically real curved steel blade; dark navy/black handle wrap with pale
-diamond openings; ornate round/slightly floral antique-gold tsuba; dark saya;
-restrained gold fittings; and a small braided/tassel ornament where shown.
-State lighting may reflect on steel but may not turn the weapon into glass or
-energy. Ultra uses two matching copies; Hell is the full inversion of Heaven's
-same registered katana geometry.
-
-| State | Working production color | Non-negotiable treatment |
+| Route | Surface | Register |
 |---|---|---|
-| Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
-| Heaven | Blue `#7CC4FF` | Saturated cyan-blue refraction, both diamond eyes open, ordered glass shards. |
-| Hell | Registered full-scene chromatic inversion of Heaven | Heaven's exact pose, anatomy, crop, alpha, hair, uniform, ribbon, katana, wings, shards, and spatial composition are preserved. Every foreground and scene RGB value—including skin—is inverted. Only both closed eyes and exactly one vivid red tear differ semantically; no standalone flat Hell-pink token is canonical. |
-| Ultra | Gold `#FFD24A`–`#F7C84B` | Never inverted; exclusive gold refraction, asymmetric eyes, two matching katanas. |
+| `/` | **The hero** — "the instrument" | poster; one screen, operable |
+| `/landing` | **The document** | scannable; numbered sections, ledger density |
 
-These values supersede incidental color sampling from older concept images.
-Chroma green used during transparent-background extraction is a production
-surface only and must never enter the brand palette.
+`/hero-a` and `/hero-b` are retained prototype review routes, reachable only by
+direct URL. They still load the older `styles/tokens.css` and are **not** part
+of this system — see the collision note at the end.
 
-> **Prototype, not the product.** Eight hero variations behind a preview
-> switcher (`src/components/Switcher.tsx`). All share one content source
-> (`src/content.ts`) and the real, measured token figures — messaging stays
-> constant while the visual world changes per route. The exception is Hero
-> A/B (below): a separately-authored design-tool prototype with its own
-> copy and its own risk-ladder framing, ported in as-is rather than rebuilt
-> against `content.ts`.
+## The world
 
-## How the newer three were derived (impeccable provenance)
+Ported from the approved Claude Design comp. Two pegs own two halves of the
+palette and conflating them was the original mistake.
 
-The first three routes (`/overdrive`, `/prism`, `/default`) were hand-authored
-from the owner's concept pegs. The **second three** (`/manifesto`,
-`/instrument`, `/onebit`) were derived through the **impeccable** design skill
-(`.github/skills/impeccable/`, v4.0.4), fresh from the same pegs with **no
-anchor to v1**, at the owner's request: *"I want to see from fresh start how
-impeccable will use our pegs."*
+**The ground is washed charcoal `#1b1a1c`, never black.** A warm, desaturated
+grey-brown that behaves like printed ink on uncoated stock. It is the reason the
+pages read as a document rather than a screen. An earlier pass had it at pure
+`#000000`; that over-correction made every accent scream.
 
-- **The roll** — `concept-seed.mjs --scope direction --mode persuade`
-  (`PRODUCT.md` present): seed key **`346e6ded`**, **assigned index 6** (build a
-  grounded direction, not a challenger), six catalog challengers dealt.
-- **Grounded brief** — audience: aesthetic-driven early adopters; the thing to
-  prove: the **Heaven ↔ Hell tension**; relationship to v1: **fully fresh**.
-- **Craft bar** judged against three challenger reference cards (wood-type
-  manifesto, nixie lab counter, one-bit Mac desktop). Each new direction fuses
-  the grounded index-6 read with one challenger.
-- **detect.mjs** (60-rule anti-slop scanner) run over all three: the only
-  standing flag is the one-bit dithered-dot **wallpaper**, which is the literal
-  1-bit desktop surface (the rule's own canvas/measurement exception) — kept
-  deliberately. The Instrument serif was swapped off the "overused" list
-  (Fraunces → Spectral) to clear its flag.
+**The ink is bone `#eeebe6`**, warm, matched to the peg's linework — not a
+blue-white halo. Hairlines are that same bone at low alpha, so every rule on the
+page is one family with the type.
 
-## The eight routes
+**The prism runs at roughly half chroma.** Sampled straight off the character
+the hues are display-neon: correct for a figure lit from inside on black, far
+too hot as UI on charcoal. Each hue keeps its identity and loses its saturation,
+so the spectrum reads as *refracted light* rather than LED.
 
-`#/hero-a` is the current winner — `/` and any unmatched route redirect there
-(`src/main.tsx`). Hero A/B are ported from an external design-tool prototype
-(`src/variations/hero/useHeroEngine.ts` — the shared 5-act, wheel/keyboard/
-touch-driven state machine both routes render), not derived from the pegs/
-impeccable process described below; the other six routes are unchanged.
-
-| Route | Name | World |
-|---|---|---|
-| `#/hero-a` | **Hero A · Reredos** (current winner) | Full-viewport 5-act scrollytelling piece. Centered, monumental `SKILL / HEAVEN` typeset behind Lucy, symmetric single wing, katana slash on Act III. Act V hands off to a live 7-rung risk ladder (OFF..MAX, ULTRA sealed past the firebreak) driving Heaven/Hell/Ultra. |
-| `#/hero-b` | **Hero B · Guillotine** | Same engine as Hero A, asymmetric frame-cropped layout: Lucy bleeds off the bottom-right corner, edge-to-edge `HELL` wordmark, vertical rail labels ("COMPOSED · NOT INSTALLED" / "SLASH TO SUMMON"). |
-| `#/overdrive` | **Overdrive** (v1, prior winner) | Kinetic `SKILL / HEAVEN` typeset, glass wing, angel katana, scroll-world parallax, Heaven→Hell glitch slice. |
-| `#/manifesto` | **Wood-Type Manifesto** | 1914 letterpress conviction. Dark-on-light "paper." Oversized imperative verbs `SUMMON THEM. / RESTRAIN. / BREAK LOOSE`, numbered ordinals (01 SUMMON / 02 ENTER / 03 GATED), `//` ticker. A red blade slices diagonally mid-scroll and **destroys the grid** — restraint vs the fall. One accent (a single warm red), no gradients, no glow. |
-| `#/instrument` | **Honest Instrument** | Nixie-tube lab counter. Six CSS glass tubes glow the real standing dose **20176** on a machined chassis; `−28.9% vs native`. Interactive posture rail lights per-posture readouts. Serif headline "Numbers you can summon." Proves the **two-number honest-dosing / HH-Index** value. Amber-on-black, reverent; Hell = a cold tamper flicker. |
-| `#/onebit` | **One-Bit Invert** | Classic 1-bit OS desktop. Dithered wallpaper, real window chrome (`HEAVEN.app`, `PROJECTS`, `POSTURES` control panel, `WELCOME.md`), desktop icons, gated `HELL.app` (a locked door raising a 1-bit alert dialog). Heaven→Hell is a **literal `filter: invert()`** — the invert *is* the material. Strictly monochrome. |
-| `#/prism` | **Prism** | Luminance / prismatic. Lucy as a translucent glass-shard figure, holographic hair, refracting halo. |
-| `#/default` | **Default** | White-on-black Swiss restraint. One prism accent. |
-
-**Known deviation:** Hero A/B render Lucy from a transparent raster cutout
-(`src/assets/lucy-hero.png`) rather than the pure-SVG `Art.tsx` primitives every
-other route uses. The original JPG remains in the asset folder as provenance;
-the production route uses the Gaia-prepared RGBA cutout so the page background
-can invert cleanly behind her.
-
-## Shared contract
-
-- `src/content.ts` — `HEADLINE`, `HARNESSES`, `POSTURES` (real two-number
-  doses: floor 19,661 tok; product-floor 20,176 tok / −28.9% vs native),
-  `COMMANDS` (`/skill-heaven` · `claude-zero` · `/skill-hell`), `CTA`.
-- `src/styles/tokens.css` — the Luminance/Prismatic tokens (deliberately **not**
-  the research-repo pink/cyan). Each variation may override locally; every
-  selector is scoped under a per-variation root (`.vo .vm .vi .vb .vp .vd-…`) to
-  prevent cross-variation CSS collisions.
-
-## Product-truth guardrails honored across all six
-
-- `/skill-hell` is shown in **every** variation as a **locked, gated** door —
-  never an activator (P2).
-- The launcher story is **compose + exec, never mutate shared state** (P3) —
-  reflected in the "Composed, Not Installed" / "nothing mutated" copy.
-- Doses are always **two numbers**, never averaged into one.
-- No fabricated testimonials, logos, pricing, or counts. Token figures are the
-  real measured benchmark results.
-
-## Regenerate the previews
-
-```bash
-npm -w @gaia-skill-heaven/site run dev            # :5178
-# then, with Playwright resolvable (PW_ENTRY or an installed `playwright`):
-node packages/site/scripts/shots.mjs         # the original three
-node packages/site/scripts/shots-new.mjs     # the newer three
+```
+ground    #1b1a1c void · #211f21 panel · #272426 card · #181718 inert
+ink       #eeebe6 bone · #9a9691 dim · #67635f faint
+hairline  rgba(238,235,230,.11) · strong rgba(238,235,230,.2)
+prism     #a58ae0 violet  primary, interactive
+          #6f96d8 blue    structure
+          #5fc2d6 cyan    highlight, hover, borrowed
+          #71ccae mint    measured, safe
+          #e094c8 rose    the explore lane
+          #d478b0 magenta edge
+surface   #5fc2d6 zero · #6f96d8 heaven · #e094c8 hell · #d9b25c ultra
+hell      #efece7 paper · #171618 ink · rgba(23,22,24,.16) line
+house     #38bdf8 research · #fbbf24 tree   (hairlines and links only)
 ```
 
-Output lands in `packages/site/preview/` (gitignored — regenerate locally).
+Two rules that are easy to break:
+
+- **The spectrum appears as split light, never as a fill** — the 56px 2px rule
+  under a section number or a selected direction plate, the footer band, the
+  section marker. Never a gradient background, never gradient body text.
+- **Hell is monochrome.** The invert carries no colour at all; that is what
+  makes the impact frame land. Any accent surviving into Hell is a bug. The
+  character art is the one exemption, because the Hell master is *itself* a full
+  RGB inversion — the page flips and the art does not.
+
+**Faint (`#67635f`) is a hairline value, not a text value.** At 2.9:1 on
+charcoal and 2.7:1 on paper it fails the 4.5:1 body floor. Both surfaces use
+`dim` for the smallest labels and reserve `faint` for rules.
+
+## Type
+
+Self-hosted latin subsets in `src/assets/fonts/` — never a font CDN. An external
+stylesheet host is a third-party runtime dependency that blocks first paint and
+fails closed on restricted networks, and the fallback stack is not the design.
+
+- **Anton** — the condensed heavy display. Two moments only: the hero's state
+  word and the footer wordmark. It ships **weight 400 only**, so anything that
+  inherits a bolder weight must reset it — an `h1` inheriting 700 makes the
+  browser synthesise bold, which clogs the counters and stops it reading as
+  Anton at all. `.hx__state` carries `font-weight: 400; font-synthesis-weight: none`.
+- **Archivo (variable width)** — display and UI, pushed **wide** to match the
+  peg's expanded bowls: headline `wdth 112 / wght 800`, section h2 `wdth 108`,
+  labels `wdth 106`.
+- **JetBrains Mono** — everything a developer would type or read as data:
+  commands, doses, status chips, section numbers, nav, annotations. 9–13px,
+  tracking .12–.24em.
+
+Floor: **10px mono for HUD labels, 13px body. Nothing smaller.**
+
+Two structural borrows: **registration marks** (a hairline cross, two 9px
+circles, a rotated `PLATE NO. 001`) and **outline as a second voice** — the
+footer's `SKILL HELL` as a 1.5px `-webkit-text-stroke` offset behind the solid
+`SKILL HEAVEN`. It reads far better than a low-opacity fill.
+
+## The hero — "the instrument"
+
+**Thesis: a hero you operate, not one you watch.** It refuses the scroll-jacked
+cinematic hero the previous version was, and the headline-plus-screenshot hero
+the category ships. The product *is* four surfaces plus a discrete ladder, so
+the first viewport hands the visitor that control and lets them work it before
+installing anything.
+
+Composition: nav → registration row (a **state index**, not an eyebrow) →
+`SKILL` + the state word in Anton → command and role → blurb → the command line,
+which rewrites live off the instrument → the filled CTA plus a ghost CTA → the
+raw install string. The approved character master for the active state anchors
+the right column, bottom-aligned.
+
+The instrument band closes the viewport: a thesis caption, four direction plates
+(`/skill-zero` · `/skill-heaven` · `/skill-hell` · `/skill-ultra`), and the
+`off…max` ladder with a slot strip showing how many skills may be auto-summoned
+per capability gap.
+
+**The two surfaces with no ladder render its absence as content** rather than
+hiding the control — Zero states that `/summon` is the floor, Ultra states that
+the controller decides. That is the clearest thing on the page about what Ultra
+*is*.
+
+**Signature interaction.** Selecting a direction fires the impact frame, and the
+explore direction inverts the whole page to paper.
+
+Layout stability is load-bearing here: the gauge column reserves one height
+across all four states and the blurb reserves its tallest line count, because
+otherwise clicking a direction plate relocates the plate you just clicked.
+
+## The document — `/landing`
+
+Wireframe register, deliberately inverting every hero choice: scannable rather
+than cinematic, ledger rows and terminals rather than one statement per screen,
+numbered sections `01`–`05`.
+
+Wireframe cues are **load-bearing, not decoration**: dashed asset slots, `▸`
+annotation strips, section numbers over the 56px split-light rule, 5px accent
+squares in panel corners, hairline borders at **0px radius**.
+
+| § | Name |
+|---|---|
+| — | Arrival header — compact, no repeat of the hero headline; measured dose panel |
+| 01 | Choose your door — five real `*-zero` doors, install one-liner, launch command |
+| 02 | Watch it run — looping terminal, impact frame scoped to the panel |
+| 03 | Skills are permanent. Sessions are not. |
+| 04 | Converge or explore — the `/summon` floor, then the four surfaces |
+| 05 | One house, three rooms |
+| — | Footer — loud wordmark, four minimal link columns |
+
+**§03 is the strongest section and must not be weakened.** The argument in three
+beats, then a before/after pair where the reader clicks rows to mount and drop
+skills, live counters recomputing off the benchmark floor, and a verdict strip
+whose sentence changes with what the reader did. The point lands because the
+reader causes the mutation themselves and then watches `git status` refuse to
+notice. That is the product.
+
+## The impact frame
+
+One shared mechanic, same numbers on both surfaces:
+
+- `46ms`, `steps(3, end)`, shear plus translate, **max 8px** displacement.
+- Hard invert on the same frame: `#1b1a1c → #efece7`, `#eeebe6 → #171618`.
+- **The hero owns the full-page invert.** On the landing page it is scoped to
+  the terminal panel, because the reader is mid-document.
+- Nothing eases. Transitions are linear so the flip reads as a **cut, not a
+  fade**.
+
+## Art
+
+Approved v4 character masters at `src/assets/lucy/v4-approved/set-a/`, the
+alpha-verified katana pack at `src/assets/lucy/frontpage/katana-authority-v2/`,
+and state icons under `identity/`.
+
+Canon that is not negotiable:
+
+- **Zero carries no wings.** Never composite a wing or shard asset behind it.
+- **Hell is a full RGB inversion of Heaven** — never colour-corrected back,
+  never inverted a second time by a CSS filter.
+- Sets A, B and C are all owner-approved; do not collapse them to one. The
+  hero and landing default to set A.
+- The katana pack is the one alpha-certified family. The character masters carry
+  uncertified mattes, so prefer them composited on a dark ground over hard
+  cutout use.
+- **The logo stays a dashed slot.** It is the one asset still in commission.
+
+## Product-truth guardrails
+
+- Doses are always **two numbers**, never averaged; floors named separately.
+- The launcher **composes and execs** — it never stashes, restores, or mutates.
+- Per-rung auto-summon counts are **provisional** and every surface that renders
+  one carries the WIP mark.
+- **`slider` is banned vocabulary.** The control is a ladder with discrete rungs.
+- Hell is not gated, locked, or refused; it is one of two live directions.
+- No fabricated logos, pricing, testimonials, or counts. `19,661` · `20,176` ·
+  `28,379` · `−28.9%` · `+515 tok` are the real measured figures.
+- A standing `WIP · v0` disclosure sits in the chrome and the footer.
+
+## Token collision — read before adding a surface
+
+`styles/tokens.css` (the retained prototype routes) and `styles/system.css`
+both define seven `--sh-*` names with **different meanings**, most dangerously
+`--sh-ink`: bone body text here, a near-black card fill there. Import order
+decided the winner at `:root`, which made both production surfaces draw
+`#10121d` on `#1b1a1c` — invisible.
+
+`system.css` re-declares the contested names on the `.hx` and `.lp` roots, so
+specificity settles it instead of import order and the legacy routes keep their
+own values. **A new production surface must add its root to that block**, or
+retire `tokens.css` along with the prototype routes.
