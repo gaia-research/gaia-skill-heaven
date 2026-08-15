@@ -631,7 +631,7 @@ export default function Landing() {
             <div className="lp-counters">
               <Counter label="MOUNTED" value={fmt(mounted.length)} />
               <Counter label="ADDED" value={fmt(nAdded)} tone="cyan" />
-              <Counter label="DROPPED" value={fmt(nDropped)} tone="rose" />
+              <Counter label="DROPPED" value={fmt(nDropped)} tone="amber" />
               <Counter label="STANDING" value={fmt(standing)} tone="mint" />
             </div>
             <div className="lp-rows">
@@ -767,7 +767,7 @@ export default function Landing() {
           </div>
           <div className="lp-ledger__col">
             <div className="lp-ledger__head">
-              <span className="lp-ledger__glyph lp-k-rose" aria-hidden="true">
+              <span className="lp-ledger__glyph lp-k-amber" aria-hidden="true">
                 ◈
               </span>
               <h3>REACH FOR /SKILL-HELL</h3>
@@ -786,7 +786,7 @@ export default function Landing() {
                 <>You are looking for where the entropy curve turns — better, until it is not.</>,
               ].map((row, i) => (
                 <li key={i}>
-                  <span className="lp-k-rose" aria-hidden="true">
+                  <span className="lp-k-amber" aria-hidden="true">
                     →
                   </span>
                   <span>{row}</span>
@@ -1062,7 +1062,7 @@ function Counter({
 }: {
   label: string
   value: string
-  tone?: 'cyan' | 'rose' | 'mint'
+  tone?: 'cyan' | 'amber' | 'mint'
 }) {
   return (
     <div className="lp-counter">

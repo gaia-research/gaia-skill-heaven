@@ -995,7 +995,7 @@
 .lp-counter__v--cyan {
   color: var(--sh-cyan);
 }
-.lp-counter__v--rose {
+.lp-counter__v--amber {
   color: var(--sh-hell);
 }
 .lp-counter__v--mint {
@@ -1239,7 +1239,7 @@
 .lp-k-violet {
   color: var(--sh-violet);
 }
-.lp-k-rose {
+.lp-k-amber {
   color: var(--sh-hell);
 }
 .lp-k-mint {
@@ -1570,16 +1570,6 @@
     var(--sh-rose) 82%,
     var(--sh-magenta)
   );
-  background-size: 200% 100%;
-  animation: lp-drift 14s linear infinite;
-}
-@keyframes lp-drift {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
 }
 
 .lp-wordmark {
