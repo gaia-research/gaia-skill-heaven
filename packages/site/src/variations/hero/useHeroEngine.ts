@@ -137,15 +137,15 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const wordStroke = WORD_STROKE[scene]
 
   // Per-band figure framing, FACE-ANCHORED. origin is the measured FACE centre
-  // (% of the master) so the zoom pivots on the face and faces stay put; x/y
-  // (vh) then place that face. Faces are matched to a common upper-third line,
-  // then nudged per owner: ultra +1 up, hell +2 down & +½ right, zero +1 up.
-  // A notch = 3vh (½ = 1.5vh). PROVISIONAL, verified against screenshots.
+  // (% of the master) so the zoom pivots on the face; y (vh) then places that
+  // face on the GOLDEN-RATIO line (~37vh from top) — face-first, never covered.
+  // Because origin is the face, face-y ≈ 8 + originY%*92 + lucyY + y, i.e. y
+  // moves the face 1:1 in vh. PROVISIONAL, verified against screenshots.
   const FIG = {
-    zero: { zoom: 1.5, x: 1.8, y: -10, origin: '47% 27%' },
-    heaven: { zoom: 2.5, x: 0.6, y: -10, origin: '49% 30%' },
-    hell: { zoom: 2.5, x: 3.3, y: 0, origin: '47% 26%' },
-    ultra: { zoom: 2.1, x: 4.9, y: -8, origin: '42% 25%' },
+    zero: { zoom: 1.5, x: 1.8, y: 6, origin: '47% 30%' },
+    heaven: { zoom: 2.5, x: 0.6, y: 12, origin: '49% 27%' },
+    hell: { zoom: 2.5, x: 3.3, y: 12, origin: '47% 30%' },
+    ultra: { zoom: 2.1, x: 4.9, y: 15, origin: '45% 24%' },
   } as const
   const fig = FIG[scene]
 
@@ -162,7 +162,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     wordStroke,
     figZoom: fig.zoom,
     figX: fig.x,
-    figY: fig.y + (atLadder && scene !== 'zero' ? -1.5 : 0),
+    figY: fig.y,
     figOrigin: fig.origin,
     hair: P0.hair,
     hair2: P0.hair2,
@@ -202,7 +202,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     // carries none (canon).
     oWing: atLadder ? (scene === 'zero' ? 0 : 0.55) : [0.5, 0.4, 0.28, 0.14, 0][act],
     haloRot: pick([0, -3, -7, -12, -12]),
-    lucyY: pick([0, -1.5, -3, 0, 12]),
+    lucyY: pick([0, -1.5, -3, 0, 0]),
     lucyXB: pick([0, -1, -2, 1, 6]),
     lucyBlend: 'normal' as const,
     lucyFilter:
