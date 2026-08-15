@@ -1,0 +1,9 @@
+{
+  "version": "v3",
+  "state": "ultra",
+  "master": "masters/lucy-ultra.webp",
+  "components": [
+    "components/wings/lucy-wing-ultra-pair.webp",
+    "components/katana/lucy-katana-ultra-dual.webp"
+  ]
+}

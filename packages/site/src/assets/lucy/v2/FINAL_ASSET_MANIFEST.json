@@ -1,0 +1,391 @@
+{
+  "version": "v2",
+  "paid_generation_calls": 3,
+  "heaven_source": "V2-HH-01 accepted original gpt-image-2 master",
+  "hell_source": "registered exact inversion + V2-HH-02 bounded face mask",
+  "ultra_source": "V2-ULTRA-01 original gpt-image-2 master",
+  "v1_preserved": true,
+  "pair_matrix": {
+    "masters/lucy-{state}.webp": {
+      "heaven": "masters/lucy-heaven.webp",
+      "hell": "masters/lucy-hell.webp",
+      "size": [
+        1024,
+        1536
+      ],
+      "position": "center"
+    },
+    "hero/lucy-{state}-desktop-wide.webp": {
+      "heaven": "hero/lucy-heaven-desktop-wide.webp",
+      "hell": "hero/lucy-hell-desktop-wide.webp",
+      "size": [
+        2560,
+        1080
+      ],
+      "position": "center"
+    },
+    "states/lucy-{state}.webp": {
+      "heaven": "states/lucy-heaven.webp",
+      "hell": "states/lucy-hell.webp",
+      "size": [
+        1024,
+        1536
+      ],
+      "position": "center"
+    },
+    "states/panels/lucy-{state}-panel.webp": {
+      "heaven": "states/panels/lucy-heaven-panel.webp",
+      "hell": "states/panels/lucy-hell-panel.webp",
+      "size": [
+        1024,
+        1280
+      ],
+      "position": "center"
+    },
+    "portraits/lucy-{state}.webp": {
+      "heaven": "portraits/lucy-heaven.webp",
+      "hell": "portraits/lucy-hell.webp",
+      "size": [
+        1024,
+        1024
+      ],
+      "position": "top"
+    },
+    "mobile/lucy-{state}-hero-1440x2560.webp": {
+      "heaven": "mobile/lucy-heaven-hero-1440x2560.webp",
+      "hell": "mobile/lucy-hell-hero-1440x2560.webp",
+      "size": [
+        1440,
+        2560
+      ],
+      "position": "center"
+    },
+    "identity/lucy-avatar-{state}.webp": {
+      "heaven": "identity/lucy-avatar-heaven.webp",
+      "hell": "identity/lucy-avatar-hell.webp",
+      "size": [
+        512,
+        512
+      ],
+      "position": "top"
+    },
+    "backgrounds/lucy-bg-{state}-desktop.webp": {
+      "heaven": "backgrounds/lucy-bg-heaven-desktop.webp",
+      "hell": "backgrounds/lucy-bg-hell-desktop.webp",
+      "size": [
+        2560,
+        1440
+      ],
+      "position": "center"
+    },
+    "components/wings/lucy-wing-{state}-left.webp": {
+      "heaven": "components/wings/lucy-wing-heaven-left.webp",
+      "hell": "components/wings/lucy-wing-hell-left.webp",
+      "size": [
+        470,
+        510
+      ],
+      "position": "center"
+    },
+    "components/wings/lucy-wing-{state}-right.webp": {
+      "heaven": "components/wings/lucy-wing-heaven-right.webp",
+      "hell": "components/wings/lucy-wing-hell-right.webp",
+      "size": [
+        480,
+        640
+      ],
+      "position": "center"
+    },
+    "components/ribbons/lucy-ribbon-{state}.webp": {
+      "heaven": "components/ribbons/lucy-ribbon-heaven.webp",
+      "hell": "components/ribbons/lucy-ribbon-hell.webp",
+      "size": [
+        350,
+        200
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-cluster-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-cluster-heaven.webp",
+      "hell": "components/shards/lucy-shard-cluster-hell.webp",
+      "size": [
+        500,
+        730
+      ],
+      "position": "center"
+    },
+    "components/wings/lucy-wing-{state}-pair.webp": {
+      "heaven": "components/wings/lucy-wing-heaven-pair.webp",
+      "hell": "components/wings/lucy-wing-hell-pair.webp",
+      "size": [
+        1060,
+        640
+      ],
+      "position": "registered side crop assembly"
+    },
+    "components/shards/lucy-shard-01-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-01-heaven.webp",
+      "hell": "components/shards/lucy-shard-01-hell.webp",
+      "size": [
+        95,
+        150
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-02-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-02-heaven.webp",
+      "hell": "components/shards/lucy-shard-02-hell.webp",
+      "size": [
+        105,
+        185
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-03-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-03-heaven.webp",
+      "hell": "components/shards/lucy-shard-03-hell.webp",
+      "size": [
+        140,
+        250
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-04-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-04-heaven.webp",
+      "hell": "components/shards/lucy-shard-04-hell.webp",
+      "size": [
+        100,
+        155
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-05-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-05-heaven.webp",
+      "hell": "components/shards/lucy-shard-05-hell.webp",
+      "size": [
+        115,
+        180
+      ],
+      "position": "center"
+    },
+    "components/shards/lucy-shard-06-{state}.webp": {
+      "heaven": "components/shards/lucy-shard-06-heaven.webp",
+      "hell": "components/shards/lucy-shard-06-hell.webp",
+      "size": [
+        130,
+        230
+      ],
+      "position": "center"
+    },
+    "fx/lucy-particles-{state}.webp": {
+      "heaven": "fx/lucy-particles-heaven.webp",
+      "hell": "fx/lucy-particles-hell.webp",
+      "size": [
+        500,
+        120
+      ],
+      "position": "center"
+    },
+    "fx/lucy-caustic-{state}.webp": {
+      "heaven": "fx/lucy-caustic-heaven.webp",
+      "hell": "fx/lucy-caustic-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-aura-{state}.webp": {
+      "heaven": "fx/lucy-aura-heaven.webp",
+      "hell": "fx/lucy-aura-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-dust-{state}.webp": {
+      "heaven": "fx/lucy-dust-heaven.webp",
+      "hell": "fx/lucy-dust-hell.webp",
+      "size": [
+        500,
+        75
+      ],
+      "position": "center"
+    },
+    "fx/lucy-trail-{state}.webp": {
+      "heaven": "fx/lucy-trail-heaven.webp",
+      "hell": "fx/lucy-trail-hell.webp",
+      "size": [
+        500,
+        100
+      ],
+      "position": "center"
+    },
+    "fx/lucy-fragment-{state}.webp": {
+      "heaven": "fx/lucy-fragment-heaven.webp",
+      "hell": "fx/lucy-fragment-hell.webp",
+      "size": [
+        500,
+        120
+      ],
+      "position": "center"
+    },
+    "fx/lucy-streak-{state}.webp": {
+      "heaven": "fx/lucy-streak-heaven.webp",
+      "hell": "fx/lucy-streak-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-reflection-{state}.webp": {
+      "heaven": "fx/lucy-reflection-heaven.webp",
+      "hell": "fx/lucy-reflection-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-flare-{state}.webp": {
+      "heaven": "fx/lucy-flare-heaven.webp",
+      "hell": "fx/lucy-flare-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-spectral-{state}.webp": {
+      "heaven": "fx/lucy-spectral-heaven.webp",
+      "hell": "fx/lucy-spectral-hell.webp",
+      "size": [
+        500,
+        90
+      ],
+      "position": "center"
+    },
+    "fx/lucy-refraction-{state}.webp": {
+      "heaven": "fx/lucy-refraction-heaven.webp",
+      "hell": "fx/lucy-refraction-hell.webp",
+      "size": [
+        360,
+        230
+      ],
+      "position": "center"
+    },
+    "identity/lucy-state-icon-{state}.webp": {
+      "heaven": "identity/lucy-state-icon-heaven.webp",
+      "hell": "identity/lucy-state-icon-hell.webp",
+      "size": [
+        270,
+        270
+      ],
+      "position": "center"
+    },
+    "identity/lucy-wing-emblem-{state}.webp": {
+      "heaven": "identity/lucy-wing-emblem-heaven.webp",
+      "hell": "identity/lucy-wing-emblem-hell.webp",
+      "size": [
+        315,
+        350
+      ],
+      "position": "center"
+    },
+    "identity/lucy-divider-{state}.webp": {
+      "heaven": "identity/lucy-divider-heaven.webp",
+      "hell": "identity/lucy-divider-hell.webp",
+      "size": [
+        845,
+        220
+      ],
+      "position": "center"
+    }
+  },
+  "outputs": [
+    "assemblies/lucy-heaven-assembly.json",
+    "assemblies/lucy-hell-assembly.json",
+    "assemblies/lucy-ultra-assembly.json",
+    "backgrounds/lucy-bg-heaven-desktop.webp",
+    "backgrounds/lucy-bg-hell-desktop.webp",
+    "backgrounds/lucy-bg-ultra-desktop.webp",
+    "components/katana/lucy-katana-ultra-dual.webp",
+    "components/ribbons/lucy-ribbon-heaven.webp",
+    "components/ribbons/lucy-ribbon-hell.webp",
+    "components/shards/lucy-shard-01-heaven.webp",
+    "components/shards/lucy-shard-01-hell.webp",
+    "components/shards/lucy-shard-02-heaven.webp",
+    "components/shards/lucy-shard-02-hell.webp",
+    "components/shards/lucy-shard-03-heaven.webp",
+    "components/shards/lucy-shard-03-hell.webp",
+    "components/shards/lucy-shard-04-heaven.webp",
+    "components/shards/lucy-shard-04-hell.webp",
+    "components/shards/lucy-shard-05-heaven.webp",
+    "components/shards/lucy-shard-05-hell.webp",
+    "components/shards/lucy-shard-06-heaven.webp",
+    "components/shards/lucy-shard-06-hell.webp",
+    "components/shards/lucy-shard-cluster-heaven.webp",
+    "components/shards/lucy-shard-cluster-hell.webp",
+    "components/wings/lucy-wing-heaven-left.webp",
+    "components/wings/lucy-wing-heaven-pair.webp",
+    "components/wings/lucy-wing-heaven-right.webp",
+    "components/wings/lucy-wing-hell-left.webp",
+    "components/wings/lucy-wing-hell-pair.webp",
+    "components/wings/lucy-wing-hell-right.webp",
+    "components/wings/lucy-wing-ultra-pair.webp",
+    "fx/lucy-aura-heaven.webp",
+    "fx/lucy-aura-hell.webp",
+    "fx/lucy-caustic-heaven.webp",
+    "fx/lucy-caustic-hell.webp",
+    "fx/lucy-dust-heaven.webp",
+    "fx/lucy-dust-hell.webp",
+    "fx/lucy-flare-heaven.webp",
+    "fx/lucy-flare-hell.webp",
+    "fx/lucy-fragment-heaven.webp",
+    "fx/lucy-fragment-hell.webp",
+    "fx/lucy-particles-heaven.webp",
+    "fx/lucy-particles-hell.webp",
+    "fx/lucy-reflection-heaven.webp",
+    "fx/lucy-reflection-hell.webp",
+    "fx/lucy-refraction-heaven.webp",
+    "fx/lucy-refraction-hell.webp",
+    "fx/lucy-spectral-heaven.webp",
+    "fx/lucy-spectral-hell.webp",
+    "fx/lucy-streak-heaven.webp",
+    "fx/lucy-streak-hell.webp",
+    "fx/lucy-trail-heaven.webp",
+    "fx/lucy-trail-hell.webp",
+    "hero/lucy-heaven-desktop-wide.webp",
+    "hero/lucy-hell-desktop-wide.webp",
+    "hero/lucy-ultra-desktop-wide.webp",
+    "identity/lucy-avatar-heaven.webp",
+    "identity/lucy-avatar-hell.webp",
+    "identity/lucy-avatar-ultra.webp",
+    "identity/lucy-divider-heaven.webp",
+    "identity/lucy-divider-hell.webp",
+    "identity/lucy-heaven-diamond-eye.webp",
+    "identity/lucy-hell-red-tear.webp",
+    "identity/lucy-state-icon-heaven.webp",
+    "identity/lucy-state-icon-hell.webp",
+    "identity/lucy-wing-emblem-heaven.webp",
+    "identity/lucy-wing-emblem-hell.webp",
+    "masters/lucy-heaven.webp",
+    "masters/lucy-hell.webp",
+    "masters/lucy-ultra.webp",
+    "mobile/lucy-heaven-hero-1440x2560.webp",
+    "mobile/lucy-hell-hero-1440x2560.webp",
+    "mobile/lucy-ultra-hero-1440x2560.webp",
+    "portraits/lucy-heaven.webp",
+    "portraits/lucy-hell.webp",
+    "portraits/lucy-ultra.webp",
+    "states/lucy-heaven.webp",
+    "states/lucy-hell-white.webp",
+    "states/lucy-hell.webp",
+    "states/lucy-ultra.webp",
+    "states/panels/lucy-heaven-panel.webp",
+    "states/panels/lucy-hell-panel.webp",
+    "states/panels/lucy-ultra-panel.webp"
+  ]
+}
