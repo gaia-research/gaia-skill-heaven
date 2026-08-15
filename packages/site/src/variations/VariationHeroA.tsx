@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
-import { HeroInfo } from './hero/HeroInfo'
+import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -61,8 +61,21 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     ultra: { cmd: '/skill-ultra', hint: 'auto · picks direction + depth for you' },
   }
   const band = BAND[v.scene]
-  const INSTALL_CMD = 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh'
+  const INSTALL_ALL = 'curl -fsSL https://skill-heaven.dev/install | sh'
   const [copied, setCopied] = useState<string | null>(null)
+  const [bare, setBare] = useState(false)
+  // The "What is this?" hint stays out of the way until the visitor does
+  // anything deliberate EXCEPT scrolling — a click on empty space, a control, or
+  // a copy. Wheel/keyboard act-nav never triggers it.
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => {
+    const reveal = () => setRevealed(true)
+    window.addEventListener('click', reveal, { once: true })
+    return () => window.removeEventListener('click', reveal)
+  }, [])
+  // Per-scene accent for the quiet explainers (no red).
+  const accent =
+    v.scene === 'ultra' ? '#FFD24A' : v.scene === 'hell' ? '#5FC2D6' : v.scene === 'zero' ? v.fg : '#A58AE0'
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).then(
       () => {
@@ -76,7 +89,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   return (
     <div
       ref={rootRef}
-      className="vha"
+      className={`vha${bare ? ' vha--bare' : ''}`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -88,25 +101,32 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     >
       {/* Opaque scene ground — guarantees the band colour paints behind the
          (often transparent) character masters, in every browser and capture. */}
-      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg }} />
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
       <Link to="/landing" className="vha-skip" style={{ color: v.fg, borderColor: v.hair2 }}>
         Skip · Enter the door →
       </Link>
-      <HeroInfo
-        atLadder={v.atLadder}
-        fg={v.fg}
-        bg={v.bg}
-        dim={v.dim}
-        accent={
-          v.scene === 'ultra'
-            ? '#FFD24A'
-            : v.scene === 'hell'
-              ? '#5FC2D6'
-              : v.scene === 'zero'
-                ? v.fg
-                : '#A58AE0'
-        }
-      />
+      {revealed && (
+        <HeroInfo atLadder={v.atLadder} fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} />
+      )}
+      <HeroSummon fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} copy={copy} copied={copied} />
+
+      {/* Immersive toggle — fade the whole interface to reveal just the artwork
+         (and back). Stays visible so it can always be restored. */}
+      <button
+        type="button"
+        className="vha-bare-toggle"
+        onClick={() => setBare((b) => !b)}
+        aria-pressed={bare}
+        aria-label={bare ? 'Show interface' : 'Show artwork only'}
+        title={bare ? 'Show interface' : 'Show artwork only'}
+        style={{ color: v.fg, borderColor: v.hair2 }}
+      >
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <circle cx="8.5" cy="10" r="1.6" />
+          <path d="M21 16l-5-5-4 4-2-2-4 4" />
+        </svg>
+      </button>
       <div
         aria-hidden="true"
         style={{
@@ -184,7 +204,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           height: '92vh',
           translate: '-50% 0',
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
+          transform: `translateX(${v.figX}vh) translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
           transformOrigin: v.figOrigin,
           zIndex: 1,
           pointerEvents: 'none',
@@ -231,6 +251,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       </div>
 
       <div
+        className="vha-typewrap"
         style={{
           position: 'absolute',
           left: 0,
@@ -329,7 +350,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         }}
       />
 
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div className="vha-chrome" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', left: '8vw', bottom: '7vh', display: 'flex', alignItems: 'baseline', gap: 16 }}>
           <span className="vha-act">{v.actLabel}</span>
           <span style={{ fontSize: 11, letterSpacing: '.22em', color: v.dim }}>{v.actSub}</span>
@@ -353,6 +374,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       </div>
 
       <div
+        className="vha-ctawrap"
         style={{
           position: 'absolute',
           left: '50%',
@@ -397,14 +419,30 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
           </button>
           <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          <button
-            type="button"
-            className="vha-cta-install"
-            onClick={() => copy(INSTALL_CMD, 'install')}
-            style={{ color: v.dim }}
-          >
-            {copied === 'install' ? 'install one-liner copied ⏎' : '⧉ copy install one-liner'}
-          </button>
+          {v.scene === 'zero' ? (
+            <Link
+              to="/landing"
+              className="vha-cta-cmd vha-cta-cmd--sm"
+              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
+            >
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
+              <span className="vha-cta-text">skill-zero</span>
+              <span className="vha-cta-tag" style={{ color: v.dim }}>pick your harness →</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="vha-cta-cmd vha-cta-cmd--sm"
+              onClick={() => copy(INSTALL_ALL, 'install')}
+              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
+            >
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
+              <span className="vha-cta-text">{INSTALL_ALL}</span>
+              <span className="vha-cta-tag" style={{ color: v.dim }}>
+                {copied === 'install' ? 'copied ⏎' : 'install all skills'}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
