@@ -381,13 +381,25 @@
   right: 7px;
   border-width: 0 1px 1px 0;
 }
-.lp-figure img {
+.lp-figure__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+  z-index: 0;
+}
+.lp-figure__fig {
+  position: relative;
+  z-index: 1;
   display: block;
   width: auto;
-  max-width: 100%;
-  height: clamp(240px, 21vw, 300px);
+  max-width: 118%;
+  height: clamp(360px, 42vw, 660px);
   object-fit: contain;
   object-position: bottom center;
+  filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.5));
 }
 .lp-figure figcaption {
   position: absolute;
@@ -712,11 +724,11 @@
   border-color: var(--sh-cyan);
 }
 .lp-ghost--hell {
-  color: var(--sh-rose);
+  color: var(--sh-hell);
 }
 .lp-ghost--hell:hover {
-  color: var(--sh-rose);
-  border-color: var(--sh-rose);
+  color: var(--sh-hell);
+  border-color: var(--sh-hell);
 }
 
 .lp-term {
@@ -981,7 +993,7 @@
   color: var(--sh-cyan);
 }
 .lp-counter__v--rose {
-  color: var(--sh-rose);
+  color: var(--sh-hell);
 }
 .lp-counter__v--mint {
   color: var(--sh-mint);
@@ -1225,7 +1237,7 @@
   color: var(--sh-violet);
 }
 .lp-k-rose {
-  color: var(--sh-rose);
+  color: var(--sh-hell);
 }
 .lp-k-mint {
   color: var(--sh-mint);
@@ -1277,7 +1289,7 @@
 }
 .lp-stops {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0;
   border-top: 1px solid var(--sh-line);
 }
@@ -1311,23 +1323,21 @@
     transparent 6px 10px
   );
 }
-.lp-stops--heaven .lp-stop.is-below .lp-stop__detent {
-  border-left-color: var(--sh-heaven);
-  background: linear-gradient(
-    to bottom,
-    transparent 0 4px,
-    var(--sh-heaven) 4px 6px,
-    transparent 6px 10px
-  );
+.lp-stop--zero.is-below .lp-stop__detent {
+  border-left-color: var(--sh-zero);
+  background: linear-gradient(to bottom, transparent 0 4px, var(--sh-zero) 4px 6px, transparent 6px 10px);
 }
-.lp-stops--hell .lp-stop.is-below .lp-stop__detent {
+.lp-stop--heaven.is-below .lp-stop__detent {
+  border-left-color: var(--sh-heaven);
+  background: linear-gradient(to bottom, transparent 0 4px, var(--sh-heaven) 4px 6px, transparent 6px 10px);
+}
+.lp-stop--hell.is-below .lp-stop__detent {
   border-left-color: var(--sh-hell);
-  background: linear-gradient(
-    to bottom,
-    transparent 0 4px,
-    var(--sh-hell) 4px 6px,
-    transparent 6px 10px
-  );
+  background: linear-gradient(to bottom, transparent 0 4px, var(--sh-hell) 4px 6px, transparent 6px 10px);
+}
+.lp-stop--ultra.is-below .lp-stop__detent {
+  border-left-color: var(--sh-ultra);
+  background: linear-gradient(to bottom, transparent 0 4px, var(--sh-ultra) 4px 6px, transparent 6px 10px);
 }
 .lp-stop__id {
   font-size: 12px;
@@ -1344,6 +1354,28 @@
 .lp-stop.is-on {
   background: rgba(238, 235, 230, 0.05);
   color: var(--sh-ink);
+}
+.lp-stop--zero.is-on .lp-stop__id {
+  color: var(--sh-zero);
+}
+.lp-stop--heaven.is-on .lp-stop__id {
+  color: var(--sh-heaven);
+}
+.lp-stop--hell.is-on .lp-stop__id {
+  color: var(--sh-hell);
+}
+.lp-stop--ultra.is-on .lp-stop__id {
+  color: var(--sh-ultra);
+}
+.lp-ladder__band {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lp-ladder__bandicon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
 }
 .lp-stop:hover {
   color: var(--sh-ink);
@@ -1442,12 +1474,30 @@
 
 /* ---------------------------------------------------------- closing figure */
 
+.lp-closer__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
 .lp-closer__frame {
   position: relative;
-  height: clamp(220px, 26vw, 340px);
+  height: clamp(360px, 34vw, 560px);
   border: 1px solid var(--sh-line);
   overflow: hidden;
   background: var(--sh-inert);
+}
+.lp-closer__frame--hell {
+  background: var(--sh-hell-paper);
+}
+.lp-closer__tag {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  z-index: 2;
+  color: var(--sh-ink-dim);
+}
+.lp-closer__frame--hell .lp-closer__tag {
+  color: var(--sh-hell-ink);
 }
 .lp-closer__bg {
   position: absolute;
@@ -1462,7 +1512,7 @@
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  height: 100%;
+  height: 116%;
   width: auto;
   object-fit: contain;
   object-position: bottom center;
@@ -1602,6 +1652,9 @@
   }
   .lp-head__grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-closer__row {
+    grid-template-columns: 1fr;
   }
   .lp-figure {
     min-height: 0;
