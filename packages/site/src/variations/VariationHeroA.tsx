@@ -46,6 +46,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     paintOrder: 'stroke' as const,
   }
 
+  // "Skill" sticks to the dominant state word's scale so it grows/shrinks with
+  // it through the acts: the big HEAVEN uses mType, HELL + the small ladder
+  // words use hellScale.
+  const skillScale = v.oHeaven > 0.5 || v.oSplit > 0.5 ? v.mType : v.hellScale
+
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
   const BAND: Record<string, { cmd: string; hint: string }> = {
@@ -220,23 +225,6 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
         }}
       >
-        {/* "Skill" sits CENTERED on the state word, layered on top (z-axis). */}
-        <span
-          className="vha-eyebrow"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%) rotate(-3deg)',
-            zIndex: 5,
-            color: v.fg,
-            fontSize: 'clamp(30px, 4.2vw, 68px)',
-            textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
-            pointerEvents: 'none',
-          }}
-        >
-          SKILL
-        </span>
         <div style={{ position: 'relative', zIndex: 2, transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)` }}>
           <div className="vha-word" style={{ ...wordStyle, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
@@ -271,6 +259,28 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           <div className="vha-hell" style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
             ULTRA
           </div>
+          {/* "Skill" is CENTERED on the state word, layered on top (z-axis), and
+             sticks to it: same scale factor as the dominant word + the wrapper's
+             glitch skew, so it transforms the same way in size and shape. */}
+          <span
+            className="vha-eyebrow"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              zIndex: 5,
+              transformOrigin: 'center',
+              transform: `translate(-50%, -50%) scale(${skillScale}) rotate(-3deg)`,
+              transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(0.16,1,0.3,1)',
+              color: v.fg,
+              fontSize: 'clamp(30px, 4.2vw, 68px)',
+              textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            SKILL
+          </span>
         </div>
       </div>
 
