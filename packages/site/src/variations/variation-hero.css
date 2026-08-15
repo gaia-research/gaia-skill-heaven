@@ -555,7 +555,7 @@ body.vh-hero-page {
   font-size: clamp(11px, 1.3vw, 18px);
   letter-spacing: 0.52em;
   padding-left: 0.52em;
-  color: #c81e1e;
+  color: #FFD24A;
   transform: translateY(4.5vw);
   transition: opacity calc(300ms * var(--vh-t)) linear;
 }
@@ -625,7 +625,7 @@ body.vh-hero-page {
   font-size: clamp(11px, 1.3vw, 18px);
   letter-spacing: 0.52em;
   padding-left: 0.52em;
-  color: #c81e1e;
+  color: #FFD24A;
   transition: opacity calc(300ms * var(--vh-t)) linear;
 }
 

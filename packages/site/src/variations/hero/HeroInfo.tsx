@@ -137,14 +137,14 @@ export function HeroSummon({
         type="button"
         className="vha-summon-cmd"
         onClick={() => copy('/summon', 'summon')}
-        style={{ color: fg, borderColor: accent }}
+        style={{ color: fg, borderColor: accent, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}
       >
         <span style={{ color: accent }}>/</span>summon
         <span className="vha-summon-tag" style={{ color: dim }}>
           {copied === 'summon' ? 'copied ⏎' : 'copy'}
         </span>
       </button>
-      <span className="vha-summon-hint" style={{ color: dim }}>
+      <span className="vha-summon-hint" style={{ color: dim, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}>
         summon a standalone skill
       </span>
 
@@ -154,7 +154,7 @@ export function HeroSummon({
           className="vha-info-toggle"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          style={{ color: accent, borderColor: accent }}
+          style={{ color: accent, borderColor: accent, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}
         >
           <span className="vha-info-label">Where do skills come from?</span>
           <span className="vha-info-q" style={{ borderColor: accent }}>

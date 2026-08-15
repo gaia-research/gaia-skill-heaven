@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Shared state machine behind VariationHeroA / VariationHeroB. Both routes
 // render the same 5-act, wheel/keyboard/touch-driven scrollytelling engine
-// and the same 7-rung risk ladder (OFF..MAX, plus the sealed ULTRA overdrive
-// lane past the firebreak) — they differ only in layout (Reredos vs
+// and the same 7-rung entropy ladder (OFF..MAX plus ULTRA, the crown rung —
+// reachable, never sealed) — they differ only in layout (Reredos vs
 // Guillotine), so the machine lives here once.
 
 const ACT_LABEL = ['FOCUS', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
@@ -110,7 +110,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   //   heaven — the full PRISMATIC spectrum on deep ground
   //   hell   — the INVERTED spectrum on paper; it reads red because that is what
   //            the prism becomes when inverted
-  //   ultra  — heaven with a GOLD highlight laid over it and a red edge: the
+  //   ultra  — heaven with a GOLD highlight laid over it: the
   //            final form, not flat gold
   const PAL = {
     zero: { bg: HERO.zeroBg, fg: HERO.zeroFg, dim: 'rgba(241,240,237,.5)', hair: 'rgba(241,240,237,.09)', hair2: 'rgba(241,240,237,.22)' },
@@ -481,7 +481,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [go, registerInput])
 
-  // Ultra's overdrive: a periodic double-flash (red sheet → white sheet) with
+  // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
   // a small glitch shear on the wordmark, looping while Ultra stays selected.
   useEffect(() => {
     const on = act === N - 1 && LADDER[stop].lane === 'u'
