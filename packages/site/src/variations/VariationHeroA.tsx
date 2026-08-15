@@ -3,18 +3,12 @@ import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
 
-import wingHeaven from '../assets/lucy/components/wings/lucy-wing-heaven-pair.webp'
-import wingHell from '../assets/lucy/components/wings/lucy-wing-hell-pair.webp'
-import wingUltra from '../assets/lucy/components/wings/lucy-wing-ultra-pair.webp'
+import wingLeft from '../assets/hero-commission/v01/wing-left.png'
+import wingRight from '../assets/hero-commission/v01/wing-right.png'
 
-// Glass wings, per state. Canon (DESIGN.md): Zero carries NO wings; Heaven,
-// Hell and Ultra each get their pair. Restored here after a prior PR dropped
-// the render — the asset was never superseded.
-const WINGS: Record<'heaven' | 'hell' | 'ultra', string> = {
-  heaven: wingHeaven,
-  hell: wingHell,
-  ultra: wingUltra,
-}
+// The commissioned GLASS wings (translucent PNGs), one symmetric wing each
+// side. Kept at their own scale — never the figure's oversize. Zero carries no
+// wings (canon).
 
 // ─────────────────────────────────────────────────────────────────────────
 // VARIATION: HERO A · REREDOS
@@ -98,30 +92,32 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       />
 
       {v.scene !== 'zero' && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            bottom: '2vh',
-            height: '78vh',
-            translate: '-50% 0',
-            zIndex: 0,
-            transition:
-              'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
-            transform: `scale(${(Number(v.mWing) * 1.7).toFixed(3)})`,
-            transformOrigin: '50% 6%',
-            opacity: v.oLucy * 0.82,
-            filter: v.lucyFilter,
-          }}
-        >
+        <>
           <img
-            src={WINGS[v.lucyState as 'heaven' | 'hell' | 'ultra']}
+            className="vh-asset vha-wing vha-wing--left"
+            src={wingLeft}
             alt=""
             draggable={false}
-            style={{ display: 'block', height: '100%', width: 'auto' }}
+            style={{
+              transform: `scale(${v.mWing})`,
+              opacity: v.oWing,
+              transition:
+                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+            }}
           />
-        </div>
+          <img
+            className="vh-asset vha-wing vha-wing--right"
+            src={wingRight}
+            alt=""
+            draggable={false}
+            style={{
+              transform: `scale(${v.mWing})`,
+              opacity: v.oWing,
+              transition:
+                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+            }}
+          />
+        </>
       )}
 
       <div
@@ -133,7 +129,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           height: '92vh',
           translate: '-50% 0',
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateY(${v.lucyY}vh) scale(${(Number(v.mLucy) * 1.75).toFixed(3)})`,
+          transform: `translateY(${v.lucyY}vh) scale(${(Number(v.mLucy) * 2.0).toFixed(3)})`,
           transformOrigin: '50% 5%',
         }}
       >

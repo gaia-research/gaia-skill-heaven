@@ -48,6 +48,29 @@ type EngineState = {
   od: 0 | 1 | 2
 }
 
+// Hero palette — the single source of truth for every colour the hero draws,
+// mirroring the brand tokens (styles/system.css, DESIGN.md). This ported hero
+// computes its styles in JS rather than from CSS custom properties, so the
+// palette lives here as named constants instead of scattered hex literals.
+const HERO = {
+  ink: '#0A0A0A',
+  bone: '#EDEDEA',
+  paper: '#F4F2EE',
+  inkPanel: '#171618',
+  zeroBg: '#55535A', // grey ground
+  zeroFg: '#F1F0ED', // white figure + type on grey (N13: white-on-grey)
+  ultraBg: '#080604',
+  ultraFg: '#F2E4C0',
+  cyan: '#5FC2D6', // prismatic palette (Heaven)
+  violet: '#A58AE0',
+  blue: '#7CC4FF',
+  gold: '#FFD24A', // Ultra
+  grey: '#8B8890', // Zero rung
+  hellTeal: '#3F9B8A', // inverted, non-red (Hell)
+  hellBlue: '#4F86B8',
+  hellAmber: '#C89A3F',
+} as const
+
 // Pure translation of state -> every derived style value. Nothing here
 // mutates state; `variant` only steers the two style knobs (cut angle, CTA
 // alignment) that differ between the Reredos and Guillotine layouts.
@@ -90,10 +113,10 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   //   ultra  — heaven with a GOLD highlight laid over it and a red edge: the
   //            final form, not flat gold
   const PAL = {
-    zero: { bg: '#E7E5E0', fg: '#3A383C', dim: 'rgba(58,56,60,.5)', hair: 'rgba(58,56,60,.08)', hair2: 'rgba(58,56,60,.2)' },
-    heaven: { bg: '#000000', fg: '#EDEDEA', dim: 'rgba(237,237,234,.46)', hair: 'rgba(237,237,234,.09)', hair2: 'rgba(237,237,234,.22)' },
-    hell: { bg: '#F4F2EE', fg: '#0A0A0A', dim: 'rgba(10,10,10,.48)', hair: 'rgba(10,10,10,.10)', hair2: 'rgba(10,10,10,.22)' },
-    ultra: { bg: '#080604', fg: '#F2E4C0', dim: 'rgba(242,228,192,.5)', hair: 'rgba(242,228,192,.08)', hair2: 'rgba(217,178,92,.32)' },
+    zero: { bg: HERO.zeroBg, fg: HERO.zeroFg, dim: 'rgba(241,240,237,.5)', hair: 'rgba(241,240,237,.09)', hair2: 'rgba(241,240,237,.22)' },
+    heaven: { bg: '#000000', fg: HERO.bone, dim: 'rgba(237,237,234,.46)', hair: 'rgba(237,237,234,.09)', hair2: 'rgba(237,237,234,.22)' },
+    hell: { bg: HERO.paper, fg: HERO.ink, dim: 'rgba(10,10,10,.48)', hair: 'rgba(10,10,10,.10)', hair2: 'rgba(10,10,10,.22)' },
+    ultra: { bg: HERO.ultraBg, fg: HERO.ultraFg, dim: 'rgba(242,228,192,.5)', hair: 'rgba(242,228,192,.08)', hair2: 'rgba(255,210,74,.32)' },
   } as const
   const P0 = PAL[scene]
   const bg = P0.bg
@@ -124,7 +147,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     hair: P0.hair,
     hair2: P0.hair2,
     stripe: P0.hair,
-    chromeBg: scene === 'hell' || scene === 'zero' ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.5)',
+    chromeBg: scene === 'hell' ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.5)',
 
     mType: mag(0, camZ),
     mLucy: mag(-260, camZ),
@@ -142,8 +165,8 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : od === 1 ? -7 : od === 2 ? 5 : 0,
     glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : od === 1 ? -1.6 : od === 2 ? 1.1 : 0,
     oScan: glitch ? 0.5 : od ? 0.34 : 0,
-    odSheet: od === 1 ? '#FFD24A' : od === 2 ? '#171618' : 'transparent',
-    odWedge: od === 1 ? '#171618' : '#FFD24A',
+    odSheet: od === 1 ? HERO.gold : od === 2 ? HERO.inkPanel : 'transparent',
+    odWedge: od === 1 ? HERO.inkPanel : HERO.gold,
     odOp: od ? (od === 1 ? 0.88 : 1) : 0,
     oSplit: pick([0, 0, 1, 0, 0]),
     splitX: pick([0, 0, 34, 90, 90]),
@@ -154,13 +177,17 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     typeUp: pick([0, 0, 0, 0, 28]),
     oGround: pick([0.55, 0.45, 0.3, 0.2, 0.14]),
     oHalo: pick([0.5, 0.34, 0.14, 0, 0]),
+    // Glass wings: translucent, their OWN scale (never the figure's oversize),
+    // present through the intro and at the ladder for heaven/hell/ultra; Zero
+    // carries none (canon).
+    oWing: atLadder ? (scene === 'zero' ? 0 : 0.55) : [0.5, 0.4, 0.28, 0.14, 0][act],
     haloRot: pick([0, -3, -7, -12, -12]),
     lucyY: pick([0, -1.5, -3, 0, 12]),
     lucyXB: pick([0, -1, -2, 1, 6]),
     lucyBlend: 'normal' as const,
     lucyFilter:
       scene === 'zero'
-        ? 'grayscale(1) contrast(0.94) brightness(1.05)'
+        ? 'grayscale(1) brightness(1.42) contrast(1.02)'
         : scene === 'ultra'
           ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))'
           : 'none',
@@ -192,7 +219,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     ctaPE: act === N - 1 ? ('auto' as const) : ('none' as const),
 
     stopNote: LADDER[stop].note,
-    noteTone: lane === 'u' ? '#FFD24A' : dim,
+    noteTone: lane === 'u' ? HERO.gold : dim,
     ctaLabel:
       lane === 'z'
         ? 'START CLEAN · SKILL ZERO'
@@ -201,9 +228,9 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
           : lane === 'x'
             ? 'ENTER SKILL HELL'
             : 'LET ULTRA DECIDE',
-    ctaBg: lane === 'u' ? '#0A0A0A' : lane === 'z' ? 'transparent' : fg,
-    ctaFg: lane === 'u' ? '#FFD24A' : lane === 'z' ? fg : bg,
-    ctaLine: lane === 'u' ? '#FFD24A' : fg,
+    ctaBg: lane === 'u' ? HERO.ink : lane === 'z' ? 'transparent' : fg,
+    ctaFg: lane === 'u' ? HERO.gold : lane === 'z' ? fg : bg,
+    ctaLine: lane === 'u' ? HERO.gold : fg,
   }
 }
 
@@ -339,12 +366,12 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const pickStop = useCallback(
     (i: number) => {
       setScale(1)
-      const changed = i !== stopRef.current
+      // The slice fires only when the BAND changes — i.e. you switch modes
+      // (Zero ↔ Heaven ↔ Hell ↔ Ultra). Moving WITHIN a band (high→xhigh, both
+      // Hell) does not, since the surface identity has not changed.
+      const bandChanged = LADDER[i].lane !== LADDER[stopRef.current].lane
       setStop(i)
-      // Frontload the impact: EVERY step along the one line fires the same slice
-      // the heaven→hell crossing used to own, so the CTA and the palette glitch
-      // into existence on each switch off→ultra (owner, N13 hero).
-      if (!changed || actRef.current !== N - 1 || prefersReducedMotion()) return
+      if (!bandChanged || actRef.current !== N - 1 || prefersReducedMotion()) return
       clearInterval(glitchIntervalRef.current)
       let n = 0
       setGlitch(1)
@@ -476,7 +503,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     // Flat palette per rung — no gradient, no red. The ladder IS the palette:
     // zero ink-grey · heaven cyan + violet (prismatic) · hell the inverted,
     // non-red side (teal · blue · amber) · ultra gold.
-    const RUNG_HUE = ['#8b8890', '#5fc2d6', '#a58ae0', '#3f9b8a', '#4f86b8', '#c89a3f', '#ffd24a']
+    const RUNG_HUE = [HERO.grey, HERO.cyan, HERO.violet, HERO.hellTeal, HERO.hellBlue, HERO.hellAmber, HERO.gold]
     const hue = RUNG_HUE[i]
     return {
       label: r.label,
