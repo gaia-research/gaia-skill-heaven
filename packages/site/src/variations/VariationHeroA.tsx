@@ -220,16 +220,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
         }}
       >
-        {/* "Skill" is layered BEHIND Lucy (zIndex 0, under the figure's zIndex 1)
-            so it never covers her; the state word stays in front (zIndex 2). */}
+        {/* "Skill" sits CENTERED on the state word, layered on top (z-axis). */}
         <span
           className="vha-eyebrow"
           style={{
             position: 'absolute',
             left: '50%',
-            top: 0,
-            transform: 'translate(-50%, -30%) rotate(-3deg)',
-            zIndex: 0,
+            top: '50%',
+            transform: 'translate(-50%, -50%) rotate(-3deg)',
+            zIndex: 5,
             color: v.fg,
             fontSize: 'clamp(30px, 4.2vw, 68px)',
             textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
