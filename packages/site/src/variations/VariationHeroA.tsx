@@ -1,6 +1,20 @@
+import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import './variation-hero.css'
+
+import wingHeaven from '../assets/lucy/components/wings/lucy-wing-heaven-pair.webp'
+import wingHell from '../assets/lucy/components/wings/lucy-wing-hell-pair.webp'
+import wingUltra from '../assets/lucy/components/wings/lucy-wing-ultra-pair.webp'
+
+// Glass wings, per state. Canon (DESIGN.md): Zero carries NO wings; Heaven,
+// Hell and Ultra each get their pair. Restored here after a prior PR dropped
+// the render — the asset was never superseded.
+const WINGS: Record<'heaven' | 'hell' | 'ultra', string> = {
+  heaven: wingHeaven,
+  hell: wingHell,
+  ultra: wingUltra,
+}
 
 // ─────────────────────────────────────────────────────────────────────────
 // VARIATION: HERO A · REREDOS
@@ -22,6 +36,20 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
   const assets = HERO_ASSET_SETS[normalizeLucyAssetSet(assetSet)][v.lucyState]
 
+  // Per-band wordmark fill: prismatic (heaven), inverted-red (hell), gold
+  // (ultra), flat ink (zero). Applied as a clipped text gradient; when the
+  // band has no gradient the word falls back to the scene foreground.
+  const gradText =
+    v.wordGrad === 'none'
+      ? { color: v.fg }
+      : {
+          backgroundImage: v.wordGrad,
+          WebkitBackgroundClip: 'text' as const,
+          backgroundClip: 'text' as const,
+          color: 'transparent',
+          WebkitTextFillColor: 'transparent' as const,
+        }
+
   return (
     <div
       ref={rootRef}
@@ -35,6 +63,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         color: v.fg,
       }}
     >
+      <Link to="/landing" className="vha-skip" style={{ color: v.fg, borderColor: v.hair2 }}>
+        Skip · Enter the door →
+      </Link>
       <div
         aria-hidden="true"
         style={{
@@ -71,6 +102,32 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           opacity: v.oHalo,
         }}
       />
+
+      {v.scene !== 'zero' && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: '2vh',
+            height: '78vh',
+            translate: '-50% 0',
+            zIndex: 0,
+            transition:
+              'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
+            transform: `scale(${v.mWing})`,
+            opacity: v.oLucy * 0.82,
+            filter: v.lucyFilter,
+          }}
+        >
+          <img
+            src={WINGS[v.lucyState]}
+            alt=""
+            draggable={false}
+            style={{ display: 'block', height: '100%', width: 'auto' }}
+          />
+        </div>
+      )}
 
       <div
         aria-hidden="true"
@@ -143,31 +200,37 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           <span style={{ display: 'block', width: 'min(10vw,132px)', height: 1, background: v.hair2 }} />
         </div>
         <div style={{ position: 'relative' }}>
-          <div className="vha-word" style={{ transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
+          <div className="vha-word" style={{ ...gradText, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--split-top"
-            style={{ transform: `scale(${v.mType}) translateX(${v.splitX}px)`, opacity: v.oSplit }}
+            style={{ ...gradText, transform: `scale(${v.mType}) translateX(${v.splitX}px)`, opacity: v.oSplit }}
           >
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--split-bottom"
-            style={{ transform: `scale(${v.mType}) translateX(-${v.splitX}px)`, opacity: v.oSplit }}
+            style={{ ...gradText, transform: `scale(${v.mType}) translateX(-${v.splitX}px)`, opacity: v.oSplit }}
           >
             HEAVEN
           </div>
-          <div className="vha-hell" style={{ transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
+          <div className="vha-hell" style={{ ...gradText, transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
             HELL
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
+            style={{ ...gradText, transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
-          <div className="vha-ultra" style={{ opacity: v.oUltra }}>
+          <div
+            className="vha-word vha-word--sm"
+            style={{ color: v.fg, transform: `scale(${v.hellScale})`, opacity: v.oZero }}
+          >
+            ZERO
+          </div>
+          <div className="vha-hell" style={{ ...gradText, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
             ULTRA
           </div>
         </div>
@@ -241,6 +304,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         }}
       >
         <div style={{ display: 'flex', gap: 4, marginBottom: 9 }}>
+          <div className="vha-chip vha-chip--zero">ZERO</div>
           <div className="vha-chip vha-chip--heaven">HEAVEN</div>
           <div className="vha-chip vha-chip--hell">HELL</div>
           <div className="vha-chip vha-chip--ultra">ULTRA</div>

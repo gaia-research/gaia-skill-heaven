@@ -17,6 +17,29 @@ body.vh-hero-page {
   text-rendering: optimizeLegibility;
 }
 
+/* Skip straight to the document. The one bit of persistent chrome on the
+   otherwise full-bleed hero — the old prototype Switcher is gone. */
+.vha-skip {
+  position: fixed;
+  top: 16px;
+  right: 8vw;
+  z-index: 40;
+  padding: 8px 15px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  font-family: Archivo, sans-serif;
+  font-variation-settings: 'wght' 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: opacity 200ms ease;
+  pointer-events: auto;
+}
+.vha-skip:hover {
+  opacity: 0.6;
+}
+
 .vha,
 .vha *,
 .vha *::before,
@@ -318,25 +341,32 @@ body.vh-hero-page {
   letter-spacing: 0.26em;
   padding-left: 0.26em;
 }
+.vha-chip--zero,
+.vhb-chip--zero {
+  flex: 1;
+  background: #6b6970;
+  color: #f2f1ee;
+  border: 1px solid #9a98a0;
+}
 .vha-chip--heaven,
 .vhb-chip--heaven {
-  flex: 3;
-  background: #0a0a0a;
-  color: #fff;
-  border: 1px solid #fff;
+  flex: 2;
+  background: linear-gradient(92deg, #ff4d7d, #ff9d3b, #ffe14d, #5fe08a, #4db8ff, #9b6bff);
+  color: #0a0a0a;
+  border: none;
 }
 .vha-chip--hell,
 .vhb-chip--hell {
   flex: 3;
-  background: #fff;
-  color: #0a0a0a;
-  border: 1px solid #0a0a0a;
+  background: #c43020;
+  color: #fff;
+  border: 1px solid #c43020;
 }
 .vha-chip--ultra,
 .vhb-chip--ultra {
   flex: 1;
-  background: #fff;
-  color: #c81e1e;
+  background: #0a0a0a;
+  color: #d9b25c;
   border: 1px solid #c81e1e;
   font-size: 9px;
   letter-spacing: 0.2em;
