@@ -112,13 +112,15 @@ export const surfaceById = (id: SurfaceId): Surface =>
    the WIP mark.
    ------------------------------------------------------------------------- */
 
-export type RungId = 'off' | 'low' | 'med' | 'high' | 'xhigh' | 'max';
+export type RungId = 'off' | 'low' | 'med' | 'high' | 'xhigh' | 'max' | 'ultra';
 
 export interface Rung {
   id: RungId;
   /** auto-summons permitted per capability gap — PROVISIONAL */
   slots: number;
   note: string;
+  /** the crown rung: the controller, no count to set */
+  crown?: boolean;
 }
 
 export const RUNGS: Rung[] = [
@@ -128,7 +130,19 @@ export const RUNGS: Rung[] = [
   { id: 'high', slots: 3, note: 'Three per gap. The working default for explore.' },
   { id: 'xhigh', slots: 4, note: 'Four per gap. A wider net, a heavier session.' },
   { id: 'max', slots: 5, note: 'Five per gap. The widest reach the router will take.' },
+  { id: 'ultra', slots: 0, crown: true, note: 'The controller picks direction and depth per gap. Nothing to set.' },
 ];
+
+/** One line, four bands: which surface a given rung belongs to (N13). */
+export const RUNG_BAND: Record<RungId, SurfaceId> = {
+  off: 'zero',
+  low: 'heaven',
+  med: 'heaven',
+  high: 'hell',
+  xhigh: 'hell',
+  max: 'hell',
+  ultra: 'ultra',
+};
 
 export const LADDER_WIP =
   'Per-rung counts are provisional and do not land until the benchmark does.';
@@ -138,7 +152,7 @@ export const LADDER_WIP =
    ------------------------------------------------------------------------- */
 
 export const INSTALL = {
-  sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
+  sh: 'curl -fsSL https://skill-heaven.dev/install.sh | sh',
   note: 'Installs every door plus the summon engine. One command, all harnesses.',
   standalone: 'npx --yes skill-hell@latest summon "code review" --card',
   standaloneNote: 'Summon standalone, with no launcher and nothing installed.',
@@ -203,7 +217,7 @@ export const HOUSES = [
     name: 'Gaia Skill Tree',
     blurb: 'The curated set Hell routes over and Heaven converges from.',
     action: 'Browse the tree',
-    href: 'https://github.com/gaia-research/gaia-skill-tree',
+    href: 'https://gaiaskilltree.com',
     hue: 'var(--sh-house-tree)',
   },
   {

@@ -29,9 +29,11 @@ import {
   LADDER_WIP,
   MECHANIC,
   RUNGS,
+  RUNG_BAND,
   SESSION_ROWS,
   SITE,
   SURFACES,
+  surfaceById,
   type Door,
   type RungId,
   type SurfaceId,
@@ -42,7 +44,12 @@ import './landing.css'
 /* -- the commission: real art, no placeholder slots left except the logo -- */
 import lucyZero from '../assets/lucy/v4-approved/set-a/masters/lucy-zero.webp'
 import lucyHeaven from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp'
+import lucyHell from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp'
+import lucyUltra from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp'
+import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp'
 import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
+import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
+import bgUltra from '../assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp'
 import katanaHeaven from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import katanaHell from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
 import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
@@ -245,21 +252,15 @@ export default function Landing() {
     return { nAdded: added, nDropped: dropped, standing: DOSES.benchmarkFloor + tokens, verdict: line }
   }, [mounted])
 
-  /* ---- §04 direction + ladder ---- */
-  const heaven = SURFACES.find((s) => s.id === 'heaven')!
-  const hellSurface = SURFACES.find((s) => s.id === 'hell')!
-  const [direction, setDirection] = useState<'heaven' | 'hell'>('heaven')
-  const [rungs, setRungs] = useState<Record<'heaven' | 'hell', RungId>>({
-    heaven: heaven.defaultRung ?? 'low',
-    hell: hellSurface.defaultRung ?? 'high',
-  })
-  const activeSurface = direction === 'heaven' ? heaven : hellSurface
-  const activeRung = RUNGS.find((r) => r.id === rungs[direction])!
-  const pickRung = useCallback(
-    (id: RungId) => setRungs((r) => ({ ...r, [direction]: id })),
-    [direction],
-  )
-  const rungIndex = RUNGS.findIndex((r) => r.id === activeRung.id)
+  /* ---- §04 direction + ladder — ONE line, four bands (N13) ---- */
+  // A single rung on one continuous line; its band/surface is READ from the
+  // rung (off=Zero, low·med=Heaven, high·xhigh·max=Hell, ultra=the crown),
+  // never chosen as a separate direction.
+  const [rung, setRung] = useState<RungId>('low')
+  const activeRung = RUNGS.find((r) => r.id === rung)!
+  const activeSurface = surfaceById(RUNG_BAND[rung])
+  const rungIndex = RUNGS.findIndex((r) => r.id === rung)
+  const pickRung = useCallback((id: RungId) => setRung(id), [])
   const onLadderKey = useCallback(
     (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
@@ -355,7 +356,9 @@ export default function Landing() {
           </div>
 
           <figure className="lp-figure">
+            <img className="lp-figure__bg" src={bgZero} alt="" aria-hidden="true" loading="lazy" decoding="async" />
             <img
+              className="lp-figure__fig"
               src={lucyZero}
               alt="Skill Zero: the line's figure seated in a cyan-lit clean room, eyes closed, a single katana across her lap."
               width={1024}
@@ -667,9 +670,9 @@ export default function Landing() {
       <section className="lp-section" id="directions">
         <SectionHead n="04" title="CONVERGE OR EXPLORE" />
         <p className="lp-section__lede">
-          Heaven and Hell are two directions of the same summon, sharing one MCP. Converge narrows
-          the reach; explore widens it. Both are live today, and neither adds a thing to your
-          machine.
+          Heaven and Hell are two directions of the same summon over one shared MCP — converge
+          narrows the reach, explore widens it. It is one line: the band is read from the rung you
+          set, not chosen as a separate mode. Nothing here adds a thing to your machine.
         </p>
 
         {/* the floor */}
@@ -694,15 +697,20 @@ export default function Landing() {
               <div className="lp-surface__role">{s.role}</div>
               <p className="lp-surface__blurb">{s.blurb}</p>
               <div className="lp-surface__foot">
-                {s.ladder ? (
+                {s.id === 'heaven' ? (
                   <>
-                    <span className="sh-label">
-                      LADDER off → max · opens at {s.defaultRung}
-                    </span>
+                    <span className="sh-label">BAND · low · med · opens low</span>
                     <span className="sh-chip sh-chip--wip">WIP</span>
                   </>
+                ) : s.id === 'hell' ? (
+                  <>
+                    <span className="sh-label">BAND · high · xhigh · max · opens high</span>
+                    <span className="sh-chip sh-chip--wip">WIP</span>
+                  </>
+                ) : s.id === 'ultra' ? (
+                  <span className="sh-label">THE CROWN RUNG · no count to set</span>
                 ) : (
-                  <span className="sh-label">NO LADDER OF ITS OWN</span>
+                  <span className="sh-label">OFF · the floor of the line</span>
                 )}
               </div>
             </article>
@@ -746,7 +754,7 @@ export default function Landing() {
                 ◈
               </span>
               <h3>REACH FOR /SKILL-HELL</h3>
-              <span className="sh-chip sh-chip--live">LIVE</span>
+              <span className="sh-chip sh-chip--wip">WIP</span>
             </div>
             <span className="lp-band lp-ledger__blade" aria-hidden="true">
               <img src={katanaHell} alt="" />
@@ -776,50 +784,44 @@ export default function Landing() {
           <div className="lp-ladder__head">
             <div>
               <span className="sh-label">
-                THE LADDER · {activeSurface.command} · auto-summons per capability gap
+                THE LADDER · ONE LINE · off · low · med · high · xhigh · max · ultra
               </span>
               <span className="sh-chip sh-chip--wip lp-ladder__wip">WIP · PROVISIONAL</span>
             </div>
-            <div className="lp-seg" role="group" aria-label="Ladder direction">
-              <button
-                type="button"
-                className={`lp-seg__btn${direction === 'heaven' ? ' is-on' : ''}`}
-                aria-pressed={direction === 'heaven'}
-                onClick={() => setDirection('heaven')}
-              >
-                CONVERGE
-              </button>
-              <button
-                type="button"
-                className={`lp-seg__btn${direction === 'hell' ? ' is-on' : ''}`}
-                aria-pressed={direction === 'hell'}
-                onClick={() => setDirection('hell')}
-              >
-                EXPLORE
-              </button>
+            <div className="lp-ladder__band">
+              <img
+                className="lp-ladder__bandicon"
+                src={SURFACE_ICON[activeSurface.id]}
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="sh-label" style={{ color: activeSurface.hue }}>
+                {activeSurface.name} · {activeSurface.role}
+              </span>
             </div>
           </div>
 
           <div
-            className={`lp-stops lp-stops--${direction}`}
+            className="lp-stops"
             role="group"
-            aria-label={`Ladder rung for ${activeSurface.command}`}
+            aria-label={`Ladder rung — currently ${activeRung.id}, ${activeSurface.name}`}
             onKeyDown={onLadderKey}
           >
             {RUNGS.map((r, i) => {
               const on = r.id === activeRung.id
-              const isDefault = r.id === activeSurface.defaultRung
+              const band = RUNG_BAND[r.id]
+              const opensHere = (band === 'heaven' && r.id === 'low') || (band === 'hell' && r.id === 'high')
               return (
                 <button
                   key={r.id}
                   type="button"
-                  className={`lp-stop${on ? ' is-on' : ''}${i <= rungIndex ? ' is-below' : ''}`}
+                  className={`lp-stop lp-stop--${band}${on ? ' is-on' : ''}${i <= rungIndex ? ' is-below' : ''}`}
                   aria-pressed={on}
                   onClick={() => pickRung(r.id)}
                 >
                   <span className="lp-stop__detent" aria-hidden="true" />
                   <span className="lp-stop__id">{r.id}</span>
-                  <span className="lp-stop__def">{isDefault ? 'default' : ' '}</span>
+                  <span className="lp-stop__def">{opensHere ? 'opens' : ' '}</span>
                 </button>
               )
             })}
@@ -827,9 +829,11 @@ export default function Landing() {
 
           <div className="lp-ladder__read" aria-live="polite">
             <div className="lp-ladder__count">
-              <span className="lp-ladder__n">{activeRung.slots}</span>
+              <span className="lp-ladder__n">{activeRung.crown ? 'auto' : activeRung.slots}</span>
               <span className="sh-label">
-                auto-summon{activeRung.slots === 1 ? '' : 's'} per gap
+                {activeRung.crown
+                  ? 'controller · picks direction + depth'
+                  : `auto-summon${activeRung.slots === 1 ? '' : 's'} per gap`}
               </span>
               <span className="sh-chip sh-chip--wip">WIP</span>
             </div>
@@ -898,9 +902,22 @@ export default function Landing() {
 
       {/* --------------------------------------------------------- closing art */}
       <section className="lp-section lp-closer" aria-hidden="true">
-        <div className="lp-closer__frame">
-          <img className="lp-closer__bg" src={bgHeaven} alt="" />
-          <img className="lp-closer__figure" src={lucyHeaven} alt="" />
+        <div className="lp-closer__row">
+          <div className="lp-closer__frame lp-closer__frame--heaven">
+            <img className="lp-closer__bg" src={bgHeaven} alt="" loading="lazy" decoding="async" />
+            <img className="lp-closer__figure" src={lucyHeaven} alt="" loading="lazy" decoding="async" />
+            <span className="lp-closer__tag sh-label">CONVERGE</span>
+          </div>
+          <div className="lp-closer__frame lp-closer__frame--hell">
+            <img className="lp-closer__bg" src={bgHell} alt="" loading="lazy" decoding="async" />
+            <img className="lp-closer__figure" src={lucyHell} alt="" loading="lazy" decoding="async" />
+            <span className="lp-closer__tag sh-label">EXPLORE</span>
+          </div>
+          <div className="lp-closer__frame lp-closer__frame--ultra">
+            <img className="lp-closer__bg" src={bgUltra} alt="" loading="lazy" decoding="async" />
+            <img className="lp-closer__figure" src={lucyUltra} alt="" loading="lazy" decoding="async" />
+            <span className="lp-closer__tag sh-label">THE CROWN</span>
+          </div>
         </div>
       </section>
 

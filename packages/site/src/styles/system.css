@@ -34,19 +34,20 @@
   --sh-blue: #6f96d8;     /* structure */
   --sh-cyan: #5fc2d6;     /* highlight, hover, borrowed */
   --sh-mint: #71ccae;     /* measured, safe */
-  --sh-rose: #e094c8;     /* the explore lane */
+  --sh-rose: #e094c8;     /* prismatic spectrum band only (never a UI accent) */
   --sh-magenta: #d478b0;  /* edge */
 
   /* ---- surface identity: one hue per product surface ----
      Zero is zen monochrome (ink grey, not a colour); Heaven is prismatic in
-     the hero and reduces to this structural blue in the document; Ultra is
-     gold with a red treatment accent. See DESIGN.md “The four bands (N13)”. */
+     the hero and reduces to this structural blue in the document; Hell is the
+     RGB inversion of Heaven — warm amber, never red; Ultra is gold. RED is
+     banned in the UI (only the figure's single tear). See DESIGN.md. */
   --sh-zero: #8b8890;
   --sh-heaven: #6f96d8;
-  --sh-hell: #e094c8;
+  --sh-hell: #c89a3f;
   --sh-ultra: #d9b25c;
 
-  /* ---- hell inversion: the inverted spectrum (reads red) on paper ---- */
+  /* ---- hell inversion: the inverted (amber/teal, non-red) spectrum on paper ---- */
   --sh-hell-paper: #efece7;
   --sh-hell-ink: #171618;
   --sh-hell-line: rgba(23, 22, 24, 0.16);
