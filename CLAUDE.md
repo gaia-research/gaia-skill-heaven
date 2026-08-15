@@ -165,8 +165,9 @@ happens *inside* one of those two, it does not add a third.
   (working mapping `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven
   defaults `low`, Hell defaults `high`). `/skill-ultra` is the controller over
   both — it picks direction and depth per gap and has no ladder of its own.
-  Hell is not gated, locked, or refused at any rung; only `/skill-ultra`
-  refuses, because it is unratified — never describe that as a gate.
+  Hell is not gated, locked, or refused at any rung, and neither is Ultra —
+  N12 ratified all four surfaces, so nothing on the ladder refuses. What is
+  still outstanding is implementation, not permission.
   Heaven/Hell stamps are not built; routing falls back to relevance ranking.
 - **P3 — never mutate shared state.** The launcher composes flags and execs; it
   never stashes, restores, or edits the user's `~/.claude`, settings, or

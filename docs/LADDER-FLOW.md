@@ -63,8 +63,9 @@ of these numbers must say so.
 
 `/skill-heaven` defaults to `low`; `/skill-hell` defaults to `high`. Both
 directions are reachable at every rung — **Hell is not gated, locked, or
-refused at any of them.** `/skill-ultra` is the only surface here that
-refuses, and only because it is unratified, never because it is gated.
+refused at any of them**, and neither is Ultra. N12 ratified all four
+surfaces, so **nothing here refuses**; what is outstanding on `/skill-ultra`
+is implementation, not permission.
 
 `floor` is **not on the ladder.** It is the doorless benchmark
 placebo-of-record, byte-frozen, reachable only as `--posture floor`. Users
@@ -115,7 +116,7 @@ flowchart TD
     I -->|yes| K["`ladder: off·low·med·high·xhigh·max<br/>default high`"]
     K --> L[arm explore direction at that budget]
 
-    B -->|/skill-ultra| U["`picks direction + depth per gap<br/>no ladder of its own — refuses, unratified`"]
+    B -->|/skill-ultra| U["`picks direction + depth per gap<br/>no ladder of its own — ratified N12`"]
 
     F --> O([session is armed])
     L --> O
