@@ -1,0 +1,1887 @@
+{
+  "schema": "lucy-v4-approved-collective/v1",
+  "purpose": "Owner-authorized downstream registry for all A/B/C visual variations; it does not claim a pristine-alpha guard pass.",
+  "owner_authorization": {
+    "path": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+    "scope": "all nine active v4 visual variations"
+  },
+  "retained_guard_evidence": {
+    "candidate_gate": "STOP_ALL_NINE_ACTIVE_CANDIDATES_HARD_FAIL",
+    "independent_review": "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+    "validator": "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+    "candidate_manifest": "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json",
+    "rule": "Owner approval permits downstream use but never relabels retained automated or independent failures as passes."
+  },
+  "brief_coverage": {
+    "P0": "all three sets: canonical state masters, full-state surfaces, and independently assembled desktop/mobile hero pair",
+    "P1": "all three sets: runtime panels/features and zero/heaven/hell/ultra/neutral busts",
+    "P2": "reused by exact path reference; no duplicate workbench PNGs or copies",
+    "P3": "all three sets: OG, square, portrait, and story WebPs"
+  },
+  "counts": {
+    "production_webps": 82,
+    "by_priority": {
+      "P0": 43,
+      "P1": 27,
+      "P2": 0,
+      "P3": 12
+    },
+    "production_pngs": 0
+  },
+  "sets": {
+    "A": {
+      "receipt": "docs/lucy/production/v4/downstream/SET-A.md",
+      "manifest": "packages/site/src/assets/lucy/v4-approved/set-a/ASSET_MANIFEST.json"
+    },
+    "B": {
+      "receipt": "docs/lucy/production/v4/downstream/SET-B.md",
+      "manifest": "packages/site/src/assets/lucy/v4-approved/set-b/SET_B_ASSET_MANIFEST.json"
+    },
+    "C": {
+      "receipt": "docs/lucy/production/v4/downstream/SET-C.md",
+      "manifest": "packages/site/src/assets/lucy/v4-approved/set-c/PROVENANCE_AND_ASSEMBLY_MANIFEST.json"
+    }
+  },
+  "reused_p2_exact_references": {
+    "set_a": [
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/",
+      "packages/site/src/assets/lucy/components/ribbons/",
+      "packages/site/src/assets/lucy/components/wings/",
+      "packages/site/src/assets/lucy/components/shards/",
+      "packages/site/src/assets/lucy/components/eyes/",
+      "packages/site/src/assets/lucy/fx/",
+      "packages/site/src/assets/lucy/backgrounds/",
+      "packages/site/src/assets/lucy/identity/"
+    ],
+    "set_b": {
+      "ribbons": [
+        "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-zero.webp",
+        "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-heaven.webp",
+        "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-hell.webp",
+        "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-ultra.webp"
+      ],
+      "wings": [
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-left.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-right.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-pair.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-left.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-right.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-pair.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-left.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-right.webp",
+        "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-pair.webp"
+      ],
+      "shards": [
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-01.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-02.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-03.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-04.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-05.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-06.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-07.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-08.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-09.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-10.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-11.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-12.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-13.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-14.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-15.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-16.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-17.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-18.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-19.webp",
+        "packages/site/src/assets/lucy/components/shards/lucy-shard-20.webp"
+      ],
+      "eyes": [
+        "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-closed.webp",
+        "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-blank.webp",
+        "packages/site/src/assets/lucy/components/eyes/lucy-eyes-heaven.webp",
+        "packages/site/src/assets/lucy/components/eyes/lucy-eyes-hell.webp",
+        "packages/site/src/assets/lucy/components/eyes/lucy-eyes-ultra.webp"
+      ],
+      "katanas": [
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-neutral-steel.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-unsheathed.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-sheathed.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-saya.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-dual.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-zero.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp",
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp"
+      ],
+      "fx": [
+        "packages/site/src/assets/lucy/fx/lucy-aura-heaven.webp",
+        "packages/site/src/assets/lucy/fx/lucy-aura-hell.webp",
+        "packages/site/src/assets/lucy/fx/lucy-aura-ultra.webp",
+        "packages/site/src/assets/lucy/fx/lucy-caustics-cyan.webp",
+        "packages/site/src/assets/lucy/fx/lucy-caustics-inverted.webp",
+        "packages/site/src/assets/lucy/fx/lucy-caustics-gold.webp",
+        "packages/site/src/assets/lucy/fx/lucy-particles-cyan.webp",
+        "packages/site/src/assets/lucy/fx/lucy-particles-gold.webp",
+        "packages/site/src/assets/lucy/fx/lucy-hell-red-fragments.webp",
+        "packages/site/src/assets/lucy/fx/lucy-optical-filaments.webp"
+      ],
+      "backgrounds": [
+        "packages/site/src/assets/lucy/backgrounds/lucy-bg-zero-desktop.webp",
+        "packages/site/src/assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp",
+        "packages/site/src/assets/lucy/backgrounds/lucy-bg-hell-desktop.webp",
+        "packages/site/src/assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp"
+      ],
+      "identity": [
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-zero.svg",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-zero.webp",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-heaven.svg",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-heaven.webp",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-hell.svg",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-hell.webp",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-ultra.svg",
+        "packages/site/src/assets/lucy/identity/lucy-state-icon-ultra.webp",
+        "packages/site/src/assets/lucy/identity/lucy-diamond-eye.svg",
+        "packages/site/src/assets/lucy/identity/lucy-diamond-eye.webp",
+        "packages/site/src/assets/lucy/identity/lucy-red-tear.svg",
+        "packages/site/src/assets/lucy/identity/lucy-red-tear.webp"
+      ]
+    },
+    "set_c": {
+      "backgrounds": {
+        "zero": "packages/site/src/assets/lucy/backgrounds/lucy-bg-zero-desktop.webp",
+        "heaven": "packages/site/src/assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp",
+        "hell": "packages/site/src/assets/lucy/backgrounds/lucy-bg-hell-desktop.webp",
+        "ultra": "packages/site/src/assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp"
+      },
+      "katana_authority_directory": "packages/site/src/assets/lucy/frontpage/katana-authority-v2",
+      "ribbons_directory": "packages/site/src/assets/lucy/components/ribbons",
+      "wings_directory": "packages/site/src/assets/lucy/components/wings",
+      "shards_directory": "packages/site/src/assets/lucy/components/shards",
+      "eyes_directory": "packages/site/src/assets/lucy/components/eyes",
+      "fx_directory": "packages/site/src/assets/lucy/fx",
+      "state_icons_directory": "packages/site/src/assets/lucy/identity"
+    }
+  },
+  "assets": [
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-heaven-alternate-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-heaven-alternate-mobile.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-ultra-primary-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-ultra-primary-mobile.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "standardized master export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-hell.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1055,
+        1491
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: hell-A",
+      "transform": "standardized master export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1122,
+        1402
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "standardized master export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-zero.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-heaven-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "full-state export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-hell-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1055,
+        1491
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: hell-A",
+      "transform": "full-state export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-ultra-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1122,
+        1402
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "full-state export",
+      "alpha_disclosure": "LOCAL_BIREFNET_EXTRACTION_ALPHA; upstream candidate matte failure retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-zero-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "candidate/source: packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "full-state export",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-heaven-feature-panel.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-hell-feature-panel.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: hell-A",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-ultra-feature-panel.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-zero-feature-panel.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-heaven-bust.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: heaven-A",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-hell-bust.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: hell-A",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "neutral",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-neutral-bust.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: packages/site/src/assets/lucy/models/lucy-neutral.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-ultra-bust.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: ultra-A",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-zero-bust.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-og-1200x630.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1200,
+        630
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-portrait-1080x1350.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-square-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "A",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-story-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "candidate/source: shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-alternate-heaven-desktop-2560x1440.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-alternate-heaven-mobile-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-primary-ultra-desktop-2560x1440.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-primary-ultra-mobile-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/heroes/lucy-heaven-alternate-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-alternate-heaven-desktop-2560x1440.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/heroes/lucy-ultra-primary-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-primary-ultra-desktop-2560x1440.webp",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-heaven-master.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1054,
+        1492
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-heaven.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1054,
+        1492
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-hell-master.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-hell.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-ultra-master.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-ultra.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-zero-master.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "ESTABLISHED_SOURCE_ALPHA",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/masters/lucy-zero.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "standardized master export",
+      "alpha_disclosure": "ESTABLISHED_SOURCE_ALPHA",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/lucy-heaven.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1054,
+        1492
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "full-state export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/lucy-hell.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "full-state export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/lucy-ultra.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "full-state export",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/lucy-zero.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "full-state export",
+      "alpha_disclosure": "ESTABLISHED_SOURCE_ALPHA",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/portraits/lucy-heaven-bust-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/portraits/lucy-hell-bust-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "neutral",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/portraits/lucy-neutral-bust-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/portraits/lucy-neutral.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_SOURCE_ALPHA",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/portraits/lucy-ultra-bust-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/portraits/lucy-zero-bust-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_SOURCE_ALPHA",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/panels/lucy-heaven-panel-1440x900.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/panels/lucy-hell-panel-1440x900.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/panels/lucy-ultra-panel-1440x900.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/states/panels/lucy-zero-panel-1440x900.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/social/lucy-og-1200x630.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1200,
+        630
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/social/lucy-portrait-1080x1350.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/social/lucy-square-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "B",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-b/social/lucy-story-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/hero/lucy-heaven-alternate-desktop-2560x1440.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/hero/lucy-heaven-alternate-mobile-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/hero/lucy-ultra-primary-desktop-2560x1440.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/hero/lucy-ultra-primary-mobile-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/heroes/lucy-heaven-alternate-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/heroes/lucy-ultra-primary-desktop.webp",
+      "format": "WEBP",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "separately assembled responsive hero composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/masters/lucy-heaven.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/masters/lucy-hell.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"hell-C\", \"exact_inversion_source\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-C3/intermediate/hell-C-exact-inversion.png\", \"lineage\": \"full Heaven-palette source then exact full RGB inversion; no face patch or tear recolor\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-hell-C-isnet-anime.png\"}",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/masters/lucy-ultra.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "standardized master export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/lucy-heaven-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "full-state export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/lucy-hell-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"hell-C\", \"exact_inversion_source\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-C3/intermediate/hell-C-exact-inversion.png\", \"lineage\": \"full Heaven-palette source then exact full RGB inversion; no face patch or tear recolor\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-hell-C-isnet-anime.png\"}",
+      "transform": "full-state export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/lucy-ultra-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "full-state export",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P0",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/lucy-zero-full.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"VERIFIED_EXISTING_ALPHA\", \"path\": \"packages/site/src/assets/lucy/states/lucy-zero.webp\"}",
+      "transform": "full-state export",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/portraits/lucy-heaven-bust-1024x1024.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/portraits/lucy-hell-bust-1024x1024.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"hell-C\", \"exact_inversion_source\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-C3/intermediate/hell-C-exact-inversion.png\", \"lineage\": \"full Heaven-palette source then exact full RGB inversion; no face patch or tear recolor\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-hell-C-isnet-anime.png\"}",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "neutral",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/portraits/lucy-neutral-bust-1024x1024.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"VERIFIED_EXISTING_ALPHA\", \"path\": \"packages/site/src/assets/lucy/models/lucy-neutral.webp\"}",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/portraits/lucy-ultra-bust-1024x1024.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "OWNER_OVERRIDE_UNCERTIFIED_SEGMENTATION_ALPHA; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/portraits/lucy-zero-bust-1024x1024.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "has_alpha_channel": true,
+      "source_provenance": "{\"alpha_status\": \"VERIFIED_EXISTING_ALPHA\", \"path\": \"packages/site/src/assets/lucy/states/lucy-zero.webp\"}",
+      "transform": "bust portrait crop/composite",
+      "alpha_disclosure": "ESTABLISHED_ALPHA_SOURCE",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "heaven",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/panels/lucy-heaven-panel-1024x1280.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"heaven-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png\"}",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "hell",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/panels/lucy-hell-panel-1024x1280.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"hell-C\", \"exact_inversion_source\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-C3/intermediate/hell-C-exact-inversion.png\", \"lineage\": \"full Heaven-palette source then exact full RGB inversion; no face patch or tear recolor\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-hell-C-isnet-anime.png\"}",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "ultra",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/panels/lucy-ultra-panel-1024x1280.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL\", \"candidate\": \"ultra-C\", \"matte\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png\", \"raw\": \"packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png\"}",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P1",
+      "state": "zero",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/states/panels/lucy-zero-panel-1024x1280.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "{\"alpha_status\": \"VERIFIED_EXISTING_ALPHA\", \"path\": \"packages/site/src/assets/lucy/states/lucy-zero.webp\"}",
+      "transform": "runtime feature-panel composite",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/social/lucy-og-1200x630.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1200,
+        630
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/social/lucy-portrait-1080x1350.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/social/lucy-square-1080x1080.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    },
+    {
+      "set": "C",
+      "priority": "P3",
+      "state": "shared",
+      "path": "packages/site/src/assets/lucy/v4-approved/set-c/social/lucy-story-1080x1920.webp",
+      "format": "WEBP",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "has_alpha_channel": false,
+      "source_provenance": "shared established source",
+      "transform": "social campaign composition",
+      "alpha_disclosure": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE; upstream matte failures retained",
+      "owner_authorization": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+      "retained_guard_evidence": [
+        "docs/lucy/production/v4/V4_INDEPENDENT_REVIEW.md",
+        "docs/lucy/production/v4/V4_VALIDATION_REPORT.md",
+        "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json"
+      ]
+    }
+  ]
+}

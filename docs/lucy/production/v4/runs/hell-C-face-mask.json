@@ -1,0 +1,9 @@
+{
+  "candidate": "hell-C",
+  "face_crop_size": [335, 335],
+  "shapes": [
+    {"type": "ellipse", "box": [92, 142, 169, 216]},
+    {"type": "ellipse", "box": [168, 130, 248, 211]},
+    {"type": "polygon", "points": [[202, 166], [236, 164], [242, 258], [222, 279], [209, 227]]}
+  ]
+}

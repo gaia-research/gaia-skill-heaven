@@ -1,0 +1,399 @@
+{
+  "schema": "lucy-v4-downstream-set/v1",
+  "set": "B",
+  "owner_approval": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+  "candidate_sources": {
+    "heaven": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+    "hell": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+    "ultra": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp"
+  },
+  "state_sources": {
+    "zero": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+    "heaven": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+    "hell": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+    "ultra": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+    "neutral": "packages/site/src/assets/lucy/portraits/lucy-neutral.webp"
+  },
+  "alpha_contract": {
+    "zero_and_neutral": "reused established alpha-bearing assets",
+    "heaven_hell_ultra": "opaque owner-approved preview composites; matte guard failures retained, no synthetic alpha or chroma reconstruction"
+  },
+  "p0": [
+    "masters/lucy-zero-master.webp",
+    "masters/lucy-zero.webp",
+    "states/lucy-zero.webp",
+    "masters/lucy-heaven-master.webp",
+    "masters/lucy-heaven.webp",
+    "states/lucy-heaven.webp",
+    "masters/lucy-hell-master.webp",
+    "masters/lucy-hell.webp",
+    "states/lucy-hell.webp",
+    "masters/lucy-ultra-master.webp",
+    "masters/lucy-ultra.webp",
+    "states/lucy-ultra.webp",
+    "hero/lucy-primary-ultra-desktop-2560x1440.webp",
+    "hero/lucy-alternate-heaven-desktop-2560x1440.webp",
+    "heroes/lucy-ultra-primary-desktop.webp",
+    "heroes/lucy-heaven-alternate-desktop.webp",
+    "hero/lucy-primary-ultra-mobile-1080x1920.webp",
+    "hero/lucy-alternate-heaven-mobile-1080x1920.webp"
+  ],
+  "p1": [
+    "states/panels/lucy-zero-panel-1440x900.webp",
+    "states/panels/lucy-heaven-panel-1440x900.webp",
+    "states/panels/lucy-hell-panel-1440x900.webp",
+    "states/panels/lucy-ultra-panel-1440x900.webp",
+    "portraits/lucy-zero-bust-1080x1080.webp",
+    "portraits/lucy-heaven-bust-1080x1080.webp",
+    "portraits/lucy-hell-bust-1080x1080.webp",
+    "portraits/lucy-ultra-bust-1080x1080.webp",
+    "portraits/lucy-neutral-bust-1080x1080.webp"
+  ],
+  "p2_reused_by_reference": {
+    "ribbons": [
+      "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-zero.webp",
+      "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-heaven.webp",
+      "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-hell.webp",
+      "packages/site/src/assets/lucy/components/ribbons/lucy-ribbon-ultra.webp"
+    ],
+    "wings": [
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-left.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-right.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-heaven-pair.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-left.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-right.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-hell-pair.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-left.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-right.webp",
+      "packages/site/src/assets/lucy/components/wings/lucy-wing-ultra-pair.webp"
+    ],
+    "shards": [
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-01.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-02.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-03.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-04.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-05.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-06.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-07.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-08.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-09.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-10.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-11.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-12.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-13.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-14.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-15.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-16.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-17.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-18.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-19.webp",
+      "packages/site/src/assets/lucy/components/shards/lucy-shard-20.webp"
+    ],
+    "eyes": [
+      "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-closed.webp",
+      "packages/site/src/assets/lucy/components/eyes/lucy-eyes-zero-blank.webp",
+      "packages/site/src/assets/lucy/components/eyes/lucy-eyes-heaven.webp",
+      "packages/site/src/assets/lucy/components/eyes/lucy-eyes-hell.webp",
+      "packages/site/src/assets/lucy/components/eyes/lucy-eyes-ultra.webp"
+    ],
+    "katanas": [
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-neutral-steel.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-unsheathed.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-sheathed.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-saya.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-dual.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-zero.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp",
+      "packages/site/src/assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp"
+    ],
+    "fx": [
+      "packages/site/src/assets/lucy/fx/lucy-aura-heaven.webp",
+      "packages/site/src/assets/lucy/fx/lucy-aura-hell.webp",
+      "packages/site/src/assets/lucy/fx/lucy-aura-ultra.webp",
+      "packages/site/src/assets/lucy/fx/lucy-caustics-cyan.webp",
+      "packages/site/src/assets/lucy/fx/lucy-caustics-inverted.webp",
+      "packages/site/src/assets/lucy/fx/lucy-caustics-gold.webp",
+      "packages/site/src/assets/lucy/fx/lucy-particles-cyan.webp",
+      "packages/site/src/assets/lucy/fx/lucy-particles-gold.webp",
+      "packages/site/src/assets/lucy/fx/lucy-hell-red-fragments.webp",
+      "packages/site/src/assets/lucy/fx/lucy-optical-filaments.webp"
+    ],
+    "backgrounds": [
+      "packages/site/src/assets/lucy/backgrounds/lucy-bg-zero-desktop.webp",
+      "packages/site/src/assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp",
+      "packages/site/src/assets/lucy/backgrounds/lucy-bg-hell-desktop.webp",
+      "packages/site/src/assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp"
+    ],
+    "identity": [
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-zero.svg",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-zero.webp",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-heaven.svg",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-heaven.webp",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-hell.svg",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-hell.webp",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-ultra.svg",
+      "packages/site/src/assets/lucy/identity/lucy-state-icon-ultra.webp",
+      "packages/site/src/assets/lucy/identity/lucy-diamond-eye.svg",
+      "packages/site/src/assets/lucy/identity/lucy-diamond-eye.webp",
+      "packages/site/src/assets/lucy/identity/lucy-red-tear.svg",
+      "packages/site/src/assets/lucy/identity/lucy-red-tear.webp"
+    ]
+  },
+  "p3": [
+    "social/lucy-og-1200x630.webp",
+    "social/lucy-square-1080x1080.webp",
+    "social/lucy-portrait-1080x1350.webp",
+    "social/lucy-story-1080x1920.webp"
+  ],
+  "assets": [
+    {
+      "rel": "masters/lucy-zero-master.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "purpose": "P0 canonical full-state source for Set B zero",
+      "alpha": "ESTABLISHED_SOURCE_ALPHA"
+    },
+    {
+      "rel": "masters/lucy-zero.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "purpose": "P0 standardized live-source alias for Set B zero",
+      "alpha": "ESTABLISHED_SOURCE_ALPHA"
+    },
+    {
+      "rel": "states/lucy-zero.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "purpose": "P0 full-state surface for Set B zero",
+      "alpha": "ESTABLISHED_SOURCE_ALPHA"
+    },
+    {
+      "rel": "states/panels/lucy-zero-panel-1440x900.webp",
+      "width": 1440,
+      "height": 900,
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "purpose": "P1 runtime feature panel for zero",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-heaven-master.webp",
+      "width": 1054,
+      "height": 1492,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P0 canonical full-state source for Set B heaven",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-heaven.webp",
+      "width": 1054,
+      "height": 1492,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P0 standardized live-source alias for Set B heaven",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/lucy-heaven.webp",
+      "width": 1054,
+      "height": 1492,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P0 full-state surface for Set B heaven",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/panels/lucy-heaven-panel-1440x900.webp",
+      "width": 1440,
+      "height": 900,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P1 runtime feature panel for heaven",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-hell-master.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P0 canonical full-state source for Set B hell",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-hell.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P0 standardized live-source alias for Set B hell",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/lucy-hell.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P0 full-state surface for Set B hell",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/panels/lucy-hell-panel-1440x900.webp",
+      "width": 1440,
+      "height": 900,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P1 runtime feature panel for hell",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-ultra-master.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P0 canonical full-state source for Set B ultra",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "masters/lucy-ultra.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P0 standardized live-source alias for Set B ultra",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/lucy-ultra.webp",
+      "width": 1024,
+      "height": 1536,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P0 full-state surface for Set B ultra",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "states/panels/lucy-ultra-panel-1440x900.webp",
+      "width": 1440,
+      "height": 900,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P1 runtime feature panel for ultra",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "hero/lucy-primary-ultra-desktop-2560x1440.webp",
+      "width": 2560,
+      "height": 1440,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P0 primary desktop hero",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "hero/lucy-alternate-heaven-desktop-2560x1440.webp",
+      "width": 2560,
+      "height": 1440,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P0 alternate desktop hero",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "heroes/lucy-ultra-primary-desktop.webp",
+      "width": 2560,
+      "height": 1440,
+      "source": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-primary-ultra-desktop-2560x1440.webp",
+      "purpose": "P0 standardized primary desktop hero alias",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "heroes/lucy-heaven-alternate-desktop.webp",
+      "width": 2560,
+      "height": 1440,
+      "source": "packages/site/src/assets/lucy/v4-approved/set-b/hero/lucy-alternate-heaven-desktop-2560x1440.webp",
+      "purpose": "P0 standardized alternate desktop hero alias",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "hero/lucy-primary-ultra-mobile-1080x1920.webp",
+      "width": 1080,
+      "height": 1920,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P0 re-authored primary mobile hero",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "hero/lucy-alternate-heaven-mobile-1080x1920.webp",
+      "width": 1080,
+      "height": 1920,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P0 re-authored alternate mobile hero",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "portraits/lucy-zero-bust-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "purpose": "P1 zero bust portrait",
+      "alpha": "ESTABLISHED_SOURCE_ALPHA"
+    },
+    {
+      "rel": "portraits/lucy-heaven-bust-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P1 heaven bust portrait",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "portraits/lucy-hell-bust-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P1 hell bust portrait",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "portraits/lucy-ultra-bust-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P1 ultra bust portrait",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "portraits/lucy-neutral-bust-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/portraits/lucy-neutral.webp",
+      "purpose": "P1 neutral bust portrait",
+      "alpha": "ESTABLISHED_SOURCE_ALPHA"
+    },
+    {
+      "rel": "social/lucy-og-1200x630.webp",
+      "width": 1200,
+      "height": 630,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P3 og social export",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "social/lucy-square-1080x1080.webp",
+      "width": 1080,
+      "height": 1080,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-heaven-B-candidate-preview-only.webp",
+      "purpose": "P3 square social export",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "social/lucy-portrait-1080x1350.webp",
+      "width": 1080,
+      "height": 1350,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-hell-B-candidate-preview-only.webp",
+      "purpose": "P3 portrait social export",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    },
+    {
+      "rel": "social/lucy-story-1080x1920.webp",
+      "width": 1080,
+      "height": 1920,
+      "source": "packages/site/src/assets/lucy/v4-candidates/previews/lucy-ultra-B-candidate-preview-only.webp",
+      "purpose": "P3 story social export",
+      "alpha": "OPAQUE_OWNER_APPROVED_PREVIEW_COMPOSITE"
+    }
+  ]
+}

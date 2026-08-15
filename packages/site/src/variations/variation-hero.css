@@ -212,17 +212,6 @@ body.vh-hero-page {
   font-weight: 700;
 }
 
-.vha-tear,
-.vhb-tear {
-  position: absolute;
-  width: 2px;
-  transform-origin: 50% 0;
-  background: linear-gradient(180deg, #c81e1e, rgba(200, 30, 30, 0));
-  animation-name: vh-drip;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-}
-
 .vha-cue,
 .vhb-cue {
   font-size: 12px;
@@ -287,8 +276,8 @@ body.vh-hero-page {
 /* `height` is a LAYOUT property, so transitioning it is a main-thread animation:
    every frame re-lays-out and repaints the whole CTA subtree, for all seven
    rungs at once. Hero A's main thread is already saturated per frame (the
-   full-viewport mix-blend-mode scan layer, the blended + `filter: invert()`
-   Lucy layer, the perspective+mask ground plane, 19-23vw type), so the shrink
+   full-viewport mix-blend-mode scan layer, the full-resolution Lucy layer,
+   the perspective+mask ground plane, 19-23vw type), so the shrink
    of a just-deselected rung could stall for hundreds of milliseconds. Clicking
    three or four hell rungs in a row therefore left several of them frozen
    part-way down — all reading as "selected" — while the label colour and the

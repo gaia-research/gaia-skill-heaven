@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "candidate_gate_status": "STOP_ALL_NINE_ACTIVE_CANDIDATES_HARD_FAIL",
+  "generated_calls": 18,
+  "replacement_calls": 9,
+  "active_candidates": 9,
+  "superseded_candidates": 9,
+  "alpha_deliverables": 0,
+  "preview_webps_reopened": 18,
+  "portable_manifest_paths_checked": 34,
+  "production_pngs": [],
+  "failures": []
+}

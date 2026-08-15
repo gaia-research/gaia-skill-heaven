@@ -1,0 +1,332 @@
+{
+  "schema": "lucy-v4-approved-set-c/v1",
+  "set": "C",
+  "owner_approval": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+  "brief": "docs/lucy/authority/LUCY_FRONT_PAGE_CORE_ASSETS.md",
+  "candidate_manifest": "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json",
+  "source_candidates": {
+    "zero": {
+      "path": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+      "alpha_status": "VERIFIED_EXISTING_ALPHA"
+    },
+    "heaven": {
+      "candidate": "heaven-C",
+      "raw": "packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-C/raw/heaven-C-gpt-image-2.png",
+      "matte": "packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-heaven-C-isnet-anime.png",
+      "alpha_status": "OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL"
+    },
+    "hell": {
+      "candidate": "hell-C",
+      "exact_inversion_source": "packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-C3/intermediate/hell-C-exact-inversion.png",
+      "matte": "packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-hell-C-isnet-anime.png",
+      "alpha_status": "OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL",
+      "lineage": "full Heaven-palette source then exact full RGB inversion; no face patch or tear recolor"
+    },
+    "ultra": {
+      "candidate": "ultra-C",
+      "raw": "packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-C/raw/ultra-C-gpt-image-2.png",
+      "matte": "packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/matte-probe/lucy-ultra-C-isnet-anime.png",
+      "alpha_status": "OWNER_OVERRIDE_UNCERTIFIED_ISNET_ANIME_PROPOSAL"
+    },
+    "neutral": {
+      "path": "packages/site/src/assets/lucy/models/lucy-neutral.webp",
+      "alpha_status": "VERIFIED_EXISTING_ALPHA"
+    }
+  },
+  "local_matte_attempt": {
+    "tool": "rembg isnet-anime through pipx",
+    "command": "pipx run --spec rembg[cpu,cli] rembg i -m isnet-anime <source> <workbench-matte>",
+    "status": "OWNER_OVERRIDE_UNCERTIFIED; candidate hard matte guards remain failed and visible"
+  },
+  "reusable_asset_references": {
+    "backgrounds": {
+      "zero": "packages/site/src/assets/lucy/backgrounds/lucy-bg-zero-desktop.webp",
+      "heaven": "packages/site/src/assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp",
+      "hell": "packages/site/src/assets/lucy/backgrounds/lucy-bg-hell-desktop.webp",
+      "ultra": "packages/site/src/assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp"
+    },
+    "katana_authority_directory": "packages/site/src/assets/lucy/frontpage/katana-authority-v2",
+    "ribbons_directory": "packages/site/src/assets/lucy/components/ribbons",
+    "wings_directory": "packages/site/src/assets/lucy/components/wings",
+    "shards_directory": "packages/site/src/assets/lucy/components/shards",
+    "eyes_directory": "packages/site/src/assets/lucy/components/eyes",
+    "fx_directory": "packages/site/src/assets/lucy/fx",
+    "state_icons_directory": "packages/site/src/assets/lucy/identity"
+  },
+  "brief_coverage": {
+    "P0": [
+      "states/lucy-*-full.webp",
+      "hero/lucy-ultra-primary-desktop-2560x1440.webp",
+      "hero/lucy-heaven-alternate-desktop-2560x1440.webp",
+      "hero/*-mobile-1080x1920.webp"
+    ],
+    "P1": [
+      "states/panels/lucy-*-panel-1024x1280.webp",
+      "portraits/lucy-*-bust-1024x1024.webp",
+      "reusable_asset_references"
+    ],
+    "P2": [
+      "reusable_asset_references.backgrounds",
+      "reusable_asset_references.fx_directory",
+      "reusable_asset_references.state_icons_directory"
+    ],
+    "P3": [
+      "social/lucy-og-1200x630.webp",
+      "social/lucy-square-1080x1080.webp",
+      "social/lucy-portrait-1080x1350.webp",
+      "social/lucy-story-1080x1920.webp"
+    ]
+  },
+  "responsive_authoring": "mobile heroes and story each use independent canvas dimensions, placements, scale and state background rather than center-cropping desktop heroes",
+  "outputs": [
+    {
+      "path": "hero/lucy-heaven-alternate-desktop-2560x1440.webp",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "alpha": false
+    },
+    {
+      "path": "hero/lucy-heaven-alternate-mobile-1080x1920.webp",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "alpha": false
+    },
+    {
+      "path": "hero/lucy-ultra-primary-desktop-2560x1440.webp",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "alpha": false
+    },
+    {
+      "path": "hero/lucy-ultra-primary-mobile-1080x1920.webp",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "alpha": false
+    },
+    {
+      "path": "heroes/lucy-heaven-alternate-desktop.webp",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "alpha": false
+    },
+    {
+      "path": "heroes/lucy-ultra-primary-desktop.webp",
+      "dimensions": [
+        2560,
+        1440
+      ],
+      "alpha": false
+    },
+    {
+      "path": "masters/lucy-heaven.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "masters/lucy-hell.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "masters/lucy-ultra.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "portraits/lucy-heaven-bust-1024x1024.webp",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "alpha": true
+    },
+    {
+      "path": "portraits/lucy-hell-bust-1024x1024.webp",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "alpha": true
+    },
+    {
+      "path": "portraits/lucy-neutral-bust-1024x1024.webp",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "alpha": true
+    },
+    {
+      "path": "portraits/lucy-ultra-bust-1024x1024.webp",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "alpha": true
+    },
+    {
+      "path": "portraits/lucy-zero-bust-1024x1024.webp",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "alpha": true
+    },
+    {
+      "path": "social/lucy-og-1200x630.webp",
+      "dimensions": [
+        1200,
+        630
+      ],
+      "alpha": false
+    },
+    {
+      "path": "social/lucy-portrait-1080x1350.webp",
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "alpha": false
+    },
+    {
+      "path": "social/lucy-square-1080x1080.webp",
+      "dimensions": [
+        1080,
+        1080
+      ],
+      "alpha": false
+    },
+    {
+      "path": "social/lucy-story-1080x1920.webp",
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "alpha": false
+    },
+    {
+      "path": "states/lucy-heaven-full.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "states/lucy-hell-full.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "states/lucy-ultra-full.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "states/lucy-zero-full.webp",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "path": "states/panels/lucy-heaven-panel-1024x1280.webp",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "alpha": false
+    },
+    {
+      "path": "states/panels/lucy-hell-panel-1024x1280.webp",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "alpha": false
+    },
+    {
+      "path": "states/panels/lucy-ultra-panel-1024x1280.webp",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "alpha": false
+    },
+    {
+      "path": "states/panels/lucy-zero-panel-1024x1280.webp",
+      "dimensions": [
+        1024,
+        1280
+      ],
+      "alpha": false
+    }
+  ],
+  "source_alpha_observation": {
+    "zero": {
+      "min": 0,
+      "max": 255,
+      "opaque_pixels": 500629
+    },
+    "heaven": {
+      "min": 0,
+      "max": 255,
+      "opaque_pixels": 12
+    },
+    "hell": {
+      "min": 0,
+      "max": 255,
+      "opaque_pixels": 5
+    },
+    "ultra": {
+      "min": 0,
+      "max": 255,
+      "opaque_pixels": 17
+    }
+  },
+  "review_workbench": {
+    "normal": "packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/review/set-c-normal-composite-review.png",
+    "dark": "packages/site/assets/workbench/lucy/V4-CANDIDATES/set-c-downstream/review/set-c-dark-composite-review.png"
+  },
+  "production_pngs": 0,
+  "self_review": {
+    "normal_and_dark_composites": {
+      "status": "REVIEWED_ONCE_WITH_KNOWN_ALPHA_GAP",
+      "all_final_surfaces": 26,
+      "observation": "opaque hero, panel, and social plates remain visually readable; light-composite alpha surfaces expose model-assisted smoke/halo, strongest around Hell shards and hair. This is recorded, not corrected or relabeled as a guard pass."
+    },
+    "mechanical_reopen_and_dimension_check": {
+      "status": "PASS",
+      "checked_webps": 26,
+      "production_pngs": 0,
+      "failures": []
+    },
+    "guard_status": "OWNER_APPROVED_VISUALS; NO_PRISTINE_ALPHA_GUARD_PASS_CLAIM"
+  }
+}

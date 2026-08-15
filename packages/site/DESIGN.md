@@ -37,6 +37,17 @@ pelvis. Avoid wasp-waist pinching, an overlong torso, tiny pelvis, or a skirt
 concealing an implausibly short hip-to-knee span. This guides judgment rather
 than imposing a numeric rejection threshold.
 
+**Katana authority:** all front-page katana components must follow the approved
+katana panel embedded in `lucy-character-sheet-master.png` and the workbench
+crop `Lucy_Katana_reference.png`. Older Hero A/B commissioned sword rasters are
+provenance only and must not seed new weapon geometry. The approved construction
+is a physically real curved steel blade; dark navy/black handle wrap with pale
+diamond openings; ornate round/slightly floral antique-gold tsuba; dark saya;
+restrained gold fittings; and a small braided/tassel ornament where shown.
+State lighting may reflect on steel but may not turn the weapon into glass or
+energy. Ultra uses two matching copies; Hell is the full inversion of Heaven's
+same registered katana geometry.
+
 | State | Working production color | Non-negotiable treatment |
 |---|---|---|
 | Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |

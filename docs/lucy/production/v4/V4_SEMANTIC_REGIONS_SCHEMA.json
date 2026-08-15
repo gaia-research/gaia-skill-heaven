@@ -1,0 +1,31 @@
+{
+  "description": "Per-candidate boxes. Coordinates may be normalized 0..1 or absolute pixels. Keep face-core tight; do not draw boxes around empty composition space.",
+  "regions": [
+    {
+      "name": "face-core",
+      "box": [0.0, 0.0, 0.0, 0.0],
+      "minimum_foreground_pixels": 64,
+      "minimum_alpha_192_fraction": 0.7,
+      "minimum_median_alpha": 224
+    },
+    {
+      "name": "head",
+      "box": [0.0, 0.0, 0.0, 0.0],
+      "minimum_foreground_pixels": 64,
+      "minimum_median_alpha": 128
+    },
+    {
+      "name": "hair",
+      "box": [0.0, 0.0, 0.0, 0.0],
+      "minimum_foreground_pixels": 64,
+      "minimum_median_alpha": 64
+    },
+    {"name": "torso", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "left-arm-hand", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "right-arm-hand", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "left-leg-foot", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "right-leg-foot", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "wings", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64},
+    {"name": "weapons", "box": [0.0, 0.0, 0.0, 0.0], "minimum_foreground_pixels": 64}
+  ]
+}

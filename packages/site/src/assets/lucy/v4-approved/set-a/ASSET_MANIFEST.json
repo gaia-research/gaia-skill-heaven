@@ -1,0 +1,470 @@
+{
+  "schema": "lucy-v4-approved-set-a/v1",
+  "set": "A",
+  "owner_approval": "docs/lucy/production/v4/V4_OWNER_APPROVAL.md",
+  "candidate_manifest": "packages/site/src/assets/lucy/v4-candidates/CANDIDATE_MANIFEST.json",
+  "active_visual_sources": {
+    "heaven": "heaven-A",
+    "hell": "hell-A",
+    "ultra": "ultra-A",
+    "zero": "packages/site/src/assets/lucy/states/lucy-zero.webp",
+    "neutral": "packages/site/src/assets/lucy/models/lucy-neutral.webp"
+  },
+  "hell_lineage": "hell-A is the exact full-RGB inversion candidate; no eyelid, skin, or tear recolor was applied in this downstream export.",
+  "source_condition": {
+    "zero": {
+      "mode": "established-alpha",
+      "guard": "not re-evaluated in Set A"
+    },
+    "heaven": {
+      "mode": "owner-approved-preview + local-birefnet-general-extraction",
+      "local_extraction_guard": "PASS",
+      "candidate_raw_guard": "FAILED_BEFORE_OWNER_OVERRIDE",
+      "source": "packages/site/assets/workbench/lucy/V4-SET-A/matte/heaven-A-guarded.png",
+      "fallback": "packages/site/assets/workbench/lucy/V4-CANDIDATES/heaven-A/raw/heaven-A-gpt-image-2.png",
+      "local_guard_report": "packages/site/assets/workbench/lucy/V4-SET-A/audit/heaven/guard.json"
+    },
+    "hell": {
+      "mode": "owner-approved-preview + local-birefnet-general-extraction",
+      "local_extraction_guard": "FAIL",
+      "candidate_raw_guard": "FAILED_BEFORE_OWNER_OVERRIDE",
+      "source": "packages/site/assets/workbench/lucy/V4-SET-A/matte/hell-A-guarded.png",
+      "fallback": "packages/site/assets/workbench/lucy/V4-CANDIDATES/hell-source-A3/intermediate/hell-A-exact-inversion.png",
+      "local_guard_report": "packages/site/assets/workbench/lucy/V4-SET-A/audit/hell/guard.json"
+    },
+    "ultra": {
+      "mode": "owner-approved-preview + local-birefnet-general-extraction",
+      "local_extraction_guard": "PASS",
+      "candidate_raw_guard": "FAILED_BEFORE_OWNER_OVERRIDE",
+      "source": "packages/site/assets/workbench/lucy/V4-SET-A/matte/ultra-A-guarded.png",
+      "fallback": "packages/site/assets/workbench/lucy/V4-CANDIDATES/ultra-A/raw/ultra-A-gpt-image-2.png",
+      "local_guard_report": "packages/site/assets/workbench/lucy/V4-SET-A/audit/ultra/guard.json"
+    },
+    "neutral": {
+      "mode": "established-alpha",
+      "guard": "not re-evaluated in Set A"
+    }
+  },
+  "matte_status": {
+    "owner_override": true,
+    "automated_v4_candidate_alpha_deliverables": 0,
+    "statement": "Owner approved visual variations. A local extraction can pass or fail its own recorded matte check; neither result changes the historical candidate raw guard finding or the owner-override provenance."
+  },
+  "p0_p3_mapping": {
+    "P0": [
+      "masters/",
+      "states/",
+      "heroes/"
+    ],
+    "P1": [
+      "features/",
+      "portraits/"
+    ],
+    "P2": {
+      "reused_by_exact_path_reference": [
+        "packages/site/src/assets/lucy/frontpage/katana-authority-v2/",
+        "packages/site/src/assets/lucy/components/ribbons/",
+        "packages/site/src/assets/lucy/components/wings/",
+        "packages/site/src/assets/lucy/components/shards/",
+        "packages/site/src/assets/lucy/components/eyes/",
+        "packages/site/src/assets/lucy/fx/",
+        "packages/site/src/assets/lucy/backgrounds/",
+        "packages/site/src/assets/lucy/identity/"
+      ]
+    },
+    "P3": [
+      "social/"
+    ]
+  },
+  "mobile": "Hero mobile WebPs are independently assembled vertical compositions; not a center crop of desktop heroes.",
+  "generated_model_calls": 0,
+  "output_count": 25,
+  "mechanical_reopen": {
+    "status": "PASS",
+    "entries": [
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-heaven-feature-panel.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1280
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-hell-feature-panel.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1280
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-ultra-feature-panel.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1280
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/features/lucy-zero-feature-panel.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1280
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-heaven-alternate-desktop.webp",
+        "format": "WEBP",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-heaven-alternate-mobile.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-ultra-primary-desktop.webp",
+        "format": "WEBP",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/heroes/lucy-ultra-primary-mobile.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-hell.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1055,
+          1491
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1122,
+          1402
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/masters/lucy-zero.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-heaven-bust.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-hell-bust.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-neutral-bust.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-ultra-bust.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/portraits/lucy-zero-bust.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1024
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-og-1200x630.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1200,
+          630
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-portrait-1080x1350.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1080,
+          1350
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-square-1080x1080.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1080,
+          1080
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/social/lucy-story-1080x1920.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1080,
+          1920
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "alpha_extrema": null
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-heaven-full.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-hell-full.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1055,
+          1491
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-ultra-full.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1122,
+          1402
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      {
+        "path": "packages/site/src/assets/lucy/v4-approved/set-a/states/lucy-zero-full.webp",
+        "format": "WEBP",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "bands": [
+          "R",
+          "G",
+          "B",
+          "A"
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ]
+      }
+    ]
+  },
+  "source_candidate_status_at_export": "STOP_ALL_NINE_ACTIVE_CANDIDATES_HARD_FAIL"
+}
