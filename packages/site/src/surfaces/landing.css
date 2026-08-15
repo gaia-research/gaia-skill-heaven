@@ -89,6 +89,25 @@
   gap: 14px;
   min-width: 0;
 }
+.lp-nav__back {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  margin-right: 4px;
+  border: 1px solid var(--sh-line-strong);
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--sh-ink-dim);
+  text-decoration: none;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+.lp-nav__back:hover {
+  color: var(--sh-ink);
+  border-color: var(--sh-ink);
+}
 .lp-nav__name {
   font-variation-settings: 'wdth' 106, 'wght' 800;
   font-size: 16px;
@@ -352,59 +371,43 @@
 .lp-figure {
   position: relative;
   margin: 0;
-  align-self: stretch;
-  border: 1px solid var(--sh-line-strong);
-  background:
-    repeating-linear-gradient(122deg, rgba(165, 138, 224, 0.1) 0 2px, transparent 2px 9px),
-    radial-gradient(115% 85% at 50% 16%, rgba(95, 194, 214, 0.1), transparent 62%);
-  overflow: hidden;
+  align-self: end;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-}
-.lp-figure::before,
-.lp-figure::after {
-  content: '';
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  border-color: rgba(238, 235, 230, 0.34);
-  border-style: solid;
-}
-.lp-figure::before {
-  top: 7px;
-  left: 7px;
-  border-width: 1px 0 0 1px;
-}
-.lp-figure::after {
-  bottom: 7px;
-  right: 7px;
-  border-width: 0 1px 1px 0;
+  min-height: clamp(360px, 40vw, 620px);
+  overflow: visible;
 }
 .lp-figure__bg {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.45;
+  left: 50%;
+  bottom: -4%;
+  translate: -50% 0;
+  width: 152%;
+  height: 130%;
+  object-fit: contain;
+  opacity: 0.5;
   z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(60% 58% at 50% 46%, #000 38%, transparent 78%);
+  mask-image: radial-gradient(60% 58% at 50% 46%, #000 38%, transparent 78%);
 }
 .lp-figure__fig {
   position: relative;
   z-index: 1;
   display: block;
   width: auto;
-  max-width: 118%;
-  height: clamp(360px, 42vw, 660px);
+  max-width: 142%;
+  height: clamp(430px, 52vw, 820px);
+  margin-top: clamp(-150px, -9vw, -64px);
   object-fit: contain;
   object-position: bottom center;
-  filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 26px 60px rgba(0, 0, 0, 0.62));
 }
 .lp-figure figcaption {
   position: absolute;
-  left: 14px;
-  bottom: 12px;
+  left: 0;
+  bottom: 8px;
   color: var(--sh-ink-dim);
 }
 

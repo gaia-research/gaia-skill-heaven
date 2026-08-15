@@ -19,6 +19,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
 import {
@@ -42,10 +43,10 @@ import '../styles/system.css'
 import './landing.css'
 
 /* -- the commission: real art, no placeholder slots left except the logo -- */
-import lucyZero from '../assets/lucy/v4-approved/set-a/masters/lucy-zero.webp'
-import lucyHeaven from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp'
-import lucyHell from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp'
-import lucyUltra from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp'
+import lucyZero from '../assets/lucy/frontpage/variation-a/states/lucy-zero.webp'
+import lucyHeaven from '../assets/lucy/frontpage/variation-a/states/lucy-heaven.webp'
+import lucyHell from '../assets/lucy/frontpage/variation-a/states/lucy-hell.webp'
+import lucyUltra from '../assets/lucy/frontpage/variation-a/states/lucy-ultra.webp'
 import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp'
 import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
 import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
@@ -261,6 +262,19 @@ export default function Landing() {
   const activeSurface = surfaceById(RUNG_BAND[rung])
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
   const pickRung = useCallback((id: RungId) => setRung(id), [])
+  // In-page nav uses #hash anchors, but this app runs under a HashRouter — a
+  // bare #id would be read as a route and bounce to the hero. Intercept those
+  // clicks and scroll instead. External (http) links pass through.
+  const onLpAnchorClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
+    const a = (e.target as HTMLElement).closest('a[href^="#"]') as HTMLAnchorElement | null
+    if (!a) return
+    const id = a.getAttribute('href')?.slice(1)
+    if (!id) return
+    const el = document.getElementById(id)
+    if (!el) return
+    e.preventDefault()
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
   const onLadderKey = useCallback(
     (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
@@ -272,13 +286,16 @@ export default function Landing() {
   )
 
   return (
-    <div className="lp">
+    <div className="lp" onClick={onLpAnchorClick}>
       {/* ---------------------------------------------------------------- nav */}
       <a className="lp-skip" href="#doors">
         Skip to the doors
       </a>
       <nav className="lp-nav" aria-label="Primary">
         <div className="lp-nav__brand">
+          <a className="lp-nav__back" href="#/" aria-label="Back to the door">
+            <span aria-hidden="true">←</span> THE DOOR
+          </a>
           <span className="lp-slot lp-slot--logo" aria-hidden="true">
             <span>SVG</span>
           </span>
@@ -360,7 +377,7 @@ export default function Landing() {
             <img
               className="lp-figure__fig"
               src={lucyZero}
-              alt="Skill Zero: the line's figure seated in a cyan-lit clean room, eyes closed, a single katana across her lap."
+              alt="Skill Zero: the line's figure at rest, a single katana in hand — nothing summoned yet."
               width={1024}
               height={1536}
               loading="lazy"
