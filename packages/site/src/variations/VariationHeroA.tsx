@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
@@ -28,15 +29,49 @@ export interface VariationHeroProps {
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, dots, rungs, rootRef } = useHeroEngine('a')
-  const assets = HERO_ASSET_SETS[normalizeLucyAssetSet(assetSet)][v.lucyState]
+  const set = normalizeLucyAssetSet(assetSet)
+  const assets = HERO_ASSET_SETS[set][v.lucyState]
+  // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
+  // export) and set-C's has an opaque white ground that can't sit on the black
+  // Heaven page. Set-A is the only transparent Heaven with a clear face; the
+  // earlier hair issue is a framing/scale problem, handled by FIG below.
+  const lucyImg = assets.lucy
+  // Hell inverts its wings too (the whole scene is an RGB inversion).
+  const wingFilter = v.scene === 'hell' ? 'invert(1)' : 'none'
 
-  // White/foreground fill by default; the prismatic identity rides the split-
-  // light shadow only (a chromatic offset, never a gradient fill). Zero has no
-  // split — it stays zen.
-  const wordStyle = {
-    color: v.fg,
-    textShadow: v.wordShadow === 'none' ? 'none' : v.wordShadow,
+  // Stroke (outline) + diagonal hatch fill, never a solid fill (owner + the
+  // original). Zero is the exception: bone fill + dark stroke, kept legible.
+  const wordStyle =
+    v.wordFillBg === 'none'
+      ? { color: v.fg, WebkitTextStroke: v.wordStroke }
+      : {
+          color: 'transparent',
+          backgroundImage: v.wordFillBg,
+          WebkitBackgroundClip: 'text' as const,
+          backgroundClip: 'text' as const,
+          WebkitTextStroke: v.wordStroke,
+        }
+
+  // Fifth-scene CTA: the real launch/invocation one-liner per band + the
+  // constant install one-liner, both copyable (mirrors the instrument).
+  const BAND: Record<string, { cmd: string; hint: string }> = {
+    zero: { cmd: 'claude-zero', hint: 'launch clean — only /summon available' },
+    heaven: { cmd: '/skill-heaven', hint: 'converge · low↔med, default low' },
+    hell: { cmd: '/skill-hell', hint: 'explore · high↔max, default high' },
+    ultra: { cmd: '/skill-ultra', hint: 'auto · picks direction + depth for you' },
   }
+  const band = BAND[v.scene]
+  const INSTALL_CMD = 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh'
+  const [copied, setCopied] = useState<string | null>(null)
+  const copy = useCallback((text: string, key: string) => {
+    void navigator.clipboard?.writeText(text).then(
+      () => {
+        setCopied(key)
+        window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1400)
+      },
+      () => undefined,
+    )
+  }, [])
 
   return (
     <div
@@ -51,6 +86,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         color: v.fg,
       }}
     >
+      {/* Opaque scene ground — guarantees the band colour paints behind the
+         (often transparent) character masters, in every browser and capture. */}
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg }} />
       <Link to="/landing" className="vha-skip" style={{ color: v.fg, borderColor: v.hair2 }}>
         Skip · Enter the door →
       </Link>
@@ -101,6 +139,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             style={{
               transform: `scale(${v.mWing})`,
               opacity: v.oWing,
+              filter: wingFilter,
               transition:
                 'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
             }}
@@ -113,6 +152,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             style={{
               transform: `scale(${v.mWing})`,
               opacity: v.oWing,
+              filter: wingFilter,
               transition:
                 'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
             }}
@@ -129,12 +169,12 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           height: '92vh',
           translate: '-50% 0',
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateY(${v.lucyY}vh) scale(${(Number(v.mLucy) * 2.0).toFixed(3)})`,
-          transformOrigin: '50% 5%',
+          transform: `translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
+          transformOrigin: v.figOrigin,
         }}
       >
         <img
-          src={assets.lucy}
+          src={lucyImg}
           alt=""
           style={{
             display: 'block',
@@ -314,14 +354,28 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 22, color: v.noteTone }}>{v.stopNote}</div>
-        <button
-          className="vha-cta-btn"
-          onClick={(e) => e.preventDefault()}
-          style={{ border: `1px solid ${v.ctaLine}`, background: v.ctaBg, color: v.ctaFg }}
-        >
-          {v.ctaLabel}
-        </button>
+        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 14, color: v.noteTone }}>{v.stopNote}</div>
+        <div className="vha-cta">
+          <button
+            type="button"
+            className="vha-cta-cmd"
+            onClick={() => copy(band.cmd, 'cmd')}
+            style={{ borderColor: v.ctaLine, color: v.fg }}
+          >
+            <span className="vha-cta-prompt" style={{ color: v.ctaLine }}>$</span>
+            <span className="vha-cta-text">{band.cmd}</span>
+            <span className="vha-cta-tag" style={{ color: v.dim }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
+          </button>
+          <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
+          <button
+            type="button"
+            className="vha-cta-install"
+            onClick={() => copy(INSTALL_CMD, 'install')}
+            style={{ color: v.dim }}
+          >
+            {copied === 'install' ? 'install one-liner copied ⏎' : '⧉ copy install one-liner'}
+          </button>
+        </div>
       </div>
     </div>
   )

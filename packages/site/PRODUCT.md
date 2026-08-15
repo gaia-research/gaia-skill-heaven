@@ -22,19 +22,21 @@ context on demand, for one session, and nothing is installed. `/summon` is that
 mechanic in its single, explicit form and it is present in every implementation
 — it is the product floor.
 
-The other three surfaces decide **how much summoning is automatic**:
+The other three surfaces are contiguous **bands on one line** — there is a
+single ladder `off · low · med · high · xhigh · max · ultra`, and the surface is
+read from the current rung. Each rung sets **how much summoning is automatic**:
 
-- **Skill Zero** — the launcher. Severs the harness's skill catalogue to its
-  nearest achievable zero and restores only what you name. Ships with `/summon`
-  by default.
-- **Skill Heaven** — the **converge** direction. `/skill-heaven` carries a ladder
-  `off → max` setting how many skills the agent may auto-summon per capability
-  gap, chosen narrowly.
-- **Skill Hell** — the **explore** direction. `/skill-hell` carries the same
-  `off → max` ladder, cast wider. Heaven and Hell share one MCP that routes a
-  summon to the appropriate side.
-- **Skill Ultra** — the **controller**. `/skill-ultra` picks the direction and
-  the depth per gap. It has no ladder of its own.
+- **Skill Zero** — the launcher and the `off` rung. Severs the harness's skill
+  catalogue to its nearest achievable zero and restores only what you name.
+  Ships with `/summon` by default.
+- **Skill Heaven** — the **converge** band (`low · med`). `/skill-heaven`
+  auto-summons narrowly — the right few skills per capability gap.
+- **Skill Hell** — the **explore** band (`high · xhigh · max`). `/skill-hell`
+  casts wider. Heaven and Hell are two directions of the same summon over one
+  shared MCP; they are interswitchable — a rung is just *how much* (and the
+  router picks *which*) enters the skill entropy.
+- **Skill Ultra** — the **crown rung** (`ultra`). `/skill-ultra` is the auto
+  mode: it picks the direction and the depth per gap. No sub-ladder of its own.
 
 Success is a visitor understanding, in seconds, that a skill can be summoned for
 one session instead of installed forever — and that they choose how much of the
@@ -73,9 +75,10 @@ The public site is served from `packages/site`.
 
 ## Capabilities and Constraints
 
-- **The rungs are `off · low · med · high · xhigh · max`** and they are discrete,
-  never a continuous fader. On both `/skill-heaven` and `/skill-hell` a rung
-  means *how many skills may be auto-summoned per capability gap*. `off` means
+- **The rungs are `off · low · med · high · xhigh · max · ultra`** on ONE line,
+  discrete, never a continuous fader. The surface is read from the rung:
+  `off`=Zero, `low·med`=Heaven, `high·xhigh·max`=Hell, `ultra`=Ultra. A rung
+  means *how many skills may be auto-summoned per capability gap*; `off` means
   none are automatic — `/summon` still works by hand.
 - **Auto-summon depth per rung is PROVISIONAL (WIP).** The working mapping is
   `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`, chosen to sit inside the
@@ -83,8 +86,8 @@ The public site is served from `packages/site`.
   benchmark does** and every surface that shows them must say so.
 - **Defaults:** `/skill-heaven` opens at `low`; `/skill-hell` opens at `high`.
   Both provisional on the same footing as the numbers above.
-- **Skill Ultra has no rung.** It is the controller over Heaven and Hell — no
-  slider, no ladder of its own.
+- **Skill Ultra is the crown rung.** It is the auto controller over the whole
+  line — no slider, no sub-ladder of its own; it sits at the top as `ultra`.
 - **Never mutate shared state:** compose + exec only; writes confined to a
   disposable mkdtemp session dir.
 - **Heaven/Hell stamps are not built yet.** Routing eligibility today falls back
