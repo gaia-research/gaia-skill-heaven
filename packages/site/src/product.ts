@@ -153,9 +153,9 @@ export const LADDER_WIP =
 
 export const INSTALL = {
   sh: 'curl -fsSL https://skill-heaven.dev/install.sh | sh',
-  note: 'Installs every door plus the summon engine. One command, all harnesses.',
-  standalone: 'npx --yes skill-hell@latest summon "code review" --card',
-  standaloneNote: 'Summon standalone, with no launcher and nothing installed.',
+  note: 'Installs the whole plugin — every door plus the summon engine. One command, all harnesses.',
+  standalone: 'npx skill-zero@latest claude',
+  standaloneNote: 'One-time use — runs a door once, nothing installed, nothing left behind.',
   uninstall: '$HOME/.local/share/gaia-skill-heaven/uninstall.sh',
 } as const;
 
@@ -223,7 +223,7 @@ export const HOUSES = [
   {
     id: 'heaven',
     room: 'Room 03 · you are here',
-    name: 'Skill Heaven',
+    name: 'Gaia Skill Heaven',
     blurb: 'The four surfaces. Composes flags, execs your harness, writes nothing you have to clean up.',
     action: 'Pick a door above',
     href: null,

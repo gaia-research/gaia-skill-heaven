@@ -52,7 +52,6 @@ import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
 import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
 import bgUltra from '../assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp'
 import katanaHeaven from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
-import katanaHell from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
 import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
 import iconHeaven from '../assets/lucy/identity/lucy-state-icon-heaven.svg'
 import iconHell from '../assets/lucy/identity/lucy-state-icon-hell.svg'
@@ -77,7 +76,7 @@ const fmt = (n: number) => n.toLocaleString('en-US')
 function doorNote(door: Door): string {
   return door.status === 'flagship'
     ? `The flagship door. The measured floor on this page was recorded on ${door.harness}.`
-    : `Prototype door for ${door.harness}. Same launcher, same /summon floor; the doses above are measured on Claude Code.`
+    : `Zero skills. ${MECHANIC.floor} to summon any skill, including your own.`
 }
 
 /* -------------------------------------------------------------------------
@@ -151,7 +150,7 @@ export default function Landing() {
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
 
-  const installCmd = installMode === 'sh' ? INSTALL.sh : INSTALL.standalone
+  const installCmd = installMode === 'sh' ? INSTALL.sh : `npx skill-zero@latest ${picked.id}`
   const installNote = installMode === 'sh' ? INSTALL.note : INSTALL.standaloneNote
 
   const copy = useCallback((text: string, key: string) => {
@@ -400,11 +399,7 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------------ 01 */}
       <section className="lp-section" id="doors">
-        <SectionHead n="01" title="CHOOSE YOUR DOOR" />
-        <p className="lp-section__lede">
-          One door per harness — {DOORS.length} of them, all real. Install once: the one-liner brings
-          every door and the summon engine with it.
-        </p>
+        <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
 
         <div className="sh-note lp-ann">
           <span className="lp-ann__mark" aria-hidden="true">
@@ -457,7 +452,7 @@ export default function Landing() {
                   aria-pressed={installMode === 'sh'}
                   onClick={() => setInstallMode('sh')}
                 >
-                  sh · every door
+                  curl (install everything)
                 </button>
                 <button
                   type="button"
@@ -465,7 +460,7 @@ export default function Landing() {
                   aria-pressed={installMode === 'npx'}
                   onClick={() => setInstallMode('npx')}
                 >
-                  npx · standalone
+                  npx (one-time use)
                 </button>
               </div>
             </div>
@@ -481,7 +476,7 @@ export default function Landing() {
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
-            <div className="sh-label">LAUNCH · {picked.pkg}</div>
+            <div className="sh-label">HOW TO LAUNCH</div>
             <CommandBlock
               cmd={picked.launch}
               sigil="$"
@@ -501,12 +496,10 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------------ 02 */}
       <section className="lp-section" id="run">
-        <SectionHead n="02" title="WATCH IT RUN" />
+        <SectionHead n="02" title="DEMO" />
         <p className="lp-section__lede">
-          Simulated, and honest about it — this is the shape of a session, not a recording. Launch a
-          door, <code>{MECHANIC.floor}</code> one skill at a capability gap, then arm a rung of the
-          explore ladder. Reaching <code>/skill-hell</code> fires the same impact frame as the hero:
-          the panel inverts and shears, monochrome only.
+          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> a single skill.
+          <code>/skill-hell</code> auto-summons agentic skills for you.
         </p>
 
         <div className="lp-term__controls">
@@ -558,22 +551,11 @@ export default function Landing() {
             <span>{picked.pkg} ─╯</span>
           </div>
         </div>
-
-        <div className="sh-note lp-ann">
-          <span className="lp-ann__mark" aria-hidden="true">
-            ▸
-          </span>
-          <span>
-            IMPACT FRAME · 46ms shear + hard invert (#1b1a1c → #efece7). Monochrome only — colour
-            never survives into Hell — which arms live, from inside the session, at whatever
-            rung you name.
-          </span>
-        </div>
       </section>
 
       {/* ------------------------------------------------------------------ 03 */}
       <section className="lp-section" id="session">
-        <SectionHead n="03" title={<>SKILLS ARE PERMANENT.<br />SESSIONS ARE NOT.</>} tight />
+        <SectionHead n="03" title={<>SKILLS LIVE IN YOUR SESSION.<br />SUMMON ONLY WHEN YOU NEED IT.</>} tight />
         <p className="lp-section__lede">
           Installing a skill edits your repo. It becomes a directory, a commit, a thing you maintain
           — and it loads on every turn whether the task needs it or not. Summoning makes the loadout{' '}
@@ -685,12 +667,8 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------------ 04 */}
       <section className="lp-section" id="directions">
-        <SectionHead n="04" title="CONVERGE OR EXPLORE" />
-        <p className="lp-section__lede">
-          Heaven and Hell are two directions of the same summon over one shared MCP — converge
-          narrows the reach, explore widens it. It is one line: the band is read from the rung you
-          set, not chosen as a separate mode. Nothing here adds a thing to your machine.
-        </p>
+        <SectionHead n="04" title="HEAVEN OR HELL?" />
+        <p className="lp-section__lede">Here’s how you choose.</p>
 
         {/* the floor */}
         <div className="lp-floor">
@@ -734,66 +712,56 @@ export default function Landing() {
           ))}
         </div>
 
-        {/* the two-column decision ledger */}
-        <div className="lp-ledger">
-          <div className="lp-ledger__col">
-            <div className="lp-ledger__head">
-              <span className="lp-ledger__glyph lp-k-violet" aria-hidden="true">
-                ◆
-              </span>
-              <h3>REACH FOR /SKILL-HEAVEN</h3>
+        {/* the four-band decision ledger */}
+        <div className="lp-ledger lp-ledger--four">
+          {[
+            {
+              cmd: '/skill-zero',
+              glyph: '○',
+              kcls: 'lp-k-grey',
+              rows: ['benchmarking', 'clean slate', 'everything vanilla', 'removing skill bloat'],
+            },
+            {
+              cmd: '/skill-heaven',
+              glyph: '◆',
+              kcls: 'lp-k-violet',
+              rows: ['brainstorming', 'grilling sessions', 'iterating', 'human-in-the-loop'],
+            },
+            {
+              cmd: '/skill-hell',
+              glyph: '◈',
+              kcls: 'lp-k-amber',
+              wip: true,
+              rows: ['exploring options', 'yolo-ing', 'let the expert decide', 'full agentic autonomy'],
+            },
+            {
+              cmd: '/skill-ultra',
+              glyph: '✦',
+              kcls: 'lp-k-gold',
+              wip: true,
+              rows: ['controlled autonomy', 'unlimited budget', 'maximize quality', 'fully equipped agent'],
+            },
+          ].map((col) => (
+            <div className="lp-ledger__col" key={col.cmd}>
+              <div className="lp-ledger__head">
+                <span className={`lp-ledger__glyph ${col.kcls}`} aria-hidden="true">
+                  {col.glyph}
+                </span>
+                <h3>REACH FOR {col.cmd.toUpperCase()}</h3>
+                {col.wip ? <span className="sh-chip sh-chip--wip">WIP</span> : null}
+              </div>
+              <ul className="lp-ledger__rows">
+                {col.rows.map((row, i) => (
+                  <li key={i}>
+                    <span className={col.kcls} aria-hidden="true">
+                      →
+                    </span>
+                    <span>{row}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <span className="lp-band lp-ledger__blade" aria-hidden="true">
-              <img src={katanaHeaven} alt="" />
-            </span>
-            <ul className="lp-ledger__rows">
-              {[
-                <>
-                  You know roughly what the task needs and want the <b>tightest reach</b> that
-                  covers it.
-                </>,
-                <>Context is tight and you would rather pay {fmt(DOSES.productFloor)} than {fmt(DOSES.native)}.</>,
-                <>A second opinion helps here; a committee does not.</>,
-                <>You are recording a benchmark arm and need a narrow, repeatable loadout.</>,
-              ].map((row, i) => (
-                <li key={i}>
-                  <span className="lp-k-mint" aria-hidden="true">
-                    →
-                  </span>
-                  <span>{row}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="lp-ledger__col">
-            <div className="lp-ledger__head">
-              <span className="lp-ledger__glyph lp-k-amber" aria-hidden="true">
-                ◈
-              </span>
-              <h3>REACH FOR /SKILL-HELL</h3>
-              <span className="sh-chip sh-chip--wip">WIP</span>
-            </div>
-            <span className="lp-band lp-ledger__blade" aria-hidden="true">
-              <img src={katanaHell} alt="" />
-            </span>
-            <ul className="lp-ledger__rows">
-              {[
-                <>
-                  You do <b>not</b> know which skills the task needs — let the router choose.
-                </>,
-                <>You want more experts in context: Hell routes the summon as a mixture of agents.</>,
-                <>You accept a heavier session in exchange for reach.</>,
-                <>You are looking for where the entropy curve turns — better, until it is not.</>,
-              ].map((row, i) => (
-                <li key={i}>
-                  <span className="lp-k-amber" aria-hidden="true">
-                    →
-                  </span>
-                  <span>{row}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
 
         {/* the ladder */}
@@ -846,11 +814,13 @@ export default function Landing() {
 
           <div className="lp-ladder__read" aria-live="polite">
             <div className="lp-ladder__count">
-              <span className="lp-ladder__n">{activeRung.crown ? 'auto' : activeRung.slots}</span>
+              <span className="lp-ladder__n">{activeRung.crown ? 'auto' : activeRung.slots === 0 ? 'off' : activeRung.slots}</span>
               <span className="sh-label">
                 {activeRung.crown
                   ? 'controller · picks direction + depth'
-                  : `auto-summon${activeRung.slots === 1 ? '' : 's'} per gap`}
+                  : activeRung.slots === 0
+                    ? `the floor · ${MECHANIC.floor} by hand`
+                    : `auto-summon${activeRung.slots === 1 ? '' : 's'} per gap`}
               </span>
               <span className="sh-chip sh-chip--wip">WIP</span>
             </div>
