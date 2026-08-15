@@ -42,19 +42,44 @@ prism     #a58ae0 violet  primary, interactive
           #e094c8 rose    the explore lane
           #d478b0 magenta edge
 surface   #5fc2d6 zero · #6f96d8 heaven · #e094c8 hell · #d9b25c ultra
+          (these are the calm DOCUMENT hues for /landing + /instrument;
+           the animated hero motif below treats each surface as a full
+           band, not a single hue)
 hell      #efece7 paper · #171618 ink · rgba(23,22,24,.16) line
 house     #38bdf8 research · #fbbf24 tree   (hairlines and links only)
 ```
 
+### The four bands — the hero motif (N13)
+
+The animated hero (`/`, Hero A) reads the **one line** as four bands and gives
+each its own colour language. This is louder than the document palette above on
+purpose — the hero is operated, the document is read.
+
+- **Zero — zen, washed monochrome.** No deep black; **ink grey `#3A383C` is the
+  darkest tone**, on a soft paper ground `#E7E5E0`. Even the figure is rendered
+  under a `grayscale(1)` wash. Calm, at rest — the floor.
+- **Heaven — the full PRISMATIC spectrum.** Not a blue motif. The state word
+  and accents carry the whole refracted spectrum on deep ground.
+- **Hell — the INVERTED spectrum.** It is the prism inverted, and it *reads
+  red* because that is what the spectrum becomes when inverted — not a red
+  motif applied by hand. On the paper (inverted) page.
+- **Ultra — a GOLD highlight laid over Heaven, plus a red edge.** Not flat
+  gold: the final form is Heaven lit gold with a red accent (`#D9B25C` gold,
+  `#C81E1E` red). The figure gets a gold drop-glow.
+
 Two rules that are easy to break:
 
-- **The spectrum appears as split light, never as a fill** — the 56px 2px rule
-  under a section number or a selected direction plate, the footer band, the
-  section marker. Never a gradient background, never gradient body text.
-- **Hell is monochrome.** The invert carries no colour at all; that is what
-  makes the impact frame land. Any accent surviving into Hell is a bug. The
-  character art is the one exemption, because the Hell master is *itself* a full
-  RGB inversion — the page flips and the art does not.
+- **The document spectrum appears as split light, never as a fill** — the 56px
+  2px rule under a section number or a selected direction plate, the footer
+  band, the section marker. On `/landing` and `/instrument`, never a gradient
+  background or gradient body text. **(The animated hero is the exception:** it
+  fills the state word with the band's spectrum by design — see the four bands
+  above.)
+- **Hell is the inverted spectrum, not a colourless void.** The Hell *page* is
+  the document inverted (paper + ink flip), and the Hell *spectrum* is the
+  prism inverted, which reads red. The impact frame lands because the whole
+  page flips; the character art needs no correction because the Hell master is
+  *itself* a full RGB inversion — the page flips and the art does not.
 
 **Faint (`#67635f`) is a hairline value, not a text value.** At 2.9:1 on
 charcoal and 2.7:1 on paper it fails the 4.5:1 body floor. Both surfaces use
@@ -85,13 +110,30 @@ circles, a rotated `PLATE NO. 001`) and **outline as a second voice** — the
 footer's `SKILL HELL` as a 1.5px `-webkit-text-stroke` offset behind the solid
 `SKILL HEAVEN`. It reads far better than a low-opacity fill.
 
-## The hero — "the instrument"
+## The hero (`/`) — Hero A, the animated poster
 
-**Thesis: a hero you operate, not one you watch.** It refuses the scroll-jacked
-cinematic hero the previous version was, and the headline-plus-screenshot hero
-the category ships. The product *is* four surfaces plus a discrete ladder, so
-the first viewport hands the visitor that control and lets them work it before
-installing anything.
+**The official hero is Hero A** (`src/variations/VariationHeroA.tsx`) — the
+five-act, wheel/keyboard/touch-driven scrollytelling piece, centered and
+monumental, ending on the **one line** (N13): a single ladder
+`ZERO · low · med · high · xhigh · max · ULTRA` whose four surfaces are
+contiguous bands. Selecting any rung frontloads the slice/glitch impact and
+repaints the page to that band's motif (see the four bands above); the CTA
+rewrites and glitches into existence on every switch. A persistent
+`Skip · Enter the door` control routes to the document. Ultra is rendered as
+the seventh, crown rung — the word reads **SKILL ULTRA**, gold with a red
+edge, never "Skill Hell Ultra".
+
+## The instrument (`/instrument`) — the sampler
+
+**Thesis: a surface you operate, not one you watch.** Kept as a secondary
+explore page so a visitor can work the surfaces and decide which to pick. It
+looks strong on desktop but lacks Hero A's animated feel, which is why it is
+no longer the front door.
+
+> **Pending:** the instrument still renders the earlier two-dial model
+> (pick a direction, then a per-direction rung). Under N13 it should render
+> the single one-line ladder with the four bands read from the rung. Tracked
+> for the next iteration.
 
 Composition: nav → registration row (a **state index**, not an eyebrow) →
 `SKILL` + the state word in Anton → command and role → blurb → the command line,

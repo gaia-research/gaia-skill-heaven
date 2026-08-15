@@ -37,13 +37,16 @@
   --sh-rose: #e094c8;     /* the explore lane */
   --sh-magenta: #d478b0;  /* edge */
 
-  /* ---- surface identity: one hue per product surface ---- */
-  --sh-zero: #5fc2d6;
+  /* ---- surface identity: one hue per product surface ----
+     Zero is zen monochrome (ink grey, not a colour); Heaven is prismatic in
+     the hero and reduces to this structural blue in the document; Ultra is
+     gold with a red treatment accent. See DESIGN.md “The four bands (N13)”. */
+  --sh-zero: #8b8890;
   --sh-heaven: #6f96d8;
   --sh-hell: #e094c8;
   --sh-ultra: #d9b25c;
 
-  /* ---- hell inversion: monochrome only. Any accent surviving into Hell is a bug. ---- */
+  /* ---- hell inversion: the inverted spectrum (reads red) on paper ---- */
   --sh-hell-paper: #efece7;
   --sh-hell-ink: #171618;
   --sh-hell-line: rgba(23, 22, 24, 0.16);
