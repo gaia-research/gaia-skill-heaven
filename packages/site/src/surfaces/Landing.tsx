@@ -1,0 +1,1082 @@
+/**
+ * Landing — the document page.
+ *
+ * The hero is the poster; this is the page a developer who has already
+ * decided actually reads. It reproduces the approved landing comp
+ * (wireframe register: numbered sections, hairlines at 0 radius, dashed
+ * annotation strips, one looping terminal with a 46ms impact frame) and
+ * carries the current product truth: one mechanic (`summon`), four
+ * surfaces, one discrete ladder, five real doors.
+ *
+ * Every product string is read from `../product`. Nothing here is invented:
+ * no pricing, no logos, no testimonials, no counts.
+ */
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
+import {
+  DOORS,
+  DOSES,
+  HOUSES,
+  INSTALL,
+  LADDER_WIP,
+  MECHANIC,
+  RUNGS,
+  SESSION_ROWS,
+  SITE,
+  SURFACES,
+  type Door,
+  type RungId,
+  type SurfaceId,
+} from '../product'
+import '../styles/system.css'
+import './landing.css'
+
+/* -- the commission: real art, no placeholder slots left except the logo -- */
+import lucyZero from '../assets/lucy/v4-approved/set-a/masters/lucy-zero.webp'
+import lucyHeaven from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp'
+import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
+import katanaHeaven from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
+import katanaHell from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
+import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
+import iconHeaven from '../assets/lucy/identity/lucy-state-icon-heaven.svg'
+import iconHell from '../assets/lucy/identity/lucy-state-icon-hell.svg'
+import iconUltra from '../assets/lucy/identity/lucy-state-icon-ultra.svg'
+
+const SURFACE_ICON: Record<SurfaceId, string> = {
+  zero: iconZero,
+  heaven: iconHeaven,
+  hell: iconHell,
+  ultra: iconUltra,
+}
+
+/* Claude's own wordmark — Simple Icons (CC0-1.0), 24×24 viewBox, verbatim.
+   No other door harness publishes a mark, so those tiles hold a dashed slot. */
+const CLAUDE_MARK =
+  'm4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z'
+
+const SESSION_DIR = '/tmp/skill-zero-a91f7c'
+const fmt = (n: number) => n.toLocaleString('en-US')
+
+/** Per-door note. Derived from status only — no per-harness claim is invented. */
+function doorNote(door: Door): string {
+  return door.status === 'flagship'
+    ? `The flagship door. The measured floor on this page was recorded on ${door.harness}.`
+    : `Prototype door for ${door.harness}. Same launcher, same /summon floor; the doses above are measured on Claude Code.`
+}
+
+/* -------------------------------------------------------------------------
+   §02 — the simulated session. Numbers are interpolated from product truth,
+   never typed in by hand.
+   ------------------------------------------------------------------------- */
+
+type TermKind = 'cmd' | 'info' | 'ok' | 'dim'
+interface TermLine {
+  g: string
+  t: string
+  k: TermKind
+  d: number
+  hell?: boolean
+}
+
+const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
+const HELL_RUNG = RUNGS.find((r) => r.id === 'high')!
+
+const SCRIPT: TermLine[] = [
+  { g: '$', t: 'claude-zero', k: 'cmd', d: 540 },
+  { g: '▸', t: 'compose   flags for claude code · zero shared state touched', k: 'info', d: 300 },
+  { g: '▸', t: `session   ${SESSION_DIR}   (mkdtemp · disposable)`, k: 'info', d: 300 },
+  { g: '▸', t: "surface   bundled OFF · mcp {gaia} · setting-sources ''", k: 'info', d: 300 },
+  {
+    g: '▸',
+    t: `dose      ${fmt(DOSES.productFloor)} tok standing   ·   ${DOSES.deltaVsNative} vs native ${fmt(DOSES.native)}`,
+    k: 'info',
+    d: 340,
+  },
+  { g: '✓', t: 'exec      claude   (composed → exec’d · nothing installed)', k: 'ok', d: 860 },
+  { g: '›', t: `${MECHANIC.floor} "systematic debugging"`, k: 'cmd', d: 480 },
+  { g: ' ', t: 'gap       no debugging skill in context', k: 'dim', d: 300 },
+  {
+    g: ' ',
+    t: `summon    ${BORROWED.id}   +${fmt(BORROWED.tokens)} tok   · this session only`,
+    k: 'dim',
+    d: 320,
+  },
+  { g: '✓', t: 'mounted   1 skill · borrowed · nothing written to your repo', k: 'ok', d: 940 },
+  { g: '›', t: `/skill-hell ${HELL_RUNG.id}`, k: 'cmd', d: 440, hell: true },
+  {
+    g: ' ',
+    t: `ladder    ${HELL_RUNG.id} · ${HELL_RUNG.slots} auto-summons per gap   [WIP · provisional]`,
+    k: 'dim',
+    d: 340,
+  },
+  { g: ' ', t: 'route     gaia mcp · explore · more experts in context', k: 'dim', d: 340 },
+  { g: '✓', t: `armed     ${MECHANIC.floor} still works by hand at every rung`, k: 'ok', d: 1600 },
+]
+
+const HELL_INDEX = SCRIPT.findIndex((l) => l.hell)
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+/* =========================================================================
+   the page
+   ========================================================================= */
+
+export default function Landing() {
+  /* ---- §01 doors + install ---- */
+  const [pickedId, setPickedId] = useState(DOORS[0].id)
+  const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
+  const [installMode, setInstallMode] = useState<'sh' | 'npx'>('sh')
+  const [copied, setCopied] = useState('')
+  const copyTimer = useRef<number | undefined>(undefined)
+
+  const installCmd = installMode === 'sh' ? INSTALL.sh : INSTALL.standalone
+  const installNote = installMode === 'sh' ? INSTALL.note : INSTALL.standaloneNote
+
+  const copy = useCallback((text: string, key: string) => {
+    void navigator.clipboard?.writeText(text).catch(() => {})
+    setCopied(key)
+    window.clearTimeout(copyTimer.current)
+    copyTimer.current = window.setTimeout(() => setCopied(''), 1600)
+  }, [])
+
+  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+
+  /* ---- §02 terminal ---- */
+  const [step, setStep] = useState(0)
+  const [hell, setHell] = useState(false)
+  const [shear, setShear] = useState(false)
+  const stepTimer = useRef<number | undefined>(undefined)
+  const shearTimer = useRef<number | undefined>(undefined)
+
+  const clearTimers = useCallback(() => {
+    window.clearTimeout(stepTimer.current)
+    window.clearTimeout(shearTimer.current)
+  }, [])
+
+  const advance = useCallback(
+    (i: number) => {
+      const line = SCRIPT[i]
+      if (!line) {
+        stepTimer.current = window.setTimeout(() => {
+          setStep(0)
+          setHell(false)
+          stepTimer.current = window.setTimeout(() => advance(0), 420)
+        }, 2800)
+        return
+      }
+      setStep(i + 1)
+      if (line.hell) {
+        setHell(true)
+        setShear(true)
+        shearTimer.current = window.setTimeout(() => setShear(false), 300)
+      }
+      stepTimer.current = window.setTimeout(() => advance(i + 1), line.d)
+    },
+    [],
+  )
+
+  const replay = useCallback(() => {
+    clearTimers()
+    setStep(0)
+    setHell(false)
+    setShear(false)
+    if (prefersReducedMotion()) {
+      setStep(SCRIPT.length)
+      setHell(true)
+      return
+    }
+    stepTimer.current = window.setTimeout(() => advance(0), 420)
+  }, [advance, clearTimers])
+
+  const jumpHell = useCallback(() => {
+    clearTimers()
+    setStep(HELL_INDEX + 1)
+    setHell(true)
+    if (!prefersReducedMotion()) {
+      setShear(true)
+      shearTimer.current = window.setTimeout(() => setShear(false), 300)
+      stepTimer.current = window.setTimeout(() => advance(HELL_INDEX + 1), 480)
+    } else {
+      setStep(SCRIPT.length)
+    }
+  }, [advance, clearTimers])
+
+  useEffect(() => {
+    replay()
+    return clearTimers
+  }, [replay, clearTimers])
+
+  /* ---- §03 the session story ---- */
+  const [mounted, setMounted] = useState<string[]>(
+    SESSION_ROWS.filter((r) => r.mounted).map((r) => r.id),
+  )
+  const isOn = useCallback((id: string) => mounted.includes(id), [mounted])
+  const toggleRow = useCallback((id: string) => {
+    setMounted((m) => (m.includes(id) ? m.filter((x) => x !== id) : m.concat(id)))
+  }, [])
+
+  const { nAdded, nDropped, standing, verdict } = useMemo(() => {
+    const added = SESSION_ROWS.filter((r) => r.origin === 'skill-tree' && mounted.includes(r.id)).length
+    const dropped = SESSION_ROWS.filter((r) => r.origin === 'repo' && !mounted.includes(r.id)).length
+    const tokens = SESSION_ROWS.reduce((n, r) => n + (mounted.includes(r.id) ? r.tokens : 0), 0)
+    const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
+    const line =
+      added === 0 && dropped === 0
+        ? 'You are running the repo exactly as it sits on disk — nothing borrowed, nothing dropped. Your repo did not change.'
+        : added === 0
+          ? `You dropped ${plural(dropped, 'skill')} you had installed. They are still committed, still on disk, still there tomorrow — they just did not load. Your repo did not change.`
+          : dropped === 0
+            ? `You mounted ${plural(added, 'skill')} you never installed. No directory was created, no commit was made, nothing to uninstall later. Your repo did not change.`
+            : `You mounted ${plural(added, 'skill')} you never installed and dropped ${plural(dropped, 'skill')} you did. Nothing was created, nothing was deleted. Your repo did not change.`
+    return { nAdded: added, nDropped: dropped, standing: DOSES.benchmarkFloor + tokens, verdict: line }
+  }, [mounted])
+
+  /* ---- §04 direction + ladder ---- */
+  const heaven = SURFACES.find((s) => s.id === 'heaven')!
+  const hellSurface = SURFACES.find((s) => s.id === 'hell')!
+  const [direction, setDirection] = useState<'heaven' | 'hell'>('heaven')
+  const [rungs, setRungs] = useState<Record<'heaven' | 'hell', RungId>>({
+    heaven: heaven.defaultRung ?? 'low',
+    hell: hellSurface.defaultRung ?? 'high',
+  })
+  const activeSurface = direction === 'heaven' ? heaven : hellSurface
+  const activeRung = RUNGS.find((r) => r.id === rungs[direction])!
+  const pickRung = useCallback(
+    (id: RungId) => setRungs((r) => ({ ...r, [direction]: id })),
+    [direction],
+  )
+  const rungIndex = RUNGS.findIndex((r) => r.id === activeRung.id)
+  const onLadderKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      e.preventDefault()
+      const next = Math.min(RUNGS.length - 1, Math.max(0, rungIndex + (e.key === 'ArrowRight' ? 1 : -1)))
+      pickRung(RUNGS[next].id)
+    },
+    [pickRung, rungIndex],
+  )
+
+  return (
+    <div className="lp">
+      {/* ---------------------------------------------------------------- nav */}
+      <a className="lp-skip" href="#doors">
+        Skip to the doors
+      </a>
+      <nav className="lp-nav" aria-label="Primary">
+        <div className="lp-nav__brand">
+          <span className="lp-slot lp-slot--logo" aria-hidden="true">
+            <span>SVG</span>
+          </span>
+          <span className="lp-nav__name">{SITE.repoName}</span>
+          <span className="lp-nav__wip">{SITE.version}</span>
+        </div>
+        <div className="lp-nav__right">
+          <div className="lp-nav__links">
+            <a href="#doors">DOORS</a>
+            <a href="#run">TERMINAL</a>
+            <a href="#session">SESSION-ONLY</a>
+            <a href="#directions">CONVERGE / EXPLORE</a>
+            <a href="#house">ECOSYSTEM</a>
+          </div>
+          <a className="lp-nav__cta" href="#doors">
+            {DOORS[0].launch} <span aria-hidden="true">⏎</span>
+          </a>
+        </div>
+      </nav>
+
+      {/* ------------------------------------------------------------- arrival */}
+      <header className="lp-head">
+        <div className="lp-head__grid">
+          <div className="lp-head__lede">
+            <div className="lp-kicker">
+              <span>HELL · HEAVEN · INDEX</span>
+              <span className="lp-kicker__rule" aria-hidden="true" />
+              <span>THE LAUNCHER</span>
+              <span className="lp-reg" aria-hidden="true" />
+              <span className="lp-reg-dots" aria-hidden="true">
+                <i />
+                <i />
+              </span>
+            </div>
+            <h1 className="lp-h1">
+              You are inside.
+              <br />
+              Now pick your door.
+            </h1>
+            <p className="lp-lede">
+              {SITE.name} composes a lean skill surface at launch — it builds flags and execs your
+              harness. Nothing installed, nothing mutated, nothing left behind. From inside the
+              session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
+              it.
+            </p>
+          </div>
+
+          <div className="lp-dose sh-panel">
+            <div className="lp-dose__head">
+              <span className="sh-label">STANDING DOSE · MEASURED</span>
+              <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
+            </div>
+            <p className="lp-dose__body">
+              Every skill you don’t need is still context. The model still has to read it, weigh it,
+              decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
+              real token. Skill Zero cuts it at launch.
+            </p>
+            <div className="lp-bars">
+              <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
+              <DoseBar
+                label="benchmark floor"
+                value={DOSES.benchmarkFloor}
+                max={DOSES.native}
+                tone="cyan"
+              />
+              <DoseBar
+                label="product floor"
+                value={DOSES.productFloor}
+                max={DOSES.native}
+                tone="mint"
+                strong
+              />
+            </div>
+            <p className="lp-dose__foot">{DOSES.note}</p>
+          </div>
+
+          <figure className="lp-figure">
+            <img
+              src={lucyZero}
+              alt="Skill Zero: the line's figure seated in a cyan-lit clean room, eyes closed, a single katana across her lap."
+              width={1024}
+              height={1536}
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption className="sh-label">SKILL ZERO · THE LAUNCHER</figcaption>
+          </figure>
+        </div>
+
+        {/* blade divider — the alpha-verified katana pack */}
+        <div className="lp-blade">
+          <span className="lp-band lp-blade__band" aria-hidden="true">
+            <img src={katanaHeaven} alt="" />
+          </span>
+          <span className="lp-blade__plate" aria-hidden="true">
+            PLATE NO. 001
+          </span>
+        </div>
+      </header>
+
+      {/* ------------------------------------------------------------------ 01 */}
+      <section className="lp-section" id="doors">
+        <SectionHead n="01" title="CHOOSE YOUR DOOR" />
+        <p className="lp-section__lede">
+          One door per harness — {DOORS.length} of them, all real. Install once: the one-liner brings
+          every door and the summon engine with it.
+        </p>
+
+        <div className="sh-note lp-ann">
+          <span className="lp-ann__mark" aria-hidden="true">
+            ▸
+          </span>
+          <span>
+            MARKS · the Claude tile carries the harness’s own wordmark (Simple Icons, CC0). The other
+            harnesses publish no public mark, so those tiles hold a dashed slot until one exists.
+            Default selection is <b>{DOORS[0].pkg}</b>.
+          </span>
+        </div>
+
+        <div className="lp-doors">
+          {DOORS.map((d) => {
+            const on = d.id === pickedId
+            return (
+              <button
+                key={d.id}
+                type="button"
+                className={`lp-door${on ? ' is-on' : ''}`}
+                aria-pressed={on}
+                onClick={() => setPickedId(d.id)}
+              >
+                <span className="lp-door__tick" aria-hidden="true" />
+                {d.id === 'claude' ? (
+                  <svg className="lp-door__mark" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d={CLAUDE_MARK} />
+                  </svg>
+                ) : (
+                  <span className="lp-door__mark lp-door__mark--slot" aria-hidden="true">
+                    MARK
+                  </span>
+                )}
+                <span className="lp-door__pkg">{d.pkg}</span>
+                <span className="lp-door__harness">{d.harness}</span>
+                <span className="sh-chip lp-door__chip">{d.status}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="lp-install">
+          <div className="lp-install__panel">
+            <div className="lp-install__head">
+              <span className="sh-label">INSTALL · ONE COMMAND</span>
+              <div className="lp-seg" role="group" aria-label="Install route">
+                <button
+                  type="button"
+                  className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'sh'}
+                  onClick={() => setInstallMode('sh')}
+                >
+                  sh · every door
+                </button>
+                <button
+                  type="button"
+                  className={`lp-seg__btn${installMode === 'npx' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'npx'}
+                  onClick={() => setInstallMode('npx')}
+                >
+                  npx · standalone
+                </button>
+              </div>
+            </div>
+            <CommandBlock
+              cmd={installCmd}
+              sigil="$"
+              tone="mint"
+              copied={copied === 'install'}
+              onCopy={() => copy(installCmd, 'install')}
+              label="install command"
+            />
+            <p className="lp-install__note">{installNote}</p>
+          </div>
+
+          <div className="lp-install__panel lp-install__panel--launch sh-panel">
+            <div className="sh-label">LAUNCH · {picked.pkg}</div>
+            <CommandBlock
+              cmd={picked.launch}
+              sigil="$"
+              tone="violet"
+              copied={copied === 'launch'}
+              onCopy={() => copy(picked.launch, 'launch')}
+              label="launch command"
+            />
+            <p className="lp-install__prose">{doorNote(picked)}</p>
+          </div>
+        </div>
+        <p className="lp-fineprint">
+          WORK IN PROGRESS · v0 — the doors are source-delivered through <code>install.sh</code>, not
+          npm. Uninstall is one script: <code>{INSTALL.uninstall}</code>
+        </p>
+      </section>
+
+      {/* ------------------------------------------------------------------ 02 */}
+      <section className="lp-section" id="run">
+        <SectionHead n="02" title="WATCH IT RUN" />
+        <p className="lp-section__lede">
+          Simulated, and honest about it — this is the shape of a session, not a recording. Launch a
+          door, <code>{MECHANIC.floor}</code> one skill at a capability gap, then arm a rung of the
+          explore ladder. Reaching <code>/skill-hell</code> fires the same impact frame as the hero:
+          the panel inverts and shears, monochrome only.
+        </p>
+
+        <div className="lp-term__controls">
+          <button type="button" className="lp-ghost" onClick={replay}>
+            ↻ REPLAY
+          </button>
+          <button type="button" className="lp-ghost lp-ghost--hell" onClick={jumpHell}>
+            ↯ JUMP TO /skill-hell
+          </button>
+        </div>
+
+        <div
+          className={`lp-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
+          role="img"
+          aria-label="Simulated terminal session: claude-zero composes flags and execs, /summon borrows one skill for the session, /skill-hell arms the explore ladder at rung high."
+        >
+          <span className="lp-term__c lp-term__c--tl" aria-hidden="true" />
+          <span className="lp-term__c lp-term__c--tr" aria-hidden="true" />
+          <span className="lp-term__c lp-term__c--bl" aria-hidden="true" />
+          <span className="lp-term__c lp-term__c--br" aria-hidden="true" />
+          <div className="lp-term__bar">
+            <span>╭─ ~/gaia-skill-tree — {picked.pkg}</span>
+            <span className="lp-term__state">{hell ? 'HELL · EXPLORE' : 'HEAVEN · CONVERGE'} ─╮</span>
+          </div>
+          <div className="lp-term__body">
+            {SCRIPT.slice(0, step).map((l, i) => (
+              <div className="lp-term__row" key={i}>
+                <span className="lp-term__gut" aria-hidden="true">
+                  │
+                </span>
+                <span className={`lp-term__glyph lp-k-${l.k}`} aria-hidden="true">
+                  {l.g}
+                </span>
+                <span className={`lp-term__text lp-k-${l.k}`}>{l.t}</span>
+              </div>
+            ))}
+            <div className="lp-term__row">
+              <span className="lp-term__gut" aria-hidden="true">
+                │
+              </span>
+              <span className="lp-term__glyph" aria-hidden="true">
+                ›
+              </span>
+              <span className="lp-term__caret" aria-hidden="true" />
+            </div>
+          </div>
+          <div className="lp-term__bar lp-term__bar--foot">
+            <span>╰─ INSERT · UTF-8</span>
+            <span>{picked.pkg} ─╯</span>
+          </div>
+        </div>
+
+        <div className="sh-note lp-ann">
+          <span className="lp-ann__mark" aria-hidden="true">
+            ▸
+          </span>
+          <span>
+            IMPACT FRAME · 46ms shear + hard invert (#1b1a1c → #efece7). Monochrome only — colour
+            never survives into Hell. Hell is not a locked lane: it arms live, from inside the
+            session.
+          </span>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ 03 */}
+      <section className="lp-section" id="session">
+        <SectionHead n="03" title={<>SKILLS ARE PERMANENT.<br />SESSIONS ARE NOT.</>} tight />
+        <p className="lp-section__lede">
+          Installing a skill edits your repo. It becomes a directory, a commit, a thing you maintain
+          — and it loads on every turn whether the task needs it or not. Summoning makes the loadout{' '}
+          <b>session-only</b>: mount skills you never installed, drop ones you did, and the repo on
+          disk never moves.
+        </p>
+
+        <div className="lp-beats">
+          <div className="lp-beat">
+            <div className="sh-label lp-beat__n">BEAT 01</div>
+            <p>
+              <b>Installing is permanent.</b> It is a diff you own forever.
+            </p>
+          </div>
+          <div className="lp-beat lp-beat--violet">
+            <div className="sh-label lp-beat__n">BEAT 02</div>
+            <p>
+              <b>Summoning is borrowed.</b> The loadout lives for one session.
+            </p>
+          </div>
+          <div className="lp-beat lp-beat--mint">
+            <div className="sh-label lp-beat__n">BEAT 03</div>
+            <p>
+              <b>Nothing is left behind.</b> The tree on disk is byte-identical.
+            </p>
+          </div>
+        </div>
+
+        <div className="lp-story">
+          <div className="lp-story__disk">
+            <div className="lp-story__head">
+              <span className="sh-label">ON DISK · YOUR REPO</span>
+              <span className="sh-chip">FROZEN</span>
+            </div>
+            <pre className="lp-tree">{`my-project/
+├─ .claude/
+│  └─ skills/
+│     ├─ code-review/
+│     ├─ tdd/
+│     └─ diagnose/
+├─ src/
+├─ CLAUDE.md
+└─ package.json`}</pre>
+            <p className="lp-story__foot">
+              3 skills committed · every one of them loads on every turn ·{' '}
+              <b>0 diffs this session</b>
+            </p>
+          </div>
+
+          <div className="lp-story__session">
+            <div className="lp-story__head">
+              <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
+              <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
+            </div>
+            <div className="lp-counters">
+              <Counter label="MOUNTED" value={fmt(mounted.length)} />
+              <Counter label="ADDED" value={fmt(nAdded)} tone="cyan" />
+              <Counter label="DROPPED" value={fmt(nDropped)} tone="rose" />
+              <Counter label="STANDING" value={fmt(standing)} tone="mint" />
+            </div>
+            <div className="lp-rows">
+              {SESSION_ROWS.map((r) => {
+                const on = isOn(r.id)
+                const src = on ? r.origin : r.origin === 'repo' ? 'dropped' : 'available'
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={`lp-row${on ? ' is-on' : ''} lp-row--${r.origin}`}
+                    aria-pressed={on}
+                    onClick={() => toggleRow(r.id)}
+                  >
+                    <span className="lp-row__mark" aria-hidden="true">
+                      {on ? '●' : '○'}
+                    </span>
+                    <span className="lp-row__name">{r.id}</span>
+                    <span className="lp-row__src">{src}</span>
+                    <span className="lp-row__tok">{on ? fmt(r.tokens) : '—'}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="lp-story__foot">
+              Click any row to mount or drop it. Rows marked <b>skill-tree</b> were never installed
+              here — standing dose recomputes off the benchmark floor of{' '}
+              {fmt(DOSES.benchmarkFloor)} tok.
+            </p>
+          </div>
+        </div>
+
+        <div className="lp-verdict">
+          <div className="lp-verdict__cmd">
+            <span className="lp-k-ok">$</span>
+            <span className="lp-verdict__dim">git status</span>
+            <span className="lp-verdict__arrow" aria-hidden="true">
+              →
+            </span>
+            <span>nothing to commit, working tree clean</span>
+          </div>
+          <p className="lp-verdict__line" aria-live="polite">
+            {verdict}
+          </p>
+          <p className="lp-verdict__foot">
+            composes → execs → exits. The only writes happened inside <b>{SESSION_DIR}</b>, and it
+            died with the process. Nothing stashed, nothing restored, nothing to undo.
+          </p>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ 04 */}
+      <section className="lp-section" id="directions">
+        <SectionHead n="04" title="CONVERGE OR EXPLORE" />
+        <p className="lp-section__lede">
+          Heaven and Hell are two directions of the same summon, sharing one MCP. Converge narrows
+          the reach; explore widens it. Neither is locked, and neither adds a thing to your machine.
+        </p>
+
+        {/* the floor */}
+        <div className="lp-floor">
+          <div className="lp-floor__cmd">
+            <span aria-hidden="true">›</span>
+            <code>{MECHANIC.floor}</code>
+            <span className="sh-chip sh-chip--live">THE FLOOR</span>
+          </div>
+          <div className="lp-floor__prose">
+            <p>{MECHANIC.line}</p>
+            <p className="lp-floor__note">{MECHANIC.floorNote}</p>
+          </div>
+        </div>
+
+        {/* four surfaces */}
+        <div className="lp-surfaces">
+          {SURFACES.map((s) => (
+            <article className={`lp-surface lp-surface--${s.id}`} key={s.id}>
+              <img className="lp-surface__icon" src={SURFACE_ICON[s.id]} alt="" aria-hidden="true" />
+              <h3 className="lp-surface__cmd">{s.command}</h3>
+              <div className="lp-surface__role">{s.role}</div>
+              <p className="lp-surface__blurb">{s.blurb}</p>
+              <div className="lp-surface__foot">
+                {s.ladder ? (
+                  <>
+                    <span className="sh-label">
+                      LADDER off → max · opens at {s.defaultRung}
+                    </span>
+                    <span className="sh-chip sh-chip--wip">WIP</span>
+                  </>
+                ) : (
+                  <span className="sh-label">NO LADDER OF ITS OWN</span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* the two-column decision ledger */}
+        <div className="lp-ledger">
+          <div className="lp-ledger__col">
+            <div className="lp-ledger__head">
+              <span className="lp-ledger__glyph lp-k-violet" aria-hidden="true">
+                ◆
+              </span>
+              <h3>REACH FOR /SKILL-HEAVEN</h3>
+            </div>
+            <span className="lp-band lp-ledger__blade" aria-hidden="true">
+              <img src={katanaHeaven} alt="" />
+            </span>
+            <ul className="lp-ledger__rows">
+              {[
+                <>
+                  You know roughly what the task needs and want the <b>tightest reach</b> that
+                  covers it.
+                </>,
+                <>Context is tight and you would rather pay {fmt(DOSES.productFloor)} than {fmt(DOSES.native)}.</>,
+                <>A second opinion helps here; a committee does not.</>,
+                <>You are recording a benchmark arm and need a narrow, repeatable loadout.</>,
+              ].map((row, i) => (
+                <li key={i}>
+                  <span className="lp-k-mint" aria-hidden="true">
+                    →
+                  </span>
+                  <span>{row}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="lp-ledger__col">
+            <div className="lp-ledger__head">
+              <span className="lp-ledger__glyph lp-k-rose" aria-hidden="true">
+                ◈
+              </span>
+              <h3>REACH FOR /SKILL-HELL</h3>
+              <span className="sh-chip sh-chip--live">LIVE</span>
+            </div>
+            <span className="lp-band lp-ledger__blade" aria-hidden="true">
+              <img src={katanaHell} alt="" />
+            </span>
+            <ul className="lp-ledger__rows">
+              {[
+                <>
+                  You do <b>not</b> know which skills the task needs — let the router choose.
+                </>,
+                <>You want more experts in context: Hell routes the summon as a mixture of agents.</>,
+                <>You accept a heavier session in exchange for reach.</>,
+                <>You are looking for where the entropy curve turns — better, until it is not.</>,
+              ].map((row, i) => (
+                <li key={i}>
+                  <span className="lp-k-rose" aria-hidden="true">
+                    →
+                  </span>
+                  <span>{row}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* the ladder */}
+        <div className="lp-ladder">
+          <div className="lp-ladder__head">
+            <div>
+              <span className="sh-label">
+                THE LADDER · {activeSurface.command} · auto-summons per capability gap
+              </span>
+              <span className="sh-chip sh-chip--wip lp-ladder__wip">WIP · PROVISIONAL</span>
+            </div>
+            <div className="lp-seg" role="group" aria-label="Ladder direction">
+              <button
+                type="button"
+                className={`lp-seg__btn${direction === 'heaven' ? ' is-on' : ''}`}
+                aria-pressed={direction === 'heaven'}
+                onClick={() => setDirection('heaven')}
+              >
+                CONVERGE
+              </button>
+              <button
+                type="button"
+                className={`lp-seg__btn${direction === 'hell' ? ' is-on' : ''}`}
+                aria-pressed={direction === 'hell'}
+                onClick={() => setDirection('hell')}
+              >
+                EXPLORE
+              </button>
+            </div>
+          </div>
+
+          <div
+            className={`lp-stops lp-stops--${direction}`}
+            role="group"
+            aria-label={`Ladder rung for ${activeSurface.command}`}
+            onKeyDown={onLadderKey}
+          >
+            {RUNGS.map((r, i) => {
+              const on = r.id === activeRung.id
+              const isDefault = r.id === activeSurface.defaultRung
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={`lp-stop${on ? ' is-on' : ''}${i <= rungIndex ? ' is-below' : ''}`}
+                  aria-pressed={on}
+                  onClick={() => pickRung(r.id)}
+                >
+                  <span className="lp-stop__detent" aria-hidden="true" />
+                  <span className="lp-stop__id">{r.id}</span>
+                  <span className="lp-stop__def">{isDefault ? 'default' : ' '}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="lp-ladder__read" aria-live="polite">
+            <div className="lp-ladder__count">
+              <span className="lp-ladder__n">{activeRung.slots}</span>
+              <span className="sh-label">
+                auto-summon{activeRung.slots === 1 ? '' : 's'} per gap
+              </span>
+              <span className="sh-chip sh-chip--wip">WIP</span>
+            </div>
+            <p className="lp-ladder__note">{activeRung.note}</p>
+          </div>
+          <p className="lp-ladder__wipnote">
+            <span className="sh-chip sh-chip--wip">WIP</span> {LADDER_WIP}
+          </p>
+        </div>
+
+        <div className="sh-note lp-ann">
+          <span className="lp-ann__mark" aria-hidden="true">
+            ▨
+          </span>
+          <span>
+            ONE MCP · Heaven and Hell are the same summon pointed two ways — the rung sets how many
+            skills may be summoned automatically per gap, and <b>{MECHANIC.floor}</b> still works by
+            hand at every rung, including <b>off</b>. Rungs are discrete stops, never a continuous
+            fader.
+          </span>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------ 05 */}
+      <section className="lp-section" id="house">
+        <SectionHead n="05" title="ONE HOUSE, THREE ROOMS" />
+        <p className="lp-section__lede">
+          Research proves it, the registry records it, the launcher runs it. Each room keeps its own
+          colour.
+        </p>
+        <div className="lp-rooms">
+          {HOUSES.map((h) => {
+            const inner = (
+              <>
+                <span className="lp-room__tick" aria-hidden="true" style={{ background: h.hue }} />
+                <div className="lp-room__label" style={{ color: h.hue }}>
+                  {h.room.toUpperCase()}
+                </div>
+                <h3 className="lp-room__name">{h.name}</h3>
+                <p className="lp-room__blurb">{h.blurb}</p>
+                <div className="lp-room__action" style={{ color: h.href ? h.hue : undefined }}>
+                  {h.action}
+                  {h.href ? <span aria-hidden="true"> ↗</span> : null}
+                </div>
+              </>
+            )
+            return h.href ? (
+              <a
+                className="lp-room"
+                key={h.id}
+                href={h.href}
+                style={{ borderColor: h.hue }}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {inner}
+              </a>
+            ) : (
+              <div className="lp-room lp-room--here" key={h.id} style={{ borderColor: h.hue }}>
+                {inner}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- closing art */}
+      <section className="lp-section lp-closer" aria-hidden="true">
+        <div className="lp-closer__frame">
+          <img className="lp-closer__bg" src={bgHeaven} alt="" />
+          <img className="lp-closer__figure" src={lucyHeaven} alt="" />
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- footer */}
+      <footer className="lp-foot">
+        <div className="lp-foot__cols">
+          <div className="lp-foot__brand">
+            <div className="lp-foot__mark">
+              <span className="lp-slot lp-slot--logo lp-slot--lg" aria-hidden="true">
+                <span>SVG</span>
+              </span>
+              <span className="lp-nav__name">{SITE.repoName}</span>
+            </div>
+            <p className="lp-foot__slot">
+              LOGO SLOT · still open. Prismatic angel, side view, sword lowered — vector, single
+              colour + spectrum refraction.
+            </p>
+          </div>
+          <FootCol
+            title="PRODUCT"
+            links={[
+              ['Doors', '#doors'],
+              ['Watch it run', '#run'],
+              ['Session-only skills', '#session'],
+              ['Converge or explore', '#directions'],
+            ]}
+          />
+          <FootCol title="SURFACES" links={SURFACES.map((s) => [s.command, '#directions'])} />
+          <FootCol
+            title="RESEARCH"
+            links={[
+              ['HH Index ↗', HOUSES[0].href ?? '#house'],
+              ['Benchmark method ↗', HOUSES[0].href ?? '#house'],
+              ['Gaia Skill Tree ↗', HOUSES[1].href ?? '#house'],
+            ]}
+          />
+          <FootCol
+            title="REPO"
+            links={[
+              ['GitHub ↗', SITE.repoUrl],
+              ['Issues ↗', SITE.issuesUrl],
+              [SITE.licence, SITE.repoUrl],
+            ]}
+          />
+        </div>
+
+        <div className="lp-foot__band" aria-hidden="true" />
+
+        <div className="lp-wordmark">
+          <div className="lp-wordmark__solid">SKILL HEAVEN</div>
+          <div className="lp-wordmark__ghost" aria-hidden="true">
+            SKILL HELL
+          </div>
+        </div>
+
+        <div className="lp-foot__bar">
+          <span>
+            {SITE.version.toUpperCase()} · SOURCE-DELIVERED THROUGH INSTALL.SH · NOT ON NPM
+          </span>
+          <span className="lp-foot__licence">
+            <span className="lp-foot__dot" aria-hidden="true" />
+            GAIA RESEARCH · {SITE.licence.toUpperCase()}
+          </span>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+/* =========================================================================
+   small parts
+   ========================================================================= */
+
+function SectionHead({
+  n,
+  title,
+  tight,
+}: {
+  n: string
+  title: ReactNode
+  tight?: boolean
+}) {
+  return (
+    <div className="lp-shead">
+      <span className="lp-shead__n">{n}</span>
+      <span className="sh-rule lp-shead__rule" aria-hidden="true" />
+      <h2 className={`sh-h2${tight ? ' lp-shead__h2--tight' : ''}`}>{title}</h2>
+    </div>
+  )
+}
+
+function DoseBar({
+  label,
+  value,
+  max,
+  tone,
+  strong,
+}: {
+  label: string
+  value: number
+  max: number
+  tone: 'inert' | 'cyan' | 'mint'
+  strong?: boolean
+}) {
+  return (
+    <div className="lp-bar">
+      <div className={`lp-bar__top${strong ? ' is-strong' : ''}`}>
+        <span>{label}</span>
+        <span>{fmt(value)} tok</span>
+      </div>
+      <div className="lp-bar__track">
+        <div
+          className={`lp-bar__fill lp-bar__fill--${tone}`}
+          style={{ width: `${(value / max) * 100}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function Counter({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone?: 'cyan' | 'rose' | 'mint'
+}) {
+  return (
+    <div className="lp-counter">
+      <div className="sh-label">{label}</div>
+      <div className={`lp-counter__v${tone ? ` lp-counter__v--${tone}` : ''}`}>{value}</div>
+    </div>
+  )
+}
+
+function CommandBlock({
+  cmd,
+  sigil,
+  tone,
+  copied,
+  onCopy,
+  label,
+}: {
+  cmd: string
+  sigil: string
+  tone: 'mint' | 'violet'
+  copied: boolean
+  onCopy: () => void
+  label: string
+}) {
+  return (
+    <div className="lp-cmd">
+      <span className={`lp-cmd__sigil lp-k-${tone}`} aria-hidden="true">
+        {sigil}
+      </span>
+      <code className="lp-cmd__code">{cmd}</code>
+      <button type="button" className="lp-cmd__copy" onClick={onCopy}>
+        {copied ? 'COPIED' : 'COPY'}
+        <span className="lp-sr">{` ${label}`}</span>
+      </button>
+    </div>
+  )
+}
+
+function FootCol({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div className="lp-foot__col">
+      <div className="sh-label">{title}</div>
+      <div className="lp-foot__links">
+        {links.map(([text, href]) => (
+          <a key={text + href} href={href}>
+            {text}
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}

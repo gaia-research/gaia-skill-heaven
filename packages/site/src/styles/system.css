@@ -219,3 +219,28 @@ button { font-family: inherit; }
   white-space: nowrap;
   border: 0;
 }
+
+/* --------------------------------------------------------------------------
+   Token collision guard.
+
+   The retained prototype routes still load `styles/tokens.css`, the older
+   Luminance/Prismatic set. Seven names exist in both files with DIFFERENT
+   meanings — most dangerously `--sh-ink`, which is bone body text here and a
+   near-black card fill there. Whichever stylesheet is imported last wins at
+   `:root`, which made the production surfaces render text at #10121d on a
+   #1b1a1c ground: invisible.
+
+   Re-declaring the contested names on the production surface roots settles it
+   by specificity instead of by import order, so neither file has to move and
+   the legacy routes keep their own values. Remove this block when tokens.css
+   is retired with those routes.
+   -------------------------------------------------------------------------- */
+.hx, .lp {
+  --sh-void: #1b1a1c;
+  --sh-ink: #eeebe6;
+  --sh-line: rgba(238, 235, 230, 0.11);
+  --sh-line-strong: rgba(238, 235, 230, 0.2);
+  --sh-hell-ink: #171618;
+  --sh-hell-line: rgba(23, 22, 24, 0.16);
+  --sh-maxw: 1320px;
+}
