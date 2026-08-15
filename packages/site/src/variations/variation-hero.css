@@ -251,9 +251,9 @@ body.vh-hero-page {
 
 .vha-eyebrow,
 .vhb-eyebrow {
-  font-family: 'Caveat', 'Archivo', cursive;
+  font-family: 'Kalam', 'Archivo', cursive;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
   padding-left: 0;
   line-height: 0.9;
   text-transform: none;

@@ -224,7 +224,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               position: 'absolute',
               left: '50%',
               top: 0,
-              transform: 'translate(-50%, -62%) rotate(-3deg)',
+              transform: 'translate(-50%, -30%) rotate(-3deg)',
               zIndex: 7,
               color: v.fg,
               fontSize: 'clamp(30px, 4.2vw, 68px)',
