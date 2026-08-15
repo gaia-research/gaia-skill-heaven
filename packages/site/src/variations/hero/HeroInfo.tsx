@@ -43,9 +43,9 @@ export function HeroInfo({
         className="vha-info-toggle"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        style={{ color: dim, borderColor: dim }}
+        style={{ color: accent, borderColor: accent }}
       >
-        <span className="vha-info-q" style={{ borderColor: dim }}>
+        <span className="vha-info-q" style={{ borderColor: accent }}>
           ?
         </span>
         <span className="vha-info-label">{label}</span>
@@ -62,9 +62,18 @@ export function HeroInfo({
                 Skill entropy
               </p>
               <p className="vha-info-body" style={{ color: dim }}>
-                How many skills — and how varied — sit in the agent&apos;s context.
-                Climb the ladder and entropy rises: more experts weigh in, quality
-                climbs, and so does cost. The win is the useful few, not the crowd.
+                How much the agent decides for itself.
+              </p>
+              <p className="vha-info-body" style={{ color: dim, marginTop: 6 }}>
+                <strong style={{ color: fg }}>Low · converge.</strong> Tightens toward a
+                plan you approve — impeccable weighing craft options, grill-me
+                stress-testing a build. You stay in the loop.
+              </p>
+              <p className="vha-info-body" style={{ color: dim, marginTop: 6 }}>
+                <strong style={{ color: fg }}>High · explore.</strong> Hands the agent
+                the wheel — gstack pits rival roles against each other, a CSO hunting
+                security holes. Not lower quality: more autonomous, more surprising,
+                seen only once it ships.
               </p>
               <EntropyCurve fg={fg} dim={dim} accent={accent} />
             </>
@@ -74,9 +83,12 @@ export function HeroInfo({
                 Skill Heaven
               </p>
               <p className="vha-info-body" style={{ color: dim }}>
-                Summon a skill into one session instead of installing it forever.
-                One line, one session — nothing installed, nothing mutated, nothing
-                left behind. The ladder sets how much of the summoning is automatic.
+                Summon a skill for one session — nothing installed, gone when you
+                leave. The ladder sets the agent&apos;s temperament:{' '}
+                <strong style={{ color: fg }}>converge</strong> to shape a plan you
+                steer, or <strong style={{ color: fg }}>explore</strong> to hand it
+                autonomy and trust the surprise. One summon — you choose how much
+                control.
               </p>
             </>
           )}
@@ -93,6 +105,84 @@ export function HeroInfo({
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+// Upper-right, below "Skip": a copyable /summon one-liner (summon a standalone
+// skill) and a quiet "Where do skills come from?" explainer. Same whisper-quiet
+// treatment as HeroInfo, right-aligned.
+export function HeroSummon({
+  fg,
+  bg,
+  dim,
+  accent,
+  copy,
+  copied,
+}: {
+  fg: string
+  bg: string
+  dim: string
+  accent: string
+  copy: (text: string, key: string) => void
+  copied: string | null
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="vha-summon">
+      <button
+        type="button"
+        className="vha-summon-cmd"
+        onClick={() => copy('/summon', 'summon')}
+        style={{ color: fg, borderColor: accent }}
+      >
+        <span style={{ color: accent }}>/</span>summon
+        <span className="vha-summon-tag" style={{ color: dim }}>
+          {copied === 'summon' ? 'copied ⏎' : 'copy'}
+        </span>
+      </button>
+      <span className="vha-summon-hint" style={{ color: dim }}>
+        summon a standalone skill
+      </span>
+
+      <div className="vha-info vha-info--right" data-open={open ? '1' : '0'}>
+        <button
+          type="button"
+          className="vha-info-toggle"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          style={{ color: accent, borderColor: accent }}
+        >
+          <span className="vha-info-label">Where do skills come from?</span>
+          <span className="vha-info-q" style={{ borderColor: accent }}>
+            ?
+          </span>
+        </button>
+        {open && (
+          <div className="vha-info-panel" style={{ color: fg, background: `${bg}f2`, borderColor: dim }}>
+            <p className="vha-info-title" style={{ color: accent }}>
+              The Gaia Skill Tree
+            </p>
+            <p className="vha-info-body" style={{ color: dim }}>
+              Every summon is drawn from the Gaia Skill Tree — an evidence-backed
+              registry where a skill is <strong style={{ color: fg }}>proven to work</strong>,
+              then named to the human who authored it. Only skills that earn their
+              place get in: curated, ranked, attributed. Off-canon? Summon straight
+              from any GitHub repo — our MCP loads it for this session only, nothing
+              installed, gone when you leave.
+            </p>
+            <a
+              className="vha-info-link"
+              href="https://gaiaskilltree.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: accent, borderColor: accent }}
+            >
+              Explore the tree · gaiaskilltree.com →
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 // lane past the firebreak) — they differ only in layout (Reredos vs
 // Guillotine), so the machine lives here once.
 
-const ACT_LABEL = ['EMPTY HANDED', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
-const ACT_SUB = ['nothing installed', '/skill-heaven', '—', '/skill-hell', 'one line']
+const ACT_LABEL = ['FOCUS', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
+const ACT_SUB = ["converge, don't collect", 'one skill · one session', 'cut the context bloat', 'explore · trust the agent', 'one line']
 const CAM = [0, 180, 340, 430, 120]
 const P = 1200
 const N = 5
@@ -136,13 +136,16 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const wordFill = WORD_FILL[scene]
   const wordStroke = WORD_STROKE[scene]
 
-  // Per-band figure framing. Zero is smaller + offset higher; all faces are
-  // lifted so the lowered wordmarks reveal the face. PROVISIONAL.
+  // Per-band figure framing, FACE-ANCHORED. origin is the measured FACE centre
+  // (% of the master) so the zoom pivots on the face and faces stay put; x/y
+  // (vh) then place that face. Faces are matched to a common upper-third line,
+  // then nudged per owner: ultra +1 up, hell +2 down & +½ right, zero +1 up.
+  // A notch = 3vh (½ = 1.5vh). PROVISIONAL, verified against screenshots.
   const FIG = {
-    zero: { zoom: 1.5, y: -10, origin: '50% 12%' },
-    heaven: { zoom: 2.5, y: -10, origin: '50% 30%' },
-    hell: { zoom: 2.5, y: -10, origin: '50% 30%' },
-    ultra: { zoom: 2.1, y: -9, origin: '50% 22%' },
+    zero: { zoom: 1.5, x: 1.8, y: -10, origin: '47% 27%' },
+    heaven: { zoom: 2.5, x: 0.6, y: -10, origin: '49% 30%' },
+    hell: { zoom: 2.5, x: 3.3, y: 0, origin: '47% 26%' },
+    ultra: { zoom: 2.1, x: 4.9, y: -8, origin: '42% 25%' },
   } as const
   const fig = FIG[scene]
 
@@ -158,6 +161,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     wordFill,
     wordStroke,
     figZoom: fig.zoom,
+    figX: fig.x,
     figY: fig.y,
     figOrigin: fig.origin,
     hair: P0.hair,
