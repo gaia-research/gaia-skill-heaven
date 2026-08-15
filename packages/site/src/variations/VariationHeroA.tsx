@@ -19,7 +19,8 @@ import wingRight from '../assets/hero-commission/v01/wing-right.png'
 // touch-driven 5-act scrollytelling piece, centered and monumental: the
 // SKILL / HEAVEN typeset sits dead-center behind Lucy, single wing symmetric
 // either side, the katana slashing in on Act III (SLASH). Act V (ENTER) hands
-// off to the risk ladder (OFF..MAX, ULTRA sealed) driving Heaven/Hell/Ultra
+// off to the entropy ladder (OFF..MAX plus ULTRA, the crown rung — never
+// sealed) driving Heaven/Hell/Ultra
 // live.
 // ─────────────────────────────────────────────────────────────────────────
 
