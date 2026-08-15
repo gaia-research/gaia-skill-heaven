@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Skill Heaven — design system
+   Ported from the approved Claude Design comp ("Skill Heaven Landing").
+   Two pegs own two halves of the palette and must not be conflated:
+   the GROUND is washed charcoal (printed ink on uncoated stock, not black);
+   the PRISM is the character's own hues at roughly HALF chroma, so the
+   spectrum reads as refracted light rather than LED.
+   Shared by every surface. Per-surface files scope under their own prefix.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---- ground: warm desaturated grey-brown, never #000 ---- */
+  --sh-void: #1b1a1c;
+  --sh-panel: #211f21;
+  --sh-card: #272426;
+  --sh-inert: #181718;
+
+  /* ---- ink: bone, warm, matched to the peg's linework ---- */
+  --sh-ink: #eeebe6;
+  --sh-ink-dim: #9a9691;
+  --sh-ink-faint: #67635f;
+
+  /* ---- hairlines: the same bone at low alpha, so every rule is one family with the type ---- */
+  --sh-line: rgba(238, 235, 230, 0.11);
+  --sh-line-strong: rgba(238, 235, 230, 0.2);
+
+  /* ---- prism: one hue per semantic role, never a gradient fill ---- */
+  --sh-violet: #a58ae0;   /* primary, interactive */
+  --sh-blue: #6f96d8;     /* structure */
+  --sh-cyan: #5fc2d6;     /* highlight, hover, borrowed */
+  --sh-mint: #71ccae;     /* measured, safe */
+  --sh-rose: #e094c8;     /* the explore lane */
+  --sh-magenta: #d478b0;  /* edge */
+
+  /* ---- surface identity: one hue per product surface ---- */
+  --sh-zero: #5fc2d6;
+  --sh-heaven: #6f96d8;
+  --sh-hell: #e094c8;
+  --sh-ultra: #d9b25c;
+
+  /* ---- hell inversion: monochrome only. Any accent surviving into Hell is a bug. ---- */
+  --sh-hell-paper: #efece7;
+  --sh-hell-ink: #171618;
+  --sh-hell-line: rgba(23, 22, 24, 0.16);
+
+  /* ---- house colours (sibling repos; hairlines and links only, never fills) ---- */
+  --sh-house-research: #38bdf8;
+  --sh-house-tree: #fbbf24;
+
+  /* ---- type ---- */
+  --sh-display: 'Anton', 'Arial Narrow', sans-serif;
+  --sh-sans: 'Archivo', system-ui, -apple-system, sans-serif;
+  --sh-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ---- rhythm ---- */
+  --sh-maxw: 1320px;
+  --sh-gutter: clamp(20px, 4vw, 40px);
+
+  /* the impact frame: a cut, never a fade */
+  --sh-impact: 46ms;
+}
+
+/* --------------------------------------------------------------------------
+   reset
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--sh-void);
+}
+
+body {
+  color: var(--sh-ink);
+  font-family: var(--sh-sans);
+  font-variation-settings: 'wdth' 100, 'wght' 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+a { color: var(--sh-ink); text-decoration: none; }
+a:hover { color: var(--sh-cyan); }
+button { font-family: inherit; }
+::selection { background: var(--sh-violet); color: var(--sh-void); }
+
+/* --------------------------------------------------------------------------
+   shared primitives — the commission-sheet grammar
+   Wireframe cues are load-bearing, not decoration.
+   -------------------------------------------------------------------------- */
+
+/* mono micro-label: 10px floor, nothing smaller */
+.sh-label {
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sh-ink-faint);
+}
+
+/* numbered section marker: 56px 2px split-light rule under the ordinal */
+.sh-rule {
+  display: block;
+  width: 56px;
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background: linear-gradient(
+    90deg,
+    var(--sh-violet), var(--sh-blue), var(--sh-cyan),
+    var(--sh-mint), var(--sh-rose), var(--sh-magenta)
+  );
+}
+
+/* section heading: Archivo pushed wide, per the peg's expanded bowls */
+.sh-h2 {
+  font-family: var(--sh-sans);
+  font-variation-settings: 'wdth' 108, 'wght' 800;
+  font-size: clamp(26px, 4.4vw, 54px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* annotation strip: the ▸ wireframe callout */
+.sh-note {
+  border: 1px dashed var(--sh-line-strong);
+  padding: 10px 14px;
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+  color: var(--sh-ink-faint);
+}
+.sh-note b { color: var(--sh-ink-dim); font-weight: 500; }
+
+/* status chip */
+.sh-chip {
+  display: inline-block;
+  border: 1px solid var(--sh-line-strong);
+  padding: 2px 7px;
+  font-family: var(--sh-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sh-ink-dim);
+  white-space: nowrap;
+}
+.sh-chip--wip { border-color: rgba(217, 178, 92, 0.5); color: var(--sh-ultra); }
+.sh-chip--live { border-color: rgba(113, 204, 174, 0.5); color: var(--sh-mint); }
+
+/* panel: hairline, 0 radius, 5px accent square in the corner */
+.sh-panel {
+  position: relative;
+  border: 1px solid var(--sh-line);
+  background: var(--sh-panel);
+}
+.sh-panel::after {
+  content: '';
+  position: absolute;
+  top: 7px; right: 7px;
+  width: 5px; height: 5px;
+  background: var(--sh-violet);
+}
+
+/* the one filled element rule: a solid action */
+.sh-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--sh-ink);
+  background: var(--sh-ink);
+  color: var(--sh-void);
+  font-family: var(--sh-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: background 120ms linear, color 120ms linear;
+}
+.sh-cta:hover { background: var(--sh-cyan); border-color: var(--sh-cyan); color: var(--sh-void); }
+
+.sh-cta--ghost {
+  background: transparent;
+  color: var(--sh-ink);
+  border-color: var(--sh-line-strong);
+}
+.sh-cta--ghost:hover { background: transparent; border-color: var(--sh-cyan); color: var(--sh-cyan); }
+
+/* focus: visible, always */
+:focus-visible {
+  outline: 2px solid var(--sh-cyan);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
