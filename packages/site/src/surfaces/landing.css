@@ -1208,7 +1208,7 @@
 
 .lp-ledger {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--sh-line);
 }
 .lp-ledger__col {
@@ -1227,8 +1227,8 @@
 }
 .lp-ledger__head h3 {
   margin: 0;
-  font-variation-settings: 'wdth' 106, 'wght' 800;
-  font-size: 19px;
+  font-variation-settings: 'wdth' 104, 'wght' 800;
+  font-size: 15px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -1244,6 +1244,12 @@
 }
 .lp-k-mint {
   color: var(--sh-mint);
+}
+.lp-k-grey {
+  color: var(--sh-ink-dim);
+}
+.lp-k-gold {
+  color: #ffd24a;
 }
 .lp-ledger__blade {
   --lp-band-h: 26px;
@@ -1744,5 +1750,34 @@
   }
   .lp-figure img {
     height: clamp(240px, 68vw, 320px);
+  }
+}
+
+/* four-band decision ledger — responsive collapse */
+@media (max-width: 1080px) {
+  .lp-ledger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp-ledger__col {
+    border-left: 0;
+    border-top: 0;
+  }
+  .lp-ledger__col:nth-child(2n) {
+    border-left: 1px solid var(--sh-line);
+  }
+  .lp-ledger__col:nth-child(n + 3) {
+    border-top: 1px solid var(--sh-line);
+  }
+}
+@media (max-width: 620px) {
+  .lp-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-ledger__col,
+  .lp-ledger__col:nth-child(2n) {
+    border-left: 0;
+  }
+  .lp-ledger__col + .lp-ledger__col {
+    border-top: 1px solid var(--sh-line);
   }
 }
