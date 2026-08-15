@@ -9,6 +9,10 @@ import lucyZeroSetB from '../../assets/lucy/v4-approved/set-b/masters/lucy-zero.
 import lucyHeavenSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-heaven.webp'
 import lucyHellSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-hell.webp'
 import lucyUltraSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-ultra.webp'
+import lucyHeavenV5 from '../../assets/lucy/v5/masters/lucy-heaven.png'
+import lucyHellV5 from '../../assets/lucy/v5/masters/lucy-hell.png'
+import lucyUltraV5 from '../../assets/lucy/v5/masters/lucy-ultra.png'
+import lucyZeroV5 from '../../assets/lucy/v5/masters/lucy-zero.png'
 import katanaHeaven from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import katanaHell from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
 import katanaUltra from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp'
@@ -19,7 +23,7 @@ import slashArc from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katan
 const lucyZeroSetC = lucyZeroSetA
 
 export type LucyHeroState = 'zero' | 'heaven' | 'hell' | 'ultra'
-export type LucyAssetSet = 'a' | 'b' | 'c'
+export type LucyAssetSet = 'a' | 'b' | 'c' | 'v5'
 
 export interface LucyHeroAsset {
   lucy: string
@@ -34,6 +38,12 @@ export type LucyHeroAssetSet = Record<LucyHeroState, LucyHeroAsset>
  * character-art sets, not the two independently-designed page layouts.
  */
 export const HERO_ASSET_SETS: Record<LucyAssetSet, LucyHeroAssetSet> = {
+  v5: {
+    zero: { lucy: lucyZeroV5, katana: katanaHeaven, slashArc },
+    heaven: { lucy: lucyHeavenV5, katana: katanaHeaven, slashArc },
+    hell: { lucy: lucyHellV5, katana: katanaHell, slashArc },
+    ultra: { lucy: lucyUltraV5, katana: katanaUltra, slashArc },
+  },
   a: {
     zero: { lucy: lucyZeroSetA, katana: katanaHeaven, slashArc },
     heaven: { lucy: lucyHeavenSetA, katana: katanaHeaven, slashArc },
@@ -54,12 +64,15 @@ export const HERO_ASSET_SETS: Record<LucyAssetSet, LucyHeroAssetSet> = {
   },
 }
 
-export const DEFAULT_LUCY_ASSET_SET: LucyAssetSet = 'a'
+export const DEFAULT_LUCY_ASSET_SET: LucyAssetSet = 'v5'
 
-/** Keeps malformed review URLs on the approved Set A default. */
+/** Keeps malformed review URLs on the approved default. */
 export function normalizeLucyAssetSet(value?: string): LucyAssetSet {
   const normalized = value?.trim().toLowerCase()
-  return normalized === 'b' || normalized === 'c' || normalized === 'a'
+  return normalized === 'a' ||
+    normalized === 'b' ||
+    normalized === 'c' ||
+    normalized === 'v5'
     ? normalized
     : DEFAULT_LUCY_ASSET_SET
 }
