@@ -8,6 +8,11 @@ coverage/
 # live in the sibling v01/v02/v03 folders.
 packages/site/src/assets/hero-commission/workbench/
 
+# Lucy production: PNG masters and intermediates stay recoverable locally.
+# Only the canonical character-sheet PNG under src/assets/lucy/authority ships.
+packages/site/assets/workbench/
+lucy-masters-backup/
+
 .env
 .env.*
 .DS_Store

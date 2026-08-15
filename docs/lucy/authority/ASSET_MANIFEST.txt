@@ -1,0 +1,30 @@
+LUCY COMMISSION HANDOVER BUNDLE
+
+CANON
+- README.md
+- docs/LUCY_CANONICAL_CHARACTER_SHEET.md
+- docs/LUCY_FRONT_PAGE_CORE_ASSETS.md
+- docs/LUCY_FULL_WEBSITE_COMMISSION_PACK.md
+- docs/ARTIST_HANDOVER_CHECKLIST.md
+- data/lucy-canon.json
+
+FINAL VISUAL
+- images/final/Lucy_Canonical_Character_Sheet_Final.png
+
+ORIGINAL REFERENCE
+- images/reference/Lucy_Original_Reference.jpg
+
+REFERENCE CROPS
+- images/reference_crops/Lucy_ZERO_reference_panel.png
+- images/reference_crops/Lucy_HEAVEN_reference_panel.png
+- images/reference_crops/Lucy_HELL_reference_panel.png
+- images/reference_crops/Lucy_ULTRA_reference_panel.png
+- images/reference_crops/Lucy_Model_Turnaround_reference.png
+- images/reference_crops/Lucy_Eye_System_reference.png
+- images/reference_crops/Lucy_Wing_System_reference.png
+- images/reference_crops/Lucy_Katana_reference.png
+- images/reference_crops/Lucy_Expression_reference.png
+- images/reference_crops/Lucy_Palette_Materials_reference.png
+
+ITERATION HISTORY
+- images/iterations/*

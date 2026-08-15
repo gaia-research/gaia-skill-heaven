@@ -6,6 +6,26 @@
 > in shipped copy or user-facing code. **Milim is the Gaia Research lab mascot,
 > not this line's persona.**
 
+## Lucy visual authority and state color canon
+
+The production authority is the approved character sheet at
+`src/assets/lucy/authority/lucy-character-sheet-master.png`, interpreted with
+`docs/lucy/authority/LUCY_CANONICAL_CHARACTER_SHEET.md` and
+`docs/lucy/authority/lucy-canon.json`. Earlier hero assets and iteration sheets
+are provenance, not authority. Lucy's anatomy and outfit never transform;
+gravity, eyes, shards, lighting, inversion, and weapon count communicate state.
+
+| State | Working production color | Non-negotiable treatment |
+|---|---|---|
+| Zero | Cyan `#37D6E0` | Deep black field, closed eyes, normal gravity, no wings or shards. |
+| Heaven | Blue `#7CC4FF` | Saturated cyan-blue refraction, both diamond eyes open, ordered glass shards. |
+| Hell | Full-scene chromatic inversion | White field, closed eyes and vivid red tear; no standalone flat Hell-pink token is canonical yet. |
+| Ultra | Gold `#FFD24A`–`#F7C84B` | Never inverted; exclusive gold refraction, asymmetric eyes, two matching katanas. |
+
+These values supersede incidental color sampling from older concept images.
+Chroma green used during transparent-background extraction is a production
+surface only and must never enter the brand palette.
+
 > **Prototype, not the product.** Eight hero variations behind a preview
 > switcher (`src/components/Switcher.tsx`). All share one content source
 > (`src/content.ts`) and the real, measured token figures — messaging stays
