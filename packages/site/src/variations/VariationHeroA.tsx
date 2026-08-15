@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
@@ -64,6 +64,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const INSTALL_ALL = 'curl -fsSL https://skill-heaven.dev/install | sh'
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
+  // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
+  // (slides + fades) so only Lucy + assets show; click again restores. Clicks
+  // on controls, links, or the tooltips never trigger it.
+  const [focus, setFocus] = useState(false)
+  const onHeroClick = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    const t = e.target as HTMLElement
+    if (t.closest('button, a, input, .vha-info, .vha-summon, .vha-bare-toggle')) return
+    setFocus((f) => !f)
+  }, [])
   // The "What is this?" hint stays out of the way until the visitor does
   // anything deliberate EXCEPT scrolling — a click on empty space, a control, or
   // a copy. Wheel/keyboard act-nav never triggers it.
@@ -89,7 +98,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   return (
     <div
       ref={rootRef}
-      className={`vha${bare ? ' vha--bare' : ''}`}
+      className={`vha${bare ? ' vha--bare' : ''}${focus ? ' vha--focus' : ''}`}
+      onClick={onHeroClick}
       style={{
         position: 'fixed',
         inset: 0,
@@ -259,9 +269,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           bottom: `calc(3vh + ${v.typeUp}vh)`,
           textAlign: 'center',
           pointerEvents: 'none',
-          transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
         }}
       >
+        {/* SKILL layer + the glitch-transformed state word live here */}
         <div style={{ position: 'relative', zIndex: 2, transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)` }}>
           <div className="vha-word" style={{ ...wordStyle, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
@@ -353,15 +363,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       <div className="vha-chrome" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', left: '8vw', bottom: '7vh', display: 'flex', alignItems: 'baseline', gap: 16 }}>
           <span className="vha-act">{v.actLabel}</span>
-          <span style={{ fontSize: 11, letterSpacing: '.22em', color: v.dim }}>{v.actSub}</span>
+          <span style={{ fontSize: 11, letterSpacing: '.22em', color: v.dim, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.actSub}</span>
         </div>
 
         <div style={{ position: 'absolute', right: '8vw', bottom: '7vh', display: 'flex', alignItems: 'center', gap: 18 }}>
-          <span style={{ fontSize: 11, letterSpacing: '.22em', color: v.dim, opacity: v.oCue }}>SCROLL</span>
+          <span style={{ fontSize: 11, letterSpacing: '.22em', color: v.dim, opacity: v.oCue, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>SCROLL</span>
           <span className="vha-cue" style={{ color: v.dim, opacity: v.oCue }}>
             ↓
           </span>
-          <span style={{ fontSize: 11, letterSpacing: '.22em' }}>{v.counter}</span>
+          <span style={{ fontSize: 11, letterSpacing: '.22em', textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.counter}</span>
         </div>
 
         <div style={{ position: 'absolute', right: '8vw', top: '50%', translate: '0 -50%', display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'auto' }}>
@@ -387,6 +397,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           opacity: v.oCta,
           transform: `translateY(${v.ctaY}px)`,
           pointerEvents: v.ctaPE,
+          // Legibility scrim so the ladder + commands read over the busy figure.
+          background: `linear-gradient(to top, ${v.bg} 4%, ${v.bg}cc 52%, ${v.bg}00 100%)`,
+          paddingTop: 26,
         }}
       >
         <div style={{ display: 'flex', gap: 4, marginBottom: 9 }}>
@@ -406,7 +419,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 14, color: v.noteTone }}>{v.stopNote}</div>
+        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 14, color: v.noteTone, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.stopNote}</div>
         <div className="vha-cta">
           <button
             type="button"

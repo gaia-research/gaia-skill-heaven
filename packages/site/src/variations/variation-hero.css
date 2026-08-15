@@ -915,3 +915,17 @@ body.vh-hero-page {
 .vha-info-link:hover {
   opacity: 0.75;
 }
+
+/* Focus mode: click empty backdrop → the main text slides out of the way,
+   leaving Lucy + assets. Only the wordmark moves; other UI stays. */
+.vha-typewrap {
+  transition:
+    bottom calc(700ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1),
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 440ms linear;
+}
+.vha--focus .vha-typewrap {
+  transform: translateY(24vh);
+  opacity: 0;
+  pointer-events: none;
+}

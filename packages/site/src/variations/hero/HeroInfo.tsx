@@ -17,7 +17,10 @@ export function HeroInfo({
   dim: string
   accent: string
 }) {
-  const [open, setOpen] = useState(false)
+  // Auto-opens on mount: HeroInfo only mounts once the first non-scroll
+  // interaction has revealed it, and the whole tooltip should show, not just
+  // the toggle.
+  const [open, setOpen] = useState(true)
   const [hidden, setHidden] = useState(false)
 
   if (hidden) {
@@ -187,24 +190,28 @@ export function HeroSummon({
   )
 }
 
-// Tiny "quality & cost rise with entropy" sketch — two curves over the rungs.
+// Skill-entropy sketch: cost climbs monotonically, quality rises to a peak
+// then falls — "better until it isn't." The dot marks the turn.
 function EntropyCurve({ fg, dim, accent }: { fg: string; dim: string; accent: string }) {
   return (
-    <svg className="vha-info-curve" viewBox="0 0 220 96" role="img" aria-label="Quality and cost rise with skill entropy">
+    <svg className="vha-info-curve" viewBox="0 0 220 96" role="img" aria-label="Cost rises with skill entropy while quality peaks then falls">
       {/* axes */}
       <line x1="16" y1="8" x2="16" y2="80" stroke={dim} strokeWidth="1" opacity="0.5" />
       <line x1="16" y1="80" x2="212" y2="80" stroke={dim} strokeWidth="1" opacity="0.5" />
-      {/* cost — straight-ish climb */}
-      <path d="M16 76 L212 20" fill="none" stroke={dim} strokeWidth="1.5" strokeDasharray="3 3" />
-      {/* quality — rises then plateaus (diminishing returns) */}
-      <path d="M16 74 C 80 30, 120 20, 212 30" fill="none" stroke={accent} strokeWidth="2" />
-      <text x="150" y="16" fill={dim} fontSize="9" letterSpacing="0.12em">
+      {/* cost — keeps climbing */}
+      <path d="M16 82 C 84 74, 142 50, 210 12" fill="none" stroke={dim} strokeWidth="1.5" strokeDasharray="3 3" />
+      {/* quality — rises to a peak, then falls */}
+      <path d="M16 78 C 62 34, 100 20, 132 22 C 168 25, 194 46, 210 60" fill="none" stroke={accent} strokeWidth="2" />
+      {/* the turn */}
+      <line x1="132" y1="24" x2="132" y2="80" stroke={dim} strokeWidth="1" strokeDasharray="2 3" opacity="0.6" />
+      <circle cx="132" cy="22" r="2.6" fill={accent} />
+      <text x="166" y="20" fill={dim} fontSize="9" letterSpacing="0.12em">
         cost
       </text>
-      <text x="120" y="44" fill={fg} fontSize="9" letterSpacing="0.12em">
+      <text x="70" y="22" fill={fg} fontSize="9" letterSpacing="0.12em">
         quality
       </text>
-      <text x="150" y="93" fill={dim} fontSize="8" letterSpacing="0.14em">
+      <text x="138" y="93" fill={dim} fontSize="8" letterSpacing="0.14em">
         entropy →
       </text>
     </svg>
