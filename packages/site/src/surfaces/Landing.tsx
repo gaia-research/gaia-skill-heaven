@@ -545,8 +545,8 @@ export default function Landing() {
           </span>
           <span>
             IMPACT FRAME · 46ms shear + hard invert (#1b1a1c → #efece7). Monochrome only — colour
-            never survives into Hell. Hell is not a locked lane: it arms live, from inside the
-            session.
+            never survives into Hell — which arms live, from inside the session, at whatever
+            rung you name.
           </span>
         </div>
       </section>
@@ -668,7 +668,8 @@ export default function Landing() {
         <SectionHead n="04" title="CONVERGE OR EXPLORE" />
         <p className="lp-section__lede">
           Heaven and Hell are two directions of the same summon, sharing one MCP. Converge narrows
-          the reach; explore widens it. Neither is locked, and neither adds a thing to your machine.
+          the reach; explore widens it. Both are live today, and neither adds a thing to your
+          machine.
         </p>
 
         {/* the floor */}
