@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 // lane past the firebreak) — they differ only in layout (Reredos vs
 // Guillotine), so the machine lives here once.
 
-const ACT_LABEL = ['CLEAN SLATE', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
+const ACT_LABEL = ['EMPTY HANDED', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
 const ACT_SUB = ['nothing installed', '/skill-heaven', '—', '/skill-hell', 'one line']
 const CAM = [0, 180, 340, 430, 120]
 const P = 1200
@@ -149,6 +149,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const pick = <T,>(arr: T[]) => arr[act]
 
   return {
+    atLadder,
     bg,
     fg,
     dim,

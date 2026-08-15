@@ -640,3 +640,136 @@ body.vh-hero-page {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Upper-left explainer — whisper-quiet, dismissable, responsive to mobile.
+   Acts 1–4: "What is this?" (the system). Act 5: "Skill entropy" + a sketch.
+   ───────────────────────────────────────────────────────────────────────── */
+.vha-info {
+  position: absolute;
+  top: clamp(14px, 2.6vh, 26px);
+  left: clamp(16px, 8vw, 120px);
+  z-index: 40;
+  pointer-events: auto;
+  max-width: min(88vw, 340px);
+}
+.vha-info-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.48;
+  transition: opacity 180ms ease;
+}
+.vha-info-toggle:hover,
+.vha-info[data-open='1'] .vha-info-toggle {
+  opacity: 0.92;
+}
+.vha-info-q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+}
+.vha-info-label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.vha-info-panel {
+  margin-top: 10px;
+  width: min(84vw, 320px);
+  padding: 14px 16px 12px;
+  border: 1px solid;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: vha-info-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes vha-info-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.vha-info-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.vha-info-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.vha-info-curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 10px;
+}
+.vha-info-hide {
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.vha-info-hide:hover {
+  opacity: 1;
+}
+.vha-info-nub {
+  position: absolute;
+  top: clamp(14px, 2.6vh, 26px);
+  left: clamp(16px, 8vw, 120px);
+  z-index: 40;
+  pointer-events: auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 180ms ease;
+}
+.vha-info-nub:hover {
+  opacity: 0.75;
+}
+@media (max-width: 640px) {
+  .vha-info,
+  .vha-info-nub {
+    left: 14px;
+    top: 12px;
+  }
+  .vha-info-label {
+    display: none;
+  }
+  .vha-info-panel {
+    width: min(90vw, 300px);
+  }
+}
