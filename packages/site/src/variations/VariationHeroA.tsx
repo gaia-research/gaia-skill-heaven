@@ -165,6 +165,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
           transformOrigin: v.figOrigin,
+          zIndex: 1,
+          pointerEvents: 'none',
         }}
       >
         <img
@@ -189,6 +191,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           position: 'absolute',
           left: '50%',
           top: '56%',
+          zIndex: 2,
+          pointerEvents: 'none',
           width: 'min(78vw,1180px)',
           translate: '-50% -50%',
           transition:
@@ -214,26 +218,27 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           textAlign: 'center',
           pointerEvents: 'none',
           transition: 'bottom calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)`,
         }}
       >
-        <div style={{ position: 'relative' }}>
-          <span
-            className="vha-eyebrow"
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: 0,
-              transform: 'translate(-50%, -30%) rotate(-3deg)',
-              zIndex: 7,
-              color: v.fg,
-              fontSize: 'clamp(30px, 4.2vw, 68px)',
-              textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
-              pointerEvents: 'none',
-            }}
-          >
-            SKILL
-          </span>
+        {/* "Skill" is layered BEHIND Lucy (zIndex 0, under the figure's zIndex 1)
+            so it never covers her; the state word stays in front (zIndex 2). */}
+        <span
+          className="vha-eyebrow"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: 0,
+            transform: 'translate(-50%, -30%) rotate(-3deg)',
+            zIndex: 0,
+            color: v.fg,
+            fontSize: 'clamp(30px, 4.2vw, 68px)',
+            textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
+            pointerEvents: 'none',
+          }}
+        >
+          SKILL
+        </span>
+        <div style={{ position: 'relative', zIndex: 2, transform: `translateX(${v.glitchX}px) skewX(${v.glitchSkew}deg)` }}>
           <div className="vha-word" style={{ ...wordStyle, transform: `scale(${v.mType})`, opacity: v.oHeaven }}>
             HEAVEN
           </div>
