@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
+import { HeroInfo } from './hero/HeroInfo'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -91,6 +92,21 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       <Link to="/landing" className="vha-skip" style={{ color: v.fg, borderColor: v.hair2 }}>
         Skip · Enter the door →
       </Link>
+      <HeroInfo
+        atLadder={v.atLadder}
+        fg={v.fg}
+        bg={v.bg}
+        dim={v.dim}
+        accent={
+          v.scene === 'ultra'
+            ? '#FFD24A'
+            : v.scene === 'hell'
+              ? '#5FC2D6'
+              : v.scene === 'zero'
+                ? v.fg
+                : '#A58AE0'
+        }
+      />
       <div
         aria-hidden="true"
         style={{
