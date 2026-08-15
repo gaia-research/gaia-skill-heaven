@@ -251,11 +251,11 @@ body.vh-hero-page {
 
 .vha-eyebrow,
 .vhb-eyebrow {
-  font-family: 'Permanent Marker', 'Archivo', cursive;
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-family: 'Caveat', 'Archivo', cursive;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   padding-left: 0;
-  line-height: 1;
+  line-height: 0.9;
   text-transform: none;
 }
 .vhb-eyebrow {
@@ -352,16 +352,16 @@ body.vh-hero-page {
 .vha-chip--heaven,
 .vhb-chip--heaven {
   flex: 2;
-  background: #7cc4ff;
+  background: #ffffff;
   color: #0a0a0a;
   border: none;
 }
 .vha-chip--hell,
 .vhb-chip--hell {
   flex: 3;
-  background: #171618;
-  color: #efece7;
-  border: 1px solid #171618;
+  background: #0a0a0a;
+  color: #ffffff;
+  border: none;
 }
 .vha-chip--ultra,
 .vhb-chip--ultra {

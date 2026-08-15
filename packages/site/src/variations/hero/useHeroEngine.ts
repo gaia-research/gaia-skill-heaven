@@ -123,34 +123,26 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
   const fg = P0.fg
   const dim = P0.dim
 
-  // Wordmark treatment per band: a text STROKE (the line-art outline) plus a
-  // DIAGONAL HATCH fill — never a solid fill and never a gradient (owner + the
-  // original). Zero is the exception: bone fill + dark stroke so it stays
-  // legible and zen. Hell carries no red.
-  const STROKE = {
-    zero: `1.6px ${HERO.inkPanel}`,
-    heaven: `2px ${HERO.bone}`,
-    hell: `2px ${HERO.ink}`,
-    ultra: `2px ${HERO.gold}`,
+  // Photoshop-style treatment: a SOLID fill + a coloured TEXT BORDER (stroke).
+  // HEAVEN white, HELL black, ULTRA white, ZERO bone. The border carries the
+  // palette splash: prismatic (heaven), inverted non-red (hell), gold (ultra).
+  const WORD_FILL = { zero: HERO.bone, heaven: '#FFFFFF', hell: '#0A0A0A', ultra: '#FFFFFF' } as const
+  const WORD_STROKE = {
+    zero: `2px ${HERO.grey}`,
+    heaven: `3px ${HERO.violet}`,
+    hell: `3px ${HERO.hellTeal}`,
+    ultra: `3px ${HERO.gold}`,
   } as const
-  const HATCH = {
-    zero: 'none',
-    heaven: `repeating-linear-gradient(48deg, ${HERO.cyan} 0 3px, transparent 3px 8px, ${HERO.violet} 8px 11px, transparent 11px 16px, ${HERO.blue} 16px 19px, transparent 19px 24px)`,
-    hell: `repeating-linear-gradient(48deg, ${HERO.hellTeal} 0 3px, transparent 3px 8px, ${HERO.hellAmber} 8px 11px, transparent 11px 16px)`,
-    ultra: `repeating-linear-gradient(48deg, ${HERO.gold} 0 3px, transparent 3px 8px, #FFF0C4 8px 11px, transparent 11px 16px)`,
-  } as const
-  const wordStroke = STROKE[scene]
-  const wordFillBg = HATCH[scene]
+  const wordFill = WORD_FILL[scene]
+  const wordStroke = WORD_STROKE[scene]
 
-  // Per-band figure framing. Each master frames the figure at a different
-  // scale, so a single zoom leaves faces inconsistent. These equalize the
-  // FACE size and offset it toward the upper third (golden-ratio-ish), never
-  // dead centre. PROVISIONAL — tuned against fifth-scene screenshots.
+  // Per-band figure framing. Zero is smaller + offset higher; all faces are
+  // lifted so the lowered wordmarks reveal the face. PROVISIONAL.
   const FIG = {
-    zero: { zoom: 2.0, y: -7, origin: '50% 12%' },
-    heaven: { zoom: 3.2, y: -11, origin: '50% 30%' },
-    hell: { zoom: 3.2, y: -11, origin: '50% 30%' },
-    ultra: { zoom: 2.6, y: -8, origin: '50% 22%' },
+    zero: { zoom: 1.5, y: -10, origin: '50% 12%' },
+    heaven: { zoom: 2.5, y: -10, origin: '50% 30%' },
+    hell: { zoom: 2.5, y: -10, origin: '50% 30%' },
+    ultra: { zoom: 2.1, y: -9, origin: '50% 22%' },
   } as const
   const fig = FIG[scene]
 
@@ -162,8 +154,8 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     dim,
     lucyState,
     scene,
+    wordFill,
     wordStroke,
-    wordFillBg,
     figZoom: fig.zoom,
     figY: fig.y,
     figOrigin: fig.origin,
@@ -523,22 +515,21 @@ export function useHeroEngine(variant: 'a' | 'b') {
 
   const rungs = LADDER.map((r, i) => {
     const sel = i === stop
-    // Flat palette per rung — no gradient, no red. The ladder IS the palette:
-    // zero ink-grey · heaven cyan + violet (prismatic) · hell the inverted,
-    // non-red side (teal · blue · amber) · ultra gold.
-    const RUNG_HUE = [HERO.grey, HERO.cyan, HERO.violet, HERO.hellTeal, HERO.hellBlue, HERO.hellAmber, HERO.gold]
-    const hue = RUNG_HUE[i]
+    // Diagonal line-art fill (not solid) + a solid single-colour border:
+    // zero ink-grey · heaven white + prismatic border · hell black + inverted
+    // border (no red) · ultra white + gold border.
+    const RUNG_FILL = [HERO.grey, '#FFFFFF', '#FFFFFF', '#0A0A0A', '#0A0A0A', '#0A0A0A', '#FFFFFF']
+    const RUNG_BORDER = [HERO.grey, HERO.cyan, HERO.violet, HERO.hellTeal, HERO.hellBlue, HERO.hellAmber, HERO.gold]
+    const fill = RUNG_FILL[i]
+    const border = RUNG_BORDER[i]
     return {
       label: r.label,
       h: sel ? 38 : 13,
-      // Only the rung that is becoming selected eases its height; every other
-      // rung snaps back to 13px in the same commit that moves the label and the
-      // CTA note. See the note on `.vha-rung` in variation-hero.css.
       sel,
-      bg: hue,
-      line: hue,
-      op: sel ? 1 : 0.38,
-      tone: sel ? hue : v.dim,
+      bg: `repeating-linear-gradient(45deg, ${fill} 0 2px, transparent 2px 4px)`,
+      line: border,
+      op: sel ? 1 : 0.4,
+      tone: sel ? border : v.dim,
       pick: () => pickStop(i),
     }
   })
