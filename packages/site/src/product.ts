@@ -1,12 +1,14 @@
 /**
  * Product truth for every surface on this site.
  *
- * One mechanic — `summon` — and four surfaces that set how much of the
- * summoning is automatic. Every figure here is either a real measured
- * benchmark result or explicitly flagged provisional. Nothing is invented:
- * no testimonials, no logos, no user counts, no pricing.
+ * One mechanic — `summon` — and ONE LINE: a single ladder
+ * `off · low · med · high · xhigh · max · ultra` whose four surfaces are
+ * contiguous bands read from the current rung (off = Zero, low·med = Heaven,
+ * high·xhigh·max = Hell, ultra = Ultra, the crown rung). Every figure here is
+ * either a real measured benchmark result or explicitly flagged provisional.
+ * Nothing is invented: no testimonials, no logos, no user counts, no pricing.
  *
- * Authority: gaia-research/founder/RATIFICATION.md · packages/site/PRODUCT.md
+ * Authority: gaia-research/founder/RATIFICATION.md (N13) · packages/site/PRODUCT.md
  */
 
 export const SITE = {

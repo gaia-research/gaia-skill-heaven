@@ -1,10 +1,11 @@
-# The Ladder — one mechanic, four surfaces
+# The Ladder — one mechanic, one line, four surfaces
 
-**Founder ruling, N12 (2026-08-15).** Supersedes the 2026-08-07 "two ladder
-halves" reading this doc used to carry: Heaven and Hell are no longer opposite
-halves of one seven-rung axis. Each direction now carries the **full** ladder,
-and `ultra` is no longer a rung on it at all — it moved up, to become the
-controller over both directions.
+**Founder ruling, N13 (2026-08-15, corrective).** Restores the single-scale
+reading and supersedes the "two independent ladders" reading N12 briefly
+carried. There is **one ladder — one line** — and the four surfaces are
+contiguous **bands** on it, not four separate controls. `ultra` is the
+**crown** of that one line: the controller above everything, rendered as its
+seventh selectable rung so the whole thing reads as a single continuous axis.
 
 ## The mechanic
 
@@ -14,81 +15,81 @@ every door**, copied straight from how `skill-hell` already does it. Nothing
 below is a different mechanic; it's a different amount of automation wrapped
 around the same single act.
 
-## Four surfaces, not two halves
+## One line, read as four bands
+
+A session sits at **exactly one rung**. Which surface you are in is **read
+from the rung** — you do not hold a Heaven position and a Hell position at the
+same time.
 
 ```
-   SKILL ZERO              /skill-heaven            /skill-hell            /skill-ultra
-   (the floor)              (converge)                (explore)             (the controller)
- ┌────────────────┐   ┌─────────────────────┐  ┌─────────────────────┐  ┌───────────────────┐
- │ ships /summon   │   │ off·low·med·high·    │  │ off·low·med·high·    │  │ picks direction +  │
- │ by default —    │   │ xhigh·max             │  │ xhigh·max             │  │ depth per gap —    │
- │ manual, none of │   │ default: low          │  │ default: high         │  │ NO ladder of its   │
- │ the choosing    │   │                       │  │                       │  │ own, no rung, never │
- │ is automated    │   │                       │  │                       │  │ a slider            │
- └────────────────┘   └─────────────────────┘  └─────────────────────┘  └───────────────────┘
-      boot-time              └──────── live, additive, one shared MCP ────────┘      sits above both
-      (D12, unchanged)
+  ZERO        HEAVEN            HELL                     ULTRA
+ (floor)     (converge)        (explore)              (the controller)
+  ┌────┬───────────────┬───────────────────────────┬─────────┐
+  │ off │  low   med    │  high    xhigh    max      │  ultra  │
+  └────┴───────────────┴───────────────────────────┴─────────┘
+    0      1     2         3       4        5         crown
+   ships   ▲ default low     ▲ default high          picks direction
+  /summon                                             + depth per gap
+  (manual)  └─────── auto-summons per capability gap ───────┘
 ```
 
-- **Skill Zero** is the product floor: it ships `/summon` by default, with
-  none of the choosing automated. Its own boot-time dial
-  (`--level off|low|med` → `product-floor|curated|native`) is **unchanged by
-  N12** and still governed by D12 below — it decides what's *ambient* at
-  launch, a different question from how much gets auto-summoned afterward.
-- **`/skill-heaven` (converge)** and **`/skill-hell` (explore)** are two
-  directions of the same summon, over **one shared MCP**. Each carries the
-  **same discrete ladder, `off…max`**, setting **how many skills the agent
-  may auto-summon per capability gap**. The ladder is **per direction** — you
-  can sit at `low` in Heaven and `high` in Hell in the same session; there is
-  no single shared position between them.
-- **`/skill-ultra`** is the controller: it picks direction and depth per gap
-  and has **no ladder of its own** — no rung, and never a slider. This
-  supersedes the earlier placement of `ultra` as a rung above Hell; the
-  ledger's frozen arm key is unaffected by the rename.
+- **`off` — Skill Zero.** The product floor. Ships `/summon` by default, with
+  **none of the choosing automated**. This is the bottom of the one line.
+- **`low · med` — Skill Heaven (converge).** Auto-summons narrowly — the
+  right few skills for the gap in front of you. Representative rung: `low`.
+- **`high · xhigh · max` — Skill Hell (explore).** Auto-summons widely — more
+  experts in context, better until it isn't. Representative rung: `high`.
+- **`ultra` — Skill Ultra.** The crown rung. It picks the direction **and**
+  the depth per gap — the final form. It sits on the same line as its top
+  rung (selectable directly, alongside Heaven and Hell) because there is one
+  axis; it has no sub-ladder of its own because it **is** the top of the one.
+  Never a slider (N1).
+
+Selecting a surface selects into its band; selecting an individual rung
+fine-tunes within it. **Nothing on the line refuses** — every rung and band
+is reachable. Hell is not gated, locked, or sealed, and neither is Ultra;
+what is outstanding on the upper band is implementation, not permission.
 
 ## The rungs (PROVISIONAL until the benchmark lands)
 
-Per-rung counts and the per-direction defaults are **provisional** — they do
-not land until the Hell/Heaven benchmark does. Every surface that renders one
-of these numbers must say so.
+Per-rung counts and the per-band defaults are **provisional** — they do not
+land until the Hell/Heaven benchmark does. Every surface that renders one of
+these numbers must say so.
 
-| Rung | Skills auto-summoned per capability gap (working mapping) |
-|---|---|
-| `off` | 0 |
-| `low` | 1 |
-| `med` | 2 |
-| `high` | 3 |
-| `xhigh` | 4 |
-| `max` | 5 |
+| Rung | Band | Skills auto-summoned per capability gap (working mapping) |
+|---|---|---|
+| `off` | Zero | 0 — manual `/summon` only |
+| `low` | Heaven | 1 |
+| `med` | Heaven | 2 |
+| `high` | Hell | 3 |
+| `xhigh` | Hell | 4 |
+| `max` | Hell | 5 |
+| `ultra` | Ultra | controller — picks direction + depth per gap |
 
-`/skill-heaven` defaults to `low`; `/skill-hell` defaults to `high`. Both
-directions are reachable at every rung — **Hell is not gated, locked, or
-refused at any of them**, and neither is Ultra. N12 ratified all four
-surfaces, so **nothing here refuses**; what is outstanding on `/skill-ultra`
-is implementation, not permission.
+Heaven's representative rung is `low`; Hell's is `high`.
 
-`floor` is **not on the ladder.** It is the doorless benchmark
+`floor` is **not on the line.** It is the doorless benchmark
 placebo-of-record, byte-frozen, reachable only as `--posture floor`. Users
 never select it.
 
-## Why boot-time and live are still different things
+## Two dials that share the bottom rung
 
-Not a policy choice — a capability one, and this part of the old doc still
-holds.
+`off` is where the one line meets Skill Zero's own **boot dial**, and the two
+are different questions — worth keeping straight.
 
-**Skill Zero's boot posture is subtractive.** `product-floor`, `curated`, and
-`native` differ by how much of your ambient setup is *withheld*. A running
-session cannot un-load what it already loaded (D12), so choosing one of these
-postures is a decision that can only be made **at boot**. That is why the
-launcher owns them, not either summon direction.
+**Skill Zero's boot dial is subtractive.** `--level off|low|med →
+product-floor | curated | native` decides how much of your ambient setup is
+*withheld at launch*. A running session cannot un-load what it already loaded
+(D12), so that decision can only be made **at boot** — which is why the
+launcher owns it. (These `low|med` are boot postures of the launcher, **not**
+the global line's Heaven rungs; the collision of names is historical.)
 
-**The Heaven/Hell ladder is additive.** `off` through `max` differ by how
-freely skills are *summoned in* on top of whatever the session already
-booted at. Adding context to a live session is something every harness can
-do — that is why `/skill-heaven` and `/skill-hell` both work live, launcher
-or not, native session or not, and why raising either ladder in-session is
-always allowed (upward-only, same D12 constraint, just applied to a
-different dial now).
+**The summon line is additive.** `low` through `max` differ by how freely
+skills are *summoned in* on top of whatever the session already booted at.
+Adding context to a live session is something every harness can do — that is
+why summoning works live, launcher or not, native session or not, and why
+climbing the line in-session is always allowed (upward-only, same D12
+constraint applied to a different dial).
 
 ## Stamps are not built
 
@@ -101,25 +102,22 @@ consumes them yet.
 
 ```mermaid
 flowchart TD
-    A([user types a command]) --> B{which surface?}
+    A([user picks a rung on the one line]) --> B{which band?}
 
-    B -->|/skill-zero| Z[boot posture:<br/>product-floor · curated · native]
+    B -->|off · Zero| Z[boot dial:<br/>product-floor · curated · native]
     Z --> Z2["`ships /summon by default —<br/>manual, none of the choosing automated`"]
 
-    B -->|/skill-heaven| C{shared MCP reachable?}
-    C -->|no| D[install instructions]
-    C -->|yes| E["`ladder: off·low·med·high·xhigh·max<br/>default low`"]
-    E --> F[arm converge direction at that budget]
+    B -->|low·med · Heaven| E["`converge — summon narrowly<br/>default low`"]
+    E --> F[arm converge at that depth]
 
-    B -->|/skill-hell| I{shared MCP reachable?}
-    I -->|no| J[install instructions]
-    I -->|yes| K["`ladder: off·low·med·high·xhigh·max<br/>default high`"]
-    K --> L[arm explore direction at that budget]
+    B -->|high·xhigh·max · Hell| K["`explore — summon widely<br/>default high`"]
+    K --> L[arm explore at that depth]
 
-    B -->|/skill-ultra| U["`picks direction + depth per gap<br/>no ladder of its own — ratified N12`"]
+    B -->|ultra · Ultra| U["`crown rung — picks direction<br/>+ depth per gap · ratified N13`"]
 
     F --> O([session is armed])
     L --> O
+    U --> O
     O --> P{agent hits a<br/>capability gap}
     P -->|yes| Q[/summon/]
     P -->|no| O
@@ -137,9 +135,9 @@ flowchart TD
 
 ## Summoning is ambient, not a search box
 
-Arming either direction's ladder does not fetch one skill and stop. Once
-armed, the agent summons on its own when it needs something, and the user
-never types another command.
+Sitting anywhere above `off` does not fetch one skill and stop. Once armed,
+the agent summons on its own when it needs something, and the user never
+types another command.
 
 Each arrival prints a card — identity, whatever trust fields *the tree
 published* (or an explicit "relevance-only" disclosure when it published
