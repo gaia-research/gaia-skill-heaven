@@ -6,14 +6,24 @@ Session goal: working prototypes the founder can actually use. Benchmarks come l
 
 ## The ladder
 
-Skill Heaven → Skill Hell is one **entropy ladder**, from `off` through `max`, plus `ultra`.
+One ladder, one line: `off · low · med · high · xhigh · max · ultra`. The four
+surfaces are contiguous **bands** on it, read from the current rung (N13 —
+`docs/LADDER-FLOW.md` is the current statement; the table below is kept in sync
+with `RUNG_SLOTS` in `packages/core/src/compile.ts`).
 
-| Rung | Meaning |
-|---|---|
-| `off` | product-floor — the nearest achievable zero a user can launch at, door open |
-| `low` | curated — a chosen skill set, nothing else |
-| `med` / `high` / `xhigh` / `max` | Skill Hell — progressively more summoned context |
-| `ultra` | pending; ledger arm only |
+| Rung | Band | Skills auto-summoned per capability gap |
+|---|---|---|
+| `off` | Zero | 0 — manual `/summon` only |
+| `low` | Heaven (converge) | 1 |
+| `med` | Heaven (converge) | 2 |
+| `high` | Hell (explore) | 3 |
+| `xhigh` | Hell (explore) | 4 |
+| `max` | Hell (explore) | 5 |
+| `ultra` | Ultra | controller — picks direction + depth per gap |
+
+Counts are **PROVISIONAL** until the Hell/Heaven benchmark lands. Nothing on the
+line refuses: `ultra` is ratified (N13), and what is outstanding on the upper
+band is implementation, not permission.
 
 `floor` (absolute zero, doorless) stays an internal benchmarking ruler and is never
 product vocabulary.
