@@ -30,7 +30,7 @@ export function HeroInfo({
         className="vha-info-nub"
         onClick={() => setHidden(false)}
         aria-label="Show explainer"
-        style={{ color: dim, borderColor: dim }}
+        style={{ color: dim, borderColor: dim, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
       >
         ?
       </button>
@@ -46,7 +46,7 @@ export function HeroInfo({
         className="vha-info-toggle"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        style={{ color: accent, borderColor: accent }}
+        style={{ color: accent, borderColor: accent, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
       >
         <span className="vha-info-q" style={{ borderColor: accent }}>
           ?
@@ -137,14 +137,17 @@ export function HeroSummon({
         type="button"
         className="vha-summon-cmd"
         onClick={() => copy('/summon', 'summon')}
-        style={{ color: fg, borderColor: accent, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}
+        style={{ color: fg, borderColor: accent, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
       >
         <span style={{ color: accent }}>/</span>summon
         <span className="vha-summon-tag" style={{ color: dim }}>
           {copied === 'summon' ? 'copied ⏎' : 'copy'}
         </span>
       </button>
-      <span className="vha-summon-hint" style={{ color: dim, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}>
+      <span
+        className="vha-summon-hint"
+        style={{ color: dim, background: `${bg}b3`, padding: '2px 6px', backdropFilter: 'blur(6px)' }}
+      >
         summon a standalone skill
       </span>
 
@@ -154,7 +157,7 @@ export function HeroSummon({
           className="vha-info-toggle"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          style={{ color: accent, borderColor: accent, textShadow: `0 0 7px ${bg},0 1px 2px ${bg}` }}
+          style={{ color: accent, borderColor: accent, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
         >
           <span className="vha-info-label">Where do skills come from?</span>
           <span className="vha-info-q" style={{ borderColor: accent }}>

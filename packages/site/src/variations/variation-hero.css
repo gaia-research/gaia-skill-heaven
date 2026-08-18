@@ -886,6 +886,55 @@ body.vh-hero-page {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Mobile: Lucy + wings scale off viewport HEIGHT (92vh / 100%), which on a
+   narrow-but-tall phone reads as oversized because there is no matching
+   width constraint. Shrink the base figure so the same face-anchored
+   framing math in useHeroEngine still holds, just at a smaller footprint —
+   this is not a redesign of the framing, only its scale on this viewport.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .vha-wing {
+    height: 58%;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Mobile touch targets — WCAG 2.5.8 (min 24×24 CSS px) with a 44×44
+   comfortable-tap floor per platform guidance. Desktop keeps the
+   whisper-quiet visual sizing; only the mobile hit area grows, via padding
+   / min-width / min-height rather than resizing the glyphs themselves.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .vha-skip {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 15px;
+  }
+  .vha-info-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 4px 10px;
+  }
+  .vha-info--right .vha-info-toggle {
+    justify-content: flex-end;
+  }
+  .vha-info-nub {
+    width: 44px;
+    height: 44px;
+  }
+  .vha-bare-toggle {
+    width: 44px;
+    height: 44px;
+  }
+  .vha-summon-cmd {
+    min-height: 44px;
+    padding: 10px 13px;
+  }
+}
+
 /* Secondary install terminal — smaller than the main CTA, still a terminal. */
 .vha-cta-cmd--sm {
   padding: 8px 14px;
