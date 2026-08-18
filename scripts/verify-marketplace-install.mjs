@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// KC1 fresh-environment check: "claude-zero installs cleanly from the
+// KC1 fresh-environment check: "skill-heaven installs cleanly from the
 // marketplace, verified from a fresh environment."
 //
 // .claude-plugin/marketplace.json declares this plugin's `source` as
-// `./packages/claude-zero/plugin` — a marketplace install copies ONLY that
-// directory. `packages/claude-zero/src/`, `bin/`, `package.json` and
-// `node_modules/` are never shipped to an installed user. This script proves
+// `./plugins/skill-heaven` — a marketplace install copies ONLY that
+// directory. Nothing from `packages/` — no `src/`, `bin/`, `package.json` or
+// `node_modules/` — is ever shipped to an installed user. This script proves
 // that claim by *doing* the copy a marketplace install does — into a clean
 // temp dir, with no repo, no node_modules, nothing beside it — and then
 // exercising the two things a user actually touches:
@@ -18,7 +18,7 @@
 //
 // A5a: the copy source itself is now READ from marketplace.json's `source`
 // field (`resolvePluginSource`, above `verifyMarketplaceInstall`) rather than
-// hardcoded. A hardcoded `join(PKG_ROOT, "plugin")` only proved "this layout
+// hardcoded. A hardcoded plugin path only proved "this layout
 // runs standalone" — a narrower claim than KC1's "installs cleanly from the
 // marketplace", which is a claim about what the manifest routes to, not
 // about what happens to exist on disk. If `source` ever drifts (typo, path
@@ -29,8 +29,8 @@
 // A negative control ("the command didn't error") is not a positive result,
 // so this asserts on actual stdout content, not just exit codes.
 //
-// Run directly: `node packages/claude-zero/scripts/verify-marketplace-install.mjs`
-// Wrapped in CI by: packages/claude-zero/test/verify-marketplace-install.test.ts
+// Run directly: `node scripts/verify-marketplace-install.mjs`
+// Wrapped in CI by: test/verify-marketplace-install.test.ts
 
 import { execFileSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -39,10 +39,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const PKG_ROOT = join(HERE, ".."); // packages/claude-zero
-const REPO_ROOT = join(PKG_ROOT, "..", ".."); // packages/claude-zero/../.. -> repo root
+const REPO_ROOT = join(HERE, ".."); // scripts/.. -> repo root
 const DEFAULT_MARKETPLACE_PATH = join(REPO_ROOT, ".claude-plugin", "marketplace.json");
-const PLUGIN_NAME = "claude-zero"; // this package's entry name in marketplace.json
+const PLUGIN_NAME = "skill-heaven"; // the sole entry name in marketplace.json
 
 /** Everything a real marketplace install must NOT bring along. If any of
  * these leak into the copy, the "fresh environment" is a fiction. */
@@ -127,8 +126,8 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
   // A clean temp dir with NO repo around it — the closest thing to a real
   // user's plugin cache we can build without an actual `claude plugin
   // install`. Named to make it obvious in `ps`/tmp listings what it is.
-  const fresh = mkdtempSync(join(tmpdir(), "claude-zero-marketplace-install-"));
-  const installedPluginRoot = join(fresh, "claude-zero-plugin");
+  const fresh = mkdtempSync(join(tmpdir(), "skill-heaven-marketplace-install-"));
+  const installedPluginRoot = join(fresh, "skill-heaven-plugin");
 
   try {
     log(`Copying ${PLUGIN_SRC}`);

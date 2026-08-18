@@ -147,7 +147,7 @@ describe("run", () => {
     expect(plan.posture).toBe("product-floor");
     expect(plan.standingTokens).toBe(0);
     expect(plan.argv).not.toContain("--disable-slash-commands");
-    expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*claude-zero[\\/]plugin/);
+    expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*plugins[\\/]skill-heaven/);
     expect(plan.fsPlan).toEqual([]);
   });
 

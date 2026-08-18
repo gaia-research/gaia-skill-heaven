@@ -18,10 +18,10 @@ import {
   buildLadderArtifact,
   ladderArtifactPath,
   serializeLadderArtifact,
-} from "../scripts/generate-ladder.js";
+} from "../packages/claude-zero/scripts/generate-ladder.js";
 
-const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PLUGIN = join(PKG, "plugin");
+const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
+const PLUGIN = join(REPO, "plugins", "skill-heaven");
 const commandPath = join(PLUGIN, "commands", "skill-zero.md");
 const command = readFileSync(commandPath, "utf-8");
 
@@ -51,7 +51,7 @@ describe("/skill-zero command definition", () => {
   });
 
   it("prices at or under the gate (c) budget, prefixed and unprefixed", () => {
-    for (const id of ["skill-zero", "claude-zero:skill-zero"]) {
+    for (const id of ["skill-zero", "skill-heaven:skill-zero"]) {
       const dose = tokenize(makeListingLine(id, fm.description), "chars4");
       expect(dose, `${id} self-dose`).toBeLessThanOrEqual(GATE_C_BUDGET_TOKENS);
     }
@@ -97,9 +97,9 @@ describe("ladder artifact", () => {
 describe("door manifests", () => {
   const pluginJson = JSON.parse(readFileSync(join(PLUGIN, ".claude-plugin", "plugin.json"), "utf-8"));
   const marketplace = JSON.parse(
-    readFileSync(join(PKG, "..", "..", ".claude-plugin", "marketplace.json"), "utf-8"),
+    readFileSync(join(REPO, ".claude-plugin", "marketplace.json"), "utf-8"),
   );
-  const entry = marketplace.plugins.find((p: { name: string }) => p.name === "claude-zero");
+  const entry = marketplace.plugins.find((p: { name: string }) => p.name === "skill-heaven");
 
   it("labels both public manifests as an actively tested working prototype", () => {
     for (const description of [pluginJson.description, entry.description]) {

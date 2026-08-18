@@ -5,7 +5,7 @@
 // (and without needing claude installed).
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -81,9 +81,19 @@ function statuslineBinPath(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "statusline.mjs");
 }
 
-/** Absolute path to the door's own plugin dir (the one carrying /skill-zero). */
-function doorPluginDir(): string {
-  return join(dirname(fileURLToPath(import.meta.url)), "..", "plugin");
+/** Absolute path to the door's own plugin dir (the one carrying /skill-zero),
+ * or undefined when it is not on disk beside us.
+ *
+ * The plugin moved OUT of this package to the repo root (`plugins/skill-heaven`)
+ * when the marketplace consolidated to a single plugin. install.sh unpacks the
+ * whole source tree, so the dir is there for every supported install; a bare
+ * `npm i claude-zero` has no plugins/ beside it, and core is explicit that
+ * omitting doorPluginDir still compiles product-floor ("mounting one is the
+ * door package's business"). So this degrades to a doorless product-floor
+ * rather than composing a --plugin-dir that points at nothing. */
+function doorPluginDir(): string | undefined {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "plugins", "skill-heaven");
+  return existsSync(dir) ? dir : undefined;
 }
 
 function helpText(): string {
