@@ -25,7 +25,7 @@ The command installs:
 - `hermes-zero`
 - `grok-zero`
 - a `skill-hell` binary from the published `@gaia-research/mcp@latest` package
-- the `claude-zero@gaia-skill-heaven` Claude plugin, when the user's own `claude`
+- the `skill-heaven@gaia-skill-heaven` Claude plugin, when the user's own `claude`
   binary is already on `PATH`
 
 It never installs Claude Code, pi, Codex, Hermes, or Grok. A missing harness
@@ -119,7 +119,9 @@ eligibility, and content-hash admission or verification are not shipped.
 ### Claude plugin
 
 The repository is the `gaia-skill-heaven` Claude marketplace. Registration installs
-`claude-zero@gaia-skill-heaven`, which supplies `/skill-heaven` and `/skill-hell`.
+`skill-heaven@gaia-skill-heaven`, the one plugin, which supplies the ladder
+commands. Existing `claude-zero@gaia-skill-heaven` installs migrate on
+`/plugin marketplace update` via the `renames` entry in `marketplace.json`.
 The installer uses an HTTPS marketplace URL so public installation does not
 depend on GitHub SSH credentials.
 

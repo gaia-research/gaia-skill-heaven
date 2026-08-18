@@ -19,6 +19,12 @@ jobs:
       - run: npm -w @gaia-skill-heaven/site run build
       - run: npm test
 
+      # The plugin is the shipped artifact: validate its manifest with the real
+      # Claude Code CLI, not just our own tests. `plugin validate` is a static
+      # manifest check — it starts no session and needs no credentials.
+      - name: Validate the plugin manifest
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven
+
       # D6 cross-repo gate: a record emitted by core must pass gaia-research's
       # ledger validator (the validator never moves — it stays upstream, D6).
       - name: Checkout gaia-research (upstream ledger validator)

@@ -2,7 +2,7 @@ import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { RUNG_BUDGETS, renderCard, renderHell } from "../plugin/scripts/render-hell.mjs";
+import { RUNG_BUDGETS, renderCard, renderHell } from "../plugins/skill-heaven/scripts/render-hell.mjs";
 
 let root: string;
 let previousBin: string | undefined;

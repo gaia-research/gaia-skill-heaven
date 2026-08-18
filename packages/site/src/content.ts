@@ -23,7 +23,7 @@ export const HARNESSES: Harness[] = [
     id: 'claude',
     name: 'Claude',
     status: 'flagship',
-    install: 'claude plugin marketplace add gaia-research/gaia-skill-heaven\nclaude plugin install claude-zero@gaia-skill-heaven',
+    install: 'claude plugin marketplace add gaia-research/gaia-skill-heaven\nclaude plugin install skill-heaven@gaia-skill-heaven',
     note: 'The flagship Skill Zero door + the /skill-heaven entropy ladder.',
   },
   {

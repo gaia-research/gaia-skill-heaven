@@ -3,9 +3,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { HEAVEN_LEVELS, HELL_LEVELS, LADDER_LEVELS, UNRATIFIED_LEVELS } from "skill-zero";
-import { buildLadderArtifact } from "../scripts/generate-ladder.js";
-import { run } from "../src/cli.js";
-import { renderHell } from "../plugin/scripts/render-hell.mjs";
+import { buildLadderArtifact } from "../packages/claude-zero/scripts/generate-ladder.js";
+import { run } from "../packages/claude-zero/src/cli.js";
+import { renderHell } from "../plugins/skill-heaven/scripts/render-hell.mjs";
 import {
   formatTokens,
   isLaunchManifest,
@@ -14,7 +14,7 @@ import {
   normalizeTarget,
   readLadderData,
   renderPosture,
-} from "../plugin/scripts/render-posture.mjs";
+} from "../plugins/skill-heaven/scripts/render-posture.mjs";
 
 const productFloor = {
   schema: "claude-zero/profile@1",

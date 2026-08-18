@@ -1,15 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "gaia-skill-heaven",
-  "description": "The Claude Code plugin marketplace for gaia-skill-heaven — the Skill Heaven umbrella runtime brand. It ships claude-zero, the Skill Zero launcher door, while keeping /skill-hell framed as the live Hell summon door under the same umbrella.",
+  "description": "The Claude Code plugin marketplace for gaia-skill-heaven. It ships one plugin — skill-heaven — the Claude Code door to the one ladder, one line.",
   "owner": {
     "name": "Gaia Research"
   },
   "plugins": [
     {
-      "name": "claude-zero",
-      "source": "./packages/claude-zero/plugin",
-      "description": "Working prototype of the Claude Code door to Skill Zero under the Skill Heaven umbrella, actively tested for public use — there is one ladder, one line (off · low · med · high · xhigh · max · ultra) whose four surfaces are contiguous bands read from the rung: off is /skill-zero (owns boot-time off|low|med and ships /summon by default), low·med is /skill-heaven (converge), high·xhigh·max is /skill-hell (explore) — two directions of the same summon over one MCP — and ultra is /skill-ultra, the crown rung and controller with no sub-ladder of its own (PROVISIONAL counts/defaults), with /skill-hell as the live Hell summon door. Interfaces may change. Built on skill-zero core."
+      "name": "skill-heaven",
+      "source": "./plugins/skill-heaven",
+      "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. One ladder, one line (off · low · med · high · xhigh · max · ultra) whose four surfaces are contiguous bands read from the current rung: off is /skill-zero (the product floor), low·med is /skill-heaven (converge), high·xhigh·max is /skill-hell (explore) — two directions of the same summon — and ultra is /skill-ultra, the crown rung and controller with no sub-ladder of its own. Per-rung counts are PROVISIONAL until the benchmark lands. Interfaces may change. The off-default launcher and standing-dose statusline live in the claude-zero package, run from a source checkout — not part of this marketplace install."
     }
-  ]
+  ],
+  "renames": {
+    "claude-zero": "skill-heaven"
+  }
 }

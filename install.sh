@@ -13,7 +13,7 @@ BIN_DIR=$INSTALL_HOME/bin
 SOURCE_REF=${SKILL_HEAVEN_REF:-main}
 SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/gaia-skill-heaven/tar.gz/$SOURCE_REF"}
 MCP_SPEC=${SKILL_HELL_PACKAGE:-"@gaia-research/mcp@0.3.0"}
-PLUGIN_ID=claude-zero@gaia-skill-heaven
+PLUGIN_ID=skill-heaven@gaia-skill-heaven
 MARKETPLACE=gaia-skill-heaven
 PLUGIN_MANAGED=$INSTALL_HOME/.claude-plugin-managed
 MARKETPLACE_MANAGED=$INSTALL_HOME/.claude-marketplace-managed
@@ -48,7 +48,7 @@ plugin_is_installed() {
   if node -e '
     const fs = require("node:fs");
     const plugins = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    process.exit(plugins.some((plugin) => plugin.id === "claude-zero@gaia-skill-heaven") ? 0 : 1);
+    process.exit(plugins.some((plugin) => plugin.id === "skill-heaven@gaia-skill-heaven") ? 0 : 1);
   ' "$plugin_json"; then
     rm -f "$plugin_json"
     return 0
@@ -176,7 +176,7 @@ cat >"$STAGE/uninstall.sh" <<'EOF'
 #!/bin/sh
 set -eu
 ROOT=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
-PLUGIN_ID=claude-zero@gaia-skill-heaven
+PLUGIN_ID=skill-heaven@gaia-skill-heaven
 MARKETPLACE=gaia-skill-heaven
 
 printf '%s\n' "Skill Heaven working prototype — uninstalling everything from $ROOT"
