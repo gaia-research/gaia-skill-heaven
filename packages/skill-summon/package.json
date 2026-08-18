@@ -1,0 +1,17 @@
+{
+  "name": "skill-summon",
+  "version": "0.1.0",
+  "description": "The summon engine: rank, clone, and materialize the best-matching Named Skill from the Gaia Skill Tree into a session-locked temp directory. One MCP tool (summon) plus the skill-summon CLI.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "3.25.76"
+  }
+}
