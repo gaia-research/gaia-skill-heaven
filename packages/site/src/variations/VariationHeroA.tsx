@@ -113,7 +113,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       {/* Opaque scene ground — guarantees the band colour paints behind the
          (often transparent) character masters, in every browser and capture. */}
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
-      <Link to="/landing" className="vha-skip" style={{ color: v.fg, borderColor: v.hair2 }}>
+      <Link
+        to="/landing"
+        className="vha-skip"
+        style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+      >
         Skip · Enter the door →
       </Link>
       {revealed && (
@@ -222,6 +226,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         }}
       >
         <img
+          className="vha-lucy"
           src={lucyImg}
           alt=""
           style={{
