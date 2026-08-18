@@ -46,9 +46,14 @@ under test.
 - `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
 - `med` → `native` — the user's setup untouched; top of Heaven
-- `high` → default usable additive-prototype level
-- `xhigh` · `max` → broader usable additive-prototype levels; no fixed public count contract
-- `ultra` → unratified
+- `high` → Hell's representative rung; the default the explore band opens on
+- `xhigh` · `max` → broader explore rungs
+- `ultra` → the crown rung: the controller that picks direction + depth per gap
+
+Per-rung slot counts live in one place — `RUNG_SLOTS` in
+`packages/core/src/compile.ts` (`off 0 · low 1 · med 2 · high 3 · xhigh 4 ·
+max 5`, `ultra` = controller) — and are **PROVISIONAL** until the benchmark
+lands.
 
 The ladder is the primary product interface on every door:
 
@@ -64,7 +69,8 @@ Launchers own the current subtractive choices `off|low|med`. The published
 `skill-hell` prototype owns the usable additive levels: `high` is the default,
 while `xhigh` and `max` broaden the requested summoning behavior. This is a
 product mapping, but not a fixed per-rung count, score-band, HH score, or
-routing-eligibility contract. `ultra` remains unratified. `--posture` remains
+routing-eligibility contract. `ultra` is **ratified** (N13) and refuses
+nowhere. `--posture` remains
 available for benchmark and compatibility invocations, but is not the product's
 lead vocabulary.
 
@@ -199,10 +205,15 @@ eligibility, and relevance-band filtering remain unshipped.
 
 ## Open
 
-- `ultra` remains unratified. The usable Hell prototype does not establish a
-  fixed count, score band, HH score, or routing-eligibility policy for its levels.
+- `ultra` is ratified (N13); what is outstanding is the controller's
+  heuristics, not permission. The usable Hell prototype does not establish a
+  score band, HH score, or routing-eligibility policy for its levels.
 - Relevance-band filtering and routing eligibility are open engine seams.
-- Delivery is `npx`, shipping **the launcher and never a harness** — the door execs whatever the
+- Delivery is the **Claude Code plugin** (`/plugin install
+  skill-heaven@gaia-skill-heaven`), with `install.sh` as the optional
+  standalone launcher install. **`npx` is not an install path**
+  (`docs/AGENT-PLUGIN.md`). Either way the launcher ships and **never a
+  harness** — the door execs whatever the
   user already has on `PATH`. Consequence: the harness version is the user's and can move under
   us, so a door should report the version it actually launched. A dose is a statement about a
   version, never a standing guarantee.
