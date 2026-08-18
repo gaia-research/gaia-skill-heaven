@@ -41,8 +41,8 @@ export function buildLadderArtifact(): LadderArtifact {
 }
 
 export function ladderArtifactPath(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "..", "plugin", "data", "ladder.json");
+  const here = dirname(fileURLToPath(import.meta.url)); // packages/claude-zero/scripts
+  return join(here, "..", "..", "..", "plugins", "skill-heaven", "data", "ladder.json");
 }
 
 export function serializeLadderArtifact(artifact: LadderArtifact): string {
