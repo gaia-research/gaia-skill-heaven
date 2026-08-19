@@ -13,10 +13,12 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "launcher": "npm -w skill-zero run launcher --"
+    "launcher": "npm -w skill-zero run launcher --",
+    "build:mcp": "node scripts/build-mcp.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
+    "esbuild": "0.28.2",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
