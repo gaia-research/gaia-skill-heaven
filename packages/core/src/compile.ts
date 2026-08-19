@@ -87,9 +87,23 @@ export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
 // ---------------------------------------------------------------------------
 // THE SUMMON LINE (founder ruling N13, docs/LADDER-FLOW.md)
 //
+// WHAT THIS LINE MEASURES: skill entropy — how much skill variety and volume
+// enters a session. `LADDER_LEVELS` are entropy readings, not settings:
+// `zero` is zero skills (zero skill entropy, and why the floor is spelled
+// `zero` rather than `off` — `off` named a switch position, `zero` names a
+// quantity on the same scale as everything above it); `low → med → high →
+// xhigh → max` are rising skill entropy; `ultra` picks the entropy per gap —
+// direction and depth both — rather than reading one fixed value, which is
+// why it sits at the top of this same line instead of beside it. Full
+// argument, not restated here: docs/LADDER-FLOW.md, "What the ladder
+// measures — skill entropy".
+//
 // One ladder, one line. The four surfaces are contiguous BANDS on it, read from
 // the current rung — a session sits at exactly one rung and does not hold a
-// Heaven position and a Hell position at once.
+// Heaven position and a Hell position at once. Heaven (`low·med`) is the
+// lower-entropy, converging direction; Hell (`high·xhigh·max`) is the
+// higher-entropy, exploring direction — two directions along one quantity,
+// which is what makes them one line and not two products.
 //
 // This is a DIFFERENT DIAL from the launcher's boot dial above. `HEAVEN_LEVELS`
 // / `LEVEL_ALIASES` map `zero|low|med` onto boot POSTURES: how much of the user's
@@ -104,6 +118,9 @@ export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
 // about counts (plugin code said high 1 · xhigh 3 · max 5); the disagreement is
 // resolved by there being nothing to disagree about. What a rung DOES carry is
 // its band — the direction — and that is what downstream reads from here.
+// Skill entropy is a product concept, not an information-theoretic one: no
+// formula, no unit, no threshold, no number is computed anywhere in this file
+// or downstream of it, and nothing should start.
 // ---------------------------------------------------------------------------
 
 export const BANDS = ["zero", "heaven", "hell", "ultra"] as const;

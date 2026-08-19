@@ -102,6 +102,87 @@ filed as a follow-up, not faked.
 is the only thing that gives a genuinely clean start: already-loaded skills
 **cannot be evicted mid-session** (D12, probed).
 
+## M0 probe — does `${user_config.*}` reach a command's `!` bash block?
+
+**Status: not verified with a live pane.** Rule 0 (root `CLAUDE.md`) blocks
+invoking `claude` interactively from this task, so this could only be
+researched from the official docs
+(`docs.claude.com/en/docs/claude-code/plugins-reference` and the
+skills/slash-commands reference) and from what the shipped code already
+assumes. Recorded here per D8: a negative or unknown result is a first-class
+finding, not something to paper over.
+
+**Question:** does `${user_config.zero_cuts}` text-substitution, or a
+`CLAUDE_PLUGIN_OPTION_ZERO_CUTS` environment variable, actually reach the
+`!`-prefixed bash line inside `commands/skill-zero.md` (and the other rung
+commands) — the mechanism `zeroCuts()` in `render-ladder.mjs` would need to
+read the plugin's configured `zero_cuts` option at all?
+
+**Documented, directly (plugins-reference, "User configuration"):**
+- *"Each value is available for substitution as `${user_config.KEY}` in MCP
+  and LSP server configs and hook commands. **Non-sensitive values can also
+  be substituted in skill and agent content.**"* Command files under
+  `commands/` are skill content per the docs merge ("Custom commands have
+  been merged into skills... work[s] the same way"), so this is the closest
+  direct statement that `${user_config.zero_cuts}`, written literally inside
+  a command's `!` line, would interpolate before the line runs.
+- The rejected-fields table for `${user_config.*}` (shell-form hook
+  commands, monitor commands, MCP `headersHelper` — each rejected because
+  "substituting a configured value into a shell command would let the shell
+  run whatever that value contains") does **not** list skill/command
+  content. It is not documented as rejected there.
+- Separately: *"All values are exported to hook processes as
+  `CLAUDE_PLUGIN_OPTION_<KEY>` environment variables."* This is scoped
+  explicitly to **hook processes** — a different execution path from a
+  command's `!` block, which runs through the session's Bash tool. Neither
+  doc page says `CLAUDE_PLUGIN_OPTION_<KEY>` is exported into *that*
+  subprocess's environment automatically.
+
+**Inferred by analogy, not spelled out for `user_config` specifically:** the
+three path variables (`CLAUDE_PLUGIN_ROOT`, `CLAUDE_PLUGIN_DATA`,
+`CLAUDE_PROJECT_DIR`) get an explicit table in the same doc: for "Skill and
+agent content" they resolve "Anywhere the placeholder appears" — and our own
+`commands/summon.md` already relies on exactly that
+(`` !`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ...` ``), proven
+by `verify-marketplace-install.mjs` to resolve inside a `!` block on a real
+install. The `user_config` section reuses the words "substituted" and "skill
+and agent content" but does not repeat "anywhere the placeholder appears"
+verbatim for `user_config`, and the skills reference's own canonical
+"Available string substitutions" table — the definitive list for
+`$ARGUMENTS`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_PLUGIN_ROOT}`, etc. — does
+**not** list `${user_config.*}` at all. That is an inconsistency between two
+doc pages, not a confirmed answer either way.
+
+**Net assessment.** Two distinct mechanisms are in play and the evidence
+points different directions for each:
+
+1. Writing `${user_config.zero_cuts}` literally into a command's `!` line
+   (e.g. `CLAUDE_PLUGIN_OPTION_ZERO_CUTS='${user_config.zero_cuts}' node ...`)
+   — plausible per the substitution-surface statement above, but **not
+   implemented in this PR**: none of `plugins/skill-heaven/commands/*.md`
+   do this today. Wiring it up is future work, not this probe's question.
+2. Relying on `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` simply appearing in
+   `process.env` inside `render-ladder.mjs` without the command file doing
+   anything — documented **only** for hook processes, so this is the weaker
+   of the two paths and likely does not hold for a `!`-block subprocess.
+
+**This degrades safely either way.** `zeroCuts()` in
+`plugins/skill-heaven/scripts/render-ladder.mjs` reads
+`CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? SKILL_HEAVEN_ZERO_CUTS`, and treats
+anything other than `"all"` as `"automatic"`. If this probe resolves
+negative, the floor still ships exactly what N13 specifies by default (cut
+automatic summoning, keep manual `/summon`) — nothing breaks; the plugin's
+`zero_cuts` userConfig option just stays inert until a follow-up wires the
+substitution into the command files' `!` lines explicitly and a live pane
+confirms it lands.
+
+**What would close this out:** in a real `claude` session (a `herdr` pane,
+per Rule 0) with the plugin installed and `zero_cuts` set to `all` via the
+plugin's config UI, run `/skill-zero` and check whether the rendered output
+shows the `all`-cut copy — and separately, whether `${user_config.zero_cuts}`
+written directly into a test command's `!` line comes through as literal
+text or as the configured value. Neither was run here.
+
 ## What the MCP exposes
 
 One server, `skill-summon`, one tool:
