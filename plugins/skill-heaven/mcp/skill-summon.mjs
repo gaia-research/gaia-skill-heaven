@@ -21423,9 +21423,19 @@ async function openSession(opts = {}) {
   const root = await mkdtemp(path.join(tmpdir(), SESSION_DIR_PREFIX));
   return SummonSession.createAt(root, opts.id ?? randomUUID());
 }
+function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  const resolved = path.resolve(root);
+  if (path.dirname(resolved) !== path.resolve(tempRoot)) return false;
+  return path.basename(resolved).startsWith(SESSION_DIR_PREFIX);
+}
 async function resolveSession(opts = {}) {
   const existingRoot = process.env.SKILL_SUMMON_SESSION;
   if (existingRoot) {
+    if (!isDisposableSessionRoot(existingRoot)) {
+      throw new Error(
+        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable session directory. A session root must be a "${SESSION_DIR_PREFIX}*" directory directly under the OS temp dir (${tmpdir()}); summon refuses to write into or delete any other path.`
+      );
+    }
     return {
       session: await SummonSession.loadAt(existingRoot),
       created: false
@@ -22061,13 +22071,29 @@ async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
   await cp(sourceDir, destDir, {
     recursive: true,
-    filter: (source) => path3.basename(source) !== ".git"
+    dereference: false,
+    filter: (source) => {
+      if (path3.basename(source) === ".git") return false;
+      return true;
+    }
   });
+  await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
   const skillContent = await readFile2(path3.join(destDir, "SKILL.md"));
   const sha256 = createHash("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
   return { path: destDir, materializeSeconds, fileCount, sha256 };
+}
+async function rejectSymlinks(dir) {
+  for (const entry of await readdir2(dir, { withFileTypes: true })) {
+    const full = path3.join(dir, entry.name);
+    if (entry.isSymbolicLink()) {
+      throw new Error(
+        `refusing to materialize skill: '${full}' is a symlink, which could redirect reads outside the summoned payload.`
+      );
+    }
+    if (entry.isDirectory()) await rejectSymlinks(full);
+  }
 }
 async function countFiles(dir) {
   let count = 0;
@@ -22083,7 +22109,7 @@ async function countFiles(dir) {
 import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
 import {
   cp as cp2,
-  lstat as lstat2,
+  lstat as lstat3,
   mkdir as mkdir3,
   readFile as readFile3,
   readdir as readdir3,
@@ -22196,7 +22222,7 @@ var PayloadCache = class {
         }
         continue;
       }
-      const entryStat = await lstat2(entryRoot);
+      const entryStat = await lstat3(entryRoot);
       retained.push({
         root: entryRoot,
         bytes: await directorySize2(entryRoot),
@@ -22235,7 +22261,7 @@ function cacheKey(identity) {
   ).digest("hex");
 }
 async function directorySize2(root) {
-  const target = await lstat2(root);
+  const target = await lstat3(root);
   if (!target.isDirectory()) return target.size;
   let bytes = 0;
   for (const entry of await readdir3(root)) {
