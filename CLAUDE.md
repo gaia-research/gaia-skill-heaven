@@ -39,8 +39,8 @@ agent's call, worked out in use while the benchmark is built; Heaven's
 representative rung (`low`) and Hell's (`high`) are **PROVISIONAL**. The
 benchmark's job is the **entropy curve**: quality and cost as skill entropy
 rises, expected to rise then turn since Skill Hell routes summons through gaia
-mcp as a **mixture-of-agents for skills** (D5) — not a token-savings headline.
-**Heaven/Hell stamps are not built**; routing falls back to relevance
+mcp as a **mixture-of-agents for skills** (D5) — not a token-savings headline
+(N13). **Heaven/Hell stamps are not built**; routing falls back to relevance
 ranking, and no surface may present stamp-gated routing as running. Public
 domain: [`skill-heaven.dev`](https://skill-heaven.dev), served from
 `packages/site` (N9/N11).

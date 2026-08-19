@@ -70,7 +70,7 @@ because it is the top of the one it controls.
 
 The Hell/Heaven benchmark's job is the **entropy curve**: how quality and cost
 move together as skill entropy rises. That is deliberately *not* a
-token-savings headline — cheaper is not the thesis; knowing what rising
+token-savings headline (N13) — cheaper is not the thesis; knowing what rising
 skill entropy buys and what it costs is.
 
 The curve is expected to rise and then turn. Skill Hell routes summons through
