@@ -13,8 +13,10 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   findSession,
+  isDisposableSessionRoot,
   listSessions,
   reapSessions,
+  resolveSession,
   SummonSession,
 } from "../src/summon/session.js";
 
@@ -120,6 +122,56 @@ describe("summon session garbage collection", () => {
     await session.close();
 
     await expect(access(root)).rejects.toThrow();
+  });
+});
+
+// P3: only writes live inside a disposable mkdtemp session dir. SKILL_SUMMON_SESSION
+// is inherited from the environment and therefore untrusted; resolveSession() both
+// writes into it (cache/, skills/) and, via close(), recursively deletes it. A value
+// pointing anywhere other than a "skill-summon-session-*" mkdtemp under the OS temp
+// dir must be refused rather than adopted.
+describe("SKILL_SUMMON_SESSION confinement", () => {
+  const savedEnv = process.env.SKILL_SUMMON_SESSION;
+  afterEach(() => {
+    if (savedEnv === undefined) delete process.env.SKILL_SUMMON_SESSION;
+    else process.env.SKILL_SUMMON_SESSION = savedEnv;
+  });
+
+  it("recognizes only skill-summon-session-* dirs directly under tmpdir()", () => {
+    expect(
+      isDisposableSessionRoot(path.join(tmpdir(), "skill-summon-session-abc")),
+    ).toBe(true);
+    // Wrong prefix.
+    expect(isDisposableSessionRoot(path.join(tmpdir(), "arbitrary-shared-root"))).toBe(
+      false,
+    );
+    // Right prefix but not a direct child of tmpdir().
+    expect(
+      isDisposableSessionRoot(
+        path.join(tmpdir(), "nested", "skill-summon-session-abc"),
+      ),
+    ).toBe(false);
+    // Outside tmpdir() entirely.
+    expect(isDisposableSessionRoot("/etc/skill-summon-session-abc")).toBe(false);
+  });
+
+  it("refuses to adopt an env-supplied root outside the disposable namespace", async () => {
+    const parent = await temporaryParent();
+    // A directory with a valid, parseable session.json, but NOT a
+    // skill-summon-session-* mkdtemp under tmpdir(). Pre-fix, resolveSession()
+    // would load it, ensureRoots() would write cache/ + skills/ into it, and
+    // close() would delete the whole thing.
+    const arbitrary = path.join(parent, "shared-config");
+    await mkdir(arbitrary);
+    await writeFile(
+      path.join(arbitrary, "session.json"),
+      JSON.stringify({ id: "x", createdAt: "2026-04-01T00:00:00.000Z", pid: 1, skills: [] }),
+    );
+    process.env.SKILL_SUMMON_SESSION = arbitrary;
+
+    await expect(resolveSession()).rejects.toThrow(/not a disposable session directory/u);
+    // Still there — nothing was created inside it and it was not deleted.
+    await expect(access(path.join(arbitrary, "session.json"))).resolves.toBeUndefined();
   });
 });
 

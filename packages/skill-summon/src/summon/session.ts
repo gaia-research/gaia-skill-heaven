@@ -209,16 +209,48 @@ export async function openSession(
 }
 
 /**
+ * A path is a disposable session root only if it is a direct child of the OS
+ * temp directory whose name carries the mkdtemp prefix openSession() uses.
+ * SKILL_SUMMON_SESSION is untrusted (inherited from the environment), and both
+ * resolveSession() (which writes cache/ and skills/ into it) and close() (which
+ * recursively deletes it) trust it — so a value pointing anywhere else would
+ * let summon write into, and then delete, a directory that is not one of ours.
+ * That would violate P3 (only writes live inside a disposable mkdtemp session
+ * dir) and could delete outside the session namespace entirely. Confining the
+ * env-supplied root to <tmpdir()>/skill-summon-session-* closes both paths.
+ */
+export function isDisposableSessionRoot(
+  root: string,
+  tempRoot: string = tmpdir(),
+): boolean {
+  const resolved = path.resolve(root);
+  if (path.dirname(resolved) !== path.resolve(tempRoot)) return false;
+  return path.basename(resolved).startsWith(SESSION_DIR_PREFIX);
+}
+
+/**
  * Reuse the session root named by SKILL_SUMMON_SESSION if it is set, so
  * multiple skill-summon invocations in one shell share a session. Otherwise
  * open a fresh session; callers should surface `created` so the invoker
  * knows to export SKILL_SUMMON_SESSION to keep reusing it.
+ *
+ * The env-supplied root MUST be a disposable session dir we could have created
+ * (a `skill-summon-session-*` mkdtemp under the OS temp dir). Anything else is
+ * refused rather than adopted — see isDisposableSessionRoot().
  */
 export async function resolveSession(
   opts: OpenSessionOptions = {},
 ): Promise<ResolveSessionResult> {
   const existingRoot = process.env.SKILL_SUMMON_SESSION;
   if (existingRoot) {
+    if (!isDisposableSessionRoot(existingRoot)) {
+      throw new Error(
+        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable ` +
+          `session directory. A session root must be a "${SESSION_DIR_PREFIX}*" ` +
+          `directory directly under the OS temp dir (${tmpdir()}); summon refuses ` +
+          `to write into or delete any other path.`,
+      );
+    }
     return {
       session: await SummonSession.loadAt(existingRoot),
       created: false,
