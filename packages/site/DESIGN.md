@@ -5,12 +5,13 @@ one visual system:
 
 | Route | Surface | Register |
 |---|---|---|
-| `/` | **The hero** — "the instrument" | poster; one screen, operable |
+| `/` | **The hero** — Hero A, the animated poster | poster; one screen, operable |
 | `/landing` | **The document** | scannable; numbered sections, ledger density |
+| `/instrument` | **The instrument** — the sampler | secondary; operate the line |
 
-`/hero-a` and `/hero-b` are retained prototype review routes, reachable only by
-direct URL. They still load the older `styles/tokens.css` and are **not** part
-of this system — see the collision note at the end.
+The old `/hero-a` and `/hero-b` review routes are gone (`main.tsx` routes
+anything unknown back to `/`), but `styles/tokens.css` is still imported at the
+entry — see the collision note at the end.
 
 ## The world
 
@@ -130,10 +131,18 @@ explore page so a visitor can work the surfaces and decide which to pick. It
 looks strong on desktop but lacks Hero A's animated feel, which is why it is
 no longer the front door.
 
-> **Pending:** the instrument still renders the earlier two-dial model
-> (pick a direction, then a per-direction rung). Under N13 it should render
-> the single one-line ladder with the four bands read from the rung. Tracked
-> for the next iteration.
+**The instrument renders the one line.** The rung is the only state and the
+band is *read* from it, so the four direction plates are a shortcut to where a
+band opens — never a second control. The ladder is always on screen, all seven
+rungs, with each rung carrying its band's colour on a 2px edge; `zero` and
+`ultra` are positions **on** the line, not surfaces that lack one. The impact
+frame fires on a **band crossing**, not on every step: `low → med` stays inside
+Heaven and repaints nothing, `med → high` cuts.
+
+> The earlier two-dial model (a direction, plus a *per-direction* rung) is
+> retired. It let the page hold a Heaven position and a Hell position at once,
+> which a session cannot do, and it hid the ladder on the two bands that hold a
+> single rung instead of showing where they sit.
 
 Composition: nav → registration row (a **state index**, not an eyebrow) →
 `SKILL` + the state word in Anton → command and role → blurb → the command line,
@@ -143,8 +152,10 @@ the right column, bottom-aligned.
 
 The instrument band closes the viewport: a thesis caption, four direction plates
 (`/skill-zero` · `/skill-heaven` · `/skill-hell` · `/skill-ultra`), and the
-`off…max` ladder with a slot strip showing how many skills may be auto-summoned
-per capability gap.
+`zero…max` ladder under a **skill entropy** gauge. The gauge reads out the
+current rung's **direction** and its **position along the band** — never a
+count. The earlier slot strip (five pips, "how many skills per gap") is
+retired along with the count model itself.
 
 **The two surfaces with no ladder render its absence as content** rather than
 hiding the control — Zero states that `/summon` is the floor, Ultra states that
@@ -218,23 +229,37 @@ Canon that is not negotiable:
 
 - Doses are always **two numbers**, never averaged; floors named separately.
 - The launcher **composes and execs** — it never stashes, restores, or mutates.
-- Per-rung auto-summon counts are **provisional** and every surface that renders
-  one carries the WIP mark.
-- **`slider` is banned vocabulary.** The control is a ladder with discrete rungs.
-- Hell is not gated, locked, or refused; it is one of two live directions.
+- **The bottom rung is `zero`, never `off`.** `off` named a switch position;
+  `zero` names a reading of the quantity the line measures.
+- **`slots`, `RUNG_SLOTS`, "budget", "cap", "how many skills", "per-gap budget"
+  are banned vocabulary**, along with `slider`. The control is a ladder with
+  discrete rungs, and a rung names a **direction** and a **position along its
+  band** — never a number. Where each band opens (`low`, `high`) is provisional
+  and every surface that renders the line carries the WIP mark.
+- **Hell and Ultra are not gated, locked, sealed, or refused.** Nothing on the
+  line refuses. Do not write copy that denies a sealing that was never on the
+  table — the denial implies the thing.
+- **Skill Zero subtracts; Skill Heaven converges.** Never attribute stripping,
+  evicting, or subtracting to Heaven.
+- **The install copy prints only commands the tool accepts.** The plugin
+  two-liner is primary, `install.sh` at the GitHub Pages host is the optional
+  launcher route, and there is no `npx` path and no `skill-heaven.dev`.
 - No fabricated logos, pricing, testimonials, or counts. `19,661` · `20,176` ·
-  `28,379` · `−28.9%` · `+515 tok` are the real measured figures.
+  `28,379` · `−28.9%` · `+515 tok` are the real measured figures. The entropy
+  curve and the Heaven/Hell stamps are **not built** — never rendered as
+  results.
 - A standing `WIP · v0` disclosure sits in the chrome and the footer.
 
 ## Token collision — read before adding a surface
 
-`styles/tokens.css` (the retained prototype routes) and `styles/system.css`
+`styles/tokens.css` (the retired prototype routes' palette, still imported by
+`main.tsx`) and `styles/system.css`
 both define seven `--sh-*` names with **different meanings**, most dangerously
 `--sh-ink`: bone body text here, a near-black card fill there. Import order
 decided the winner at `:root`, which made both production surfaces draw
 `#10121d` on `#1b1a1c` — invisible.
 
 `system.css` re-declares the contested names on the `.hx` and `.lp` roots, so
-specificity settles it instead of import order and the legacy routes keep their
-own values. **A new production surface must add its root to that block**, or
-retire `tokens.css` along with the prototype routes.
+specificity settles it instead of import order. **A new production surface must
+add its root to that block**, or retire `tokens.css` — now that the prototype
+routes are gone, retiring it is the cleaner fix and is still outstanding.

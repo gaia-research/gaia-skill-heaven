@@ -390,6 +390,42 @@ body.vh-hero-page {
   opacity: 0.78;
 }
 
+/* ── Act 5 · the interface around the ladder ────────────────────────────────
+   Default (narrow / short) composition: one centred stack at the bottom, which
+   is what every viewport used to get. The wide-viewport TRIPTYCH that flanks
+   the figure lives in the `min-width: 1080px` block further down; the geometry
+   is CSS-owned so that breakpoint can restate it, rather than inline style.  */
+.vha-ctawrap {
+  position: absolute;
+  left: 50%;
+  bottom: 7vh;
+  translate: -50% 0;
+  width: min(90vw, 660px);
+  z-index: 6;
+  text-align: center;
+  padding-top: 26px;
+  /* Legibility scrim so the ladder + commands read over the busy figure. */
+  background: linear-gradient(to top, var(--vha-bg) 4%, var(--vha-bg-soft) 52%, var(--vha-bg-none) 100%);
+}
+
+.vha-chiprow {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 9px;
+}
+.vha-rungrow {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+.vha-stopnote {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  min-height: 16px;
+  margin-bottom: 14px;
+}
+
 /* Fifth-scene CTA: a copyable invocation one-liner + a copyable install
    one-liner, mirroring the instrument surface. */
 .vha-cta {
@@ -431,21 +467,6 @@ body.vh-hero-page {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
-}
-.vha-cta-install {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: opacity 200ms ease;
-}
-.vha-cta-install:hover {
-  opacity: 0.7;
 }
 
 .vha-cut,
@@ -512,6 +533,13 @@ body.vh-hero-page {
   font-size: min(26vw, 34vh, 50rem);
   line-height: 0.8;
   letter-spacing: -0.01em;
+}
+/* The engine's per-act offset and scale are the default; the Act 5 flank
+   breakpoint restates them. Both live in the stylesheet so the media query can
+   win — the `-act` values come in inline, and inline always beats a rule. */
+.vha-typewrap {
+  --vha-type-up: var(--vha-type-up-act);
+  --vha-word-scale: var(--vha-word-scale-act);
 }
 .vha-word {
   position: relative;
@@ -933,9 +961,42 @@ body.vh-hero-page {
     min-height: 44px;
     padding: 10px 13px;
   }
+  /* the install lines are long by nature — let them wrap rather than bleed */
+  .vha-cta-install .vha-cta-cmd--sm {
+    max-width: calc(100vw - 24px);
+    padding: 7px 10px;
+    font-size: 9.5px;
+  }
+  .vha-cta-install .vha-cta-text {
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+  /* the door + repo actions stack rather than crush at phone widths */
+  .vha-cta-row {
+    gap: 6px 10px;
+    margin-top: 8px;
+  }
+  .vha-cta-door,
+  .vha-cta-link {
+    min-height: 40px;
+    padding: 6px 11px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .vha-cta-mini {
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+  }
 }
 
-/* Secondary install terminal — smaller than the main CTA, still a terminal. */
+/* Secondary install terminal — smaller than the main CTA, still a terminal.
+   Two lines, stacked, each copyable on its own. */
+.vha-cta-install {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
 .vha-cta-cmd--sm {
   padding: 8px 14px;
   font-size: 11.5px;
@@ -943,11 +1004,254 @@ body.vh-hero-page {
   text-decoration: none;
   opacity: 0.9;
 }
+.vha-cta-install .vha-cta-cmd--sm {
+  margin-top: 0;
+}
+/* One terminal, both install lines, one copy — grouped so the CTA stack stays
+   short enough to keep the figure clear. */
+.vha-cta-term {
+  width: min(100%, 520px);
+  margin: 8px auto 0;
+  border: 1px solid currentColor;
+  text-align: left;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.vha-cta-termhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 8px 5px 10px;
+  border-bottom: 1px solid currentColor;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.vha-cta-termcopy {
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  padding: 3px 8px;
+  font: inherit;
+  letter-spacing: 0.14em;
+  transition: opacity 200ms ease;
+}
+.vha-cta-termcopy:hover {
+  opacity: 0.72;
+}
+.vha-cta-termline {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 5px 10px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+.vha-cta-termline + .vha-cta-termline {
+  padding-top: 0;
+  padding-bottom: 8px;
+}
+.vha-cta-termline .vha-cta-text {
+  overflow-wrap: anywhere;
+}
+
+/* The door, the repo actions, and the optional intro — one quiet row each. */
+.vha-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+}
+.vha-cta-row--quiet {
+  margin-top: 7px;
+  gap: 6px 16px;
+}
+.vha-cta-door,
+.vha-cta-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: opacity 200ms ease;
+}
+.vha-cta-door:hover,
+.vha-cta-link:hover {
+  opacity: 0.72;
+}
+.vha-cta-mini {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+a.vha-cta-mini,
+.vha-cta-mini--btn {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+a.vha-cta-mini:hover,
+.vha-cta-mini--btn:hover {
+  opacity: 0.72;
+}
 .vha-cta-cmd--sm:hover {
   opacity: 1;
 }
 .vha-cta-cmd--sm .vha-cta-tag {
   font-size: 9px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Act 5 · THE TRIPTYCH  (wide viewports only)
+
+   The figure is framed face-first — useHeroEngine's FIG table pins her face to
+   the golden-ratio line at ~37vh — but the wordmark stack is bottom-anchored
+   and knows nothing about where her face landed. On a wide-but-short viewport
+   `min(26vw, 34vh)` resolves to the HEIGHT term, so the type grew until it drew
+   straight across her eyes and mouth.
+
+   The fix is compositional, not a mask: the interface moves OUT of the centre
+   column and the type moves DOWN to the base of the poster.
+
+       ┌──────────────────────────────────────┐
+       │                 ▲ figure, face clear │
+       │              ╭──┴──╮                 │
+       │              │     │                 │   centre column carries nothing
+       │   ═══════ the one line ═══════       │   from crown to collar
+       │  ┌────────┐         ┌────────────┐   │
+       │  │ command│         │ install    │   │   CTAs flank (owner ruling)
+       │  └────────┘         └────────────┘   │
+       │        S K I L L   Z E R O           │   type as the base, monumental
+       └──────────────────────────────────────┘
+
+   Every band clears: the four FIG entries differ in zoom and origin, but all
+   four put the face between ~30vh and ~48vh, and nothing here rises above 52vh
+   from the bottom. Below 1080px the single centred stack still applies — there
+   the type is width-bound (26vw wins) and already sits under the face.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* The wrapper never takes the click; its three zones do. Keeps the act dots
+   and the figure underneath reachable once the wrapper spans the viewport. */
+.vha-ctawrap {
+  pointer-events: none;
+}
+.vha-ctawrap--flank > * {
+  pointer-events: auto;
+}
+/* …and the act label, counter and dots sit ABOVE the flank scrim rather than
+   under it. The chrome is click-transparent already, so raising it is free. */
+.vha-chrome {
+  z-index: 7;
+}
+
+@media (min-width: 1200px) {
+  .vha-ctawrap--flank {
+    inset: 0;
+    width: auto;
+    translate: none;
+    padding-top: 0;
+    background: none;
+    text-align: left;
+    /* Above the wordmark's layer. The two do not overlap in this composition,
+       but the ordering is what makes the scrim, the type and the interface read
+       in that order back to front. */
+    z-index: 8;
+  }
+
+  /* The two plates flank her HEAD, in the upper band where the frame's outer
+     edges are empty in all four motifs. That is the only place they can go
+     without taking width from something that needs it: the lower half has two
+     centred elements that both have to be wide — the ladder, which IS the one
+     line, and the wordmark, which is the poster. Squeezing either to make room
+     at the sides costs more than it buys.
+
+     So: plates top, ladder mid, type at the base, each with the full width it
+     needs and the centre column from her crown to her collar left empty. */
+  .vha-ctawrap--flank .vha-cta {
+    position: absolute;
+    top: 20vh;
+    align-items: flex-start;
+  }
+  /* Equal widths, both BLEEDING to the frame edge and carrying their margin as
+     padding: symmetric, and reading as the poster's margin plates rather than
+     two cards floating on the art. The right plate's terminal sets the width —
+     its longest line is 54 monospace characters and must not wrap. */
+  .vha-ctawrap--flank .vha-cta--left {
+    left: 0;
+    width: calc(3.5vw + min(32vw, 458px));
+    padding-left: 3.5vw;
+    padding-right: 24px;
+  }
+  .vha-ctawrap--flank .vha-cta--right {
+    right: 0;
+    width: calc(3.5vw + min(32vw, 458px));
+    padding-right: 3.5vw;
+    padding-left: 24px;
+  }
+
+  .vha-ctawrap--flank .vha-ladderband {
+    position: absolute;
+    left: 50%;
+    bottom: 30vh;
+    translate: -50% 0;
+    width: min(72vw, 880px);
+    text-align: center;
+  }
+  .vha-ctawrap--flank .vha-stopnote {
+    margin-bottom: 0;
+  }
+  .vha-ctawrap--flank .vha-cta-term {
+    margin-inline: 0;
+    width: 100%;
+  }
+  .vha-ctawrap--flank .vha-cta-row {
+    justify-content: flex-start;
+  }
+  /* Each column is a plate the wordmark passes behind. Solid band ground, no
+     radius, no border — the poster's own language, and the only thing that
+     keeps an install line readable with 160px of type running under it. */
+  .vha-ctawrap--flank .vha-cta {
+    background: var(--vha-bg);
+    padding-block: 16px;
+  }
+
+  /* The type is the base of the poster now, so it can grow back — it no longer
+     has to dodge the face. It carries the legibility scrim itself, as a layer
+     BEHIND its own glyphs (z-index -1 inside its stacking context): that is the
+     only ordering where the scrim covers the figure, the wordmark reads on the
+     scrim, and the interface plates at z-index 8 still read on the wordmark. */
+  .vha-typewrap--base {
+    --vha-type-up: 1vh;
+    --vha-word-scale: 0.66;
+    z-index: 6;
+  }
+  /* Near-opaque up to the ladder, then a long fade that runs out at the collar
+     so it never reaches the face. Her white sailor collar is the brightest
+     thing on the page and the ladder has to stay readable across it. */
+  .vha-typewrap--base::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(-3vh - var(--vha-type-up));
+    height: 52vh;
+    z-index: -1;
+    background: linear-gradient(to top, var(--vha-bg) 30%, var(--vha-bg-soft) 62%, var(--vha-bg-none) 100%);
+    pointer-events: none;
+  }
 }
 
 /* Link inside the "Where do skills come from?" card → gaiaskilltree.com */

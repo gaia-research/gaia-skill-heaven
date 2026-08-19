@@ -2,13 +2,21 @@
  * Product truth for every surface on this site.
  *
  * One mechanic — `summon` — and ONE LINE: a single ladder
- * `off · low · med · high · xhigh · max · ultra` whose four surfaces are
- * contiguous bands read from the current rung (off = Zero, low·med = Heaven,
- * high·xhigh·max = Hell, ultra = Ultra, the crown rung). Every figure here is
- * either a real measured benchmark result or explicitly flagged provisional.
- * Nothing is invented: no testimonials, no logos, no user counts, no pricing.
+ * `zero · low · med · high · xhigh · max · ultra` whose four surfaces are
+ * contiguous bands read from the current rung (zero = Zero, low·med = Heaven,
+ * high·xhigh·max = Hell, ultra = Ultra, the crown rung).
  *
- * Authority: gaia-research/founder/RATIFICATION.md (N13) · packages/site/PRODUCT.md
+ * What the line measures is SKILL ENTROPY — how much skill variety and volume
+ * enters a session. A rung is a reading of that quantity, so it names a
+ * direction and a position along its band; it never names a count. No rung
+ * carries a number and no summon is capped.
+ *
+ * Every figure here is either a real measured benchmark result or explicitly
+ * flagged provisional. Nothing is invented: no testimonials, no logos, no user
+ * counts, no pricing. No command appears here that the tool would reject.
+ *
+ * Authority: docs/LADDER-FLOW.md (N13) · docs/AGENT-PLUGIN.md (install) ·
+ * gaia-research/founder/RATIFICATION.md · packages/site/PRODUCT.md
  */
 
 export const SITE = {
@@ -50,7 +58,27 @@ export interface Surface {
   ladder: 'converge' | 'explore' | null;
   defaultRung: RungId | null;
   hue: string;
+  /**
+   * The per-skill HH Index stamp this band reads, for the two bands that read
+   * one. `heaven-native` and `hell-safe` are the two halves of the same
+   * question — does a skill hold up when few are in context, and does it stay
+   * safe when many are — and they are being measured NOW, in the open, at
+   * `HOUSES[0].href`.
+   *
+   * They are not shipped routing. Stamps are not built, so eligibility today
+   * falls back to relevance ranking, and no surface may render stamp-gated
+   * routing as running. Every surface that shows a stamp must therefore also
+   * say what routing does today; `STAMP_ROUTING_NOTE` is that sentence.
+   */
+  stamp: { label: string; note: string } | null;
 }
+
+/**
+ * The one sentence that keeps a stamp honest. Print it wherever the stamps are
+ * named — they describe an index being measured, not a router that is running.
+ */
+export const STAMP_ROUTING_NOTE =
+  'Both stamps are being benchmarked in the open. Until the index lands, routing ranks on relevance.';
 
 export const SURFACES: Surface[] = [
   {
@@ -63,6 +91,7 @@ export const SURFACES: Surface[] = [
     ladder: null,
     defaultRung: null,
     hue: 'var(--sh-zero)',
+    stamp: null,
   },
   {
     id: 'heaven',
@@ -74,6 +103,10 @@ export const SURFACES: Surface[] = [
     ladder: 'converge',
     defaultRung: 'low',
     hue: 'var(--sh-heaven)',
+    stamp: {
+      label: 'heaven-native',
+      note: 'skills that still carry a gap when few are in context',
+    },
   },
   {
     id: 'hell',
@@ -85,6 +118,10 @@ export const SURFACES: Surface[] = [
     ladder: 'explore',
     defaultRung: 'high',
     hue: 'var(--sh-hell)',
+    stamp: {
+      label: 'hell-safe',
+      note: 'skills that stay safe when many are',
+    },
   },
   {
     id: 'ultra',
@@ -92,10 +129,11 @@ export const SURFACES: Surface[] = [
     command: '/skill-ultra',
     role: 'the controller',
     blurb:
-      'Picks the direction and the depth per gap. No ladder of its own — nothing to set.',
+      'Picks the direction and the position for you, gap by gap. No ladder of its own — nothing to set.',
     ladder: null,
     defaultRung: null,
     hue: 'var(--sh-ultra)',
+    stamp: null,
   },
 ];
 
@@ -104,38 +142,96 @@ export const surfaceById = (id: SurfaceId): Surface =>
 
 /* -------------------------------------------------------------------------
    The ladder — discrete rungs, never a continuous fader.
-   A rung sets HOW MANY skills may be auto-summoned per capability gap.
 
-   ⚠ PROVISIONAL. The per-rung counts below are a working mapping chosen to
-   sit inside the shipped summon tool's own limit range. They do not land
-   until the benchmark does, and every surface that renders them must carry
-   the WIP mark.
+   What it measures is SKILL ENTROPY: how much skill variety and volume enters
+   a session. A rung names a DIRECTION along that scale and a POSITION along
+   its band. It never names a count — no rung carries a number and no summon
+   is capped. How far a rung reaches on a given gap is the agent's call,
+   worked out in use while the benchmark is built.
+
+   ⚠ PROVISIONAL. Where each band opens — Heaven at `low`, Hell at `high` —
+   is a working default, not a finding. Every surface that renders the line
+   carries the WIP mark.
    ------------------------------------------------------------------------- */
 
-export type RungId = 'off' | 'low' | 'med' | 'high' | 'xhigh' | 'max' | 'ultra';
+export type RungId = 'zero' | 'low' | 'med' | 'high' | 'xhigh' | 'max' | 'ultra';
+
+/** Which way along skill entropy a rung moves the session. Never a quantity. */
+export type Direction = 'floor' | 'converge' | 'explore' | 'crown';
 
 export interface Rung {
   id: RungId;
-  /** auto-summons permitted per capability gap — PROVISIONAL */
-  slots: number;
+  /** the direction this rung reads as — never a count */
+  direction: Direction;
+  /** where it sits along its band, reader-facing */
+  position: string;
+  /** what the rung means, one line */
   note: string;
-  /** the crown rung: the controller, no count to set */
+  /** the band opens here — Heaven's `low`, Hell's `high`. PROVISIONAL. */
+  opens?: boolean;
+  /** the crown rung: it picks the reading instead of being one */
   crown?: boolean;
 }
 
 export const RUNGS: Rung[] = [
-  { id: 'off', slots: 0, note: 'Nothing automatic. /summon still works by hand.' },
-  { id: 'low', slots: 1, note: 'One skill per gap. The tightest useful reach.' },
-  { id: 'med', slots: 2, note: 'Two per gap. A second opinion in context.' },
-  { id: 'high', slots: 3, note: 'Three per gap. The working default for explore.' },
-  { id: 'xhigh', slots: 4, note: 'Four per gap. A wider net, a heavier session.' },
-  { id: 'max', slots: 5, note: 'Five per gap. The widest reach the router will take.' },
-  { id: 'ultra', slots: 0, crown: true, note: 'The controller picks direction and depth per gap. Nothing to set.' },
+  {
+    id: 'zero',
+    direction: 'floor',
+    position: 'the floor of the line',
+    note: 'Zero skills, zero skill entropy. Nothing automatic — /summon still works by hand.',
+  },
+  {
+    id: 'low',
+    direction: 'converge',
+    position: 'the band opens here',
+    opens: true,
+    note: 'Narrow onto the gap in front of you. The tightest useful reach.',
+  },
+  {
+    id: 'med',
+    direction: 'converge',
+    position: 'further along the band',
+    note: 'Still converging, with more room to move — a second reading of the same gap.',
+  },
+  {
+    id: 'high',
+    direction: 'explore',
+    position: 'the band opens here',
+    opens: true,
+    note: 'Widen around the gap. More experts in context — better, until it is not.',
+  },
+  {
+    id: 'xhigh',
+    direction: 'explore',
+    position: 'further along the band',
+    note: 'Reaching wider. A broader search, and a heavier session to pay for it.',
+  },
+  {
+    id: 'max',
+    direction: 'explore',
+    position: 'the far end of the band',
+    note: 'The widest the line reaches. Where the curve is expected to turn.',
+  },
+  {
+    id: 'ultra',
+    direction: 'crown',
+    position: 'the crown of the line',
+    crown: true,
+    note: 'Picks the direction and the position for you, gap by gap. Nothing to set.',
+  },
 ];
+
+/** The word a surface shows for a rung's direction. */
+export const DIRECTION_WORD: Record<Direction, string> = {
+  floor: 'the floor',
+  converge: 'converge',
+  explore: 'explore',
+  crown: 'auto',
+};
 
 /** One line, four bands: which surface a given rung belongs to (N13). */
 export const RUNG_BAND: Record<RungId, SurfaceId> = {
-  off: 'zero',
+  zero: 'zero',
   low: 'heaven',
   med: 'heaven',
   high: 'hell',
@@ -144,18 +240,50 @@ export const RUNG_BAND: Record<RungId, SurfaceId> = {
   ultra: 'ultra',
 };
 
+/**
+ * The inverse of `RUNG_BAND`: where each band opens on the line. Naming a
+ * surface is naming a rung, because a session sits at exactly one rung and the
+ * surface is READ from it — there is no separate surface to select.
+ *
+ * Heaven's `low` and Hell's `high` are PROVISIONAL working defaults, not
+ * findings. `zero` and `ultra` are single-rung bands, so theirs are exact.
+ */
+export const BAND_OPENS: Record<SurfaceId, RungId> = {
+  zero: 'zero',
+  heaven: 'low',
+  hell: 'high',
+  ultra: 'ultra',
+};
+
+/** What the line measures. Surfaces that already say "skill entropy" use this
+ *  as the definition rather than repeating the term. */
+export const LADDER_MEASURE =
+  'How much skill variety and volume enters a session.';
+
 export const LADDER_WIP =
-  'Per-rung counts are provisional and do not land until the benchmark does.';
+  'No rung carries a count and no summon is capped: how far one reaches on a given gap is the agent’s call. Where each band opens stays provisional until the benchmark lands.';
 
 /* -------------------------------------------------------------------------
-   Install & launch — real, working commands only
+   Install & launch — real, working commands only.
+
+   Settled in docs/AGENT-PLUGIN.md ("Install — the final decision"):
+   the plugin is the primary install, install.sh is the optional launcher
+   route, `npx` is not an install path, and `skill-heaven.dev` is deferred —
+   the site prints the host that actually serves today.
    ------------------------------------------------------------------------- */
 
 export const INSTALL = {
-  sh: 'curl -fsSL https://skill-heaven.dev/install.sh | sh',
-  note: 'Installs the whole plugin — every door plus the summon engine. One command, all harnesses.',
-  standalone: 'npx skill-zero@latest claude',
-  standaloneNote: 'One-time use — runs a door once, nothing installed, nothing left behind.',
+  /** Primary — two lines typed inside Claude Code. Nothing else to install. */
+  plugin: [
+    '/plugin marketplace add gaia-research/gaia-skill-heaven',
+    '/plugin install skill-heaven@gaia-skill-heaven',
+  ] as const,
+  pluginNote:
+    'Two lines inside Claude Code, no terminal. The plugin carries its own summon engine — no sibling checkout, no external package, no npx.',
+  /** Optional — the five source-built launcher doors. */
+  sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
+  shNote:
+    'Optional. Adds the five standalone *-zero launcher doors, and registers the same plugin when Claude Code is already on PATH. It never installs a harness.',
   uninstall: '$HOME/.local/share/gaia-skill-heaven/uninstall.sh',
 } as const;
 

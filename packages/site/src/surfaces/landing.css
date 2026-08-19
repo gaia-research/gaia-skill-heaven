@@ -562,14 +562,21 @@
 .lp-door.is-on .lp-door__mark {
   fill: var(--sh-violet);
 }
-.lp-door__mark--slot {
+/* The one harness with no public vector mark. A lettermark in our own display
+   type — deliberately OUR voice, so it cannot be mistaken for the vendor's
+   mark — sized and coloured to sit in the same rank as the four real ones. */
+.lp-door__mark--letter {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--sh-line-strong);
-  font-family: var(--sh-mono);
-  font-size: 6.5px;
+  font-family: var(--sh-sans);
+  font-variation-settings: 'wdth' 112, 'wght' 800;
+  font-size: 19px;
+  line-height: 1;
   color: var(--sh-ink-dim);
+}
+.lp-door.is-on .lp-door__mark--letter {
+  color: var(--sh-violet);
 }
 .lp-door__pkg {
   font-family: var(--sh-mono);
@@ -641,6 +648,13 @@
 }
 .lp-fineprint code {
   color: var(--sh-ink);
+}
+
+/* the plugin route is two lines, each separately copyable */
+.lp-install__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .lp-cmd {
@@ -1198,6 +1212,46 @@
   color: var(--sh-ink-dim);
   text-wrap: pretty;
 }
+/* The band's HH Index stamp. A hairline block above the band footer, carrying
+   the band's own hue on the tag — the stamp IS the band's half of the index,
+   so it is coloured like the band and not like a generic link. */
+.lp-surface__stamp {
+  display: block;
+  margin: -4px 0 14px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--sh-line);
+  text-decoration: none;
+  transition: opacity 160ms linear;
+}
+.lp-surface__stamp:hover {
+  opacity: 0.72;
+}
+.lp-surface__stamp-tag {
+  display: block;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+  color: var(--sh-stamp, var(--sh-ink));
+}
+.lp-surface--heaven .lp-surface__stamp-tag {
+  color: var(--sh-heaven);
+}
+.lp-surface--hell .lp-surface__stamp-tag {
+  color: var(--sh-hell);
+}
+.lp-surface__stamp-note {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sh-ink-dim);
+  text-wrap: pretty;
+}
+.lp-surface__stamp:hover .lp-surface__stamp-note {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .lp-surface__foot {
   display: flex;
   flex-wrap: wrap;
@@ -1205,6 +1259,18 @@
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--sh-line);
+}
+
+/* Inline link inside an annotation strip — the strip is already quiet, so the
+   link earns its emphasis from the underline, not from another colour. */
+.lp-ann__link {
+  color: var(--sh-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.lp-ann__link:hover {
+  opacity: 0.72;
 }
 
 .lp-ledger {
@@ -1402,11 +1468,24 @@
   align-items: baseline;
   gap: 10px;
 }
+/* The readout names a DIRECTION, never a count — the stop strip above already
+   carries the position, so nothing here is a number. */
 .lp-ladder__n {
   font-family: var(--sh-mono);
-  font-size: 34px;
+  font-size: 26px;
   line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--sh-ink);
+}
+.lp-ladder__measure {
+  margin: 8px 0 0;
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: var(--sh-ink-dim);
+  max-width: 56ch;
 }
 .lp-ladder__note {
   margin: 0;

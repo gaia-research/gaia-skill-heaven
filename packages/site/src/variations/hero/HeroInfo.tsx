@@ -1,9 +1,10 @@
 import { useState } from 'react'
 
-// Upper-left, whisper-quiet info affordance. On the acts (Acts 1–4) it offers a
-// subtle "What is this?" that explains the Skill Heaven system; on the ladder
-// (Act 5) it explains "Skill entropy" with a small visual. Collapsed by default,
-// dismissable, and responsive down to mobile (see .vha-info* in the CSS).
+// Upper-left "About" affordance (issue #47 — it replaces the old "(?)" tooltip
+// labels). On the acts (Acts 1–4) it explains the Skill Heaven system; on the
+// ladder (Act 5) it explains skill entropy with a small visual and hands the
+// reader on to the Gaia Skill Tree. Dismissable, and responsive down to mobile
+// (see .vha-info* in the CSS).
 export function HeroInfo({
   atLadder,
   fg,
@@ -17,10 +18,9 @@ export function HeroInfo({
   dim: string
   accent: string
 }) {
-  // Auto-opens on mount: HeroInfo only mounts once the first non-scroll
-  // interaction has revealed it, and the whole tooltip should show, not just
-  // the toggle.
-  const [open, setOpen] = useState(true)
+  // Collapsed on mount. The panel is tall enough to cover the artwork, and the
+  // figure's face is never obstructed by chrome the visitor did not open.
+  const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
 
   if (hidden) {
@@ -29,7 +29,7 @@ export function HeroInfo({
         type="button"
         className="vha-info-nub"
         onClick={() => setHidden(false)}
-        aria-label="Show explainer"
+        aria-label="Show the About panel"
         style={{ color: dim, borderColor: dim, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
       >
         ?
@@ -37,7 +37,7 @@ export function HeroInfo({
     )
   }
 
-  const label = atLadder ? 'Skill entropy' : 'What is this?'
+  const label = 'About'
 
   return (
     <div className="vha-info" data-open={open ? '1' : '0'}>
@@ -65,7 +65,8 @@ export function HeroInfo({
                 Skill entropy
               </p>
               <p className="vha-info-body" style={{ color: dim }}>
-                How much the agent decides for itself.
+                How much skill variety and volume enters a session. The ladder is a
+                scale of that; a rung is a position on it, never a number of skills.
               </p>
               <p className="vha-info-body" style={{ color: dim, marginTop: 6 }}>
                 <strong style={{ color: fg }}>Low · converge.</strong> Tightens toward a
@@ -79,6 +80,19 @@ export function HeroInfo({
                 seen only once it ships.
               </p>
               <EntropyCurve fg={fg} dim={dim} accent={accent} />
+              <p className="vha-info-body" style={{ color: dim, opacity: 0.8 }}>
+                Sketch, not a result — the benchmark that would plot this curve is
+                not built yet.
+              </p>
+              <a
+                className="vha-info-link"
+                href="https://gaiaskilltree.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: accent, borderColor: accent }}
+              >
+                Where the skills come from · gaiaskilltree.com →
+              </a>
             </>
           ) : (
             <>
@@ -112,45 +126,25 @@ export function HeroInfo({
   )
 }
 
-// Upper-right, below "Skip": a copyable /summon one-liner (summon a standalone
-// skill) and a quiet "Where do skills come from?" explainer. Same whisper-quiet
-// treatment as HeroInfo, right-aligned.
+// Upper-right, below "Skip": a quiet "Where do skills come from?" explainer.
+// Issue #47 removed the standalone `/summon` copy CTA that used to sit here —
+// the actionable CTA on this page is the install, and it lives with the other
+// CTAs at the foot of the ladder. Same whisper-quiet treatment as HeroInfo,
+// right-aligned.
 export function HeroSummon({
   fg,
   bg,
   dim,
   accent,
-  copy,
-  copied,
 }: {
   fg: string
   bg: string
   dim: string
   accent: string
-  copy: (text: string, key: string) => void
-  copied: string | null
 }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="vha-summon">
-      <button
-        type="button"
-        className="vha-summon-cmd"
-        onClick={() => copy('/summon', 'summon')}
-        style={{ color: fg, borderColor: accent, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
-      >
-        <span style={{ color: accent }}>/</span>summon
-        <span className="vha-summon-tag" style={{ color: dim }}>
-          {copied === 'summon' ? 'copied ⏎' : 'copy'}
-        </span>
-      </button>
-      <span
-        className="vha-summon-hint"
-        style={{ color: dim, background: `${bg}b3`, padding: '2px 6px', backdropFilter: 'blur(6px)' }}
-      >
-        summon a standalone skill
-      </span>
-
       <div className="vha-info vha-info--right" data-open={open ? '1' : '0'}>
         <button
           type="button"

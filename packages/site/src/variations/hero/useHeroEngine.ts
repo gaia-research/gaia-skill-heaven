@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Shared state machine behind VariationHeroA / VariationHeroB. Both routes
 // render the same 5-act, wheel/keyboard/touch-driven scrollytelling engine
-// and the same 7-rung entropy ladder (OFF..MAX plus ULTRA, the crown rung —
-// reachable, never sealed) — they differ only in layout (Reredos vs
-// Guillotine), so the machine lives here once.
+// and the same 7-rung skill-entropy ladder (ZERO..MAX plus ULTRA at its
+// crown) — they differ only in layout (Reredos vs Guillotine), so the machine
+// lives here once.
 
 const ACT_LABEL = ['FOCUS', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
 const ACT_SUB = ["converge, don't collect", 'one skill · one session', 'cut the context bloat', 'explore · trust the agent', 'one line']
@@ -17,21 +17,23 @@ const mag = (d: number, camZ: number) => ((P - d) / (P - d - camZ)).toFixed(4)
 
 export type Lane = 'z' | 'h' | 'x' | 'u'
 
-// The one line (N13). A single ladder — off·low·med·high·xhigh·max·ultra —
-// whose four surfaces are contiguous BANDS read from the current rung:
-//   ZERO (off)            → lane 'z'  the floor, ships /summon, none automated
+// The one line (N13). A single ladder — zero·low·med·high·xhigh·max·ultra —
+// measuring SKILL ENTROPY, whose four surfaces are contiguous BANDS read from
+// the current rung:
+//   ZERO                 → lane 'z'  the floor, ships /summon, none automated
 //   LOW·MED              → lane 'h'  Skill Heaven · converge
 //   HIGH·XHIGH·MAX       → lane 'x'  Skill Hell · explore
 //   ULTRA                → lane 'u'  Skill Ultra · the crown rung / controller
-// Nothing here refuses: every rung is reachable, none gated or sealed (N13).
+// A rung names a direction and a position, never a count. Nothing on the line
+// refuses — every rung is reachable (N13).
 export const LADDER: { label: string; lane: Lane; note: string }[] = [
   { label: 'ZERO', lane: 'z', note: 'zero · the floor — ships /summon, none of it automated' },
-  { label: 'LOW', lane: 'h', note: 'heaven · converge — the tightest useful reach' },
-  { label: 'MED', lane: 'h', note: 'heaven · converge — a second opinion in context' },
-  { label: 'HIGH', lane: 'x', note: 'hell · explore — the working default' },
-  { label: 'XHIGH', lane: 'x', note: 'hell · explore — a wider net' },
-  { label: 'MAX', lane: 'x', note: 'hell · explore — the widest reach' },
-  { label: 'ULTRA', lane: 'u', note: 'ultra · the controller picks direction + depth for you' },
+  { label: 'LOW', lane: 'h', note: 'heaven · converge — the band opens here' },
+  { label: 'MED', lane: 'h', note: 'heaven · converge — further along the band' },
+  { label: 'HIGH', lane: 'x', note: 'hell · explore — the band opens here' },
+  { label: 'XHIGH', lane: 'x', note: 'hell · explore — further along the band' },
+  { label: 'MAX', lane: 'x', note: 'hell · explore — the far end of the band' },
+  { label: 'ULTRA', lane: 'u', note: 'ultra · the crown — picks direction + position per gap' },
 ]
 
 function prefersReducedMotion() {
@@ -264,9 +266,14 @@ export type HeroVals = ReturnType<typeof computeVals>
 const FLASH_FLOOR = 0.45
 
 export function useHeroEngine(variant: 'a' | 'b') {
-  const [act, setAct] = useState(0)
+  // The hero LANDS ON THE LADDER (issue #47): a visitor arrives on the one
+  // line with the install in reach, not at the top of a five-act story. Acts
+  // 1–4 are the optional narrative, entered deliberately from the ladder.
+  const [act, setAct] = useState(N - 1)
   const [flash, setFlash] = useState<0 | 1 | 2>(0)
-  const [stop, setStop] = useState(3)
+  // …and it opens at ZERO, the product floor, even though Skill Heaven is the
+  // umbrella name (issue #47).
+  const [stop, setStop] = useState(0)
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
   const [od, setOd] = useState<0 | 1 | 2>(0)
 
@@ -539,5 +546,17 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   })
 
-  return { v, dots, rungs, rootRef }
+  // Act navigation the surface can drive directly. `enterStory` opens the
+  // deprecated-by-default five-act narrative; `enterLadder` returns to the one
+  // line, which is where the hero lands (issue #47).
+  const enterStory = useCallback(() => {
+    setScale(1)
+    go(0)
+  }, [go, setScale])
+  const enterLadder = useCallback(() => {
+    setScale(1)
+    go(N - 1)
+  }, [go, setScale])
+
+  return { v, act, actCount: N, dots, rungs, rootRef, enterStory, enterLadder }
 }

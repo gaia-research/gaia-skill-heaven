@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
+import { DOORS, INSTALL, SITE } from '../product'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -19,9 +20,9 @@ import wingRight from '../assets/hero-commission/v01/wing-right.png'
 // touch-driven 5-act scrollytelling piece, centered and monumental: the
 // SKILL / HEAVEN typeset sits dead-center behind Lucy, single wing symmetric
 // either side, the katana slashing in on Act III (SLASH). Act V (ENTER) hands
-// off to the entropy ladder (OFF..MAX plus ULTRA, the crown rung — never
-// sealed) driving Heaven/Hell/Ultra
-// live.
+// off to the one line — ZERO..MAX plus ULTRA at its crown — driving
+// Zero/Heaven/Hell/Ultra live. Every rung is reachable; nothing on the line
+// refuses (N13).
 // ─────────────────────────────────────────────────────────────────────────
 
 export interface VariationHeroProps {
@@ -30,7 +31,8 @@ export interface VariationHeroProps {
 }
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
-  const { v, dots, rungs, rootRef } = useHeroEngine('a')
+  const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder } = useHeroEngine('a')
+  const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   const assets = HERO_ASSET_SETS[set][v.lucyState]
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
@@ -51,18 +53,40 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // "Skill" sticks to the dominant state word's scale so it grows/shrinks with
   // it through the acts: the big HEAVEN uses mType, HELL + the small ladder
   // words use hellScale.
-  const skillScale = v.oHeaven > 0.5 || v.oSplit > 0.5 ? v.mType : v.hellScale
+  const skillScale = v.oHeaven > 0.5 || v.oSplit > 0.5 ? String(v.mType) : 'var(--vha-word-scale)'
 
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
-  const BAND: Record<string, { cmd: string; hint: string }> = {
-    zero: { cmd: 'claude-zero', hint: 'launch clean — only /summon available' },
-    heaven: { cmd: '/skill-heaven', hint: 'converge · low↔med, default low' },
-    hell: { cmd: '/skill-hell', hint: 'explore · high↔max, default high' },
-    ultra: { cmd: '/skill-ultra', hint: 'auto · picks direction + depth for you' },
+  // Per band: the command, what it means, and where its door opens. Zero's
+  // door lands at the top of the document; the summon bands land on the
+  // converge/explore section; Ultra lands on what Ultra is (issue #47).
+  const BAND: Record<string, { cmd: string; hint: string; door: string; doorLabel: string }> = {
+    zero: {
+      cmd: '/skill-zero',
+      hint: 'the floor · /summon by hand, nothing automatic',
+      door: '/landing#doors',
+      doorLabel: `Open the door · all ${DOORS.length} harnesses`,
+    },
+    heaven: {
+      cmd: '/skill-heaven',
+      hint: 'converge · low↔med, opens at low',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · heaven or hell',
+    },
+    hell: {
+      cmd: '/skill-hell',
+      hint: 'explore · high↔max, opens at high',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · heaven or hell',
+    },
+    ultra: {
+      cmd: '/skill-ultra',
+      hint: 'the crown · picks direction + position per gap',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · what Ultra is',
+    },
   }
   const band = BAND[v.scene]
-  const INSTALL_ALL = 'curl -fsSL https://skill-heaven.dev/install | sh'
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
   // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
@@ -108,22 +132,41 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         transition: 'background 0ms,color 0ms',
         background: v.bg,
         color: v.fg,
+        // The band colour reaches CSS as variables so scrims and plates can be
+        // authored in the stylesheet instead of inline. Set on the root because
+        // two independent layers need them: the CTA wrap and the wordmark.
+        ['--vha-bg' as string]: v.bg,
+        ['--vha-bg-soft' as string]: `${v.bg}cc`,
+        ['--vha-bg-none' as string]: `${v.bg}00`,
       }}
     >
       {/* Opaque scene ground — guarantees the band colour paints behind the
          (often transparent) character masters, in every browser and capture. */}
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
-      <Link
-        to="/landing"
-        className="vha-skip"
-        style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
-      >
-        Skip · Enter the door →
-      </Link>
+      {/* The hero lands on the ladder, so "skip" only means something while
+          the optional five-act story is running (issue #47). */}
+      {atLadder ? (
+        <Link
+          to="/landing"
+          className="vha-skip"
+          style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+        >
+          Go to Site →
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className="vha-skip"
+          onClick={enterLadder}
+          style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+        >
+          Skip to the line →
+        </button>
+      )}
       {revealed && (
         <HeroInfo atLadder={v.atLadder} fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} />
       )}
-      <HeroSummon fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} copy={copy} copied={copied} />
+      <HeroSummon fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} />
 
       {/* Immersive toggle — fade the whole interface to reveal just the artwork
          (and back). Stays visible so it can always be restored. */}
@@ -266,15 +309,26 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         <img src={assets.slashArc} alt="" draggable={false} />
       </div>
 
+      {/* The engine owns the narrative offset and scale; both reach CSS as
+          variables so the flank breakpoint can drop the Act 5 wordmark to the
+          base of the poster (and let it grow, since it no longer has to dodge
+          the face) without moving hero layout back into JS. Acts 1-4 and Hero B
+          are untouched. */}
       <div
-        className="vha-typewrap"
+        className={`vha-typewrap${v.atLadder ? ' vha-typewrap--base' : ''}`}
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: `calc(3vh + ${v.typeUp}vh)`,
+          bottom: 'calc(3vh + var(--vha-type-up))',
           textAlign: 'center',
           pointerEvents: 'none',
+          // The engine's per-act values arrive under `-act` names. CSS then
+          // picks which one wins, because an inline custom property beats any
+          // stylesheet rule — including a media query — so the breakpoint could
+          // never override a value written straight onto `--vha-type-up`.
+          ['--vha-type-up-act' as string]: `${v.typeUp}vh`,
+          ['--vha-word-scale-act' as string]: String(v.hellScale),
         }}
       >
         {/* SKILL layer + the glitch-transformed state word live here */}
@@ -294,22 +348,22 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           >
             HEAVEN
           </div>
-          <div className="vha-hell" style={{ ...wordStyle, transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: `translateY(${v.hellY}vh) scale(var(--vha-word-scale))`, opacity: v.oHell }}>
             HELL
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
+            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oZero }}
+            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oZero }}
           >
             ZERO
           </div>
-          <div className="vha-hell" style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oUltra }}>
             ULTRA
           </div>
           {/* "Skill" is CENTERED on the state word, layered on top (z-axis), and
@@ -389,79 +443,109 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
       </div>
 
+      {/* Act 5 · the triptych. On a wide viewport the interface FLANKS the
+          figure — the ladder centred above her collar, the command left, the
+          install right — and the monumental wordmark drops to the base of the
+          poster. The centre column from her crown to her collar carries nothing,
+          so no type or control ever crosses her face (owner ruling, PR #71).
+          Narrow viewports keep the single centred stack: there the type is
+          width-bound (26vw wins over 34vh) and already sits below the face. */}
       <div
-        className="vha-ctawrap"
+        className={`vha-ctawrap${v.atLadder ? ' vha-ctawrap--flank' : ''}`}
         style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: '7vh',
-          translate: '-50% 0',
-          width: 'min(90vw,660px)',
-          zIndex: 6,
-          textAlign: 'center',
           transition: 'opacity calc(500ms * var(--vh-t)) linear,transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           opacity: v.oCta,
           transform: `translateY(${v.ctaY}px)`,
-          pointerEvents: v.ctaPE,
-          // Legibility scrim so the ladder + commands read over the busy figure.
-          background: `linear-gradient(to top, ${v.bg} 4%, ${v.bg}cc 52%, ${v.bg}00 100%)`,
-          paddingTop: 26,
+          // Hit-testing is CSS-owned: the wrapper is click-transparent and only
+          // its three zones take pointer events, so in the flank composition —
+          // where the wrapper spans the viewport — the act dots underneath stay
+          // reachable. `--flank` is applied exactly on Act 5, which is the only
+          // act where any of this is interactive.
         }}
       >
-        <div style={{ display: 'flex', gap: 4, marginBottom: 9 }}>
-          <div className="vha-chip vha-chip--zero">ZERO</div>
-          <div className="vha-chip vha-chip--heaven">HEAVEN</div>
-          <div className="vha-chip vha-chip--hell">HELL</div>
-          <div className="vha-chip vha-chip--ultra">ULTRA</div>
+        <div className="vha-ladderband">
+          <div className="vha-chiprow">
+            <div className="vha-chip vha-chip--zero">ZERO</div>
+            <div className="vha-chip vha-chip--heaven">HEAVEN</div>
+            <div className="vha-chip vha-chip--hell">HELL</div>
+            <div className="vha-chip vha-chip--ultra">ULTRA</div>
+          </div>
+          <div className="vha-rungrow">
+            {rungs.map((r, i) => (
+              <button key={i} onClick={r.pick} aria-label={r.label} className="vha-rung-btn">
+                <span
+                  className={r.sel ? 'vha-rung vha-rung--sel' : 'vha-rung'}
+                  style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
+                />
+                <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="vha-stopnote" style={{ color: v.noteTone, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.stopNote}</div>
         </div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', marginBottom: 12 }}>
-          {rungs.map((r, i) => (
-            <button key={i} onClick={r.pick} aria-label={r.label} className="vha-rung-btn">
-              <span
-                className={r.sel ? 'vha-rung vha-rung--sel' : 'vha-rung'}
-                style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
-              />
-              <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 14, color: v.noteTone, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.stopNote}</div>
-        <div className="vha-cta">
+
+        <div className="vha-cta vha-cta--left">
           <button
             type="button"
             className="vha-cta-cmd"
             onClick={() => copy(band.cmd, 'cmd')}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
-            <span className="vha-cta-prompt" style={{ color: v.bg }}>$</span>
+            {/* every band command is a slash command typed in-session, never a shell line */}
+            <span className="vha-cta-prompt" style={{ color: v.bg }}>›</span>
             <span className="vha-cta-text">{band.cmd}</span>
             <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
           </button>
           <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          {v.scene === 'zero' ? (
-            <Link
-              to="/landing"
-              className="vha-cta-cmd vha-cta-cmd--sm"
-              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
+          {/* The door is routed per band, so it belongs beside the band's own
+              command rather than with the repo actions (issue #47). */}
+          <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
+            {band.doorLabel} →
+          </Link>
+        </div>
+
+        <div className="vha-cta vha-cta--right">
+          {/* One block, both lines, one copy — the install is two lines typed
+              inside Claude Code and it should read and paste as one thing
+              (docs/AGENT-PLUGIN.md, issue #47). */}
+          <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
+            <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
+              <span>Install · Claude Code</span>
+              <button
+                type="button"
+                className="vha-cta-termcopy"
+                onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+                style={{ color: v.fg, borderColor: v.ctaLine }}
+              >
+                {copied === 'install' ? 'copied ⏎' : 'copy both'}
+              </button>
+            </div>
+            {INSTALL.plugin.map((line) => (
+              <div key={line} className="vha-cta-termline">
+                <span className="vha-cta-prompt" style={{ color: v.dim }}>›</span>
+                <span className="vha-cta-text">{line}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* The repo actions — quiet, and never competing with the install. */}
+          <div className="vha-cta-row">
+            <a
+              className="vha-cta-link"
+              href={SITE.repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: v.fg, borderColor: v.hair2 }}
             >
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">skill-zero</span>
-              <span className="vha-cta-tag" style={{ color: v.dim }}>pick your harness →</span>
-            </Link>
-          ) : (
-            <button
-              type="button"
-              className="vha-cta-cmd vha-cta-cmd--sm"
-              onClick={() => copy(INSTALL_ALL, 'install')}
-              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
-            >
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">{INSTALL_ALL}</span>
-              <span className="vha-cta-tag" style={{ color: v.dim }}>
-                {copied === 'install' ? 'copied ⏎' : 'install all skills'}
-              </span>
+              ★ Star
+            </a>
+            <a className="vha-cta-mini" href={SITE.issuesUrl} target="_blank" rel="noreferrer" style={{ color: v.dim }}>
+              Contribute
+            </a>
+            <button type="button" className="vha-cta-mini vha-cta-mini--btn" onClick={enterStory} style={{ color: v.dim }}>
+              Intro
             </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
