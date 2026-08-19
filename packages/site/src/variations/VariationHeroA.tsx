@@ -53,7 +53,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // "Skill" sticks to the dominant state word's scale so it grows/shrinks with
   // it through the acts: the big HEAVEN uses mType, HELL + the small ladder
   // words use hellScale.
-  const skillScale = v.oHeaven > 0.5 || v.oSplit > 0.5 ? v.mType : v.hellScale
+  const skillScale = v.oHeaven > 0.5 || v.oSplit > 0.5 ? String(v.mType) : 'var(--vha-word-scale)'
 
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
@@ -132,6 +132,12 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         transition: 'background 0ms,color 0ms',
         background: v.bg,
         color: v.fg,
+        // The band colour reaches CSS as variables so scrims and plates can be
+        // authored in the stylesheet instead of inline. Set on the root because
+        // two independent layers need them: the CTA wrap and the wordmark.
+        ['--vha-bg' as string]: v.bg,
+        ['--vha-bg-soft' as string]: `${v.bg}cc`,
+        ['--vha-bg-none' as string]: `${v.bg}00`,
       }}
     >
       {/* Opaque scene ground — guarantees the band colour paints behind the
@@ -145,7 +151,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           className="vha-skip"
           style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
         >
-          Read the document →
+          Go to Site →
         </Link>
       ) : (
         <button
@@ -303,15 +309,26 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         <img src={assets.slashArc} alt="" draggable={false} />
       </div>
 
+      {/* The engine owns the narrative offset and scale; both reach CSS as
+          variables so the flank breakpoint can drop the Act 5 wordmark to the
+          base of the poster (and let it grow, since it no longer has to dodge
+          the face) without moving hero layout back into JS. Acts 1-4 and Hero B
+          are untouched. */}
       <div
-        className="vha-typewrap"
+        className={`vha-typewrap${v.atLadder ? ' vha-typewrap--base' : ''}`}
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: `calc(3vh + ${v.typeUp}vh)`,
+          bottom: 'calc(3vh + var(--vha-type-up))',
           textAlign: 'center',
           pointerEvents: 'none',
+          // The engine's per-act values arrive under `-act` names. CSS then
+          // picks which one wins, because an inline custom property beats any
+          // stylesheet rule — including a media query — so the breakpoint could
+          // never override a value written straight onto `--vha-type-up`.
+          ['--vha-type-up-act' as string]: `${v.typeUp}vh`,
+          ['--vha-word-scale-act' as string]: String(v.hellScale),
         }}
       >
         {/* SKILL layer + the glitch-transformed state word live here */}
@@ -331,22 +348,22 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           >
             HEAVEN
           </div>
-          <div className="vha-hell" style={{ ...wordStyle, transform: `translateY(${v.hellY}vh) scale(${v.hellScale})`, opacity: v.oHell }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: `translateY(${v.hellY}vh) scale(var(--vha-word-scale))`, opacity: v.oHell }}>
             HELL
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oHeavenSm }}
+            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
           <div
             className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oZero }}
+            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oZero }}
           >
             ZERO
           </div>
-          <div className="vha-hell" style={{ ...wordStyle, transform: `scale(${v.hellScale})`, opacity: v.oUltra }}>
+          <div className="vha-hell" style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oUltra }}>
             ULTRA
           </div>
           {/* "Skill" is CENTERED on the state word, layered on top (z-axis), and
@@ -426,44 +443,48 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
       </div>
 
+      {/* Act 5 · the triptych. On a wide viewport the interface FLANKS the
+          figure — the ladder centred above her collar, the command left, the
+          install right — and the monumental wordmark drops to the base of the
+          poster. The centre column from her crown to her collar carries nothing,
+          so no type or control ever crosses her face (owner ruling, PR #71).
+          Narrow viewports keep the single centred stack: there the type is
+          width-bound (26vw wins over 34vh) and already sits below the face. */}
       <div
-        className="vha-ctawrap"
+        className={`vha-ctawrap${v.atLadder ? ' vha-ctawrap--flank' : ''}`}
         style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: '7vh',
-          translate: '-50% 0',
-          width: 'min(90vw,660px)',
-          zIndex: 6,
-          textAlign: 'center',
           transition: 'opacity calc(500ms * var(--vh-t)) linear,transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           opacity: v.oCta,
           transform: `translateY(${v.ctaY}px)`,
-          pointerEvents: v.ctaPE,
-          // Legibility scrim so the ladder + commands read over the busy figure.
-          background: `linear-gradient(to top, ${v.bg} 4%, ${v.bg}cc 52%, ${v.bg}00 100%)`,
-          paddingTop: 26,
+          // Hit-testing is CSS-owned: the wrapper is click-transparent and only
+          // its three zones take pointer events, so in the flank composition —
+          // where the wrapper spans the viewport — the act dots underneath stay
+          // reachable. `--flank` is applied exactly on Act 5, which is the only
+          // act where any of this is interactive.
         }}
       >
-        <div style={{ display: 'flex', gap: 4, marginBottom: 9 }}>
-          <div className="vha-chip vha-chip--zero">ZERO</div>
-          <div className="vha-chip vha-chip--heaven">HEAVEN</div>
-          <div className="vha-chip vha-chip--hell">HELL</div>
-          <div className="vha-chip vha-chip--ultra">ULTRA</div>
+        <div className="vha-ladderband">
+          <div className="vha-chiprow">
+            <div className="vha-chip vha-chip--zero">ZERO</div>
+            <div className="vha-chip vha-chip--heaven">HEAVEN</div>
+            <div className="vha-chip vha-chip--hell">HELL</div>
+            <div className="vha-chip vha-chip--ultra">ULTRA</div>
+          </div>
+          <div className="vha-rungrow">
+            {rungs.map((r, i) => (
+              <button key={i} onClick={r.pick} aria-label={r.label} className="vha-rung-btn">
+                <span
+                  className={r.sel ? 'vha-rung vha-rung--sel' : 'vha-rung'}
+                  style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
+                />
+                <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="vha-stopnote" style={{ color: v.noteTone, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.stopNote}</div>
         </div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', marginBottom: 12 }}>
-          {rungs.map((r, i) => (
-            <button key={i} onClick={r.pick} aria-label={r.label} className="vha-rung-btn">
-              <span
-                className={r.sel ? 'vha-rung vha-rung--sel' : 'vha-rung'}
-                style={{ height: r.h, background: r.bg, border: `1px solid ${r.line}`, opacity: r.op }}
-              />
-              <span style={{ fontSize: 9, letterSpacing: '.14em', transition: 'color 320ms linear', color: r.tone }}>{r.label}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, letterSpacing: '.18em', minHeight: 16, marginBottom: 14, color: v.noteTone, textShadow: `0 0 7px ${v.bg},0 1px 2px ${v.bg}` }}>{v.stopNote}</div>
-        <div className="vha-cta">
+
+        <div className="vha-cta vha-cta--left">
           <button
             type="button"
             className="vha-cta-cmd"
@@ -476,11 +497,17 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
           </button>
           <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          {/* The install is two lines typed inside Claude Code — the only route
-              that works today (docs/AGENT-PLUGIN.md). Each line copies on its
-              own, so nothing here copies more than it shows. */}
-          {/* One block, both lines, one copy — the install is two lines and it
-              should read and paste as one thing (issue #47). */}
+          {/* The door is routed per band, so it belongs beside the band's own
+              command rather than with the repo actions (issue #47). */}
+          <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
+            {band.doorLabel} →
+          </Link>
+        </div>
+
+        <div className="vha-cta vha-cta--right">
+          {/* One block, both lines, one copy — the install is two lines typed
+              inside Claude Code and it should read and paste as one thing
+              (docs/AGENT-PLUGIN.md, issue #47). */}
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
               <span>Install · Claude Code</span>
@@ -501,11 +528,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             ))}
           </div>
 
-          {/* The door, routed per band, beside the repo actions (issue #47). */}
+          {/* The repo actions — quiet, and never competing with the install. */}
           <div className="vha-cta-row">
-            <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
-              {band.doorLabel} →
-            </Link>
             <a
               className="vha-cta-link"
               href={SITE.repoUrl}
