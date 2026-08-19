@@ -8,7 +8,7 @@ allowed-tools: Bash(node:*)
 Print the block above **verbatim** inside a fenced code block, then stop.
 
 Treat the armed rung in the block as a **standing instruction for this
-conversation**: at `off` you do not summon automatically. Manual `/summon` still
+conversation**: at `zero` you do not summon automatically. Manual `/summon` still
 works unless the block says the cut is `all`, in which case do not call the
 `summon` tool at all for the rest of this session.
 

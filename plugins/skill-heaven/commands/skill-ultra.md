@@ -1,5 +1,5 @@
 ---
-description: "Arm the crown rung: the controller picks direction and depth per gap."
+description: "Arm ultra: the top of the line, picks direction and depth per gap."
 allowed-tools: Bash(node:*), mcp__skill-summon__summon
 ---
 
