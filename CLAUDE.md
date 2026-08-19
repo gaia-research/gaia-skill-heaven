@@ -20,29 +20,27 @@ harness's channel, not this manifest. Two layers:
   ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
-**Core product model — one mechanic, one line, four surfaces (N13).** The
-user-facing mechanic is **`/summon`** — one skill into context, one session,
-nothing installed — present in every implementation, at every rung, on every
-door. There is **one ladder — one line** — `zero · low · med · high · xhigh ·
-max · ultra`, and the four surfaces are contiguous **bands** on it, read from
-the current rung. **`zero` is Skill Zero** (the product floor — ships `/summon`
-by default, none of the choosing automated). **`low · med` is `/skill-heaven`
-(converge)**; **`high · xhigh · max` is `/skill-hell` (explore)** — two
-directions of the same summon over **one shared MCP**, where the rung sets
-**which direction the agent summons in, and how far along that band it sits**. **`ultra` is
-Skill Ultra**, the **crown of the one line**: the controller that picks
-direction and depth per gap, rendered as the seventh selectable rung (it has
-no sub-ladder because it *is* the top of the one line). A session sits at
-exactly one rung — there is no separate Heaven and Hell position held at once.
-**No rung carries a count and no summon is capped** — a rung names a direction
-and a position along the band, and how far to reach on a given gap is the
-agent's call, worked out in use while the benchmark is built. Per-band defaults
-are **PROVISIONAL**: Heaven's representative rung is `low`, Hell's is `high`. Up the line
-quality and cost rise together — **Skill Hell routes summons through gaia mcp
-as a mixture-of-agents for skills** (D5), so more summoned skills mean more
-experts in context, better until it isn't. The benchmark shapes the **entropy
-curve** (quality and cost vs skill entropy), not a token-savings headline
-(B6); **Heaven/Hell stamps are not built** — routing falls back to relevance
+**Core product model — skill entropy, one line, four surfaces (N13).** The
+ladder measures **skill entropy** — how much skill variety and volume enters a
+session (full statement: `docs/LADDER-FLOW.md`). Rungs are entropy readings,
+not settings: `zero · low · med · high · xhigh · max · ultra`, one line, and
+the four surfaces are contiguous **bands** read from the current rung. The one
+mechanic behind all of it is **`/summon`** — one skill into context, one
+session, nothing installed — present at every rung, on every door. **`zero` is
+Skill Zero**: zero skills, zero skill entropy, the product floor that ships
+`/summon` by default with none of the choosing automated. **`low · med`
+converges as `/skill-heaven`**; **`high · xhigh · max` explores as
+`/skill-hell`** — the lower- and higher-entropy directions of the same summon,
+over **one shared MCP**. **`ultra`** sits at the top of the same line and
+picks the entropy for you, gap by gap. A session sits at exactly one rung —
+never a separate Heaven and Hell position at once. **No rung carries a count
+and no summon is capped** — how far a rung reaches on a given gap is the
+agent's call, worked out in use while the benchmark is built; Heaven's
+representative rung (`low`) and Hell's (`high`) are **PROVISIONAL**. The
+benchmark's job is the **entropy curve**: quality and cost as skill entropy
+rises, expected to rise then turn since Skill Hell routes summons through gaia
+mcp as a **mixture-of-agents for skills** (D5) — not a token-savings headline
+(B6). **Heaven/Hell stamps are not built**; routing falls back to relevance
 ranking, and no surface may present stamp-gated routing as running. Public
 domain: [`skill-heaven.dev`](https://skill-heaven.dev), served from
 `packages/site` (N9/N11).
@@ -167,9 +165,8 @@ happens *inside* one of those two, it does not add a third.
   contiguous bands read from the rung: `zero` = Skill Zero (ships `/summon` by
   default as the product floor), `low · med` = `/skill-heaven` (converge),
   `high · xhigh · max` = `/skill-hell` (explore) — two directions of the same
-  summon over one shared MCP — and `ultra` = Skill Ultra, the crown rung: the
-  controller that picks direction + depth per gap, rendered as the seventh
-  selectable rung with no sub-ladder of its own. A session sits at exactly one
+  summon over one shared MCP — and `ultra` sits at the top of the same line
+  and picks the entropy for you, gap by gap. A session sits at exactly one
   rung. No rung carries a count and no summon is capped; what each rung
   reaches for is worked out in use until the benchmark lands (Heaven's
   representative rung `low`, Hell's `high`).
