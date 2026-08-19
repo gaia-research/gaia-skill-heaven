@@ -17,13 +17,22 @@ describe("one-command installer", () => {
     expect(help).toContain("https://gaia-research.github.io/gaia-skill-heaven/install.sh");
   });
 
-  it("installs every door and the published summon engine without installing harnesses", () => {
+  it("installs every door and the bundled plugin's five commands without installing harnesses", () => {
     for (const door of ["claude", "pi", "codex", "hermes", "grok"]) {
       expect(installer).toContain(`$door-zero`);
     }
-    expect(installer).toContain("@gaia-research/mcp@0.3.0");
-    expect(installer).toContain("node_modules/.bin/skill-hell");
+    for (const command of ["/summon", "/skill-zero", "/skill-heaven", "/skill-hell", "/skill-ultra"]) {
+      expect(installer).toContain(command);
+    }
     expect(installer).toContain("Harnesses are never installed");
+  });
+
+  it("never wires the deprecated external @gaia-research/mcp package", () => {
+    expect(installer).not.toMatch(/@gaia-research\/mcp/);
+    expect(installer).not.toMatch(/\bnpx\b/);
+    expect(installer).not.toContain("node_modules/.bin/skill-hell");
+    expect(installer).not.toMatch(/MCP_SPEC/);
+    expect(installer).not.toMatch(/SKILL_HELL_PACKAGE/);
   });
 
   it("registers the Claude plugin idempotently and tracks only installer-owned state", () => {

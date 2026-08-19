@@ -1,8 +1,8 @@
 #!/bin/sh
 # Skill Heaven installer for the Skill Zero launcher doors.
-# POSIX sh; tested on macOS. Installs source-built doors and the summon engine
-# under one user-owned directory, then registers the Claude plugin when Claude
-# Code is already available. It never installs a harness.
+# POSIX sh; tested on macOS. Installs source-built doors under one user-owned
+# directory, then registers the Claude plugin (which bundles its own summon
+# engine) when Claude Code is already available. It never installs a harness.
 
 set -eu
 
@@ -12,7 +12,6 @@ INSTALL_HOME=${SKILL_HEAVEN_HOME:-$DEFAULT_HOME}
 BIN_DIR=$INSTALL_HOME/bin
 SOURCE_REF=${SKILL_HEAVEN_REF:-main}
 SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/gaia-skill-heaven/tar.gz/$SOURCE_REF"}
-MCP_SPEC=${SKILL_HELL_PACKAGE:-"@gaia-research/mcp@0.3.0"}
 PLUGIN_ID=skill-heaven@gaia-skill-heaven
 MARKETPLACE=gaia-skill-heaven
 PLUGIN_MANAGED=$INSTALL_HOME/.claude-plugin-managed
@@ -32,9 +31,11 @@ usage() {
 Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
        $0 --uninstall
 
-Installs the WORKING PROTOTYPE's five Skill Zero launcher doors, @gaia-research/mcp@0.3.0
-(skill-hell), and the Claude plugin when the user's own claude binary is on PATH.
-No harness is installed. Set SKILL_HEAVEN_HOME to override:
+Installs the WORKING PROTOTYPE's five Skill Zero launcher doors and the Claude
+plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
+user's own claude binary is on PATH. The plugin bundles its own summon engine —
+no external package is installed. No harness is installed. Set SKILL_HEAVEN_HOME
+to override:
   $INSTALL_HOME
 EOF
 }
@@ -92,7 +93,7 @@ uninstall_all() {
   fi
 
   rm -rf "$INSTALL_HOME"
-  say "Removed the five doors, skill-hell, and installer-managed Claude plugin state."
+  say "Removed the five doors and installer-managed Claude plugin state."
 }
 
 case ${1:-} in
@@ -113,7 +114,7 @@ case ${1:-} in
 esac
 
 say "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use."
-say "Installing all five Skill Zero doors, the Claude plugin, and the skill-hell summon engine under the Skill Heaven umbrella."
+say "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 say "Harnesses are never installed; every door uses the user's own harness binary."
 
 missing=
@@ -143,7 +144,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$STAGE/source" "$STAGE/engine" "$STAGE/bin"
+mkdir -p "$STAGE/source" "$STAGE/bin"
 ARCHIVE=$STAGE/source.tar.gz
 say "Fetching Skill Heaven source ($SOURCE_REF) ..."
 curl -fsSL "$SOURCE_ARCHIVE" -o "$ARCHIVE" || fail "could not download $SOURCE_ARCHIVE. Check the URL/network; nothing was installed."
@@ -160,18 +161,9 @@ say "Installing launcher runtime dependencies ..."
   npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 ) || fail "launcher dependency installation failed; nothing was installed."
 
-say "Installing the published summon engine ($MCP_SPEC) ..."
-npm install --prefix "$STAGE/engine" --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false "$MCP_SPEC" || fail "could not install $MCP_SPEC; nothing was installed."
-ENGINE_BIN=$STAGE/engine/node_modules/.bin/skill-hell
-ENGINE_PACKAGE=$STAGE/engine/node_modules/@gaia-research/mcp/package.json
-[ -x "$ENGINE_BIN" ] || fail "$MCP_SPEC did not provide an executable skill-hell binary; nothing was installed."
-[ -f "$ENGINE_PACKAGE" ] || fail "$MCP_SPEC did not provide package metadata; nothing was installed."
-ENGINE_VERSION=$(node -p 'require(process.argv[1]).version' "$ENGINE_PACKAGE")
-
 for door in claude pi codex hermes grok; do
   ln -s "../source/packages/$door-zero/bin/$door-zero.mjs" "$STAGE/bin/$door-zero"
 done
-ln -s ../engine/node_modules/.bin/skill-hell "$STAGE/bin/skill-hell"
 cat >"$STAGE/uninstall.sh" <<'EOF'
 #!/bin/sh
 set -eu
@@ -199,7 +191,7 @@ if [ -f "$ROOT/.claude-marketplace-managed" ]; then
   claude plugin marketplace remove "$MARKETPLACE"
 fi
 rm -rf "$ROOT"
-printf '%s\n' "Removed the five doors, skill-hell, and installer-managed Claude plugin state."
+printf '%s\n' "Removed the five doors and installer-managed Claude plugin state."
 EOF
 chmod +x "$STAGE/uninstall.sh"
 
@@ -216,7 +208,7 @@ STAGE=$INSTALL_PARENT/.gaia-skill-heaven-stage-moved.$$
 rm -rf "$OLD"
 
 if command -v claude >/dev/null 2>&1; then
-  say "Claude Code detected; installing its /skill-zero and /skill-hell plugin ..."
+  say "Claude Code detected; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
   if marketplace_is_configured; then
     claude plugin marketplace update "$MARKETPLACE"
   else
@@ -230,7 +222,7 @@ if command -v claude >/dev/null 2>&1; then
     claude plugin install --scope user "$PLUGIN_ID"
     touch "$PLUGIN_MANAGED"
   fi
-  say "Claude plugin ready: /skill-zero and /skill-hell."
+  say "Claude plugin ready: /summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra."
 else
   say "Claude Code was not detected, so no harness was installed and plugin registration is deferred."
   say "After installing Claude Code yourself, register the already-delivered plugin with:"
@@ -242,7 +234,6 @@ say "Installed Skill Zero doors:"
 for door in claude pi codex hermes grok; do
   say "  $door-zero"
 done
-say "Installed summon engine: skill-hell (@gaia-research/mcp@$ENGINE_VERSION)"
 
 say "Harnesses detected (not installed by this script):"
 for harness in claude pi codex hermes grok; do

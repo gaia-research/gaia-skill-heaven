@@ -2,16 +2,16 @@
 
 > **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
 
-The Claude Code door to Skill Zero under the Skill Heaven umbrella. Its `/skill-hell` command resolves a
-`skill-hell` executable supplied by the published
-[`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
-prototype. Direct public use should select `@latest`, for example
-`npx --yes skill-hell@latest summon "code review" --card`.
+The Claude Code door to Skill Zero under the Skill Heaven umbrella. `/skill-hell`
+(and the other four in-session commands) are supplied by the `skill-heaven`
+Claude plugin at `plugins/skill-heaven`, whose summon engine ships bundled
+inside it — no external package, no `npx`. See
+[`docs/AGENT-PLUGIN.md`](../../docs/AGENT-PLUGIN.md).
 
 ## Install
 
 The repository's one-command installer delivers this launcher, all four sibling
-doors, the working summon engine, and the Claude plugin:
+doors, and the Claude plugin (its summon engine bundled inside):
 
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
@@ -26,7 +26,7 @@ than npm-published. See the root README for PATH, update, and uninstall details.
 ## Launch
 
 ```bash
-claude-zero                                  # off/product-floor (default)
+claude-zero                                  # zero/product-floor (default)
 claude-zero --level med                      # Claude untouched (= native)
 claude-zero --level low --skill ./my-skill  # curated clean room
 claude-zero --print                          # inspect; do not spawn
@@ -45,7 +45,7 @@ edits `~/.claude`, project skills, or source skill directories (P3).
 
 ## `/skill-zero`: the boot-time half
 
-`/skill-zero` shows only `off · low · med`; `med` is native and unlocked.
+`/skill-zero` shows only `zero · low · med`; `med` is native and unlocked.
 Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-zero`
 command and explicitly says it changed nothing.
@@ -59,9 +59,9 @@ root now, and it ships all five surfaces (`/summon`, `/skill-zero`,
 
 `/skill-hell` opens on `high` and covers `high · xhigh · max`; `ultra` is the
 crown rung and is reached with `/skill-ultra`. **Nothing on the line refuses**
-(N13). Per-rung counts come from core's `RUNG_SLOTS` and are PROVISIONAL until
-the benchmark lands; the prototype publishes no score bands, HH scoring, or
-routing-eligibility contract.
+(N13). No rung carries a count and no summon is capped — what each rung
+reaches for is worked out in use until the benchmark lands; the engine
+publishes no score bands, HH scoring, or routing-eligibility contract.
 
 Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
 paired install timing/cache state, file count, path, and inspect link. Claude
@@ -84,7 +84,7 @@ invocation doses remain separate.
 
 ## Boundaries
 
-- Heaven: `off|low|med`, boot-time launcher choices.
+- Heaven: `zero|low|med`, boot-time launcher choices.
 - Hell: `high|xhigh|max`, `high` is the default. `ultra` is the crown rung,
   reached with `/skill-ultra`. Nothing on the line refuses (N13).
 - The plugin's MCP exposes exactly one tool, `summon`.

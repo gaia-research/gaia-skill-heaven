@@ -119,13 +119,13 @@ export function parseStatuslineInput(raw: string): StatuslineInput | null {
   }
 }
 
-/** A skill materialized into this session's skill-hell summon root (session.json
- * at SKILL_HELL_SESSION). Only the fields the statusline segment needs. */
+/** A skill materialized into this session's summon root (session.json
+ * at SKILL_SUMMON_SESSION). Only the fields the statusline segment needs. */
 export interface HellSummonedSkill {
   id: string;
 }
 
-/** The subset of skill-hell's session.json this door reads. */
+/** The subset of the summon engine's session.json this door reads. */
 export interface HellSessionManifest {
   skills: HellSummonedSkill[];
 }
