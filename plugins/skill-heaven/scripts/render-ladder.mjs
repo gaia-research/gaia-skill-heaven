@@ -239,7 +239,7 @@ export function renderLadder(options) {
   return renderBand(data, mode, target);
 }
 
-/** `/summon <intent>` — the manual path, present at every rung including `off`. */
+/** `/summon <intent>` — the manual path, present at every rung including `zero`. */
 function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.ProcessEnv} */ env) {
   const intent = String(rawIntent ?? "").trim();
   if (zeroCuts(env) === "all") {
