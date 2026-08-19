@@ -214,7 +214,7 @@ export default function Hero() {
               {copied === 'install' ? 'Copied to clipboard' : 'Copy the install'}
             </button>
             <Link className="sh-cta sh-cta--ghost" to="/landing">
-              Read the document
+              Go to Site
             </Link>
           </div>
           <p className="hx__install">
