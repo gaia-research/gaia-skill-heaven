@@ -175,7 +175,7 @@ function header(data, title) {
     "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
     `   ${data.wip}`,
     "",
-    "   one ladder, one line — the surface is read from the rung:",
+    "   one ladder, one line of rising skill entropy — the surface is read from the rung:",
     "",
   ];
 }
@@ -345,13 +345,13 @@ function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, 
   lines.push("");
   lines.push(
     band === "ultra"
-      ? "   armed: the controller picks the direction (converge or explore) and how far to reach, per gap."
+      ? "   armed: ultra sits at the top of the line and picks the direction and how far to reach, per gap."
       : `   armed: ${info.direction} on each capability gap. There is no per-rung count and no`,
   );
   if (band === "ultra") {
     lines.push(
-      "   The crown rung has no sub-ladder — it is the top of the one line. Its",
-      "   heuristics are unaided today: nothing scores the choice for you yet.",
+      "   Ultra has no sub-ladder of its own — its heuristics are unaided today:",
+      "   nothing scores the choice for you yet.",
     );
   } else {
     lines.push(
