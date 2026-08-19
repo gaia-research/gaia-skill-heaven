@@ -1,5 +1,13 @@
 # WP18 install transcript
 
+> **Dated historical transcript.** This is a verbatim record of a real
+> session against the `install.sh` and `@gaia-research/mcp@0.3.0` that
+> existed at the time (commit `27d92cc56f06685d8fe13951901022ef5e64e4c4`).
+> The external `@gaia-research/mcp` package it installs is now **deprecated**
+> — the current installer no longer downloads a separate summon engine; the
+> plugin bundles its own (see `docs/AGENT-PLUGIN.md`). Left unedited as a
+> record of what actually ran, not as current installation guidance.
+
 Visible herdr pane: `w8:p1B`
 
 Clean test root: `/private/tmp/gaia-skill-heaven-wp18-final`

@@ -39,14 +39,14 @@ You stay in charge — Skill Heaven never mutates your real config. It composes 
 
 ## Install
 
-Requires **Node.js 22+**. Installs the launcher doors plus the Hell summon door:
+Requires **Node.js 22+**. Installs the five launcher doors, and — when Claude Code is on `PATH` — the Skill Heaven plugin (`/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra`). The summon engine ships bundled inside the plugin; there's no separate package to install:
 
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 ```
 
 ```text
-claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero   skill-hell
+claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
 ```
 
 The installer does **not** install the harnesses themselves — install Claude Code, Codex, Pi, Hermes, or Grok as usual. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if needed:
@@ -90,18 +90,12 @@ Skill suppression differs per harness, so Skill Zero is **fail-closed**: if it c
 
 ## Summon more — the Heaven and Hell directions
 
-A clean start is only half of Skill Heaven. Once you're launched, you *summon* capability back in with `/summon` — in one of two directions, both over one shared MCP:
+A clean start is only half of Skill Heaven. Once you're launched, you *summon* capability back in with `/summon` — in one of two directions, both over one shared MCP that ships bundled inside the Skill Heaven plugin (no separate install, no `npx`):
 
 - **Heaven — converge.** Curate toward the right few skills for the task. *(In-session `/skill-heaven`; ladder default `low`, PROVISIONAL. The automated routing is HH-Index research, in the works.)*
-- **Hell — explore.** Reach into the wider evidenced skill world for capability you don't already have. Ladder default `high`, PROVISIONAL. This is live today as the `skill-hell` summon door:
+- **Hell — explore.** Reach into the wider evidenced skill world for capability you don't already have. Ladder default `high`, PROVISIONAL. In-session command: `/skill-hell`.
 
-```bash
-skill-hell summon "code review" --card
-# or straight from npm:
-npx --yes skill-hell@latest summon "code review" --card
-```
-
-`skill-hell` is the **exploratory side of Skill Heaven** — a per-session summon, not an install. It brings a skill into context once and leaves nothing behind. Today it's a manual surface; it does not yet auto-route from HH-Index results.
+`/skill-hell` is the **exploratory side of Skill Heaven**, run in-session — a per-session summon, not an install. It brings a skill into context once and leaves nothing behind. Today it's a manual surface; it does not yet auto-route from HH-Index results.
 
 The launcher also ships the in-session command set for the whole runtime surface:
 

@@ -4,7 +4,8 @@ Five doors in, the boundary is clear enough to name. This document fixes it, so 
 harness six is *additive* — a quirks table entry and a probe, not a redesign.
 
 **The rule:** the core owns the ladder, the postures, and the guarantees; it
-consumes the independently released summon engine. A harness owns only *how*
+consumes the in-repo summon engine (`packages/skill-summon`, bundled into the
+Claude plugin — see `docs/AGENT-PLUGIN.md`). A harness owns only *how*
 it is asked to suppress things. If a change to one harness touches core, that
 is a signal the core abstraction is wrong, not that the harness is special.
 
@@ -65,8 +66,8 @@ The ladder is the primary product interface on every door:
 <door>-heaven --help                  # ladder first; postures are compatibility vocabulary
 ```
 
-Launchers own the current subtractive choices `off|low|med`. The published
-`skill-hell` prototype owns the usable additive levels: `high` is the default,
+Launchers own the current subtractive choices `off|low|med`. The bundled
+summon engine owns the usable additive levels: `high` is the default,
 while `xhigh` and `max` broaden the requested summoning behavior. This is a
 product mapping, but not a fixed per-rung count, score-band, HH score, or
 routing-eligibility contract. `ultra` is **ratified** (N13) and refuses
@@ -105,11 +106,16 @@ arms and never averaged — the gap between them *is* the door's cost.
 I/O. `exec()` materializes and spawns. `execSupport: "recipe"` (emit a plan, never spawn) is an
 honest state, not a failure.
 
-### 5. The summon engine (`gaia-mcp`)
+### 5. The summon engine (`packages/skill-summon`)
 
-The published [`@gaia-research/mcp@0.4.0`](https://github.com/gaia-research/gaia-mcp/releases/tag/mcp-v0.4.0)
-prototype is an independent package. Its current rich Registry/Bond surface is
-`gaia_search`, `gaia_inspect`, `summon`, and `gaia_status`.
+The summon engine is an **in-repo TypeScript port**, not an independent
+package — `packages/skill-summon`, ported from the external `@gaia-research/mcp`
+prototype and shipped as a committed MCP bundle inside the Claude plugin
+(`plugins/skill-heaven/mcp/`, wired through `.mcp.json`; see
+`docs/AGENT-PLUGIN.md` for the packaging contract). Its surface is **one
+tool**: `summon` (`{ query: string, limit?: positive integer }`). There is no
+upper cap — nothing assigns a ceiling, so the engine must not invent one; a
+malformed `limit` is refused, never clamped.
 
 Its `summon` flow is: search → untuned candidate ordering → clone/validate →
 materialize the whole skill directory → session lock → GC → payload cache. It
@@ -119,13 +125,14 @@ quirk and needs its own evidence.
 The source URLs are env-overridable as `TREE_URL` and `TREE_NAMED_URL`, so the
 engine can be configured against another tree without a fork.
 
-`summon` is the current tool name; `gaia_summon` is not a current package tool.
-D4's thin `search_skills` + `summon` Heaven/Summon profile is a separate
-profile/dose constraint. It does not make the rich package an implemented or
-measured two-tool profile, and it does not deprecate `gaia_search`,
-`gaia_inspect`, or `gaia_status`.
+The external prototype's rich Registry/Bond surface — `gaia_search`,
+`gaia_inspect`, and `gaia_status` — is **not ported**. Whether dropping them
+degrades summon quality is a benchmark question, filed upstream. The external
+`@gaia-research/mcp` package itself is **deprecated**: this repo's installer
+and plugin no longer reference it, and it is kept installable on npm only so
+that copies of `install.sh` predating this change keep working.
 
-The prototype does **not** ship Hell/Heaven scoring, routing eligibility, or
+The engine does **not** ship Hell/Heaven scoring, routing eligibility, or
 content-hash admission or verification. Its displayed per-invocation ordering
 must not be presented as any of those systems.
 
@@ -196,7 +203,7 @@ universal live-execution route:
 | pi | card plus resource discovery + reload loads the directory as a real native skill |
 | codex / hermes / grok | tbd; likely place the directory into the scoped config home |
 
-The current engine accepts a caller-supplied `--limit`; the usable prototype
+The current engine accepts a caller-supplied `limit`; the usable engine
 maps `high`, `xhigh`, and `max` to progressively broader additive requests, but
 does not publish fixed per-rung counts or score bands. HH scoring, routing
 eligibility, and relevance-band filtering remain unshipped.
@@ -206,7 +213,7 @@ eligibility, and relevance-band filtering remain unshipped.
 ## Open
 
 - `ultra` is ratified (N13); what is outstanding is the controller's
-  heuristics, not permission. The usable Hell prototype does not establish a
+  heuristics, not permission. The usable Hell engine does not establish a
   score band, HH score, or routing-eligibility policy for its levels.
 - Relevance-band filtering and routing eligibility are open engine seams.
 - Delivery is the **Claude Code plugin** (`/plugin install
