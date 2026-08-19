@@ -55,7 +55,14 @@ export function createSkillSummonMcpServer({
           .string()
           .min(1)
           .describe("Task or capability to summon a matching skill for."),
-        limit: z.number().int().min(1).max(5).optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe(
+            "How many skills to summon for this gap. No upper cap — the caller decides the depth.",
+          ),
       }),
       annotations: summonAnnotations,
     },

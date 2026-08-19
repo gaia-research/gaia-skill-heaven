@@ -108,6 +108,14 @@ describe.each(SURFACES)("$file", ({ file, mode }) => {
     expect(source).not.toMatch(/\bUNRATIFIED\b/);
     expect(source).not.toMatch(/\bultra is (gated|locked|sealed)\b/i);
   });
+
+  it("attaches no count to a rung and no cap to a summon", () => {
+    // Nothing assigns a number. If copy ever tells the agent to pass a specific
+    // limit, or advertises "N skills per gap", this fails.
+    expect(source).not.toMatch(/limit:\s*\d/);
+    expect(source).not.toMatch(/\d+\s*skills?\s*(per|\/)\s*gap/i);
+    expect(source).not.toMatch(/between 1 and 5/i);
+  });
 });
 
 describe("/skill-zero command definition", () => {
@@ -147,7 +155,6 @@ describe("the auto-summon protocol", () => {
   it("summon.md makes exactly one call and arms nothing", () => {
     const flat = commands.get("summon.md")!.replace(/\s+/g, " ");
     expect(flat).toContain("call the `summon` tool **once**");
-    expect(flat).toContain("`limit: 1`");
     expect(flat).toContain("arms nothing");
   });
 });

@@ -30,7 +30,7 @@ export function assertLevelAllowed(level: string | undefined): void {
     const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
       `level "${level}" is a live summon rung, not a boot posture. ` +
-        `Launch grok-zero at off|low|med, then arm it in-session with ${arm}.`,
+        `Launch grok-zero at zero|low|med, then arm it in-session with ${arm}.`,
     );
   }
 }
@@ -40,7 +40,7 @@ export function resolveLevelAlias(level: string): Posture | undefined {
 }
 
 export interface LaunchOptions {
-  /** default "product-floor" (`--level off`) */
+  /** default "product-floor" (`--level zero`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated copies each directory into the scoped profile. */
   skillPaths?: string[];

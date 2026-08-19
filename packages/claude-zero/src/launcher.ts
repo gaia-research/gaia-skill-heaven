@@ -74,7 +74,7 @@ export const CURATED_DOOR_ABSENCE_NOTE =
   "product-floor if you need /skill-zero to survive in-session.";
 
 export interface LaunchOptions {
-  /** default "product-floor" (`--level off`) */
+  /** default "product-floor" (`--level zero`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
   skillPaths?: string[];
@@ -115,7 +115,7 @@ export function assertLevelAllowed(level: string | undefined): void {
     const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
       `level "${level}" is a live summon rung, not a boot posture. ` +
-        `Launch claude-zero at off|low|med, then arm it in-session with ${arm}.`,
+        `Launch claude-zero at zero|low|med, then arm it in-session with ${arm}.`,
     );
   }
 }

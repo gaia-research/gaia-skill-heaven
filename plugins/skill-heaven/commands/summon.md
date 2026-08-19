@@ -11,7 +11,7 @@ If the block is a `⛔` refusal, print it and stop — do not call the `summon`
 tool, and do not offer a way around the cut.
 
 Otherwise, if the user named an intent, call the `summon` tool **once**, with
-that intent as `query` and `limit: 1`. Then:
+that intent as `query`. Then:
 
 - Print the returned card **verbatim** before using anything from it. The card
   is the disclosure: it names the skill and carries the engine's own ranking

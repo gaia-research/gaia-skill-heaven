@@ -1,25 +1,21 @@
-import { RUNG_SLOTS } from "skill-zero";
 import { describe, expect, it } from "vitest";
 import {
   renderHellChooser,
   renderSummonedCard,
-  rungBudgets,
+  HELL_RUNGS,
 } from "../src/hell-presentation.js";
 
 describe("pi Skill Hell presentation", () => {
   it("shares the founder-ruled chooser and bounded budgets", () => {
-    // The counts now come from core's RUNG_SLOTS — one source of truth for the
-    // whole line. There is deliberately no relevance band: band filtering is not
-    // shipped, and this surface used to claim otherwise.
-    expect(rungBudgets).toEqual({
-      high: { count: RUNG_SLOTS.high },
-      xhigh: { count: RUNG_SLOTS.xhigh },
-      max: { count: RUNG_SLOTS.max },
-    });
-    expect([rungBudgets.high.count, rungBudgets.xhigh.count, rungBudgets.max.count]).toEqual([3, 4, 5]);
+    // No counts anywhere: a rung names a direction and a position on the band,
+    // not a number. And no relevance band — band filtering is not shipped, and
+    // this surface used to claim otherwise.
+    expect(HELL_RUNGS).toEqual(["high", "xhigh", "max"]);
     const chooser = renderHellChooser();
-    expect(chooser).toContain("● high    default");
+    expect(chooser).toContain("● high    explore · the band opens here");
     expect(chooser).toContain("○ ultra   the crown rung");
+    // No counts on the chooser either: a rung names a direction, not a number.
+    expect(chooser).not.toMatch(/\d+\s*skills?\s*\/\s*gap/);
     expect(chooser).not.toMatch(/UNRATIFIED/);
     expect(chooser).not.toMatch(/P2|gated/i);
   });

@@ -1,49 +1,42 @@
 {
   "schema": "skill-heaven/ladder@2",
-  "source": "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
-  "wip": "WIP · PROVISIONAL — per-rung counts do not land until the benchmark does.",
+  "source": "skill-zero RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
+  "wip": "WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
   "rungs": [
     {
-      "id": "off",
-      "band": "zero",
-      "slots": 0
+      "id": "zero",
+      "band": "zero"
     },
     {
       "id": "low",
-      "band": "heaven",
-      "slots": 1
+      "band": "heaven"
     },
     {
       "id": "med",
-      "band": "heaven",
-      "slots": 2
+      "band": "heaven"
     },
     {
       "id": "high",
-      "band": "hell",
-      "slots": 3
+      "band": "hell"
     },
     {
       "id": "xhigh",
-      "band": "hell",
-      "slots": 4
+      "band": "hell"
     },
     {
       "id": "max",
-      "band": "hell",
-      "slots": 5
+      "band": "hell"
     },
     {
       "id": "ultra",
-      "band": "ultra",
-      "slots": null
+      "band": "ultra"
     }
   ],
   "bands": {
     "zero": {
       "surface": "Skill Zero",
       "command": "/skill-zero",
-      "defaultRung": "off",
+      "defaultRung": "zero",
       "direction": "floor"
     },
     "heaven": {

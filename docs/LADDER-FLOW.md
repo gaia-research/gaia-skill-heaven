@@ -25,15 +25,15 @@ same time.
   ZERO        HEAVEN            HELL                     ULTRA
  (floor)     (converge)        (explore)              (the controller)
   ┌────┬───────────────┬───────────────────────────┬─────────┐
-  │ off │  low   med    │  high    xhigh    max      │  ultra  │
+  │ zero│  low   med    │  high    xhigh    max      │  ultra  │
   └────┴───────────────┴───────────────────────────┴─────────┘
-    0      1     2         3       4        5         crown
+  floor   ◀── converge ──▶   ◀────── explore ──────▶     crown
    ships   ▲ default low     ▲ default high          picks direction
   /summon                                             + depth per gap
   (manual)  └─────── auto-summons per capability gap ───────┘
 ```
 
-- **`off` — Skill Zero.** The product floor. Ships `/summon` by default, with
+- **`zero` — Skill Zero.** The product floor. Ships `/summon` by default, with
   **none of the choosing automated**. This is the bottom of the one line.
 - **`low · med` — Skill Heaven (converge).** Auto-summons narrowly — the
   right few skills for the gap in front of you. Representative rung: `low`.
@@ -50,23 +50,31 @@ fine-tunes within it. **Nothing on the line refuses** — every rung and band
 is reachable. Hell is not gated, locked, or sealed, and neither is Ultra;
 what is outstanding on the upper band is implementation, not permission.
 
-## The rungs (PROVISIONAL until the benchmark lands)
+## The rungs — no counts, no caps
 
-Per-rung counts and the per-band defaults are **provisional** — they do not
-land until the Hell/Heaven benchmark does. Every surface that renders one of
-these numbers must say so.
+**Correction (owner ruling, 2026-08-19).** The working mapping this section
+used to carry — `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5` — is
+withdrawn. **No count was ever assigned to a rung, and no cap was ever assigned
+to a summon.** A rung names a *direction* and a position along its band; how far
+to reach on a given gap is the agent's call, worked out **in use** — by the
+agent using the product — while the benchmark is built.
 
-| Rung | Band | Skills auto-summoned per capability gap (working mapping) |
+The bottom rung is spelled **`zero`**, matching its band and its surface. The
+earlier `off` spelling is retired.
+
+| Rung | Band | What it means |
 |---|---|---|
-| `off` | Zero | 0 — manual `/summon` only |
-| `low` | Heaven | 1 |
-| `med` | Heaven | 2 |
-| `high` | Hell | 3 |
-| `xhigh` | Hell | 4 |
-| `max` | Hell | 5 |
-| `ultra` | Ultra | controller — picks direction + depth per gap |
+| `zero` | Zero | nothing automatic — manual `/summon` only |
+| `low` | Heaven | converge — the band opens here |
+| `med` | Heaven | converge — further along the band |
+| `high` | Hell | explore — the band opens here |
+| `xhigh` | Hell | explore — further along the band |
+| `max` | Hell | explore — further along the band |
+| `ultra` | Ultra | the crown rung — picks direction + depth per gap |
 
-Heaven's representative rung is `low`; Hell's is `high`.
+Heaven's representative rung is `low`; Hell's is `high`. Those defaults remain
+**provisional** until the benchmark lands. Every surface that renders the line
+carries a `WIP · PROVISIONAL` mark.
 
 `floor` is **not on the line.** It is the doorless benchmark
 placebo-of-record, byte-frozen, reachable only as `--posture floor`. Users
@@ -74,10 +82,10 @@ never select it.
 
 ## Two dials that share the bottom rung
 
-`off` is where the one line meets Skill Zero's own **boot dial**, and the two
+`zero` is where the one line meets Skill Zero's own **boot dial**, and the two
 are different questions — worth keeping straight.
 
-**Skill Zero's boot dial is subtractive.** `--level off|low|med →
+**Skill Zero's boot dial is subtractive.** `--level zero|low|med →
 product-floor | curated | native` decides how much of your ambient setup is
 *withheld at launch*. A running session cannot un-load what it already loaded
 (D12), so that decision can only be made **at boot** — which is why the

@@ -100,11 +100,11 @@ export function parseArgs(argv: string[]): CliArgs {
     if ((SUMMON_ONLY_LEVELS as readonly string[]).includes(level)) {
       const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
       throw new Error(
-        `--level ${level} is a live summon rung, not a boot posture — launch a Heaven rung (off|low|med), then arm ${arm}`,
+        `--level ${level} is a live summon rung, not a boot posture — launch a Heaven rung (zero|low|med), then arm ${arm}`,
       );
     }
     const aliased = LEVEL_ALIASES[level];
-    if (!aliased) throw new Error(`--level must be one of off|low|med (or native)`);
+    if (!aliased) throw new Error(`--level must be one of zero|low|med (or native)`);
     if (posture !== undefined && posture !== aliased) {
       throw new Error(`--level ${level} (= ${aliased}) contradicts --posture ${posture}`);
     }

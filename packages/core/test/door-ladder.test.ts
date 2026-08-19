@@ -43,7 +43,7 @@ function captureStderr(fn: () => number): { code: number; err: string } {
 
 describe("ladder-first door contract", () => {
   for (const [name, parse, run] of doors) {
-    it(`${name} defaults to off/product-floor`, () => {
+    it(`${name} defaults to zero/product-floor`, () => {
       expect(parse([]).posture).toBe("product-floor");
       const result = captureStdout(() => run(["--print"]));
       expect(result.code).toBe(0);
@@ -54,7 +54,7 @@ describe("ladder-first door contract", () => {
       const result = captureStdout(() => run(["--help"]));
       expect(result.code).toBe(0);
       expect(result.out).toContain("--level <level>");
-      expect(result.out).toContain("off|low|med (default: off)");
+      expect(result.out).toContain("zero|low|med (default: zero)");
       expect(result.out).toContain("Hell (high|xhigh|max) is armed live with /skill-hell");
       expect(result.out).toContain("--level native");
 

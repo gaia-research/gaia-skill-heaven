@@ -13,7 +13,6 @@ import {
   LADDER_WIP,
   POSTURES,
   RUNG_BANDS,
-  RUNG_SLOTS,
   type Band,
   type BandInfo,
 } from "skill-zero";
@@ -21,11 +20,12 @@ import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 
 export interface LadderArtifact {
   schema: "skill-heaven/ladder@2";
-  source: "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES";
-  /** The mark every rendering of a per-rung count must carry. */
+  source: "skill-zero RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES";
+  /** The mark every rendering of the line must carry. */
   wip: string;
-  /** One ladder, one line — in order, bottom to crown. */
-  rungs: Array<{ id: string; band: Band; slots: number | null }>;
+  /** One ladder, one line — in order, bottom to crown. A rung carries its band
+   * (the direction) and nothing else: there are no per-rung counts. */
+  rungs: Array<{ id: string; band: Band }>;
   /** The four contiguous bands the line is read as. */
   bands: Record<Band, BandInfo>;
   postures: string[];
@@ -35,10 +35,9 @@ export interface LadderArtifact {
 export function buildLadderArtifact(): LadderArtifact {
   return {
     schema: "skill-heaven/ladder@2",
-    source:
-      "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
+    source: "skill-zero RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
     wip: LADDER_WIP,
-    rungs: LADDER_LEVELS.map((id) => ({ id, band: RUNG_BANDS[id], slots: RUNG_SLOTS[id] })),
+    rungs: LADDER_LEVELS.map((id) => ({ id, band: RUNG_BANDS[id] })),
     bands: BAND_INFO,
     postures: [...POSTURES],
     launchablePostures: [...LAUNCHABLE_POSTURES],

@@ -33,7 +33,7 @@ export const MODES = ["zero", "heaven", "hell", "ultra", "summon"];
 
 /**
  * @typedef {object} LadderData
- * @property {Array<{ id: string, band: string, slots: number | null }>} rungs
+ * @property {Array<{ id: string, band: string }>} rungs
  * @property {Record<string, { surface: string, command: string, defaultRung: string, direction: string }>} bands
  * @property {string} wip
  */
@@ -49,12 +49,7 @@ export function readLadderData(dataDir = join(here, "..", "data")) {
     if (
       Array.isArray(rungs) &&
       rungs.length > 0 &&
-      rungs.every(
-        (r) =>
-          typeof r?.id === "string" &&
-          typeof r?.band === "string" &&
-          (r.slots === null || typeof r.slots === "number"),
-      ) &&
+      rungs.every((r) => typeof r?.id === "string" && typeof r?.band === "string") &&
       bands &&
       typeof bands === "object" &&
       typeof value?.wip === "string" &&
@@ -113,7 +108,7 @@ export function loadManifest(path = process.env[profileEnv]) {
 
 /** @param {string} posture @returns {string | null} */
 export function levelForPosture(posture) {
-  if (posture === "product-floor") return "off";
+  if (posture === "product-floor") return "zero";
   if (posture === "curated") return "low";
   if (posture === "native") return "med";
   return null;
@@ -156,11 +151,6 @@ function rungById(data, id) {
   return data.rungs.find((rung) => rung.id === id) ?? null;
 }
 
-/** @param {number | null} slots */
-function slotLabel(slots) {
-  return slots === null ? "  —  " : `${slots}/gap`;
-}
-
 /** The seven-rung line. Identical on every rung command — only the armed marker
  * moves. @param {LadderData} data @param {string} armed */
 function line(data, armed) {
@@ -169,12 +159,12 @@ function line(data, armed) {
     const band = data.bands[rung.band];
     const meaning =
       rung.band === "zero"
-        ? "manual /summon only"
+        ? "nothing automatic · manual /summon only"
         : rung.band === "ultra"
-          ? "controller · picks direction + depth per gap"
-          : band.direction;
+          ? "the crown rung · picks direction and depth per gap"
+          : `${band.direction} · ${rung.id === "low" || rung.id === "high" ? "the band opens here" : "further along the band"}`;
     const armedMark = rung.id === armed ? " · armed" : "";
-    return `   ${rung.id === armed ? "●" : "○"} ${rung.id.padEnd(width)}  ${rung.band.padEnd(6)} ${slotLabel(rung.slots)}  ${meaning}${armedMark}`;
+    return `   ${rung.id === armed ? "●" : "○"} ${rung.id.padEnd(width)}  ${rung.band.padEnd(6)}  ${meaning}${armedMark}`;
   });
 }
 
@@ -203,21 +193,25 @@ function moveLine(data) {
 /** The protocol the agent follows while a lane is armed. This IS the disclosure
  * the product promises: the card names the skill and carries the ranking
  * disclosure with it, and it is printed before anything from it is used.
- * @param {number | null} slots */
-function autoSummonProtocol(slots) {
-  const limit = slots === null ? "the depth you judge the gap needs (1–5)" : String(slots);
+ *
+ * No count appears here on purpose. Nothing assigns a number to a rung and
+ * nothing caps a summon — the rung names a DIRECTION, and how far to reach in
+ * that direction is the agent's call, gap by gap.
+ * @param {string} direction */
+function autoSummonProtocol(direction) {
   return [
     "",
-    "   On a real capability gap — never preemptively — call the `summon` tool with",
-    `   limit: ${limit}. Print the returned card verbatim before using anything from it,`,
-    "   read the SKILL.md at the card's path, and follow it. The card is the listing",
-    "   entry, not the skill body. The lane stays armed.",
+    "   On a real capability gap — never preemptively — call the `summon` tool, with",
+    `   a depth you judge the gap needs while ${direction === "converge" ? "converging" : "exploring"}.`,
+    "   Print the returned card verbatim before using anything from it, read the",
+    "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
+    "   not the skill body. The lane stays armed.",
   ];
 }
 
 const STANDING_INSTRUCTION_NOTE =
   "   A session sits at exactly one rung. The rung is a standing instruction the\n" +
-  "   agent honours, not a limit the tool enforces.";
+  "   agent honours, not something the tool enforces.";
 
 /**
  * @param {object} options
@@ -279,7 +273,7 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
       `✳ /summon · ${intent}`,
       "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
       "",
-      "   Call the `summon` tool once, with limit: 1 and this intent as the query.",
+      "   Call the `summon` tool once, with this intent as the query.",
       "   Print the returned card verbatim before using anything from it, read the",
       "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
       "   not the skill body. This is one manual call — it arms nothing.",
@@ -292,8 +286,8 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
 /** `/skill-zero [all]` — the floor. */
 function renderZero(/** @type {LadderData} */ data, /** @type {string | null} */ target, /** @type {LaunchManifest | null} */ manifest, /** @type {NodeJS.ProcessEnv} */ env) {
   const cutsAll = target === "all" || zeroCuts(env) === "all";
-  const lines = header(data, "⚡ Skill Zero · the floor · armed: off");
-  lines.push(...line(data, "off"));
+  const lines = header(data, "⚡ Skill Zero · the floor · armed: zero");
+  lines.push(...line(data, "zero"));
   lines.push("");
   lines.push(
     cutsAll
@@ -310,7 +304,7 @@ function renderZero(/** @type {LadderData} */ data, /** @type {string | null} */
   lines.push(
     "   Already-loaded skills cannot be evicted mid-session (D12, probed) — this",
     "   command cuts summoning, it does not empty the session. A genuinely clean",
-    "   start is a boot-time decision: → claude-zero --level off",
+    "   start is a boot-time decision: → claude-zero --level zero",
   );
   lines.push("");
   lines.push(moveLine(data));
@@ -346,23 +340,26 @@ function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, 
   }
 
   const armed = target || info.defaultRung;
-  const rung = rungById(data, armed);
-  const slots = rung ? rung.slots : null;
   const lines = header(data, `${bandGlyph(band)} ${info.surface} · ${info.direction} · armed: ${armed}`);
   lines.push(...line(data, armed));
   lines.push("");
   lines.push(
     band === "ultra"
-      ? "   armed: the controller picks the direction (converge or explore) and the depth per gap."
-      : `   armed: up to ${slots} skill${slots === 1 ? "" : "s"} per capability gap · ${info.direction}.`,
+      ? "   armed: the controller picks the direction (converge or explore) and how far to reach, per gap."
+      : `   armed: ${info.direction} on each capability gap. There is no per-rung count and no`,
   );
   if (band === "ultra") {
     lines.push(
       "   The crown rung has no sub-ladder — it is the top of the one line. Its",
       "   heuristics are unaided today: nothing scores the choice for you yet.",
     );
+  } else {
+    lines.push(
+      "   cap on a summon — how far this rung reaches is being worked out in use while",
+      "   the benchmark is built. Reach further along the band to go wider.",
+    );
   }
-  lines.push(...autoSummonProtocol(slots));
+  lines.push(...autoSummonProtocol(info.direction));
   lines.push("");
   lines.push(moveLine(data));
   lines.push(STANDING_INSTRUCTION_NOTE);

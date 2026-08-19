@@ -31,7 +31,7 @@ afterAll(() => {
 
 describe("assertLevelAllowed", () => {
   it("allows every boot-dial rung", () => {
-    for (const level of ["off", "low", "med", "native"]) {
+    for (const level of ["zero", "low", "med", "native"]) {
       expect(() => assertLevelAllowed(level)).not.toThrow();
     }
     expect(() => assertLevelAllowed(undefined)).not.toThrow();

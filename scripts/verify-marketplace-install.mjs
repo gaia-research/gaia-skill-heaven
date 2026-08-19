@@ -234,7 +234,7 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
 
       // Every rung command renders the SAME line — that is the product claim,
       // so verify it from the installed copy rather than trusting the unit test.
-      const RUNGS = ["off", "low", "med", "high", "xhigh", "max", "ultra"];
+      const RUNGS = ["zero", "low", "med", "high", "xhigh", "max", "ultra"];
       for (const mode of ["zero", "heaven", "hell", "ultra"]) {
         const out = renderStandalone(mode);
         assert(out !== null, `render-ladder.mjs renders the ${mode} surface standalone`);
@@ -253,7 +253,8 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
       const armed = renderStandalone("hell");
       if (armed) {
         assert(armed.includes("`summon` tool"), "an armed lane names the summon tool the agent must call");
-        assert(armed.includes("limit: 3"), "an armed lane states the per-gap limit to pass");
+        assert(armed.includes("explore"), "an armed lane names its direction");
+        assert(!/limit:\s*\d/.test(armed), "an armed lane attaches no count to the rung and no cap to a summon");
         assert(armed.includes("verbatim"), "an armed lane requires the card be printed verbatim (the disclosure)");
       }
     }

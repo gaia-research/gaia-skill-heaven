@@ -12,7 +12,6 @@
 
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { RUNG_SLOTS } from "skill-zero";
 
 /** The shape summon returns. Trust fields are OPTIONAL and tree-provided: a tree
  *  publishes what it has and we render what it published. Never require them. */
@@ -30,25 +29,20 @@ export interface SummonedSkill {
   totalSeconds?: number;
 }
 
-/** Hell rungs are a summon budget, not a posture — how many skills one
- *  capability gap may pull. The counts come from core's RUNG_SLOTS, the single
- *  source of truth for the whole line (they used to be stated three different
- *  ways). They are PROVISIONAL until the benchmark lands.
+/** The Hell rungs, in order. A rung names a DIRECTION and how far along the
+ *  band you are — it carries no count. Nothing assigns a number to a rung and
+ *  nothing caps a summon: how far a rung reaches is being worked out in use
+ *  while the benchmark is built.
  *
  *  `ultra` IS on the line: it is the crown rung, ratified by N13, and it does
- *  not refuse. It carries no fixed count because the controller picks the depth
- *  per gap.
+ *  not refuse.
  *
- *  There is deliberately NO relevance band here. Band filtering is not shipped —
- *  the engine takes a `limit`, not a score window — and this surface used to
- *  claim otherwise. */
-export const rungBudgets = {
-  high: { count: RUNG_SLOTS.high as number },
-  xhigh: { count: RUNG_SLOTS.xhigh as number },
-  max: { count: RUNG_SLOTS.max as number },
-} as const;
+ *  There is deliberately NO relevance band here either. Band filtering is not
+ *  shipped — the engine takes a depth, not a score window — and this surface
+ *  used to claim otherwise. */
+export const HELL_RUNGS = ["high", "xhigh", "max"] as const;
 
-export type HellLevel = keyof typeof rungBudgets;
+export type HellLevel = (typeof HELL_RUNGS)[number];
 
 const PROTOTYPE_NOTE =
   "   WORKING PROTOTYPE · actively tested for public use · interfaces may change";
@@ -57,11 +51,11 @@ export function renderHellChooser(): string {
   return [
     "🔥 Skill Hell · high · xhigh · max · ultra",
     PROTOTYPE_NOTE,
-    "   WIP · PROVISIONAL — per-rung counts do not land until the benchmark does.",
+    "   WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
     "",
-    `   ● high    default · ${rungBudgets.high.count} skills/gap`,
-    `   ○ xhigh   ${rungBudgets.xhigh.count} skills/gap`,
-    `   ○ max     ${rungBudgets.max.count} skills/gap`,
+    "   ● high    explore · the band opens here",
+    "   ○ xhigh   explore · further along the band",
+    "   ○ max     explore · further along the band",
     "   ○ ultra   the crown rung · the controller picks direction + depth per gap",
     "",
     "   Select a rung to arm the lane; any other text manually summons for that intent.",
@@ -69,12 +63,12 @@ export function renderHellChooser(): string {
 }
 
 export function renderArmed(level: HellLevel): string {
-  const budget = rungBudgets[level];
   return [
     `🔥 Skill Hell armed: ${level}`,
-    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap (PROVISIONAL)`,
+    "   explore on each capability gap. There is no per-rung count and no cap on a",
+    "   summon — how far this rung reaches is the agent's call, gap by gap.",
     "   Summon only for a real gap; the lane remains armed afterward.",
-    `   engine seam: summon --limit ${budget.count}; automatic gap detection remains a harness integration seam.`,
+    "   engine seam: automatic gap detection remains a harness integration seam.",
   ].join("\n");
 }
 

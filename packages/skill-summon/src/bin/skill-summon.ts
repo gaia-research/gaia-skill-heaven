@@ -364,10 +364,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 function parseCount(value: string): number {
   const limit = Number(value);
-  if (!Number.isInteger(limit) || limit < 1 || limit > 5) {
-    throw new UsageError(
-      `--count must be an integer between 1 and 5, got: ${value}`,
-    );
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new UsageError(`--count must be a positive integer, got: ${value}`);
   }
   return limit;
 }

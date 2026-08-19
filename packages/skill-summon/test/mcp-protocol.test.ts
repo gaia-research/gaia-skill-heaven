@@ -165,11 +165,11 @@ describe("skill-summon MCP protocol", () => {
     });
   });
 
-  // The rung sets `limit`, so the boundary is a product surface, not an
-  // implementation detail: an over-range limit must be REFUSED, never silently
-  // clamped down to 5. A clamp would let a surface ask for more than the line
-  // permits and get a quiet, plausible-looking answer back.
-  it.each([0, 6, 42, 1.5, -1])("refuses limit %s rather than clamping it", async (limit) => {
+  // There is NO summon cap. Nobody assigned a ceiling, so the engine must not
+  // invent one: a depth the product never ruled out has to go through. Only
+  // genuinely malformed values are refused, and they are refused — never
+  // silently clamped into range, which would answer a question nobody asked.
+  it.each([0, -1, 1.5])("refuses malformed limit %s rather than clamping it", async (limit) => {
     const service = new GaiaService(new InMemoryGaiaRegistrySource(documents));
     const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
     const client = new Client({ name: "skill-summon-test", version: "1.0.0" });
@@ -186,14 +186,12 @@ describe("skill-summon MCP protocol", () => {
       arguments: { query: "automated testing", limit },
     });
 
-    // Refused at the schema boundary, and the refusal NAMES the offending field.
     expect(result.isError, `limit ${limit} was accepted`).toBe(true);
     expect(JSON.stringify(result.content)).toMatch(/limit/i);
-    // And nothing was summoned — a clamp would have produced a real result.
     expect((result.structuredContent as Record<string, unknown> | undefined)?.summoned).toBeUndefined();
   });
 
-  it("accepts every limit the line can ask for (1..5)", async () => {
+  it("accepts any positive depth, with no upper cap", async () => {
     const service = new GaiaService(new InMemoryGaiaRegistrySource(documents));
     const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
     const client = new Client({ name: "skill-summon-test", version: "1.0.0" });
@@ -205,13 +203,14 @@ describe("skill-summon MCP protocol", () => {
       () => server.close(),
     );
 
-    for (const limit of [1, 2, 3, 4, 5]) {
+    // 6 and 25 are the point: the old port capped at 5 and would have refused
+    // both. The fixture is registry-only so nothing installs — what matters is
+    // that the call is ACCEPTED and reports the skip.
+    for (const limit of [1, 5, 6, 25]) {
       const result = await client.callTool({
         name: "summon",
         arguments: { query: "automated testing", limit },
       });
-      // The fixture is registry-only, so nothing installs — but the call must be
-      // ACCEPTED and report the skip, not be rejected at the schema boundary.
       expect(result.isError, `limit ${limit} was rejected`).toBeFalsy();
     }
   });

@@ -39,51 +39,56 @@ simply stops being the thing the marketplace points at.
 
 ## One line, five entry points, one tool
 
-The rung is a **standing instruction in context**; the agent passes `limit` to
-the `summon` tool from the armed rung. That is how `/skill-hell <rung>` already
-worked — no second MCP tool is needed.
+The rung is a **standing instruction in context**. It names a *direction*, not a
+number: the agent decides how far to reach on a given gap. No second MCP tool is
+needed.
 
-| Command | Sets rung | Auto-summons per gap | Note |
+| Command | Sets rung | Direction | Note |
 |---|---|---|---|
-| `/skill-zero [all]` | `off` | **0 — cut** | `/summon` by hand still works. `all` cuts that too. |
-| `/skill-heaven [low\|med]` | `low` (default) | 1 · 2 | converge |
-| `/skill-hell [high\|xhigh\|max]` | `high` (default) | 3 · 4 · 5 | explore |
-| `/skill-ultra` | `ultra` | agent picks direction + depth per gap | crown rung, no sub-ladder |
-| `/summon <intent>` | — | manual, one call | present at every rung including `off` |
+| `/skill-zero [all]` | `zero` | **nothing automatic** | `/summon` by hand still works. `all` cuts that too. |
+| `/skill-heaven [low\|med]` | `low` (default) | converge | narrowly, on the gap in front of you |
+| `/skill-hell [high\|xhigh\|max]` | `high` (default) | explore | widely, around the gap |
+| `/skill-ultra` | `ultra` | picks direction + depth per gap | crown rung, no sub-ladder |
+| `/summon <intent>` | — | manual, one call | present at every rung including `zero` |
 
-All four rung commands render **the same seven-rung slider**, differing only in
-the default they open on and which band is highlighted. Every rendering carries
-the `WIP · PROVISIONAL` mark.
+All four rung commands render **the same seven-rung line**, differing only in
+the rung they open on and which band is highlighted. Every rendering carries the
+`WIP · PROVISIONAL` mark.
 
-### Rung slots — single source of truth
+### The rungs — no counts, no caps
 
-`RUNG_SLOTS` lives in `packages/core/src/compile.ts` and is the only place the
-mapping is written down:
+`RUNG_BANDS` and `BAND_INFO` live in `packages/core/src/compile.ts` and are the
+only place the line is written down:
 
-| Rung | Band | Slots per capability gap |
+| Rung | Band | What it means |
 |---|---|---|
-| `off` | zero | 0 |
-| `low` | heaven | 1 |
-| `med` | heaven | 2 |
-| `high` | hell | 3 |
-| `xhigh` | hell | 4 |
-| `max` | hell | 5 |
-| `ultra` | ultra | controller — agent picks direction + depth |
+| `zero` | zero | nothing automatic — manual `/summon` only |
+| `low` | heaven | converge — the band opens here |
+| `med` | heaven | converge — further along the band |
+| `high` | hell | explore — the band opens here |
+| `xhigh` | hell | explore — further along the band |
+| `max` | hell | explore — further along the band |
+| `ultra` | ultra | the crown rung — picks direction and depth per gap |
 
-`packages/claude-zero/scripts/generate-ladder.ts` emits it into the plugin's
-`data/ladder.json`; `packages/site/src/product.ts` imports it. This retires the
-three-table disagreement (plugin code previously said `high 1 · xhigh 3 · max 5`).
+**No rung carries a count, and no summon is capped.** A rung names a *direction*
+and a position along the band; how far to reach on a given gap is the agent's
+call. What `low` or `high` should actually reach for is being worked out in use —
+by the agent using the product — while the benchmark is built. So there is no
+number to keep in sync, and nothing to disagree about. Three tables used to
+disagree (plugin code said `high 1 · xhigh 3 · max 5`); the disagreement is
+resolved by there being no numbers.
 
-**PROVISIONAL until the Hell/Heaven benchmark lands.** Every surface that
-renders one of these numbers says so.
+`packages/claude-zero/scripts/generate-ladder.ts` emits the line into the
+plugin's `data/ladder.json`. The site is a separate surface and is **out of
+scope** for this work.
 
-### `off` cuts *automatic* summoning
+### `zero` cuts *automatic* summoning
 
-`/skill-zero` sets the rung to `off`, which cuts **automatic** summoning.
+`/skill-zero` sets the rung to `zero`, which cuts **automatic** summoning.
 
-> **Naming note.** The *rung* is spelled `off`; `zero` is the *band* it sits in
-> (and the surface's name). N13, `packages/core`, `data/ladder.json` and the site
-> all spell the rung `off`, so the implementation follows them.
+> **Naming note.** The bottom rung, its band and its surface are all spelled
+> `zero`. The launcher's boot dial follows: `claude-zero --level zero`. The
+> earlier `off` spelling is retired — one word for one thing.
 Manual `/summon` still works — that is the product floor per N13 ("ships
 `/summon` by default, with none of the choosing automated").
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
@@ -93,7 +98,7 @@ userConfig (`automatic` | `all`, default `automatic`) sets the default.
 something the tool enforces. Hard enforcement needs server-side session state —
 filed as a follow-up, not faked.
 
-`claude-zero --level off` remains the boot-time all-skills-off launcher, and
+`claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
 **cannot be evicted mid-session** (D12, probed).
 
@@ -101,8 +106,10 @@ is the only thing that gives a genuinely clean start: already-loaded skills
 
 One server, `skill-summon`, one tool:
 
-- **`summon`** — input `{ query: string, limit?: 1..5 }`. Out-of-range `limit`
-  is **refused, never clamped**. Materialises the whole skill directory
+- **`summon`** — input `{ query: string, limit?: positive integer }`. **There is
+  no upper cap** — nothing assigns a ceiling, so the engine must not invent one.
+  A malformed `limit` (zero, negative, fractional) is **refused, never clamped**;
+  clamping would answer a question nobody asked. Materialises the whole skill directory
   (`SKILL.md` plus `reference/`, `scripts/`, fixtures) into a session-locked
   temp dir and returns a printable card per skill, plus the honest ranking
   disclosure.
@@ -115,10 +122,11 @@ dropping them degrades summon quality is a benchmark question, filed upstream.
 Written verbatim into the armed output of `/skill-heaven`, `/skill-hell` and
 `/skill-ultra`:
 
-> On a real capability gap — never preemptively — call the `summon` tool with
-> `limit: <rung slots>`. Print the returned card **verbatim** before using
-> anything from it, read the `SKILL.md` at the card's path, and follow it. The
-> card is the listing entry, not the skill body. The lane stays armed.
+> On a real capability gap — never preemptively — call the `summon` tool, with a
+> depth you judge the gap needs while converging/exploring. Print the returned
+> card **verbatim** before using anything from it, read the `SKILL.md` at the
+> card's path, and follow it. The card is the listing entry, not the skill body.
+> The lane stays armed.
 
 The card is the disclosure: it names the skill being summoned and carries the
 ranking disclosure with it.
@@ -180,12 +188,13 @@ Stated here so no surface implies otherwise:
 
 - **Heaven/Hell stamps.** Routing falls back to relevance ranking, and no
   surface may present stamp-gated routing as running.
-- **The entropy benchmark.** Every per-rung count is PROVISIONAL until it lands.
-- **Hard enforcement of the `off` cut.** It is a standing instruction, not a
+- **The entropy benchmark.** What each rung should reach for is being worked
+  out in use until it lands.
+- **Hard enforcement of the `zero` cut.** It is a standing instruction, not a
   server-side gate.
 - **Ultra controller heuristics.** At `ultra` the agent picks direction and
   depth unaided.
-- **Relevance-band filtering.** The engine takes a `limit`, not a score band.
+- **Relevance-band filtering.** The engine takes a depth, not a score band.
 - **The five surfaces on the non-Claude doors.** Claude Code first.
 
 ## Authority

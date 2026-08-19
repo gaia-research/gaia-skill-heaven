@@ -16,27 +16,28 @@ harness's channel, not this manifest. Two layers:
   TypeScript ESM.
 - **`packages/claude-zero`**, **`packages/pi-zero`** — the per-harness
   **doors** (the user-facing installables). `claude-zero` is the flagship
-  (WS4); `pi-zero` is the vanguard (WS5). Every door defaults to the `off`
+  (WS4); `pi-zero` is the vanguard (WS5). Every door defaults to the `zero`
   ladder rung; `native` is explicit. Per N9 the marketing weight is on
   the doors; the engine is the research instrument they are built on.
 
 **Core product model — one mechanic, one line, four surfaces (N13).** The
 user-facing mechanic is **`/summon`** — one skill into context, one session,
 nothing installed — present in every implementation, at every rung, on every
-door. There is **one ladder — one line** — `off · low · med · high · xhigh ·
+door. There is **one ladder — one line** — `zero · low · med · high · xhigh ·
 max · ultra`, and the four surfaces are contiguous **bands** on it, read from
-the current rung. **`off` is Skill Zero** (the product floor — ships `/summon`
+the current rung. **`zero` is Skill Zero** (the product floor — ships `/summon`
 by default, none of the choosing automated). **`low · med` is `/skill-heaven`
 (converge)**; **`high · xhigh · max` is `/skill-hell` (explore)** — two
 directions of the same summon over **one shared MCP**, where the rung sets
-**how many skills the agent may auto-summon per capability gap**. **`ultra` is
+**which direction the agent summons in, and how far along that band it sits**. **`ultra` is
 Skill Ultra**, the **crown of the one line**: the controller that picks
 direction and depth per gap, rendered as the seventh selectable rung (it has
 no sub-ladder because it *is* the top of the one line). A session sits at
 exactly one rung — there is no separate Heaven and Hell position held at once.
-Per-rung counts and per-band defaults are **PROVISIONAL** until the benchmark
-lands (working mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`;
-Heaven's representative rung `low`, Hell's `high`). Up the line
+**No rung carries a count and no summon is capped** — a rung names a direction
+and a position along the band, and how far to reach on a given gap is the
+agent's call, worked out in use while the benchmark is built. Per-band defaults
+are **PROVISIONAL**: Heaven's representative rung is `low`, Hell's is `high`. Up the line
 quality and cost rise together — **Skill Hell routes summons through gaia mcp
 as a mixture-of-agents for skills** (D5), so more summoned skills mean more
 experts in context, better until it isn't. The benchmark shapes the **entropy
@@ -162,15 +163,16 @@ happens *inside* one of those two, it does not add a third.
 - **One mechanic, one line, four surfaces (founder ruling N13, `docs/LADDER-FLOW.md`).**
   `/summon` — one skill into context, one session, nothing installed — is
   present on every door at every rung. There is one ladder — one line —
-  `off · low · med · high · xhigh · max · ultra`, and the four surfaces are
-  contiguous bands read from the rung: `off` = Skill Zero (ships `/summon` by
+  `zero · low · med · high · xhigh · max · ultra`, and the four surfaces are
+  contiguous bands read from the rung: `zero` = Skill Zero (ships `/summon` by
   default as the product floor), `low · med` = `/skill-heaven` (converge),
   `high · xhigh · max` = `/skill-hell` (explore) — two directions of the same
   summon over one shared MCP — and `ultra` = Skill Ultra, the crown rung: the
   controller that picks direction + depth per gap, rendered as the seventh
   selectable rung with no sub-ladder of its own. A session sits at exactly one
-  rung. PROVISIONAL until the benchmark lands (working mapping `off 0 · low 1
-  · med 2 · high 3 · xhigh 4 · max 5`; Heaven's rung `low`, Hell's `high`).
+  rung. No rung carries a count and no summon is capped; what each rung
+  reaches for is worked out in use until the benchmark lands (Heaven's
+  representative rung `low`, Hell's `high`).
   Nothing on the line refuses — Hell is not gated, locked, or sealed at any
   rung, and neither is Ultra; N13 ratified all four surfaces, so what is
   outstanding is implementation, not permission.

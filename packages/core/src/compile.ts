@@ -74,10 +74,10 @@ export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
 // The user-facing ladder. `native` remains an explicit escape hatch through
 // LEVEL_ALIASES, but is not a rung: it means "leave my setup untouched".
-export const LADDER_LEVELS = ["off", "low", "med", "high", "xhigh", "max", "ultra"] as const;
-export const HEAVEN_LEVELS = ["off", "low", "med"] as const;
+export const LADDER_LEVELS = ["zero", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export const HEAVEN_LEVELS = ["zero", "low", "med"] as const;
 export const LEVEL_ALIASES: Record<string, Posture> = {
-  off: "product-floor",
+  zero: "product-floor",
   low: "curated",
   med: "native",
   native: "native",
@@ -92,39 +92,26 @@ export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
 // Heaven position and a Hell position at once.
 //
 // This is a DIFFERENT DIAL from the launcher's boot dial above. `HEAVEN_LEVELS`
-// / `LEVEL_ALIASES` map `off|low|med` onto boot POSTURES: how much of the user's
+// / `LEVEL_ALIASES` map `zero|low|med` onto boot POSTURES: how much of the user's
 // ambient setup is withheld at launch, decidable only at boot (D12). The line
 // below is additive: how freely skills are SUMMONED IN on top of whatever the
 // session booted at. LADDER-FLOW is explicit that the shared `low|med` spellings
 // are "the collision of names is historical" — do not fuse the two.
 //
-// THIS IS THE SINGLE SOURCE OF TRUTH for per-rung slot counts. Three tables
-// used to disagree (plugin code said high 1 · xhigh 3 · max 5). Everything
-// downstream now reads from here: the plugin's data/ladder.json is generated
-// from it, and packages/site/src/product.ts is held to it by a parity test.
+// THERE ARE NO PER-RUNG NUMBERS. Nothing assigns a count to a rung and nothing
+// caps a summon: how deep `low` or `high` reaches is the agent's call, worked
+// out in use while the benchmark is being built. Three tables used to disagree
+// about counts (plugin code said high 1 · xhigh 3 · max 5); the disagreement is
+// resolved by there being nothing to disagree about. What a rung DOES carry is
+// its band — the direction — and that is what downstream reads from here.
 // ---------------------------------------------------------------------------
 
 export const BANDS = ["zero", "heaven", "hell", "ultra"] as const;
 export type Band = (typeof BANDS)[number];
 
-/** Auto-summons permitted per capability gap. `null` = the crown rung, whose
- * depth is the controller's call rather than a fixed count.
- *
- * PROVISIONAL until the Hell/Heaven benchmark lands. Every surface that renders
- * one of these numbers must say so — see LADDER_WIP. */
-export const RUNG_SLOTS: Record<(typeof LADDER_LEVELS)[number], number | null> = {
-  off: 0,
-  low: 1,
-  med: 2,
-  high: 3,
-  xhigh: 4,
-  max: 5,
-  ultra: null,
-};
-
 /** Which band a rung belongs to. The surface is READ from the rung (N13). */
 export const RUNG_BANDS: Record<(typeof LADDER_LEVELS)[number], Band> = {
-  off: "zero",
+  zero: "zero",
   low: "heaven",
   med: "heaven",
   high: "hell",
@@ -145,15 +132,15 @@ export interface BandInfo {
 }
 
 export const BAND_INFO: Record<Band, BandInfo> = {
-  zero: { surface: "Skill Zero", command: "/skill-zero", defaultRung: "off", direction: "floor" },
+  zero: { surface: "Skill Zero", command: "/skill-zero", defaultRung: "zero", direction: "floor" },
   heaven: { surface: "Skill Heaven", command: "/skill-heaven", defaultRung: "low", direction: "converge" },
   hell: { surface: "Skill Hell", command: "/skill-hell", defaultRung: "high", direction: "explore" },
   ultra: { surface: "Skill Ultra", command: "/skill-ultra", defaultRung: "ultra", direction: "controller" },
 };
 
-/** The mark every rendering of a per-rung count must carry. */
+/** The mark every rendering of the line must carry. */
 export const LADDER_WIP =
-  "WIP \u00b7 PROVISIONAL \u2014 per-rung counts do not land until the benchmark does.";
+  "WIP \u00b7 PROVISIONAL \u2014 what each rung means is being worked out against the benchmark.";
 
 /** Rungs that are armed live, in-session, and have no boot-posture mapping.
  * They do not refuse: `ultra` is ratified (N13). They are simply a different

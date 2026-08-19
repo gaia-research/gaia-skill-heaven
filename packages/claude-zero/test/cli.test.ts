@@ -67,11 +67,11 @@ describe("parseArgs", () => {
     });
   });
   it("captures --print, --posture, --level", () => {
-    expect(parseArgs(["--print", "--posture", "native", "--level", "off"])).toMatchObject({
+    expect(parseArgs(["--print", "--posture", "native", "--level", "zero"])).toMatchObject({
       print: true,
       posture: "native",
       postureProvided: true,
-      level: "off",
+      level: "zero",
     });
   });
   it("collects --skill repeatably, and does not leak it to claude", () => {
@@ -116,11 +116,11 @@ describe("run", () => {
     expect(silenceStderr(() => run(["--posture", "nonsense"]))).toBe(2);
   });
 
-  it("resolves --level off to the product floor and rejects contradictions", () => {
-    const { code, out } = captureStdout(() => run(["--level", "off", "--print"]));
+  it("resolves --level zero to the product floor and rejects contradictions", () => {
+    const { code, out } = captureStdout(() => run(["--level", "zero", "--print"]));
     expect(code).toBe(0);
     expect(JSON.parse(out).posture).toBe("product-floor");
-    expect(silenceStderr(() => run(["--posture", "floor", "--level", "off"]))).toBe(2);
+    expect(silenceStderr(() => run(["--posture", "floor", "--level", "zero"]))).toBe(2);
   });
 
   it("--print composes a real curated plan: T9 argv, the env knob, and an fsPlan", () => {

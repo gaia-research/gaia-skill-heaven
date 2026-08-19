@@ -8,7 +8,7 @@ import {
   renderArmed,
   renderHellChooser,
   renderSummonedCard,
-  rungBudgets,
+  HELL_RUNGS,
 } from "../src/hell-presentation.js";
 import type {
   ExtensionAPI,
@@ -260,7 +260,7 @@ export default function piZeroExtension(pi: ExtensionAPI) {
         );
         return;
       }
-      if (input in rungBudgets) {
+      if ((HELL_RUNGS as readonly string[]).includes(input)) {
         armedLevel = input as HellLevel;
         const rendered = renderArmed(armedLevel);
         pi.appendEntry(outputEntry, { content: rendered, widgetLines: rendered.split("\n") });
@@ -286,7 +286,10 @@ export default function piZeroExtension(pi: ExtensionAPI) {
 
       const result = await pi.exec(
         engine.command,
-        [...engine.args, "summon", intent, "--limit", String(rungBudgets[armedLevel].count), "--json"],
+        // No --limit: nothing assigns a count to a rung and nothing caps a
+        // summon. The engine's own default applies until the benchmark says
+        // what a rung should reach for.
+        [...engine.args, "summon", intent, "--json"],
         { timeout: summonTimeoutMs },
       );
       if (result.code !== 0) {
@@ -348,5 +351,5 @@ export default function piZeroExtension(pi: ExtensionAPI) {
   });
 }
 
-export { renderArmed, renderHellChooser, renderSummonedCard, rungBudgets };
+export { renderArmed, renderHellChooser, renderSummonedCard, HELL_RUNGS };
 export type { HellLevel, SummonedSkill };

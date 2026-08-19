@@ -100,7 +100,7 @@ function helpText(): string {
   return [
     "Usage: claude-zero [--level <level>] [options] [-- <claude args...>]",
     "",
-    `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
+    `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: zero)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
     "                     ultra is the crown rung, armed live with /skill-ultra",
     "  --level native     Explicitly keep the user's native setup",

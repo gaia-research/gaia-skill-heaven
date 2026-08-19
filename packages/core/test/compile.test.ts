@@ -261,8 +261,8 @@ describe("cli level lane", () => {
   it("defaults to floor", () => {
     expect(parseArgs([]).posture).toBe("floor");
   });
-  it("maps the complete Heaven half: off → product-floor, low → curated, med → native", () => {
-    expect(parseArgs(["--level", "off"]).posture).toBe("product-floor");
+  it("maps the complete Heaven half: zero → product-floor, low → curated, med → native", () => {
+    expect(parseArgs(["--level", "zero"]).posture).toBe("product-floor");
     expect(parseArgs(["--level", "low"]).posture).toBe("curated");
     expect(parseArgs(["--level", "med"]).posture).toBe("native");
   });
@@ -286,9 +286,9 @@ describe("cli level lane", () => {
     }
   });
   it("contradiction between --posture and --level errors", () => {
-    expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
-    expect(() => parseArgs(["--posture", "floor", "--level", "off"])).toThrow(/contradicts/);
-    expect(parseArgs(["--posture", "product-floor", "--level", "off"]).posture).toBe("product-floor");
+    expect(() => parseArgs(["--posture", "native", "--level", "zero"])).toThrow(/contradicts/);
+    expect(() => parseArgs(["--posture", "floor", "--level", "zero"])).toThrow(/contradicts/);
+    expect(parseArgs(["--posture", "product-floor", "--level", "zero"]).posture).toBe("product-floor");
   });
   it("--record demands headless + ids", () => {
     expect(() => parseArgs(["--record"])).toThrow(/headless/);
