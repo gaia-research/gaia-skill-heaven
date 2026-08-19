@@ -141,9 +141,10 @@ packages/<name>-heaven/
 ```
 
 `src/cli.ts` supports: `--posture floor|product-floor|curated|native`,
-`--level off|low|med` (`med` maps to native; `high|xhigh|max` route users to
-live `/skill-hell`; `ultra` refuses as unratified — **match an existing door's
-wording and exit code exactly**), `--skill <path>` repeatable, `--model`, `--print`, and `--`
+`--level off|low|med` (`med` maps to native; the summon-line rungs
+`high|xhigh|max|ultra` route users to `/skill-hell <rung>` or `/skill-ultra` —
+a redirect, never a gate, and **match an existing door's wording and exit code
+exactly**), `--skill <path>` repeatable, `--model`, `--print`, and `--`
 passthrough.
 
 The compile route goes in `packages/core/src/compile.ts`: add the harness to `HARNESSES`, add a

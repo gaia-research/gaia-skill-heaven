@@ -74,16 +74,95 @@ export const DEFAULT_CLAUDE_MECHANISM: Mechanism = "plugin-dir";
 
 // The user-facing ladder. `native` remains an explicit escape hatch through
 // LEVEL_ALIASES, but is not a rung: it means "leave my setup untouched".
-export const LADDER_LEVELS = ["off", "low", "med", "high", "xhigh", "max", "ultra"] as const;
-export const HEAVEN_LEVELS = ["off", "low", "med"] as const;
+export const LADDER_LEVELS = ["zero", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export const HEAVEN_LEVELS = ["zero", "low", "med"] as const;
 export const LEVEL_ALIASES: Record<string, Posture> = {
-  off: "product-floor",
+  zero: "product-floor",
   low: "curated",
   med: "native",
   native: "native",
 };
 export const HELL_LEVELS = ["high", "xhigh", "max"] as const;
-export const UNRATIFIED_LEVELS = ["ultra"] as const;
+
+// ---------------------------------------------------------------------------
+// THE SUMMON LINE (founder ruling N13, docs/LADDER-FLOW.md)
+//
+// WHAT THIS LINE MEASURES: skill entropy — how much skill variety and volume
+// enters a session. `LADDER_LEVELS` are entropy readings, not settings:
+// `zero` is zero skills (zero skill entropy, and why the floor is spelled
+// `zero` rather than `off` — `off` named a switch position, `zero` names a
+// quantity on the same scale as everything above it); `low → med → high →
+// xhigh → max` are rising skill entropy; `ultra` picks the entropy per gap —
+// direction and depth both — rather than reading one fixed value, which is
+// why it sits at the top of this same line instead of beside it. Full
+// argument, not restated here: docs/LADDER-FLOW.md, "What the ladder
+// measures — skill entropy".
+//
+// One ladder, one line. The four surfaces are contiguous BANDS on it, read from
+// the current rung — a session sits at exactly one rung and does not hold a
+// Heaven position and a Hell position at once. Heaven (`low·med`) is the
+// lower-entropy, converging direction; Hell (`high·xhigh·max`) is the
+// higher-entropy, exploring direction — two directions along one quantity,
+// which is what makes them one line and not two products.
+//
+// This is a DIFFERENT DIAL from the launcher's boot dial above. `HEAVEN_LEVELS`
+// / `LEVEL_ALIASES` map `zero|low|med` onto boot POSTURES: how much of the user's
+// ambient setup is withheld at launch, decidable only at boot (D12). The line
+// below is additive: how freely skills are SUMMONED IN on top of whatever the
+// session booted at. LADDER-FLOW is explicit that the shared `low|med` spellings
+// are "the collision of names is historical" — do not fuse the two.
+//
+// THERE ARE NO PER-RUNG NUMBERS. Nothing assigns a count to a rung and nothing
+// caps a summon: how deep `low` or `high` reaches is the agent's call, worked
+// out in use while the benchmark is being built. Three tables used to disagree
+// about counts (plugin code said high 1 · xhigh 3 · max 5); the disagreement is
+// resolved by there being nothing to disagree about. What a rung DOES carry is
+// its band — the direction — and that is what downstream reads from here.
+// Skill entropy is a product concept, not an information-theoretic one: no
+// formula, no unit, no threshold, no number is computed anywhere in this file
+// or downstream of it, and nothing should start.
+// ---------------------------------------------------------------------------
+
+export const BANDS = ["zero", "heaven", "hell", "ultra"] as const;
+export type Band = (typeof BANDS)[number];
+
+/** Which band a rung belongs to. The surface is READ from the rung (N13). */
+export const RUNG_BANDS: Record<(typeof LADDER_LEVELS)[number], Band> = {
+  zero: "zero",
+  low: "heaven",
+  med: "heaven",
+  high: "hell",
+  xhigh: "hell",
+  max: "hell",
+  ultra: "ultra",
+};
+
+export interface BandInfo {
+  /** the surface's product name */
+  surface: string;
+  /** the slash command that opens on this band */
+  command: string;
+  /** the rung a bare invocation of that command opens on */
+  defaultRung: (typeof LADDER_LEVELS)[number];
+  /** the one-word direction: what climbing inside this band does */
+  direction: string;
+}
+
+export const BAND_INFO: Record<Band, BandInfo> = {
+  zero: { surface: "Skill Zero", command: "/skill-zero", defaultRung: "zero", direction: "floor" },
+  heaven: { surface: "Skill Heaven", command: "/skill-heaven", defaultRung: "low", direction: "converge" },
+  hell: { surface: "Skill Hell", command: "/skill-hell", defaultRung: "high", direction: "explore" },
+  ultra: { surface: "Skill Ultra", command: "/skill-ultra", defaultRung: "ultra", direction: "controller" },
+};
+
+/** The mark every rendering of the line must carry. */
+export const LADDER_WIP =
+  "WIP \u00b7 PROVISIONAL \u2014 what each rung means is being worked out against the benchmark.";
+
+/** Rungs that are armed live, in-session, and have no boot-posture mapping.
+ * They do not refuse: `ultra` is ratified (N13). They are simply a different
+ * dial from `--level`, and saying so is the honest answer to `--level ultra`. */
+export const SUMMON_ONLY_LEVELS = ["high", "xhigh", "max", "ultra"] as const;
 
 export type FsOp =
   | { kind: "write"; path: string; contents: string }

@@ -19,6 +19,18 @@ jobs:
       - run: npm -w @gaia-skill-heaven/site run build
       - run: npm test
 
+      # PR4: the summon MCP server is bundled and its output is COMMITTED
+      # (plugins/skill-heaven/mcp/skill-summon.mjs), so an installed user needs
+      # no npx, no sibling checkout, no external binary. esbuild output can
+      # vary by version, so esbuild is pinned to an exact version (no `^`) in
+      # root package.json — this rebuild is deterministic given that pin. A
+      # diff here means someone edited the source without rebuilding, or
+      # committed a bundle produced by a different esbuild version.
+      - name: MCP bundle is up to date
+        run: |
+          npm run build:mcp
+          git diff --exit-code -- plugins/skill-heaven/mcp/
+
       # The plugin is the shipped artifact: validate its manifest with the real
       # Claude Code CLI, not just our own tests. `plugin validate` is a static
       # manifest check — it starts no session and needs no credentials.

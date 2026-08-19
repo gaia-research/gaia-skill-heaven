@@ -14,7 +14,7 @@
 import {
   compile,
   LEVEL_ALIASES,
-  UNRATIFIED_LEVELS,
+  SUMMON_ONLY_LEVELS,
   resolveSkill,
   type CompileResult,
   type FsOp,
@@ -22,14 +22,20 @@ import {
   type ResolvedSkill,
 } from "skill-zero";
 
-export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
+// The rungs that are armed LIVE, in-session, and have no boot-posture mapping.
+// They do not refuse: ultra is ratified (N13) and nothing on the line refuses.
+// They are simply a different dial from --level, and saying so is the honest
+// answer — the launcher owns the subtractive boot dial, /skill-hell and
+// /skill-ultra own the additive summon line.
+export const SUMMON_ONLY: ReadonlySet<string> = new Set(SUMMON_ONLY_LEVELS);
 
-/** Refuse only values with no ratified product meaning. */
+/** A summon-line rung is not a boot posture. This is a redirect, not a gate. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && UNRATIFIED.has(level)) {
+  if (level && SUMMON_ONLY.has(level)) {
+    const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
-      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so pi-zero refuses rather than guessing.`,
+      `level "${level}" is a live summon rung, not a boot posture. ` +
+        `Launch pi-zero at zero|low|med, then arm it in-session with ${arm}.`,
     );
   }
 }
@@ -42,7 +48,7 @@ export function resolveLevelAlias(level: string): Posture | undefined {
 }
 
 export interface LaunchOptions {
-  /** default "product-floor" (`--level off`) */
+  /** default "product-floor" (`--level zero`) */
   posture?: Posture;
   /** --skill <path>, repeatable. Curated only; core rejects it elsewhere. */
   skillPaths?: string[];

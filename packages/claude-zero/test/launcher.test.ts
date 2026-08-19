@@ -30,22 +30,33 @@ afterAll(() => {
 });
 
 describe("assertLevelAllowed", () => {
-  it("allows every ratified Heaven and Hell rung", () => {
-    for (const level of ["off", "low", "med", "high", "xhigh", "max"]) {
+  it("allows every boot-dial rung", () => {
+    for (const level of ["zero", "low", "med", "native"]) {
       expect(() => assertLevelAllowed(level)).not.toThrow();
     }
     expect(() => assertLevelAllowed(undefined)).not.toThrow();
   });
 
-  it("refuses ultra as unratified, never as P2-gated", () => {
-    let message = "";
-    try {
-      assertLevelAllowed("ultra");
-    } catch (error) {
-      message = (error as Error).message;
+  // N13: nothing on the line refuses. `ultra` is the crown rung, and the upper
+  // band as a whole is armed LIVE — a different dial from the launcher's boot
+  // posture. So this guard is a REDIRECT, and it must not read as a gate.
+  it("redirects every summon-line rung to the command that arms it, never as a gate", () => {
+    for (const [level, arm] of [
+      ["high", "/skill-hell high"],
+      ["xhigh", "/skill-hell xhigh"],
+      ["max", "/skill-hell max"],
+      ["ultra", "/skill-ultra"],
+    ] as const) {
+      let message = "";
+      try {
+        assertLevelAllowed(level);
+      } catch (error) {
+        message = (error as Error).message;
+      }
+      expect(message, `${level} produced no redirect`).toContain("not a boot posture");
+      expect(message).toContain(arm);
+      expect(message).not.toMatch(/UNRATIFIED|P2|gated|locked/i);
     }
-    expect(message).toContain("UNRATIFIED");
-    expect(message).not.toMatch(/P2|gated/i);
   });
 });
 

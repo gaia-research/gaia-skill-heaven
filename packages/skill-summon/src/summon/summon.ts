@@ -20,7 +20,10 @@ import { reapSessions } from "./session.js";
 import type { InstalledSkill, SummonSession } from "./session.js";
 
 const DEFAULT_LIMIT = 1;
-const MAX_LIMIT = 5;
+// There is NO upper cap. How many skills a gap warrants is the agent's call —
+// nobody assigned a ceiling, and inventing one would let the engine refuse a
+// depth the product never ruled out. `limit` must still be a positive integer;
+// that is a well-formedness check, not a policy.
 
 export type SummonOptions = {
   query: string;
@@ -90,9 +93,9 @@ export async function summon(
   if (trimmedQuery.length === 0) {
     throw new Error("Summon query must not be empty.");
   }
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
+  if (!Number.isInteger(limit) || limit < 1) {
     throw new Error(
-      `Summon count must be an integer between 1 and ${MAX_LIMIT}, got: ${limit}`,
+      `Summon count must be a positive integer, got: ${limit}`,
     );
   }
 
