@@ -12,7 +12,7 @@ Skill Heaven is the runtime layer for AI coding harnesses (**Claude Code, Codex,
 - **Hell** — the *exploratory* band (`high · xhigh · max`): reach out into the evidenced skill world for more capability when you need it (`skill-hell`).
 - **Ultra** — the crown rung (`ultra`): the controller that picks a direction and depth for you per gap, with no sub-ladder of its own.
 
-It is **one ladder — one line** — `off · low · med · high · xhigh · max · ultra` — and the four surfaces are contiguous **bands** on it, read from the rung you sit at. The rung sets how many skills the agent may auto-summon per capability gap. Counts and defaults are **PROVISIONAL** until the benchmark lands (working mapping: `off 0 · low 1 · med 2 · high 3 · xhigh 4 · max 5`; Heaven's rung `low`, Hell's `high`).
+It is **one ladder — one line** — `zero · low · med · high · xhigh · max · ultra` — and the four surfaces are contiguous **bands** on it, read from the rung you sit at. A rung names a direction and a position along that band — it carries no count, and no summon is capped; how far to reach on a given gap is the agent's call. What's **PROVISIONAL** is only the representative rung per band, until the benchmark lands: Heaven's is `low`, Hell's is `high`.
 
 Skill Zero is the part you can use right now. Heaven, Hell, and Ultra are the summon directions of the same runtime — the behavior research (the **HH Index**) is still in the works.
 

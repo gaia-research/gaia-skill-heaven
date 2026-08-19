@@ -37,45 +37,46 @@ skills alone. Marcus's `.cursorrules` observation is exactly this: cursor's quir
 
 ### 1. The ladder
 
-`off · low · med · high · xhigh · max · ultra`
+`zero · low · med · high · xhigh · max · ultra`
 
 **Skill- and context-scoped.** It is *not* the harness's reasoning dial — `--thinking`,
 `model_reasoning_effort`, `--reasoning` are model-scoped and share level names by pure
 coincidence. Hold reasoning constant across arms; it is a control variable, never the thing
 under test.
 
-- `off` → `product-floor` — the nearest zero a user can actually launch at, door still open
+- `zero` → `product-floor` — the nearest zero a user can actually launch at, door still open
 - `low` → `curated` — suppress everything, readmit exactly these
 - `med` → `native` — the user's setup untouched; top of Heaven
 - `high` → Hell's representative rung; the default the explore band opens on
 - `xhigh` · `max` → broader explore rungs
 - `ultra` → the crown rung: the controller that picks direction + depth per gap
 
-Per-rung slot counts live in one place — `RUNG_SLOTS` in
-`packages/core/src/compile.ts` (`off 0 · low 1 · med 2 · high 3 · xhigh 4 ·
-max 5`, `ultra` = controller) — and are **PROVISIONAL** until the benchmark
-lands.
+A rung names a direction and a position along its band. **No rung carries a
+count and no summon is capped** — how far to reach on a given gap is the
+agent's call, worked out in use while the benchmark is built. What stays
+**PROVISIONAL** is only the representative rung per band: Heaven's is `low`,
+Hell's is `high`.
 
 The ladder is the primary product interface on every door:
 
 ```bash
-<door>-heaven                         # defaults to --level off
-<door>-heaven --level off
+<door>-heaven                         # defaults to --level zero
+<door>-heaven --level zero
 <door>-heaven --level low --skill /path/to/skill
 <door>-heaven --level native          # explicitly leave the user's setup untouched
 <door>-heaven --help                  # ladder first; postures are compatibility vocabulary
 ```
 
-Launchers own the current subtractive choices `off|low|med`. The bundled
+Launchers own the current subtractive choices `zero|low|med`. The bundled
 summon engine owns the usable additive levels: `high` is the default,
 while `xhigh` and `max` broaden the requested summoning behavior. This is a
-product mapping, but not a fixed per-rung count, score-band, HH score, or
+product mapping, not a fixed per-rung count, score-band, HH score, or
 routing-eligibility contract. `ultra` is **ratified** (N13) and refuses
 nowhere. `--posture` remains
 available for benchmark and compatibility invocations, but is not the product's
 lead vocabulary.
 
-A bare launcher selects `off`/`product-floor`. Execution support is
+A bare launcher selects `zero`/`product-floor`. Execution support is
 harness- and version-specific: consult each door's probe rather than inferring a
 universal live route from the five source-built door commands. `--print` emits
 the plan and its caveats; no door silently falls back to `native`.

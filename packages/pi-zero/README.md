@@ -15,7 +15,7 @@ The pi door to Skill Zero under the Skill Heaven umbrella: a boot-time launcher 
 ## Launch
 
 ```bash
-pi-zero                                  # off/product-floor (default)
+pi-zero                                  # zero/product-floor (default)
 pi-zero --level med                      # pi untouched (= native)
 pi-zero --level low --skill /path/to/skill
 pi-zero --print
@@ -32,7 +32,7 @@ disposable session directory.
 
 ### `/skill-zero`
 
-Owns only `off · low · med`. Without a launcher manifest it gives an exact
+Owns only `zero · low · med`. Without a launcher manifest it gives an exact
 `pi-zero` command and says it changed nothing. Heaven is a boot-time choice.
 
 ### `/skill-hell`

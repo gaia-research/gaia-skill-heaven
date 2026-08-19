@@ -26,7 +26,7 @@ than npm-published. See the root README for PATH, update, and uninstall details.
 ## Launch
 
 ```bash
-claude-zero                                  # off/product-floor (default)
+claude-zero                                  # zero/product-floor (default)
 claude-zero --level med                      # Claude untouched (= native)
 claude-zero --level low --skill ./my-skill  # curated clean room
 claude-zero --print                          # inspect; do not spawn
@@ -45,7 +45,7 @@ edits `~/.claude`, project skills, or source skill directories (P3).
 
 ## `/skill-zero`: the boot-time half
 
-`/skill-zero` shows only `off · low · med`; `med` is native and unlocked.
+`/skill-zero` shows only `zero · low · med`; `med` is native and unlocked.
 Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-zero`
 command and explicitly says it changed nothing.
@@ -84,7 +84,7 @@ invocation doses remain separate.
 
 ## Boundaries
 
-- Heaven: `off|low|med`, boot-time launcher choices.
+- Heaven: `zero|low|med`, boot-time launcher choices.
 - Hell: `high|xhigh|max`, `high` is the default. `ultra` is the crown rung,
   reached with `/skill-ultra`. Nothing on the line refuses (N13).
 - The plugin's MCP exposes exactly one tool, `summon`.
