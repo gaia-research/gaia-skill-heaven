@@ -18,7 +18,7 @@
 import { join } from "node:path";
 import {
   compile,
-  UNRATIFIED_LEVELS,
+  SUMMON_ONLY_LEVELS,
   resolveSkill,
   type FsOp,
   type Posture,
@@ -29,7 +29,12 @@ import type { ProfileManifest } from "./statusline.js";
 
 // Ultra has no ratified product meaning. Hell rungs are live summon budgets,
 // not launcher postures; the CLI routes users to /skill-hell for those.
-export const UNRATIFIED: ReadonlySet<string> = new Set(UNRATIFIED_LEVELS);
+// The rungs that are armed LIVE, in-session, and have no boot-posture mapping.
+// They do not refuse: ultra is ratified (N13) and nothing on the line refuses.
+// They are simply a different dial from --level, and saying so is the honest
+// answer — the launcher owns the subtractive boot dial, /skill-hell and
+// /skill-ultra own the additive summon line.
+export const SUMMON_ONLY: ReadonlySet<string> = new Set(SUMMON_ONLY_LEVELS);
 
 // KC6 (Issue #12): a refusal must say WHICH of two unlike things it is —
 // withheld by policy (a key exists, and could turn) or incapable in the
@@ -104,12 +109,13 @@ export interface LaunchPlan {
   notes: string[];
 }
 
-/** Refuse only values with no ratified product meaning. */
+/** A summon-line rung is not a boot posture. This is a redirect, not a gate. */
 export function assertLevelAllowed(level: string | undefined): void {
-  if (level && UNRATIFIED.has(level)) {
+  if (level && SUMMON_ONLY.has(level)) {
+    const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
-      `level "${level}" is UNRATIFIED. Ultra has no approved ` +
-        `product mapping to compose, so claude-zero refuses rather than guessing.`,
+      `level "${level}" is a live summon rung, not a boot posture. ` +
+        `Launch claude-zero at off|low|med, then arm it in-session with ${arm}.`,
     );
   }
 }

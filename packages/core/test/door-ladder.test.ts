@@ -65,14 +65,21 @@ describe("ladder-first door contract", () => {
       }
     });
 
-    it(`${name} routes Hell live and distinguishes unratified ultra`, () => {
-      const hell = captureStderr(() => run(["--level", "max", "--print"]));
-      expect(hell.code).toBe(2);
-      expect(hell.err).toContain("live Hell summon budget");
-      expect(hell.err).toContain("/skill-hell max");
-      expect(hell.err).not.toMatch(/P2|gated|policy/i);
-
-      expect(() => run(["--level", "ultra", "--print"])).toThrow(/UNRATIFIED/);
+    // N13: nothing on the line refuses. Every rung above the boot dial — ultra
+    // included — gets the SAME answer: it is armed live, here is the command.
+    it(`${name} routes every summon rung live, ultra included, and never as a gate`, () => {
+      for (const [level, arm] of [
+        ["high", "/skill-hell high"],
+        ["xhigh", "/skill-hell xhigh"],
+        ["max", "/skill-hell max"],
+        ["ultra", "/skill-ultra"],
+      ] as const) {
+        const routed = captureStderr(() => run(["--level", level, "--print"]));
+        expect(routed.code, `${name} --level ${level}`).toBe(2);
+        expect(routed.err).toContain("live summon rung, not a boot posture");
+        expect(routed.err).toContain(arm);
+        expect(routed.err).not.toMatch(/UNRATIFIED|P2|gated|policy/i);
+      }
     });
   }
 });

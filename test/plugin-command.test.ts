@@ -22,8 +22,22 @@ import {
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(REPO, "plugins", "skill-heaven");
-const commandPath = join(PLUGIN, "commands", "skill-zero.md");
-const command = readFileSync(commandPath, "utf-8");
+
+/** One mechanic, five entry points (docs/AGENT-PLUGIN.md). Each rung command
+ * renders the SAME line through the SAME renderer; only the surface argument
+ * differs. `summon` is the manual path and is present at every rung. */
+const SURFACES = [
+  { file: "skill-zero.md", mode: "zero" },
+  { file: "skill-heaven.md", mode: "heaven" },
+  { file: "skill-hell.md", mode: "hell" },
+  { file: "skill-ultra.md", mode: "ultra" },
+  { file: "summon.md", mode: "summon" },
+] as const;
+
+const commands = new Map(
+  SURFACES.map((s) => [s.file, readFileSync(join(PLUGIN, "commands", s.file), "utf-8")] as const),
+);
+const command = commands.get("skill-zero.md")!;
 
 /** gate (c): the priced budget for /skill-zero's own standing line. The
  * command's self-dose must not exceed the budget the gate set, including the
@@ -41,46 +55,100 @@ function frontmatter(md: string): Record<string, string> {
   return out;
 }
 
-describe("/skill-zero command definition", () => {
-  const fm = frontmatter(command);
+describe.each(SURFACES)("$file", ({ file, mode }) => {
+  const source = commands.get(file)!;
+  const fm = frontmatter(source);
+  const slash = file.replace(/\.md$/, "");
 
   it("declares a description and the narrowest tool grant it needs", () => {
     expect(fm.description).toBeTruthy();
-    // The command runs exactly one thing: node, on the shipped renderer.
-    expect(fm["allowed-tools"]).toBe("Bash(node:*)");
+    // Every surface runs exactly one thing: node, on the one shipped renderer.
+    // Everything but /skill-zero also calls the summon MCP tool — /skill-zero is
+    // the floor, so it is the one surface that must NOT hold that grant.
+    expect(fm["allowed-tools"]).toBe(
+      mode === "zero" ? "Bash(node:*)" : "Bash(node:*), mcp__skill-summon__summon",
+    );
   });
 
   it("prices at or under the gate (c) budget, prefixed and unprefixed", () => {
-    for (const id of ["skill-zero", "skill-heaven:skill-zero"]) {
+    for (const id of [slash, `skill-heaven:${slash}`]) {
       const dose = tokenize(makeListingLine(id, fm.description), "chars4");
       expect(dose, `${id} self-dose`).toBeLessThanOrEqual(GATE_C_BUDGET_TOKENS);
     }
   });
 
-  it("invokes the shipped renderer through the interpolated plugin root", () => {
+  it("invokes the ONE shipped renderer through the interpolated plugin root", () => {
     // Probed on 2.1.216: ${CLAUDE_PLUGIN_ROOT} is substituted into the command
     // markdown (it is NOT exported to the bash child), and $ARGUMENTS is
     // shell-escaped before substitution.
-    expect(command).toContain('node "${CLAUDE_PLUGIN_ROOT}/scripts/render-posture.mjs"');
-    expect(command).toContain("'$ARGUMENTS'");
-    expect(existsSync(join(PLUGIN, "scripts", "render-posture.mjs"))).toBe(true);
+    expect(source).toContain(
+      `node "\${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ${mode}`,
+    );
+    expect(source).toContain("'$ARGUMENTS'");
+    expect(existsSync(join(PLUGIN, "scripts", "render-ladder.mjs"))).toBe(true);
   });
 
-  it("uses the founder-ratified ladder vocabulary, never the retired control words", () => {
-    expect(command).toMatch(/\bladder\b.*\brung\b/i);
-    expect(command).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bpicker\b/i);
+  it("never uses the retired control words", () => {
+    expect(source).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bpicker\b/i);
   });
 
   it("pins the rendered block as verbatim, un-embellished copy", () => {
-    expect(command).toMatch(/verbatim/i);
+    expect(source).toMatch(/verbatim/i);
+    expect(source).toMatch(/⛔/);
+  });
+
+  it("never presents routing as stamp- or trust-gated (stamps are not built)", () => {
+    expect(source).not.toMatch(/stamp-gated routing (is|are) (live|running|on)/i);
+    if (mode !== "zero") {
+      expect(source.replace(/\s+/g, " ")).toContain("Heaven/Hell stamps are not");
+    }
+  });
+
+  it("never claims a rung is unratified, gated or locked (N13)", () => {
+    expect(source).not.toMatch(/\bUNRATIFIED\b/);
+    expect(source).not.toMatch(/\bultra is (gated|locked|sealed)\b/i);
+  });
+});
+
+describe("/skill-zero command definition", () => {
+  it("uses the founder-ratified ladder vocabulary", () => {
+    expect(command).toMatch(/\bladder\b.*\brung\b/i);
+  });
+
+  it("holds the numbers discipline and refuses to route around a refusal", () => {
     expect(command).toMatch(/Do not add posture, token or savings numbers of your own/);
     expect(command).toMatch(/If the block is a `⛔` refusal, print the refusal and nothing else/);
-    expect(command.replace(/\s+/g, " ")).toContain("Do not route around an unratified rung");
+    expect(command.replace(/\s+/g, " ")).toContain("Do not route around a refusal");
   });
 
   it("never claims the command can restart Claude Code (D12 / B4)", () => {
     expect(command.replace(/\s+/g, " ")).toContain("Nothing can restart Claude Code from inside a session");
     expect(command).not.toMatch(/\b(relaunch|restart)(ing)? (it|the session|claude) for (you|them)\b/i);
+  });
+
+  it("never claims the cut emptied an already-loaded session (D12)", () => {
+    expect(command.replace(/\s+/g, " ")).toContain("Already-loaded skills cannot be evicted mid-session");
+  });
+});
+
+describe("the auto-summon protocol", () => {
+  it.each(["skill-heaven.md", "skill-hell.md", "skill-ultra.md"] as const)(
+    "%s arms a lane and states the disclosure rule",
+    (file) => {
+      const source = commands.get(file)!;
+      const flat = source.replace(/\s+/g, " ");
+      expect(flat).toContain("standing instruction for this conversation");
+      expect(flat).toContain("never preemptively");
+      expect(flat).toContain("`summon` tool");
+      expect(flat).toContain("The card is the listing entry, not the skill body");
+    },
+  );
+
+  it("summon.md makes exactly one call and arms nothing", () => {
+    const flat = commands.get("summon.md")!.replace(/\s+/g, " ");
+    expect(flat).toContain("call the `summon` tool **once**");
+    expect(flat).toContain("`limit: 1`");
+    expect(flat).toContain("arms nothing");
   });
 });
 
@@ -121,16 +189,22 @@ describe("door manifests", () => {
     }
   });
 
-  it("now advertises /skill-hell now that the summon-engine command surface exists (WP3)", () => {
-    // The P2 gate this comment used to cite is the /skill-zero posture
-    // ladder's "hell" row (a formal, benchmarked context-budget stop) — a
-    // separate concept from this prototype summon command, which the ladder
-    // row's own lockedNote already pointed to ("see /skill-hell") before
-    // this door existed. See NAMESPACE.md / docs/SKILL-HELL.md.
-    expect(existsSync(join(PLUGIN, "commands", "skill-hell.md"))).toBe(true);
+  it("advertises every surface it actually ships, and only those", () => {
+    for (const { file } of SURFACES) {
+      expect(existsSync(join(PLUGIN, "commands", file))).toBe(true);
+    }
     for (const description of [pluginJson.description, entry.description]) {
-      expect(description).toContain("/skill-hell");
+      for (const surface of ["/skill-zero", "/skill-heaven", "/skill-hell", "/skill-ultra"]) {
+        expect(description, `door copy omits ${surface}`).toContain(surface);
+      }
       expect(description).not.toMatch(/step 3/);
+    }
+  });
+
+  it("never calls a rung unratified or gated in public copy (N13)", () => {
+    for (const description of [pluginJson.description, entry.description]) {
+      expect(description).not.toMatch(/\bUNRATIFIED\b/i);
+      expect(description).not.toMatch(/\bgated\b/i);
     }
   });
 });
@@ -142,7 +216,7 @@ describe("door manifests", () => {
 // the real script through the real env-var contract (CLAUDE_ZERO_PROFILE) is
 // what the command markdown above actually runs.
 describe("standing-dose disclosure survives the real process invocation (KC2)", () => {
-  const rendererPath = join(PLUGIN, "scripts", "render-posture.mjs");
+  const rendererPath = join(PLUGIN, "scripts", "render-ladder.mjs");
   let dir: string;
 
   beforeAll(() => {
@@ -153,7 +227,7 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
   function runRenderer(manifest: Record<string, unknown>): string {
     const manifestPath = join(dir, `${Math.random().toString(36).slice(2)}.json`);
     writeFileSync(manifestPath, JSON.stringify(manifest));
-    const r = spawnSync(process.execPath, [rendererPath], {
+    const r = spawnSync(process.execPath, [rendererPath, "zero"], {
       env: { ...process.env, CLAUDE_ZERO_PROFILE: manifestPath },
       encoding: "utf-8",
       timeout: 20000,

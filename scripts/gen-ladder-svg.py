@@ -53,7 +53,7 @@ RUNGS = [
     ("high", "default", "hell"),
     ("xhigh", "", "hell"),
     ("max", "", "hell"),
-    ("ultra", "unratified", "hell"),
+    ("ultra", "crown", "hell"),
 ]
 
 BOX_W, BOX_H, GAP = 96, 46, 12
@@ -83,8 +83,9 @@ def build():
         f'viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="The entropy ladder. '
         f'Heaven holds off, low, and med (which equals native); it is served '
         f'by slash skill-heaven and needs the Skill Zero launcher. Hell is additive and holds high (the '
-        f'default), xhigh, max, and ultra (unratified); it is served by slash skill-hell and '
-        f'needs only the plugin.">'
+        f'default), xhigh, and max, served by slash skill-hell; ultra is the crown rung, served by '
+        f'slash skill-ultra. Every rung is reachable; nothing on the line refuses. '
+        f'The additive band needs only the plugin.">'
     )
 
     heaven_n = sum(1 for r in RUNGS if r[2] == "heaven")
@@ -133,7 +134,9 @@ def build():
     for i, (rung, sub, half) in enumerate(RUNGS):
         bx, by = xs[i], tops[i]
         heaven = half == "heaven"
-        unratified = rung == "ultra"
+        # The crown rung. It is drawn distinctly because it is the top of the
+        # line, NOT because it is withheld — nothing on the line refuses (N13).
+        crown = rung == "ultra"
 
         if heaven:
             fill, stroke, label = INK, LINE, LUMEN
@@ -141,10 +144,10 @@ def build():
         else:
             fill, stroke, label = "#ffffff", HELL_LINE, HELL_INK
             sub_fill = HELL_DIM
-        if unratified:
-            fill, stroke, label, sub_fill = HELL_BG, HELL_FAINT, HELL_FAINT, HELL_FAINT
+        if crown:
+            fill, stroke, label, sub_fill = HELL_BG, HELL_LINE, HELL_INK, HELL_DIM
 
-        dash = ' stroke-dasharray="4 4"' if unratified else ""
+        dash = ""
         width = "2" if sub == "default" else "1.5"
         p.append(
             f'<rect x="{bx:.1f}" y="{by}" width="{BOX_W}" height="{BOX_H}" rx="7" '

@@ -99,12 +99,14 @@ describe("run", () => {
     expect(plan).not.toHaveProperty("sessionDir");
   });
 
-  it("routes a Hell budget to the live /skill-hell surface", () => {
-    const { code, err } = captureStderr(() => run(["--level", "max"]));
-    expect(code).toBe(2);
-    expect(err).toContain("live Hell summon budget, not a boot posture");
-    expect(err).toContain("/skill-hell max");
-    expect(err).not.toMatch(/P2|gated/i);
+  it("routes a summon rung to the command that arms it, ultra included", () => {
+    for (const [level, arm] of [["max", "/skill-hell max"], ["ultra", "/skill-ultra"]] as const) {
+      const { code, err } = captureStderr(() => run(["--level", level]));
+      expect(code, level).toBe(2);
+      expect(err).toContain("live summon rung, not a boot posture");
+      expect(err).toContain(arm);
+      expect(err).not.toMatch(/UNRATIFIED|P2|gated/i);
+    }
   });
 
   it("refuses the doorless benchmark floor — it is core's, for measurement runs (exit 2)", () => {
@@ -198,7 +200,7 @@ describe("refusal honesty (KC6)", () => {
   it("distinguishes Hell routing from the floor's harness limitation", () => {
     const hell = captureStderr(() => run(["--level", "max"])).err;
     const floor = captureStderr(() => run(["--posture", "floor"])).err;
-    expect(hell).toContain("live Hell summon budget");
+    expect(hell).toContain("live summon rung");
     expect(hell).toContain("/skill-hell max");
     expect(hell).not.toMatch(/policy|P2|gated/i);
     expect(floor).toContain("not a policy hold");

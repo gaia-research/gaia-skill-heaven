@@ -12,6 +12,7 @@
 
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { RUNG_SLOTS } from "skill-zero";
 
 /** The shape summon returns. Trust fields are OPTIONAL and tree-provided: a tree
  *  publishes what it has and we render what it published. Never require them. */
@@ -29,13 +30,22 @@ export interface SummonedSkill {
   totalSeconds?: number;
 }
 
-/** Hell rungs are a summon budget, not a posture — how many skills one capability
- *  gap may pull, and how wide the relevance band is. `ultra` is absent because it
- *  is unratified: there is no approved budget to give it. */
+/** Hell rungs are a summon budget, not a posture — how many skills one
+ *  capability gap may pull. The counts come from core's RUNG_SLOTS, the single
+ *  source of truth for the whole line (they used to be stated three different
+ *  ways). They are PROVISIONAL until the benchmark lands.
+ *
+ *  `ultra` IS on the line: it is the crown rung, ratified by N13, and it does
+ *  not refuse. It carries no fixed count because the controller picks the depth
+ *  per gap.
+ *
+ *  There is deliberately NO relevance band here. Band filtering is not shipped —
+ *  the engine takes a `limit`, not a score window — and this surface used to
+ *  claim otherwise. */
 export const rungBudgets = {
-  high: { count: 1, relevance: "best relevant match only" },
-  xhigh: { count: 3, relevance: "matches within 10% of the best score" },
-  max: { count: 5, relevance: "matches within 25% of the best score" },
+  high: { count: RUNG_SLOTS.high as number },
+  xhigh: { count: RUNG_SLOTS.xhigh as number },
+  max: { count: RUNG_SLOTS.max as number },
 } as const;
 
 export type HellLevel = keyof typeof rungBudgets;
@@ -47,11 +57,12 @@ export function renderHellChooser(): string {
   return [
     "🔥 Skill Hell · high · xhigh · max · ultra",
     PROTOTYPE_NOTE,
+    "   WIP · PROVISIONAL — per-rung counts do not land until the benchmark does.",
     "",
-    "   ● high    default · 1 skill/gap · tight relevance",
-    "   ○ xhigh   3 skills/gap · within 10% of the best score",
-    "   ○ max     5 skills/gap · within 25% of the best score",
-    "   ⊘ ultra   UNRATIFIED · no approved summon budget",
+    `   ● high    default · ${rungBudgets.high.count} skills/gap`,
+    `   ○ xhigh   ${rungBudgets.xhigh.count} skills/gap`,
+    `   ○ max     ${rungBudgets.max.count} skills/gap`,
+    "   ○ ultra   the crown rung · the controller picks direction + depth per gap",
     "",
     "   Select a rung to arm the lane; any other text manually summons for that intent.",
   ].join("\n");
@@ -61,7 +72,7 @@ export function renderArmed(level: HellLevel): string {
   const budget = rungBudgets[level];
   return [
     `🔥 Skill Hell armed: ${level}`,
-    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap · ${budget.relevance}`,
+    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap (PROVISIONAL)`,
     "   Summon only for a real gap; the lane remains armed afterward.",
     `   engine seam: summon --limit ${budget.count}; automatic gap detection remains a harness integration seam.`,
   ].join("\n");

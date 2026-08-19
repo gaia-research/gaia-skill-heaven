@@ -1,28 +1,70 @@
 {
-  "schema": "claude-zero/ladder@1",
-  "source": "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES",
-  "levels": [
-    "off",
-    "low",
-    "med",
-    "high",
-    "xhigh",
-    "max",
-    "ultra"
+  "schema": "skill-heaven/ladder@2",
+  "source": "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
+  "wip": "WIP · PROVISIONAL — per-rung counts do not land until the benchmark does.",
+  "rungs": [
+    {
+      "id": "off",
+      "band": "zero",
+      "slots": 0
+    },
+    {
+      "id": "low",
+      "band": "heaven",
+      "slots": 1
+    },
+    {
+      "id": "med",
+      "band": "heaven",
+      "slots": 2
+    },
+    {
+      "id": "high",
+      "band": "hell",
+      "slots": 3
+    },
+    {
+      "id": "xhigh",
+      "band": "hell",
+      "slots": 4
+    },
+    {
+      "id": "max",
+      "band": "hell",
+      "slots": 5
+    },
+    {
+      "id": "ultra",
+      "band": "ultra",
+      "slots": null
+    }
   ],
-  "heavenLevels": [
-    "off",
-    "low",
-    "med"
-  ],
-  "hellLevels": [
-    "high",
-    "xhigh",
-    "max"
-  ],
-  "unratifiedLevels": [
-    "ultra"
-  ],
+  "bands": {
+    "zero": {
+      "surface": "Skill Zero",
+      "command": "/skill-zero",
+      "defaultRung": "off",
+      "direction": "floor"
+    },
+    "heaven": {
+      "surface": "Skill Heaven",
+      "command": "/skill-heaven",
+      "defaultRung": "low",
+      "direction": "converge"
+    },
+    "hell": {
+      "surface": "Skill Hell",
+      "command": "/skill-hell",
+      "defaultRung": "high",
+      "direction": "explore"
+    },
+    "ultra": {
+      "surface": "Skill Ultra",
+      "command": "/skill-ultra",
+      "defaultRung": "ultra",
+      "direction": "controller"
+    }
+  },
   "postures": [
     "floor",
     "product-floor",

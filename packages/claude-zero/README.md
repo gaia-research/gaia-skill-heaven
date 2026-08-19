@@ -52,13 +52,16 @@ command and explicitly says it changed nothing.
 
 ## `/skill-hell`: usable additive prototype
 
-In a Claude Code session where this plugin and a resolvable `skill-hell`
-binary are installed, `/skill-hell` exposes `high · xhigh · max · ultra`.
-`high` is the default usable level; `xhigh` and `max` broaden the requested
-summoning behavior; `ultra` remains unratified. `/skill-hell <intent>`
-materializes a requested skill for the card-based hand-off. The prototype does
-not publish fixed per-rung counts or score bands, HH scoring, or a routing-
-eligibility contract.
+The plugin moved out of this package: it is `plugins/skill-heaven` at the repo
+root now, and it ships all five surfaces (`/summon`, `/skill-zero`,
+`/skill-heaven`, `/skill-hell`, `/skill-ultra`) plus the summon MCP. See
+`docs/AGENT-PLUGIN.md`.
+
+`/skill-hell` opens on `high` and covers `high · xhigh · max`; `ultra` is the
+crown rung and is reached with `/skill-ultra`. **Nothing on the line refuses**
+(N13). Per-rung counts come from core's `RUNG_SLOTS` and are PROVISIONAL until
+the benchmark lands; the prototype publishes no score bands, HH scoring, or
+routing-eligibility contract.
 
 Arrivals are cards, not pasted bodies: identity, tree-published trust fields,
 paired install timing/cache state, file count, path, and inspect link. Claude
@@ -82,9 +85,9 @@ invocation doses remain separate.
 ## Boundaries
 
 - Heaven: `off|low|med`, boot-time launcher choices.
-- Hell: `high|xhigh|max` are usable additive-prototype levels; `high` is the default. `ultra` remains unratified.
-- The rich MCP package has four tools (`gaia_search`, `gaia_inspect`, `summon`,
-  `gaia_status`); it is not an implemented or measured D4 thin two-tool profile.
+- Hell: `high|xhigh|max`, `high` is the default. `ultra` is the crown rung,
+  reached with `/skill-ultra`. Nothing on the line refuses (N13).
+- The plugin's MCP exposes exactly one tool, `summon`.
 - Hell/Heaven scoring, routing eligibility, and content-hash admission or
   verification are not shipped.
 - `floor`: benchmark-only, doorless posture.

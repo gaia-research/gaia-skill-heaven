@@ -159,51 +159,44 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
       assert(typeof pluginJson.name === "string" && pluginJson.name.length > 0, "plugin.json has a non-empty 'name'");
     }
 
-    // --- the command file resolves its script path under ${CLAUDE_PLUGIN_ROOT} ---
-    const commandPath = join(installedPluginRoot, "commands", "skill-zero.md");
-    assert(existsSync(commandPath), "commands/skill-zero.md shipped");
-    const commandBody = existsSync(commandPath) ? readFileSync(commandPath, "utf-8") : "";
+    // --- every shipped surface resolves its script under ${CLAUDE_PLUGIN_ROOT} ---
+    // One mechanic, five entry points, ONE renderer (docs/AGENT-PLUGIN.md).
     // Claude Code interpolates ${CLAUDE_PLUGIN_ROOT} to the installed plugin
-    // root before running the bash line (probed on 2.1.216, see
-    // render-posture.mjs header comment). We don't have the harness here, so
-    // we do the same substitution by hand and confirm the resulting path is
-    // real, exactly proving what the harness would resolve to.
-    const scriptRefMatch = /\$\{CLAUDE_PLUGIN_ROOT\}\/(scripts\/[a-zA-Z0-9._-]+\.mjs)/.exec(commandBody);
-    assert(scriptRefMatch !== null, "command file references a script via ${CLAUDE_PLUGIN_ROOT}/scripts/*.mjs");
-    const resolvedScript = scriptRefMatch ? join(installedPluginRoot, scriptRefMatch[1]) : null;
-    assert(
-      resolvedScript !== null && existsSync(resolvedScript),
-      `the script the command references resolves to a real file under the installed plugin root${
-        resolvedScript ? ` (${resolvedScript})` : ""
-      }`,
-    );
+    // root before running the bash line (probed on 2.1.216). We don't have the
+    // harness here, so we do the same substitution by hand and confirm the
+    // resulting path is real — exactly what the harness would resolve to.
+    const SURFACES = [
+      { file: "skill-zero.md", mode: "zero" },
+      { file: "skill-heaven.md", mode: "heaven" },
+      { file: "skill-hell.md", mode: "hell" },
+      { file: "skill-ultra.md", mode: "ultra" },
+      { file: "summon.md", mode: "summon" },
+    ];
 
-    // --- render-posture.mjs actually runs standalone, with real output ---
-    if (resolvedScript && existsSync(resolvedScript)) {
-      let stdout = "";
-      let ranOk = false;
-      try {
-        stdout = execFileSync(process.execPath, [resolvedScript], {
-          cwd: fresh, // nowhere near the repo
-          env: { PATH: process.env.PATH }, // minimal env: no repo-derived vars
-          encoding: "utf-8",
-        });
-        ranOk = true;
-      } catch (/** @type {any} */ err) {
-        failures.push(`render-posture.mjs exited non-zero or threw when run standalone: ${err.message}`);
-      }
-      assert(ranOk, "scripts/render-posture.mjs runs under plain `node` with zero node_modules beside it");
-      if (ranOk) {
-        log("--- actual stdout of the standalone run ---");
-        for (const line of stdout.split("\n")) log(`  | ${line}`);
-        log("--- end stdout ---");
-        assert(stdout.includes("Skill Zero"), "output contains the Skill Zero chooser header");
-        assert(stdout.includes("off · low · med"), "output renders only the Heaven half");
-        assert(!stdout.includes("🔥 Skill Hell"), "output does not render the Skill Hell chooser");
-        assert(stdout.includes("boot-time decisions"), "output explains that Skill Zero requires a launcher");
-        assert(stdout.includes("--level low --skill <path>"), "output gives the exact launcher exit");
-        assert(stdout.includes("did not change"), "output never implies the running session changed");
-      }
+    /** @type {string | null} */
+    let renderer = null;
+    for (const { file, mode } of SURFACES) {
+      const commandPath = join(installedPluginRoot, "commands", file);
+      assert(existsSync(commandPath), `commands/${file} shipped`);
+      if (!existsSync(commandPath)) continue;
+      const body = readFileSync(commandPath, "utf-8");
+      const match = /\$\{CLAUDE_PLUGIN_ROOT\}\/(scripts\/[a-zA-Z0-9._-]+\.mjs)" ([a-z]+)/.exec(body);
+      assert(match !== null, `${file} references its renderer through \${CLAUDE_PLUGIN_ROOT} with a surface argument`);
+      if (!match) continue;
+      const resolved = join(installedPluginRoot, match[1]);
+      assert(existsSync(resolved), `${file}'s renderer resolves to a real file under the installed plugin root`);
+      assert(match[2] === mode, `${file} renders the "${mode}" surface (got "${match[2]}")`);
+      renderer = existsSync(resolved) ? resolved : renderer;
+    }
+
+    // The external-binary hunt is GONE. Summoning is an MCP tool call the agent
+    // makes; nothing here shells out to a sibling checkout. Assert the absence,
+    // so a reintroduction is a loud failure rather than a quiet regression.
+    for (const gone of ["resolve-hell.mjs", "render-hell.mjs", "render-posture.mjs"]) {
+      assert(
+        !existsSync(join(installedPluginRoot, "scripts", gone)),
+        `scripts/${gone} is gone (the external summon-engine hunt was removed)`,
+      );
     }
 
     // --- data/ladder.json shipped, so the script isn't reading it from ---
@@ -211,54 +204,57 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
     const ladderPath = join(installedPluginRoot, "data", "ladder.json");
     assert(existsSync(ladderPath), "data/ladder.json shipped inside the copied plugin (script does not reach back into the repo for it)");
 
-    // --- /skill-hell's complete standalone route ships and renders success ---
-    const hellCommandPath = join(installedPluginRoot, "commands", "skill-hell.md");
-    const hellRenderer = join(installedPluginRoot, "scripts", "render-hell.mjs");
-    const hellResolver = join(installedPluginRoot, "scripts", "resolve-hell.mjs");
-    assert(existsSync(hellCommandPath), "commands/skill-hell.md shipped");
-    assert(existsSync(hellRenderer), "scripts/render-hell.mjs shipped");
-    assert(existsSync(hellResolver), "scripts/resolve-hell.mjs shipped");
-    if (existsSync(hellCommandPath)) {
-      const hellCommand = readFileSync(hellCommandPath, "utf-8");
-      assert(
-        hellCommand.includes('${CLAUDE_PLUGIN_ROOT}/scripts/render-hell.mjs'),
-        "skill-hell command references its renderer through ${CLAUDE_PLUGIN_ROOT}",
-      );
-    }
-    if (existsSync(hellRenderer) && existsSync(hellResolver)) {
-      const fakeSkill = join(fresh, "fake-skill");
-      mkdirSync(fakeSkill);
-      writeFileSync(join(fakeSkill, "SKILL.md"), "# Marketplace verification skill\n");
-      const fakeEngine = join(fresh, "skill-hell");
-      writeFileSync(
-        fakeEngine,
-        `#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({summoned:[{id:"verify-skill",level:"high",trustMagnitude:1,path:${JSON.stringify(fakeSkill)}}]}))\n`,
-      );
-      chmodSync(fakeEngine, 0o755);
-      let hellStdout = "";
-      let hellRanOk = false;
-      try {
-        hellStdout = execFileSync(process.execPath, [hellRenderer, "verification intent"], {
-          cwd: fresh,
-          env: { PATH: process.env.PATH, SKILL_HELL_BIN: fakeEngine },
-          encoding: "utf-8",
-        });
-        hellRanOk = true;
-      } catch (/** @type {any} */ err) {
-        failures.push(`render-hell.mjs failed against the standalone fake engine: ${err.message}`);
+    // --- the one renderer actually runs standalone, with real output --------
+    if (renderer) {
+      /** @param {string} mode @returns {string | null} */
+      const renderStandalone = (mode) => {
+        try {
+          return execFileSync(process.execPath, [renderer, mode], {
+            cwd: fresh, // nowhere near the repo
+            env: { PATH: process.env.PATH ?? "" }, // minimal env: no repo-derived vars
+            encoding: "utf-8",
+          });
+        } catch (/** @type {any} */ err) {
+          failures.push(`render-ladder.mjs ${mode} exited non-zero or threw when run standalone: ${err.message}`);
+          return null;
+        }
+      };
+
+      const zero = renderStandalone("zero");
+      assert(zero !== null, "scripts/render-ladder.mjs runs under plain `node` with zero node_modules beside it");
+      if (zero) {
+        log("--- actual stdout of the standalone `zero` run ---");
+        for (const line of zero.split("\n")) log(`  | ${line}`);
+        log("--- end stdout ---");
+        assert(zero.includes("Skill Zero"), "output contains the Skill Zero header");
+        assert(zero.includes("Manual /summon still works"), "the floor keeps the manual summon it ships by default");
+        assert(zero.includes("cannot be evicted mid-session"), "output never implies the cut emptied the running session (D12)");
+        assert(zero.includes("WIP · PROVISIONAL"), "every rendering of a provisional count carries the WIP mark");
       }
-      assert(hellRanOk, "scripts/render-hell.mjs runs standalone through its shipped resolver");
-      if (hellRanOk) {
-        // Arrivals are CARDS, not pasted bodies. That is not a shortcut: a
-        // card-only probe returned the canary on both Claude Code 2.1.224
-        // (pane w8:p13) and pi (pane w8:p14), reading SKILL.md and a sibling
-        // reference from the materialized directory on disk. So the contract to
-        // verify is that the card names the directory — NOT that the body was
-        // inlined, which is the pre-ladder behaviour this replaced.
-        assert(hellStdout.startsWith("┌ summoned · "), "successful /skill-hell output leads with the summoned card");
-        assert(hellStdout.includes("WORKING PROTOTYPE · actively tested for public use"), "successful /skill-hell output discloses public prototype status");
-        assert(hellStdout.includes(fakeSkill), "successful /skill-hell card points at the materialized skill directory");
-        assert(hellStdout.includes("inspect: "), "successful /skill-hell card carries an inspect link");
+
+      // Every rung command renders the SAME line — that is the product claim,
+      // so verify it from the installed copy rather than trusting the unit test.
+      const RUNGS = ["off", "low", "med", "high", "xhigh", "max", "ultra"];
+      for (const mode of ["zero", "heaven", "hell", "ultra"]) {
+        const out = renderStandalone(mode);
+        assert(out !== null, `render-ladder.mjs renders the ${mode} surface standalone`);
+        if (!out) continue;
+        for (const rung of RUNGS) {
+          assert(new RegExp(`[●○] ${rung}\\b`).test(out), `${mode} renders rung ${rung} on the one line`);
+        }
+        assert(!/UNRATIFIED/.test(out), `${mode} refuses no rung (N13)`);
+      }
+
+      const summon = renderStandalone("summon");
+      assert(summon !== null, "render-ladder.mjs renders the manual /summon surface standalone");
+      if (summon) {
+        assert(summon.includes("/summon <intent>"), "bare /summon prints usage rather than a refusal");
+      }
+      const armed = renderStandalone("hell");
+      if (armed) {
+        assert(armed.includes("`summon` tool"), "an armed lane names the summon tool the agent must call");
+        assert(armed.includes("limit: 3"), "an armed lane states the per-gap limit to pass");
+        assert(armed.includes("verbatim"), "an armed lane requires the card be printed verbatim (the disclosure)");
       }
     }
   } finally {

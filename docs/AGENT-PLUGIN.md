@@ -45,11 +45,11 @@ worked — no second MCP tool is needed.
 
 | Command | Sets rung | Auto-summons per gap | Note |
 |---|---|---|---|
-| `/skill-zero [all]` | `zero` | **0 — cut** | `/summon` by hand still works. `all` cuts that too. |
+| `/skill-zero [all]` | `off` | **0 — cut** | `/summon` by hand still works. `all` cuts that too. |
 | `/skill-heaven [low\|med]` | `low` (default) | 1 · 2 | converge |
 | `/skill-hell [high\|xhigh\|max]` | `high` (default) | 3 · 4 · 5 | explore |
 | `/skill-ultra` | `ultra` | agent picks direction + depth per gap | crown rung, no sub-ladder |
-| `/summon <intent>` | — | manual, one call | present at every rung including `zero` |
+| `/summon <intent>` | — | manual, one call | present at every rung including `off` |
 
 All four rung commands render **the same seven-rung slider**, differing only in
 the default they open on and which band is highlighted. Every rendering carries
@@ -62,7 +62,7 @@ mapping is written down:
 
 | Rung | Band | Slots per capability gap |
 |---|---|---|
-| `zero` | zero | 0 |
+| `off` | zero | 0 |
 | `low` | heaven | 1 |
 | `med` | heaven | 2 |
 | `high` | hell | 3 |
@@ -77,9 +77,13 @@ three-table disagreement (plugin code previously said `high 1 · xhigh 3 · max 
 **PROVISIONAL until the Hell/Heaven benchmark lands.** Every surface that
 renders one of these numbers says so.
 
-### `zero` cuts *automatic* summoning
+### `off` cuts *automatic* summoning
 
-`/skill-zero` sets the rung to `zero`, which cuts **automatic** summoning.
+`/skill-zero` sets the rung to `off`, which cuts **automatic** summoning.
+
+> **Naming note.** The *rung* is spelled `off`; `zero` is the *band* it sits in
+> (and the surface's name). N13, `packages/core`, `data/ladder.json` and the site
+> all spell the rung `off`, so the implementation follows them.
 Manual `/summon` still works — that is the product floor per N13 ("ships
 `/summon` by default, with none of the choosing automated").
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
@@ -89,7 +93,7 @@ userConfig (`automatic` | `all`, default `automatic`) sets the default.
 something the tool enforces. Hard enforcement needs server-side session state —
 filed as a follow-up, not faked.
 
-`claude-zero --level zero` remains the boot-time all-skills-off launcher, and
+`claude-zero --level off` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
 **cannot be evicted mid-session** (D12, probed).
 
@@ -177,7 +181,7 @@ Stated here so no surface implies otherwise:
 - **Heaven/Hell stamps.** Routing falls back to relevance ranking, and no
   surface may present stamp-gated routing as running.
 - **The entropy benchmark.** Every per-rung count is PROVISIONAL until it lands.
-- **Hard enforcement of the `zero` cut.** It is a standing instruction, not a
+- **Hard enforcement of the `off` cut.** It is a standing instruction, not a
   server-side gate.
 - **Ultra controller heuristics.** At `ultra` the agent picks direction and
   depth unaided.

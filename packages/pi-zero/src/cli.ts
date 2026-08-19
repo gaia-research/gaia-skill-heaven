@@ -9,8 +9,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HEAVEN_LEVELS, HELL_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
-import { assertLevelAllowed, planLaunch, resolveLevelAlias } from "./launcher.js";
+import { HEAVEN_LEVELS, HELL_LEVELS, SUMMON_ONLY_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
+import { planLaunch, resolveLevelAlias } from "./launcher.js";
 
 // Guinea-pig model for this prototype (WP2 dispatch brief) — cheap and
 // consistent, verified working against pi 0.83.0 (PROBE.md). Only applied
@@ -91,7 +91,7 @@ function helpText(): string {
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
-    "                     ultra is unratified",
+    "                     ultra is the crown rung, armed live with /skill-ultra",
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
@@ -110,20 +110,22 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // Ultra is the sole unratified rung. Ratified Hell levels route below to
+  // The upper band (high · xhigh · max · ultra) is armed live, in-session.
+  // It routes below to
   // the live /skill-hell surface instead of being treated as postures.
-  assertLevelAllowed(args.level);
-
   let posture = args.posture;
   if (args.level !== undefined) {
     // Heaven aliases select boot postures. Hell levels have no posture mapping
     // and are routed to /skill-hell below.
     const aliased = resolveLevelAlias(args.level);
     if (!aliased) {
-      if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
+      if ((SUMMON_ONLY_LEVELS as readonly string[]).includes(args.level)) {
+        // Not a gate. The upper band is armed LIVE, in-session — a different
+        // dial from the launcher's boot posture. Nothing on the line refuses (N13).
+        const arm = args.level === "ultra" ? "/skill-ultra" : `/skill-hell ${args.level}`;
         process.stderr.write(
-          `pi-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
-            `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
+          `pi-zero: --level ${args.level} is a live summon rung, not a boot posture. ` +
+            `Launch a Heaven rung (${HEAVEN_LEVELS.join("|")}), then run ${arm}.\n`,
         );
       } else {
         process.stderr.write(`pi-zero: unknown --level "${args.level}" — choose ${HEAVEN_LEVELS.join("|")}, or native.\n`);

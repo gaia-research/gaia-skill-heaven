@@ -9,8 +9,8 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HEAVEN_LEVELS, HELL_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-zero";
-import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
+import { HEAVEN_LEVELS, HELL_LEVELS, SUMMON_ONLY_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-zero";
+import { CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
@@ -102,7 +102,7 @@ function helpText(): string {
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: off)`,
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
-    "                     ultra is unratified",
+    "                     ultra is the crown rung, armed live with /skill-ultra",
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
@@ -120,18 +120,19 @@ export function run(argv: string[]): number {
     return 0;
   }
 
-  // Ultra has no ratified product mapping. Hell rungs are handled below as
-  // live summon budgets, never boot postures.
-  assertLevelAllowed(args.level);
-
+  // The upper band (high · xhigh · max · ultra) is handled below as live
+  // summon rungs, never boot postures. Nothing on the line refuses (N13).
   let posture = args.posture;
   if (args.level !== undefined) {
     const aliased = LEVEL_ALIASES[args.level];
     if (!aliased) {
-      if ((HELL_LEVELS as readonly string[]).includes(args.level)) {
+      if ((SUMMON_ONLY_LEVELS as readonly string[]).includes(args.level)) {
+        // Not a gate. The upper band is armed LIVE, in-session — a different
+        // dial from the launcher's boot posture. Nothing on the line refuses (N13).
+        const arm = args.level === "ultra" ? "/skill-ultra" : `/skill-hell ${args.level}`;
         process.stderr.write(
-          `claude-zero: --level ${args.level} is a live Hell summon budget, not a boot posture. ` +
-            `Launch a Heaven rung, then run /skill-hell ${args.level}.\n`,
+          `claude-zero: --level ${args.level} is a live summon rung, not a boot posture. ` +
+            `Launch a Heaven rung (${HEAVEN_LEVELS.join("|")}), then run ${arm}.\n`,
         );
       } else {
         process.stderr.write(

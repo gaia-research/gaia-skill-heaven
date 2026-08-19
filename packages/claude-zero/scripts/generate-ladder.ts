@@ -1,6 +1,6 @@
 // Generates the ladder policy artifact consumed by the zero-dependency plugin
-// renderers. Once marketplace-installed they cannot import skill-zero, so the
-// canonical lists are machine-copied and freshness-tested.
+// renderer. Once marketplace-installed it cannot import skill-zero, so the
+// canonical constants are machine-copied and freshness-tested.
 //
 //   npx tsx packages/claude-zero/scripts/generate-ladder.ts
 
@@ -8,33 +8,38 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  HEAVEN_LEVELS,
-  HELL_LEVELS,
+  BAND_INFO,
   LADDER_LEVELS,
+  LADDER_WIP,
   POSTURES,
-  UNRATIFIED_LEVELS,
+  RUNG_BANDS,
+  RUNG_SLOTS,
+  type Band,
+  type BandInfo,
 } from "skill-zero";
 import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 
 export interface LadderArtifact {
-  schema: "claude-zero/ladder@1";
-  source: "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES";
-  levels: string[];
-  heavenLevels: string[];
-  hellLevels: string[];
-  unratifiedLevels: string[];
+  schema: "skill-heaven/ladder@2";
+  source: "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES";
+  /** The mark every rendering of a per-rung count must carry. */
+  wip: string;
+  /** One ladder, one line — in order, bottom to crown. */
+  rungs: Array<{ id: string; band: Band; slots: number | null }>;
+  /** The four contiguous bands the line is read as. */
+  bands: Record<Band, BandInfo>;
   postures: string[];
   launchablePostures: string[];
 }
 
 export function buildLadderArtifact(): LadderArtifact {
   return {
-    schema: "claude-zero/ladder@1",
-    source: "skill-zero ladder constants + POSTURES, claude-zero LAUNCHABLE_POSTURES",
-    levels: [...LADDER_LEVELS],
-    heavenLevels: [...HEAVEN_LEVELS],
-    hellLevels: [...HELL_LEVELS],
-    unratifiedLevels: [...UNRATIFIED_LEVELS],
+    schema: "skill-heaven/ladder@2",
+    source:
+      "skill-zero RUNG_SLOTS + RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
+    wip: LADDER_WIP,
+    rungs: LADDER_LEVELS.map((id) => ({ id, band: RUNG_BANDS[id], slots: RUNG_SLOTS[id] })),
+    bands: BAND_INFO,
     postures: [...POSTURES],
     launchablePostures: [...LAUNCHABLE_POSTURES],
   };

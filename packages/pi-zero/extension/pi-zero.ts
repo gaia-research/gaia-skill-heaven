@@ -250,7 +250,14 @@ export default function piZeroExtension(pi: ExtensionAPI) {
         return;
       }
       if (input === "ultra") {
-        ctx.ui.notify("ultra is UNRATIFIED — no approved summon budget exists", "error");
+        // Not a refusal. `ultra` is the crown rung (N13) and nothing on the line
+        // refuses — but this door has not built the controller surface yet, so
+        // it says exactly that rather than pretending either way.
+        ctx.ui.notify(
+          "ultra is the crown rung: the controller picks direction + depth per gap. " +
+            "pi-zero has not built that surface yet — arm high|xhigh|max, or summon by intent.",
+          "warning",
+        );
         return;
       }
       if (input in rungBudgets) {

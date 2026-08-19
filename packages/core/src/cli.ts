@@ -2,7 +2,7 @@
 // pending N4/N5). See README for the full surface.
 
 import { writeFileSync } from "node:fs";
-import { compile, HARNESSES, HELL_LEVELS, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, UNRATIFIED_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
+import { compile, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
@@ -93,15 +93,14 @@ export function parseArgs(argv: string[]): CliArgs {
     else throw new Error(`unknown arg: ${a}`);
   }
 
-  // Heaven levels select boot postures. Hell levels are live summon budgets
-  // owned by /skill-hell and deliberately have no posture mapping.
+  // Heaven levels select boot postures. The upper band — high · xhigh · max ·
+  // ultra — is armed live, in-session, and deliberately has no posture mapping.
+  // This is a redirect, not a gate: nothing on the line refuses (N13).
   if (level !== undefined) {
-    if ((UNRATIFIED_LEVELS as readonly string[]).includes(level)) {
-      throw new Error(`--level ${level} is UNRATIFIED — no approved product mapping exists`);
-    }
-    if ((HELL_LEVELS as readonly string[]).includes(level)) {
+    if ((SUMMON_ONLY_LEVELS as readonly string[]).includes(level)) {
+      const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
       throw new Error(
-        `--level ${level} is a live Hell summon budget, not a boot posture — launch a Heaven rung, then arm /skill-hell ${level}`,
+        `--level ${level} is a live summon rung, not a boot posture — launch a Heaven rung (off|low|med), then arm ${arm}`,
       );
     }
     const aliased = LEVEL_ALIASES[level];

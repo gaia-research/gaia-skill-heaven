@@ -1,3 +1,4 @@
+import { RUNG_SLOTS } from "skill-zero";
 import { describe, expect, it } from "vitest";
 import {
   renderHellChooser,
@@ -7,14 +8,19 @@ import {
 
 describe("pi Skill Hell presentation", () => {
   it("shares the founder-ruled chooser and bounded budgets", () => {
+    // The counts now come from core's RUNG_SLOTS — one source of truth for the
+    // whole line. There is deliberately no relevance band: band filtering is not
+    // shipped, and this surface used to claim otherwise.
     expect(rungBudgets).toEqual({
-      high: { count: 1, relevance: "best relevant match only" },
-      xhigh: { count: 3, relevance: "matches within 10% of the best score" },
-      max: { count: 5, relevance: "matches within 25% of the best score" },
+      high: { count: RUNG_SLOTS.high },
+      xhigh: { count: RUNG_SLOTS.xhigh },
+      max: { count: RUNG_SLOTS.max },
     });
+    expect([rungBudgets.high.count, rungBudgets.xhigh.count, rungBudgets.max.count]).toEqual([3, 4, 5]);
     const chooser = renderHellChooser();
     expect(chooser).toContain("● high    default");
-    expect(chooser).toContain("⊘ ultra   UNRATIFIED");
+    expect(chooser).toContain("○ ultra   the crown rung");
+    expect(chooser).not.toMatch(/UNRATIFIED/);
     expect(chooser).not.toMatch(/P2|gated/i);
   });
 

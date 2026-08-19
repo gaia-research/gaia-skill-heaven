@@ -29,9 +29,11 @@ Owns only `off · low · med`. Without a launcher manifest it gives an exact
 
 ### `/skill-hell`
 
-Owns `high · xhigh · max · ultra`, works without a launcher, and defaults to
-`high`. Ratified rungs arm bounded per-gap summon budgets; `ultra` refuses as
-unratified, not gated. `/skill-hell <intent>` remains the manual path.
+Owns `high · xhigh · max`, works without a launcher, and defaults to `high`.
+Each rung arms a bounded per-gap summon budget, taken from core's `RUNG_SLOTS`
+(PROVISIONAL until the benchmark lands). `ultra` is the crown rung and does not
+refuse (N13) — pi-zero has simply not built the controller surface yet, and says
+exactly that. `/skill-hell <intent>` remains the manual path.
 
 Arrivals are cards, not pasted bodies. The extension persists each materialized
 directory, returns its `SKILL.md` through `resources_discover`, and calls
