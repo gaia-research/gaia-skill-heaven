@@ -5,6 +5,7 @@ import './hero.css';
 import {
   DIRECTION_WORD,
   DOORS,
+  HOUSES,
   INSTALL,
   LADDER_MEASURE,
   LADDER_WIP,
@@ -195,6 +196,20 @@ export default function Hero() {
 
           <p className="hx__role">{surface.command} · {surface.role}</p>
           <p className="hx__blurb">{surface.blurb}</p>
+
+          {/* The band's HH Index stamp, linked to the research measuring it.
+              Reserves its height so switching direction never relocates the
+              command line underneath — layout stability is load-bearing on
+              this surface. */}
+          <p className="hx__stamp">
+            {surface.stamp ? (
+              <a href={HOUSES[0].href} target="_blank" rel="noreferrer">
+                <b>{surface.stamp.label}</b> · {surface.stamp.note} ↗
+              </a>
+            ) : (
+              <span aria-hidden="true">&nbsp;</span>
+            )}
+          </p>
 
           <div className="hx__cmd">
             <code aria-live="polite">

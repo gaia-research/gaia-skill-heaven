@@ -216,6 +216,33 @@
   max-width: 46ch;
 }
 
+/* The band's HH Index stamp. Reserves one line in every state — Zero and Ultra
+   read no stamp — because on this surface a changing height would relocate the
+   control the visitor just used. */
+.hx__stamp {
+  margin: 10px 0 0;
+  min-height: 1.6em;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--hx-dim);
+  max-width: 46ch;
+}
+.hx__stamp a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 160ms linear;
+}
+.hx__stamp a:hover {
+  opacity: 0.72;
+}
+.hx__stamp b {
+  color: var(--hx-ink);
+  font-weight: 500;
+}
+
 /* the live command readout */
 .hx__cmd {
   display: flex;

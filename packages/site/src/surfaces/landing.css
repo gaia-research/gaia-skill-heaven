@@ -1212,6 +1212,46 @@
   color: var(--sh-ink-dim);
   text-wrap: pretty;
 }
+/* The band's HH Index stamp. A hairline block above the band footer, carrying
+   the band's own hue on the tag — the stamp IS the band's half of the index,
+   so it is coloured like the band and not like a generic link. */
+.lp-surface__stamp {
+  display: block;
+  margin: -4px 0 14px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--sh-line);
+  text-decoration: none;
+  transition: opacity 160ms linear;
+}
+.lp-surface__stamp:hover {
+  opacity: 0.72;
+}
+.lp-surface__stamp-tag {
+  display: block;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+  color: var(--sh-stamp, var(--sh-ink));
+}
+.lp-surface--heaven .lp-surface__stamp-tag {
+  color: var(--sh-heaven);
+}
+.lp-surface--hell .lp-surface__stamp-tag {
+  color: var(--sh-hell);
+}
+.lp-surface__stamp-note {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sh-ink-dim);
+  text-wrap: pretty;
+}
+.lp-surface__stamp:hover .lp-surface__stamp-note {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .lp-surface__foot {
   display: flex;
   flex-wrap: wrap;
@@ -1219,6 +1259,18 @@
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--sh-line);
+}
+
+/* Inline link inside an annotation strip — the strip is already quiet, so the
+   link earns its emphasis from the underline, not from another colour. */
+.lp-ann__link {
+  color: var(--sh-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.lp-ann__link:hover {
+  opacity: 0.72;
 }
 
 .lp-ledger {

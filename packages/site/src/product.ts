@@ -58,7 +58,27 @@ export interface Surface {
   ladder: 'converge' | 'explore' | null;
   defaultRung: RungId | null;
   hue: string;
+  /**
+   * The per-skill HH Index stamp this band reads, for the two bands that read
+   * one. `heaven-native` and `hell-safe` are the two halves of the same
+   * question — does a skill hold up when few are in context, and does it stay
+   * safe when many are — and they are being measured NOW, in the open, at
+   * `HOUSES[0].href`.
+   *
+   * They are not shipped routing. Stamps are not built, so eligibility today
+   * falls back to relevance ranking, and no surface may render stamp-gated
+   * routing as running. Every surface that shows a stamp must therefore also
+   * say what routing does today; `STAMP_ROUTING_NOTE` is that sentence.
+   */
+  stamp: { label: string; note: string } | null;
 }
+
+/**
+ * The one sentence that keeps a stamp honest. Print it wherever the stamps are
+ * named — they describe an index being measured, not a router that is running.
+ */
+export const STAMP_ROUTING_NOTE =
+  'Both stamps are being benchmarked in the open. Until the index lands, routing ranks on relevance.';
 
 export const SURFACES: Surface[] = [
   {
@@ -71,6 +91,7 @@ export const SURFACES: Surface[] = [
     ladder: null,
     defaultRung: null,
     hue: 'var(--sh-zero)',
+    stamp: null,
   },
   {
     id: 'heaven',
@@ -82,6 +103,10 @@ export const SURFACES: Surface[] = [
     ladder: 'converge',
     defaultRung: 'low',
     hue: 'var(--sh-heaven)',
+    stamp: {
+      label: 'heaven-native',
+      note: 'skills that still carry a gap when few are in context',
+    },
   },
   {
     id: 'hell',
@@ -93,6 +118,10 @@ export const SURFACES: Surface[] = [
     ladder: 'explore',
     defaultRung: 'high',
     hue: 'var(--sh-hell)',
+    stamp: {
+      label: 'hell-safe',
+      note: 'skills that stay safe when many are',
+    },
   },
   {
     id: 'ultra',
@@ -104,6 +133,7 @@ export const SURFACES: Surface[] = [
     ladder: null,
     defaultRung: null,
     hue: 'var(--sh-ultra)',
+    stamp: null,
   },
 ];
 

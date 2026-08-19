@@ -35,6 +35,7 @@ import {
   RUNG_BAND,
   SESSION_ROWS,
   SITE,
+  STAMP_ROUTING_NOTE,
   SURFACES,
   surfaceById,
   type Door,
@@ -783,6 +784,21 @@ export default function Landing() {
               <h3 className="lp-surface__cmd">{s.command}</h3>
               <div className="lp-surface__role">{s.role}</div>
               <p className="lp-surface__blurb">{s.blurb}</p>
+              {/* The band's HH Index stamp, linked to the research that is
+                  measuring it. Live work, not a promise — but it is an index
+                  being built, not a router that is running, which is what
+                  STAMP_ROUTING_NOTE under this grid says. */}
+              {s.stamp && (
+                <a
+                  className="lp-surface__stamp"
+                  href={HOUSES[0].href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span className="lp-surface__stamp-tag">{s.stamp.label}</span>
+                  <span className="lp-surface__stamp-note">{s.stamp.note} ↗</span>
+                </a>
+              )}
               <div className="lp-surface__foot">
                 {s.id === 'heaven' ? (
                   <>
@@ -802,6 +818,20 @@ export default function Landing() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="sh-note lp-ann">
+          <span className="lp-ann__mark" aria-hidden="true">
+            ▸
+          </span>
+          <span>
+            STAMPS · <b>heaven-native</b> and <b>hell-safe</b> are the two halves of one question —
+            does a skill still carry a gap when few are in context, and does it stay safe when many
+            are. {STAMP_ROUTING_NOTE}{' '}
+            <a className="lp-ann__link" href={HOUSES[0].href} target="_blank" rel="noreferrer">
+              Follow the HH Index ↗
+            </a>
+          </span>
         </div>
 
         {/* the four-band decision ledger */}
