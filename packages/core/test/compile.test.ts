@@ -261,29 +261,34 @@ describe("cli level lane", () => {
   it("defaults to floor", () => {
     expect(parseArgs([]).posture).toBe("floor");
   });
-  it("maps the complete Heaven half: off → product-floor, low → curated, med → native", () => {
-    expect(parseArgs(["--level", "off"]).posture).toBe("product-floor");
+  it("maps the complete Heaven half: zero → product-floor, low → curated, med → native", () => {
+    expect(parseArgs(["--level", "zero"]).posture).toBe("product-floor");
     expect(parseArgs(["--level", "low"]).posture).toBe("curated");
     expect(parseArgs(["--level", "med"]).posture).toBe("native");
   });
-  it("routes Hell budgets to /skill-hell rather than P2-locking them", () => {
-    for (const level of ["high", "xhigh", "max"]) {
-      expect(() => parseArgs(["--level", level])).toThrow(/live Hell summon budget.*\/skill-hell/i);
+  // N13: nothing on the line refuses. The upper band is armed live, in-session,
+  // so --level answers with a redirect to the command that arms it.
+  it("routes every summon-line rung to the command that arms it, never as a gate", () => {
+    for (const [level, arm] of [
+      ["high", "/skill-hell high"],
+      ["xhigh", "/skill-hell xhigh"],
+      ["max", "/skill-hell max"],
+      ["ultra", "/skill-ultra"],
+    ] as const) {
+      expect(() => parseArgs(["--level", level])).toThrow(/live summon rung, not a boot posture/i);
       try {
         parseArgs(["--level", level]);
       } catch (error) {
-        expect((error as Error).message).not.toMatch(/P2|gated|policy/i);
+        const message = (error as Error).message;
+        expect(message).toContain(arm);
+        expect(message).not.toMatch(/UNRATIFIED|P2|gated|policy/i);
       }
     }
   });
-
-  it("refuses ultra as unratified", () => {
-    expect(() => parseArgs(["--level", "ultra"])).toThrow(/UNRATIFIED/);
-  });
   it("contradiction between --posture and --level errors", () => {
-    expect(() => parseArgs(["--posture", "native", "--level", "off"])).toThrow(/contradicts/);
-    expect(() => parseArgs(["--posture", "floor", "--level", "off"])).toThrow(/contradicts/);
-    expect(parseArgs(["--posture", "product-floor", "--level", "off"]).posture).toBe("product-floor");
+    expect(() => parseArgs(["--posture", "native", "--level", "zero"])).toThrow(/contradicts/);
+    expect(() => parseArgs(["--posture", "floor", "--level", "zero"])).toThrow(/contradicts/);
+    expect(parseArgs(["--posture", "product-floor", "--level", "zero"]).posture).toBe("product-floor");
   });
   it("--record demands headless + ids", () => {
     expect(() => parseArgs(["--record"])).toThrow(/headless/);

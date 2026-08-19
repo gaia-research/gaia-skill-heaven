@@ -1,0 +1,72 @@
+{
+  "schema": "skill-heaven/ladder@2",
+  "source": "skill-zero RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
+  "wip": "WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
+  "rungs": [
+    {
+      "id": "zero",
+      "band": "zero"
+    },
+    {
+      "id": "low",
+      "band": "heaven"
+    },
+    {
+      "id": "med",
+      "band": "heaven"
+    },
+    {
+      "id": "high",
+      "band": "hell"
+    },
+    {
+      "id": "xhigh",
+      "band": "hell"
+    },
+    {
+      "id": "max",
+      "band": "hell"
+    },
+    {
+      "id": "ultra",
+      "band": "ultra"
+    }
+  ],
+  "bands": {
+    "zero": {
+      "surface": "Skill Zero",
+      "command": "/skill-zero",
+      "defaultRung": "zero",
+      "direction": "floor"
+    },
+    "heaven": {
+      "surface": "Skill Heaven",
+      "command": "/skill-heaven",
+      "defaultRung": "low",
+      "direction": "converge"
+    },
+    "hell": {
+      "surface": "Skill Hell",
+      "command": "/skill-hell",
+      "defaultRung": "high",
+      "direction": "explore"
+    },
+    "ultra": {
+      "surface": "Skill Ultra",
+      "command": "/skill-ultra",
+      "defaultRung": "ultra",
+      "direction": "controller"
+    }
+  },
+  "postures": [
+    "floor",
+    "product-floor",
+    "curated",
+    "native"
+  ],
+  "launchablePostures": [
+    "native",
+    "curated",
+    "product-floor"
+  ]
+}

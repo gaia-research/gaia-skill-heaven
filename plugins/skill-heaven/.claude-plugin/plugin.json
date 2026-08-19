@@ -1,0 +1,40 @@
+{
+  "name": "skill-heaven",
+  "displayName": "Skill Heaven",
+  "version": "0.1.0",
+  "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. One mechanic — /summon, one skill into context for one session, nothing installed — on one line: zero · low · med · high · xhigh · max · ultra, whose four surfaces are contiguous bands read from the current rung. /skill-zero is the floor, /skill-heaven converges, /skill-hell explores, and /skill-ultra is the crown rung whose controller picks direction and depth per gap. Nothing on the line refuses. No rung carries a count and no summon is capped — what each rung reaches for is being worked out in use while the benchmark is built. Interfaces may change. The zero-default launcher and standing-dose statusline live in the claude-zero package, run from a source checkout — not part of this marketplace install.",
+  "homepage": "https://github.com/gaia-research/gaia-skill-heaven#readme",
+  "repository": "https://github.com/gaia-research/gaia-skill-heaven",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "context",
+    "summon",
+    "skill-heaven",
+    "skill-hell",
+    "gaia"
+  ],
+  "author": {
+    "name": "Gaia Research"
+  },
+  "userConfig": {
+    "tree_url": {
+      "type": "string",
+      "title": "Gaia Registry generic projection URL",
+      "description": "URL of the generic Gaia Skill Tree projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
+      "default": "https://gaiaskilltree.com/graph/gaia.json"
+    },
+    "tree_named_url": {
+      "type": "string",
+      "title": "Gaia Registry named projection URL",
+      "description": "URL of the Named Skills Gaia projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
+      "default": "https://gaiaskilltree.com/graph/named/index.json"
+    },
+    "zero_cuts": {
+      "type": "string",
+      "title": "What Skill Zero cuts by default",
+      "description": "\"automatic\" (default) cuts only automatic summoning — manual /summon still works, per N13's product floor. \"all\" cuts manual /summon too. Claude Code's userConfig schema has no enum type; any value other than \"all\" is treated as \"automatic\" by plugins/skill-heaven/scripts/render-ladder.mjs's zeroCuts().",
+      "default": "automatic"
+    }
+  }
+}

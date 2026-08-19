@@ -17,7 +17,9 @@
     "packages/*/src",
     "packages/*/test",
     "packages/*/scripts",
-    "packages/*/plugin/scripts"
+    "plugins/*/scripts",
+    "scripts",
+    "test"
   ],
   // Vendored third-party scripts inside test fixtures are data, not our source.
   //
@@ -31,6 +33,10 @@
   // moduleResolution + jsx:react-jsx) and must not be checked under NodeNext.
   "exclude": [
     "node_modules",
+    // Asset-pipeline utilities: plain JS helpers over image binaries, never
+    // imported by src/ or test/ and never shipped. They predate `scripts` being
+    // in `include` (which it now is, for scripts/verify-marketplace-install.mjs).
+    "scripts/assets",
     "packages/*/test/fixtures",
     "packages/*/extension",
     "packages/site"

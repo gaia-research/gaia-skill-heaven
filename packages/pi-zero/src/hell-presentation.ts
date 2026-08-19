@@ -29,16 +29,20 @@ export interface SummonedSkill {
   totalSeconds?: number;
 }
 
-/** Hell rungs are a summon budget, not a posture — how many skills one capability
- *  gap may pull, and how wide the relevance band is. `ultra` is absent because it
- *  is unratified: there is no approved budget to give it. */
-export const rungBudgets = {
-  high: { count: 1, relevance: "best relevant match only" },
-  xhigh: { count: 3, relevance: "matches within 10% of the best score" },
-  max: { count: 5, relevance: "matches within 25% of the best score" },
-} as const;
+/** The Hell rungs, in order. A rung names a DIRECTION and how far along the
+ *  band you are — it carries no count. Nothing assigns a number to a rung and
+ *  nothing caps a summon: how far a rung reaches is being worked out in use
+ *  while the benchmark is built.
+ *
+ *  `ultra` IS on the line: it is the crown rung, ratified by N13, and it does
+ *  not refuse.
+ *
+ *  There is deliberately NO relevance band here either. Band filtering is not
+ *  shipped — the engine takes a depth, not a score window — and this surface
+ *  used to claim otherwise. */
+export const HELL_RUNGS = ["high", "xhigh", "max"] as const;
 
-export type HellLevel = keyof typeof rungBudgets;
+export type HellLevel = (typeof HELL_RUNGS)[number];
 
 const PROTOTYPE_NOTE =
   "   WORKING PROTOTYPE · actively tested for public use · interfaces may change";
@@ -47,23 +51,24 @@ export function renderHellChooser(): string {
   return [
     "🔥 Skill Hell · high · xhigh · max · ultra",
     PROTOTYPE_NOTE,
+    "   WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
     "",
-    "   ● high    default · 1 skill/gap · tight relevance",
-    "   ○ xhigh   3 skills/gap · within 10% of the best score",
-    "   ○ max     5 skills/gap · within 25% of the best score",
-    "   ⊘ ultra   UNRATIFIED · no approved summon budget",
+    "   ● high    explore · the band opens here",
+    "   ○ xhigh   explore · further along the band",
+    "   ○ max     explore · further along the band",
+    "   ○ ultra   the crown rung · the controller picks direction + depth per gap",
     "",
     "   Select a rung to arm the lane; any other text manually summons for that intent.",
   ].join("\n");
 }
 
 export function renderArmed(level: HellLevel): string {
-  const budget = rungBudgets[level];
   return [
     `🔥 Skill Hell armed: ${level}`,
-    `   budget: up to ${budget.count} skill${budget.count === 1 ? "" : "s"} per capability gap · ${budget.relevance}`,
+    "   explore on each capability gap. There is no per-rung count and no cap on a",
+    "   summon — how far this rung reaches is the agent's call, gap by gap.",
     "   Summon only for a real gap; the lane remains armed afterward.",
-    `   engine seam: summon --limit ${budget.count}; automatic gap detection remains a harness integration seam.`,
+    "   engine seam: automatic gap detection remains a harness integration seam.",
   ].join("\n");
 }
 
