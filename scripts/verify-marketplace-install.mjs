@@ -32,7 +32,7 @@
 // Run directly: `node scripts/verify-marketplace-install.mjs`
 // Wrapped in CI by: test/verify-marketplace-install.test.ts
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -90,14 +90,99 @@ export function resolvePluginSource(
 }
 
 /**
+ * PR4: boot the bundled summon MCP server (plugins/skill-heaven/mcp/skill-summon.mjs)
+ * as a real child process, over stdio, with a minimal env (no repo-derived
+ * vars, nothing that could help Node resolve a bare package from outside the
+ * copied plugin dir), and confirm it answers `initialize` then `tools/list`
+ * with exactly `["summon"]`. Hand-rolled newline-delimited JSON-RPC framing —
+ * zero dependencies, matching the rest of this file's style. Not a general
+ * MCP client: just enough to prove the bundle boots standalone and answers
+ * the two calls a real host makes first.
+ * @param {string} serverPath
+ * @param {string} cwd
+ * @returns {Promise<{ ok: true, tools: string[] } | { ok: false, error: string }>}
+ */
+function bootBundledMcpServer(serverPath, cwd) {
+  return new Promise((resolve) => {
+    /** @type {import("node:child_process").ChildProcessWithoutNullStreams} */
+    const child = spawn(process.execPath, [serverPath], {
+      cwd,
+      env: { PATH: process.env.PATH ?? "" },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let buffered = "";
+    let stderr = "";
+    let settled = false;
+
+    /** @param {{ ok: true, tools: string[] } | { ok: false, error: string }} result */
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.kill();
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({
+        ok: false,
+        error: `bundled MCP server did not answer tools/list within 10s. stderr: ${stderr || "(empty)"}`,
+      });
+    }, 10_000);
+
+    child.on("error", (/** @type {Error} */ err) => {
+      finish({ ok: false, error: `failed to spawn bundled MCP server: ${err.message}` });
+    });
+
+    child.stderr.on("data", (/** @type {Buffer} */ chunk) => {
+      stderr += chunk.toString("utf8");
+    });
+
+    child.stdout.on("data", (/** @type {Buffer} */ chunk) => {
+      buffered += chunk.toString("utf8");
+      const lines = buffered.split("\n");
+      buffered = lines.pop() ?? ""; // keep any partial trailing line for the next chunk
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        /** @type {any} */
+        let message;
+        try {
+          message = JSON.parse(line);
+        } catch {
+          continue; // not a JSON-RPC line — ignore
+        }
+        if (message?.id === 2 && message?.result && Array.isArray(message.result.tools)) {
+          finish({ ok: true, tools: message.result.tools.map((/** @type {any} */ t) => t.name) });
+        }
+      }
+    });
+
+    const send = (/** @type {object} */ msg) => child.stdin.write(`${JSON.stringify(msg)}\n`);
+    send({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2024-11-05",
+        capabilities: {},
+        clientInfo: { name: "verify-marketplace-install", version: "0.0.0" },
+      },
+    });
+    send({ jsonrpc: "2.0", method: "notifications/initialized" });
+    send({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} });
+  });
+}
+
+/**
  * @param {(msg: string) => void} log
  * @param {{ marketplacePath?: string, repoRoot?: string, pluginName?: string }} [opts]
  *   Test-only overrides for resolvePluginSource's inputs — production callers
  *   (the CLI entry below, and the wrapping vitest suite's default case) rely
  *   on the real repo defaults.
- * @returns {{ ok: boolean, failures: string[] }}
+ * @returns {Promise<{ ok: boolean, failures: string[] }>}
  */
-export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg) => {}, opts = {}) {
+export async function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg) => {}, opts = {}) {
   /** @type {string[]} */
   const failures = [];
   /** @param {boolean} cond @param {string} msg */
@@ -204,6 +289,45 @@ export function verifyMarketplaceInstall(log = /** @param {string} _msg */ (_msg
     const ladderPath = join(installedPluginRoot, "data", "ladder.json");
     assert(existsSync(ladderPath), "data/ladder.json shipped inside the copied plugin (script does not reach back into the repo for it)");
 
+    // --- PR4: the summon MCP server is bundled in — no npx, no sibling ------
+    // --- checkout, no external binary. ---------------------------------------
+    const mcpConfigPath = join(installedPluginRoot, ".mcp.json");
+    assert(existsSync(mcpConfigPath), ".mcp.json shipped at the plugin root");
+    if (existsSync(mcpConfigPath)) {
+      /** @type {any} */
+      let mcpConfig = null;
+      try {
+        mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf-8"));
+      } catch (/** @type {any} */ err) {
+        failures.push(`.mcp.json did not parse as JSON: ${err.message}`);
+      }
+      if (mcpConfig) {
+        const server = mcpConfig?.mcpServers?.["skill-summon"];
+        assert(!!server, '.mcp.json declares an mcpServers["skill-summon"] entry');
+        assert(server?.command === "node", ".mcp.json's skill-summon server runs on plain node (no npx, no external binary)");
+        assert(
+          Array.isArray(server?.args) && server.args.some((/** @type {string} */ a) => a.includes("${CLAUDE_PLUGIN_ROOT}") && a.includes("mcp/skill-summon.mjs")),
+          '.mcp.json points at "${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs" — the bundle committed inside the plugin, not a sibling checkout',
+        );
+      }
+    }
+
+    const mcpServerPath = join(installedPluginRoot, "mcp", "skill-summon.mjs");
+    assert(existsSync(mcpServerPath), "mcp/skill-summon.mjs (the bundled summon MCP server) shipped inside the copied plugin");
+    if (existsSync(mcpServerPath)) {
+      const boot = await bootBundledMcpServer(mcpServerPath, fresh);
+      assert(
+        boot.ok,
+        `bundled MCP server boots over stdio on plain node with no node_modules reachable${boot.ok ? "" : ` (${boot.error})`}`,
+      );
+      if (boot.ok) {
+        assert(
+          JSON.stringify(boot.tools) === JSON.stringify(["summon"]),
+          `bundled MCP server's tools/list is exactly ["summon"] (got ${JSON.stringify(boot.tools)})`,
+        );
+      }
+    }
+
     // --- the one renderer actually runs standalone, with real output --------
     if (renderer) {
       /** @param {string} mode @returns {string | null} */
@@ -300,7 +424,7 @@ function isInvokedDirectly() {
 }
 
 if (isInvokedDirectly()) {
-  const { ok, failures } = verifyMarketplaceInstall((msg) => process.stdout.write(`${msg}\n`));
+  const { ok, failures } = await verifyMarketplaceInstall((msg) => process.stdout.write(`${msg}\n`));
   if (ok) {
     process.stdout.write("\nKC1 fresh-environment check: PASS\n");
     process.exit(0);

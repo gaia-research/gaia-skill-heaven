@@ -25,9 +25,9 @@ import { resolvePluginSource, verifyMarketplaceInstall } from "../scripts/verify
 const SCRIPT_PATH = fileURLToPath(new URL("../scripts/verify-marketplace-install.mjs", import.meta.url));
 
 describe("KC1: marketplace install, verified from a fresh environment", () => {
-  it("passes every check when the plugin dir is copied in isolation and run standalone", () => {
+  it("passes every check when the plugin dir is copied in isolation and run standalone", async () => {
     const lines: string[] = [];
-    const { ok, failures } = verifyMarketplaceInstall((msg: string) => lines.push(msg));
+    const { ok, failures } = await verifyMarketplaceInstall((msg: string) => lines.push(msg));
 
     if (!ok) {
       // Surface the full transcript (including the real stdout dump from the
@@ -64,7 +64,7 @@ describe("A5a: plugin source is read FROM marketplace.json, not asserted indepen
     return path;
   }
 
-  it("FAILS when source points somewhere that does not exist — the fix's whole point", () => {
+  it("FAILS when source points somewhere that does not exist — the fix's whole point", async () => {
     const marketplacePath = writeMarketplace({
       plugins: [{ name: "skill-heaven", source: "./this-directory-does-not-exist" }],
     });
@@ -76,7 +76,7 @@ describe("A5a: plugin source is read FROM marketplace.json, not asserted indepen
     }
 
     const lines: string[] = [];
-    const { ok, failures } = verifyMarketplaceInstall((msg) => lines.push(msg), { marketplacePath, repoRoot, pluginName: "skill-heaven" });
+    const { ok, failures } = await verifyMarketplaceInstall((msg) => lines.push(msg), { marketplacePath, repoRoot, pluginName: "skill-heaven" });
     expect(ok).toBe(false);
     expect(failures.some((f) => f.includes("does not exist"))).toBe(true);
   });
