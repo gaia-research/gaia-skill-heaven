@@ -1,4 +1,4 @@
-![Skill Heaven decides what enters your agent's session, along one line. Skill Zero is the finished launcher that starts a harness clean at the bottom rung (off); Heaven is the converge band that curates the right few skills; Hell is the exploratory band that reaches for more capability; Ultra is the crown rung that picks direction and depth for you.](docs/assets/entropy-ladder.svg)
+![Skill Heaven decides what enters your agent's session, along one line. Skill Zero is the finished launcher that starts a harness clean at the bottom rung (zero); Heaven is the converge band that curates the right few skills; Hell is the exploratory band that reaches for more capability; Ultra is the crown rung that picks direction and depth for you.](docs/assets/entropy-ladder.svg)
 
 # Skill Heaven
 
@@ -6,7 +6,7 @@
 
 Skill Heaven is the runtime layer for AI coding harnesses (**Claude Code, Codex, Pi, Hermes, Grok**). Instead of treating skills as permanent installs, it treats them as something you *start clean* and *summon on purpose*:
 
-- **Skill Zero** — the launcher, and the bottom rung (`off`) of the one line. Start any harness with a clean, minimal context in one command (`claude-zero`, `pi-zero`, …), shipping `/summon` by default. This is finished and usable today.
+- **Skill Zero** — the launcher, and the bottom rung (`zero`) of the one line. Start any harness with a clean, minimal context in one command (`claude-zero`, `pi-zero`, …), shipping `/summon` by default. This is finished and usable today.
 - **`/summon`** — the one mechanic underneath everything else: one skill into context, one session, nothing installed. Present at every rung, on every door — Heaven and Hell are just two directions of this same act, over one shared MCP.
 - **Heaven** — the *converge* band (`low · med`): bring back only the right few skills for the task at hand.
 - **Hell** — the *exploratory* band (`high · xhigh · max`): reach out into the evidenced skill world for more capability when you need it (`skill-hell`).
@@ -75,7 +75,7 @@ Pick how clean you want to start with `--level`:
 
 | Level | You get |
 |---|---|
-| `off` | The cleanest launchable start for that harness |
+| `zero` | The cleanest launchable start for that harness |
 | `low` | Clean, then only the skills you name (`--skill ./skills/my-skill`) |
 | `med` | Your normal, native harness |
 
@@ -100,7 +100,7 @@ A clean start is only half of Skill Heaven. Once you're launched, you *summon* c
 The launcher also ships the in-session command set for the whole runtime surface:
 
 ```text
-/skill-zero     start / re-compose a clean launch — the bottom rung (off), ships /summon by default
+/skill-zero     start / re-compose a clean launch — the bottom rung (zero), ships /summon by default
 /summon         one skill into context, one session, nothing installed — the shared mechanic under everything below
 /skill-heaven   converge band (low · med) — curate the right few (rung low, PROVISIONAL)
 /skill-hell     explore band (high · xhigh · max) — summon more capability (rung high, PROVISIONAL)
@@ -163,7 +163,7 @@ $HOME/.local/share/gaia-skill-heaven/uninstall.sh
 ```bash
 npm install
 npm test
-npm run launcher -- --level off --print
+npm run launcher -- --level zero --print
 ```
 
 Node.js **22+**, TypeScript ESM. No harness binaries are installed as dependencies.
