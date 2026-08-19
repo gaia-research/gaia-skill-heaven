@@ -16,5 +16,25 @@
   ],
   "author": {
     "name": "Gaia Research"
+  },
+  "userConfig": {
+    "tree_url": {
+      "type": "string",
+      "title": "Gaia Registry generic projection URL",
+      "description": "URL of the generic Gaia Skill Tree projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
+      "default": "https://gaiaskilltree.com/graph/gaia.json"
+    },
+    "tree_named_url": {
+      "type": "string",
+      "title": "Gaia Registry named projection URL",
+      "description": "URL of the Named Skills Gaia projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
+      "default": "https://gaiaskilltree.com/graph/named/index.json"
+    },
+    "zero_cuts": {
+      "type": "string",
+      "title": "What Skill Zero cuts by default",
+      "description": "\"automatic\" (default) cuts only automatic summoning — manual /summon still works, per N13's product floor. \"all\" cuts manual /summon too. Claude Code's userConfig schema has no enum type; any value other than \"all\" is treated as \"automatic\" by plugins/skill-heaven/scripts/render-ladder.mjs's zeroCuts().",
+      "default": "automatic"
+    }
   }
 }
