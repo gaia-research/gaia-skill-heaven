@@ -23,10 +23,12 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  DIRECTION_WORD,
   DOORS,
   DOSES,
   HOUSES,
   INSTALL,
+  LADDER_MEASURE,
   LADDER_WIP,
   MECHANIC,
   RUNGS,
@@ -122,7 +124,7 @@ const SCRIPT: TermLine[] = [
   { g: '›', t: `/skill-hell ${HELL_RUNG.id}`, k: 'cmd', d: 440, hell: true },
   {
     g: ' ',
-    t: `ladder    ${HELL_RUNG.id} · ${HELL_RUNG.slots} auto-summons per gap   [WIP · provisional]`,
+    t: `ladder    ${HELL_RUNG.id} · ${HELL_RUNG.direction} · ${HELL_RUNG.position}   [WIP · provisional]`,
     k: 'dim',
     d: 340,
   },
@@ -148,12 +150,14 @@ export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
   const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
-  const [installMode, setInstallMode] = useState<'sh' | 'npx'>('sh')
+  // Two real install routes, settled in docs/AGENT-PLUGIN.md: the plugin is
+  // primary (two lines inside Claude Code), install.sh is the optional route
+  // for the five standalone launcher doors. There is no npx path.
+  const [installMode, setInstallMode] = useState<'plugin' | 'sh'>('plugin')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
 
-  const installCmd = installMode === 'sh' ? INSTALL.sh : `npx skill-zero@latest ${picked.id}`
-  const installNote = installMode === 'sh' ? INSTALL.note : INSTALL.standaloneNote
+  const installNote = installMode === 'plugin' ? INSTALL.pluginNote : INSTALL.shNote
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -256,8 +260,9 @@ export default function Landing() {
 
   /* ---- §04 direction + ladder — ONE line, four bands (N13) ---- */
   // A single rung on one continuous line; its band/surface is READ from the
-  // rung (off=Zero, low·med=Heaven, high·xhigh·max=Hell, ultra=the crown),
-  // never chosen as a separate direction.
+  // rung (zero=Zero, low·med=Heaven, high·xhigh·max=Hell, ultra=the crown),
+  // never chosen as a separate direction. A rung names a direction and a
+  // position along skill entropy — never a count.
   const [rung, setRung] = useState<RungId>('low')
   const activeRung = RUNGS.find((r) => r.id === rung)!
   const activeSurface = surfaceById(RUNG_BAND[rung])
@@ -335,10 +340,11 @@ export default function Landing() {
               Now pick your door.
             </h1>
             <p className="lp-lede">
-              {SITE.name} composes a lean skill surface at launch — it builds flags and execs your
-              harness. Nothing installed, nothing mutated, nothing left behind. From inside the
+              <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
+              your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
               session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
-              it.
+              it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
+              ways.
             </p>
             <SlashReel />
           </div>
@@ -445,52 +451,92 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <span className="sh-label">INSTALL · ONE COMMAND</span>
+              <span className="sh-label">INSTALL</span>
               <div className="lp-seg" role="group" aria-label="Install route">
+                <button
+                  type="button"
+                  className={`lp-seg__btn${installMode === 'plugin' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'plugin'}
+                  onClick={() => setInstallMode('plugin')}
+                >
+                  the plugin (Claude Code)
+                </button>
                 <button
                   type="button"
                   className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
                   aria-pressed={installMode === 'sh'}
                   onClick={() => setInstallMode('sh')}
                 >
-                  curl (install everything)
-                </button>
-                <button
-                  type="button"
-                  className={`lp-seg__btn${installMode === 'npx' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'npx'}
-                  onClick={() => setInstallMode('npx')}
-                >
-                  npx (one-time use)
+                  the launcher doors (shell)
                 </button>
               </div>
             </div>
-            <CommandBlock
-              cmd={installCmd}
-              sigil="$"
-              tone="mint"
-              copied={copied === 'install'}
-              onCopy={() => copy(installCmd, 'install')}
-              label="install command"
-            />
+            {installMode === 'plugin' ? (
+              <div className="lp-install__lines">
+                {INSTALL.plugin.map((line, i) => (
+                  <CommandBlock
+                    key={line}
+                    cmd={line}
+                    sigil="›"
+                    tone={i === 0 ? 'violet' : 'mint'}
+                    copied={copied === `install-${i}`}
+                    onCopy={() => copy(line, `install-${i}`)}
+                    label={`install command, line ${i + 1} of ${INSTALL.plugin.length}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <CommandBlock
+                cmd={INSTALL.sh}
+                sigil="$"
+                tone="mint"
+                copied={copied === 'install'}
+                onCopy={() => copy(INSTALL.sh, 'install')}
+                label="install command"
+              />
+            )}
             <p className="lp-install__note">{installNote}</p>
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
-            <div className="sh-label">HOW TO LAUNCH</div>
-            <CommandBlock
-              cmd={picked.launch}
-              sigil="$"
-              tone="violet"
-              copied={copied === 'launch'}
-              onCopy={() => copy(picked.launch, 'launch')}
-              label="launch command"
-            />
-            <p className="lp-install__prose">{doorNote(picked)}</p>
+            <div className="sh-label">
+              {installMode === 'plugin' ? 'THEN, IN THE SESSION' : 'HOW TO LAUNCH'}
+            </div>
+            {installMode === 'plugin' ? (
+              <>
+                <CommandBlock
+                  cmd={MECHANIC.floor}
+                  sigil="›"
+                  tone="violet"
+                  copied={copied === 'launch'}
+                  onCopy={() => copy(MECHANIC.floor, 'launch')}
+                  label="summon command"
+                />
+                <p className="lp-install__prose">
+                  Nothing to launch. The plugin puts five commands in the session you are
+                  already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
+                  <code>/skill-heaven</code>, <code>/skill-hell</code>,{' '}
+                  <code>/skill-ultra</code> — and the summon engine ships inside it.
+                </p>
+              </>
+            ) : (
+              <>
+                <CommandBlock
+                  cmd={picked.launch}
+                  sigil="$"
+                  tone="violet"
+                  copied={copied === 'launch'}
+                  onCopy={() => copy(picked.launch, 'launch')}
+                  label="launch command"
+                />
+                <p className="lp-install__prose">{doorNote(picked)}</p>
+              </>
+            )}
           </div>
         </div>
         <p className="lp-fineprint">
-          WORK IN PROGRESS · v0 — the doors are source-delivered through <code>install.sh</code>, not
+          WORK IN PROGRESS · v0 — the plugin installs from this repository’s own marketplace; the
+          five launcher doors are source-delivered through <code>install.sh</code>. Neither is on
           npm. Uninstall is one script: <code>{INSTALL.uninstall}</code>
         </p>
       </section>
@@ -704,9 +750,9 @@ export default function Landing() {
                     <span className="sh-chip sh-chip--wip">WIP</span>
                   </>
                 ) : s.id === 'ultra' ? (
-                  <span className="sh-label">THE CROWN RUNG · no count to set</span>
+                  <span className="sh-label">ULTRA · the crown of the line</span>
                 ) : (
-                  <span className="sh-label">OFF · the floor of the line</span>
+                  <span className="sh-label">ZERO · the floor of the line</span>
                 )}
               </div>
             </article>
@@ -740,7 +786,7 @@ export default function Landing() {
               glyph: '✦',
               kcls: 'lp-k-gold',
               wip: true,
-              rows: ['controlled autonomy', 'unlimited budget', 'maximize quality', 'fully equipped agent'],
+              rows: ['controlled autonomy', 'no dial to set', 'maximize quality', 'fully equipped agent'],
             },
           ].map((col) => (
             <div className="lp-ledger__col" key={col.cmd}>
@@ -770,9 +816,10 @@ export default function Landing() {
           <div className="lp-ladder__head">
             <div>
               <span className="sh-label">
-                THE LADDER · ONE LINE · off · low · med · high · xhigh · max · ultra
+                THE LADDER · SKILL ENTROPY · zero · low · med · high · xhigh · max · ultra
               </span>
               <span className="sh-chip sh-chip--wip lp-ladder__wip">WIP · PROVISIONAL</span>
+              <p className="lp-ladder__measure">{LADDER_MEASURE}</p>
             </div>
             <div className="lp-ladder__band">
               <img
@@ -815,15 +862,10 @@ export default function Landing() {
 
           <div className="lp-ladder__read" aria-live="polite">
             <div className="lp-ladder__count">
-              <span className="lp-ladder__n">{activeRung.crown ? 'auto' : activeRung.slots === 0 ? 'off' : activeRung.slots}</span>
-              <span className="sh-label">
-                {activeRung.crown
-                  ? 'controller · picks direction + depth'
-                  : activeRung.slots === 0
-                    ? `the floor · ${MECHANIC.floor} by hand`
-                    : `auto-summon${activeRung.slots === 1 ? '' : 's'} per gap`}
+              <span className="lp-ladder__n" style={{ color: activeSurface.hue }}>
+                {DIRECTION_WORD[activeRung.direction]}
               </span>
-              <span className="sh-chip sh-chip--wip">WIP</span>
+              <span className="sh-label">{activeRung.position}</span>
             </div>
             <p className="lp-ladder__note">{activeRung.note}</p>
           </div>
@@ -837,10 +879,10 @@ export default function Landing() {
             ▨
           </span>
           <span>
-            ONE MCP · Heaven and Hell are the same summon pointed two ways — the rung sets how many
-            skills may be summoned automatically per gap, and <b>{MECHANIC.floor}</b> still works by
-            hand at every rung, including <b>off</b>. Rungs are discrete stops, never a continuous
-            fader.
+            ONE MCP · Heaven and Hell are the same summon pointed two ways along skill entropy. A
+            rung names a direction and a position, never a count, and <b>{MECHANIC.floor}</b> still
+            works by hand at every rung, including <b>zero</b>. Rungs are discrete stops, never a
+            continuous fader. Nothing on the line refuses.
           </span>
         </div>
       </section>
@@ -961,7 +1003,7 @@ export default function Landing() {
 
         <div className="lp-foot__bar">
           <span>
-            {SITE.version.toUpperCase()} · SOURCE-DELIVERED THROUGH INSTALL.SH · NOT ON NPM
+            {SITE.version.toUpperCase()} · INSTALLED AS A CLAUDE CODE PLUGIN · NOT ON NPM
           </span>
           <span className="lp-foot__licence">
             <span className="lp-foot__dot" aria-hidden="true" />

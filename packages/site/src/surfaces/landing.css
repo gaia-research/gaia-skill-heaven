@@ -643,6 +643,13 @@
   color: var(--sh-ink);
 }
 
+/* the plugin route is two lines, each separately copyable */
+.lp-install__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .lp-cmd {
   display: flex;
   align-items: flex-start;
@@ -1402,11 +1409,24 @@
   align-items: baseline;
   gap: 10px;
 }
+/* The readout names a DIRECTION, never a count — the stop strip above already
+   carries the position, so nothing here is a number. */
 .lp-ladder__n {
   font-family: var(--sh-mono);
-  font-size: 34px;
+  font-size: 26px;
   line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--sh-ink);
+}
+.lp-ladder__measure {
+  margin: 8px 0 0;
+  font-family: var(--sh-mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: var(--sh-ink-dim);
+  max-width: 56ch;
 }
 .lp-ladder__note {
   margin: 0;

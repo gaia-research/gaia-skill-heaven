@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { DOSES } from '../product'
+import { DOORS, DOSES } from '../product'
 
 const BUNDLED = [
   'pdf-tools',
@@ -76,8 +76,10 @@ export function SlashReel() {
       )} to ${fmt(FLOOR)} tokens — a clean slate you summon into on demand.`}
     >
       <div className="lp-reel__head">
+        {/* The real flagship launcher, not a made-up flag — cutting the
+            bundled surface is what it does at boot. */}
         <span className="lp-reel__cmd">
-          $ skill-zero <b>--slash</b>
+          $ <b>{DOORS[0].launch}</b>
         </span>
         <span className="lp-reel__count" aria-hidden="true">
           <span className={clean ? 'lp-reel__tok is-clean' : 'lp-reel__tok'}>{fmt(tokens)}</span>

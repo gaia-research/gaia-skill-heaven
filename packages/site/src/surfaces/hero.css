@@ -257,12 +257,20 @@
 .hx__actions .sh-cta--ghost:hover { background: transparent; color: var(--hx-accent); border-color: var(--hx-accent); }
 
 .hx__install {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   margin-top: 12px;
   font-family: var(--sh-mono);
   font-size: 10.5px;
   letter-spacing: 0.06em;
   color: var(--hx-dim);
   word-break: break-all;
+}
+.hx__install em {
+  font-style: normal;
+  color: var(--hx-dim);
+  opacity: 0.72;
 }
 
 /* --------------------------------------------------------------------------
@@ -411,14 +419,46 @@
   background: var(--hx-ink);
 }
 
-/* the slot strip — how many skills may be auto-summoned per gap */
-.hx__slots { display: flex; align-items: center; gap: 7px; margin-top: 13px; flex-wrap: wrap; }
-.hx__slot {
-  width: 26px; height: 9px;
-  border: 1px solid var(--hx-line-strong);
-  flex: none;
+/* the readout — a rung names a direction and a position, never a count */
+.hx__measure {
+  margin: 0 0 12px;
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  color: var(--hx-dim);
+  max-width: 52ch;
 }
-.hx__slot--on { background: var(--hx-accent); border-color: var(--hx-accent); }
+.hx__read {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+.hx__read-dir {
+  font-family: var(--sh-mono);
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hx-accent);
+}
+.hx__read-pos {
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hx-dim);
+}
+.hx__read-note {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--hx-dim);
+  max-width: 52ch;
+  text-wrap: pretty;
+}
 .hx__wip {
   margin: 9px 0 0;
   font-family: var(--sh-mono);
@@ -427,14 +467,6 @@
   letter-spacing: 0.08em;
   color: var(--hx-dim);
   max-width: 62ch;
-}
-
-.hx__slot-read {
-  font-family: var(--sh-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--hx-dim);
-  margin-left: 4px;
 }
 
 /* the two surfaces that carry no ladder say so, in the ladder's own place */

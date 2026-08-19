@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import './hero.css';
 
 import {
+  DIRECTION_WORD,
   DOORS,
   INSTALL,
+  LADDER_MEASURE,
   LADDER_WIP,
   MECHANIC,
   RUNGS,
@@ -60,7 +62,7 @@ export default function Hero() {
   const surface = useMemo(() => SURFACES.find((s) => s.id === dir)!, [dir]);
   const hasLadder = surface.ladder !== null;
   const activeRung = hasLadder ? rungs[dir as 'heaven' | 'hell'] : null;
-  const slots = activeRung ? RUNGS.find((r) => r.id === activeRung)!.slots : 0;
+  const rung = activeRung ? RUNGS.find((r) => r.id === activeRung)! : null;
 
   /* the impact frame — a 46ms cut on every direction change */
   const fire = useCallback(() => {
@@ -132,11 +134,13 @@ export default function Hero() {
     );
   }, []);
 
-  /* the command line rewrites live off the instrument */
+  /* The command line rewrites live off the instrument. These are the plugin's
+     real in-session commands — a bare rung is the argument, never a flag, and
+     the sigil is the session prompt, never a shell `$`. */
   const command = hasLadder
-    ? `${surface.command} --rung ${activeRung}`
+    ? `${surface.command} ${activeRung}`
     : dir === 'zero'
-      ? `claude-zero  ·  ${MECHANIC.floor} "code review"`
+      ? `${surface.command}  ·  ${MECHANIC.floor} "code review"`
       : surface.command;
 
   const art = ART[dir];
@@ -194,7 +198,7 @@ export default function Hero() {
 
           <div className="hx__cmd">
             <code aria-live="polite">
-              <b>$</b> {command}
+              <b>›</b> {command}
             </code>
             <button className="hx__copy" type="button" onClick={() => copy(command, 'cmd')}>
               {copied === 'cmd' ? 'copied' : 'copy'}
@@ -202,14 +206,23 @@ export default function Hero() {
           </div>
 
           <div className="hx__actions">
-            <button className="sh-cta" type="button" onClick={() => copy(INSTALL.sh, 'install')}>
-              {copied === 'install' ? 'Copied to clipboard' : 'Copy the install one-liner'}
+            <button
+              className="sh-cta"
+              type="button"
+              onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+            >
+              {copied === 'install' ? 'Copied to clipboard' : 'Copy the install'}
             </button>
             <Link className="sh-cta sh-cta--ghost" to="/landing">
               Read the document
             </Link>
           </div>
-          <p className="hx__install">{INSTALL.sh}</p>
+          <p className="hx__install">
+            {INSTALL.plugin.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+            <em>Two lines inside Claude Code.</em>
+          </p>
         </div>
 
         <div className="hx__figure">
@@ -248,11 +261,10 @@ export default function Hero() {
             {hasLadder ? (
               <>
                 <div className="hx__gauge-head">
-                  <span className="hx__gauge-title">
-                    Auto-summons per capability gap
-                  </span>
+                  <span className="hx__gauge-title">Skill entropy</span>
                   <span className="sh-chip sh-chip--wip">WIP</span>
                 </div>
+                <p className="hx__measure">{LADDER_MEASURE}</p>
 
                 <div
                   className="hx__rungs"
@@ -275,20 +287,13 @@ export default function Hero() {
                   ))}
                 </div>
 
-                <div className="hx__slots">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`hx__slot${i < slots ? ' hx__slot--on' : ''}`}
-                      aria-hidden="true"
-                    />
-                  ))}
-                  <span className="hx__slot-read" aria-live="polite">
-                    {slots === 0
-                      ? 'none automatic — /summon still works by hand'
-                      : `${slots} skill${slots === 1 ? '' : 's'} per gap`}
+                <div className="hx__read" aria-live="polite">
+                  <span className="hx__read-dir">
+                    {rung ? DIRECTION_WORD[rung.direction] : ''}
                   </span>
+                  <span className="hx__read-pos">{rung?.position}</span>
                 </div>
+                <p className="hx__read-note">{rung?.note}</p>
 
                 <p className="hx__wip">{LADDER_WIP}</p>
               </>
@@ -300,8 +305,8 @@ export default function Hero() {
                   </>
                 ) : (
                   <>
-                    <b>No ladder.</b> The controller picks the direction and the depth
-                    per gap. Nothing to set.
+                    <b>No ladder.</b> The crown rung picks the direction and the
+                    position for you, gap by gap. Nothing to set.
                   </>
                 )}
               </div>
