@@ -16,7 +16,7 @@ import {
 } from "./statusline.js";
 
 const PROFILE_ENV = "CLAUDE_ZERO_PROFILE";
-const HELL_SESSION_ENV = "SKILL_HELL_SESSION";
+const SUMMON_SESSION_ENV = "SKILL_SUMMON_SESSION";
 const HELL_MANIFEST_FILE = "session.json";
 
 function loadManifest(path: string | undefined): ProfileManifest | null {
@@ -29,12 +29,12 @@ function loadManifest(path: string | undefined): ProfileManifest | null {
   }
 }
 
-// Reads skill-hell's own session.json directly off disk — no subprocess, no
+// Reads the summon engine's own session.json directly off disk — no subprocess, no
 // network (the statusline runs on every prompt render, so this must stay
-// cheap), and no session is ever created here: unlike `skill-hell path`,
-// resolveSession() would materialize a fresh session root as a side effect
-// of merely asking, which a passive statusline read must never do. Absent or
-// unreadable degrades silently to no segment, same discipline as the profile
+// cheap), and no session is ever created here: unlike the engine's own session
+// resolution, resolveSession() would materialize a fresh session root as a side
+// effect of merely asking, which a passive statusline read must never do. Absent
+// or unreadable degrades silently to no segment, same discipline as the profile
 // manifest above.
 function loadHellManifest(sessionRoot: string | undefined): HellSessionManifest | null {
   if (!sessionRoot) return null;
@@ -65,7 +65,7 @@ export function main(): void {
   // Emit nothing so a mis-wired statusline is silent, not noisy/misleading.
   if (!manifest) return;
   const input = parseStatuslineInput(readStdin());
-  const hellManifest = loadHellManifest(process.env[HELL_SESSION_ENV]);
+  const hellManifest = loadHellManifest(process.env[SUMMON_SESSION_ENV]);
   process.stdout.write(renderStatusline(manifest, input, hellManifest));
 }
 
