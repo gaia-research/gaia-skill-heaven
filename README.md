@@ -136,7 +136,7 @@ Heaven, Hell, and Ultra aren't just summon buttons — they're a behavioral axis
 
 > **When does adding capability actually help, and when does it just add context entropy?**
 
-That question names **skill entropy** — how much skill variety and volume enters a session, and the axis the one ladder actually measures. It's a product concept, not a formula: `zero` is zero skills, the floor; `low → med → high → xhigh → max` is rising entropy; Heaven converges toward the low end, Hell explores toward the high end, and Ultra is the top rung of that same line, and from there it picks the entropy per gap rather than holding one level. The benchmark's job is to trace the resulting **entropy curve** — how quality and cost move together as entropy rises — not a token-savings headline, and that curve isn't measured yet. Full definition: [`docs/LADDER-FLOW.md`](docs/LADDER-FLOW.md).
+That question names **skill entropy** — how much skill variety and volume enters a session, and the axis the one ladder actually measures. It's a product concept, not a formula: `zero` is zero skills, the floor; `low → med → high → xhigh → max` is rising entropy; Heaven converges toward the low end, Hell explores toward the high end, and Ultra sits at the top of the same line and picks the entropy for you, gap by gap. The benchmark's job is to trace the resulting **entropy curve** — how quality and cost move together as entropy rises — not a token-savings headline, and that curve isn't measured yet. Full definition: [`docs/LADDER-FLOW.md`](docs/LADDER-FLOW.md).
 
 That research lives in `gaia-research` and is still in progress. The launcher does **not** yet auto-route skills from HH-Index results.
 
