@@ -5,7 +5,7 @@
    under .vha (Hero A) or .vhb (Hero B); shared page-level rules and
    keyframes live under the vh- stem.
    ═══════════════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Big+Shoulders+Display:wght@100..900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import '../assets/fonts/fonts.css';
 
 body.vh-hero-page {
   margin: 0;
@@ -15,6 +15,29 @@ body.vh-hero-page {
   background: #000;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Skip straight to the document. The one bit of persistent chrome on the
+   otherwise full-bleed hero — the old prototype Switcher is gone. */
+.vha-skip {
+  position: fixed;
+  top: 16px;
+  right: 8vw;
+  z-index: 40;
+  padding: 8px 15px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  font-family: Archivo, sans-serif;
+  font-variation-settings: 'wght' 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: opacity 200ms ease;
+  pointer-events: auto;
+}
+.vha-skip:hover {
+  opacity: 0.6;
 }
 
 .vha,
@@ -228,11 +251,12 @@ body.vh-hero-page {
 
 .vha-eyebrow,
 .vhb-eyebrow {
-  font-family: Archivo, sans-serif;
-  font-variation-settings: 'wdth' 100, 'wght' 700;
-  letter-spacing: 0.3em;
-  padding-left: 0.3em;
-  line-height: 1;
+  font-family: 'Kalam', 'Archivo', cursive;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  padding-left: 0;
+  line-height: 0.9;
+  text-transform: none;
 }
 .vhb-eyebrow {
   font-size: clamp(13px, 1.5vw, 22px);
@@ -318,26 +342,33 @@ body.vh-hero-page {
   letter-spacing: 0.26em;
   padding-left: 0.26em;
 }
+.vha-chip--zero,
+.vhb-chip--zero {
+  flex: 1;
+  background: #6b6970;
+  color: #f2f1ee;
+  border: 1px solid #9a98a0;
+}
 .vha-chip--heaven,
 .vhb-chip--heaven {
-  flex: 3;
-  background: #0a0a0a;
-  color: #fff;
-  border: 1px solid #fff;
+  flex: 2;
+  background: #ffffff;
+  color: #0a0a0a;
+  border: none;
 }
 .vha-chip--hell,
 .vhb-chip--hell {
   flex: 3;
-  background: #fff;
-  color: #0a0a0a;
-  border: 1px solid #0a0a0a;
+  background: #0a0a0a;
+  color: #ffffff;
+  border: none;
 }
 .vha-chip--ultra,
 .vhb-chip--ultra {
   flex: 1;
-  background: #fff;
-  color: #c81e1e;
-  border: 1px solid #c81e1e;
+  background: #ffd24a;
+  color: #0a0a0a;
+  border: none;
   font-size: 9px;
   letter-spacing: 0.2em;
   padding-left: 0.2em;
@@ -357,6 +388,64 @@ body.vh-hero-page {
 .vha-cta-btn:hover,
 .vhb-cta-btn:hover {
   opacity: 0.78;
+}
+
+/* Fifth-scene CTA: a copyable invocation one-liner + a copyable install
+   one-liner, mirroring the instrument surface. */
+.vha-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.vha-cta-cmd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 13px 20px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+.vha-cta-cmd:hover {
+  opacity: 0.75;
+}
+.vha-cta-prompt {
+  font-weight: 500;
+  opacity: 0.8;
+}
+.vha-cta-text {
+  font-weight: 500;
+}
+.vha-cta-tag {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.vha-cta-hint {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.vha-cta-install {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 200ms ease;
+}
+.vha-cta-install:hover {
+  opacity: 0.7;
 }
 
 .vha-cut,
@@ -417,9 +506,10 @@ body.vh-hero-page {
   top: 0;
   font-family: 'Big Shoulders Display', Archivo, sans-serif;
   font-weight: 900;
-  /* Keep the wordmark monumental, but let viewport height win on ultrawide
-     screens so it does not become a wall over Lucy's face. */
-  font-size: min(23vw, 30vh, 42rem);
+  /* Keep the wordmark monumental — oversized by design (the figure and the
+     headline both dominate the page; N13 direction). Viewport height still
+     wins on ultrawide so it does not become a wall over the face. */
+  font-size: min(26vw, 34vh, 50rem);
   line-height: 0.8;
   letter-spacing: -0.01em;
 }
@@ -453,7 +543,7 @@ body.vh-hero-page {
   translate: 0 -50%;
   font-family: Archivo, sans-serif;
   font-variation-settings: 'wdth' 125, 'wght' 900;
-  font-size: min(19vw, 27vh, 34rem);
+  font-size: min(24vw, 32vh, 44rem);
   line-height: 0.78;
   letter-spacing: -0.02em;
   transition: transform calc(500ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1), opacity calc(120ms * var(--vh-t)) linear;
@@ -465,7 +555,7 @@ body.vh-hero-page {
   font-size: clamp(11px, 1.3vw, 18px);
   letter-spacing: 0.52em;
   padding-left: 0.52em;
-  color: #c81e1e;
+  color: #FFD24A;
   transform: translateY(4.5vw);
   transition: opacity calc(300ms * var(--vh-t)) linear;
 }
@@ -535,7 +625,7 @@ body.vh-hero-page {
   font-size: clamp(11px, 1.3vw, 18px);
   letter-spacing: 0.52em;
   padding-left: 0.52em;
-  color: #c81e1e;
+  color: #FFD24A;
   transition: opacity calc(300ms * var(--vh-t)) linear;
 }
 
@@ -549,4 +639,293 @@ body.vh-hero-page {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Upper-left explainer — whisper-quiet, dismissable, responsive to mobile.
+   Acts 1–4: "What is this?" (the system). Act 5: "Skill entropy" + a sketch.
+   ───────────────────────────────────────────────────────────────────────── */
+.vha-info {
+  position: absolute;
+  top: clamp(14px, 2.6vh, 26px);
+  left: clamp(16px, 8vw, 120px);
+  z-index: 40;
+  pointer-events: auto;
+  max-width: min(88vw, 340px);
+}
+.vha-info-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.85;
+  transition: opacity 180ms ease;
+}
+.vha-info-toggle:hover,
+.vha-info[data-open='1'] .vha-info-toggle {
+  opacity: 0.92;
+}
+.vha-info-q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+.vha-info-label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.vha-info-panel {
+  margin-top: 10px;
+  width: min(84vw, 320px);
+  padding: 14px 16px 12px;
+  border: 1px solid;
+  border-radius: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: vha-info-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes vha-info-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.vha-info-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.vha-info-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.vha-info-curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 10px;
+}
+.vha-info-hide {
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.vha-info-hide:hover {
+  opacity: 1;
+}
+.vha-info-nub {
+  position: absolute;
+  top: clamp(14px, 2.6vh, 26px);
+  left: clamp(16px, 8vw, 120px);
+  z-index: 40;
+  pointer-events: auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 180ms ease;
+}
+.vha-info-nub:hover {
+  opacity: 0.75;
+}
+@media (max-width: 640px) {
+  .vha-info,
+  .vha-info-nub {
+    left: 14px;
+    top: 12px;
+  }
+  .vha-info-label {
+    display: none;
+  }
+  .vha-info-panel {
+    width: min(90vw, 300px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Upper-right: /summon one-liner + "Where do skills come from?" explainer.
+   ───────────────────────────────────────────────────────────────────────── */
+.vha-summon {
+  position: fixed;
+  top: 58px;
+  right: 8vw;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+  max-width: min(88vw, 340px);
+  pointer-events: auto;
+}
+.vha-summon-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 13px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.vha-summon-cmd:hover {
+  opacity: 1;
+}
+.vha-summon-tag {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.vha-summon-hint {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
+.vha-info--right {
+  position: static;
+  max-width: none;
+  margin-top: 4px;
+}
+.vha-info--right .vha-info-toggle {
+  justify-content: flex-end;
+}
+.vha-info--right .vha-info-panel {
+  margin-left: auto;
+  text-align: left;
+}
+
+/* Immersive "show artwork only" toggle — extreme corner, whisper-quiet. */
+.vha-bare-toggle {
+  position: fixed;
+  right: 2.2vw;
+  bottom: 2.4vh;
+  z-index: 45;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.38;
+  transition: opacity 200ms ease, background 200ms ease;
+  pointer-events: auto;
+}
+.vha-bare-toggle:hover {
+  opacity: 0.9;
+}
+.vha--bare .vha-bare-toggle {
+  opacity: 0.5;
+}
+
+/* Immersive mode: fade the whole interface, leave only the artwork. */
+.vha-typewrap,
+.vha-chrome,
+.vha-ctawrap,
+.vha-summon {
+  transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vha--bare .vha-typewrap,
+.vha--bare .vha-chrome,
+.vha--bare .vha-ctawrap,
+.vha--bare .vha-skip,
+.vha--bare .vha-info,
+.vha--bare .vha-info-nub,
+.vha--bare .vha-summon {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .vha-summon {
+    top: 52px;
+    right: 14px;
+    max-width: 72vw;
+  }
+  .vha-info--right .vha-info-label {
+    display: none;
+  }
+}
+
+/* Secondary install terminal — smaller than the main CTA, still a terminal. */
+.vha-cta-cmd--sm {
+  padding: 8px 14px;
+  font-size: 11.5px;
+  margin-top: 6px;
+  text-decoration: none;
+  opacity: 0.9;
+}
+.vha-cta-cmd--sm:hover {
+  opacity: 1;
+}
+.vha-cta-cmd--sm .vha-cta-tag {
+  font-size: 9px;
+}
+
+/* Link inside the "Where do skills come from?" card → gaiaskilltree.com */
+.vha-info-link {
+  display: inline-block;
+  margin-top: 11px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+  transition: opacity 160ms ease;
+}
+.vha-info-link:hover {
+  opacity: 0.75;
+}
+
+/* Focus mode: click empty backdrop → the main text slides out of the way,
+   leaving Lucy + assets. Only the wordmark moves; other UI stays. */
+.vha-typewrap {
+  transition:
+    bottom calc(700ms * var(--vh-t)) cubic-bezier(0.16, 1, 0.3, 1),
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 440ms linear;
+}
+.vha--focus .vha-typewrap {
+  transform: translateY(24vh);
+  opacity: 0;
+  pointer-events: none;
 }

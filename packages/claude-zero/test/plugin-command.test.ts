@@ -111,8 +111,13 @@ describe("door manifests", () => {
   });
 
   it("carries no banned lexicon word in any door description", () => {
+    // Slider/notch/picker are the retired "posture control" words (R2). Ladder/rung
+    // were de-banned when the entropy ladder was ratified as the product's core
+    // noun (docs/LADDER-FLOW.md founder ruling, 2026-08-07; "the split ladder",
+    // 44f0e9d) — the command-file test now *requires* them (line 70) and the
+    // README/CLAUDE.md use them freely. Door copy may therefore say "ladder".
     for (const description of [pluginJson.description, entry.description]) {
-      expect(description).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bladder\b|\brung(s)?\b|\bpicker\b/i);
+      expect(description).not.toMatch(/\bslider\b|\bnotch(es)?\b|\bpicker\b/i);
     }
   });
 

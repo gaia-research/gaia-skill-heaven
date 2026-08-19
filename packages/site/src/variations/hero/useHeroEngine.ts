@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Shared state machine behind VariationHeroA / VariationHeroB. Both routes
 // render the same 5-act, wheel/keyboard/touch-driven scrollytelling engine
-// and the same 7-rung risk ladder (OFF..MAX, plus the sealed ULTRA overdrive
-// lane past the firebreak) — they differ only in layout (Reredos vs
+// and the same 7-rung entropy ladder (OFF..MAX plus ULTRA, the crown rung —
+// reachable, never sealed) — they differ only in layout (Reredos vs
 // Guillotine), so the machine lives here once.
 
-const ACT_LABEL = ['CLEAN SLATE', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
-const ACT_SUB = ['nothing installed', '/skill-heaven', '—', '/skill-hell · gated', 'one axis']
+const ACT_LABEL = ['FOCUS', 'SUMMON', 'SLASH', 'BREAK LOOSE', 'ENTER']
+const ACT_SUB = ["converge, don't collect", 'one skill · one session', 'cut the context bloat', 'explore · trust the agent', 'one line']
 const CAM = [0, 180, 340, 430, 120]
 const P = 1200
 const N = 5
@@ -15,19 +15,23 @@ const N = 5
 // Real perspective parallax: one camera push, per-layer depth.
 const mag = (d: number, camZ: number) => ((P - d) / (P - d - camZ)).toFixed(4)
 
-export type Lane = 'h' | 'x' | 'u'
+export type Lane = 'z' | 'h' | 'x' | 'u'
 
-// The posture ladder. Off/Low/Med run the Heaven palette; High→Max are the
-// Hell lane (gated, P2); Ultra is Hell in overdrive, past the token-ceiling
-// firebreak — always shown sealed, never an activator.
+// The one line (N13). A single ladder — off·low·med·high·xhigh·max·ultra —
+// whose four surfaces are contiguous BANDS read from the current rung:
+//   ZERO (off)            → lane 'z'  the floor, ships /summon, none automated
+//   LOW·MED              → lane 'h'  Skill Heaven · converge
+//   HIGH·XHIGH·MAX       → lane 'x'  Skill Hell · explore
+//   ULTRA                → lane 'u'  Skill Ultra · the crown rung / controller
+// Nothing here refuses: every rung is reachable, none gated or sealed (N13).
 export const LADDER: { label: string; lane: Lane; note: string }[] = [
-  { label: 'OFF', lane: 'h', note: 'off · cleanest launchable posture' },
-  { label: 'LOW', lane: 'h', note: 'curated · only what you summon' },
-  { label: 'MED', lane: 'h', note: 'native · your harness as shipped' },
-  { label: 'HIGH', lane: 'x', note: 'hell · more surface, priced honestly' },
-  { label: 'XHIGH', lane: 'x', note: 'hell · fleets and long loops' },
-  { label: 'MAX', lane: 'x', note: 'hell · every good skill in the tree' },
-  { label: 'ULTRA', lane: 'u', note: 'overdrive · past the firebreak' },
+  { label: 'ZERO', lane: 'z', note: 'zero · the floor — ships /summon, none of it automated' },
+  { label: 'LOW', lane: 'h', note: 'heaven · converge — the tightest useful reach' },
+  { label: 'MED', lane: 'h', note: 'heaven · converge — a second opinion in context' },
+  { label: 'HIGH', lane: 'x', note: 'hell · explore — the working default' },
+  { label: 'XHIGH', lane: 'x', note: 'hell · explore — a wider net' },
+  { label: 'MAX', lane: 'x', note: 'hell · explore — the widest reach' },
+  { label: 'ULTRA', lane: 'u', note: 'ultra · the controller picks direction + depth for you' },
 ]
 
 function prefersReducedMotion() {
@@ -44,32 +48,126 @@ type EngineState = {
   od: 0 | 1 | 2
 }
 
+// Hero palette — the single source of truth for every colour the hero draws,
+// mirroring the brand tokens (styles/system.css, DESIGN.md). This ported hero
+// computes its styles in JS rather than from CSS custom properties, so the
+// palette lives here as named constants instead of scattered hex literals.
+const HERO = {
+  ink: '#0A0A0A',
+  bone: '#EDEDEA',
+  paper: '#F4F2EE',
+  inkPanel: '#171618',
+  zeroBg: '#1B1A1C', // our charcoal token (the established "black-grey", never #000)
+  zeroFg: '#EEEBE6', // bone — white figure + type on charcoal
+  ultraBg: '#080604',
+  ultraFg: '#F2E4C0',
+  cyan: '#5FC2D6', // prismatic palette (Heaven)
+  violet: '#A58AE0',
+  blue: '#7CC4FF',
+  gold: '#FFD24A', // Ultra
+  grey: '#8B8890', // Zero rung
+  hellTeal: '#3F9B8A', // inverted, non-red (Hell)
+  hellBlue: '#4F86B8',
+  hellAmber: '#C89A3F',
+} as const
+
 // Pure translation of state -> every derived style value. Nothing here
 // mutates state; `variant` only steers the two style knobs (cut angle, CTA
 // alignment) that differ between the Reredos and Guillotine layouts.
 function computeVals(state: EngineState, variant: 'a' | 'b') {
   const { act, flash, stop, glitch, od } = state
   const lane = LADDER[stop].lane
-  // Below act 5 the act owns the palette; at act 5 the ladder does.
-  const hell = act >= 3 && !(act === N - 1 && lane === 'h')
-  const lucyState = act === N - 1 && lane === 'u' ? ('ultra' as const) : hell ? ('hell' as const) : ('heaven' as const)
+  const atLadder = act === N - 1
+  // Below act 5 the act owns the palette (heaven build → hell reveal); at act 5
+  // the ladder's current rung owns it, so the whole page repaints to the band.
+  const scene: 'zero' | 'heaven' | 'hell' | 'ultra' = atLadder
+    ? lane === 'z'
+      ? 'zero'
+      : lane === 'x'
+        ? 'hell'
+        : lane === 'u'
+          ? 'ultra'
+          : 'heaven'
+    : act >= 3
+      ? 'hell'
+      : 'heaven'
+  const hell = scene === 'hell'
+  // Zero has no bespoke master — it borrows Heaven's figure under a monochrome
+  // wash (owner: "even Lucy is rendered monochrome up top"). Hell and Ultra use
+  // their own approved masters.
+  const lucyState =
+    scene === 'ultra'
+      ? ('ultra' as const)
+      : scene === 'hell'
+        ? ('hell' as const)
+        : scene === 'zero'
+          ? ('zero' as const)
+          : ('heaven' as const)
   const camZ = CAM[act]
 
-  const bg = hell ? '#FFFFFF' : '#000000'
-  const fg = hell ? '#0A0A0A' : '#EDEDEA'
-  const dim = hell ? 'rgba(10,10,10,.48)' : 'rgba(237,237,234,.46)'
+  // Four bands, four palettes (N13 motif):
+  //   zero   — zen washed monochrome; ink grey is the darkest tone, never black
+  //   heaven — the full PRISMATIC spectrum on deep ground
+  //   hell   — the INVERTED spectrum on paper; it reads red because that is what
+  //            the prism becomes when inverted
+  //   ultra  — heaven with a GOLD highlight laid over it: the
+  //            final form, not flat gold
+  const PAL = {
+    zero: { bg: HERO.zeroBg, fg: HERO.zeroFg, dim: 'rgba(241,240,237,.5)', hair: 'rgba(241,240,237,.09)', hair2: 'rgba(241,240,237,.22)' },
+    heaven: { bg: '#000000', fg: HERO.bone, dim: 'rgba(237,237,234,.46)', hair: 'rgba(237,237,234,.09)', hair2: 'rgba(237,237,234,.22)' },
+    hell: { bg: HERO.paper, fg: HERO.ink, dim: 'rgba(10,10,10,.48)', hair: 'rgba(10,10,10,.10)', hair2: 'rgba(10,10,10,.22)' },
+    ultra: { bg: HERO.ultraBg, fg: HERO.ultraFg, dim: 'rgba(242,228,192,.5)', hair: 'rgba(242,228,192,.08)', hair2: 'rgba(255,210,74,.32)' },
+  } as const
+  const P0 = PAL[scene]
+  const bg = P0.bg
+  const fg = P0.fg
+  const dim = P0.dim
+
+  // Photoshop-style treatment: a SOLID fill + a coloured TEXT BORDER (stroke).
+  // HEAVEN white, HELL black, ULTRA white, ZERO bone. The border carries the
+  // palette splash: prismatic (heaven), inverted non-red (hell), gold (ultra).
+  const WORD_FILL = { zero: HERO.bone, heaven: '#FFFFFF', hell: '#0A0A0A', ultra: '#FFFFFF' } as const
+  const WORD_STROKE = {
+    zero: `2px ${HERO.grey}`,
+    heaven: `3px ${HERO.violet}`,
+    hell: `3px ${HERO.hellTeal}`,
+    ultra: `3px ${HERO.gold}`,
+  } as const
+  const wordFill = WORD_FILL[scene]
+  const wordStroke = WORD_STROKE[scene]
+
+  // Per-band figure framing, FACE-ANCHORED. origin is the measured FACE centre
+  // (% of the master) so the zoom pivots on the face; y (vh) then places that
+  // face on the GOLDEN-RATIO line (~37vh from top) — face-first, never covered.
+  // Because origin is the face, face-y ≈ 8 + originY%*92 + lucyY + y, i.e. y
+  // moves the face 1:1 in vh. PROVISIONAL, verified against screenshots.
+  const FIG = {
+    zero: { zoom: 1.5, x: 1.8, y: 6, origin: '47% 30%' },
+    heaven: { zoom: 2.5, x: 0.6, y: 12, origin: '49% 27%' },
+    hell: { zoom: 2.5, x: 3.3, y: 12, origin: '47% 30%' },
+    ultra: { zoom: 2.1, x: 4.9, y: 15, origin: '45% 24%' },
+  } as const
+  const fig = FIG[scene]
 
   const pick = <T,>(arr: T[]) => arr[act]
 
   return {
+    atLadder,
     bg,
     fg,
     dim,
     lucyState,
-    hair: hell ? 'rgba(10,10,10,.10)' : 'rgba(237,237,234,.09)',
-    hair2: hell ? 'rgba(10,10,10,.22)' : 'rgba(237,237,234,.22)',
-    stripe: hell ? 'rgba(10,10,10,.09)' : 'rgba(237,237,234,.09)',
-    chromeBg: hell ? 'rgba(255,255,255,.6)' : 'rgba(0,0,0,.5)',
+    scene,
+    wordFill,
+    wordStroke,
+    figZoom: fig.zoom,
+    figX: fig.x,
+    figY: fig.y,
+    figOrigin: fig.origin,
+    hair: P0.hair,
+    hair2: P0.hair2,
+    stripe: P0.hair,
+    chromeBg: scene === 'hell' ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.5)',
 
     mType: mag(0, camZ),
     mLucy: mag(-260, camZ),
@@ -78,36 +176,49 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     mBlade: mag(120, camZ),
 
     oHeaven: pick([1, 1, 1, 0, 0]),
-    oHeavenSm: act === N - 1 && !hell ? 1 : 0,
-    oHeavenB: act < 3 ? 1 : act === N - 1 && !hell ? 1 : 0,
+    oHeavenSm: atLadder && scene === 'heaven' ? 1 : 0,
+    oZero: atLadder && scene === 'zero' ? 1 : 0,
+    oHeavenB: act < 3 ? 1 : atLadder && scene === 'heaven' ? 1 : 0,
     mHeavenB: act === N - 1 ? (Number(mag(0, camZ)) * 0.62).toFixed(4) : mag(0, camZ),
     heavenYB: act === N - 1 ? -11 : pick([0, -1, -2, 0, 0]),
     oUltra: act === N - 1 && lane === 'u' ? 1 : 0,
     glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : od === 1 ? -7 : od === 2 ? 5 : 0,
     glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : od === 1 ? -1.6 : od === 2 ? 1.1 : 0,
     oScan: glitch ? 0.5 : od ? 0.34 : 0,
-    odSheet: od === 1 ? '#C81E1E' : od === 2 ? '#FFFFFF' : 'transparent',
-    odWedge: od === 1 ? '#FFFFFF' : '#C81E1E',
+    odSheet: od === 1 ? HERO.gold : od === 2 ? HERO.inkPanel : 'transparent',
+    odWedge: od === 1 ? HERO.inkPanel : HERO.gold,
     odOp: od ? (od === 1 ? 0.88 : 1) : 0,
     oSplit: pick([0, 0, 1, 0, 0]),
     splitX: pick([0, 0, 34, 90, 90]),
     oHell: act === 3 || (act === N - 1 && hell) ? 1 : 0,
-    hellScale: pick([1.25, 1.25, 1.25, 1, 0.62]),
+    hellScale: pick([1.25, 1.25, 1.25, 1, 0.5]),
     hellY: 0,
     hellYB: pick([0, 0, 0, 0, -11]),
-    typeUp: pick([0, 0, 0, 0, 28]),
+    typeUp: pick([0, 0, 0, 0, 36]),
     oGround: pick([0.55, 0.45, 0.3, 0.2, 0.14]),
     oHalo: pick([0.5, 0.34, 0.14, 0, 0]),
+    // Glass wings: translucent, their OWN scale (never the figure's oversize),
+    // present through the intro and at the ladder for heaven/hell/ultra; Zero
+    // carries none (canon).
+    oWing: atLadder ? (scene === 'zero' ? 0 : 0.55) : [0.5, 0.4, 0.28, 0.14, 0][act],
     haloRot: pick([0, -3, -7, -12, -12]),
-    lucyY: pick([0, -1.5, -3, 0, 12]),
+    lucyY: pick([0, -1.5, -3, 0, 0]),
     lucyXB: pick([0, -1, -2, 1, 6]),
     lucyBlend: 'normal' as const,
-    lucyFilter: 'none',
+    lucyFilter:
+      scene === 'zero'
+        ? 'grayscale(1) brightness(1.55) contrast(1.06)'
+        : scene === 'ultra'
+          ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))'
+          : 'none',
     oLucy: pick([1, 1, 1, 1, 0.88]),
 
     oBlade: pick([0, 1, 0.9, 0, 0]),
     bladeX: pick([-58, -14, 46, 120, 120]),
     bladeXB: pick([-62, -18, 40, 110, 110]),
+    // Horizontal motion blur on the katana, synced to the swing: heavy as it
+    // flies in and out, sharp at the pose. Eases with the blade transition.
+    bladeBlur: pick([0, 12, 5, 18, 0]),
 
     oCut: pick([0, 0, 1, 0.14, 0]),
     cutRot: variant === 'b' ? -38 : -28,
@@ -127,13 +238,19 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     ctaY: act === N - 1 ? 0 : 24,
     ctaPE: act === N - 1 ? ('auto' as const) : ('none' as const),
 
-    stopNote: LADDER[stop].note + (LADDER[stop].lane === 'h' ? '' : ' · GATED'),
-    noteTone: lane === 'u' ? '#C81E1E' : dim,
+    stopNote: LADDER[stop].note,
+    noteTone: lane === 'u' ? HERO.gold : dim,
     ctaLabel:
-      LADDER[stop].lane === 'h' ? 'ENTER SKILL HEAVEN' : LADDER[stop].lane === 'x' ? 'HELL · LOCKED DOOR' : 'OVERDRIVE · SEALED',
-    ctaBg: lane === 'h' ? fg : 'transparent',
-    ctaFg: lane === 'h' ? bg : lane === 'u' ? '#C81E1E' : fg,
-    ctaLine: lane === 'u' ? '#C81E1E' : fg,
+      lane === 'z'
+        ? 'START CLEAN · SKILL ZERO'
+        : lane === 'h'
+          ? 'ENTER SKILL HEAVEN'
+          : lane === 'x'
+            ? 'ENTER SKILL HELL'
+            : 'LET ULTRA DECIDE',
+    ctaBg: lane === 'u' ? HERO.ink : lane === 'z' ? 'transparent' : fg,
+    ctaFg: lane === 'u' ? HERO.gold : lane === 'z' ? fg : bg,
+    ctaLine: lane === 'u' ? HERO.gold : fg,
   }
 }
 
@@ -269,11 +386,12 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const pickStop = useCallback(
     (i: number) => {
       setScale(1)
-      const wasHeaven = LADDER[stopRef.current].lane === 'h'
-      const isHeaven = LADDER[i].lane === 'h'
-      const crossing = actRef.current === N - 1 && wasHeaven !== isHeaven
+      // The slice fires only when the BAND changes — i.e. you switch modes
+      // (Zero ↔ Heaven ↔ Hell ↔ Ultra). Moving WITHIN a band (high→xhigh, both
+      // Hell) does not, since the surface identity has not changed.
+      const bandChanged = LADDER[i].lane !== LADDER[stopRef.current].lane
       setStop(i)
-      if (!crossing || prefersReducedMotion()) return
+      if (!bandChanged || actRef.current !== N - 1 || prefersReducedMotion()) return
       clearInterval(glitchIntervalRef.current)
       let n = 0
       setGlitch(1)
@@ -363,7 +481,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [go, registerInput])
 
-  // Ultra's overdrive: a periodic double-flash (red sheet → white sheet) with
+  // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
   // a small glitch shear on the wordmark, looping while Ultra stays selected.
   useEffect(() => {
     const on = act === N - 1 && LADDER[stop].lane === 'u'
@@ -402,18 +520,21 @@ export function useHeroEngine(variant: 'a' | 'b') {
 
   const rungs = LADDER.map((r, i) => {
     const sel = i === stop
-    const ink = r.lane === 'u' ? '#C81E1E' : '#0A0A0A'
+    // Diagonal line-art fill (not solid) + a solid single-colour border:
+    // zero ink-grey · heaven white + prismatic border · hell black + inverted
+    // border (no red) · ultra white + gold border.
+    const RUNG_FILL = [HERO.grey, '#FFFFFF', '#FFFFFF', '#0A0A0A', '#0A0A0A', '#0A0A0A', '#FFFFFF']
+    const RUNG_BORDER = [HERO.grey, HERO.cyan, HERO.violet, HERO.hellTeal, HERO.hellBlue, HERO.hellAmber, HERO.gold]
+    const fill = RUNG_FILL[i]
+    const border = RUNG_BORDER[i]
     return {
       label: r.label,
       h: sel ? 38 : 13,
-      // Only the rung that is becoming selected eases its height; every other
-      // rung snaps back to 13px in the same commit that moves the label and the
-      // CTA note. See the note on `.vha-rung` in variation-hero.css.
       sel,
-      bg: r.lane === 'h' ? '#0A0A0A' : sel ? 'repeating-linear-gradient(135deg,' + ink + ' 0 2px,#FFFFFF 2px 5px)' : '#FFFFFF',
-      line: r.lane === 'h' ? '#FFFFFF' : ink,
-      op: sel ? 1 : 0.42,
-      tone: sel ? (r.lane === 'u' ? '#C81E1E' : v.fg) : v.dim,
+      bg: `repeating-linear-gradient(45deg, ${fill} 0 2px, transparent 2px 4px)`,
+      line: border,
+      op: sel ? 1 : 0.4,
+      tone: sel ? border : v.dim,
       pick: () => pickStop(i),
     }
   })
