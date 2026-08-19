@@ -165,6 +165,57 @@ describe("skill-summon MCP protocol", () => {
     });
   });
 
+  // The rung sets `limit`, so the boundary is a product surface, not an
+  // implementation detail: an over-range limit must be REFUSED, never silently
+  // clamped down to 5. A clamp would let a surface ask for more than the line
+  // permits and get a quiet, plausible-looking answer back.
+  it.each([0, 6, 42, 1.5, -1])("refuses limit %s rather than clamping it", async (limit) => {
+    const service = new GaiaService(new InMemoryGaiaRegistrySource(documents));
+    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+    const client = new Client({ name: "skill-summon-test", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    closeCallbacks.push(
+      () => client.close(),
+      () => server.close(),
+    );
+
+    const result = await client.callTool({
+      name: "summon",
+      arguments: { query: "automated testing", limit },
+    });
+
+    // Refused at the schema boundary, and the refusal NAMES the offending field.
+    expect(result.isError, `limit ${limit} was accepted`).toBe(true);
+    expect(JSON.stringify(result.content)).toMatch(/limit/i);
+    // And nothing was summoned — a clamp would have produced a real result.
+    expect((result.structuredContent as Record<string, unknown> | undefined)?.summoned).toBeUndefined();
+  });
+
+  it("accepts every limit the line can ask for (1..5)", async () => {
+    const service = new GaiaService(new InMemoryGaiaRegistrySource(documents));
+    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+    const client = new Client({ name: "skill-summon-test", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    closeCallbacks.push(
+      () => client.close(),
+      () => server.close(),
+    );
+
+    for (const limit of [1, 2, 3, 4, 5]) {
+      const result = await client.callTool({
+        name: "summon",
+        arguments: { query: "automated testing", limit },
+      });
+      // The fixture is registry-only, so nothing installs — but the call must be
+      // ACCEPTED and report the skip, not be rejected at the schema boundary.
+      expect(result.isError, `limit ${limit} was rejected`).toBeFalsy();
+    }
+  });
+
   it.each(SUPPORTED_PROTOCOL_VERSIONS)(
     "initializes and lists tools using MCP protocol %s",
     async (protocolVersion) => {
