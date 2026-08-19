@@ -432,21 +432,6 @@ body.vh-hero-page {
   font-size: 11px;
   letter-spacing: 0.1em;
 }
-.vha-cta-install {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: opacity 200ms ease;
-}
-.vha-cta-install:hover {
-  opacity: 0.7;
-}
 
 .vha-cut,
 .vhb-cut {
@@ -933,15 +918,151 @@ body.vh-hero-page {
     min-height: 44px;
     padding: 10px 13px;
   }
+  /* the install lines are long by nature — let them wrap rather than bleed */
+  .vha-cta-install .vha-cta-cmd--sm {
+    max-width: calc(100vw - 24px);
+    padding: 7px 10px;
+    font-size: 9.5px;
+  }
+  .vha-cta-install .vha-cta-text {
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+  /* the door + repo actions stack rather than crush at phone widths */
+  .vha-cta-row {
+    gap: 6px 10px;
+    margin-top: 8px;
+  }
+  .vha-cta-door,
+  .vha-cta-link {
+    min-height: 40px;
+    padding: 6px 11px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .vha-cta-mini {
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+  }
 }
 
-/* Secondary install terminal — smaller than the main CTA, still a terminal. */
+/* Secondary install terminal — smaller than the main CTA, still a terminal.
+   Two lines, stacked, each copyable on its own. */
+.vha-cta-install {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
 .vha-cta-cmd--sm {
   padding: 8px 14px;
   font-size: 11.5px;
   margin-top: 6px;
   text-decoration: none;
   opacity: 0.9;
+}
+.vha-cta-install .vha-cta-cmd--sm {
+  margin-top: 0;
+}
+/* One terminal, both install lines, one copy — grouped so the CTA stack stays
+   short enough to keep the figure clear. */
+.vha-cta-term {
+  width: min(100%, 520px);
+  margin: 8px auto 0;
+  border: 1px solid currentColor;
+  text-align: left;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.vha-cta-termhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 8px 5px 10px;
+  border-bottom: 1px solid currentColor;
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.vha-cta-termcopy {
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  padding: 3px 8px;
+  font: inherit;
+  letter-spacing: 0.14em;
+  transition: opacity 200ms ease;
+}
+.vha-cta-termcopy:hover {
+  opacity: 0.72;
+}
+.vha-cta-termline {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 5px 10px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+.vha-cta-termline + .vha-cta-termline {
+  padding-top: 0;
+  padding-bottom: 8px;
+}
+.vha-cta-termline .vha-cta-text {
+  overflow-wrap: anywhere;
+}
+
+/* The door, the repo actions, and the optional intro — one quiet row each. */
+.vha-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+}
+.vha-cta-row--quiet {
+  margin-top: 7px;
+  gap: 6px 16px;
+}
+.vha-cta-door,
+.vha-cta-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: opacity 200ms ease;
+}
+.vha-cta-door:hover,
+.vha-cta-link:hover {
+  opacity: 0.72;
+}
+.vha-cta-mini {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+a.vha-cta-mini,
+.vha-cta-mini--btn {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+a.vha-cta-mini:hover,
+.vha-cta-mini--btn:hover {
+  opacity: 0.72;
 }
 .vha-cta-cmd--sm:hover {
   opacity: 1;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
+import { DOORS, INSTALL, SITE } from '../product'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -19,9 +20,9 @@ import wingRight from '../assets/hero-commission/v01/wing-right.png'
 // touch-driven 5-act scrollytelling piece, centered and monumental: the
 // SKILL / HEAVEN typeset sits dead-center behind Lucy, single wing symmetric
 // either side, the katana slashing in on Act III (SLASH). Act V (ENTER) hands
-// off to the entropy ladder (OFF..MAX plus ULTRA, the crown rung — never
-// sealed) driving Heaven/Hell/Ultra
-// live.
+// off to the one line — ZERO..MAX plus ULTRA at its crown — driving
+// Zero/Heaven/Hell/Ultra live. Every rung is reachable; nothing on the line
+// refuses (N13).
 // ─────────────────────────────────────────────────────────────────────────
 
 export interface VariationHeroProps {
@@ -30,7 +31,8 @@ export interface VariationHeroProps {
 }
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
-  const { v, dots, rungs, rootRef } = useHeroEngine('a')
+  const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder } = useHeroEngine('a')
+  const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   const assets = HERO_ASSET_SETS[set][v.lucyState]
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
@@ -55,14 +57,36 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
 
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
-  const BAND: Record<string, { cmd: string; hint: string }> = {
-    zero: { cmd: 'claude-zero', hint: 'launch clean — only /summon available' },
-    heaven: { cmd: '/skill-heaven', hint: 'converge · low↔med, default low' },
-    hell: { cmd: '/skill-hell', hint: 'explore · high↔max, default high' },
-    ultra: { cmd: '/skill-ultra', hint: 'auto · picks direction + depth for you' },
+  // Per band: the command, what it means, and where its door opens. Zero's
+  // door lands at the top of the document; the summon bands land on the
+  // converge/explore section; Ultra lands on what Ultra is (issue #47).
+  const BAND: Record<string, { cmd: string; hint: string; door: string; doorLabel: string }> = {
+    zero: {
+      cmd: '/skill-zero',
+      hint: 'the floor · /summon by hand, nothing automatic',
+      door: '/landing#doors',
+      doorLabel: `Open the door · all ${DOORS.length} harnesses`,
+    },
+    heaven: {
+      cmd: '/skill-heaven',
+      hint: 'converge · low↔med, opens at low',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · heaven or hell',
+    },
+    hell: {
+      cmd: '/skill-hell',
+      hint: 'explore · high↔max, opens at high',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · heaven or hell',
+    },
+    ultra: {
+      cmd: '/skill-ultra',
+      hint: 'the crown · picks direction + position per gap',
+      door: '/landing#directions',
+      doorLabel: 'Open the door · what Ultra is',
+    },
   }
   const band = BAND[v.scene]
-  const INSTALL_ALL = 'curl -fsSL https://skill-heaven.dev/install | sh'
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
   // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
@@ -113,17 +137,30 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       {/* Opaque scene ground — guarantees the band colour paints behind the
          (often transparent) character masters, in every browser and capture. */}
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
-      <Link
-        to="/landing"
-        className="vha-skip"
-        style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
-      >
-        Skip · Enter the door →
-      </Link>
+      {/* The hero lands on the ladder, so "skip" only means something while
+          the optional five-act story is running (issue #47). */}
+      {atLadder ? (
+        <Link
+          to="/landing"
+          className="vha-skip"
+          style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+        >
+          Read the document →
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className="vha-skip"
+          onClick={enterLadder}
+          style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+        >
+          Skip to the line →
+        </button>
+      )}
       {revealed && (
         <HeroInfo atLadder={v.atLadder} fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} />
       )}
-      <HeroSummon fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} copy={copy} copied={copied} />
+      <HeroSummon fg={v.fg} bg={v.bg} dim={v.dim} accent={accent} />
 
       {/* Immersive toggle — fade the whole interface to reveal just the artwork
          (and back). Stays visible so it can always be restored. */}
@@ -433,35 +470,58 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             onClick={() => copy(band.cmd, 'cmd')}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
-            <span className="vha-cta-prompt" style={{ color: v.bg }}>$</span>
+            {/* every band command is a slash command typed in-session, never a shell line */}
+            <span className="vha-cta-prompt" style={{ color: v.bg }}>›</span>
             <span className="vha-cta-text">{band.cmd}</span>
             <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
           </button>
           <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          {v.scene === 'zero' ? (
-            <Link
-              to="/landing"
-              className="vha-cta-cmd vha-cta-cmd--sm"
-              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
-            >
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">skill-zero</span>
-              <span className="vha-cta-tag" style={{ color: v.dim }}>pick your harness →</span>
+          {/* The install is two lines typed inside Claude Code — the only route
+              that works today (docs/AGENT-PLUGIN.md). Each line copies on its
+              own, so nothing here copies more than it shows. */}
+          {/* One block, both lines, one copy — the install is two lines and it
+              should read and paste as one thing (issue #47). */}
+          <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
+            <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
+              <span>Install · Claude Code</span>
+              <button
+                type="button"
+                className="vha-cta-termcopy"
+                onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+                style={{ color: v.fg, borderColor: v.ctaLine }}
+              >
+                {copied === 'install' ? 'copied ⏎' : 'copy both'}
+              </button>
+            </div>
+            {INSTALL.plugin.map((line) => (
+              <div key={line} className="vha-cta-termline">
+                <span className="vha-cta-prompt" style={{ color: v.dim }}>›</span>
+                <span className="vha-cta-text">{line}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* The door, routed per band, beside the repo actions (issue #47). */}
+          <div className="vha-cta-row">
+            <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
+              {band.doorLabel} →
             </Link>
-          ) : (
-            <button
-              type="button"
-              className="vha-cta-cmd vha-cta-cmd--sm"
-              onClick={() => copy(INSTALL_ALL, 'install')}
-              style={{ background: 'transparent', color: v.fg, borderColor: v.ctaLine }}
+            <a
+              className="vha-cta-link"
+              href={SITE.repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: v.fg, borderColor: v.hair2 }}
             >
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">{INSTALL_ALL}</span>
-              <span className="vha-cta-tag" style={{ color: v.dim }}>
-                {copied === 'install' ? 'copied ⏎' : 'install all skills'}
-              </span>
+              ★ Star
+            </a>
+            <a className="vha-cta-mini" href={SITE.issuesUrl} target="_blank" rel="noreferrer" style={{ color: v.dim }}>
+              Contribute
+            </a>
+            <button type="button" className="vha-cta-mini vha-cta-mini--btn" onClick={enterStory} style={{ color: v.dim }}>
+              Intro
             </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
