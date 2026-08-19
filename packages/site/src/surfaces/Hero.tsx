@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './hero.css';
 
 import {
+  BAND_OPENS,
   DIRECTION_WORD,
   DOORS,
   HOUSES,
@@ -11,6 +12,7 @@ import {
   LADDER_WIP,
   MECHANIC,
   RUNGS,
+  RUNG_BAND,
   SITE,
   SURFACES,
   type RungId,
@@ -51,19 +53,21 @@ const ART: Record<SurfaceId, { figure: string; alt: string }> = {
 const RUNG_IDS = RUNGS.map((r) => r.id);
 
 export default function Hero() {
-  const [dir, setDir] = useState<SurfaceId>('zero');
-  const [rungs, setRungs] = useState<Record<'heaven' | 'hell', RungId>>({
-    heaven: 'low',
-    hell: 'high',
-  });
+  const [rungId, setRungId] = useState<RungId>('zero');
   const [impact, setImpact] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const impactTimer = useRef<number | undefined>(undefined);
 
+  /* ONE LINE (N13). The session sits at exactly one rung and the surface is
+     READ from it — so the rung is the only state, and `dir` is derived. The
+     retired model kept a direction alongside a PER-DIRECTION rung
+     (`{heaven:'low', hell:'high'}`), which is two dials for one line: it let
+     the page hold a Heaven position and a Hell position at once, and it made
+     the ladder vanish on the two bands that have exactly one rung rather than
+     showing where they sit on the line. */
+  const rung = useMemo(() => RUNGS.find((r) => r.id === rungId)!, [rungId]);
+  const dir = RUNG_BAND[rungId];
   const surface = useMemo(() => SURFACES.find((s) => s.id === dir)!, [dir]);
-  const hasLadder = surface.ladder !== null;
-  const activeRung = hasLadder ? rungs[dir as 'heaven' | 'hell'] : null;
-  const rung = activeRung ? RUNGS.find((r) => r.id === activeRung)! : null;
 
   /* the impact frame — a 46ms cut on every direction change */
   const fire = useCallback(() => {
@@ -74,28 +78,26 @@ export default function Hero() {
 
   useEffect(() => () => window.clearTimeout(impactTimer.current), []);
 
-  const pick = useCallback(
-    (id: SurfaceId) => {
-      if (id === dir) return;
-      setDir(id);
-      fire();
-    },
-    [dir, fire],
-  );
-
+  /* Moving the rung is the only way the page changes. The impact frame is the
+     BAND crossing, not every step: walking low → med stays inside Heaven and
+     repaints nothing, while med → high crosses into Hell and cuts. */
   const setRung = useCallback(
     (id: RungId) => {
-      if (!hasLadder) return;
-      setRungs((prev) => ({ ...prev, [dir as 'heaven' | 'hell']: id }));
+      if (id === rungId) return;
+      if (RUNG_BAND[id] !== RUNG_BAND[rungId]) fire();
+      setRungId(id);
     },
-    [dir, hasLadder],
+    [rungId, fire],
   );
+
+  /* Naming a surface is naming a rung — it moves the line to where that band
+     opens, rather than setting a second, independent control. */
+  const pick = useCallback((id: SurfaceId) => setRung(BAND_OPENS[id]), [setRung]);
 
   /* arrow keys walk the ladder, as a radio group should */
   const onRungKey = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!activeRung) return;
-      const i = RUNG_IDS.indexOf(activeRung);
+      const i = RUNG_IDS.indexOf(rungId);
       let next = i;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = Math.min(RUNG_IDS.length - 1, i + 1);
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = Math.max(0, i - 1);
@@ -105,7 +107,7 @@ export default function Hero() {
       e.preventDefault();
       setRung(RUNG_IDS[next]);
     },
-    [activeRung, setRung],
+    [rungId, setRung],
   );
 
   const onDirKey = useCallback(
@@ -137,12 +139,17 @@ export default function Hero() {
 
   /* The command line rewrites live off the instrument. These are the plugin's
      real in-session commands — a bare rung is the argument, never a flag, and
-     the sigil is the session prompt, never a shell `$`. */
-  const command = hasLadder
-    ? `${surface.command} ${activeRung}`
-    : dir === 'zero'
+     the sigil is the session prompt, never a shell `$`.
+
+     Only the two multi-rung bands take the rung as an argument. `zero` shows
+     the floor it actually ships — /summon, by hand — and `ultra` takes none,
+     because the crown rung is what picks the reading for you. */
+  const command =
+    dir === 'zero'
       ? `${surface.command}  ·  ${MECHANIC.floor} "code review"`
-      : surface.command;
+      : dir === 'ultra'
+        ? surface.command
+        : `${surface.command} ${rungId}`;
 
   const art = ART[dir];
 
@@ -272,60 +279,45 @@ export default function Hero() {
             ))}
           </div>
 
+          {/* One ladder, always shown, all seven rungs. The band is read off
+              the rung rather than chosen beside it, so `zero` and `ultra` are
+              positions ON the line — the ladder no longer disappears on the
+              two bands that happen to hold a single rung. */}
           <div className="hx__gauge">
-            {hasLadder ? (
-              <>
-                <div className="hx__gauge-head">
-                  <span className="hx__gauge-title">Skill entropy</span>
-                  <span className="sh-chip sh-chip--wip">WIP</span>
-                </div>
-                <p className="hx__measure">{LADDER_MEASURE}</p>
+            <div className="hx__gauge-head">
+              <span className="hx__gauge-title">Skill entropy</span>
+              <span className="sh-chip sh-chip--wip">WIP</span>
+            </div>
+            <p className="hx__measure">{LADDER_MEASURE}</p>
 
-                <div
-                  className="hx__rungs"
-                  role="radiogroup"
-                  aria-label={`${surface.name} ladder`}
-                  onKeyDown={onRungKey}
+            <div
+              className="hx__rungs"
+              role="radiogroup"
+              aria-label="Skill entropy ladder"
+              onKeyDown={onRungKey}
+            >
+              {RUNGS.map((r) => (
+                <button
+                  key={r.id}
+                  className={`hx__rung hx__rung--${RUNG_BAND[r.id]}`}
+                  type="button"
+                  role="radio"
+                  aria-checked={r.id === rungId}
+                  tabIndex={r.id === rungId ? 0 : -1}
+                  onClick={() => setRung(r.id)}
                 >
-                  {RUNGS.map((r) => (
-                    <button
-                      key={r.id}
-                      className="hx__rung"
-                      type="button"
-                      role="radio"
-                      aria-checked={r.id === activeRung}
-                      tabIndex={r.id === activeRung ? 0 : -1}
-                      onClick={() => setRung(r.id)}
-                    >
-                      {r.id}
-                    </button>
-                  ))}
-                </div>
+                  {r.id}
+                </button>
+              ))}
+            </div>
 
-                <div className="hx__read" aria-live="polite">
-                  <span className="hx__read-dir">
-                    {rung ? DIRECTION_WORD[rung.direction] : ''}
-                  </span>
-                  <span className="hx__read-pos">{rung?.position}</span>
-                </div>
-                <p className="hx__read-note">{rung?.note}</p>
+            <div className="hx__read" aria-live="polite">
+              <span className="hx__read-dir">{DIRECTION_WORD[rung.direction]}</span>
+              <span className="hx__read-pos">{rung.position}</span>
+            </div>
+            <p className="hx__read-note">{rung.note}</p>
 
-                <p className="hx__wip">{LADDER_WIP}</p>
-              </>
-            ) : (
-              <div className="hx__noladder">
-                {dir === 'zero' ? (
-                  <>
-                    <b>{MECHANIC.floor}</b> — the floor. {MECHANIC.floorNote}
-                  </>
-                ) : (
-                  <>
-                    <b>No ladder.</b> The crown rung picks the direction and the
-                    position for you, gap by gap. Nothing to set.
-                  </>
-                )}
-              </div>
-            )}
+            <p className="hx__wip">{LADDER_WIP}</p>
           </div>
         </div>
       </div>

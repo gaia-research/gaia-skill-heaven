@@ -131,10 +131,18 @@ explore page so a visitor can work the surfaces and decide which to pick. It
 looks strong on desktop but lacks Hero A's animated feel, which is why it is
 no longer the front door.
 
-> **Pending:** the instrument still renders the earlier two-dial model
-> (pick a direction, then a per-direction rung). Under N13 it should render
-> the single one-line ladder with the four bands read from the rung. Tracked
-> for the next iteration.
+**The instrument renders the one line.** The rung is the only state and the
+band is *read* from it, so the four direction plates are a shortcut to where a
+band opens — never a second control. The ladder is always on screen, all seven
+rungs, with each rung carrying its band's colour on a 2px edge; `zero` and
+`ultra` are positions **on** the line, not surfaces that lack one. The impact
+frame fires on a **band crossing**, not on every step: `low → med` stays inside
+Heaven and repaints nothing, `med → high` cuts.
+
+> The earlier two-dial model (a direction, plus a *per-direction* rung) is
+> retired. It let the page hold a Heaven position and a Hell position at once,
+> which a session cannot do, and it hid the ladder on the two bands that hold a
+> single rung instead of showing where they sit.
 
 Composition: nav → registration row (a **state index**, not an eyebrow) →
 `SKILL` + the state word in Anton → command and role → blurb → the command line,

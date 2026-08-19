@@ -446,6 +446,25 @@
   background: var(--hx-ink);
 }
 
+/* Four contiguous BANDS on one line. Each rung carries its band's colour as a
+   2px edge, so the line reads as bands without becoming four controls — the
+   band is read from the rung, never selected beside it. */
+.hx__rung {
+  border-top: 2px solid transparent;
+}
+.hx__rung--zero {
+  border-top-color: var(--sh-zero);
+}
+.hx__rung--heaven {
+  border-top-color: var(--sh-heaven);
+}
+.hx__rung--hell {
+  border-top-color: var(--sh-hell);
+}
+.hx__rung--ultra {
+  border-top-color: var(--sh-ultra);
+}
+
 /* the readout — a rung names a direction and a position, never a count */
 .hx__measure {
   margin: 0 0 12px;
@@ -496,16 +515,10 @@
   max-width: 62ch;
 }
 
-/* the two surfaces that carry no ladder say so, in the ladder's own place */
-.hx__noladder {
-  border: 1px dashed var(--hx-line-strong);
-  padding: 12px 14px;
-  font-family: var(--sh-mono);
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--hx-dim);
-}
-.hx__noladder b { color: var(--hx-ink); font-weight: 500; }
+/* `.hx__noladder` retired with the two-dial model: under one line there is no
+   surface without a ladder, only rungs whose band happens to hold one of them.
+   Zero and Ultra now read their own position off the line like every other
+   rung, and their meaning is carried by the rung note. */
 
 .hx .sh-chip { border-color: var(--hx-line-strong); color: var(--hx-dim); }
 .hx .sh-chip--wip { border-color: rgba(217, 178, 92, 0.55); color: var(--sh-ultra); }

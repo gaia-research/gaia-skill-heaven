@@ -240,6 +240,21 @@ export const RUNG_BAND: Record<RungId, SurfaceId> = {
   ultra: 'ultra',
 };
 
+/**
+ * The inverse of `RUNG_BAND`: where each band opens on the line. Naming a
+ * surface is naming a rung, because a session sits at exactly one rung and the
+ * surface is READ from it — there is no separate surface to select.
+ *
+ * Heaven's `low` and Hell's `high` are PROVISIONAL working defaults, not
+ * findings. `zero` and `ultra` are single-rung bands, so theirs are exact.
+ */
+export const BAND_OPENS: Record<SurfaceId, RungId> = {
+  zero: 'zero',
+  heaven: 'low',
+  hell: 'high',
+  ultra: 'ultra',
+};
+
 /** What the line measures. Surfaces that already say "skill entropy" use this
  *  as the definition rather than repeating the term. */
 export const LADDER_MEASURE =
