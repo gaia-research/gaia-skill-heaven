@@ -3,7 +3,9 @@ description: "Arm explore: auto-summon widely per capability gap (high|xhigh|max
 allowed-tools: Bash(node:*), mcp__skill-summon__summon
 ---
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" hell '$ARGUMENTS'`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" hell --intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'
+$ARGUMENTS
+SKILL_HEAVEN_ARGS_EOF`
 
 Print the block above **verbatim** inside a fenced code block.
 

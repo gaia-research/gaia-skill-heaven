@@ -78,14 +78,28 @@ describe.each(SURFACES)("$file", ({ file, mode }) => {
   });
 
   it("invokes the ONE shipped renderer through the interpolated plugin root", () => {
-    // Probed on 2.1.216: ${CLAUDE_PLUGIN_ROOT} is substituted into the command
-    // markdown (it is NOT exported to the bash child), and $ARGUMENTS is
-    // shell-escaped before substitution.
+    // ${CLAUDE_PLUGIN_ROOT} is substituted into the command markdown (it is NOT
+    // exported to the bash child), so the renderer path is interpolated here.
     expect(source).toContain(
       `node "\${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ${mode}`,
     );
-    expect(source).toContain("'$ARGUMENTS'");
     expect(existsSync(join(PLUGIN, "scripts", "render-ladder.mjs"))).toBe(true);
+  });
+
+  it("passes $ARGUMENTS on stdin via a quoted heredoc, never in the shell argv", () => {
+    // A slash command's `$ARGUMENTS` expands to the RAW argument string as typed
+    // — Claude Code does NOT shell-escape the catch-all placeholder (confirmed
+    // against the docs and reproduced: a single-quoted `'$ARGUMENTS'` is broken
+    // out of by an argument like `x'; touch pwned #`). So user text must never
+    // ride the shell argv. Every surface pipes it on stdin through a
+    // quoted-delimiter heredoc — whose body is never re-parsed for shell
+    // metacharacters — and tells the renderer to read it with --intent-stdin.
+    expect(source).toContain("--intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'");
+    expect(source).toMatch(/<<'SKILL_HEAVEN_ARGS_EOF'\n\$ARGUMENTS\nSKILL_HEAVEN_ARGS_EOF/);
+    // The old injectable form — $ARGUMENTS interpolated into a quoted argv slot —
+    // must be gone.
+    expect(source).not.toContain("'$ARGUMENTS'");
+    expect(source).not.toMatch(/render-ladder\.mjs" \w+ '\$ARGUMENTS'/);
   });
 
   it("never uses the retired control words", () => {

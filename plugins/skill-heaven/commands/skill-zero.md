@@ -3,7 +3,9 @@ description: "Cut automatic summoning to the floor; `all` cuts manual /summon to
 allowed-tools: Bash(node:*)
 ---
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" zero '$ARGUMENTS'`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" zero --intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'
+$ARGUMENTS
+SKILL_HEAVEN_ARGS_EOF`
 
 Print the block above **verbatim** inside a fenced code block, then stop.
 

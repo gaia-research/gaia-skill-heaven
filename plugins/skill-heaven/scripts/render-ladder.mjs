@@ -376,14 +376,46 @@ function bandGlyph(band) {
 }
 
 export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
+  // The mode is a fixed literal the command markdown controls (heaven, hell,
+  // …); the target/intent is user-supplied and MUST NOT ride the shell argv.
+  // A slash command's `$ARGUMENTS` expands to the raw argument string as typed
+  // (Claude Code does not shell-escape the catch-all placeholder), so embedding
+  // it in the `!` command line — quoted or not — is injectable. The command
+  // markdown instead pipes $ARGUMENTS on stdin through a quoted-delimiter
+  // heredoc (whose body is never re-parsed for shell metacharacters) and passes
+  // the literal flag `--intent-stdin` so we know to read it.
+  //
+  // The flag is what makes reading stdin SAFE: we only touch fd 0 when the
+  // command markdown explicitly asked us to. A direct `node render-ladder.mjs
+  // zero` (the verify script, the KC2 test, a user at a terminal) passes no
+  // flag, so we never block on an interactive TTY waiting for EOF.
   const [mode, ...rest] = argv;
+  const intentStdinIdx = rest.indexOf("--intent-stdin");
+  const readStdin = intentStdinIdx !== -1;
+  const argvRest = readStdin
+    ? rest.slice(0, intentStdinIdx).concat(rest.slice(intentStdinIdx + 1))
+    : rest;
+  const target = readStdin ? (readIntentFromStdin() ?? "") : argvRest.join(" ");
   const { text } = renderLadder({
     mode: String(mode ?? "").trim().toLowerCase(),
-    target: rest.join(" "),
+    target,
     manifest: loadManifest(),
   });
   process.stdout.write(text);
   return 0;
+}
+
+/** Read the user intent piped in on stdin. Only called when the command
+ * markdown passed `--intent-stdin`, so fd 0 is a heredoc/pipe the caller
+ * controls — never an interactive TTY. Returns null on empty/error. */
+function readIntentFromStdin() {
+  try {
+    const raw = readFileSync(0, "utf8");
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  } catch {
+    return null;
+  }
 }
 
 const invokedDirectly =

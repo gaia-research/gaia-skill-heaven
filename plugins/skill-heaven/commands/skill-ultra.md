@@ -3,7 +3,9 @@ description: "Arm ultra: the top of the line, picks direction and depth per gap.
 allowed-tools: Bash(node:*), mcp__skill-summon__summon
 ---
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ultra '$ARGUMENTS'`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ultra --intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'
+$ARGUMENTS
+SKILL_HEAVEN_ARGS_EOF`
 
 Print the block above **verbatim** inside a fenced code block.
 
