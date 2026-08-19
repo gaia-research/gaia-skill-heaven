@@ -562,14 +562,21 @@
 .lp-door.is-on .lp-door__mark {
   fill: var(--sh-violet);
 }
-.lp-door__mark--slot {
+/* The one harness with no public vector mark. A lettermark in our own display
+   type — deliberately OUR voice, so it cannot be mistaken for the vendor's
+   mark — sized and coloured to sit in the same rank as the four real ones. */
+.lp-door__mark--letter {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--sh-line-strong);
-  font-family: var(--sh-mono);
-  font-size: 6.5px;
+  font-family: var(--sh-sans);
+  font-variation-settings: 'wdth' 112, 'wght' 800;
+  font-size: 19px;
+  line-height: 1;
   color: var(--sh-ink-dim);
+}
+.lp-door.is-on .lp-door__mark--letter {
+  color: var(--sh-violet);
 }
 .lp-door__pkg {
   font-family: var(--sh-mono);
