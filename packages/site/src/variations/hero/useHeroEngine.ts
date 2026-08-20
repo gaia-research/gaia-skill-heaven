@@ -157,7 +157,10 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
   const WORD_STROKE = {
     zero: `${mobile ? 3 : 2}px ${HERO.grey}`,
     heaven: `3px ${HERO.violet}`,
-    hell: `3px ${HERO.hellTeal}`,
+    // Hell's word border defaults to "max"'s amber rather than "high"'s
+    // teal — the band reads one colour regardless of which Hell rung
+    // (high/xhigh/max) is actually selected, and amber was the pick.
+    hell: `3px ${HERO.hellAmber}`,
     ultra: `3px ${HERO.gold}`,
   } as const
   const wordFill = WORD_FILL[scene]

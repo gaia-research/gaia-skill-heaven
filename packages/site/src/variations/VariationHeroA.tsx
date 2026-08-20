@@ -423,35 +423,39 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           >
             SKILL
           </span>
+
+          {/* The "wordmark shadow" (Variation E, mobile only): Heaven/Hell/
+              Ultra multiply the exact main instance above — same position,
+              size and font, anchored at n=0 which is precisely where the
+              Variation D title sits — and propagate copies of it up (n<0)
+              and down (n>0) at a fixed spacing. Only the true main slot
+              carries the fill and the SKILL script; every shadow copy is
+              stroke-only. Zero keeps just the single title, no shadow.
+              Desktop never sees these (`.vha-word--bg`, variation-hero.css).
+              MUST stay inside this wrapper — it's what carries
+              --vha-word-scale, and a shadow copy outside it silently drops
+              the whole `transform` (an unresolved var() in `scale()`
+              invalidates the entire property, not just that function). */}
+          {v.atLadder && v.scene !== 'zero' && (
+            <>
+              {[-2, -1, 1, 2].map((n) => (
+                <div
+                  key={n}
+                  aria-hidden="true"
+                  className={`vha-word--bg ${v.scene === 'heaven' ? 'vha-word vha-word--sm vha-word--heaven' : 'vha-hell'}`}
+                  style={{
+                    ...wordStyle,
+                    color: 'transparent',
+                    transform: `translateY(${n * 17}vh) ${v.scene === 'heaven' ? 'scaleX(1.12) ' : ''}scale(var(--vha-word-scale))`,
+                  }}
+                >
+                  {stateWord[v.scene]}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
-
-      {/* The "wordmark shadow" (Variation E, mobile only): Heaven/Hell/Ultra
-          multiply the exact main instance above — same position, size and
-          font, anchored at n=0 which is precisely where the Variation D
-          title sits — and propagate copies of it up (n<0) and down (n>0)
-          the screen at a fixed spacing. Only the true main slot carries the
-          fill and the SKILL script; every shadow copy is stroke-only. Zero
-          keeps just the single title, no shadow. Desktop never sees these
-          (`.vha-word--bg`, variation-hero.css). */}
-      {v.atLadder && v.scene !== 'zero' && (
-        <>
-          {[-2, -1, 1, 2].map((n) => (
-            <div
-              key={n}
-              aria-hidden="true"
-              className={`vha-word--bg ${v.scene === 'heaven' ? 'vha-word vha-word--sm vha-word--heaven' : 'vha-hell'}`}
-              style={{
-                ...wordStyle,
-                color: 'transparent',
-                transform: `translateY(${n * 17}vh) ${v.scene === 'heaven' ? 'scaleX(1.12) ' : ''}scale(var(--vha-word-scale))`,
-              }}
-            >
-              {stateWord[v.scene]}
-            </div>
-          ))}
-        </>
-      )}
 
       <div
         aria-hidden="true"
