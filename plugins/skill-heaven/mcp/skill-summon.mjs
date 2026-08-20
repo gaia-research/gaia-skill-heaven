@@ -13081,6 +13081,12 @@ async function ensureCachedRepo(cacheDir, repoUrl, branch) {
   if (!await pathExists(cacheDir)) {
     await cloneRepo(repoUrl, branch, cacheDir);
     warm = false;
+  } else if (branch && COMMIT_SHA.test(branch)) {
+    warm = await tryReuseCommitPinnedCache(cacheDir, branch);
+    if (!warm) {
+      await rm(cacheDir, { recursive: true, force: true });
+      await cloneRepo(repoUrl, branch, cacheDir);
+    }
   } else {
     try {
       await runGit(["pull"], cacheDir);
@@ -13114,6 +13120,17 @@ async function resolveRemoteCommit(repoUrl, branch) {
   if (!commit)
     throw new Error(`git ls-remote returned no commit for ${repoUrl}`);
   return commit;
+}
+async function tryReuseCommitPinnedCache(cacheDir, commit) {
+  try {
+    const currentCommit = await gitOutput(["rev-parse", "HEAD"], cacheDir);
+    if (currentCommit.toLowerCase() === commit.toLowerCase()) return true;
+    await runGit(["fetch", "--depth", "1", "origin", commit], cacheDir);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], cacheDir);
+    return true;
+  } catch {
+    return false;
+  }
 }
 async function cloneRepo(repoUrl, branch, dest) {
   await mkdir(path.dirname(dest), { recursive: true });
