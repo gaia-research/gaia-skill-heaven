@@ -172,7 +172,10 @@ export function readSkillFrontmatter(source: string): Record<string, string> {
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
     if (line.trim() === "---") break;
-    const match = /^([A-Za-z_][\w-]*):\s*(.*)$/u.exec(line);
+    // No `\s*` before the capture: it would overlap with `(.*)` and make the
+    // match ambiguous (polynomial backtracking on `A:` + many spaces). The
+    // value is trimmed below, so leading whitespace is dropped anyway.
+    const match = /^([A-Za-z_][\w-]*):(.*)$/u.exec(line);
     if (match) {
       flush();
       key = match[1];

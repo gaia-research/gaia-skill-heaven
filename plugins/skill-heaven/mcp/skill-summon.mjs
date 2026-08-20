@@ -13178,7 +13178,8 @@ var BLOB_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.*)/;
 var TREE_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)(.*)/;
 var REPO_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)/;
 function parseGithubUrl(url) {
-  const trimmed = url.replace(/\/+$/, "");
+  let trimmed = url;
+  while (trimmed.endsWith("/")) trimmed = trimmed.slice(0, -1);
   const blobMatch = BLOB_URL.exec(trimmed);
   if (blobMatch) {
     const [, owner, repo, branch, filePath] = blobMatch;
@@ -13355,7 +13356,7 @@ function readSkillFrontmatter(source) {
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
     if (line.trim() === "---") break;
-    const match = /^([A-Za-z_][\w-]*):\s*(.*)$/u.exec(line);
+    const match = /^([A-Za-z_][\w-]*):(.*)$/u.exec(line);
     if (match) {
       flush();
       key = match[1];

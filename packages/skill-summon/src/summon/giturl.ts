@@ -30,7 +30,10 @@ const REPO_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)/;
  *   null, subpath: "" }.
  */
 export function parseGithubUrl(url: string): ParsedGithubUrl {
-  const trimmed = url.replace(/\/+$/, "");
+  // Stripped with a loop rather than `/\/+$/`: that regex backtracks
+  // quadratically on a string of many `/` that does not end the match.
+  let trimmed = url;
+  while (trimmed.endsWith("/")) trimmed = trimmed.slice(0, -1);
 
   const blobMatch = BLOB_URL.exec(trimmed);
   if (blobMatch) {
