@@ -267,16 +267,15 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
     bladeXB: pick([-62, -18, 40, 110, 110]),
     // Horizontal motion blur on the katana, synced to the swing: heavy as it
     // flies in and out, sharp at the pose. Eases with the blade transition.
-    bladeBlur: atLadder ? (glitch ? 20 : 0) : pick([0, 12, 5, 18, 0]),
+    bladeBlur: atLadder ? (glitch ? 8 : 0) : pick([0, 12, 5, 18, 0]),
     // The scrollytelling swing (Acts 1-4) wants the full 700ms cinematic
-    // ease. The ladder's glitch swipe is a 46ms-stepped hard cut like every
-    // other glitch element on this surface (the wordmark shear has no
-    // transition at all) — left at 700ms it never caught up between ticks and
-    // read as a slow smear instead of two decisive strokes.
+    // ease. The ladder's glitch swipe is a snappy impact cut.
     bladeTransition:
       atLadder && glitch
-        ? 'transform 40ms linear,opacity calc(120ms * var(--vh-t)) linear,filter 40ms linear'
-        : 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
+        ? 'transform 30ms linear,opacity 70ms linear,filter 30ms linear'
+        : atLadder
+          ? 'transform 200ms cubic-bezier(.16,1,.3,1),opacity 150ms linear,filter 200ms linear'
+          : 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
 
     oCut: pick([0, 0, 1, 0.14, 0]),
     cutRot: variant === 'b' ? -38 : -28,
@@ -471,15 +470,15 @@ export function useHeroEngine(variant: 'a' | 'b') {
       setFlash(1)
       glitchIntervalRef.current = setInterval(() => {
         n += 1
-        if (n > 6) {
+        if (n > 3) {
           clearInterval(glitchIntervalRef.current)
           setGlitch(0)
           setFlash(0)
           return
         }
         setGlitch(n % 2 ? 2 : 1)
-        setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
-      }, 46)
+        setFlash(n === 1 ? 1 : 0)
+      }, 32)
     },
     [setScale],
   )

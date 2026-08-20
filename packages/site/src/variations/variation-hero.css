@@ -116,11 +116,16 @@ body.vh-hero-page {
   -webkit-user-drag: none;
 }
 
+.vha-lucy {
+  will-change: transform, opacity;
+}
+
 .vha-wing {
   bottom: 0;
   height: 100%;
   width: auto;
   max-width: none;
+  will-change: transform, opacity;
 }
 .vha-wing--left {
   left: 2%;
@@ -624,6 +629,13 @@ body.vh-hero-page {
   color: #FFD24A;
   transform: translateY(4.5vw);
   transition: opacity calc(300ms * var(--vh-t)) linear;
+}
+
+.vha-typewrap--base .vha-word,
+.vha-typewrap--base .vha-word--sm,
+.vha-typewrap--base .vha-hell,
+.vha-typewrap--base .vha-ultra {
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), opacity 140ms linear;
 }
 
 /* ── Hero B · Guillotine — edge-to-edge, frame-cropped ──────────────────── */
