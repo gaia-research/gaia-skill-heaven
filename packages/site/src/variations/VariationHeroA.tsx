@@ -112,6 +112,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     },
   }
   const band = BAND[v.scene]
+  // Mobile-only, Variation E: the state word repeated to fill the screen
+  // (owner reference: a magazine "BRAND BRAND BRAND" tile, subject in
+  // front). Reuses the same word the single-instance wordmark shows, so it
+  // never drifts out of sync with the band.
+  const stateWord: Record<typeof v.scene, string> = { zero: 'ZERO', heaven: 'HEAVEN', hell: 'HELL', ultra: 'ULTRA' }
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
   // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
@@ -382,13 +387,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             HELL
           </div>
           <div
-            className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
+            className="vha-word vha-word--sm vha-word--heaven"
+            style={{ ...wordStyle, transform: 'scaleX(1.12) scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
           <div
-            className="vha-word vha-word--sm"
+            className="vha-word vha-word--sm vha-word--zero"
             style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oZero }}
           >
             ZERO
@@ -420,6 +425,33 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           </span>
         </div>
       </div>
+
+      {/* The "wordmark shadow" (Variation E, mobile only): Heaven/Hell/Ultra
+          multiply the exact main instance above — same position, size and
+          font, anchored at n=0 which is precisely where the Variation D
+          title sits — and propagate copies of it up (n<0) and down (n>0)
+          the screen at a fixed spacing. Only the true main slot carries the
+          fill and the SKILL script; every shadow copy is stroke-only. Zero
+          keeps just the single title, no shadow. Desktop never sees these
+          (`.vha-word--bg`, variation-hero.css). */}
+      {v.atLadder && v.scene !== 'zero' && (
+        <>
+          {[-2, -1, 1, 2].map((n) => (
+            <div
+              key={n}
+              aria-hidden="true"
+              className={`vha-word--bg ${v.scene === 'heaven' ? 'vha-word vha-word--sm vha-word--heaven' : 'vha-hell'}`}
+              style={{
+                ...wordStyle,
+                color: 'transparent',
+                transform: `translateY(${n * 17}vh) ${v.scene === 'heaven' ? 'scaleX(1.12) ' : ''}scale(var(--vha-word-scale))`,
+              }}
+            >
+              {stateWord[v.scene]}
+            </div>
+          ))}
+        </>
+      )}
 
       <div
         aria-hidden="true"

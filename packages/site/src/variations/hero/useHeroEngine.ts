@@ -150,8 +150,12 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
   // HEAVEN white, HELL black, ULTRA white, ZERO bone. The border carries the
   // palette splash: prismatic (heaven), inverted non-red (hell), gold (ultra).
   const WORD_FILL = { zero: HERO.bone, heaven: '#FFFFFF', hell: '#0A0A0A', ultra: '#FFFFFF' } as const
+  // Zero's stroke reads noticeably thinner than the other three bands even at
+  // the same weight — bumped to match on mobile, where the wordmark now sits
+  // behind Lucy and has to hold up as a title rather than a quiet watermark.
+  // Desktop keeps the original 2px.
   const WORD_STROKE = {
-    zero: `2px ${HERO.grey}`,
+    zero: `${mobile ? 3 : 2}px ${HERO.grey}`,
     heaven: `3px ${HERO.violet}`,
     hell: `3px ${HERO.hellTeal}`,
     ultra: `3px ${HERO.gold}`,
@@ -234,7 +238,11 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
         : scene === 'ultra'
           ? 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))'
           : 'none',
-    oLucy: pick([1, 1, 1, 1, 0.88]),
+    // The ladder's own act (index 4) reads a hair under full opacity on
+    // desktop — barely visible there, but on mobile, where she's the main
+    // event behind the wordmark, the alpha read as a bug. Full opacity on
+    // mobile at the ladder; desktop keeps the original.
+    oLucy: mobile && atLadder ? 1 : pick([1, 1, 1, 1, 0.88]),
 
     // At the ladder, the blade is otherwise parked off-scene (oBlade reads 0
     // at act===N-1 by the Act 1-4 table below) — so a band switch used to cut
