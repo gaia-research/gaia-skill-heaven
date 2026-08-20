@@ -1,0 +1,4 @@
+numpy==2.4.6
+onnxruntime==1.29.0
+Pillow==12.3.0
+scipy==1.17.1

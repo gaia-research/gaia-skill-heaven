@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
+import { Link, useNavigate } from 'react-router-dom'
+import { HERO_ASSET_SETS, normalizeLucyAssetSet, preloadLucyAssets } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import { DOORS, INSTALL } from '../product'
@@ -57,13 +57,13 @@ function ZeroCompat({ fg }: { fg: string }) {
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder } = useHeroEngine('a')
+  const navigate = useNavigate()
   const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   const assets = HERO_ASSET_SETS[set][v.lucyState]
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
   // export) and set-C's has an opaque white ground that can't sit on the black
   // Heaven back on set-A per owner.
-  const lucyImg = assets.lucy
   // Hell inverts its wings too (the whole scene is an RGB inversion).
   const wingFilter = v.scene === 'hell' ? 'invert(1)' : 'none'
 
@@ -83,35 +83,42 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
   // Per band: the command, what it means, and where its door opens. Zero's
-  // door lands at the top of the document; the summon bands land on the
-  // converge/explore section; Ultra lands on what Ultra is (issue #47).
-  const BAND: Record<string, { cmd: string; hint: string; door: string; doorLabel: string }> = {
+  // door lands at section 01 (#doors); Heaven, Hell, and Ultra land at
+  // section 04 (#directions).
+  const BAND: Record<string, { cmd: string; hint: string; anchor: string; doorLabel: string }> = {
     zero: {
       cmd: '/skill-zero',
       hint: 'the floor · /summon by hand, nothing automatic',
-      door: '/landing#doors',
+      anchor: 'doors',
       doorLabel: `Open the door · all ${DOORS.length} harnesses`,
     },
     heaven: {
       cmd: '/skill-heaven',
       hint: 'converge · low↔med, opens at low',
-      door: '/landing#directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · heaven or hell',
     },
     hell: {
       cmd: '/skill-hell',
       hint: 'explore · high↔max, opens at high',
-      door: '/landing#directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · heaven or hell',
     },
     ultra: {
       cmd: '/skill-ultra',
       hint: 'the crown · picks direction + position per gap',
-      door: '/landing#directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · what Ultra is',
     },
   }
   const band = BAND[v.scene]
+  const openLandingSection = useCallback(
+    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string) => {
+      e.preventDefault()
+      navigate(`/landing?section=${anchor}`, { state: { scrollTo: anchor } })
+    },
+    [navigate],
+  )
   // Mobile-only, Variation E: the state word repeated to fill the screen
   // (owner reference: a magazine "BRAND BRAND BRAND" tile, subject in
   // front). Reuses the same word the single-instance wordmark shows, so it
@@ -137,6 +144,17 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     window.addEventListener('click', reveal, { once: true })
     return () => window.removeEventListener('click', reveal)
   }, [])
+  // Preload and pre-decode all character and weapon assets into memory/GPU cache
+  useEffect(() => {
+    preloadLucyAssets(set)
+    const wings = [wingLeft, wingRight]
+    wings.forEach((src) => {
+      const img = new Image()
+      img.src = src
+      img.decode?.().catch(() => {})
+    })
+  }, [set])
+
   // Per-scene accent for the quiet explainers (no red).
   const accent =
     v.scene === 'ultra' ? '#FFD24A' : v.scene === 'hell' ? '#5FC2D6' : v.scene === 'zero' ? v.fg : '#A58AE0'
@@ -304,20 +322,28 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           pointerEvents: 'none',
         }}
       >
-        <img
-          className="vha-lucy"
-          src={lucyImg}
-          alt=""
-          style={{
-            display: 'block',
-            height: '92vh',
-            width: 'auto',
-            mixBlendMode: v.lucyBlend,
-            transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
-            opacity: v.oLucy,
-            filter: v.lucyFilter,
-          }}
-        />
+        {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => {
+          const isCurrent = v.lucyState === state
+          return (
+            <img
+              key={state}
+              className="vha-lucy"
+              src={HERO_ASSET_SETS[set][state].lucy}
+              alt=""
+              loading="eager"
+              decoding="sync"
+              style={{
+                display: isCurrent ? 'block' : 'none',
+                height: '92vh',
+                width: 'auto',
+                mixBlendMode: v.lucyBlend,
+                transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
+                opacity: isCurrent ? v.oLucy : 0,
+                filter: isCurrent ? v.lucyFilter : 'none',
+              }}
+            />
+          )
+        })}
       </div>
 
       <div
@@ -337,7 +363,21 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           filter: v.bladeBlur ? `blur(${v.bladeBlur}px)` : 'none',
         }}
       >
-        <img className="vh-asset vh-asset--sword" src={assets.katana} alt="" draggable={false} />
+        {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => {
+          const isCurrent = v.lucyState === state
+          return (
+            <img
+              key={state}
+              className="vh-asset vh-asset--sword"
+              src={HERO_ASSET_SETS[set][state].katana}
+              alt=""
+              loading="eager"
+              decoding="sync"
+              style={{ display: isCurrent ? 'block' : 'none' }}
+              draggable={false}
+            />
+          )
+        })}
       </div>
 
       <div className="vh-slash-arc vha-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
@@ -564,7 +604,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               for. */}
           <Link
             className="vha-cta-cmd"
-            to={band.door}
+            to={`/landing?section=${band.anchor}`}
+            onClick={(e) => openLandingSection(e, band.anchor)}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
             <span className="vha-cta-text">{band.doorLabel}</span>
@@ -586,27 +627,31 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
 
         <div className="vha-cta vha-cta--right">
-          {/* One block, both lines, one copy — the install is two lines typed
-              inside Claude Code and it should read and paste as one thing
-              (docs/AGENT-PLUGIN.md, issue #47). */}
+          {/* The portable Agent Plugin installer is primary. It prints the
+              local plugin/marketplace paths; clients load the installed
+              directory without this page pretending to rewrite an unknown
+              harness config. Claude's marketplace flow lives behind the
+              "Claude tested" tab on /landing, not stacked here too. */}
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
-              <span>Install · Claude Code</span>
+              <span>Install · Agent Plugins</span>
               <button
                 type="button"
                 className="vha-cta-termcopy"
-                onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+                onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
                 style={{ color: v.fg, borderColor: v.ctaLine }}
               >
-                {copied === 'install' ? 'copied ⏎' : 'copy both'}
+                {copied === 'install' ? 'copied ⏎' : 'copy install'}
               </button>
             </div>
-            {INSTALL.plugin.map((line) => (
-              <div key={line} className="vha-cta-termline">
-                <span className="vha-cta-prompt" style={{ color: v.dim }}>›</span>
-                <span className="vha-cta-text">{line}</span>
-              </div>
-            ))}
+            <div className="vha-cta-termline">
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
+              <span className="vha-cta-text">{INSTALL.agentPlugin.command}</span>
+            </div>
+            <div className="vha-cta-termline">
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>↳</span>
+              <span className="vha-cta-text">prints a directory any Agent Plugins client can load</span>
+            </div>
           </div>
 
           {/* Star/Contribute pulled per owner request — repo actions were

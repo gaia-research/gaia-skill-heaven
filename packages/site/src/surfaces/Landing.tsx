@@ -22,6 +22,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   DIRECTION_WORD,
   DOORS,
@@ -48,10 +49,10 @@ import { SlashReel } from './SlashReel'
 import { HarnessMark } from '../harnessMarks'
 
 /* -- the commission: real art, no placeholder slots left except the logo -- */
-import lucyZero from '../assets/lucy/v5/masters/lucy-zero.png'
-import lucyHeaven from '../assets/lucy/v5/masters/lucy-heaven.png'
-import lucyHell from '../assets/lucy/v5/masters/lucy-hell.png'
-import lucyUltra from '../assets/lucy/v5/masters/lucy-ultra.png'
+import lucyZero from '../assets/lucy/v5/delivery/lucy-zero.webp'
+import lucyHeaven from '../assets/lucy/v5/delivery/lucy-heaven.webp'
+import lucyHell from '../assets/lucy/v5/delivery/lucy-hell.webp'
+import lucyUltra from '../assets/lucy/v5/delivery/lucy-ultra.webp'
 import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp'
 import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
 import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
@@ -72,6 +73,12 @@ const SURFACE_ICON: Record<SurfaceId, string> = {
 
 const SESSION_DIR = '/tmp/skill-zero-a91f7c'
 const fmt = (n: number) => n.toLocaleString('en-US')
+
+/** Install truth is owned by product.ts; read the real fields directly. */
+const AGENT_PLUGIN_COMMAND = INSTALL.agentPlugin.command
+const AGENT_PLUGIN_NOTE = INSTALL.agentPlugin.note
+const CLAUDE_COMPATIBILITY = INSTALL.claudeMarketplace.commands
+const CLAUDE_COMPATIBILITY_NOTE = INSTALL.claudeMarketplace.note
 
 /** Per-door note. Derived from status only — no per-harness claim is invented. */
 function doorNote(door: Door): string {
@@ -147,14 +154,19 @@ export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
   const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
-  // Two real install routes, settled in docs/AGENT-PLUGIN.md: the plugin is
-  // primary (two lines inside Claude Code), install.sh is the optional route
-  // for the five standalone launcher doors. There is no npx path.
-  const [installMode, setInstallMode] = useState<'plugin' | 'sh'>('plugin')
+  // Three real delivery views: the harness-neutral Agent Plugin installer is
+  // primary, Claude's marketplace flow is tested compatibility, and install.sh
+  // remains the optional launcher-only route. There is no npx path.
+  const [installMode, setInstallMode] = useState<'agent-plugin' | 'claude' | 'sh'>('agent-plugin')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
 
-  const installNote = installMode === 'plugin' ? INSTALL.pluginNote : INSTALL.shNote
+  const installNote =
+    installMode === 'agent-plugin'
+      ? AGENT_PLUGIN_NOTE
+      : installMode === 'claude'
+        ? CLAUDE_COMPATIBILITY_NOTE
+        : INSTALL.shNote
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -265,6 +277,19 @@ export default function Landing() {
   const activeSurface = surfaceById(RUNG_BAND[rung])
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
   const pickRung = useCallback((id: RungId) => setRung(id), [])
+
+  const location = useLocation()
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const section = (location.state as { scrollTo?: string } | null)?.scrollTo ?? searchParams.get('section')
+    if (section) {
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById(section)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+      return () => window.clearTimeout(timer)
+    }
+  }, [location])
   // In-page nav uses #hash anchors, but this app runs under a HashRouter — a
   // bare #id would be read as a route and bounce to the hero. Intercept those
   // clicks and scroll instead. External (http) links pass through.
@@ -405,18 +430,6 @@ export default function Landing() {
       <section className="lp-section" id="doors">
         <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
 
-        <div className="sh-note lp-ann">
-          <span className="lp-ann__mark" aria-hidden="true">
-            ▸
-          </span>
-          <span>
-            MARKS · four tiles carry the harness’s own mark — Claude (Simple Icons, CC0), pi
-            (pi.dev), Codex (OpenAI) and Grok (xAI). Nous Research publishes no vector mark for
-            Hermes, so that tile carries a lettermark in our own type rather than an invented logo.
-            Default selection is <b>{DOORS[0].pkg}</b>.
-          </span>
-        </div>
-
         <div className="lp-doors">
           {DOORS.map((d) => {
             const on = d.id === pickedId
@@ -446,15 +459,29 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <span className="sh-label">INSTALL</span>
+              <div>
+                <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
+                <p className="lp-install__prose">
+                  One portable package for any Agent Plugins client. The installer prints the
+                  plugin and marketplace paths; it does not guess at or rewrite a harness config.
+                </p>
+              </div>
               <div className="lp-seg" role="group" aria-label="Install route">
                 <button
                   type="button"
-                  className={`lp-seg__btn${installMode === 'plugin' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'plugin'}
-                  onClick={() => setInstallMode('plugin')}
+                  className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'agent-plugin'}
+                  onClick={() => setInstallMode('agent-plugin')}
                 >
-                  the plugin (Claude Code)
+                  Agent Plugin
+                </button>
+                <button
+                  type="button"
+                  className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'claude'}
+                  onClick={() => setInstallMode('claude')}
+                >
+                  Claude tested
                 </button>
                 <button
                   type="button"
@@ -462,21 +489,30 @@ export default function Landing() {
                   aria-pressed={installMode === 'sh'}
                   onClick={() => setInstallMode('sh')}
                 >
-                  the launcher doors (shell)
+                  launcher-only
                 </button>
               </div>
             </div>
-            {installMode === 'plugin' ? (
+            {installMode === 'agent-plugin' ? (
+              <CommandBlock
+                cmd={AGENT_PLUGIN_COMMAND}
+                sigil="$"
+                tone="mint"
+                copied={copied === 'install-agent-plugin'}
+                onCopy={() => copy(AGENT_PLUGIN_COMMAND, 'install-agent-plugin')}
+                label="Agent Plugin installer command"
+              />
+            ) : installMode === 'claude' ? (
               <div className="lp-install__lines">
-                {INSTALL.plugin.map((line, i) => (
+                {CLAUDE_COMPATIBILITY.map((line, i) => (
                   <CommandBlock
                     key={line}
                     cmd={line}
                     sigil="›"
                     tone={i === 0 ? 'violet' : 'mint'}
-                    copied={copied === `install-${i}`}
-                    onCopy={() => copy(line, `install-${i}`)}
-                    label={`install command, line ${i + 1} of ${INSTALL.plugin.length}`}
+                    copied={copied === `install-claude-${i}`}
+                    onCopy={() => copy(line, `install-claude-${i}`)}
+                    label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
                   />
                 ))}
               </div>
@@ -485,19 +521,25 @@ export default function Landing() {
                 cmd={INSTALL.sh}
                 sigil="$"
                 tone="mint"
-                copied={copied === 'install'}
-                onCopy={() => copy(INSTALL.sh, 'install')}
-                label="install command"
+                copied={copied === 'install-launchers'}
+                onCopy={() => copy(INSTALL.sh, 'install-launchers')}
+                label="launcher-only install command"
               />
             )}
             <p className="lp-install__note">{installNote}</p>
+            {installMode === 'agent-plugin' ? (
+              <p className="lp-install__note">
+                Pinned compatibility paths: <b>Codex · Grok · Hermes · Claude · Pi</b>. Other
+                conformant clients may load the same directory through their own registration UI.
+              </p>
+            ) : null}
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              {installMode === 'plugin' ? 'THEN, IN THE SESSION' : 'HOW TO LAUNCH'}
+              {installMode === 'sh' ? 'HOW TO LAUNCH' : 'THEN, IN THE SESSION'}
             </div>
-            {installMode === 'plugin' ? (
+            {installMode !== 'sh' ? (
               <>
                 <CommandBlock
                   cmd={MECHANIC.floor}
@@ -508,10 +550,11 @@ export default function Landing() {
                   label="summon command"
                 />
                 <p className="lp-install__prose">
-                  Nothing to launch. The plugin puts five commands in the session you are
-                  already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
-                  <code>/skill-heaven</code>, <code>/skill-hell</code>,{' '}
-                  <code>/skill-ultra</code> — and the summon engine ships inside it.
+                  Nothing to launch here. The Agent Plugin puts five commands in the session you
+                  are already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
+                  <code>/skill-heaven</code>, <code>/skill-hell</code>, and <code>/skill-ultra</code>{' '}
+                  — and the summon engine ships inside it. Claude's two-line flow above is the
+                  tested compatibility route for that same package.
                 </p>
               </>
             ) : (
@@ -530,9 +573,10 @@ export default function Landing() {
           </div>
         </div>
         <p className="lp-fineprint">
-          WORK IN PROGRESS · v0 — the plugin installs from this repository’s own marketplace; the
-          five launcher doors are source-delivered through <code>install.sh</code>. Neither is on
-          npm. Uninstall is one script: <code>{INSTALL.uninstall}</code>
+          WORK IN PROGRESS · v0 — the Agent Plugin installer is harness-neutral; Claude’s
+          marketplace flow is tested compatibility. The five launcher doors are source-delivered
+          separately through <code>install.sh</code>. Neither path is on npm. Uninstall is one
+          script: <code>{INSTALL.uninstall}</code>
         </p>
       </section>
 
@@ -712,61 +756,138 @@ export default function Landing() {
         <SectionHead n="04" title="HEAVEN OR HELL?" />
         <p className="lp-section__lede">Here’s how you choose.</p>
 
-        {/* the floor */}
-        <div className="lp-floor">
-          <div className="lp-floor__cmd">
-            <span aria-hidden="true">›</span>
-            <code>{MECHANIC.floor}</code>
-            <span className="sh-chip sh-chip--live">THE FLOOR</span>
+        {/* 1. Skill Zero & /summon in its own dedicated area */}
+        <div
+          className={`lp-zero-card${activeSurface.id === 'zero' ? ' is-highlighted' : ''}`}
+          onClick={() => pickRung('zero')}
+          role="button"
+          tabIndex={0}
+          aria-label="Skill Zero · The floor"
+        >
+          <div className="lp-zero-card__main">
+            <div className="lp-zero-card__head">
+              <img className="lp-zero-card__icon" src={SURFACE_ICON.zero} alt="" aria-hidden="true" />
+              <div>
+                <div className="lp-zero-card__cmd-row">
+                  <h3 className="lp-zero-card__cmd">/skill-zero</h3>
+                  <span className="sh-chip sh-chip--live">THE FLOOR</span>
+                </div>
+                <div className="lp-zero-card__role">THE LAUNCHER · ZERO BLOAT</div>
+              </div>
+            </div>
+            <p className="lp-zero-card__blurb">
+              {surfaceById('zero').blurb}
+            </p>
+            <p className="lp-zero-card__note">
+              {MECHANIC.floorNote}
+            </p>
           </div>
-          <div className="lp-floor__prose">
-            <p>{MECHANIC.line}</p>
-            <p className="lp-floor__note">{MECHANIC.floorNote}</p>
+          <div className="lp-zero-card__reach">
+            <div className="lp-zero-card__reach-head">
+              <span className="lp-zero-card__glyph" aria-hidden="true">○</span>
+              <h4>REACH FOR /SKILL-ZERO</h4>
+            </div>
+            <ul className="lp-zero-card__reach-list">
+              {['benchmarking', 'clean slate', 'everything vanilla', 'removing skill bloat'].map((row, i) => (
+                <li key={i}>
+                  <span aria-hidden="true">→</span>
+                  <span>{row}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* four surfaces */}
-        <div className="lp-surfaces">
-          {SURFACES.map((s) => (
-            <article className={`lp-surface lp-surface--${s.id}`} key={s.id}>
-              <img className="lp-surface__icon" src={SURFACE_ICON[s.id]} alt="" aria-hidden="true" />
-              <h3 className="lp-surface__cmd">{s.command}</h3>
-              <div className="lp-surface__role">{s.role}</div>
-              <p className="lp-surface__blurb">{s.blurb}</p>
-              {/* The band's HH Index stamp, linked to the research that is
-                  measuring it. Live work, not a promise — but it is an index
-                  being built, not a router that is running, which is what
-                  STAMP_ROUTING_NOTE under this grid says. */}
-              {s.stamp && (
-                <a
-                  className="lp-surface__stamp"
-                  href={HOUSES[0].href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span className="lp-surface__stamp-tag">{s.stamp.label}</span>
-                  <span className="lp-surface__stamp-note">{s.stamp.note} ↗</span>
-                </a>
-              )}
-              <div className="lp-surface__foot">
-                {s.id === 'heaven' ? (
-                  <>
-                    <span className="sh-label">BAND · low · med · opens low</span>
-                    <span className="sh-chip sh-chip--wip">WIP</span>
-                  </>
-                ) : s.id === 'hell' ? (
-                  <>
-                    <span className="sh-label">BAND · high · xhigh · max · opens high</span>
-                    <span className="sh-chip sh-chip--wip">WIP</span>
-                  </>
-                ) : s.id === 'ultra' ? (
-                  <span className="sh-label">ULTRA · the crown of the line</span>
-                ) : (
-                  <span className="sh-label">ZERO · the floor of the line</span>
+        {/* 2. Three columns: Skill-Heaven, Skill-Hell (inverted), and Skill-Ultra + Reach */}
+        <div className="lp-directions-grid">
+          {([
+            {
+              id: 'heaven' as const,
+              defaultRung: 'low' as const,
+              glyph: '◆',
+              kcls: 'lp-k-violet',
+              reach: ['brainstorming', 'grilling sessions', 'iterating', 'human-in-the-loop'],
+            },
+            {
+              id: 'hell' as const,
+              defaultRung: 'high' as const,
+              glyph: '◈',
+              kcls: 'lp-k-amber',
+              reach: ['exploring options', 'yolo-ing', 'let the expert decide', 'full agentic autonomy'],
+            },
+            {
+              id: 'ultra' as const,
+              defaultRung: 'ultra' as const,
+              glyph: '✦',
+              kcls: 'lp-k-gold',
+              reach: ['controlled autonomy', 'no dial to set', 'maximize quality', 'fully equipped agent'],
+            },
+          ] as const).map(({ id, defaultRung, glyph, kcls, reach }) => {
+            const s = surfaceById(id)
+            const isHighlighted = activeSurface.id === id
+            return (
+              <article
+                key={id}
+                className={`lp-dir-card lp-dir-card--${id}${isHighlighted ? ' is-highlighted' : ''}`}
+                onClick={() => pickRung(defaultRung)}
+              >
+                <div className="lp-dir-card__head">
+                  <div className="lp-dir-card__brand">
+                    <img className="lp-dir-card__icon" src={SURFACE_ICON[id]} alt="" aria-hidden="true" />
+                    <div>
+                      <h3 className="lp-dir-card__cmd">{s.command}</h3>
+                      <div className="lp-dir-card__role">{s.role}</div>
+                    </div>
+                  </div>
+                  <span className="sh-chip sh-chip--wip">WIP</span>
+                </div>
+
+                <p className="lp-dir-card__blurb">{s.blurb}</p>
+
+                {s.stamp && (
+                  <a
+                    className="lp-dir-card__stamp"
+                    href={HOUSES[0].href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="lp-dir-card__stamp-tag">{s.stamp.label}</span>
+                    <span className="lp-dir-card__stamp-note">{s.stamp.note} ↗</span>
+                  </a>
                 )}
-              </div>
-            </article>
-          ))}
+
+                <div className="lp-dir-card__reach">
+                  <div className="lp-dir-card__reach-head">
+                    <span className={`lp-dir-card__glyph ${kcls}`} aria-hidden="true">
+                      {glyph}
+                    </span>
+                    <h4>REACH FOR {s.command.toUpperCase()}</h4>
+                  </div>
+                  <ul className="lp-dir-card__reach-list">
+                    {reach.map((row, i) => (
+                      <li key={i}>
+                        <span className={kcls} aria-hidden="true">
+                          →
+                        </span>
+                        <span>{row}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="lp-dir-card__foot">
+                  {id === 'heaven' ? (
+                    <span className="sh-label">BAND · low · med · opens low</span>
+                  ) : id === 'hell' ? (
+                    <span className="sh-label">BAND · high · xhigh · max · opens high</span>
+                  ) : (
+                    <span className="sh-label">ULTRA · the crown of the line</span>
+                  )}
+                </div>
+              </article>
+            )
+          })}
         </div>
 
         <div className="sh-note lp-ann">
@@ -781,58 +902,6 @@ export default function Landing() {
               Follow the HH Index ↗
             </a>
           </span>
-        </div>
-
-        {/* the four-band decision ledger */}
-        <div className="lp-ledger lp-ledger--four">
-          {[
-            {
-              cmd: '/skill-zero',
-              glyph: '○',
-              kcls: 'lp-k-grey',
-              rows: ['benchmarking', 'clean slate', 'everything vanilla', 'removing skill bloat'],
-            },
-            {
-              cmd: '/skill-heaven',
-              glyph: '◆',
-              kcls: 'lp-k-violet',
-              rows: ['brainstorming', 'grilling sessions', 'iterating', 'human-in-the-loop'],
-            },
-            {
-              cmd: '/skill-hell',
-              glyph: '◈',
-              kcls: 'lp-k-amber',
-              wip: true,
-              rows: ['exploring options', 'yolo-ing', 'let the expert decide', 'full agentic autonomy'],
-            },
-            {
-              cmd: '/skill-ultra',
-              glyph: '✦',
-              kcls: 'lp-k-gold',
-              wip: true,
-              rows: ['controlled autonomy', 'no dial to set', 'maximize quality', 'fully equipped agent'],
-            },
-          ].map((col) => (
-            <div className="lp-ledger__col" key={col.cmd}>
-              <div className="lp-ledger__head">
-                <span className={`lp-ledger__glyph ${col.kcls}`} aria-hidden="true">
-                  {col.glyph}
-                </span>
-                <h3>REACH FOR {col.cmd.toUpperCase()}</h3>
-                {col.wip ? <span className="sh-chip sh-chip--wip">WIP</span> : null}
-              </div>
-              <ul className="lp-ledger__rows">
-                {col.rows.map((row, i) => (
-                  <li key={i}>
-                    <span className={col.kcls} aria-hidden="true">
-                      →
-                    </span>
-                    <span>{row}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
 
         {/* the ladder */}

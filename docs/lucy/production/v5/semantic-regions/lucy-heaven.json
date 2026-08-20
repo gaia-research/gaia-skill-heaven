@@ -1,0 +1,15 @@
+{
+  "source": "packages/site/src/assets/lucy/v5/masters/lucy-heaven.png",
+  "regions": [
+    {"name": "face-core", "box": [0.41, 0.20, 0.58, 0.30]},
+    {"name": "head", "box": [0.34, 0.12, 0.65, 0.35]},
+    {"name": "hair", "box": [0.33, 0.00, 0.90, 0.39]},
+    {"name": "torso", "box": [0.35, 0.27, 0.76, 0.58]},
+    {"name": "left-arm-hand", "box": [0.07, 0.42, 0.46, 0.62]},
+    {"name": "right-arm-hand", "box": [0.65, 0.34, 0.98, 0.61]},
+    {"name": "left-leg-foot", "box": [0.01, 0.38, 0.45, 0.98]},
+    {"name": "right-leg-foot", "box": [0.00, 0.54, 0.68, 1.00]},
+    {"name": "wings", "box": [0, 0, 0, 0], "expected": "source-external", "reason": "The approved v5 source has no separable wings region; route composition may supply wings independently."},
+    {"name": "weapons", "box": [0.14, 0.45, 1.00, 0.84]}
+  ]
+}

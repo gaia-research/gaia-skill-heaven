@@ -16,6 +16,17 @@ import './styles/tokens.css'
 //                  decide which surface to pick; no scrollytelling.
 // The old /hero-a, /hero-b variation review routes and the prototype Switcher
 // are gone: Hero A is the winner, there is nothing left to switch between.
+
+// Redirect bare paths (e.g. /landing -> /#/landing, /instrument -> /#/instrument)
+// so direct URLs, bookmarks, and dev server refreshes land on the intended surface.
+const barePathMatch = window.location.pathname.match(/^(.*)\/(landing|instrument)\/?$/)
+if (barePathMatch) {
+  const [, base, route] = barePathMatch
+  const targetBase = base ? `${base}/` : '/'
+  const target = `${targetBase}#/${route}${window.location.search}${window.location.hash}`
+  window.history.replaceState(null, '', target)
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HashRouter>

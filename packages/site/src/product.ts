@@ -266,24 +266,101 @@ export const LADDER_WIP =
 /* -------------------------------------------------------------------------
    Install & launch — real, working commands only.
 
-   Settled in docs/AGENT-PLUGIN.md ("Install — the final decision"):
-   the plugin is the primary install, install.sh is the optional launcher
-   route, `npx` is not an install path, and `skill-heaven.dev` is deferred —
-   the site prints the host that actually serves today.
+   Agent Plugins standardises the package layout, not one universal client
+   registration command. The portable installer is therefore the primary
+   route: it puts one plugin and one local marketplace on disk, prints both
+   paths, and leaves client configuration to the client. The examples below
+   are pinned compatibility checks, not a claim that these five clients are
+   the portability boundary.
+
+   Claude's public marketplace flow remains a tested compatibility route. It
+   is deliberately modelled separately from the harness-neutral installer so
+   the site does not teach a Claude-only flow as the universal one.
    ------------------------------------------------------------------------- */
 
+export interface ClientRegistration {
+  id: string;
+  name: string;
+  /** Version used by the pinned compatibility probe. */
+  testedVersion: string;
+  commands: readonly string[];
+  note: string;
+}
+
+const AGENT_PLUGIN_INSTALL_COMMAND =
+  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh';
+
+const AGENT_PLUGIN_ROOT = '$HOME/.local/share/gaia-skill-heaven-agent-plugin';
+const AGENT_PLUGIN_MARKETPLACE = `${AGENT_PLUGIN_ROOT}/marketplace`;
+const AGENT_PLUGIN_DIRECTORY = `${AGENT_PLUGIN_MARKETPLACE}/plugins/skill-heaven`;
+
+/** Pinned client registration examples from plugins/skill-heaven/PROBE.md. */
+export const CLIENT_REGISTRATIONS: readonly ClientRegistration[] = [
+  {
+    id: 'codex',
+    name: 'Codex',
+    testedVersion: '0.146.0',
+    commands: [
+      `codex plugin marketplace add "${AGENT_PLUGIN_MARKETPLACE}"`,
+      'codex plugin add skill-heaven@gaia-skill-heaven',
+    ],
+    note: 'Registers the installed marketplace, then enables the plugin.',
+  },
+  {
+    id: 'grok',
+    name: 'Grok',
+    testedVersion: '1.0.5',
+    commands: [`grok plugin install "${AGENT_PLUGIN_DIRECTORY}" --trust`],
+    note: 'Loads the installed plugin directory with explicit trust.',
+  },
+  {
+    id: 'hermes',
+    name: 'Hermes',
+    testedVersion: '0.20.0',
+    commands: [
+      `hermes plugins install "file://${AGENT_PLUGIN_DIRECTORY}" --enable`,
+    ],
+    note: 'Installs the local Git-backed plugin artifact and enables it.',
+  },
+  {
+    id: 'pi',
+    name: 'Pi',
+    testedVersion: '0.84.2',
+    commands: [`pi install "${AGENT_PLUGIN_DIRECTORY}" --approve`],
+    note: 'Loads the Pi adapter from the installed plugin directory.',
+  },
+];
+
 export const INSTALL = {
-  /** Primary — two lines typed inside Claude Code. Nothing else to install. */
-  plugin: [
-    '/plugin marketplace add gaia-research/gaia-skill-heaven',
-    '/plugin install skill-heaven@gaia-skill-heaven',
-  ] as const,
+  /** Primary — one portable package, with client registration kept explicit. */
+  agentPlugin: {
+    command: AGENT_PLUGIN_INSTALL_COMMAND,
+    marketplaceDirectory: AGENT_PLUGIN_MARKETPLACE,
+    pluginDirectory: AGENT_PLUGIN_DIRECTORY,
+    note:
+      'Primary path. Installs one portable Agent Plugin and a local marketplace, then prints both directories. Any Agent Plugins client can load the installed plugin directory; client registration stays explicit because the standard defines the package, not one universal install command.',
+    clientNote:
+      'The pinned examples below show tested client registration. They are compatibility evidence, not the boundary of supported Agent Plugins clients.',
+    clients: CLIENT_REGISTRATIONS,
+  },
+  /** Compatibility alias retained for existing install panels. */
+  plugin: [AGENT_PLUGIN_INSTALL_COMMAND] as const,
   pluginNote:
-    'Two lines inside Claude Code, no terminal. The plugin carries its own summon engine — no sibling checkout, no external package, no npx.',
+    'Primary path. Installs one portable Agent Plugin and a local marketplace, then prints both directories. Point any Agent Plugins client at the printed plugin directory and use that client’s own registration command.',
+  /** Tested Claude Code compatibility — a client route, not the universal install. */
+  claudeMarketplace: {
+    testedVersion: '2.1.237',
+    commands: [
+      '/plugin marketplace add gaia-research/gaia-skill-heaven',
+      '/plugin install skill-heaven@gaia-skill-heaven',
+    ] as const,
+    note:
+      'Tested Claude Code marketplace compatibility. This client-owned route remains available; it is not the harness-neutral Agent Plugin installer.',
+  },
   /** Optional — the five source-built launcher doors. */
   sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
   shNote:
-    'Optional. Adds the five standalone *-zero launcher doors, and registers the same plugin when Claude Code is already on PATH. It never installs a harness.',
+    'Secondary path. Installs the five standalone *-zero launcher doors independently of the plugin. It never installs a harness; use it when you want to start a clean launcher from a shell.',
   uninstall: '$HOME/.local/share/gaia-skill-heaven/uninstall.sh',
 } as const;
 

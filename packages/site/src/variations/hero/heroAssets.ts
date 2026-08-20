@@ -9,10 +9,10 @@ import lucyZeroSetB from '../../assets/lucy/v4-approved/set-b/masters/lucy-zero.
 import lucyHeavenSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-heaven.webp'
 import lucyHellSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-hell.webp'
 import lucyUltraSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-ultra.webp'
-import lucyHeavenV5 from '../../assets/lucy/v5/masters/lucy-heaven.png'
-import lucyHellV5 from '../../assets/lucy/v5/masters/lucy-hell.png'
-import lucyUltraV5 from '../../assets/lucy/v5/masters/lucy-ultra.png'
-import lucyZeroV5 from '../../assets/lucy/v5/masters/lucy-zero.png'
+import lucyHeavenV5 from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
+import lucyHellV5 from '../../assets/lucy/v5/delivery/lucy-hell.webp'
+import lucyUltraV5 from '../../assets/lucy/v5/delivery/lucy-ultra.webp'
+import lucyZeroV5 from '../../assets/lucy/v5/delivery/lucy-zero.webp'
 import katanaHeaven from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import katanaHell from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
 import katanaUltra from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp'
@@ -34,8 +34,8 @@ export interface LucyHeroAsset {
 export type LucyHeroAssetSet = Record<LucyHeroState, LucyHeroAsset>
 
 /**
- * Owner-approved v4 Lucy character sets. The `a`/`b`/`c` identifiers name
- * character-art sets, not the two independently-designed page layouts.
+ * Owner-approved Lucy character sets. The `a`/`b`/`c` identifiers name the
+ * v4 review sets; `v5` is the supersampled delivery set used in production.
  */
 export const HERO_ASSET_SETS: Record<LucyAssetSet, LucyHeroAssetSet> = {
   v5: {
@@ -79,3 +79,35 @@ export function normalizeLucyAssetSet(value?: string): LucyAssetSet {
 
 /** Backwards-compatible default used by existing hero code. */
 export const HERO_ASSETS: LucyHeroAssetSet = HERO_ASSET_SETS[DEFAULT_LUCY_ASSET_SET]
+
+/** Retained references in memory so the browser never garbage collects decoded GPU textures */
+const PRELOAD_CACHE = new Set<HTMLImageElement>()
+
+/**
+ * Preloads and pre-decodes all Lucy character states, katanas, and weapons
+ * into browser and GPU texture memory.
+ */
+export function preloadLucyAssets(set: LucyAssetSet = DEFAULT_LUCY_ASSET_SET) {
+  if (typeof window === 'undefined') return
+  const assets = HERO_ASSET_SETS[set]
+  const list = [
+    assets.zero.lucy,
+    assets.heaven.lucy,
+    assets.hell.lucy,
+    assets.ultra.lucy,
+    assets.zero.katana,
+    assets.heaven.katana,
+    assets.hell.katana,
+    assets.ultra.katana,
+    assets.zero.slashArc,
+  ]
+  list.forEach((src) => {
+    const img = new Image()
+    img.src = src
+    img.decode?.().catch(() => {})
+    PRELOAD_CACHE.add(img)
+  })
+}
+
+// Eagerly preload the production delivery masters on initial module load
+preloadLucyAssets('v5')

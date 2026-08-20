@@ -29,6 +29,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--asset-type", choices=("character", "component"), default="character")
     parser.add_argument("--candidate", default="unknown")
     parser.add_argument(
+        "--allow-canvas-contact",
+        action="store_true",
+        help="allow approved source composition to touch the canvas; contact count is still reported",
+    )
+    parser.add_argument(
+        "--source-native-prism",
+        action="store_true",
+        help="allow only prismatic edge hues mapped from --prism-reference",
+    )
+    parser.add_argument("--prism-reference", type=Path, help="approved native-alpha source for inherited-prism comparison")
+    parser.add_argument(
         "--exact-inverted-hell",
         action="store_true",
         help=(
@@ -96,6 +107,24 @@ def interior_boundary_band(alpha: np.ndarray, radius: int = 2) -> np.ndarray:
         grown[:, :-1] |= near_exterior[:, 1:]
         near_exterior = grown
     return near_exterior & (alpha > 0)
+
+
+def expanded(mask: np.ndarray, radius: int) -> np.ndarray:
+    window = radius * 2 + 1
+    horizontal_padded = np.pad(mask, ((0, 0), (radius, radius)), mode="constant")
+    horizontal_sum = np.pad(
+        np.cumsum(horizontal_padded, axis=1, dtype=np.uint32),
+        ((0, 0), (1, 0)),
+        mode="constant",
+    )
+    horizontal = (horizontal_sum[:, window:] - horizontal_sum[:, :-window]) > 0
+    vertical_padded = np.pad(horizontal, ((radius, radius), (0, 0)), mode="constant")
+    vertical_sum = np.pad(
+        np.cumsum(vertical_padded, axis=0, dtype=np.uint32),
+        ((1, 0), (0, 0)),
+        mode="constant",
+    )
+    return (vertical_sum[window:] - vertical_sum[:-window]) > 0
 
 
 def native_alpha(source: Image.Image) -> tuple[np.ndarray, dict]:
@@ -202,9 +231,19 @@ def load_regions(path: Path | None, width: int, height: int) -> list[dict]:
             )
         else:
             x1, y1, x2, y2 = map(round, box)
+        expected = item.get("expected", "present")
+        if expected not in {"present", "canonically-absent", "source-external"}:
+            raise ValueError(f"semantic region {item['name']} has unsupported expected={expected!r}")
+        if expected != "present" and item["name"] != "wings":
+            raise ValueError(f"only the wings region may declare expected={expected!r}")
+        reason = item.get("reason")
+        if expected != "present" and not reason:
+            raise ValueError(f"semantic region {item['name']} must explain its declared exception")
         normalized.append({
             "name": item["name"],
             "box": [x1, y1, x2, y2],
+            "expected": expected,
+            "reason": reason,
             "minimum_foreground_pixels": int(item.get("minimum_foreground_pixels", 64)),
             "minimum_alpha_128_fraction": float(item.get("minimum_alpha_128_fraction", 0.0)),
             "minimum_alpha_192_fraction": float(item.get("minimum_alpha_192_fraction", 0.70 if item["name"] == "face-core" else 0.0)),
@@ -217,7 +256,15 @@ def load_regions(path: Path | None, width: int, height: int) -> list[dict]:
     return normalized
 
 
-def audit(data: np.ndarray, regions: list[dict], *, exact_inverted_hell: bool = False) -> dict:
+def audit(
+    data: np.ndarray,
+    regions: list[dict],
+    *,
+    exact_inverted_hell: bool = False,
+    allow_canvas_contact: bool = False,
+    source_native_prism: bool = False,
+    prism_reference: np.ndarray | None = None,
+) -> dict:
     rgb = data[:, :, :3].astype(np.int16)
     alpha = data[:, :, 3]
     height, width = alpha.shape
@@ -236,7 +283,47 @@ def audit(data: np.ndarray, regions: list[dict], *, exact_inverted_hell: bool = 
         & (rgb[:, :, 1] >= rgb[:, :, 2] + 8)
     )
     strong_magenta = (rgb[:, :, 0] > 170) & (rgb[:, :, 2] > 170) & (rgb[:, :, 1] < 100)
+    green_exterior = band & strong_green
+    magenta_exterior = band & strong_magenta
+    green_interior = interior_boundary & key_green_dominant
     hidden_rgb = transparent & np.any(rgb != 0, axis=2)
+
+    new_green_exterior = green_exterior
+    new_magenta_exterior = magenta_exterior
+    new_green_interior = green_interior
+    if source_native_prism:
+        if prism_reference is None:
+            raise ValueError("--source-native-prism requires --prism-reference")
+        reference_rgb = prism_reference[:, :, :3].astype(np.int16)
+        reference_alpha = prism_reference[:, :, 3]
+        # The delivery's bounded luma residual can move an inherited hue a few
+        # values across the strong-color threshold. The reference mask is
+        # deliberately wider in color space, then spatially dilated by ten
+        # source pixels (20 output pixels); output candidates still must map to
+        # approved source color rather than receiving a blanket pass.
+        reference_green = (
+            (reference_rgb[:, :, 1] > reference_rgb[:, :, 0] + 15)
+            & (reference_rgb[:, :, 1] > reference_rgb[:, :, 2] + 15)
+        )
+        reference_key_green = (
+            (reference_rgb[:, :, 1] >= 120)
+            & (reference_rgb[:, :, 0] <= 190)
+            & (reference_rgb[:, :, 2] <= 190)
+            & (reference_rgb[:, :, 1] >= reference_rgb[:, :, 0] + 5)
+            & (reference_rgb[:, :, 1] >= reference_rgb[:, :, 2] + 3)
+        )
+        reference_magenta = (
+            (reference_rgb[:, :, 0] > 145)
+            & (reference_rgb[:, :, 2] > 145)
+            & (reference_rgb[:, :, 1] < 125)
+        )
+
+        allowed_green_exterior = expanded(exterior_band(reference_alpha) & reference_green, 20)
+        allowed_magenta_exterior = expanded(exterior_band(reference_alpha) & reference_magenta, 20)
+        allowed_green_interior = expanded(interior_boundary_band(reference_alpha) & reference_key_green, 20)
+        new_green_exterior = green_exterior & ~allowed_green_exterior
+        new_magenta_exterior = magenta_exterior & ~allowed_magenta_exterior
+        new_green_interior = green_interior & ~allowed_green_interior
 
     border = np.zeros_like(alpha, dtype=bool)
     border[:3] = True
@@ -244,11 +331,31 @@ def audit(data: np.ndarray, regions: list[dict], *, exact_inverted_hell: bool = 
     border[:, :3] = True
     border[:, -3:] = True
     border_foreground = int((border & foreground).sum())
+    new_border_foreground = border & foreground
+    if allow_canvas_contact:
+        if prism_reference is None:
+            raise ValueError("--allow-canvas-contact requires --prism-reference")
+        allowed_source_border = expanded(prism_reference[:, :, 3] > 0, 4)
+        new_border_foreground &= ~allowed_source_border
+    new_border_foreground_pixels = int(new_border_foreground.sum())
 
     ys, xs = np.where(foreground)
     bbox = None if not len(xs) else [int(xs.min()), int(ys.min()), int(xs.max() + 1), int(ys.max() + 1)]
     region_results = []
     for region in regions:
+        if region["expected"] != "present":
+            region_results.append({
+                **region,
+                "area_pixels": 0,
+                "foreground_pixels": 0,
+                "alpha_128_fraction": 0.0,
+                "alpha_192_fraction": 0.0,
+                "alpha_240_fraction": 0.0,
+                "median_nonzero_alpha": 0,
+                "pass": True,
+                "declared_exception": True,
+            })
+            continue
         x1, y1, x2, y2 = region["box"]
         values = alpha[y1:y2, x1:x2]
         count = int((values > 0).sum())
@@ -281,12 +388,12 @@ def audit(data: np.ndarray, regions: list[dict], *, exact_inverted_hell: bool = 
         "has_transparency": int(transparent.sum()) > width * height * 0.05,
         "has_opaque_foreground": int((alpha == 255).sum()) > 1000,
         "has_fractional_alpha": int(partial.sum()) > 100,
-        "foreground_not_on_canvas_border": border_foreground == 0,
+        "foreground_not_on_canvas_border": new_border_foreground_pixels == 0,
         "zero_hidden_rgb_after_export": int(hidden_rgb.sum()) == 0,
-        "zero_strong_green_exterior_fringe": int((band & strong_green).sum()) == 0,
-        "zero_strong_magenta_exterior_fringe": int((band & strong_magenta).sum()) == 0,
+        "zero_strong_green_exterior_fringe": int(new_green_exterior.sum()) == 0,
+        "zero_strong_magenta_exterior_fringe": int(new_magenta_exterior.sum()) == 0,
         "zero_strong_green_interior_boundary_spill": (
-            exact_inverted_hell or int((interior_boundary & key_green_dominant).sum()) == 0
+            exact_inverted_hell or int(new_green_interior.sum()) == 0
         ),
         "all_semantic_regions_occupied": all(item["pass"] for item in region_results),
     }
@@ -297,12 +404,18 @@ def audit(data: np.ndarray, regions: list[dict], *, exact_inverted_hell: bool = 
         "opaque_pixels": int((alpha == 255).sum()),
         "fractional_alpha_pixels": int(partial.sum()),
         "border_foreground_pixels": border_foreground,
+        "new_border_foreground_pixels": new_border_foreground_pixels,
         "hidden_rgb_pixels": int(hidden_rgb.sum()),
-        "strong_green_exterior_pixels": int((band & strong_green).sum()),
-        "strong_magenta_exterior_pixels": int((band & strong_magenta).sum()),
-        "strong_green_interior_boundary_pixels": int((interior_boundary & key_green_dominant).sum()),
+        "strong_green_exterior_pixels": int(green_exterior.sum()),
+        "strong_magenta_exterior_pixels": int(magenta_exterior.sum()),
+        "strong_green_interior_boundary_pixels": int(green_interior.sum()),
         "strong_magenta_interior_boundary_pixels": int((interior_boundary & strong_magenta).sum()),
+        "new_strong_green_exterior_pixels": int(new_green_exterior.sum()),
+        "new_strong_magenta_exterior_pixels": int(new_magenta_exterior.sum()),
+        "new_strong_green_interior_boundary_pixels": int(new_green_interior.sum()),
         "exact_inverted_hell_mode": exact_inverted_hell,
+        "allow_canvas_contact": allow_canvas_contact,
+        "source_native_prism": source_native_prism,
         "foreground_bbox": bbox,
         "semantic_regions": region_results,
         "checks": checks,
@@ -319,13 +432,32 @@ def main() -> None:
     source = Image.open(args.input)
     source_rgba = source.convert("RGBA")
     source_alpha = np.asarray(source_rgba, dtype=np.uint8)[:, :, 3]
-    native = "A" in source.getbands() and int(source_alpha.min()) == 0 and int(source_alpha.max()) == 255
+    native = "A" in source.getbands() and int(source_alpha.min()) == 0 and int(source_alpha.max()) > 0
     try:
         data, extraction = native_alpha(source) if native else chroma_alpha(source)
         if args.asset_type == "character" and args.regions is None:
             raise ValueError("character masters require --regions semantic occupancy data")
+        if args.source_native_prism and not native:
+            raise ValueError("--source-native-prism requires an approved native-alpha input")
+        if args.source_native_prism and args.prism_reference is None:
+            raise ValueError("--source-native-prism requires --prism-reference")
+        prism_reference = None
+        if args.prism_reference is not None:
+            reference = Image.open(args.prism_reference)
+            reference_alpha = np.asarray(reference.convert("RGBA"), dtype=np.uint8)[:, :, 3]
+            if "A" not in reference.getbands() or int(reference_alpha.min()) != 0 or int(reference_alpha.max()) <= 0:
+                raise ValueError("--prism-reference must be a native-alpha source")
+            reference = reference.convert("RGBA").resize(source.size, Image.Resampling.LANCZOS)
+            prism_reference = np.asarray(reference, dtype=np.uint8)
         regions = load_regions(args.regions, source.width, source.height)
-        metrics = audit(data, regions, exact_inverted_hell=args.exact_inverted_hell)
+        metrics = audit(
+            data,
+            regions,
+            exact_inverted_hell=args.exact_inverted_hell,
+            allow_canvas_contact=args.allow_canvas_contact,
+            source_native_prism=args.source_native_prism,
+            prism_reference=prism_reference,
+        )
         error = None
     except Exception as exc:
         data = np.asarray(source_rgba, dtype=np.uint8).copy()

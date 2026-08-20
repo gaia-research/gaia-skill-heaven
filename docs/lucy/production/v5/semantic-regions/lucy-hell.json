@@ -1,0 +1,15 @@
+{
+  "source": "packages/site/src/assets/lucy/v5/masters/lucy-hell.png",
+  "regions": [
+    {"name": "face-core", "box": [0.31, 0.20, 0.47, 0.30]},
+    {"name": "head", "box": [0.25, 0.10, 0.55, 0.34]},
+    {"name": "hair", "box": [0.23, 0.00, 0.68, 0.36]},
+    {"name": "torso", "box": [0.29, 0.27, 0.71, 0.62]},
+    {"name": "left-arm-hand", "box": [0.14, 0.38, 0.42, 0.61]},
+    {"name": "right-arm-hand", "box": [0.60, 0.31, 0.96, 0.59]},
+    {"name": "left-leg-foot", "box": [0.13, 0.54, 0.48, 0.98]},
+    {"name": "right-leg-foot", "box": [0.31, 0.55, 0.73, 0.77]},
+    {"name": "wings", "box": [0.73, 0.01, 1.00, 0.44]},
+    {"name": "weapons", "box": [0.38, 0.45, 1.00, 0.83]}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "source": "packages/site/src/assets/lucy/v5/masters/lucy-ultra.png",
+  "regions": [
+    {"name": "face-core", "box": [0.34, 0.17, 0.52, 0.27]},
+    {"name": "head", "box": [0.27, 0.08, 0.59, 0.31]},
+    {"name": "hair", "box": [0.22, 0.00, 0.67, 0.34]},
+    {"name": "torso", "box": [0.29, 0.25, 0.70, 0.57]},
+    {"name": "left-arm-hand", "box": [0.02, 0.24, 0.43, 0.48]},
+    {"name": "right-arm-hand", "box": [0.61, 0.27, 0.98, 0.56]},
+    {"name": "left-leg-foot", "box": [0.03, 0.49, 0.47, 0.94]},
+    {"name": "right-leg-foot", "box": [0.17, 0.47, 0.62, 0.77]},
+    {"name": "wings", "box": [0.00, 0.00, 1.00, 0.72]},
+    {"name": "weapons", "box": [0.00, 0.17, 1.00, 0.89]}
+  ]
+}

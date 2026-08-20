@@ -19,18 +19,12 @@ import {
   type SurfaceId,
 } from '../product';
 
-import zeroMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-zero.webp';
-import heavenMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp';
-import hellMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp';
-import ultraMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp';
+import zeroMaster from '../assets/lucy/v5/delivery/lucy-zero.webp';
+import heavenMaster from '../assets/lucy/v5/delivery/lucy-heaven.webp';
+import hellMaster from '../assets/lucy/v5/delivery/lucy-hell.webp';
+import ultraMaster from '../assets/lucy/v5/delivery/lucy-ultra.webp';
 
-
-
-/**
- * Approved character art, per state. The Hell master is already a full
- * RGB inversion of Heaven — the page inverts around it, the art never does.
- * Zero carries no wings, by canon.
- */
+/** Approved v5 character art, per state. Zero carries no wings, by canon. */
 const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   zero: {
     figure: zeroMaster,
@@ -42,7 +36,7 @@ const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   },
   hell: {
     figure: hellMaster,
-    alt: 'The line’s figure in its Hell state — the Heaven render fully inverted, eyes closed, a single red tear.',
+    alt: 'The line’s figure in its Hell state — inverted palette, eyes closed, a single red tear.',
   },
   ultra: {
     figure: ultraMaster,
@@ -151,8 +145,6 @@ export default function Hero() {
         ? surface.command
         : `${surface.command} ${rungId}`;
 
-  const art = ART[dir];
-
   return (
     <div className={`hx hx--${dir}${impact ? ' hx--impact' : ''}`}>
       <nav className="hx__nav">
@@ -231,24 +223,31 @@ export default function Hero() {
             <button
               className="sh-cta"
               type="button"
-              onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+              onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
             >
-              {copied === 'install' ? 'Copied to clipboard' : 'Copy the install'}
+              {copied === 'install' ? 'Copied to clipboard' : 'Copy the Agent Plugin install'}
             </button>
             <Link className="sh-cta sh-cta--ghost" to="/landing">
               Go to Site
             </Link>
           </div>
           <p className="hx__install">
-            {INSTALL.plugin.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-            <em>Two lines inside Claude Code.</em>
+            <span>{INSTALL.agentPlugin.command}</span>
+            <em>Any Agent Plugins client can load the installed directory.</em>
           </p>
         </div>
 
         <div className="hx__figure">
-          <img src={art.figure} alt={art.alt} />
+          {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => (
+            <img
+              key={state}
+              src={ART[state].figure}
+              alt={ART[state].alt}
+              loading="eager"
+              decoding="sync"
+              style={{ display: state === dir ? 'block' : 'none' }}
+            />
+          ))}
         </div>
       </div>
 
