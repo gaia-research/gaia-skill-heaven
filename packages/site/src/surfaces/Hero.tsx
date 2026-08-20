@@ -24,6 +24,8 @@ import heavenMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.w
 import hellMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp';
 import ultraMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp';
 
+const AGENT_PLUGIN_INSTALL =
+  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh';
 
 
 /**
@@ -231,19 +233,21 @@ export default function Hero() {
             <button
               className="sh-cta"
               type="button"
-              onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+              onClick={() => copy(AGENT_PLUGIN_INSTALL, 'install')}
             >
-              {copied === 'install' ? 'Copied to clipboard' : 'Copy the install'}
+              {copied === 'install' ? 'Copied to clipboard' : 'Copy the Agent Plugin install'}
             </button>
             <Link className="sh-cta sh-cta--ghost" to="/landing">
               Go to Site
             </Link>
           </div>
           <p className="hx__install">
+            <span>{AGENT_PLUGIN_INSTALL}</span>
+            <em>Primary: any Agent Plugins client can load the installed directory.</em>
+            <em>Claude Code compatibility — marketplace flow:</em>
             {INSTALL.plugin.map((line) => (
               <span key={line}>{line}</span>
             ))}
-            <em>Two lines inside Claude Code.</em>
           </p>
         </div>
 

@@ -67,11 +67,27 @@ never as the claim.
 
 ## Operating Context
 
-Used from inside a coding-agent harness. The install is settled in
-`docs/AGENT-PLUGIN.md` ("Install — the final decision") and the site prints
-nothing else.
+Used from inside a coding-agent harness. The install hierarchy is settled in
+`docs/AGENT-PLUGIN.md` ("Install and client delivery") and the site prints
+the portable route first.
 
-**Primary — the plugin.** Two lines typed inside Claude Code, no terminal:
+**Primary — install the portable Agent Plugin package.** One command places a
+single, stable plugin directory on disk:
+
+```
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+The package is the product boundary: any standards-conformant Agent Plugins
+client can load that directory. Agent Plugins standardizes the package, not one
+universal client-registration command, so the client owns its own registration,
+enablement, update, and cache behavior. The installer does not silently mutate
+any harness configuration. Other clients may load the same installed directory;
+the five pinned harness examples are compatibility evidence, not the support
+boundary.
+
+**Claude Code compatibility — tested marketplace flow.** Claude Code also
+accepts these two lines inside the harness, with no terminal:
 
 ```
 /plugin marketplace add gaia-research/gaia-skill-heaven
@@ -83,8 +99,9 @@ inside it — no sibling checkout, no external package, no build step. It puts
 five commands in the session: `/summon`, `/skill-zero`, `/skill-heaven`,
 `/skill-hell`, `/skill-ultra`.
 
-**Optional — the standalone launcher doors.** For the five source-built
-`*-zero` binaries independent of Claude Code:
+**Secondary — the standalone launcher doors.** `install.sh` is a separate
+launcher route for the five source-built `*-zero` binaries, independent of
+the portable plugin and its client registration:
 
 ```
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
@@ -131,12 +148,15 @@ The public site is served from `packages/site`.
   in `gaia-research` as WIP — it is not part of what this site presents.
 - **Free.** The doors, the plugin, and the MCP transport cost nothing. No paid
   tier, metering, or enterprise pricing has shipped.
-- Per-harness support varies: Claude Code is the flagship (the plugin);
-  `pi-zero`, `codex-zero`, `hermes-zero`, `grok-zero` exist as prototypes.
+- Per-harness delivery varies: Claude Code is the compatibility-tested
+  marketplace client; other clients may load the same portable plugin
+  directory through their own registration flow. The standalone
+  `pi-zero`, `codex-zero`, `hermes-zero`, and `grok-zero` launchers remain
+  prototypes, not a claim that those five examples define the support boundary.
 - **WORK IN PROGRESS · v0.** The plugin installs from this repository's own
-  marketplace; the five launcher doors are source-delivered through
-  `install.sh`. Neither is on npm. The site carries a standing WIP disclosure
-  in the chrome and footer.
+  portable package or Claude marketplace; the five launcher doors are
+  source-delivered through `install.sh`. Neither route is on npm. The site
+  carries a standing WIP disclosure in the chrome and footer.
 
 ## Brand Commitments
 

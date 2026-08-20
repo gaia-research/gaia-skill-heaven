@@ -1,20 +1,23 @@
 /**
- * Harness marks — each is the harness vendor's OWN mark, reduced to a single
- * monochrome path so a tile can recolour it. Nothing here is redrawn, traced
- * or approximated; source and licence sit with each entry. Shared between the
+ * Harness marks — each is the harness vendor's OWN mark, rendered either as a
+ * monochrome path or as a supplied local asset. Nothing here is redrawn,
+ * traced or approximated; source and licence sit with each entry. Shared between the
  * landing document's door tiles (`surfaces/Landing.tsx`) and the Skill-Zero
  * CTA's compatibility row (`variations/VariationHeroA.tsx`) so the same five
  * marks never drift into two copies.
  *
- * `hermes` has no entry ON PURPOSE. Nous Research publishes no vector mark —
- * not on nousresearch.com, not on hermes.nousresearch.com, not in the
- * NousResearch GitHub org (checked 2026-08-20; the site ships only raster
- * favicons and the one detailed SVG on the Hermes download page is Tux). That
- * tile carries a lettermark in the site's own type instead of an invented
- * logo: a negative result is recorded, not papered over (D8).
+ * Hermes uses the owner's supplied transparent raster mark. Grok uses the
+ * owner's supplied light/dark SVG pair, selected with the user's colour
+ * preference so the mark remains legible on either surface.
  */
 
-export type DoorMark = { viewBox: string; d: string; evenOdd?: boolean }
+import hermesMark from './assets/harnesses/hermes.webp'
+import grokMark from './assets/harnesses/grok.svg'
+import grokDarkMark from './assets/harnesses/grok-dark.svg'
+
+export type DoorMark =
+  | { kind?: 'path'; viewBox: string; d: string; evenOdd?: boolean }
+  | { kind: 'asset'; src: string; darkSrc?: string; invert?: boolean }
 
 export const DOOR_MARKS: Record<string, DoorMark> = {
   /* claude — Simple Icons (CC0-1.0), 24×24 viewBox, verbatim. */
@@ -38,19 +41,25 @@ export const DOOR_MARKS: Record<string, DoorMark> = {
     viewBox: '0 0 20 20',
     d: 'M11.248 18.25q-.825 0-1.568-.314a4.3 4.3 0 0 1-1.32-.874 4 4 0 0 1-1.304.214 4 4 0 0 1-2.046-.544 4.27 4.27 0 0 1-1.518-1.485 4 4 0 0 1-.56-2.095q0-.48.131-1.04A4.4 4.4 0 0 1 2.04 10.71a4.07 4.07 0 0 1 .017-3.4 4.2 4.2 0 0 1 1.056-1.418 3.8 3.8 0 0 1 1.6-.842 3.9 3.9 0 0 1 .76-1.683q.593-.759 1.451-1.188a4.04 4.04 0 0 1 1.832-.429q.825 0 1.567.313.742.314 1.32.875a4 4 0 0 1 1.304-.215q1.106 0 2.046.545a4.14 4.14 0 0 1 1.501 1.485q.578.941.578 2.095 0 .48-.132 1.04.66.61 1.023 1.419.363.792.363 1.666 0 .892-.38 1.717a4.3 4.3 0 0 1-1.072 1.435 3.8 3.8 0 0 1-1.584.825 3.8 3.8 0 0 1-.775 1.683 4.06 4.06 0 0 1-1.436 1.188 4.04 4.04 0 0 1-1.832.429m-4.076-2.062q.825 0 1.435-.347l3.103-1.782a.36.36 0 0 0 .164-.313v-1.42L7.881 14.62a.67.67 0 0 1-.726 0l-3.118-1.798a.5.5 0 0 1-.017.115v.198q0 .841.396 1.551.413.693 1.139 1.089a3.2 3.2 0 0 0 1.617.412m.165-2.69a.4.4 0 0 0 .181.05q.083 0 .165-.05l1.238-.71-3.977-2.31a.7.7 0 0 1-.363-.643v-3.58q-.825.362-1.32 1.122a2.9 2.9 0 0 0-.495 1.65q0 .809.413 1.55.412.743 1.072 1.123zm3.91 3.663q.875 0 1.585-.396a2.96 2.96 0 0 0 1.534-2.64v-3.564a.32.32 0 0 0-.165-.297l-1.254-.726v4.604a.7.7 0 0 1-.363.643l-3.119 1.799a3 3 0 0 0 1.783.577m.627-6.039V8.878L10.01 7.822 8.129 8.878v2.244l1.881 1.056zM7.057 5.859a.7.7 0 0 1 .363-.644l3.119-1.798a3 3 0 0 0-1.782-.578q-.874 0-1.584.396A2.96 2.96 0 0 0 6.05 4.324a3.07 3.07 0 0 0-.396 1.551v3.547q0 .199.165.314l1.237.726zm8.383 7.887q.825-.364 1.303-1.123.495-.758.495-1.65a3.15 3.15 0 0 0-.412-1.55q-.413-.743-1.073-1.123l-3.086-1.782q-.099-.065-.181-.049a.3.3 0 0 0-.165.05l-1.238.692 3.993 2.327a.6.6 0 0 1 .264.264.64.64 0 0 1 .1.363zm-3.317-8.382a.63.63 0 0 1 .726 0l3.135 1.831v-.297q0-.792-.396-1.501a2.86 2.86 0 0 0-1.105-1.155q-.71-.43-1.65-.43-.825 0-1.436.347L8.294 5.941a.36.36 0 0 0-.165.314v1.418z',
   },
-  /* grok — xAI's Grok symbol. Wikimedia Commons,
-     File:Grok_logo_without_text.svg, public domain (trademark of xAI, used
-     nominatively). Kept as the knockout tile the brand actually uses — the
-     bare slash on its own does not read as Grok. */
+  /* hermes — owner's supplied transparent raster mark. The source is black
+     linework, so invert it for the dark production surfaces. */
+  hermes: {
+    kind: 'asset',
+    src: hermesMark,
+    invert: true,
+  },
+  /* grok — owner's supplied xAI mark. The local pair preserves the source's
+     black/light variants; <picture> selects the variant for the user's colour
+     preference rather than approximating the mark in a path. */
   grok: {
-    viewBox: '0 0 163.53 163.53',
-    evenOdd: true,
-    d: 'M0 0H163.53V163.53H0Z M38.72 129.19H58.68L124.98 34.51H105.02Z',
+    kind: 'asset',
+    src: grokMark,
+    darkSrc: grokDarkMark,
   },
 }
 
-/** Renders a harness's mark, or a lettermark fallback (Hermes today) when the
- *  vendor publishes no vector logo. `className` sets size/colour by CSS. */
+/** Renders a harness's mark, or a lettermark fallback when no mark is known.
+ * `className` sets size/colour by CSS. */
 export function HarnessMark({
   id,
   harness,
@@ -68,6 +77,25 @@ export function HarnessMark({
       <span className={letterClassName} aria-hidden="true">
         {harness.slice(0, 1)}
       </span>
+    )
+  }
+  if (mark.kind === 'asset') {
+    return (
+      <picture className={className} aria-hidden="true">
+        {mark.darkSrc ? <source media="(prefers-color-scheme: dark)" srcSet={mark.darkSrc} /> : null}
+        <img
+          src={mark.src}
+          alt=""
+          aria-hidden="true"
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: mark.invert ? 'invert(1)' : undefined,
+          }}
+        />
+      </picture>
     )
   }
   return (

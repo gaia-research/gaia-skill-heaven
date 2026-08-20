@@ -73,6 +73,31 @@ const SURFACE_ICON: Record<SurfaceId, string> = {
 const SESSION_DIR = '/tmp/skill-zero-a91f7c'
 const fmt = (n: number) => n.toLocaleString('en-US')
 
+/*
+ * Install truth is owned by product.ts. The optional fields let the landing
+ * surface move ahead of the product-model migration without duplicating a
+ * second source of truth in the UI; the fallbacks are the settled commands in
+ * docs/AGENT-PLUGIN.md and disappear once the new fields land there.
+ */
+type InstallContract = typeof INSTALL & {
+  agentPlugin?: string
+  agentPluginNote?: string
+  claudeCompatibility?: readonly string[]
+  claudeCompatibilityNote?: string
+}
+
+const installContract = INSTALL as InstallContract
+const AGENT_PLUGIN_COMMAND =
+  installContract.agentPlugin ??
+  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh'
+const AGENT_PLUGIN_NOTE =
+  installContract.agentPluginNote ??
+  'Installs one stable plugin directory and a local marketplace. Any Agent Plugins client can load the installed directory; registration and updates remain client-owned.'
+const CLAUDE_COMPATIBILITY = installContract.claudeCompatibility ?? INSTALL.plugin
+const CLAUDE_COMPATIBILITY_NOTE =
+  installContract.claudeCompatibilityNote ??
+  'Tested compatibility for Claude Code 2.1.237. This marketplace flow is one client delivery path, not the universal Agent Plugins installer.'
+
 /** Per-door note. Derived from status only — no per-harness claim is invented. */
 function doorNote(door: Door): string {
   return door.status === 'flagship'
@@ -147,14 +172,19 @@ export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
   const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
-  // Two real install routes, settled in docs/AGENT-PLUGIN.md: the plugin is
-  // primary (two lines inside Claude Code), install.sh is the optional route
-  // for the five standalone launcher doors. There is no npx path.
-  const [installMode, setInstallMode] = useState<'plugin' | 'sh'>('plugin')
+  // Three real delivery views: the harness-neutral Agent Plugin installer is
+  // primary, Claude's marketplace flow is tested compatibility, and install.sh
+  // remains the optional launcher-only route. There is no npx path.
+  const [installMode, setInstallMode] = useState<'agent-plugin' | 'claude' | 'sh'>('agent-plugin')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
 
-  const installNote = installMode === 'plugin' ? INSTALL.pluginNote : INSTALL.shNote
+  const installNote =
+    installMode === 'agent-plugin'
+      ? AGENT_PLUGIN_NOTE
+      : installMode === 'claude'
+        ? CLAUDE_COMPATIBILITY_NOTE
+        : INSTALL.shNote
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -446,15 +476,29 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <span className="sh-label">INSTALL</span>
+              <div>
+                <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
+                <p className="lp-install__prose">
+                  One portable package for any Agent Plugins client. The installer prints the
+                  plugin and marketplace paths; it does not guess at or rewrite a harness config.
+                </p>
+              </div>
               <div className="lp-seg" role="group" aria-label="Install route">
                 <button
                   type="button"
-                  className={`lp-seg__btn${installMode === 'plugin' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'plugin'}
-                  onClick={() => setInstallMode('plugin')}
+                  className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'agent-plugin'}
+                  onClick={() => setInstallMode('agent-plugin')}
                 >
-                  the plugin (Claude Code)
+                  Agent Plugin
+                </button>
+                <button
+                  type="button"
+                  className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
+                  aria-pressed={installMode === 'claude'}
+                  onClick={() => setInstallMode('claude')}
+                >
+                  Claude tested
                 </button>
                 <button
                   type="button"
@@ -462,21 +506,30 @@ export default function Landing() {
                   aria-pressed={installMode === 'sh'}
                   onClick={() => setInstallMode('sh')}
                 >
-                  the launcher doors (shell)
+                  launcher-only
                 </button>
               </div>
             </div>
-            {installMode === 'plugin' ? (
+            {installMode === 'agent-plugin' ? (
+              <CommandBlock
+                cmd={AGENT_PLUGIN_COMMAND}
+                sigil="$"
+                tone="mint"
+                copied={copied === 'install-agent-plugin'}
+                onCopy={() => copy(AGENT_PLUGIN_COMMAND, 'install-agent-plugin')}
+                label="Agent Plugin installer command"
+              />
+            ) : installMode === 'claude' ? (
               <div className="lp-install__lines">
-                {INSTALL.plugin.map((line, i) => (
+                {CLAUDE_COMPATIBILITY.map((line, i) => (
                   <CommandBlock
                     key={line}
                     cmd={line}
                     sigil="›"
                     tone={i === 0 ? 'violet' : 'mint'}
-                    copied={copied === `install-${i}`}
-                    onCopy={() => copy(line, `install-${i}`)}
-                    label={`install command, line ${i + 1} of ${INSTALL.plugin.length}`}
+                    copied={copied === `install-claude-${i}`}
+                    onCopy={() => copy(line, `install-claude-${i}`)}
+                    label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
                   />
                 ))}
               </div>
@@ -485,19 +538,25 @@ export default function Landing() {
                 cmd={INSTALL.sh}
                 sigil="$"
                 tone="mint"
-                copied={copied === 'install'}
-                onCopy={() => copy(INSTALL.sh, 'install')}
-                label="install command"
+                copied={copied === 'install-launchers'}
+                onCopy={() => copy(INSTALL.sh, 'install-launchers')}
+                label="launcher-only install command"
               />
             )}
             <p className="lp-install__note">{installNote}</p>
+            {installMode === 'agent-plugin' ? (
+              <p className="lp-install__note">
+                Pinned compatibility paths: <b>Codex · Grok · Hermes · Claude · Pi</b>. Other
+                conformant clients may load the same directory through their own registration UI.
+              </p>
+            ) : null}
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              {installMode === 'plugin' ? 'THEN, IN THE SESSION' : 'HOW TO LAUNCH'}
+              {installMode === 'sh' ? 'HOW TO LAUNCH' : 'THEN, IN THE SESSION'}
             </div>
-            {installMode === 'plugin' ? (
+            {installMode !== 'sh' ? (
               <>
                 <CommandBlock
                   cmd={MECHANIC.floor}
@@ -508,10 +567,11 @@ export default function Landing() {
                   label="summon command"
                 />
                 <p className="lp-install__prose">
-                  Nothing to launch. The plugin puts five commands in the session you are
-                  already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
-                  <code>/skill-heaven</code>, <code>/skill-hell</code>,{' '}
-                  <code>/skill-ultra</code> — and the summon engine ships inside it.
+                  Nothing to launch here. The Agent Plugin puts five commands in the session you
+                  are already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
+                  <code>/skill-heaven</code>, <code>/skill-hell</code>, and <code>/skill-ultra</code>{' '}
+                  — and the summon engine ships inside it. Claude's two-line flow above is the
+                  tested compatibility route for that same package.
                 </p>
               </>
             ) : (
@@ -530,9 +590,10 @@ export default function Landing() {
           </div>
         </div>
         <p className="lp-fineprint">
-          WORK IN PROGRESS · v0 — the plugin installs from this repository’s own marketplace; the
-          five launcher doors are source-delivered through <code>install.sh</code>. Neither is on
-          npm. Uninstall is one script: <code>{INSTALL.uninstall}</code>
+          WORK IN PROGRESS · v0 — the Agent Plugin installer is harness-neutral; Claude’s
+          marketplace flow is tested compatibility. The five launcher doors are source-delivered
+          separately through <code>install.sh</code>. Neither path is on npm. Uninstall is one
+          script: <code>{INSTALL.uninstall}</code>
         </p>
       </section>
 

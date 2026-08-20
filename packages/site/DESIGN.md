@@ -147,8 +147,8 @@ Heaven and repaints nothing, `med → high` cuts.
 Composition: nav → registration row (a **state index**, not an eyebrow) →
 `SKILL` + the state word in Anton → command and role → blurb → the command line,
 which rewrites live off the instrument → the filled CTA plus a ghost CTA → the
-raw install string. The approved character master for the active state anchors
-the right column, bottom-aligned.
+portable plugin install string. The approved character master for the active
+state anchors the right column, bottom-aligned.
 
 The instrument band closes the viewport: a thesis caption, four direction plates
 (`/skill-zero` · `/skill-heaven` · `/skill-hell` · `/skill-ultra`), and the
@@ -182,7 +182,7 @@ squares in panel corners, hairline borders at **0px radius**.
 | § | Name |
 |---|---|
 | — | Arrival header — compact, no repeat of the hero headline; measured dose panel |
-| 01 | Choose your door — five real `*-zero` doors, install one-liner, launch command |
+| 01 | Choose your door — portable plugin first, client registration second, Claude compatibility flow, standalone launcher secondary |
 | 02 | Watch it run — looping terminal, impact frame scoped to the panel |
 | 03 | Skills are permanent. Sessions are not. |
 | 04 | Converge or explore — the `/summon` floor, then the four surfaces |
@@ -241,9 +241,13 @@ Canon that is not negotiable:
   table — the denial implies the thing.
 - **Skill Zero subtracts; Skill Heaven converges.** Never attribute stripping,
   evicting, or subtracting to Heaven.
-- **The install copy prints only commands the tool accepts.** The plugin
-  two-liner is primary, `install.sh` at the GitHub Pages host is the optional
-  launcher route, and there is no `npx` path and no `skill-heaven.dev`.
+- **Install hierarchy is visible and honest.** Show the portable
+  `install-agent-plugin.sh` package first, then explain that each Agent Plugins
+  client owns registration, enablement, updates, and cache behavior. Keep
+  Claude's two-line marketplace flow as tested compatibility, show
+  `install.sh` as the secondary standalone launcher route, and do not make the
+  five pinned harness examples a support boundary. There is no `npx` path and
+  no `skill-heaven.dev`.
 - No fabricated logos, pricing, testimonials, or counts. `19,661` · `20,176` ·
   `28,379` · `−28.9%` · `+515 tok` are the real measured figures. The entropy
   curve and the Heaven/Hell stamps are **not built** — never rendered as

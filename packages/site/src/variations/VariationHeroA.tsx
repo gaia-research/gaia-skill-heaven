@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
@@ -9,6 +9,9 @@ import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
 import wingRight from '../assets/hero-commission/v01/wing-right.png'
+
+const AGENT_PLUGIN_INSTALL =
+  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh'
 
 // The commissioned GLASS wings (translucent PNGs), one symmetric wing each
 // side. Kept at their own scale — never the figure's oversize. Zero carries no
@@ -57,6 +60,7 @@ function ZeroCompat({ fg }: { fg: string }) {
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder } = useHeroEngine('a')
+  const navigate = useNavigate()
   const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   const assets = HERO_ASSET_SETS[set][v.lucyState]
@@ -85,33 +89,50 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Per band: the command, what it means, and where its door opens. Zero's
   // door lands at the top of the document; the summon bands land on the
   // converge/explore section; Ultra lands on what Ultra is (issue #47).
-  const BAND: Record<string, { cmd: string; hint: string; door: string; doorLabel: string }> = {
+  const BAND: Record<string, { cmd: string; hint: string; anchor: string; fallbackAnchor?: string; doorLabel: string }> = {
     zero: {
       cmd: '/skill-zero',
       hint: 'the floor · /summon by hand, nothing automatic',
-      door: '/landing#doors',
+      anchor: 'doors',
       doorLabel: `Open the door · all ${DOORS.length} harnesses`,
     },
     heaven: {
       cmd: '/skill-heaven',
       hint: 'converge · low↔med, opens at low',
-      door: '/landing#directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · heaven or hell',
     },
     hell: {
       cmd: '/skill-hell',
       hint: 'explore · high↔max, opens at high',
-      door: '/landing#directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · heaven or hell',
     },
     ultra: {
       cmd: '/skill-ultra',
       hint: 'the crown · picks direction + position per gap',
-      door: '/landing#directions',
+      anchor: 'ultra',
+      fallbackAnchor: 'directions',
       doorLabel: 'Open the door · what Ultra is',
     },
   }
   const band = BAND[v.scene]
+  const openLandingSection = useCallback(
+    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string, fallbackAnchor?: string) => {
+      e.preventDefault()
+      navigate('/landing')
+      // HashRouter owns the URL hash, so `/landing#section` is a route-shaped
+      // hash rather than a native document anchor. Navigate first, then let
+      // Landing mount before resolving the section. Ultra currently lives in
+      // the directions section; the explicit fallback keeps this link correct
+      // until a dedicated `#ultra` section exists.
+      window.setTimeout(() => {
+        const target = document.getElementById(anchor) ?? (fallbackAnchor ? document.getElementById(fallbackAnchor) : null)
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 0)
+    },
+    [navigate],
+  )
   // Mobile-only, Variation E: the state word repeated to fill the screen
   // (owner reference: a magazine "BRAND BRAND BRAND" tile, subject in
   // front). Reuses the same word the single-instance wordmark shows, so it
@@ -564,7 +585,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               for. */}
           <Link
             className="vha-cta-cmd"
-            to={band.door}
+            to="/landing"
+            onClick={(e) => openLandingSection(e, band.anchor, band.fallbackAnchor)}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
             <span className="vha-cta-text">{band.doorLabel}</span>
@@ -586,23 +608,37 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
 
         <div className="vha-cta vha-cta--right">
-          {/* One block, both lines, one copy — the install is two lines typed
-              inside Claude Code and it should read and paste as one thing
-              (docs/AGENT-PLUGIN.md, issue #47). */}
+          {/* The portable Agent Plugin installer is primary. It prints the
+              local plugin/marketplace paths; clients load the installed
+              directory without this page pretending to rewrite an unknown
+              harness config. Claude's marketplace flow remains visible as
+              tested compatibility, not as the universal install story. */}
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
-              <span>Install · Claude Code</span>
+              <span>Install · Agent Plugins</span>
               <button
                 type="button"
                 className="vha-cta-termcopy"
-                onClick={() => copy(INSTALL.plugin.join('\n'), 'install')}
+                onClick={() => copy(AGENT_PLUGIN_INSTALL, 'install')}
                 style={{ color: v.fg, borderColor: v.ctaLine }}
               >
-                {copied === 'install' ? 'copied ⏎' : 'copy both'}
+                {copied === 'install' ? 'copied ⏎' : 'copy install'}
               </button>
             </div>
+            <div className="vha-cta-termline">
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
+              <span className="vha-cta-text">{AGENT_PLUGIN_INSTALL}</span>
+            </div>
+            <div className="vha-cta-termline">
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>↳</span>
+              <span className="vha-cta-text">prints a directory any Agent Plugins client can load</span>
+            </div>
+            <div className="vha-cta-termline">
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>·</span>
+              <span className="vha-cta-text">Claude Code compatibility:</span>
+            </div>
             {INSTALL.plugin.map((line) => (
-              <div key={line} className="vha-cta-termline">
+              <div key={`claude-${line}`} className="vha-cta-termline">
                 <span className="vha-cta-prompt" style={{ color: v.dim }}>›</span>
                 <span className="vha-cta-text">{line}</span>
               </div>
