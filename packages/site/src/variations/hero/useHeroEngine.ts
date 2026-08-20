@@ -82,7 +82,11 @@ const HERO = {
   grey: '#8B8890', // Zero rung
   hellTeal: '#3F9B8A', // inverted, non-red (Hell)
   hellBlue: '#4F86B8',
-  hellAmber: '#C89A3F',
+  // Sampled off the Hell master's own hair (weighted average of its dominant
+  // orange pixel cluster) rather than a generic "amber" — reads as HER
+  // colour, not a swatch-picker amber. Shared token: also the MAX rung
+  // border, so this change reaches both.
+  hellAmber: '#DB6F07',
 } as const
 
 // Lucy's print on the ladder, mobile only: <100% of the desktop scale, same

@@ -430,15 +430,20 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               Variation D title sits — and propagate copies of it up (n<0)
               and down (n>0) at a fixed spacing. Only the true main slot
               carries the fill and the SKILL script; every shadow copy is
-              stroke-only. Zero keeps just the single title, no shadow.
-              Desktop never sees these (`.vha-word--bg`, variation-hero.css).
-              MUST stay inside this wrapper — it's what carries
-              --vha-word-scale, and a shadow copy outside it silently drops
-              the whole `transform` (an unresolved var() in `scale()`
-              invalidates the entire property, not just that function). */}
+              stroke-only, and thinner than the main's stroke (a full-weight
+              outline repeated this many times reads heavier than a shadow
+              should). Zero keeps just the single title, no shadow. Desktop
+              never sees these (`.vha-word--bg`, variation-hero.css). MUST
+              stay inside this wrapper — it's what carries --vha-word-scale,
+              and a shadow copy outside it silently drops the whole
+              `transform` (an unresolved var() in `scale()` invalidates the
+              entire property, not just that function).
+              More copies downward than up (1..5 vs -2..-1): the main sits
+              high already, so upward mostly runs off-screen after two, while
+              downward is what actually fills a tall/large display. */}
           {v.atLadder && v.scene !== 'zero' && (
             <>
-              {[-2, -1, 1, 2].map((n) => (
+              {[-2, -1, 1, 2, 3, 4, 5].map((n) => (
                 <div
                   key={n}
                   aria-hidden="true"
@@ -446,6 +451,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
                   style={{
                     ...wordStyle,
                     color: 'transparent',
+                    WebkitTextStroke: v.wordStroke.replace(/^\S+/, '1.25px'),
                     transform: `translateY(${n * 17}vh) ${v.scene === 'heaven' ? 'scaleX(1.12) ' : ''}scale(var(--vha-word-scale))`,
                   }}
                 >

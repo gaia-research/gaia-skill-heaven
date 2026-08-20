@@ -954,11 +954,22 @@ body.vh-hero-page {
    ───────────────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .vha-wing {
-    height: 58%;
-    /* Shift the pair up the screen — bottom:0 (base) plus the shorter height
-       above left them pinned to the very bottom, reading low relative to
-       her now-smaller mobile figure. */
-    bottom: 14vh;
+    /* Smaller print — same ~0.62 scale-down Lucy's own mobile fix used
+       (58% * 0.62), not a fresh number picked independently of hers. */
+    height: 36%;
+    /* Shift the pair much higher up the screen — bottom:0 (base) pinned
+       them to the very bottom, reading low relative to her now-smaller
+       mobile figure and her higher face-anchored framing. */
+    bottom: 30vh;
+  }
+  /* Spread further apart than the desktop 2%/2% — at mobile's narrower
+     width that gap read as crowding the figure rather than flanking her.
+     -8% still overlapped in the centre; -20% actually clears a gap. */
+  .vha-wing--left {
+    left: -20%;
+  }
+  .vha-wing--right {
+    right: -20%;
   }
 }
 
