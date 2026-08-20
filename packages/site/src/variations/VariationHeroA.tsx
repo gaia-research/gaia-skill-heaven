@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
-import { DOORS, INSTALL, SITE } from '../product'
+import { DOORS, INSTALL } from '../product'
+import { HarnessMark } from '../harnessMarks'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -28,6 +29,30 @@ import wingRight from '../assets/hero-commission/v01/wing-right.png'
 export interface VariationHeroProps {
   /** Character set for reviewer routes; the layout remains Hero A. */
   assetSet?: string
+}
+
+// Zero-scene only: /skill-zero is the one command that has to name a
+// harness before it means anything, so this is the one CTA that shows the
+// harness marks. Heaven/Hell/Ultra never repeat it — by the time a visitor is
+// on those bands the harness choice is already made (issue: mobile viewport
+// pass).
+function ZeroCompat({ fg }: { fg: string }) {
+  return (
+    <div className="vha-cta-compat" style={{ color: fg }}>
+      <span className="vha-cta-compat__label">Runs on</span>
+      <span className="vha-cta-compat__marks">
+        {DOORS.map((d) => (
+          <HarnessMark
+            key={d.id}
+            id={d.id}
+            harness={d.harness}
+            className="vha-cta-compat__mark"
+            letterClassName="vha-cta-compat__mark vha-cta-compat__mark--letter"
+          />
+        ))}
+      </span>
+    </div>
+  )
 }
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
@@ -87,6 +112,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     },
   }
   const band = BAND[v.scene]
+  // Mobile-only, Variation E: the state word repeated to fill the screen
+  // (owner reference: a magazine "BRAND BRAND BRAND" tile, subject in
+  // front). Reuses the same word the single-instance wordmark shows, so it
+  // never drifts out of sync with the band.
+  const stateWord: Record<typeof v.scene, string> = { zero: 'ZERO', heaven: 'HEAVEN', hell: 'HELL', ultra: 'ULTRA' }
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
   // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
@@ -261,7 +291,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           bottom: 0,
           height: '92vh',
           translate: '-50% 0',
-          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+          // transform-origin travels WITH transform now — leaving it out of the
+          // transition meant the pivot point snapped instantly on every band
+          // change (each FIG entry carries its own face-anchored origin), so
+          // the figure looked like it was jumping mid-animation even though
+          // the scale/position themselves were easing correctly.
+          transition:
+            'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateX(${v.figX}vh) translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
           transformOrigin: v.figOrigin,
           zIndex: 1,
@@ -295,8 +331,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           pointerEvents: 'none',
           width: 'min(78vw,1180px)',
           translate: '-50% -50%',
-          transition:
-            'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
+          transition: v.bladeTransition,
           transform: `rotate(-28deg) translateX(${v.bladeX}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
           filter: v.bladeBlur ? `blur(${v.bladeBlur}px)` : 'none',
@@ -352,13 +387,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             HELL
           </div>
           <div
-            className="vha-word vha-word--sm"
-            style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
+            className="vha-word vha-word--sm vha-word--heaven"
+            style={{ ...wordStyle, transform: 'scaleX(1.12) scale(var(--vha-word-scale))', opacity: v.oHeavenSm }}
           >
             HEAVEN
           </div>
           <div
-            className="vha-word vha-word--sm"
+            className="vha-word vha-word--sm vha-word--zero"
             style={{ ...wordStyle, transform: 'scale(var(--vha-word-scale))', opacity: v.oZero }}
           >
             ZERO
@@ -388,6 +423,43 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           >
             SKILL
           </span>
+
+          {/* The "wordmark shadow" (Variation E, mobile only): Heaven/Hell/
+              Ultra multiply the exact main instance above — same position,
+              size and font, anchored at n=0 which is precisely where the
+              Variation D title sits — and propagate copies of it up (n<0)
+              and down (n>0) at a fixed spacing. Only the true main slot
+              carries the fill and the SKILL script; every shadow copy is
+              stroke-only, and thinner than the main's stroke (a full-weight
+              outline repeated this many times reads heavier than a shadow
+              should). Zero keeps just the single title, no shadow. Desktop
+              never sees these (`.vha-word--bg`, variation-hero.css). MUST
+              stay inside this wrapper — it's what carries --vha-word-scale,
+              and a shadow copy outside it silently drops the whole
+              `transform` (an unresolved var() in `scale()` invalidates the
+              entire property, not just that function).
+              More copies downward than up (1..5 vs -2..-1): the main sits
+              high already, so upward mostly runs off-screen after two, while
+              downward is what actually fills a tall/large display. */}
+          {v.atLadder && v.scene !== 'zero' && (
+            <>
+              {[-2, -1, 1, 2, 3, 4, 5].map((n) => (
+                <div
+                  key={n}
+                  aria-hidden="true"
+                  className={`vha-word--bg ${v.scene === 'heaven' ? 'vha-word vha-word--sm vha-word--heaven' : 'vha-hell'}`}
+                  style={{
+                    ...wordStyle,
+                    color: 'transparent',
+                    WebkitTextStroke: v.wordStroke.replace(/^\S+/, '1.25px'),
+                    transform: `translateY(${n * 17}vh) ${v.scene === 'heaven' ? 'scaleX(1.12) ' : ''}scale(var(--vha-word-scale))`,
+                  }}
+                >
+                  {stateWord[v.scene]}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
@@ -485,23 +557,32 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
 
         <div className="vha-cta vha-cta--left">
-          <button
-            type="button"
+          {/* Open the door is the primary action on every band (zero, heaven,
+              hell, ultra alike) — it's the one link that actually goes
+              somewhere. The copy-command control below it is secondary: handy
+              once you've already got the plugin, not the first thing to reach
+              for. */}
+          <Link
             className="vha-cta-cmd"
-            onClick={() => copy(band.cmd, 'cmd')}
+            to={band.door}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
-            {/* every band command is a slash command typed in-session, never a shell line */}
-            <span className="vha-cta-prompt" style={{ color: v.bg }}>›</span>
-            <span className="vha-cta-text">{band.cmd}</span>
-            <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
-          </button>
-          <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          {/* The door is routed per band, so it belongs beside the band's own
-              command rather than with the repo actions (issue #47). */}
-          <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
-            {band.doorLabel} →
+            <span className="vha-cta-text">{band.doorLabel}</span>
+            <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>→</span>
           </Link>
+          <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
+          <button
+            type="button"
+            className="vha-cta-door vha-cta-door--cmd"
+            onClick={() => copy(band.cmd, 'cmd')}
+            style={{ color: v.fg, borderColor: v.ctaLine }}
+          >
+            {/* every band command is a slash command typed in-session, never a shell line */}
+            <span className="vha-cta-prompt" style={{ opacity: 0.8 }}>›</span>
+            <span className="vha-cta-text">{band.cmd}</span>
+            <span className="vha-cta-tag">{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
+          </button>
+          {v.scene === 'zero' && <ZeroCompat fg={v.fg} />}
         </div>
 
         <div className="vha-cta vha-cta--right">
@@ -528,20 +609,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             ))}
           </div>
 
-          {/* The repo actions — quiet, and never competing with the install. */}
+          {/* Star/Contribute pulled per owner request — repo actions were
+              competing with the install for attention. Intro (desktop-only,
+              hidden on mobile — see .vha-cta-mini--btn in variation-hero.css)
+              is the one action worth keeping here. */}
           <div className="vha-cta-row">
-            <a
-              className="vha-cta-link"
-              href={SITE.repoUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: v.fg, borderColor: v.hair2 }}
-            >
-              ★ Star
-            </a>
-            <a className="vha-cta-mini" href={SITE.issuesUrl} target="_blank" rel="noreferrer" style={{ color: v.dim }}>
-              Contribute
-            </a>
             <button type="button" className="vha-cta-mini vha-cta-mini--btn" onClick={enterStory} style={{ color: v.dim }}>
               Intro
             </button>

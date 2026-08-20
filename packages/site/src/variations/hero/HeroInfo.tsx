@@ -41,16 +41,14 @@ export function HeroInfo({
 
   return (
     <div className="vha-info" data-open={open ? '1' : '0'}>
+      {/* A plain text button — no ruled box around the "?" any more. */}
       <button
         type="button"
         className="vha-info-toggle"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        style={{ color: accent, borderColor: accent, background: `${bg}b3`, backdropFilter: 'blur(6px)' }}
+        style={{ color: accent }}
       >
-        <span className="vha-info-q" style={{ borderColor: accent }}>
-          ?
-        </span>
         <span className="vha-info-label">{label}</span>
       </button>
 
