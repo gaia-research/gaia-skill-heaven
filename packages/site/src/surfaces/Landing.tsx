@@ -73,30 +73,11 @@ const SURFACE_ICON: Record<SurfaceId, string> = {
 const SESSION_DIR = '/tmp/skill-zero-a91f7c'
 const fmt = (n: number) => n.toLocaleString('en-US')
 
-/*
- * Install truth is owned by product.ts. The optional fields let the landing
- * surface move ahead of the product-model migration without duplicating a
- * second source of truth in the UI; the fallbacks are the settled commands in
- * docs/AGENT-PLUGIN.md and disappear once the new fields land there.
- */
-type InstallContract = typeof INSTALL & {
-  agentPlugin?: string
-  agentPluginNote?: string
-  claudeCompatibility?: readonly string[]
-  claudeCompatibilityNote?: string
-}
-
-const installContract = INSTALL as InstallContract
-const AGENT_PLUGIN_COMMAND =
-  installContract.agentPlugin ??
-  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh'
-const AGENT_PLUGIN_NOTE =
-  installContract.agentPluginNote ??
-  'Installs one stable plugin directory and a local marketplace. Any Agent Plugins client can load the installed directory; registration and updates remain client-owned.'
-const CLAUDE_COMPATIBILITY = installContract.claudeCompatibility ?? INSTALL.plugin
-const CLAUDE_COMPATIBILITY_NOTE =
-  installContract.claudeCompatibilityNote ??
-  'Tested compatibility for Claude Code 2.1.237. This marketplace flow is one client delivery path, not the universal Agent Plugins installer.'
+/** Install truth is owned by product.ts; read the real fields directly. */
+const AGENT_PLUGIN_COMMAND = INSTALL.agentPlugin.command
+const AGENT_PLUGIN_NOTE = INSTALL.agentPlugin.note
+const CLAUDE_COMPATIBILITY = INSTALL.claudeMarketplace.commands
+const CLAUDE_COMPATIBILITY_NOTE = INSTALL.claudeMarketplace.note
 
 /** Per-door note. Derived from status only — no per-harness claim is invented. */
 function doorNote(door: Door): string {

@@ -10,9 +10,6 @@ import './variation-hero.css'
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
 import wingRight from '../assets/hero-commission/v01/wing-right.png'
 
-const AGENT_PLUGIN_INSTALL =
-  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh'
-
 // The commissioned GLASS wings (translucent PNGs), one symmetric wing each
 // side. Kept at their own scale — never the figure's oversize. Zero carries no
 // wings (canon).
@@ -611,15 +608,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           {/* The portable Agent Plugin installer is primary. It prints the
               local plugin/marketplace paths; clients load the installed
               directory without this page pretending to rewrite an unknown
-              harness config. Claude's marketplace flow remains visible as
-              tested compatibility, not as the universal install story. */}
+              harness config. Claude's marketplace flow lives behind the
+              "Claude tested" tab on /landing, not stacked here too. */}
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
               <span>Install · Agent Plugins</span>
               <button
                 type="button"
                 className="vha-cta-termcopy"
-                onClick={() => copy(AGENT_PLUGIN_INSTALL, 'install')}
+                onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
                 style={{ color: v.fg, borderColor: v.ctaLine }}
               >
                 {copied === 'install' ? 'copied ⏎' : 'copy install'}
@@ -627,22 +624,12 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             </div>
             <div className="vha-cta-termline">
               <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">{AGENT_PLUGIN_INSTALL}</span>
+              <span className="vha-cta-text">{INSTALL.agentPlugin.command}</span>
             </div>
             <div className="vha-cta-termline">
               <span className="vha-cta-prompt" style={{ color: v.dim }}>↳</span>
               <span className="vha-cta-text">prints a directory any Agent Plugins client can load</span>
             </div>
-            <div className="vha-cta-termline">
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>·</span>
-              <span className="vha-cta-text">Claude Code compatibility:</span>
-            </div>
-            {INSTALL.plugin.map((line) => (
-              <div key={`claude-${line}`} className="vha-cta-termline">
-                <span className="vha-cta-prompt" style={{ color: v.dim }}>›</span>
-                <span className="vha-cta-text">{line}</span>
-              </div>
-            ))}
           </div>
 
           {/* Star/Contribute pulled per owner request — repo actions were

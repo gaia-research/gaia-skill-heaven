@@ -24,9 +24,6 @@ import heavenMaster from '../assets/lucy/v5/delivery/lucy-heaven.webp';
 import hellMaster from '../assets/lucy/v5/delivery/lucy-hell.webp';
 import ultraMaster from '../assets/lucy/v5/delivery/lucy-ultra.webp';
 
-const AGENT_PLUGIN_INSTALL =
-  'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh';
-
 /** Approved v5 character art, per state. Zero carries no wings, by canon. */
 const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   zero: {
@@ -228,7 +225,7 @@ export default function Hero() {
             <button
               className="sh-cta"
               type="button"
-              onClick={() => copy(AGENT_PLUGIN_INSTALL, 'install')}
+              onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
             >
               {copied === 'install' ? 'Copied to clipboard' : 'Copy the Agent Plugin install'}
             </button>
@@ -237,12 +234,8 @@ export default function Hero() {
             </Link>
           </div>
           <p className="hx__install">
-            <span>{AGENT_PLUGIN_INSTALL}</span>
-            <em>Primary: any Agent Plugins client can load the installed directory.</em>
-            <em>Claude Code compatibility — marketplace flow:</em>
-            {INSTALL.plugin.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
+            <span>{INSTALL.agentPlugin.command}</span>
+            <em>Any Agent Plugins client can load the installed directory.</em>
           </p>
         </div>
 
