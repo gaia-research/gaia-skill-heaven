@@ -30,9 +30,11 @@ packages/site/preview/
 # TS incremental build info
 *.tsbuildinfo
 
-# local screenshot/inspection artifacts
+# local screenshot/inspection and harness-probe artifacts
 preview/
 packages/site/preview/
+.firecrawl/
+.tmp/
 
 # impeccable skill local config
 .impeccable/

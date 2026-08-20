@@ -36,18 +36,21 @@ plugins/skill-heaven/                    THE AGENT PLUGIN
 ├── mcp/skill-summon.mjs                 committed esbuild bundle (generated, CI-gated)
 ├── dev.skill-heaven.pi/                 Pi compatibility adapter + pinned probe
 ├── package.json                         Pi package delivery metadata
+├── .codex-plugin/plugin.json            Codex delivery metadata
+├── .codex.mcp.json                      Codex plugin-root MCP launch shim
 ├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
-├── .mcp.json                            retained Claude MCP compatibility
-├── commands/*.md                        retained Claude explicit commands
+├── .mcp.json                            retained Claude/Grok MCP compatibility
+├── commands/*.md                        retained explicit command compatibility
 ├── scripts/render-ladder.mjs            one renderer, zero-dependency, bare Node
 └── data/ladder.json                     generated from packages/core
 ```
 
 The core manifest is closed: `displayName` and `userConfig` do not appear at its
-top level. The old Claude files remain alongside the portable core until the
-version-pinned Claude probes in issue #77 establish which root files and
-placeholder names that client accepts and its official extension namespace.
-They are compatibility files, not alternate portable manifests.
+top level. Client-owned files remain beside the portable core only where a
+pinned client still requires its pre-standard delivery shape. They are thin
+compatibility files, not alternate engines or portable manifests. The results
+and hard signals are recorded in
+[`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md).
 
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
 is not the plugin.
@@ -119,13 +122,11 @@ is the only thing that gives a genuinely clean start: already-loaded skills
 
 ## M0 probe — does `${user_config.*}` reach a command's `!` bash block?
 
-**Status: not verified with a live pane.** Rule 0 (root `CLAUDE.md`) blocks
-invoking `claude` interactively from this task, so this could only be
-researched from the official docs
-(`docs.claude.com/en/docs/claude-code/plugins-reference` and the
-skills/slash-commands reference) and from what the shipped code already
-assumes. Recorded here per D8: a negative or unknown result is a first-class
-finding, not something to paper over.
+**Status: not verified.** The four-cell live harness campaign in
+`plugins/skill-heaven/PROBE.md` proved install, commands, and summon, but did not
+change `zero_cuts` through Claude's config UI. Earlier work recorded only the
+official-doc evidence below. This remains unknown per D8 rather than being
+inferred from the successful default-path probes.
 
 **Question:** does `${user_config.zero_cuts}` text-substitution, or a
 `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` environment variable, actually reach the
@@ -191,9 +192,9 @@ automatic summoning, keep manual `/summon`) — nothing breaks; the plugin's
 substitution into the command files' `!` lines explicitly and a live pane
 confirms it lands.
 
-**What would close this out:** in a real `claude` session (a `herdr` pane,
-per Rule 0) with the plugin installed and `zero_cuts` set to `all` via the
-plugin's config UI, run `/skill-zero` and check whether the rendered output
+**What would close this out:** in a real `claude` session with the plugin
+installed and `zero_cuts` set to `all` via the plugin's config UI, run
+`/skill-zero` and check whether the rendered output
 shows the `all`-cut copy — and separately, whether `${user_config.zero_cuts}`
 written directly into a test command's `!` line comes through as literal
 text or as the configured value. Neither was run here.
@@ -245,13 +246,18 @@ construction. CI rebuilds the bundle and fails on `git diff --exit-code`.
 
 ## The tree
 
-Defaults, both exposed as plugin `userConfig` so pointing at another projection
-is a config change, not a code change:
+The engine defaults to these two projections:
 
 ```
 TREE_URL       https://gaiaskilltree.com/graph/gaia.json          (278 generic skills)
 TREE_NAMED_URL https://gaiaskilltree.com/graph/named/index.json   (267 named skills)
 ```
+
+Claude marketplace compatibility currently exposes both as `userConfig`.
+Portable `mcp.json` carries the public defaults, and the Pi adapter deliberately
+uses that package configuration rather than ambient host variables. A portable,
+client-neutral one-source override is not shipped; its resolver and migration
+contract are tracked in #80.
 
 > **Correction to an earlier brief.** "Gaia Skill Tree Arbor I" does not exist
 > in code — it is a founder-doc concept (`gaia-skill-tree/founder/ENDGAME -
@@ -260,25 +266,34 @@ TREE_NAMED_URL https://gaiaskilltree.com/graph/named/index.json   (267 named ski
 
 ## Install and client delivery
 
-Agent Plugins standardizes the package, not one universal install command.
-Compatible clients install `plugins/skill-heaven` as an Agent Plugin directory.
-Client delivery remains explicit:
+Agent Plugins standardizes the package, not one universal client-registration
+command. `install-agent-plugin.sh` therefore installs one stable package and a
+local marketplace without mutating any harness configuration:
 
-- **Claude Code marketplace compatibility:**
-  ```
-  /plugin marketplace add gaia-research/gaia-skill-heaven
-  /plugin install skill-heaven@gaia-skill-heaven
-  ```
-- **Pi 0.84.2 from this checkout:**
-  ```bash
-  pi install ./plugins/skill-heaven --approve
-  ```
-  Pi is not yet a native Agent Plugins client and deliberately has no built-in
-  MCP runtime. The namespaced adapter maps the portable skills and `mcp.json`
-  into Pi's extension API; see
-  [`plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
-- **`install.sh` is optional:** it installs the standalone `*-zero` launchers,
-  not the Agent Plugin.
+```bash
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+The script requires Node 22+ and Git, then prints both paths. Any
+standards-conformant Agent Plugins client can load the plugin directory, though
+clients outside the pinned probe remain unverified. Pinned clients with their own package
+manager use the commands in the README compatibility table; this is delivery
+over one installed artifact, not five repackaged plugins. Clients may cache a
+copy, so updating or deleting the local artifact does not update or unregister
+client-managed copies.
+
+Claude Code 2.1.237 still accepts the public marketplace flow:
+
+```text
+/plugin marketplace add gaia-research/gaia-skill-heaven
+/plugin install skill-heaven@gaia-skill-heaven
+```
+
+Pi 0.84.2 remains a namespaced adapter because it is not a native Agent Plugins
+client and deliberately has no built-in MCP runtime. The adapter maps portable
+skills and `mcp.json` into Pi's extension API; see its
+[`PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+`install.sh` remains separate and installs the standalone `*-zero` launchers.
 
 `gaia-mcp` remains deprecated. Existing
 `claude-zero@gaia-skill-heaven` marketplace installs migrate through the
@@ -297,9 +312,11 @@ Stated here so no surface implies otherwise:
 - **Ultra controller heuristics.** At `ultra` the agent picks direction and
   depth unaided.
 - **Relevance-band filtering.** The engine takes a depth, not a score band.
-- **Portable-client coverage beyond Pi.** Pi 0.84.2 now has all five surfaces
-  through its namespaced compatibility adapter; Codex, Hermes and Grok still
-  need the pinned installation probes tracked in issue #77.
+- **Every possible client's install UX.** The package is portable, but the
+  Agent Plugins specification leaves install and enable flows to clients. The
+  pinned Codex, Hermes, Grok, Claude and Pi paths are probed; other conformant
+  clients may load the same installed directory through their own UI or command,
+  but are not claimed as verified.
 
 ## Authority
 

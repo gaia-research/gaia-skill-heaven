@@ -12,6 +12,15 @@ export const DEFAULT_NAMED_REGISTRY_URL =
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1_000;
 
+export function resolveConfiguredRegistryUrl(
+  value: string | undefined,
+  fallback: string,
+): string {
+  const configured = value?.trim();
+  if (!configured || /^\$\{[^}]+\}$/.test(configured)) return fallback;
+  return configured;
+}
+
 export class GaiaDataError extends Error {
   override readonly name = "GaiaDataError";
 }

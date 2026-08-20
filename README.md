@@ -16,7 +16,7 @@ Works with **Claude Code · Codex · Pi · Hermes · Grok**
 
 ## Install
 
-Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the launchers.
+Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or just the launchers.
 
 | | You get | Best if |
 |---|---|---|
@@ -27,34 +27,37 @@ Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the 
 
 ### 1 · The Agent Plugin — *recommended*
 
-**One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable plugin standard: one manifest, the bundled MCP, and the skills, in a single install. Nothing in it is tied to one vendor; only the way each harness is told to load it differs.
+**One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable package standard: one manifest, the bundled MCP, and the skills. Install that package once:
 
-**Claude Code** — two lines, typed in-session. No terminal, no build step, no `npx`:
+```bash
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+The script puts the plugin at
+`$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven`
+and prints that path. Point any **standards-conformant Agent Plugins client** at it. The standard intentionally leaves installation and enablement to each client, so the script delivers one stable package without guessing at or silently editing an unknown harness's configuration. Clients outside the pinned probe remain unverified.
+
+The clients pinned in the compatibility probe use these registration commands:
+
+| Client | Register the installed package |
+|---|---|
+| Codex 0.146.0 | `codex plugin marketplace add "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace"` then `codex plugin add skill-heaven@gaia-skill-heaven` |
+| Grok 1.0.5 | `grok plugin install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --trust` |
+| Hermes 0.20.0 | `hermes plugins install "file://$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --enable` |
+| Pi 0.84.2 | `pi install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --approve` |
+
+**Claude Code marketplace compatibility still works** on 2.1.237. Use the public marketplace directly — no local install is required:
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-**Agent Plugins clients** — install or load the directory
-`plugins/skill-heaven`; root `plugin.json`, `mcp.json`, and `skills/` are the
-portable contract.
+Run `/reload` in a Pi session that was already open; other clients pick up the plugin in a new session. Then `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available. There is no second engine or sibling repository.
 
-**Pi 0.84.2** — Pi is not yet a native Agent Plugins client, so this checkout
-ships a namespaced adapter over that same contract:
+Some clients copy plugins into their own cache. Re-running the script updates the stable local artifact; run that client's update or reinstall command to refresh its cached copy.
 
-```bash
-git clone https://github.com/gaia-research/gaia-skill-heaven.git
-cd gaia-skill-heaven
-pi install ./plugins/skill-heaven --approve
-```
-
-Run `/reload` in a Pi session that was already open. Then `/summon`,
-`/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available;
-the adapter reads portable `mcp.json` and starts the bundled server lazily.
-There is no second engine or sibling repository.
-
-📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
+📖 [Agent Plugin details](docs/AGENT-PLUGIN.md) · [pinned harness probe](plugins/skill-heaven/PROBE.md)
 
 > **Just want `/summon`?** Install the full plugin anyway — that is the recommended path, and summon is the mechanic underneath every surface, so you lose nothing by taking all of them. A separate summon-only install is [tracked in #76](https://github.com/gaia-research/gaia-skill-heaven/issues/76).
 
@@ -178,12 +181,12 @@ Two things worth knowing:
 
 | Harness | Launcher | In-session commands |
 |---|---|---|
-| Claude Code | ✅ `claude-zero` | ✅ plugin |
-| Codex | ✅ `codex-zero` | — |
-| Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (Pi 0.84.2) |
-| Hermes | ✅ `hermes-zero` | — |
-| Grok | ✅ `grok-zero` | — |
-| Cursor | inspection only | — |
+| Claude Code | ✅ `claude-zero` | ✅ marketplace compatibility (2.1.237) |
+| Codex | ✅ `codex-zero` | ✅ plugin compatibility (0.146.0) |
+| Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
+| Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |
+| Grok | ✅ `grok-zero` | ✅ plugin compatibility (1.0.5) |
+| Other conformant Agent Plugins clients | — | ◻️ load the same directory; not yet pinned here |
 
 ---
 
@@ -206,6 +209,14 @@ The benchmark's job is the **entropy curve** — how quality and cost move toget
 ---
 
 ## Uninstall
+
+Remove the recommended Agent Plugin artifact:
+
+```bash
+$HOME/.local/share/gaia-skill-heaven-agent-plugin/uninstall.sh
+```
+
+This does not remove copies or registrations managed by Codex, Grok, Hermes, Pi, or Claude; use that client's plugin remove command too. If you also installed the standalone launchers, remove those separately:
 
 ```bash
 $HOME/.local/share/gaia-skill-heaven/uninstall.sh
