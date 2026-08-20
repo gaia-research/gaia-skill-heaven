@@ -1,0 +1,27 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "skill-heaven",
+  "version": "0.1.0",
+  "description": "Working prototype of Skill Heaven. One mechanic—summon one skill into context for one session, without installing it—across the zero, heaven, hell, and ultra surfaces.",
+  "author": {
+    "name": "Gaia Research"
+  },
+  "homepage": "https://skill-heaven.dev",
+  "repository": "https://github.com/gaia-research/gaia-skill-heaven",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "context",
+    "summon",
+    "skill-heaven",
+    "skill-hell",
+    "gaia"
+  ],
+  "extensions": {
+    "dev.skill-heaven.pi": {
+      "packageManifest": "./package.json",
+      "extension": "./dev.skill-heaven.pi/skill-heaven.ts",
+      "minimumClientVersion": "0.84.2"
+    }
+  }
+}

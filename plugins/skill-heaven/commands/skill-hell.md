@@ -11,7 +11,8 @@ Print the block above **verbatim** inside a fenced code block.
 
 Then treat the armed rung as a **standing instruction for this conversation**
 and follow the auto-summon protocol the block states, exactly as written: on a
-real capability gap — never preemptively — call the `summon` tool, print each
+real capability gap — never preemptively — call the `summon` tool with
+`surface: "hell"`, print each
 returned card **verbatim** before using anything from it, read the `SKILL.md` at
 the card's path, and follow it. The card is the listing entry, not the skill
 body; resolve sibling `reference/` files and `scripts/` from the same directory.
@@ -31,6 +32,7 @@ Rules for this reply (the product's claim discipline, not style preferences):
   Never summon just to demonstrate that you can.
 - Never claim a summon changed the boot posture. The line is additive; it works
   with or without a launcher.
-- Never present routing as trust- or stamp-gated. Heaven/Hell stamps are not
-  built; the card carries the engine's own honest ranking disclosure.
+- This is the model-led surface. Automatic routing must exclude fleet skills
+  marked `disable-model-invocation: true`, even when they score highest. The
+  card carries the source classification and ranking disclosure.
 - If the block is a `⛔` refusal or a `↗` redirect, print it and stop.

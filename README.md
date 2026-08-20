@@ -16,7 +16,7 @@ Works with **Claude Code · Codex · Pi · Hermes · Grok**
 
 ## Install
 
-Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the launchers.
+Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or just the launchers.
 
 | | You get | Best if |
 |---|---|---|
@@ -27,35 +27,37 @@ Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the 
 
 ### 1 · The Agent Plugin — *recommended*
 
-**One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable plugin standard: one manifest, the bundled MCP, and the skills, in a single install. Nothing in it is tied to one vendor; only the way each harness is told to load it differs.
+**One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable package standard: one manifest, the bundled MCP, and the skills. Install that package once:
 
-**Claude Code** — two lines, typed in-session. No terminal, no build step, no `npx`:
+```bash
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+The script puts the plugin at
+`$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven`
+and prints that path. Point any **standards-conformant Agent Plugins client** at it. The standard intentionally leaves installation and enablement to each client, so the script delivers one stable package without guessing at or silently editing an unknown harness's configuration. Clients outside the pinned probe remain unverified.
+
+The clients pinned in the compatibility probe use these registration commands:
+
+| Client | Register the installed package |
+|---|---|
+| Codex 0.146.0 | `codex plugin marketplace add "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace"` then `codex plugin add skill-heaven@gaia-skill-heaven` |
+| Grok 1.0.5 | `grok plugin install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --trust` |
+| Hermes 0.20.0 | `hermes plugins install "file://$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --enable` |
+| Pi 0.84.2 | `pi install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --approve` |
+
+**Claude Code marketplace compatibility still works** on 2.1.237. Use the public marketplace directly — no local install is required:
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-**Any other harness** — clone the repo and load the same bundle:
+Run `/reload` in a Pi session that was already open; other clients pick up the plugin in a new session. Then `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available. There is no second engine or sibling repository.
 
-```bash
-git clone https://github.com/gaia-research/gaia-skill-heaven.git
-```
+Some clients copy plugins into their own cache. Re-running the script updates the stable local artifact; run that client's update or reinstall command to refresh its cached copy.
 
-```json
-{
-  "mcpServers": {
-    "skill-summon": {
-      "command": "node",
-      "args": ["/path/to/gaia-skill-heaven/plugins/skill-heaven/mcp/skill-summon.mjs"]
-    }
-  }
-}
-```
-
-Either way you get `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell` and `/skill-ultra`, with the summon engine bundled in. There is no second package and no sibling repository.
-
-📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
+📖 [Agent Plugin details](docs/AGENT-PLUGIN.md) · [pinned harness probe](plugins/skill-heaven/PROBE.md)
 
 > **Just want `/summon`?** Install the full plugin anyway — that is the recommended path, and summon is the mechanic underneath every surface, so you lose nothing by taking all of them. A separate summon-only install is [tracked in #76](https://github.com/gaia-research/gaia-skill-heaven/issues/76).
 
@@ -95,6 +97,17 @@ Once the plugin is installed, in any session:
 
 Nothing you summon is installed, and nothing is left behind when the session ends.
 
+### One Skill URL
+
+The plugin reads one `skill_url` (`SKILL_SOURCE` outside Claude settings):
+
+- A Skill Tree website root such as `https://gaiaskilltree.com` derives its generic and named projections.
+- A GitHub repository such as `https://github.com/mattpocock/skills` is a flat fleet: directories containing `SKILL.md` become relevance-routed summon candidates, with no generic map required.
+
+Fleet invocation follows Matt Pocock's convention. `disable-model-invocation: true` marks a human-led **Skill Heaven** skill that requires explicit authorization. A fleet skill without that flag is model-led **Skill Hell** and may be reached automatically. Manual `/summon` is explicit and may reach either; materialization remains atomic and session-only.
+
+The old `TREE_URL` + `TREE_NAMED_URL` pair remains a deprecated migration fallback. Configure one Skill URL for new installs.
+
 With the launchers, from your shell:
 
 ```bash
@@ -110,14 +123,14 @@ One mechanic — **`/summon`**, one skill into context, one session, nothing ins
 
 | Surface | Command | Who chooses | Who it's for |
 |---|---|---|---|
-| **Skill Zero** | `/skill-zero` | **You** — nothing is automatic | Minimalists and software doctors who want a precise, bloat-free harness |
+| **Skill Zero** | `/skill-zero` | **You** — temporary skills are cut by default | Minimalists and software doctors who want a precise, bloat-free harness |
 | **Skill Heaven** | `/skill-heaven` | **You** — the agent converges on what you point at | Focused work where you stay the author of the context |
 | **Skill Hell** | `/skill-hell` | **The model** — it reaches wider than you would | Unfamiliar territory, where you don't yet know which expert you need |
 | **Skill Ultra** | `/skill-ultra` | **The model** — direction *and* depth, per gap | Engineers running a fleet of agents, each balancing Heaven against Hell |
 
 **Heaven is human-led. Hell is model-led.** That is the distinction the whole product turns on. Heaven narrows onto the gap; Hell widens around it, putting more experts in context than you would have picked.
 
-> **Status.** The launchers and all five in-session commands ship and work today, as actively tested prototypes — interfaces may still change. What is *not* built yet is the automatic routing: summons are ranked by relevance, not by Heaven/Hell trust stamps, and nothing auto-routes from benchmark results.
+> **Status.** The launchers and all five in-session commands ship and work today as actively tested prototypes. GitHub fleets now route invocation safety from `SKILL.md` metadata and route candidates by relevance. Benchmark-derived trust routing is still not built.
 
 ---
 
@@ -132,7 +145,7 @@ zero  ·  low   med  ·  high   xhigh   max  ·  ultra
 
 | Rung | Surface | What it means |
 |---|---|---|
-| `zero` | Zero | nothing automatic — manual `/summon` only |
+| `zero` | Zero | temporary skills cut — manual `/summon` only |
 | `low` `med` | Heaven | converge — narrow onto the gap |
 | `high` `xhigh` `max` | Hell | explore — widen around the gap |
 | `ultra` | Ultra | picks direction and depth for you, gap by gap |
@@ -179,12 +192,12 @@ Two things worth knowing:
 
 | Harness | Launcher | In-session commands |
 |---|---|---|
-| Claude Code | ✅ `claude-zero` | ✅ plugin |
-| Codex | ✅ `codex-zero` | — |
-| Pi | ✅ `pi-zero` | — |
-| Hermes | ✅ `hermes-zero` | — |
-| Grok | ✅ `grok-zero` | — |
-| Cursor | inspection only | — |
+| Claude Code | ✅ `claude-zero` | ✅ marketplace compatibility (2.1.237) |
+| Codex | ✅ `codex-zero` | ✅ plugin compatibility (0.146.0) |
+| Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
+| Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |
+| Grok | ✅ `grok-zero` | ✅ plugin compatibility (1.0.5) |
+| Other conformant Agent Plugins clients | — | ◻️ load the same directory; not yet pinned here |
 
 ---
 
@@ -207,6 +220,14 @@ The benchmark's job is the **entropy curve** — how quality and cost move toget
 ---
 
 ## Uninstall
+
+Remove the recommended Agent Plugin artifact:
+
+```bash
+$HOME/.local/share/gaia-skill-heaven-agent-plugin/uninstall.sh
+```
+
+This does not remove copies or registrations managed by Codex, Grok, Hermes, Pi, or Claude; use that client's plugin remove command too. If you also installed the standalone launchers, remove those separately:
 
 ```bash
 $HOME/.local/share/gaia-skill-heaven/uninstall.sh

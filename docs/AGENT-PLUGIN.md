@@ -1,7 +1,8 @@
-# Skill Heaven — one Agent Plugin
+# Skill Heaven — one portable Agent Plugin
 
-**Status: the shape of record for the plugin.** This document settles what
-ships as *one* Claude Code plugin, so nothing downstream re-litigates it. It is
+**Status: the shape of record for the plugin.** The portable core targets the
+[Agent Plugins 1.0.0 specification](https://agent-plugins.org/specification):
+root `plugin.json`, root `mcp.json`, and shallow `skills/*/SKILL.md`. It is
 implementation guidance, not a ratification — decision authority stays with
 `gaia-research/founder/RATIFICATION.md` (see **Authority** below).
 
@@ -9,7 +10,9 @@ implementation guidance, not a ratification — decision authority stays with
 
 A user installs **one** plugin — `skill-heaven` — and gets the summon MCP plus
 all five surfaces. No sibling repository, no `npx`, no external binary, no
-build step. `gaia-mcp` is deprecated.
+build step. `gaia-mcp` is deprecated. Portable clients discover the same skills
+and MCP declaration; client-only delivery shims stay namespaced or in legacy
+compatibility locations.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
 `/skill-hell` summoned by shelling out to a `skill-hell` binary hunted for at
@@ -18,24 +21,39 @@ four-line "Fix one of:" error. Three rung tables disagreed with each other, and
 `ultra` was refused as `⛔ UNRATIFIED` in four places while `docs/LADDER-FLOW.md`
 (N13) said nothing on the line refuses.
 
-## Target shape
+## Package shape
 
 ```
-skill-heaven/
-├── .claude-plugin/marketplace.json      entry: skill-heaven → ./plugins/skill-heaven
-├── plugins/skill-heaven/                THE PLUGIN
-│   ├── .claude-plugin/plugin.json       name: skill-heaven · userConfig: tree_url, tree_named_url, zero_cuts
-│   ├── .mcp.json                        skill-summon → node ${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs
-│   ├── mcp/skill-summon.mjs             committed esbuild bundle (generated, CI-gated)
-│   ├── commands/{summon,skill-heaven,skill-hell,skill-zero,skill-ultra}.md
-│   ├── scripts/render-ladder.mjs        one renderer, zero-dependency, bare Node
-│   └── data/ladder.json                 generated from packages/core
-├── packages/skill-summon/               the ported engine (npm: skill-summon, one bin)
-└── packages/claude-zero/                unchanged npm door/launcher — no longer the plugin
+plugins/skill-heaven/                    THE AGENT PLUGIN
+├── plugin.json                          Agent Plugins 1.0.0 manifest
+├── mcp.json                             skill-summon → node ${PLUGIN_ROOT}/mcp/skill-summon.mjs
+├── skills/
+│   ├── summon/SKILL.md
+│   ├── skill-zero/SKILL.md
+│   ├── skill-heaven/SKILL.md
+│   ├── skill-hell/SKILL.md
+│   └── skill-ultra/SKILL.md
+├── mcp/skill-summon.mjs                 committed esbuild bundle (generated, CI-gated)
+├── dev.skill-heaven.pi/                 Pi compatibility adapter + pinned probe
+├── package.json                         Pi package delivery metadata
+├── .codex-plugin/plugin.json            Codex delivery metadata
+├── .codex.mcp.json                      Codex plugin-root MCP launch shim
+├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
+├── .mcp.json                            retained Claude/Grok MCP compatibility
+├── commands/*.md                        retained explicit command compatibility
+├── scripts/render-ladder.mjs            one renderer, zero-dependency, bare Node
+└── data/ladder.json                     generated from packages/core
 ```
+
+The core manifest is closed: `displayName` and `userConfig` do not appear at its
+top level. Client-owned files remain beside the portable core only where a
+pinned client still requires its pre-standard delivery shape. They are thin
+compatibility files, not alternate engines or portable manifests. The results
+and hard signals are recorded in
+[`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md).
 
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
-simply stops being the thing the marketplace points at.
+is not the plugin.
 
 ## One line, five entry points, one tool
 
@@ -45,7 +63,7 @@ needed.
 
 | Command | Sets rung | Direction | Note |
 |---|---|---|---|
-| `/skill-zero [all]` | `zero` | **nothing automatic** | `/summon` by hand still works. `all` cuts that too. |
+| `/skill-zero [all]` | `zero` | **temporary skills cut** | `/summon` by hand still works. `all` cuts that too. |
 | `/skill-heaven [low\|med]` | `low` (default) | converge | narrowly, on the gap in front of you |
 | `/skill-hell [high\|xhigh\|max]` | `high` (default) | explore | widely, around the gap |
 | `/skill-ultra` | `ultra` | picks direction + depth per gap | crown rung, no sub-ladder |
@@ -62,7 +80,7 @@ only place the line is written down:
 
 | Rung | Band | What it means |
 |---|---|---|
-| `zero` | zero | nothing automatic — manual `/summon` only |
+| `zero` | zero | temporary skills cut — manual `/summon` only |
 | `low` | heaven | converge — the band opens here |
 | `med` | heaven | converge — further along the band |
 | `high` | hell | explore — the band opens here |
@@ -82,9 +100,9 @@ resolved by there being no numbers.
 plugin's `data/ladder.json`. The site is a separate surface and is **out of
 scope** for this work.
 
-### `zero` cuts *automatic* summoning
+### `zero` cuts temporary skills
 
-`/skill-zero` sets the rung to `zero`, which cuts **automatic** summoning.
+`/skill-zero` sets the rung to `zero`, which cuts temporary automatic skills.
 
 > **Naming note.** The bottom rung, its band and its surface are all spelled
 > `zero`. The launcher's boot dial follows: `claude-zero --level zero`. The
@@ -92,7 +110,7 @@ scope** for this work.
 Manual `/summon` still works — that is the product floor per N13 ("ships
 `/summon` by default, with none of the choosing automated").
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
-userConfig (`automatic` | `all`, default `automatic`) sets the default.
+userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
 **Honest limit:** the cut is a standing instruction the agent honours, not
 something the tool enforces. Hard enforcement needs server-side session state —
@@ -104,13 +122,11 @@ is the only thing that gives a genuinely clean start: already-loaded skills
 
 ## M0 probe — does `${user_config.*}` reach a command's `!` bash block?
 
-**Status: not verified with a live pane.** Rule 0 (root `CLAUDE.md`) blocks
-invoking `claude` interactively from this task, so this could only be
-researched from the official docs
-(`docs.claude.com/en/docs/claude-code/plugins-reference` and the
-skills/slash-commands reference) and from what the shipped code already
-assumes. Recorded here per D8: a negative or unknown result is a first-class
-finding, not something to paper over.
+**Status: not verified.** The four-cell live harness campaign in
+`plugins/skill-heaven/PROBE.md` proved install, commands, and summon, but did not
+change `zero_cuts` through Claude's config UI. Earlier work recorded only the
+official-doc evidence below. This remains unknown per D8 rather than being
+inferred from the successful default-path probes.
 
 **Question:** does `${user_config.zero_cuts}` text-substitution, or a
 `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` environment variable, actually reach the
@@ -169,16 +185,16 @@ points different directions for each:
 **This degrades safely either way.** `zeroCuts()` in
 `plugins/skill-heaven/scripts/render-ladder.mjs` reads
 `CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? SKILL_HEAVEN_ZERO_CUTS`, and treats
-anything other than `"all"` as `"automatic"`. If this probe resolves
+anything other than `"all"` as `"temporary"`. If this probe resolves
 negative, the floor still ships exactly what N13 specifies by default (cut
-automatic summoning, keep manual `/summon`) — nothing breaks; the plugin's
+temporary automatic skills, keep manual `/summon`) — nothing breaks; the plugin's
 `zero_cuts` userConfig option just stays inert until a follow-up wires the
 substitution into the command files' `!` lines explicitly and a live pane
 confirms it lands.
 
-**What would close this out:** in a real `claude` session (a `herdr` pane,
-per Rule 0) with the plugin installed and `zero_cuts` set to `all` via the
-plugin's config UI, run `/skill-zero` and check whether the rendered output
+**What would close this out:** in a real `claude` session with the plugin
+installed and `zero_cuts` set to `all` via the plugin's config UI, run
+`/skill-zero` and check whether the rendered output
 shows the `all`-cut copy — and separately, whether `${user_config.zero_cuts}`
 written directly into a test command's `!` line comes through as literal
 text or as the configured value. Neither was run here.
@@ -187,13 +203,15 @@ text or as the configured value. Neither was run here.
 
 One server, `skill-summon`, one tool:
 
-- **`summon`** — input `{ query: string, limit?: positive integer }`. **There is
+- **`summon`** — input `{ query: string, limit?: positive integer, surface?: "any" | "heaven" | "hell" }`. **There is
   no upper cap** — nothing assigns a ceiling, so the engine must not invent one.
   A malformed `limit` (zero, negative, fractional) is **refused, never clamped**;
   clamping would answer a question nobody asked. Materialises the whole skill directory
   (`SKILL.md` plus `reference/`, `scripts/`, fixtures) into a session-locked
-  temp dir and returns a printable card per skill, plus the honest ranking
-  disclosure.
+  temp dir and returns a printable card per skill, plus source invocation and
+  ranking disclosures. `heaven` excludes model-led-only fleet skills; `hell`
+  excludes human-led-only fleet skills and is the safe omitted default; explicit
+  manual `/summon` passes `any`.
 
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
@@ -203,8 +221,9 @@ dropping them degrades summon quality is a benchmark question, filed upstream.
 Written verbatim into the armed output of `/skill-heaven`, `/skill-hell` and
 `/skill-ultra`:
 
-> On a real capability gap — never preemptively — call the `summon` tool, with a
-> depth you judge the gap needs while converging/exploring. Print the returned
+> On a real capability gap — never preemptively — call the `summon` tool with
+> `surface: "heaven"` while converging or `surface: "hell"` while exploring,
+> and a depth you judge the gap needs. Print the returned
 > card **verbatim** before using anything from it, read the `SKILL.md` at the
 > card's path, and follow it. The card is the listing entry, not the skill body.
 > The lane stays armed.
@@ -217,51 +236,74 @@ ranking disclosure with it.
 Full rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
 `SKILL_SUMMON_TTL_HOURS`, `SKILL_SUMMON_CACHE_DIR`, `SKILL_SUMMON_CACHE_MAX_MB`;
 session dirs `/tmp/skill-summon-*`; payload cache
-`skill-summon-payload-cache-v1`. `TREE_URL` / `TREE_NAMED_URL` keep their names.
+`skill-summon-payload-cache-v1`; source env `SKILL_SOURCE`. The old paired
+`TREE_URL` / `TREE_NAMED_URL` variables remain a deprecated migration fallback.
 
 ## Packaging
 
 The MCP ships as a **committed esbuild bundle** at
-`plugins/skill-heaven/mcp/skill-summon.mjs`, run by `.mcp.json` through
-`${CLAUDE_PLUGIN_ROOT}`. Zero install step, offline-safe, and the repo keeps
-**zero runtime dependencies** — the bundle has none by construction. CI rebuilds
-the bundle and fails on `git diff --exit-code`.
+`plugins/skill-heaven/mcp/skill-summon.mjs`. Portable clients load it from root
+`mcp.json` through `${PLUGIN_ROOT}`; the retained Claude compatibility file uses
+`.mcp.json` and `${CLAUDE_PLUGIN_ROOT}`. Zero install step, offline-safe, and
+the repo keeps **zero runtime dependencies** — the bundle has none by
+construction. CI rebuilds the bundle and fails on `git diff --exit-code`.
 
-## The tree
+## One Skill URL
 
-Defaults, both exposed as plugin `userConfig` so pointing at another projection
-is a config change, not a code change:
+The engine defaults to `SKILL_SOURCE=https://gaiaskilltree.com`. Claude exposes
+that value as the `skill_url` user setting titled **Skill URL**.
+
+A website root is a tree source. The adapter derives:
 
 ```
-TREE_URL       https://gaiaskilltree.com/graph/gaia.json          (278 generic skills)
-TREE_NAMED_URL https://gaiaskilltree.com/graph/named/index.json   (267 named skills)
+<root>/graph/gaia.json
+<root>/graph/named/index.json
 ```
 
-> **Correction to an earlier brief.** "Gaia Skill Tree Arbor I" does not exist
-> in code — it is a founder-doc concept (`gaia-skill-tree/founder/ENDGAME -
-> SCHEMA.md`, `schema: gaia.arbor-edge/v1`). The two URLs above are what the
-> engine actually reads today.
+A `https://github.com/<owner>/<repo>` source is a flat fleet. The adapter scans
+bounded conventional directories for `SKILL.md`, parses `name`, `description`,
+and Matt Pocock's `disable-model-invocation` convention, then synthesizes
+commit-pinned candidates. Flat fleets need no generic reference or tree trust
+ordering; the agent query routes them by relevance.
 
-## Install — the final decision
+`disable-model-invocation: true` means human-led Skill Heaven and explicit
+invocation only. Absence means model-led Skill Hell and automatic invocation is
+allowed. Each summon remains an atomic, session-only materialization.
 
-This settles issues #47 and #53 against each other.
+## Install and client delivery
 
-1. **Primary install is the plugin**, two lines, copy-pasteable, no terminal —
-   which is also the mobile answer #47 asked for:
-   ```
-   /plugin marketplace add gaia-research/gaia-skill-heaven
-   /plugin install skill-heaven@gaia-skill-heaven
-   ```
-2. **`install.sh` is optional** — the standalone launcher install (the five
-   `*-zero` doors). Not required for, and not part of, the plugin.
-3. **`npx` is not an install path.** This settles #47's npx bullets against #53.
-4. **`skill-heaven.dev` is deferred.** The site uses the URL that actually
-   serves today: `gaia-research.github.io/gaia-skill-heaven/install.sh`.
-5. **`gaia-mcp` is deprecated** — kept installable so copies of `install.sh` in
-   the wild keep working, with a README banner pointing here.
+Agent Plugins standardizes the package, not one universal client-registration
+command. `install-agent-plugin.sh` therefore installs one stable package and a
+local marketplace without mutating any harness configuration:
 
-Existing `claude-zero@gaia-skill-heaven` installs migrate automatically via a
-`renames` entry in `marketplace.json` (needs Claude Code ≥ 2.1.193).
+```bash
+curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+The script requires Node 22+ and Git, then prints both paths. Any
+standards-conformant Agent Plugins client can load the plugin directory, though
+clients outside the pinned probe remain unverified. Pinned clients with their own package
+manager use the commands in the README compatibility table; this is delivery
+over one installed artifact, not five repackaged plugins. Clients may cache a
+copy, so updating or deleting the local artifact does not update or unregister
+client-managed copies.
+
+Claude Code 2.1.237 still accepts the public marketplace flow:
+
+```text
+/plugin marketplace add gaia-research/gaia-skill-heaven
+/plugin install skill-heaven@gaia-skill-heaven
+```
+
+Pi 0.84.2 remains a namespaced adapter because it is not a native Agent Plugins
+client and deliberately has no built-in MCP runtime. The adapter maps portable
+skills and `mcp.json` into Pi's extension API; see its
+[`PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+`install.sh` remains separate and installs the standalone `*-zero` launchers.
+
+`gaia-mcp` remains deprecated. Existing
+`claude-zero@gaia-skill-heaven` marketplace installs migrate through the
+`renames` entry in `marketplace.json` (Claude Code ≥ 2.1.193).
 
 ## Not built
 
@@ -276,7 +318,11 @@ Stated here so no surface implies otherwise:
 - **Ultra controller heuristics.** At `ultra` the agent picks direction and
   depth unaided.
 - **Relevance-band filtering.** The engine takes a depth, not a score band.
-- **The five surfaces on the non-Claude doors.** Claude Code first.
+- **Every possible client's install UX.** The package is portable, but the
+  Agent Plugins specification leaves install and enable flows to clients. The
+  pinned Codex, Hermes, Grok, Claude and Pi paths are probed; other conformant
+  clients may load the same installed directory through their own UI or command,
+  but are not claimed as verified.
 
 ## Authority
 

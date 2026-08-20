@@ -7,6 +7,7 @@ import { elapsedSeconds, startTiming } from "./timing.js";
 
 const execFileAsync = promisify(execFile);
 const GIT_TIMEOUT_MS = 60_000;
+const COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
 export type CloneOutcome = {
   path: string;
@@ -44,6 +45,16 @@ export async function ensureCachedRepo(
   if (!(await pathExists(cacheDir))) {
     await cloneRepo(repoUrl, branch, cacheDir);
     warm = false;
+  } else if (branch && COMMIT_SHA.test(branch)) {
+    // Commit-pinned fleet cache: checked out detached with no upstream, so
+    // `git pull` always fails here. Reuse as-is when already at that commit
+    // (the common case — no network call needed); otherwise re-fetch the
+    // pinned commit into the existing directory rather than re-cloning.
+    warm = await tryReuseCommitPinnedCache(cacheDir, branch);
+    if (!warm) {
+      await rm(cacheDir, { recursive: true, force: true });
+      await cloneRepo(repoUrl, branch, cacheDir);
+    }
   } else {
     try {
       await runGit(["pull"], cacheDir);
@@ -69,6 +80,7 @@ export async function resolveRemoteCommit(
   repoUrl: string,
   branch: string | null,
 ): Promise<string> {
+  if (branch && COMMIT_SHA.test(branch)) return branch.toLowerCase();
   const refs = branch
     ? [`refs/heads/${branch}`, `refs/tags/${branch}^{}`, `refs/tags/${branch}`]
     : ["HEAD"];
@@ -90,12 +102,36 @@ export async function resolveRemoteCommit(
   return commit;
 }
 
+/** True if cacheDir already holds (or now holds, after a targeted fetch) the pinned commit. */
+async function tryReuseCommitPinnedCache(
+  cacheDir: string,
+  commit: string,
+): Promise<boolean> {
+  try {
+    const currentCommit = await gitOutput(["rev-parse", "HEAD"], cacheDir);
+    if (currentCommit.toLowerCase() === commit.toLowerCase()) return true;
+    await runGit(["fetch", "--depth", "1", "origin", commit], cacheDir);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], cacheDir);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function cloneRepo(
   repoUrl: string,
   branch: string | null,
   dest: string,
 ): Promise<void> {
   await mkdir(path.dirname(dest), { recursive: true });
+  if (branch && COMMIT_SHA.test(branch)) {
+    await mkdir(dest, { recursive: true });
+    await runGit(["init"], dest);
+    await runGit(["remote", "add", "origin", repoUrl], dest);
+    await runGit(["fetch", "--depth", "1", "origin", branch], dest);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], dest);
+    return;
+  }
   const args = ["clone", "--single-branch", "--depth", "1"];
   if (branch) args.push("-b", branch);
   args.push(repoUrl, dest);

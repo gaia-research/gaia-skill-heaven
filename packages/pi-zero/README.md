@@ -4,13 +4,14 @@
 
 The pi door to Skill Zero under the Skill Heaven umbrella: a boot-time launcher plus live-session extension.
 
-> **Superseded.** This extension is scheduled to be replaced by a forthcoming
-> `pi-heaven` extension that consumes `plugins/skill-heaven` directly — Agent
-> Plugin is a universal standard, so other harnesses are expected to install
-> or pick up that plugin rather than each re-implementing their own summon
-> path (see [`docs/AGENT-PLUGIN.md`](../../docs/AGENT-PLUGIN.md)). Until
-> `pi-heaven` ships, `/skill-hell` here can render the chooser and arm a rung,
-> but it cannot summon a skill by intent (see below).
+> **Superseded for live summon.** The portable Agent Plugin now ships a Pi
+> compatibility adapter that consumes `plugins/skill-heaven` directly. From a
+> source checkout install it with `pi install ./plugins/skill-heaven --approve`;
+> it exposes all five skills, all five explicit slash surfaces, and the bundled
+> summon engine. See [`docs/AGENT-PLUGIN.md`](../../docs/AGENT-PLUGIN.md) and the
+> pinned [`Pi probe`](../../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+> This package remains the boot-time posture launcher; its older extension can
+> render/arm rungs but cannot summon by intent (see below).
 
 ## Launch
 

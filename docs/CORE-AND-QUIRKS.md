@@ -123,8 +123,10 @@ materialize the whole skill directory → session lock → GC → payload cache.
 produces a directory on disk; what a harness can do with that directory is a
 quirk and needs its own evidence.
 
-The source URLs are env-overridable as `TREE_URL` and `TREE_NAMED_URL`, so the
-engine can be configured against another tree without a fork.
+One `SKILL_SOURCE` URL selects the source. A website root derives the tree's
+generic and named projections; a GitHub repository becomes a flat `SKILL.md`
+fleet. The paired `TREE_URL` and `TREE_NAMED_URL` variables are deprecated
+migration compatibility.
 
 The external prototype's rich Registry/Bond surface — `gaia_search`,
 `gaia_inspect`, and `gaia_status` — is **not ported**. Whether dropping them

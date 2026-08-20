@@ -13,7 +13,7 @@ If the block is a `⛔` refusal, print it and stop — do not call the `summon`
 tool, and do not offer a way around the cut.
 
 Otherwise, if the user named an intent, call the `summon` tool **once**, with
-that intent as `query`. Then:
+that intent as `query` and `surface: "any"`. Then:
 
 - Print the returned card **verbatim** before using anything from it. The card
   is the disclosure: it names the skill and carries the engine's own ranking
@@ -29,5 +29,9 @@ This is one manual call and it arms nothing. It works at every rung, including
 the floor. To automate the choosing instead: `/skill-heaven` (converge),
 `/skill-hell` (explore), `/skill-ultra` (controller).
 
-Never claim a summon changed the boot posture, and never present routing as
-trust- or stamp-gated — Heaven/Hell stamps are not built.
+Observe the card's invocation disclosure. Manual `/summon` may reach both
+human-led Skill Heaven and model-led Skill Hell skills because the user invoked
+it explicitly. Automatic callers must use `surface: "hell"` so human-led fleet
+skills marked `disable-model-invocation: true` cannot self-invoke.
+
+Never claim a summon changed the boot posture.

@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
-import {
-  DEFAULT_GENERIC_REGISTRY_URL,
-  DEFAULT_NAMED_REGISTRY_URL,
-  HttpGaiaRegistrySource,
-} from "../data/source.js";
+import { resolveSkillSource } from "../data/configured-source.js";
 import type { TrustFields } from "../domain/types.js";
 import { GaiaService } from "../service.js";
 import {
@@ -232,11 +228,7 @@ async function runGc(args: ParsedArgs): Promise<void> {
 }
 
 function createService(): GaiaService {
-  const source = new HttpGaiaRegistrySource({
-    genericUrl: process.env.TREE_URL ?? DEFAULT_GENERIC_REGISTRY_URL,
-    namedUrl: process.env.TREE_NAMED_URL ?? DEFAULT_NAMED_REGISTRY_URL,
-  });
-  return new GaiaService(source);
+  return new GaiaService(resolveSkillSource().source);
 }
 
 function noteIfCreated(created: boolean, root: string): void {

@@ -11,7 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import type { TrustFields } from "../domain/types.js";
+import type { SkillInvocation, TrustFields } from "../domain/types.js";
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
 // cache directory (payload-cache.ts CACHE_DIR_NAME) also lives directly under
@@ -26,6 +26,8 @@ export type InstalledSkill = {
   id: string;
   name: string;
   contributor: string;
+  invocation?: SkillInvocation | undefined;
+  origin?: "tree" | "fleet" | undefined;
   level?: string | undefined;
   trustMagnitude?: number | undefined;
   stars?: number | undefined;

@@ -14,7 +14,11 @@ import {
 import { parseGithubUrl } from "./giturl.js";
 import { materializeSkillDir } from "./materialize.js";
 import { PayloadCache } from "./payload-cache.js";
-import { rankCandidatesWithDetails, type RankingSummary } from "./rank.js";
+import {
+  rankCandidatesWithDetails,
+  type RankingSummary,
+  type SummonSurface,
+} from "./rank.js";
 import { elapsedSeconds, startTiming } from "./timing.js";
 import { reapSessions } from "./session.js";
 import type { InstalledSkill, SummonSession } from "./session.js";
@@ -28,6 +32,7 @@ const DEFAULT_LIMIT = 1;
 export type SummonOptions = {
   query: string;
   limit?: number | undefined;
+  surface?: SummonSurface | undefined;
 };
 
 export type SkippedCandidate = {
@@ -48,6 +53,7 @@ export type SuiteAttempt = {
 
 export type SummonOutcome = {
   query: string;
+  surface: SummonSurface;
   summoned: InstalledSkill[];
   skipped: SkippedCandidate[];
   suites: SuiteAttempt[];
@@ -86,7 +92,7 @@ type InstallOutcome = {
 export async function summon(
   service: GaiaService,
   session: SummonSession,
-  { query, limit = DEFAULT_LIMIT }: SummonOptions,
+  { query, limit = DEFAULT_LIMIT, surface = "hell" }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -101,7 +107,7 @@ export async function summon(
 
   await reapSessions({ excludeRoots: [session.root] });
   const registry = await service.namedSkills();
-  const ranked = rankCandidatesWithDetails(registry, trimmedQuery);
+  const ranked = rankCandidatesWithDetails(registry, trimmedQuery, surface);
   const candidates = ranked.candidates;
   await session.ensureRoots();
 
@@ -136,6 +142,7 @@ export async function summon(
 
   return {
     query: trimmedQuery,
+    surface,
     summoned,
     skipped,
     suites,
@@ -365,6 +372,8 @@ async function installSingle(
       id: skill.id,
       name: skill.name,
       contributor: skill.contributor,
+      ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
       branch,
@@ -487,6 +496,8 @@ async function installSingle(
       id: skill.id,
       name: skill.name,
       contributor: skill.contributor,
+      ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
       branch,

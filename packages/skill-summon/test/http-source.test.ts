@@ -1,8 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { HttpGaiaRegistrySource } from "../src/index.js";
+import {
+  HttpGaiaRegistrySource,
+  resolveConfiguredRegistryUrl,
+} from "../src/index.js";
 
 describe("HttpGaiaRegistrySource", () => {
+  it("falls back when another client leaves a user-config placeholder literal", () => {
+    expect(resolveConfiguredRegistryUrl(undefined, "https://default.test")).toBe(
+      "https://default.test",
+    );
+    expect(
+      resolveConfiguredRegistryUrl("${user_config.tree_url}", "https://default.test"),
+    ).toBe("https://default.test");
+    expect(
+      resolveConfiguredRegistryUrl("https://custom.test/tree.json", "https://default.test"),
+    ).toBe("https://custom.test/tree.json");
+  });
+
   it("loads and caches the two public Gaia projections", async () => {
     const fetchFn = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
@@ -58,6 +73,7 @@ describe("HttpGaiaRegistrySource", () => {
     expect(first.generic.skills[0]?.id).toBe("testing");
     expect(first.named.buckets.testing?.[0]?.id).toBe("example/health");
     expect(first.source).toEqual({
+      kind: "tree",
       genericUrl: "https://example.test/generic.json",
       namedUrl: "https://example.test/named.json",
       fetchedAt: "2026-07-16T12:00:00.000Z",

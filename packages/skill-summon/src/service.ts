@@ -127,7 +127,10 @@ export class GaiaService {
     if (kinds.has("named")) {
       for (const skill of namedSkills) {
         const resolvedType =
-          skill.type ?? genericTypes.get(skill.genericSkillRef);
+          skill.type ??
+          (skill.genericSkillRef
+            ? genericTypes.get(skill.genericSkillRef)
+            : undefined);
         if (
           allowedTypes &&
           (!resolvedType || !allowedTypes.has(normalize(resolvedType)))
@@ -164,7 +167,7 @@ export class GaiaService {
           [skill.id, 10],
           [skill.title ?? "", 10],
           [skill.catalogRef ?? "", 8],
-          [skill.genericSkillRef, 8],
+          [skill.genericSkillRef ?? "", 8],
           [skill.tags.join(" "), 6],
           [skill.description, 3],
         ]);
@@ -178,7 +181,10 @@ export class GaiaService {
           description: skill.description,
           ...(resolvedType ? { type: resolvedType } : {}),
           status: skill.status,
-          genericSkillRef: skill.genericSkillRef,
+          ...(skill.genericSkillRef
+            ? { genericSkillRef: skill.genericSkillRef }
+            : {}),
+          ...(skill.invocation ? { invocation: skill.invocation } : {}),
           contributor: skill.contributor,
           ...(skill.level === undefined ? {} : { level: skill.level }),
           ...(skill.trustMagnitude === undefined
@@ -296,6 +302,7 @@ export class GaiaService {
   }
 
   #metadata(snapshot: GaiaRegistrySnapshot): ResultMetadata {
+    const sourceKind = snapshot.source.kind ?? "tree";
     const generatedTimes = [
       Date.parse(snapshot.generic.generatedAt),
       Date.parse(snapshot.named.generatedAt),
@@ -311,14 +318,25 @@ export class GaiaService {
       oldestGeneratedAt === undefined
         ? null
         : Math.max(0, Math.floor((now - oldestGeneratedAt) / 1_000));
-    const upstreamDeclaresContractVersion = [
-      snapshot.generic.contractVersion ?? snapshot.generic.schemaVersion,
-      snapshot.named.contractVersion ?? snapshot.named.schemaVersion,
-    ].every((version) => version === TREE_CONTRACT_VERSION);
+    const upstreamDeclaresContractVersion =
+      sourceKind === "fleet" ||
+      [
+        snapshot.generic.contractVersion ?? snapshot.generic.schemaVersion,
+        snapshot.named.contractVersion ?? snapshot.named.schemaVersion,
+      ].every((version) => version === TREE_CONTRACT_VERSION);
     const warnings: string[] = [];
-    if (!upstreamDeclaresContractVersion) {
+    if (sourceKind === "fleet") {
+      warnings.push(
+        "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active.",
+      );
+    } else if (!upstreamDeclaresContractVersion) {
       warnings.push(
         `Gaia's public projections do not both advertise a contract version. Compatibility is being enforced by the ${TREE_CONTRACT_VERSION} shape adapter; verify the source URLs before stateful follow-up work.`,
+      );
+    }
+    if (snapshot.source.legacy) {
+      warnings.push(
+        "TREE_URL + TREE_NAMED_URL compatibility is deprecated; configure one SKILL_SOURCE root URL.",
       );
     }
     if (stale) {
@@ -332,6 +350,11 @@ export class GaiaService {
     return {
       serverVersion: this.#serverVersion,
       mode: "registry",
+      sourceKind,
+      routingMode:
+        sourceKind === "fleet"
+          ? "collection-only"
+          : "generic-map+collection",
       contractVersion: TREE_CONTRACT_VERSION,
       supportedContractVersions: [TREE_CONTRACT_VERSION],
       upstreamDeclaresContractVersion,
@@ -370,6 +393,7 @@ function toNamedSummary(skill: NamedSkill): NamedSkillSummary {
     ...(skill.level === undefined ? {} : { level: skill.level }),
     description: skill.description,
     ...(skill.catalogRef ? { catalogRef: skill.catalogRef } : {}),
+    ...(skill.invocation ? { invocation: skill.invocation } : {}),
     ...(skill.trustMagnitude === undefined
       ? {}
       : { trustMagnitude: skill.trustMagnitude }),

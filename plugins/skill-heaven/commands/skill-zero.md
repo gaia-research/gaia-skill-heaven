@@ -1,5 +1,5 @@
 ---
-description: "Cut automatic summoning to the floor; `all` cuts manual /summon too."
+description: "Zero cuts temporary skills by default; `all` cuts every skill summon."
 allowed-tools: Bash(node:*)
 ---
 
@@ -10,7 +10,7 @@ SKILL_HEAVEN_ARGS_EOF`
 Print the block above **verbatim** inside a fenced code block, then stop.
 
 Treat the armed rung in the block as a **standing instruction for this
-conversation**: at `zero` you do not summon automatically. Manual `/summon` still
+conversation**: at `zero` temporary automatic skills are cut. Manual `/summon` still
 works unless the block says the cut is `all`, in which case do not call the
 `summon` tool at all for the rest of this session.
 

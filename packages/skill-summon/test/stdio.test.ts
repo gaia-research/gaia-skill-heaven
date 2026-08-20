@@ -111,6 +111,11 @@ describe("skill-summon-mcp stdio executable", () => {
       env: {
         PATH: process.env.PATH ?? "",
         HOME: process.env.HOME ?? "",
+        // macOS resolves tmpdir() through $TMPDIR. The child must see the same
+        // temp root as the parent that created SKILL_SUMMON_SESSION; otherwise
+        // it falls back to /tmp and correctly rejects the parent-owned root as
+        // outside its disposable-session namespace.
+        TMPDIR: process.env.TMPDIR ?? "",
         TREE_URL: `${baseUrl}/generic.json`,
         TREE_NAMED_URL: `${baseUrl}/named.json`,
         SKILL_SUMMON_SESSION: session.root,

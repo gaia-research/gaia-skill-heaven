@@ -143,9 +143,9 @@ describe("one line, four bands", () => {
 });
 
 describe("the floor", () => {
-  it("cuts automatic summoning but keeps manual /summon", () => {
+  it("cuts temporary automatic skills but keeps manual /summon", () => {
     const { text } = render("zero");
-    expect(text).toContain("no automatic summoning");
+    expect(text).toContain("no temporary automatic skills");
     expect(text).toContain("Manual /summon still works");
     expect(text).toContain("/skill-zero all");
   });
@@ -257,9 +257,9 @@ describe("launch-manifest helpers carried over from the posture renderer", () =>
     expect(normalizeTarget("no spaces allowed")).toBeNull();
   });
 
-  it("defaults zero_cuts to automatic", () => {
-    expect(zeroCuts({})).toBe("automatic");
+  it("defaults zero_cuts to temporary", () => {
+    expect(zeroCuts({})).toBe("temporary");
     expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "ALL" })).toBe("all");
-    expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "nonsense" })).toBe("automatic");
+    expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "nonsense" })).toBe("temporary");
   });
 });
