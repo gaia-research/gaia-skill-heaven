@@ -6,9 +6,9 @@
 
 **Your coding agent is carrying skills it never uses. Skill Heaven decides what actually enters a session.**
 
-Start the harness clean, then summon back only what the task needs — one session, nothing installed.
+Summon exactly the skills a task needs — one session, nothing installed. Or start the harness clean and add nothing at all.
 
-[![Install](https://img.shields.io/badge/Install-one%20command-a58ae0?style=for-the-badge)](#install)
+[![Install the plugin](https://img.shields.io/badge/Install-two%20lines%20in%20Claude%20Code-a58ae0?style=for-the-badge)](#1--the-full-agent-plugin--recommended)
 [![Site](https://img.shields.io/badge/skill--heaven.dev-visit-05060a?style=for-the-badge)](https://skill-heaven.dev)
 
 Works with **Claude Code · Codex · Pi · Hermes · Grok**
@@ -19,22 +19,73 @@ Works with **Claude Code · Codex · Pi · Hermes · Grok**
 
 ## Install
 
-Requires **Node.js 22+**.
+Requires **Node.js 22+**. Three ways in — pick the first one that fits you.
+
+| | You get | Best if |
+|---|---|---|
+| **1 · The plugin** | All five commands + the summon engine | You use **Claude Code** — start here |
+| **2 · `/summon` alone** | Just the summon tool, as an MCP server | You use another harness, or want one tool and nothing else |
+| **3 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
+
+---
+
+### 1 · The full agent plugin — *recommended*
+
+Two lines, typed inside Claude Code. No terminal, no build step, no `npx`.
+
+```text
+/plugin marketplace add gaia-research/gaia-skill-heaven
+/plugin install skill-heaven@gaia-skill-heaven
+```
+
+That's everything: `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra`, with the summon engine bundled inside the plugin. There is no second package to install and no sibling repository to clone.
+
+📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
+
+---
+
+### 2 · `/summon` on its own
+
+`/summon` is the one mechanic underneath every surface — **one skill into context, one session, nothing installed.** It ships as a standalone MCP server, so any MCP-capable harness can have it without the rest of the ladder.
+
+```bash
+git clone https://github.com/gaia-research/gaia-skill-heaven.git
+```
+
+Then point your harness at the bundled server — it needs no arguments, no environment, and no install step:
+
+```json
+{
+  "mcpServers": {
+    "skill-summon": {
+      "command": "node",
+      "args": ["/path/to/gaia-skill-heaven/plugins/skill-heaven/mcp/skill-summon.mjs"]
+    }
+  }
+}
+```
+
+You get one tool, `summon`: it ranks skills against your intent, materializes the winner's whole directory — `SKILL.md`, `reference/`, `scripts/`, fixtures — into a session-locked temp directory, and prints a card telling you what arrived, what it cost, and where to inspect it. Your real configuration is never touched.
+
+*If you took path 1, you already have this — the plugin wires the same server up for you.*
+
+---
+
+### 3 · The Skill Zero launchers
+
+Five shell commands that start a harness with a clean context, independent of Claude Code.
 
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 ```
 
-That gives you two things:
+```text
+claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
+```
 
-| | What it is | How you use it |
-|---|---|---|
-| **Five launchers** | `claude-zero` · `codex-zero` · `pi-zero` · `hermes-zero` · `grok-zero` | Run one instead of your usual harness command |
-| **The Claude Code plugin** | `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra` | Type them inside a Claude Code session |
+Run one instead of your usual harness command. The installer also registers the Claude Code plugin from path 1 if your `claude` binary is already on `PATH`.
 
-The plugin installs automatically when Claude Code is on your `PATH`. The summon engine ships bundled inside it — there is no second package and no `npx`.
-
-The installer does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if your shell doesn't pick it up:
+It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if your shell doesn't pick it up:
 
 ```bash
 export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
@@ -44,23 +95,22 @@ export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
 
 ## Try it in 60 seconds
 
-```bash
-# 1. See what a clean launch would compose — nothing is spawned
-claude-zero --print
-
-# 2. Start your harness with a clean context
-claude-zero
-```
-
-Then, inside the session:
+Inside a Claude Code session, once the plugin is installed:
 
 ```text
-/summon        pull one skill into context for this session only
-/skill-heaven  converge — the right few skills for the gap in front of you
-/skill-hell    explore — reach wide for capability you don't have yet
+/summon         pull one skill into context — this session only, nothing installed
+/skill-heaven   converge — the right few skills for the gap in front of you
+/skill-hell     explore — reach wide for capability you don't have yet
 ```
 
 Nothing you summon is installed, and nothing is left behind when the session ends.
+
+With the launchers, from your shell:
+
+```bash
+claude-zero --print   # see what a clean launch would compose — nothing is spawned
+claude-zero           # start your harness with a clean context
+```
 
 ---
 
