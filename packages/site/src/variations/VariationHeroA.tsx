@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
-import { DOORS, INSTALL, SITE } from '../product'
+import { DOORS, INSTALL } from '../product'
 import { HarnessMark } from '../harnessMarks'
 import './variation-hero.css'
 
@@ -567,20 +567,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             ))}
           </div>
 
-          {/* The repo actions — quiet, and never competing with the install. */}
+          {/* Star/Contribute pulled per owner request — repo actions were
+              competing with the install for attention. Intro (desktop-only,
+              hidden on mobile — see .vha-cta-mini--btn in variation-hero.css)
+              is the one action worth keeping here. */}
           <div className="vha-cta-row">
-            <a
-              className="vha-cta-link"
-              href={SITE.repoUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: v.fg, borderColor: v.hair2 }}
-            >
-              ★ Star
-            </a>
-            <a className="vha-cta-mini" href={SITE.issuesUrl} target="_blank" rel="noreferrer" style={{ color: v.dim }}>
-              Contribute
-            </a>
             <button type="button" className="vha-cta-mini vha-cta-mini--btn" onClick={enterStory} style={{ color: v.dim }}>
               Intro
             </button>
