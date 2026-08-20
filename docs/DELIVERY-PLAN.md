@@ -112,13 +112,17 @@ not an external package. It ships as a committed MCP bundle inside the plugin
 path and no separate binary to select.
 
 The bundle exposes one tool, `summon` (`{ query: string, limit?: positive
-integer }`). There is no upper cap — nothing assigns a ceiling, so the engine
-must not invent one; a malformed `limit` is refused, never clamped.
+integer, surface?: "any" | "heaven" | "hell" }`). There is no upper cap —
+nothing assigns a ceiling, so the engine must not invent one; a malformed
+`limit` is refused, never clamped.
 `gaia_search`, `gaia_inspect`, and `gaia_status` — tools the old external
 package exposed — are not ported; whether dropping them degrades summon
-quality is a benchmark question, filed upstream. Hell/Heaven scoring, routing
-eligibility, and content-hash admission or verification are not shipped —
-routing falls back to relevance ranking.
+quality is a benchmark question, filed upstream. One Skill URL resolves either
+a tree website (derived generic plus named projections) or a flat GitHub
+`SKILL.md` fleet. Flat fleets route by relevance and enforce Matt Pocock's
+`disable-model-invocation` distinction: human-led skills route through Heaven;
+model-led skills may route automatically through Hell. Benchmark trust scoring
+and content-hash admission remain unshipped.
 
 The external `@gaia-research/mcp` package (the `skill-hell` binary, the
 sibling `gaia-mcp` repo) is **deprecated**. This repo's installer and plugin

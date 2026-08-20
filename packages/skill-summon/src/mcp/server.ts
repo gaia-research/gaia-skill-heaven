@@ -34,7 +34,7 @@ export function createSkillSummonMcpServer({
     { name: "skill-summon", version },
     {
       instructions:
-        "Use summon to install the best-matching skill's full directory (SKILL.md plus any reference/, scripts/, and fixtures) from the public Gaia Registry into a session-locked temp directory. summon returns a printable card and inspect URL plus cloneSeconds, materializeSeconds, totalSeconds, and cacheState (cold or warm) for every materialized skill, an honest ranking disclosure, and totalSeconds for the invocation. The Gaia Registry itself is read-only and cannot be installed into, fused, or mutated; summon does not touch your real configuration. Session payloads are ephemeral; a separate bounded, commit-addressed payload cache may retain copies across sessions and can always be rebuilt on a miss.",
+        "Use summon to materialize the best-matching skill's full directory from the configured SKILL_SOURCE into a session-locked temp directory. A website root resolves a Skill Tree (generic map plus named collection); a GitHub repository resolves a flat SKILL.md fleet. Human-led fleet skills belong to Skill Heaven and require explicit invocation; model-led skills belong to Skill Hell and may be reached automatically. summon returns printable disclosure cards and never touches real agent configuration.",
     },
   );
 
@@ -49,7 +49,7 @@ export function createSkillSummonMcpServer({
     {
       title: "Summon a skill",
       description:
-        "Install the best-matching Named Skill from the live Gaia Registry: resolve the current source commit, reuse a bounded commit-addressed payload cache when available, or shallow-clone transiently on a miss; validate the resolved subpath, discard clone scaffolding, then materialize the whole skill directory (SKILL.md plus any reference/, scripts/, and fixtures) into a session-locked temp directory. Recurses into suiteComponents for suite skills. Never writes to your real configuration. Falls through to the next-best candidate on an install failure and reports what was skipped. The structured result includes a printable card and inspect URL, tree-provided trust fields, per-skill cloneSeconds, materializeSeconds, totalSeconds, and cacheState (cold or warm), an honest ranking disclosure, plus the invocation totalSeconds.",
+        "Materialize the best-matching skill from the configured Skill Tree or flat GitHub fleet. The agent supplies the capability query and optional surface: Heaven admits human-led/unspecified skills; Hell admits model-led/unspecified skills and is the safe default; explicit manual summon passes any. Source commits and subpaths are validated, payloads are commit-addressed, and real agent configuration is never modified.",
       inputSchema: z.object({
         query: z
           .string()
@@ -63,13 +63,25 @@ export function createSkillSummonMcpServer({
           .describe(
             "How many skills to summon for this gap. No upper cap — the caller decides the depth.",
           ),
+        surface: z
+          .enum(["any", "heaven", "hell"])
+          .optional()
+          .describe(
+            "Invocation lane. Omitted defaults safely to hell; heaven excludes model-led-only skills; explicit manual summon passes any.",
+          ),
       }),
       annotations: summonAnnotations,
     },
-    async ({ query, limit }): Promise<CallToolResult> => {
+    async ({ query, limit, surface }): Promise<CallToolResult> => {
       try {
         const session = await getSession();
-        return toolResult(await summon(service, session, { query, limit }));
+        return toolResult(
+          await summon(service, session, {
+            query,
+            ...(limit === undefined ? {} : { limit }),
+            ...(surface === undefined ? {} : { surface }),
+          }),
+        );
       } catch (error) {
         return toolError(error);
       }

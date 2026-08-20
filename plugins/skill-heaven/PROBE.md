@@ -2,6 +2,9 @@
 
 **Date:** 2026-08-20  
 **Branch:** `feat/ws5-agent-plugin-harness-install`, stacked on PR #78  
+
+> Historical evidence: this predates the one `skill_url` / `SKILL_SOURCE` configuration, so references to the old paired settings document what the pinned clients did during that probe, not the current interface.
+
 **Owner-requested visible-pane protocol:** although repository Rule 0 is lifted,
 every harness invocation ran in the right-hand Herdr pane `wQ:p2`. The completed
 pane was moved to an archive tab after verification.

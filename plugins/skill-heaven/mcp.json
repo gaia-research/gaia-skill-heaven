@@ -6,8 +6,7 @@
       "command": "node",
       "args": ["${PLUGIN_ROOT}/mcp/skill-summon.mjs"],
       "env": {
-        "TREE_URL": "https://gaiaskilltree.com/graph/gaia.json",
-        "TREE_NAMED_URL": "https://gaiaskilltree.com/graph/named/index.json"
+        "SKILL_SOURCE": "https://gaiaskilltree.com"
       }
     }
   }

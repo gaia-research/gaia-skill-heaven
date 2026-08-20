@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_GENERIC_REGISTRY_URL, DEFAULT_NAMED_REGISTRY_URL } from "skill-summon";
+import { DEFAULT_SKILL_SOURCE } from "skill-summon";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(REPO, "plugins", "skill-heaven");
@@ -33,14 +33,9 @@ describe(".mcp.json — the summon MCP server declaration", () => {
     ]);
   });
 
-  it("wires TREE_URL / TREE_NAMED_URL to userConfig — the real env vars source.ts reads", () => {
-    // packages/skill-summon/src/data/source.ts reads process.env.TREE_URL and
-    // process.env.TREE_NAMED_URL (HttpGaiaRegistrySource construction in
-    // src/bin/skill-summon-mcp.ts) — these must be the exact names, or the
-    // configured tree_url/tree_named_url userConfig silently does nothing.
+  it("wires one SKILL_SOURCE to the Skill URL userConfig", () => {
     expect(mcpConfig.mcpServers["skill-summon"].env).toEqual({
-      TREE_URL: "${user_config.tree_url}",
-      TREE_NAMED_URL: "${user_config.tree_named_url}",
+      SKILL_SOURCE: "${user_config.skill_url}",
     });
   });
 });
@@ -50,9 +45,9 @@ describe("plugin.json — userConfig", () => {
     readFileSync(join(PLUGIN, ".claude-plugin", "plugin.json"), "utf-8"),
   );
 
-  it("declares exactly tree_url, tree_named_url, zero_cuts", () => {
+  it("declares exactly skill_url and zero_cuts", () => {
     expect(Object.keys(pluginJson.userConfig).sort()).toEqual(
-      ["tree_named_url", "tree_url", "zero_cuts"].sort(),
+      ["skill_url", "zero_cuts"].sort(),
     );
   });
 
@@ -60,7 +55,7 @@ describe("plugin.json — userConfig", () => {
   // supports only type: string | number | boolean | directory | file — there
   // is no enum type. Every option here must be type "string" with `type`,
   // `title`, and `description` all present (title/description are required).
-  for (const key of ["tree_url", "tree_named_url", "zero_cuts"]) {
+  for (const key of ["skill_url", "zero_cuts"]) {
     it(`${key} is a well-formed string option (type, title, description all present)`, () => {
       const option = pluginJson.userConfig[key];
       expect(option.type).toBe("string");
@@ -71,16 +66,12 @@ describe("plugin.json — userConfig", () => {
     });
   }
 
-  it("tree_url defaults to the same URL source.ts hardcodes as DEFAULT_GENERIC_REGISTRY_URL", () => {
-    expect(pluginJson.userConfig.tree_url.default).toBe(DEFAULT_GENERIC_REGISTRY_URL);
+  it("skill_url defaults to the public Skill Tree website root", () => {
+    expect(pluginJson.userConfig.skill_url.default).toBe(DEFAULT_SKILL_SOURCE);
   });
 
-  it("tree_named_url defaults to the same URL source.ts hardcodes as DEFAULT_NAMED_REGISTRY_URL", () => {
-    expect(pluginJson.userConfig.tree_named_url.default).toBe(DEFAULT_NAMED_REGISTRY_URL);
-  });
-
-  it('zero_cuts defaults to "automatic" — N13\'s product floor (cut automatic summoning only)', () => {
-    expect(pluginJson.userConfig.zero_cuts.default).toBe("automatic");
+  it('zero_cuts defaults to "temporary"', () => {
+    expect(pluginJson.userConfig.zero_cuts.default).toBe("temporary");
   });
 });
 

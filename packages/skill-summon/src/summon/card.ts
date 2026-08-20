@@ -15,6 +15,13 @@ export function renderSummonCard(
   ranking: RankingSummary,
 ): string {
   const lines = [`[Summoned] ${skill.name}`, `  ID: ${skill.id}`];
+  if (skill.invocation === "human") {
+    lines.push("  Invocation: human-led · Skill Heaven · explicit invocation only");
+  } else if (skill.invocation === "model") {
+    lines.push("  Invocation: model-led · Skill Hell · may be reached automatically");
+  } else {
+    lines.push("  Invocation: unclassified · source did not publish a lane");
+  }
   const trust = displayTrustFields(skill.trust ?? {});
   if (trust.length > 0) {
     lines.push(
@@ -23,7 +30,9 @@ export function renderSummonCard(
   }
   lines.push(
     ranking.mode === "relevance-only"
-      ? "  Ranking: relevance only — tree published no comparable trust signals"
+      ? skill.origin === "fleet"
+        ? "  Ranking: relevance only — flat fleet; no generic map or tree trust ordering"
+        : "  Ranking: relevance only — tree published no comparable trust signals"
       : `  Ranking: trust then relevance — ${ranking.trustFields.join(", ")}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s · ${skill.cache}/${skill.cacheSource} · ${skill.fileCount} files`,
     `  Path: ${skill.path}`,

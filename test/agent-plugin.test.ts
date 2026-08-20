@@ -56,7 +56,7 @@ describe("Agent Plugins 1.0.0 package", () => {
     expect(existsSync(path)).toBe(true);
     const source = readFileSync(path, "utf8");
     expect(source).toMatch(new RegExp(`^---\\nname: ${surface}\\n`));
-    expect(source).toMatch(/\ndescription: .+\n---\n/);
+    expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\n---\n/);
   });
 
   it("keeps Codex compatibility thin and rooted in the same bundled server", () => {

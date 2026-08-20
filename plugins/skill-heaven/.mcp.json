@@ -4,8 +4,7 @@
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
       "env": {
-        "TREE_URL": "${user_config.tree_url}",
-        "TREE_NAMED_URL": "${user_config.tree_named_url}"
+        "SKILL_SOURCE": "${user_config.skill_url}"
       }
     }
   }

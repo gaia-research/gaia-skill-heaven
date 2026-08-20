@@ -98,7 +98,10 @@ class SkillSummonClient {
   private stdoutBuffer = "";
   private startPromise: Promise<void> | undefined;
 
-  async callSummon(input: { query: string; limit?: number }, signal?: AbortSignal): Promise<McpResult> {
+  async callSummon(
+    input: { query: string; limit?: number; surface?: "any" | "heaven" | "hell" },
+    signal?: AbortSignal,
+  ): Promise<McpResult> {
     await this.start();
     const result = await this.request("tools/call", { name: "summon", arguments: input }, signal);
     if (!isObject(result)) throw new Error("skill-summon returned a non-object MCP result");
@@ -300,15 +303,21 @@ export default function skillHeavenPi(pi: ExtensionAPI): void {
     name: "summon",
     label: "Summon",
     description:
-      "Summon the best-matching Named Skill from the live Gaia Registry into a session-locked temporary directory. Returns printable disclosure cards and materialized skill paths; never writes to agent configuration.",
+      "Summon the best-matching skill from the configured Skill URL into a session-locked temporary directory. Returns printable disclosure cards and materialized skill paths; never writes to agent configuration.",
     promptSnippet: "Summon a matching skill for a concrete capability gap",
     promptGuidelines: [
-      "Use summon only when the user invokes /summon or an armed Skill Heaven lane identifies a real capability gap; print every returned card verbatim before using the skill.",
+      "Manual /summon uses any; human-led Skill Heaven routing uses heaven; automatic model-led Skill Hell routing uses hell. Print every returned card verbatim before using the skill.",
     ],
     parameters: Type.Object({
       query: Type.String({ minLength: 1, description: "Task or capability to summon a matching skill for" }),
       limit: Type.Optional(
         Type.Integer({ minimum: 1, description: "Requested depth; no upper cap" }),
+      ),
+      surface: Type.Optional(
+        Type.Union(
+          [Type.Literal("any"), Type.Literal("heaven"), Type.Literal("hell")],
+          { description: "Invocation lane: manual, human-led, or model-led" },
+        ),
       ),
     }),
     async execute(_toolCallId, params, signal) {

@@ -3236,8 +3236,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path6) {
-      let input = path6;
+    function removeDotSegments(path7) {
+      let input = path7;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3489,8 +3489,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path6, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path6 && path6 !== "/" ? path6 : void 0;
+        const [path7, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path7 && path7 !== "/" ? path7 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -7120,10 +7120,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path6) {
-  if (!path6)
+function getElementAtPath(obj, path7) {
+  if (!path7)
     return obj;
-  return path6.reduce((acc, key) => acc?.[key], obj);
+  return path7.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -7443,11 +7443,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path6, issues) {
+function prefixIssues(path7, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path6);
+    iss.path.unshift(path7);
     return iss;
   });
 }
@@ -13043,6 +13043,332 @@ var StdioServerTransport = class {
   }
 };
 
+// packages/skill-summon/src/data/fleet-source.ts
+import { lstat, mkdtemp, readFile, readdir, rm as rm2, stat as stat2 } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path2 from "node:path";
+
+// packages/skill-summon/src/summon/clone.ts
+import { execFile } from "node:child_process";
+import { mkdir, rm, stat } from "node:fs/promises";
+import path from "node:path";
+import { promisify } from "node:util";
+
+// packages/skill-summon/src/summon/timing.ts
+import { performance } from "node:perf_hooks";
+function startTiming() {
+  return performance.now();
+}
+function elapsedSeconds(startedAt) {
+  return Number(((performance.now() - startedAt) / 1e3).toFixed(3));
+}
+
+// packages/skill-summon/src/summon/clone.ts
+var execFileAsync = promisify(execFile);
+var GIT_TIMEOUT_MS = 6e4;
+var COMMIT_SHA = /^[0-9a-f]{40}$/i;
+async function discardCachedRepo(cacheDir) {
+  await rm(cacheDir, { recursive: true, force: true });
+}
+async function ensureCachedRepo(cacheDir, repoUrl, branch) {
+  const startedAt = startTiming();
+  const exists = await pathExists(cacheDir);
+  const validRepo = exists && await pathExists(path.join(cacheDir, ".git"));
+  if (exists && !validRepo) {
+    await rm(cacheDir, { recursive: true, force: true });
+  }
+  let warm;
+  if (!await pathExists(cacheDir)) {
+    await cloneRepo(repoUrl, branch, cacheDir);
+    warm = false;
+  } else {
+    try {
+      await runGit(["pull"], cacheDir);
+      warm = true;
+    } catch {
+      await rm(cacheDir, { recursive: true, force: true });
+      await cloneRepo(repoUrl, branch, cacheDir);
+      warm = false;
+    }
+  }
+  const commit = await gitOutput(["rev-parse", "HEAD"], cacheDir);
+  return {
+    path: cacheDir,
+    cloneSeconds: elapsedSeconds(startedAt),
+    warm,
+    commit
+  };
+}
+async function resolveRemoteCommit(repoUrl, branch) {
+  if (branch && COMMIT_SHA.test(branch)) return branch.toLowerCase();
+  const refs = branch ? [`refs/heads/${branch}`, `refs/tags/${branch}^{}`, `refs/tags/${branch}`] : ["HEAD"];
+  const output = await gitOutput([
+    "ls-remote",
+    "--exit-code",
+    repoUrl,
+    ...refs
+  ]);
+  const lines = output.split("\n").filter(Boolean);
+  const preferred = branch ? lines.find((line) => line.endsWith(`refs/heads/${branch}`)) ?? lines.find((line) => line.endsWith(`refs/tags/${branch}^{}`)) ?? lines[0] : lines[0];
+  const commit = preferred?.split(/\s+/u)[0];
+  if (!commit)
+    throw new Error(`git ls-remote returned no commit for ${repoUrl}`);
+  return commit;
+}
+async function cloneRepo(repoUrl, branch, dest) {
+  await mkdir(path.dirname(dest), { recursive: true });
+  if (branch && COMMIT_SHA.test(branch)) {
+    await mkdir(dest, { recursive: true });
+    await runGit(["init"], dest);
+    await runGit(["remote", "add", "origin", repoUrl], dest);
+    await runGit(["fetch", "--depth", "1", "origin", branch], dest);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], dest);
+    return;
+  }
+  const args = ["clone", "--single-branch", "--depth", "1"];
+  if (branch) args.push("-b", branch);
+  args.push(repoUrl, dest);
+  await runGit(args);
+}
+async function runGit(args, cwd) {
+  await gitOutput(args, cwd);
+}
+async function gitOutput(args, cwd) {
+  try {
+    const { stdout } = await execFileAsync("git", args, {
+      cwd,
+      timeout: GIT_TIMEOUT_MS
+    });
+    return stdout.trim();
+  } catch (error2) {
+    throw new Error(`git ${args.join(" ")} failed: ${errorMessage(error2)}`);
+  }
+}
+async function pathExists(target) {
+  try {
+    await stat(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function errorMessage(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/skill-summon/src/summon/giturl.ts
+var BLOB_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.*)/;
+var TREE_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)(.*)/;
+var REPO_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)/;
+function parseGithubUrl(url) {
+  const trimmed = url.replace(/\/+$/, "");
+  const blobMatch = BLOB_URL.exec(trimmed);
+  if (blobMatch) {
+    const [, owner, repo, branch, filePath] = blobMatch;
+    const subpath = filePath.endsWith(".md") ? dirname(filePath) : filePath;
+    return {
+      repoUrl: `https://github.com/${owner}/${repo}.git`,
+      branch,
+      subpath
+    };
+  }
+  const treeMatch = TREE_URL.exec(trimmed);
+  if (treeMatch) {
+    const [, owner, repo, branch, rest] = treeMatch;
+    return {
+      repoUrl: `https://github.com/${owner}/${repo}.git`,
+      branch,
+      subpath: rest.replace(/^\/+/, "")
+    };
+  }
+  const repoMatch = REPO_URL.exec(trimmed);
+  if (repoMatch) {
+    const [, owner, repo] = repoMatch;
+    return {
+      repoUrl: `https://github.com/${owner}/${repo}.git`,
+      branch: null,
+      subpath: ""
+    };
+  }
+  return { repoUrl: trimmed, branch: null, subpath: "" };
+}
+function dirname(filePath) {
+  const index = filePath.lastIndexOf("/");
+  return index === -1 ? "" : filePath.slice(0, index);
+}
+
+// packages/skill-summon/src/data/fleet-source.ts
+var MAX_DISCOVERY_DEPTH = 8;
+var MAX_DISCOVERED_SKILLS = 1e3;
+var MAX_SKILL_MD_BYTES = 1e6;
+var SKIP_DIRECTORIES = /* @__PURE__ */ new Set([".git", "node_modules", "vendor", "dist", "build"]);
+var GithubFleetSource = class {
+  #sourceUrl;
+  #checkout;
+  #now;
+  constructor(sourceUrl, options = {}) {
+    this.#sourceUrl = sourceUrl;
+    this.#checkout = options.checkout ?? checkoutGithubFleet;
+    this.#now = options.now ?? (() => /* @__PURE__ */ new Date());
+  }
+  async load() {
+    const checkout = await this.#checkout(this.#sourceUrl);
+    try {
+      const skills = await discoverFleetSkills(checkout);
+      if (skills.length === 0) {
+        throw new Error(
+          `GitHub fleet ${this.#sourceUrl} contains no discoverable SKILL.md files within depth ${MAX_DISCOVERY_DEPTH}.`
+        );
+      }
+      const generatedAt = this.#now().toISOString();
+      return {
+        generic: { generatedAt, skills: [] },
+        named: { generatedAt, buckets: { fleet: skills } },
+        source: {
+          kind: "fleet",
+          rootUrl: this.#sourceUrl,
+          genericUrl: this.#sourceUrl,
+          namedUrl: this.#sourceUrl,
+          commit: checkout.commit,
+          fetchedAt: generatedAt
+        }
+      };
+    } finally {
+      await checkout.cleanup();
+    }
+  }
+};
+async function checkoutGithubFleet(sourceUrl) {
+  const parsed = parseGithubUrl(sourceUrl.replace(/\.git\/?$/u, ""));
+  if (!/^https:\/\/github\.com\//u.test(sourceUrl) || !parsed.repoUrl.endsWith(".git")) {
+    throw new Error(`Skill fleet source must be a GitHub repository URL, got: ${sourceUrl}`);
+  }
+  const root = await mkdtemp(path2.join(tmpdir(), "skill-summon-fleet-"));
+  const repoPath = path2.join(root, "repo");
+  try {
+    const clone2 = await ensureCachedRepo(repoPath, parsed.repoUrl, parsed.branch);
+    const scanRoot = path2.resolve(clone2.path, parsed.subpath);
+    const relative = path2.relative(path2.resolve(clone2.path), scanRoot);
+    if (relative.startsWith("..") || path2.isAbsolute(relative)) {
+      throw new Error(`Fleet subpath escapes repository root: ${parsed.subpath}`);
+    }
+    const scanStat = await lstat(scanRoot);
+    if (scanStat.isSymbolicLink() || !scanStat.isDirectory()) {
+      throw new Error(`Fleet path is not a real directory: ${parsed.subpath}`);
+    }
+    const webUrl = parsed.repoUrl.replace(/\.git$/u, "");
+    const contributor = new URL(webUrl).pathname.split("/").filter(Boolean)[0] ?? "fleet";
+    return {
+      path: scanRoot,
+      repoUrl: parsed.repoUrl,
+      webUrl,
+      commit: clone2.commit,
+      contributor,
+      cleanup: async () => {
+        await discardCachedRepo(repoPath);
+        await rm2(root, { recursive: true, force: true });
+      }
+    };
+  } catch (error2) {
+    await rm2(root, { recursive: true, force: true });
+    throw error2;
+  }
+}
+async function discoverFleetSkills(checkout) {
+  const discovered = [];
+  async function walk(directory, depth) {
+    if (depth > MAX_DISCOVERY_DEPTH || discovered.length >= MAX_DISCOVERED_SKILLS) return;
+    const entries = (await readdir(directory, { withFileTypes: true })).sort(
+      (a, b) => a.name.localeCompare(b.name)
+    );
+    const skillFile = entries.find((entry) => entry.name === "SKILL.md" && entry.isFile());
+    if (skillFile) {
+      const skillPath = path2.join(directory, skillFile.name);
+      const skillStat = await stat2(skillPath);
+      if (skillStat.size > MAX_SKILL_MD_BYTES) {
+        throw new Error(`Fleet SKILL.md exceeds ${MAX_SKILL_MD_BYTES} bytes: ${skillPath}`);
+      }
+      const source = await readFile(skillPath, "utf8");
+      const frontmatter = readSkillFrontmatter(source);
+      const relativeDirectory = path2.relative(checkout.path, directory).split(path2.sep).join("/");
+      const fallbackName = path2.basename(directory);
+      const name = frontmatter.name || fallbackName;
+      const idPath = relativeDirectory || fallbackName;
+      const skillMdPath = relativeDirectory ? `${relativeDirectory}/SKILL.md` : "SKILL.md";
+      const sourceUrl = `${checkout.webUrl}/blob/${checkout.commit}/${encodeGithubPath(skillMdPath)}`;
+      const humanLed = frontmatter["disable-model-invocation"] === "true";
+      discovered.push({
+        id: `${checkout.contributor}/${slug(idPath)}`,
+        name,
+        contributor: checkout.contributor,
+        invocation: humanLed ? "human" : "model",
+        origin: "fleet",
+        status: "fleet",
+        description: frontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
+        catalogRef: slug(name),
+        tags: [.../* @__PURE__ */ new Set([...words(name), ...words(relativeDirectory)])],
+        links: { github: sourceUrl },
+        evidence: []
+      });
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || SKIP_DIRECTORIES.has(entry.name)) continue;
+      await walk(path2.join(directory, entry.name), depth + 1);
+      if (discovered.length >= MAX_DISCOVERED_SKILLS) break;
+    }
+  }
+  await walk(checkout.path, 0);
+  if (discovered.length >= MAX_DISCOVERED_SKILLS) {
+    throw new Error(`GitHub fleet exceeds the ${MAX_DISCOVERED_SKILLS}-skill discovery limit.`);
+  }
+  return discovered;
+}
+function readSkillFrontmatter(source) {
+  const lines = source.split(/\r?\n/u);
+  if (lines[0]?.trim() !== "---") return {};
+  const out = {};
+  let key;
+  let values = [];
+  const flush = () => {
+    if (key) out[key] = values.join(" ").replace(/\s+/gu, " ").trim();
+    key = void 0;
+    values = [];
+  };
+  for (let index = 1; index < lines.length; index++) {
+    const line = lines[index] ?? "";
+    if (line.trim() === "---") break;
+    const match = /^([A-Za-z_][\w-]*):\s*(.*)$/u.exec(line);
+    if (match) {
+      flush();
+      key = match[1];
+      const value = (match[2] ?? "").trim();
+      values = [">-", ">", "|", "|-"].includes(value) ? [] : [stripQuotes(value)];
+    } else if (key && /^\s+\S/u.test(line)) {
+      values.push(line.trim());
+    } else if (!(key && line.trim() === "")) {
+      flush();
+    }
+  }
+  flush();
+  return out;
+}
+function stripQuotes(value) {
+  if (value.length >= 2 && (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+function words(value) {
+  return value.toLocaleLowerCase("en-US").split(/[^a-z0-9]+/u).filter(Boolean);
+}
+function slug(value) {
+  return words(value).join("-") || "skill";
+}
+function encodeGithubPath(value) {
+  return value.split("/").map(encodeURIComponent).join("/");
+}
+
 // packages/skill-summon/src/domain/types.ts
 var TREE_CONTRACT_VERSION = "gaia-public-v1";
 
@@ -13524,8 +13850,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path6, errorMaps, issueData } = params;
-  const fullPath = [...path6, ...issueData.path || []];
+  const { data, path: path7, errorMaps, issueData } = params;
+  const fullPath = [...path7, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -13641,11 +13967,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path6, key) {
+  constructor(parent, value, path7, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path6;
+    this._path = path7;
     this._key = key;
   }
   get path() {
@@ -17129,6 +17455,8 @@ var namedSkillSchema = external_exports.object({
   title: external_exports.string().optional(),
   contributor: external_exports.string().min(1),
   genericSkillRef: external_exports.string().min(1),
+  invocation: external_exports.enum(["human", "model", "any"]).optional(),
+  origin: external_exports.enum(["tree", "fleet"]).optional(),
   status: external_exports.string(),
   level: external_exports.string().optional(),
   description: external_exports.string(),
@@ -17162,17 +17490,14 @@ var namedRegistrySchema = external_exports.object({
 var DEFAULT_GENERIC_REGISTRY_URL = "https://gaiaskilltree.com/graph/gaia.json";
 var DEFAULT_NAMED_REGISTRY_URL = "https://gaiaskilltree.com/graph/named/index.json";
 var DEFAULT_CACHE_TTL_MS = 5 * 60 * 1e3;
-function resolveConfiguredRegistryUrl(value, fallback) {
-  const configured = value?.trim();
-  if (!configured || /^\$\{[^}]+\}$/.test(configured)) return fallback;
-  return configured;
-}
 var GaiaDataError = class extends Error {
   name = "GaiaDataError";
 };
 var HttpGaiaRegistrySource = class {
   #genericUrl;
   #namedUrl;
+  #rootUrl;
+  #legacy;
   #fetchFn;
   #now;
   #cacheTtlMs;
@@ -17180,6 +17505,8 @@ var HttpGaiaRegistrySource = class {
   constructor(options = {}) {
     this.#genericUrl = options.genericUrl ?? DEFAULT_GENERIC_REGISTRY_URL;
     this.#namedUrl = options.namedUrl ?? DEFAULT_NAMED_REGISTRY_URL;
+    this.#rootUrl = options.rootUrl;
+    this.#legacy = options.legacy ?? false;
     this.#fetchFn = options.fetchFn ?? fetch;
     this.#now = options.now ?? (() => /* @__PURE__ */ new Date());
     this.#cacheTtlMs = options.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
@@ -17220,7 +17547,7 @@ var HttpGaiaRegistrySource = class {
       );
     }
     const orphanedNamedSkills = namedSkills.filter(
-      (skill) => !genericIds.has(skill.genericSkillRef)
+      (skill) => skill.genericSkillRef !== void 0 && !genericIds.has(skill.genericSkillRef)
     );
     if (orphanedNamedSkills.length > 0) {
       const examples = orphanedNamedSkills.slice(0, 3).map((skill) => `${skill.id} -> ${skill.genericSkillRef}`).join(", ");
@@ -17230,8 +17557,19 @@ var HttpGaiaRegistrySource = class {
     }
     const snapshot = {
       generic: generic.data,
-      named: named.data,
+      named: {
+        ...named.data,
+        buckets: Object.fromEntries(
+          Object.entries(named.data.buckets).map(([bucket, skills]) => [
+            bucket,
+            skills.map((skill) => ({ ...skill, origin: "tree" }))
+          ])
+        )
+      },
       source: {
+        kind: "tree",
+        ...this.#rootUrl ? { rootUrl: this.#rootUrl } : {},
+        ...this.#legacy ? { legacy: true } : {},
         genericUrl: this.#genericUrl,
         namedUrl: this.#namedUrl,
         fetchedAt: now.toISOString()
@@ -17252,7 +17590,7 @@ var HttpGaiaRegistrySource = class {
       });
     } catch (error2) {
       throw new GaiaDataError(
-        `Could not fetch Gaia projection ${url}: ${errorMessage(error2)}`
+        `Could not fetch Gaia projection ${url}: ${errorMessage2(error2)}`
       );
     }
     if (!response.ok) {
@@ -17264,12 +17602,12 @@ var HttpGaiaRegistrySource = class {
       return await response.json();
     } catch (error2) {
       throw new GaiaDataError(
-        `Gaia projection ${url} is not valid JSON: ${errorMessage(error2)}`
+        `Gaia projection ${url} is not valid JSON: ${errorMessage2(error2)}`
       );
     }
   }
 };
-function errorMessage(error2) {
+function errorMessage2(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 function assertSupportedContract(value, url) {
@@ -17281,6 +17619,104 @@ function assertSupportedContract(value, url) {
     throw new GaiaDataError(
       `Gaia projection ${url} advertises unsupported contract ${String(advertised)}. This server supports ${TREE_CONTRACT_VERSION}; install a compatible skill-summon version or restore a supported projection.`
     );
+  }
+}
+
+// packages/skill-summon/src/data/configured-source.ts
+var DEFAULT_SKILL_SOURCE = "https://gaiaskilltree.com";
+var GENERIC_PROJECTION_PATH = "graph/gaia.json";
+var NAMED_PROJECTION_PATH = "graph/named/index.json";
+function resolveSkillSource(options = {}) {
+  const env = options.env ?? process.env;
+  const configuredSource = configuredValue(env.SKILL_SOURCE);
+  if (configuredSource) {
+    if (isGithubRepository(configuredSource)) {
+      return {
+        source: options.fleetFactory?.(configuredSource) ?? new GithubFleetSource(configuredSource),
+        kind: "fleet",
+        sourceUrl: configuredSource,
+        legacy: false
+      };
+    }
+    const rootUrl2 = normalizeTreeRoot(configuredSource);
+    const projections = treeProjectionUrls(rootUrl2);
+    return {
+      source: new HttpGaiaRegistrySource({
+        ...projections,
+        rootUrl: rootUrl2,
+        ...options.fetchFn ? { fetchFn: options.fetchFn } : {}
+      }),
+      kind: "tree",
+      sourceUrl: rootUrl2,
+      legacy: false
+    };
+  }
+  const legacyGeneric = configuredValue(env.TREE_URL);
+  const legacyNamed = configuredValue(env.TREE_NAMED_URL);
+  if (legacyGeneric || legacyNamed) {
+    if (!legacyGeneric || !legacyNamed) {
+      throw new Error(
+        "Legacy TREE_URL and TREE_NAMED_URL must be configured together. Prefer one SKILL_SOURCE root URL."
+      );
+    }
+    return {
+      source: new HttpGaiaRegistrySource({
+        genericUrl: legacyGeneric,
+        namedUrl: legacyNamed,
+        legacy: true,
+        ...options.fetchFn ? { fetchFn: options.fetchFn } : {}
+      }),
+      kind: "tree",
+      sourceUrl: legacyGeneric,
+      legacy: true
+    };
+  }
+  const rootUrl = DEFAULT_SKILL_SOURCE;
+  return {
+    source: new HttpGaiaRegistrySource({
+      ...treeProjectionUrls(rootUrl),
+      rootUrl,
+      ...options.fetchFn ? { fetchFn: options.fetchFn } : {}
+    }),
+    kind: "tree",
+    sourceUrl: rootUrl,
+    legacy: false
+  };
+}
+function treeProjectionUrls(rootUrl) {
+  const normalized = normalizeTreeRoot(rootUrl);
+  return {
+    genericUrl: `${normalized}/${GENERIC_PROJECTION_PATH}`,
+    namedUrl: `${normalized}/${NAMED_PROJECTION_PATH}`
+  };
+}
+function configuredValue(value) {
+  const configured = value?.trim();
+  if (!configured || /^\$\{[^}]+\}$/u.test(configured)) return void 0;
+  return configured;
+}
+function normalizeTreeRoot(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`SKILL_SOURCE must be an absolute website or GitHub URL, got: ${value}`);
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error(`SKILL_SOURCE must use http or https, got: ${url.protocol}`);
+  }
+  url.hash = "";
+  url.search = "";
+  url.pathname = url.pathname.replace(/\/+$/u, "");
+  return url.toString().replace(/\/$/u, "");
+}
+function isGithubRepository(value) {
+  try {
+    const url = new URL(value);
+    const parts = url.pathname.split("/").filter(Boolean);
+    return url.hostname.toLocaleLowerCase("en-US") === "github.com" && parts.length >= 2;
+  } catch {
+    return false;
   }
 }
 
@@ -21337,16 +21773,16 @@ var EMPTY_COMPLETION_RESULT = {
 // packages/skill-summon/src/summon/session.ts
 import { randomUUID } from "node:crypto";
 import {
-  lstat,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
+  lstat as lstat2,
+  mkdir as mkdir2,
+  mkdtemp as mkdtemp2,
+  readFile as readFile2,
+  readdir as readdir2,
+  rm as rm3,
   writeFile
 } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
+import { tmpdir as tmpdir2 } from "node:os";
+import path3 from "node:path";
 var SESSION_DIR_PREFIX = "skill-summon-session-";
 var MANIFEST_FILE = "session.json";
 var DEFAULT_SESSION_TTL_HOURS = 4;
@@ -21358,7 +21794,7 @@ var SummonSession = class _SummonSession {
   constructor(root, manifest) {
     this.root = root;
     this.id = manifest.id;
-    this.#manifestPath = path.join(root, MANIFEST_FILE);
+    this.#manifestPath = path3.join(root, MANIFEST_FILE);
     this.#manifest = manifest;
   }
   static async createAt(root, id) {
@@ -21373,13 +21809,13 @@ var SummonSession = class _SummonSession {
     return session;
   }
   static async loadAt(root) {
-    const manifestPath = path.join(root, MANIFEST_FILE);
+    const manifestPath = path3.join(root, MANIFEST_FILE);
     let raw;
     try {
-      raw = await readFile(manifestPath, "utf8");
+      raw = await readFile2(manifestPath, "utf8");
     } catch (error2) {
       throw new Error(
-        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage2(error2)}`
+        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage3(error2)}`
       );
     }
     const manifest = JSON.parse(raw);
@@ -21393,15 +21829,15 @@ var SummonSession = class _SummonSession {
   }
   /** Directory for transient clone scaffolding: <root>/cache/. */
   get cacheRoot() {
-    return path.join(this.root, "cache");
+    return path3.join(this.root, "cache");
   }
   /** Directory under which materialized skills for this session live: <root>/skills/. */
   get skillsRoot() {
-    return path.join(this.root, "skills");
+    return path3.join(this.root, "skills");
   }
   async ensureRoots() {
-    await mkdir(this.cacheRoot, { recursive: true });
-    await mkdir(this.skillsRoot, { recursive: true });
+    await mkdir2(this.cacheRoot, { recursive: true });
+    await mkdir2(this.skillsRoot, { recursive: true });
   }
   /** Record a skill (or suite component) already materialized on disk into the session manifest. */
   async recordSkill(skill, opts = {}) {
@@ -21414,7 +21850,7 @@ var SummonSession = class _SummonSession {
     await this.#writeManifest();
   }
   async close() {
-    await rm(this.root, { recursive: true, force: true });
+    await rm3(this.root, { recursive: true, force: true });
   }
   async #writeManifest() {
     await writeFile(
@@ -21425,20 +21861,20 @@ var SummonSession = class _SummonSession {
   }
 };
 async function openSession(opts = {}) {
-  const root = await mkdtemp(path.join(tmpdir(), SESSION_DIR_PREFIX));
+  const root = await mkdtemp2(path3.join(tmpdir2(), SESSION_DIR_PREFIX));
   return SummonSession.createAt(root, opts.id ?? randomUUID());
 }
-function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
-  const resolved = path.resolve(root);
-  if (path.dirname(resolved) !== path.resolve(tempRoot)) return false;
-  return path.basename(resolved).startsWith(SESSION_DIR_PREFIX);
+function isDisposableSessionRoot(root, tempRoot = tmpdir2()) {
+  const resolved = path3.resolve(root);
+  if (path3.dirname(resolved) !== path3.resolve(tempRoot)) return false;
+  return path3.basename(resolved).startsWith(SESSION_DIR_PREFIX);
 }
 async function resolveSession(opts = {}) {
   const existingRoot = process.env.SKILL_SUMMON_SESSION;
   if (existingRoot) {
     if (!isDisposableSessionRoot(existingRoot)) {
       throw new Error(
-        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable session directory. A session root must be a "${SESSION_DIR_PREFIX}*" directory directly under the OS temp dir (${tmpdir()}); summon refuses to write into or delete any other path.`
+        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable session directory. A session root must be a "${SESSION_DIR_PREFIX}*" directory directly under the OS temp dir (${tmpdir2()}); summon refuses to write into or delete any other path.`
       );
     }
     return {
@@ -21456,41 +21892,41 @@ async function reapSessions(opts = {}) {
       `Session TTL must be a non-negative number, got: ${ttlHours}`
     );
   }
-  const root = opts.tempRoot ?? tmpdir();
+  const root = opts.tempRoot ?? tmpdir2();
   const excluded = new Set(
-    (opts.excludeRoots ?? []).map((item) => path.resolve(item))
+    (opts.excludeRoots ?? []).map((item) => path3.resolve(item))
   );
   const now = (opts.now ?? /* @__PURE__ */ new Date()).getTime();
   const candidates = [];
   const liveProtected = [];
   let entries;
   try {
-    entries = await readdir(root, { withFileTypes: true });
+    entries = await readdir2(root, { withFileTypes: true });
   } catch (error2) {
     throw new Error(
-      `Could not scan session roots in ${root}: ${errorMessage2(error2)}`
+      `Could not scan session roots in ${root}: ${errorMessage3(error2)}`
     );
   }
   let scanned = 0;
   for (const entry of entries) {
     if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
       continue;
-    const sessionRoot = path.join(root, entry.name);
-    if (excluded.has(path.resolve(sessionRoot))) continue;
+    const sessionRoot = path3.join(root, entry.name);
+    if (excluded.has(path3.resolve(sessionRoot))) continue;
     scanned++;
     const manifest = await readManifestSafely(sessionRoot);
     if (manifest?.pid !== void 0 && isProcessLive(manifest.pid)) {
       liveProtected.push(sessionRoot);
       continue;
     }
-    const sessionStat = await lstat(sessionRoot);
+    const sessionStat = await lstat2(sessionRoot);
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     const startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
     const ageHours = Math.max(0, (now - startedAt) / 36e5);
     if (ageHours < ttlHours) continue;
     const bytes = await directorySize(sessionRoot);
     candidates.push({ root: sessionRoot, ageHours, bytes });
-    if (!dryRun) await rm(sessionRoot, { recursive: true, force: true });
+    if (!dryRun) await rm3(sessionRoot, { recursive: true, force: true });
   }
   return {
     dryRun,
@@ -21515,7 +21951,7 @@ function sessionTtlHours() {
 async function readManifestSafely(root) {
   try {
     return JSON.parse(
-      await readFile(path.join(root, MANIFEST_FILE), "utf8")
+      await readFile2(path3.join(root, MANIFEST_FILE), "utf8")
     );
   } catch {
     return void 0;
@@ -21533,21 +21969,21 @@ function isProcessLive(pid) {
   }
 }
 async function directorySize(root) {
-  const target = await lstat(root);
+  const target = await lstat2(root);
   if (!target.isDirectory()) return target.size;
   let bytes = target.size;
-  for (const entry of await readdir(root)) {
-    bytes += await directorySize(path.join(root, entry));
+  for (const entry of await readdir2(root)) {
+    bytes += await directorySize(path3.join(root, entry));
   }
   return bytes;
 }
-function errorMessage2(error2) {
+function errorMessage3(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 
 // packages/skill-summon/src/summon/summon.ts
-import { stat as stat3 } from "node:fs/promises";
-import path5 from "node:path";
+import { stat as stat4 } from "node:fs/promises";
+import path6 from "node:path";
 
 // packages/skill-summon/src/version.ts
 var VERSION = "0.1.0";
@@ -21634,7 +22070,7 @@ var GaiaService = class {
     }
     if (kinds.has("named")) {
       for (const skill of namedSkills) {
-        const resolvedType = skill.type ?? genericTypes.get(skill.genericSkillRef);
+        const resolvedType = skill.type ?? (skill.genericSkillRef ? genericTypes.get(skill.genericSkillRef) : void 0);
         if (allowedTypes && (!resolvedType || !allowedTypes.has(normalize(resolvedType)))) {
           continue;
         }
@@ -21656,7 +22092,7 @@ var GaiaService = class {
           [skill.id, 10],
           [skill.title ?? "", 10],
           [skill.catalogRef ?? "", 8],
-          [skill.genericSkillRef, 8],
+          [skill.genericSkillRef ?? "", 8],
           [skill.tags.join(" "), 6],
           [skill.description, 3]
         ]);
@@ -21670,7 +22106,8 @@ var GaiaService = class {
           description: skill.description,
           ...resolvedType ? { type: resolvedType } : {},
           status: skill.status,
-          genericSkillRef: skill.genericSkillRef,
+          ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
+          ...skill.invocation ? { invocation: skill.invocation } : {},
           contributor: skill.contributor,
           ...skill.level === void 0 ? {} : { level: skill.level },
           ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
@@ -21758,6 +22195,7 @@ var GaiaService = class {
     return flattenNamed(snapshot);
   }
   #metadata(snapshot) {
+    const sourceKind = snapshot.source.kind ?? "tree";
     const generatedTimes = [
       Date.parse(snapshot.generic.generatedAt),
       Date.parse(snapshot.named.generatedAt)
@@ -21766,14 +22204,23 @@ var GaiaService = class {
     const now = this.#now().getTime();
     const stale = generatedTimes.length !== 2 || oldestGeneratedAt === void 0 || now - oldestGeneratedAt > this.#maxDataAgeMs;
     const dataAgeSeconds = oldestGeneratedAt === void 0 ? null : Math.max(0, Math.floor((now - oldestGeneratedAt) / 1e3));
-    const upstreamDeclaresContractVersion = [
+    const upstreamDeclaresContractVersion = sourceKind === "fleet" || [
       snapshot.generic.contractVersion ?? snapshot.generic.schemaVersion,
       snapshot.named.contractVersion ?? snapshot.named.schemaVersion
     ].every((version2) => version2 === TREE_CONTRACT_VERSION);
     const warnings = [];
-    if (!upstreamDeclaresContractVersion) {
+    if (sourceKind === "fleet") {
+      warnings.push(
+        "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active."
+      );
+    } else if (!upstreamDeclaresContractVersion) {
       warnings.push(
         `Gaia's public projections do not both advertise a contract version. Compatibility is being enforced by the ${TREE_CONTRACT_VERSION} shape adapter; verify the source URLs before stateful follow-up work.`
+      );
+    }
+    if (snapshot.source.legacy) {
+      warnings.push(
+        "TREE_URL + TREE_NAMED_URL compatibility is deprecated; configure one SKILL_SOURCE root URL."
       );
     }
     if (stale) {
@@ -21784,6 +22231,8 @@ var GaiaService = class {
     return {
       serverVersion: this.#serverVersion,
       mode: "registry",
+      sourceKind,
+      routingMode: sourceKind === "fleet" ? "collection-only" : "generic-map+collection",
       contractVersion: TREE_CONTRACT_VERSION,
       supportedContractVersions: [TREE_CONTRACT_VERSION],
       upstreamDeclaresContractVersion,
@@ -21820,6 +22269,7 @@ function toNamedSummary(skill) {
     ...skill.level === void 0 ? {} : { level: skill.level },
     description: skill.description,
     ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
+    ...skill.invocation ? { invocation: skill.invocation } : {},
     ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
     ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
     ...skill.trust === void 0 ? {} : { trust: skill.trust },
@@ -21903,8 +22353,8 @@ function formatTrustValue(value) {
   return String(value);
 }
 function humanizeTrustKey(key) {
-  const words = key.replace(/([a-z0-9])([A-Z])/gu, "$1 $2").replace(/[_-]+/gu, " ").trim();
-  return words.replace(/\b\w/gu, (letter) => letter.toLocaleUpperCase("en-US"));
+  const words2 = key.replace(/([a-z0-9])([A-Z])/gu, "$1 $2").replace(/[_-]+/gu, " ").trim();
+  return words2.replace(/\b\w/gu, (letter) => letter.toLocaleUpperCase("en-US"));
 }
 
 // packages/skill-summon/src/summon/card.ts
@@ -21914,6 +22364,13 @@ function inspectUrl(sourceUrl, repoUrl) {
 }
 function renderSummonCard(skill, ranking) {
   const lines = [`[Summoned] ${skill.name}`, `  ID: ${skill.id}`];
+  if (skill.invocation === "human") {
+    lines.push("  Invocation: human-led \xB7 Skill Heaven \xB7 explicit invocation only");
+  } else if (skill.invocation === "model") {
+    lines.push("  Invocation: model-led \xB7 Skill Hell \xB7 may be reached automatically");
+  } else {
+    lines.push("  Invocation: unclassified \xB7 source did not publish a lane");
+  }
   const trust = displayTrustFields(skill.trust ?? {});
   if (trust.length > 0) {
     lines.push(
@@ -21921,7 +22378,7 @@ function renderSummonCard(skill, ranking) {
     );
   }
   lines.push(
-    ranking.mode === "relevance-only" ? "  Ranking: relevance only \u2014 tree published no comparable trust signals" : `  Ranking: trust then relevance \u2014 ${ranking.trustFields.join(", ")}`,
+    ranking.mode === "relevance-only" ? skill.origin === "fleet" ? "  Ranking: relevance only \u2014 flat fleet; no generic map or tree trust ordering" : "  Ranking: relevance only \u2014 tree published no comparable trust signals" : `  Ranking: trust then relevance \u2014 ${ranking.trustFields.join(", ")}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s \xB7 ${skill.cache}/${skill.cacheSource} \xB7 ${skill.fileCount} files`,
     `  Path: ${skill.path}`,
     `  Inspect: ${skill.inspectUrl}`
@@ -21929,169 +22386,30 @@ function renderSummonCard(skill, ranking) {
   return lines.join("\n");
 }
 
-// packages/skill-summon/src/summon/clone.ts
-import { execFile } from "node:child_process";
-import { mkdir as mkdir2, rm as rm2, stat } from "node:fs/promises";
-import path2 from "node:path";
-import { promisify } from "node:util";
-
-// packages/skill-summon/src/summon/timing.ts
-import { performance } from "node:perf_hooks";
-function startTiming() {
-  return performance.now();
-}
-function elapsedSeconds(startedAt) {
-  return Number(((performance.now() - startedAt) / 1e3).toFixed(3));
-}
-
-// packages/skill-summon/src/summon/clone.ts
-var execFileAsync = promisify(execFile);
-var GIT_TIMEOUT_MS = 6e4;
-async function discardCachedRepo(cacheDir) {
-  await rm2(cacheDir, { recursive: true, force: true });
-}
-async function ensureCachedRepo(cacheDir, repoUrl, branch) {
-  const startedAt = startTiming();
-  const exists = await pathExists(cacheDir);
-  const validRepo = exists && await pathExists(path2.join(cacheDir, ".git"));
-  if (exists && !validRepo) {
-    await rm2(cacheDir, { recursive: true, force: true });
-  }
-  let warm;
-  if (!await pathExists(cacheDir)) {
-    await cloneRepo(repoUrl, branch, cacheDir);
-    warm = false;
-  } else {
-    try {
-      await runGit(["pull"], cacheDir);
-      warm = true;
-    } catch {
-      await rm2(cacheDir, { recursive: true, force: true });
-      await cloneRepo(repoUrl, branch, cacheDir);
-      warm = false;
-    }
-  }
-  const commit = await gitOutput(["rev-parse", "HEAD"], cacheDir);
-  return {
-    path: cacheDir,
-    cloneSeconds: elapsedSeconds(startedAt),
-    warm,
-    commit
-  };
-}
-async function resolveRemoteCommit(repoUrl, branch) {
-  const refs = branch ? [`refs/heads/${branch}`, `refs/tags/${branch}^{}`, `refs/tags/${branch}`] : ["HEAD"];
-  const output = await gitOutput([
-    "ls-remote",
-    "--exit-code",
-    repoUrl,
-    ...refs
-  ]);
-  const lines = output.split("\n").filter(Boolean);
-  const preferred = branch ? lines.find((line) => line.endsWith(`refs/heads/${branch}`)) ?? lines.find((line) => line.endsWith(`refs/tags/${branch}^{}`)) ?? lines[0] : lines[0];
-  const commit = preferred?.split(/\s+/u)[0];
-  if (!commit)
-    throw new Error(`git ls-remote returned no commit for ${repoUrl}`);
-  return commit;
-}
-async function cloneRepo(repoUrl, branch, dest) {
-  await mkdir2(path2.dirname(dest), { recursive: true });
-  const args = ["clone", "--single-branch", "--depth", "1"];
-  if (branch) args.push("-b", branch);
-  args.push(repoUrl, dest);
-  await runGit(args);
-}
-async function runGit(args, cwd) {
-  await gitOutput(args, cwd);
-}
-async function gitOutput(args, cwd) {
-  try {
-    const { stdout } = await execFileAsync("git", args, {
-      cwd,
-      timeout: GIT_TIMEOUT_MS
-    });
-    return stdout.trim();
-  } catch (error2) {
-    throw new Error(`git ${args.join(" ")} failed: ${errorMessage3(error2)}`);
-  }
-}
-async function pathExists(target) {
-  try {
-    await stat(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function errorMessage3(error2) {
-  return error2 instanceof Error ? error2.message : String(error2);
-}
-
-// packages/skill-summon/src/summon/giturl.ts
-var BLOB_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.*)/;
-var TREE_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)(.*)/;
-var REPO_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)/;
-function parseGithubUrl(url) {
-  const trimmed = url.replace(/\/+$/, "");
-  const blobMatch = BLOB_URL.exec(trimmed);
-  if (blobMatch) {
-    const [, owner, repo, branch, filePath] = blobMatch;
-    const subpath = filePath.endsWith(".md") ? dirname(filePath) : filePath;
-    return {
-      repoUrl: `https://github.com/${owner}/${repo}.git`,
-      branch,
-      subpath
-    };
-  }
-  const treeMatch = TREE_URL.exec(trimmed);
-  if (treeMatch) {
-    const [, owner, repo, branch, rest] = treeMatch;
-    return {
-      repoUrl: `https://github.com/${owner}/${repo}.git`,
-      branch,
-      subpath: rest.replace(/^\/+/, "")
-    };
-  }
-  const repoMatch = REPO_URL.exec(trimmed);
-  if (repoMatch) {
-    const [, owner, repo] = repoMatch;
-    return {
-      repoUrl: `https://github.com/${owner}/${repo}.git`,
-      branch: null,
-      subpath: ""
-    };
-  }
-  return { repoUrl: trimmed, branch: null, subpath: "" };
-}
-function dirname(filePath) {
-  const index = filePath.lastIndexOf("/");
-  return index === -1 ? "" : filePath.slice(0, index);
-}
-
 // packages/skill-summon/src/summon/materialize.ts
 import { createHash } from "node:crypto";
-import { cp, readFile as readFile2, readdir as readdir2 } from "node:fs/promises";
-import path3 from "node:path";
+import { cp, readFile as readFile3, readdir as readdir3 } from "node:fs/promises";
+import path4 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
   await cp(sourceDir, destDir, {
     recursive: true,
     dereference: false,
     filter: (source) => {
-      if (path3.basename(source) === ".git") return false;
+      if (path4.basename(source) === ".git") return false;
       return true;
     }
   });
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
-  const skillContent = await readFile2(path3.join(destDir, "SKILL.md"));
+  const skillContent = await readFile3(path4.join(destDir, "SKILL.md"));
   const sha256 = createHash("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
   return { path: destDir, materializeSeconds, fileCount, sha256 };
 }
 async function rejectSymlinks(dir) {
-  for (const entry of await readdir2(dir, { withFileTypes: true })) {
-    const full = path3.join(dir, entry.name);
+  for (const entry of await readdir3(dir, { withFileTypes: true })) {
+    const full = path4.join(dir, entry.name);
     if (entry.isSymbolicLink()) {
       throw new Error(
         `refusing to materialize skill: '${full}' is a symlink, which could redirect reads outside the summoned payload.`
@@ -22102,8 +22420,8 @@ async function rejectSymlinks(dir) {
 }
 async function countFiles(dir) {
   let count = 0;
-  for (const entry of await readdir2(dir, { withFileTypes: true })) {
-    const full = path3.join(dir, entry.name);
+  for (const entry of await readdir3(dir, { withFileTypes: true })) {
+    const full = path4.join(dir, entry.name);
     if (entry.isDirectory()) count += await countFiles(full);
     else count += 1;
   }
@@ -22114,18 +22432,18 @@ async function countFiles(dir) {
 import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
 import {
   cp as cp2,
-  lstat as lstat3,
+  lstat as lstat4,
   mkdir as mkdir3,
-  readFile as readFile3,
-  readdir as readdir3,
+  readFile as readFile4,
+  readdir as readdir4,
   rename,
-  rm as rm3,
-  stat as stat2,
+  rm as rm4,
+  stat as stat3,
   utimes,
   writeFile as writeFile2
 } from "node:fs/promises";
-import { tmpdir as tmpdir2 } from "node:os";
-import path4 from "node:path";
+import { tmpdir as tmpdir3 } from "node:os";
+import path5 from "node:path";
 var DEFAULT_CACHE_MAX_MB = 16;
 var CACHE_DIR_NAME = "skill-summon-payload-cache-v1";
 var METADATA_FILE = "metadata.json";
@@ -22142,24 +22460,24 @@ var PayloadCache = class {
         `Payload cache size must be non-negative, got: ${this.maxBytes}`
       );
     }
-    this.#entriesRoot = path4.join(this.root, "entries");
+    this.#entriesRoot = path5.join(this.root, "entries");
   }
   async lookup(identity) {
     await this.prune();
     const entryRoot = this.#entryRoot(identity);
-    const payload = path4.join(entryRoot, PAYLOAD_DIR);
+    const payload = path5.join(entryRoot, PAYLOAD_DIR);
     try {
       const metadata = JSON.parse(
-        await readFile3(path4.join(entryRoot, METADATA_FILE), "utf8")
+        await readFile4(path5.join(entryRoot, METADATA_FILE), "utf8")
       );
       if (metadata.key !== cacheKey(identity)) return void 0;
-      if (!(await stat2(path4.join(payload, "SKILL.md"))).isFile())
+      if (!(await stat3(path5.join(payload, "SKILL.md"))).isFile())
         return void 0;
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
       return payload;
     } catch {
-      await rm3(entryRoot, { recursive: true, force: true });
+      await rm4(entryRoot, { recursive: true, force: true });
       return void 0;
     }
   }
@@ -22169,23 +22487,23 @@ var PayloadCache = class {
     if (payloadBytes > this.maxBytes || this.maxBytes === 0) return false;
     await mkdir3(this.#entriesRoot, { recursive: true });
     const key = cacheKey(identity);
-    const entryRoot = path4.join(this.#entriesRoot, key);
+    const entryRoot = path5.join(this.#entriesRoot, key);
     if (await pathExists2(entryRoot)) {
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
       await this.prune();
       return true;
     }
-    const temporaryRoot = path4.join(
+    const temporaryRoot = path5.join(
       this.#entriesRoot,
       `.tmp-${process.pid}-${randomUUID2()}`
     );
     try {
-      const payload = path4.join(temporaryRoot, PAYLOAD_DIR);
+      const payload = path5.join(temporaryRoot, PAYLOAD_DIR);
       await mkdir3(temporaryRoot, { recursive: true });
       await cp2(sourceDir, payload, {
         recursive: true,
-        filter: (source) => path4.basename(source) !== ".git"
+        filter: (source) => path5.basename(source) !== ".git"
       });
       const metadata = {
         ...identity,
@@ -22194,7 +22512,7 @@ var PayloadCache = class {
         bytes: payloadBytes
       };
       await writeFile2(
-        path4.join(temporaryRoot, METADATA_FILE),
+        path5.join(temporaryRoot, METADATA_FILE),
         JSON.stringify(metadata, null, 2),
         "utf8"
       );
@@ -22204,7 +22522,7 @@ var PayloadCache = class {
         if (!await pathExists2(entryRoot)) throw error2;
       }
     } finally {
-      await rm3(temporaryRoot, { recursive: true, force: true });
+      await rm4(temporaryRoot, { recursive: true, force: true });
     }
     await this.prune();
     return await pathExists2(entryRoot);
@@ -22212,22 +22530,22 @@ var PayloadCache = class {
   async prune() {
     let entries;
     try {
-      entries = await readdir3(this.#entriesRoot, { withFileTypes: true });
+      entries = await readdir4(this.#entriesRoot, { withFileTypes: true });
     } catch {
       return;
     }
     const retained = [];
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const entryRoot = path4.join(this.#entriesRoot, entry.name);
+      const entryRoot = path5.join(this.#entriesRoot, entry.name);
       if (entry.name.startsWith(".tmp-")) {
         const pid = Number(/^\.tmp-(\d+)-/u.exec(entry.name)?.[1]);
         if (!isProcessLive2(pid)) {
-          await rm3(entryRoot, { recursive: true, force: true });
+          await rm4(entryRoot, { recursive: true, force: true });
         }
         continue;
       }
-      const entryStat = await lstat3(entryRoot);
+      const entryStat = await lstat4(entryRoot);
       retained.push({
         root: entryRoot,
         bytes: await directorySize2(entryRoot),
@@ -22238,16 +22556,16 @@ var PayloadCache = class {
     retained.sort((left, right) => left.accessedAt - right.accessedAt);
     for (const entry of retained) {
       if (totalBytes <= this.maxBytes) break;
-      await rm3(entry.root, { recursive: true, force: true });
+      await rm4(entry.root, { recursive: true, force: true });
       totalBytes -= entry.bytes;
     }
   }
   #entryRoot(identity) {
-    return path4.join(this.#entriesRoot, cacheKey(identity));
+    return path5.join(this.#entriesRoot, cacheKey(identity));
   }
 };
 function payloadCacheRoot() {
-  return process.env.SKILL_SUMMON_CACHE_DIR ?? path4.join(tmpdir2(), CACHE_DIR_NAME);
+  return process.env.SKILL_SUMMON_CACHE_DIR ?? path5.join(tmpdir3(), CACHE_DIR_NAME);
 }
 function payloadCacheMaxBytes() {
   const configured = process.env.SKILL_SUMMON_CACHE_MAX_MB;
@@ -22266,11 +22584,11 @@ function cacheKey(identity) {
   ).digest("hex");
 }
 async function directorySize2(root) {
-  const target = await lstat3(root);
+  const target = await lstat4(root);
   if (!target.isDirectory()) return target.size;
   let bytes = 0;
-  for (const entry of await readdir3(root)) {
-    bytes += await directorySize2(path4.join(root, entry));
+  for (const entry of await readdir4(root)) {
+    bytes += await directorySize2(path5.join(root, entry));
   }
   return bytes;
 }
@@ -22285,7 +22603,7 @@ function isProcessLive2(pid) {
 }
 async function pathExists2(target) {
   try {
-    await stat2(target);
+    await stat3(target);
     return true;
   } catch {
     return false;
@@ -22295,12 +22613,13 @@ async function pathExists2(target) {
 // packages/skill-summon/src/summon/rank.ts
 var MIN_RELEVANCE = 6;
 var RELEVANCE_BAND = 0.5;
-function rankCandidatesWithDetails(candidates, query) {
-  const scored = candidates.filter(isInstallable).map((skill) => ({ skill, relevance: relevanceScore(skill, query) })).filter(({ relevance }) => relevance >= MIN_RELEVANCE);
+function rankCandidatesWithDetails(candidates, query, surface = "hell") {
+  const fleet = candidates.some((skill) => skill.origin === "fleet");
+  const scored = candidates.filter((skill) => allowedOnSurface(skill, surface)).filter(isInstallable).map((skill) => ({ skill, relevance: relevanceScore(skill, query) })).filter(({ relevance }) => relevance >= MIN_RELEVANCE);
   if (scored.length === 0) {
     return {
       candidates: [],
-      ranking: relevanceOnlyRanking()
+      ranking: relevanceOnlyRanking(fleet)
     };
   }
   const best = Math.max(...scored.map(({ relevance }) => relevance));
@@ -22318,7 +22637,7 @@ function rankCandidatesWithDetails(candidates, query) {
   });
   return {
     candidates: onTopic.map(({ skill }) => skill),
-    ranking: fieldOrder.length === 0 ? relevanceOnlyRanking() : {
+    ranking: fieldOrder.length === 0 ? relevanceOnlyRanking(fleet) : {
       mode: "trust-then-relevance",
       trustFields: fieldOrder,
       disclosure: `Tree-published trust (${fieldOrder.join(", ")}) orders candidates within the relevance band; relevance breaks ties.`
@@ -22339,12 +22658,18 @@ function fieldScore(skill, field) {
   if (value === void 0) return Number.NEGATIVE_INFINITY;
   return trustScore(field, value) ?? Number.NEGATIVE_INFINITY;
 }
-function relevanceOnlyRanking() {
+function relevanceOnlyRanking(fleet = false) {
   return {
     mode: "relevance-only",
     trustFields: [],
-    disclosure: "Tree published no comparable trust signals; candidates are ranked by relevance only."
+    disclosure: fleet ? "Flat fleet: the agent query routes SKILL.md name and description metadata by relevance; no generic map or tree trust ordering is active." : "Tree published no comparable trust signals; candidates are ranked by relevance only."
   };
+}
+function allowedOnSurface(skill, surface) {
+  const invocation = skill.invocation ?? "any";
+  if (surface === "heaven") return invocation !== "model";
+  if (surface === "hell") return invocation !== "human";
+  return true;
 }
 function relevanceScore(skill, query) {
   return scoreMatch(query, [
@@ -22352,7 +22677,7 @@ function relevanceScore(skill, query) {
     [skill.id, 10],
     [skill.title ?? "", 10],
     [skill.catalogRef ?? "", 8],
-    [skill.genericSkillRef, 8],
+    [skill.genericSkillRef ?? "", 8],
     [skill.tags.join(" "), 6],
     [skill.description, 3]
   ]);
@@ -22360,7 +22685,7 @@ function relevanceScore(skill, query) {
 
 // packages/skill-summon/src/summon/summon.ts
 var DEFAULT_LIMIT2 = 1;
-async function summon(service, session, { query, limit = DEFAULT_LIMIT2 }) {
+async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface = "hell" }) {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
   if (trimmedQuery.length === 0) {
@@ -22373,7 +22698,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2 }) {
   }
   await reapSessions({ excludeRoots: [session.root] });
   const registry2 = await service.namedSkills();
-  const ranked = rankCandidatesWithDetails(registry2, trimmedQuery);
+  const ranked = rankCandidatesWithDetails(registry2, trimmedQuery, surface);
   const candidates = ranked.candidates;
   await session.ensureRoots();
   const ctx = {
@@ -22403,6 +22728,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2 }) {
   }
   return {
     query: trimmedQuery,
+    surface,
     summoned,
     skipped,
     suites,
@@ -22553,6 +22879,8 @@ async function installSingle(skill, ctx, viaSuite) {
       id: skill.id,
       name: skill.name,
       contributor: skill.contributor,
+      ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
       branch,
@@ -22601,7 +22929,7 @@ async function installSingle(skill, ctx, viaSuite) {
         /\.git$/,
         ""
       );
-      const cacheDir = path5.join(ctx.session.cacheRoot, cacheOwner, repoName);
+      const cacheDir = path6.join(ctx.session.cacheRoot, cacheOwner, repoName);
       transientClone = cacheDir;
       let cloneOutcome;
       try {
@@ -22614,12 +22942,12 @@ async function installSingle(skill, ctx, viaSuite) {
           reason: `Could not clone ${repoUrl}: ${errorMessage4(error2)}`
         };
       }
-      sourceSkillPath = path5.join(cloneOutcome.path, subpath);
+      sourceSkillPath = path6.join(cloneOutcome.path, subpath);
       retainedIdentity = { repoUrl, commit: cloneOutcome.commit, subpath };
     }
     let sourceStat;
     try {
-      sourceStat = await stat3(sourceSkillPath);
+      sourceStat = await stat4(sourceSkillPath);
     } catch {
       return {
         ok: false,
@@ -22636,7 +22964,7 @@ async function installSingle(skill, ctx, viaSuite) {
         reason: `links.github for '${skill.id}' points at a file, not a skill directory (${sourceSkillPath}).`
       };
     }
-    if (!await pathExists3(path5.join(sourceSkillPath, "SKILL.md"))) {
+    if (!await pathExists3(path6.join(sourceSkillPath, "SKILL.md"))) {
       return {
         ok: false,
         installed: [],
@@ -22646,7 +22974,7 @@ async function installSingle(skill, ctx, viaSuite) {
     }
     const cloneSeconds = elapsedSeconds(sourceStartedAt);
     const safeId = skill.id.replaceAll("/", "__");
-    const destDir = path5.join(ctx.session.skillsRoot, safeId);
+    const destDir = path6.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
       materializeOutcome = await materializeSkillDir(sourceSkillPath, destDir);
@@ -22666,6 +22994,8 @@ async function installSingle(skill, ctx, viaSuite) {
       id: skill.id,
       name: skill.name,
       contributor: skill.contributor,
+      ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
       branch,
@@ -22702,16 +23032,16 @@ function installedTrust(skill) {
   };
 }
 async function isResidentPayload(session, payloadPath) {
-  const relative = path5.relative(
-    path5.resolve(session.skillsRoot),
-    path5.resolve(payloadPath)
+  const relative = path6.relative(
+    path6.resolve(session.skillsRoot),
+    path6.resolve(payloadPath)
   );
-  if (relative.startsWith("..") || path5.isAbsolute(relative)) return false;
-  return pathExists3(path5.join(payloadPath, "SKILL.md"));
+  if (relative.startsWith("..") || path6.isAbsolute(relative)) return false;
+  return pathExists3(path6.join(payloadPath, "SKILL.md"));
 }
 async function pathExists3(target) {
   try {
-    await stat3(target);
+    await stat4(target);
     return true;
   } catch {
     return false;
@@ -22735,7 +23065,7 @@ function createSkillSummonMcpServer({
   const server = new McpServer(
     { name: "skill-summon", version: version2 },
     {
-      instructions: "Use summon to install the best-matching skill's full directory (SKILL.md plus any reference/, scripts/, and fixtures) from the public Gaia Registry into a session-locked temp directory. summon returns a printable card and inspect URL plus cloneSeconds, materializeSeconds, totalSeconds, and cacheState (cold or warm) for every materialized skill, an honest ranking disclosure, and totalSeconds for the invocation. The Gaia Registry itself is read-only and cannot be installed into, fused, or mutated; summon does not touch your real configuration. Session payloads are ephemeral; a separate bounded, commit-addressed payload cache may retain copies across sessions and can always be rebuilt on a miss."
+      instructions: "Use summon to materialize the best-matching skill's full directory from the configured SKILL_SOURCE into a session-locked temp directory. A website root resolves a Skill Tree (generic map plus named collection); a GitHub repository resolves a flat SKILL.md fleet. Human-led fleet skills belong to Skill Heaven and require explicit invocation; model-led skills belong to Skill Hell and may be reached automatically. summon returns printable disclosure cards and never touches real agent configuration."
     }
   );
   let sessionPromise;
@@ -22747,19 +23077,28 @@ function createSkillSummonMcpServer({
     "summon",
     {
       title: "Summon a skill",
-      description: "Install the best-matching Named Skill from the live Gaia Registry: resolve the current source commit, reuse a bounded commit-addressed payload cache when available, or shallow-clone transiently on a miss; validate the resolved subpath, discard clone scaffolding, then materialize the whole skill directory (SKILL.md plus any reference/, scripts/, and fixtures) into a session-locked temp directory. Recurses into suiteComponents for suite skills. Never writes to your real configuration. Falls through to the next-best candidate on an install failure and reports what was skipped. The structured result includes a printable card and inspect URL, tree-provided trust fields, per-skill cloneSeconds, materializeSeconds, totalSeconds, and cacheState (cold or warm), an honest ranking disclosure, plus the invocation totalSeconds.",
+      description: "Materialize the best-matching skill from the configured Skill Tree or flat GitHub fleet. The agent supplies the capability query and optional surface: Heaven admits human-led/unspecified skills; Hell admits model-led/unspecified skills and is the safe default; explicit manual summon passes any. Source commits and subpaths are validated, payloads are commit-addressed, and real agent configuration is never modified.",
       inputSchema: external_exports.object({
         query: external_exports.string().min(1).describe("Task or capability to summon a matching skill for."),
         limit: external_exports.number().int().min(1).optional().describe(
           "How many skills to summon for this gap. No upper cap \u2014 the caller decides the depth."
+        ),
+        surface: external_exports.enum(["any", "heaven", "hell"]).optional().describe(
+          "Invocation lane. Omitted defaults safely to hell; heaven excludes model-led-only skills; explicit manual summon passes any."
         )
       }),
       annotations: summonAnnotations
     },
-    async ({ query, limit }) => {
+    async ({ query, limit, surface }) => {
       try {
         const session = await getSession();
-        return toolResult(await summon(service, session, { query, limit }));
+        return toolResult(
+          await summon(service, session, {
+            query,
+            ...limit === void 0 ? {} : { limit },
+            ...surface === void 0 ? {} : { surface }
+          })
+        );
       } catch (error2) {
         return toolError(error2);
       }
@@ -22791,16 +23130,7 @@ function toolError(error2) {
 
 // packages/skill-summon/src/bin/skill-summon-mcp.ts
 async function main() {
-  const source = new HttpGaiaRegistrySource({
-    genericUrl: resolveConfiguredRegistryUrl(
-      process.env.TREE_URL,
-      DEFAULT_GENERIC_REGISTRY_URL
-    ),
-    namedUrl: resolveConfiguredRegistryUrl(
-      process.env.TREE_NAMED_URL,
-      DEFAULT_NAMED_REGISTRY_URL
-    )
-  });
+  const { source } = resolveSkillSource();
   const service = new GaiaService(source);
   const server = createSkillSummonMcpServer({ service });
   const transport = new StdioServerTransport();

@@ -7,6 +7,7 @@ import { elapsedSeconds, startTiming } from "./timing.js";
 
 const execFileAsync = promisify(execFile);
 const GIT_TIMEOUT_MS = 60_000;
+const COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
 export type CloneOutcome = {
   path: string;
@@ -69,6 +70,7 @@ export async function resolveRemoteCommit(
   repoUrl: string,
   branch: string | null,
 ): Promise<string> {
+  if (branch && COMMIT_SHA.test(branch)) return branch.toLowerCase();
   const refs = branch
     ? [`refs/heads/${branch}`, `refs/tags/${branch}^{}`, `refs/tags/${branch}`]
     : ["HEAD"];
@@ -96,6 +98,14 @@ async function cloneRepo(
   dest: string,
 ): Promise<void> {
   await mkdir(path.dirname(dest), { recursive: true });
+  if (branch && COMMIT_SHA.test(branch)) {
+    await mkdir(dest, { recursive: true });
+    await runGit(["init"], dest);
+    await runGit(["remote", "add", "origin", repoUrl], dest);
+    await runGit(["fetch", "--depth", "1", "origin", branch], dest);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], dest);
+    return;
+  }
   const args = ["clone", "--single-branch", "--depth", "1"];
   if (branch) args.push("-b", branch);
   args.push(repoUrl, dest);

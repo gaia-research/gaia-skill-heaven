@@ -57,5 +57,20 @@ describe("summon result card", () => {
     expect(card).toContain(
       "Ranking: relevance only — tree published no comparable trust signals",
     );
+    expect(card).toContain("Invocation: unclassified");
+  });
+
+  it("discloses human-led Heaven and model-led Hell classification", () => {
+    const ranking = {
+      mode: "relevance-only" as const,
+      trustFields: [],
+      disclosure: "relevance",
+    };
+    expect(renderSummonCard({ ...base, invocation: "human" }, ranking)).toContain(
+      "Invocation: human-led · Skill Heaven · explicit invocation only",
+    );
+    expect(renderSummonCard({ ...base, invocation: "model" }, ranking)).toContain(
+      "Invocation: model-led · Skill Hell · may be reached automatically",
+    );
   });
 });

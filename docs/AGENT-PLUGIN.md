@@ -63,7 +63,7 @@ needed.
 
 | Command | Sets rung | Direction | Note |
 |---|---|---|---|
-| `/skill-zero [all]` | `zero` | **nothing automatic** | `/summon` by hand still works. `all` cuts that too. |
+| `/skill-zero [all]` | `zero` | **temporary skills cut** | `/summon` by hand still works. `all` cuts that too. |
 | `/skill-heaven [low\|med]` | `low` (default) | converge | narrowly, on the gap in front of you |
 | `/skill-hell [high\|xhigh\|max]` | `high` (default) | explore | widely, around the gap |
 | `/skill-ultra` | `ultra` | picks direction + depth per gap | crown rung, no sub-ladder |
@@ -80,7 +80,7 @@ only place the line is written down:
 
 | Rung | Band | What it means |
 |---|---|---|
-| `zero` | zero | nothing automatic — manual `/summon` only |
+| `zero` | zero | temporary skills cut — manual `/summon` only |
 | `low` | heaven | converge — the band opens here |
 | `med` | heaven | converge — further along the band |
 | `high` | hell | explore — the band opens here |
@@ -100,9 +100,9 @@ resolved by there being no numbers.
 plugin's `data/ladder.json`. The site is a separate surface and is **out of
 scope** for this work.
 
-### `zero` cuts *automatic* summoning
+### `zero` cuts temporary skills
 
-`/skill-zero` sets the rung to `zero`, which cuts **automatic** summoning.
+`/skill-zero` sets the rung to `zero`, which cuts temporary automatic skills.
 
 > **Naming note.** The bottom rung, its band and its surface are all spelled
 > `zero`. The launcher's boot dial follows: `claude-zero --level zero`. The
@@ -110,7 +110,7 @@ scope** for this work.
 Manual `/summon` still works — that is the product floor per N13 ("ships
 `/summon` by default, with none of the choosing automated").
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
-userConfig (`automatic` | `all`, default `automatic`) sets the default.
+userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
 **Honest limit:** the cut is a standing instruction the agent honours, not
 something the tool enforces. Hard enforcement needs server-side session state —
@@ -185,9 +185,9 @@ points different directions for each:
 **This degrades safely either way.** `zeroCuts()` in
 `plugins/skill-heaven/scripts/render-ladder.mjs` reads
 `CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? SKILL_HEAVEN_ZERO_CUTS`, and treats
-anything other than `"all"` as `"automatic"`. If this probe resolves
+anything other than `"all"` as `"temporary"`. If this probe resolves
 negative, the floor still ships exactly what N13 specifies by default (cut
-automatic summoning, keep manual `/summon`) — nothing breaks; the plugin's
+temporary automatic skills, keep manual `/summon`) — nothing breaks; the plugin's
 `zero_cuts` userConfig option just stays inert until a follow-up wires the
 substitution into the command files' `!` lines explicitly and a live pane
 confirms it lands.
@@ -203,13 +203,15 @@ text or as the configured value. Neither was run here.
 
 One server, `skill-summon`, one tool:
 
-- **`summon`** — input `{ query: string, limit?: positive integer }`. **There is
+- **`summon`** — input `{ query: string, limit?: positive integer, surface?: "any" | "heaven" | "hell" }`. **There is
   no upper cap** — nothing assigns a ceiling, so the engine must not invent one.
   A malformed `limit` (zero, negative, fractional) is **refused, never clamped**;
   clamping would answer a question nobody asked. Materialises the whole skill directory
   (`SKILL.md` plus `reference/`, `scripts/`, fixtures) into a session-locked
-  temp dir and returns a printable card per skill, plus the honest ranking
-  disclosure.
+  temp dir and returns a printable card per skill, plus source invocation and
+  ranking disclosures. `heaven` excludes model-led-only fleet skills; `hell`
+  excludes human-led-only fleet skills and is the safe omitted default; explicit
+  manual `/summon` passes `any`.
 
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
@@ -219,8 +221,9 @@ dropping them degrades summon quality is a benchmark question, filed upstream.
 Written verbatim into the armed output of `/skill-heaven`, `/skill-hell` and
 `/skill-ultra`:
 
-> On a real capability gap — never preemptively — call the `summon` tool, with a
-> depth you judge the gap needs while converging/exploring. Print the returned
+> On a real capability gap — never preemptively — call the `summon` tool with
+> `surface: "heaven"` while converging or `surface: "hell"` while exploring,
+> and a depth you judge the gap needs. Print the returned
 > card **verbatim** before using anything from it, read the `SKILL.md` at the
 > card's path, and follow it. The card is the listing entry, not the skill body.
 > The lane stays armed.
@@ -233,7 +236,8 @@ ranking disclosure with it.
 Full rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
 `SKILL_SUMMON_TTL_HOURS`, `SKILL_SUMMON_CACHE_DIR`, `SKILL_SUMMON_CACHE_MAX_MB`;
 session dirs `/tmp/skill-summon-*`; payload cache
-`skill-summon-payload-cache-v1`. `TREE_URL` / `TREE_NAMED_URL` keep their names.
+`skill-summon-payload-cache-v1`; source env `SKILL_SOURCE`. The old paired
+`TREE_URL` / `TREE_NAMED_URL` variables remain a deprecated migration fallback.
 
 ## Packaging
 
@@ -244,25 +248,27 @@ The MCP ships as a **committed esbuild bundle** at
 the repo keeps **zero runtime dependencies** — the bundle has none by
 construction. CI rebuilds the bundle and fails on `git diff --exit-code`.
 
-## The tree
+## One Skill URL
 
-The engine defaults to these two projections:
+The engine defaults to `SKILL_SOURCE=https://gaiaskilltree.com`. Claude exposes
+that value as the `skill_url` user setting titled **Skill URL**.
+
+A website root is a tree source. The adapter derives:
 
 ```
-TREE_URL       https://gaiaskilltree.com/graph/gaia.json          (278 generic skills)
-TREE_NAMED_URL https://gaiaskilltree.com/graph/named/index.json   (267 named skills)
+<root>/graph/gaia.json
+<root>/graph/named/index.json
 ```
 
-Claude marketplace compatibility currently exposes both as `userConfig`.
-Portable `mcp.json` carries the public defaults, and the Pi adapter deliberately
-uses that package configuration rather than ambient host variables. A portable,
-client-neutral one-source override is not shipped; its resolver and migration
-contract are tracked in #80.
+A `https://github.com/<owner>/<repo>` source is a flat fleet. The adapter scans
+bounded conventional directories for `SKILL.md`, parses `name`, `description`,
+and Matt Pocock's `disable-model-invocation` convention, then synthesizes
+commit-pinned candidates. Flat fleets need no generic reference or tree trust
+ordering; the agent query routes them by relevance.
 
-> **Correction to an earlier brief.** "Gaia Skill Tree Arbor I" does not exist
-> in code — it is a founder-doc concept (`gaia-skill-tree/founder/ENDGAME -
-> SCHEMA.md`, `schema: gaia.arbor-edge/v1`). The two URLs above are what the
-> engine actually reads today.
+`disable-model-invocation: true` means human-led Skill Heaven and explicit
+invocation only. Absence means model-led Skill Hell and automatic invocation is
+allowed. Each summon remains an atomic, session-only materialization.
 
 ## Install and client delivery
 
