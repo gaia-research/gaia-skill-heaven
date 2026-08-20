@@ -15,7 +15,13 @@ ROOT = Path(__file__).resolve().parents[2]
 GUARD = ROOT / "scripts/assets/lucy-matte-guard.py"
 
 
-def run(input_path: Path, folder: Path, candidate: str, regions: Path | None = None) -> tuple[int, dict]:
+def run(
+    input_path: Path,
+    folder: Path,
+    candidate: str,
+    regions: Path | None = None,
+    extra_args: tuple[str, ...] = (),
+) -> tuple[int, dict]:
     command = [
         sys.executable, str(GUARD),
         "--input", str(input_path),
@@ -28,6 +34,7 @@ def run(input_path: Path, folder: Path, candidate: str, regions: Path | None = N
         command.extend(("--asset-type", "component"))
     else:
         command.extend(("--regions", str(regions)))
+    command.extend(extra_args)
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     return result.returncode, json.loads((folder / "report.json").read_text())
 
@@ -116,6 +123,68 @@ def main() -> None:
         assert native_spill_code != 0 and not native_spill["pass"]
         assert native_spill["metrics"]["strong_green_interior_boundary_pixels"] > 0
 
+        # The prismatic exception is explicit, native-alpha-only, and keeps
+        # reporting the inherited edge pixels even when they are approved.
+        native_prism_source = base / "synthetic-native-prism.png"
+        native_prism = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(native_prism)
+        draw.rectangle((56, 56, 199, 199), fill=(255, 0, 255, 128))
+        draw.rectangle((64, 64, 191, 191), fill=(60, 90, 150, 255))
+        native_prism.save(native_prism_source)
+
+        native_prism_negative_dir = base / "synthetic-native-prism-negative"
+        native_prism_negative_dir.mkdir()
+        native_prism_negative_code, native_prism_negative = run(
+            native_prism_source,
+            native_prism_negative_dir,
+            "synthetic-native-prism-negative-control",
+        )
+        assert native_prism_negative_code != 0 and not native_prism_negative["pass"]
+        assert native_prism_negative["metrics"]["strong_magenta_exterior_pixels"] > 0
+
+        native_prism_positive_dir = base / "synthetic-native-prism-positive"
+        native_prism_positive_dir.mkdir()
+        native_prism_positive_code, native_prism_positive = run(
+            native_prism_source,
+            native_prism_positive_dir,
+            "synthetic-native-prism-positive-control",
+            extra_args=("--source-native-prism", "--prism-reference", str(native_prism_source)),
+        )
+        assert native_prism_positive_code == 0 and native_prism_positive["pass"]
+        assert native_prism_positive["metrics"]["source_native_prism"]
+        assert native_prism_positive["metrics"]["strong_magenta_exterior_pixels"] > 0
+
+        # A reference hue is not a canvas-wide exemption. The same magenta
+        # introduced well outside the 20-output-pixel source neighborhood must
+        # still fail closed.
+        far_prism_source = base / "synthetic-native-prism-far.png"
+        far_prism = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(far_prism)
+        draw.rectangle((56, 56, 199, 199), fill=(60, 90, 150, 255))
+        draw.rectangle((24, 216, 47, 239), fill=(255, 0, 255, 128))
+        far_prism.save(far_prism_source)
+        far_prism_dir = base / "synthetic-native-prism-far"
+        far_prism_dir.mkdir()
+        far_prism_code, far_prism_report = run(
+            far_prism_source,
+            far_prism_dir,
+            "synthetic-native-prism-far-negative-control",
+            extra_args=("--source-native-prism", "--prism-reference", str(native_prism_source)),
+        )
+        assert far_prism_code != 0 and not far_prism_report["pass"]
+        assert far_prism_report["metrics"]["new_strong_magenta_exterior_pixels"] > 0
+
+        chroma_prism_dir = base / "synthetic-chroma-prism-rejected"
+        chroma_prism_dir.mkdir()
+        chroma_prism_code, chroma_prism = run(
+            chroma_spill_source,
+            chroma_prism_dir,
+            "synthetic-chroma-prism-negative-control",
+            extra_args=("--source-native-prism",),
+        )
+        assert chroma_prism_code != 0 and not chroma_prism["pass"]
+        assert "requires an approved native-alpha input" in chroma_prism["error"]
+
         print(json.dumps({
             "pass": True,
             "v3_heaven_rejected": True,
@@ -127,6 +196,10 @@ def main() -> None:
             "synthetic_chroma_despilled_opaque_pixels": chroma_spill["extraction"]["despilled_opaque_interior_pixels"],
             "synthetic_native_interior_green_spill_rejected": True,
             "synthetic_native_interior_green_spill_pixels": native_spill["metrics"]["strong_green_interior_boundary_pixels"],
+            "synthetic_native_prism_exception_accepted": True,
+            "synthetic_native_prism_magenta_pixels_reported": native_prism_positive["metrics"]["strong_magenta_exterior_pixels"],
+            "synthetic_far_prism_rejected": True,
+            "synthetic_chroma_prism_exception_rejected": True,
             "authority_katana_accepted": True,
         }, indent=2))
 

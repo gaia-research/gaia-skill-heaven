@@ -44,8 +44,10 @@ character. Her anatomy and outfit do not transform between states.
 - As-is backup: run `scripts/assets/backup-lucy-pngs.sh` after any PNG lands.
 - Production deliverables:
   `packages/site/src/assets/lucy/` as WebP.
-- The only tracked production PNG is
-  `authority/lucy-character-sheet-master.png`.
+- The canonical sheet and owner-approved source masters already retained under
+  `src/assets/lucy/*/masters/` may stay in Git for authority and provenance,
+  but frontend code must never import those PNGs directly; browsers load
+  delivery WebPs only.
 - Write a receipt to `docs/lucy/production/runs/<job-id>.md` with model,
   prompt path or full prompt, input authorities, raw path, outputs, dimensions,
   alpha result, self-review results, and any blocked item.
@@ -76,8 +78,12 @@ alpha. No white, black, gray, or colored matte may remain in translucent edges.
    inverted-RGB checker, and raw-alpha audits for halos, holes, ghost pixels,
    missing pale features, and contaminated glass edges.
 7. Require zero strong-green and zero strong-magenta pixels in the
-   exterior-connected partial-alpha band. Do not infer completeness from RGB;
-   the alpha silhouette is the authority.
+   exterior-connected partial-alpha band for chroma-key work. An approved
+   native-alpha prismatic source may use the guard's explicit
+   `--source-native-prism` exception only when the receipt records the source
+   provenance and edge counts and browser QA confirms the inherited hues are
+   art, not matte contamination. Do not infer completeness from RGB; the alpha
+   silhouette is the authority.
 8. Export a lossless-alpha WebP and re-open it to verify alpha survived.
 
 Chroma is a workbench surface, never a brand color. Do not regenerate because
@@ -107,6 +113,57 @@ Keep reusable processing logic in `scripts/assets/`; do not hide the workflow
 inside an untracked one-off command. Derivatives from the same generation—wide
 composites, state cards, portraits, social crops, filtered plates, and mobile
 crops—are not new image-generation jobs.
+
+## Supersampling modes
+
+Generation/master authority, enhancement workbench, delivery master, web
+encoding, and verification are separate stages. The approved source always
+owns Lucy's pose, identity, composition, and silhouette. An enhancer may
+recover bounded image detail; it never owns alpha geometry.
+
+- **standard:** direct deterministic resampling for ordinary derivatives.
+- **high:** a 4x enhancement workspace collapsed to the requested delivery
+  dimensions.
+- **overkill:** offline hero/key-art production. Separate luma, chroma, and
+  canonical alpha; use a neural detail oracle only on luma with
+  `face_enhance=false`; keep conservative resampling as the structural owner;
+  then use a tiled 16x numerical workspace and staged Lanczos
+  `16x -> 4x -> 2x` collapse. Never commit or ship the 4x/8x/16x workspace.
+
+The v5 reference implementation is
+`scripts/assets/lucy-v5-overkill-export.py`. Reproduce it from a clean checkout
+with Python 3.11 and the pinned
+`scripts/assets/requirements-lucy-overkill.txt`; the script downloads the
+checksum-pinned MIT-licensed ArtCNN R16F96 ONNX model into the ignored
+workbench. Its hybrid path bounds the ArtCNN luma residual, reconstructs BT.709
+Cb/Cr independently, resamples the source alpha independently, produces exact
+2x delivery dimensions, encodes lossy RGB with lossless/high-fidelity alpha,
+reopens the WebP, and refuses any encoded alpha change.
+
+```bash
+python3.11 -m venv packages/site/assets/workbench/lucy/ISSUE-73-OVERKILL/.venv
+packages/site/assets/workbench/lucy/ISSUE-73-OVERKILL/.venv/bin/pip install -r scripts/assets/requirements-lucy-overkill.txt
+packages/site/assets/workbench/lucy/ISSUE-73-OVERKILL/.venv/bin/python scripts/assets/lucy-v5-overkill-export.py --provider coreml --force
+python3 scripts/assets/validate-lucy-v5-delivery.py
+```
+
+Use `--provider cpu` when Core ML is unavailable. Provider choice is recorded
+in the manifest and may alter RGB bytes; dimensions, bounded-detail policy, and
+decoded-alpha verification remain identical.
+
+Every supersampled run must record:
+
+- source and model provenance plus SHA-256;
+- exact source, theoretical workspace, and delivery dimensions;
+- model/runtime/provider versions and `face_enhance=false`;
+- luma residual bounds, chroma method, and alpha method;
+- encoded dimensions, byte count, alpha counts/hash, and output hash;
+- white, black, gray, light/dark checker, inverted-RGB, and raw-alpha audits;
+- real browser verification on every consuming route at desktop and mobile.
+
+The delivery size and byte budget are quality targets, not permission to
+damage the approved art. Report misses honestly. A delivery must still be a
+smaller modern-format browser asset than its retained source PNG.
 
 ## State gates
 
