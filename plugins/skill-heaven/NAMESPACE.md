@@ -1,4 +1,13 @@
-# Namespace observations for #30
+# Namespace observations for #30 and Agent Plugins 1.0.0
+
+Agent Plugins extension namespaces are a different concept from slash-command
+prefixes. The portable manifest uses `dev.skill-heaven.pi` for the Pi delivery
+adapter: the namespace is owned by `skill-heaven.dev`, its top-level directory
+has the exact same name, and other clients can ignore it. We do **not** claim an
+official Pi-owned namespace; Pi 0.84.2 has not published Agent Plugin extension
+semantics and is not listed as a conformant client. Claude compatibility stays
+in its legacy locations until the client documents or proves an official
+reverse-DNS namespace — issue #77 explicitly forbids guessing it.
 
 Issue #30 asks whether `/skill-zero:*` and `/skill-hell:*` can be two
 separate plugin namespaces. Facts observed while building the `/skill-hell`
