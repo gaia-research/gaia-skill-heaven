@@ -1,7 +1,5 @@
 ![Skill Heaven's one line of seven rungs measures skill entropy — how much skill variety and volume enters a session. Zero is the human-led floor, Heaven converges narrowly on the gap, Hell explores widely around it, and Ultra picks the entropy for you, gap by gap.](docs/assets/entropy-ladder.svg)
 
-<div align="center">
-
 # Skill Heaven
 
 **Your coding agent is carrying skills it never uses. Skill Heaven decides what actually enters a session.**
@@ -12,8 +10,6 @@ Summon exactly the skills a task needs — one session, nothing installed. Or st
 [![Site](https://img.shields.io/badge/skill--heaven.dev-visit-05060a?style=for-the-badge)](https://skill-heaven.dev)
 
 Works with **Claude Code · Codex · Pi · Hermes · Grok**
-
-</div>
 
 ---
 
