@@ -1,0 +1,248 @@
+{
+  "schema": "lucy-v5-overkill-delivery/v1",
+  "pipeline": {
+    "mode": "overkill-hybrid",
+    "structure_owner": "Lanczos conservative 2x baseline",
+    "detail_oracle": "ArtCNN R16F96 luma-only 1x -> 2x -> 4x cascade; no face enhancement",
+    "luma": "bounded 4x ArtCNN residual, then tiled hybrid 4x -> 16x -> 4x -> 2x Lanczos collapse",
+    "chroma": "BT.709 Cb/Cr independently supersampled to 4x and collapsed",
+    "alpha": "canonical source alpha independently supersampled to 4x and collapsed; 254 hardened to 255",
+    "full_16x_frame_materialized": false,
+    "neural_tile": 512,
+    "neural_halo": 48,
+    "collapse_core_4x": 256,
+    "collapse_halo_4x": 8,
+    "webp_quality": 88,
+    "webp_alpha_quality": 100
+  },
+  "model": {
+    "name": "ArtCNN_R16F96.onnx",
+    "url": "https://raw.githubusercontent.com/Artoriuz/ArtCNN/c619fc3292d8867378e072f08bb0500c086440d5/ONNX/ArtCNN_R16F96.onnx",
+    "sha256": "498f1295c43f5799ef5bdea14a8f5b7a68d1f99ae67fee8a8f77ec9b25ca3e8d",
+    "license": "MIT"
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "onnxruntime": "1.29.0",
+    "numpy": "2.4.6",
+    "pillow": "12.3.0",
+    "scipy": "1.17.1",
+    "provider": "coreml",
+    "cwebp": "1.6.0\nlibsharpyuv: 0.4.2"
+  },
+  "outputs": [
+    {
+      "state": "zero",
+      "source": "packages/site/src/assets/lucy/v5/masters/lucy-zero.png",
+      "source_sha256": "db4237fc749bd205a197a263caba08f14c47ef9c40a3622c3228047831814401",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "source_bytes": 1899846,
+      "source_alpha": {
+        "minimum": 0,
+        "maximum": 254,
+        "transparent_pixels": 762848,
+        "opaque_pixels": 0,
+        "fractional_pixels": 810016,
+        "sha256_raw": "b74646298a74b4fabf34598e2ea2bb6b774e41234d89617ae0e03de9e00cec52"
+      },
+      "output": "packages/site/src/assets/lucy/v5/delivery/lucy-zero.webp",
+      "output_sha256": "5fcdf741d33280ec6881575c26fd89bc732cb4712e8f2be5c940194f53f8036e",
+      "output_dimensions": [
+        2048,
+        3072
+      ],
+      "output_bytes": 573548,
+      "output_smaller_than_source": true,
+      "decoded_alpha": {
+        "minimum": 0,
+        "maximum": 255,
+        "transparent_pixels": 3055011,
+        "opaque_pixels": 2130,
+        "fractional_pixels": 3234315,
+        "sha256_raw": "97df8e526aa4c6430c51fd85effa2d53b2b4e9642ed0754871d768bd76c3cf4a"
+      },
+      "prism_constraint": {
+        "converged": true,
+        "decoded_green_pixels": 0,
+        "decoded_magenta_pixels": 0
+      },
+      "alpha_adjustments": {
+        "method": "direct source -> 2x deterministic Lanczos; no neural alpha processing",
+        "baseline": "direct source -> 2x Lanczos alpha",
+        "removed_nonzero_pixels": 0,
+        "added_nonzero_pixels": 0,
+        "differing_pixels": 0,
+        "maximum_delta": 0,
+        "hardened_254_pixels": 0
+      }
+    },
+    {
+      "state": "heaven",
+      "source": "packages/site/src/assets/lucy/v5/masters/lucy-heaven.png",
+      "source_sha256": "bf18566eb8af5d1092158bc91fecd2ca4d349e48e3a1faef5d96e964a15b6817",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "source_bytes": 1671983,
+      "source_alpha": {
+        "minimum": 0,
+        "maximum": 254,
+        "transparent_pixels": 1092023,
+        "opaque_pixels": 0,
+        "fractional_pixels": 480841,
+        "sha256_raw": "38af503358bb5736dcc50acb023a34b48cbbab3480f82a0674a4eff67c4f54b1"
+      },
+      "output": "packages/site/src/assets/lucy/v5/delivery/lucy-heaven.webp",
+      "output_sha256": "29b6b5344acc1fea2e5b64ebfb3921207ed8e9b418f1126b97f25594a3698edc",
+      "output_dimensions": [
+        2048,
+        3072
+      ],
+      "output_bytes": 574092,
+      "output_smaller_than_source": true,
+      "decoded_alpha": {
+        "minimum": 0,
+        "maximum": 255,
+        "transparent_pixels": 4383899,
+        "opaque_pixels": 4984,
+        "fractional_pixels": 1902573,
+        "sha256_raw": "52a9c70a13c609da0a14b87c2ddf998cf811bcfb01d988f40f9b7ec9352adbfa"
+      },
+      "prism_constraint": {
+        "converged": true,
+        "decoded_green_pixels": 0,
+        "decoded_magenta_pixels": 0
+      },
+      "alpha_adjustments": {
+        "method": "direct source -> 2x deterministic Lanczos; no neural alpha processing",
+        "baseline": "direct source -> 2x Lanczos alpha",
+        "removed_nonzero_pixels": 0,
+        "added_nonzero_pixels": 0,
+        "differing_pixels": 0,
+        "maximum_delta": 0,
+        "hardened_254_pixels": 0
+      }
+    },
+    {
+      "state": "hell",
+      "source": "packages/site/src/assets/lucy/v5/masters/lucy-hell.png",
+      "source_sha256": "7cac233b90ed1aa3c1b020fef1b72f096efc87e0663564d065bd4ae1ce45473e",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "source_bytes": 1846763,
+      "source_alpha": {
+        "minimum": 0,
+        "maximum": 254,
+        "transparent_pixels": 1116668,
+        "opaque_pixels": 0,
+        "fractional_pixels": 456196,
+        "sha256_raw": "cd998c8f2f3d4ded4e83613e65229d2f3071108c4fc35daf0311557a30ed2547"
+      },
+      "output": "packages/site/src/assets/lucy/v5/delivery/lucy-hell.webp",
+      "output_sha256": "1fc4987b9d122732d683e5092814edd6a2602f39f2aa274fdfa6419ad2df2dc5",
+      "output_dimensions": [
+        2048,
+        3072
+      ],
+      "output_bytes": 660968,
+      "output_smaller_than_source": true,
+      "decoded_alpha": {
+        "minimum": 0,
+        "maximum": 255,
+        "transparent_pixels": 4475515,
+        "opaque_pixels": 1448,
+        "fractional_pixels": 1814493,
+        "sha256_raw": "366dbef2c74cf542a5dd5e380c65054e3736711afb2f527c0309e13e6d678ae5"
+      },
+      "prism_constraint": {
+        "converged": true,
+        "decoded_green_pixels": 0,
+        "decoded_magenta_pixels": 0
+      },
+      "alpha_adjustments": {
+        "method": "direct source -> 2x deterministic Lanczos; no neural alpha processing",
+        "baseline": "direct source -> 2x Lanczos alpha",
+        "removed_nonzero_pixels": 0,
+        "added_nonzero_pixels": 0,
+        "differing_pixels": 0,
+        "maximum_delta": 0,
+        "hardened_254_pixels": 0
+      }
+    },
+    {
+      "state": "ultra",
+      "source": "packages/site/src/assets/lucy/v5/masters/lucy-ultra.png",
+      "source_sha256": "df4f37dff3f38670d3301a90ac496ba148d2ff557ad3bdb5cbd62e70ec310094",
+      "source_dimensions": [
+        1095,
+        1437
+      ],
+      "source_bytes": 2430523,
+      "source_alpha": {
+        "minimum": 0,
+        "maximum": 255,
+        "transparent_pixels": 440709,
+        "opaque_pixels": 118,
+        "fractional_pixels": 1132688,
+        "sha256_raw": "25723bd30850c8bf8c5b73b6d6781b8f701108c3cb4f21f7947912658e5d9d96"
+      },
+      "output": "packages/site/src/assets/lucy/v5/delivery/lucy-ultra.webp",
+      "output_sha256": "feb320f164d0849ef79aa741bcf539018c95f67b5ac9b5a92b0b437608e438b3",
+      "output_dimensions": [
+        2190,
+        2874
+      ],
+      "output_bytes": 1623554,
+      "output_smaller_than_source": true,
+      "decoded_alpha": {
+        "minimum": 0,
+        "maximum": 255,
+        "transparent_pixels": 1763366,
+        "opaque_pixels": 860,
+        "fractional_pixels": 4529834,
+        "sha256_raw": "169cc9fa01d1df3f50863b744ded17a25aae00e3d4d396af2e416d0c8128b443"
+      },
+      "prism_constraint": {
+        "converged": false,
+        "decoded_green_pixels": 5,
+        "decoded_magenta_pixels": 0
+      },
+      "alpha_adjustments": {
+        "method": "direct source -> 2x deterministic Lanczos; no neural alpha processing",
+        "baseline": "direct source -> 2x Lanczos alpha",
+        "removed_nonzero_pixels": 0,
+        "added_nonzero_pixels": 0,
+        "differing_pixels": 0,
+        "maximum_delta": 0,
+        "hardened_254_pixels": 0
+      }
+    }
+  ],
+  "known_issues": [
+    {
+      "state": "ultra",
+      "summary": "Ultra fails 3 automated gate checks; owner reviewed the delivered WebP visually and accepted it.",
+      "checks": {
+        "has_opaque_foreground": {
+          "pass": false,
+          "detail": "opaque_pixels=860 (gate requires >1000); Ultra's glass/edge-heavy design is mostly fractional alpha rather than fully opaque fill."
+        },
+        "zero_strong_green_exterior_fringe": {
+          "pass": false,
+          "detail": "5 decoded pixels of 6,294,060 (0.00008%) remain outside the strong-green threshold after 7 prism-safe correction attempts."
+        },
+        "zero_strong_green_interior_boundary_spill": {
+          "pass": false,
+          "detail": "Interior boundary green-spill check also fails alongside the exterior fringe check; not independently re-measured pixel count."
+        }
+      },
+      "disposition": "Shipped as-is at owner's explicit direction after visual review of the delivered lucy-ultra.webp. Not wired into CI (see PR notes) so this known, accepted exception cannot fail unrelated future builds."
+    }
+  ]
+}

@@ -9,10 +9,10 @@ import lucyZeroSetB from '../../assets/lucy/v4-approved/set-b/masters/lucy-zero.
 import lucyHeavenSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-heaven.webp'
 import lucyHellSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-hell.webp'
 import lucyUltraSetC from '../../assets/lucy/v4-approved/set-c/masters/lucy-ultra.webp'
-import lucyHeavenV5 from '../../assets/lucy/v5/masters/lucy-heaven.png'
-import lucyHellV5 from '../../assets/lucy/v5/masters/lucy-hell.png'
-import lucyUltraV5 from '../../assets/lucy/v5/masters/lucy-ultra.png'
-import lucyZeroV5 from '../../assets/lucy/v5/masters/lucy-zero.png'
+import lucyHeavenV5 from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
+import lucyHellV5 from '../../assets/lucy/v5/delivery/lucy-hell.webp'
+import lucyUltraV5 from '../../assets/lucy/v5/delivery/lucy-ultra.webp'
+import lucyZeroV5 from '../../assets/lucy/v5/delivery/lucy-zero.webp'
 import katanaHeaven from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import katanaHell from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-hell.webp'
 import katanaUltra from '../../assets/lucy/frontpage/katana-authority-v2/lucy-katana-ultra.webp'
@@ -34,8 +34,8 @@ export interface LucyHeroAsset {
 export type LucyHeroAssetSet = Record<LucyHeroState, LucyHeroAsset>
 
 /**
- * Owner-approved v4 Lucy character sets. The `a`/`b`/`c` identifiers name
- * character-art sets, not the two independently-designed page layouts.
+ * Owner-approved Lucy character sets. The `a`/`b`/`c` identifiers name the
+ * v4 review sets; `v5` is the supersampled delivery set used in production.
  */
 export const HERO_ASSET_SETS: Record<LucyAssetSet, LucyHeroAssetSet> = {
   v5: {

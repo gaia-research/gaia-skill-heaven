@@ -19,20 +19,15 @@ import {
   type SurfaceId,
 } from '../product';
 
-import zeroMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-zero.webp';
-import heavenMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-heaven.webp';
-import hellMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-hell.webp';
-import ultraMaster from '../assets/lucy/v4-approved/set-a/masters/lucy-ultra.webp';
+import zeroMaster from '../assets/lucy/v5/delivery/lucy-zero.webp';
+import heavenMaster from '../assets/lucy/v5/delivery/lucy-heaven.webp';
+import hellMaster from '../assets/lucy/v5/delivery/lucy-hell.webp';
+import ultraMaster from '../assets/lucy/v5/delivery/lucy-ultra.webp';
 
 const AGENT_PLUGIN_INSTALL =
   'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh';
 
-
-/**
- * Approved character art, per state. The Hell master is already a full
- * RGB inversion of Heaven — the page inverts around it, the art never does.
- * Zero carries no wings, by canon.
- */
+/** Approved v5 character art, per state. Zero carries no wings, by canon. */
 const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   zero: {
     figure: zeroMaster,
@@ -44,7 +39,7 @@ const ART: Record<SurfaceId, { figure: string; alt: string }> = {
   },
   hell: {
     figure: hellMaster,
-    alt: 'The line’s figure in its Hell state — the Heaven render fully inverted, eyes closed, a single red tear.',
+    alt: 'The line’s figure in its Hell state — inverted palette, eyes closed, a single red tear.',
   },
   ultra: {
     figure: ultraMaster,
