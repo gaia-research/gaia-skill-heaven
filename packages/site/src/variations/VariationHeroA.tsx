@@ -145,29 +145,6 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     window.addEventListener('click', reveal, { once: true })
     return () => window.removeEventListener('click', reveal)
   }, [])
-  // Preload and pre-decode all character and weapon assets into GPU textures so
-  // switching bands is instant with zero decode frame drops or flicker.
-  useEffect(() => {
-    const assetList = [
-      HERO_ASSET_SETS[set].zero.lucy,
-      HERO_ASSET_SETS[set].heaven.lucy,
-      HERO_ASSET_SETS[set].hell.lucy,
-      HERO_ASSET_SETS[set].ultra.lucy,
-      HERO_ASSET_SETS[set].zero.katana,
-      HERO_ASSET_SETS[set].heaven.katana,
-      HERO_ASSET_SETS[set].hell.katana,
-      HERO_ASSET_SETS[set].ultra.katana,
-      HERO_ASSET_SETS[set].zero.slashArc,
-      wingLeft,
-      wingRight,
-    ]
-    assetList.forEach((src) => {
-      const img = new Image()
-      img.src = src
-      img.decode?.().catch(() => {})
-    })
-  }, [set])
-
   // Per-scene accent for the quiet explainers (no red).
   const accent =
     v.scene === 'ultra' ? '#FFD24A' : v.scene === 'hell' ? '#5FC2D6' : v.scene === 'zero' ? v.fg : '#A58AE0'
@@ -258,9 +235,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           backgroundImage: `linear-gradient(to right,${v.hair} 1px,transparent 1px),linear-gradient(to bottom,${v.hair} 1px,transparent 1px)`,
           backgroundSize: '5% 12%',
           transformOrigin: '50% 100%',
-          transition: v.atLadder
-            ? 'transform 240ms cubic-bezier(.16,1,.3,1),opacity 180ms linear'
-            : 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(700ms * var(--vh-t)) linear',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(700ms * var(--vh-t)) linear',
           transform: `perspective(900px) rotateX(72deg) scale(${v.mGround})`,
           opacity: v.oGround,
           WebkitMaskImage: 'radial-gradient(ellipse at 50% 100%,#000,transparent 78%)',
@@ -279,9 +254,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           translate: '-50% -50%',
           border: `1.5px solid ${v.fg}`,
           borderRadius: '50%',
-          transition: v.atLadder
-            ? 'transform 240ms cubic-bezier(.16,1,.3,1),opacity 180ms linear'
-            : 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
+          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(600ms * var(--vh-t)) linear',
           transform: `scale(${v.mWing}) rotate(${v.haloRot}deg)`,
           opacity: v.oHalo,
         }}
@@ -298,9 +271,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               transform: `scale(${v.mWing})`,
               opacity: v.oWing,
               filter: wingFilter,
-              transition: v.atLadder
-                ? 'opacity 180ms linear,transform 240ms cubic-bezier(.16,1,.3,1)'
-                : 'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+              transition:
+                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
             }}
           />
           <img
@@ -312,9 +284,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               transform: `scale(${v.mWing})`,
               opacity: v.oWing,
               filter: wingFilter,
-              transition: v.atLadder
-                ? 'opacity 180ms linear,transform 240ms cubic-bezier(.16,1,.3,1)'
-                : 'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+              transition:
+                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
             }}
           />
         </>
@@ -333,9 +304,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           // change (each FIG entry carries its own face-anchored origin), so
           // the figure looked like it was jumping mid-animation even though
           // the scale/position themselves were easing correctly.
-          transition: v.atLadder
-            ? 'transform 240ms cubic-bezier(.16,1,.3,1),transform-origin 240ms cubic-bezier(.16,1,.3,1)'
-            : 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+          transition:
+            'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateX(${v.figX}vh) translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
           transformOrigin: v.figOrigin,
           zIndex: 1,
@@ -351,9 +321,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             height: '92vh',
             width: 'auto',
             mixBlendMode: v.lucyBlend,
-            transition: v.atLadder
-              ? 'filter 120ms linear,opacity 150ms linear'
-              : 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
+            transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
             opacity: v.oLucy,
             filter: v.lucyFilter,
           }}
@@ -453,9 +421,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               zIndex: 5,
               transformOrigin: 'center',
               transform: `translate(-50%, -50%) scale(${skillScale}) rotate(-3deg)`,
-              transition: v.atLadder
-                ? 'transform 240ms cubic-bezier(0.16,1,0.3,1)'
-                : 'transform calc(900ms * var(--vh-t)) cubic-bezier(0.16,1,0.3,1)',
+              transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(0.16,1,0.3,1)',
               color: v.fg,
               fontSize: 'clamp(30px, 4.2vw, 68px)',
               textShadow: `0 2px 20px ${v.bg}, 0 0 8px ${v.bg}`,
