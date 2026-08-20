@@ -6,8 +6,9 @@
 
 Summon exactly the skills a task needs — one session, nothing installed. Or start the harness clean and add nothing at all.
 
-[![Install the plugin](https://img.shields.io/badge/Install-two%20lines%20in%20Claude%20Code-a58ae0?style=for-the-badge)](#1--the-full-agent-plugin--recommended)
-[![Site](https://img.shields.io/badge/skill--heaven.dev-visit-05060a?style=for-the-badge)](https://skill-heaven.dev)
+[![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
+[![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
+[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
 Works with **Claude Code · Codex · Pi · Hermes · Grok**
 
@@ -19,36 +20,28 @@ Requires **Node.js 22+**. Three ways in — pick the first one that fits you.
 
 | | You get | Best if |
 |---|---|---|
-| **1 · The plugin** | All five commands + the summon engine | You use **Claude Code** — start here |
-| **2 · `/summon` alone** | Just the summon tool, as an MCP server | You use another harness, or want one tool and nothing else |
+| **1 · The Agent Plugin** | All five commands + the summon engine | Any harness — **start here** |
+| **2 · `/summon` alone** | The one mechanic, as a single skill | You want summoning and nothing else |
 | **3 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
 
 ---
 
-### 1 · The full agent plugin — *recommended*
+### 1 · The Agent Plugin — *recommended*
 
-Two lines, typed inside Claude Code. No terminal, no build step, no `npx`.
+**One package, every harness.** The Agent Plugin is the universal standard: the bundled skill set plus the summon MCP, in one install. Nothing in it is Claude-specific — only the way each harness is told to load it.
+
+**Claude Code** — two lines, typed in-session. No terminal, no build step, no `npx`:
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-That's everything: `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra`, with the summon engine bundled inside the plugin. There is no second package to install and no sibling repository to clone.
-
-📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
-
----
-
-### 2 · `/summon` on its own
-
-`/summon` is the one mechanic underneath every surface — **one skill into context, one session, nothing installed.** It ships as a standalone MCP server, so any MCP-capable harness can have it without the rest of the ladder.
+**Any other harness** — clone the repo and load the same bundle:
 
 ```bash
 git clone https://github.com/gaia-research/gaia-skill-heaven.git
 ```
-
-Then point your harness at the bundled server — it needs no arguments, no environment, and no install step:
 
 ```json
 {
@@ -61,15 +54,31 @@ Then point your harness at the bundled server — it needs no arguments, no envi
 }
 ```
 
-You get one tool, `summon`: it ranks skills against your intent, materializes the winner's whole directory — `SKILL.md`, `reference/`, `scripts/`, fixtures — into a session-locked temp directory, and prints a card telling you what arrived, what it cost, and where to inspect it. Your real configuration is never touched.
+Either way you get all five surfaces — `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra` — with the summon engine bundled in. There is no second package and no sibling repository.
 
-*If you took path 1, you already have this — the plugin wires the same server up for you.*
+📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
+
+---
+
+### 2 · `/summon` on its own
+
+`/summon` is the one mechanic underneath every surface — **one skill into context, one session, nothing installed.** It stands alone as a single skill, for anyone who wants that mechanic and none of the ladder:
+
+```bash
+npx skills install gaia-research/summon
+```
+
+One skill, one job: describe the gap, and it ranks the Gaia Skill Tree against your intent, materializes the winner's whole directory — `SKILL.md`, `reference/`, `scripts/`, fixtures — into a session-locked temp directory, and prints a card telling you what arrived, what it cost, and where to inspect it. Your real configuration is never touched.
+
+> **Not published yet.** The standalone summon skill is [tracked in #76](https://github.com/gaia-research/gaia-skill-heaven/issues/76) and is not installable today. Until it lands, take path 1 — the Agent Plugin gives you `/summon` along with everything else.
+
+*If you took path 1, you already have summon.*
 
 ---
 
 ### 3 · The Skill Zero launchers
 
-Five shell commands that start a harness with a clean context, independent of Claude Code.
+Five shell commands that start a harness with a clean context, independent of any plugin.
 
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
@@ -79,7 +88,7 @@ curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
 ```
 
-Run one instead of your usual harness command. The installer also registers the Claude Code plugin from path 1 if your `claude` binary is already on `PATH`.
+Run one instead of your usual harness command. The installer also registers the Agent Plugin from path 1 if your `claude` binary is already on `PATH`.
 
 It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if your shell doesn't pick it up:
 
@@ -223,17 +232,11 @@ $HOME/.local/share/gaia-skill-heaven/uninstall.sh
 | | |
 |---|---|
 | The ladder, in full | [`docs/LADDER-FLOW.md`](docs/LADDER-FLOW.md) |
-| The Claude Code plugin | [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md) |
+| The Agent Plugin | [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md) |
 | Engine internals & harness quirks | [`docs/CORE-AND-QUIRKS.md`](docs/CORE-AND-QUIRKS.md) |
 | What a real install looks like | [`docs/INSTALL-TRANSCRIPT.md`](docs/INSTALL-TRANSCRIPT.md) |
 | Vision · Mission | [VISION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md) · [MISSION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md) |
 | Hell / Heaven benchmark | [research.gaiaskilltree.com](https://research.gaiaskilltree.com/research/hh-benchmark) |
-
-### Gaia ecosystem
-
-[![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
-[![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
-[![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
 ## Development
 
