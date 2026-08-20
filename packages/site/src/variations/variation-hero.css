@@ -973,6 +973,24 @@ body.vh-hero-page {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Act 5, mobile — the poster wordmark ("SKILL HEAVEN" etc.) is positioned by
+   useHeroEngine's `typeUp`, tuned for the ≥1200px triptych where a CSS
+   override pins it to the very base of the poster (`.vha-typewrap--base`
+   below) and for the desktop centred stack where the ladder sits well below
+   it. Neither applies here: on a phone the ladder's own box is tall enough
+   that the wordmark's engine position lands INSIDE it, bleeding through the
+   rung row as noise instead of reading as a title. The chip row at the top
+   of the ladder already names the band ("HELL", "HEAVEN", ...), so the giant
+   duplicate is dropped here rather than patched into a gap too small to hold
+   it. Desktop is untouched — the flank/base breakpoint still owns it there.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .vha-typewrap {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Mobile touch targets — WCAG 2.5.8 (min 24×24 CSS px) with a 44×44
    comfortable-tap floor per platform guidance. Desktop keeps the
    whisper-quiet visual sizing; only the mobile hit area grows, via padding
@@ -1159,6 +1177,15 @@ body.vh-hero-page {
 .vha-cta-door--cmd .vha-cta-tag {
   opacity: 0.6;
   margin-left: 2px;
+}
+/* Open the door IS the CTA on mobile — the /skill-x copy command it demoted
+   to no longer gets a second box underneath it there. Desktop keeps both.
+   (Placed after the unconditional .vha-cta-door rule above so the cascade —
+   equal specificity, last declared wins — actually lands the override.) */
+@media (max-width: 640px) {
+  .vha-cta-door--cmd {
+    display: none;
+  }
 }
 .vha-cta-mini {
   border: 0;
