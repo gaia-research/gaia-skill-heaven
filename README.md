@@ -16,19 +16,18 @@ Works with **Claude Code · Codex · Pi · Hermes · Grok**
 
 ## Install
 
-Requires **Node.js 22+**. Three ways in — pick the first one that fits you.
+Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the launchers.
 
 | | You get | Best if |
 |---|---|---|
-| **1 · The Agent Plugin** | All five commands + the summon engine | Any harness — **start here** |
-| **2 · `/summon` alone** | The one mechanic, as a single skill | You want summoning and nothing else |
-| **3 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
+| **1 · The Agent Plugin** | All five surfaces + the summon engine | Any harness — **start here** |
+| **2 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
 
 ---
 
 ### 1 · The Agent Plugin — *recommended*
 
-**One package, every harness.** The Agent Plugin is the universal standard: the bundled skill set plus the summon MCP, in one install. Nothing in it is Claude-specific — only the way each harness is told to load it.
+**One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable plugin standard: one manifest, the bundled MCP, and the skills, in a single install. Nothing in it is tied to one vendor; only the way each harness is told to load it differs.
 
 **Claude Code** — two lines, typed in-session. No terminal, no build step, no `npx`:
 
@@ -54,29 +53,15 @@ git clone https://github.com/gaia-research/gaia-skill-heaven.git
 }
 ```
 
-Either way you get all five surfaces — `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, `/skill-ultra` — with the summon engine bundled in. There is no second package and no sibling repository.
+Either way you get `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell` and `/skill-ultra`, with the summon engine bundled in. There is no second package and no sibling repository.
 
 📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
 
----
-
-### 2 · `/summon` on its own
-
-`/summon` is the one mechanic underneath every surface — **one skill into context, one session, nothing installed.** It stands alone as a single skill, for anyone who wants that mechanic and none of the ladder:
-
-```bash
-npx skills install gaia-research/summon
-```
-
-One skill, one job: describe the gap, and it ranks the Gaia Skill Tree against your intent, materializes the winner's whole directory — `SKILL.md`, `reference/`, `scripts/`, fixtures — into a session-locked temp directory, and prints a card telling you what arrived, what it cost, and where to inspect it. Your real configuration is never touched.
-
-> **Not published yet.** The standalone summon skill is [tracked in #76](https://github.com/gaia-research/gaia-skill-heaven/issues/76) and is not installable today. Until it lands, take path 1 — the Agent Plugin gives you `/summon` along with everything else.
-
-*If you took path 1, you already have summon.*
+> **Just want `/summon`?** Install the full plugin anyway — that is the recommended path, and summon is the mechanic underneath every surface, so you lose nothing by taking all of them. A separate summon-only install is [tracked in #76](https://github.com/gaia-research/gaia-skill-heaven/issues/76).
 
 ---
 
-### 3 · The Skill Zero launchers
+### 2 · The Skill Zero launchers
 
 Five shell commands that start a harness with a clean context, independent of any plugin.
 
@@ -88,7 +73,7 @@ curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
 claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
 ```
 
-Run one instead of your usual harness command. The installer also registers the Agent Plugin from path 1 if your `claude` binary is already on `PATH`.
+Run one instead of your usual harness command. The installer also registers the Agent Plugin above if your `claude` binary is already on `PATH`.
 
 It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if your shell doesn't pick it up:
 
@@ -100,7 +85,7 @@ export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
 
 ## Try it in 60 seconds
 
-Inside a Claude Code session, once the plugin is installed:
+Once the plugin is installed, in any session:
 
 ```text
 /summon         pull one skill into context — this session only, nothing installed
