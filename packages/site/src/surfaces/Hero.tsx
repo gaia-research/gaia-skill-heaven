@@ -145,8 +145,6 @@ export default function Hero() {
         ? surface.command
         : `${surface.command} ${rungId}`;
 
-  const art = ART[dir];
-
   return (
     <div className={`hx hx--${dir}${impact ? ' hx--impact' : ''}`}>
       <nav className="hx__nav">
@@ -240,7 +238,16 @@ export default function Hero() {
         </div>
 
         <div className="hx__figure">
-          <img src={art.figure} alt={art.alt} />
+          {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => (
+            <img
+              key={state}
+              src={ART[state].figure}
+              alt={ART[state].alt}
+              loading="eager"
+              decoding="sync"
+              style={{ display: state === dir ? 'block' : 'none' }}
+            />
+          ))}
         </div>
       </div>
 

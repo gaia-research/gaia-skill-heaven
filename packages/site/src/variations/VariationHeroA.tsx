@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
+import { HERO_ASSET_SETS, normalizeLucyAssetSet, preloadLucyAssets } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import { DOORS, INSTALL } from '../product'
@@ -64,7 +64,6 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
   // export) and set-C's has an opaque white ground that can't sit on the black
   // Heaven back on set-A per owner.
-  const lucyImg = assets.lucy
   // Hell inverts its wings too (the whole scene is an RGB inversion).
   const wingFilter = v.scene === 'hell' ? 'invert(1)' : 'none'
 
@@ -145,6 +144,17 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     window.addEventListener('click', reveal, { once: true })
     return () => window.removeEventListener('click', reveal)
   }, [])
+  // Preload and pre-decode all character and weapon assets into memory/GPU cache
+  useEffect(() => {
+    preloadLucyAssets(set)
+    const wings = [wingLeft, wingRight]
+    wings.forEach((src) => {
+      const img = new Image()
+      img.src = src
+      img.decode?.().catch(() => {})
+    })
+  }, [set])
+
   // Per-scene accent for the quiet explainers (no red).
   const accent =
     v.scene === 'ultra' ? '#FFD24A' : v.scene === 'hell' ? '#5FC2D6' : v.scene === 'zero' ? v.fg : '#A58AE0'
@@ -312,20 +322,28 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           pointerEvents: 'none',
         }}
       >
-        <img
-          className="vha-lucy"
-          src={lucyImg}
-          alt=""
-          style={{
-            display: 'block',
-            height: '92vh',
-            width: 'auto',
-            mixBlendMode: v.lucyBlend,
-            transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
-            opacity: v.oLucy,
-            filter: v.lucyFilter,
-          }}
-        />
+        {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => {
+          const isCurrent = v.lucyState === state
+          return (
+            <img
+              key={state}
+              className="vha-lucy"
+              src={HERO_ASSET_SETS[set][state].lucy}
+              alt=""
+              loading="eager"
+              decoding="sync"
+              style={{
+                display: isCurrent ? 'block' : 'none',
+                height: '92vh',
+                width: 'auto',
+                mixBlendMode: v.lucyBlend,
+                transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
+                opacity: isCurrent ? v.oLucy : 0,
+                filter: isCurrent ? v.lucyFilter : 'none',
+              }}
+            />
+          )
+        })}
       </div>
 
       <div
@@ -345,7 +363,21 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           filter: v.bladeBlur ? `blur(${v.bladeBlur}px)` : 'none',
         }}
       >
-        <img className="vh-asset vh-asset--sword" src={assets.katana} alt="" draggable={false} />
+        {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => {
+          const isCurrent = v.lucyState === state
+          return (
+            <img
+              key={state}
+              className="vh-asset vh-asset--sword"
+              src={HERO_ASSET_SETS[set][state].katana}
+              alt=""
+              loading="eager"
+              decoding="sync"
+              style={{ display: isCurrent ? 'block' : 'none' }}
+              draggable={false}
+            />
+          )
+        })}
       </div>
 
       <div className="vh-slash-arc vha-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>

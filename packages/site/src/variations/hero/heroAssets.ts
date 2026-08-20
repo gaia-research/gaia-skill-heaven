@@ -79,3 +79,35 @@ export function normalizeLucyAssetSet(value?: string): LucyAssetSet {
 
 /** Backwards-compatible default used by existing hero code. */
 export const HERO_ASSETS: LucyHeroAssetSet = HERO_ASSET_SETS[DEFAULT_LUCY_ASSET_SET]
+
+/** Retained references in memory so the browser never garbage collects decoded GPU textures */
+const PRELOAD_CACHE = new Set<HTMLImageElement>()
+
+/**
+ * Preloads and pre-decodes all Lucy character states, katanas, and weapons
+ * into browser and GPU texture memory.
+ */
+export function preloadLucyAssets(set: LucyAssetSet = DEFAULT_LUCY_ASSET_SET) {
+  if (typeof window === 'undefined') return
+  const assets = HERO_ASSET_SETS[set]
+  const list = [
+    assets.zero.lucy,
+    assets.heaven.lucy,
+    assets.hell.lucy,
+    assets.ultra.lucy,
+    assets.zero.katana,
+    assets.heaven.katana,
+    assets.hell.katana,
+    assets.ultra.katana,
+    assets.zero.slashArc,
+  ]
+  list.forEach((src) => {
+    const img = new Image()
+    img.src = src
+    img.decode?.().catch(() => {})
+    PRELOAD_CACHE.add(img)
+  })
+}
+
+// Eagerly preload the production delivery masters on initial module load
+preloadLucyAssets('v5')
