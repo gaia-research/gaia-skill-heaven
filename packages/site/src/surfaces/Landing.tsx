@@ -416,18 +416,6 @@ export default function Landing() {
       <section className="lp-section" id="doors">
         <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
 
-        <div className="sh-note lp-ann">
-          <span className="lp-ann__mark" aria-hidden="true">
-            ▸
-          </span>
-          <span>
-            MARKS · four tiles carry the harness’s own mark — Claude (Simple Icons, CC0), pi
-            (pi.dev), Codex (OpenAI) and Grok (xAI). Nous Research publishes no vector mark for
-            Hermes, so that tile carries a lettermark in our own type rather than an invented logo.
-            Default selection is <b>{DOORS[0].pkg}</b>.
-          </span>
-        </div>
-
         <div className="lp-doors">
           {DOORS.map((d) => {
             const on = d.id === pickedId
