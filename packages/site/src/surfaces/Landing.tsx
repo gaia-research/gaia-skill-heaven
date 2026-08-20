@@ -756,61 +756,138 @@ export default function Landing() {
         <SectionHead n="04" title="HEAVEN OR HELL?" />
         <p className="lp-section__lede">Here’s how you choose.</p>
 
-        {/* the floor */}
-        <div className="lp-floor">
-          <div className="lp-floor__cmd">
-            <span aria-hidden="true">›</span>
-            <code>{MECHANIC.floor}</code>
-            <span className="sh-chip sh-chip--live">THE FLOOR</span>
+        {/* 1. Skill Zero & /summon in its own dedicated area */}
+        <div
+          className={`lp-zero-card${activeSurface.id === 'zero' ? ' is-highlighted' : ''}`}
+          onClick={() => pickRung('zero')}
+          role="button"
+          tabIndex={0}
+          aria-label="Skill Zero · The floor"
+        >
+          <div className="lp-zero-card__main">
+            <div className="lp-zero-card__head">
+              <img className="lp-zero-card__icon" src={SURFACE_ICON.zero} alt="" aria-hidden="true" />
+              <div>
+                <div className="lp-zero-card__cmd-row">
+                  <h3 className="lp-zero-card__cmd">/skill-zero</h3>
+                  <span className="sh-chip sh-chip--live">THE FLOOR</span>
+                </div>
+                <div className="lp-zero-card__role">THE LAUNCHER · ZERO BLOAT</div>
+              </div>
+            </div>
+            <p className="lp-zero-card__blurb">
+              {surfaceById('zero').blurb}
+            </p>
+            <p className="lp-zero-card__note">
+              {MECHANIC.floorNote}
+            </p>
           </div>
-          <div className="lp-floor__prose">
-            <p>{MECHANIC.line}</p>
-            <p className="lp-floor__note">{MECHANIC.floorNote}</p>
+          <div className="lp-zero-card__reach">
+            <div className="lp-zero-card__reach-head">
+              <span className="lp-zero-card__glyph" aria-hidden="true">○</span>
+              <h4>REACH FOR /SKILL-ZERO</h4>
+            </div>
+            <ul className="lp-zero-card__reach-list">
+              {['benchmarking', 'clean slate', 'everything vanilla', 'removing skill bloat'].map((row, i) => (
+                <li key={i}>
+                  <span aria-hidden="true">→</span>
+                  <span>{row}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* four surfaces */}
-        <div className="lp-surfaces">
-          {SURFACES.map((s) => (
-            <article className={`lp-surface lp-surface--${s.id}`} key={s.id}>
-              <img className="lp-surface__icon" src={SURFACE_ICON[s.id]} alt="" aria-hidden="true" />
-              <h3 className="lp-surface__cmd">{s.command}</h3>
-              <div className="lp-surface__role">{s.role}</div>
-              <p className="lp-surface__blurb">{s.blurb}</p>
-              {/* The band's HH Index stamp, linked to the research that is
-                  measuring it. Live work, not a promise — but it is an index
-                  being built, not a router that is running, which is what
-                  STAMP_ROUTING_NOTE under this grid says. */}
-              {s.stamp && (
-                <a
-                  className="lp-surface__stamp"
-                  href={HOUSES[0].href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span className="lp-surface__stamp-tag">{s.stamp.label}</span>
-                  <span className="lp-surface__stamp-note">{s.stamp.note} ↗</span>
-                </a>
-              )}
-              <div className="lp-surface__foot">
-                {s.id === 'heaven' ? (
-                  <>
-                    <span className="sh-label">BAND · low · med · opens low</span>
-                    <span className="sh-chip sh-chip--wip">WIP</span>
-                  </>
-                ) : s.id === 'hell' ? (
-                  <>
-                    <span className="sh-label">BAND · high · xhigh · max · opens high</span>
-                    <span className="sh-chip sh-chip--wip">WIP</span>
-                  </>
-                ) : s.id === 'ultra' ? (
-                  <span className="sh-label">ULTRA · the crown of the line</span>
-                ) : (
-                  <span className="sh-label">ZERO · the floor of the line</span>
+        {/* 2. Three columns: Skill-Heaven, Skill-Hell (inverted), and Skill-Ultra + Reach */}
+        <div className="lp-directions-grid">
+          {([
+            {
+              id: 'heaven' as const,
+              defaultRung: 'low' as const,
+              glyph: '◆',
+              kcls: 'lp-k-violet',
+              reach: ['brainstorming', 'grilling sessions', 'iterating', 'human-in-the-loop'],
+            },
+            {
+              id: 'hell' as const,
+              defaultRung: 'high' as const,
+              glyph: '◈',
+              kcls: 'lp-k-amber',
+              reach: ['exploring options', 'yolo-ing', 'let the expert decide', 'full agentic autonomy'],
+            },
+            {
+              id: 'ultra' as const,
+              defaultRung: 'ultra' as const,
+              glyph: '✦',
+              kcls: 'lp-k-gold',
+              reach: ['controlled autonomy', 'no dial to set', 'maximize quality', 'fully equipped agent'],
+            },
+          ] as const).map(({ id, defaultRung, glyph, kcls, reach }) => {
+            const s = surfaceById(id)
+            const isHighlighted = activeSurface.id === id
+            return (
+              <article
+                key={id}
+                className={`lp-dir-card lp-dir-card--${id}${isHighlighted ? ' is-highlighted' : ''}`}
+                onClick={() => pickRung(defaultRung)}
+              >
+                <div className="lp-dir-card__head">
+                  <div className="lp-dir-card__brand">
+                    <img className="lp-dir-card__icon" src={SURFACE_ICON[id]} alt="" aria-hidden="true" />
+                    <div>
+                      <h3 className="lp-dir-card__cmd">{s.command}</h3>
+                      <div className="lp-dir-card__role">{s.role}</div>
+                    </div>
+                  </div>
+                  <span className="sh-chip sh-chip--wip">WIP</span>
+                </div>
+
+                <p className="lp-dir-card__blurb">{s.blurb}</p>
+
+                {s.stamp && (
+                  <a
+                    className="lp-dir-card__stamp"
+                    href={HOUSES[0].href}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="lp-dir-card__stamp-tag">{s.stamp.label}</span>
+                    <span className="lp-dir-card__stamp-note">{s.stamp.note} ↗</span>
+                  </a>
                 )}
-              </div>
-            </article>
-          ))}
+
+                <div className="lp-dir-card__reach">
+                  <div className="lp-dir-card__reach-head">
+                    <span className={`lp-dir-card__glyph ${kcls}`} aria-hidden="true">
+                      {glyph}
+                    </span>
+                    <h4>REACH FOR {s.command.toUpperCase()}</h4>
+                  </div>
+                  <ul className="lp-dir-card__reach-list">
+                    {reach.map((row, i) => (
+                      <li key={i}>
+                        <span className={kcls} aria-hidden="true">
+                          →
+                        </span>
+                        <span>{row}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="lp-dir-card__foot">
+                  {id === 'heaven' ? (
+                    <span className="sh-label">BAND · low · med · opens low</span>
+                  ) : id === 'hell' ? (
+                    <span className="sh-label">BAND · high · xhigh · max · opens high</span>
+                  ) : (
+                    <span className="sh-label">ULTRA · the crown of the line</span>
+                  )}
+                </div>
+              </article>
+            )
+          })}
         </div>
 
         <div className="sh-note lp-ann">
@@ -825,58 +902,6 @@ export default function Landing() {
               Follow the HH Index ↗
             </a>
           </span>
-        </div>
-
-        {/* the four-band decision ledger */}
-        <div className="lp-ledger lp-ledger--four">
-          {[
-            {
-              cmd: '/skill-zero',
-              glyph: '○',
-              kcls: 'lp-k-grey',
-              rows: ['benchmarking', 'clean slate', 'everything vanilla', 'removing skill bloat'],
-            },
-            {
-              cmd: '/skill-heaven',
-              glyph: '◆',
-              kcls: 'lp-k-violet',
-              rows: ['brainstorming', 'grilling sessions', 'iterating', 'human-in-the-loop'],
-            },
-            {
-              cmd: '/skill-hell',
-              glyph: '◈',
-              kcls: 'lp-k-amber',
-              wip: true,
-              rows: ['exploring options', 'yolo-ing', 'let the expert decide', 'full agentic autonomy'],
-            },
-            {
-              cmd: '/skill-ultra',
-              glyph: '✦',
-              kcls: 'lp-k-gold',
-              wip: true,
-              rows: ['controlled autonomy', 'no dial to set', 'maximize quality', 'fully equipped agent'],
-            },
-          ].map((col) => (
-            <div className="lp-ledger__col" key={col.cmd}>
-              <div className="lp-ledger__head">
-                <span className={`lp-ledger__glyph ${col.kcls}`} aria-hidden="true">
-                  {col.glyph}
-                </span>
-                <h3>REACH FOR {col.cmd.toUpperCase()}</h3>
-                {col.wip ? <span className="sh-chip sh-chip--wip">WIP</span> : null}
-              </div>
-              <ul className="lp-ledger__rows">
-                {col.rows.map((row, i) => (
-                  <li key={i}>
-                    <span className={col.kcls} aria-hidden="true">
-                      →
-                    </span>
-                    <span>{row}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
 
         {/* the ladder */}
