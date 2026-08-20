@@ -17162,6 +17162,11 @@ var namedRegistrySchema = external_exports.object({
 var DEFAULT_GENERIC_REGISTRY_URL = "https://gaiaskilltree.com/graph/gaia.json";
 var DEFAULT_NAMED_REGISTRY_URL = "https://gaiaskilltree.com/graph/named/index.json";
 var DEFAULT_CACHE_TTL_MS = 5 * 60 * 1e3;
+function resolveConfiguredRegistryUrl(value, fallback) {
+  const configured = value?.trim();
+  if (!configured || /^\$\{[^}]+\}$/.test(configured)) return fallback;
+  return configured;
+}
 var GaiaDataError = class extends Error {
   name = "GaiaDataError";
 };
@@ -22787,8 +22792,14 @@ function toolError(error2) {
 // packages/skill-summon/src/bin/skill-summon-mcp.ts
 async function main() {
   const source = new HttpGaiaRegistrySource({
-    genericUrl: process.env.TREE_URL ?? DEFAULT_GENERIC_REGISTRY_URL,
-    namedUrl: process.env.TREE_NAMED_URL ?? DEFAULT_NAMED_REGISTRY_URL
+    genericUrl: resolveConfiguredRegistryUrl(
+      process.env.TREE_URL,
+      DEFAULT_GENERIC_REGISTRY_URL
+    ),
+    namedUrl: resolveConfiguredRegistryUrl(
+      process.env.TREE_NAMED_URL,
+      DEFAULT_NAMED_REGISTRY_URL
+    )
   });
   const service = new GaiaService(source);
   const server = createSkillSummonMcpServer({ service });

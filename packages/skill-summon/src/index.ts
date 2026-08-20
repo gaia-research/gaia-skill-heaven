@@ -4,6 +4,7 @@ export {
   GaiaDataError,
   HttpGaiaRegistrySource,
   InMemoryGaiaRegistrySource,
+  resolveConfiguredRegistryUrl,
 } from "./data/source.js";
 export type {
   GaiaRegistrySource,

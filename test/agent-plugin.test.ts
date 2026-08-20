@@ -59,6 +59,21 @@ describe("Agent Plugins 1.0.0 package", () => {
     expect(source).toMatch(/\ndescription: .+\n---\n/);
   });
 
+  it("keeps Codex compatibility thin and rooted in the same bundled server", () => {
+    const codexManifest = json(join(PLUGIN, ".codex-plugin", "plugin.json"));
+    expect(codexManifest.name).toBe("skill-heaven");
+    expect(codexManifest.skills).toBe("./skills/");
+    expect(codexManifest.mcpServers).toBe("./.codex.mcp.json");
+
+    const codexMcp = json(join(PLUGIN, ".codex.mcp.json"));
+    const servers = codexMcp.mcpServers as Record<string, Record<string, unknown>>;
+    expect(servers["skill-summon"]).toMatchObject({
+      command: "node",
+      args: ["./mcp/skill-summon.mjs"],
+      cwd: ".",
+    });
+  });
+
   it("keeps Pi compatibility namespaced and pointed at the portable components", () => {
     const extensions = manifest.extensions as Record<string, Record<string, unknown>>;
     expect(extensions["dev.skill-heaven.pi"]).toEqual({

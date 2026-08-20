@@ -6,6 +6,7 @@ on:
     paths:
       - 'packages/site/**'
       - 'install.sh'
+      - 'install-agent-plugin.sh'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -31,8 +32,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm -w @gaia-skill-heaven/site run build
-      - name: Publish the one-command installer at /install.sh
-        run: cp install.sh packages/site/dist/install.sh
+      - name: Publish the one-command installers
+        run: |
+          cp install.sh packages/site/dist/install.sh
+          cp install-agent-plugin.sh packages/site/dist/install-agent-plugin.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

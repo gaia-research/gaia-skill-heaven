@@ -6,14 +6,21 @@ import {
   DEFAULT_GENERIC_REGISTRY_URL,
   DEFAULT_NAMED_REGISTRY_URL,
   HttpGaiaRegistrySource,
+  resolveConfiguredRegistryUrl,
 } from "../data/source.js";
 import { createSkillSummonMcpServer } from "../mcp/server.js";
 import { GaiaService } from "../service.js";
 
 async function main(): Promise<void> {
   const source = new HttpGaiaRegistrySource({
-    genericUrl: process.env.TREE_URL ?? DEFAULT_GENERIC_REGISTRY_URL,
-    namedUrl: process.env.TREE_NAMED_URL ?? DEFAULT_NAMED_REGISTRY_URL,
+    genericUrl: resolveConfiguredRegistryUrl(
+      process.env.TREE_URL,
+      DEFAULT_GENERIC_REGISTRY_URL,
+    ),
+    namedUrl: resolveConfiguredRegistryUrl(
+      process.env.TREE_NAMED_URL,
+      DEFAULT_NAMED_REGISTRY_URL,
+    ),
   });
   const service = new GaiaService(source);
   const server = createSkillSummonMcpServer({ service });

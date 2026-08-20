@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "skill-summon": {
+      "command": "node",
+      "args": ["./mcp/skill-summon.mjs"],
+      "cwd": "."
+    }
+  }
+}
