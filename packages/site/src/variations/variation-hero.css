@@ -469,6 +469,44 @@ body.vh-hero-page {
   letter-spacing: 0.1em;
 }
 
+/* Zero-scene only: which harnesses /skill-zero actually runs on. Heaven/Hell/
+   Ultra don't repeat it — the launcher choice is made once, at Zero. */
+.vha-cta-compat {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+.vha-cta-compat__label {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.vha-cta-compat__marks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vha-cta-compat__mark {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  opacity: 0.85;
+}
+.vha-cta-compat__mark--letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: 1px solid currentColor;
+  font-size: 8.5px;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
 .vha-cut,
 .vhb-cut {
   position: absolute;
@@ -681,6 +719,9 @@ body.vh-hero-page {
   pointer-events: auto;
   max-width: min(88vw, 340px);
 }
+/* Plain text button — no border, no background chip. "Rules" here means the
+   ruled box that used to sit around the "?" glyph; the toggle now reads as an
+   ordinary button, same as any other link on the page. */
 .vha-info-toggle {
   display: inline-flex;
   align-items: center;
@@ -696,17 +737,6 @@ body.vh-hero-page {
 .vha-info-toggle:hover,
 .vha-info[data-open='1'] .vha-info-toggle {
   opacity: 0.92;
-}
-.vha-info-q {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid currentColor;
-  border-radius: 0;
-  font-size: 11px;
-  line-height: 1;
 }
 .vha-info-label {
   font-size: 11px;
@@ -794,11 +824,14 @@ body.vh-hero-page {
     left: 14px;
     top: 12px;
   }
-  .vha-info-label {
-    display: none;
-  }
+  /* Mobile keeps the "About" word readable — there is no boxed "?" glyph left
+     to fall back to (see .vha-info-q below), so hiding the label here would
+     leave no affordance at all. */
   .vha-info-panel {
-    width: min(90vw, 300px);
+    /* A left-anchored panel this wide reached into the centre column where
+       Lucy's face sits (HARD RULE: nothing covers the face). Keep it inside
+       the left third of the viewport instead. */
+    width: min(70vw, 300px);
   }
 }
 
@@ -904,12 +937,10 @@ body.vh-hero-page {
 }
 
 @media (max-width: 640px) {
+  /* The second "(?) where do skills come from" affordance, disabled on
+     mobile per owner ruling — one About affordance is enough on a phone, and
+     this one only ever opened a wide panel with nowhere safe to sit. */
   .vha-summon {
-    top: 52px;
-    right: 14px;
-    max-width: 72vw;
-  }
-  .vha-info--right .vha-info-label {
     display: none;
   }
 }
@@ -924,6 +955,20 @@ body.vh-hero-page {
 @media (max-width: 640px) {
   .vha-wing {
     height: 58%;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Act 5 chrome — the act label/sub ("ENTER" / "one line"), the scroll cue,
+   the counter ("05 / 05") and the act-jump dots. On mobile the acts 1-4 story
+   is disabled (useHeroEngine clamps navigation to the ladder — issue: mobile
+   viewport pass), so this row is dead weight that only overlapped the CTA
+   stack sitting right below it. Desktop keeps it; the acts are still live
+   there.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .vha-chrome {
+    display: none;
   }
 }
 
@@ -971,6 +1016,15 @@ body.vh-hero-page {
     overflow-wrap: anywhere;
     text-align: left;
   }
+  /* the primary door CTA wraps rather than overflows its longer label */
+  .vha-cta-cmd {
+    max-width: calc(100vw - 24px);
+    padding: 12px 16px;
+    font-size: 12.5px;
+    text-align: center;
+    white-space: normal;
+    justify-content: center;
+  }
   /* the door + repo actions stack rather than crush at phone widths */
   .vha-cta-row {
     gap: 6px 10px;
@@ -986,6 +1040,12 @@ body.vh-hero-page {
   .vha-cta-mini {
     font-size: 8.5px;
     letter-spacing: 0.1em;
+  }
+  /* Acts 1-4 (the scrollytelling intro) are disabled on mobile — useHeroEngine
+     clamps navigation to the ladder there — so the button that used to open
+     them would be dead on tap. Desktop keeps it. */
+  .vha-cta-mini--btn {
+    display: none;
   }
 }
 
@@ -1086,6 +1146,19 @@ body.vh-hero-page {
 .vha-cta-door:hover,
 .vha-cta-link:hover {
   opacity: 0.72;
+}
+/* The copy-command control, demoted to secondary (Open the door is primary —
+   see .vha-cta-cmd below): a slash command reads wrong in the door's all-caps
+   treatment, so it keeps its own case and monospace weight. */
+.vha-cta-door--cmd {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 12px;
+  gap: 8px;
+}
+.vha-cta-door--cmd .vha-cta-tag {
+  opacity: 0.6;
+  margin-left: 2px;
 }
 .vha-cta-mini {
   border: 0;

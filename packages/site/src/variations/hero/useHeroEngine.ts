@@ -42,6 +42,18 @@ function prefersReducedMotion() {
     : false
 }
 
+// Acts 1-4 are the optional scrollytelling intro; Act 5 is the one line. On a
+// phone the intro is disabled outright (mobile viewport pass) — the hero
+// lands on, and stays on, the ladder. Desktop keeps the full five-act story.
+// Matches the .vha-chrome / .vha-cta-mini--btn mobile breakpoint in
+// variation-hero.css, so the dots/Intro button that would drive this
+// disappear in lockstep with the behaviour.
+function isMobileViewport() {
+  return typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(max-width: 640px)').matches
+    : false
+}
+
 type EngineState = {
   act: number
   flash: 0 | 1 | 2
@@ -73,10 +85,19 @@ const HERO = {
   hellAmber: '#C89A3F',
 } as const
 
+// Lucy's print on the ladder, mobile only: <100% of the desktop scale, same
+// proportions (a uniform CSS `scale()`, so nothing stretches). The face-anchor
+// MATH (FIG.origin, FIG.y) stays exactly what it is on desktop — only the
+// zoom factor shrinks — because that anchor formula is what keeps her face
+// clear of the CTA stack below it; touching the box height instead (an
+// earlier version of this fix) dragged the anchor itself down into the CTA
+// stack, which is the opposite of what "mobile viewport" pass needed.
+const MOBILE_FIG_SCALE = 0.62
+
 // Pure translation of state -> every derived style value. Nothing here
 // mutates state; `variant` only steers the two style knobs (cut angle, CTA
 // alignment) that differ between the Reredos and Guillotine layouts.
-function computeVals(state: EngineState, variant: 'a' | 'b') {
+function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
   const { act, flash, stop, glitch, od } = state
   const lane = LADDER[stop].lane
   const atLadder = act === N - 1
@@ -162,7 +183,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
     scene,
     wordFill,
     wordStroke,
-    figZoom: fig.zoom,
+    figZoom: mobile ? fig.zoom * MOBILE_FIG_SCALE : fig.zoom,
     figX: fig.x,
     figY: fig.y,
     figOrigin: fig.origin,
@@ -215,12 +236,32 @@ function computeVals(state: EngineState, variant: 'a' | 'b') {
           : 'none',
     oLucy: pick([1, 1, 1, 1, 0.88]),
 
-    oBlade: pick([0, 1, 0.9, 0, 0]),
-    bladeX: pick([-58, -14, 46, 120, 120]),
+    // At the ladder, the blade is otherwise parked off-scene (oBlade reads 0
+    // at act===N-1 by the Act 1-4 table below) — so a band switch used to cut
+    // straight from one figure/background to the next with nothing to sell
+    // the change. Reuse the SAME glitch clock pickStop already runs for every
+    // band crossing: a two-frame swipe (blade flying one way, then the other)
+    // timed to land right as the flash/scan pulse covers the repaint, so the
+    // cut reads as a katana slash rather than a jump cut.
+    oBlade: atLadder ? (glitch ? 1 : 0) : pick([0, 1, 0.9, 0, 0]),
+    // Narrower swipe than the desktop story ever used: the frame itself is
+    // capped at 78vw, and on a phone that's most of the screen already — an
+    // 85% throw swung almost the whole blade off the narrow viewport on each
+    // tick, so it barely registered before it was already gone.
+    bladeX: atLadder ? (glitch === 1 ? -50 : glitch === 2 ? 50 : 0) : pick([-58, -14, 46, 120, 120]),
     bladeXB: pick([-62, -18, 40, 110, 110]),
     // Horizontal motion blur on the katana, synced to the swing: heavy as it
     // flies in and out, sharp at the pose. Eases with the blade transition.
-    bladeBlur: pick([0, 12, 5, 18, 0]),
+    bladeBlur: atLadder ? (glitch ? 20 : 0) : pick([0, 12, 5, 18, 0]),
+    // The scrollytelling swing (Acts 1-4) wants the full 700ms cinematic
+    // ease. The ladder's glitch swipe is a 46ms-stepped hard cut like every
+    // other glitch element on this surface (the wordmark shear has no
+    // transition at all) — left at 700ms it never caught up between ticks and
+    // read as a slow smear instead of two decisive strokes.
+    bladeTransition:
+      atLadder && glitch
+        ? 'transform 40ms linear,opacity calc(120ms * var(--vh-t)) linear,filter 40ms linear'
+        : 'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
 
     oCut: pick([0, 0, 1, 0.14, 0]),
     cutRot: variant === 'b' ? -38 : -28,
@@ -276,6 +317,15 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const [stop, setStop] = useState(0)
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
   const [od, setOd] = useState<0 | 1 | 2>(0)
+  const [mobile, setMobile] = useState(isMobileViewport)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mq = window.matchMedia('(max-width: 640px)')
+    const onChange = () => setMobile(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   const actRef = useRef(act)
   actRef.current = act
@@ -362,7 +412,8 @@ export function useHeroEngine(variant: 'a' | 'b') {
   )
 
   const go = useCallback((n: number, opts?: { steps?: number; t?: number }) => {
-    const nextAct = Math.max(0, Math.min(N - 1, n))
+    // Mobile never leaves the ladder — Acts 1-4 are desktop-only.
+    const nextAct = isMobileViewport() ? N - 1 : Math.max(0, Math.min(N - 1, n))
     const from = actRef.current
     if (nextAct === from) return
     const steps = opts?.steps ?? 1
@@ -511,7 +562,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [act, stop])
 
-  const v = computeVals({ act, flash, stop, glitch, od }, variant)
+  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile)
 
   const dots = Array.from({ length: N }, (_, i) => ({
     aria: 'Act ' + (i + 1),

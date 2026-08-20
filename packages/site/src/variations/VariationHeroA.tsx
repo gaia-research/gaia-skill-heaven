@@ -4,6 +4,7 @@ import { HERO_ASSET_SETS, normalizeLucyAssetSet } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import { DOORS, INSTALL, SITE } from '../product'
+import { HarnessMark } from '../harnessMarks'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -28,6 +29,30 @@ import wingRight from '../assets/hero-commission/v01/wing-right.png'
 export interface VariationHeroProps {
   /** Character set for reviewer routes; the layout remains Hero A. */
   assetSet?: string
+}
+
+// Zero-scene only: /skill-zero is the one command that has to name a
+// harness before it means anything, so this is the one CTA that shows the
+// harness marks. Heaven/Hell/Ultra never repeat it — by the time a visitor is
+// on those bands the harness choice is already made (issue: mobile viewport
+// pass).
+function ZeroCompat({ fg }: { fg: string }) {
+  return (
+    <div className="vha-cta-compat" style={{ color: fg }}>
+      <span className="vha-cta-compat__label">Runs on</span>
+      <span className="vha-cta-compat__marks">
+        {DOORS.map((d) => (
+          <HarnessMark
+            key={d.id}
+            id={d.id}
+            harness={d.harness}
+            className="vha-cta-compat__mark"
+            letterClassName="vha-cta-compat__mark vha-cta-compat__mark--letter"
+          />
+        ))}
+      </span>
+    </div>
+  )
 }
 
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
@@ -261,7 +286,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           bottom: 0,
           height: '92vh',
           translate: '-50% 0',
-          transition: 'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+          // transform-origin travels WITH transform now — leaving it out of the
+          // transition meant the pivot point snapped instantly on every band
+          // change (each FIG entry carries its own face-anchored origin), so
+          // the figure looked like it was jumping mid-animation even though
+          // the scale/position themselves were easing correctly.
+          transition:
+            'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
           transform: `translateX(${v.figX}vh) translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
           transformOrigin: v.figOrigin,
           zIndex: 1,
@@ -295,8 +326,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           pointerEvents: 'none',
           width: 'min(78vw,1180px)',
           translate: '-50% -50%',
-          transition:
-            'transform calc(700ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),opacity calc(400ms * var(--vh-t)) linear,filter calc(700ms * var(--vh-t)) linear',
+          transition: v.bladeTransition,
           transform: `rotate(-28deg) translateX(${v.bladeX}%) scale(${v.mBlade})`,
           opacity: v.oBlade,
           filter: v.bladeBlur ? `blur(${v.bladeBlur}px)` : 'none',
@@ -485,23 +515,32 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
 
         <div className="vha-cta vha-cta--left">
-          <button
-            type="button"
+          {/* Open the door is the primary action on every band (zero, heaven,
+              hell, ultra alike) — it's the one link that actually goes
+              somewhere. The copy-command control below it is secondary: handy
+              once you've already got the plugin, not the first thing to reach
+              for. */}
+          <Link
             className="vha-cta-cmd"
-            onClick={() => copy(band.cmd, 'cmd')}
+            to={band.door}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
-            {/* every band command is a slash command typed in-session, never a shell line */}
-            <span className="vha-cta-prompt" style={{ color: v.bg }}>›</span>
-            <span className="vha-cta-text">{band.cmd}</span>
-            <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
-          </button>
-          <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
-          {/* The door is routed per band, so it belongs beside the band's own
-              command rather than with the repo actions (issue #47). */}
-          <Link className="vha-cta-door" to={band.door} style={{ color: v.fg, borderColor: v.ctaLine }}>
-            {band.doorLabel} →
+            <span className="vha-cta-text">{band.doorLabel}</span>
+            <span className="vha-cta-tag" style={{ color: v.bg, opacity: 0.6 }}>→</span>
           </Link>
+          <div className="vha-cta-hint" style={{ color: v.dim }}>{band.hint}</div>
+          <button
+            type="button"
+            className="vha-cta-door vha-cta-door--cmd"
+            onClick={() => copy(band.cmd, 'cmd')}
+            style={{ color: v.fg, borderColor: v.ctaLine }}
+          >
+            {/* every band command is a slash command typed in-session, never a shell line */}
+            <span className="vha-cta-prompt" style={{ opacity: 0.8 }}>›</span>
+            <span className="vha-cta-text">{band.cmd}</span>
+            <span className="vha-cta-tag">{copied === 'cmd' ? 'copied ⏎' : 'copy'}</span>
+          </button>
+          {v.scene === 'zero' && <ZeroCompat fg={v.fg} />}
         </div>
 
         <div className="vha-cta vha-cta--right">
