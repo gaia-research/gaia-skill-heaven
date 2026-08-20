@@ -36,24 +36,23 @@ Requires **Node.js 22+**. Two ways in — install the Agent Plugin, or just the 
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-**Any other harness** — clone the repo and load the same bundle:
+**Agent Plugins clients** — install or load the directory
+`plugins/skill-heaven`; root `plugin.json`, `mcp.json`, and `skills/` are the
+portable contract.
+
+**Pi 0.84.2** — Pi is not yet a native Agent Plugins client, so this checkout
+ships a namespaced adapter over that same contract:
 
 ```bash
 git clone https://github.com/gaia-research/gaia-skill-heaven.git
+cd gaia-skill-heaven
+pi install ./plugins/skill-heaven --approve
 ```
 
-```json
-{
-  "mcpServers": {
-    "skill-summon": {
-      "command": "node",
-      "args": ["/path/to/gaia-skill-heaven/plugins/skill-heaven/mcp/skill-summon.mjs"]
-    }
-  }
-}
-```
-
-Either way you get `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell` and `/skill-ultra`, with the summon engine bundled in. There is no second package and no sibling repository.
+Run `/reload` in a Pi session that was already open. Then `/summon`,
+`/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available;
+the adapter reads portable `mcp.json` and starts the bundled server lazily.
+There is no second engine or sibling repository.
 
 📖 [`docs/AGENT-PLUGIN.md`](docs/AGENT-PLUGIN.md)
 
@@ -181,7 +180,7 @@ Two things worth knowing:
 |---|---|---|
 | Claude Code | ✅ `claude-zero` | ✅ plugin |
 | Codex | ✅ `codex-zero` | — |
-| Pi | ✅ `pi-zero` | — |
+| Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (Pi 0.84.2) |
 | Hermes | ✅ `hermes-zero` | — |
 | Grok | ✅ `grok-zero` | — |
 | Cursor | inspection only | — |

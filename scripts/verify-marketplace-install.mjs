@@ -45,7 +45,7 @@ const PLUGIN_NAME = "skill-heaven"; // the sole entry name in marketplace.json
 
 /** Everything a real marketplace install must NOT bring along. If any of
  * these leak into the copy, the "fresh environment" is a fiction. */
-const FORBIDDEN_SIBLINGS = ["node_modules", "src", "bin", "package.json", "tsconfig.json"];
+const FORBIDDEN_SIBLINGS = ["node_modules", "src", "bin", "tsconfig.json"];
 
 /**
  * A5a (KC1 narrowness fix): resolve the plugin source dir FROM
@@ -231,17 +231,42 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
       "fresh temp dir has no node_modules anywhere beside the plugin (no npm install ran here)",
     );
 
-    // --- plugin.json is present and minimally valid ----------------------
+    // --- portable Agent Plugin manifest + skills are present -------------
+    const portablePluginJsonPath = join(installedPluginRoot, "plugin.json");
+    assert(existsSync(portablePluginJsonPath), "portable plugin.json shipped at the plugin root");
+    let portablePluginJson = null;
+    try {
+      portablePluginJson = JSON.parse(readFileSync(portablePluginJsonPath, "utf-8"));
+    } catch (/** @type {any} */ err) {
+      failures.push(`root plugin.json did not parse as JSON: ${err.message}`);
+    }
+    if (portablePluginJson) {
+      assert(
+        portablePluginJson.$schema === "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "root plugin.json targets Agent Plugins 1.0.0",
+      );
+      assert(portablePluginJson.name === "skill-heaven", "root plugin.json names skill-heaven");
+      assert(!("displayName" in portablePluginJson), "root plugin.json carries no non-portable displayName field");
+      assert(!("userConfig" in portablePluginJson), "root plugin.json carries no non-portable userConfig field");
+    }
+    for (const skill of ["summon", "skill-zero", "skill-heaven", "skill-hell", "skill-ultra"]) {
+      assert(
+        existsSync(join(installedPluginRoot, "skills", skill, "SKILL.md")),
+        `portable skills/${skill}/SKILL.md shipped at shallow discovery depth`,
+      );
+    }
+
+    // --- retained Claude marketplace manifest is still valid ------------
     const pluginJsonPath = join(installedPluginRoot, ".claude-plugin", "plugin.json");
-    assert(existsSync(pluginJsonPath), "plugin.json shipped at .claude-plugin/plugin.json");
+    assert(existsSync(pluginJsonPath), "Claude compatibility plugin.json shipped at .claude-plugin/plugin.json");
     let pluginJson = null;
     try {
       pluginJson = JSON.parse(readFileSync(pluginJsonPath, "utf-8"));
     } catch (/** @type {any} */ err) {
-      failures.push(`plugin.json did not parse as JSON: ${err.message}`);
+      failures.push(`Claude compatibility plugin.json did not parse as JSON: ${err.message}`);
     }
     if (pluginJson) {
-      assert(typeof pluginJson.name === "string" && pluginJson.name.length > 0, "plugin.json has a non-empty 'name'");
+      assert(typeof pluginJson.name === "string" && pluginJson.name.length > 0, "Claude compatibility plugin.json has a non-empty 'name'");
     }
 
     // --- every shipped surface resolves its script under ${CLAUDE_PLUGIN_ROOT} ---
@@ -291,8 +316,33 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
 
     // --- PR4: the summon MCP server is bundled in — no npx, no sibling ------
     // --- checkout, no external binary. ---------------------------------------
+    const portableMcpConfigPath = join(installedPluginRoot, "mcp.json");
+    assert(existsSync(portableMcpConfigPath), "portable mcp.json shipped at the plugin root");
+    if (existsSync(portableMcpConfigPath)) {
+      /** @type {any} */
+      let portableMcpConfig = null;
+      try {
+        portableMcpConfig = JSON.parse(readFileSync(portableMcpConfigPath, "utf-8"));
+      } catch (/** @type {any} */ err) {
+        failures.push(`portable mcp.json did not parse as JSON: ${err.message}`);
+      }
+      if (portableMcpConfig) {
+        const portableServer = portableMcpConfig?.mcpServers?.["skill-summon"];
+        assert(
+          portableMcpConfig.$schema === "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+          "portable mcp.json targets Agent Plugins 1.0.0",
+        );
+        assert(portableServer?.type === "stdio", "portable skill-summon declares the stdio transport explicitly");
+        assert(portableServer?.command === "node", "portable skill-summon runs on plain node");
+        assert(
+          Array.isArray(portableServer?.args) && portableServer.args.includes("${PLUGIN_ROOT}/mcp/skill-summon.mjs"),
+          'portable mcp.json points at "${PLUGIN_ROOT}/mcp/skill-summon.mjs"',
+        );
+      }
+    }
+
     const mcpConfigPath = join(installedPluginRoot, ".mcp.json");
-    assert(existsSync(mcpConfigPath), ".mcp.json shipped at the plugin root");
+    assert(existsSync(mcpConfigPath), "Claude compatibility .mcp.json shipped at the plugin root");
     if (existsSync(mcpConfigPath)) {
       /** @type {any} */
       let mcpConfig = null;

@@ -1,7 +1,8 @@
-# Skill Heaven — one Agent Plugin
+# Skill Heaven — one portable Agent Plugin
 
-**Status: the shape of record for the plugin.** This document settles what
-ships as *one* Claude Code plugin, so nothing downstream re-litigates it. It is
+**Status: the shape of record for the plugin.** The portable core targets the
+[Agent Plugins 1.0.0 specification](https://agent-plugins.org/specification):
+root `plugin.json`, root `mcp.json`, and shallow `skills/*/SKILL.md`. It is
 implementation guidance, not a ratification — decision authority stays with
 `gaia-research/founder/RATIFICATION.md` (see **Authority** below).
 
@@ -9,7 +10,9 @@ implementation guidance, not a ratification — decision authority stays with
 
 A user installs **one** plugin — `skill-heaven` — and gets the summon MCP plus
 all five surfaces. No sibling repository, no `npx`, no external binary, no
-build step. `gaia-mcp` is deprecated.
+build step. `gaia-mcp` is deprecated. Portable clients discover the same skills
+and MCP declaration; client-only delivery shims stay namespaced or in legacy
+compatibility locations.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
 `/skill-hell` summoned by shelling out to a `skill-hell` binary hunted for at
@@ -18,24 +21,36 @@ four-line "Fix one of:" error. Three rung tables disagreed with each other, and
 `ultra` was refused as `⛔ UNRATIFIED` in four places while `docs/LADDER-FLOW.md`
 (N13) said nothing on the line refuses.
 
-## Target shape
+## Package shape
 
 ```
-skill-heaven/
-├── .claude-plugin/marketplace.json      entry: skill-heaven → ./plugins/skill-heaven
-├── plugins/skill-heaven/                THE PLUGIN
-│   ├── .claude-plugin/plugin.json       name: skill-heaven · userConfig: tree_url, tree_named_url, zero_cuts
-│   ├── .mcp.json                        skill-summon → node ${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs
-│   ├── mcp/skill-summon.mjs             committed esbuild bundle (generated, CI-gated)
-│   ├── commands/{summon,skill-heaven,skill-hell,skill-zero,skill-ultra}.md
-│   ├── scripts/render-ladder.mjs        one renderer, zero-dependency, bare Node
-│   └── data/ladder.json                 generated from packages/core
-├── packages/skill-summon/               the ported engine (npm: skill-summon, one bin)
-└── packages/claude-zero/                unchanged npm door/launcher — no longer the plugin
+plugins/skill-heaven/                    THE AGENT PLUGIN
+├── plugin.json                          Agent Plugins 1.0.0 manifest
+├── mcp.json                             skill-summon → node ${PLUGIN_ROOT}/mcp/skill-summon.mjs
+├── skills/
+│   ├── summon/SKILL.md
+│   ├── skill-zero/SKILL.md
+│   ├── skill-heaven/SKILL.md
+│   ├── skill-hell/SKILL.md
+│   └── skill-ultra/SKILL.md
+├── mcp/skill-summon.mjs                 committed esbuild bundle (generated, CI-gated)
+├── dev.skill-heaven.pi/                 Pi compatibility adapter + pinned probe
+├── package.json                         Pi package delivery metadata
+├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
+├── .mcp.json                            retained Claude MCP compatibility
+├── commands/*.md                        retained Claude explicit commands
+├── scripts/render-ladder.mjs            one renderer, zero-dependency, bare Node
+└── data/ladder.json                     generated from packages/core
 ```
+
+The core manifest is closed: `displayName` and `userConfig` do not appear at its
+top level. The old Claude files remain alongside the portable core until the
+version-pinned Claude probes in issue #77 establish which root files and
+placeholder names that client accepts and its official extension namespace.
+They are compatibility files, not alternate portable manifests.
 
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
-simply stops being the thing the marketplace points at.
+is not the plugin.
 
 ## One line, five entry points, one tool
 
@@ -222,10 +237,11 @@ session dirs `/tmp/skill-summon-*`; payload cache
 ## Packaging
 
 The MCP ships as a **committed esbuild bundle** at
-`plugins/skill-heaven/mcp/skill-summon.mjs`, run by `.mcp.json` through
-`${CLAUDE_PLUGIN_ROOT}`. Zero install step, offline-safe, and the repo keeps
-**zero runtime dependencies** — the bundle has none by construction. CI rebuilds
-the bundle and fails on `git diff --exit-code`.
+`plugins/skill-heaven/mcp/skill-summon.mjs`. Portable clients load it from root
+`mcp.json` through `${PLUGIN_ROOT}`; the retained Claude compatibility file uses
+`.mcp.json` and `${CLAUDE_PLUGIN_ROOT}`. Zero install step, offline-safe, and
+the repo keeps **zero runtime dependencies** — the bundle has none by
+construction. CI rebuilds the bundle and fails on `git diff --exit-code`.
 
 ## The tree
 
@@ -242,26 +258,31 @@ TREE_NAMED_URL https://gaiaskilltree.com/graph/named/index.json   (267 named ski
 > SCHEMA.md`, `schema: gaia.arbor-edge/v1`). The two URLs above are what the
 > engine actually reads today.
 
-## Install — the final decision
+## Install and client delivery
 
-This settles issues #47 and #53 against each other.
+Agent Plugins standardizes the package, not one universal install command.
+Compatible clients install `plugins/skill-heaven` as an Agent Plugin directory.
+Client delivery remains explicit:
 
-1. **Primary install is the plugin**, two lines, copy-pasteable, no terminal —
-   which is also the mobile answer #47 asked for:
-   ```
-   /plugin marketplace add gaia-research/gaia-skill-heaven
-   /plugin install skill-heaven@gaia-skill-heaven
-   ```
-2. **`install.sh` is optional** — the standalone launcher install (the five
-   `*-zero` doors). Not required for, and not part of, the plugin.
-3. **`npx` is not an install path.** This settles #47's npx bullets against #53.
-4. **`skill-heaven.dev` is deferred.** The site uses the URL that actually
-   serves today: `gaia-research.github.io/gaia-skill-heaven/install.sh`.
-5. **`gaia-mcp` is deprecated** — kept installable so copies of `install.sh` in
-   the wild keep working, with a README banner pointing here.
+- **Claude Code marketplace compatibility:**
+  ```
+  /plugin marketplace add gaia-research/gaia-skill-heaven
+  /plugin install skill-heaven@gaia-skill-heaven
+  ```
+- **Pi 0.84.2 from this checkout:**
+  ```bash
+  pi install ./plugins/skill-heaven --approve
+  ```
+  Pi is not yet a native Agent Plugins client and deliberately has no built-in
+  MCP runtime. The namespaced adapter maps the portable skills and `mcp.json`
+  into Pi's extension API; see
+  [`plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+- **`install.sh` is optional:** it installs the standalone `*-zero` launchers,
+  not the Agent Plugin.
 
-Existing `claude-zero@gaia-skill-heaven` installs migrate automatically via a
-`renames` entry in `marketplace.json` (needs Claude Code ≥ 2.1.193).
+`gaia-mcp` remains deprecated. Existing
+`claude-zero@gaia-skill-heaven` marketplace installs migrate through the
+`renames` entry in `marketplace.json` (Claude Code ≥ 2.1.193).
 
 ## Not built
 
@@ -276,7 +297,9 @@ Stated here so no surface implies otherwise:
 - **Ultra controller heuristics.** At `ultra` the agent picks direction and
   depth unaided.
 - **Relevance-band filtering.** The engine takes a depth, not a score band.
-- **The five surfaces on the non-Claude doors.** Claude Code first.
+- **Portable-client coverage beyond Pi.** Pi 0.84.2 now has all five surfaces
+  through its namespaced compatibility adapter; Codex, Hermes and Grok still
+  need the pinned installation probes tracked in issue #77.
 
 ## Authority
 

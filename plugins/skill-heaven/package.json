@@ -1,0 +1,21 @@
+{
+  "name": "skill-heaven-agent-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "pi-package"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./dev.skill-heaven.pi/skill-heaven.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  }
+}
