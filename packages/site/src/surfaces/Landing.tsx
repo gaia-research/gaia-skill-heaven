@@ -22,6 +22,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   DIRECTION_WORD,
   DOORS,
@@ -276,6 +277,19 @@ export default function Landing() {
   const activeSurface = surfaceById(RUNG_BAND[rung])
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
   const pickRung = useCallback((id: RungId) => setRung(id), [])
+
+  const location = useLocation()
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const section = (location.state as { scrollTo?: string } | null)?.scrollTo ?? searchParams.get('section')
+    if (section) {
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById(section)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+      return () => window.clearTimeout(timer)
+    }
+  }, [location])
   // In-page nav uses #hash anchors, but this app runs under a HashRouter — a
   // bare #id would be read as a route and bounce to the hero. Intercept those
   // clicks and scroll instead. External (http) links pass through.

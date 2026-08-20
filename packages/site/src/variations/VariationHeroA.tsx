@@ -84,9 +84,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Fifth-scene CTA: the real launch/invocation one-liner per band + the
   // constant install one-liner, both copyable (mirrors the instrument).
   // Per band: the command, what it means, and where its door opens. Zero's
-  // door lands at the top of the document; the summon bands land on the
-  // converge/explore section; Ultra lands on what Ultra is (issue #47).
-  const BAND: Record<string, { cmd: string; hint: string; anchor: string; fallbackAnchor?: string; doorLabel: string }> = {
+  // door lands at section 01 (#doors); Heaven, Hell, and Ultra land at
+  // section 04 (#directions).
+  const BAND: Record<string, { cmd: string; hint: string; anchor: string; doorLabel: string }> = {
     zero: {
       cmd: '/skill-zero',
       hint: 'the floor · /summon by hand, nothing automatic',
@@ -108,25 +108,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     ultra: {
       cmd: '/skill-ultra',
       hint: 'the crown · picks direction + position per gap',
-      anchor: 'ultra',
-      fallbackAnchor: 'directions',
+      anchor: 'directions',
       doorLabel: 'Open the door · what Ultra is',
     },
   }
   const band = BAND[v.scene]
   const openLandingSection = useCallback(
-    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string, fallbackAnchor?: string) => {
+    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string) => {
       e.preventDefault()
-      navigate('/landing')
-      // HashRouter owns the URL hash, so `/landing#section` is a route-shaped
-      // hash rather than a native document anchor. Navigate first, then let
-      // Landing mount before resolving the section. Ultra currently lives in
-      // the directions section; the explicit fallback keeps this link correct
-      // until a dedicated `#ultra` section exists.
-      window.setTimeout(() => {
-        const target = document.getElementById(anchor) ?? (fallbackAnchor ? document.getElementById(fallbackAnchor) : null)
-        target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 0)
+      navigate(`/landing?section=${anchor}`, { state: { scrollTo: anchor } })
     },
     [navigate],
   )
@@ -582,8 +572,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               for. */}
           <Link
             className="vha-cta-cmd"
-            to="/landing"
-            onClick={(e) => openLandingSection(e, band.anchor, band.fallbackAnchor)}
+            to={`/landing?section=${band.anchor}`}
+            onClick={(e) => openLandingSection(e, band.anchor)}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
             <span className="vha-cta-text">{band.doorLabel}</span>
