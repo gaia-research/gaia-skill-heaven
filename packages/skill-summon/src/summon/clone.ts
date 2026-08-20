@@ -45,6 +45,16 @@ export async function ensureCachedRepo(
   if (!(await pathExists(cacheDir))) {
     await cloneRepo(repoUrl, branch, cacheDir);
     warm = false;
+  } else if (branch && COMMIT_SHA.test(branch)) {
+    // Commit-pinned fleet cache: checked out detached with no upstream, so
+    // `git pull` always fails here. Reuse as-is when already at that commit
+    // (the common case — no network call needed); otherwise re-fetch the
+    // pinned commit into the existing directory rather than re-cloning.
+    warm = await tryReuseCommitPinnedCache(cacheDir, branch);
+    if (!warm) {
+      await rm(cacheDir, { recursive: true, force: true });
+      await cloneRepo(repoUrl, branch, cacheDir);
+    }
   } else {
     try {
       await runGit(["pull"], cacheDir);
@@ -90,6 +100,22 @@ export async function resolveRemoteCommit(
   if (!commit)
     throw new Error(`git ls-remote returned no commit for ${repoUrl}`);
   return commit;
+}
+
+/** True if cacheDir already holds (or now holds, after a targeted fetch) the pinned commit. */
+async function tryReuseCommitPinnedCache(
+  cacheDir: string,
+  commit: string,
+): Promise<boolean> {
+  try {
+    const currentCommit = await gitOutput(["rev-parse", "HEAD"], cacheDir);
+    if (currentCommit.toLowerCase() === commit.toLowerCase()) return true;
+    await runGit(["fetch", "--depth", "1", "origin", commit], cacheDir);
+    await runGit(["checkout", "--detach", "FETCH_HEAD"], cacheDir);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function cloneRepo(

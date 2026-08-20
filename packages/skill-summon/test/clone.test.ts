@@ -38,6 +38,31 @@ describe("commit-pinned fleet materialization", () => {
       await readFile(path.join(checkout.path, "skills", "fixture", "SKILL.md"), "utf8"),
     ).toBe("# version one\n");
   });
+
+  it("reuses an existing commit-pinned cache as warm instead of falling back to a re-clone", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "skill-summon-clone-test-"));
+    roots.push(root);
+    const origin = path.join(root, "origin");
+    await mkdir(path.join(origin, "skills", "fixture"), { recursive: true });
+    await git(origin, "init");
+    await git(origin, "config", "user.email", "fixture@example.test");
+    await git(origin, "config", "user.name", "Fixture");
+    await writeFile(path.join(origin, "skills", "fixture", "SKILL.md"), "# version one\n");
+    await git(origin, "add", ".");
+    await git(origin, "commit", "-m", "one");
+    const commit = (await git(origin, "rev-parse", "HEAD")).trim();
+
+    const cacheDir = path.join(root, "checkout");
+    const first = await ensureCachedRepo(cacheDir, origin, commit);
+    expect(first.warm).toBe(false);
+
+    // A second skill materialized from the same pinned fleet commit must reuse
+    // the cache (detached HEAD, no upstream) rather than `git pull` failing
+    // and forcing a full rmtree + re-clone.
+    const second = await ensureCachedRepo(cacheDir, origin, commit);
+    expect(second.warm).toBe(true);
+    expect(second.commit).toBe(commit);
+  });
 });
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
