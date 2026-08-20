@@ -32,6 +32,8 @@ export interface GaiaRegistrySource {
 export type HttpGaiaRegistrySourceOptions = {
   genericUrl?: string;
   namedUrl?: string;
+  rootUrl?: string;
+  legacy?: boolean;
   fetchFn?: typeof fetch;
   now?: () => Date;
   cacheTtlMs?: number;
@@ -40,6 +42,8 @@ export type HttpGaiaRegistrySourceOptions = {
 export class HttpGaiaRegistrySource implements GaiaRegistrySource {
   readonly #genericUrl: string;
   readonly #namedUrl: string;
+  readonly #rootUrl?: string;
+  readonly #legacy: boolean;
   readonly #fetchFn: typeof fetch;
   readonly #now: () => Date;
   readonly #cacheTtlMs: number;
@@ -48,6 +52,8 @@ export class HttpGaiaRegistrySource implements GaiaRegistrySource {
   constructor(options: HttpGaiaRegistrySourceOptions = {}) {
     this.#genericUrl = options.genericUrl ?? DEFAULT_GENERIC_REGISTRY_URL;
     this.#namedUrl = options.namedUrl ?? DEFAULT_NAMED_REGISTRY_URL;
+    this.#rootUrl = options.rootUrl;
+    this.#legacy = options.legacy ?? false;
     this.#fetchFn = options.fetchFn ?? fetch;
     this.#now = options.now ?? (() => new Date());
     this.#cacheTtlMs = options.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
@@ -90,7 +96,9 @@ export class HttpGaiaRegistrySource implements GaiaRegistrySource {
       );
     }
     const orphanedNamedSkills = namedSkills.filter(
-      (skill) => !genericIds.has(skill.genericSkillRef),
+      (skill) =>
+        skill.genericSkillRef !== undefined &&
+        !genericIds.has(skill.genericSkillRef),
     );
     if (orphanedNamedSkills.length > 0) {
       const examples = orphanedNamedSkills
@@ -104,8 +112,19 @@ export class HttpGaiaRegistrySource implements GaiaRegistrySource {
 
     const snapshot: GaiaRegistrySnapshot = {
       generic: generic.data,
-      named: named.data,
+      named: {
+        ...named.data,
+        buckets: Object.fromEntries(
+          Object.entries(named.data.buckets).map(([bucket, skills]) => [
+            bucket,
+            skills.map((skill) => ({ ...skill, origin: "tree" as const })),
+          ]),
+        ),
+      },
       source: {
+        kind: "tree",
+        ...(this.#rootUrl ? { rootUrl: this.#rootUrl } : {}),
+        ...(this.#legacy ? { legacy: true } : {}),
         genericUrl: this.#genericUrl,
         namedUrl: this.#namedUrl,
         fetchedAt: now.toISOString(),
@@ -156,6 +175,7 @@ export class InMemoryGaiaRegistrySource implements GaiaRegistrySource {
     return {
       ...structuredClone(this.#documents),
       source: {
+        kind: "tree",
         genericUrl: "memory://gaia/generic",
         namedUrl: "memory://gaia/named",
         fetchedAt: new Date().toISOString(),

@@ -1,4 +1,22 @@
 export {
+  DEFAULT_SKILL_SOURCE,
+  resolveSkillSource,
+  treeProjectionUrls,
+} from "./data/configured-source.js";
+export type {
+  ResolveSkillSourceOptions,
+  SkillSourceResolution,
+} from "./data/configured-source.js";
+export {
+  GithubFleetSource,
+  checkoutGithubFleet,
+  readSkillFrontmatter,
+} from "./data/fleet-source.js";
+export type {
+  GithubFleetCheckout,
+  GithubFleetSourceOptions,
+} from "./data/fleet-source.js";
+export {
   DEFAULT_GENERIC_REGISTRY_URL,
   DEFAULT_NAMED_REGISTRY_URL,
   GaiaDataError,

@@ -18,23 +18,17 @@
     "name": "Gaia Research"
   },
   "userConfig": {
-    "tree_url": {
+    "skill_url": {
       "type": "string",
-      "title": "Gaia Registry generic projection URL",
-      "description": "URL of the generic Gaia Skill Tree projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
-      "default": "https://gaiaskilltree.com/graph/gaia.json"
-    },
-    "tree_named_url": {
-      "type": "string",
-      "title": "Gaia Registry named projection URL",
-      "description": "URL of the Named Skills Gaia projection the summon MCP server reads. Defaults to the public gaiaskilltree.com projection; override only to point at a different Gaia Registry build.",
-      "default": "https://gaiaskilltree.com/graph/named/index.json"
+      "title": "Skill URL",
+      "description": "One source URL. Use a Skill Tree website root such as https://gaiaskilltree.com or a flat GitHub repository containing SKILL.md files.",
+      "default": "https://gaiaskilltree.com"
     },
     "zero_cuts": {
       "type": "string",
-      "title": "What Skill Zero cuts by default",
-      "description": "\"automatic\" (default) cuts only automatic summoning — manual /summon still works, per N13's product floor. \"all\" cuts manual /summon too. Claude Code's userConfig schema has no enum type; any value other than \"all\" is treated as \"automatic\" by plugins/skill-heaven/scripts/render-ladder.mjs's zeroCuts().",
-      "default": "automatic"
+      "title": "Zero cuts (temporary/all) skills. Default is temporary.",
+      "description": "\"temporary\" (default) cuts temporary automatic summons while manual /summon remains available. \"all\" cuts all skill summons, including manual /summon.",
+      "default": "temporary"
     }
   }
 }

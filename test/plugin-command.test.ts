@@ -111,10 +111,11 @@ describe.each(SURFACES)("$file", ({ file, mode }) => {
     expect(source).toMatch(/⛔/);
   });
 
-  it("never presents routing as stamp- or trust-gated (stamps are not built)", () => {
+  it("states source-backed invocation routing without trust-gate claims", () => {
     expect(source).not.toMatch(/stamp-gated routing (is|are) (live|running|on)/i);
     if (mode !== "zero") {
-      expect(source.replace(/\s+/g, " ")).toContain("Heaven/Hell stamps are not");
+      expect(source).toContain("surface:");
+      expect(source).toContain("disable-model-invocation: true");
     }
   });
 

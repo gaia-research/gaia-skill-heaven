@@ -46,6 +46,34 @@ describe("tree-provided summon trust", () => {
     ]);
   });
 
+  it("keeps human-led skills out of automatic Hell routing", () => {
+    const human = skill("fixture/human", "Review Human", "code review");
+    human.invocation = "human";
+    human.origin = "fleet";
+    const model = skill("fixture/model", "Review Model", "code review");
+    model.invocation = "model";
+    model.origin = "fleet";
+
+    expect(
+      rankCandidatesWithDetails([human, model], "code review").candidates.map(
+        (candidate) => candidate.id,
+      ),
+    ).toEqual(["fixture/model"]);
+    expect(
+      rankCandidatesWithDetails([human, model], "code review", "hell").candidates.map(
+        (candidate) => candidate.id,
+      ),
+    ).toEqual(["fixture/model"]);
+    expect(
+      rankCandidatesWithDetails([human, model], "code review", "heaven").candidates.map(
+        (candidate) => candidate.id,
+      ),
+    ).toEqual(["fixture/human"]);
+    expect(
+      rankCandidatesWithDetails([human, model], "code review", "any").candidates,
+    ).toHaveLength(2);
+  });
+
   it("displays a string rank but does not pretend it has ordering semantics", () => {
     const candidate = skill("fixture/ranked", "Ranked Review", "code review");
     candidate.trust = { rank: "curator-pick" };

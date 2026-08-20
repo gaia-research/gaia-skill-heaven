@@ -116,21 +116,16 @@ export function levelForPosture(posture) {
 
 /** What `/skill-zero` cuts by default.
  *
- * `automatic` — automatic summoning is cut; manual `/summon` still works. This
- * is the product floor per N13: it "ships /summon by default, with none of the
- * choosing automated".
- * `all` — manual `/summon` is cut too.
+ * `temporary` — temporary automatic skills are cut; manual `/summon` still works.
+ * `all` — every skill summon, including manual `/summon`, is cut.
  *
  * Read from the plugin's userConfig if the harness exports it, otherwise from
- * SKILL_HEAVEN_ZERO_CUTS, otherwise `automatic`. Whether userConfig reaches a
- * command's `!` bash block at all is an open M0 probe; defaulting to `automatic`
- * means a negative result degrades to the documented default rather than
- * breaking the surface.
+ * SKILL_HEAVEN_ZERO_CUTS, otherwise `temporary`.
  * @param {NodeJS.ProcessEnv} [env]
- * @returns {"automatic" | "all"} */
+ * @returns {"temporary" | "all"} */
 export function zeroCuts(env = process.env) {
   const raw = (env.CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? env.SKILL_HEAVEN_ZERO_CUTS ?? "").trim().toLowerCase();
-  return raw === "all" ? "all" : "automatic";
+  return raw === "all" ? "all" : "temporary";
 }
 
 /** @param {LaunchManifest} manifest */
@@ -159,7 +154,7 @@ function line(data, armed) {
     const band = data.bands[rung.band];
     const meaning =
       rung.band === "zero"
-        ? "nothing automatic · manual /summon only"
+        ? "nothing temporary · manual /summon only"
         : rung.band === "ultra"
           ? "the crown rung · picks direction and depth per gap"
           : `${band.direction} · ${rung.id === "low" || rung.id === "high" ? "the band opens here" : "further along the band"}`;
@@ -199,10 +194,15 @@ function moveLine(data) {
  * that direction is the agent's call, gap by gap.
  * @param {string} direction */
 function autoSummonProtocol(direction) {
+  const routing = direction === "converge"
+    ? 'surface "heaven" for human-led skills'
+    : direction === "explore"
+      ? 'surface "hell" for model-led skills'
+      : 'surface "heaven" for the human-led path or "hell" for the model-led path';
   return [
     "",
     "   On a real capability gap — never preemptively — call the `summon` tool, with",
-    `   a depth you judge the gap needs while ${direction === "converge" ? "converging" : "exploring"}.`,
+    `   ${routing}, and a depth you judge the gap needs.`,
     "   Print the returned card verbatim before using anything from it, read the",
     "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
     "   not the skill body. The lane stays armed.",
@@ -246,9 +246,9 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
     return {
       text: [
         "⛔ manual /summon is cut for this session (zero_cuts = all).",
-        "   Skill Zero's default cuts only AUTOMATIC summoning; this configuration cuts",
-        "   the manual call too. Change it in the plugin's settings (zero_cuts:",
-        "   automatic), or arm a rung above the floor: /skill-heaven · /skill-hell.",
+        "   Skill Zero's default cuts temporary skills; this configuration cuts the",
+        "   manual call too. Change it in the plugin's settings (zero_cuts:",
+        "   temporary), or arm a rung above the floor: /skill-heaven · /skill-hell.",
         "",
       ].join("\n"),
       refused: true,
@@ -273,7 +273,7 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
       `✳ /summon · ${intent}`,
       "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
       "",
-      "   Call the `summon` tool once, with this intent as the query.",
+      '   Call the `summon` tool once, with this intent as the query and surface "any".',
       "   Print the returned card verbatim before using anything from it, read the",
       "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
       "   not the skill body. This is one manual call — it arms nothing.",
@@ -291,8 +291,8 @@ function renderZero(/** @type {LadderData} */ data, /** @type {string | null} */
   lines.push("");
   lines.push(
     cutsAll
-      ? "   cut: no automatic summoning, and no manual /summon either."
-      : "   cut: no automatic summoning. Manual /summon still works — the floor ships it.",
+      ? "   cut: no temporary automatic skills, and no manual /summon either."
+      : "   cut: no temporary automatic skills. Manual /summon still works — the floor ships it.",
   );
   if (!cutsAll) lines.push("   Cut that too with: /skill-zero all");
   lines.push("");

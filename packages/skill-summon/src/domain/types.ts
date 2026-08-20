@@ -40,12 +40,17 @@ export type TrustFieldDescriptor = {
 export type TrustFieldValue = TrustScalar | TrustFieldDescriptor;
 export type TrustFields = Record<string, TrustFieldValue>;
 
+export type SkillInvocation = "human" | "model" | "any";
+
 export type NamedSkill = {
   id: string;
   name: string;
   title?: string | undefined;
   contributor: string;
-  genericSkillRef: string;
+  genericSkillRef?: string | undefined;
+  /** Human-led = Skill Heaven; model-led = Skill Hell; any = tree did not classify it. */
+  invocation?: SkillInvocation | undefined;
+  origin?: "tree" | "fleet" | undefined;
   status: string;
   level?: string | undefined;
   description: string;
@@ -86,8 +91,12 @@ export type GaiaRegistryDocuments = {
 };
 
 export type RegistrySourceInfo = {
+  kind?: "tree" | "fleet" | undefined;
+  rootUrl?: string | undefined;
   genericUrl: string;
   namedUrl: string;
+  commit?: string | undefined;
+  legacy?: boolean | undefined;
   fetchedAt: string;
 };
 
@@ -98,6 +107,8 @@ export type GaiaRegistrySnapshot = GaiaRegistryDocuments & {
 export type ResultMetadata = {
   serverVersion: string;
   mode: "registry";
+  sourceKind: "tree" | "fleet";
+  routingMode: "generic-map+collection" | "collection-only";
   contractVersion: typeof TREE_CONTRACT_VERSION;
   supportedContractVersions: [typeof TREE_CONTRACT_VERSION];
   upstreamDeclaresContractVersion: boolean;
@@ -144,6 +155,7 @@ export type SearchResultItem = {
   type?: string;
   status: string;
   genericSkillRef?: string;
+  invocation?: SkillInvocation;
   level?: string;
   trustMagnitude?: number;
   overallTrustGrade?: string;
@@ -168,6 +180,7 @@ export type NamedSkillSummary = {
   level?: string;
   description: string;
   catalogRef?: string | undefined;
+  invocation?: SkillInvocation;
   trustMagnitude?: number;
   overallTrustGrade?: string;
   trust?: TrustFields;

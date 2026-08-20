@@ -73,6 +73,7 @@ describe("HttpGaiaRegistrySource", () => {
     expect(first.generic.skills[0]?.id).toBe("testing");
     expect(first.named.buckets.testing?.[0]?.id).toBe("example/health");
     expect(first.source).toEqual({
+      kind: "tree",
       genericUrl: "https://example.test/generic.json",
       namedUrl: "https://example.test/named.json",
       fetchedAt: "2026-07-16T12:00:00.000Z",

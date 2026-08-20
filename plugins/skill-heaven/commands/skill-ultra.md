@@ -12,7 +12,8 @@ Print the block above **verbatim** inside a fenced code block.
 Then treat `ultra` as a **standing instruction for this conversation**. It is
 the top of the one line and has no sub-ladder: on a real capability gap — never
 preemptively — choose both the direction (converge on the gap, or explore around
-it) and how far to reach, then call the `summon` tool to match that choice.
+it) and how far to reach, then call the `summon` tool with `surface: "heaven"`
+for the human-led path or `surface: "hell"` for the model-led path.
 Print each returned card **verbatim** before using
 anything from it, read the `SKILL.md` at the card's path, and follow it. The
 card is the listing entry, not the skill body; resolve sibling `reference/`
@@ -29,6 +30,7 @@ Rules for this reply (the product's claim discipline, not style preferences):
 - Do not describe the controller as trained, benchmarked or scored. It is your
   own judgement, called by name — the benchmark that would inform it is not
   built.
-- Never present routing as trust- or stamp-gated. Heaven/Hell stamps are not
-  built; the card carries the engine's own honest ranking disclosure.
+- Honor source invocation metadata: fleet skills marked
+  `disable-model-invocation: true` are human-led and must never leak into the
+  automatic model-led path. The card carries the classification and ranking disclosure.
 - If the block is a `⛔` refusal, print it and stop.

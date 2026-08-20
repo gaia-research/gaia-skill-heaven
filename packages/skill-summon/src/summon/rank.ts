@@ -18,6 +18,8 @@ export type RankingSummary = {
   disclosure: string;
 };
 
+export type SummonSurface = "any" | "heaven" | "hell";
+
 export type RankedCandidates = {
   candidates: NamedSkill[];
   ranking: RankingSummary;
@@ -39,8 +41,11 @@ export function rankCandidates(
 export function rankCandidatesWithDetails(
   candidates: readonly NamedSkill[],
   query: string,
+  surface: SummonSurface = "hell",
 ): RankedCandidates {
+  const fleet = candidates.some((skill) => skill.origin === "fleet");
   const scored = candidates
+    .filter((skill) => allowedOnSurface(skill, surface))
     .filter(isInstallable)
     .map((skill) => ({ skill, relevance: relevanceScore(skill, query) }))
     .filter(({ relevance }) => relevance >= MIN_RELEVANCE);
@@ -48,7 +53,7 @@ export function rankCandidatesWithDetails(
   if (scored.length === 0) {
     return {
       candidates: [],
-      ranking: relevanceOnlyRanking(),
+      ranking: relevanceOnlyRanking(fleet),
     };
   }
 
@@ -71,7 +76,7 @@ export function rankCandidatesWithDetails(
     candidates: onTopic.map(({ skill }) => skill),
     ranking:
       fieldOrder.length === 0
-        ? relevanceOnlyRanking()
+        ? relevanceOnlyRanking(fleet)
         : {
             mode: "trust-then-relevance",
             trustFields: fieldOrder,
@@ -96,13 +101,21 @@ function fieldScore(skill: NamedSkill, field: string): number {
   return trustScore(field, value) ?? Number.NEGATIVE_INFINITY;
 }
 
-function relevanceOnlyRanking(): RankingSummary {
+function relevanceOnlyRanking(fleet = false): RankingSummary {
   return {
     mode: "relevance-only",
     trustFields: [],
-    disclosure:
-      "Tree published no comparable trust signals; candidates are ranked by relevance only.",
+    disclosure: fleet
+      ? "Flat fleet: the agent query routes SKILL.md name and description metadata by relevance; no generic map or tree trust ordering is active."
+      : "Tree published no comparable trust signals; candidates are ranked by relevance only.",
   };
+}
+
+function allowedOnSurface(skill: NamedSkill, surface: SummonSurface): boolean {
+  const invocation = skill.invocation ?? "any";
+  if (surface === "heaven") return invocation !== "model";
+  if (surface === "hell") return invocation !== "human";
+  return true;
 }
 
 function relevanceScore(skill: NamedSkill, query: string): number {
@@ -111,7 +124,7 @@ function relevanceScore(skill: NamedSkill, query: string): number {
     [skill.id, 10],
     [skill.title ?? "", 10],
     [skill.catalogRef ?? "", 8],
-    [skill.genericSkillRef, 8],
+    [skill.genericSkillRef ?? "", 8],
     [skill.tags.join(" "), 6],
     [skill.description, 3],
   ]);

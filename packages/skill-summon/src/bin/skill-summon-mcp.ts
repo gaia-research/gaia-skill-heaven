@@ -2,26 +2,12 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import {
-  DEFAULT_GENERIC_REGISTRY_URL,
-  DEFAULT_NAMED_REGISTRY_URL,
-  HttpGaiaRegistrySource,
-  resolveConfiguredRegistryUrl,
-} from "../data/source.js";
+import { resolveSkillSource } from "../data/configured-source.js";
 import { createSkillSummonMcpServer } from "../mcp/server.js";
 import { GaiaService } from "../service.js";
 
 async function main(): Promise<void> {
-  const source = new HttpGaiaRegistrySource({
-    genericUrl: resolveConfiguredRegistryUrl(
-      process.env.TREE_URL,
-      DEFAULT_GENERIC_REGISTRY_URL,
-    ),
-    namedUrl: resolveConfiguredRegistryUrl(
-      process.env.TREE_NAMED_URL,
-      DEFAULT_NAMED_REGISTRY_URL,
-    ),
-  });
+  const { source } = resolveSkillSource();
   const service = new GaiaService(source);
   const server = createSkillSummonMcpServer({ service });
   const transport = new StdioServerTransport();

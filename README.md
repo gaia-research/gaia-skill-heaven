@@ -97,6 +97,17 @@ Once the plugin is installed, in any session:
 
 Nothing you summon is installed, and nothing is left behind when the session ends.
 
+### One Skill URL
+
+The plugin reads one `skill_url` (`SKILL_SOURCE` outside Claude settings):
+
+- A Skill Tree website root such as `https://gaiaskilltree.com` derives its generic and named projections.
+- A GitHub repository such as `https://github.com/mattpocock/skills` is a flat fleet: directories containing `SKILL.md` become relevance-routed summon candidates, with no generic map required.
+
+Fleet invocation follows Matt Pocock's convention. `disable-model-invocation: true` marks a human-led **Skill Heaven** skill that requires explicit authorization. A fleet skill without that flag is model-led **Skill Hell** and may be reached automatically. Manual `/summon` is explicit and may reach either; materialization remains atomic and session-only.
+
+The old `TREE_URL` + `TREE_NAMED_URL` pair remains a deprecated migration fallback. Configure one Skill URL for new installs.
+
 With the launchers, from your shell:
 
 ```bash
@@ -112,14 +123,14 @@ One mechanic — **`/summon`**, one skill into context, one session, nothing ins
 
 | Surface | Command | Who chooses | Who it's for |
 |---|---|---|---|
-| **Skill Zero** | `/skill-zero` | **You** — nothing is automatic | Minimalists and software doctors who want a precise, bloat-free harness |
+| **Skill Zero** | `/skill-zero` | **You** — temporary skills are cut by default | Minimalists and software doctors who want a precise, bloat-free harness |
 | **Skill Heaven** | `/skill-heaven` | **You** — the agent converges on what you point at | Focused work where you stay the author of the context |
 | **Skill Hell** | `/skill-hell` | **The model** — it reaches wider than you would | Unfamiliar territory, where you don't yet know which expert you need |
 | **Skill Ultra** | `/skill-ultra` | **The model** — direction *and* depth, per gap | Engineers running a fleet of agents, each balancing Heaven against Hell |
 
 **Heaven is human-led. Hell is model-led.** That is the distinction the whole product turns on. Heaven narrows onto the gap; Hell widens around it, putting more experts in context than you would have picked.
 
-> **Status.** The launchers and all five in-session commands ship and work today, as actively tested prototypes — interfaces may still change. What is *not* built yet is the automatic routing: summons are ranked by relevance, not by Heaven/Hell trust stamps, and nothing auto-routes from benchmark results.
+> **Status.** The launchers and all five in-session commands ship and work today as actively tested prototypes. GitHub fleets now route invocation safety from `SKILL.md` metadata and route candidates by relevance. Benchmark-derived trust routing is still not built.
 
 ---
 
@@ -134,7 +145,7 @@ zero  ·  low   med  ·  high   xhigh   max  ·  ultra
 
 | Rung | Surface | What it means |
 |---|---|---|
-| `zero` | Zero | nothing automatic — manual `/summon` only |
+| `zero` | Zero | temporary skills cut — manual `/summon` only |
 | `low` `med` | Heaven | converge — narrow onto the gap |
 | `high` `xhigh` `max` | Hell | explore — widen around the gap |
 | `ultra` | Ultra | picks direction and depth for you, gap by gap |
