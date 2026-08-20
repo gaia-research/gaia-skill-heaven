@@ -1,35 +1,74 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="348" viewBox="0 0 900 348" role="img" aria-label="The skill-entropy ladder is one line of seven rungs measuring how much skill variety and volume enters a session: zero is the floor with no automatic summoning, Heaven (low, med) converges narrowly on the gap, Hell (high, xhigh, max) explores widely around it, and Ultra sits at the top of the line, picking the entropy for you, gap by gap. Every rung is reachable; nothing on the line refuses.">
-<rect x="0" y="0" width="396.0" height="348" fill="#05060a"/>
-<rect x="396.0" y="0" width="504.0" height="348" fill="#f4f4f2"/>
-<text x="104.0" y="52.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="12" font-weight="700" fill="#f7f8ff" text-anchor="middle" letter-spacing="2.4">ZERO</text>
-<text x="266.0" y="52.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="13" font-weight="700" fill="#f7f8ff" text-anchor="middle" letter-spacing="3.2">HEAVEN</text>
-<text x="266.0" y="74.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#37d6e0" text-anchor="middle">converge</text>
-<text x="266.0" y="94.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11.5" font-weight="400" fill="#6b6f88" text-anchor="middle">narrows onto the gap</text>
-<text x="580.0" y="52.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="13" font-weight="700" fill="#050505" text-anchor="middle" letter-spacing="3.2">HELL</text>
-<text x="580.0" y="74.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#050505" text-anchor="middle">explore</text>
-<text x="580.0" y="94.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11.5" font-weight="400" fill="#6a6a68" text-anchor="middle">widens around the gap</text>
-<text x="796.0" y="52.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="12" font-weight="700" fill="#050505" text-anchor="middle" letter-spacing="2.4">ULTRA</text>
-<rect x="56.0" y="168" width="96" height="46" rx="7" fill="#10121d" stroke="#2b2d3a" stroke-width="1.5"/>
-<text x="104.0" y="197.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">zero</text>
-<text x="104.0" y="232.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="11" font-weight="400" fill="#6b6f88" text-anchor="middle">floor</text>
-<rect x="164.0" y="159" width="96" height="46" rx="7" fill="#10121d" stroke="#2b2d3a" stroke-width="1.5"/>
-<text x="212.0" y="188.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">low</text>
-<rect x="272.0" y="150" width="96" height="46" rx="7" fill="#10121d" stroke="#2b2d3a" stroke-width="1.5"/>
-<text x="320.0" y="179.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">med</text>
-<rect x="424.0" y="141" width="96" height="46" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
-<text x="472.0" y="170.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">high</text>
-<rect x="532.0" y="132" width="96" height="46" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
-<text x="580.0" y="161.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">xhigh</text>
-<rect x="640.0" y="123" width="96" height="46" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
-<text x="688.0" y="152.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">max</text>
-<rect x="748.0" y="114" width="96" height="46" rx="7" fill="#f4f4f2" stroke="#050505" stroke-width="1.5"/>
-<text x="796.0" y="143.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">ultra</text>
-<rect x="164.0" y="250" width="204.0" height="56" rx="9" fill="none" stroke="#37d6e0" stroke-width="1.5"/>
-<text x="266.0" y="275.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="15" font-weight="600" fill="#f7f8ff" text-anchor="middle">/skill-heaven</text>
-<text x="266.0" y="293.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="10.5" font-weight="400" fill="#a9adc4" text-anchor="middle" letter-spacing="0.4">lower-entropy direction</text>
-<rect x="424.0" y="250" width="312.0" height="56" rx="9" fill="none" stroke="#050505" stroke-width="1.5"/>
-<text x="580.0" y="275.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="15" font-weight="600" fill="#050505" text-anchor="middle">/skill-hell</text>
-<text x="580.0" y="293.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="10.5" font-weight="400" fill="#6a6a68" text-anchor="middle" letter-spacing="0.4">higher-entropy direction</text>
-<text x="266.0" y="330.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6b6f88" text-anchor="middle">every rung is reachable</text>
-<text x="580.0" y="330.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6a6a68" text-anchor="middle">nothing on the line refuses</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="612" viewBox="0 0 1060 612" role="img" aria-label="Skill Heaven's one line of seven rungs measures skill entropy — how much skill variety and volume enters a session. Zero is the human-led floor: a clean harness with nothing loaded, opened with /skill-zero. Heaven (low, med) is human-led and converges narrowly on the gap, opened with /skill-heaven. Hell (high, xhigh, max) is model-led and explores widely around it, opened with /skill-hell. Ultra is model-led and sits at the top of the line, picking the entropy for you gap by gap, opened with /skill-ultra. Every rung is reachable; nothing on the line refuses.">
+<rect x="0.0" y="0.0" width="1060.0" height="612.0" fill="#05060a"/>
+<rect x="472.0" y="120.0" width="588.0" height="432.0" fill="#f4f4f2"/>
+<text x="530.0" y="44.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="11" font-weight="700" fill="#6b6f88" text-anchor="middle" letter-spacing="3.4">ONE MECHANIC  ·  ONE LINE  ·  FOUR SURFACES</text>
+<text x="530.0" y="78.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="24" font-weight="700" fill="#f7f8ff" text-anchor="middle">Decide how much skill enters the session.</text>
+<text x="530.0" y="102.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="12.5" font-weight="400" fill="#a9adc4" text-anchor="middle">/summon puts one skill into context — one session, nothing installed. The line below sets how far the agent reaches.</text>
+<text x="454.0" y="142.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="10" font-weight="700" fill="#6b6f88" text-anchor="end" letter-spacing="1.6">◀ HUMAN-LED</text>
+<text x="490.0" y="142.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="10" font-weight="700" fill="#6a6a68" text-anchor="start" letter-spacing="1.6">MODEL-LED ▶</text>
+<text x="113.0" y="204.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#6b6f88" text-anchor="middle">floor</text>
+<text x="333.0" y="184.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#37d6e0" text-anchor="middle">◀ converge</text>
+<text x="669.0" y="154.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#050505" text-anchor="middle">explore ▶</text>
+<text x="947.0" y="144.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="12" font-weight="600" fill="#6a6a68" text-anchor="middle">crown</text>
+<rect x="61.0" y="220.0" width="104.0" height="44.0" rx="7" fill="#10121d" stroke="#3d4155" stroke-width="1.5"/>
+<text x="113.0" y="248.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">zero</text>
+<rect x="223.0" y="210.0" width="104.0" height="44.0" rx="7" fill="#10121d" stroke="#37d6e0" stroke-width="1.5"/>
+<text x="275.0" y="238.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">low</text>
+<rect x="339.0" y="200.0" width="104.0" height="44.0" rx="7" fill="#10121d" stroke="#37d6e0" stroke-width="1.5"/>
+<text x="391.0" y="228.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f7f8ff" text-anchor="middle">med</text>
+<rect x="501.0" y="190.0" width="104.0" height="44.0" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
+<text x="553.0" y="218.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">high</text>
+<rect x="617.0" y="180.0" width="104.0" height="44.0" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
+<text x="669.0" y="208.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">xhigh</text>
+<rect x="733.0" y="170.0" width="104.0" height="44.0" rx="7" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
+<text x="785.0" y="198.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#050505" text-anchor="middle">max</text>
+<rect x="895.0" y="160.0" width="104.0" height="44.0" rx="7" fill="#050505" stroke="#050505" stroke-width="1.5"/>
+<text x="947.0" y="188.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="17" font-weight="600" fill="#f4f4f2" text-anchor="middle">ultra</text>
+<line x1="61.0" y1="298.0" x2="472.0" y2="298.0" stroke="#3d4155" stroke-width="1"/>
+<line x1="472.0" y1="298.0" x2="991.0" y2="298.0" stroke="#d3d3cf" stroke-width="1"/>
+<path d="M 990.0 294 L 999.0 298 L 990.0 302 Z" fill="#d3d3cf"/>
+<text x="61.0" y="316.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6b6f88" text-anchor="start">skill entropy — how much skill variety and volume enters a session</text>
+<text x="999.0" y="316.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6a6a68" text-anchor="end">a session sits at exactly one rung</text>
+<rect x="31.0" y="336.0" width="164.0" height="196.0" rx="11" fill="#10121d" stroke="#3d4155" stroke-width="1.5"/>
+<rect x="47.0" y="350.0" width="88.6" height="19.0" rx="9.5" fill="#f7f8ff"/>
+<text x="91.3" y="363.5" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#05060a" text-anchor="middle" letter-spacing="1.4">HUMAN-LED</text>
+<text x="47.0" y="402.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="20" font-weight="700" fill="#f7f8ff" text-anchor="start">Skill Zero</text>
+<text x="47.0" y="424.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="13.5" font-weight="600" fill="#f7f8ff" text-anchor="start">/skill-zero</text>
+<line x1="47.0" y1="438.0" x2="179.0" y2="438.0" stroke="#3d4155" stroke-width="1"/>
+<text x="47.0" y="458.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">Vanilla harness with</text>
+<text x="47.0" y="474.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">nothing loaded. Precise,</text>
+<text x="47.0" y="490.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">bloat-free context.</text>
+<text x="47.0" y="514.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#f7f8ff" text-anchor="start" letter-spacing="1.2">MINIMALISTS · DOCTORS</text>
+<rect x="210.0" y="336.0" width="246.0" height="196.0" rx="11" fill="#10121d" stroke="#37d6e0" stroke-width="1.5"/>
+<rect x="226.0" y="350.0" width="88.6" height="19.0" rx="9.5" fill="#37d6e0"/>
+<text x="270.3" y="363.5" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#05060a" text-anchor="middle" letter-spacing="1.4">HUMAN-LED</text>
+<text x="226.0" y="402.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="20" font-weight="700" fill="#f7f8ff" text-anchor="start">Skill Heaven</text>
+<text x="226.0" y="424.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="13.5" font-weight="600" fill="#37d6e0" text-anchor="start">/skill-heaven</text>
+<line x1="226.0" y1="438.0" x2="440.0" y2="438.0" stroke="#2b2d3a" stroke-width="1"/>
+<text x="226.0" y="458.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">Converge. You pick the direction; the</text>
+<text x="226.0" y="474.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">agent summons the right few skills for</text>
+<text x="226.0" y="490.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#a9adc4" text-anchor="start">the gap in front of you.</text>
+<text x="226.0" y="514.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#37d6e0" text-anchor="start" letter-spacing="1.2">YOU STAY THE AUTHOR</text>
+<rect x="504.0" y="336.0" width="330.0" height="196.0" rx="11" fill="#ffffff" stroke="#050505" stroke-width="1.5"/>
+<rect x="520.0" y="350.0" width="88.6" height="19.0" rx="9.5" fill="#050505"/>
+<text x="564.3" y="363.5" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#f4f4f2" text-anchor="middle" letter-spacing="1.4">MODEL-LED</text>
+<text x="520.0" y="402.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="20" font-weight="700" fill="#050505" text-anchor="start">Skill Hell</text>
+<text x="520.0" y="424.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="13.5" font-weight="600" fill="#050505" text-anchor="start">/skill-hell</text>
+<line x1="520.0" y1="438.0" x2="818.0" y2="438.0" stroke="#d3d3cf" stroke-width="1"/>
+<text x="520.0" y="458.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6a6a68" text-anchor="start">Explore. The model reaches wide and pulls in more</text>
+<text x="520.0" y="474.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6a6a68" text-anchor="start">experts into context than you would have picked —</text>
+<text x="520.0" y="490.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#6a6a68" text-anchor="start">a mixture of agents, for skills.</text>
+<text x="520.0" y="514.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#050505" text-anchor="start" letter-spacing="1.2">THE MODEL DOES THE CHOOSING</text>
+<rect x="862.0" y="336.0" width="170.0" height="196.0" rx="11" fill="#050505" stroke="#050505" stroke-width="1.5"/>
+<rect x="878.0" y="350.0" width="88.6" height="19.0" rx="9.5" fill="#f4f4f2"/>
+<text x="922.3" y="363.5" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#050505" text-anchor="middle" letter-spacing="1.4">MODEL-LED</text>
+<text x="878.0" y="402.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="20" font-weight="700" fill="#f4f4f2" text-anchor="start">Skill Ultra</text>
+<text x="878.0" y="424.0" font-family="'JetBrains Mono','SF Mono',ui-monospace,monospace" font-size="13.5" font-weight="600" fill="#f4f4f2" text-anchor="start">/skill-ultra</text>
+<line x1="878.0" y1="438.0" x2="1016.0" y2="438.0" stroke="#3a3a38" stroke-width="1"/>
+<text x="878.0" y="458.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#b4b4b0" text-anchor="start">The crown. Picks the</text>
+<text x="878.0" y="474.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#b4b4b0" text-anchor="start">direction and the depth</text>
+<text x="878.0" y="490.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11" font-weight="400" fill="#b4b4b0" text-anchor="start">for you, gap by gap.</text>
+<text x="878.0" y="514.0" font-family="'Space Grotesk','Inter',system-ui,sans-serif" font-size="9" font-weight="700" fill="#f4f4f2" text-anchor="start" letter-spacing="1.2">FLEET OPERATORS</text>
+<text x="530.0" y="580.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="11.5" font-weight="400" fill="#a9adc4" text-anchor="middle">Nothing on the line refuses. No rung carries a count, and no summon is capped.</text>
+<text x="530.0" y="598.0" font-family="'Inter',system-ui,-apple-system,sans-serif" font-size="10" font-weight="400" fill="#6b6f88" text-anchor="middle">Heaven's representative rung (low) and Hell's (high) stay PROVISIONAL  ·  docs/LADDER-FLOW.md</text>
 </svg>
