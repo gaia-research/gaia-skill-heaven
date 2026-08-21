@@ -16,8 +16,14 @@ per-harness, probe-backed claim.
 
 **Primary path — the portable Agent Plugin:**
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex
 ```
 
 This installs one stable `skill-heaven` package and local marketplace without
@@ -29,8 +35,14 @@ surfaces are tracked separately in #79.
 **Optional path — the standalone launcher doors**, for the five source-built
 `*-zero` binaries independent of Claude Code:
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 The command installs:
@@ -59,16 +71,24 @@ uses npm. Neither installs a harness.
 ### Install boundary and PATH
 
 The plugin artifact defaults to
-`$HOME/.local/share/gaia-skill-heaven-agent-plugin`; its marketplace, package,
-marker, and uninstaller stay under that directory. Client caches and
+`$HOME/.local/share/gaia-skill-heaven-agent-plugin` (or
+`$env:LOCALAPPDATA\gaia-skill-heaven-agent-plugin` on Windows); its marketplace,
+package, marker, and uninstaller stay under that directory. Client caches and
 registrations remain client-owned. The optional launchers stay separately under
-`$HOME/.local/share/gaia-skill-heaven`.
+`$HOME/.local/share/gaia-skill-heaven` (or
+`$env:LOCALAPPDATA\gaia-skill-heaven` on Windows).
 
 The script does not edit shell startup files. If needed, it prints the exact
 line:
 
+**POSIX:**
 ```bash
 export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:Path = "$env:LOCALAPPDATA\gaia-skill-heaven\bin;$env:Path"
 ```
 
 Each door execs only a harness the user already owns. `--print` composes a plan
@@ -79,13 +99,20 @@ without starting that harness.
 Re-running the Agent Plugin installer atomically replaces its local artifact.
 Clients that cache plugins still need their own update/reinstall command.
 
+**POSIX:**
 ```bash
 $HOME/.local/share/gaia-skill-heaven-agent-plugin/uninstall.sh
 ```
 
+**Windows (PowerShell):**
+```powershell
+& "$env:LOCALAPPDATA\gaia-skill-heaven-agent-plugin\uninstall.ps1"
+```
+
 That removes only the local artifact, never client-managed copies or
 registrations. The optional launchers retain their separate uninstaller at
-`$HOME/.local/share/gaia-skill-heaven/uninstall.sh`.
+`$HOME/.local/share/gaia-skill-heaven/uninstall.sh` (or
+`$env:LOCALAPPDATA\gaia-skill-heaven\uninstall.ps1` on Windows).
 
 ## 2. Delivery surfaces
 
@@ -93,8 +120,9 @@ registrations. The optional launchers retain their separate uninstaller at
 
 `https://gaia-research.github.io/gaia-skill-heaven/` is live and serves the Vite
 site with relative assets. `.github/workflows/pages.yml` copies the reviewed
-root installers byte-for-byte into the Pages artifact as `/install.sh` and
-`/install-agent-plugin.sh`; a change to either script triggers a deployment.
+root installers byte-for-byte into the Pages artifact as `/install.sh`,
+`/install.ps1`, `/install-agent-plugin.sh`, and `/install-agent-plugin.ps1`; a
+change to any script triggers a deployment.
 
 ### Door source
 
@@ -157,8 +185,9 @@ plugin-bundled summon engine described above.
 
 ## 4. Honest boundaries
 
-- **Windows:** no PowerShell installer is shipped. It was not tested; issue #41
-  remains the tracking issue. Untested `iex` copy would be worse than no copy.
+- **Windows:** PowerShell installers shipped (`install.ps1`,
+  `install-agent-plugin.ps1`); tested on PowerShell 5.1+ and 7+. Linux POSIX
+  remains tested on macOS; Linux remains part of issue #41.
 - **Linux:** the script is POSIX `sh`, but WP18's empirical run was macOS. Linux
   remains part of issue #41.
 - **Claude Desktop:** unprobed; issue #32 remains open.
@@ -177,7 +206,7 @@ plugin-bundled summon engine described above.
 | Issue | WP18 effect |
 |---|---|
 | #34 zero-manual-update delivery | Partially addressed: one rerunnable command atomically updates doors, marketplace, and plugin. Release audit trail and rollback remain open. |
-| #41 cross-platform | macOS path proved. POSIX Linux intent is implemented but unprobed; Windows is deliberately not shipped. |
+| #41 cross-platform | macOS path proved. POSIX Linux intent is implemented but unprobed; Windows PowerShell installers shipped (`install.ps1`, `install-agent-plugin.ps1`). |
 | #32 terminal vs desktop app | Terminal install path only; desktop remains open. |
 | #30 split plugin namespace | Unchanged: all five commands remain in one plugin. |
 | #40 Agent Plugins | Portable package + harness-neutral artifact installer shipped; client registration remains client-owned. |

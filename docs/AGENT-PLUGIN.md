@@ -272,11 +272,18 @@ allowed. Each summon remains an atomic, session-only materialization.
 ## Install and client delivery
 
 Agent Plugins standardizes the package, not one universal client-registration
-command. `install-agent-plugin.sh` therefore installs one stable package and a
-local marketplace without mutating any harness configuration:
+command. `install-agent-plugin.sh` (and `install-agent-plugin.ps1` on Windows)
+therefore installs one stable package and a local marketplace without mutating
+any harness configuration:
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex
 ```
 
 The script requires Node 22+ and Git, then prints both paths. Any

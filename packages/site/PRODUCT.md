@@ -75,7 +75,11 @@ the portable route first.
 single, stable plugin directory on disk:
 
 ```
+# POSIX (macOS / Linux)
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+
+# Windows (PowerShell)
+irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex
 ```
 
 The package is the product boundary: any standards-conformant Agent Plugins
@@ -99,12 +103,16 @@ inside it — no sibling checkout, no external package, no build step. It puts
 five commands in the session: `/summon`, `/skill-zero`, `/skill-heaven`,
 `/skill-hell`, `/skill-ultra`.
 
-**Secondary — the standalone launcher doors.** `install.sh` is a separate
-launcher route for the five source-built `*-zero` binaries, independent of
+**Secondary — the standalone launcher doors.** `install.sh` (or `install.ps1` on Windows)
+is a separate launcher route for the five source-built `*-zero` binaries, independent of
 the portable plugin and its client registration:
 
 ```
+# POSIX (macOS / Linux)
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
+
+# Windows (PowerShell)
+irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 Then launch a door (`claude-zero` is the flagship). The script never installs a
@@ -193,7 +201,8 @@ The public site is served from `packages/site`.
 - Real, working install and launch commands (see Operating Context). Verified
   2026-08-19: the plugin install path is the one settled in
   `docs/AGENT-PLUGIN.md`, and
-  `https://gaia-research.github.io/gaia-skill-heaven/install.sh` serves `200`.
+  `https://gaia-research.github.io/gaia-skill-heaven/install.sh`, `install.ps1`,
+  `install-agent-plugin.sh`, and `install-agent-plugin.ps1` serve `200`.
 - **Dead paths, do not print:** `skill-heaven.dev` has no DNS (NXDOMAIN);
   `skill-zero` is not on npm (404); `skill-hell` and `@gaia-research/mcp` are
   **deprecated** on npm — the summon engine now ships bundled inside the
