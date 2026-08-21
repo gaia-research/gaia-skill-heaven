@@ -7,6 +7,8 @@ on:
       - 'packages/site/**'
       - 'install.sh'
       - 'install-agent-plugin.sh'
+      - 'install.ps1'
+      - 'install-agent-plugin.ps1'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -36,6 +38,8 @@ jobs:
         run: |
           cp install.sh packages/site/dist/install.sh
           cp install-agent-plugin.sh packages/site/dist/install-agent-plugin.sh
+          cp install.ps1 packages/site/dist/install.ps1
+          cp install-agent-plugin.ps1 packages/site/dist/install-agent-plugin.ps1
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

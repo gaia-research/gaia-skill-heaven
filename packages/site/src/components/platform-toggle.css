@@ -1,0 +1,50 @@
+.sh-platform-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--sh-line-strong, currentColor);
+  border-radius: 0;
+  overflow: hidden;
+  height: 22px;
+  font-family: var(--sh-mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.sh-platform-toggle__btn {
+  padding: 0 8px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--sh-ink-dim, inherit);
+  cursor: pointer;
+  transition: background 120ms linear, color 120ms linear, opacity 120ms linear;
+  font: inherit;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.sh-platform-toggle__btn.is-on {
+  background: var(--sh-ink, currentColor);
+  color: var(--sh-void, #1b1a1c);
+}
+
+.sh-platform-toggle__btn:hover:not(.is-on) {
+  color: var(--sh-cyan, #5fc2d6);
+}
+
+@media (max-width: 640px) {
+  .sh-platform-toggle {
+    font-size: 8px;
+    height: 20px;
+  }
+  .sh-platform-toggle__btn {
+    padding: 0 5px;
+  }
+}

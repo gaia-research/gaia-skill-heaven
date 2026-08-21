@@ -29,12 +29,18 @@ Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or j
 
 **One package, every harness.** Skill Heaven ships as an [Agent Plugin](https://agent-plugins.org) — the portable package standard: one manifest, the bundled MCP, and the skills. Install that package once:
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
 ```
 
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex
+```
+
 The script puts the plugin at
-`$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven`
+`$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven` (or `%LOCALAPPDATA%\gaia-skill-heaven-agent-plugin\marketplace\plugins\skill-heaven` on Windows)
 and prints that path. Point any **standards-conformant Agent Plugins client** at it. The standard intentionally leaves installation and enablement to each client, so the script delivers one stable package without guessing at or silently editing an unknown harness's configuration. Clients outside the pinned probe remain unverified.
 
 The clients pinned in the compatibility probe use these registration commands:
@@ -67,8 +73,14 @@ Some clients copy plugins into their own cache. Re-running the script updates th
 
 Five shell commands that start a harness with a clean context, independent of any plugin.
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 ```text
@@ -77,10 +89,16 @@ claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
 
 Run one instead of your usual harness command. The installer also registers the Agent Plugin above if your `claude` binary is already on `PATH`.
 
-It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin`; add it to your `PATH` if your shell doesn't pick it up:
+It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin` (or `%LOCALAPPDATA%\gaia-skill-heaven\bin` on Windows); add it to your `PATH` if your shell doesn't pick it up:
 
+**macOS / Linux (POSIX):**
 ```bash
 export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:Path = "$env:LOCALAPPDATA\gaia-skill-heaven\bin;$env:Path"
 ```
 
 ---
@@ -223,14 +241,26 @@ The benchmark's job is the **entropy curve** — how quality and cost move toget
 
 Remove the recommended Agent Plugin artifact:
 
+**macOS / Linux (POSIX):**
 ```bash
 $HOME/.local/share/gaia-skill-heaven-agent-plugin/uninstall.sh
 ```
 
+**Windows (PowerShell):**
+```powershell
+& "$env:LOCALAPPDATA\gaia-skill-heaven-agent-plugin\uninstall.ps1"
+```
+
 This does not remove copies or registrations managed by Codex, Grok, Hermes, Pi, or Claude; use that client's plugin remove command too. If you also installed the standalone launchers, remove those separately:
 
+**macOS / Linux (POSIX):**
 ```bash
 $HOME/.local/share/gaia-skill-heaven/uninstall.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+& "$env:LOCALAPPDATA\gaia-skill-heaven\uninstall.ps1"
 ```
 
 ## Docs & links

@@ -13,8 +13,14 @@ inside it — no external package, no `npx`. See
 The repository's one-command installer delivers this launcher, all four sibling
 doors, and the Claude plugin (its summon engine bundled inside):
 
+**macOS / Linux (POSIX):**
 ```bash
 curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 It uses the user's own Claude Code binary and never installs a harness. When

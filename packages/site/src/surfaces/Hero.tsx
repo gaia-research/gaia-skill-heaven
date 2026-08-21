@@ -7,7 +7,6 @@ import {
   DIRECTION_WORD,
   DOORS,
   HOUSES,
-  INSTALL,
   LADDER_MEASURE,
   LADDER_WIP,
   MECHANIC,
@@ -15,9 +14,12 @@ import {
   RUNG_BAND,
   SITE,
   SURFACES,
+  PLATFORM_COMMANDS,
+  type Platform,
   type RungId,
   type SurfaceId,
 } from '../product';
+import { PlatformToggle } from '../components/PlatformToggle';
 
 import zeroMaster from '../assets/lucy/v5/delivery/lucy-zero.webp';
 import heavenMaster from '../assets/lucy/v5/delivery/lucy-heaven.webp';
@@ -48,6 +50,7 @@ const RUNG_IDS = RUNGS.map((r) => r.id);
 
 export default function Hero() {
   const [rungId, setRungId] = useState<RungId>('zero');
+  const [platform, setPlatform] = useState<Platform>('posix');
   const [impact, setImpact] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const impactTimer = useRef<number | undefined>(undefined);
@@ -223,16 +226,17 @@ export default function Hero() {
             <button
               className="sh-cta"
               type="button"
-              onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
+              onClick={() => copy(PLATFORM_COMMANDS[platform].agentPlugin, 'install')}
             >
               {copied === 'install' ? 'Copied to clipboard' : 'Copy the Agent Plugin install'}
             </button>
+            <PlatformToggle platform={platform} onToggle={setPlatform} />
             <Link className="sh-cta sh-cta--ghost" to="/landing">
               Go to Site
             </Link>
           </div>
           <p className="hx__install">
-            <span>{INSTALL.agentPlugin.command}</span>
+            <span>{PLATFORM_COMMANDS[platform].agentPlugin}</span>
             <em>Any Agent Plugins client can load the installed directory.</em>
           </p>
         </div>
