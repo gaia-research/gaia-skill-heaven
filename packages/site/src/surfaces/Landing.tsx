@@ -39,7 +39,9 @@ import {
   STAMP_ROUTING_NOTE,
   SURFACES,
   surfaceById,
+  PLATFORM_COMMANDS,
   type Door,
+  type Platform,
   type RungId,
   type SurfaceId,
 } from '../product'
@@ -47,6 +49,7 @@ import '../styles/system.css'
 import './landing.css'
 import { SlashReel } from './SlashReel'
 import { HarnessMark } from '../harnessMarks'
+import { PlatformToggle } from '../components/PlatformToggle'
 
 /* -- the commission: real art, no placeholder slots left except the logo -- */
 import lucyZero from '../assets/lucy/v5/delivery/lucy-zero.webp'
@@ -158,15 +161,16 @@ export default function Landing() {
   // primary, Claude's marketplace flow is tested compatibility, and install.sh
   // remains the optional launcher-only route. There is no npx path.
   const [installMode, setInstallMode] = useState<'agent-plugin' | 'claude' | 'sh'>('agent-plugin')
+  const [platform, setPlatform] = useState<Platform>('posix')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
 
   const installNote =
     installMode === 'agent-plugin'
-      ? AGENT_PLUGIN_NOTE
+      ? (platform === 'windows' ? INSTALL.agentPluginPs1.note : AGENT_PLUGIN_NOTE)
       : installMode === 'claude'
         ? CLAUDE_COMPATIBILITY_NOTE
-        : INSTALL.shNote
+        : (platform === 'windows' ? INSTALL.shPs1Note : INSTALL.shNote)
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -466,40 +470,50 @@ export default function Landing() {
                   plugin and marketplace paths; it does not guess at or rewrite a harness config.
                 </p>
               </div>
-              <div className="lp-seg" role="group" aria-label="Install route">
-                <button
-                  type="button"
-                  className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'agent-plugin'}
-                  onClick={() => setInstallMode('agent-plugin')}
-                >
-                  Agent Plugin
-                </button>
-                <button
-                  type="button"
-                  className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'claude'}
-                  onClick={() => setInstallMode('claude')}
-                >
-                  Claude tested
-                </button>
-                <button
-                  type="button"
-                  className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
-                  aria-pressed={installMode === 'sh'}
-                  onClick={() => setInstallMode('sh')}
-                >
-                  launcher-only
-                </button>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <PlatformToggle platform={platform} onToggle={setPlatform} />
+                <div className="lp-seg" role="group" aria-label="Install route">
+                  <button
+                    type="button"
+                    className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
+                    aria-pressed={installMode === 'agent-plugin'}
+                    onClick={() => setInstallMode('agent-plugin')}
+                  >
+                    Agent Plugin
+                  </button>
+                  <button
+                    type="button"
+                    className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
+                    aria-pressed={installMode === 'claude'}
+                    onClick={() => setInstallMode('claude')}
+                  >
+                    Claude tested
+                  </button>
+                  <button
+                    type="button"
+                    className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
+                    aria-pressed={installMode === 'sh'}
+                    onClick={() => setInstallMode('sh')}
+                  >
+                    launcher-only
+                  </button>
+                </div>
               </div>
             </div>
             {installMode === 'agent-plugin' ? (
               <CommandBlock
-                cmd={AGENT_PLUGIN_COMMAND}
-                sigil="$"
+                cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
+                sigil={PLATFORM_COMMANDS[platform].sigil}
                 tone="mint"
                 copied={copied === 'install-agent-plugin'}
-                onCopy={() => copy(AGENT_PLUGIN_COMMAND, 'install-agent-plugin')}
+                onCopy={() =>
+                  copy(
+                    platform === 'windows'
+                      ? INSTALL.agentPluginPs1.command
+                      : AGENT_PLUGIN_COMMAND,
+                    'install-agent-plugin',
+                  )
+                }
                 label="Agent Plugin installer command"
               />
             ) : installMode === 'claude' ? (
@@ -518,11 +532,16 @@ export default function Landing() {
               </div>
             ) : (
               <CommandBlock
-                cmd={INSTALL.sh}
-                sigil="$"
+                cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
+                sigil={PLATFORM_COMMANDS[platform].sigil}
                 tone="mint"
                 copied={copied === 'install-launchers'}
-                onCopy={() => copy(INSTALL.sh, 'install-launchers')}
+                onCopy={() =>
+                  copy(
+                    platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh,
+                    'install-launchers',
+                  )
+                }
                 label="launcher-only install command"
               />
             )}
@@ -575,8 +594,8 @@ export default function Landing() {
         <p className="lp-fineprint">
           WORK IN PROGRESS · v0 — the Agent Plugin installer is harness-neutral; Claude’s
           marketplace flow is tested compatibility. The five launcher doors are source-delivered
-          separately through <code>install.sh</code>. Neither path is on npm. Uninstall is one
-          script: <code>{INSTALL.uninstall}</code>
+          separately through <code>install.sh</code> (or <code>install.ps1</code> on Windows). Neither path is on npm. Uninstall is one
+          script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
         </p>
       </section>
 

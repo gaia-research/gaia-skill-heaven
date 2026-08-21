@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HERO_ASSET_SETS, normalizeLucyAssetSet, preloadLucyAssets } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
-import { DOORS, INSTALL } from '../product'
+import { DOORS, PLATFORM_COMMANDS, type Platform } from '../product'
 import { HarnessMark } from '../harnessMarks'
+import { PlatformToggle } from '../components/PlatformToggle'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -124,6 +125,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // front). Reuses the same word the single-instance wordmark shows, so it
   // never drifts out of sync with the band.
   const stateWord: Record<typeof v.scene, string> = { zero: 'ZERO', heaven: 'HEAVEN', hell: 'HELL', ultra: 'ULTRA' }
+  const [platform, setPlatform] = useState<Platform>('posix')
   const [copied, setCopied] = useState<string | null>(null)
   const [bare, setBare] = useState(false)
   // Click anywhere on empty backdrop → the MAIN TEXT gets out of the way
@@ -635,18 +637,23 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
               <span>Install · Agent Plugins</span>
-              <button
-                type="button"
-                className="vha-cta-termcopy"
-                onClick={() => copy(INSTALL.agentPlugin.command, 'install')}
-                style={{ color: v.fg, borderColor: v.ctaLine }}
-              >
-                {copied === 'install' ? 'copied ⏎' : 'copy install'}
-              </button>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <PlatformToggle platform={platform} onToggle={setPlatform} />
+                <button
+                  type="button"
+                  className="vha-cta-termcopy"
+                  onClick={() => copy(PLATFORM_COMMANDS[platform].agentPlugin, 'install')}
+                  style={{ color: v.fg, borderColor: v.ctaLine }}
+                >
+                  {copied === 'install' ? 'copied ⏎' : 'copy install'}
+                </button>
+              </div>
             </div>
             <div className="vha-cta-termline">
-              <span className="vha-cta-prompt" style={{ color: v.dim }}>$</span>
-              <span className="vha-cta-text">{INSTALL.agentPlugin.command}</span>
+              <span className="vha-cta-prompt" style={{ color: v.dim }}>
+                {PLATFORM_COMMANDS[platform].sigil}
+              </span>
+              <span className="vha-cta-text">{PLATFORM_COMMANDS[platform].agentPlugin}</span>
             </div>
             <div className="vha-cta-termline">
               <span className="vha-cta-prompt" style={{ color: v.dim }}>↳</span>
