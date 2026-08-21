@@ -17474,7 +17474,10 @@ var namedSkillSchema = external_exports.object({
   contributor: external_exports.string().min(1),
   genericSkillRef: external_exports.string().min(1),
   invocation: external_exports.enum(["human", "model", "any"]).optional(),
-  origin: external_exports.union([external_exports.enum(["tree", "fleet"]), external_exports.boolean()]).optional(),
+  origin: external_exports.preprocess(
+    (val) => typeof val === "boolean" ? void 0 : val,
+    external_exports.enum(["tree", "fleet"]).optional()
+  ),
   status: external_exports.string(),
   level: external_exports.string().optional(),
   description: external_exports.string(),
