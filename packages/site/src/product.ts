@@ -290,6 +290,9 @@ export interface ClientRegistration {
 const AGENT_PLUGIN_INSTALL_COMMAND =
   'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh';
 
+const AGENT_PLUGIN_INSTALL_COMMAND_PS1 =
+  'irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex';
+
 const AGENT_PLUGIN_ROOT = '$HOME/.local/share/gaia-skill-heaven-agent-plugin';
 const AGENT_PLUGIN_MARKETPLACE = `${AGENT_PLUGIN_ROOT}/marketplace`;
 const AGENT_PLUGIN_DIRECTORY = `${AGENT_PLUGIN_MARKETPLACE}/plugins/skill-heaven`;
@@ -343,6 +346,11 @@ export const INSTALL = {
       'The pinned examples below show tested client registration. They are compatibility evidence, not the boundary of supported Agent Plugins clients.',
     clients: CLIENT_REGISTRATIONS,
   },
+  /** PowerShell equivalent of the Agent Plugin installer. */
+  agentPluginPs1: {
+    command: AGENT_PLUGIN_INSTALL_COMMAND_PS1,
+    note: 'Windows path. Same portable Agent Plugin, installed via PowerShell.',
+  },
   /** Compatibility alias retained for existing install panels. */
   plugin: [AGENT_PLUGIN_INSTALL_COMMAND] as const,
   pluginNote:
@@ -361,8 +369,34 @@ export const INSTALL = {
   sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
   shNote:
     'Secondary path. Installs the five standalone *-zero launcher doors independently of the plugin. It never installs a harness; use it when you want to start a clean launcher from a shell.',
+  /** PowerShell equivalent of the launcher-only installer. */
+  shPs1: 'irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex',
+  shPs1Note: 'Windows path. Installs the five standalone *-zero launcher doors via PowerShell.',
   uninstall: '$HOME/.local/share/gaia-skill-heaven/uninstall.sh',
+  uninstallPs1: '$env:LOCALAPPDATA\\gaia-skill-heaven\\uninstall.ps1',
 } as const;
+
+export type Platform = 'posix' | 'windows';
+
+export const PLATFORM_COMMANDS: Record<
+  Platform,
+  {
+    agentPlugin: string;
+    launchers: string;
+    sigil: string;
+  }
+> = {
+  posix: {
+    agentPlugin: AGENT_PLUGIN_INSTALL_COMMAND,
+    launchers: INSTALL.sh,
+    sigil: '$',
+  },
+  windows: {
+    agentPlugin: AGENT_PLUGIN_INSTALL_COMMAND_PS1,
+    launchers: 'irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex',
+    sigil: '>',
+  },
+};
 
 export interface Door {
   id: string;
