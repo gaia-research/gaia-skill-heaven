@@ -463,14 +463,14 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <div>
+              <div className="lp-install__title">
                 <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
                 <p className="lp-install__prose">
                   One portable package for any Agent Plugins client. The installer prints the
                   plugin and marketplace paths; it does not guess at or rewrite a harness config.
                 </p>
               </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <div className="lp-install__controls">
                 <PlatformToggle platform={platform} onToggle={setPlatform} />
                 <div className="lp-seg" role="group" aria-label="Install route">
                   <button
