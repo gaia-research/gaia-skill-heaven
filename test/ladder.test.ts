@@ -31,8 +31,12 @@ const productFloor = {
   launcherLocked: true,
 };
 
-function render(mode: string, target = "", env: NodeJS.ProcessEnv = {}) {
-  return renderLadder({ mode, target, data, env, manifest: null });
+function render(mode: string, target = "", env: NodeJS.ProcessEnv = {}, detail: "concise" | "full" = "full") {
+  return renderLadder({ mode, target, data, env, manifest: null, detail });
+}
+
+function renderConcise(mode: string, target = "", env: NodeJS.ProcessEnv = {}) {
+  return renderLadder({ mode, target, data, env, manifest: null, detail: "concise" });
 }
 
 describe("the shipped ladder artifact", () => {
@@ -130,15 +134,44 @@ describe("one line, four bands", () => {
     expect(text).not.toMatch(/limit:\s*\d/);
   });
 
-  it("says the armed rung is a standing instruction, not an enforced limit", () => {
+  it("states that a session sits at exactly one rung without authority framing", () => {
     for (const mode of ["zero", "heaven", "hell", "ultra"]) {
-      expect(render(mode).text).toContain("not something the tool enforces");
+      expect(render(mode).text).toContain("A session sits at exactly one rung");
+      expect(render(mode).text).not.toContain("standing instruction");
     }
   });
 
   it("names an unknown rung honestly instead of silently arming the default", () => {
     const { text } = render("hell", "blazing");
     expect(text).toContain('Unknown rung "blazing"');
+  });
+});
+
+describe("concise mode (default)", () => {
+  it("renders 1-3 lines of plain state for every surface", () => {
+    for (const [mode, expected] of [
+      ["zero", "⚡ Skill Zero · zero"],
+      ["heaven", "☁ Skill Heaven · low"],
+      ["hell", "🔥 Skill Hell · high"],
+      ["ultra", "✦ Skill Ultra"],
+    ] as const) {
+      const { text, refused } = renderConcise(mode);
+      expect(refused).toBe(false);
+      expect(text).toContain(expected);
+      const lines = text.trim().split("\n");
+      expect(lines.length).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it("renders concise summon state", () => {
+    const usage = renderConcise("summon");
+    expect(usage.refused).toBe(false);
+    expect(usage.text).toContain("/summon <intent>");
+
+    const withIntent = renderConcise("summon", "fix a bug");
+    expect(withIntent.refused).toBe(false);
+    expect(withIntent.text).toContain("fix a bug");
+    expect(withIntent.text).toContain("manual · one call");
   });
 });
 

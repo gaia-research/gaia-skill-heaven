@@ -63,7 +63,7 @@ describe("the rendered ladder header names skill entropy", () => {
 
   it("every rung command's header says the line reads as skill entropy", () => {
     for (const mode of ["zero", "heaven", "hell", "ultra"]) {
-      const { text } = renderLadder({ mode, target: "", data, env: {}, manifest: null });
+      const { text } = renderLadder({ mode, target: "", data, env: {}, manifest: null, detail: "full" });
       expect(text, `${mode} header omits skill entropy`).toMatch(/skill entropy/i);
     }
   });
