@@ -53,6 +53,7 @@ interface CliArgs {
   skills: string[];
   model?: string;
   piArgs: string[];
+  errors: string[];
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -64,6 +65,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let model: string | undefined;
   const skills: string[] = [];
   const piArgs: string[] = [];
+  const errors: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--") {
@@ -72,17 +74,34 @@ export function parseArgs(argv: string[]): CliArgs {
     } else if (a === "--help" || a === "-h") help = true;
     else if (a === "--print") print = true;
     else if (a === "--posture") {
-      posture = argv[++i] ?? "";
-      postureProvided = true;
-    }
-    else if (a === "--level") level = argv[++i];
-    else if (a === "--model") model = argv[++i];
-    else if (a === "--skill") {
-      const p = argv[++i];
-      if (p !== undefined) skills.push(p);
+      if (i + 1 >= argv.length) {
+        errors.push("option '--posture' requires an argument");
+      } else {
+        posture = argv[++i] ?? "";
+        postureProvided = true;
+      }
+    } else if (a === "--level") {
+      if (i + 1 >= argv.length) {
+        errors.push("option '--level' requires an argument");
+      } else {
+        level = argv[++i];
+      }
+    } else if (a === "--model") {
+      if (i + 1 >= argv.length) {
+        errors.push("option '--model' requires an argument");
+      } else {
+        model = argv[++i];
+      }
+    } else if (a === "--skill") {
+      if (i + 1 >= argv.length) {
+        errors.push("option '--skill' requires an argument");
+      } else {
+        const p = argv[++i];
+        if (p !== undefined) skills.push(p);
+      }
     } else piArgs.push(a);
   }
-  return { help, print, posture, postureProvided, level, skills, model, piArgs };
+  return { help, print, posture, postureProvided, level, skills, model, piArgs, errors };
 }
 
 function helpText(): string {
@@ -108,6 +127,13 @@ export function run(argv: string[]): number {
   if (args.help) {
     process.stdout.write(helpText());
     return 0;
+  }
+
+  if (args.errors.length > 0) {
+    for (const err of args.errors) {
+      process.stderr.write(`pi-zero: ${err}\n`);
+    }
+    return 2;
   }
 
   // The upper band (high · xhigh · max · ultra) is armed live, in-session.
@@ -162,7 +188,11 @@ export function run(argv: string[]): number {
         piArgs: piArgsWithDoor(posture, args.piArgs),
       });
     } catch (e) {
-      process.stderr.write(`pi-zero: ${(e as Error).message}\n`);
+      let msg = (e as Error).message;
+      if (args.level) {
+        msg = msg.replace("--posture curated", `--level ${args.level}`);
+      }
+      process.stderr.write(`pi-zero: ${msg}\n`);
       return 2;
     }
     process.stdout.write(
@@ -209,7 +239,11 @@ export function run(argv: string[]): number {
         });
       }
     } catch (e) {
-      process.stderr.write(`pi-zero: ${(e as Error).message}\n`);
+      let msg = (e as Error).message;
+      if (args.level) {
+        msg = msg.replace("--posture curated", `--level ${args.level}`);
+      }
+      process.stderr.write(`pi-zero: ${msg}\n`);
       return 2;
     }
 

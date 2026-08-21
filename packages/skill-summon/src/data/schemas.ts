@@ -52,7 +52,11 @@ const namedSkillSchema = z
     contributor: z.string().min(1),
     genericSkillRef: z.string().min(1),
     invocation: z.enum(["human", "model", "any"]).optional(),
-    origin: z.enum(["tree", "fleet"]).optional(),
+    origin: z
+      .preprocess(
+        (val) => (typeof val === "boolean" ? undefined : val),
+        z.enum(["tree", "fleet"]).optional(),
+      ),
     status: z.string(),
     level: z.string().optional(),
     description: z.string(),
