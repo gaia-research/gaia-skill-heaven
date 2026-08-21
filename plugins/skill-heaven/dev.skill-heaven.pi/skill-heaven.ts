@@ -306,7 +306,7 @@ export default function skillHeavenPi(pi: ExtensionAPI): void {
       "Summon the best-matching skill from the configured Skill URL into a session-locked temporary directory. Returns printable disclosure cards and materialized skill paths; never writes to agent configuration.",
     promptSnippet: "Summon a matching skill for a concrete capability gap",
     promptGuidelines: [
-      "Manual /summon uses any; human-led Skill Heaven routing uses heaven; automatic model-led Skill Hell routing uses hell. Print every returned card verbatim before using the skill.",
+      "Manual /summon uses any; human-led Skill Heaven routing uses heaven; automatic model-led Skill Hell routing uses hell. Show the returned card before applying the skill.",
     ],
     parameters: Type.Object({
       query: Type.String({ minLength: 1, description: "Task or capability to summon a matching skill for" }),

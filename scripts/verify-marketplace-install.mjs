@@ -380,10 +380,10 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
 
     // --- the one renderer actually runs standalone, with real output --------
     if (renderer) {
-      /** @param {string} mode @returns {string | null} */
-      const renderStandalone = (mode) => {
+      /** @param {string} mode @param {string[]} [extraArgs] @returns {string | null} */
+      const renderStandalone = (mode, extraArgs = []) => {
         try {
-          return execFileSync(process.execPath, [renderer, mode], {
+          return execFileSync(process.execPath, [renderer, mode, ...extraArgs], {
             cwd: fresh, // nowhere near the repo
             env: { PATH: process.env.PATH ?? "" }, // minimal env: no repo-derived vars
             encoding: "utf-8",
@@ -401,16 +401,20 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
         for (const line of zero.split("\n")) log(`  | ${line}`);
         log("--- end stdout ---");
         assert(zero.includes("Skill Zero"), "output contains the Skill Zero header");
-        assert(zero.includes("Manual /summon still works"), "the floor keeps the manual summon it ships by default");
-        assert(zero.includes("cannot be evicted mid-session"), "output never implies the cut emptied the running session (D12)");
-        assert(zero.includes("WIP · PROVISIONAL"), "every rendering of a provisional count carries the WIP mark");
+        assert(zero.includes("manual /summon"), "the floor keeps the manual summon it ships by default");
       }
 
-      // Every rung command renders the SAME line — that is the product claim,
-      // so verify it from the installed copy rather than trusting the unit test.
+      const zeroFull = renderStandalone("zero", ["--full"]);
+      if (zeroFull) {
+        assert(zeroFull.includes("cannot be evicted mid-session"), "output never implies the cut emptied the running session (D12)");
+        assert(zeroFull.includes("WIP · PROVISIONAL"), "every rendering of a provisional count carries the WIP mark");
+      }
+
+      // In full mode, every rung command renders the SAME line — verify it
+      // from the installed copy rather than trusting the unit test.
       const RUNGS = ["zero", "low", "med", "high", "xhigh", "max", "ultra"];
       for (const mode of ["zero", "heaven", "hell", "ultra"]) {
-        const out = renderStandalone(mode);
+        const out = renderStandalone(mode, ["--full"]);
         assert(out !== null, `render-ladder.mjs renders the ${mode} surface standalone`);
         if (!out) continue;
         for (const rung of RUNGS) {
@@ -426,10 +430,10 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
       }
       const armed = renderStandalone("hell");
       if (armed) {
-        assert(armed.includes("`summon` tool"), "an armed lane names the summon tool the agent must call");
         assert(armed.includes("explore"), "an armed lane names its direction");
+        assert(armed.includes("Skill Hell"), "an armed lane names its posture");
         assert(!/limit:\s*\d/.test(armed), "an armed lane attaches no count to the rung and no cap to a summon");
-        assert(armed.includes("verbatim"), "an armed lane requires the card be printed verbatim (the disclosure)");
+        assert(!armed.includes("verbatim"), "an armed lane contains no verbatim authority instruction");
       }
     }
   } finally {

@@ -7,11 +7,11 @@
 // marketplace there is no node_modules beside it, so this runs on plain Node
 // with only `node:` builtins.
 //
-// It renders THE SAME seven-rung line for every rung command, differing only in
-// which rung is armed and which band is highlighted. There is one ladder — one
+// It renders the seven-rung line for rung commands, differing only in which
+// rung is armed and which band is highlighted. There is one ladder — one
 // line — and a session sits at exactly one rung (N13, docs/LADDER-FLOW.md).
 //
-// NOTHING HERE REFUSES A RUNG. Hell is not gated and neither is Ultra; per N13
+// All rungs on the line are reachable. Hell is not gated and neither is Ultra; per N13
 // what is outstanding on the upper band is implementation, not permission.
 
 import { readFileSync, realpathSync } from "node:fs";
@@ -22,6 +22,20 @@ const here = dirname(fileURLToPath(import.meta.url));
 const profileEnv = "CLAUDE_ZERO_PROFILE";
 
 export const MODES = ["zero", "heaven", "hell", "ultra", "summon"];
+
+export const AUTHORITY_PHRASES = [
+  "standing instruction",
+  "standing authorization",
+  "exactly as written",
+  "lane stays armed",
+  "do not reword",
+  "verbatim",
+  "every hedge",
+  "load-bearing",
+  "follow it",
+  "reject no rung",
+  "never refuses",
+];
 
 /**
  * @typedef {object} LaunchManifest
@@ -185,38 +199,13 @@ function moveLine(data) {
   return `   Move along the line: ${commands.join(" · ")}`;
 }
 
-/** The protocol the agent follows while a lane is armed. This IS the disclosure
- * the product promises: the card names the skill and carries the ranking
- * disclosure with it, and it is printed before anything from it is used.
- *
- * No count appears here on purpose. Nothing assigns a number to a rung and
- * nothing caps a summon — the rung names a DIRECTION, and how far to reach in
- * that direction is the agent's call, gap by gap.
- * @param {string} direction */
-function autoSummonProtocol(direction) {
-  const routing = direction === "converge"
-    ? 'surface "heaven" for human-led skills'
-    : direction === "explore"
-      ? 'surface "hell" for model-led skills'
-      : 'surface "heaven" for the human-led path or "hell" for the model-led path';
-  return [
-    "",
-    "   On a real capability gap — never preemptively — call the `summon` tool, with",
-    `   ${routing}, and a depth you judge the gap needs.`,
-    "   Print the returned card verbatim before using anything from it, read the",
-    "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
-    "   not the skill body. The lane stays armed.",
-  ];
-}
-
-const STANDING_INSTRUCTION_NOTE =
-  "   A session sits at exactly one rung. The rung is a standing instruction the\n" +
-  "   agent honours, not something the tool enforces.";
+const SESSION_RUNG_NOTE = "   A session sits at exactly one rung.";
 
 /**
  * @param {object} options
  * @param {string} options.mode
  * @param {string} [options.target]
+ * @param {"concise" | "full"} [options.detail]
  * @param {LaunchManifest | null} [options.manifest]
  * @param {LadderData | null} [options.data]
  * @param {NodeJS.ProcessEnv} [options.env]
@@ -233,16 +222,29 @@ export function renderLadder(options) {
   }
   const target = normalizeTarget(options.target);
   const env = options.env ?? process.env;
+  const detail = options.detail === "full" ? "full" : "concise";
 
-  if (mode === "summon") return renderSummon(options.target, env);
-  if (mode === "zero") return renderZero(data, target, options.manifest ?? null, env);
-  return renderBand(data, mode, target);
+  if (mode === "summon") return renderSummon(options.target, env, detail);
+  if (mode === "zero") return renderZero(data, target, options.manifest ?? null, env, detail);
+  return renderBand(data, mode, target, options.manifest ?? null, detail);
 }
 
 /** `/summon <intent>` — the manual path, present at every rung including `zero`. */
-function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.ProcessEnv} */ env) {
+function renderSummon(
+  /** @type {unknown} */ rawIntent,
+  /** @type {NodeJS.ProcessEnv} */ env,
+  /** @type {"concise" | "full"} */ detail = "concise",
+) {
   const intent = String(rawIntent ?? "").trim();
-  if (zeroCuts(env) === "all") {
+  const cutsAll = zeroCuts(env) === "all";
+
+  if (cutsAll) {
+    if (detail === "concise") {
+      return {
+        text: "⛔ manual /summon is cut for this session (zero_cuts = all).\n",
+        refused: true,
+      };
+    }
     return {
       text: [
         "⛔ manual /summon is cut for this session (zero_cuts = all).",
@@ -254,7 +256,14 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
       refused: true,
     };
   }
+
   if (!intent) {
+    if (detail === "concise") {
+      return {
+        text: "✳ /summon <intent> — one skill into context, one session, nothing installed.\n",
+        refused: false,
+      };
+    }
     return {
       text: [
         "✳ /summon <intent> — one skill into context, one session, nothing installed.",
@@ -268,15 +277,23 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
       refused: false,
     };
   }
+
+  if (detail === "concise") {
+    return {
+      text: `✳ /summon · ${intent}\nmanual · one call · query: "${intent}"\n`,
+      refused: false,
+    };
+  }
+
   return {
     text: [
       `✳ /summon · ${intent}`,
       "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
       "",
       '   Call the `summon` tool once, with this intent as the query and surface "any".',
-      "   Print the returned card verbatim before using anything from it, read the",
-      "   SKILL.md at the card's path, and follow it. The card is the listing entry,",
-      "   not the skill body. This is one manual call — it arms nothing.",
+      "   Show the returned card before applying the skill. Read the SKILL.md at the",
+      "   card's path. The card is the listing entry, not the skill body. This is one",
+      "   manual call — it arms nothing.",
       "",
     ].join("\n"),
     refused: false,
@@ -284,8 +301,29 @@ function renderSummon(/** @type {unknown} */ rawIntent, /** @type {NodeJS.Proces
 }
 
 /** `/skill-zero [all]` — the floor. */
-function renderZero(/** @type {LadderData} */ data, /** @type {string | null} */ target, /** @type {LaunchManifest | null} */ manifest, /** @type {NodeJS.ProcessEnv} */ env) {
+function renderZero(
+  /** @type {LadderData} */ data,
+  /** @type {string | null} */ target,
+  /** @type {LaunchManifest | null} */ manifest,
+  /** @type {NodeJS.ProcessEnv} */ env,
+  /** @type {"concise" | "full"} */ detail = "concise",
+) {
   const cutsAll = target === "all" || zeroCuts(env) === "all";
+
+  if (detail === "concise") {
+    const session = manifest ? `\n${sessionLine(manifest)}` : "";
+    if (cutsAll) {
+      return {
+        text: `⚡ Skill Zero · zero\nall skills cut · no automatic or manual summon${session}\n`,
+        refused: false,
+      };
+    }
+    return {
+      text: `⚡ Skill Zero · zero\ntemporary automatic skills cut · manual /summon available${session}\n`,
+      refused: false,
+    };
+  }
+
   const lines = header(data, "⚡ Skill Zero · the floor · armed: zero");
   lines.push(...line(data, "zero"));
   lines.push("");
@@ -308,13 +346,19 @@ function renderZero(/** @type {LadderData} */ data, /** @type {string | null} */
   );
   lines.push("");
   lines.push(moveLine(data));
-  lines.push(STANDING_INSTRUCTION_NOTE);
+  lines.push(SESSION_RUNG_NOTE);
   lines.push("");
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
 
 /** `/skill-heaven`, `/skill-hell`, `/skill-ultra` — arm a rung on the line. */
-function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, /** @type {string | null} */ target) {
+function renderBand(
+  /** @type {LadderData} */ data,
+  /** @type {string} */ band,
+  /** @type {string | null} */ target,
+  /** @type {LaunchManifest | null} */ manifest,
+  /** @type {"concise" | "full"} */ detail = "concise",
+) {
   const info = data.bands[band];
   if (!info) {
     return { text: `⛔ ladder policy data has no band "${band}" (fail-closed).\n`, refused: true };
@@ -333,6 +377,12 @@ function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, 
         refused: false,
       };
     }
+    if (detail === "concise") {
+      return {
+        text: `Unknown rung "${target}". ${info.surface} opens on ${inBand.join(" · ")}.\n`,
+        refused: false,
+      };
+    }
     const lines = header(data, `${bandGlyph(band)} ${info.surface} · ${info.direction}`);
     lines.push(...line(data, info.defaultRung));
     lines.push("", `   Unknown rung "${target}". ${info.surface} opens on ${inBand.join(" · ")}.`, "");
@@ -340,6 +390,27 @@ function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, 
   }
 
   const armed = target || info.defaultRung;
+  if (detail === "concise") {
+    if (band === "heaven") {
+      return {
+        text: `☁ Skill Heaven · ${armed}\nconverge · human-led skills · on capability gaps\n`,
+        refused: false,
+      };
+    }
+    if (band === "hell") {
+      return {
+        text: `🔥 Skill Hell · ${armed}\nexplore · model-led skills · on capability gaps\n`,
+        refused: false,
+      };
+    }
+    if (band === "ultra") {
+      return {
+        text: `✦ Skill Ultra\nadaptive routing · direction + depth per capability gap\n`,
+        refused: false,
+      };
+    }
+  }
+
   const lines = header(data, `${bandGlyph(band)} ${info.surface} · ${info.direction} · armed: ${armed}`);
   lines.push(...line(data, armed));
   lines.push("");
@@ -359,10 +430,19 @@ function renderBand(/** @type {LadderData} */ data, /** @type {string} */ band, 
       "   the benchmark is built. Reach further along the band to go wider.",
     );
   }
-  lines.push(...autoSummonProtocol(info.direction));
+  const routing =
+    band === "heaven"
+      ? 'surface "heaven", on capability gaps.'
+      : band === "hell"
+        ? 'surface "hell", on capability gaps.'
+        : 'surface "heaven" (converge) or "hell" (explore), on capability gaps.';
+  lines.push("", `   routing: summon tool, ${routing}`);
+  if (manifest) {
+    lines.push(`   ${sessionLine(manifest)}`);
+  }
   lines.push("");
   lines.push(moveLine(data));
-  lines.push(STANDING_INSTRUCTION_NOTE);
+  lines.push(SESSION_RUNG_NOTE);
   lines.push("");
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
@@ -389,7 +469,9 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   // command markdown explicitly asked us to. A direct `node render-ladder.mjs
   // zero` (the verify script, the KC2 test, a user at a terminal) passes no
   // flag, so we never block on an interactive TTY waiting for EOF.
-  const [mode, ...rest] = argv;
+  const isFull = argv.includes("--full");
+  const filtered = isFull ? argv.filter((a) => a !== "--full") : argv;
+  const [mode, ...rest] = filtered;
   const intentStdinIdx = rest.indexOf("--intent-stdin");
   const readStdin = intentStdinIdx !== -1;
   const argvRest = readStdin
@@ -399,6 +481,7 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   const { text } = renderLadder({
     mode: String(mode ?? "").trim().toLowerCase(),
     target,
+    detail: isFull ? "full" : "concise",
     manifest: loadManifest(),
   });
   process.stdout.write(text);

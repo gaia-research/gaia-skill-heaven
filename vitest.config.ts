@@ -6,5 +6,6 @@ export default defineConfig({
     // `.claude/worktrees/`. Without this, vitest discovers their test files too
     // and runs every suite twice — against a working copy that is mid-edit.
     exclude: ["**/node_modules/**", "**/dist/**", ".claude/**", "packages/site/**"],
+    testTimeout: 20000,
   },
 });

@@ -218,15 +218,14 @@ dropping them degrades summon quality is a benchmark question, filed upstream.
 
 ### Auto-summon protocol
 
-Written verbatim into the armed output of `/skill-heaven`, `/skill-hell` and
+Presented as routing guidance for `/skill-heaven`, `/skill-hell` and
 `/skill-ultra`:
 
 > On a real capability gap — never preemptively — call the `summon` tool with
 > `surface: "heaven"` while converging or `surface: "hell"` while exploring,
-> and a depth you judge the gap needs. Print the returned
-> card **verbatim** before using anything from it, read the `SKILL.md` at the
-> card's path, and follow it. The card is the listing entry, not the skill body.
-> The lane stays armed.
+> and a depth you judge the gap needs. Show the returned card before using the
+> skill, read the `SKILL.md` at the card's path, and apply relevant guidance to
+> the current task. The card is the listing entry, not the skill body.
 
 The card is the disclosure: it names the skill being summoned and carries the
 ranking disclosure with it.

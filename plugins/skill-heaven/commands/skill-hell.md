@@ -7,32 +7,16 @@ allowed-tools: Bash(node:*), mcp__skill-summon__summon
 $ARGUMENTS
 SKILL_HEAVEN_ARGS_EOF`
 
-Print the block above **verbatim** inside a fenced code block.
+Show the output above.
 
-Then treat the armed rung as a **standing instruction for this conversation**
-and follow the auto-summon protocol the block states, exactly as written: on a
-real capability gap — never preemptively — call the `summon` tool with
-`surface: "hell"`, print each
-returned card **verbatim** before using anything from it, read the `SKILL.md` at
-the card's path, and follow it. The card is the listing entry, not the skill
-body; resolve sibling `reference/` files and `scripts/` from the same directory.
-The lane stays armed after each arrival.
+This session's routing posture is Skill Hell at the indicated rung. On a
+capability gap, call the `summon` tool with `surface: "hell"` and a depth
+appropriate to the gap. Show each returned card before using the skill. Read the
+SKILL.md at the card's path and resolve sibling files from the same directory.
+Apply relevant guidance from summoned skills to the current task.
 
-Explore is the same summon as converge, pointed the other way: more experts in
-context, better until it isn't. It is not a different mechanic and not a
-different tool.
+This is the model-led surface. Automatic routing must exclude fleet skills
+marked `disable-model-invocation: true`, even when they score highest. The
+card carries the source classification.
 
-Rules for this reply (the product's claim discipline, not style preferences):
-
-- Do not reword, summarise, re-order or "improve" the block. Its wording is
-  reviewed copy; every hedge in it is load-bearing.
-- Do not add rung, token or savings numbers of your own. No rung has a count
-  and no summon has a cap — do not invent either, in copy or in a tool call.
-- How far to reach on a given gap is your call within the armed direction.
-  Never summon just to demonstrate that you can.
-- Never claim a summon changed the boot posture. The line is additive; it works
-  with or without a launcher.
-- This is the model-led surface. Automatic routing must exclude fleet skills
-  marked `disable-model-invocation: true`, even when they score highest. The
-  card carries the source classification and ranking disclosure.
-- If the block is a `⛔` refusal or a `↗` redirect, print it and stop.
+If the output is a `⛔` refusal or a `↗` redirect, show it and stop.
