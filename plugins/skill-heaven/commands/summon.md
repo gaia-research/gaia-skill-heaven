@@ -7,27 +7,23 @@ allowed-tools: Bash(node:*), mcp__skill-summon__summon
 $ARGUMENTS
 SKILL_HEAVEN_ARGS_EOF`
 
-Print the block above **verbatim** inside a fenced code block.
+Show the output above.
 
-If the block is a `⛔` refusal, print it and stop — do not call the `summon`
-tool, and do not offer a way around the cut.
+If the output is a `⛔` refusal, show it and stop — do not call the `summon`
+tool.
 
-Otherwise, if the user named an intent, call the `summon` tool **once**, with
+Otherwise, if the user named an intent, call the `summon` tool once with
 that intent as `query` and `surface: "any"`. Then:
 
-- Print the returned card **verbatim** before using anything from it. The card
-  is the disclosure: it names the skill and carries the engine's own ranking
-  disclosure with it.
-- Read the `SKILL.md` at the card's path and follow it like any other skill.
-  Resolve sibling `reference/` files and `scripts/` from that same directory.
-  The card is the listing entry, not the skill body.
-- If nothing could be summoned, print what the tool reported — including what it
-  skipped and why — and stop. Do not invent a skill or retry with a reworded
-  query.
+- Show the returned card before using the summoned skill. The card is the
+  listing entry and carries source classification and ranking disclosure.
+- Read the `SKILL.md` at the card's path and resolve sibling files from the
+  same directory. Apply relevant guidance from the skill to the current task,
+  subject to the user's request and existing permissions.
+- If nothing could be summoned, report what the tool reported and stop.
 
-This is one manual call and it arms nothing. It works at every rung, including
-the floor. To automate the choosing instead: `/skill-heaven` (converge),
-`/skill-hell` (explore), `/skill-ultra` (controller).
+This is one manual call and sets no ongoing routing posture. It works at every
+rung, including the floor, unless the zero cut is `all`.
 
 Observe the card's invocation disclosure. Manual `/summon` may reach both
 human-led Skill Heaven and model-led Skill Hell skills because the user invoked

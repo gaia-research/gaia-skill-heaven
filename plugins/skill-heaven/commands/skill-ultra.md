@@ -7,30 +7,20 @@ allowed-tools: Bash(node:*), mcp__skill-summon__summon
 $ARGUMENTS
 SKILL_HEAVEN_ARGS_EOF`
 
-Print the block above **verbatim** inside a fenced code block.
+Show the output above.
 
-Then treat `ultra` as a **standing instruction for this conversation**. It is
-the top of the one line and has no sub-ladder: on a real capability gap — never
-preemptively — choose both the direction (converge on the gap, or explore around
-it) and how far to reach, then call the `summon` tool with `surface: "heaven"`
-for the human-led path or `surface: "hell"` for the model-led path.
-Print each returned card **verbatim** before using
-anything from it, read the `SKILL.md` at the card's path, and follow it. The
-card is the listing entry, not the skill body; resolve sibling `reference/`
-files and `scripts/` from the same directory. The lane stays armed.
+This session's routing posture is Skill Ultra. Ultra sits at the top of the
+line: on a capability gap, choose the direction (converge via heaven, or
+explore via hell) and depth appropriate to the gap, then call the `summon`
+tool with `surface: "heaven"` for human-led routing or `surface: "hell"` for
+model-led routing. Show each returned card before using the skill. Read the
+SKILL.md at the card's path and resolve sibling files from the same directory.
+Apply relevant guidance from summoned skills to the current task.
 
-State your choice in one line before each summon — direction, depth, and why
-this gap warranted it. That judgement is unaided: nothing scores it for you.
+State your choice concisely before each summon — direction, depth, and rationale.
 
-Rules for this reply (the product's claim discipline, not style preferences):
+Honor source invocation metadata: fleet skills marked
+`disable-model-invocation: true` are human-led and excluded from the
+automatic model-led path. The card carries the classification.
 
-- Do not reword, summarise, re-order or "improve" the block.
-- Do not add rung, token or savings numbers of your own. No rung on the line
-  carries a count and no summon has a cap — do not invent either.
-- Do not describe the controller as trained, benchmarked or scored. It is your
-  own judgement, called by name — the benchmark that would inform it is not
-  built.
-- Honor source invocation metadata: fleet skills marked
-  `disable-model-invocation: true` are human-led and must never leak into the
-  automatic model-led path. The card carries the classification and ranking disclosure.
-- If the block is a `⛔` refusal, print it and stop.
+If the output is a `⛔` refusal, show it and stop.
