@@ -3,11 +3,16 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { INSTALL } from "../../site/src/product.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const installerPath = resolve(root, "install.sh");
 const installer = readFileSync(installerPath, "utf8");
 const pagesWorkflow = readFileSync(resolve(root, ".github/workflows/pages.yml"), "utf8");
+const ps1InstallerPath = resolve(root, "install.ps1");
+const ps1AgentPluginPath = resolve(root, "install-agent-plugin.ps1");
+const ps1Installer = readFileSync(ps1InstallerPath, "utf8");
+const ps1AgentPlugin = readFileSync(ps1AgentPluginPath, "utf8");
 
 describe("one-command installer", () => {
   it("is valid POSIX-sh syntax and identifies itself as a working prototype", () => {
@@ -50,3 +55,47 @@ describe("one-command installer", () => {
     expect(pagesWorkflow).toContain("cp install.sh packages/site/dist/install.sh");
   });
 });
+
+describe("windows PowerShell installers", () => {
+  it("install.ps1 exists and contains expected structure", () => {
+    expect(ps1Installer).toContain("[CmdletBinding()]");
+    expect(ps1Installer).toContain("gaia-skill-heaven");
+    expect(ps1Installer).toContain("npm ci");
+    expect(ps1Installer).toContain("uninstall.ps1");
+    for (const door of ["claude", "pi", "codex", "hermes", "grok"]) {
+      expect(ps1Installer).toContain(door);
+    }
+    expect(ps1Installer).toContain("$door-zero");
+  });
+
+  it("install-agent-plugin.ps1 exists and contains expected structure", () => {
+    expect(ps1AgentPlugin).toContain("[CmdletBinding()]");
+    expect(ps1AgentPlugin).toContain("gaia-skill-heaven-agent-plugin");
+    expect(ps1AgentPlugin).toContain("plugin.json");
+    expect(ps1AgentPlugin).toContain("git");
+    expect(ps1AgentPlugin).toContain("uninstall.ps1");
+  });
+
+  it("never references the deprecated external MCP package", () => {
+    expect(ps1Installer).not.toMatch(/@gaia-research\/mcp/);
+    expect(ps1Installer).not.toMatch(/\bnpx\b/);
+    expect(ps1AgentPlugin).not.toMatch(/@gaia-research\/mcp/);
+  });
+
+  it("pages workflow copies PS1 files to dist", () => {
+    expect(pagesWorkflow).toContain("- 'install.ps1'");
+    expect(pagesWorkflow).toContain("- 'install-agent-plugin.ps1'");
+    expect(pagesWorkflow).toContain("cp install.ps1 packages/site/dist/install.ps1");
+    expect(pagesWorkflow).toContain(
+      "cp install-agent-plugin.ps1 packages/site/dist/install-agent-plugin.ps1"
+    );
+  });
+
+  it("INSTALL exports Windows PS1 commands", () => {
+    expect(INSTALL.agentPluginPs1.command).toContain("irm");
+    expect(INSTALL.agentPluginPs1.command).toContain("install-agent-plugin.ps1");
+    expect(INSTALL.shPs1).toContain("irm");
+    expect(INSTALL.shPs1).toContain("install.ps1");
+  });
+});
+
