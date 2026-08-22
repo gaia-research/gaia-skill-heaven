@@ -504,14 +504,42 @@
   color: var(--sh-ink);
   cursor: pointer;
   transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    background 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Strategic Semantic Colorization per Harness */
+.lp-door--claude {
+  --door-accent: #e07a5f;
+}
+.lp-door--pi {
+  --door-accent: #71ccae;
+}
+.lp-door--codex {
+  --door-accent: #10a37f;
+}
+.lp-door--hermes {
+  --door-accent: #5fc2d6;
+}
+.lp-door--grok {
+  --door-accent: #d9b25c;
+}
+
 .lp-door:hover {
-  border-color: var(--sh-cyan);
+  border-color: var(--door-accent, var(--sh-cyan));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
+.lp-door:hover .lp-door__mark {
+  fill: var(--door-accent, var(--sh-cyan));
+  color: var(--door-accent, var(--sh-cyan));
+}
+
 .lp-door.is-on {
   background: var(--sh-card);
-  border-color: var(--sh-violet);
+  border-color: var(--door-accent, var(--sh-violet));
+  box-shadow: 0 0 0 1px var(--door-accent, var(--sh-violet)), 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .lp-door__tick {
   position: absolute;
@@ -520,9 +548,10 @@
   width: 5px;
   height: 5px;
   background: transparent;
+  transition: background 160ms ease;
 }
 .lp-door.is-on .lp-door__tick {
-  background: var(--sh-violet);
+  background: var(--door-accent, var(--sh-violet));
 }
 .lp-door__mark {
   display: block;
@@ -530,9 +559,11 @@
   height: 22px;
   margin-bottom: 14px;
   fill: var(--sh-ink-dim);
+  transition: fill 160ms ease, color 160ms ease;
 }
 .lp-door.is-on .lp-door__mark {
-  fill: var(--sh-violet);
+  fill: var(--door-accent, var(--sh-violet));
+  color: var(--door-accent, var(--sh-violet));
 }
 /* The one harness with no public vector mark. A lettermark in our own display
    type — deliberately OUR voice, so it cannot be mistaken for the vendor's
@@ -546,14 +577,20 @@
   font-size: 19px;
   line-height: 1;
   color: var(--sh-ink-dim);
+  transition: color 160ms ease;
 }
 .lp-door.is-on .lp-door__mark--letter {
-  color: var(--sh-violet);
+  color: var(--door-accent, var(--sh-violet));
 }
 .lp-door__pkg {
   font-family: var(--sh-mono);
   font-size: 12px;
   margin-bottom: 5px;
+  transition: color 160ms ease;
+}
+.lp-door.is-on .lp-door__pkg {
+  color: var(--sh-ink);
+  font-weight: 600;
 }
 .lp-door__harness {
   font-size: 11.5px;
@@ -563,10 +600,22 @@
 }
 .lp-door__chip {
   text-transform: uppercase;
+  transition: all 160ms ease;
 }
 .lp-door.is-on .lp-door__chip {
-  border-color: rgba(165, 138, 224, 0.5);
-  color: var(--sh-violet);
+  border-color: var(--door-accent, rgba(165, 138, 224, 0.5));
+  color: var(--door-accent, var(--sh-violet));
+  background: rgba(238, 235, 230, 0.05);
+}
+.lp-door__chip--flagship {
+  border-color: rgba(224, 122, 95, 0.4);
+  color: #e07a5f;
+  background: rgba(224, 122, 95, 0.08);
+}
+.lp-door.is-on .lp-door__chip--flagship {
+  border-color: #e07a5f;
+  color: #e07a5f;
+  background: rgba(224, 122, 95, 0.16);
 }
 
 /* install + launch */

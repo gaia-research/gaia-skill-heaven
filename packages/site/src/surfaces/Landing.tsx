@@ -1020,6 +1020,10 @@ export default function Landing() {
       {/* ------------------------------------------------------------------ 01 */}
       <section className="lp-section" id="doors">
         <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
+        <p className="lp-section__lede">
+          Pick your harness door. Every door launches with zero unneeded standing dose, mounts{' '}
+          <code>/summon</code> natively into your session, and leaves your repository byte-identical.
+        </p>
 
         <div className="lp-doors">
           {DOORS.map((d) => {
@@ -1028,7 +1032,7 @@ export default function Landing() {
               <button
                 key={d.id}
                 type="button"
-                className={`lp-door${on ? ' is-on' : ''}`}
+                className={`lp-door lp-door--${d.id}${on ? ' is-on' : ''}`}
                 aria-pressed={on}
                 onClick={() => setPickedId(d.id)}
               >
@@ -1041,7 +1045,9 @@ export default function Landing() {
                 />
                 <span className="lp-door__pkg">{d.pkg}</span>
                 <span className="lp-door__harness">{d.harness}</span>
-                <span className="sh-chip lp-door__chip">{d.status}</span>
+                <span className={`sh-chip lp-door__chip${d.status === 'flagship' ? ' lp-door__chip--flagship' : ''}`}>
+                  {d.status}
+                </span>
               </button>
             )
           })}
@@ -1052,7 +1058,7 @@ export default function Landing() {
             <div className="lp-install__head">
               <div className="lp-install__title">
                 <div className="lp-install__title-wrap">
-                  <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
+                  <span className="sh-label">STEP 01 · INSTALL THE ENGINE</span>
                   <InfoTooltip
                     align="left"
                     label="Installation compatibility details"
@@ -1158,7 +1164,7 @@ export default function Landing() {
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              {installMode === 'sh' ? 'HOW TO LAUNCH' : 'THEN, IN THE SESSION'}
+              {installMode === 'sh' ? `STEP 02 · LAUNCH ${picked.harness.toUpperCase()}` : 'STEP 02 · SUMMON IN SESSION'}
             </div>
             {installMode !== 'sh' ? (
               <>
