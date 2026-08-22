@@ -205,17 +205,22 @@
 .lp-head {
   max-width: var(--lp-maxw);
   margin: 0 auto;
-  padding: clamp(40px, 6vw, 74px) var(--lp-pad) 0;
+  padding: clamp(36px, 5vw, 64px) var(--lp-pad) 0;
 }
 .lp-head__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
-  gap: 40px;
+  grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr);
+  gap: 32px 44px;
   align-items: end;
 }
+.lp-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
 .lp-head__lede {
-  grid-column: 1 / -1;
-  max-width: 780px;
+  max-width: 720px;
 }
 .lp-kicker {
   display: flex;
@@ -375,18 +380,18 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: clamp(420px, 46vw, 720px);
+  min-height: clamp(380px, 42vw, 640px);
   overflow: visible;
 }
 .lp-figure__bg {
   position: absolute;
   left: 50%;
-  bottom: -4%;
+  bottom: -2%;
   translate: -50% 0;
-  width: 152%;
-  height: 130%;
+  width: 145%;
+  height: 125%;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: 0.45;
   z-index: 0;
   pointer-events: none;
   -webkit-mask-image: radial-gradient(60% 58% at 50% 46%, #000 38%, transparent 78%);
@@ -400,53 +405,15 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: clamp(420px, 46vw, 720px);
+  max-height: clamp(380px, 42vw, 640px);
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 24px 54px rgba(0, 0, 0, 0.58));
 }
 .lp-figure figcaption {
   position: absolute;
-  left: 0;
-  bottom: 8px;
-  color: var(--sh-ink-dim);
-}
-
-/* blade divider — the alpha-verified katana pack.
-   .lp-band maps the blade's alpha bounding box onto the strip: the master is
-   1200×320 with the blade at x 274–902 / y 107–210, so the image is drawn at
-   3.107× the band height and re-centred on that box. */
-.lp-band {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  height: var(--lp-band-h, 60px);
-}
-.lp-band img {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: calc(var(--lp-band-h, 60px) * 3.107);
-  width: auto;
-  max-width: none;
-  transform: translate(-49%, -49.5%);
-}
-.lp-blade {
-  position: relative;
-  margin-top: clamp(36px, 5vw, 64px);
-  padding-right: 26px;
-}
-.lp-blade__band {
-  --lp-band-h: clamp(52px, 7.2vw, 104px);
-}
-.lp-blade__plate {
-  position: absolute;
   right: 0;
-  top: -10px;
-  writing-mode: vertical-rl;
-  font-family: var(--sh-mono);
-  font-size: 9px;
-  letter-spacing: 0.26em;
+  bottom: 8px;
   color: var(--sh-ink-dim);
 }
 
@@ -734,14 +701,54 @@
   color: var(--sh-void);
 }
 
-/* ------------------------------------------------------------- 02 terminal */
+/* ------------------------------------------------------------- 02 terminal (Claude Code TUI) */
 
-.lp-term__controls {
+.lp-sampler-ctrls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
+.lp-sampler-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--sh-line-strong);
+}
+.lp-sampler-btn {
+  padding: 8px 14px;
+  background: var(--sh-panel);
+  border: 0;
+  border-right: 1px solid var(--sh-line);
+  color: var(--sh-ink-dim);
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.lp-sampler-btn:last-child {
+  border-right: 0;
+}
+.lp-sampler-btn:hover {
+  color: var(--sh-ink);
+  background: rgba(238, 235, 230, 0.06);
+}
+.lp-sampler-btn.is-active {
+  background: var(--sh-ink);
+  color: var(--sh-void);
+  font-weight: 600;
+}
+.lp-sampler-btn--hell.is-active {
+  background: var(--sh-hell);
+  color: var(--sh-void);
+}
+.lp-sampler-btn--ultra.is-active {
+  background: var(--sh-ultra);
+  color: var(--sh-void);
+}
+
 .lp-ghost {
   padding: 8px 14px;
   cursor: pointer;
@@ -756,42 +763,50 @@
   color: var(--sh-cyan);
   border-color: var(--sh-cyan);
 }
-.lp-ghost--hell {
-  color: var(--sh-hell);
-}
-.lp-ghost--hell:hover {
-  color: var(--sh-hell);
-  border-color: var(--sh-hell);
-}
 
-.lp-term {
+/* Claude Code Terminal container */
+.lp-cc-term {
   position: relative;
   border: 1px solid var(--sh-line-strong);
-  background: var(--sh-panel);
+  background: #17171a;
+  padding: 18px 22px 14px;
+  font-family: var(--sh-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  color: #eeebe6;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
   transition: background 60ms linear, border-color 60ms linear, color 60ms linear;
-  --lp-term-fg: var(--sh-ink);
-  --lp-term-dim: var(--sh-ink-dim);
-  --lp-term-line: var(--sh-line-strong);
-  --lp-term-accent: rgba(165, 138, 224, 0.55);
-  --lp-k-cmd: var(--sh-ink);
-  --lp-k-ok: var(--sh-mint);
-  --lp-k-info: var(--sh-ink-dim);
-  --lp-k-dim: var(--sh-ink-dim);
+  min-height: 560px;
+  height: 560px;
+  display: flex;
+  flex-direction: column;
 }
-/* Hell is monochrome — any accent surviving the invert is a bug. */
-.lp-term.is-hell {
-  background: var(--sh-hell-paper);
-  border-color: var(--sh-hell-line);
-  --lp-term-fg: var(--sh-hell-ink);
-  --lp-term-dim: rgba(23, 22, 24, 0.62);
-  --lp-term-line: var(--sh-hell-line);
-  --lp-term-accent: rgba(23, 22, 24, 0.4);
-  --lp-k-cmd: var(--sh-hell-ink);
-  --lp-k-ok: var(--sh-hell-ink);
-  --lp-k-info: rgba(23, 22, 24, 0.72);
-  --lp-k-dim: rgba(23, 22, 24, 0.62);
+
+/* Hell monochrome inversion */
+.lp-cc-term.is-hell {
+  background: var(--sh-hell-paper, #efece7);
+  border-color: var(--sh-hell-line, rgba(23, 22, 24, 0.2));
+  color: var(--sh-hell-ink, #171618);
 }
-.lp-term.is-shearing {
+.lp-cc-term.is-hell .lp-cc-dim {
+  color: rgba(23, 22, 24, 0.65);
+}
+.lp-cc-term.is-hell .lp-cc-header-text b {
+  color: #171618;
+}
+.lp-cc-term.is-hell .lp-cc-user-cmd {
+  color: #171618;
+}
+.lp-cc-term.is-hell .lp-cc-header {
+  border-bottom-color: rgba(23, 22, 24, 0.15);
+}
+.lp-cc-term.is-hell .lp-cc-rule {
+  border-top-color: rgba(23, 22, 24, 0.15);
+}
+.lp-cc-term.is-hell .lp-cc-cursor {
+  background: #171618;
+}
+.lp-cc-term.is-shearing {
   animation: lp-shear var(--sh-impact) steps(3, end) 1;
 }
 @keyframes lp-shear {
@@ -811,113 +826,371 @@
     transform: translate3d(0, 0, 0);
   }
 }
-.lp-term__c {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-color: var(--lp-term-accent);
-  border-style: solid;
-  border-width: 0;
-}
-.lp-term__c--tl {
-  top: -1px;
-  left: -1px;
-  border-width: 2px 0 0 2px;
-}
-.lp-term__c--tr {
-  top: -1px;
-  right: -1px;
-  border-width: 2px 2px 0 0;
-}
-.lp-term__c--bl {
-  bottom: -1px;
-  left: -1px;
-  border-width: 0 0 2px 2px;
-}
-.lp-term__c--br {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 2px 2px 0;
-}
-.lp-term__bar {
+
+/* Header */
+.lp-cc-header {
+  flex: none;
   display: flex;
+  gap: 14px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 11px 18px;
-  border-bottom: 1px solid var(--lp-term-line);
-  font-family: var(--sh-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  color: var(--lp-term-dim);
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(238, 235, 230, 0.1);
+  margin-bottom: 14px;
 }
-.lp-term__bar--foot {
-  border-bottom: 0;
-  border-top: 1px solid var(--lp-term-line);
-  font-size: 9.5px;
-}
-.lp-term__state {
-  letter-spacing: 0.2em;
-  white-space: nowrap;
-}
-.lp-term__body {
-  padding: 20px 20px 16px;
-  min-height: 358px;
-  overflow-x: auto;
-  font-family: var(--sh-mono);
-  color: var(--lp-term-fg);
-}
-.lp-term__row {
-  display: flex;
-  gap: 10px;
-  padding: 1.5px 0;
+.lp-cc-logo-art {
+  margin: 0;
+  color: #d97757;
+  line-height: 1;
   font-size: 13px;
-  line-height: 1.62;
   white-space: pre;
 }
-.lp-term__gut {
-  flex: none;
-  width: 9px;
-  color: var(--lp-term-dim);
-  opacity: 0.55;
+.lp-cc-header-text {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.45;
 }
-.lp-term__glyph {
-  flex: none;
-  width: 12px;
-  text-align: center;
-  color: var(--lp-term-fg);
+.lp-cc-header-text b {
+  color: #eeebe6;
 }
-.lp-term__text {
+.lp-cc-dim {
+  color: #8c8985;
+}
+
+/* Body */
+.lp-cc-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 6px;
+}
+
+.lp-cc-body::-webkit-scrollbar {
+  width: 5px;
+}
+.lp-cc-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lp-cc-body::-webkit-scrollbar-thumb {
+  background: rgba(238, 235, 230, 0.16);
+  border-radius: 3px;
+}
+.lp-cc-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(238, 235, 230, 0.32);
+}
+
+.lp-cc-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.lp-cc-prompt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+}
+.lp-cc-prompt-glyph {
+  color: #d97757;
+  font-weight: bold;
+  user-select: none;
+}
+.lp-cc-user-cmd {
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   white-space: pre-wrap;
+  word-break: break-word;
 }
-.lp-k-cmd {
-  color: var(--lp-k-cmd);
+.lp-cc-response {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.lp-k-ok {
-  color: var(--lp-k-ok);
+.lp-cc-res-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
-.lp-k-info {
-  color: var(--lp-k-info);
+.lp-cc-bullet {
+  color: #d97757;
+  font-size: 11px;
 }
-.lp-k-dim {
-  color: var(--lp-k-dim);
+.lp-cc-bullet--heaven {
+  color: var(--sh-heaven, #6f96d8);
 }
-.lp-term__caret {
+.lp-cc-bullet--hell {
+  color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-bullet--ultra {
+  color: var(--sh-ultra, #d9b25c);
+}
+
+.cc-file {
+  color: #b1b9f9;
+}
+.cc-cyan {
+  color: #4ec9d4;
+}
+.cc-gold {
+  color: var(--sh-ultra, #d9b25c);
+}
+.cc-yellow {
+  color: #d7ba7d;
+}
+.cc-amber {
+  color: #c89a3f;
+}
+
+.lp-cc-line-in {
+  animation: lp-cc-fade-in 140ms ease-out forwards;
+}
+@keyframes lp-cc-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-cc-pill-wrap {
+  margin: 3px 0 2px 14px;
+}
+
+/* Delight: Summoned skill micro-pill card in terminal */
+.lp-cc-skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px 3px 8px;
+  background: rgba(238, 235, 230, 0.05);
+  border: 1px solid rgba(238, 235, 230, 0.12);
+  border-radius: 2px;
+  font-family: var(--sh-mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #eeebe6;
+  width: fit-content;
+  max-width: 100%;
+  transition: all 180ms ease;
+}
+.lp-cc-skill-pill:hover {
+  background: rgba(238, 235, 230, 0.09);
+  border-color: rgba(238, 235, 230, 0.26);
+  transform: translateX(2px);
+}
+.lp-cc-skill-pill--cyan {
+  border-left: 2px solid var(--sh-cyan, #5fc2d6);
+}
+.lp-cc-skill-pill--cyan .lp-cc-skill-dot {
+  background: var(--sh-cyan, #5fc2d6);
+  box-shadow: 0 0 5px rgba(95, 194, 214, 0.55);
+}
+.lp-cc-skill-pill--violet {
+  border-left: 2px solid var(--sh-violet, #a58ae0);
+}
+.lp-cc-skill-pill--violet .lp-cc-skill-dot {
+  background: var(--sh-violet, #a58ae0);
+  box-shadow: 0 0 5px rgba(165, 138, 224, 0.55);
+}
+.lp-cc-skill-pill--amber {
+  border-left: 2px solid var(--sh-hell, #c89a3f);
+}
+.lp-cc-skill-pill--amber .lp-cc-skill-dot {
+  background: var(--sh-hell, #c89a3f);
+  box-shadow: 0 0 5px rgba(200, 154, 63, 0.55);
+}
+.lp-cc-skill-pill--gold {
+  border-left: 2px solid var(--sh-ultra, #d9b25c);
+}
+.lp-cc-skill-pill--gold .lp-cc-skill-dot {
+  background: var(--sh-ultra, #d9b25c);
+  box-shadow: 0 0 5px rgba(217, 178, 92, 0.55);
+}
+
+.lp-cc-skill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lp-cc-skill-name {
+  color: #b1b9f9;
+  font-weight: 600;
+}
+.lp-cc-skill-pill--amber .lp-cc-skill-name {
+  color: #d7ba7d;
+}
+.lp-cc-skill-tag {
+  padding: 1px 5px;
+  background: rgba(238, 235, 230, 0.08);
+  color: var(--sh-ink-dim, #9a9691);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-cc-skill-tok {
+  color: var(--sh-mint, #71ccae);
+  font-size: 10.5px;
+}
+.lp-cc-skill-badge {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--sh-ink-dim, #9a9691);
+  border: 1px solid rgba(238, 235, 230, 0.16);
+  padding: 0 4px;
+}
+
+/* Hell theme overrides for skill pills */
+.lp-cc-term.is-hell .lp-cc-skill-pill {
+  background: rgba(23, 22, 24, 0.06);
+  border-color: rgba(23, 22, 24, 0.16);
+  color: var(--sh-hell-ink, #171618);
+}
+.lp-cc-term.is-hell .lp-cc-skill-name {
+  color: #171618;
+}
+.lp-cc-term.is-hell .lp-cc-skill-tag {
+  background: rgba(23, 22, 24, 0.08);
+  color: rgba(23, 22, 24, 0.7);
+}
+.lp-cc-term.is-hell .lp-cc-skill-tok {
+  color: #171618;
+  font-weight: 600;
+}
+.lp-cc-term.is-hell .lp-cc-skill-badge {
+  border-color: rgba(23, 22, 24, 0.2);
+  color: rgba(23, 22, 24, 0.7);
+}
+
+/* Action detail blocks (Grill-Me question & Impeccable variations) */
+.lp-cc-block {
+  margin: 4px 0 3px 14px;
+  padding: 6px 10px;
+  border-left: 2px solid rgba(238, 235, 230, 0.16);
+  background: rgba(238, 235, 230, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.lp-cc-block--heaven {
+  border-left-color: var(--sh-heaven, #6f96d8);
+}
+.lp-cc-block--hell {
+  border-left-color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-block--ultra {
+  border-left-color: var(--sh-ultra, #d9b25c);
+}
+.lp-cc-subhead {
+  color: #eeebe6;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.lp-cc-term.is-hell .lp-cc-block {
+  background: rgba(23, 22, 24, 0.05);
+  border-left-color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-term.is-hell .lp-cc-subhead {
+  color: #171618;
+}
+
+/* Working row */
+.lp-cc-working-row {
+  margin-top: 4px;
+  font-size: 12px;
+  flex: none;
+}
+.lp-cc-working {
+  color: #d97757;
+  font-weight: 500;
+}
+.lp-cc-braille {
+  display: inline-block;
+  margin-right: 2px;
+}
+.lp-cc-ready-dot {
+  color: #71ccae;
+  margin-right: 4px;
+  font-size: 10px;
+}
+.lp-cc-ready-label {
+  color: #eeebe6;
+  font-weight: 500;
+}
+.lp-cc-term.is-hell .lp-cc-ready-label {
+  color: #171618;
+}
+
+/* TUI Bottom */
+.lp-cc-bottom {
+  flex: none;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lp-cc-rule {
+  margin: 6px 0;
+  border-top: 1px solid rgba(238, 235, 230, 0.12);
+}
+.lp-cc-input-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+}
+.lp-cc-input-text {
+  color: #ffffff;
+  font-weight: 500;
+  white-space: pre;
+}
+.lp-cc-term.is-hell .lp-cc-input-text {
+  color: #171618;
+}
+.lp-cc-cursor {
   display: inline-block;
   width: 8px;
   height: 15px;
-  background: var(--lp-term-fg);
-  animation: lp-caret 1s steps(1, end) infinite;
+  background: #eeebe6;
+  animation: lp-cc-cursor-blink 1s steps(1) infinite;
 }
-@keyframes lp-caret {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
+@keyframes lp-cc-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.lp-cc-status-row {
+  font-size: 11.5px;
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp-cc-cyan {
+  color: #4ec9d4;
+}
+.lp-cc-yellow {
+  color: #d7ba7d;
+}
+.lp-cc-green {
+  color: #71ccae;
+}
+.lp-cc-coral {
+  color: #ff6b80;
+}
+.lp-cc-gy {
+  color: #67635f;
 }
 
 /* ---------------------------------------------------------- 03 the session */
