@@ -897,17 +897,19 @@
   font-weight: 600;
   min-width: 0;
   width: 100%;
+  flex-wrap: nowrap;
 }
 .lp-cc-prompt-glyph {
   color: #d97757;
   font-weight: bold;
   user-select: none;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  line-height: inherit;
 }
 .lp-cc-user-cmd {
   color: #ffffff;
   display: block;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1171,7 +1173,7 @@
   min-height: 20px;
   min-width: 0;
   width: 100%;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .lp-cc-input-text {
   color: #ffffff;
@@ -1180,7 +1182,7 @@
   word-break: break-word;
   overflow-wrap: break-word;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
 }
 .lp-cc-term.is-hell .lp-cc-input-text {
   color: #171618;
@@ -1188,10 +1190,11 @@
 .lp-cc-cursor {
   display: inline-block;
   width: 8px;
-  height: 15px;
+  height: 14px;
   background: #eeebe6;
   animation: lp-cc-cursor-blink 1s steps(1) infinite;
-  vertical-align: middle;
+  vertical-align: -2px;
+  margin-left: 2px;
   flex-shrink: 0;
 }
 @keyframes lp-cc-cursor-blink {

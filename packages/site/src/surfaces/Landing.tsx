@@ -1113,9 +1113,11 @@ export default function Landing() {
           <div className="lp-cc-bottom">
             <div className="lp-cc-rule" />
             <div className="lp-cc-input-line">
-              <span className="lp-cc-prompt-glyph">❯</span>
-              <span className="lp-cc-input-text">{currentInput}</span>
-              <span className="lp-cc-cursor" />
+              <span className="lp-cc-prompt-glyph" aria-hidden="true">❯</span>
+              <span className="lp-cc-input-text">
+                {currentInput}
+                <span className="lp-cc-cursor" aria-hidden="true" />
+              </span>
             </div>
             <div className="lp-cc-rule" />
             <div className="lp-cc-status-row">
