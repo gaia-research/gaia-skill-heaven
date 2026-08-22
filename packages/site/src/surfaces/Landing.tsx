@@ -1452,50 +1452,64 @@ export default function Landing() {
         </p>
 
         <div className="lp-beats">
-          <div className="lp-beat">
-            <div className="sh-label lp-beat__n">BEAT 01</div>
-            <p>
-              <b>Installing is permanent.</b> It is a diff you own forever.
-            </p>
+          <div className="lp-beat lp-beat--warn">
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 01 · ON DISK</span>
+              <span className="lp-beat__badge">PERMANENT</span>
+            </div>
+            <h4 className="lp-beat__title">Installing is permanent.</h4>
+            <p>It is a diff you own forever. Loads on every turn whether needed or not.</p>
           </div>
           <div className="lp-beat lp-beat--violet">
-            <div className="sh-label lp-beat__n">BEAT 02</div>
-            <p>
-              <b>Summoning is borrowed.</b> The loadout lives for one session.
-            </p>
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 02 · IN MEMORY</span>
+              <span className="lp-beat__badge">DISPOSABLE</span>
+            </div>
+            <h4 className="lp-beat__title">Summoning is borrowed.</h4>
+            <p>The loadout lives exclusively for this one active process session.</p>
           </div>
           <div className="lp-beat lp-beat--mint">
-            <div className="sh-label lp-beat__n">BEAT 03</div>
-            <p>
-              <b>Nothing is left behind.</b> The tree on disk is byte-identical.
-            </p>
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 03 · ZERO TRACE</span>
+              <span className="lp-beat__badge">CLEAN TREE</span>
+            </div>
+            <h4 className="lp-beat__title">Nothing left behind.</h4>
+            <p>The tree on disk remains 100% byte-identical after the session exits.</p>
           </div>
         </div>
 
         <div className="lp-story">
           <div className="lp-story__disk">
             <div className="lp-story__head">
-              <span className="sh-label">ON DISK · YOUR REPO</span>
-              <span className="sh-chip">FROZEN</span>
+              <div className="lp-story__title-wrap">
+                <span className="lp-story__indicator lp-story__indicator--frozen" aria-hidden="true" />
+                <span className="sh-label">ON DISK · YOUR REPO</span>
+              </div>
+              <span className="sh-chip sh-chip--dim">FROZEN</span>
             </div>
-            <pre className="lp-tree">{`my-project/
-├─ .claude/
-│  └─ skills/
-│     ├─ code-review/
-│     ├─ tdd/
-│     └─ diagnose/
-├─ src/
-├─ CLAUDE.md
-└─ package.json`}</pre>
+            <div className="lp-tree-wrap">
+              <pre className="lp-tree">{`my-project/
+├── .claude/
+│   └── skills/          # standing cost paid every turn
+│       ├── code-review/
+│       ├── tdd/
+│       └── diagnose/
+├── src/
+├── CLAUDE.md
+└── package.json`}</pre>
+            </div>
             <p className="lp-story__foot">
-              3 skills committed · every one of them loads on every turn ·{' '}
-              <b>0 diffs this session</b>
+              <span className="lp-story__foot-tag">STANDING BLOAT</span>
+              <span>3 skills committed · loads every turn · <b>0 diffs this session</b></span>
             </p>
           </div>
 
           <div className="lp-story__session">
             <div className="lp-story__head">
-              <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
+              <div className="lp-story__title-wrap">
+                <span className="lp-story__indicator lp-story__indicator--live" aria-hidden="true" />
+                <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
+              </div>
               <div className="lp-story__head-badges">
                 <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
                 <InfoTooltip
@@ -1509,57 +1523,85 @@ export default function Landing() {
                 />
               </div>
             </div>
+
             <div className="lp-counters">
-              <Counter label="MOUNTED" value={fmt(mounted.length)} />
-              <Counter label="ADDED" value={fmt(nAdded)} tone="cyan" />
-              <Counter label="DROPPED" value={fmt(nDropped)} tone="amber" />
-              <Counter label="STANDING" value={fmt(standing)} tone="mint" />
+              <Counter label="MOUNTED" value={fmt(mounted.length)} unit="skills" />
+              <Counter label="ADDED (SUMMON)" value={fmt(nAdded)} tone="cyan" unit="added" />
+              <Counter label="DROPPED" value={fmt(nDropped)} tone="amber" unit="evicted" />
+              <Counter label="STANDING DOSE" value={fmt(standing)} tone="mint" unit="tok" />
             </div>
+
+            <div className="lp-rows-header">
+              <span className="lp-rows-header__cell">STATE</span>
+              <span className="lp-rows-header__cell">SKILL IDENTIFIER</span>
+              <span className="lp-rows-header__cell">SOURCE</span>
+              <span className="lp-rows-header__cell" style={{ textAlign: 'right' }}>COST</span>
+            </div>
+
             <div className="lp-rows">
               {SESSION_ROWS.map((r) => {
                 const on = isOn(r.id)
-                const src = on ? r.origin : r.origin === 'repo' ? 'dropped' : 'available'
+                const isSummon = r.origin === 'skill-tree'
+                const srcLabel = on ? (isSummon ? 'SUMMONED' : 'REPO') : (r.origin === 'repo' ? 'DROPPED' : 'OFFERED')
                 return (
                   <button
                     key={r.id}
                     type="button"
-                    className={`lp-row${on ? ' is-on' : ''} lp-row--${r.origin}`}
+                    className={`lp-row${on ? ' is-on' : ' is-off'}${isSummon ? ' lp-row--summon' : ' lp-row--repo'}`}
                     aria-pressed={on}
                     onClick={() => toggleRow(r.id)}
                   >
                     <span className="lp-row__mark" aria-hidden="true">
                       {on ? '●' : '○'}
                     </span>
-                    <span className="lp-row__name">{r.id}</span>
-                    <span className="lp-row__src">{src}</span>
-                    <span className="lp-row__tok">{on ? fmt(r.tokens) : '—'}</span>
+                    <span className="lp-row__name">
+                      <code>{r.id}</code>
+                    </span>
+                    <span className={`lp-row__chip lp-row__chip--${srcLabel.toLowerCase()}`}>
+                      {srcLabel}
+                    </span>
+                    <span className="lp-row__tok">
+                      {on ? (
+                        <span className="lp-row__tok-val">+{fmt(r.tokens)} <small>tok</small></span>
+                      ) : (
+                        <span className="lp-row__tok-dim">—</span>
+                      )}
+                    </span>
                   </button>
                 )
               })}
             </div>
+
             <p className="lp-story__foot">
-              Click any row to mount or drop it. Rows marked <b>skill-tree</b> were never installed
-              here — standing dose recomputes off the benchmark floor of{' '}
-              {fmt(DOSES.benchmarkFloor)} tok.
+              <span className="lp-story__foot-tag lp-story__foot-tag--interactive">INTERACTIVE</span>
+              <span>Click any skill row above to simulate real-time loadout and dose recomputation.</span>
             </p>
           </div>
         </div>
 
         <div className="lp-verdict">
-          <div className="lp-verdict__cmd">
-            <span className="lp-k-ok">$</span>
-            <span className="lp-verdict__dim">git status</span>
-            <span className="lp-verdict__arrow" aria-hidden="true">
-              →
-            </span>
-            <span>nothing to commit, working tree clean</span>
+          <div className="lp-verdict__top">
+            <div className="lp-verdict__cmd">
+              <span className="lp-k-ok">$</span>
+              <span className="lp-verdict__term">git status</span>
+              <span className="lp-verdict__arrow" aria-hidden="true">→</span>
+              <span className="lp-verdict__clean">
+                <svg className="lp-verdict__check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8.5l3.5 3.5 6.5-6.5"/></svg>
+                nothing to commit, working tree clean
+              </span>
+            </div>
+            <span className="sh-chip sh-chip--live">ZERO MUTATION</span>
           </div>
-          <p className="lp-verdict__line" aria-live="polite">
-            {verdict}
-          </p>
+
+          <div className="lp-verdict__banner">
+            <div className="lp-verdict__icon" aria-hidden="true">✓</div>
+            <p className="lp-verdict__line" aria-live="polite">
+              {verdict}
+            </p>
+          </div>
+
           <p className="lp-verdict__foot">
-            composes → execs → exits. The only writes happened inside <b>{SESSION_DIR}</b>, and it
-            died with the process. Nothing stashed, nothing restored, nothing to undo.
+            <b>P3 invariant</b>: composes → execs → exits. The only writes happened inside disposable <code>{SESSION_DIR}</code>, which died when the process exited. Nothing stashed, nothing restored, zero dirty git state.
           </p>
         </div>
       </section>
@@ -1976,15 +2018,20 @@ function Counter({
   label,
   value,
   tone,
+  unit,
 }: {
   label: string
   value: string
   tone?: 'cyan' | 'amber' | 'mint'
+  unit?: string
 }) {
   return (
-    <div className="lp-counter">
-      <div className="sh-label">{label}</div>
-      <div className={`lp-counter__v${tone ? ` lp-counter__v--${tone}` : ''}`}>{value}</div>
+    <div className={`lp-counter${tone ? ` lp-counter--${tone}` : ''}`}>
+      <div className="sh-label lp-counter__label">{label}</div>
+      <div className={`lp-counter__v${tone ? ` lp-counter__v--${tone}` : ''}`}>
+        {value}
+        {unit && <span className="lp-counter__u">{unit}</span>}
+      </div>
     </div>
   )
 }
