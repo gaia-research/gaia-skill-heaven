@@ -2777,10 +2777,22 @@
   }
   .lp-figure {
     min-height: 0;
+    margin: 28px auto 0;
+    max-width: min(380px, 90vw);
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .lp-figure__fig {
+    margin: 0 auto;
+    max-height: clamp(320px, 75vw, 460px);
   }
   .lp-figure figcaption {
     position: static;
-    margin-top: 10px;
+    margin-top: 12px;
     text-align: center;
     width: 100%;
   }
