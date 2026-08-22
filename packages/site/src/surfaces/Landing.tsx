@@ -236,7 +236,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     readyTiming: '520ms',
   },
   {
-    id: 'hell-1',
+    id: 'hell',
     cmd: '/skill-hell explore the codebase and autofix security issues',
     bulletTone: 'hell',
     verb: 'Prestidigitating…',
@@ -266,47 +266,21 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         </div>
         <div className="lp-cc-dim">&nbsp;&nbsp;· Flagged high-severity CVE: prototype pollution in session claim parser (src/auth/jwt.ts:42)</div>
       </div>,
-    ],
-    readyTiming: '480ms',
-  },
-  {
-    id: 'hell-2',
-    cmd: 'garrytan/cso → obra/systematic-debugging: isolate reproduction & draft patch',
-    bulletTone: 'hell',
-    verb: 'Combobulating…',
-    title: (
-      <>
-        <span className="cc-amber">obra/systematic-debugging</span> isolated reproduction & proposed patch…
-      </>
-    ),
-    lines: [
       <div className="lp-cc-block lp-cc-block--hell" key="debug-trace">
         <div className="lp-cc-subhead">
-          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Created minimal reproduction in test/auth-security.test.ts
+          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Swarm delegated: isolated reproduction & drafted patch
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Isolated root cause: unchecked Object.assign on decoded payload</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Created reproduction in test/auth-security.test.ts (reproduced: RED)</div>
         <div className="lp-cc-dim">&nbsp;&nbsp;· Applied fix: sanitized dictionary with Object.create(null) + frozen prototype</div>
       </div>,
-    ],
-    readyTiming: '540ms',
-  },
-  {
-    id: 'hell-3',
-    cmd: 'obra/systematic-debugging → garrytan/cso: verify patch & open draft PR',
-    bulletTone: 'hell',
-    verb: 'Quantumizing…',
-    title: (
-      <>
-        <span className="cc-amber">garrytan/cso</span> verified patch · 0 CVEs remaining…
-      </>
-    ),
-    lines: [
       <div className="lp-cc-block lp-cc-block--hell" key="cso-verify">
         <div className="lp-cc-subhead">
-          <span className="cc-amber">◈ [garrytan/cso]</span> Security audit PASS: exploit payloads neutralized (38/38 tests green)
+          <span className="cc-amber">◈ [garrytan/cso]</span> Autonomous verification & Pull Request:
         </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Security audit PASS: 0 CVEs remaining · all exploit vectors neutralized</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Regression tests: 38/38 unit & security tests green (GREEN)</div>
         <div className="lp-cc-dim">
-          &nbsp;&nbsp;<span className="cc-green">✓</span> Committed to branch <span className="cc-file">fix/cve-session-prototype-pollution</span>
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed to branch <span className="cc-file">fix/cve-session-prototype-pollution</span>
         </div>
         <div className="lp-cc-dim">
           &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #142 "fix(auth): sanitize JWT session claim prototype injection"
@@ -336,10 +310,10 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
 
 const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
   heaven: [1, 2, 3],
-  hell: [4, 5, 6],
-  all: [0, 1, 2, 3, 4, 5, 6, 7],
+  hell: [4],
+  all: [0, 1, 2, 3, 4, 5],
   summon: [0],
-  zero: [7],
+  zero: [5],
 }
 
 function prefersReducedMotion(): boolean {
