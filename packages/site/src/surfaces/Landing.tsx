@@ -484,7 +484,7 @@ export default function Landing() {
   }, [activeVerb])
 
   const typeAndSubmitCommand = useCallback(
-    (turnIdx: number, onDone: () => void, charDelay = 28) => {
+    (turnIdx: number, onDone: () => void) => {
       const turn = CLAUDE_TURNS[turnIdx]
       const fullCmd = turn.cmd
       let charIdx = 0
@@ -492,18 +492,22 @@ export default function Landing() {
 
       const typeNextChar = () => {
         if (charIdx < fullCmd.length) {
+          const char = fullCmd[charIdx]
           charIdx++
           setCurrentInput(fullCmd.slice(0, charIdx))
+          // Natural human cadence: tiny hesitation on space, slash, quotes or punctuation
+          const isPunct = char === ' ' || char === '/' || char === '-' || char === '\'' || char === '"' || char === '.'
+          const charDelay = isPunct ? 68 : 34 + (charIdx % 4) * 5
           animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
         } else {
-          // Pause briefly at end of command (simulating Enter keypress)
+          // Pause naturally at end of command before "pressing Enter" to let user read what was typed
           animTimerRef.current = window.setTimeout(() => {
             const isHell = turn.id.startsWith('hell')
             if (isHell) {
               setHell(true)
               if (turn.id === 'hell-1') {
                 setShear(true)
-                shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
+                shearTimerRef.current = window.setTimeout(() => setShear(false), 320)
               }
             } else {
               setHell(false)
@@ -518,7 +522,7 @@ export default function Landing() {
             // Set ONE single verb for the entire task
             setActiveVerb(turn.verb)
 
-            // Step 1: Reveal title after initial verb loading
+            // Step 1: Deliberate thinking/tool dispatch delay (showing braille spinner)
             animTimerRef.current = window.setTimeout(() => {
               setHistory((prev) =>
                 prev.map((item, idx) =>
@@ -526,7 +530,7 @@ export default function Landing() {
                 ),
               )
 
-              // Step 2: Stream lines one by one while keeping the SAME verb
+              // Step 2: Stream lines one by one with a readable, natural cadence
               let lineIdx = 0
               const revealNextLine = () => {
                 if (lineIdx < turn.lines.length) {
@@ -539,25 +543,28 @@ export default function Landing() {
                     ),
                   )
                   if (lineIdx < turn.lines.length) {
-                    animTimerRef.current = window.setTimeout(revealNextLine, 360)
+                    animTimerRef.current = window.setTimeout(revealNextLine, 720)
                   } else {
                     // Finished all lines in this turn -> Ready state (pause spinner animation)
                     setActiveVerb('')
+                    const isDense = turn.lines.length > 2 || isHell || turn.id.startsWith('ultra')
+                    // Natural pause after turn completes to give reader time to read the result
                     animTimerRef.current = window.setTimeout(
                       onDone,
-                      isHell ? 2800 : 1800,
+                      isDense ? 3600 : 2800,
                     )
                   }
                 }
               }
 
-              animTimerRef.current = window.setTimeout(revealNextLine, 360)
-            }, 440)
-          }, 220)
+              animTimerRef.current = window.setTimeout(revealNextLine, 600)
+            }, 950)
+          }, 550)
         }
       }
 
-      animTimerRef.current = window.setTimeout(typeNextChar, 120)
+      // Initial breath before typing starts
+      animTimerRef.current = window.setTimeout(typeNextChar, 500)
     },
     [],
   )
@@ -588,7 +595,7 @@ export default function Landing() {
         if (seqPos >= indices.length) {
           animTimerRef.current = window.setTimeout(() => {
             runSequence(indices)
-          }, 4500)
+          }, 6000)
           return
         }
         const turnIdx = indices[seqPos]
@@ -596,7 +603,7 @@ export default function Landing() {
         typeAndSubmitCommand(turnIdx, nextStep)
       }
 
-      animTimerRef.current = window.setTimeout(nextStep, 350)
+      animTimerRef.current = window.setTimeout(nextStep, 480)
     },
     [clearTimers, typeAndSubmitCommand],
   )
