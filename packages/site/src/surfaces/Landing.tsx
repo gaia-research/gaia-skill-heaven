@@ -94,51 +94,68 @@ function doorNote(door: Door): string {
    never typed in by hand.
    ------------------------------------------------------------------------- */
 
-type TermKind = 'cmd' | 'info' | 'ok' | 'dim'
-interface TermLine {
-  g: string
-  t: string
-  k: TermKind
-  d: number
-  hell?: boolean
-}
+type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
 const HELL_RUNG = RUNGS.find((r) => r.id === 'high')!
 
-const SCRIPT: TermLine[] = [
-  { g: '$', t: 'claude-zero', k: 'cmd', d: 540 },
-  { g: '▸', t: 'compose   flags for claude code · zero shared state touched', k: 'info', d: 300 },
-  { g: '▸', t: `session   ${SESSION_DIR}   (mkdtemp · disposable)`, k: 'info', d: 300 },
-  { g: '▸', t: "surface   bundled OFF · mcp {gaia} · setting-sources ''", k: 'info', d: 300 },
-  {
-    g: '▸',
-    t: `dose      ${fmt(DOSES.productFloor)} tok standing   ·   ${DOSES.deltaVsNative} vs native ${fmt(DOSES.native)}`,
-    k: 'info',
-    d: 340,
-  },
-  { g: '✓', t: 'exec      claude   (composed → exec’d · nothing installed)', k: 'ok', d: 860 },
-  { g: '›', t: `${MECHANIC.floor} "systematic debugging"`, k: 'cmd', d: 480 },
-  { g: ' ', t: 'gap       no debugging skill in context', k: 'dim', d: 300 },
-  {
-    g: ' ',
-    t: `summon    ${BORROWED.id}   +${fmt(BORROWED.tokens)} tok   · this session only`,
-    k: 'dim',
-    d: 320,
-  },
-  { g: '✓', t: 'mounted   1 skill · borrowed · nothing written to your repo', k: 'ok', d: 940 },
-  { g: '›', t: `/skill-hell ${HELL_RUNG.id}`, k: 'cmd', d: 440, hell: true },
-  {
-    g: ' ',
-    t: `ladder    ${HELL_RUNG.id} · ${HELL_RUNG.direction} · ${HELL_RUNG.position}   [WIP · provisional]`,
-    k: 'dim',
-    d: 340,
-  },
-  { g: ' ', t: 'route     gaia mcp · explore · more experts in context', k: 'dim', d: 340 },
-  { g: '✓', t: `armed     ${MECHANIC.floor} still works by hand at every rung`, k: 'ok', d: 1600 },
-]
+interface ClaudeTurn {
+  id: 'summon' | 'heaven' | 'hell'
+  cmd: string
+  bulletTone?: 'coral' | 'heaven' | 'hell'
+  title: ReactNode
+  lines: string[]
+}
 
-const HELL_INDEX = SCRIPT.findIndex((l) => l.hell)
+const CLAUDE_TURNS: ClaudeTurn[] = [
+  {
+    id: 'summon',
+    cmd: `${MECHANIC.floor} "systematic debugging"`,
+    bulletTone: 'coral',
+    title: (
+      <>
+        Summoning <span className="cc-file">{BORROWED.id}</span> into session context…
+      </>
+    ),
+    lines: [
+      '· source: gaia-skill-tree (borrowed)',
+      `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
+      '· mounted 1 skill · 0 diffs on disk',
+    ],
+  },
+  {
+    id: 'heaven',
+    cmd: '/skill-heaven low',
+    bulletTone: 'heaven',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven (converge)</span> armed at rung{' '}
+        <span className="cc-yellow">low</span>
+      </>
+    ),
+    lines: [
+      '· posture: human-in-the-loop · tight signal',
+      `· standing dose: ${fmt(DOSES.productFloor)} tok (${DOSES.deltaVsNative} vs native ${fmt(DOSES.native)})`,
+      '· route: 1 expert in context · approval required for edits',
+    ],
+  },
+  {
+    id: 'hell',
+    cmd: `/skill-hell ${HELL_RUNG.id}`,
+    bulletTone: 'hell',
+    title: (
+      <>
+        <span className="cc-amber">Skill Hell (explore)</span> armed at rung{' '}
+        <span className="cc-yellow">{HELL_RUNG.id}</span>
+      </>
+    ),
+    lines: [
+      '· posture: autonomous exploration · wide tool space',
+      '· route: gaia mcp · mixture-of-agents for skills',
+      '· entropy: high · auto-summons expert tools on gap',
+    ],
+  },
+]
 
 function prefersReducedMotion(): boolean {
   return (
@@ -181,69 +198,154 @@ export default function Landing() {
   useEffect(() => () => window.clearTimeout(copyTimer.current), [])
 
   /* ---- §02 terminal ---- */
-  const [step, setStep] = useState(0)
+  const [samplerMode, setSamplerMode] = useState<SamplerMode>('all')
+  const [visibleTurns, setVisibleTurns] = useState<
+    { index: number; typed: string; isComplete: boolean; isTyping: boolean }[]
+  >([])
   const [hell, setHell] = useState(false)
   const [shear, setShear] = useState(false)
-  const stepTimer = useRef<number | undefined>(undefined)
-  const shearTimer = useRef<number | undefined>(undefined)
+  const [isWorking, setIsWorking] = useState(true)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const animTimerRef = useRef<number | undefined>(undefined)
+  const shearTimerRef = useRef<number | undefined>(undefined)
 
   const clearTimers = useCallback(() => {
-    window.clearTimeout(stepTimer.current)
-    window.clearTimeout(shearTimer.current)
+    if (animTimerRef.current) window.clearTimeout(animTimerRef.current)
+    if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
   }, [])
 
-  const advance = useCallback(
-    (i: number) => {
-      const line = SCRIPT[i]
-      if (!line) {
-        stepTimer.current = window.setTimeout(() => {
-          setStep(0)
-          setHell(false)
-          stepTimer.current = window.setTimeout(() => advance(0), 420)
-        }, 2800)
-        return
+  const typeCommand = useCallback(
+    (turnIdx: number, onDone: () => void, charDelay = 32) => {
+      const fullCmd = CLAUDE_TURNS[turnIdx].cmd
+      let charIdx = 0
+
+      setVisibleTurns((prev) => [
+        ...prev.filter((t) => t.index !== turnIdx),
+        { index: turnIdx, typed: '', isComplete: false, isTyping: true },
+      ])
+
+      const typeNextChar = () => {
+        if (charIdx < fullCmd.length) {
+          charIdx++
+          const currentText = fullCmd.slice(0, charIdx)
+          setVisibleTurns((prev) =>
+            prev.map((t) =>
+              t.index === turnIdx ? { ...t, typed: currentText, isTyping: true } : t,
+            ),
+          )
+          animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+        } else {
+          animTimerRef.current = window.setTimeout(() => {
+            const isHell = CLAUDE_TURNS[turnIdx].id === 'hell'
+            if (isHell) {
+              setHell(true)
+              setShear(true)
+              shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
+            } else {
+              setHell(false)
+            }
+
+            setVisibleTurns((prev) =>
+              prev.map((t) =>
+                t.index === turnIdx
+                  ? { ...t, typed: fullCmd, isTyping: false, isComplete: true }
+                  : t,
+              ),
+            )
+            animTimerRef.current = window.setTimeout(onDone, isHell ? 2400 : 1300)
+          }, 180)
+        }
       }
-      setStep(i + 1)
-      if (line.hell) {
-        setHell(true)
-        setShear(true)
-        shearTimer.current = window.setTimeout(() => setShear(false), 300)
-      }
-      stepTimer.current = window.setTimeout(() => advance(i + 1), line.d)
+
+      animTimerRef.current = window.setTimeout(typeNextChar, 80)
     },
     [],
   )
 
-  const replay = useCallback(() => {
+  const playAll = useCallback(() => {
     clearTimers()
-    setStep(0)
     setHell(false)
     setShear(false)
+    setVisibleTurns([])
+    setIsWorking(true)
+
     if (prefersReducedMotion()) {
-      setStep(SCRIPT.length)
-      setHell(true)
+      setVisibleTurns(
+        CLAUDE_TURNS.map((_, i) => ({
+          index: i,
+          typed: CLAUDE_TURNS[i].cmd,
+          isComplete: true,
+          isTyping: false,
+        })),
+      )
+      setIsWorking(false)
       return
     }
-    stepTimer.current = window.setTimeout(() => advance(0), 420)
-  }, [advance, clearTimers])
 
-  const jumpHell = useCallback(() => {
-    clearTimers()
-    setStep(HELL_INDEX + 1)
-    setHell(true)
-    if (!prefersReducedMotion()) {
-      setShear(true)
-      shearTimer.current = window.setTimeout(() => setShear(false), 300)
-      stepTimer.current = window.setTimeout(() => advance(HELL_INDEX + 1), 480)
-    } else {
-      setStep(SCRIPT.length)
+    const runTurn = (idx: number) => {
+      if (idx >= CLAUDE_TURNS.length) {
+        setIsWorking(false)
+        animTimerRef.current = window.setTimeout(() => {
+          playAll()
+        }, 3400)
+        return
+      }
+      typeCommand(idx, () => runTurn(idx + 1))
     }
-  }, [advance, clearTimers])
+
+    animTimerRef.current = window.setTimeout(() => runTurn(0), 400)
+  }, [clearTimers, typeCommand])
+
+  const selectSampler = useCallback(
+    (mode: SamplerMode) => {
+      clearTimers()
+      setSamplerMode(mode)
+      if (mode === 'all') {
+        playAll()
+      } else {
+        const turnIdx = CLAUDE_TURNS.findIndex((t) => t.id === mode)
+        if (turnIdx !== -1) {
+          setVisibleTurns([])
+          setHell(false)
+          setShear(false)
+          setIsWorking(true)
+          if (prefersReducedMotion()) {
+            const isHell = mode === 'hell'
+            setHell(isHell)
+            setVisibleTurns([
+              {
+                index: turnIdx,
+                typed: CLAUDE_TURNS[turnIdx].cmd,
+                isComplete: true,
+                isTyping: false,
+              },
+            ])
+            setIsWorking(false)
+            return
+          }
+          typeCommand(turnIdx, () => {
+            setIsWorking(false)
+          })
+        }
+      }
+    },
+    [clearTimers, playAll, typeCommand],
+  )
+
+  const replay = useCallback(() => {
+    selectSampler(samplerMode)
+  }, [selectSampler, samplerMode])
 
   useEffect(() => {
-    replay()
+    playAll()
     return clearTimers
-  }, [replay, clearTimers])
+  }, [playAll, clearTimers])
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight
+    }
+  }, [visibleTurns, isWorking])
 
   /* ---- §03 the session story ---- */
   const [mounted, setMounted] = useState<string[]>(
@@ -598,53 +700,123 @@ export default function Landing() {
           <code>/skill-hell</code> auto-summons agentic skills for you.
         </p>
 
-        <div className="lp-term__controls">
+        <div className="lp-sampler-ctrls">
+          <div className="lp-sampler-tabs" role="group" aria-label="Terminal Sampler Modes">
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'all' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('all')}
+            >
+              ALL FLOW
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'summon' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('summon')}
+            >
+              /summon (Floor)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'heaven' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('heaven')}
+            >
+              /skill-heaven (Converge)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn lp-sampler-btn--hell${samplerMode === 'hell' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('hell')}
+            >
+              /skill-hell (Explore)
+            </button>
+          </div>
           <button type="button" className="lp-ghost" onClick={replay}>
             ↻ REPLAY
           </button>
-          <button type="button" className="lp-ghost lp-ghost--hell" onClick={jumpHell}>
-            ↯ JUMP TO /skill-hell
-          </button>
         </div>
 
+        {/* Claude Code Terminal TUI Mock */}
         <div
-          className={`lp-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
+          className={`lp-cc-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
           role="img"
-          aria-label="Simulated terminal session: claude-zero composes flags and execs, /summon borrows one skill for the session, /skill-hell arms the explore ladder at rung high."
+          aria-label="Simulated Claude Code terminal session: /summon borrows a skill for this session, /skill-heaven arms converge, and /skill-hell arms explore."
         >
-          <span className="lp-term__c lp-term__c--tl" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--tr" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--bl" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--br" aria-hidden="true" />
-          <div className="lp-term__bar">
-            <span>╭─ ~/gaia-skill-tree — {picked.pkg}</span>
-            <span className="lp-term__state">{hell ? 'HELL · EXPLORE' : 'HEAVEN · CONVERGE'} ─╮</span>
-          </div>
-          <div className="lp-term__body">
-            {SCRIPT.slice(0, step).map((l, i) => (
-              <div className="lp-term__row" key={i}>
-                <span className="lp-term__gut" aria-hidden="true">
-                  │
-                </span>
-                <span className={`lp-term__glyph lp-k-${l.k}`} aria-hidden="true">
-                  {l.g}
-                </span>
-                <span className={`lp-term__text lp-k-${l.k}`}>{l.t}</span>
+          {/* Header Block: authentic Claude ASCII mark + metadata */}
+          <div className="lp-cc-header">
+            <pre className="lp-cc-logo-art" aria-hidden="true">{` ▐▛███▜▌
+▝▜█████▛▘
+  ▘▘ ▝▝`}</pre>
+            <div className="lp-cc-header-text">
+              <div>
+                <b>Claude Code</b> <span className="lp-cc-dim">{picked.status === 'flagship' ? 'v2.1.198' : 'v2.1.198 · plugin'}</span>
               </div>
-            ))}
-            <div className="lp-term__row">
-              <span className="lp-term__gut" aria-hidden="true">
-                │
-              </span>
-              <span className="lp-term__glyph" aria-hidden="true">
-                ›
-              </span>
-              <span className="lp-term__caret" aria-hidden="true" />
+              <div className="lp-cc-dim">Claude 3.7 Sonnet with thinking · Claude Max</div>
+              <div className="lp-cc-dim">~/gaia-skill-tree</div>
             </div>
           </div>
-          <div className="lp-term__bar lp-term__bar--foot">
-            <span>╰─ INSERT · UTF-8</span>
-            <span>{picked.pkg} ─╯</span>
+
+          <div className="lp-cc-body" ref={bodyRef}>
+            {visibleTurns.map((turnState) => {
+              const turn = CLAUDE_TURNS[turnState.index]
+              return (
+                <div className="lp-cc-turn" key={turn.id}>
+                  <div className="lp-cc-prompt-row">
+                    <span className="lp-cc-prompt-glyph">❯</span>
+                    <span className="lp-cc-user-cmd">
+                      {turnState.typed}
+                      {turnState.isTyping ? <span className="lp-cc-cursor" /> : null}
+                    </span>
+                  </div>
+                  {turnState.isComplete ? (
+                    <div className="lp-cc-response">
+                      <div className="lp-cc-res-title">
+                        <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
+                        {turn.title}
+                      </div>
+                      {turn.lines.map((line, li) => (
+                        <div className="lp-cc-dim" key={li}>
+                          &nbsp;&nbsp;{line}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+
+            {/* Spinner working state */}
+            {isWorking && visibleTurns.some((t) => t.isComplete) ? (
+              <div className="lp-cc-working-row">
+                <span className="lp-cc-working">
+                  <span className="lp-cc-braille">⠋</span> Ready
+                </span>{' '}
+                <span className="lp-cc-dim">(412ms · esc to interrupt)</span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* TUI Bottom Status & Input Bar */}
+          <div className="lp-cc-bottom">
+            <div className="lp-cc-rule" />
+            <div className="lp-cc-input-line">
+              <span className="lp-cc-prompt-glyph">❯</span>
+              <span className="lp-cc-cursor" />
+            </div>
+            <div className="lp-cc-rule" />
+            <div className="lp-cc-status-row">
+              <span className="lp-cc-cyan">~/gaia-skill-tree</span>
+              <span className="lp-cc-gy"> &gt; </span>
+              <span className="lp-cc-yellow">master *</span>
+              <span className="lp-cc-green"> ↑1</span>
+              <span className="lp-cc-gy"> &gt; ctx ──────── </span>
+              <span className="lp-cc-green">3%</span>
+              <span className="lp-cc-gy"> 31k/1M</span>
+            </div>
+            <div className="lp-cc-status-row">
+              <span className="lp-cc-coral">⏵⏵ bypass permissions on</span>
+              <span className="lp-cc-dim"> (shift+tab to cycle)</span>
+            </div>
           </div>
         </div>
       </section>
