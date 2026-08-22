@@ -1748,26 +1748,22 @@ export default function Landing() {
         {/* the ladder */}
         <div className="lp-ladder">
           <div className="lp-ladder__head">
-            <div>
-              <div className="lp-ladder__title-wrap">
-                <span className="sh-label">
-                  THE LADDER · SKILL ENTROPY · zero · low · med · high · xhigh · max · ultra
-                </span>
-                <InfoTooltip
-                  variant="badge"
-                  badgeText="WIP · PROVISIONAL"
-                  align="left"
-                  label="Entropy Ladder details"
-                  content={
-                    <>
-                      <p><b>Skill Entropy Measure</b>: {LADDER_MEASURE}</p>
-                      <p style={{ marginTop: 6 }}><b>Calibration</b>: {LADDER_WIP}</p>
-                      <p style={{ marginTop: 6 }}><b>Stamps & Routing</b>: {STAMP_ROUTING_NOTE}</p>
-                      <p style={{ marginTop: 6 }}><b>One MCP</b>: Heaven and Hell are two directions of the same summon. A rung names a direction and position, never a count.</p>
-                    </>
-                  }
-                />
-              </div>
+            <div className="lp-ladder__title-wrap">
+              <span className="sh-label">THE LADDER · SKILL ENTROPY SCALE</span>
+              <InfoTooltip
+                variant="badge"
+                badgeText="WIP · PROVISIONAL"
+                align="left"
+                label="Entropy Ladder details"
+                content={
+                  <>
+                    <p><b>Skill Entropy Measure</b>: {LADDER_MEASURE}</p>
+                    <p style={{ marginTop: 6 }}><b>Calibration</b>: {LADDER_WIP}</p>
+                    <p style={{ marginTop: 6 }}><b>Routing</b>: {STAMP_ROUTING_NOTE}</p>
+                    <p style={{ marginTop: 6 }}><b>One MCP</b>: All rungs share the same <code>/summon</code> mechanic. A rung specifies entropy direction, never a hard count.</p>
+                  </>
+                }
+              />
             </div>
             <div className="lp-ladder__band">
               <img
@@ -1801,24 +1797,31 @@ export default function Landing() {
                   onClick={() => pickRung(r.id)}
                 >
                   <span className="lp-stop__detent" aria-hidden="true" />
-                  <span className="lp-stop__id">{r.id}</span>
-                  <span className="lp-stop__def">{opensHere ? 'opens' : ' '}</span>
+                  <div className="lp-stop__meta">
+                    <span className="lp-stop__id">{r.id}</span>
+                    <span className="lp-stop__def">{opensHere ? 'OPEN' : r.crown ? 'CROWN' : ' '}</span>
+                  </div>
                 </button>
               )
             })}
           </div>
 
           <div className="lp-ladder__read" aria-live="polite">
-            <div className="lp-ladder__count">
-              <span className="lp-ladder__n" style={{ color: activeSurface.hue }}>
-                {DIRECTION_WORD[activeRung.direction]}
-              </span>
-              <span className="sh-label">{activeRung.position}</span>
+            <div className="lp-ladder__status-card">
+              <div className="lp-ladder__status-head">
+                <span className="lp-ladder__dir-badge" style={{ color: activeSurface.hue, borderColor: activeSurface.hue }}>
+                  {DIRECTION_WORD[activeRung.direction]}
+                </span>
+                <span className="lp-ladder__rung-chip">RUNG: <b>{activeRung.id}</b></span>
+                <span className="lp-ladder__pos-text">({activeRung.position})</span>
+              </div>
+              <p className="lp-ladder__note">{activeRung.note}</p>
             </div>
-            <p className="lp-ladder__note">{activeRung.note}</p>
           </div>
+
           <p className="lp-ladder__wipnote">
-            <span className="sh-chip sh-chip--wip">WIP</span> {LADDER_WIP}
+            <span className="sh-chip sh-chip--wip">BENCHMARK CALIBRATION</span>
+            <span>{LADDER_WIP}</span>
           </p>
         </div>
 
@@ -1827,10 +1830,7 @@ export default function Landing() {
             ▨
           </span>
           <span>
-            ONE MCP · Heaven and Hell are the same summon pointed two ways along skill entropy. A
-            rung names a direction and a position, never a count, and <b>{MECHANIC.floor}</b> still
-            works by hand at every rung, including <b>zero</b>. Rungs are discrete stops, never a
-            continuous fader. Nothing on the line refuses.
+            <b>ONE SHARED MCP · FOUR SURFACES</b>: Heaven and Hell operate the same summon engine along the skill entropy scale. <code>{MECHANIC.floor}</code> is always callable by hand at every rung.
           </span>
         </div>
       </section>
