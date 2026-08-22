@@ -123,9 +123,9 @@ interface TurnHistoryState {
 const CLAUDE_TURNS: ClaudeTurn[] = [
   {
     id: 'summon',
-    cmd: `${MECHANIC.floor} "systematic debugging"`,
+    cmd: `${MECHANIC.floor} systematic debugging`,
     bulletTone: 'coral',
-    initialVerb: 'Resolving obra/systematic-debugging from registry…',
+    initialVerb: 'Cogitating…',
     title: (
       <>
         Summoning <span className="cc-file">{BORROWED.id}</span> into session context…
@@ -134,24 +134,24 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     lines: [
       {
         text: '· source: gaia-skill-tree (borrowed · 1 skill mounted)',
-        verb: 'Reading skill manifest…',
+        verb: 'Clauding…',
       },
       {
         text: `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
-        verb: 'Measuring standing dose…',
+        verb: 'Calculating…',
       },
       {
         text: '· 0 diffs written to working tree',
-        verb: 'Checking git status…',
+        verb: 'Baking…',
       },
     ],
-    readyTiming: '294ms',
+    readyTiming: '340ms',
   },
   {
     id: 'heaven',
-    cmd: '/skill-heaven "brainstorm with me a design idea"',
+    cmd: '/skill-heaven brainstorm with me a design idea',
     bulletTone: 'heaven',
-    initialVerb: 'Analyzing intent · converging on design skills…',
+    initialVerb: 'Ruminating…',
     title: (
       <>
         <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned 2 skills for design…
@@ -160,24 +160,24 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     lines: [
       {
         text: '· pbakaus/impeccable (+1,420 tok · borrowed)',
-        verb: 'Mounting pbakaus/impeccable into context…',
+        verb: 'Percolating…',
       },
       {
         text: '· mattpocock/grill-me (+860 tok · borrowed)',
-        verb: 'Mounting mattpocock/grill-me into context…',
+        verb: 'Deliberating…',
       },
       {
         text: '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
-        verb: 'Synthesizing session posture…',
+        verb: 'Synthesizing…',
       },
     ],
-    readyTiming: '412ms',
+    readyTiming: '480ms',
   },
   {
     id: 'hell',
-    cmd: '/skill-hell "explore the codebase and autofix security issues"',
+    cmd: '/skill-hell explore the codebase and autofix security issues',
     bulletTone: 'hell',
-    initialVerb: 'Exploring tool space via gaia mcp…',
+    initialVerb: 'Prestidigitating…',
     title: (
       <>
         <span className="cc-amber">Skill Hell (explore)</span> auto-summoned 2 skills via gaia mcp…
@@ -186,24 +186,24 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     lines: [
       {
         text: '· garrytan/cso (+2,100 tok · borrowed)',
-        verb: 'Dispatching garrytan/cso agent…',
+        verb: 'Combobulating…',
       },
       {
         text: '· obra/systematic-debugging (+515 tok · borrowed)',
-        verb: 'Dispatching obra/systematic-debugging agent…',
+        verb: 'Orchestrating…',
       },
       {
         text: '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
-        verb: 'Orchestrating mixture-of-agents…',
+        verb: 'Quantumizing…',
       },
     ],
-    readyTiming: '638ms',
+    readyTiming: '680ms',
   },
   {
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
-    initialVerb: 'Severing borrowed skills · restoring clean floor…',
+    initialVerb: 'Recombobulating…',
     title: (
       <>
         <span className="cc-cyan">Skill Zero</span> cleared all borrowed skills · back to floor
@@ -212,18 +212,18 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     lines: [
       {
         text: '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
-        verb: 'Unmounting active session skills…',
+        verb: 'Discombobulating…',
       },
       {
         text: `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
-        verb: 'Restoring product floor…',
+        verb: 'Osmosing…',
       },
       {
         text: '· zero skills in context · 0 diffs on disk · /summon on demand',
-        verb: 'Verifying clean working tree…',
+        verb: 'Actualizing…',
       },
     ],
-    readyTiming: '180ms',
+    readyTiming: '240ms',
   },
 ]
 
@@ -898,9 +898,12 @@ export default function Landing() {
             {history.length > 0 && (
               <div className="lp-cc-working-row">
                 {activeVerb ? (
-                  <span className="lp-cc-working">
-                    <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> {activeVerb}
-                  </span>
+                  <>
+                    <span className="lp-cc-working">
+                      <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> {activeVerb}
+                    </span>{' '}
+                    <span className="lp-cc-dim">(esc to interrupt)</span>
+                  </>
                 ) : (
                   <>
                     <span className="lp-cc-working">
