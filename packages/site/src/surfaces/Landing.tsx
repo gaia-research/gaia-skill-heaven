@@ -1237,6 +1237,10 @@ export default function Landing() {
             </div>
           </div>
         </div>
+
+        <p className="lp-fineprint">
+          PROTOTYPE · SIMULATION NOTICE — Skill Heaven and the Hell/Heaven entropy curve are active research prototypes (the Hell/Heaven benchmark is under construction and not yet measured; consider the working product as such). For demo purposes, this terminal simulates and reenacts the live product mechanics and dual-track orchestration.
+        </p>
       </section>
 
       {/* ------------------------------------------------------------------ 03 */}
