@@ -94,7 +94,7 @@ function doorNote(door: Door): string {
    never typed in by hand.
    ------------------------------------------------------------------------- */
 
-type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'zero'
+type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'ultra' | 'zero'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
 const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
@@ -102,7 +102,7 @@ const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', 
 interface ClaudeTurn {
   id: string
   cmd: string
-  bulletTone?: 'coral' | 'heaven' | 'hell'
+  bulletTone?: 'coral' | 'heaven' | 'hell' | 'ultra'
   verb: string
   title: ReactNode
   lines: ReactNode[]
@@ -124,7 +124,7 @@ function SummonedSkillPill({
   name: string
   tag: string
   tokens: string
-  tone: 'cyan' | 'violet' | 'amber'
+  tone: 'cyan' | 'violet' | 'amber' | 'gold'
 }) {
   return (
     <div className={`lp-cc-skill-pill lp-cc-skill-pill--${tone}`}>
@@ -140,12 +140,12 @@ function SummonedSkillPill({
 const CLAUDE_TURNS: ClaudeTurn[] = [
   {
     id: 'summon',
-    cmd: `${MECHANIC.floor} systematic debugging`,
+    cmd: `${MECHANIC.floor} obra/systematic-debugging`,
     bulletTone: 'coral',
     verb: 'Cogitating…',
     title: (
       <>
-        Summoning <span className="cc-file">{BORROWED.id}</span> into session context…
+        Summoning <span className="cc-file">{BORROWED.id}</span> into context…
       </>
     ),
     lines: [
@@ -290,19 +290,96 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     readyTiming: '680ms',
   },
   {
+    id: 'ultra-1',
+    cmd: '/skill-ultra redesign analytics dashboard and harden streaming pipeline',
+    bulletTone: 'ultra',
+    verb: 'Orchestrating…',
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra (the crown)</span> decomposed task into 2 capability gaps…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="impeccable-ultra"
+        name="pbakaus/impeccable"
+        tag="design-systems"
+        tokens="+1,420 tok"
+        tone="gold"
+      />,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-decomp">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Dial:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture] → Dynamic Entropy: <b className="cc-cyan">LOW (Converge · Human-in-the-Loop)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Pipeline Load & Stream Hardening] → Dynamic Entropy: <b className="cc-amber">HIGH (Explore · Swarm)</b></div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-gap1">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">◆ [pbakaus/impeccable]</span> Gap 1 — 2 dashboard layout strategies:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Minimalist HUD): High-density telemetry cards + 60fps canvas sparklines</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive Canvas): High-level KPI grid + expandable drill-down drawer</div>
+      </div>,
+    ],
+    readyTiming: '430ms',
+  },
+  {
+    id: 'ultra-2',
+    cmd: "Let's go with Strategy A (Minimalist HUD) with 60fps sparklines",
+    bulletTone: 'ultra',
+    verb: 'Recombobulating…',
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra</span> resolved Gap 1 · escalated Gap 2 to autonomous swarm…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="perf-ultra"
+        name="addy-osmani/performance-optimization"
+        tag="perf-tuning"
+        tokens="+2,640 tok"
+        tone="gold"
+      />,
+      <SummonedSkillPill
+        key="cso-ultra"
+        name="garrytan/cso"
+        tag="chaos-audit"
+        tokens="+2,100 tok"
+        tone="gold"
+      />,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-swarm">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra swarm]</span> Autonomous pipeline synthesis & chaos hardening:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Minimalist HUD layout)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· [addy-osmani/perf] Replaced WebSocket listener with zero-alloc ring buffer (src/stream/pipeline.ts)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· [garrytan/cso] Injected 50,000 evt/sec chaos load — verified 0 dropped frames & 0 leaks</div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed branch <span className="cc-file">feat/analytics-hud-stream-hardening</span>
+        </div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #184 "feat(analytics): 60fps HUD + zero-alloc stream pipeline"
+        </div>
+      </div>,
+    ],
+    readyTiming: '640ms',
+  },
+  {
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
     verb: 'Recombobulating…',
     title: (
       <>
-        <span className="cc-cyan">Skill Zero</span> cleared all borrowed skills · back to floor
+        <span className="cc-cyan">Skill Zero</span> automatic skill summons paused
       </>
     ),
     lines: [
-      '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
+      '· automatic skill summons: PAUSED · 0 skills auto-borrowed',
       `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
-      '· zero skills in context · 0 diffs on disk · /summon on demand',
+      '· base model active · manual /summon available on demand',
     ],
     readyTiming: '240ms',
   },
@@ -311,9 +388,10 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
 const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
   heaven: [1, 2, 3],
   hell: [4],
-  all: [0, 1, 2, 3, 4, 5],
+  ultra: [5, 6],
+  all: [0, 1, 2, 3, 4, 5, 6, 7],
   summon: [0],
-  zero: [5],
+  zero: [7],
 }
 
 function prefersReducedMotion(): boolean {
@@ -883,8 +961,8 @@ export default function Landing() {
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
         <p className="lp-section__lede">
-          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> a single skill.
-          <code>/skill-hell</code> auto-summons agentic skills for you.
+          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> any skill into context on demand.
+          Explore the entropy curve from <code>/skill-zero</code> up to <code>/skill-ultra</code>.
         </p>
 
         <div className="lp-sampler-ctrls">
@@ -901,7 +979,7 @@ export default function Landing() {
               className={`lp-sampler-btn${samplerMode === 'summon' ? ' is-active' : ''}`}
               onClick={() => selectSampler('summon')}
             >
-              /summon (Floor)
+              /summon
             </button>
             <button
               type="button"
@@ -919,10 +997,17 @@ export default function Landing() {
             </button>
             <button
               type="button"
+              className={`lp-sampler-btn lp-sampler-btn--ultra${samplerMode === 'ultra' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('ultra')}
+            >
+              /skill-ultra (Crown)
+            </button>
+            <button
+              type="button"
               className={`lp-sampler-btn${samplerMode === 'zero' ? ' is-active' : ''}`}
               onClick={() => selectSampler('zero')}
             >
-              /skill-zero (Clear)
+              /skill-zero
             </button>
           </div>
           <button type="button" className="lp-ghost" onClick={replay}>

@@ -744,6 +744,10 @@
   background: var(--sh-hell);
   color: var(--sh-void);
 }
+.lp-sampler-btn--ultra.is-active {
+  background: var(--sh-ultra);
+  color: var(--sh-void);
+}
 
 .lp-ghost {
   padding: 8px 14px;
@@ -923,12 +927,18 @@
 .lp-cc-bullet--hell {
   color: var(--sh-hell, #c89a3f);
 }
+.lp-cc-bullet--ultra {
+  color: var(--sh-ultra, #d9b25c);
+}
 
 .cc-file {
   color: #b1b9f9;
 }
 .cc-cyan {
   color: #4ec9d4;
+}
+.cc-gold {
+  color: var(--sh-ultra, #d9b25c);
 }
 .cc-yellow {
   color: #d7ba7d;
@@ -997,6 +1007,13 @@
 .lp-cc-skill-pill--amber .lp-cc-skill-dot {
   background: var(--sh-hell, #c89a3f);
   box-shadow: 0 0 5px rgba(200, 154, 63, 0.55);
+}
+.lp-cc-skill-pill--gold {
+  border-left: 2px solid var(--sh-ultra, #d9b25c);
+}
+.lp-cc-skill-pill--gold .lp-cc-skill-dot {
+  background: var(--sh-ultra, #d9b25c);
+  box-shadow: 0 0 5px rgba(217, 178, 92, 0.55);
 }
 
 .lp-cc-skill-dot {
@@ -1070,6 +1087,9 @@
 }
 .lp-cc-block--hell {
   border-left-color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-block--ultra {
+  border-left-color: var(--sh-ultra, #d9b25c);
 }
 .lp-cc-subhead {
   color: #eeebe6;
