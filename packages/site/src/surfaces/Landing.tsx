@@ -100,7 +100,7 @@ const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
 const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 interface ClaudeTurn {
-  id: 'summon' | 'heaven' | 'hell' | 'zero'
+  id: string
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell'
   verb: string
@@ -162,13 +162,13 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     readyTiming: '340ms',
   },
   {
-    id: 'heaven',
+    id: 'heaven-1',
     cmd: '/skill-heaven brainstorm with me a design idea',
     bulletTone: 'heaven',
     verb: 'Ruminating…',
     title: (
       <>
-        <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned 2 skills for design…
+        <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned pbakaus/impeccable…
       </>
     ),
     lines: [
@@ -179,6 +179,28 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         tokens="+1,420 tok"
         tone="violet"
       />,
+      <div className="lp-cc-block lp-cc-block--heaven" key="impeccable-v">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> 3 visual directions drafted for "SaaS Landing Page":
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation A (Linear-dark): High-density hairlines, mono tags, dark void</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation B (Editorial-warm): Washed charcoal, Anton headers, warm bone</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation C (Kinetic-prism): Refracted spectrum accents, interactive canvas</div>
+      </div>,
+    ],
+    readyTiming: '412ms',
+  },
+  {
+    id: 'heaven-2',
+    cmd: "Let's go with Variation B (Editorial-warm)",
+    bulletTone: 'heaven',
+    verb: 'Deliberating…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to refine direction…
+      </>
+    ),
+    lines: [
       <SummonedSkillPill
         key="grill"
         name="mattpocock/grill-me"
@@ -188,30 +210,39 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       />,
       <div className="lp-cc-block lp-cc-block--heaven" key="grill-q">
         <div className="lp-cc-subhead">
-          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> What is the core conversion goal for this SaaS landing page?
+          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> Grilling session — 2 architectural questions:
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;1. Developer self-serve signups (frictionless)</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;2. Enterprise sales demo bookings (high touch)</div>
-      </div>,
-      <div className="lp-cc-block lp-cc-block--heaven" key="impeccable-v">
-        <div className="lp-cc-subhead">
-          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> 3 visual variations drafted for "SaaS Landing Page":
-        </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation A (Linear-dark): High-density hairlines, mono tags, dark void</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation B (Editorial-warm): Washed charcoal, bold display, warm bone</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation C (Kinetic-prism): Refracted spectrum accents, interactive canvas</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;1. What is the core conversion target? (self-serve developer vs enterprise demo)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;2. Should the hero feature an interactive code terminal or a visual canvas?</div>
       </div>,
     ],
-    readyTiming: '480ms',
+    readyTiming: '380ms',
   },
   {
-    id: 'hell',
+    id: 'heaven-3',
+    cmd: '1. Self-serve developer signups, and 2. An interactive Claude Code terminal',
+    bulletTone: 'heaven',
+    verb: 'Crunching…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven</span> synthesized SaaS landing page components…
+      </>
+    ),
+    lines: [
+      '· Wrote src/components/LandingHero.tsx (Editorial-warm layout, Anton display)',
+      '· Wrote src/components/ClaudeTerminal.tsx (interactive TUI, sticky tail scroll)',
+      '· 0 diffs outside disposable session · standing dose: 20,176 tok',
+    ],
+    readyTiming: '520ms',
+  },
+  {
+    id: 'hell-1',
     cmd: '/skill-hell explore the codebase and autofix security issues',
     bulletTone: 'hell',
     verb: 'Prestidigitating…',
     title: (
       <>
-        <span className="cc-amber">Skill Hell (explore)</span> auto-summoned 2 skills via gaia mcp…
+        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous multi-agent swarm…
       </>
     ),
     lines: [
@@ -231,16 +262,54 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       />,
       <div className="lp-cc-block lp-cc-block--hell" key="cso-detect">
         <div className="lp-cc-subhead">
-          <span className="cc-amber">◈ [garrytan/cso]</span> Detected 2 CVE vulnerabilities in auth token verification & regex parser
+          <span className="cc-amber">◈ [garrytan/cso]</span> Scanning AST & dependency tree for attack vectors…
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Isolated prototype pollution in session handler</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Flagged high-severity CVE: prototype pollution in session claim parser (src/auth/jwt.ts:42)</div>
       </div>,
-      <div className="lp-cc-block lp-cc-block--hell" key="debug-fix">
+    ],
+    readyTiming: '480ms',
+  },
+  {
+    id: 'hell-2',
+    cmd: 'garrytan/cso → obra/systematic-debugging: isolate reproduction & draft patch',
+    bulletTone: 'hell',
+    verb: 'Combobulating…',
+    title: (
+      <>
+        <span className="cc-amber">obra/systematic-debugging</span> isolated reproduction & proposed patch…
+      </>
+    ),
+    lines: [
+      <div className="lp-cc-block lp-cc-block--hell" key="debug-trace">
         <div className="lp-cc-subhead">
-          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Patched src/auth/jwt.ts · 38/38 tests green
+          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Created minimal reproduction in test/auth-security.test.ts
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Isolated root cause: unchecked Object.assign on decoded payload</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Applied fix: sanitized dictionary with Object.create(null) + frozen prototype</div>
+      </div>,
+    ],
+    readyTiming: '540ms',
+  },
+  {
+    id: 'hell-3',
+    cmd: 'obra/systematic-debugging → garrytan/cso: verify patch & open draft PR',
+    bulletTone: 'hell',
+    verb: 'Quantumizing…',
+    title: (
+      <>
+        <span className="cc-amber">garrytan/cso</span> verified patch · 0 CVEs remaining…
+      </>
+    ),
+    lines: [
+      <div className="lp-cc-block lp-cc-block--hell" key="cso-verify">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Security audit PASS: exploit payloads neutralized (38/38 tests green)
         </div>
         <div className="lp-cc-dim">
-          &nbsp;&nbsp;<span className="cc-green">✓</span> Pushed branch <span className="cc-file">fix/cve-auth-sanitize</span> · Draft PR #142 opened
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Committed to branch <span className="cc-file">fix/cve-session-prototype-pollution</span>
+        </div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #142 "fix(auth): sanitize JWT session claim prototype injection"
         </div>
       </div>,
     ],
@@ -264,6 +333,14 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     readyTiming: '240ms',
   },
 ]
+
+const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
+  heaven: [1, 2, 3],
+  hell: [4, 5, 6],
+  all: [0, 1, 2, 3, 4, 5, 6, 7],
+  summon: [0],
+  zero: [7],
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -355,11 +432,13 @@ export default function Landing() {
         } else {
           // Pause briefly at end of command (simulating Enter keypress)
           animTimerRef.current = window.setTimeout(() => {
-            const isHell = turn.id === 'hell'
+            const isHell = turn.id.startsWith('hell')
             if (isHell) {
               setHell(true)
-              setShear(true)
-              shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
+              if (turn.id === 'hell-1') {
+                setShear(true)
+                shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
+              }
             } else {
               setHell(false)
             }
@@ -417,71 +496,53 @@ export default function Landing() {
     [],
   )
 
-  const playAll = useCallback(() => {
-    clearTimers()
-    setHell(false)
-    setShear(false)
-    setHistory([])
-    setCurrentInput('')
-    setActiveVerb('')
-    setUserScrolledUp(false)
+  const runSequence = useCallback(
+    (indices: number[]) => {
+      clearTimers()
+      setHell(false)
+      setShear(false)
+      setHistory([])
+      setCurrentInput('')
+      setActiveVerb('')
+      setUserScrolledUp(false)
 
-    if (prefersReducedMotion()) {
-      setHistory(
-        CLAUDE_TURNS.map((_, i) => ({
-          turnIdx: i,
-          showTitle: true,
-          linesCount: CLAUDE_TURNS[i].lines.length,
-        })),
-      )
-      return
-    }
-
-    const runTurn = (idx: number) => {
-      if (idx >= CLAUDE_TURNS.length) {
-        animTimerRef.current = window.setTimeout(() => {
-          playAll()
-        }, 3600)
+      if (prefersReducedMotion()) {
+        setHistory(
+          indices.map((idx) => ({
+            turnIdx: idx,
+            showTitle: true,
+            linesCount: CLAUDE_TURNS[idx].lines.length,
+          })),
+        )
         return
       }
-      typeAndSubmitCommand(idx, () => runTurn(idx + 1))
-    }
 
-    animTimerRef.current = window.setTimeout(() => runTurn(0), 400)
-  }, [clearTimers, typeAndSubmitCommand])
+      let seqPos = 0
+      const nextStep = () => {
+        if (seqPos >= indices.length) {
+          animTimerRef.current = window.setTimeout(() => {
+            runSequence(indices)
+          }, 4500)
+          return
+        }
+        const turnIdx = indices[seqPos]
+        seqPos++
+        typeAndSubmitCommand(turnIdx, nextStep)
+      }
+
+      animTimerRef.current = window.setTimeout(nextStep, 350)
+    },
+    [clearTimers, typeAndSubmitCommand],
+  )
 
   const selectSampler = useCallback(
     (mode: SamplerMode) => {
       clearTimers()
       setSamplerMode(mode)
-      setUserScrolledUp(false)
-      if (mode === 'all') {
-        playAll()
-      } else {
-        const turnIdx = CLAUDE_TURNS.findIndex((t) => t.id === mode)
-        if (turnIdx !== -1) {
-          setHistory([])
-          setCurrentInput('')
-          setActiveVerb('')
-          setHell(false)
-          setShear(false)
-          if (prefersReducedMotion()) {
-            const isHell = mode === 'hell'
-            setHell(isHell)
-            setHistory([
-              {
-                turnIdx,
-                showTitle: true,
-                linesCount: CLAUDE_TURNS[turnIdx].lines.length,
-              },
-            ])
-            return
-          }
-          typeAndSubmitCommand(turnIdx, () => {})
-        }
-      }
+      const seq = SAMPLER_SEQUENCES[mode]
+      runSequence(seq)
     },
-    [clearTimers, playAll, typeAndSubmitCommand],
+    [clearTimers, runSequence],
   )
 
   const replay = useCallback(() => {
