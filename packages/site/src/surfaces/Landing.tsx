@@ -716,15 +716,20 @@ export default function Landing() {
   }, [selectSampler, samplerMode])
 
   const location = useLocation()
+  const initialTabHandledRef = useRef<string | null>(null)
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     const tabParam = (location.state as { tab?: string } | null)?.tab ?? searchParams.get('tab')
     const validModes: SamplerMode[] = ['all', 'summon', 'heaven', 'hell', 'ultra', 'zero']
     const mode = tabParam && validModes.includes(tabParam as SamplerMode) ? (tabParam as SamplerMode) : 'heaven'
-    selectSampler(mode)
-    return clearTimers
-  }, [location.search, location.state, selectSampler, clearTimers])
+
+    const key = tabParam ?? '__default__'
+    if (initialTabHandledRef.current !== key) {
+      initialTabHandledRef.current = key
+      selectSampler(mode)
+    }
+  }, [location.search, location.state, selectSampler])
 
   useEffect(() => {
     if (bodyRef.current && !userScrolledUp) {
