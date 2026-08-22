@@ -60,7 +60,6 @@ import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp'
 import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
 import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
 import bgUltra from '../assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp'
-import katanaHeaven from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
 import iconHeaven from '../assets/lucy/identity/lucy-state-icon-heaven.svg'
 import iconHell from '../assets/lucy/identity/lucy-state-icon-hell.svg'
@@ -95,51 +94,305 @@ function doorNote(door: Door): string {
    never typed in by hand.
    ------------------------------------------------------------------------- */
 
-type TermKind = 'cmd' | 'info' | 'ok' | 'dim'
-interface TermLine {
-  g: string
-  t: string
-  k: TermKind
-  d: number
-  hell?: boolean
-}
+type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'ultra' | 'zero'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
-const HELL_RUNG = RUNGS.find((r) => r.id === 'high')!
+const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
-const SCRIPT: TermLine[] = [
-  { g: '$', t: 'claude-zero', k: 'cmd', d: 540 },
-  { g: '▸', t: 'compose   flags for claude code · zero shared state touched', k: 'info', d: 300 },
-  { g: '▸', t: `session   ${SESSION_DIR}   (mkdtemp · disposable)`, k: 'info', d: 300 },
-  { g: '▸', t: "surface   bundled OFF · mcp {gaia} · setting-sources ''", k: 'info', d: 300 },
+interface ClaudeTurn {
+  id: string
+  cmd: string
+  bulletTone?: 'coral' | 'heaven' | 'hell' | 'ultra'
+  verb: string
+  title: ReactNode
+  lines: ReactNode[]
+  readyTiming: string
+}
+
+interface TurnHistoryState {
+  turnIdx: number
+  showTitle: boolean
+  linesCount: number
+}
+
+function SummonedSkillPill({
+  name,
+  tag,
+  tokens,
+  tone,
+}: {
+  name: string
+  tag: string
+  tokens: string
+  tone: 'cyan' | 'violet' | 'amber' | 'gold'
+}) {
+  return (
+    <div className={`lp-cc-skill-pill lp-cc-skill-pill--${tone}`}>
+      <span className="lp-cc-skill-dot" aria-hidden="true" />
+      <span className="lp-cc-skill-name">{name}</span>
+      <span className="lp-cc-skill-tag">{tag}</span>
+      <span className="lp-cc-skill-tok">{tokens}</span>
+      <span className="lp-cc-skill-badge">BORROWED</span>
+    </div>
+  )
+}
+
+const CLAUDE_TURNS: ClaudeTurn[] = [
   {
-    g: '▸',
-    t: `dose      ${fmt(DOSES.productFloor)} tok standing   ·   ${DOSES.deltaVsNative} vs native ${fmt(DOSES.native)}`,
-    k: 'info',
-    d: 340,
+    id: 'summon',
+    cmd: `${MECHANIC.floor} obra/systematic-debugging`,
+    bulletTone: 'coral',
+    verb: 'Cogitating…',
+    title: (
+      <>
+        Summoning <span className="cc-file">{BORROWED.id}</span> into context…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="debug"
+        name="obra/systematic-debugging"
+        tag="root-cause"
+        tokens={`+${fmt(BORROWED.tokens)} tok`}
+        tone="cyan"
+      />,
+      '· source: gaia-skill-tree · 1 skill mounted for this session only',
+      '· 0 diffs written to working tree · clean slate',
+    ],
+    readyTiming: '340ms',
   },
-  { g: '✓', t: 'exec      claude   (composed → exec’d · nothing installed)', k: 'ok', d: 860 },
-  { g: '›', t: `${MECHANIC.floor} "systematic debugging"`, k: 'cmd', d: 480 },
-  { g: ' ', t: 'gap       no debugging skill in context', k: 'dim', d: 300 },
   {
-    g: ' ',
-    t: `summon    ${BORROWED.id}   +${fmt(BORROWED.tokens)} tok   · this session only`,
-    k: 'dim',
-    d: 320,
+    id: 'heaven-1',
+    cmd: '/skill-heaven brainstorm with me a design idea',
+    bulletTone: 'heaven',
+    verb: 'Ruminating…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned pbakaus/impeccable…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="impeccable"
+        name="pbakaus/impeccable"
+        tag="design-systems"
+        tokens="+1,420 tok"
+        tone="violet"
+      />,
+      <div className="lp-cc-block lp-cc-block--heaven" key="impeccable-v">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> 3 visual directions drafted for "SaaS Landing Page":
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation A (Linear-dark): High-density hairlines, mono tags, dark void</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation B (Editorial-warm): Washed charcoal, Anton headers, warm bone</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation C (Kinetic-prism): Refracted spectrum accents, interactive canvas</div>
+      </div>,
+    ],
+    readyTiming: '412ms',
   },
-  { g: '✓', t: 'mounted   1 skill · borrowed · nothing written to your repo', k: 'ok', d: 940 },
-  { g: '›', t: `/skill-hell ${HELL_RUNG.id}`, k: 'cmd', d: 440, hell: true },
   {
-    g: ' ',
-    t: `ladder    ${HELL_RUNG.id} · ${HELL_RUNG.direction} · ${HELL_RUNG.position}   [WIP · provisional]`,
-    k: 'dim',
-    d: 340,
+    id: 'heaven-2',
+    cmd: "Let's go with Variation B (Editorial-warm)",
+    bulletTone: 'heaven',
+    verb: 'Deliberating…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to refine direction…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="grill"
+        name="mattpocock/grill-me"
+        tag="critique"
+        tokens="+860 tok"
+        tone="violet"
+      />,
+      <div className="lp-cc-block lp-cc-block--heaven" key="grill-q">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> Grilling session — 2 architectural questions:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;1. What is the core conversion target? (self-serve developer vs enterprise demo)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;2. Should the hero feature an interactive code terminal or a visual canvas?</div>
+      </div>,
+    ],
+    readyTiming: '380ms',
   },
-  { g: ' ', t: 'route     gaia mcp · explore · more experts in context', k: 'dim', d: 340 },
-  { g: '✓', t: `armed     ${MECHANIC.floor} still works by hand at every rung`, k: 'ok', d: 1600 },
+  {
+    id: 'heaven-3',
+    cmd: '1. Self-serve developer signups, and 2. An interactive Claude Code terminal',
+    bulletTone: 'heaven',
+    verb: 'Crunching…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Heaven</span> synthesized SaaS landing page components…
+      </>
+    ),
+    lines: [
+      '· Wrote src/components/LandingHero.tsx (Editorial-warm layout, Anton display)',
+      '· Wrote src/components/ClaudeTerminal.tsx (interactive TUI, sticky tail scroll)',
+      '· 0 diffs outside disposable session · standing dose: 20,176 tok',
+    ],
+    readyTiming: '520ms',
+  },
+  {
+    id: 'hell',
+    cmd: '/skill-hell explore the codebase and autofix security issues',
+    bulletTone: 'hell',
+    verb: 'Prestidigitating…',
+    title: (
+      <>
+        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous multi-agent swarm…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="cso"
+        name="garrytan/cso"
+        tag="security-audit"
+        tokens="+2,100 tok"
+        tone="amber"
+      />,
+      <SummonedSkillPill
+        key="debug-hell"
+        name="obra/systematic-debugging"
+        tag="deep-diagnostics"
+        tokens="+515 tok"
+        tone="amber"
+      />,
+      <div className="lp-cc-block lp-cc-block--hell" key="cso-detect">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Scanning AST & dependency tree for attack vectors…
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Flagged high-severity CVE: prototype pollution in session claim parser (src/auth/jwt.ts:42)</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--hell" key="debug-trace">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Swarm delegated: isolated reproduction & drafted patch
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Created reproduction in test/auth-security.test.ts (reproduced: RED)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Applied fix: sanitized dictionary with Object.create(null) + frozen prototype</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--hell" key="cso-verify">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Autonomous verification & Pull Request:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Security audit PASS: 0 CVEs remaining · all exploit vectors neutralized</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Regression tests: 38/38 unit & security tests green (GREEN)</div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed to branch <span className="cc-file">fix/cve-session-prototype-pollution</span>
+        </div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #142 "fix(auth): sanitize JWT session claim prototype injection"
+        </div>
+      </div>,
+    ],
+    readyTiming: '680ms',
+  },
+  {
+    id: 'ultra-1',
+    cmd: '/skill-ultra redesign analytics dashboard and harden streaming pipeline',
+    bulletTone: 'ultra',
+    verb: 'Orchestrating…',
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra (the crown)</span> decomposed task into 2 capability gaps…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="impeccable-ultra"
+        name="pbakaus/impeccable"
+        tag="design-systems"
+        tokens="+1,420 tok"
+        tone="gold"
+      />,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-decomp">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Dial:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture] → Dynamic Entropy: <b className="cc-cyan">LOW (Converge · Human-in-the-Loop)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Pipeline Load & Stream Hardening] → Dynamic Entropy: <b className="cc-amber">HIGH (Explore · Swarm)</b></div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-gap1">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">◆ [pbakaus/impeccable]</span> Gap 1 — 2 dashboard layout strategies:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Minimalist HUD): High-density telemetry cards + 60fps canvas sparklines</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive Canvas): High-level KPI grid + expandable drill-down drawer</div>
+      </div>,
+    ],
+    readyTiming: '430ms',
+  },
+  {
+    id: 'ultra-2',
+    cmd: "Let's go with Strategy A (Minimalist HUD) with 60fps sparklines",
+    bulletTone: 'ultra',
+    verb: 'Recombobulating…',
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra</span> resolved Gap 1 · escalated Gap 2 to autonomous swarm…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="perf-ultra"
+        name="addy-osmani/performance-optimization"
+        tag="perf-tuning"
+        tokens="+2,640 tok"
+        tone="gold"
+      />,
+      <SummonedSkillPill
+        key="cso-ultra"
+        name="garrytan/cso"
+        tag="chaos-audit"
+        tokens="+2,100 tok"
+        tone="gold"
+      />,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-swarm">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra swarm]</span> Autonomous pipeline synthesis & chaos hardening:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Minimalist HUD layout)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· [addy-osmani/perf] Replaced WebSocket listener with zero-alloc ring buffer (src/stream/pipeline.ts)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· [garrytan/cso] Injected 50,000 evt/sec chaos load — verified 0 dropped frames & 0 leaks</div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed branch <span className="cc-file">feat/analytics-hud-stream-hardening</span>
+        </div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #184 "feat(analytics): 60fps HUD + zero-alloc stream pipeline"
+        </div>
+      </div>,
+    ],
+    readyTiming: '640ms',
+  },
+  {
+    id: 'zero',
+    cmd: '/skill-zero',
+    bulletTone: 'coral',
+    verb: 'Recombobulating…',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Zero</span> automatic skill summons paused
+      </>
+    ),
+    lines: [
+      '· automatic skill summons: PAUSED · 0 skills auto-borrowed',
+      `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
+      '· base model active · manual /summon available on demand',
+    ],
+    readyTiming: '240ms',
+  },
 ]
 
-const HELL_INDEX = SCRIPT.findIndex((l) => l.hell)
+const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
+  heaven: [1, 2, 3],
+  hell: [4],
+  ultra: [5, 6],
+  all: [0, 1, 2, 3, 4, 5, 6, 7],
+  summon: [0],
+  zero: [7],
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -182,69 +435,182 @@ export default function Landing() {
   useEffect(() => () => window.clearTimeout(copyTimer.current), [])
 
   /* ---- §02 terminal ---- */
-  const [step, setStep] = useState(0)
+  const [samplerMode, setSamplerMode] = useState<SamplerMode>('heaven')
+  const [history, setHistory] = useState<TurnHistoryState[]>([])
+  const [currentInput, setCurrentInput] = useState<string>('')
+  const [activeVerb, setActiveVerb] = useState<string>('')
+  const [brailleIdx, setBrailleIdx] = useState(0)
   const [hell, setHell] = useState(false)
   const [shear, setShear] = useState(false)
-  const stepTimer = useRef<number | undefined>(undefined)
-  const shearTimer = useRef<number | undefined>(undefined)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const animTimerRef = useRef<number | undefined>(undefined)
+  const shearTimerRef = useRef<number | undefined>(undefined)
 
   const clearTimers = useCallback(() => {
-    window.clearTimeout(stepTimer.current)
-    window.clearTimeout(shearTimer.current)
+    if (animTimerRef.current) window.clearTimeout(animTimerRef.current)
+    if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
   }, [])
 
-  const advance = useCallback(
-    (i: number) => {
-      const line = SCRIPT[i]
-      if (!line) {
-        stepTimer.current = window.setTimeout(() => {
-          setStep(0)
-          setHell(false)
-          stepTimer.current = window.setTimeout(() => advance(0), 420)
-        }, 2800)
-        return
+  // Detect user manual scroll — stick to tail only if user hasn't scrolled up
+  const handleBodyScroll = useCallback(() => {
+    if (!bodyRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = bodyRef.current
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 40
+    setUserScrolledUp(!isAtBottom)
+  }, [])
+
+  // Braille spinner animation loop — spins only while activeVerb is working, pauses when Ready
+  useEffect(() => {
+    if (!activeVerb) return
+    const brailleTimer = window.setInterval(() => {
+      setBrailleIdx((prev) => (prev + 1) % BRAILLE.length)
+    }, 80)
+    return () => window.clearInterval(brailleTimer)
+  }, [activeVerb])
+
+  const typeAndSubmitCommand = useCallback(
+    (turnIdx: number, onDone: () => void, charDelay = 28) => {
+      const turn = CLAUDE_TURNS[turnIdx]
+      const fullCmd = turn.cmd
+      let charIdx = 0
+      setCurrentInput('')
+
+      const typeNextChar = () => {
+        if (charIdx < fullCmd.length) {
+          charIdx++
+          setCurrentInput(fullCmd.slice(0, charIdx))
+          animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+        } else {
+          // Pause briefly at end of command (simulating Enter keypress)
+          animTimerRef.current = window.setTimeout(() => {
+            const isHell = turn.id.startsWith('hell')
+            if (isHell) {
+              setHell(true)
+              if (turn.id === 'hell-1') {
+                setShear(true)
+                shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
+              }
+            } else {
+              setHell(false)
+            }
+
+            // Move command from bottom prompt into top conversation history
+            setCurrentInput('')
+            setHistory((prev) => [
+              ...prev,
+              { turnIdx, showTitle: false, linesCount: 0 },
+            ])
+            // Set ONE single verb for the entire task
+            setActiveVerb(turn.verb)
+
+            // Step 1: Reveal title after initial verb loading
+            animTimerRef.current = window.setTimeout(() => {
+              setHistory((prev) =>
+                prev.map((item, idx) =>
+                  idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+                ),
+              )
+
+              // Step 2: Stream lines one by one while keeping the SAME verb
+              let lineIdx = 0
+              const revealNextLine = () => {
+                if (lineIdx < turn.lines.length) {
+                  lineIdx++
+                  setHistory((prev) =>
+                    prev.map((item, idx) =>
+                      idx === prev.length - 1
+                        ? { ...item, linesCount: lineIdx }
+                        : item,
+                    ),
+                  )
+                  if (lineIdx < turn.lines.length) {
+                    animTimerRef.current = window.setTimeout(revealNextLine, 360)
+                  } else {
+                    // Finished all lines in this turn -> Ready state (pause spinner animation)
+                    setActiveVerb('')
+                    animTimerRef.current = window.setTimeout(
+                      onDone,
+                      isHell ? 2800 : 1800,
+                    )
+                  }
+                }
+              }
+
+              animTimerRef.current = window.setTimeout(revealNextLine, 360)
+            }, 440)
+          }, 220)
+        }
       }
-      setStep(i + 1)
-      if (line.hell) {
-        setHell(true)
-        setShear(true)
-        shearTimer.current = window.setTimeout(() => setShear(false), 300)
-      }
-      stepTimer.current = window.setTimeout(() => advance(i + 1), line.d)
+
+      animTimerRef.current = window.setTimeout(typeNextChar, 120)
     },
     [],
   )
 
-  const replay = useCallback(() => {
-    clearTimers()
-    setStep(0)
-    setHell(false)
-    setShear(false)
-    if (prefersReducedMotion()) {
-      setStep(SCRIPT.length)
-      setHell(true)
-      return
-    }
-    stepTimer.current = window.setTimeout(() => advance(0), 420)
-  }, [advance, clearTimers])
+  const runSequence = useCallback(
+    (indices: number[]) => {
+      clearTimers()
+      setHell(false)
+      setShear(false)
+      setHistory([])
+      setCurrentInput('')
+      setActiveVerb('')
+      setUserScrolledUp(false)
 
-  const jumpHell = useCallback(() => {
-    clearTimers()
-    setStep(HELL_INDEX + 1)
-    setHell(true)
-    if (!prefersReducedMotion()) {
-      setShear(true)
-      shearTimer.current = window.setTimeout(() => setShear(false), 300)
-      stepTimer.current = window.setTimeout(() => advance(HELL_INDEX + 1), 480)
-    } else {
-      setStep(SCRIPT.length)
-    }
-  }, [advance, clearTimers])
+      if (prefersReducedMotion()) {
+        setHistory(
+          indices.map((idx) => ({
+            turnIdx: idx,
+            showTitle: true,
+            linesCount: CLAUDE_TURNS[idx].lines.length,
+          })),
+        )
+        return
+      }
+
+      let seqPos = 0
+      const nextStep = () => {
+        if (seqPos >= indices.length) {
+          animTimerRef.current = window.setTimeout(() => {
+            runSequence(indices)
+          }, 4500)
+          return
+        }
+        const turnIdx = indices[seqPos]
+        seqPos++
+        typeAndSubmitCommand(turnIdx, nextStep)
+      }
+
+      animTimerRef.current = window.setTimeout(nextStep, 350)
+    },
+    [clearTimers, typeAndSubmitCommand],
+  )
+
+  const selectSampler = useCallback(
+    (mode: SamplerMode) => {
+      clearTimers()
+      setSamplerMode(mode)
+      const seq = SAMPLER_SEQUENCES[mode]
+      runSequence(seq)
+    },
+    [clearTimers, runSequence],
+  )
+
+  const replay = useCallback(() => {
+    selectSampler(samplerMode)
+  }, [selectSampler, samplerMode])
 
   useEffect(() => {
-    replay()
+    selectSampler('heaven')
     return clearTimers
-  }, [replay, clearTimers])
+  }, [selectSampler, clearTimers])
+
+  useEffect(() => {
+    if (bodyRef.current && !userScrolledUp) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight
+    }
+  }, [history, activeVerb, currentInput, userScrolledUp])
 
   /* ---- §03 the session story ---- */
   const [mounted, setMounted] = useState<string[]>(
@@ -349,59 +715,61 @@ export default function Landing() {
       {/* ------------------------------------------------------------- arrival */}
       <header className="lp-head">
         <div className="lp-head__grid">
-          <div className="lp-head__lede">
-            <div className="lp-kicker">
-              <span>HELL · HEAVEN · INDEX</span>
-              <span className="lp-kicker__rule" aria-hidden="true" />
-              <span>THE LAUNCHER</span>
-              <span className="lp-reg" aria-hidden="true" />
-              <span className="lp-reg-dots" aria-hidden="true">
-                <i />
-                <i />
-              </span>
+          <div className="lp-head__main">
+            <div className="lp-head__lede">
+              <div className="lp-kicker">
+                <span>HELL · HEAVEN · INDEX</span>
+                <span className="lp-kicker__rule" aria-hidden="true" />
+                <span>THE LAUNCHER</span>
+                <span className="lp-reg" aria-hidden="true" />
+                <span className="lp-reg-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                </span>
+              </div>
+              <h1 className="lp-h1">
+                You are inside.
+                <br />
+                Now pick your door.
+              </h1>
+              <p className="lp-lede">
+                <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
+                your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
+                session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
+                it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
+                ways.
+              </p>
+              <SlashReel />
             </div>
-            <h1 className="lp-h1">
-              You are inside.
-              <br />
-              Now pick your door.
-            </h1>
-            <p className="lp-lede">
-              <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
-              your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
-              session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
-              it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
-              ways.
-            </p>
-            <SlashReel />
-          </div>
 
-          <div className="lp-dose sh-panel">
-            <div className="lp-dose__head">
-              <span className="sh-label">STANDING DOSE · MEASURED</span>
-              <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
+            <div className="lp-dose sh-panel">
+              <div className="lp-dose__head">
+                <span className="sh-label">STANDING DOSE · MEASURED</span>
+                <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
+              </div>
+              <p className="lp-dose__body">
+                Every skill you don’t need is still context. The model still has to read it, weigh it,
+                decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
+                real token. Skill Zero cuts it at launch.
+              </p>
+              <div className="lp-bars">
+                <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
+                <DoseBar
+                  label="benchmark floor"
+                  value={DOSES.benchmarkFloor}
+                  max={DOSES.native}
+                  tone="cyan"
+                />
+                <DoseBar
+                  label="product floor"
+                  value={DOSES.productFloor}
+                  max={DOSES.native}
+                  tone="mint"
+                  strong
+                />
+              </div>
+              <p className="lp-dose__foot">{DOSES.note}</p>
             </div>
-            <p className="lp-dose__body">
-              Every skill you don’t need is still context. The model still has to read it, weigh it,
-              decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
-              real token. Skill Zero cuts it at launch.
-            </p>
-            <div className="lp-bars">
-              <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
-              <DoseBar
-                label="benchmark floor"
-                value={DOSES.benchmarkFloor}
-                max={DOSES.native}
-                tone="cyan"
-              />
-              <DoseBar
-                label="product floor"
-                value={DOSES.productFloor}
-                max={DOSES.native}
-                tone="mint"
-                strong
-              />
-            </div>
-            <p className="lp-dose__foot">{DOSES.note}</p>
           </div>
 
           <figure className="lp-figure">
@@ -417,16 +785,6 @@ export default function Landing() {
             />
             <figcaption className="sh-label">SKILL ZERO · THE LAUNCHER</figcaption>
           </figure>
-        </div>
-
-        {/* blade divider — the alpha-verified katana pack */}
-        <div className="lp-blade">
-          <span className="lp-band lp-blade__band" aria-hidden="true">
-            <img src={katanaHeaven} alt="" />
-          </span>
-          <span className="lp-blade__plate" aria-hidden="true">
-            PLATE NO. 001
-          </span>
         </div>
       </header>
 
@@ -603,57 +961,159 @@ export default function Landing() {
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
         <p className="lp-section__lede">
-          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> a single skill.
-          <code>/skill-hell</code> auto-summons agentic skills for you.
+          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> any skill into context on demand.
+          Explore the entropy curve from <code>/skill-zero</code> up to <code>/skill-ultra</code>.
         </p>
 
-        <div className="lp-term__controls">
+        <div className="lp-sampler-ctrls">
+          <div className="lp-sampler-tabs" role="group" aria-label="Terminal Sampler Modes">
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'all' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('all')}
+            >
+              ALL FLOW
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'summon' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('summon')}
+            >
+              /summon
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'heaven' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('heaven')}
+            >
+              /skill-heaven (Converge)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn lp-sampler-btn--hell${samplerMode === 'hell' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('hell')}
+            >
+              /skill-hell (Explore)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn lp-sampler-btn--ultra${samplerMode === 'ultra' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('ultra')}
+            >
+              /skill-ultra (Crown)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'zero' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('zero')}
+            >
+              /skill-zero
+            </button>
+          </div>
           <button type="button" className="lp-ghost" onClick={replay}>
             ↻ REPLAY
           </button>
-          <button type="button" className="lp-ghost lp-ghost--hell" onClick={jumpHell}>
-            ↯ JUMP TO /skill-hell
-          </button>
         </div>
 
+        {/* Claude Code Terminal TUI Mock */}
         <div
-          className={`lp-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
+          className={`lp-cc-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
           role="img"
-          aria-label="Simulated terminal session: claude-zero composes flags and execs, /summon borrows one skill for the session, /skill-hell arms the explore ladder at rung high."
+          aria-label="Simulated Claude Code terminal session: /summon borrows a skill for this session, /skill-heaven arms converge, and /skill-hell arms explore."
         >
-          <span className="lp-term__c lp-term__c--tl" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--tr" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--bl" aria-hidden="true" />
-          <span className="lp-term__c lp-term__c--br" aria-hidden="true" />
-          <div className="lp-term__bar">
-            <span>╭─ ~/gaia-skill-tree — {picked.pkg}</span>
-            <span className="lp-term__state">{hell ? 'HELL · EXPLORE' : 'HEAVEN · CONVERGE'} ─╮</span>
-          </div>
-          <div className="lp-term__body">
-            {SCRIPT.slice(0, step).map((l, i) => (
-              <div className="lp-term__row" key={i}>
-                <span className="lp-term__gut" aria-hidden="true">
-                  │
-                </span>
-                <span className={`lp-term__glyph lp-k-${l.k}`} aria-hidden="true">
-                  {l.g}
-                </span>
-                <span className={`lp-term__text lp-k-${l.k}`}>{l.t}</span>
+          {/* Header Block: authentic Claude ASCII mark + metadata */}
+          <div className="lp-cc-header">
+            <pre className="lp-cc-logo-art" aria-hidden="true">{` ▐▛███▜▌
+▝▜█████▛▘
+  ▘▘ ▝▝`}</pre>
+            <div className="lp-cc-header-text">
+              <div>
+                <b>Claude Code</b> <span className="lp-cc-dim">{picked.status === 'flagship' ? 'v2.1.198' : 'v2.1.198 · plugin'}</span>
               </div>
-            ))}
-            <div className="lp-term__row">
-              <span className="lp-term__gut" aria-hidden="true">
-                │
-              </span>
-              <span className="lp-term__glyph" aria-hidden="true">
-                ›
-              </span>
-              <span className="lp-term__caret" aria-hidden="true" />
+              <div className="lp-cc-dim">Claude 3.7 Sonnet with thinking · Claude Max</div>
+              <div className="lp-cc-dim">~/gaia-skill-tree</div>
             </div>
           </div>
-          <div className="lp-term__bar lp-term__bar--foot">
-            <span>╰─ INSERT · UTF-8</span>
-            <span>{picked.pkg} ─╯</span>
+
+          <div className="lp-cc-body" ref={bodyRef} onScroll={handleBodyScroll}>
+            {history.map((item, hIdx) => {
+              const turn = CLAUDE_TURNS[item.turnIdx]
+
+              return (
+                <div className="lp-cc-turn" key={hIdx}>
+                  <div className="lp-cc-prompt-row">
+                    <span className="lp-cc-prompt-glyph">❯</span>
+                    <span className="lp-cc-user-cmd">{turn.cmd}</span>
+                  </div>
+
+                  {item.showTitle && (
+                    <div className="lp-cc-response">
+                      <div className="lp-cc-res-title">
+                        <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
+                        {turn.title}
+                      </div>
+                      {turn.lines.slice(0, item.linesCount).map((line, li) => (
+                        <div className="lp-cc-line-wrap lp-cc-line-in" key={li}>
+                          {typeof line === 'string' ? (
+                            <div className="lp-cc-dim">&nbsp;&nbsp;{line}</div>
+                          ) : (
+                            <div className="lp-cc-pill-wrap">{line}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Active Claude Code verb or Paused Ready status */}
+            {history.length > 0 && (
+              <div className="lp-cc-working-row">
+                {activeVerb ? (
+                  <>
+                    <span className="lp-cc-working">
+                      <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> {activeVerb}
+                    </span>{' '}
+                    <span className="lp-cc-dim">(esc to interrupt)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="lp-cc-ready-dot" aria-hidden="true">
+                      ●
+                    </span>{' '}
+                    <span className="lp-cc-ready-label">Ready</span>{' '}
+                    <span className="lp-cc-dim">
+                      ({CLAUDE_TURNS[history[history.length - 1].turnIdx].readyTiming} · esc to interrupt)
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* TUI Bottom Status & Input Bar */}
+          <div className="lp-cc-bottom">
+            <div className="lp-cc-rule" />
+            <div className="lp-cc-input-line">
+              <span className="lp-cc-prompt-glyph">❯</span>
+              <span className="lp-cc-input-text">{currentInput}</span>
+              <span className="lp-cc-cursor" />
+            </div>
+            <div className="lp-cc-rule" />
+            <div className="lp-cc-status-row">
+              <span className="lp-cc-cyan">~/gaia-skill-tree</span>
+              <span className="lp-cc-gy"> &gt; </span>
+              <span className="lp-cc-yellow">master *</span>
+              <span className="lp-cc-green"> ↑1</span>
+              <span className="lp-cc-gy"> &gt; ctx ──────── </span>
+              <span className="lp-cc-green">3%</span>
+              <span className="lp-cc-gy"> 31k/1M</span>
+            </div>
+            <div className="lp-cc-status-row">
+              <span className="lp-cc-coral">⏵⏵ bypass permissions on</span>
+              <span className="lp-cc-dim"> (shift+tab to cycle)</span>
+            </div>
           </div>
         </div>
       </section>
