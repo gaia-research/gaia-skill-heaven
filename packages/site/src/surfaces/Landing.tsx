@@ -97,13 +97,27 @@ function doorNote(door: Door): string {
 type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'zero'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
+const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
+interface ClaudeTurnLine {
+  text: string
+  verb: string
+}
 
 interface ClaudeTurn {
   id: 'summon' | 'heaven' | 'hell' | 'zero'
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell'
+  initialVerb: string
   title: ReactNode
-  lines: string[]
+  lines: ClaudeTurnLine[]
+  readyTiming: string
+}
+
+interface TurnHistoryState {
+  turnIdx: number
+  showTitle: boolean
+  linesCount: number
 }
 
 const CLAUDE_TURNS: ClaudeTurn[] = [
@@ -111,61 +125,105 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     id: 'summon',
     cmd: `${MECHANIC.floor} "systematic debugging"`,
     bulletTone: 'coral',
+    initialVerb: 'Resolving obra/systematic-debugging from registry…',
     title: (
       <>
         Summoning <span className="cc-file">{BORROWED.id}</span> into session context…
       </>
     ),
     lines: [
-      '· source: gaia-skill-tree (borrowed · 1 skill mounted)',
-      `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
-      '· 0 diffs written to working tree',
+      {
+        text: '· source: gaia-skill-tree (borrowed · 1 skill mounted)',
+        verb: 'Reading skill manifest…',
+      },
+      {
+        text: `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
+        verb: 'Measuring standing dose…',
+      },
+      {
+        text: '· 0 diffs written to working tree',
+        verb: 'Checking git status…',
+      },
     ],
+    readyTiming: '294ms',
   },
   {
     id: 'heaven',
-    cmd: 'brainstorm with me a design idea',
+    cmd: '/skill-heaven "brainstorm with me a design idea"',
     bulletTone: 'heaven',
+    initialVerb: 'Analyzing intent · converging on design skills…',
     title: (
       <>
         <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned 2 skills for design…
       </>
     ),
     lines: [
-      '· pbakaus/impeccable (+1,420 tok · borrowed)',
-      '· mattpocock/grill-me (+860 tok · borrowed)',
-      '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
+      {
+        text: '· pbakaus/impeccable (+1,420 tok · borrowed)',
+        verb: 'Mounting pbakaus/impeccable into context…',
+      },
+      {
+        text: '· mattpocock/grill-me (+860 tok · borrowed)',
+        verb: 'Mounting mattpocock/grill-me into context…',
+      },
+      {
+        text: '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
+        verb: 'Synthesizing session posture…',
+      },
     ],
+    readyTiming: '412ms',
   },
   {
     id: 'hell',
-    cmd: 'explore the codebase and autofix security issues',
+    cmd: '/skill-hell "explore the codebase and autofix security issues"',
     bulletTone: 'hell',
+    initialVerb: 'Exploring tool space via gaia mcp…',
     title: (
       <>
         <span className="cc-amber">Skill Hell (explore)</span> auto-summoned 2 skills via gaia mcp…
       </>
     ),
     lines: [
-      '· garrytan/cso (+2,100 tok · borrowed)',
-      '· obra/systematic-debugging (+515 tok · borrowed)',
-      '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
+      {
+        text: '· garrytan/cso (+2,100 tok · borrowed)',
+        verb: 'Dispatching garrytan/cso agent…',
+      },
+      {
+        text: '· obra/systematic-debugging (+515 tok · borrowed)',
+        verb: 'Dispatching obra/systematic-debugging agent…',
+      },
+      {
+        text: '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
+        verb: 'Orchestrating mixture-of-agents…',
+      },
     ],
+    readyTiming: '638ms',
   },
   {
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
+    initialVerb: 'Severing borrowed skills · restoring clean floor…',
     title: (
       <>
         <span className="cc-cyan">Skill Zero</span> cleared all borrowed skills · back to floor
       </>
     ),
     lines: [
-      '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
-      `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
-      '· zero skills in context · 0 diffs on disk · /summon on demand',
+      {
+        text: '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
+        verb: 'Unmounting active session skills…',
+      },
+      {
+        text: `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
+        verb: 'Restoring product floor…',
+      },
+      {
+        text: '· zero skills in context · 0 diffs on disk · /summon on demand',
+        verb: 'Verifying clean working tree…',
+      },
     ],
+    readyTiming: '180ms',
   },
 ]
 
@@ -211,8 +269,10 @@ export default function Landing() {
 
   /* ---- §02 terminal ---- */
   const [samplerMode, setSamplerMode] = useState<SamplerMode>('all')
-  const [historyTurns, setHistoryTurns] = useState<number[]>([])
+  const [history, setHistory] = useState<TurnHistoryState[]>([])
   const [currentInput, setCurrentInput] = useState<string>('')
+  const [activeVerb, setActiveVerb] = useState<string>('')
+  const [brailleIdx, setBrailleIdx] = useState(0)
   const [hell, setHell] = useState(false)
   const [shear, setShear] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -224,9 +284,18 @@ export default function Landing() {
     if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
   }, [])
 
+  // Braille spinner animation loop
+  useEffect(() => {
+    const brailleTimer = window.setInterval(() => {
+      setBrailleIdx((prev) => (prev + 1) % BRAILLE.length)
+    }, 80)
+    return () => window.clearInterval(brailleTimer)
+  }, [])
+
   const typeAndSubmitCommand = useCallback(
     (turnIdx: number, onDone: () => void, charDelay = 28) => {
-      const fullCmd = CLAUDE_TURNS[turnIdx].cmd
+      const turn = CLAUDE_TURNS[turnIdx]
+      const fullCmd = turn.cmd
       let charIdx = 0
       setCurrentInput('')
 
@@ -238,7 +307,7 @@ export default function Landing() {
         } else {
           // Pause briefly at end of command (simulating Enter keypress)
           animTimerRef.current = window.setTimeout(() => {
-            const isHell = CLAUDE_TURNS[turnIdx].id === 'hell'
+            const isHell = turn.id === 'hell'
             if (isHell) {
               setHell(true)
               setShear(true)
@@ -249,10 +318,49 @@ export default function Landing() {
 
             // Move command from bottom prompt into top conversation history
             setCurrentInput('')
-            setHistoryTurns((prev) => [...prev, turnIdx])
+            setHistory((prev) => [
+              ...prev,
+              { turnIdx, showTitle: false, linesCount: 0 },
+            ])
+            setActiveVerb(turn.initialVerb)
 
-            // Wait while response is viewed before triggering next turn
-            animTimerRef.current = window.setTimeout(onDone, isHell ? 2400 : 1400)
+            // Step 1: Reveal title after initial verb loading
+            animTimerRef.current = window.setTimeout(() => {
+              setHistory((prev) =>
+                prev.map((item, idx) =>
+                  idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+                ),
+              )
+              setActiveVerb(turn.lines[0]?.verb ?? 'Processing…')
+
+              // Step 2: Stream lines one by one with their respective Claude verbs
+              let lineIdx = 0
+              const revealNextLine = () => {
+                if (lineIdx < turn.lines.length) {
+                  lineIdx++
+                  setHistory((prev) =>
+                    prev.map((item, idx) =>
+                      idx === prev.length - 1
+                        ? { ...item, linesCount: lineIdx }
+                        : item,
+                    ),
+                  )
+                  if (lineIdx < turn.lines.length) {
+                    setActiveVerb(turn.lines[lineIdx].verb)
+                    animTimerRef.current = window.setTimeout(revealNextLine, 360)
+                  } else {
+                    // Finished all lines in this turn
+                    setActiveVerb('')
+                    animTimerRef.current = window.setTimeout(
+                      onDone,
+                      isHell ? 2600 : 1600,
+                    )
+                  }
+                }
+              }
+
+              animTimerRef.current = window.setTimeout(revealNextLine, 360)
+            }, 440)
           }, 220)
         }
       }
@@ -266,11 +374,18 @@ export default function Landing() {
     clearTimers()
     setHell(false)
     setShear(false)
-    setHistoryTurns([])
+    setHistory([])
     setCurrentInput('')
+    setActiveVerb('')
 
     if (prefersReducedMotion()) {
-      setHistoryTurns(CLAUDE_TURNS.map((_, i) => i))
+      setHistory(
+        CLAUDE_TURNS.map((_, i) => ({
+          turnIdx: i,
+          showTitle: true,
+          linesCount: CLAUDE_TURNS[i].lines.length,
+        })),
+      )
       return
     }
 
@@ -278,7 +393,7 @@ export default function Landing() {
       if (idx >= CLAUDE_TURNS.length) {
         animTimerRef.current = window.setTimeout(() => {
           playAll()
-        }, 3400)
+        }, 3600)
         return
       }
       typeAndSubmitCommand(idx, () => runTurn(idx + 1))
@@ -296,14 +411,21 @@ export default function Landing() {
       } else {
         const turnIdx = CLAUDE_TURNS.findIndex((t) => t.id === mode)
         if (turnIdx !== -1) {
-          setHistoryTurns([])
+          setHistory([])
           setCurrentInput('')
+          setActiveVerb('')
           setHell(false)
           setShear(false)
           if (prefersReducedMotion()) {
             const isHell = mode === 'hell'
             setHell(isHell)
-            setHistoryTurns([turnIdx])
+            setHistory([
+              {
+                turnIdx,
+                showTitle: true,
+                linesCount: CLAUDE_TURNS[turnIdx].lines.length,
+              },
+            ])
             return
           }
           typeAndSubmitCommand(turnIdx, () => {})
@@ -326,7 +448,7 @@ export default function Landing() {
     if (bodyRef.current) {
       bodyRef.current.scrollTop = bodyRef.current.scrollHeight
     }
-  }, [historyTurns, currentInput])
+  }, [history, activeVerb, currentInput])
 
   /* ---- §03 the session story ---- */
   const [mounted, setMounted] = useState<string[]>(
@@ -745,36 +867,50 @@ export default function Landing() {
           </div>
 
           <div className="lp-cc-body" ref={bodyRef}>
-            {historyTurns.map((turnIdx) => {
-              const turn = CLAUDE_TURNS[turnIdx]
+            {history.map((item, hIdx) => {
+              const turn = CLAUDE_TURNS[item.turnIdx]
+
               return (
-                <div className="lp-cc-turn" key={turn.id}>
+                <div className="lp-cc-turn" key={hIdx}>
                   <div className="lp-cc-prompt-row">
                     <span className="lp-cc-prompt-glyph">❯</span>
                     <span className="lp-cc-user-cmd">{turn.cmd}</span>
                   </div>
-                  <div className="lp-cc-response">
-                    <div className="lp-cc-res-title">
-                      <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
-                      {turn.title}
-                    </div>
-                    {turn.lines.map((line, li) => (
-                      <div className="lp-cc-dim" key={li}>
-                        &nbsp;&nbsp;{line}
+
+                  {item.showTitle && (
+                    <div className="lp-cc-response">
+                      <div className="lp-cc-res-title">
+                        <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
+                        {turn.title}
                       </div>
-                    ))}
-                  </div>
+                      {turn.lines.slice(0, item.linesCount).map((line, li) => (
+                        <div className="lp-cc-dim lp-cc-line-in" key={li}>
+                          &nbsp;&nbsp;{line.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}
 
-            {/* Spinner working state */}
-            {historyTurns.length > 0 && (
+            {/* Active Claude Code verb or Ready status */}
+            {history.length > 0 && (
               <div className="lp-cc-working-row">
-                <span className="lp-cc-working">
-                  <span className="lp-cc-braille">⠋</span> Ready
-                </span>{' '}
-                <span className="lp-cc-dim">(412ms · esc to interrupt)</span>
+                {activeVerb ? (
+                  <span className="lp-cc-working">
+                    <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> {activeVerb}
+                  </span>
+                ) : (
+                  <>
+                    <span className="lp-cc-working">
+                      <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> Ready
+                    </span>{' '}
+                    <span className="lp-cc-dim">
+                      ({CLAUDE_TURNS[history[history.length - 1].turnIdx].readyTiming} · esc to interrupt)
+                    </span>
+                  </>
+                )}
               </div>
             )}
           </div>
