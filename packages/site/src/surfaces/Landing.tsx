@@ -60,7 +60,6 @@ import bgZero from '../assets/lucy/backgrounds/lucy-bg-zero-desktop.webp'
 import bgHeaven from '../assets/lucy/backgrounds/lucy-bg-heaven-desktop.webp'
 import bgHell from '../assets/lucy/backgrounds/lucy-bg-hell-desktop.webp'
 import bgUltra from '../assets/lucy/backgrounds/lucy-bg-ultra-desktop.webp'
-import katanaHeaven from '../assets/lucy/frontpage/katana-authority-v2/lucy-katana-heaven.webp'
 import iconZero from '../assets/lucy/identity/lucy-state-icon-zero.svg'
 import iconHeaven from '../assets/lucy/identity/lucy-state-icon-heaven.svg'
 import iconHell from '../assets/lucy/identity/lucy-state-icon-hell.svg'
@@ -349,59 +348,61 @@ export default function Landing() {
       {/* ------------------------------------------------------------- arrival */}
       <header className="lp-head">
         <div className="lp-head__grid">
-          <div className="lp-head__lede">
-            <div className="lp-kicker">
-              <span>HELL · HEAVEN · INDEX</span>
-              <span className="lp-kicker__rule" aria-hidden="true" />
-              <span>THE LAUNCHER</span>
-              <span className="lp-reg" aria-hidden="true" />
-              <span className="lp-reg-dots" aria-hidden="true">
-                <i />
-                <i />
-              </span>
+          <div className="lp-head__main">
+            <div className="lp-head__lede">
+              <div className="lp-kicker">
+                <span>HELL · HEAVEN · INDEX</span>
+                <span className="lp-kicker__rule" aria-hidden="true" />
+                <span>THE LAUNCHER</span>
+                <span className="lp-reg" aria-hidden="true" />
+                <span className="lp-reg-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                </span>
+              </div>
+              <h1 className="lp-h1">
+                You are inside.
+                <br />
+                Now pick your door.
+              </h1>
+              <p className="lp-lede">
+                <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
+                your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
+                session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
+                it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
+                ways.
+              </p>
+              <SlashReel />
             </div>
-            <h1 className="lp-h1">
-              You are inside.
-              <br />
-              Now pick your door.
-            </h1>
-            <p className="lp-lede">
-              <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
-              your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
-              session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
-              it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
-              ways.
-            </p>
-            <SlashReel />
-          </div>
 
-          <div className="lp-dose sh-panel">
-            <div className="lp-dose__head">
-              <span className="sh-label">STANDING DOSE · MEASURED</span>
-              <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
+            <div className="lp-dose sh-panel">
+              <div className="lp-dose__head">
+                <span className="sh-label">STANDING DOSE · MEASURED</span>
+                <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
+              </div>
+              <p className="lp-dose__body">
+                Every skill you don’t need is still context. The model still has to read it, weigh it,
+                decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
+                real token. Skill Zero cuts it at launch.
+              </p>
+              <div className="lp-bars">
+                <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
+                <DoseBar
+                  label="benchmark floor"
+                  value={DOSES.benchmarkFloor}
+                  max={DOSES.native}
+                  tone="cyan"
+                />
+                <DoseBar
+                  label="product floor"
+                  value={DOSES.productFloor}
+                  max={DOSES.native}
+                  tone="mint"
+                  strong
+                />
+              </div>
+              <p className="lp-dose__foot">{DOSES.note}</p>
             </div>
-            <p className="lp-dose__body">
-              Every skill you don’t need is still context. The model still has to read it, weigh it,
-              decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
-              real token. Skill Zero cuts it at launch.
-            </p>
-            <div className="lp-bars">
-              <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
-              <DoseBar
-                label="benchmark floor"
-                value={DOSES.benchmarkFloor}
-                max={DOSES.native}
-                tone="cyan"
-              />
-              <DoseBar
-                label="product floor"
-                value={DOSES.productFloor}
-                max={DOSES.native}
-                tone="mint"
-                strong
-              />
-            </div>
-            <p className="lp-dose__foot">{DOSES.note}</p>
           </div>
 
           <figure className="lp-figure">
@@ -417,16 +418,6 @@ export default function Landing() {
             />
             <figcaption className="sh-label">SKILL ZERO · THE LAUNCHER</figcaption>
           </figure>
-        </div>
-
-        {/* blade divider — the alpha-verified katana pack */}
-        <div className="lp-blade">
-          <span className="lp-band lp-blade__band" aria-hidden="true">
-            <img src={katanaHeaven} alt="" />
-          </span>
-          <span className="lp-blade__plate" aria-hidden="true">
-            PLATE NO. 001
-          </span>
         </div>
       </header>
 

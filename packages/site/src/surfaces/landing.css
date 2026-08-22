@@ -205,17 +205,22 @@
 .lp-head {
   max-width: var(--lp-maxw);
   margin: 0 auto;
-  padding: clamp(40px, 6vw, 74px) var(--lp-pad) 0;
+  padding: clamp(36px, 5vw, 64px) var(--lp-pad) 0;
 }
 .lp-head__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
-  gap: 40px;
+  grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr);
+  gap: 32px 44px;
   align-items: end;
 }
+.lp-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
 .lp-head__lede {
-  grid-column: 1 / -1;
-  max-width: 780px;
+  max-width: 720px;
 }
 .lp-kicker {
   display: flex;
@@ -375,18 +380,18 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: clamp(420px, 46vw, 720px);
+  min-height: clamp(380px, 42vw, 640px);
   overflow: visible;
 }
 .lp-figure__bg {
   position: absolute;
   left: 50%;
-  bottom: -4%;
+  bottom: -2%;
   translate: -50% 0;
-  width: 152%;
-  height: 130%;
+  width: 145%;
+  height: 125%;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: 0.45;
   z-index: 0;
   pointer-events: none;
   -webkit-mask-image: radial-gradient(60% 58% at 50% 46%, #000 38%, transparent 78%);
@@ -400,53 +405,15 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: clamp(420px, 46vw, 720px);
+  max-height: clamp(380px, 42vw, 640px);
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 24px 54px rgba(0, 0, 0, 0.58));
 }
 .lp-figure figcaption {
   position: absolute;
-  left: 0;
-  bottom: 8px;
-  color: var(--sh-ink-dim);
-}
-
-/* blade divider — the alpha-verified katana pack.
-   .lp-band maps the blade's alpha bounding box onto the strip: the master is
-   1200×320 with the blade at x 274–902 / y 107–210, so the image is drawn at
-   3.107× the band height and re-centred on that box. */
-.lp-band {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  height: var(--lp-band-h, 60px);
-}
-.lp-band img {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: calc(var(--lp-band-h, 60px) * 3.107);
-  width: auto;
-  max-width: none;
-  transform: translate(-49%, -49.5%);
-}
-.lp-blade {
-  position: relative;
-  margin-top: clamp(36px, 5vw, 64px);
-  padding-right: 26px;
-}
-.lp-blade__band {
-  --lp-band-h: clamp(52px, 7.2vw, 104px);
-}
-.lp-blade__plate {
-  position: absolute;
   right: 0;
-  top: -10px;
-  writing-mode: vertical-rl;
-  font-family: var(--sh-mono);
-  font-size: 9px;
-  letter-spacing: 0.26em;
+  bottom: 8px;
   color: var(--sh-ink-dim);
 }
 
