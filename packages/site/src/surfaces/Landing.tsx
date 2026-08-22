@@ -104,6 +104,9 @@ interface ClaudeTurn {
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell' | 'ultra'
   verb: string
+  palette?: 'natural' | 'hell'
+  shear?: boolean
+  automated?: boolean
   title: ReactNode
   lines: ReactNode[]
   readyTiming: string
@@ -308,6 +311,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     cmd: '/skill-ultra redesign analytics dashboard and harden streaming pipeline',
     bulletTone: 'ultra',
     verb: 'Orchestrating…',
+    palette: 'natural',
     title: (
       <>
         <span className="cc-gold">Skill Ultra (the crown)</span> decomposed task into 2 capability gaps…
@@ -323,29 +327,66 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       />,
       <div className="lp-cc-block lp-cc-block--ultra" key="ultra-decomp">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Dial:
+          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Planner:
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture] → Dynamic Entropy: <b className="cc-cyan">LOW (Converge · Human-in-the-Loop)</b></div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Pipeline Load & Stream Hardening] → Dynamic Entropy: <b className="cc-amber">HIGH (Explore · Swarm)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture & Data Density] → Dialing <b className="cc-cyan">HEAVEN (Converge · Human-in-the-Loop)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Stream Hardening & Load Test] → Dialing <b className="cc-amber">HELL (Explore · Autonomous Swarm)</b></div>
       </div>,
-      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-gap1">
+      <div className="lp-cc-block lp-cc-block--heaven" key="ultra-gap1">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">◆ [pbakaus/impeccable]</span> Gap 1 — 2 dashboard layout strategies:
+          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> Gap 1 — 2 UI architecture directions:
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Minimalist HUD): High-density telemetry cards + 60fps canvas sparklines</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive Canvas): High-level KPI grid + expandable drill-down drawer</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Live Telemetry HUD): 60fps canvas sparklines + zero-latency buffer</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive KPI Canvas): High-level aggregates + accordion drawers</div>
       </div>,
     ],
     readyTiming: '430ms',
   },
   {
     id: 'ultra-2',
-    cmd: "Let's go with Strategy A (Minimalist HUD) with 60fps sparklines",
-    bulletTone: 'ultra',
-    verb: 'Recombobulating…',
+    cmd: 'Strategy A (Live Telemetry HUD) with 60fps sparklines',
+    bulletTone: 'heaven',
+    verb: 'Converging…',
+    palette: 'natural',
     title: (
       <>
-        <span className="cc-gold">Skill Ultra</span> resolved Gap 1 · escalated Gap 2 to autonomous swarm…
+        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to lock architecture…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="grill-ultra"
+        name="mattpocock/grill-me"
+        tag="critique"
+        tokens="+860 tok"
+        tone="violet"
+      />,
+      <div className="lp-cc-block lp-cc-block--heaven" key="ultra-lock">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> Architecture locked with human feedback:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A selected: High-density 60fps canvas telemetry sparklines</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Specified zero-alloc circular buffer interface for live event streams</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-handoff">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Gap 1 resolved in Heaven → Escalating Gap 2 to Skill Hell…
+        </div>
+      </div>,
+    ],
+    readyTiming: '480ms',
+  },
+  {
+    id: 'ultra-3',
+    cmd: '[swarm] /skill-hell explore streaming pipeline, fix memory leaks & chaos test',
+    bulletTone: 'hell',
+    verb: 'Prestidigitating swarm…',
+    palette: 'hell',
+    shear: true,
+    automated: true,
+    title: (
+      <>
+        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous 3-agent swarm…
       </>
     ),
     lines: [
@@ -354,37 +395,76 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         name="addy-osmani/performance-optimization"
         tag="perf-tuning"
         tokens="+2,640 tok"
-        tone="gold"
+        tone="amber"
       />,
       <SummonedSkillPill
         key="cso-ultra"
         name="garrytan/cso"
         tag="chaos-audit"
         tokens="+2,100 tok"
-        tone="gold"
+        tone="amber"
       />,
-      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-swarm">
+      <SummonedSkillPill
+        key="debug-ultra"
+        name="obra/systematic-debugging"
+        tag="deep-diagnostics"
+        tokens="+515 tok"
+        tone="amber"
+      />,
+      <div className="lp-cc-block lp-cc-block--hell" key="ultra-swarm-trace">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">♛ [ultra swarm]</span> Autonomous pipeline synthesis & chaos hardening:
+          <span className="cc-amber">◈ [addy-osmani/perf]</span> Benchmarking WebSocket pipeline under 100k msg/sec load…
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Minimalist HUD layout)</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· [addy-osmani/perf] Replaced WebSocket listener with zero-alloc ring buffer (src/stream/pipeline.ts)</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· [garrytan/cso] Injected 50,000 evt/sec chaos load — verified 0 dropped frames & 0 leaks</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Identified memory leak in buffer allocation (src/stream/ws-buffer.ts:88)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Replaced with zero-alloc circular ring buffer (src/stream/circular-buffer.ts)</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--hell" key="ultra-chaos">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Chaos testing & thread safety validation:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Injected 50,000 evt/sec synthetic bursts: 0 dropped frames · heap flat at 18MB</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Regression sweep: 42/42 pipeline & benchmark tests green (GREEN)</div>
+      </div>,
+    ],
+    readyTiming: '680ms',
+  },
+  {
+    id: 'ultra-4',
+    cmd: '[ultra] synthesize Heaven + Hell outputs & open Pull Request',
+    bulletTone: 'ultra',
+    verb: 'Synthesizing…',
+    palette: 'natural',
+    automated: true,
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra</span> merged dual orchestration (Heaven + Hell) into PR…
+      </>
+    ),
+    lines: [
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-summary">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Unified dual-track synthesis:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Telemetry HUD, 60fps canvas)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/stream/circular-buffer.ts (zero-alloc ring buffer)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Verified 0 dropped frames under 50k evt/sec load</div>
         <div className="lp-cc-dim">
           &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed branch <span className="cc-file">feat/analytics-hud-stream-hardening</span>
         </div>
         <div className="lp-cc-dim">
           &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #184 "feat(analytics): 60fps HUD + zero-alloc stream pipeline"
         </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Standing dose returned to clean product floor · 0 uncommitted diffs</div>
       </div>,
     ],
-    readyTiming: '640ms',
+    readyTiming: '540ms',
   },
   {
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
     verb: 'Recombobulating…',
+    palette: 'natural',
     title: (
       <>
         <span className="cc-cyan">Skill Zero</span> automatic skill summons paused
@@ -402,10 +482,10 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
 const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
   heaven: [1, 2, 3],
   hell: [4],
-  ultra: [5, 6],
-  all: [0, 1, 2, 3, 4, 5, 6, 7],
+  ultra: [5, 6, 7, 8],
+  all: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   summon: [0],
-  zero: [7],
+  zero: [9],
 }
 
 function prefersReducedMotion(): boolean {
@@ -490,81 +570,94 @@ export default function Landing() {
       let charIdx = 0
       setCurrentInput('')
 
-      const typeNextChar = () => {
-        if (charIdx < fullCmd.length) {
-          const char = fullCmd[charIdx]
-          charIdx++
-          setCurrentInput(fullCmd.slice(0, charIdx))
-          // Natural human cadence: tiny hesitation on space, slash, quotes or punctuation
-          const isPunct = char === ' ' || char === '/' || char === '-' || char === '\'' || char === '"' || char === '.'
-          const charDelay = isPunct ? 68 : 34 + (charIdx % 4) * 5
-          animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+      const isHellPalette = turn.palette === 'hell' || turn.id.startsWith('hell')
+
+      const executeTurn = () => {
+        if (isHellPalette) {
+          setHell(true)
         } else {
-          // Pause naturally at end of command before "pressing Enter" to let user read what was typed
-          animTimerRef.current = window.setTimeout(() => {
-            const isHell = turn.id.startsWith('hell')
-            if (isHell) {
-              setHell(true)
-              if (turn.id === 'hell-1') {
-                setShear(true)
-                shearTimerRef.current = window.setTimeout(() => setShear(false), 320)
-              }
-            } else {
-              setHell(false)
-            }
+          setHell(false)
+        }
 
-            // Move command from bottom prompt into top conversation history
-            setCurrentInput('')
-            setHistory((prev) => [
-              ...prev,
-              { turnIdx, showTitle: false, linesCount: 0 },
-            ])
-            // Set ONE single verb for the entire task
-            setActiveVerb(turn.verb)
+        if (turn.shear || turn.id === 'hell-1') {
+          setShear(true)
+          shearTimerRef.current = window.setTimeout(() => setShear(false), 340)
+        }
 
-            // Step 1: Deliberate thinking/tool dispatch delay (showing braille spinner)
-            animTimerRef.current = window.setTimeout(() => {
+        // Move command from bottom prompt into top conversation history
+        setCurrentInput('')
+        setHistory((prev) => [
+          ...prev,
+          { turnIdx, showTitle: false, linesCount: 0 },
+        ])
+        // Set ONE single verb for the entire task
+        setActiveVerb(turn.verb)
+
+        // Step 1: Deliberate thinking/tool dispatch delay (showing braille spinner)
+        animTimerRef.current = window.setTimeout(() => {
+          setHistory((prev) =>
+            prev.map((item, idx) =>
+              idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+            ),
+          )
+
+          // Step 2: Stream lines one by one with a readable, natural cadence
+          let lineIdx = 0
+          const revealNextLine = () => {
+            if (lineIdx < turn.lines.length) {
+              lineIdx++
               setHistory((prev) =>
                 prev.map((item, idx) =>
-                  idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+                  idx === prev.length - 1
+                    ? { ...item, linesCount: lineIdx }
+                    : item,
                 ),
               )
-
-              // Step 2: Stream lines one by one with a readable, natural cadence
-              let lineIdx = 0
-              const revealNextLine = () => {
-                if (lineIdx < turn.lines.length) {
-                  lineIdx++
-                  setHistory((prev) =>
-                    prev.map((item, idx) =>
-                      idx === prev.length - 1
-                        ? { ...item, linesCount: lineIdx }
-                        : item,
-                    ),
-                  )
-                  if (lineIdx < turn.lines.length) {
-                    animTimerRef.current = window.setTimeout(revealNextLine, 720)
-                  } else {
-                    // Finished all lines in this turn -> Ready state (pause spinner animation)
-                    setActiveVerb('')
-                    const isDense = turn.lines.length > 2 || isHell || turn.id.startsWith('ultra')
-                    // Natural pause after turn completes to give reader time to read the result
-                    animTimerRef.current = window.setTimeout(
-                      onDone,
-                      isDense ? 3600 : 2800,
-                    )
-                  }
-                }
+              if (lineIdx < turn.lines.length) {
+                animTimerRef.current = window.setTimeout(
+                  revealNextLine,
+                  turn.automated ? 580 : 720,
+                )
+              } else {
+                // Finished all lines in this turn -> Ready state (pause spinner animation)
+                setActiveVerb('')
+                const isDense = turn.lines.length > 2 || isHellPalette || turn.id.startsWith('ultra')
+                // Natural pause after turn completes to give reader time to read the result
+                animTimerRef.current = window.setTimeout(
+                  onDone,
+                  isDense ? 3600 : 2800,
+                )
               }
+            }
+          }
 
-              animTimerRef.current = window.setTimeout(revealNextLine, 600)
-            }, 950)
-          }, 550)
-        }
+          animTimerRef.current = window.setTimeout(revealNextLine, 600)
+        }, turn.automated ? 680 : 950)
       }
 
-      // Initial breath before typing starts
-      animTimerRef.current = window.setTimeout(typeNextChar, 500)
+      if (turn.automated) {
+        // Automated multi-agent swarm action: dispatches without human typing delay
+        animTimerRef.current = window.setTimeout(executeTurn, 480)
+      } else {
+        // Human typing simulation
+        const typeNextChar = () => {
+          if (charIdx < fullCmd.length) {
+            const char = fullCmd[charIdx]
+            charIdx++
+            setCurrentInput(fullCmd.slice(0, charIdx))
+            // Natural human cadence: tiny hesitation on space, slash, quotes or punctuation
+            const isPunct = char === ' ' || char === '/' || char === '-' || char === '\'' || char === '"' || char === '.'
+            const charDelay = isPunct ? 68 : 34 + (charIdx % 4) * 5
+            animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+          } else {
+            // Pause naturally at end of command before "pressing Enter" to let user read what was typed
+            animTimerRef.current = window.setTimeout(executeTurn, 550)
+          }
+        }
+
+        // Initial breath before typing starts
+        animTimerRef.current = window.setTimeout(typeNextChar, 500)
+      }
     },
     [],
   )
@@ -1066,7 +1159,9 @@ export default function Landing() {
               return (
                 <div className="lp-cc-turn" key={hIdx}>
                   <div className="lp-cc-prompt-row">
-                    <span className="lp-cc-prompt-glyph">❯</span>
+                    <span className="lp-cc-prompt-glyph">
+                      {turn.automated ? (turn.palette === 'hell' ? '◈' : '♛') : '❯'}
+                    </span>
                     <span className="lp-cc-user-cmd">{turn.cmd}</span>
                   </div>
 
