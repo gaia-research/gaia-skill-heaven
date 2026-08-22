@@ -97,7 +97,6 @@ function doorNote(door: Door): string {
 type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'zero'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
-const HELL_RUNG = RUNGS.find((r) => r.id === 'high')!
 
 interface ClaudeTurn {
   id: 'summon' | 'heaven' | 'hell' | 'zero'
@@ -118,41 +117,39 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       </>
     ),
     lines: [
-      '· source: gaia-skill-tree (borrowed)',
+      '· source: gaia-skill-tree (borrowed · 1 skill mounted)',
       `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
-      '· mounted 1 skill · 0 diffs on disk',
+      '· 0 diffs written to working tree',
     ],
   },
   {
     id: 'heaven',
-    cmd: '/skill-heaven low',
+    cmd: 'brainstorm with me a design idea',
     bulletTone: 'heaven',
     title: (
       <>
-        <span className="cc-cyan">Skill Heaven (converge)</span> armed at rung{' '}
-        <span className="cc-yellow">low</span>
+        <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned 2 skills for design…
       </>
     ),
     lines: [
-      '· posture: human-in-the-loop · tight signal',
-      `· standing dose: ${fmt(DOSES.productFloor)} tok (${DOSES.deltaVsNative} vs native ${fmt(DOSES.native)})`,
-      '· route: 1 expert in context · approval required for edits',
+      '· pbakaus/impeccable (+1,420 tok · borrowed)',
+      '· mattpocock/grill-me (+860 tok · borrowed)',
+      '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
     ],
   },
   {
     id: 'hell',
-    cmd: `/skill-hell ${HELL_RUNG.id}`,
+    cmd: 'explore the codebase and autofix security issues',
     bulletTone: 'hell',
     title: (
       <>
-        <span className="cc-amber">Skill Hell (explore)</span> armed at rung{' '}
-        <span className="cc-yellow">{HELL_RUNG.id}</span>
+        <span className="cc-amber">Skill Hell (explore)</span> auto-summoned 2 skills via gaia mcp…
       </>
     ),
     lines: [
-      '· posture: autonomous exploration · wide tool space',
-      '· route: gaia mcp · mixture-of-agents for skills',
-      '· entropy: high · auto-summons expert tools on gap',
+      '· garrytan/cso (+2,100 tok · borrowed)',
+      '· obra/systematic-debugging (+515 tok · borrowed)',
+      '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
     ],
   },
   {
@@ -161,13 +158,13 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     bulletTone: 'coral',
     title: (
       <>
-        <span className="cc-cyan">Skill Zero</span> reset · auto-summoning stopped
+        <span className="cc-cyan">Skill Zero</span> cleared all borrowed skills · back to floor
       </>
     ),
     lines: [
-      '· posture: product floor · clean slate',
-      `· standing dose: ${fmt(DOSES.productFloor)} tok (clean floor)`,
-      '· unmounted active summons · /summon on demand',
+      '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
+      `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
+      '· zero skills in context · 0 diffs on disk · /summon on demand',
     ],
   },
 ]
@@ -719,7 +716,7 @@ export default function Landing() {
               className={`lp-sampler-btn${samplerMode === 'zero' ? ' is-active' : ''}`}
               onClick={() => selectSampler('zero')}
             >
-              /skill-zero (Reset)
+              /skill-zero (Clear)
             </button>
           </div>
           <button type="button" className="lp-ghost" onClick={replay}>
