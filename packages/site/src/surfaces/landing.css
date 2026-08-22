@@ -490,7 +490,7 @@
 .lp-doors {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 .lp-door {
   position: relative;
@@ -499,9 +499,9 @@
   align-items: flex-start;
   gap: 0;
   text-align: left;
-  padding: 16px 14px 14px;
+  padding: 20px 18px 18px;
   background: var(--sh-panel);
-  border: 1px solid rgba(238, 235, 230, 0.12);
+  border: 1px solid rgba(238, 235, 230, 0.14);
   color: var(--sh-ink);
   cursor: pointer;
   transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -529,8 +529,8 @@
 
 .lp-door:hover {
   border-color: var(--door-accent, var(--sh-cyan));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 .lp-door:hover .lp-door__mark {
   fill: var(--door-accent, var(--sh-cyan));
@@ -540,14 +540,14 @@
 .lp-door.is-on {
   background: var(--sh-card);
   border-color: var(--door-accent, var(--sh-violet));
-  box-shadow: 0 0 0 1px var(--door-accent, var(--sh-violet)), 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px var(--door-accent, var(--sh-violet)), 0 10px 32px rgba(0, 0, 0, 0.55);
 }
 .lp-door__tick {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 5px;
-  height: 5px;
+  top: 10px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
   background: transparent;
   transition: background 160ms ease;
 }
@@ -556,15 +556,17 @@
 }
 .lp-door__mark {
   display: block;
-  width: 22px;
-  height: 22px;
-  margin-bottom: 14px;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 18px;
   fill: var(--sh-ink-dim);
-  transition: fill 160ms ease, color 160ms ease;
+  transition: fill 160ms ease, color 160ms ease, transform 160ms ease;
 }
+.lp-door:hover .lp-door__mark,
 .lp-door.is-on .lp-door__mark {
   fill: var(--door-accent, var(--sh-violet));
   color: var(--door-accent, var(--sh-violet));
+  transform: scale(1.06);
 }
 /* The one harness with no public vector mark. A lettermark in our own display
    type — deliberately OUR voice, so it cannot be mistaken for the vendor's
@@ -575,7 +577,7 @@
   justify-content: center;
   font-family: var(--sh-sans);
   font-variation-settings: 'wdth' 112, 'wght' 800;
-  font-size: 19px;
+  font-size: 22px;
   line-height: 1;
   color: var(--sh-ink-dim);
   transition: color 160ms ease;
@@ -583,30 +585,44 @@
 .lp-door.is-on .lp-door__mark--letter {
   color: var(--door-accent, var(--sh-violet));
 }
+
+/* Package name: Bold, punchy, high-readability */
 .lp-door__pkg {
   font-family: var(--sh-mono);
-  font-size: 12px;
-  margin-bottom: 5px;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--sh-ink);
+  margin-bottom: 4px;
   transition: color 160ms ease;
 }
 .lp-door.is-on .lp-door__pkg {
   color: var(--sh-ink);
-  font-weight: 600;
 }
+
+/* Harness subtitle: Clear secondary hierarchy */
 .lp-door__harness {
-  font-size: 11.5px;
-  line-height: 1.4;
+  font-size: 12.5px;
+  line-height: 1.35;
   color: var(--sh-ink-dim);
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
+.lp-door.is-on .lp-door__harness {
+  color: var(--sh-ink);
+}
+
+/* Status Chip */
 .lp-door__chip {
   text-transform: uppercase;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  padding: 3px 8px;
   transition: all 160ms ease;
 }
 .lp-door.is-on .lp-door__chip {
   border-color: var(--door-accent, rgba(165, 138, 224, 0.5));
   color: var(--door-accent, var(--sh-violet));
-  background: rgba(238, 235, 230, 0.05);
+  background: rgba(238, 235, 230, 0.06);
 }
 .lp-door__chip--flagship {
   border-color: rgba(224, 122, 95, 0.4);
@@ -616,7 +632,7 @@
 .lp-door.is-on .lp-door__chip--flagship {
   border-color: #e07a5f;
   color: #e07a5f;
-  background: rgba(224, 122, 95, 0.16);
+  background: rgba(224, 122, 95, 0.18);
 }
 
 /* install + launch */
@@ -2529,7 +2545,7 @@
   .lp-door {
     aspect-ratio: 1;
     min-height: 0;
-    padding: 14px 12px;
+    padding: 16px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -2537,22 +2553,23 @@
   }
   .lp-door__mark {
     margin-bottom: auto;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
   }
   .lp-door__pkg {
-    font-size: 11px;
-    margin-bottom: 2px;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-bottom: 3px;
     line-height: 1.2;
   }
   .lp-door__harness {
-    font-size: 10px;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    font-size: 11.5px;
+    line-height: 1.25;
+    margin-bottom: 8px;
   }
   .lp-door__chip {
-    font-size: 8px;
-    padding: 2px 5px;
+    font-size: 8.5px;
+    padding: 2px 6px;
   }
   .lp-beats {
     grid-template-columns: minmax(0, 1fr);
@@ -2686,30 +2703,31 @@
   .lp-door {
     aspect-ratio: 1;
     min-height: 0;
-    padding: 12px 10px;
+    padding: 14px 12px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     box-sizing: border-box;
   }
   .lp-door__mark {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     margin-bottom: auto;
   }
   .lp-door__pkg {
-    font-size: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
     margin-bottom: 2px;
     line-height: 1.2;
   }
   .lp-door__harness {
-    font-size: 9px;
-    margin-bottom: 4px;
-    line-height: 1.15;
+    font-size: 10.5px;
+    margin-bottom: 6px;
+    line-height: 1.2;
   }
   .lp-door__chip {
-    font-size: 7.5px;
-    padding: 1px 4px;
+    font-size: 8px;
+    padding: 2px 5px;
   }
   .lp-nav__cta {
     font-size: 10px;
