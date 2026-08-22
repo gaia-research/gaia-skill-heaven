@@ -94,13 +94,13 @@ function doorNote(door: Door): string {
    never typed in by hand.
    ------------------------------------------------------------------------- */
 
-type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell'
+type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'zero'
 
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
 const HELL_RUNG = RUNGS.find((r) => r.id === 'high')!
 
 interface ClaudeTurn {
-  id: 'summon' | 'heaven' | 'hell'
+  id: 'summon' | 'heaven' | 'hell' | 'zero'
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell'
   title: ReactNode
@@ -153,6 +153,21 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       '· posture: autonomous exploration · wide tool space',
       '· route: gaia mcp · mixture-of-agents for skills',
       '· entropy: high · auto-summons expert tools on gap',
+    ],
+  },
+  {
+    id: 'zero',
+    cmd: '/skill-zero',
+    bulletTone: 'coral',
+    title: (
+      <>
+        <span className="cc-cyan">Skill Zero</span> reset · auto-summoning stopped
+      </>
+    ),
+    lines: [
+      '· posture: product floor · clean slate',
+      `· standing dose: ${fmt(DOSES.productFloor)} tok (clean floor)`,
+      '· unmounted active summons · /summon on demand',
     ],
   },
 ]
@@ -698,6 +713,13 @@ export default function Landing() {
               onClick={() => selectSampler('hell')}
             >
               /skill-hell (Explore)
+            </button>
+            <button
+              type="button"
+              className={`lp-sampler-btn${samplerMode === 'zero' ? ' is-active' : ''}`}
+              onClick={() => selectSampler('zero')}
+            >
+              /skill-zero (Reset)
             </button>
           </div>
           <button type="button" className="lp-ghost" onClick={replay}>
