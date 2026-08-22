@@ -522,18 +522,70 @@ function InfoTooltip({
   className = '',
 }: InfoTooltipProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number } | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const pad = 14
+
+    // Target width: up to 340px, bounded within viewport - 2*pad
+    const width = Math.min(340, Math.max(260, vw - pad * 2))
+
+    let left = 0
+    if (vw <= 640) {
+      // Mobile: center under trigger or clamp to screen margins
+      const triggerCenter = rect.left + rect.width / 2
+      left = Math.max(pad, Math.min(vw - width - pad, triggerCenter - width / 2))
+    } else {
+      // Desktop: align left, right or center relative to trigger, but clamped to screen
+      if (align === 'right') {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.right - width))
+      } else if (align === 'center') {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.left + rect.width / 2 - width / 2))
+      } else {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.left))
+      }
+    }
+
+    // Vertical placement: prefer below trigger, flip above if overflowing bottom
+    const spaceBelow = vh - rect.bottom
+    const estimatedHeight = 170
+    if (spaceBelow < estimatedHeight && rect.top > estimatedHeight) {
+      setPos({ bottom: vh - rect.top + 8, left, width })
+    } else {
+      setPos({ top: rect.bottom + 8, left, width })
+    }
+  }, [align])
 
   const toggle = useCallback((e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setOpen((prev) => !prev)
-  }, [])
+    setOpen((prev) => {
+      const next = !prev
+      if (next) {
+        requestAnimationFrame(updatePosition)
+      }
+      return next
+    })
+  }, [updatePosition])
 
   useEffect(() => {
     if (!open) return
+
+    const handleResizeOrScroll = () => {
+      updatePosition()
+    }
     const handleClickOutside = (e: globalThis.MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        popoverRef.current && !popoverRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
@@ -542,22 +594,26 @@ function InfoTooltip({
         setOpen(false)
       }
     }
+
+    window.addEventListener('resize', handleResizeOrScroll)
+    window.addEventListener('scroll', handleResizeOrScroll, { passive: true })
     document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('touchstart', handleClickOutside)
     document.addEventListener('keydown', handleKeyDown)
+
     return () => {
+      window.removeEventListener('resize', handleResizeOrScroll)
+      window.removeEventListener('scroll', handleResizeOrScroll)
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open])
+  }, [open, updatePosition])
 
   return (
-    <div
-      className={`lp-tooltip-wrap lp-tooltip--${align}${open ? ' is-open' : ''} ${className}`.trim()}
-      ref={ref}
-    >
+    <div className={`lp-tooltip-wrap ${className}`.trim()}>
       <button
+        ref={triggerRef}
         type="button"
         className={variant === 'badge' ? 'lp-tooltip-badge' : 'lp-tooltip-btn'}
         onClick={toggle}
@@ -574,10 +630,19 @@ function InfoTooltip({
         )}
       </button>
 
-      {open && (
+      {open && pos && (
         <div
+          ref={popoverRef}
           className="lp-tooltip-popover"
           role="tooltip"
+          style={{
+            position: 'fixed',
+            left: `${pos.left}px`,
+            width: `${pos.width}px`,
+            ...(pos.top != null ? { top: `${pos.top}px` } : {}),
+            ...(pos.bottom != null ? { bottom: `${pos.bottom}px` } : {}),
+            zIndex: 9999,
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="lp-tooltip-body">{content}</div>
@@ -1046,32 +1111,31 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <div className="lp-install__title">
-                <div className="lp-install__title-wrap">
-                  <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
-                  <InfoTooltip
-                    align="left"
-                    label="Launcher installation details"
-                    content={
-                      <>
-                        <p>
-                          <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
-                        </p>
-                        <p style={{ marginTop: 6 }}>
-                          Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
-                        </p>
-                      </>
-                    }
-                  />
-                </div>
-                <p className="lp-install__prose">
-                  Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
-                </p>
+              <div className="lp-install__title-wrap">
+                <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
+                <InfoTooltip
+                  align="left"
+                  label="Launcher installation details"
+                  content={
+                    <>
+                      <p>
+                        <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
+                      </p>
+                      <p style={{ marginTop: 6 }}>
+                        Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+                      </p>
+                    </>
+                  }
+                />
               </div>
               <div className="lp-install__controls">
                 <PlatformToggle platform={platform} onToggle={setPlatform} />
               </div>
             </div>
+
+            <p className="lp-install__prose">
+              Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
+            </p>
 
             <CommandBlock
               cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
@@ -1095,6 +1159,7 @@ export default function Landing() {
             <div className="sh-label">
               STEP 02 · LAUNCH {picked.harness.toUpperCase()}
             </div>
+            <p className="lp-install__prose">{doorNote(picked)}</p>
             <CommandBlock
               cmd={picked.launch}
               sigil="$"
@@ -1103,7 +1168,6 @@ export default function Landing() {
               onCopy={() => copy(picked.launch, 'launch')}
               label="launch command"
             />
-            <p className="lp-install__prose">{doorNote(picked)}</p>
           </div>
         </div>
         <p className="lp-fineprint">
