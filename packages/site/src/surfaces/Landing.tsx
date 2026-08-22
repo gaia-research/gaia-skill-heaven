@@ -104,6 +104,9 @@ interface ClaudeTurn {
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell' | 'ultra'
   verb: string
+  palette?: 'natural' | 'hell'
+  shear?: boolean
+  automated?: boolean
   title: ReactNode
   lines: ReactNode[]
   readyTiming: string
@@ -134,6 +137,20 @@ function SummonedSkillPill({
       <span className="lp-cc-skill-tok">{tokens}</span>
       <span className="lp-cc-skill-badge">BORROWED</span>
     </div>
+  )
+}
+
+function ClaudeTerminalLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 180 84"
+      fill="currentColor"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M30,0 H150 V16 H30 Z M30,16 H50 V32 H30 Z M60,16 H120 V32 H60 Z M130,16 H150 V32 H130 Z M10,32 H170 V48 H10 Z M30,48 H150 V64 H30 Z M40,64 H50 V80 H40 Z M60,64 H70 V80 H60 Z M110,64 H120 V80 H110 Z M130,64 H140 V80 H130 Z" />
+    </svg>
   )
 }
 
@@ -294,6 +311,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     cmd: '/skill-ultra redesign analytics dashboard and harden streaming pipeline',
     bulletTone: 'ultra',
     verb: 'Orchestrating…',
+    palette: 'natural',
     title: (
       <>
         <span className="cc-gold">Skill Ultra (the crown)</span> decomposed task into 2 capability gaps…
@@ -309,29 +327,66 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       />,
       <div className="lp-cc-block lp-cc-block--ultra" key="ultra-decomp">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Dial:
+          <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Planner:
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture] → Dynamic Entropy: <b className="cc-cyan">LOW (Converge · Human-in-the-Loop)</b></div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Pipeline Load & Stream Hardening] → Dynamic Entropy: <b className="cc-amber">HIGH (Explore · Swarm)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture & Data Density] → Dialing <b className="cc-cyan">HEAVEN (Converge · Human-in-the-Loop)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Stream Hardening & Load Test] → Dialing <b className="cc-amber">HELL (Explore · Autonomous Swarm)</b></div>
       </div>,
-      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-gap1">
+      <div className="lp-cc-block lp-cc-block--heaven" key="ultra-gap1">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">◆ [pbakaus/impeccable]</span> Gap 1 — 2 dashboard layout strategies:
+          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> Gap 1 — 2 UI architecture directions:
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Minimalist HUD): High-density telemetry cards + 60fps canvas sparklines</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive Canvas): High-level KPI grid + expandable drill-down drawer</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A (Live Telemetry HUD): 60fps canvas sparklines + zero-latency buffer</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy B (Executive KPI Canvas): High-level aggregates + accordion drawers</div>
       </div>,
     ],
     readyTiming: '430ms',
   },
   {
     id: 'ultra-2',
-    cmd: "Let's go with Strategy A (Minimalist HUD) with 60fps sparklines",
-    bulletTone: 'ultra',
-    verb: 'Recombobulating…',
+    cmd: 'Strategy A (Live Telemetry HUD) with 60fps sparklines',
+    bulletTone: 'heaven',
+    verb: 'Converging…',
+    palette: 'natural',
     title: (
       <>
-        <span className="cc-gold">Skill Ultra</span> resolved Gap 1 · escalated Gap 2 to autonomous swarm…
+        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to lock architecture…
+      </>
+    ),
+    lines: [
+      <SummonedSkillPill
+        key="grill-ultra"
+        name="mattpocock/grill-me"
+        tag="critique"
+        tokens="+860 tok"
+        tone="violet"
+      />,
+      <div className="lp-cc-block lp-cc-block--heaven" key="ultra-lock">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> Architecture locked with human feedback:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Strategy A selected: High-density 60fps canvas telemetry sparklines</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Specified zero-alloc circular buffer interface for live event streams</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-handoff">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Gap 1 resolved in Heaven → Escalating Gap 2 to Skill Hell…
+        </div>
+      </div>,
+    ],
+    readyTiming: '480ms',
+  },
+  {
+    id: 'ultra-3',
+    cmd: '[swarm] /skill-hell explore streaming pipeline, fix memory leaks & chaos test',
+    bulletTone: 'hell',
+    verb: 'Prestidigitating swarm…',
+    palette: 'hell',
+    shear: true,
+    automated: true,
+    title: (
+      <>
+        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous 3-agent swarm…
       </>
     ),
     lines: [
@@ -340,37 +395,76 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         name="addy-osmani/performance-optimization"
         tag="perf-tuning"
         tokens="+2,640 tok"
-        tone="gold"
+        tone="amber"
       />,
       <SummonedSkillPill
         key="cso-ultra"
         name="garrytan/cso"
         tag="chaos-audit"
         tokens="+2,100 tok"
-        tone="gold"
+        tone="amber"
       />,
-      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-swarm">
+      <SummonedSkillPill
+        key="debug-ultra"
+        name="obra/systematic-debugging"
+        tag="deep-diagnostics"
+        tokens="+515 tok"
+        tone="amber"
+      />,
+      <div className="lp-cc-block lp-cc-block--hell" key="ultra-swarm-trace">
         <div className="lp-cc-subhead">
-          <span className="cc-gold">♛ [ultra swarm]</span> Autonomous pipeline synthesis & chaos hardening:
+          <span className="cc-amber">◈ [addy-osmani/perf]</span> Benchmarking WebSocket pipeline under 100k msg/sec load…
         </div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Minimalist HUD layout)</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· [addy-osmani/perf] Replaced WebSocket listener with zero-alloc ring buffer (src/stream/pipeline.ts)</div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· [garrytan/cso] Injected 50,000 evt/sec chaos load — verified 0 dropped frames & 0 leaks</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Identified memory leak in buffer allocation (src/stream/ws-buffer.ts:88)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Replaced with zero-alloc circular ring buffer (src/stream/circular-buffer.ts)</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--hell" key="ultra-chaos">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Chaos testing & thread safety validation:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Injected 50,000 evt/sec synthetic bursts: 0 dropped frames · heap flat at 18MB</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Regression sweep: 42/42 pipeline & benchmark tests green (GREEN)</div>
+      </div>,
+    ],
+    readyTiming: '680ms',
+  },
+  {
+    id: 'ultra-4',
+    cmd: '[ultra] synthesize Heaven + Hell outputs & open Pull Request',
+    bulletTone: 'ultra',
+    verb: 'Synthesizing…',
+    palette: 'natural',
+    automated: true,
+    title: (
+      <>
+        <span className="cc-gold">Skill Ultra</span> merged dual orchestration (Heaven + Hell) into PR…
+      </>
+    ),
+    lines: [
+      <div className="lp-cc-block lp-cc-block--ultra" key="ultra-summary">
+        <div className="lp-cc-subhead">
+          <span className="cc-gold">♛ [ultra controller]</span> Unified dual-track synthesis:
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/components/AnalyticsHUD.tsx (Strategy A Telemetry HUD, 60fps canvas)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Wrote src/stream/circular-buffer.ts (zero-alloc ring buffer)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Verified 0 dropped frames under 50k evt/sec load</div>
         <div className="lp-cc-dim">
           &nbsp;&nbsp;<span className="cc-green">✓</span> Git: Committed branch <span className="cc-file">feat/analytics-hud-stream-hardening</span>
         </div>
         <div className="lp-cc-dim">
           &nbsp;&nbsp;<span className="cc-green">✓</span> GitHub: Opened Draft PR #184 "feat(analytics): 60fps HUD + zero-alloc stream pipeline"
         </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Standing dose returned to clean product floor · 0 uncommitted diffs</div>
       </div>,
     ],
-    readyTiming: '640ms',
+    readyTiming: '540ms',
   },
   {
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
     verb: 'Recombobulating…',
+    palette: 'natural',
     title: (
       <>
         <span className="cc-cyan">Skill Zero</span> automatic skill summons paused
@@ -388,10 +482,10 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
 const SAMPLER_SEQUENCES: Record<SamplerMode, number[]> = {
   heaven: [1, 2, 3],
   hell: [4],
-  ultra: [5, 6],
-  all: [0, 1, 2, 3, 4, 5, 6, 7],
+  ultra: [5, 6, 7, 8],
+  all: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   summon: [0],
-  zero: [7],
+  zero: [9],
 }
 
 function prefersReducedMotion(): boolean {
@@ -406,24 +500,174 @@ function prefersReducedMotion(): boolean {
    the page
    ========================================================================= */
 
+/* =========================================================================
+   Info Tooltip (Clickable & Accessible Popover)
+   ========================================================================= */
+
+interface InfoTooltipProps {
+  content: ReactNode
+  label?: string
+  align?: 'left' | 'right' | 'center'
+  variant?: 'icon' | 'badge'
+  badgeText?: string
+  className?: string
+}
+
+function InfoTooltip({
+  content,
+  label = 'More information',
+  align = 'left',
+  variant = 'icon',
+  badgeText,
+  className = '',
+}: InfoTooltipProps) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number } | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const pad = 14
+
+    // Target width: up to 340px, bounded within viewport - 2*pad
+    const width = Math.min(340, Math.max(260, vw - pad * 2))
+
+    let left = 0
+    if (vw <= 640) {
+      // Mobile: center under trigger or clamp to screen margins
+      const triggerCenter = rect.left + rect.width / 2
+      left = Math.max(pad, Math.min(vw - width - pad, triggerCenter - width / 2))
+    } else {
+      // Desktop: align left, right or center relative to trigger, but clamped to screen
+      if (align === 'right') {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.right - width))
+      } else if (align === 'center') {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.left + rect.width / 2 - width / 2))
+      } else {
+        left = Math.max(pad, Math.min(vw - width - pad, rect.left))
+      }
+    }
+
+    // Vertical placement: prefer below trigger, flip above if overflowing bottom
+    const spaceBelow = vh - rect.bottom
+    const estimatedHeight = 170
+    if (spaceBelow < estimatedHeight && rect.top > estimatedHeight) {
+      setPos({ bottom: vh - rect.top + 8, left, width })
+    } else {
+      setPos({ top: rect.bottom + 8, left, width })
+    }
+  }, [align])
+
+  const toggle = useCallback((e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpen((prev) => {
+      const next = !prev
+      if (next) {
+        requestAnimationFrame(updatePosition)
+      }
+      return next
+    })
+  }, [updatePosition])
+
+  useEffect(() => {
+    if (!open) return
+
+    const handleResizeOrScroll = () => {
+      updatePosition()
+    }
+    const handleClickOutside = (e: globalThis.MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        popoverRef.current && !popoverRef.current.contains(target)
+      ) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResizeOrScroll)
+    window.addEventListener('scroll', handleResizeOrScroll, { passive: true })
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('resize', handleResizeOrScroll)
+      window.removeEventListener('scroll', handleResizeOrScroll)
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open, updatePosition])
+
+  return (
+    <div className={`lp-tooltip-wrap ${className}`.trim()}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={variant === 'badge' ? 'lp-tooltip-badge' : 'lp-tooltip-btn'}
+        onClick={toggle}
+        aria-expanded={open}
+        aria-label={label}
+      >
+        {variant === 'badge' ? (
+          <>
+            <span>{badgeText}</span>
+            <span className="lp-tooltip-mark" aria-hidden="true">ⓘ</span>
+          </>
+        ) : (
+          <span className="lp-tooltip-mark" aria-hidden="true">ⓘ</span>
+        )}
+      </button>
+
+      {open && pos && (
+        <div
+          ref={popoverRef}
+          className="lp-tooltip-popover"
+          role="tooltip"
+          style={{
+            position: 'fixed',
+            left: `${pos.left}px`,
+            width: `${pos.width}px`,
+            ...(pos.top != null ? { top: `${pos.top}px` } : {}),
+            ...(pos.bottom != null ? { bottom: `${pos.bottom}px` } : {}),
+            zIndex: 9999,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="lp-tooltip-body">{content}</div>
+          <button
+            type="button"
+            className="lp-tooltip-close"
+            onClick={() => setOpen(false)}
+            aria-label="Close tooltip"
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
   const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
-  // Three real delivery views: the harness-neutral Agent Plugin installer is
-  // primary, Claude's marketplace flow is tested compatibility, and install.sh
-  // remains the optional launcher-only route. There is no npx path.
-  const [installMode, setInstallMode] = useState<'agent-plugin' | 'claude' | 'sh'>('agent-plugin')
+  const [pluginMode, setPluginMode] = useState<'agent-plugin' | 'claude'>('agent-plugin')
   const [platform, setPlatform] = useState<Platform>('posix')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
-
-  const installNote =
-    installMode === 'agent-plugin'
-      ? (platform === 'windows' ? INSTALL.agentPluginPs1.note : AGENT_PLUGIN_NOTE)
-      : installMode === 'claude'
-        ? CLAUDE_COMPATIBILITY_NOTE
-        : (platform === 'windows' ? INSTALL.shPs1Note : INSTALL.shNote)
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -470,80 +714,100 @@ export default function Landing() {
   }, [activeVerb])
 
   const typeAndSubmitCommand = useCallback(
-    (turnIdx: number, onDone: () => void, charDelay = 28) => {
+    (turnIdx: number, onDone: () => void) => {
       const turn = CLAUDE_TURNS[turnIdx]
       const fullCmd = turn.cmd
       let charIdx = 0
       setCurrentInput('')
 
-      const typeNextChar = () => {
-        if (charIdx < fullCmd.length) {
-          charIdx++
-          setCurrentInput(fullCmd.slice(0, charIdx))
-          animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+      const isHellPalette = turn.palette === 'hell' || turn.id.startsWith('hell')
+
+      const executeTurn = () => {
+        if (isHellPalette) {
+          setHell(true)
         } else {
-          // Pause briefly at end of command (simulating Enter keypress)
-          animTimerRef.current = window.setTimeout(() => {
-            const isHell = turn.id.startsWith('hell')
-            if (isHell) {
-              setHell(true)
-              if (turn.id === 'hell-1') {
-                setShear(true)
-                shearTimerRef.current = window.setTimeout(() => setShear(false), 300)
-              }
-            } else {
-              setHell(false)
-            }
+          setHell(false)
+        }
 
-            // Move command from bottom prompt into top conversation history
-            setCurrentInput('')
-            setHistory((prev) => [
-              ...prev,
-              { turnIdx, showTitle: false, linesCount: 0 },
-            ])
-            // Set ONE single verb for the entire task
-            setActiveVerb(turn.verb)
+        if (turn.shear || turn.id === 'hell-1') {
+          setShear(true)
+          shearTimerRef.current = window.setTimeout(() => setShear(false), 340)
+        }
 
-            // Step 1: Reveal title after initial verb loading
-            animTimerRef.current = window.setTimeout(() => {
+        // Move command from bottom prompt into top conversation history
+        setCurrentInput('')
+        setHistory((prev) => [
+          ...prev,
+          { turnIdx, showTitle: false, linesCount: 0 },
+        ])
+        // Set ONE single verb for the entire task
+        setActiveVerb(turn.verb)
+
+        // Step 1: Deliberate thinking/tool dispatch delay (showing braille spinner)
+        animTimerRef.current = window.setTimeout(() => {
+          setHistory((prev) =>
+            prev.map((item, idx) =>
+              idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+            ),
+          )
+
+          // Step 2: Stream lines one by one with a readable, natural cadence
+          let lineIdx = 0
+          const revealNextLine = () => {
+            if (lineIdx < turn.lines.length) {
+              lineIdx++
               setHistory((prev) =>
                 prev.map((item, idx) =>
-                  idx === prev.length - 1 ? { ...item, showTitle: true } : item,
+                  idx === prev.length - 1
+                    ? { ...item, linesCount: lineIdx }
+                    : item,
                 ),
               )
-
-              // Step 2: Stream lines one by one while keeping the SAME verb
-              let lineIdx = 0
-              const revealNextLine = () => {
-                if (lineIdx < turn.lines.length) {
-                  lineIdx++
-                  setHistory((prev) =>
-                    prev.map((item, idx) =>
-                      idx === prev.length - 1
-                        ? { ...item, linesCount: lineIdx }
-                        : item,
-                    ),
-                  )
-                  if (lineIdx < turn.lines.length) {
-                    animTimerRef.current = window.setTimeout(revealNextLine, 360)
-                  } else {
-                    // Finished all lines in this turn -> Ready state (pause spinner animation)
-                    setActiveVerb('')
-                    animTimerRef.current = window.setTimeout(
-                      onDone,
-                      isHell ? 2800 : 1800,
-                    )
-                  }
-                }
+              if (lineIdx < turn.lines.length) {
+                animTimerRef.current = window.setTimeout(
+                  revealNextLine,
+                  turn.automated ? 580 : 720,
+                )
+              } else {
+                // Finished all lines in this turn -> Ready state (pause spinner animation)
+                setActiveVerb('')
+                const isDense = turn.lines.length > 2 || isHellPalette || turn.id.startsWith('ultra')
+                // Natural pause after turn completes to give reader time to read the result
+                animTimerRef.current = window.setTimeout(
+                  onDone,
+                  isDense ? 3600 : 2800,
+                )
               }
+            }
+          }
 
-              animTimerRef.current = window.setTimeout(revealNextLine, 360)
-            }, 440)
-          }, 220)
-        }
+          animTimerRef.current = window.setTimeout(revealNextLine, 600)
+        }, turn.automated ? 680 : 950)
       }
 
-      animTimerRef.current = window.setTimeout(typeNextChar, 120)
+      if (turn.automated) {
+        // Automated multi-agent swarm action: dispatches without human typing delay
+        animTimerRef.current = window.setTimeout(executeTurn, 480)
+      } else {
+        // Human typing simulation
+        const typeNextChar = () => {
+          if (charIdx < fullCmd.length) {
+            const char = fullCmd[charIdx]
+            charIdx++
+            setCurrentInput(fullCmd.slice(0, charIdx))
+            // Natural human cadence: tiny hesitation on space, slash, quotes or punctuation
+            const isPunct = char === ' ' || char === '/' || char === '-' || char === '\'' || char === '"' || char === '.'
+            const charDelay = isPunct ? 68 : 34 + (charIdx % 4) * 5
+            animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
+          } else {
+            // Pause naturally at end of command before "pressing Enter" to let user read what was typed
+            animTimerRef.current = window.setTimeout(executeTurn, 550)
+          }
+        }
+
+        // Initial breath before typing starts
+        animTimerRef.current = window.setTimeout(typeNextChar, 500)
+      }
     },
     [],
   )
@@ -574,7 +838,7 @@ export default function Landing() {
         if (seqPos >= indices.length) {
           animTimerRef.current = window.setTimeout(() => {
             runSequence(indices)
-          }, 4500)
+          }, 6000)
           return
         }
         const turnIdx = indices[seqPos]
@@ -582,7 +846,7 @@ export default function Landing() {
         typeAndSubmitCommand(turnIdx, nextStep)
       }
 
-      animTimerRef.current = window.setTimeout(nextStep, 350)
+      animTimerRef.current = window.setTimeout(nextStep, 480)
     },
     [clearTimers, typeAndSubmitCommand],
   )
@@ -601,10 +865,21 @@ export default function Landing() {
     selectSampler(samplerMode)
   }, [selectSampler, samplerMode])
 
+  const location = useLocation()
+  const initialTabHandledRef = useRef<string | null>(null)
+
   useEffect(() => {
-    selectSampler('heaven')
-    return clearTimers
-  }, [selectSampler, clearTimers])
+    const searchParams = new URLSearchParams(location.search)
+    const tabParam = (location.state as { tab?: string } | null)?.tab ?? searchParams.get('tab')
+    const validModes: SamplerMode[] = ['all', 'summon', 'heaven', 'hell', 'ultra', 'zero']
+    const mode = tabParam && validModes.includes(tabParam as SamplerMode) ? (tabParam as SamplerMode) : 'heaven'
+
+    const key = tabParam ?? '__default__'
+    if (initialTabHandledRef.current !== key) {
+      initialTabHandledRef.current = key
+      selectSampler(mode)
+    }
+  }, [location.search, location.state, selectSampler])
 
   useEffect(() => {
     if (bodyRef.current && !userScrolledUp) {
@@ -648,7 +923,6 @@ export default function Landing() {
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
   const pickRung = useCallback((id: RungId) => setRung(id), [])
 
-  const location = useLocation()
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     const section = (location.state as { scrollTo?: string } | null)?.scrollTo ?? searchParams.get('section')
@@ -744,14 +1018,25 @@ export default function Landing() {
 
             <div className="lp-dose sh-panel">
               <div className="lp-dose__head">
-                <span className="sh-label">STANDING DOSE · MEASURED</span>
+                <div className="lp-dose__title-wrap">
+                  <span className="sh-label">STANDING DOSE · MEASURED</span>
+                  <InfoTooltip
+                    align="left"
+                    label="How standing dose is measured"
+                    content={
+                      <>
+                        <p>
+                          <b>Standing Dose Tax</b>: Every skill not needed for a turn is still context. The model reads and weighs it before generating tokens. Skill Zero cuts this to the minimum product floor.
+                        </p>
+                        <p style={{ marginTop: 6 }}>
+                          {DOSES.note}
+                        </p>
+                      </>
+                    }
+                  />
+                </div>
                 <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
               </div>
-              <p className="lp-dose__body">
-                Every skill you don’t need is still context. The model still has to read it, weigh it,
-                decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
-                real token. Skill Zero cuts it at launch.
-              </p>
               <div className="lp-bars">
                 <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
                 <DoseBar
@@ -768,7 +1053,6 @@ export default function Landing() {
                   strong
                 />
               </div>
-              <p className="lp-dose__foot">{DOSES.note}</p>
             </div>
           </div>
 
@@ -791,6 +1075,10 @@ export default function Landing() {
       {/* ------------------------------------------------------------------ 01 */}
       <section className="lp-section" id="doors">
         <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
+        <p className="lp-section__lede">
+          Pick your harness door. Every door launches with zero unneeded standing dose, mounts{' '}
+          <code>/summon</code> natively into your session, and leaves your repository byte-identical.
+        </p>
 
         <div className="lp-doors">
           {DOORS.map((d) => {
@@ -799,7 +1087,7 @@ export default function Landing() {
               <button
                 key={d.id}
                 type="button"
-                className={`lp-door${on ? ' is-on' : ''}`}
+                className={`lp-door lp-door--${d.id}${on ? ' is-on' : ''}`}
                 aria-pressed={on}
                 onClick={() => setPickedId(d.id)}
               >
@@ -812,7 +1100,9 @@ export default function Landing() {
                 />
                 <span className="lp-door__pkg">{d.pkg}</span>
                 <span className="lp-door__harness">{d.harness}</span>
-                <span className="sh-chip lp-door__chip">{d.status}</span>
+                <span className={`sh-chip lp-door__chip${d.status === 'flagship' ? ' lp-door__chip--flagship' : ''}`}>
+                  {d.status}
+                </span>
               </button>
             )
           })}
@@ -821,139 +1111,67 @@ export default function Landing() {
         <div className="lp-install">
           <div className="lp-install__panel">
             <div className="lp-install__head">
-              <div className="lp-install__title">
-                <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
-                <p className="lp-install__prose">
-                  One portable package for any Agent Plugins client. The installer prints the
-                  plugin and marketplace paths; it does not guess at or rewrite a harness config.
-                </p>
+              <div className="lp-install__title-wrap">
+                <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
+                <InfoTooltip
+                  align="left"
+                  label="Launcher installation details"
+                  content={
+                    <>
+                      <p>
+                        <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
+                      </p>
+                      <p style={{ marginTop: 6 }}>
+                        Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+                      </p>
+                    </>
+                  }
+                />
               </div>
               <div className="lp-install__controls">
                 <PlatformToggle platform={platform} onToggle={setPlatform} />
-                <div className="lp-seg" role="group" aria-label="Install route">
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'agent-plugin'}
-                    onClick={() => setInstallMode('agent-plugin')}
-                  >
-                    Agent Plugin
-                  </button>
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'claude'}
-                    onClick={() => setInstallMode('claude')}
-                  >
-                    Claude tested
-                  </button>
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'sh'}
-                    onClick={() => setInstallMode('sh')}
-                  >
-                    launcher-only
-                  </button>
-                </div>
               </div>
             </div>
-            {installMode === 'agent-plugin' ? (
-              <CommandBlock
-                cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
-                sigil={PLATFORM_COMMANDS[platform].sigil}
-                tone="mint"
-                copied={copied === 'install-agent-plugin'}
-                onCopy={() =>
-                  copy(
-                    platform === 'windows'
-                      ? INSTALL.agentPluginPs1.command
-                      : AGENT_PLUGIN_COMMAND,
-                    'install-agent-plugin',
-                  )
-                }
-                label="Agent Plugin installer command"
-              />
-            ) : installMode === 'claude' ? (
-              <div className="lp-install__lines">
-                {CLAUDE_COMPATIBILITY.map((line, i) => (
-                  <CommandBlock
-                    key={line}
-                    cmd={line}
-                    sigil="›"
-                    tone={i === 0 ? 'violet' : 'mint'}
-                    copied={copied === `install-claude-${i}`}
-                    onCopy={() => copy(line, `install-claude-${i}`)}
-                    label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
-                  />
-                ))}
-              </div>
-            ) : (
-              <CommandBlock
-                cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
-                sigil={PLATFORM_COMMANDS[platform].sigil}
-                tone="mint"
-                copied={copied === 'install-launchers'}
-                onCopy={() =>
-                  copy(
-                    platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh,
-                    'install-launchers',
-                  )
-                }
-                label="launcher-only install command"
-              />
-            )}
-            <p className="lp-install__note">{installNote}</p>
-            {installMode === 'agent-plugin' ? (
-              <p className="lp-install__note">
-                Pinned compatibility paths: <b>Codex · Grok · Hermes · Claude · Pi</b>. Other
-                conformant clients may load the same directory through their own registration UI.
-              </p>
-            ) : null}
+
+            <p className="lp-install__prose">
+              Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
+            </p>
+
+            <CommandBlock
+              cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
+              sigil={PLATFORM_COMMANDS[platform].sigil}
+              tone="mint"
+              copied={copied === 'install-launchers'}
+              onCopy={() =>
+                copy(
+                  platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh,
+                  'install-launchers',
+                )
+              }
+              label="launcher-only install command"
+            />
+            <p className="lp-install__note">
+              {platform === 'windows' ? INSTALL.shPs1Note : INSTALL.shNote}
+            </p>
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              {installMode === 'sh' ? 'HOW TO LAUNCH' : 'THEN, IN THE SESSION'}
+              STEP 02 · LAUNCH {picked.harness.toUpperCase()}
             </div>
-            {installMode !== 'sh' ? (
-              <>
-                <CommandBlock
-                  cmd={MECHANIC.floor}
-                  sigil="›"
-                  tone="violet"
-                  copied={copied === 'launch'}
-                  onCopy={() => copy(MECHANIC.floor, 'launch')}
-                  label="summon command"
-                />
-                <p className="lp-install__prose">
-                  Nothing to launch here. The Agent Plugin puts five commands in the session you
-                  are already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
-                  <code>/skill-heaven</code>, <code>/skill-hell</code>, and <code>/skill-ultra</code>{' '}
-                  — and the summon engine ships inside it. Claude's two-line flow above is the
-                  tested compatibility route for that same package.
-                </p>
-              </>
-            ) : (
-              <>
-                <CommandBlock
-                  cmd={picked.launch}
-                  sigil="$"
-                  tone="violet"
-                  copied={copied === 'launch'}
-                  onCopy={() => copy(picked.launch, 'launch')}
-                  label="launch command"
-                />
-                <p className="lp-install__prose">{doorNote(picked)}</p>
-              </>
-            )}
+            <p className="lp-install__prose">{doorNote(picked)}</p>
+            <CommandBlock
+              cmd={picked.launch}
+              sigil="$"
+              tone="violet"
+              copied={copied === 'launch'}
+              onCopy={() => copy(picked.launch, 'launch')}
+              label="launch command"
+            />
           </div>
         </div>
         <p className="lp-fineprint">
-          WORK IN PROGRESS · v0 — the Agent Plugin installer is harness-neutral; Claude’s
-          marketplace flow is tested compatibility. The five launcher doors are source-delivered
-          separately through <code>install.sh</code> (or <code>install.ps1</code> on Windows). Neither path is on npm. Uninstall is one
-          script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, see the <b>Agent Plugin</b> in the Demo section below.
         </p>
       </section>
 
@@ -961,9 +1179,94 @@ export default function Landing() {
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
         <p className="lp-section__lede">
-          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> any skill into context on demand.
-          Explore the entropy curve from <code>/skill-zero</code> up to <code>/skill-ultra</code>.
+          Watch the live multi-agent simulation below, or mount <code>{MECHANIC.floor}</code> into your existing session with the portable Agent Plugin.
         </p>
+
+        {/* In-Session Delivery / Plugin Install Panels */}
+        <div className="lp-plugin-box sh-panel">
+          <div className="lp-plugin-box__head">
+            <div className="lp-plugin-box__title-wrap">
+              <span className="sh-label">IN-SESSION DELIVERY · LOAD INTO YOUR HARNESS</span>
+              <InfoTooltip
+                align="left"
+                label="Agent Plugin details"
+                content={
+                  <>
+                    <p>
+                      <b>Agent Plugins standard</b>: Pinned compatibility paths for Codex · Grok · Hermes · Claude · Pi. The client manages its own registration and cache lifecycle.
+                    </p>
+                    <p style={{ marginTop: 6 }}>
+                      Uninstall script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+                    </p>
+                  </>
+                }
+              />
+            </div>
+            <div className="lp-plugin-box__controls">
+              <PlatformToggle platform={platform} onToggle={setPlatform} />
+              <div className="lp-seg" role="group" aria-label="Session plugin route">
+                <button
+                  type="button"
+                  className={`lp-seg__btn${pluginMode === 'agent-plugin' ? ' is-on' : ''}`}
+                  aria-pressed={pluginMode === 'agent-plugin'}
+                  onClick={() => setPluginMode('agent-plugin')}
+                >
+                  Agent Plugin (All Clients)
+                </button>
+                <button
+                  type="button"
+                  className={`lp-seg__btn${pluginMode === 'claude' ? ' is-on' : ''}`}
+                  aria-pressed={pluginMode === 'claude'}
+                  onClick={() => setPluginMode('claude')}
+                >
+                  Claude tested
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-plugin-box__content">
+            {pluginMode === 'agent-plugin' ? (
+              <>
+                <CommandBlock
+                  cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
+                  sigil={PLATFORM_COMMANDS[platform].sigil}
+                  tone="mint"
+                  copied={copied === 'install-agent-plugin'}
+                  onCopy={() =>
+                    copy(
+                      platform === 'windows'
+                        ? INSTALL.agentPluginPs1.command
+                        : AGENT_PLUGIN_COMMAND,
+                      'install-agent-plugin',
+                    )
+                  }
+                  label="Agent Plugin installer command"
+                />
+                <p className="lp-plugin-box__note">
+                  {platform === 'windows' ? INSTALL.agentPluginPs1.note : AGENT_PLUGIN_NOTE}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="lp-install__lines">
+                  {CLAUDE_COMPATIBILITY.map((line, i) => (
+                    <CommandBlock
+                      key={line}
+                      cmd={line}
+                      sigil="›"
+                      tone={i === 0 ? 'violet' : 'mint'}
+                      copied={copied === `install-claude-${i}`}
+                      onCopy={() => copy(line, `install-claude-${i}`)}
+                      label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
+                    />
+                  ))}
+                </div>
+                <p className="lp-plugin-box__note">{CLAUDE_COMPATIBILITY_NOTE}</p>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="lp-sampler-ctrls">
           <div className="lp-sampler-tabs" role="group" aria-label="Terminal Sampler Modes">
@@ -1010,9 +1313,27 @@ export default function Landing() {
               /skill-zero
             </button>
           </div>
-          <button type="button" className="lp-ghost" onClick={replay}>
-            ↻ REPLAY
-          </button>
+          <div className="lp-sampler-actions">
+            <InfoTooltip
+              variant="badge"
+              badgeText="PROTOTYPE NOTICE"
+              align="right"
+              label="Prototype & simulation notice"
+              content={
+                <>
+                  <p>
+                    <b>Active Research Prototype</b> — The Hell/Heaven benchmark is under construction and not yet measured; consider the working product as such.
+                  </p>
+                  <p style={{ marginTop: 6 }}>
+                    For demo purposes, this terminal simulates and reenacts the live product mechanics and dual-track orchestration.
+                  </p>
+                </>
+              }
+            />
+            <button type="button" className="lp-ghost" onClick={replay}>
+              ↻ REPLAY
+            </button>
+          </div>
         </div>
 
         {/* Claude Code Terminal TUI Mock */}
@@ -1023,14 +1344,12 @@ export default function Landing() {
         >
           {/* Header Block: authentic Claude ASCII mark + metadata */}
           <div className="lp-cc-header">
-            <pre className="lp-cc-logo-art" aria-hidden="true">{` ▐▛███▜▌
-▝▜█████▛▘
-  ▘▘ ▝▝`}</pre>
+            <ClaudeTerminalLogo className="lp-cc-logo-art" />
             <div className="lp-cc-header-text">
               <div>
                 <b>Claude Code</b> <span className="lp-cc-dim">{picked.status === 'flagship' ? 'v2.1.198' : 'v2.1.198 · plugin'}</span>
               </div>
-              <div className="lp-cc-dim">Claude 3.7 Sonnet with thinking · Claude Max</div>
+              <div className="lp-cc-dim">Claude Opus 5 with thinking · Claude Max</div>
               <div className="lp-cc-dim">~/gaia-skill-tree</div>
             </div>
           </div>
@@ -1042,7 +1361,9 @@ export default function Landing() {
               return (
                 <div className="lp-cc-turn" key={hIdx}>
                   <div className="lp-cc-prompt-row">
-                    <span className="lp-cc-prompt-glyph">❯</span>
+                    <span className="lp-cc-prompt-glyph">
+                      {turn.automated ? (turn.palette === 'hell' ? '◈' : '♛') : '❯'}
+                    </span>
                     <span className="lp-cc-user-cmd">{turn.cmd}</span>
                   </div>
 
@@ -1096,9 +1417,11 @@ export default function Landing() {
           <div className="lp-cc-bottom">
             <div className="lp-cc-rule" />
             <div className="lp-cc-input-line">
-              <span className="lp-cc-prompt-glyph">❯</span>
-              <span className="lp-cc-input-text">{currentInput}</span>
-              <span className="lp-cc-cursor" />
+              <span className="lp-cc-prompt-glyph" aria-hidden="true">❯</span>
+              <span className="lp-cc-input-text">
+                {currentInput}
+                <span className="lp-cc-cursor" aria-hidden="true" />
+              </span>
             </div>
             <div className="lp-cc-rule" />
             <div className="lp-cc-status-row">
@@ -1129,103 +1452,156 @@ export default function Landing() {
         </p>
 
         <div className="lp-beats">
-          <div className="lp-beat">
-            <div className="sh-label lp-beat__n">BEAT 01</div>
-            <p>
-              <b>Installing is permanent.</b> It is a diff you own forever.
-            </p>
+          <div className="lp-beat lp-beat--warn">
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 01 · ON DISK</span>
+              <span className="lp-beat__badge">PERMANENT</span>
+            </div>
+            <h4 className="lp-beat__title">Installing is permanent.</h4>
+            <p>It is a diff you own forever. Loads on every turn whether needed or not.</p>
           </div>
           <div className="lp-beat lp-beat--violet">
-            <div className="sh-label lp-beat__n">BEAT 02</div>
-            <p>
-              <b>Summoning is borrowed.</b> The loadout lives for one session.
-            </p>
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 02 · IN MEMORY</span>
+              <span className="lp-beat__badge">DISPOSABLE</span>
+            </div>
+            <h4 className="lp-beat__title">Summoning is borrowed.</h4>
+            <p>The loadout lives exclusively for this one active process session.</p>
           </div>
           <div className="lp-beat lp-beat--mint">
-            <div className="sh-label lp-beat__n">BEAT 03</div>
-            <p>
-              <b>Nothing is left behind.</b> The tree on disk is byte-identical.
-            </p>
+            <div className="lp-beat__head">
+              <span className="sh-label lp-beat__n">BEAT 03 · ZERO TRACE</span>
+              <span className="lp-beat__badge">CLEAN TREE</span>
+            </div>
+            <h4 className="lp-beat__title">Nothing left behind.</h4>
+            <p>The tree on disk remains 100% byte-identical after the session exits.</p>
           </div>
         </div>
 
         <div className="lp-story">
           <div className="lp-story__disk">
             <div className="lp-story__head">
-              <span className="sh-label">ON DISK · YOUR REPO</span>
-              <span className="sh-chip">FROZEN</span>
+              <div className="lp-story__title-wrap">
+                <span className="lp-story__indicator lp-story__indicator--frozen" aria-hidden="true" />
+                <span className="sh-label">ON DISK · YOUR REPO</span>
+              </div>
+              <span className="sh-chip sh-chip--dim">FROZEN</span>
             </div>
-            <pre className="lp-tree">{`my-project/
-├─ .claude/
-│  └─ skills/
-│     ├─ code-review/
-│     ├─ tdd/
-│     └─ diagnose/
-├─ src/
-├─ CLAUDE.md
-└─ package.json`}</pre>
+            <div className="lp-tree-wrap">
+              <pre className="lp-tree">{`my-project/
+├── .claude/
+│   └── skills/          # standing cost paid every turn
+│       ├── code-review/
+│       ├── tdd/
+│       └── diagnose/
+├── src/
+├── CLAUDE.md
+└── package.json`}</pre>
+            </div>
             <p className="lp-story__foot">
-              3 skills committed · every one of them loads on every turn ·{' '}
-              <b>0 diffs this session</b>
+              <span className="lp-story__foot-tag">STANDING BLOAT</span>
+              <span>3 skills committed · loads every turn · <b>0 diffs this session</b></span>
             </p>
           </div>
 
           <div className="lp-story__session">
             <div className="lp-story__head">
-              <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
-              <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
+              <div className="lp-story__title-wrap">
+                <span className="lp-story__indicator lp-story__indicator--live" aria-hidden="true" />
+                <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
+              </div>
+              <div className="lp-story__head-badges">
+                <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
+                <InfoTooltip
+                  align="right"
+                  label="Session lifecycle information"
+                  content={
+                    <p>
+                      Click any row to mount or drop it for this session. Rows marked <b>skill-tree</b> were never installed here — standing dose recomputes off the benchmark floor of {fmt(DOSES.benchmarkFloor)} tok.
+                    </p>
+                  }
+                />
+              </div>
             </div>
+
             <div className="lp-counters">
-              <Counter label="MOUNTED" value={fmt(mounted.length)} />
-              <Counter label="ADDED" value={fmt(nAdded)} tone="cyan" />
-              <Counter label="DROPPED" value={fmt(nDropped)} tone="amber" />
-              <Counter label="STANDING" value={fmt(standing)} tone="mint" />
+              <Counter label="MOUNTED" value={fmt(mounted.length)} unit="skills" />
+              <Counter label="ADDED (SUMMON)" value={fmt(nAdded)} tone="cyan" unit="added" />
+              <Counter label="DROPPED" value={fmt(nDropped)} tone="amber" unit="evicted" />
+              <Counter label="STANDING DOSE" value={fmt(standing)} tone="mint" unit="tok" />
             </div>
+
+            <div className="lp-rows-header">
+              <span className="lp-rows-header__cell">STATE</span>
+              <span className="lp-rows-header__cell">SKILL IDENTIFIER</span>
+              <span className="lp-rows-header__cell">SOURCE</span>
+              <span className="lp-rows-header__cell" style={{ textAlign: 'right' }}>COST</span>
+            </div>
+
             <div className="lp-rows">
               {SESSION_ROWS.map((r) => {
                 const on = isOn(r.id)
-                const src = on ? r.origin : r.origin === 'repo' ? 'dropped' : 'available'
+                const isSummon = r.origin === 'skill-tree'
+                const srcLabel = on ? (isSummon ? 'SUMMONED' : 'REPO') : (r.origin === 'repo' ? 'DROPPED' : 'OFFERED')
                 return (
                   <button
                     key={r.id}
                     type="button"
-                    className={`lp-row${on ? ' is-on' : ''} lp-row--${r.origin}`}
+                    className={`lp-row${on ? ' is-on' : ' is-off'}${isSummon ? ' lp-row--summon' : ' lp-row--repo'}`}
                     aria-pressed={on}
                     onClick={() => toggleRow(r.id)}
                   >
                     <span className="lp-row__mark" aria-hidden="true">
                       {on ? '●' : '○'}
                     </span>
-                    <span className="lp-row__name">{r.id}</span>
-                    <span className="lp-row__src">{src}</span>
-                    <span className="lp-row__tok">{on ? fmt(r.tokens) : '—'}</span>
+                    <span className="lp-row__name">
+                      <code>{r.id}</code>
+                    </span>
+                    <span className={`lp-row__chip lp-row__chip--${srcLabel.toLowerCase()}`}>
+                      {srcLabel}
+                    </span>
+                    <span className="lp-row__tok">
+                      {on ? (
+                        <span className="lp-row__tok-val">+{fmt(r.tokens)} <small>tok</small></span>
+                      ) : (
+                        <span className="lp-row__tok-dim">—</span>
+                      )}
+                    </span>
                   </button>
                 )
               })}
             </div>
+
             <p className="lp-story__foot">
-              Click any row to mount or drop it. Rows marked <b>skill-tree</b> were never installed
-              here — standing dose recomputes off the benchmark floor of{' '}
-              {fmt(DOSES.benchmarkFloor)} tok.
+              <span className="lp-story__foot-tag lp-story__foot-tag--interactive">INTERACTIVE</span>
+              <span>Click any skill row above to simulate real-time loadout and dose recomputation.</span>
             </p>
           </div>
         </div>
 
         <div className="lp-verdict">
-          <div className="lp-verdict__cmd">
-            <span className="lp-k-ok">$</span>
-            <span className="lp-verdict__dim">git status</span>
-            <span className="lp-verdict__arrow" aria-hidden="true">
-              →
-            </span>
-            <span>nothing to commit, working tree clean</span>
+          <div className="lp-verdict__top">
+            <div className="lp-verdict__cmd">
+              <span className="lp-k-ok">$</span>
+              <span className="lp-verdict__term">git status</span>
+              <span className="lp-verdict__arrow" aria-hidden="true">→</span>
+              <span className="lp-verdict__clean">
+                <svg className="lp-verdict__check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8.5l3.5 3.5 6.5-6.5"/></svg>
+                nothing to commit, working tree clean
+              </span>
+            </div>
+            <span className="sh-chip sh-chip--live">ZERO MUTATION</span>
           </div>
-          <p className="lp-verdict__line" aria-live="polite">
-            {verdict}
-          </p>
+
+          <div className="lp-verdict__banner">
+            <div className="lp-verdict__icon" aria-hidden="true">✓</div>
+            <p className="lp-verdict__line" aria-live="polite">
+              {verdict}
+            </p>
+          </div>
+
           <p className="lp-verdict__foot">
-            composes → execs → exits. The only writes happened inside <b>{SESSION_DIR}</b>, and it
-            died with the process. Nothing stashed, nothing restored, nothing to undo.
+            <b>P3 invariant</b>: composes → execs → exits. The only writes happened inside disposable <code>{SESSION_DIR}</code>, which died when the process exited. Nothing stashed, nothing restored, zero dirty git state.
           </p>
         </div>
       </section>
@@ -1369,29 +1745,25 @@ export default function Landing() {
           })}
         </div>
 
-        <div className="sh-note lp-ann">
-          <span className="lp-ann__mark" aria-hidden="true">
-            ▸
-          </span>
-          <span>
-            STAMPS · <b>heaven-native</b> and <b>hell-safe</b> are the two halves of one question —
-            does a skill still carry a gap when few are in context, and does it stay safe when many
-            are. {STAMP_ROUTING_NOTE}{' '}
-            <a className="lp-ann__link" href={HOUSES[0].href} target="_blank" rel="noreferrer">
-              Follow the HH Index ↗
-            </a>
-          </span>
-        </div>
-
         {/* the ladder */}
         <div className="lp-ladder">
           <div className="lp-ladder__head">
-            <div>
-              <span className="sh-label">
-                THE LADDER · SKILL ENTROPY · zero · low · med · high · xhigh · max · ultra
-              </span>
-              <span className="sh-chip sh-chip--wip lp-ladder__wip">WIP · PROVISIONAL</span>
-              <p className="lp-ladder__measure">{LADDER_MEASURE}</p>
+            <div className="lp-ladder__title-wrap">
+              <span className="sh-label">THE LADDER · SKILL ENTROPY SCALE</span>
+              <InfoTooltip
+                variant="badge"
+                badgeText="WIP · PROVISIONAL"
+                align="left"
+                label="Entropy Ladder details"
+                content={
+                  <>
+                    <p><b>Skill Entropy Measure</b>: {LADDER_MEASURE}</p>
+                    <p style={{ marginTop: 6 }}><b>Calibration</b>: {LADDER_WIP}</p>
+                    <p style={{ marginTop: 6 }}><b>Routing</b>: {STAMP_ROUTING_NOTE}</p>
+                    <p style={{ marginTop: 6 }}><b>One MCP</b>: All rungs share the same <code>/summon</code> mechanic. A rung specifies entropy direction, never a hard count.</p>
+                  </>
+                }
+              />
             </div>
             <div className="lp-ladder__band">
               <img
@@ -1425,24 +1797,31 @@ export default function Landing() {
                   onClick={() => pickRung(r.id)}
                 >
                   <span className="lp-stop__detent" aria-hidden="true" />
-                  <span className="lp-stop__id">{r.id}</span>
-                  <span className="lp-stop__def">{opensHere ? 'opens' : ' '}</span>
+                  <div className="lp-stop__meta">
+                    <span className="lp-stop__id">{r.id}</span>
+                    <span className="lp-stop__def">{opensHere ? 'OPEN' : r.crown ? 'CROWN' : ' '}</span>
+                  </div>
                 </button>
               )
             })}
           </div>
 
           <div className="lp-ladder__read" aria-live="polite">
-            <div className="lp-ladder__count">
-              <span className="lp-ladder__n" style={{ color: activeSurface.hue }}>
-                {DIRECTION_WORD[activeRung.direction]}
-              </span>
-              <span className="sh-label">{activeRung.position}</span>
+            <div className="lp-ladder__status-card">
+              <div className="lp-ladder__status-head">
+                <span className="lp-ladder__dir-badge" style={{ color: activeSurface.hue, borderColor: activeSurface.hue }}>
+                  {DIRECTION_WORD[activeRung.direction]}
+                </span>
+                <span className="lp-ladder__rung-chip">RUNG: <b>{activeRung.id}</b></span>
+                <span className="lp-ladder__pos-text">({activeRung.position})</span>
+              </div>
+              <p className="lp-ladder__note">{activeRung.note}</p>
             </div>
-            <p className="lp-ladder__note">{activeRung.note}</p>
           </div>
+
           <p className="lp-ladder__wipnote">
-            <span className="sh-chip sh-chip--wip">WIP</span> {LADDER_WIP}
+            <span className="sh-chip sh-chip--wip">BENCHMARK CALIBRATION</span>
+            <span>{LADDER_WIP}</span>
           </p>
         </div>
 
@@ -1451,10 +1830,7 @@ export default function Landing() {
             ▨
           </span>
           <span>
-            ONE MCP · Heaven and Hell are the same summon pointed two ways along skill entropy. A
-            rung names a direction and a position, never a count, and <b>{MECHANIC.floor}</b> still
-            works by hand at every rung, including <b>zero</b>. Rungs are discrete stops, never a
-            continuous fader. Nothing on the line refuses.
+            <b>ONE SHARED MCP · FOUR SURFACES</b>: Heaven and Hell operate the same summon engine along the skill entropy scale. <code>{MECHANIC.floor}</code> is always callable by hand at every rung.
           </span>
         </div>
       </section>
@@ -1642,15 +2018,20 @@ function Counter({
   label,
   value,
   tone,
+  unit,
 }: {
   label: string
   value: string
   tone?: 'cyan' | 'amber' | 'mint'
+  unit?: string
 }) {
   return (
-    <div className="lp-counter">
-      <div className="sh-label">{label}</div>
-      <div className={`lp-counter__v${tone ? ` lp-counter__v--${tone}` : ''}`}>{value}</div>
+    <div className={`lp-counter${tone ? ` lp-counter--${tone}` : ''}`}>
+      <div className="sh-label lp-counter__label">{label}</div>
+      <div className={`lp-counter__v${tone ? ` lp-counter__v--${tone}` : ''}`}>
+        {value}
+        {unit && <span className="lp-counter__u">{unit}</span>}
+      </div>
     </div>
   )
 }
