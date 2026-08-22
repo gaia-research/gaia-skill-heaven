@@ -1054,6 +1054,37 @@
   color: rgba(23, 22, 24, 0.7);
 }
 
+/* Action detail blocks (Grill-Me question & Impeccable variations) */
+.lp-cc-block {
+  margin: 4px 0 3px 14px;
+  padding: 6px 10px;
+  border-left: 2px solid rgba(238, 235, 230, 0.16);
+  background: rgba(238, 235, 230, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.lp-cc-block--heaven {
+  border-left-color: var(--sh-heaven, #6f96d8);
+}
+.lp-cc-block--hell {
+  border-left-color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-subhead {
+  color: #eeebe6;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.lp-cc-term.is-hell .lp-cc-block {
+  background: rgba(23, 22, 24, 0.05);
+  border-left-color: var(--sh-hell, #c89a3f);
+}
+.lp-cc-term.is-hell .lp-cc-subhead {
+  color: #171618;
+}
+
 /* Working row */
 .lp-cc-working-row {
   margin-top: 4px;

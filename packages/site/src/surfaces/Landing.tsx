@@ -186,7 +186,21 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         tokens="+860 tok"
         tone="violet"
       />,
-      '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
+      <div className="lp-cc-block lp-cc-block--heaven" key="grill-q">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [mattpocock/grill-me]</span> What is the core conversion goal for this SaaS landing page?
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;1. Developer self-serve signups (frictionless)</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;2. Enterprise sales demo bookings (high touch)</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--heaven" key="impeccable-v">
+        <div className="lp-cc-subhead">
+          <span className="cc-cyan">◆ [pbakaus/impeccable]</span> 3 visual variations drafted for "SaaS Landing Page":
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation A (Linear-dark): High-density hairlines, mono tags, dark void</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation B (Editorial-warm): Washed charcoal, bold display, warm bone</div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Variation C (Kinetic-prism): Refracted spectrum accents, interactive canvas</div>
+      </div>,
     ],
     readyTiming: '480ms',
   },
@@ -215,7 +229,20 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
         tokens="+515 tok"
         tone="amber"
       />,
-      '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
+      <div className="lp-cc-block lp-cc-block--hell" key="cso-detect">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [garrytan/cso]</span> Detected 2 CVE vulnerabilities in auth token verification & regex parser
+        </div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Isolated prototype pollution in session handler</div>
+      </div>,
+      <div className="lp-cc-block lp-cc-block--hell" key="debug-fix">
+        <div className="lp-cc-subhead">
+          <span className="cc-amber">◈ [obra/systematic-debugging]</span> Patched src/auth/jwt.ts · 38/38 tests green
+        </div>
+        <div className="lp-cc-dim">
+          &nbsp;&nbsp;<span className="cc-green">✓</span> Pushed branch <span className="cc-file">fix/cve-auth-sanitize</span> · Draft PR #142 opened
+        </div>
+      </div>,
     ],
     readyTiming: '680ms',
   },
