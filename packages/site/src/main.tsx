@@ -5,7 +5,6 @@ import { VariationHeroA } from './variations/VariationHeroA'
 import Instrument from './surfaces/Hero'
 import Landing from './surfaces/Landing'
 import './styles/system.css'
-import './styles/tokens.css'
 
 // HashRouter so the site works on any static host with no server rewrites.
 //
