@@ -599,20 +599,10 @@ export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
   const picked = DOORS.find((d) => d.id === pickedId) ?? DOORS[0]
-  // Three real delivery views: the harness-neutral Agent Plugin installer is
-  // primary, Claude's marketplace flow is tested compatibility, and install.sh
-  // remains the optional launcher-only route. There is no npx path.
-  const [installMode, setInstallMode] = useState<'agent-plugin' | 'claude' | 'sh'>('agent-plugin')
+  const [pluginMode, setPluginMode] = useState<'agent-plugin' | 'claude'>('agent-plugin')
   const [platform, setPlatform] = useState<Platform>('posix')
   const [copied, setCopied] = useState('')
   const copyTimer = useRef<number | undefined>(undefined)
-
-  const installNote =
-    installMode === 'agent-plugin'
-      ? (platform === 'windows' ? INSTALL.agentPluginPs1.note : AGENT_PLUGIN_NOTE)
-      : installMode === 'claude'
-        ? CLAUDE_COMPATIBILITY_NOTE
-        : (platform === 'windows' ? INSTALL.shPs1Note : INSTALL.shNote)
 
   const copy = useCallback((text: string, key: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {})
@@ -1058,14 +1048,14 @@ export default function Landing() {
             <div className="lp-install__head">
               <div className="lp-install__title">
                 <div className="lp-install__title-wrap">
-                  <span className="sh-label">STEP 01 · INSTALL THE ENGINE</span>
+                  <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
                   <InfoTooltip
                     align="left"
-                    label="Installation compatibility details"
+                    label="Launcher installation details"
                     content={
                       <>
                         <p>
-                          <b>Pinned compatibility</b>: Codex · Grok · Hermes · Claude · Pi. Other conformant clients load the same directory through their registration UI.
+                          <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
                         </p>
                         <p style={{ marginTop: 6 }}>
                           Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
@@ -1075,135 +1065,49 @@ export default function Landing() {
                   />
                 </div>
                 <p className="lp-install__prose">
-                  One portable package for any Agent Plugins client. Does not guess at or rewrite harness config.
+                  Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
                 </p>
               </div>
               <div className="lp-install__controls">
                 <PlatformToggle platform={platform} onToggle={setPlatform} />
-                <div className="lp-seg" role="group" aria-label="Install route">
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'agent-plugin' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'agent-plugin'}
-                    onClick={() => setInstallMode('agent-plugin')}
-                  >
-                    Agent Plugin
-                  </button>
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'claude' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'claude'}
-                    onClick={() => setInstallMode('claude')}
-                  >
-                    Claude tested
-                  </button>
-                  <button
-                    type="button"
-                    className={`lp-seg__btn${installMode === 'sh' ? ' is-on' : ''}`}
-                    aria-pressed={installMode === 'sh'}
-                    onClick={() => setInstallMode('sh')}
-                  >
-                    launcher-only
-                  </button>
-                </div>
               </div>
             </div>
-            {installMode === 'agent-plugin' ? (
-              <CommandBlock
-                cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
-                sigil={PLATFORM_COMMANDS[platform].sigil}
-                tone="mint"
-                copied={copied === 'install-agent-plugin'}
-                onCopy={() =>
-                  copy(
-                    platform === 'windows'
-                      ? INSTALL.agentPluginPs1.command
-                      : AGENT_PLUGIN_COMMAND,
-                    'install-agent-plugin',
-                  )
-                }
-                label="Agent Plugin installer command"
-              />
-            ) : installMode === 'claude' ? (
-              <div className="lp-install__lines">
-                {CLAUDE_COMPATIBILITY.map((line, i) => (
-                  <CommandBlock
-                    key={line}
-                    cmd={line}
-                    sigil="›"
-                    tone={i === 0 ? 'violet' : 'mint'}
-                    copied={copied === `install-claude-${i}`}
-                    onCopy={() => copy(line, `install-claude-${i}`)}
-                    label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
-                  />
-                ))}
-              </div>
-            ) : (
-              <CommandBlock
-                cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
-                sigil={PLATFORM_COMMANDS[platform].sigil}
-                tone="mint"
-                copied={copied === 'install-launchers'}
-                onCopy={() =>
-                  copy(
-                    platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh,
-                    'install-launchers',
-                  )
-                }
-                label="launcher-only install command"
-              />
-            )}
-            <p className="lp-install__note">{installNote}</p>
-            {installMode === 'agent-plugin' ? (
-              <p className="lp-install__note">
-                Pinned compatibility paths: <b>Codex · Grok · Hermes · Claude · Pi</b>. Other
-                conformant clients may load the same directory through their own registration UI.
-              </p>
-            ) : null}
+
+            <CommandBlock
+              cmd={platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh}
+              sigil={PLATFORM_COMMANDS[platform].sigil}
+              tone="mint"
+              copied={copied === 'install-launchers'}
+              onCopy={() =>
+                copy(
+                  platform === 'windows' ? INSTALL.shPs1 : INSTALL.sh,
+                  'install-launchers',
+                )
+              }
+              label="launcher-only install command"
+            />
+            <p className="lp-install__note">
+              {platform === 'windows' ? INSTALL.shPs1Note : INSTALL.shNote}
+            </p>
           </div>
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              {installMode === 'sh' ? `STEP 02 · LAUNCH ${picked.harness.toUpperCase()}` : 'STEP 02 · SUMMON IN SESSION'}
+              STEP 02 · LAUNCH {picked.harness.toUpperCase()}
             </div>
-            {installMode !== 'sh' ? (
-              <>
-                <CommandBlock
-                  cmd={MECHANIC.floor}
-                  sigil="›"
-                  tone="violet"
-                  copied={copied === 'launch'}
-                  onCopy={() => copy(MECHANIC.floor, 'launch')}
-                  label="summon command"
-                />
-                <p className="lp-install__prose">
-                  Nothing to launch here. The Agent Plugin puts five commands in the session you
-                  are already in — <code>/summon</code>, <code>/skill-zero</code>,{' '}
-                  <code>/skill-heaven</code>, <code>/skill-hell</code>, and <code>/skill-ultra</code>{' '}
-                  — and the summon engine ships inside it. Claude's two-line flow above is the
-                  tested compatibility route for that same package.
-                </p>
-              </>
-            ) : (
-              <>
-                <CommandBlock
-                  cmd={picked.launch}
-                  sigil="$"
-                  tone="violet"
-                  copied={copied === 'launch'}
-                  onCopy={() => copy(picked.launch, 'launch')}
-                  label="launch command"
-                />
-                <p className="lp-install__prose">{doorNote(picked)}</p>
-              </>
-            )}
+            <CommandBlock
+              cmd={picked.launch}
+              sigil="$"
+              tone="violet"
+              copied={copied === 'launch'}
+              onCopy={() => copy(picked.launch, 'launch')}
+              label="launch command"
+            />
+            <p className="lp-install__prose">{doorNote(picked)}</p>
           </div>
         </div>
         <p className="lp-fineprint">
-          WORK IN PROGRESS · v0 — the Agent Plugin installer is harness-neutral; Claude’s
-          marketplace flow is tested compatibility. The five launcher doors are source-delivered
-          separately through <code>install.sh</code> (or <code>install.ps1</code> on Windows). Neither path is on npm. Uninstall is one
-          script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, see the <b>Agent Plugin</b> in the Demo section below.
         </p>
       </section>
 
@@ -1211,9 +1115,94 @@ export default function Landing() {
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
         <p className="lp-section__lede">
-          Launch with <code>{DOORS[0].launch}</code>. <code>{MECHANIC.floor}</code> any skill into context on demand.
-          Explore the entropy curve from <code>/skill-zero</code> up to <code>/skill-ultra</code>.
+          Watch the live multi-agent simulation below, or mount <code>{MECHANIC.floor}</code> into your existing session with the portable Agent Plugin.
         </p>
+
+        {/* In-Session Delivery / Plugin Install Panels */}
+        <div className="lp-plugin-box sh-panel">
+          <div className="lp-plugin-box__head">
+            <div className="lp-plugin-box__title-wrap">
+              <span className="sh-label">IN-SESSION DELIVERY · LOAD INTO YOUR HARNESS</span>
+              <InfoTooltip
+                align="left"
+                label="Agent Plugin details"
+                content={
+                  <>
+                    <p>
+                      <b>Agent Plugins standard</b>: Pinned compatibility paths for Codex · Grok · Hermes · Claude · Pi. The client manages its own registration and cache lifecycle.
+                    </p>
+                    <p style={{ marginTop: 6 }}>
+                      Uninstall script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+                    </p>
+                  </>
+                }
+              />
+            </div>
+            <div className="lp-plugin-box__controls">
+              <PlatformToggle platform={platform} onToggle={setPlatform} />
+              <div className="lp-seg" role="group" aria-label="Session plugin route">
+                <button
+                  type="button"
+                  className={`lp-seg__btn${pluginMode === 'agent-plugin' ? ' is-on' : ''}`}
+                  aria-pressed={pluginMode === 'agent-plugin'}
+                  onClick={() => setPluginMode('agent-plugin')}
+                >
+                  Agent Plugin (All Clients)
+                </button>
+                <button
+                  type="button"
+                  className={`lp-seg__btn${pluginMode === 'claude' ? ' is-on' : ''}`}
+                  aria-pressed={pluginMode === 'claude'}
+                  onClick={() => setPluginMode('claude')}
+                >
+                  Claude tested
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-plugin-box__content">
+            {pluginMode === 'agent-plugin' ? (
+              <>
+                <CommandBlock
+                  cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
+                  sigil={PLATFORM_COMMANDS[platform].sigil}
+                  tone="mint"
+                  copied={copied === 'install-agent-plugin'}
+                  onCopy={() =>
+                    copy(
+                      platform === 'windows'
+                        ? INSTALL.agentPluginPs1.command
+                        : AGENT_PLUGIN_COMMAND,
+                      'install-agent-plugin',
+                    )
+                  }
+                  label="Agent Plugin installer command"
+                />
+                <p className="lp-plugin-box__note">
+                  {platform === 'windows' ? INSTALL.agentPluginPs1.note : AGENT_PLUGIN_NOTE}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="lp-install__lines">
+                  {CLAUDE_COMPATIBILITY.map((line, i) => (
+                    <CommandBlock
+                      key={line}
+                      cmd={line}
+                      sigil="›"
+                      tone={i === 0 ? 'violet' : 'mint'}
+                      copied={copied === `install-claude-${i}`}
+                      onCopy={() => copy(line, `install-claude-${i}`)}
+                      label={`Claude compatibility command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
+                    />
+                  ))}
+                </div>
+                <p className="lp-plugin-box__note">{CLAUDE_COMPATIBILITY_NOTE}</p>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="lp-sampler-ctrls">
           <div className="lp-sampler-tabs" role="group" aria-label="Terminal Sampler Modes">
