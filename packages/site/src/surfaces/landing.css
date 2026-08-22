@@ -951,6 +951,109 @@
   }
 }
 
+.lp-cc-pill-wrap {
+  margin: 3px 0 2px 14px;
+}
+
+/* Delight: Summoned skill micro-pill card in terminal */
+.lp-cc-skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px 3px 8px;
+  background: rgba(238, 235, 230, 0.05);
+  border: 1px solid rgba(238, 235, 230, 0.12);
+  border-radius: 2px;
+  font-family: var(--sh-mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #eeebe6;
+  width: fit-content;
+  max-width: 100%;
+  transition: all 180ms ease;
+}
+.lp-cc-skill-pill:hover {
+  background: rgba(238, 235, 230, 0.09);
+  border-color: rgba(238, 235, 230, 0.26);
+  transform: translateX(2px);
+}
+.lp-cc-skill-pill--cyan {
+  border-left: 2px solid var(--sh-cyan, #5fc2d6);
+}
+.lp-cc-skill-pill--cyan .lp-cc-skill-dot {
+  background: var(--sh-cyan, #5fc2d6);
+  box-shadow: 0 0 5px rgba(95, 194, 214, 0.55);
+}
+.lp-cc-skill-pill--violet {
+  border-left: 2px solid var(--sh-violet, #a58ae0);
+}
+.lp-cc-skill-pill--violet .lp-cc-skill-dot {
+  background: var(--sh-violet, #a58ae0);
+  box-shadow: 0 0 5px rgba(165, 138, 224, 0.55);
+}
+.lp-cc-skill-pill--amber {
+  border-left: 2px solid var(--sh-hell, #c89a3f);
+}
+.lp-cc-skill-pill--amber .lp-cc-skill-dot {
+  background: var(--sh-hell, #c89a3f);
+  box-shadow: 0 0 5px rgba(200, 154, 63, 0.55);
+}
+
+.lp-cc-skill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lp-cc-skill-name {
+  color: #b1b9f9;
+  font-weight: 600;
+}
+.lp-cc-skill-pill--amber .lp-cc-skill-name {
+  color: #d7ba7d;
+}
+.lp-cc-skill-tag {
+  padding: 1px 5px;
+  background: rgba(238, 235, 230, 0.08);
+  color: var(--sh-ink-dim, #9a9691);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-cc-skill-tok {
+  color: var(--sh-mint, #71ccae);
+  font-size: 10.5px;
+}
+.lp-cc-skill-badge {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--sh-ink-dim, #9a9691);
+  border: 1px solid rgba(238, 235, 230, 0.16);
+  padding: 0 4px;
+}
+
+/* Hell theme overrides for skill pills */
+.lp-cc-term.is-hell .lp-cc-skill-pill {
+  background: rgba(23, 22, 24, 0.06);
+  border-color: rgba(23, 22, 24, 0.16);
+  color: var(--sh-hell-ink, #171618);
+}
+.lp-cc-term.is-hell .lp-cc-skill-name {
+  color: #171618;
+}
+.lp-cc-term.is-hell .lp-cc-skill-tag {
+  background: rgba(23, 22, 24, 0.08);
+  color: rgba(23, 22, 24, 0.7);
+}
+.lp-cc-term.is-hell .lp-cc-skill-tok {
+  color: #171618;
+  font-weight: 600;
+}
+.lp-cc-term.is-hell .lp-cc-skill-badge {
+  border-color: rgba(23, 22, 24, 0.2);
+  color: rgba(23, 22, 24, 0.7);
+}
+
 /* Working row */
 .lp-cc-working-row {
   margin-top: 4px;
@@ -964,6 +1067,18 @@
 .lp-cc-braille {
   display: inline-block;
   margin-right: 2px;
+}
+.lp-cc-ready-dot {
+  color: #71ccae;
+  margin-right: 4px;
+  font-size: 10px;
+}
+.lp-cc-ready-label {
+  color: #eeebe6;
+  font-weight: 500;
+}
+.lp-cc-term.is-hell .lp-cc-ready-label {
+  color: #171618;
 }
 
 /* TUI Bottom */

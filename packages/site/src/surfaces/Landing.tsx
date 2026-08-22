@@ -99,18 +99,13 @@ type SamplerMode = 'all' | 'summon' | 'heaven' | 'hell' | 'zero'
 const BORROWED = SESSION_ROWS[4] // obra/systematic-debugging, skill-tree origin
 const BRAILLE = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
-interface ClaudeTurnLine {
-  text: string
-  verb: string
-}
-
 interface ClaudeTurn {
   id: 'summon' | 'heaven' | 'hell' | 'zero'
   cmd: string
   bulletTone?: 'coral' | 'heaven' | 'hell'
-  initialVerb: string
+  verb: string
   title: ReactNode
-  lines: ClaudeTurnLine[]
+  lines: ReactNode[]
   readyTiming: string
 }
 
@@ -120,30 +115,49 @@ interface TurnHistoryState {
   linesCount: number
 }
 
+function SummonedSkillPill({
+  name,
+  tag,
+  tokens,
+  tone,
+}: {
+  name: string
+  tag: string
+  tokens: string
+  tone: 'cyan' | 'violet' | 'amber'
+}) {
+  return (
+    <div className={`lp-cc-skill-pill lp-cc-skill-pill--${tone}`}>
+      <span className="lp-cc-skill-dot" aria-hidden="true" />
+      <span className="lp-cc-skill-name">{name}</span>
+      <span className="lp-cc-skill-tag">{tag}</span>
+      <span className="lp-cc-skill-tok">{tokens}</span>
+      <span className="lp-cc-skill-badge">BORROWED</span>
+    </div>
+  )
+}
+
 const CLAUDE_TURNS: ClaudeTurn[] = [
   {
     id: 'summon',
     cmd: `${MECHANIC.floor} systematic debugging`,
     bulletTone: 'coral',
-    initialVerb: 'Cogitating…',
+    verb: 'Cogitating…',
     title: (
       <>
         Summoning <span className="cc-file">{BORROWED.id}</span> into session context…
       </>
     ),
     lines: [
-      {
-        text: '· source: gaia-skill-tree (borrowed · 1 skill mounted)',
-        verb: 'Clauding…',
-      },
-      {
-        text: `· standing dose: +${fmt(BORROWED.tokens)} tok (this session only)`,
-        verb: 'Calculating…',
-      },
-      {
-        text: '· 0 diffs written to working tree',
-        verb: 'Baking…',
-      },
+      <SummonedSkillPill
+        key="debug"
+        name="obra/systematic-debugging"
+        tag="root-cause"
+        tokens={`+${fmt(BORROWED.tokens)} tok`}
+        tone="cyan"
+      />,
+      '· source: gaia-skill-tree · 1 skill mounted for this session only',
+      '· 0 diffs written to working tree · clean slate',
     ],
     readyTiming: '340ms',
   },
@@ -151,25 +165,28 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     id: 'heaven',
     cmd: '/skill-heaven brainstorm with me a design idea',
     bulletTone: 'heaven',
-    initialVerb: 'Ruminating…',
+    verb: 'Ruminating…',
     title: (
       <>
         <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned 2 skills for design…
       </>
     ),
     lines: [
-      {
-        text: '· pbakaus/impeccable (+1,420 tok · borrowed)',
-        verb: 'Percolating…',
-      },
-      {
-        text: '· mattpocock/grill-me (+860 tok · borrowed)',
-        verb: 'Deliberating…',
-      },
-      {
-        text: '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
-        verb: 'Synthesizing…',
-      },
+      <SummonedSkillPill
+        key="impeccable"
+        name="pbakaus/impeccable"
+        tag="design-systems"
+        tokens="+1,420 tok"
+        tone="violet"
+      />,
+      <SummonedSkillPill
+        key="grill"
+        name="mattpocock/grill-me"
+        tag="critique"
+        tokens="+860 tok"
+        tone="violet"
+      />,
+      '· posture: human-in-the-loop · tight signal · 0 diffs on disk',
     ],
     readyTiming: '480ms',
   },
@@ -177,25 +194,28 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     id: 'hell',
     cmd: '/skill-hell explore the codebase and autofix security issues',
     bulletTone: 'hell',
-    initialVerb: 'Prestidigitating…',
+    verb: 'Prestidigitating…',
     title: (
       <>
         <span className="cc-amber">Skill Hell (explore)</span> auto-summoned 2 skills via gaia mcp…
       </>
     ),
     lines: [
-      {
-        text: '· garrytan/cso (+2,100 tok · borrowed)',
-        verb: 'Combobulating…',
-      },
-      {
-        text: '· obra/systematic-debugging (+515 tok · borrowed)',
-        verb: 'Orchestrating…',
-      },
-      {
-        text: '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
-        verb: 'Quantumizing…',
-      },
+      <SummonedSkillPill
+        key="cso"
+        name="garrytan/cso"
+        tag="security-audit"
+        tokens="+2,100 tok"
+        tone="amber"
+      />,
+      <SummonedSkillPill
+        key="debug-hell"
+        name="obra/systematic-debugging"
+        tag="deep-diagnostics"
+        tokens="+515 tok"
+        tone="amber"
+      />,
+      '· route: mixture-of-agents · autonomous search · 0 diffs on disk',
     ],
     readyTiming: '680ms',
   },
@@ -203,25 +223,16 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     id: 'zero',
     cmd: '/skill-zero',
     bulletTone: 'coral',
-    initialVerb: 'Recombobulating…',
+    verb: 'Recombobulating…',
     title: (
       <>
         <span className="cc-cyan">Skill Zero</span> cleared all borrowed skills · back to floor
       </>
     ),
     lines: [
-      {
-        text: '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
-        verb: 'Discombobulating…',
-      },
-      {
-        text: `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
-        verb: 'Osmosing…',
-      },
-      {
-        text: '· zero skills in context · 0 diffs on disk · /summon on demand',
-        verb: 'Actualizing…',
-      },
+      '· unmounted pbakaus/impeccable, mattpocock/grill-me, garrytan/cso, obra/systematic-debugging',
+      `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
+      '· zero skills in context · 0 diffs on disk · /summon on demand',
     ],
     readyTiming: '240ms',
   },
@@ -284,13 +295,14 @@ export default function Landing() {
     if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
   }, [])
 
-  // Braille spinner animation loop
+  // Braille spinner animation loop — spins only while activeVerb is working, pauses when Ready
   useEffect(() => {
+    if (!activeVerb) return
     const brailleTimer = window.setInterval(() => {
       setBrailleIdx((prev) => (prev + 1) % BRAILLE.length)
     }, 80)
     return () => window.clearInterval(brailleTimer)
-  }, [])
+  }, [activeVerb])
 
   const typeAndSubmitCommand = useCallback(
     (turnIdx: number, onDone: () => void, charDelay = 28) => {
@@ -322,7 +334,8 @@ export default function Landing() {
               ...prev,
               { turnIdx, showTitle: false, linesCount: 0 },
             ])
-            setActiveVerb(turn.initialVerb)
+            // Set ONE single verb for the entire task
+            setActiveVerb(turn.verb)
 
             // Step 1: Reveal title after initial verb loading
             animTimerRef.current = window.setTimeout(() => {
@@ -331,9 +344,8 @@ export default function Landing() {
                   idx === prev.length - 1 ? { ...item, showTitle: true } : item,
                 ),
               )
-              setActiveVerb(turn.lines[0]?.verb ?? 'Processing…')
 
-              // Step 2: Stream lines one by one with their respective Claude verbs
+              // Step 2: Stream lines one by one while keeping the SAME verb
               let lineIdx = 0
               const revealNextLine = () => {
                 if (lineIdx < turn.lines.length) {
@@ -346,14 +358,13 @@ export default function Landing() {
                     ),
                   )
                   if (lineIdx < turn.lines.length) {
-                    setActiveVerb(turn.lines[lineIdx].verb)
                     animTimerRef.current = window.setTimeout(revealNextLine, 360)
                   } else {
-                    // Finished all lines in this turn
+                    // Finished all lines in this turn -> Ready state (pause spinner animation)
                     setActiveVerb('')
                     animTimerRef.current = window.setTimeout(
                       onDone,
-                      isHell ? 2600 : 1600,
+                      isHell ? 2800 : 1800,
                     )
                   }
                 }
@@ -884,8 +895,12 @@ export default function Landing() {
                         {turn.title}
                       </div>
                       {turn.lines.slice(0, item.linesCount).map((line, li) => (
-                        <div className="lp-cc-dim lp-cc-line-in" key={li}>
-                          &nbsp;&nbsp;{line.text}
+                        <div className="lp-cc-line-wrap lp-cc-line-in" key={li}>
+                          {typeof line === 'string' ? (
+                            <div className="lp-cc-dim">&nbsp;&nbsp;{line}</div>
+                          ) : (
+                            <div className="lp-cc-pill-wrap">{line}</div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -894,7 +909,7 @@ export default function Landing() {
               )
             })}
 
-            {/* Active Claude Code verb or Ready status */}
+            {/* Active Claude Code verb or Paused Ready status */}
             {history.length > 0 && (
               <div className="lp-cc-working-row">
                 {activeVerb ? (
@@ -906,9 +921,10 @@ export default function Landing() {
                   </>
                 ) : (
                   <>
-                    <span className="lp-cc-working">
-                      <span className="lp-cc-braille">{BRAILLE[brailleIdx]}</span> Ready
+                    <span className="lp-cc-ready-dot" aria-hidden="true">
+                      ●
                     </span>{' '}
+                    <span className="lp-cc-ready-label">Ready</span>{' '}
                     <span className="lp-cc-dim">
                       ({CLAUDE_TURNS[history[history.length - 1].turnIdx].readyTiming} · esc to interrupt)
                     </span>
