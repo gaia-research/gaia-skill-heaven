@@ -199,12 +199,10 @@ export default function Landing() {
 
   /* ---- §02 terminal ---- */
   const [samplerMode, setSamplerMode] = useState<SamplerMode>('all')
-  const [visibleTurns, setVisibleTurns] = useState<
-    { index: number; typed: string; isComplete: boolean; isTyping: boolean }[]
-  >([])
+  const [historyTurns, setHistoryTurns] = useState<number[]>([])
+  const [currentInput, setCurrentInput] = useState<string>('')
   const [hell, setHell] = useState(false)
   const [shear, setShear] = useState(false)
-  const [isWorking, setIsWorking] = useState(true)
   const bodyRef = useRef<HTMLDivElement>(null)
   const animTimerRef = useRef<number | undefined>(undefined)
   const shearTimerRef = useRef<number | undefined>(undefined)
@@ -214,27 +212,19 @@ export default function Landing() {
     if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
   }, [])
 
-  const typeCommand = useCallback(
-    (turnIdx: number, onDone: () => void, charDelay = 32) => {
+  const typeAndSubmitCommand = useCallback(
+    (turnIdx: number, onDone: () => void, charDelay = 28) => {
       const fullCmd = CLAUDE_TURNS[turnIdx].cmd
       let charIdx = 0
-
-      setVisibleTurns((prev) => [
-        ...prev.filter((t) => t.index !== turnIdx),
-        { index: turnIdx, typed: '', isComplete: false, isTyping: true },
-      ])
+      setCurrentInput('')
 
       const typeNextChar = () => {
         if (charIdx < fullCmd.length) {
           charIdx++
-          const currentText = fullCmd.slice(0, charIdx)
-          setVisibleTurns((prev) =>
-            prev.map((t) =>
-              t.index === turnIdx ? { ...t, typed: currentText, isTyping: true } : t,
-            ),
-          )
+          setCurrentInput(fullCmd.slice(0, charIdx))
           animTimerRef.current = window.setTimeout(typeNextChar, charDelay)
         } else {
+          // Pause briefly at end of command (simulating Enter keypress)
           animTimerRef.current = window.setTimeout(() => {
             const isHell = CLAUDE_TURNS[turnIdx].id === 'hell'
             if (isHell) {
@@ -245,19 +235,17 @@ export default function Landing() {
               setHell(false)
             }
 
-            setVisibleTurns((prev) =>
-              prev.map((t) =>
-                t.index === turnIdx
-                  ? { ...t, typed: fullCmd, isTyping: false, isComplete: true }
-                  : t,
-              ),
-            )
-            animTimerRef.current = window.setTimeout(onDone, isHell ? 2400 : 1300)
-          }, 180)
+            // Move command from bottom prompt into top conversation history
+            setCurrentInput('')
+            setHistoryTurns((prev) => [...prev, turnIdx])
+
+            // Wait while response is viewed before triggering next turn
+            animTimerRef.current = window.setTimeout(onDone, isHell ? 2400 : 1400)
+          }, 220)
         }
       }
 
-      animTimerRef.current = window.setTimeout(typeNextChar, 80)
+      animTimerRef.current = window.setTimeout(typeNextChar, 120)
     },
     [],
   )
@@ -266,35 +254,26 @@ export default function Landing() {
     clearTimers()
     setHell(false)
     setShear(false)
-    setVisibleTurns([])
-    setIsWorking(true)
+    setHistoryTurns([])
+    setCurrentInput('')
 
     if (prefersReducedMotion()) {
-      setVisibleTurns(
-        CLAUDE_TURNS.map((_, i) => ({
-          index: i,
-          typed: CLAUDE_TURNS[i].cmd,
-          isComplete: true,
-          isTyping: false,
-        })),
-      )
-      setIsWorking(false)
+      setHistoryTurns(CLAUDE_TURNS.map((_, i) => i))
       return
     }
 
     const runTurn = (idx: number) => {
       if (idx >= CLAUDE_TURNS.length) {
-        setIsWorking(false)
         animTimerRef.current = window.setTimeout(() => {
           playAll()
         }, 3400)
         return
       }
-      typeCommand(idx, () => runTurn(idx + 1))
+      typeAndSubmitCommand(idx, () => runTurn(idx + 1))
     }
 
     animTimerRef.current = window.setTimeout(() => runTurn(0), 400)
-  }, [clearTimers, typeCommand])
+  }, [clearTimers, typeAndSubmitCommand])
 
   const selectSampler = useCallback(
     (mode: SamplerMode) => {
@@ -305,31 +284,21 @@ export default function Landing() {
       } else {
         const turnIdx = CLAUDE_TURNS.findIndex((t) => t.id === mode)
         if (turnIdx !== -1) {
-          setVisibleTurns([])
+          setHistoryTurns([])
+          setCurrentInput('')
           setHell(false)
           setShear(false)
-          setIsWorking(true)
           if (prefersReducedMotion()) {
             const isHell = mode === 'hell'
             setHell(isHell)
-            setVisibleTurns([
-              {
-                index: turnIdx,
-                typed: CLAUDE_TURNS[turnIdx].cmd,
-                isComplete: true,
-                isTyping: false,
-              },
-            ])
-            setIsWorking(false)
+            setHistoryTurns([turnIdx])
             return
           }
-          typeCommand(turnIdx, () => {
-            setIsWorking(false)
-          })
+          typeAndSubmitCommand(turnIdx, () => {})
         }
       }
     },
-    [clearTimers, playAll, typeCommand],
+    [clearTimers, playAll, typeAndSubmitCommand],
   )
 
   const replay = useCallback(() => {
@@ -345,7 +314,7 @@ export default function Landing() {
     if (bodyRef.current) {
       bodyRef.current.scrollTop = bodyRef.current.scrollHeight
     }
-  }, [visibleTurns, isWorking])
+  }, [historyTurns, currentInput])
 
   /* ---- §03 the session story ---- */
   const [mounted, setMounted] = useState<string[]>(
@@ -757,43 +726,38 @@ export default function Landing() {
           </div>
 
           <div className="lp-cc-body" ref={bodyRef}>
-            {visibleTurns.map((turnState) => {
-              const turn = CLAUDE_TURNS[turnState.index]
+            {historyTurns.map((turnIdx) => {
+              const turn = CLAUDE_TURNS[turnIdx]
               return (
                 <div className="lp-cc-turn" key={turn.id}>
                   <div className="lp-cc-prompt-row">
                     <span className="lp-cc-prompt-glyph">❯</span>
-                    <span className="lp-cc-user-cmd">
-                      {turnState.typed}
-                      {turnState.isTyping ? <span className="lp-cc-cursor" /> : null}
-                    </span>
+                    <span className="lp-cc-user-cmd">{turn.cmd}</span>
                   </div>
-                  {turnState.isComplete ? (
-                    <div className="lp-cc-response">
-                      <div className="lp-cc-res-title">
-                        <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
-                        {turn.title}
-                      </div>
-                      {turn.lines.map((line, li) => (
-                        <div className="lp-cc-dim" key={li}>
-                          &nbsp;&nbsp;{line}
-                        </div>
-                      ))}
+                  <div className="lp-cc-response">
+                    <div className="lp-cc-res-title">
+                      <span className={`lp-cc-bullet lp-cc-bullet--${turn.bulletTone}`}>●</span>{' '}
+                      {turn.title}
                     </div>
-                  ) : null}
+                    {turn.lines.map((line, li) => (
+                      <div className="lp-cc-dim" key={li}>
+                        &nbsp;&nbsp;{line}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )
             })}
 
             {/* Spinner working state */}
-            {isWorking && visibleTurns.some((t) => t.isComplete) ? (
+            {historyTurns.length > 0 && (
               <div className="lp-cc-working-row">
                 <span className="lp-cc-working">
                   <span className="lp-cc-braille">⠋</span> Ready
                 </span>{' '}
                 <span className="lp-cc-dim">(412ms · esc to interrupt)</span>
               </div>
-            ) : null}
+            )}
           </div>
 
           {/* TUI Bottom Status & Input Bar */}
@@ -801,6 +765,7 @@ export default function Landing() {
             <div className="lp-cc-rule" />
             <div className="lp-cc-input-line">
               <span className="lp-cc-prompt-glyph">❯</span>
+              <span className="lp-cc-input-text">{currentInput}</span>
               <span className="lp-cc-cursor" />
             </div>
             <div className="lp-cc-rule" />

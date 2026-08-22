@@ -970,6 +970,14 @@
   gap: 8px;
   min-height: 20px;
 }
+.lp-cc-input-text {
+  color: #ffffff;
+  font-weight: 500;
+  white-space: pre;
+}
+.lp-cc-term.is-hell .lp-cc-input-text {
+  color: #171618;
+}
 .lp-cc-cursor {
   display: inline-block;
   width: 8px;
