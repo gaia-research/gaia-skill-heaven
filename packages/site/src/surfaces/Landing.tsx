@@ -306,13 +306,14 @@ export default function Landing() {
   useEffect(() => () => window.clearTimeout(copyTimer.current), [])
 
   /* ---- §02 terminal ---- */
-  const [samplerMode, setSamplerMode] = useState<SamplerMode>('all')
+  const [samplerMode, setSamplerMode] = useState<SamplerMode>('heaven')
   const [history, setHistory] = useState<TurnHistoryState[]>([])
   const [currentInput, setCurrentInput] = useState<string>('')
   const [activeVerb, setActiveVerb] = useState<string>('')
   const [brailleIdx, setBrailleIdx] = useState(0)
   const [hell, setHell] = useState(false)
   const [shear, setShear] = useState(false)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const animTimerRef = useRef<number | undefined>(undefined)
   const shearTimerRef = useRef<number | undefined>(undefined)
@@ -320,6 +321,14 @@ export default function Landing() {
   const clearTimers = useCallback(() => {
     if (animTimerRef.current) window.clearTimeout(animTimerRef.current)
     if (shearTimerRef.current) window.clearTimeout(shearTimerRef.current)
+  }, [])
+
+  // Detect user manual scroll — stick to tail only if user hasn't scrolled up
+  const handleBodyScroll = useCallback(() => {
+    if (!bodyRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = bodyRef.current
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 40
+    setUserScrolledUp(!isAtBottom)
   }, [])
 
   // Braille spinner animation loop — spins only while activeVerb is working, pauses when Ready
@@ -415,6 +424,7 @@ export default function Landing() {
     setHistory([])
     setCurrentInput('')
     setActiveVerb('')
+    setUserScrolledUp(false)
 
     if (prefersReducedMotion()) {
       setHistory(
@@ -444,6 +454,7 @@ export default function Landing() {
     (mode: SamplerMode) => {
       clearTimers()
       setSamplerMode(mode)
+      setUserScrolledUp(false)
       if (mode === 'all') {
         playAll()
       } else {
@@ -478,15 +489,15 @@ export default function Landing() {
   }, [selectSampler, samplerMode])
 
   useEffect(() => {
-    playAll()
+    selectSampler('heaven')
     return clearTimers
-  }, [playAll, clearTimers])
+  }, [selectSampler, clearTimers])
 
   useEffect(() => {
-    if (bodyRef.current) {
+    if (bodyRef.current && !userScrolledUp) {
       bodyRef.current.scrollTop = bodyRef.current.scrollHeight
     }
-  }, [history, activeVerb, currentInput])
+  }, [history, activeVerb, currentInput, userScrolledUp])
 
   /* ---- §03 the session story ---- */
   const [mounted, setMounted] = useState<string[]>(
@@ -904,7 +915,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="lp-cc-body" ref={bodyRef}>
+          <div className="lp-cc-body" ref={bodyRef} onScroll={handleBodyScroll}>
             {history.map((item, hIdx) => {
               const turn = CLAUDE_TURNS[item.turnIdx]
 

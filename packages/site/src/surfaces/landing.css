@@ -770,10 +770,10 @@
   font-size: 13px;
   line-height: 1.55;
   color: #eeebe6;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
   transition: background 60ms linear, border-color 60ms linear, color 60ms linear;
-  min-height: 480px;
-  height: 480px;
+  min-height: 560px;
+  height: 560px;
   display: flex;
   flex-direction: column;
 }
