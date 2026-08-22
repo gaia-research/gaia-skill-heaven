@@ -500,6 +500,101 @@ function prefersReducedMotion(): boolean {
    the page
    ========================================================================= */
 
+/* =========================================================================
+   Info Tooltip (Clickable & Accessible Popover)
+   ========================================================================= */
+
+interface InfoTooltipProps {
+  content: ReactNode
+  label?: string
+  align?: 'left' | 'right' | 'center'
+  variant?: 'icon' | 'badge'
+  badgeText?: string
+  className?: string
+}
+
+function InfoTooltip({
+  content,
+  label = 'More information',
+  align = 'left',
+  variant = 'icon',
+  badgeText,
+  className = '',
+}: InfoTooltipProps) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const toggle = useCallback((e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpen((prev) => !prev)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClickOutside = (e: globalThis.MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div
+      className={`lp-tooltip-wrap lp-tooltip--${align}${open ? ' is-open' : ''} ${className}`.trim()}
+      ref={ref}
+    >
+      <button
+        type="button"
+        className={variant === 'badge' ? 'lp-tooltip-badge' : 'lp-tooltip-btn'}
+        onClick={toggle}
+        aria-expanded={open}
+        aria-label={label}
+      >
+        {variant === 'badge' ? (
+          <>
+            <span>{badgeText}</span>
+            <span className="lp-tooltip-mark" aria-hidden="true">ⓘ</span>
+          </>
+        ) : (
+          <span className="lp-tooltip-mark" aria-hidden="true">ⓘ</span>
+        )}
+      </button>
+
+      {open && (
+        <div
+          className="lp-tooltip-popover"
+          role="tooltip"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="lp-tooltip-body">{content}</div>
+          <button
+            type="button"
+            className="lp-tooltip-close"
+            onClick={() => setOpen(false)}
+            aria-label="Close tooltip"
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Landing() {
   /* ---- §01 doors + install ---- */
   const [pickedId, setPickedId] = useState(DOORS[0].id)
@@ -868,14 +963,25 @@ export default function Landing() {
 
             <div className="lp-dose sh-panel">
               <div className="lp-dose__head">
-                <span className="sh-label">STANDING DOSE · MEASURED</span>
+                <div className="lp-dose__title-wrap">
+                  <span className="sh-label">STANDING DOSE · MEASURED</span>
+                  <InfoTooltip
+                    align="left"
+                    label="How standing dose is measured"
+                    content={
+                      <>
+                        <p>
+                          <b>Standing Dose Tax</b>: Every skill not needed for a turn is still context. The model reads and weighs it before generating tokens. Skill Zero cuts this to the minimum product floor.
+                        </p>
+                        <p style={{ marginTop: 6 }}>
+                          {DOSES.note}
+                        </p>
+                      </>
+                    }
+                  />
+                </div>
                 <span className="lp-dose__delta">{DOSES.deltaVsNative} vs native</span>
               </div>
-              <p className="lp-dose__body">
-                Every skill you don’t need is still context. The model still has to read it, weigh it,
-                decide whether it’s <b>signal or noise</b> — that’s the tax you pay before your first
-                real token. Skill Zero cuts it at launch.
-              </p>
               <div className="lp-bars">
                 <DoseBar label="native, as shipped" value={DOSES.native} max={DOSES.native} tone="inert" />
                 <DoseBar
@@ -892,7 +998,6 @@ export default function Landing() {
                   strong
                 />
               </div>
-              <p className="lp-dose__foot">{DOSES.note}</p>
             </div>
           </div>
 
@@ -946,10 +1051,25 @@ export default function Landing() {
           <div className="lp-install__panel">
             <div className="lp-install__head">
               <div className="lp-install__title">
-                <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
+                <div className="lp-install__title-wrap">
+                  <span className="sh-label">INSTALL · AGENT PLUGIN FIRST</span>
+                  <InfoTooltip
+                    align="left"
+                    label="Installation compatibility details"
+                    content={
+                      <>
+                        <p>
+                          <b>Pinned compatibility</b>: Codex · Grok · Hermes · Claude · Pi. Other conformant clients load the same directory through their registration UI.
+                        </p>
+                        <p style={{ marginTop: 6 }}>
+                          Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
+                        </p>
+                      </>
+                    }
+                  />
+                </div>
                 <p className="lp-install__prose">
-                  One portable package for any Agent Plugins client. The installer prints the
-                  plugin and marketplace paths; it does not guess at or rewrite a harness config.
+                  One portable package for any Agent Plugins client. Does not guess at or rewrite harness config.
                 </p>
               </div>
               <div className="lp-install__controls">
@@ -1134,9 +1254,27 @@ export default function Landing() {
               /skill-zero
             </button>
           </div>
-          <button type="button" className="lp-ghost" onClick={replay}>
-            ↻ REPLAY
-          </button>
+          <div className="lp-sampler-actions">
+            <InfoTooltip
+              variant="badge"
+              badgeText="PROTOTYPE NOTICE"
+              align="right"
+              label="Prototype & simulation notice"
+              content={
+                <>
+                  <p>
+                    <b>Active Research Prototype</b> — The Hell/Heaven benchmark is under construction and not yet measured; consider the working product as such.
+                  </p>
+                  <p style={{ marginTop: 6 }}>
+                    For demo purposes, this terminal simulates and reenacts the live product mechanics and dual-track orchestration.
+                  </p>
+                </>
+              }
+            />
+            <button type="button" className="lp-ghost" onClick={replay}>
+              ↻ REPLAY
+            </button>
+          </div>
         </div>
 
         {/* Claude Code Terminal TUI Mock */}
@@ -1242,10 +1380,6 @@ export default function Landing() {
             </div>
           </div>
         </div>
-
-        <p className="lp-fineprint">
-          PROTOTYPE · SIMULATION NOTICE — Skill Heaven and the Hell/Heaven entropy curve are active research prototypes (the Hell/Heaven benchmark is under construction and not yet measured; consider the working product as such). For demo purposes, this terminal simulates and reenacts the live product mechanics and dual-track orchestration.
-        </p>
       </section>
 
       {/* ------------------------------------------------------------------ 03 */}
@@ -1303,7 +1437,18 @@ export default function Landing() {
           <div className="lp-story__session">
             <div className="lp-story__head">
               <span className="sh-label lp-story__path">THIS SESSION · {SESSION_DIR}</span>
-              <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
+              <div className="lp-story__head-badges">
+                <span className="sh-chip lp-chip--violet">DISPOSABLE</span>
+                <InfoTooltip
+                  align="right"
+                  label="Session lifecycle information"
+                  content={
+                    <p>
+                      Click any row to mount or drop it for this session. Rows marked <b>skill-tree</b> were never installed here — standing dose recomputes off the benchmark floor of {fmt(DOSES.benchmarkFloor)} tok.
+                    </p>
+                  }
+                />
+              </div>
             </div>
             <div className="lp-counters">
               <Counter label="MOUNTED" value={fmt(mounted.length)} />
@@ -1499,29 +1644,29 @@ export default function Landing() {
           })}
         </div>
 
-        <div className="sh-note lp-ann">
-          <span className="lp-ann__mark" aria-hidden="true">
-            ▸
-          </span>
-          <span>
-            STAMPS · <b>heaven-native</b> and <b>hell-safe</b> are the two halves of one question —
-            does a skill still carry a gap when few are in context, and does it stay safe when many
-            are. {STAMP_ROUTING_NOTE}{' '}
-            <a className="lp-ann__link" href={HOUSES[0].href} target="_blank" rel="noreferrer">
-              Follow the HH Index ↗
-            </a>
-          </span>
-        </div>
-
         {/* the ladder */}
         <div className="lp-ladder">
           <div className="lp-ladder__head">
             <div>
-              <span className="sh-label">
-                THE LADDER · SKILL ENTROPY · zero · low · med · high · xhigh · max · ultra
-              </span>
-              <span className="sh-chip sh-chip--wip lp-ladder__wip">WIP · PROVISIONAL</span>
-              <p className="lp-ladder__measure">{LADDER_MEASURE}</p>
+              <div className="lp-ladder__title-wrap">
+                <span className="sh-label">
+                  THE LADDER · SKILL ENTROPY · zero · low · med · high · xhigh · max · ultra
+                </span>
+                <InfoTooltip
+                  variant="badge"
+                  badgeText="WIP · PROVISIONAL"
+                  align="left"
+                  label="Entropy Ladder details"
+                  content={
+                    <>
+                      <p><b>Skill Entropy Measure</b>: {LADDER_MEASURE}</p>
+                      <p style={{ marginTop: 6 }}><b>Calibration</b>: {LADDER_WIP}</p>
+                      <p style={{ marginTop: 6 }}><b>Stamps & Routing</b>: {STAMP_ROUTING_NOTE}</p>
+                      <p style={{ marginTop: 6 }}><b>One MCP</b>: Heaven and Hell are two directions of the same summon. A rung names a direction and position, never a count.</p>
+                    </>
+                  }
+                />
+              </div>
             </div>
             <div className="lp-ladder__band">
               <img
