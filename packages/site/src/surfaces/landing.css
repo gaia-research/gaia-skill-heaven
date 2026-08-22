@@ -840,14 +840,10 @@
 .lp-cc-logo-art {
   margin: 0;
   color: #d97757;
-  line-height: 1.05;
-  font-size: 13px;
-  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  letter-spacing: 0 !important;
-  font-variant-ligatures: none;
-  font-feature-settings: 'liga' 0, 'calt' 0;
-  white-space: pre;
-  user-select: none;
+  fill: #d97757;
+  width: 54px;
+  height: 25px;
+  display: block;
   flex-shrink: 0;
 }
 .lp-cc-header-text {
@@ -2400,7 +2396,8 @@
     margin-bottom: 10px;
   }
   .lp-cc-logo-art {
-    font-size: 11px;
+    width: 44px;
+    height: 20px;
   }
   .lp-cc-header-text {
     font-size: 11px;

@@ -137,6 +137,20 @@ function SummonedSkillPill({
   )
 }
 
+function ClaudeTerminalLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 180 84"
+      fill="currentColor"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M30,0 H150 V16 H30 Z M30,16 H50 V32 H30 Z M60,16 H120 V32 H60 Z M130,16 H150 V32 H130 Z M10,32 H170 V48 H10 Z M30,48 H150 V64 H30 Z M40,64 H50 V80 H40 Z M60,64 H70 V80 H60 Z M110,64 H120 V80 H110 Z M130,64 H140 V80 H130 Z" />
+    </svg>
+  )
+}
+
 const CLAUDE_TURNS: ClaudeTurn[] = [
   {
     id: 'summon',
@@ -1028,9 +1042,7 @@ export default function Landing() {
         >
           {/* Header Block: authentic Claude ASCII mark + metadata */}
           <div className="lp-cc-header">
-            <pre className="lp-cc-logo-art" aria-hidden="true">{` ▐▛███▜▌
-▝▜█████▛▘
-  ▘▘ ▝▝`}</pre>
+            <ClaudeTerminalLogo className="lp-cc-logo-art" />
             <div className="lp-cc-header-text">
               <div>
                 <b>Claude Code</b> <span className="lp-cc-dim">{picked.status === 'flagship' ? 'v2.1.198' : 'v2.1.198 · plugin'}</span>
