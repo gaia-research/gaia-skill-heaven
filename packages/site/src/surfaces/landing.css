@@ -840,9 +840,15 @@
 .lp-cc-logo-art {
   margin: 0;
   color: #d97757;
-  line-height: 1;
+  line-height: 1.05;
   font-size: 13px;
+  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0 !important;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
   white-space: pre;
+  user-select: none;
+  flex-shrink: 0;
 }
 .lp-cc-header-text {
   min-width: 0;
@@ -893,29 +899,39 @@
   align-items: baseline;
   gap: 8px;
   font-weight: 600;
+  min-width: 0;
+  width: 100%;
 }
 .lp-cc-prompt-glyph {
   color: #d97757;
   font-weight: bold;
   user-select: none;
+  flex-shrink: 0;
 }
 .lp-cc-user-cmd {
   color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 .lp-cc-response {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  max-width: 100%;
 }
 .lp-cc-res-title {
   display: flex;
   align-items: baseline;
   gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .lp-cc-bullet {
   color: #d97757;
@@ -950,6 +966,12 @@
 .lp-cc-line-in {
   animation: lp-cc-fade-in 140ms ease-out forwards;
 }
+.lp-cc-line-wrap {
+  min-width: 0;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
 @keyframes lp-cc-fade-in {
   from {
     opacity: 0;
@@ -963,6 +985,8 @@
 
 .lp-cc-pill-wrap {
   margin: 3px 0 2px 14px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Delight: Summoned skill micro-pill card in terminal */
@@ -1146,14 +1170,21 @@
 }
 .lp-cc-input-line {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   min-height: 20px;
+  min-width: 0;
+  width: 100%;
+  flex-wrap: wrap;
 }
 .lp-cc-input-text {
   color: #ffffff;
   font-weight: 500;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .lp-cc-term.is-hell .lp-cc-input-text {
   color: #171618;
@@ -1164,6 +1195,8 @@
   height: 15px;
   background: #eeebe6;
   animation: lp-cc-cursor-blink 1s steps(1) infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 @keyframes lp-cc-cursor-blink {
   0%, 50% { opacity: 1; }
@@ -1173,9 +1206,8 @@
 .lp-cc-status-row {
   font-size: 11.5px;
   line-height: 1.45;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .lp-cc-cyan {
   color: #4ec9d4;
@@ -2176,6 +2208,12 @@
   .lp-figure {
     min-height: 0;
   }
+  .lp-figure figcaption {
+    position: static;
+    margin-top: 10px;
+    text-align: center;
+    width: 100%;
+  }
   .lp-install,
   .lp-floor {
     grid-template-columns: minmax(0, 1fr);
@@ -2240,6 +2278,53 @@
   .lp-foot__brand {
     grid-column: 1 / -1;
   }
+  .lp-sampler-ctrls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .lp-sampler-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .lp-sampler-btn {
+    flex: 1 1 calc(50% - 1px);
+    text-align: center;
+    padding: 7px 8px;
+    font-size: 9px;
+    border-bottom: 1px solid var(--sh-line);
+  }
+  .lp-ghost {
+    width: 100%;
+    text-align: center;
+  }
+  .lp-cc-term {
+    padding: 14px 14px 10px;
+    min-height: 480px;
+    height: 520px;
+  }
+  .lp-cc-block {
+    margin-left: 6px;
+    padding: 6px 8px;
+    font-size: 11.5px;
+  }
+  .lp-cc-pill-wrap {
+    margin-left: 6px;
+  }
+  .lp-ladder__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .lp-ladder__band {
+    align-self: flex-start;
+  }
+  .lp-ladder__read {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
   .lp-install__head {
     flex-direction: column;
     align-items: stretch;
@@ -2299,6 +2384,35 @@
   .lp-figure__fig {
     max-height: clamp(340px, 86vw, 480px);
   }
+  .lp-sampler-btn {
+    flex: 1 1 100%;
+    border-right: 0;
+  }
+  .lp-cc-term {
+    padding: 12px 10px 8px;
+    min-height: 440px;
+    height: 490px;
+    font-size: 11px;
+  }
+  .lp-cc-header {
+    gap: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  .lp-cc-logo-art {
+    font-size: 11px;
+  }
+  .lp-cc-header-text {
+    font-size: 11px;
+  }
+  .lp-cc-subhead {
+    font-size: 11px;
+  }
+  .lp-cc-skill-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+    gap: 4px;
+  }
   .lp-foot__cols {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
@@ -2325,6 +2439,22 @@
   }
 }
 @media (max-width: 620px) {
+  .lp-cmd {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .lp-cmd__code {
+    width: 100%;
+    order: 2;
+  }
+  .lp-cmd__sigil {
+    order: 1;
+  }
+  .lp-cmd__copy {
+    order: 1;
+    margin-left: auto;
+  }
   .lp-ledger {
     grid-template-columns: minmax(0, 1fr);
   }

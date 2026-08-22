@@ -601,10 +601,16 @@ export default function Landing() {
     selectSampler(samplerMode)
   }, [selectSampler, samplerMode])
 
+  const location = useLocation()
+
   useEffect(() => {
-    selectSampler('heaven')
+    const searchParams = new URLSearchParams(location.search)
+    const tabParam = (location.state as { tab?: string } | null)?.tab ?? searchParams.get('tab')
+    const validModes: SamplerMode[] = ['all', 'summon', 'heaven', 'hell', 'ultra', 'zero']
+    const mode = tabParam && validModes.includes(tabParam as SamplerMode) ? (tabParam as SamplerMode) : 'heaven'
+    selectSampler(mode)
     return clearTimers
-  }, [selectSampler, clearTimers])
+  }, [location.search, location.state, selectSampler, clearTimers])
 
   useEffect(() => {
     if (bodyRef.current && !userScrolledUp) {
@@ -648,7 +654,6 @@ export default function Landing() {
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
   const pickRung = useCallback((id: RungId) => setRung(id), [])
 
-  const location = useLocation()
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     const section = (location.state as { scrollTo?: string } | null)?.scrollTo ?? searchParams.get('section')
@@ -1030,7 +1035,7 @@ export default function Landing() {
               <div>
                 <b>Claude Code</b> <span className="lp-cc-dim">{picked.status === 'flagship' ? 'v2.1.198' : 'v2.1.198 · plugin'}</span>
               </div>
-              <div className="lp-cc-dim">Claude 3.7 Sonnet with thinking · Claude Max</div>
+              <div className="lp-cc-dim">Claude Opus 5 with thinking · Claude Max</div>
               <div className="lp-cc-dim">~/gaia-skill-tree</div>
             </div>
           </div>

@@ -86,7 +86,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Per band: the command, what it means, and where its door opens. Zero's
   // door lands at section 01 (#doors); Heaven, Hell, and Ultra land at
   // section 04 (#directions).
-  const BAND: Record<string, { cmd: string; hint: string; anchor: string; doorLabel: string }> = {
+  const BAND: Record<string, { cmd: string; hint: string; anchor: string; tab?: string; doorLabel: string }> = {
     zero: {
       cmd: '/skill-zero',
       hint: 'the floor · /summon by hand, nothing automatic',
@@ -96,27 +96,31 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     heaven: {
       cmd: '/skill-heaven',
       hint: 'converge · low↔med, opens at low',
-      anchor: 'directions',
-      doorLabel: 'Open the door · heaven or hell',
+      anchor: 'run',
+      tab: 'heaven',
+      doorLabel: 'Open the door · demo converge',
     },
     hell: {
       cmd: '/skill-hell',
       hint: 'explore · high↔max, opens at high',
-      anchor: 'directions',
-      doorLabel: 'Open the door · heaven or hell',
+      anchor: 'run',
+      tab: 'hell',
+      doorLabel: 'Open the door · demo explore',
     },
     ultra: {
       cmd: '/skill-ultra',
       hint: 'the crown · picks direction + position per gap',
-      anchor: 'directions',
-      doorLabel: 'Open the door · what Ultra is',
+      anchor: 'run',
+      tab: 'ultra',
+      doorLabel: 'Open the door · demo ultra',
     },
   }
   const band = BAND[v.scene]
   const openLandingSection = useCallback(
-    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string) => {
+    (e: ReactMouseEvent<HTMLAnchorElement>, anchor: string, tab?: string) => {
       e.preventDefault()
-      navigate(`/landing?section=${anchor}`, { state: { scrollTo: anchor } })
+      const search = tab ? `?section=${anchor}&tab=${tab}` : `?section=${anchor}`
+      navigate(`/landing${search}`, { state: { scrollTo: anchor, tab } })
     },
     [navigate],
   )
@@ -606,8 +610,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               for. */}
           <Link
             className="vha-cta-cmd"
-            to={`/landing?section=${band.anchor}`}
-            onClick={(e) => openLandingSection(e, band.anchor)}
+            to={`/landing?section=${band.anchor}${band.tab ? `&tab=${band.tab}` : ''}`}
+            onClick={(e) => openLandingSection(e, band.anchor, band.tab)}
             style={{ background: v.fg, color: v.bg, borderColor: v.ctaLine }}
           >
             <span className="vha-cta-text">{band.doorLabel}</span>
