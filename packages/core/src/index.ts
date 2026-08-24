@@ -31,6 +31,17 @@ export {
   type FsOp,
 } from "./compile.js";
 export { resolveSkill, type ResolvedSkill } from "./skills.js";
+export {
+  TELEMETRY_SCHEMA,
+  assembleRuntimeObservation,
+  containsAbsolutePath,
+  newSessionPseudonym,
+  serializeRuntimeObservation,
+  validateRuntimeObservation,
+  type AvailableTokenUsage,
+  type ObservationInput,
+  type RuntimeObservation,
+} from "./telemetry.js";
 
 // `materialize` — and deliberately NOT `exec`.
 //
