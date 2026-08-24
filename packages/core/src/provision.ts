@@ -90,7 +90,7 @@ export function provisionHarness(pin: HarnessBundlePin, sessionDir: string): Pro
   }
 
   const destination = join(sessionDir, "harness-bundle");
-  cpSync(pin.sourceDir, destination, { recursive: true, errorOnExist: true });
+  cpSync(pin.sourceDir, destination, { recursive: true, errorOnExist: true, verbatimSymlinks: true });
   const copiedHash = hashBundle(destination);
   if (copiedHash !== sourceHash) throw new Error("harness bundle changed while copying into the disposable sandbox");
 

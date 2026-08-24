@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -89,6 +89,25 @@ describe("R2 clean harness provisioning", () => {
     expect(hashBundle(bundle.dir)).toBe(bundle.hash);
     writeFileSync(join(bundle.dir, "manifest.txt"), "changed\n");
     expect(hashBundle(bundle.dir)).not.toBe(bundle.hash);
+  });
+
+  it("preserves safe internal symlinks and rejects bundle escapes", () => {
+    const root = temp("r2-symlink-");
+    const bundle = fixtureBundle(root);
+    symlinkSync("fixture-harness", join(bundle.dir, "bin", "alias"));
+    const hashWithInternalLink = hashBundle(bundle.dir);
+    const compiled = compile({ posture: "floor", harness: "claude", skills: [], prompt: "Q", jsonOutput: true });
+    expect(exec(compiled, {
+      harnessBundle: {
+        sourceDir: bundle.dir,
+        entry: "bin/alias",
+        pinnedVersion: bundle.version,
+        contentSha256: hashWithInternalLink,
+      },
+    }).status).toBe(0);
+
+    symlinkSync("../../../outside", join(bundle.dir, "escape"));
+    expect(() => hashBundle(bundle.dir)).toThrow(/symlink escapes/);
   });
 });
 
