@@ -26,11 +26,18 @@ function assertHash(value: string, label: string): void {
 
 function safeEntry(root: string, entry: string): string {
   if (!entry || isAbsolute(entry)) throw new Error("--harness-entry must be a non-empty path relative to --harness-bundle");
-  const target = resolve(root, entry);
-  const prefix = resolve(root) + sep;
-  if (!target.startsWith(prefix)) throw new Error("--harness-entry must stay inside --harness-bundle");
-  const real = realpathSync(target);
-  if (!real.startsWith(prefix)) throw new Error("--harness-entry resolves outside --harness-bundle");
+  const absoluteRoot = resolve(root);
+  const target = resolve(absoluteRoot, entry);
+  const lexicalRelative = relative(absoluteRoot, target);
+  if (!lexicalRelative || lexicalRelative === ".." || lexicalRelative.startsWith(`..${sep}`) || isAbsolute(lexicalRelative)) {
+    throw new Error("--harness-entry must stay inside --harness-bundle");
+  }
+  const realRoot = realpathSync(absoluteRoot);
+  const realTarget = realpathSync(target);
+  const realRelative = relative(realRoot, realTarget);
+  if (!realRelative || realRelative === ".." || realRelative.startsWith(`..${sep}`) || isAbsolute(realRelative)) {
+    throw new Error("--harness-entry resolves outside --harness-bundle");
+  }
   if (!statSync(target).isFile()) throw new Error(`--harness-entry is not a regular file: ${entry}`);
   return target;
 }

@@ -91,22 +91,36 @@ describe("R2 clean harness provisioning", () => {
     expect(hashBundle(bundle.dir)).not.toBe(bundle.hash);
   });
 
-  it("preserves safe internal symlinks and rejects bundle escapes", () => {
+  it("accepts a safe entry through a symlinked parent while rejecting symlink escapes", () => {
     const root = temp("r2-symlink-");
+    const aliasRoot = temp("r2-symlink-alias-");
     const bundle = fixtureBundle(root);
     symlinkSync("fixture-harness", join(bundle.dir, "bin", "alias"));
     const hashWithInternalLink = hashBundle(bundle.dir);
+    const linkedParent = join(aliasRoot, "linked-parent");
+    symlinkSync(root, linkedParent);
+    const aliasedBundleDir = join(linkedParent, "clean-harness-install");
     const compiled = compile({ posture: "floor", harness: "claude", skills: [], prompt: "Q", jsonOutput: true });
     expect(exec(compiled, {
       harnessBundle: {
-        sourceDir: bundle.dir,
+        sourceDir: aliasedBundleDir,
         entry: "bin/alias",
         pinnedVersion: bundle.version,
         contentSha256: hashWithInternalLink,
       },
     }).status).toBe(0);
 
-    symlinkSync("../../../outside", join(bundle.dir, "escape"));
+    const outside = join(root, "outside");
+    writeFileSync(outside, "#!/usr/bin/env sh\n");
+    symlinkSync("../../outside", join(bundle.dir, "bin", "escape"));
+    expect(() => exec(compiled, {
+      harnessBundle: {
+        sourceDir: aliasedBundleDir,
+        entry: "bin/escape",
+        pinnedVersion: bundle.version,
+        contentSha256: hashWithInternalLink,
+      },
+    })).toThrow(/resolves outside/);
     expect(() => hashBundle(bundle.dir)).toThrow(/symlink escapes/);
   });
 });

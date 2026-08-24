@@ -38,6 +38,12 @@ export function validateTrialCoordinate(arm: Arm, rung: TrialRung, posture: Post
   if (!ARM_RUNGS[arm].includes(rung)) {
     throw new Error(`--arm ${arm} cannot record --rung ${rung}; valid rungs: ${ARM_RUNGS[arm].join("|")}`);
   }
+  if (posture === "floor" && (arm !== "placebo" || rung !== "benchmark-floor")) {
+    throw new Error(
+      "--posture floor is doorless and only allows --arm placebo with --rung benchmark-floor; " +
+        "treatment coordinates require a doorful posture",
+    );
+  }
   if (arm === "placebo" && posture !== "floor") {
     throw new Error(
       "--arm placebo is only allowed for --posture floor, the doorless benchmark floor (own-placebo anchoring, B2). " +

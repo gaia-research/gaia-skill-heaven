@@ -343,7 +343,12 @@ describe("cli level lane", () => {
     expect(() => parseArgs([...base, "--arm", "blazing", "--rung", "high"])).toThrow(/--arm must be one of/);
     expect(() => parseArgs([...base, "--arm", "hell", "--rung", "blazing"])).toThrow(/--rung must be one of/);
     expect(() => parseArgs([...base, "--arm", "hell", "--rung", "low"])).toThrow(/cannot record/);
-    expect(() => parseArgs([...base, "--arm", "ultra", "--rung", "ultra"])).toThrow(/summon behavior, not a boot posture/);
+    expect(() => parseArgs([
+      "--posture", "floor", ...base, "--arm", "heaven", "--rung", "low",
+    ])).toThrow(/doorless.*only allows --arm placebo with --rung benchmark-floor/);
+    expect(() => parseArgs([
+      "--posture", "curated", ...base, "--arm", "ultra", "--rung", "ultra",
+    ])).toThrow(/summon behavior, not a boot posture/);
   });
   it("--posture product-floor parses; benchmark-floor is an alias for floor", () => {
     expect(parseArgs(["--posture", "product-floor"]).posture).toBe("product-floor");
