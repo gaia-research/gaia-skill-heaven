@@ -3,16 +3,26 @@
 
 import { writeFileSync } from "node:fs";
 import { compile, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
-import { exec, harnessVersion } from "./exec.js";
-import { assembleRecord, type RecordOpts } from "./record.js";
+import { exec } from "./exec.js";
+import { type HarnessBundlePin } from "./provision.js";
+import { assembleRunReceipt } from "./receipt.js";
+import {
+  assembleRecord,
+  TRIAL_RUNGS,
+  validateTrialCoordinate,
+  validateTrialSkills,
+  type RecordOpts,
+  type TrialRung,
+} from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
-import type { Arm } from "./vendor/ledger-record.js";
+import { ARMS, type Arm } from "./vendor/ledger-record.js";
 
 interface CliArgs {
   posture: Posture;
   harness: Harness;
   mechanism?: Mechanism;
   skillPaths: string[];
+  recordSkillPaths: string[];
   doorPluginDir?: string;
   print: boolean;
   prompt?: string;
@@ -21,6 +31,8 @@ interface CliArgs {
   keepTemp: boolean;
   passthrough: string[];
   record?: RecordOpts;
+  receiptOut?: string;
+  harnessBundle?: HarnessBundlePin;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -29,6 +41,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let harness: Harness = "claude";
   let mechanism: Mechanism | undefined;
   const skillPaths: string[] = [];
+  const recordSkillPaths: string[] = [];
   let doorPluginDir: string | undefined;
   let print = false;
   let prompt: string | undefined;
@@ -39,10 +52,16 @@ export function parseArgs(argv: string[]): CliArgs {
   let record = false;
   let benchmarkId: string | undefined;
   let task: string | undefined;
-  let arm: Arm = "heaven";
+  let arm: Arm | undefined;
+  let rung: TrialRung | undefined;
   let repeat = 0;
   let endpointRegex: string | undefined;
   let recordOut: string | undefined;
+  let receiptOut: string | undefined;
+  let harnessBundleDir: string | undefined;
+  let harnessEntry: string | undefined;
+  let pinnedHarnessVersion: string | undefined;
+  let harnessSha256: string | undefined;
   let note: string | undefined;
 
   const need = (flag: string, i: number): string => {
@@ -74,6 +93,7 @@ export function parseArgs(argv: string[]): CliArgs {
       if (!MECHANISMS.includes(v as Mechanism)) throw new Error(`--mechanism must be one of ${MECHANISMS.join("|")}`);
       mechanism = v as Mechanism;
     } else if (a === "--skill") skillPaths.push(need(a, ++i));
+    else if (a === "--record-skill") recordSkillPaths.push(need(a, ++i));
     else if (a === "--print") print = true;
     else if (a === "-p") prompt = need(a, ++i);
     else if (a === "--model") model = need(a, ++i);
@@ -84,11 +104,20 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--task") task = need(a, ++i);
     else if (a === "--arm") {
       const v = need(a, ++i);
-      if (v !== "heaven" && v !== "placebo") throw new Error("--arm must be heaven or placebo");
-      arm = v;
+      if (!ARMS.includes(v as Arm)) throw new Error(`--arm must be one of ${ARMS.join("|")}`);
+      arm = v as Arm;
+    } else if (a === "--rung") {
+      const v = need(a, ++i);
+      if (!TRIAL_RUNGS.includes(v as TrialRung)) throw new Error(`--rung must be one of ${TRIAL_RUNGS.join("|")}`);
+      rung = v as TrialRung;
     } else if (a === "--repeat") repeat = Number(need(a, ++i));
     else if (a === "--endpoint-regex") endpointRegex = need(a, ++i);
     else if (a === "--record-out") recordOut = need(a, ++i);
+    else if (a === "--receipt-out") receiptOut = need(a, ++i);
+    else if (a === "--harness-bundle") harnessBundleDir = need(a, ++i);
+    else if (a === "--harness-entry") harnessEntry = need(a, ++i);
+    else if (a === "--harness-version") pinnedHarnessVersion = need(a, ++i);
+    else if (a === "--harness-sha256") harnessSha256 = need(a, ++i);
     else if (a === "--note") note = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
   }
@@ -115,26 +144,48 @@ export function parseArgs(argv: string[]): CliArgs {
   let recordOpts: RecordOpts | undefined;
   if (record) {
     if (prompt === undefined) throw new Error("--record is headless-only: -p <text> is required");
+    if (print) throw new Error("--record cannot be combined with --print because no trial would execute");
     if (!benchmarkId || !task) throw new Error("--record requires --benchmark-id and --task");
+    if (!arm || !rung) throw new Error("--record requires an exact --arm and --rung");
     if (!Number.isInteger(repeat) || repeat < 0) throw new Error("--repeat must be a non-negative integer");
-    // B2/V5-5: the placebo-of-record is the DOORLESS floor and only the doorless
-    // floor. The product floor keeps a control surface, so it can never stand in
-    // as the placebo — and the two floors are never averaged into one arm (B1).
-    if (arm === "placebo" && posture !== "floor") {
+    validateTrialCoordinate(arm, rung, posture);
+    if (!recordOut || !receiptOut) throw new Error("--record requires --record-out and --receipt-out companion artifact paths");
+    if (recordOut === receiptOut) throw new Error("--record-out and --receipt-out must be different paths");
+    if (!harnessBundleDir || !harnessEntry || !pinnedHarnessVersion || !harnessSha256) {
       throw new Error(
-        `--arm placebo is only valid with --posture floor, the doorless benchmark floor (got ${posture}). ` +
-          "The product floor is a separate arm (B1) and is recorded as --arm heaven.",
+        "--record requires a clean pinned harness bundle: --harness-bundle, --harness-entry, " +
+          "--harness-version, and --harness-sha256",
       );
     }
-    recordOpts = { benchmarkId, task, arm, repeatIndex: repeat, endpointRegex, recordOut, note };
+    recordOpts = { benchmarkId, task, arm, rung, repeatIndex: repeat, endpointRegex, recordOut, note };
+  } else if (
+    recordSkillPaths.length || receiptOut || harnessBundleDir || harnessEntry || pinnedHarnessVersion || harnessSha256
+  ) {
+    throw new Error("--record-skill, receipt, and pinned harness bundle flags are only valid with --record");
   }
 
-  return { posture, harness, mechanism, skillPaths, doorPluginDir, print, prompt, model, effort, keepTemp, passthrough, record: recordOpts };
+  const harnessBundle = harnessBundleDir && harnessEntry && pinnedHarnessVersion && harnessSha256
+    ? { sourceDir: harnessBundleDir, entry: harnessEntry, pinnedVersion: pinnedHarnessVersion, contentSha256: harnessSha256 }
+    : undefined;
+  return {
+    posture, harness, mechanism, skillPaths, recordSkillPaths, doorPluginDir, print, prompt, model, effort,
+    keepTemp, passthrough, record: recordOpts, receiptOut, harnessBundle,
+  };
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
   const skills: ResolvedSkill[] = args.skillPaths.map(resolveSkill);
+  const recordedSkills: ResolvedSkill[] = [...skills];
+  for (const skillPath of args.recordSkillPaths) {
+    const skill = resolveSkill(skillPath);
+    const existing = recordedSkills.find((candidate) => candidate.id === skill.id);
+    if (existing && existing.contentSha256 !== skill.contentSha256) {
+      throw new Error(`recorded skill id ${skill.id} resolves to more than one content hash`);
+    }
+    if (!existing) recordedSkills.push(skill);
+  }
+  if (args.record) validateTrialSkills(args.record, recordedSkills);
 
   const input: CompileInput = {
     posture: args.posture,
@@ -177,7 +228,7 @@ export function main(argv: string[]): number {
     return 0;
   }
 
-  const result = exec(compiled, { keepTemp: args.keepTemp });
+  const result = exec(compiled, { keepTemp: args.keepTemp, harnessBundle: args.harnessBundle });
   if (result.keptTemp) console.error(`[skill-zero] kept temp dir: ${result.sessionDir}`);
 
   if (args.record) {
@@ -197,17 +248,32 @@ export function main(argv: string[]): number {
     const record = assembleRecord({
       opts: args.record,
       posture: args.posture,
-      skills,
+      skills: recordedSkills,
       model: args.model ?? "unknown",
-      harness: { name: args.harness, version: harnessVersion(compiled.command) },
+      harness: {
+        name: args.harness,
+        version: result.provision?.reportedVersion ?? "unknown (unprovisioned)",
+      },
       usage,
       resultText,
       wallClockMs: result.wallClockMs,
       recordedAt: new Date().toISOString(),
       notes: args.record.note,
     });
+    if (!result.provision || !args.receiptOut) {
+      throw new Error("--record requires verified provision evidence and a companion receipt path");
+    }
+    const receipt = assembleRunReceipt({
+      record,
+      rung: args.record.rung,
+      posture: args.posture,
+      harnessName: args.harness,
+      provision: result.provision,
+      keptTemp: result.keptTemp,
+    });
     const json = JSON.stringify(record);
-    if (args.record.recordOut) writeFileSync(args.record.recordOut, json + "\n");
+    writeFileSync(args.record.recordOut!, json + "\n");
+    writeFileSync(args.receiptOut, JSON.stringify(receipt, null, 2) + "\n");
     console.log(json);
     if (resultText !== undefined) console.error(`[skill-zero] result: ${resultText.trim()}`);
   } else if (result.stdout !== null) {

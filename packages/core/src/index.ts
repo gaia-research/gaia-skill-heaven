@@ -31,6 +31,14 @@ export {
   type FsOp,
 } from "./compile.js";
 export { resolveSkill, type ResolvedSkill } from "./skills.js";
+export { hashBundle, validateBundlePin, type HarnessBundlePin, type ProvisionedHarness } from "./provision.js";
+export {
+  RUN_RECEIPT_SCHEMA,
+  assembleRunReceipt,
+  sha256Json,
+  type RunReceipt,
+} from "./receipt.js";
+export { TRIAL_RUNGS, validateTrialCoordinate, validateTrialSkills, type TrialRung } from "./record.js";
 
 // `materialize` — and deliberately NOT `exec`.
 //

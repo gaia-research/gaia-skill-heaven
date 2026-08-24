@@ -15,7 +15,7 @@ const rec = assembleRecord({
   recordedAt: "2026-07-22T00:00:00.000Z",
   resultText: "NONE",
   usage: { input_tokens: 4, output_tokens: 5, cache_creation_input_tokens: 10, cache_read_input_tokens: 100 },
-  opts: { benchmarkId: "hh-m2-smoke", task: "listing-probe", arm: "placebo", repeatIndex: 0, endpointRegex: "^NONE$" },
+  opts: { benchmarkId: "hh-m2-smoke", task: "listing-probe", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0, endpointRegex: "^NONE$" },
   posture: "floor",
   skills: [],
 });
