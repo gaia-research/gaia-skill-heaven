@@ -204,6 +204,16 @@ Two things worth knowing:
 - **Your config is never touched.** Each launch composes a temporary session and deletes it on exit. Your real `~/.claude`, settings, and skills are left exactly as they were.
 - **It fails closed.** Harnesses hide their skills in different places. If Skill Zero can't give you a genuinely clean launch, it tells you instead of pretending.
 
+### Optional local telemetry
+
+Runtime observations are off by default. Add `--telemetry-out ./observation.json`
+to an existing `skill-zero` execution to write one local, versioned observation;
+validate it with `skill-zero --telemetry-validate ./observation.json`. The export
+contains pseudonymous session and exact skill-hash identity plus only observed
+signals—never raw prompts, outputs, credentials, or absolute local paths—and is
+never transmitted automatically. Telemetry identifies uncertainty; it does not
+prove or stamp a claim or trigger a benchmark. [Telemetry contract and flags →](docs/TELEMETRY.md)
+
 ---
 
 ## Harness support
