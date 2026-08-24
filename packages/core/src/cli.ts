@@ -1,11 +1,18 @@
 // skill-zero CLI (working name — OPEN item 8; flag vocabulary provisional
 // pending N4/N5). See README for the full surface.
 
-import { writeFileSync } from "node:fs";
-import { compile, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
+import { readFileSync, writeFileSync } from "node:fs";
+import { compile, DEFAULT_CLAUDE_MECHANISM, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
+import {
+  assembleRuntimeObservation,
+  newSessionPseudonym,
+  serializeRuntimeObservation,
+  validateRuntimeObservation,
+  type AvailableTokenUsage,
+} from "./telemetry.js";
 import type { Arm } from "./vendor/ledger-record.js";
 
 interface CliArgs {
@@ -21,6 +28,16 @@ interface CliArgs {
   keepTemp: boolean;
   passthrough: string[];
   record?: RecordOpts;
+  telemetry?: {
+    out: string;
+    taskFamily?: string;
+    invokedSkillIds: string[];
+    modelVersion?: string;
+    retryCount?: number;
+    recoveryObserved?: boolean;
+    churnCount?: number;
+  };
+  telemetryValidate?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -44,6 +61,14 @@ export function parseArgs(argv: string[]): CliArgs {
   let endpointRegex: string | undefined;
   let recordOut: string | undefined;
   let note: string | undefined;
+  let telemetryOut: string | undefined;
+  let telemetryTaskFamily: string | undefined;
+  const telemetryInvokedSkillIds: string[] = [];
+  let telemetryModelVersion: string | undefined;
+  let telemetryRetryCount: number | undefined;
+  let telemetryRecoveryObserved: boolean | undefined;
+  let telemetryChurnCount: number | undefined;
+  let telemetryValidate: string | undefined;
 
   const need = (flag: string, i: number): string => {
     const v = argv[i];
@@ -90,6 +115,19 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--endpoint-regex") endpointRegex = need(a, ++i);
     else if (a === "--record-out") recordOut = need(a, ++i);
     else if (a === "--note") note = need(a, ++i);
+    else if (a === "--telemetry-out") telemetryOut = need(a, ++i);
+    else if (a === "--telemetry-task-family") telemetryTaskFamily = need(a, ++i);
+    else if (a === "--telemetry-invoked-skill") telemetryInvokedSkillIds.push(need(a, ++i));
+    else if (a === "--telemetry-model-version") telemetryModelVersion = need(a, ++i);
+    else if (a === "--telemetry-retry-count") telemetryRetryCount = Number(need(a, ++i));
+    else if (a === "--telemetry-recovery") {
+      const value = need(a, ++i);
+      if (value !== "observed" && value !== "not-observed") {
+        throw new Error("--telemetry-recovery must be observed or not-observed");
+      }
+      telemetryRecoveryObserved = value === "observed";
+    } else if (a === "--telemetry-churn-count") telemetryChurnCount = Number(need(a, ++i));
+    else if (a === "--telemetry-validate") telemetryValidate = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
   }
 
@@ -129,11 +167,67 @@ export function parseArgs(argv: string[]): CliArgs {
     recordOpts = { benchmarkId, task, arm, repeatIndex: repeat, endpointRegex, recordOut, note };
   }
 
-  return { posture, harness, mechanism, skillPaths, doorPluginDir, print, prompt, model, effort, keepTemp, passthrough, record: recordOpts };
+  const telemetryDetailUsed = telemetryTaskFamily !== undefined || telemetryInvokedSkillIds.length > 0 ||
+    telemetryModelVersion !== undefined || telemetryRetryCount !== undefined ||
+    telemetryRecoveryObserved !== undefined || telemetryChurnCount !== undefined;
+  if (telemetryDetailUsed && telemetryOut === undefined) {
+    throw new Error("telemetry detail flags require --telemetry-out <local-file>");
+  }
+  if (telemetryOut !== undefined) {
+    if (telemetryModelVersion !== undefined && model === undefined) {
+      throw new Error("--telemetry-model-version requires --model");
+    }
+    if (record) throw new Error("--telemetry-out cannot be combined with --record; runtime observations are not benchmark arms");
+    if (print) throw new Error("--telemetry-out records an execution and cannot be combined with --print");
+    for (const [flag, value] of [
+      ["--telemetry-retry-count", telemetryRetryCount],
+      ["--telemetry-churn-count", telemetryChurnCount],
+    ] as const) {
+      if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
+        throw new Error(`${flag} must be a non-negative integer`);
+      }
+    }
+  }
+  if (telemetryValidate !== undefined && (telemetryOut !== undefined || telemetryDetailUsed || record)) {
+    throw new Error("--telemetry-validate is standalone and cannot be combined with export or benchmark flags");
+  }
+
+  return {
+    posture,
+    harness,
+    mechanism,
+    skillPaths,
+    doorPluginDir,
+    print,
+    prompt,
+    model,
+    effort,
+    keepTemp,
+    passthrough,
+    record: recordOpts,
+    ...(telemetryOut === undefined ? {} : {
+      telemetry: {
+        out: telemetryOut,
+        ...(telemetryTaskFamily === undefined ? {} : { taskFamily: telemetryTaskFamily }),
+        invokedSkillIds: telemetryInvokedSkillIds,
+        ...(telemetryModelVersion === undefined ? {} : { modelVersion: telemetryModelVersion }),
+        ...(telemetryRetryCount === undefined ? {} : { retryCount: telemetryRetryCount }),
+        ...(telemetryRecoveryObserved === undefined ? {} : { recoveryObserved: telemetryRecoveryObserved }),
+        ...(telemetryChurnCount === undefined ? {} : { churnCount: telemetryChurnCount }),
+      },
+    }),
+    ...(telemetryValidate === undefined ? {} : { telemetryValidate }),
+  };
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
+  if (args.telemetryValidate) {
+    const value: unknown = JSON.parse(readFileSync(args.telemetryValidate, "utf8"));
+    validateRuntimeObservation(value);
+    console.error(`[skill-zero] valid ${String((value as { schema?: unknown }).schema)}`);
+    return 0;
+  }
   const skills: ResolvedSkill[] = args.skillPaths.map(resolveSkill);
 
   const input: CompileInput = {
@@ -144,7 +238,7 @@ export function main(argv: string[]): number {
     model: args.model,
     effort: args.effort,
     prompt: args.prompt,
-    jsonOutput: !!args.record,
+    jsonOutput: !!args.record || !!args.telemetry,
     passthrough: args.passthrough,
     doorPluginDir: args.doorPluginDir,
   };
@@ -167,6 +261,9 @@ export function main(argv: string[]): number {
     );
   }
 
+  if (args.telemetry && compiled.execSupport === "recipe") {
+    throw new Error(`--telemetry-out requires a verified execution route; ${args.harness} compiled as recipe-only`);
+  }
   if (args.print || compiled.execSupport === "recipe") {
     if (!args.print) {
       console.error(
@@ -180,20 +277,24 @@ export function main(argv: string[]): number {
   const result = exec(compiled, { keepTemp: args.keepTemp });
   if (result.keptTemp) console.error(`[skill-zero] kept temp dir: ${result.sessionDir}`);
 
-  if (args.record) {
-    if (result.stdout === null) throw new Error("--record requires headless output");
-    let usage; let resultText: string | undefined;
+  let usage: AvailableTokenUsage | undefined;
+  let resultText: string | undefined;
+  if (result.stdout !== null) {
     try {
-      // claude --output-format json emits an event array (2.1.215); the final
-      // "result" event carries result text + usage. Older single-object shape
-      // is handled too.
+      // Known JSON headless shapes expose usage on the final result object.
+      // Result text is retained only for the legacy explicit benchmark export;
+      // runtime telemetry never receives or serializes it.
       let parsed = JSON.parse(result.stdout);
       if (Array.isArray(parsed)) parsed = parsed.find((x) => x?.type === "result") ?? parsed[parsed.length - 1];
       usage = parsed?.usage;
       resultText = typeof parsed?.result === "string" ? parsed.result : undefined;
     } catch {
-      // non-JSON output: usage stays undefined → perTurn null (unmeasured, never 0)
+      // Non-JSON output has no already-available token fields.
     }
+  }
+
+  if (args.record) {
+    if (result.stdout === null) throw new Error("--record requires headless output");
     const record = assembleRecord({
       opts: args.record,
       posture: args.posture,
@@ -210,8 +311,32 @@ export function main(argv: string[]): number {
     if (args.record.recordOut) writeFileSync(args.record.recordOut, json + "\n");
     console.log(json);
     if (resultText !== undefined) console.error(`[skill-zero] result: ${resultText.trim()}`);
-  } else if (result.stdout !== null) {
-    process.stdout.write(result.stdout);
+  } else {
+    if (args.telemetry) {
+      const version = harnessVersion(compiled.command);
+      const selectedMechanism = args.mechanism ??
+        (args.harness === "claude" && args.posture === "curated" ? DEFAULT_CLAUDE_MECHANISM : undefined);
+      const observation = assembleRuntimeObservation({
+        sessionPseudonym: newSessionPseudonym(),
+        observedAt: new Date().toISOString(),
+        harness: { name: args.harness, ...(version === "unknown" ? {} : { version }) },
+        ...(args.model ? { model: { id: args.model, ...(args.telemetry.modelVersion ? { version: args.telemetry.modelVersion } : {}) } } : {}),
+        posture: args.posture,
+        ...(selectedMechanism ? { mechanism: selectedMechanism } : {}),
+        skills,
+        invokedSkillIds: args.telemetry.invokedSkillIds,
+        ...(args.telemetry.taskFamily === undefined ? {} : { taskFamily: args.telemetry.taskFamily }),
+        exitCode: result.status,
+        ...(args.telemetry.retryCount === undefined ? {} : { retryCount: args.telemetry.retryCount }),
+        ...(args.telemetry.recoveryObserved === undefined ? {} : { recoveryObserved: args.telemetry.recoveryObserved }),
+        ...(args.telemetry.churnCount === undefined ? {} : { churnCount: args.telemetry.churnCount }),
+        wallClockMs: result.wallClockMs,
+        usage,
+      });
+      writeFileSync(args.telemetry.out, serializeRuntimeObservation(observation));
+      console.error(`[skill-zero] wrote local telemetry: ${args.telemetry.out}`);
+    }
+    if (result.stdout !== null) process.stdout.write(result.stdout);
   }
   return result.status;
 }
