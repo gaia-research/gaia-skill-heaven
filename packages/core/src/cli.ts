@@ -4,9 +4,9 @@
 import { writeFileSync } from "node:fs";
 import { compile, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
-import { assembleRecord, type RecordOpts } from "./record.js";
+import { assembleRecord, TRIAL_RUNGS, validateTrialCoordinate, type RecordOpts, type TrialRung } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
-import type { Arm } from "./vendor/ledger-record.js";
+import { ARMS, type Arm } from "./vendor/ledger-record.js";
 
 interface CliArgs {
   posture: Posture;
@@ -39,7 +39,8 @@ export function parseArgs(argv: string[]): CliArgs {
   let record = false;
   let benchmarkId: string | undefined;
   let task: string | undefined;
-  let arm: Arm = "heaven";
+  let arm: Arm | undefined;
+  let rung: TrialRung | undefined;
   let repeat = 0;
   let endpointRegex: string | undefined;
   let recordOut: string | undefined;
@@ -84,8 +85,12 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--task") task = need(a, ++i);
     else if (a === "--arm") {
       const v = need(a, ++i);
-      if (v !== "heaven" && v !== "placebo") throw new Error("--arm must be heaven or placebo");
-      arm = v;
+      if (!ARMS.includes(v as Arm)) throw new Error(`--arm must be one of ${ARMS.join("|")}`);
+      arm = v as Arm;
+    } else if (a === "--rung") {
+      const v = need(a, ++i);
+      if (!TRIAL_RUNGS.includes(v as TrialRung)) throw new Error(`--rung must be one of ${TRIAL_RUNGS.join("|")}`);
+      rung = v as TrialRung;
     } else if (a === "--repeat") repeat = Number(need(a, ++i));
     else if (a === "--endpoint-regex") endpointRegex = need(a, ++i);
     else if (a === "--record-out") recordOut = need(a, ++i);
@@ -116,17 +121,10 @@ export function parseArgs(argv: string[]): CliArgs {
   if (record) {
     if (prompt === undefined) throw new Error("--record is headless-only: -p <text> is required");
     if (!benchmarkId || !task) throw new Error("--record requires --benchmark-id and --task");
+    if (!arm || !rung) throw new Error("--record requires an exact --arm and --rung");
     if (!Number.isInteger(repeat) || repeat < 0) throw new Error("--repeat must be a non-negative integer");
-    // B2/V5-5: the placebo-of-record is the DOORLESS floor and only the doorless
-    // floor. The product floor keeps a control surface, so it can never stand in
-    // as the placebo — and the two floors are never averaged into one arm (B1).
-    if (arm === "placebo" && posture !== "floor") {
-      throw new Error(
-        `--arm placebo is only valid with --posture floor, the doorless benchmark floor (got ${posture}). ` +
-          "The product floor is a separate arm (B1) and is recorded as --arm heaven.",
-      );
-    }
-    recordOpts = { benchmarkId, task, arm, repeatIndex: repeat, endpointRegex, recordOut, note };
+    validateTrialCoordinate(arm, rung, posture);
+    recordOpts = { benchmarkId, task, arm, rung, repeatIndex: repeat, endpointRegex, recordOut, note };
   }
 
   return { posture, harness, mechanism, skillPaths, doorPluginDir, print, prompt, model, effort, keepTemp, passthrough, record: recordOpts };

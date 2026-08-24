@@ -290,14 +290,35 @@ describe("cli level lane", () => {
     expect(() => parseArgs(["--posture", "floor", "--level", "zero"])).toThrow(/contradicts/);
     expect(parseArgs(["--posture", "product-floor", "--level", "zero"]).posture).toBe("product-floor");
   });
-  it("--record demands headless + ids", () => {
+  it("--record demands headless + ids + an exact frozen arm/rung coordinate", () => {
     expect(() => parseArgs(["--record"])).toThrow(/headless/);
     expect(() => parseArgs(["--record", "-p", "Q"])).toThrow(/--benchmark-id/);
-    const ok = parseArgs(["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"]);
-    expect(ok.record).toMatchObject({ benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 0 });
+    expect(() => parseArgs(["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"])).toThrow(
+      /exact --arm and --rung/,
+    );
+    const ok = parseArgs([
+      "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t",
+      "--arm", "placebo", "--rung", "benchmark-floor",
+    ]);
+    expect(ok.record).toMatchObject({
+      benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0,
+    });
   });
-  it("--arm remains a benchmark enum, separate from live Hell budgets", () => {
-    expect(() => parseArgs(["--arm", "hell"])).toThrow(/heaven or placebo/);
+  it("accepts all four frozen ledger arms with exact compatible rungs", () => {
+    const base = ["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"];
+    expect(parseArgs([...base, "--arm", "placebo", "--rung", "benchmark-floor"]).record?.arm).toBe("placebo");
+    expect(parseArgs(["--posture", "curated", "--skill", "/missing", ...base, "--arm", "heaven", "--rung", "low"]).record?.rung).toBe("low");
+    for (const rung of ["high", "xhigh", "max"] as const) {
+      expect(parseArgs(["--posture", "product-floor", ...base, "--arm", "hell", "--rung", rung]).record?.rung).toBe(rung);
+    }
+    expect(parseArgs(["--posture", "product-floor", ...base, "--arm", "ultra", "--rung", "ultra"]).record?.arm).toBe("ultra");
+  });
+  it("rejects invalid arm/rung pairs and never maps upper rungs to boot postures", () => {
+    const base = ["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"];
+    expect(() => parseArgs([...base, "--arm", "blazing", "--rung", "high"])).toThrow(/--arm must be one of/);
+    expect(() => parseArgs([...base, "--arm", "hell", "--rung", "blazing"])).toThrow(/--rung must be one of/);
+    expect(() => parseArgs([...base, "--arm", "hell", "--rung", "low"])).toThrow(/cannot record/);
+    expect(() => parseArgs([...base, "--arm", "ultra", "--rung", "ultra"])).toThrow(/summon behavior, not a boot posture/);
   });
   it("--posture product-floor parses; benchmark-floor is an alias for floor", () => {
     expect(parseArgs(["--posture", "product-floor"]).posture).toBe("product-floor");
@@ -305,7 +326,10 @@ describe("cli level lane", () => {
     expect(() => parseArgs(["--posture", "doorful"])).toThrow(/--posture must be one of/);
   });
   it("--arm placebo is refused on the product floor (B2: the placebo-of-record is doorless)", () => {
-    const argsFor = (p: string) => ["--posture", p, "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t", "--arm", "placebo"];
+    const argsFor = (p: string) => [
+      "--posture", p, "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t",
+      "--arm", "placebo", "--rung", "benchmark-floor",
+    ];
     expect(parseArgs(argsFor("floor")).record?.arm).toBe("placebo");
     expect(() => parseArgs(argsFor("product-floor"))).toThrow(/placebo/);
   });
@@ -324,10 +348,35 @@ describe("record assembly discipline", () => {
     usage: { input_tokens: 4, output_tokens: 5, cache_creation_input_tokens: 10, cache_read_input_tokens: 100 },
   };
 
+  it("represents every R2 arm and exact rung without adding a ledger field", () => {
+    const cases = [
+      { arm: "placebo", rung: "benchmark-floor", posture: "floor", skills: [] },
+      { arm: "heaven", rung: "zero", posture: "product-floor", skills: [] },
+      { arm: "heaven", rung: "low", posture: "curated", skills: [fakeSkill] },
+      { arm: "heaven", rung: "med", posture: "native", skills: [] },
+      { arm: "hell", rung: "high", posture: "product-floor", skills: [] },
+      { arm: "hell", rung: "xhigh", posture: "product-floor", skills: [] },
+      { arm: "hell", rung: "max", posture: "product-floor", skills: [] },
+      { arm: "ultra", rung: "ultra", posture: "product-floor", skills: [] },
+    ] as const;
+    for (const c of cases) {
+      const record = assembleRecord({
+        ...base,
+        opts: { benchmarkId: "b", task: "t", arm: c.arm, rung: c.rung, repeatIndex: 0 },
+        posture: c.posture,
+        skills: [...c.skills],
+      });
+      validateRecord(record);
+      expect(record.arm).toBe(c.arm);
+      expect(record.notes).toContain(`rung=${c.rung}.`);
+      expect(record).not.toHaveProperty("rung"); // D6: hh-ledger/v1 stays frozen
+    }
+  });
+
   it("floor placebo: zeros by construction, system null, perTurn summed", () => {
     const r = assembleRecord({
       ...base,
-      opts: { benchmarkId: "hh-m2-smoke", task: "listing-probe", arm: "placebo", repeatIndex: 0, endpointRegex: "^NONE$" },
+      opts: { benchmarkId: "hh-m2-smoke", task: "listing-probe", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0, endpointRegex: "^NONE$" },
       posture: "floor",
       skills: [],
     });
@@ -340,7 +389,7 @@ describe("record assembly discipline", () => {
   it("curated heaven: standing summed, invocation null with note", () => {
     const r = assembleRecord({
       ...base,
-      opts: { benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 1 },
+      opts: { benchmarkId: "b", task: "t", arm: "heaven", rung: "low", repeatIndex: 1 },
       posture: "curated",
       skills: [fakeSkill],
     });
@@ -355,13 +404,13 @@ describe("record assembly discipline", () => {
   it("floor records name WHICH floor they came from, so the arms cannot be pooled (B1)", () => {
     const bench = assembleRecord({
       ...base,
-      opts: { benchmarkId: "b", task: "t", arm: "placebo", repeatIndex: 0 },
+      opts: { benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0 },
       posture: "floor",
       skills: [],
     });
     const product = assembleRecord({
       ...base,
-      opts: { benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 0 },
+      opts: { benchmarkId: "b", task: "t", arm: "heaven", rung: "zero", repeatIndex: 0 },
       posture: "product-floor",
       skills: [],
     });
@@ -369,8 +418,8 @@ describe("record assembly discipline", () => {
     validateRecord(product);
     // the tag leads the note, so a record's own floor is unambiguous even
     // though each note also names the arm it must never be pooled with
-    expect(bench.notes).toMatch(/^floor=benchmark \(doorless/);
-    expect(product.notes).toMatch(/^floor=product \(doorful/);
+    expect(bench.notes).toMatch(/^rung=benchmark-floor\. floor=benchmark \(doorless/);
+    expect(product.notes).toMatch(/^rung=zero\. floor=product \(doorful/);
     expect(bench.notes).toMatch(/never averaged \(B1\)/);
     expect(product.notes).toMatch(/never averaged \(B1\)/);
     // both floors load zero skills — the door is not a skill cost
@@ -382,18 +431,29 @@ describe("record assembly discipline", () => {
     expect(() =>
       assembleRecord({
         ...base,
-        opts: { benchmarkId: "b", task: "t", arm: "placebo", repeatIndex: 0 },
+        opts: { benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0 },
         posture: "product-floor",
         skills: [],
       }),
     ).toThrow(/placebo-of-record/);
   });
 
+  it("rejects loaded skills in placebo even if called below CLI validation", () => {
+    expect(() =>
+      assembleRecord({
+        ...base,
+        opts: { benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0 },
+        posture: "floor",
+        skills: [fakeSkill],
+      }),
+    ).toThrow(/cannot record loaded skills/);
+  });
+
   it("placebo arm outside floor is rejected (B2)", () => {
     expect(() =>
       assembleRecord({
         ...base,
-        opts: { benchmarkId: "b", task: "t", arm: "placebo", repeatIndex: 0 },
+        opts: { benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0 },
         posture: "curated",
         skills: [fakeSkill],
       }),
@@ -404,7 +464,7 @@ describe("record assembly discipline", () => {
     const r = assembleRecord({
       ...base,
       usage: undefined,
-      opts: { benchmarkId: "b", task: "t", arm: "heaven", repeatIndex: 0 },
+      opts: { benchmarkId: "b", task: "t", arm: "heaven", rung: "low", repeatIndex: 0 },
       posture: "curated",
       skills: [fakeSkill],
     });

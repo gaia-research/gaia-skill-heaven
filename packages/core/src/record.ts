@@ -19,10 +19,47 @@ import { floorOf, type Posture } from "./compile.js";
 import type { ResolvedSkill } from "./skills.js";
 import { LEDGER_SCHEMA, validateRecord, type Arm, type LedgerRecord } from "./vendor/ledger-record.js";
 
+/**
+ * The v1 ledger deliberately keeps a coarse, frozen arm enum. Runtime receipts
+ * carry the exact coordinate separately. `benchmark-floor` is not a product
+ * rung: it names the doorless internal instrument used only by placebo.
+ */
+export const TRIAL_RUNGS = ["benchmark-floor", "zero", "low", "med", "high", "xhigh", "max", "ultra"] as const;
+export type TrialRung = (typeof TRIAL_RUNGS)[number];
+
+const ARM_RUNGS: Record<Arm, readonly TrialRung[]> = {
+  placebo: ["benchmark-floor"],
+  heaven: ["zero", "low", "med"],
+  hell: ["high", "xhigh", "max"],
+  ultra: ["ultra"],
+};
+
+export function validateTrialCoordinate(arm: Arm, rung: TrialRung, posture: Posture): void {
+  if (!ARM_RUNGS[arm].includes(rung)) {
+    throw new Error(`--arm ${arm} cannot record --rung ${rung}; valid rungs: ${ARM_RUNGS[arm].join("|")}`);
+  }
+  if (arm === "placebo" && posture !== "floor") {
+    throw new Error(
+      "--arm placebo is only allowed for --posture floor, the doorless benchmark floor (own-placebo anchoring, B2). " +
+        "The product floor retains a control surface, so it can never stand in as the placebo-of-record.",
+    );
+  }
+  if (rung === "zero" && posture !== "product-floor") {
+    throw new Error("--rung zero is the doorful product floor and requires --posture product-floor; it is not placebo");
+  }
+  if (["high", "xhigh", "max", "ultra"].includes(rung) && posture !== "product-floor") {
+    throw new Error(
+      `--rung ${rung} is activated by in-session summon behavior, not a boot posture; ` +
+        "record it over --posture product-floor so the door remains available",
+    );
+  }
+}
+
 export interface RecordOpts {
   benchmarkId: string;
   task: string;
   arm: Arm;
+  rung: TrialRung;
   repeatIndex: number;
   endpointRegex?: string;
   recordOut?: string;
@@ -61,11 +98,9 @@ export function assembleRecord(args: {
   notes?: string;
 }): LedgerRecord {
   const { opts, posture, skills } = args;
-  if (opts.arm === "placebo" && posture !== "floor") {
-    throw new Error(
-      "--arm placebo is only allowed for --posture floor, the doorless benchmark floor (own-placebo anchoring, B2). " +
-        "The product floor retains a control surface, so it can never stand in as the placebo-of-record; record it as --arm heaven.",
-    );
+  validateTrialCoordinate(opts.arm, opts.rung, posture);
+  if (opts.arm === "placebo" && skills.length > 0) {
+    throw new Error("--arm placebo cannot record loaded skills; the doorless own-placebo has skillsLoaded: []");
   }
   const floorKind = floorOf(posture);
   const floor = floorKind !== null;
@@ -75,6 +110,9 @@ export function assembleRecord(args: {
   // pooled at analysis time (B1 — priced separately, never averaged into one
   // number). hh-ledger/v1 has no posture field and this repo does not own that
   // contract, so the tag rides `notes` until the schema carries it upstream.
+  // hh-ledger/v1 has no rung field. Keep a stable tag in its existing notes
+  // while the structured companion receipt owns the typed coordinate.
+  noteParts.push(`rung=${opts.rung}.`);
   if (floorKind === "benchmark") {
     noteParts.push("floor=benchmark (doorless; the placebo-of-record, B2). Separate arm from floor=product — never averaged (B1).");
   } else if (floorKind === "product") {
