@@ -107,6 +107,45 @@ arms and never averaged — the gap between them *is* the door's cost.
 I/O. `exec()` materializes and spawns. `execSupport: "recipe"` (emit a plan, never spawn) is an
 honest state, not a failure.
 
+### 4b. R2 benchmark recording
+
+`skill-zero --record` is the runtime driver for the frozen `hh-ledger/v1` arms. A run must name
+both the coarse arm and its exact coordinate:
+
+| ledger arm | accepted `--rung` | launch base |
+|---|---|---|
+| `placebo` | `benchmark-floor` | `floor` — doorless, and the only placebo |
+| `heaven` | `zero · low · med` | `zero` is the distinct doorful product floor |
+| `hell` | `high · xhigh · max` | `product-floor`; rung activation remains in-session summon behavior |
+| `ultra` | `ultra` | `product-floor`; activation remains in-session summon behavior |
+
+The ledger schema is unchanged. Its existing `notes` carries a stable `rung=...` tag, while a
+separate `skill-zero/r2-run-receipt/v1` JSON receipt carries the typed rung, boot posture, floor
+kind, activation kind, skill hashes, and provisioning evidence. Non-zero treatment rungs require
+at least one `--skill` or `--record-skill`; the latter attributes a skill summoned by the door
+without pretending it was a boot loadout.
+
+B5 recording also refuses to execute a shared/global harness binary. Prepare a complete isolated
+harness install directory, pin its exact `--version` output and deterministic tree hash, then pass
+that bundle to the driver. The bundle is copied into the run's `mkdtemp` sandbox, hashed again,
+and executed only from the copy:
+
+```bash
+npm run launcher -- --posture product-floor --record -p "$TASK_PROMPT" \
+  --benchmark-id hh-r2 --task "$TASK_ID" --arm hell --rung high --repeat 0 \
+  --record-skill /absolute/path/to/target-skill \
+  --harness-bundle /absolute/path/to/clean-harness-install \
+  --harness-entry bin/claude --harness-version "$PINNED_VERSION_OUTPUT" \
+  --harness-sha256 "$BUNDLE_SHA256" \
+  --record-out run.jsonl --receipt-out run.receipt.json
+```
+
+`hashBundle()` is exported by core so provisioning code can calculate the pin before a trial.
+It hashes sorted relative paths, bytes, and safe internal symlink targets; rejects any symlink
+that escapes the bundle; and fails closed on content or version drift. Output files are explicit benchmark artifacts; harness config, auth sources, and
+skill sources are read-only, and all provisioning writes stay under the disposable session.
+Every emitted ledger line still has to pass gaia-research's frozen `ledger.ts validate` gate.
+
 ### 5. The summon engine (`packages/skill-summon`)
 
 The summon engine is an **in-repo TypeScript port**, not an independent

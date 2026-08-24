@@ -5,6 +5,15 @@ import { assembleRecord } from "../src/record.js";
 import { validateRecord } from "../src/vendor/ledger-record.js";
 import type { ResolvedSkill } from "../src/skills.js";
 
+const recordRuntimeFlags = [
+  "--record-out", "/tmp/record.jsonl",
+  "--receipt-out", "/tmp/receipt.json",
+  "--harness-bundle", "/tmp/harness",
+  "--harness-entry", "bin/harness",
+  "--harness-version", "fixture 1.0.0",
+  "--harness-sha256", "a".repeat(64),
+];
+
 const fakeSkill: ResolvedSkill = {
   id: "impeccable",
   dir: "/skills/impeccable",
@@ -298,14 +307,30 @@ describe("cli level lane", () => {
     );
     const ok = parseArgs([
       "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t",
-      "--arm", "placebo", "--rung", "benchmark-floor",
+      "--arm", "placebo", "--rung", "benchmark-floor", ...recordRuntimeFlags,
     ]);
     expect(ok.record).toMatchObject({
       benchmarkId: "b", task: "t", arm: "placebo", rung: "benchmark-floor", repeatIndex: 0,
     });
   });
+  it("requires distinct ledger/receipt outputs and all pinned bundle coordinates", () => {
+    const base = [
+      "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t",
+      "--arm", "placebo", "--rung", "benchmark-floor",
+    ];
+    expect(() => parseArgs(base)).toThrow(/--record-out and --receipt-out/);
+    expect(() => parseArgs([...base, "--record-out", "/tmp/x", "--receipt-out", "/tmp/x"])).toThrow(/different paths/);
+    expect(() => parseArgs([
+      ...base, "--record-out", "/tmp/r", "--receipt-out", "/tmp/p",
+    ])).toThrow(/clean pinned harness bundle/);
+    expect(() => parseArgs(["--record-skill", "/tmp/skill"])).toThrow(/only valid with --record/);
+    expect(() => parseArgs(["--record", "--print", "-p", "Q", "--benchmark-id", "b", "--task", "t"])).toThrow(
+      /cannot be combined with --print/,
+    );
+  });
+
   it("accepts all four frozen ledger arms with exact compatible rungs", () => {
-    const base = ["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t"];
+    const base = ["--record", "-p", "Q", "--benchmark-id", "b", "--task", "t", ...recordRuntimeFlags];
     expect(parseArgs([...base, "--arm", "placebo", "--rung", "benchmark-floor"]).record?.arm).toBe("placebo");
     expect(parseArgs(["--posture", "curated", "--skill", "/missing", ...base, "--arm", "heaven", "--rung", "low"]).record?.rung).toBe("low");
     for (const rung of ["high", "xhigh", "max"] as const) {
@@ -328,7 +353,7 @@ describe("cli level lane", () => {
   it("--arm placebo is refused on the product floor (B2: the placebo-of-record is doorless)", () => {
     const argsFor = (p: string) => [
       "--posture", p, "--record", "-p", "Q", "--benchmark-id", "b", "--task", "t",
-      "--arm", "placebo", "--rung", "benchmark-floor",
+      "--arm", "placebo", "--rung", "benchmark-floor", ...recordRuntimeFlags,
     ];
     expect(parseArgs(argsFor("floor")).record?.arm).toBe("placebo");
     expect(() => parseArgs(argsFor("product-floor"))).toThrow(/placebo/);
@@ -353,11 +378,11 @@ describe("record assembly discipline", () => {
       { arm: "placebo", rung: "benchmark-floor", posture: "floor", skills: [] },
       { arm: "heaven", rung: "zero", posture: "product-floor", skills: [] },
       { arm: "heaven", rung: "low", posture: "curated", skills: [fakeSkill] },
-      { arm: "heaven", rung: "med", posture: "native", skills: [] },
-      { arm: "hell", rung: "high", posture: "product-floor", skills: [] },
-      { arm: "hell", rung: "xhigh", posture: "product-floor", skills: [] },
-      { arm: "hell", rung: "max", posture: "product-floor", skills: [] },
-      { arm: "ultra", rung: "ultra", posture: "product-floor", skills: [] },
+      { arm: "heaven", rung: "med", posture: "native", skills: [fakeSkill] },
+      { arm: "hell", rung: "high", posture: "product-floor", skills: [fakeSkill] },
+      { arm: "hell", rung: "xhigh", posture: "product-floor", skills: [fakeSkill] },
+      { arm: "hell", rung: "max", posture: "product-floor", skills: [fakeSkill] },
+      { arm: "ultra", rung: "ultra", posture: "product-floor", skills: [fakeSkill] },
     ] as const;
     for (const c of cases) {
       const record = assembleRecord({
@@ -436,6 +461,17 @@ describe("record assembly discipline", () => {
         skills: [],
       }),
     ).toThrow(/placebo-of-record/);
+  });
+
+  it("requires exact loaded skill hashes on every non-zero treatment rung", () => {
+    expect(() =>
+      assembleRecord({
+        ...base,
+        opts: { benchmarkId: "b", task: "t", arm: "hell", rung: "high", repeatIndex: 0 },
+        posture: "product-floor",
+        skills: [],
+      }),
+    ).toThrow(/requires at least one exact loaded skill hash/);
   });
 
   it("rejects loaded skills in placebo even if called below CLI validation", () => {

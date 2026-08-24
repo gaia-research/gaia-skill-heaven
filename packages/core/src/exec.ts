@@ -8,6 +8,15 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } fro
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { CompileResult, FsOp } from "./compile.js";
+import { provisionHarness, type HarnessBundlePin } from "./provision.js";
+
+export interface ProvisionEvidence {
+  pinnedVersion: string;
+  reportedVersion: string;
+  entry: string;
+  bundleContentSha256: string;
+  entryContentSha256: string;
+}
 
 export interface ExecResult {
   status: number;
@@ -15,6 +24,7 @@ export interface ExecResult {
   wallClockMs: number;
   sessionDir: string;
   keptTemp: boolean;
+  provision?: ProvisionEvidence;
 }
 
 const subst = (p: string, session: string) =>
@@ -39,7 +49,10 @@ export function materialize(fsPlan: FsOp[], session: string): void {
   }
 }
 
-export function exec(compiled: CompileResult, opts: { keepTemp?: boolean } = {}): ExecResult {
+export function exec(
+  compiled: CompileResult,
+  opts: { keepTemp?: boolean; harnessBundle?: HarnessBundlePin } = {},
+): ExecResult {
   if (compiled.execSupport !== "exec") {
     throw new Error(
       `${compiled.command}: compiled as a recipe (cells not verified for live exec) — use --print`,
@@ -52,9 +65,24 @@ export function exec(compiled: CompileResult, opts: { keepTemp?: boolean } = {})
     const env = { ...process.env };
     for (const [k, v] of Object.entries(compiled.env)) env[k] = subst(v, session);
 
+    let command = compiled.command;
+    let provision: ProvisionEvidence | undefined;
+    if (opts.harnessBundle) {
+      const copied = provisionHarness(opts.harnessBundle, session);
+      command = copied.command;
+      const reportedVersion = harnessVersion(command);
+      if (reportedVersion !== opts.harnessBundle.pinnedVersion) {
+        throw new Error(
+          `harness version mismatch: pinned ${JSON.stringify(opts.harnessBundle.pinnedVersion)}, ` +
+            `reported ${JSON.stringify(reportedVersion)}`,
+        );
+      }
+      provision = { ...copied, pinnedVersion: opts.harnessBundle.pinnedVersion, reportedVersion };
+    }
+
     const headless = compiled.argv.includes("-p");
     const t0 = Date.now();
-    const res = spawnSync(compiled.command, argv, {
+    const res = spawnSync(command, argv, {
       env,
       stdio: headless ? ["ignore", "pipe", "inherit"] : "inherit",
       encoding: "utf-8",
@@ -68,6 +96,7 @@ export function exec(compiled: CompileResult, opts: { keepTemp?: boolean } = {})
       wallClockMs,
       sessionDir: session,
       keptTemp: !!opts.keepTemp,
+      ...(provision ? { provision } : {}),
     };
   } finally {
     if (!opts.keepTemp) rmSync(session, { recursive: true, force: true });

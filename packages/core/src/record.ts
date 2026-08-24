@@ -3,14 +3,14 @@
 //
 // Field discipline (binding):
 //   tokens.system          = null   (M2a unratified — never measured here)
-//   either floor → skillStanding = 0, skillInvocation = 0 BY CONSTRUCTION
-//            (matches existing placebo records: zero skills loaded is a real
-//            zero). Both floors load zero skills; what separates them is the
-//            door, whose cost is a standing cost inside perTurn and is NOT
-//            attributable to any skill. Every floor record is tagged
-//            `floor=benchmark` or `floor=product` in notes so the two arms
-//            cannot be pooled (V5-5/B1).
-//   curated→ skillStanding = chars4 sum; skillInvocation = null + note
+//   benchmark-floor / zero rung → skillStanding = 0, skillInvocation = 0
+//            BY CONSTRUCTION. The upper treatment rungs may boot from the
+//            product-floor posture and summon skills in-session; for those,
+//            loaded skill doses are recorded normally. The door itself remains
+//            a standing cost inside perTurn, never a skill cost. Every floor
+//            posture is tagged `floor=benchmark` or `floor=product` in notes so
+//            the two bases cannot be pooled (V5-5/B1).
+//   treatment rung → skillStanding = chars4 sum; skillInvocation = null + note
 //            (stream-json invocation instrumentation is a follow-up)
 //   perTurn = input + cache_creation + cache_read + output from usage
 //            (the summation formula, documented in README §record)
@@ -52,6 +52,15 @@ export function validateTrialCoordinate(arm: Arm, rung: TrialRung, posture: Post
       `--rung ${rung} is activated by in-session summon behavior, not a boot posture; ` +
         "record it over --posture product-floor so the door remains available",
     );
+  }
+}
+
+export function validateTrialSkills(opts: Pick<RecordOpts, "arm" | "rung">, skills: ResolvedSkill[]): void {
+  if (opts.arm === "placebo" && skills.length > 0) {
+    throw new Error("--arm placebo cannot record loaded skills; the doorless own-placebo has skillsLoaded: []");
+  }
+  if (opts.rung !== "benchmark-floor" && opts.rung !== "zero" && skills.length === 0) {
+    throw new Error(`--rung ${opts.rung} requires at least one exact loaded skill hash (--skill or --record-skill)`);
   }
 }
 
@@ -99,11 +108,9 @@ export function assembleRecord(args: {
 }): LedgerRecord {
   const { opts, posture, skills } = args;
   validateTrialCoordinate(opts.arm, opts.rung, posture);
-  if (opts.arm === "placebo" && skills.length > 0) {
-    throw new Error("--arm placebo cannot record loaded skills; the doorless own-placebo has skillsLoaded: []");
-  }
+  validateTrialSkills(opts, skills);
   const floorKind = floorOf(posture);
-  const floor = floorKind !== null;
+  const zeroDose = opts.rung === "benchmark-floor" || opts.rung === "zero";
   const noteParts: string[] = [];
   // FLOOR SPLIT (V5-5): every floor record says WHICH floor produced it, in a
   // stable, greppable form, so the benchmark and product arms can never be
@@ -118,7 +125,7 @@ export function assembleRecord(args: {
   } else if (floorKind === "product") {
     noteParts.push("floor=product (doorful; retains the minimum control surface). Separate arm from floor=benchmark — never averaged (B1).");
   }
-  if (!floor) noteParts.push("skillInvocation null: stream-json invocation instrumentation is a follow-up (M2).");
+  if (!zeroDose) noteParts.push("skillInvocation null: stream-json invocation instrumentation is a follow-up (M2).");
   if (args.notes) noteParts.push(args.notes);
 
   const record: LedgerRecord = {
@@ -133,8 +140,8 @@ export function assembleRecord(args: {
     repeatIndex: opts.repeatIndex,
     tokens: {
       system: null, // M2a unratified — stays honestly null
-      skillStanding: floor ? 0 : skills.reduce((a, s) => a + s.standingTokens, 0),
-      skillInvocation: floor ? 0 : null,
+      skillStanding: zeroDose ? 0 : skills.reduce((a, s) => a + s.standingTokens, 0),
+      skillInvocation: zeroDose ? 0 : null,
       perTurn: perTurnFromUsage(args.usage),
     },
     wallClockMs: args.wallClockMs,
