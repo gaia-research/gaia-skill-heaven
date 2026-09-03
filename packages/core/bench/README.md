@@ -25,8 +25,27 @@ reaches for the network fails the run instead of quietly being measured online.
 | `unanswerable.jsonl` | 20 plausible gaps nothing in the corpus covers — these calibrate `FLOOR` and gate G2 |
 | `corpus/named-projection.json` | The committed corpus snapshot everything reads. Refresh with `scripts/snapshot-corpus.ts` — the only step that touches the network |
 | `run.ts` | The runner: MRR, recall@5, refusal rates, paired bootstrap, floor sweep |
+| `corpus/floor.json` | The calibrated absolute floor and what separation it achieved (`scripts/calibrate-floor.ts`) |
+| `corpus/expansions.json` | Generated retrieval expansions that survived the round-trip filter |
+| `corpus/expansions.rejected.json` | The ones that did not, with the rank they reached and what outranked them |
 | `results/*.jsonl` | Per-query scores, one line per query per system |
 | `results/ledger.json` | The committed run record (SPEC §7.5) |
+
+## The systems it scores
+
+| id | what it is |
+|---|---|
+| `baseline-shipped` | `scoreMatch` exactly as it shipped before Phase 1: installable-only, `MIN_RELEVANCE`, `RELEVANCE_BAND`. **This is the number everything is compared to.** |
+| `baseline-raw` | The same scorer with no gates — its ordering ability alone |
+| `bm25f` | BM25F over the committed index, exact-name fast path, no floor |
+| `bm25f-no-expansion` | The same index with `retrieval.expansions` stripped — PLAN 1.7's kill criterion, as a paired comparison inside one run |
+| `bm25f-decide` | BM25F plus the L2 decide layer. **This is what the product ships**, and the only system that can refuse |
+
+`reachableTargets` and `mrrOnReachable` exist because a quarter of the gold
+targets publish neither an installable `SKILL.md` link nor suite components.
+Summon structurally cannot deliver them, so a system that filters for
+reachability carries an MRR ceiling below 1.0 however good its retrieval is.
+Reporting raw MRR alone would blame the ranker for a curation problem.
 
 ## Provenance of the gold set — read this before citing the number
 

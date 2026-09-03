@@ -76,6 +76,20 @@ const gold = readJsonl<GoldEntry>(join(here, "gold.jsonl"));
 const unanswerable = readJsonl<UnanswerableEntry>(join(here, "unanswerable.jsonl"));
 const bm25f = new Bm25fRanker(index);
 
+// The same index with `retrieval.expansions` stripped, so PLAN 1.7's kill
+// criterion ("if expansion does not move MRR beyond what 1.3 delivers alone,
+// drop it") is a paired comparison inside one run rather than two runs
+// compared by eye.
+const withoutExpansion: SkillIndex = {
+  ...index,
+  builder: { ...index.builder, expansion: "none" },
+  docs: index.docs.map((doc) => ({
+    ...doc,
+    retrieval: { ...doc.retrieval, expansions: [], terms: [] },
+  })),
+};
+const bm25fNoExpansion = new Bm25fRanker(withoutExpansion);
+
 const systems: System[] = [
   {
     id: "baseline-shipped",
@@ -97,6 +111,13 @@ const systems: System[] = [
     id: "bm25f",
     label: "BM25F over the committed index + exact-name fast path (no floor)",
     rank: (query) => bm25f.rank(query),
+    refuses: (ranked) => ranked.length === 0,
+    reachable: () => true,
+  },
+  {
+    id: "bm25f-no-expansion",
+    label: "BM25F over the same index with expansions stripped",
+    rank: (query) => bm25fNoExpansion.rank(query),
     refuses: (ranked) => ranked.length === 0,
     reachable: () => true,
   },
@@ -141,6 +162,23 @@ if (baselineRun) {
     });
   }
 }
+
+const expansionComparison =
+  runs.find((run) => run.system === "bm25f") && runs.find((run) => run.system === "bm25f-no-expansion")
+    ? {
+        system: "bm25f",
+        against: "bm25f-no-expansion",
+        ...pairedBootstrap(
+          (runs.find((run) => run.system === "bm25f-no-expansion")?.perQuery ?? []).map(
+            (row) => row.reciprocalRank,
+          ),
+          (runs.find((run) => run.system === "bm25f")?.perQuery ?? []).map(
+            (row) => row.reciprocalRank,
+          ),
+        ),
+      }
+    : undefined;
+if (expansionComparison) comparisons.push(expansionComparison);
 
 const ledger = {
   schema: "gaia.bench-ledger/v1",
