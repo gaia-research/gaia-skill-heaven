@@ -118,6 +118,7 @@ export function decide({
  * who cannot will assume the tool is broken (SPEC §4.2).
  */
 function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | null {
+  if (doc.registryOnly) return "registry-only — the tree marks this skill installable: false";
   if (!isReachable(doc)) {
     return doc.links.github
       ? "not installable — links.github does not resolve to a SKILL.md"

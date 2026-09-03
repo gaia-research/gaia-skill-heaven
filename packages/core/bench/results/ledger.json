@@ -1,9 +1,9 @@
 {
   "schema": "gaia.bench-ledger/v1",
-  "ranAt": "2026-09-03T16:45:36.642Z",
+  "ranAt": "2026-09-03T16:57:37.688Z",
   "index": {
     "schema": "gaia.skill-index/v1",
-    "generatedAt": "2026-09-03T16:44:43.364Z",
+    "generatedAt": "2026-09-03T16:50:52.285Z",
     "sourceDigest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
     "builder": {
       "version": "skill-index-builder/0.1.0",
@@ -482,13 +482,13 @@
     {
       "system": "bm25f-decide",
       "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
-      "reachableTargets": 81,
-      "mrrOnReachable": 0.2706,
-      "mrr": 0.2192,
-      "mrrExcludingAmbiguous": 0.2112,
-      "recallAt5": 0.29,
-      "refusalRate": 0.55,
-      "falseRefusalRate": 0.13,
+      "reachableTargets": 78,
+      "mrrOnReachable": 0.2796,
+      "mrr": 0.2181,
+      "mrrExcludingAmbiguous": 0.2107,
+      "recallAt5": 0.28,
+      "refusalRate": 0.6,
+      "falseRefusalRate": 0.14,
       "refusals": [
         {
           "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
@@ -528,9 +528,9 @@
         {
           "query": "even out the volume and strip the hiss from a two-hour interview recording",
           "distance": "mid",
-          "refused": false,
-          "topScore": 15.195398401414073,
-          "topId": "mattpocock/zoom-out"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
@@ -657,9 +657,9 @@
     {
       "system": "bm25f-decide",
       "against": "baseline-shipped",
-      "delta": 0.17998427352715285,
-      "ciLow": 0.1153203048525925,
-      "ciHigh": 0.2496719903113929,
+      "delta": 0.17887316241604173,
+      "ciLow": 0.1137832211296248,
+      "ciHigh": 0.24821550162841466,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true

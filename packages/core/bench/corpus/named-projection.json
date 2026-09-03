@@ -3,7 +3,7 @@
     "url": "https://gaiaskilltree.com/graph/named/index.json",
     "source": "https://gaiaskilltree.com",
     "digest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
-    "capturedAt": "2026-09-03T16:44:43.364Z"
+    "capturedAt": "2026-09-03T16:50:52.285Z"
   },
   "generatedAt": "2026-09-01",
   "buckets": {
@@ -364,6 +364,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 30,
+        "installable": false,
         "links": {
           "github": "https://github.com/cognition-labs/devin"
         }
@@ -387,6 +388,7 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 106.13,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md"
         }
@@ -793,6 +795,7 @@
         "status": "named",
         "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/engineering/zoom-out/SKILL.md"
         }
@@ -1219,6 +1222,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 36,
+        "installable": false,
         "links": {
           "github": "https://github.com/Manavarya09/design-extract"
         }
@@ -1454,6 +1458,7 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 106.13,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/personal/edit-article/SKILL.md"
         }
@@ -1828,6 +1833,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 36,
+        "installable": false,
         "links": {}
       }
     ],
@@ -2123,6 +2129,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 36,
+        "installable": false,
         "links": {}
       },
       {
@@ -2159,6 +2166,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 33,
+        "installable": false,
         "links": {}
       }
     ],
@@ -2671,6 +2679,7 @@
         "level": "1★",
         "status": "named",
         "trustMagnitude": 2.19,
+        "installable": false,
         "links": {}
       }
     ],
@@ -3436,6 +3445,7 @@
           "mattpocock/edit-article",
           "mattpocock/obsidian-vault"
         ],
+        "installable": false,
         "links": {}
       }
     ],
@@ -3452,6 +3462,7 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 106.13,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/personal/obsidian-vault"
         }
@@ -4467,6 +4478,7 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 125.46,
+        "installable": false,
         "links": {}
       }
     ],
@@ -5112,6 +5124,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 36,
+        "installable": false,
         "links": {}
       }
     ],
@@ -5157,6 +5170,7 @@
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 45,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md"
         }
@@ -5218,6 +5232,7 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 106.13,
+        "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/deprecated/ubiquitous-language/SKILL.md"
         }
@@ -6086,6 +6101,7 @@
       "status": "awakened",
       "overallTrustGrade": "C",
       "trustMagnitude": 36,
+      "installable": false,
       "links": {}
     },
     {
@@ -6549,6 +6565,7 @@
       "status": "awakened",
       "overallTrustGrade": "A",
       "trustMagnitude": 100.82,
+      "installable": false,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/science_skills_common"
       }
@@ -6669,6 +6686,7 @@
       "status": "awakened",
       "overallTrustGrade": "ungraded",
       "trustMagnitude": 0,
+      "installable": false,
       "links": {
         "github": "https://github.com/langgenius/dify/blob/main/.agents/skills/component-refactoring/SKILL.md"
       }
@@ -6729,6 +6747,7 @@
       "status": "awakened",
       "overallTrustGrade": "ungraded",
       "trustMagnitude": 0,
+      "installable": false,
       "links": {}
     },
     {
@@ -6755,6 +6774,7 @@
       "status": "awakened",
       "overallTrustGrade": "ungraded",
       "trustMagnitude": 0,
+      "installable": false,
       "links": {}
     },
     {
