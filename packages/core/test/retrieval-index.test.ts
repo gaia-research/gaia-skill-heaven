@@ -116,6 +116,21 @@ describe("buildSkillIndex", () => {
     expect(expanded.docs[1]?.retrieval.expandedBy).toBe("test/0.0.0");
   });
 
+  it("counts how many documents carry expansions — partial coverage is not neutral", () => {
+    expect(buildSkillIndex(options).stats.expandedDocs).toBe(0);
+    const partial = buildSkillIndex({
+      ...options,
+      expansions: {
+        "garrytan/health": { expansions: ["did anything break"], expandedBy: "test/0.0.0" },
+      },
+    });
+    // An expanded document has a field to match in that an unexpanded one does
+    // not, so a half-expanded index demotes the half without it. The count is
+    // carried so that gap cannot hide.
+    expect(partial.stats.expandedDocs).toBe(1);
+    expect(partial.stats.docs).toBe(2);
+  });
+
   it("leaves the floor uncalibrated rather than guessing one", () => {
     expect(buildSkillIndex(options).stats.floor).toBeNull();
   });

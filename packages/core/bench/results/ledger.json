@@ -1,13 +1,13 @@
 {
   "schema": "gaia.bench-ledger/v1",
-  "ranAt": "2026-09-03T16:59:35.655Z",
+  "ranAt": "2026-09-03T17:03:05.077Z",
   "index": {
     "schema": "gaia.skill-index/v1",
     "generatedAt": "2026-09-03T16:50:52.285Z",
     "sourceDigest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
     "builder": {
       "version": "skill-index-builder/0.1.0",
-      "expansion": "none"
+      "expansion": "generated"
     },
     "docs": 274
   },
@@ -330,10 +330,10 @@
       "system": "bm25f",
       "label": "BM25F over the committed index + exact-name fast path (no floor)",
       "reachableTargets": 100,
-      "mrrOnReachable": 0.28,
-      "mrr": 0.28,
-      "mrrExcludingAmbiguous": 0.2653,
-      "recallAt5": 0.38,
+      "mrrOnReachable": 0.4658,
+      "mrr": 0.4658,
+      "mrrExcludingAmbiguous": 0.4629,
+      "recallAt5": 0.58,
       "refusalRate": 0,
       "falseRefusalRate": 0.02,
       "refusals": [
@@ -341,141 +341,141 @@
           "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
           "distance": "near",
           "refused": false,
-          "topScore": 15.498510822559307,
-          "topId": "garrytan/design-html"
+          "topScore": 17.509899253086203,
+          "topId": "firecrawl/firecrawl-build-interact"
         },
         {
           "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
           "distance": "near",
           "refused": false,
-          "topScore": 14.094122876769381,
+          "topScore": 27.33128218513205,
           "topId": "obra/systematic-debugging"
         },
         {
           "query": "build a browser extension that autofills expense reports from email receipts",
           "distance": "far",
           "refused": false,
-          "topScore": 16.00197538727381,
+          "topScore": 14.999171654928848,
           "topId": "garrytan/open-gstack-browser"
         },
         {
           "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
           "distance": "near",
           "refused": false,
-          "topScore": 23.716758048807577,
-          "topId": "dietrichgebert/ponytail"
+          "topScore": 25.471742116463297,
+          "topId": "addy-osmani/code-review-and-quality"
         },
         {
           "query": "draft the Terraform for a three-region VPC with private subnets and peering",
           "distance": "mid",
           "refused": false,
-          "topScore": 12.892451481127509,
+          "topScore": 10.692948156653774,
           "topId": "mbtiongson1/gaia-draft-curate"
         },
         {
           "query": "even out the volume and strip the hiss from a two-hour interview recording",
           "distance": "mid",
           "refused": false,
-          "topScore": 15.195398401414073,
-          "topId": "mattpocock/zoom-out"
+          "topScore": 14.96189088056196,
+          "topId": "k-dense-ai/pymc"
         },
         {
           "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
           "distance": "far",
           "refused": false,
-          "topScore": 18.672317135050786,
-          "topId": "mattpocock/to-spec"
+          "topScore": 22.28244941532361,
+          "topId": "mattpocock/triage"
         },
         {
           "query": "get single sign-on working for enterprise customers against their Okta tenant",
           "distance": "far",
           "refused": false,
-          "topScore": 12.545503202582799,
-          "topId": "gsd-build/get-shit-done"
+          "topScore": 18.637326341833994,
+          "topId": "ruvnet/dual-mode"
         },
         {
           "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
           "distance": "near",
           "refused": false,
-          "topScore": 15.372721122603785,
+          "topScore": 27.477078152858123,
           "topId": "k-dense-ai/transformers"
         },
         {
           "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
           "distance": "mid",
           "refused": false,
-          "topScore": 21.412905233349804,
+          "topScore": 20.581737368033462,
           "topId": "favorchurch/triage-conference"
         },
         {
           "query": "move a decades-old COBOL batch job onto something maintainable",
           "distance": "far",
           "refused": false,
-          "topScore": 10.18794273733639,
-          "topId": "santifer/career-ops"
+          "topScore": 8.687655420494236,
+          "topId": "gsd-build/ship"
         },
         {
           "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
           "distance": "mid",
           "refused": false,
-          "topScore": 10.642983819984892,
-          "topId": "santifer/career-ops"
+          "topScore": 14.526285911929385,
+          "topId": "garrytan/retro"
         },
         {
           "query": "sketch out a points-based loyalty program our users would actually want",
           "distance": "far",
           "refused": false,
-          "topScore": 11.101413471900493,
-          "topId": "mattpocock/zoom-out"
+          "topScore": 24.070554185857166,
+          "topId": "garrytan/plan-devex-review"
         },
         {
           "query": "the app freezes for a couple seconds only on older Android phones right after opening",
           "distance": "mid",
           "refused": false,
-          "topScore": 13.401739883917482,
-          "topId": "garrytan/qa-only"
+          "topScore": 21.955039183132513,
+          "topId": "garrytan/canary"
         },
         {
           "query": "the jump in our platformer feels floaty, help me dial in the arc",
           "distance": "mid",
           "refused": false,
-          "topScore": 14.250174698813263,
-          "topId": "mattpocock/grill-me"
+          "topScore": 13.180771928703553,
+          "topId": "garrytan/design-consultation"
         },
         {
           "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
           "distance": "near",
           "refused": false,
-          "topScore": 24.958376154487887,
-          "topId": "mattpocock/wayfinder"
+          "topScore": 42.34059395891915,
+          "topId": "addy-osmani/incremental-implementation"
         },
         {
           "query": "this pod keeps getting killed for using too much memory and I can't tell why",
           "distance": "near",
           "refused": false,
-          "topScore": 16.259473984501156,
-          "topId": "mattpocock/to-questionnaire"
+          "topScore": 25.634954749354915,
+          "topId": "k-dense-ai/pymc"
         },
         {
           "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
           "distance": "mid",
           "refused": false,
-          "topScore": 12.86833083040865,
-          "topId": "ruvnet/flow-nexus-platform"
+          "topScore": 20.3489374229297,
+          "topId": "garrytan/review"
         },
         {
           "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
           "distance": "near",
           "refused": false,
-          "topScore": 13.739424336375503,
-          "topId": "garrytan/land-and-deploy"
+          "topScore": 20.757238118491106,
+          "topId": "obra/using-git-worktrees"
         },
         {
           "query": "we're still on an ancient Python 2 codebase and need a path off it",
           "distance": "near",
           "refused": false,
-          "topScore": 15.117013087769632,
-          "topId": "mattpocock/wait-what"
+          "topScore": 20.18539784245845,
+          "topId": "gsd-build/plan-phase"
         }
       ]
     },
@@ -636,19 +636,19 @@
       "system": "bm25f-decide",
       "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
       "reachableTargets": 78,
-      "mrrOnReachable": 0.2796,
-      "mrr": 0.2181,
-      "mrrExcludingAmbiguous": 0.2107,
-      "recallAt5": 0.28,
-      "refusalRate": 0.6,
-      "falseRefusalRate": 0.14,
+      "mrrOnReachable": 0.4904,
+      "mrr": 0.3825,
+      "mrrExcludingAmbiguous": 0.3857,
+      "recallAt5": 0.47,
+      "refusalRate": 0.95,
+      "falseRefusalRate": 0.17,
       "refusals": [
         {
           "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
           "distance": "near",
-          "refused": false,
-          "topScore": 15.498510822559307,
-          "topId": "garrytan/design-html"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
@@ -660,16 +660,16 @@
         {
           "query": "build a browser extension that autofills expense reports from email receipts",
           "distance": "far",
-          "refused": false,
-          "topScore": 16.00197538727381,
-          "topId": "garrytan/open-gstack-browser"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
           "distance": "near",
-          "refused": false,
-          "topScore": 23.716758048807577,
-          "topId": "dietrichgebert/ponytail"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "draft the Terraform for a three-region VPC with private subnets and peering",
@@ -688,9 +688,9 @@
         {
           "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
           "distance": "far",
-          "refused": false,
-          "topScore": 18.672317135050786,
-          "topId": "mattpocock/to-spec"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "get single sign-on working for enterprise customers against their Okta tenant",
@@ -702,16 +702,16 @@
         {
           "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
           "distance": "near",
-          "refused": false,
-          "topScore": 15.372721122603785,
-          "topId": "k-dense-ai/transformers"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
           "distance": "mid",
-          "refused": false,
-          "topScore": 21.412905233349804,
-          "topId": "favorchurch/triage-conference"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "move a decades-old COBOL batch job onto something maintainable",
@@ -752,15 +752,15 @@
           "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
           "distance": "near",
           "refused": false,
-          "topScore": 24.958376154487887,
-          "topId": "mattpocock/wayfinder"
+          "topScore": 42.34059395891915,
+          "topId": "addy-osmani/incremental-implementation"
         },
         {
           "query": "this pod keeps getting killed for using too much memory and I can't tell why",
           "distance": "near",
-          "refused": false,
-          "topScore": 16.259473984501156,
-          "topId": "mattpocock/to-questionnaire"
+          "refused": true,
+          "topScore": 0,
+          "topId": null
         },
         {
           "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
@@ -800,9 +800,9 @@
     {
       "system": "bm25f",
       "against": "baseline-shipped",
-      "delta": 0.2407860541783981,
-      "ciLow": 0.17383496973988385,
-      "ciHigh": 0.3112174419375176,
+      "delta": 0.4265459195801806,
+      "ciLow": 0.3407286637505124,
+      "ciHigh": 0.5130636131207243,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true
@@ -820,9 +820,9 @@
     {
       "system": "bm25f-decide",
       "against": "baseline-shipped",
-      "delta": 0.17887316241604173,
-      "ciLow": 0.1137832211296248,
-      "ciHigh": 0.24821550162841466,
+      "delta": 0.34328982908270844,
+      "ciLow": 0.2592996297619924,
+      "ciHigh": 0.4313210371477012,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true
@@ -830,12 +830,1151 @@
     {
       "system": "bm25f",
       "against": "bm25f-no-expansion",
-      "delta": 0,
-      "ciLow": 0,
-      "ciHigh": 0,
+      "delta": 0.18575986540178252,
+      "ciLow": 0.09185614908068232,
+      "ciHigh": 0.28268067002272623,
       "resamples": 10000,
       "seed": 20260903,
-      "excludesZero": false
+      "excludesZero": true
     }
-  ]
+  ],
+  "floorSweep": {
+    "exactBypass": 0,
+    "answerableTopScores": [
+      29.4246,
+      34.0269,
+      42.7845,
+      28.9645,
+      28.6596,
+      48.7483,
+      51.8065,
+      45.977,
+      48.7589,
+      27.7026,
+      40.4607,
+      29.9868,
+      62.3598,
+      24.0227,
+      29.3445,
+      36.2652,
+      56.4723,
+      38.7637,
+      29.1284,
+      26.0101,
+      75.2056,
+      36.8962,
+      49.482,
+      34.3396,
+      71.5439,
+      32.9679,
+      59.7439,
+      58.2744,
+      35.9587,
+      37.619,
+      71.2942,
+      33.8171,
+      36.5516,
+      27.3516,
+      53.7037,
+      34.4841,
+      35.9513,
+      47.8714,
+      51.4784,
+      35.3187,
+      56.3637,
+      62.6132,
+      26.3411,
+      36.537,
+      38.3268,
+      41.6179,
+      22.1351,
+      25.6254,
+      30.9475,
+      31.7522,
+      60.2207,
+      25.6773,
+      48.4641,
+      73.4394,
+      0,
+      43.8543,
+      44.4795,
+      31.9905,
+      39.4728,
+      0,
+      29.2403,
+      47.256,
+      45.873,
+      56.6384,
+      44.6815,
+      49.0411,
+      31.3952,
+      35.4039,
+      34.0187,
+      49.2606,
+      48.3688,
+      40.0771,
+      69.9045,
+      29.5187,
+      56.6242,
+      49.0174,
+      32.3506,
+      46.6546,
+      53.673,
+      53.3472,
+      30.9521,
+      37.7321,
+      32.9211,
+      34.2102,
+      54.5941,
+      42.209,
+      36.4721,
+      40.023,
+      79.4118,
+      23.9801,
+      45.3222,
+      37.6958,
+      33.475,
+      41.3339,
+      42.8433,
+      53.1304,
+      27.5925,
+      41.8443,
+      30.9769,
+      25.2608
+    ],
+    "unanswerableTopScores": [
+      17.5099,
+      27.3313,
+      14.9992,
+      25.4717,
+      10.6929,
+      14.9619,
+      22.2824,
+      18.6373,
+      27.4771,
+      20.5817,
+      8.6877,
+      14.5263,
+      24.0706,
+      21.955,
+      13.1808,
+      42.3406,
+      25.635,
+      20.3489,
+      20.7572,
+      20.1854
+    ],
+    "points": [
+      {
+        "floor": 0,
+        "answerableAdmitted": 1,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 0.3971,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 0.7941,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 1.1912,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 1.5882,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 1.9853,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 2.3824,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 2.7794,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 3.1765,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 3.5735,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 3.9706,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 4.3677,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 4.7647,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 5.1618,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 5.5588,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 5.9559,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 6.3529,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 6.75,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 7.1471,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 7.5441,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 7.9412,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 8.3382,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 8.7353,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 9.1324,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 9.5294,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 9.9265,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 10.3235,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 10.7206,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 11.1177,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 11.5147,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 11.9118,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 12.3088,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 12.7059,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 13.103,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 13.5,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 13.8971,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 14.2941,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 14.6912,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.2
+      },
+      {
+        "floor": 15.0882,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 15.4853,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 15.8824,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 16.2794,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 16.6765,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 17.0735,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 17.4706,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.3
+      },
+      {
+        "floor": 17.8677,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 18.2647,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 18.6618,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 19.0588,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 19.4559,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 19.853,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 20.25,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 20.6471,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.55
+      },
+      {
+        "floor": 21.0441,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.6
+      },
+      {
+        "floor": 21.4412,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.6
+      },
+      {
+        "floor": 21.8383,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.6
+      },
+      {
+        "floor": 22.2353,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.65
+      },
+      {
+        "floor": 22.6324,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 23.0294,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 23.4265,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 23.8235,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 24.2206,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 24.6177,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 25.0147,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 25.4118,
+        "answerableAdmitted": 0.94,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 25.8088,
+        "answerableAdmitted": 0.92,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 26.2059,
+        "answerableAdmitted": 0.91,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 26.603,
+        "answerableAdmitted": 0.9,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 27,
+        "answerableAdmitted": 0.9,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 27.3971,
+        "answerableAdmitted": 0.89,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 27.7941,
+        "answerableAdmitted": 0.87,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 28.1912,
+        "answerableAdmitted": 0.87,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 28.5883,
+        "answerableAdmitted": 0.87,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 28.9853,
+        "answerableAdmitted": 0.85,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 29.3824,
+        "answerableAdmitted": 0.82,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 29.7794,
+        "answerableAdmitted": 0.8,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 30.1765,
+        "answerableAdmitted": 0.79,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 30.5736,
+        "answerableAdmitted": 0.79,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 30.9706,
+        "answerableAdmitted": 0.77,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 31.3677,
+        "answerableAdmitted": 0.76,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 31.7647,
+        "answerableAdmitted": 0.74,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 32.1618,
+        "answerableAdmitted": 0.73,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 32.5588,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 32.9559,
+        "answerableAdmitted": 0.71,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 33.353,
+        "answerableAdmitted": 0.7,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 33.75,
+        "answerableAdmitted": 0.69,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 34.1471,
+        "answerableAdmitted": 0.66,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 34.5441,
+        "answerableAdmitted": 0.63,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 34.9412,
+        "answerableAdmitted": 0.63,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 35.3383,
+        "answerableAdmitted": 0.62,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 35.7353,
+        "answerableAdmitted": 0.61,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 36.1324,
+        "answerableAdmitted": 0.59,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 36.5294,
+        "answerableAdmitted": 0.57,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 36.9265,
+        "answerableAdmitted": 0.54,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 37.3236,
+        "answerableAdmitted": 0.54,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 37.7206,
+        "answerableAdmitted": 0.52,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 38.1177,
+        "answerableAdmitted": 0.51,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 38.5147,
+        "answerableAdmitted": 0.5,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 38.9118,
+        "answerableAdmitted": 0.49,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 39.3089,
+        "answerableAdmitted": 0.49,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 39.7059,
+        "answerableAdmitted": 0.48,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 40.103,
+        "answerableAdmitted": 0.46,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 40.5,
+        "answerableAdmitted": 0.45,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 40.8971,
+        "answerableAdmitted": 0.45,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 41.2941,
+        "answerableAdmitted": 0.45,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 41.6912,
+        "answerableAdmitted": 0.43,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 42.0883,
+        "answerableAdmitted": 0.42,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 42.4853,
+        "answerableAdmitted": 0.41,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 42.8824,
+        "answerableAdmitted": 0.39,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 43.2794,
+        "answerableAdmitted": 0.39,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 43.6765,
+        "answerableAdmitted": 0.39,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 44.0736,
+        "answerableAdmitted": 0.38,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 44.4706,
+        "answerableAdmitted": 0.38,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 44.8677,
+        "answerableAdmitted": 0.36,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 45.2647,
+        "answerableAdmitted": 0.36,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 45.6618,
+        "answerableAdmitted": 0.35,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.0589,
+        "answerableAdmitted": 0.33,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.4559,
+        "answerableAdmitted": 0.33,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.853,
+        "answerableAdmitted": 0.32,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 47.25,
+        "answerableAdmitted": 0.32,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 47.6471,
+        "answerableAdmitted": 0.31,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 48.0442,
+        "answerableAdmitted": 0.3,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 48.4412,
+        "answerableAdmitted": 0.29,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 48.8383,
+        "answerableAdmitted": 0.26,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 49.2353,
+        "answerableAdmitted": 0.24,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 49.6324,
+        "answerableAdmitted": 0.22,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 50.0294,
+        "answerableAdmitted": 0.22,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 50.4265,
+        "answerableAdmitted": 0.22,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 50.8236,
+        "answerableAdmitted": 0.22,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.2206,
+        "answerableAdmitted": 0.22,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.6177,
+        "answerableAdmitted": 0.21,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.0147,
+        "answerableAdmitted": 0.2,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.4118,
+        "answerableAdmitted": 0.2,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.8089,
+        "answerableAdmitted": 0.2,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 53.2059,
+        "answerableAdmitted": 0.19,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 53.603,
+        "answerableAdmitted": 0.18,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 54,
+        "answerableAdmitted": 0.16,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 54.3971,
+        "answerableAdmitted": 0.16,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 54.7942,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.1912,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.5883,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.9853,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 56.3824,
+        "answerableAdmitted": 0.14,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 56.7795,
+        "answerableAdmitted": 0.11,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.1765,
+        "answerableAdmitted": 0.11,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.5736,
+        "answerableAdmitted": 0.11,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.9706,
+        "answerableAdmitted": 0.11,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 58.3677,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 58.7648,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.1618,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.5589,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.9559,
+        "answerableAdmitted": 0.09,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 60.353,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 60.75,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.1471,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.5442,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.9412,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 62.3383,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 62.7353,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 63.1324,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 63.5295,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 63.9265,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 64.3236,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 64.7206,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.1177,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.5148,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.9118,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.3089,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.7059,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.103,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.5001,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.8971,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 68.2942,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 68.6912,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 69.0883,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 69.4853,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 69.8824,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 70.2795,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 70.6765,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 71.0736,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 71.4706,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 71.8677,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.2648,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.6618,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.0589,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.4559,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.853,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 74.2501,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 74.6471,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 75.0442,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 75.4412,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 75.8383,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 76.2354,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 76.6324,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 77.0295,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 77.4265,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 77.8236,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.2206,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.6177,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.0148,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.4118,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      }
+    ],
+    "recommended": {
+      "floor": 27.3971,
+      "answerableAdmitted": 0.89,
+      "unanswerableRejected": 0.9
+    }
+  }
 }

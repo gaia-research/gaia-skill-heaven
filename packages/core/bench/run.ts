@@ -189,6 +189,8 @@ const ledger = {
     sourceDigest: index.sourceDigest,
     builder: index.builder,
     docs: index.stats.docs,
+    expandedDocs: index.stats.expandedDocs,
+    expansionCoverage: round4(index.stats.expandedDocs / (index.stats.docs || 1)),
   },
   builderVersion: INDEX_BUILDER_VERSION,
   goldSet: { queries: gold.length, ambiguous: gold.filter((entry) => entry.ambiguous).length },
@@ -200,6 +202,10 @@ const ledger = {
 
 writeFileSync(join(resultsDir, "ledger.json"), `${JSON.stringify(ledger, null, 2)}\n`);
 printReport();
+
+function hasExpansions(id: string): boolean {
+  return (index.docs.find((doc) => doc.id === id)?.retrieval.expansions.length ?? 0) > 0;
+}
 
 function scoreSystem(system: System) {
   const perQuery = gold.map((entry) => {
@@ -243,6 +249,34 @@ function scoreSystem(system: System) {
     reachableTargets: reachableRows.length,
     /** MRR over the queries this system can actually answer — the ranker's own score. */
     mrrOnReachable: round4(mean(reachableRows.map((row) => row.reciprocalRank))),
+    /**
+     * Partial expansion coverage is not neutral — an expanded document has a
+     * field to match in that an unexpanded one does not. Split the score by
+     * whether the correct answer carries expansions, so a coverage gap shows
+     * up as the regression it is instead of hiding inside an average.
+     */
+    coverageSplit: {
+      expandedTargets: {
+        n: perQuery.filter((row) => hasExpansions(row.correctId)).length,
+        mrr: round4(
+          mean(
+            perQuery
+              .filter((row) => hasExpansions(row.correctId))
+              .map((row) => row.reciprocalRank),
+          ),
+        ),
+      },
+      unexpandedTargets: {
+        n: perQuery.filter((row) => !hasExpansions(row.correctId)).length,
+        mrr: round4(
+          mean(
+            perQuery
+              .filter((row) => !hasExpansions(row.correctId))
+              .map((row) => row.reciprocalRank),
+          ),
+        ),
+      },
+    },
     mrr: round4(mean(perQuery.map((row) => row.reciprocalRank))),
     // Six gold entries name a target that no honest query can separate from a
     // sibling (README § Provenance). Reported both ways rather than quietly

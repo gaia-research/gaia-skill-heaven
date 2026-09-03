@@ -1,0 +1,1805 @@
+{
+  "cutoff": 10,
+  "rejected": [
+    {
+      "id": "addy-osmani/agent-skills",
+      "expansion": "I need a consistent workflow my coding agent follows from idea to deployed code",
+      "rank": 23,
+      "top": "mattpocock/ubiquitous-language"
+    },
+    {
+      "id": "addy-osmani/agent-skills",
+      "expansion": "is there a bundle of skills that auto-activate for API design, frontend UI work, and code review",
+      "rank": 29,
+      "top": "garrytan/design-shotgun"
+    },
+    {
+      "id": "addy-osmani/agent-skills",
+      "expansion": "I want one approved plan to run autonomously through every task without me stepping in each time",
+      "rank": 78,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "addy-osmani/agent-skills",
+      "expansion": "what's a good starter kit of engineering skills to install into Claude Code or Cursor",
+      "rank": 22,
+      "top": "mattpocock/write-a-skill"
+    },
+    {
+      "id": "addy-osmani/performance-optimization",
+      "expansion": "the site feels slow but I don't know which part is actually the bottleneck",
+      "rank": 56,
+      "top": "ruvnet/performance-analysis"
+    },
+    {
+      "id": "addy-osmani/performance-optimization",
+      "expansion": "I keep guessing at performance fixes without measuring anything first",
+      "rank": 13,
+      "top": "ruvnet/performance-analysis"
+    },
+    {
+      "id": "addy-osmani/performance-optimization",
+      "expansion": "my load times regressed after a recent change and I want to find the actual cause",
+      "rank": 183,
+      "top": "garrytan/benchmark"
+    },
+    {
+      "id": "addy-osmani/performance-optimization",
+      "expansion": "stop premature optimization, help me measure before touching any code",
+      "rank": 20,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "firecrawl/firecrawl-skills",
+      "expansion": "set up tools so my agent can crawl pages, extract content, and research online",
+      "rank": 39,
+      "top": "huggingface/huggingface-papers"
+    },
+    {
+      "id": "k-dense-ai/torch-geometric",
+      "expansion": "I have graph-structured data and want to train a GNN on it",
+      "rank": 17,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "k-dense-ai/torch-geometric",
+      "expansion": "working with heterogeneous graphs and not sure how to set up neighbor sampling",
+      "rank": 75,
+      "top": "mattpocock/git-guardrails-claude-code"
+    },
+    {
+      "id": "ruvnet/dual-mode",
+      "expansion": "I want two coding agents working on the same task in parallel and combining results",
+      "rank": 24,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "ruvnet/dual-mode",
+      "expansion": "need to spawn headless workers and collect their output automatically",
+      "rank": 15,
+      "top": "ruvnet/dual-spawn"
+    },
+    {
+      "id": "ruvnet/dual-mode",
+      "expansion": "run the same job through two different models and reconcile what they each produce",
+      "rank": 112,
+      "top": "caioribeiroclw-pixel/evidence-attestation"
+    },
+    {
+      "id": "addy-osmani/code-review-and-quality",
+      "expansion": "can someone review this diff for correctness, security, and readability before I merge",
+      "rank": 43,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "addy-osmani/code-review-and-quality",
+      "expansion": "I want a thorough check on code an AI wrote before it lands on main",
+      "rank": 70,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "addy-osmani/code-review-and-quality",
+      "expansion": "check this pull request for edge cases, error handling, and architectural issues",
+      "rank": 115,
+      "top": "ruvnet/github-code-review"
+    },
+    {
+      "id": "addy-osmani/code-review-and-quality",
+      "expansion": "is this fix actually correct, and does the regression test cover it",
+      "rank": 188,
+      "top": "dietrichgebert/ponytail"
+    },
+    {
+      "id": "addy-osmani/code-review-and-quality",
+      "expansion": "evaluate whether this change improves the codebase enough to approve",
+      "rank": null,
+      "top": "mattpocock/improve-codebase-architecture"
+    },
+    {
+      "id": "addy-osmani/spec-driven-development",
+      "expansion": "the requirements are vague and I don't want to start coding blind",
+      "rank": 15,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "addy-osmani/spec-driven-development",
+      "expansion": "this feature touches a lot of modules, I need to decompose it before planning",
+      "rank": 73,
+      "top": "mattpocock/to-spec"
+    },
+    {
+      "id": "addy-osmani/spec-driven-development",
+      "expansion": "write down what we're building and why so we have a shared source of truth",
+      "rank": null,
+      "top": "garrytan/design-consultation"
+    },
+    {
+      "id": "addy-osmani/spec-driven-development",
+      "expansion": "I'm about to make an architectural decision and want a spec reviewed first",
+      "rank": 17,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "addy-osmani/spec-driven-development",
+      "expansion": "break this bundled requirement into separate testable capabilities",
+      "rank": null,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-onboarding",
+      "expansion": "first-time setup so a coding agent can call a scraping API",
+      "rank": 12,
+      "top": "garrytan/setup-browser-cookies"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-onboarding",
+      "expansion": "walk me through authenticating a new web-extraction tool for my agent",
+      "rank": 44,
+      "top": "garrytan/pair-agent"
+    },
+    {
+      "id": "garrytan/careful",
+      "expansion": "stop the assistant from deleting files or force-pushing without confirming first",
+      "rank": null,
+      "top": "anthropic/pptx"
+    },
+    {
+      "id": "garrytan/careful",
+      "expansion": "don't let the agent run dangerous bash commands without my explicit okay",
+      "rank": 13,
+      "top": "mattpocock/git-guardrails-claude-code"
+    },
+    {
+      "id": "garrytan/careful",
+      "expansion": "make the agent double-check with me before any operation I can't undo",
+      "rank": 79,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/document-generate",
+      "expansion": "there's no documentation for this feature and I need it written from scratch",
+      "rank": 22,
+      "top": "obra/executing-plans"
+    },
+    {
+      "id": "garrytan/review",
+      "expansion": "I'm about to land this PR, catch anything that would break in production",
+      "rank": 16,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "gsd-build/plan-phase",
+      "expansion": "generate a PLAN.md with a built-in verification loop, not just a task list",
+      "rank": 30,
+      "top": "garrytan/plan-eng-review"
+    },
+    {
+      "id": "gsd-build/plan-phase",
+      "expansion": "iterate on the research alone without re-running the whole planner",
+      "rank": null,
+      "top": "obra/verification-before-completion"
+    },
+    {
+      "id": "gsd-build/plan-phase",
+      "expansion": "just show me the existing research doc for this phase without regenerating anything",
+      "rank": 13,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/edit-article",
+      "expansion": "clean up the prose in this write-up before I publish it",
+      "rank": 13,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "mattpocock/obsidian-vault",
+      "expansion": "my note-taking system is getting messy, tidy it up and keep it organized going forward",
+      "rank": 34,
+      "top": "ruvnet/github-release-management"
+    },
+    {
+      "id": "mattpocock/to-spec",
+      "expansion": "don't interview me again, just write up what we already decided as a ticket",
+      "rank": 106,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/dispatching-parallel-agents",
+      "expansion": "I have three unrelated test failures, can these be investigated at the same time",
+      "rank": 15,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/dispatching-parallel-agents",
+      "expansion": "these bugs are in different subsystems, handle them concurrently instead of one by one",
+      "rank": 12,
+      "top": "garrytan/document-generate"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "I don't know which of my agent skills actually handles this request",
+      "rank": 20,
+      "top": "ruvnet/performance-analysis"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "I need one command that routes to the right workflow for planning, review, or shipping",
+      "rank": 31,
+      "top": "mbtiongson1/gaia-draft-curate"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "there are too many specialized skills and I can't tell which one to call",
+      "rank": 232,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "help me pick the right tool instead of guessing which skill to invoke",
+      "rank": 50,
+      "top": "mattpocock/ask-matt"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "I have a pile of workflows and no idea where to start",
+      "rank": 37,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "point me at the right specialist instead of me hunting through skill names",
+      "rank": 72,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/gstack",
+      "expansion": "which of these dev tools actually fits what I'm trying to do right now",
+      "rank": 50,
+      "top": "mattpocock/ask-matt"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "this code feels way more complicated than it needs to be",
+      "rank": null,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "stop me from adding a dependency when a few lines would do",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "I keep over-engineering simple tasks, rein me in",
+      "rank": null,
+      "top": "openai/few-shot-learning"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "do we even need to build this at all",
+      "rank": null,
+      "top": "rico-favor/implement-with-discernment"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "tidy up this over-engineered mess before it grows further",
+      "rank": null,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "am I about to write boilerplate nobody asked for",
+      "rank": null,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "dietrichgebert/ponytail",
+      "expansion": "just ship the minimal fix, skip the abstraction layer",
+      "rank": 11,
+      "top": "mattpocock/zoom-out"
+    },
+    {
+      "id": "garrytan/garrytan",
+      "expansion": "I need someone to review this from every angle before I commit to it",
+      "rank": 25,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "garrytan/garrytan",
+      "expansion": "run the whole approval gauntlet on this without me babysitting each pass",
+      "rank": 178,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "garrytan/garrytan",
+      "expansion": "who signs off on this — the business case, the design, and the engineering, all at once",
+      "rank": 11,
+      "top": "mattpocock/skills"
+    },
+    {
+      "id": "garrytan/garrytan",
+      "expansion": "I don't have time to run four separate reviews manually",
+      "rank": null,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "garrytan/garrytan",
+      "expansion": "give me a single verdict instead of four disconnected opinions",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/engineering",
+      "expansion": "is there a container skill for all the dev-focused ones",
+      "rank": 113,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "obra/writing-plans",
+      "expansion": "turn these requirements into steps an engineer with zero context could follow",
+      "rank": 67,
+      "top": "intelligentcode-ai/security-engineer"
+    },
+    {
+      "id": "obra/writing-plans",
+      "expansion": "chunk this feature into small testable steps",
+      "rank": 32,
+      "top": "garrytan/setup-browser-cookies"
+    },
+    {
+      "id": "obra/writing-plans",
+      "expansion": "decide which files need to change and in what order before we start coding",
+      "rank": 11,
+      "top": "mbtiongson1/gaia-preview"
+    },
+    {
+      "id": "obra/writing-plans",
+      "expansion": "I need a plan document, not just a vague spec",
+      "rank": 31,
+      "top": "garrytan/plan-tune"
+    },
+    {
+      "id": "ruvnet/reasoningbank",
+      "expansion": "I want the agent to remember what worked last time",
+      "rank": 16,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "ruvnet/reasoningbank",
+      "expansion": "learn from past runs instead of starting from scratch every session",
+      "rank": null,
+      "top": "garrytan/learn"
+    },
+    {
+      "id": "ruvnet/reasoningbank",
+      "expansion": "improve itself over time based on what succeeded or failed before",
+      "rank": null,
+      "top": "mattpocock/implement"
+    },
+    {
+      "id": "ruvnet/reasoningbank",
+      "expansion": "store reasoning patterns so future tasks go faster",
+      "rank": 16,
+      "top": "garrytan/learn"
+    },
+    {
+      "id": "ruvnet/reasoningbank",
+      "expansion": "cross-session memory for repeated problem types",
+      "rank": 26,
+      "top": "ruvnet/agentdb-memory-patterns"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "this function works but it's a nightmare to read",
+      "rank": 67,
+      "top": "obra/executing-plans"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "clean up this code without changing what it does",
+      "rank": 30,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "simplify these deeply nested conditionals",
+      "rank": null,
+      "top": "addy-osmani/agent-skills"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "the logic works but a new teammate would never follow it",
+      "rank": null,
+      "top": "obra/finishing-a-development-branch"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "tidy up this code that grew messy under deadline pressure",
+      "rank": 13,
+      "top": "upsonic/unittest-generator"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "consolidate the duplication that crept in after the merge",
+      "rank": null,
+      "top": "mattpocock/resolving-merge-conflicts"
+    },
+    {
+      "id": "addy-osmani/code-simplification",
+      "expansion": "make this readable without touching its behavior",
+      "rank": null,
+      "top": "garrytan/make-pdf"
+    },
+    {
+      "id": "anthropic/skill-creator",
+      "expansion": "test whether my skill actually triggers on the right prompts",
+      "rank": 27,
+      "top": "dietrichgebert/ponytail"
+    },
+    {
+      "id": "anthropic/skill-creator",
+      "expansion": "improve the description so the skill gets picked up more reliably",
+      "rank": 20,
+      "top": "garrytan/skillify"
+    },
+    {
+      "id": "anthropic/skill-creator",
+      "expansion": "benchmark how well this skill performs across different prompts",
+      "rank": 24,
+      "top": "garrytan/benchmark-models"
+    },
+    {
+      "id": "firecrawl/firecrawl-research-index",
+      "expansion": "pull up research papers related to this question",
+      "rank": 15,
+      "top": "huggingface/huggingface-papers"
+    },
+    {
+      "id": "garrytan/cso",
+      "expansion": "do a deep security review, not just a quick pass",
+      "rank": 16,
+      "top": "garrytan/plan-devex-review"
+    },
+    {
+      "id": "garrytan/investigate",
+      "expansion": "why is this actually broken, not just where the error shows up",
+      "rank": null,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "garrytan/investigate",
+      "expansion": "debug this properly instead of patching the symptom",
+      "rank": null,
+      "top": "devin-ai/autonomous-swe"
+    },
+    {
+      "id": "garrytan/investigate",
+      "expansion": "this bug keeps coming back, get to the bottom of it",
+      "rank": null,
+      "top": "obra/using-git-worktrees"
+    },
+    {
+      "id": "garrytan/plan-devex-review",
+      "expansion": "find the friction points a first-time integrator would hit",
+      "rank": 108,
+      "top": "gaia-research/ci-churn"
+    },
+    {
+      "id": "garrytan/ship",
+      "expansion": "run the release steps so I don't forget one",
+      "rank": 18,
+      "top": "garrytan/setup-browser-cookies"
+    },
+    {
+      "id": "gsd-build/ship",
+      "expansion": "move this finished milestone into review",
+      "rank": 32,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "gsd-build/ship",
+      "expansion": "I finished this chunk of work, get it merge-ready",
+      "rank": null,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "gsd-build/ship",
+      "expansion": "run review and get this ready to land",
+      "rank": 39,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "k-dense-ai/stable-baselines3",
+      "expansion": "I need a proven RL algorithm implementation, not one I write from scratch",
+      "rank": null,
+      "top": "mattpocock/write-a-skill"
+    },
+    {
+      "id": "k-dense-ai/stable-baselines3",
+      "expansion": "get a reliable single-agent RL baseline running quickly",
+      "rank": null,
+      "top": "gsd-build/get-shit-done"
+    },
+    {
+      "id": "mattpocock/grill-me",
+      "expansion": "poke holes in this plan before I commit to it",
+      "rank": 16,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "mattpocock/to-tickets",
+      "expansion": "figure out which of these tasks can start now versus which are blocked",
+      "rank": null,
+      "top": "mattpocock/zoom-out"
+    },
+    {
+      "id": "mattpocock/to-tickets",
+      "expansion": "decide which parts of this work an agent can do unattended versus need me",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/executing-plans",
+      "expansion": "implement this plan in a fresh session and report back",
+      "rank": 26,
+      "top": "gsd-build/plan-phase"
+    },
+    {
+      "id": "panniantong/agent-reach",
+      "expansion": "connect this agent to outside services without me building each integration",
+      "rank": 11,
+      "top": "intelligentcode-ai/mcp-client"
+    },
+    {
+      "id": "disler/agent-fusion",
+      "expansion": "I want several different models to work on this and combine their answers",
+      "rank": 12,
+      "top": "obra/verification-before-completion"
+    },
+    {
+      "id": "disler/agent-fusion",
+      "expansion": "have multiple AI agents debate this and settle on a consensus plan",
+      "rank": 12,
+      "top": "disler/plan-synthesis"
+    },
+    {
+      "id": "disler/agent-fusion",
+      "expansion": "I need cross-checking between models before I trust an output",
+      "rank": 35,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "disler/agent-fusion",
+      "expansion": "cut cost by only sending the hard parts to the expensive model",
+      "rank": 12,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "disler/agent-fusion",
+      "expansion": "stop me from shipping one model's uncritiqued first answer",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "gsd-build/get-shit-done",
+      "expansion": "set up a standard delivery process I can run on every feature",
+      "rank": 12,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "gsd-build/get-shit-done",
+      "expansion": "help me turn a rough idea into a planned, executed, and verified change",
+      "rank": 72,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "gsd-build/get-shit-done",
+      "expansion": "stop me from jumping straight to code before the plan is agreed",
+      "rank": 30,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "mvanhorn/last30days",
+      "expansion": "I need a pulse check on how people are reacting to this launch this month",
+      "rank": null,
+      "top": "favorchurch/count-checkin-by-church"
+    },
+    {
+      "id": "mvanhorn/last30days",
+      "expansion": "has anyone been complaining about this on social media recently",
+      "rank": null,
+      "top": "remotion-dev/remotion-multimedia"
+    },
+    {
+      "id": "mvanhorn/last30days",
+      "expansion": "give me a briefing on the last month of buzz around this product",
+      "rank": 11,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mvanhorn/last30days",
+      "expansion": "check if this is trending anywhere before I write about it",
+      "rank": null,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "mvanhorn/last30days",
+      "expansion": "I want citations for what people online have actually said lately, not stale info",
+      "rank": null,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "openai/few-shot-learning",
+      "expansion": "teach it the format by example instead of writing rules",
+      "rank": 43,
+      "top": "garrytan/document-generate"
+    },
+    {
+      "id": "ruvnet/ruflo-v3",
+      "expansion": "our memory and state handling is fragmented across systems, unify it",
+      "rank": 36,
+      "top": "ruvnet/agentdb-memory-patterns"
+    },
+    {
+      "id": "ruvnet/ruflo-v3",
+      "expansion": "audit and harden security across the whole codebase as part of a rewrite",
+      "rank": 23,
+      "top": "mattpocock/edit-article"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "this feature is too big to write in one go, break it into steps",
+      "rank": 29,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "I'm about to write a ton of code at once, is that a bad idea",
+      "rank": 84,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "help me ship in small working slices instead of one giant PR",
+      "rank": 30,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "keep the app buildable and tested between each change",
+      "rank": null,
+      "top": "garrytan/unfreeze"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "I tend to gold-plate and refactor unrelated stuff, rein me in",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "what's the simplest version of this I could build first",
+      "rank": 76,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "guide me through vertical slicing this feature end to end",
+      "rank": null,
+      "top": "mattpocock/to-tickets"
+    },
+    {
+      "id": "addy-osmani/incremental-implementation",
+      "expansion": "stop scope creep while I'm implementing this",
+      "rank": null,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "garrytan/benchmark",
+      "expansion": "did this PR make the site slower",
+      "rank": null,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "garrytan/benchmark",
+      "expansion": "I need a before/after comparison of page load speed",
+      "rank": 15,
+      "top": "mbtiongson1/gaia-preview"
+    },
+    {
+      "id": "garrytan/benchmark",
+      "expansion": "run a lighthouse-style check on load time",
+      "rank": 13,
+      "top": "favorchurch/count-checkin-by-church"
+    },
+    {
+      "id": "garrytan/benchmark",
+      "expansion": "how has our page speed trended across recent PRs",
+      "rank": 23,
+      "top": "ruvnet/v3-performance-optimization"
+    },
+    {
+      "id": "garrytan/plan-eng-review",
+      "expansion": "make sure my data flow and diagrams actually make sense before I commit to them",
+      "rank": 57,
+      "top": "garrytan/make-pdf"
+    },
+    {
+      "id": "garrytan/plan-eng-review",
+      "expansion": "sanity check this design doc like a staff engineer would",
+      "rank": null,
+      "top": "favorchurch/count-checkin-by-church"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "I don't want to re-drive this browser flow every time, save it as something reusable",
+      "rank": null,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "turn my last successful scrape into a script I can run instantly next time",
+      "rank": 37,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "codify this one-off browser automation so it's fast and repeatable",
+      "rank": 50,
+      "top": "garrytan/setup-browser-cookies"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "make this scraping flow permanent instead of redoing it manually",
+      "rank": null,
+      "top": "ruvnet/flow-nexus-platform"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "generate a script plus test from what I just did in the browser",
+      "rank": 102,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "garrytan/skillify",
+      "expansion": "speed up repeat scrapes by turning them into saved skills",
+      "rank": 76,
+      "top": "vercel/find-skills"
+    },
+    {
+      "id": "gsd-build/verify-work",
+      "expansion": "I built the feature, now check with me that it actually works from a user's perspective",
+      "rank": 22,
+      "top": "dietrichgebert/ponytail"
+    },
+    {
+      "id": "gsd-build/verify-work",
+      "expansion": "walk me through testing this one thing at a time in plain language",
+      "rank": 62,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "gsd-build/verify-work",
+      "expansion": "if something's broken, diagnose it and get a fix plan ready",
+      "rank": 174,
+      "top": "gsd-build/get-shit-done"
+    },
+    {
+      "id": "gsd-build/verify-work",
+      "expansion": "run a conversational UAT pass on the phase I just finished",
+      "rank": null,
+      "top": "garrytan/plan-devex-review"
+    },
+    {
+      "id": "gsd-build/verify-work",
+      "expansion": "track test results for this phase so we have a record",
+      "rank": null,
+      "top": "gsd-build/discuss-phase"
+    },
+    {
+      "id": "k-dense-ai/transformers",
+      "expansion": "set up a pipeline for text classification without writing boilerplate",
+      "rank": 18,
+      "top": "mattpocock/git-guardrails-claude-code"
+    },
+    {
+      "id": "k-dense-ai/transformers",
+      "expansion": "how do I authenticate to pull a gated model from the Hub",
+      "rank": 29,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "k-dense-ai/transformers",
+      "expansion": "help me generate text with a causal LM and tune the decoding strategy",
+      "rank": 129,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/grill-with-docs",
+      "expansion": "keep asking me hard questions about this plan until it's actually solid",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/grill-with-docs",
+      "expansion": "make sure the terminology in this design stays consistent with our glossary",
+      "rank": 14,
+      "top": "mattpocock/ubiquitous-language"
+    },
+    {
+      "id": "mattpocock/grill-with-docs",
+      "expansion": "interrogate this design until the gaps are gone",
+      "rank": 32,
+      "top": "garrytan/design-shotgun"
+    },
+    {
+      "id": "mattpocock/grill-with-docs",
+      "expansion": "put this plan through a rigorous questioning pass before we build",
+      "rank": 20,
+      "top": "garrytan/plan-eng-review"
+    },
+    {
+      "id": "mattpocock/productivity",
+      "expansion": "help me get organized and efficient day to day",
+      "rank": null,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/triage",
+      "expansion": "figure out if this bug is already fixed before someone works on it",
+      "rank": 13,
+      "top": "obra/verification-before-completion"
+    },
+    {
+      "id": "mattpocock/triage",
+      "expansion": "check if we already rejected a similar request before",
+      "rank": 92,
+      "top": "favorchurch/count-checkin-by-church"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "this test is failing and I don't know why, don't just patch it",
+      "rank": 191,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "I've tried three fixes already and it's still broken",
+      "rank": 189,
+      "top": "obra/executing-plans"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "trace this bug back to where the bad value actually comes from",
+      "rank": 65,
+      "top": "gsd-build/execute-phase"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "stop me from band-aiding the symptom instead of the real bug",
+      "rank": 89,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "compare this broken code against a working example to find the difference",
+      "rank": 51,
+      "top": "vercel/find-skills"
+    },
+    {
+      "id": "obra/systematic-debugging",
+      "expansion": "something intermittent is failing in production and I can't reproduce it reliably",
+      "rank": 204,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "ruvnet/flow-nexus",
+      "expansion": "deploy a swarm of agents across different topologies for this task",
+      "rank": 29,
+      "top": "ruvnet/swarm-orchestration"
+    },
+    {
+      "id": "ruvnet/flow-nexus",
+      "expansion": "train a neural network across multiple machines",
+      "rank": 12,
+      "top": "k-dense-ai/torch-geometric"
+    },
+    {
+      "id": "obra/superpowers",
+      "expansion": "I want my agent to stop diving straight into code without a plan",
+      "rank": 32,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "obra/superpowers",
+      "expansion": "how do I get an agent to write a spec before implementing anything",
+      "rank": 141,
+      "top": "mattpocock/write-a-skill"
+    },
+    {
+      "id": "obra/superpowers",
+      "expansion": "set up a workflow where the agent brainstorms, plans, then works task by task",
+      "rank": 36,
+      "top": "obra/subagent-driven-development"
+    },
+    {
+      "id": "obra/superpowers",
+      "expansion": "I need subagents reviewing each other's work before it merges",
+      "rank": null,
+      "top": "anthropics/brand-guidelines"
+    },
+    {
+      "id": "obra/superpowers",
+      "expansion": "how do I make an agent work autonomously for hours without going off the rails",
+      "rank": 111,
+      "top": "mbtiongson1/gaia-bot-curate"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-scrape",
+      "expansion": "I have a URL and I need the page content as markdown in my app",
+      "rank": 21,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-scrape",
+      "expansion": "pull structured data, screenshots, and metadata from a single webpage programmatically",
+      "rank": null,
+      "top": "garrytan/scrape"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-scrape",
+      "expansion": "get clean HTML or links out of a webpage without writing my own scraper",
+      "rank": null,
+      "top": "obra/finishing-a-development-branch"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-scrape",
+      "expansion": "fetch a page's content and metadata via API for a feature I'm building",
+      "rank": 25,
+      "top": "huggingface/huggingface-papers"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-scrape",
+      "expansion": "how do I pull the readable text off this URL into my code",
+      "rank": 13,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "predict whether this molecule is toxic before running a wet-lab experiment",
+      "rank": null,
+      "top": "obra/verification-before-completion"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "train a model on a MoleculeNet benchmark dataset like Tox21 or BBBP",
+      "rank": null,
+      "top": "garrytan/benchmark-models"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "estimate solubility or binding affinity for a candidate compound",
+      "rank": 103,
+      "top": "mattpocock/improve-codebase-architecture"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "I'm doing drug discovery and need pretrained chemistry models like ChemBERTa",
+      "rank": 90,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "convert chemical structures into ML-ready fingerprints or graph representations",
+      "rank": null,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "k-dense-ai/deepchem",
+      "expansion": "predict crystal or materials properties like bandgap from structure",
+      "rank": null,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "nextlevelbuilder/ui-ux-pro-max",
+      "expansion": "suggest a GSAP animation preset that fits the interaction pattern",
+      "rank": 117,
+      "top": "browserbase/browse"
+    },
+    {
+      "id": "nextlevelbuilder/ui-ux-pro-max",
+      "expansion": "I need a design system reasoning profile, not just a random palette",
+      "rank": 95,
+      "top": "garrytan/design-consultation"
+    },
+    {
+      "id": "nextlevelbuilder/ui-ux-pro-max",
+      "expansion": "evaluate whether my layout causes cumulative layout shift or horizontal scroll",
+      "rank": null,
+      "top": "oso95/scroll-world"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "my design feels too loud, tone it down and make it quieter",
+      "rank": 17,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "harden my design tokens and theming so the app feels cohesive",
+      "rank": 14,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "clean up empty states, error states, and onboarding copy across the app",
+      "rank": 69,
+      "top": "garrytan/plan-devex-review"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "I want production-grade craft, not another safe Tailwind dashboard",
+      "rank": null,
+      "top": "addy-osmani/agent-skills"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "iterate live on this component in the browser until it looks right",
+      "rank": 122,
+      "top": "mattpocock/ask-matt"
+    },
+    {
+      "id": "pbakaus/impeccable",
+      "expansion": "give this landing page an actual point of view instead of generic polish",
+      "rank": null,
+      "top": "garrytan/landing-report"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "map how all the files and modules in this codebase actually connect",
+      "rank": 62,
+      "top": "mattpocock/zoom-out"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "find the god-object file that everything else quietly depends on",
+      "rank": 147,
+      "top": "huggingface/huggingface-vision-trainer"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "cluster this repo into logical subsystems automatically",
+      "rank": 19,
+      "top": "ruvnet/v3-memory-unification"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "surface surprising or hidden connections between unrelated parts of the code",
+      "rank": 176,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "generate a wiki-style overview of how this project is structured",
+      "rank": 98,
+      "top": "garrytan/document-generate"
+    },
+    {
+      "id": "safishamsi/graphify",
+      "expansion": "which files in this codebase are the most tangled together",
+      "rank": 141,
+      "top": "mattpocock/improve-codebase-architecture"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "this feature feels too big to just start coding, help me break it down",
+      "rank": null,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "turn this spec into a list of small verifiable tasks with acceptance criteria",
+      "rank": 66,
+      "top": "mattpocock/to-tickets"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "I need to figure out the dependency order before assigning work to parallel agents",
+      "rank": null,
+      "top": "obra/dispatching-parallel-agents"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "slice this build vertically instead of doing all the backend then all the frontend",
+      "rank": 17,
+      "top": "obra/finishing-a-development-branch"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "estimate the scope of this project before committing to a timeline",
+      "rank": null,
+      "top": "mattpocock/to-spec"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "decompose these requirements into implementable chunks a junior could follow",
+      "rank": 30,
+      "top": "obra/brainstorming"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "map what depends on what before I start writing code",
+      "rank": null,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "addy-osmani/planning-and-task-breakdown",
+      "expansion": "how do I communicate the size of this work to a non-technical stakeholder",
+      "rank": null,
+      "top": "garrytan/document-generate"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "click through a logged-in dashboard and pull data that needs JS to render",
+      "rank": 132,
+      "top": "garrytan/ship"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "automate filling out a form on a page that only works with JavaScript",
+      "rank": null,
+      "top": "intelligentcode-ai/mcp-client"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "navigate a website step by step and take screenshots along the way",
+      "rank": 198,
+      "top": "gooseworks/notte-browser"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "interact with a bot-protected page that a simple fetch can't reach",
+      "rank": null,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "keep a single browser session open across multiple automation steps",
+      "rank": 11,
+      "top": "garrytan/open-gstack-browser"
+    },
+    {
+      "id": "browser-use/browser-harness",
+      "expansion": "reuse my existing logged-in session instead of authenticating again",
+      "rank": null,
+      "top": "aplaceforallmystuff/log-to-daily"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "open this URL and check what the page actually looks like right now",
+      "rank": 14,
+      "top": "garrytan/landing-report"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "take a before and after screenshot to prove a UI change worked",
+      "rank": 38,
+      "top": "mbtiongson1/gaia-preview"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "test this form and file upload end to end",
+      "rank": 48,
+      "top": "devin-ai/autonomous-swe"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "check the site renders correctly at a mobile screen width",
+      "rank": 78,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "I need fast headless page checks, not a full test suite",
+      "rank": 68,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "garrytan/browse",
+      "expansion": "dogfood this user flow the way a real visitor would experience it",
+      "rank": 30,
+      "top": "mattpocock/grilling"
+    },
+    {
+      "id": "garrytan/design-html",
+      "expansion": "I have a plan document, now build the actual page from it",
+      "rank": 77,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "garrytan/design-html",
+      "expansion": "implement the frontend for a design that's already been signed off",
+      "rank": 57,
+      "top": "pbakaus/impeccable"
+    },
+    {
+      "id": "garrytan/design-html",
+      "expansion": "build me a page from scratch based on what I describe",
+      "rank": 77,
+      "top": "garrytan/landing-report"
+    },
+    {
+      "id": "garrytan/office-hours",
+      "expansion": "I have a side project idea and want to think it through before starting",
+      "rank": 18,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "garrytan/office-hours",
+      "expansion": "I'm not sure if there's real demand for this, talk me through it",
+      "rank": 11,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "garrytan/office-hours",
+      "expansion": "brainstorm a hackathon project with me, this is just for fun",
+      "rank": 208,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/office-hours",
+      "expansion": "force me to get specific instead of staying vague about my plan",
+      "rank": 91,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/qa",
+      "expansion": "exhaustively test every page including cosmetic issues, not just the critical ones",
+      "rank": 41,
+      "top": "0xdarkmatter/pytest-patterns"
+    },
+    {
+      "id": "garrytan/qa",
+      "expansion": "does this feature actually work? go check and fix anything wrong",
+      "rank": 65,
+      "top": "gaia-research/ci-churn"
+    },
+    {
+      "id": "garrytan/qa",
+      "expansion": "I need evidence this app is ready to ship, not just a gut feeling",
+      "rank": 38,
+      "top": "mbtiongson1/gaia-draft-curate"
+    },
+    {
+      "id": "garrytan/qa",
+      "expansion": "run through the app and document every issue with screenshots",
+      "rank": 15,
+      "top": "gooseworks/notte-browser"
+    },
+    {
+      "id": "gsd-build/discuss-phase",
+      "expansion": "I don't want the agent guessing at requirements, make it interrogate me first",
+      "rank": 57,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "gsd-build/discuss-phase",
+      "expansion": "surface the gray areas in this plan so we can decide them together up front",
+      "rank": 15,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "gsd-build/discuss-phase",
+      "expansion": "don't let planning start until we've agreed on the open questions",
+      "rank": 15,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "gsd-build/discuss-phase",
+      "expansion": "record what we decided so downstream agents don't have to ask me again",
+      "rank": 17,
+      "top": "mattpocock/ask-matt"
+    },
+    {
+      "id": "gsd-build/discuss-phase",
+      "expansion": "adaptive questioning to lock in scope before implementation starts",
+      "rank": 18,
+      "top": "garrytan/plan-eng-review"
+    },
+    {
+      "id": "k-dense-ai/pytorch-lightning",
+      "expansion": "configure a data pipeline module for my deep learning project",
+      "rank": null,
+      "top": "mattpocock/improve-codebase-architecture"
+    },
+    {
+      "id": "martin-stepanoski/nielsen-heuristics-audit",
+      "expansion": "prioritize which UX issues to fix first based on industry standards",
+      "rank": 26,
+      "top": "mattpocock/implement"
+    },
+    {
+      "id": "martin-stepanoski/nielsen-heuristics-audit",
+      "expansion": "audit this product for consistency and recognition versus recall problems",
+      "rank": 17,
+      "top": "garrytan/design-review"
+    },
+    {
+      "id": "mattpocock/handoff",
+      "expansion": "don't just dump the whole chat, distill it into what actually matters going forward",
+      "rank": 11,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "mattpocock/handoff",
+      "expansion": "save my progress so I can resume this later without repeating myself",
+      "rank": null,
+      "top": "garrytan/context-save"
+    },
+    {
+      "id": "mattpocock/handoff",
+      "expansion": "redact any secrets before writing out this session summary",
+      "rank": 11,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "mattpocock/setup-matt-pocock-skills",
+      "expansion": "set up my issue tracker preference and triage labels for this project",
+      "rank": 12,
+      "top": "mattpocock/to-spec"
+    },
+    {
+      "id": "mattpocock/setup-matt-pocock-skills",
+      "expansion": "decide whether this repo uses GitHub issues or local markdown for tracking",
+      "rank": 17,
+      "top": "ruvnet/github-multi-repo"
+    },
+    {
+      "id": "mattpocock/setup-matt-pocock-skills",
+      "expansion": "set up where ADRs and domain docs live for a new project",
+      "rank": 150,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "mattpocock/setup-matt-pocock-skills",
+      "expansion": "onboard this codebase onto the team's engineering workflow conventions",
+      "rank": 13,
+      "top": "mattpocock/engineering"
+    },
+    {
+      "id": "mattpocock/ubiquitous-language",
+      "expansion": "our team keeps using different words for the same concept, fix that",
+      "rank": 173,
+      "top": "garrytan/document-generate"
+    },
+    {
+      "id": "mattpocock/ubiquitous-language",
+      "expansion": "formalize the vocabulary this project actually uses",
+      "rank": 17,
+      "top": "dietrichgebert/ponytail"
+    },
+    {
+      "id": "obra/verification-before-completion",
+      "expansion": "I need the agent to prove its work instead of just asserting it's done",
+      "rank": 51,
+      "top": "obra/finishing-a-development-branch"
+    },
+    {
+      "id": "ruvnet/github-suite",
+      "expansion": "automate code review across several repos at once",
+      "rank": 13,
+      "top": "huggingface/huggingface-papers"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "my agents keep losing all their context between sessions and I have to re-explain everything",
+      "rank": 216,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "I need a way to coordinate a bunch of AI agents working on the same codebase without them stepping on each other",
+      "rank": 181,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "give agents persistent memory so they remember what worked last time",
+      "rank": 48,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "route cheap simple tasks to a small model and hard ones to a bigger one automatically",
+      "rank": 232,
+      "top": "openai/few-shot-learning"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "I want hooks that fire before and after every edit for observability",
+      "rank": 242,
+      "top": "gaia-research/cost"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "looking for a plugin ecosystem for extending my agent workflows",
+      "rank": 83,
+      "top": "ruvnet/v3-cli-modernization"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "set up hierarchical sub-agent swarms with a coordinator on top",
+      "rank": 88,
+      "top": "mattpocock/setup-pre-commit"
+    },
+    {
+      "id": "ruvnet/ruflo",
+      "expansion": "track token spend and cost across a bunch of parallel agent runs",
+      "rank": 101,
+      "top": "getagentseal/codeburn"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-search",
+      "expansion": "I need my product to look things up online and return results",
+      "rank": 15,
+      "top": "anthropics/brand-guidelines"
+    },
+    {
+      "id": "k-dense-ai/pymc",
+      "expansion": "how do I quantify uncertainty in my model's predictions instead of just a point estimate",
+      "rank": null,
+      "top": "mbtiongson1/gaia-preview"
+    },
+    {
+      "id": "k-dense-ai/pymc",
+      "expansion": "I need to fit a hierarchical model that shares statistical strength across groups",
+      "rank": 20,
+      "top": "garrytan/benchmark-models"
+    },
+    {
+      "id": "k-dense-ai/pymc",
+      "expansion": "my sampler keeps throwing divergences and I don't know why",
+      "rank": 84,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "k-dense-ai/pymc",
+      "expansion": "check whether my priors imply plausible data before I even fit anything",
+      "rank": null,
+      "top": "favorchurch/count-checkin-by-church"
+    },
+    {
+      "id": "k-dense-ai/pymc",
+      "expansion": "my data has missing values and I want to handle them the principled way rather than dropping rows",
+      "rank": 230,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "obra/subagent-driven-development",
+      "expansion": "review each task's output before moving to the next one without me babysitting every step",
+      "rank": 21,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/subagent-driven-development",
+      "expansion": "delegate each item in my plan to a separate agent and only surface load-bearing decisions",
+      "rank": 26,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "ruvnet/agentdb",
+      "expansion": "store embeddings and retrieve the closest matches fast",
+      "rank": 102,
+      "top": "firecrawl/firecrawl-research-index"
+    },
+    {
+      "id": "ruvnet/agentdb",
+      "expansion": "learn recurring patterns from past runs and reuse them automatically",
+      "rank": 40,
+      "top": "ruvnet/agentdb-memory-patterns"
+    },
+    {
+      "id": "ruvnet/agentdb",
+      "expansion": "build a shared knowledge store my agents can read from and write to",
+      "rank": 103,
+      "top": "anthropic/pptx"
+    },
+    {
+      "id": "stanfordnlp/dspy",
+      "expansion": "evaluate and iterate on a multi-step LLM pipeline systematically",
+      "rank": 141,
+      "top": "ruvnet/stream-chain"
+    },
+    {
+      "id": "stanfordnlp/dspy",
+      "expansion": "compose several LLM calls into one program I can optimize end-to-end",
+      "rank": null,
+      "top": "mbtiongson1/gaia-curate"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "I'm about to deploy and want to make sure I haven't missed anything critical",
+      "rank": 73,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "what should I check before pushing this to production",
+      "rank": null,
+      "top": "mattpocock/prototype"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "set up a gradual rollout so a bad change only hits a small slice of users first",
+      "rank": 115,
+      "top": "openai/few-shot-learning"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "I need a rollback plan in case this release breaks something",
+      "rank": 114,
+      "top": "mattpocock/to-tickets"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "help me feature-flag a risky change so I can turn it off without redeploying",
+      "rank": 98,
+      "top": "garrytan/setup-browser-cookies"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "what metrics should I be watching right after a deploy",
+      "rank": 92,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "addy-osmani/shipping-and-launch",
+      "expansion": "help me decide whether to roll forward or roll back based on error rates",
+      "rank": null,
+      "top": "mattpocock/implement"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-interact",
+      "expansion": "make my app click buttons and fill out forms on other websites",
+      "rank": null,
+      "top": "gooseworks/notte-browser"
+    },
+    {
+      "id": "firecrawl/firecrawl-build-interact",
+      "expansion": "add browser automation capability to my app, not just scraping",
+      "rank": 21,
+      "top": "gooseworks/notte-browser"
+    },
+    {
+      "id": "garrytan/canary",
+      "expansion": "watch my site right after I deploy and tell me if something broke",
+      "rank": 11,
+      "top": "garrytan/land-and-deploy"
+    },
+    {
+      "id": "garrytan/design-shotgun",
+      "expansion": "I don't like how this screen looks but I don't know what I actually want instead",
+      "rank": null,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "garrytan/design-shotgun",
+      "expansion": "explore what this feature could look like before we build it",
+      "rank": null,
+      "top": "favorchurch/speak-like-favor"
+    },
+    {
+      "id": "garrytan/plan-ceo-review",
+      "expansion": "am I thinking too small with this plan",
+      "rank": 14,
+      "top": "mattpocock/codebase-design"
+    },
+    {
+      "id": "garrytan/plan-ceo-review",
+      "expansion": "push back on my plan and tell me if it's ambitious enough",
+      "rank": 17,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/plan-ceo-review",
+      "expansion": "review this like a founder would, not just an engineer checking boxes",
+      "rank": 47,
+      "top": "garrytan/garrytan"
+    },
+    {
+      "id": "garrytan/plan-ceo-review",
+      "expansion": "challenge my assumptions about what this product actually needs to be",
+      "rank": 11,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "garrytan/retro",
+      "expansion": "summarize what the team actually shipped this week",
+      "rank": null,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "garrytan/retro",
+      "expansion": "who did what this sprint and where does each person need to grow",
+      "rank": 12,
+      "top": "mattpocock/code-review"
+    },
+    {
+      "id": "gsd-build/execute-phase",
+      "expansion": "just re-run the gap-closure fixes flagged by the last verification pass",
+      "rank": null,
+      "top": "mattpocock/wait-what"
+    },
+    {
+      "id": "gsd-build/execute-phase",
+      "expansion": "step through this phase's work interactively with checkpoints instead of firing everything unattended",
+      "rank": 14,
+      "top": "martin-stepanoski/nielsen-heuristics-audit"
+    },
+    {
+      "id": "gsd-build/execute-phase",
+      "expansion": "orchestrate a bunch of plan executions without blowing my context budget on the coordinator",
+      "rank": 32,
+      "top": "openai/few-shot-learning"
+    },
+    {
+      "id": "k-dense-ai/qiskit",
+      "expansion": "I keep getting noisy results back from the QPU, how do I mitigate hardware error",
+      "rank": null,
+      "top": "ruvnet/dual-collect"
+    },
+    {
+      "id": "mattpocock/diagnose",
+      "expansion": "help me build a reliable way to reproduce this failure before I try fixing anything",
+      "rank": 16,
+      "top": "garrytan/qa"
+    },
+    {
+      "id": "mattpocock/diagnose",
+      "expansion": "I keep guessing at fixes without any way to confirm they actually worked",
+      "rank": 67,
+      "top": "obra/systematic-debugging"
+    },
+    {
+      "id": "mattpocock/diagnose",
+      "expansion": "shrink this bug down to the smallest possible repro case",
+      "rank": 27,
+      "top": "mattpocock/obsidian-vault"
+    },
+    {
+      "id": "mattpocock/diagnose",
+      "expansion": "this only fails sometimes and I can't get a consistent reproduction",
+      "rank": 38,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "mattpocock/misc",
+      "expansion": "help migrating this project's setup to something new",
+      "rank": 25,
+      "top": "garrytan/setup-gbrain"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "write the test before the implementation for this feature",
+      "rank": 31,
+      "top": "garrytan/qa-only"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "make sure my tests aren't just mirroring what the implementation already does",
+      "rank": null,
+      "top": "caioribeiroclw-pixel/evidence-attestation"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "I want tests that survive a refactor instead of breaking every time internals change",
+      "rank": 23,
+      "top": "addy-osmani/test-driven-development"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "where should the boundary of this test actually sit",
+      "rank": 12,
+      "top": "dietrichgebert/ponytail"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "avoid writing a test that just recomputes the same formula the code uses",
+      "rank": 30,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "build this feature one small test-then-code cycle at a time, not tests then code in bulk",
+      "rank": 62,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "expansion": "stop writing every test up front before any implementation exists",
+      "rank": 28,
+      "top": "obra/writing-plans"
+    },
+    {
+      "id": "obra/brainstorming",
+      "expansion": "before we write any code, let's talk through what I actually need",
+      "rank": 24,
+      "top": "mattpocock/write-a-skill"
+    },
+    {
+      "id": "obra/brainstorming",
+      "expansion": "I have a rough idea and want help turning it into a real spec",
+      "rank": 41,
+      "top": "ayghri/i-have-adhd"
+    },
+    {
+      "id": "obra/brainstorming",
+      "expansion": "walk me through a couple of different approaches before we commit to one",
+      "rank": 17,
+      "top": "mattpocock/grill-me"
+    },
+    {
+      "id": "obra/brainstorming",
+      "expansion": "I want a design doc I can review before anyone touches code",
+      "rank": 28,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "obra/brainstorming",
+      "expansion": "figure out if this is a quick experiment or a real architectural change before we start building",
+      "rank": 54,
+      "top": "mbtiongson1/gaia-preview"
+    },
+    {
+      "id": "openai/self-consistency",
+      "expansion": "I want more confidence in the model's answer to a tricky problem",
+      "rank": 24,
+      "top": "mattpocock/to-questionnaire"
+    },
+    {
+      "id": "ruvnet/hive-mind",
+      "expansion": "I need multiple agents to agree on a decision even if one of them is unreliable or wrong",
+      "rank": null,
+      "top": "mattpocock/wayfinder"
+    },
+    {
+      "id": "ruvnet/hive-mind",
+      "expansion": "distributed agents need to vote and reach quorum before acting",
+      "rank": 19,
+      "top": "garrytan/canary"
+    },
+    {
+      "id": "ruvnet/hive-mind",
+      "expansion": "set up a leader-follower structure for my multi-agent system",
+      "rank": 25,
+      "top": "garrytan/codex"
+    },
+    {
+      "id": "ruvnet/hive-mind",
+      "expansion": "handle disagreement between agents using a formal consensus strategy instead of just picking one",
+      "rank": 17,
+      "top": "mattpocock/wayfinder"
+    }
+  ]
+}

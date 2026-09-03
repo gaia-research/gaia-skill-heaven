@@ -168,6 +168,7 @@ export function buildSkillIndex({
       awaitingClassification: (projection.awaitingClassification ?? []).length,
       unreachable: docs.filter((doc) => !isReachable(doc)).length,
       missingTags: docs.filter((doc) => doc.tags.length === 0).length,
+      expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
       avgFieldLen,
       floor: null,
       floorCalibration: null,
