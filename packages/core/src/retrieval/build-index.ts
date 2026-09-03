@@ -31,6 +31,7 @@ export type ProjectionSkill = {
   overallTrustGrade?: string | undefined;
   trustMagnitude?: number | undefined;
   links?: Record<string, unknown> | undefined;
+  suiteComponents?: string[] | undefined;
 };
 
 export type NamedProjection = {
@@ -70,6 +71,16 @@ export function isInstallableLink(links: Record<string, unknown> | undefined): b
 }
 
 /** Ranked text of one field of one document. */
+/**
+ * Whether summon can deliver this document at all: either its own link
+ * resolves to a SKILL.md, or it is a suite whose components carry the
+ * payloads. 20 skills in the corpus are suites with no link of their own;
+ * treating them as uninstallable drops them from every result silently.
+ */
+export function isReachable(doc: IndexedSkill): boolean {
+  return doc.installable || doc.suiteComponents.length > 0;
+}
+
 export function fieldText(doc: IndexedSkill, field: IndexField): string {
   switch (field) {
     case "name":
@@ -152,7 +163,7 @@ export function buildSkillIndex({
       // because the runtime reads `buckets` only. Stating the number keeps the
       // gap visible instead of silently shrinking the corpus.
       awaitingClassification: (projection.awaitingClassification ?? []).length,
-      uninstallable: docs.filter((doc) => !doc.installable).length,
+      unreachable: docs.filter((doc) => !isReachable(doc)).length,
       missingTags: docs.filter((doc) => doc.tags.length === 0).length,
       avgFieldLen,
       floor: null,
@@ -179,6 +190,7 @@ function toIndexedSkill(
     links: typeof links.github === "string" ? { github: links.github } : {},
     invocation: readInvocation(skill.invocation),
     installable: isInstallableLink(links),
+    suiteComponents: [...(skill.suiteComponents ?? [])],
     ...(skill.level ? { level: skill.level } : {}),
     trust: {
       ...(skill.level ? { level: skill.level } : {}),

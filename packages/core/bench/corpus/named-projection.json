@@ -3,7 +3,7 @@
     "url": "https://gaiaskilltree.com/graph/named/index.json",
     "source": "https://gaiaskilltree.com",
     "digest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
-    "capturedAt": "2026-09-03T16:30:26.169Z"
+    "capturedAt": "2026-09-03T16:44:43.364Z"
   },
   "generatedAt": "2026-09-01",
   "buckets": {
@@ -104,6 +104,11 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 127.54,
+        "suiteComponents": [
+          "disler/auto-review",
+          "disler/opinion",
+          "disler/plan-synthesis"
+        ],
         "links": {
           "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/README.md"
         }
@@ -193,6 +198,13 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 201,
+        "suiteComponents": [
+          "ruvnet/agentdb-advanced",
+          "ruvnet/agentdb-learning",
+          "ruvnet/agentdb-memory-patterns",
+          "ruvnet/agentdb-optimization",
+          "ruvnet/agentdb-vector-search"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -1485,6 +1497,11 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 126,
+        "suiteComponents": [
+          "ruvnet/dual-collect",
+          "ruvnet/dual-coordinate",
+          "ruvnet/dual-spawn"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -1571,6 +1588,22 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 351.96,
+        "suiteComponents": [
+          "mattpocock/code-review",
+          "mattpocock/diagnose",
+          "mattpocock/grill-with-docs",
+          "mattpocock/improve-codebase-architecture",
+          "mattpocock/prototype",
+          "mattpocock/research",
+          "mattpocock/setup-matt-pocock-skills",
+          "mattpocock/to-spec",
+          "mattpocock/to-tickets",
+          "mattpocock/triage",
+          "mattpocock/ubiquitous-language",
+          "mattpocock/wayfinder",
+          "mattpocock/wizard",
+          "mattpocock/zoom-out"
+        ],
         "links": {}
       }
     ],
@@ -1945,6 +1978,13 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 229.76,
+        "suiteComponents": [
+          "firecrawl/firecrawl-build-interact",
+          "firecrawl/firecrawl-build-onboarding",
+          "firecrawl/firecrawl-build-scrape",
+          "firecrawl/firecrawl-build-search",
+          "firecrawl/firecrawl-research-index"
+        ],
         "links": {
           "github": "https://github.com/firecrawl/firecrawl"
         }
@@ -2011,6 +2051,54 @@
         "status": "named",
         "overallTrustGrade": "S",
         "trustMagnitude": 594.27,
+        "suiteComponents": [
+          "garrytan/benchmark",
+          "garrytan/benchmark-models",
+          "garrytan/browse",
+          "garrytan/canary",
+          "garrytan/careful",
+          "garrytan/codex",
+          "garrytan/context-restore",
+          "garrytan/context-save",
+          "garrytan/cso",
+          "garrytan/design-consultation",
+          "garrytan/design-html",
+          "garrytan/design-review",
+          "garrytan/design-shotgun",
+          "garrytan/devex-review",
+          "garrytan/document-generate",
+          "garrytan/document-release",
+          "garrytan/freeze",
+          "garrytan/garrytan",
+          "garrytan/gstack-upgrade",
+          "garrytan/guard",
+          "garrytan/health",
+          "garrytan/investigate",
+          "garrytan/land-and-deploy",
+          "garrytan/landing-report",
+          "garrytan/learn",
+          "garrytan/make-pdf",
+          "garrytan/office-hours",
+          "garrytan/open-gstack-browser",
+          "garrytan/pair-agent",
+          "garrytan/plan-ceo-review",
+          "garrytan/plan-design-review",
+          "garrytan/plan-devex-review",
+          "garrytan/plan-eng-review",
+          "garrytan/plan-tune",
+          "garrytan/qa",
+          "garrytan/qa-only",
+          "garrytan/retro",
+          "garrytan/review",
+          "garrytan/scrape",
+          "garrytan/setup-browser-cookies",
+          "garrytan/setup-deploy",
+          "garrytan/setup-gbrain",
+          "garrytan/ship",
+          "garrytan/skillify",
+          "garrytan/sync-gbrain",
+          "garrytan/unfreeze"
+        ],
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/SKILL.md"
         }
@@ -2150,6 +2238,13 @@
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 66,
+        "suiteComponents": [
+          "ruvnet/github-code-review",
+          "ruvnet/github-multi-repo",
+          "ruvnet/github-project-management",
+          "ruvnet/github-release-management",
+          "ruvnet/github-workflow-automation"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -2168,6 +2263,16 @@
         "status": "named",
         "overallTrustGrade": "S",
         "trustMagnitude": 298.83,
+        "suiteComponents": [
+          "addy-osmani/code-review-and-quality",
+          "addy-osmani/code-simplification",
+          "addy-osmani/incremental-implementation",
+          "addy-osmani/performance-optimization",
+          "addy-osmani/planning-and-task-breakdown",
+          "addy-osmani/shipping-and-launch",
+          "addy-osmani/spec-driven-development",
+          "addy-osmani/test-driven-development"
+        ],
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/README.md"
         }
@@ -2188,6 +2293,13 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 202.15,
+        "suiteComponents": [
+          "gsd-build/discuss-phase",
+          "gsd-build/execute-phase",
+          "gsd-build/plan-phase",
+          "gsd-build/ship",
+          "gsd-build/verify-work"
+        ],
         "links": {
           "github": "https://github.com/gsd-build/get-shit-done/blob/main/README.md"
         }
@@ -2761,6 +2873,12 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 120,
+        "suiteComponents": [
+          "mattpocock/git-guardrails-claude-code",
+          "mattpocock/migrate-to-shoehorn",
+          "mattpocock/scaffold-exercises",
+          "mattpocock/setup-pre-commit"
+        ],
         "links": {}
       }
     ],
@@ -3011,6 +3129,11 @@
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 96,
+        "suiteComponents": [
+          "ruvnet/flow-nexus-neural",
+          "ruvnet/flow-nexus-platform",
+          "ruvnet/flow-nexus-swarm"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -3062,6 +3185,55 @@
         "status": "named",
         "overallTrustGrade": "S",
         "trustMagnitude": 488.28,
+        "suiteComponents": [
+          "ruvnet/agentdb",
+          "ruvnet/agentdb-advanced",
+          "ruvnet/agentdb-learning",
+          "ruvnet/agentdb-memory-patterns",
+          "ruvnet/agentdb-optimization",
+          "ruvnet/agentdb-vector-search",
+          "ruvnet/agentic-jujutsu",
+          "ruvnet/browser",
+          "ruvnet/dual-collect",
+          "ruvnet/dual-coordinate",
+          "ruvnet/dual-mode",
+          "ruvnet/dual-spawn",
+          "ruvnet/flow-nexus",
+          "ruvnet/flow-nexus-neural",
+          "ruvnet/flow-nexus-platform",
+          "ruvnet/flow-nexus-swarm",
+          "ruvnet/github-code-review",
+          "ruvnet/github-multi-repo",
+          "ruvnet/github-project-management",
+          "ruvnet/github-release-management",
+          "ruvnet/github-suite",
+          "ruvnet/github-workflow-automation",
+          "ruvnet/hive-mind",
+          "ruvnet/hooks-automation",
+          "ruvnet/pair-programming",
+          "ruvnet/performance-analysis",
+          "ruvnet/reasoningbank",
+          "ruvnet/reasoningbank-agentdb",
+          "ruvnet/reasoningbank-intelligence",
+          "ruvnet/ruflo-v3",
+          "ruvnet/skill-builder",
+          "ruvnet/sparc-methodology",
+          "ruvnet/stream-chain",
+          "ruvnet/swarm-advanced",
+          "ruvnet/swarm-orchestration",
+          "ruvnet/v3-cli-modernization",
+          "ruvnet/v3-core-implementation",
+          "ruvnet/v3-ddd-architecture",
+          "ruvnet/v3-integration-deep",
+          "ruvnet/v3-mcp-optimization",
+          "ruvnet/v3-memory-unification",
+          "ruvnet/v3-performance-optimization",
+          "ruvnet/v3-security-overhaul",
+          "ruvnet/v3-swarm-coordination",
+          "ruvnet/verification-quality",
+          "ruvnet/worker-benchmarks",
+          "ruvnet/worker-integration"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -3260,6 +3432,10 @@
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 60,
+        "suiteComponents": [
+          "mattpocock/edit-article",
+          "mattpocock/obsidian-vault"
+        ],
         "links": {}
       }
     ],
@@ -3338,6 +3514,19 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 216,
+        "suiteComponents": [
+          "ruvnet/swarm-advanced",
+          "ruvnet/swarm-orchestration",
+          "ruvnet/v3-cli-modernization",
+          "ruvnet/v3-core-implementation",
+          "ruvnet/v3-ddd-architecture",
+          "ruvnet/v3-integration-deep",
+          "ruvnet/v3-mcp-optimization",
+          "ruvnet/v3-memory-unification",
+          "ruvnet/v3-performance-optimization",
+          "ruvnet/v3-security-overhaul",
+          "ruvnet/v3-swarm-coordination"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -3430,6 +3619,14 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 180,
+        "suiteComponents": [
+          "mattpocock/grill-me",
+          "mattpocock/handoff",
+          "mattpocock/teach",
+          "mattpocock/to-questionnaire",
+          "mattpocock/wait-what",
+          "mattpocock/write-a-skill"
+        ],
         "links": {}
       }
     ],
@@ -3662,6 +3859,10 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 118.5,
+        "suiteComponents": [
+          "ruvnet/reasoningbank-agentdb",
+          "ruvnet/reasoningbank-intelligence"
+        ],
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -4480,6 +4681,33 @@
         "status": "named",
         "overallTrustGrade": "S",
         "trustMagnitude": 529.4,
+        "suiteComponents": [
+          "mattpocock/code-review",
+          "mattpocock/diagnose",
+          "mattpocock/edit-article",
+          "mattpocock/engineering",
+          "mattpocock/grill-me",
+          "mattpocock/grill-with-docs",
+          "mattpocock/handoff",
+          "mattpocock/improve-codebase-architecture",
+          "mattpocock/obsidian-vault",
+          "mattpocock/personal",
+          "mattpocock/productivity",
+          "mattpocock/prototype",
+          "mattpocock/research",
+          "mattpocock/setup-matt-pocock-skills",
+          "mattpocock/teach",
+          "mattpocock/to-questionnaire",
+          "mattpocock/to-spec",
+          "mattpocock/to-tickets",
+          "mattpocock/triage",
+          "mattpocock/ubiquitous-language",
+          "mattpocock/wait-what",
+          "mattpocock/wayfinder",
+          "mattpocock/wizard",
+          "mattpocock/write-a-skill",
+          "mattpocock/zoom-out"
+        ],
         "links": {
           "github": "https://github.com/mattpocock/skills"
         }
@@ -4664,6 +4892,19 @@
         "status": "named",
         "overallTrustGrade": "S",
         "trustMagnitude": 445.15,
+        "suiteComponents": [
+          "obra/brainstorming",
+          "obra/dispatching-parallel-agents",
+          "obra/executing-plans",
+          "obra/finishing-a-development-branch",
+          "obra/receiving-code-review",
+          "obra/requesting-code-review",
+          "obra/subagent-driven-development",
+          "obra/systematic-debugging",
+          "obra/using-git-worktrees",
+          "obra/verification-before-completion",
+          "obra/writing-plans"
+        ],
         "links": {
           "github": "https://github.com/obra/superpowers"
         }
@@ -5327,6 +5568,12 @@
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 156,
+        "suiteComponents": [
+          "garrytan/browse",
+          "garrytan/cso",
+          "garrytan/design-review",
+          "garrytan/office-hours"
+        ],
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/autoplan/SKILL.md"
         }
@@ -5383,6 +5630,19 @@
         "level": "2★",
         "status": "named",
         "trustMagnitude": 0,
+        "suiteComponents": [
+          "remotion-dev/remotion-captions",
+          "remotion-dev/remotion-create",
+          "remotion-dev/remotion-docs",
+          "remotion-dev/remotion-interactivity",
+          "remotion-dev/remotion-maps",
+          "remotion-dev/remotion-markup",
+          "remotion-dev/remotion-multimedia",
+          "remotion-dev/remotion-render",
+          "remotion-dev/remotion-saas",
+          "remotion-dev/remotion-studio",
+          "remotion-dev/remotion-upgrade"
+        ],
         "links": {}
       }
     ],

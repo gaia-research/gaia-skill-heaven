@@ -80,7 +80,7 @@ if (process.argv.includes("--check")) {
       `wrote             ${outPath}`,
       `docs              ${index.stats.docs}`,
       `expansion         ${index.builder.expansion}`,
-      `uninstallable     ${index.stats.uninstallable}`,
+      `unreachable       ${index.stats.unreachable}`,
       `missing tags      ${index.stats.missingTags}`,
       `awaiting class.   ${index.stats.awaitingClassification} (not indexed — invisible to summon)`,
       `floor             ${index.stats.floor ?? "uncalibrated"}`,

@@ -6,6 +6,7 @@ import {
   buildSkillIndex,
   deriveTerms,
   isInstallableLink,
+  isReachable,
   sha256,
   type NamedProjection,
 } from "../src/retrieval/build-index.js";
@@ -64,7 +65,31 @@ describe("buildSkillIndex", () => {
     const index = buildSkillIndex(options);
     expect(index.docs.find((doc) => doc.id === "acme/no-source")?.installable).toBe(false);
     expect(index.docs.find((doc) => doc.id === "garrytan/health")?.installable).toBe(true);
-    expect(index.stats.uninstallable).toBe(1);
+    expect(index.stats.unreachable).toBe(1);
+  });
+
+  it("counts a linkless suite root as reachable — its components carry the payloads", () => {
+    const withSuite = buildSkillIndex({
+      ...options,
+      projection: {
+        buckets: {
+          suites: [
+            {
+              id: "addy-osmani/agent-skills",
+              name: "Agent Skills",
+              contributor: "addy-osmani",
+              description: "A suite.",
+              links: { github: "https://github.com/addyosmani/agent-skills/blob/main/README.md" },
+              suiteComponents: ["addy-osmani/code-review-and-quality"],
+            },
+          ],
+        },
+      },
+    });
+    const doc = withSuite.docs[0];
+    expect(doc?.installable).toBe(false);
+    expect(isReachable(doc as never)).toBe(true);
+    expect(withSuite.stats.unreachable).toBe(0);
   });
 
   it("is deterministic — the same snapshot serializes identically", () => {
