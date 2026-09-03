@@ -60,3 +60,60 @@ export {
 // materialize(fsPlan, theirSessionDir) and spawn themselves.
 export { materialize } from "./exec.js";
 export { tokenize, makeListingLine, readFrontmatter, contentSha256, type TokenizerId } from "./vendor/census-pure.js";
+
+// Retrieval (SPEC §2–§4): the committed index contract, the offline builder,
+// the BM25F ranker, the shipped baseline, and the benchmark metrics. The
+// runtime (`skill-summon`) and the benchmark read the same implementations —
+// a re-implementation on either side would drift and make the numbers
+// meaningless.
+export {
+  SKILL_INDEX_SCHEMA,
+  STALE_AFTER_DAYS,
+  INDEX_FIELDS,
+  SkillIndexError,
+  assertSkillIndex,
+  indexAgeDays,
+  isStale,
+  type IndexField,
+  type IndexedSkill,
+  type IndexStats,
+  type FloorCalibration,
+  type RetrievalSurface,
+  type SkillIndex,
+} from "./retrieval/schema.js";
+export { normalize, tokenizeText, scoreMatch } from "./retrieval/lexical.js";
+export {
+  buildSkillIndex,
+  deriveTerms,
+  fieldText,
+  isInstallableLink,
+  sha256,
+  type BuildIndexOptions,
+  type NamedProjection,
+  type ProjectionSkill,
+} from "./retrieval/build-index.js";
+export {
+  Bm25fRanker,
+  DEFAULT_BM25F_PARAMS,
+  EXACT_MATCH_SCORE,
+  marginOf,
+  type Bm25fParams,
+  type MatchKind,
+  type ScoredSkill,
+} from "./retrieval/bm25f.js";
+export {
+  BASELINE_MIN_RELEVANCE,
+  BASELINE_RELEVANCE_BAND,
+  baselineRelevance,
+  rankBaseline,
+  type BaselineMode,
+} from "./retrieval/baseline.js";
+export {
+  mean,
+  mulberry32,
+  pairedBootstrap,
+  recallAt,
+  reciprocalRank,
+  type BootstrapResult,
+} from "./retrieval/metrics.js";
+export { INDEX_BUILDER_VERSION } from "./retrieval/version.js";

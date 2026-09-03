@@ -118,7 +118,12 @@ function allowedOnSurface(skill: NamedSkill, surface: SummonSurface): boolean {
   return true;
 }
 
-function relevanceScore(skill: NamedSkill, query: string): number {
+/**
+ * Exported for `test/index-parity.test.ts`, which pins these weights to
+ * `skill-zero`'s `baselineRelevance`. The benchmark's baseline number is only
+ * the product's number while the two agree.
+ */
+export function relevanceScore(skill: NamedSkill, query: string): number {
   return scoreMatch(query, [
     [skill.name, 12],
     [skill.id, 10],
