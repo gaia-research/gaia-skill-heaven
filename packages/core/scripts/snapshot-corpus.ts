@@ -85,6 +85,9 @@ function trim(skill: ProjectionSkill): ProjectionSkill {
     ...(skill.invocation ? { invocation: skill.invocation } : {}),
     ...(skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {}),
     ...(skill.trustMagnitude === undefined ? {} : { trustMagnitude: skill.trustMagnitude }),
+    // A suite root carries no link of its own; its components do. Dropping
+    // this field made every suite look uninstallable.
+    ...(skill.suiteComponents?.length ? { suiteComponents: [...skill.suiteComponents] } : {}),
     links: {
       ...(typeof links.github === "string" ? { github: links.github } : {}),
       ...(links.installable === false ? { installable: false } : {}),

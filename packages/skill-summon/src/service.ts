@@ -414,6 +414,17 @@ export function starCount(level: string | undefined): number {
   return match?.[1] === undefined ? -1 : Number(match[1]);
 }
 
+/**
+ * Whether summon can deliver this skill at all. A suite root carries no
+ * `links.github` of its own — its components do (gaia-skill-tree CONTRIBUTING
+ * §12) — so gating candidates on `isInstallable` alone dropped all 20 suites
+ * in the corpus from every result, silently. Payload-level installability is
+ * still `isInstallable`; this is the ranking gate.
+ */
+export function isSummonable(skill: NamedSkill): boolean {
+  return isInstallable(skill) || (skill.suiteComponents?.length ?? 0) > 0;
+}
+
 export function isInstallable(skill: NamedSkill): boolean {
   if (skill.links.installable === false) return false;
   return (

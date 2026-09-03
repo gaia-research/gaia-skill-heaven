@@ -6,6 +6,7 @@
 // a bad set is still the best of that set. That is issue #104.
 
 import { marginOf, type ScoredSkill } from "./bm25f.js";
+import { isReachable } from "./build-index.js";
 import type { IndexedSkill, SkillIndex } from "./schema.js";
 
 /** Candidates below `BAND × topScore` are dropped from the result set. PROVISIONAL — SPEC §4.1. */
@@ -117,10 +118,10 @@ export function decide({
  * who cannot will assume the tool is broken (SPEC §4.2).
  */
 function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | null {
-  if (!doc.installable) {
+  if (!isReachable(doc)) {
     return doc.links.github
       ? "not installable — links.github does not resolve to a SKILL.md"
-      : "not installable — the tree publishes no links.github";
+      : "not installable — the tree publishes no links.github and no suiteComponents";
   }
   if (surface === "heaven" && doc.invocation === "model") {
     return "surface:heaven excludes model-led skills";

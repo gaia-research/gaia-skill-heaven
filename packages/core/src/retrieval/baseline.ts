@@ -38,6 +38,10 @@ export function rankBaseline(
   query: string,
   mode: BaselineMode = "shipped",
 ): ScoredSkill[] {
+  // Deliberately `installable`, not `isReachable`: the baseline is the ranker
+  // AS IT SHIPPED, and as it shipped it dropped all 20 suite roots. Fixing that
+  // is a Phase 1 improvement and must show up as one, not be back-dated into
+  // the number it is measured against.
   const pool = mode === "shipped" ? index.docs.filter((doc) => doc.installable) : index.docs;
   const scored = pool
     .map((doc) => ({

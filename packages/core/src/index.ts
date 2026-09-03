@@ -87,6 +87,7 @@ export {
   deriveTerms,
   fieldText,
   isInstallableLink,
+  isReachable,
   sha256,
   type BuildIndexOptions,
   type NamedProjection,

@@ -8,13 +8,14 @@ import {
   assertSkillIndex,
   baselineRelevance,
   isInstallableLink,
+  isReachable,
   rankBaseline,
   type IndexedSkill,
   type SkillIndex,
 } from "skill-zero";
 
 import type { NamedSkill } from "../src/domain/types.js";
-import { isInstallable } from "../src/service.js";
+import { isInstallable, isSummonable } from "../src/service.js";
 import { rankCandidatesWithDetails, relevanceScore } from "../src/summon/rank.js";
 
 // The benchmark scores `skill-zero`'s restatement of today's ranker
@@ -45,13 +46,25 @@ describe("core baseline is the shipped ranker", () => {
     }
   });
 
-  it("admits exactly the same candidate set as rank.ts", () => {
+  it("differs from rank.ts by exactly the suite roots, and by nothing else", () => {
+    // `rankBaseline("shipped")` deliberately reproduces the ranker AS IT
+    // SHIPPED, which dropped every suite root because a suite carries no
+    // `links.github` of its own. rank.ts now admits them. That is the only
+    // permitted divergence; anything else means the baseline has drifted.
     for (const query of queries) {
       const shipped = rankCandidatesWithDetails(registry, query, "any").candidates.map(
         (skill) => skill.id,
       );
       const measured = rankBaseline(index, query, "shipped").map((hit) => hit.doc.id);
-      expect([...measured].sort()).toEqual([...shipped].sort());
+      const onlyInShipped = shipped.filter((id) => !measured.includes(id));
+      const onlyInMeasured = measured.filter((id) => !shipped.includes(id));
+
+      expect(onlyInMeasured).toEqual([]);
+      for (const id of onlyInShipped) {
+        const doc = index.docs.find((entry) => entry.id === id);
+        expect(doc?.installable).toBe(false);
+        expect(doc?.suiteComponents.length ?? 0).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -60,10 +73,12 @@ describe("core baseline is the shipped ranker", () => {
     expect(BASELINE_RELEVANCE_BAND).toBe(0.5);
   });
 
-  it("agrees with the runtime on which skills are installable", () => {
+  it("agrees with the runtime on installability and on reachability", () => {
     for (const [position, doc] of index.docs.entries()) {
-      expect(isInstallableLink(doc.links)).toBe(isInstallable(registry[position] as NamedSkill));
-      expect(doc.installable).toBe(isInstallable(registry[position] as NamedSkill));
+      const skill = registry[position] as NamedSkill;
+      expect(isInstallableLink(doc.links)).toBe(isInstallable(skill));
+      expect(doc.installable).toBe(isInstallable(skill));
+      expect(isReachable(doc)).toBe(isSummonable(skill));
     }
   });
 });
@@ -92,6 +107,7 @@ function toNamedSkill(doc: IndexedSkill): NamedSkill {
     description: doc.description,
     tags: doc.tags,
     links: { ...doc.links },
+    ...(doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {}),
     evidence: [],
     origin: "tree",
   };

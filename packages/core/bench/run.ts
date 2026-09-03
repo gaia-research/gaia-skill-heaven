@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker, marginOf, type ScoredSkill } from "../src/retrieval/bm25f.js";
+import { isReachable } from "../src/retrieval/build-index.js";
 import { rankBaseline } from "../src/retrieval/baseline.js";
 import { decide } from "../src/retrieval/decide.js";
 import {
@@ -61,11 +62,11 @@ type System = {
   /** True when this system declines rather than returning the best of a bad set. */
   refuses: (ranked: ScoredSkill[]) => boolean;
   /**
-   * Whether this system could return `doc` at all. 33 of the 100 gold targets
-   * publish no installable SKILL.md link, so any system that filters for
-   * installability has a hard MRR ceiling of 0.67 no matter how good its
-   * retrieval is. Reporting MRR without that ceiling would blame the ranker
-   * for a curation problem.
+   * Whether this system could return `doc` at all. A quarter of the gold
+   * targets publish neither an installable SKILL.md link nor suite
+   * components, so any system that filters for reachability carries a hard
+   * MRR ceiling no matter how good its retrieval is. Reporting MRR without
+   * that ceiling would blame the ranker for a curation problem.
    */
   reachable: (doc: IndexedSkill) => boolean;
 };
@@ -105,7 +106,7 @@ const systems: System[] = [
     rank: (query) => decide({ index, query, ranked: bm25f.rank(query) }).admitted,
     // A `noMatch` is a refusal. This is the system the product ships.
     refuses: (ranked) => ranked.length === 0,
-    reachable: (doc) => doc.installable,
+    reachable: isReachable,
   },
 ];
 

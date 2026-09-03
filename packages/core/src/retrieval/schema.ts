@@ -52,7 +52,17 @@ export type IndexedSkill = {
   tags: string[];
   links: { github?: string | undefined };
   invocation: "any" | "model" | "human";
+  /**
+   * `links.github` resolves to a SKILL.md, so a payload can be materialized.
+   * NOT the same question as "can summon deliver this" — see `suiteComponents`.
+   */
   installable: boolean;
+  /**
+   * Skill ids installed recursively as a suite. A suite root needs no
+   * `links.github` of its own (gaia-skill-tree CONTRIBUTING §12), so a skill
+   * with components is summonable even when `installable` is false.
+   */
+  suiteComponents: string[];
   level?: string | undefined;
   trust: IndexedTrust;
   retrieval: RetrievalSurface;
@@ -64,7 +74,8 @@ export type IndexStats = {
   docs: number;
   /** Named Skills the upstream projection has not bucketed — invisible to summon. */
   awaitingClassification: number;
-  uninstallable: number;
+  /** Documents summon cannot deliver: no installable link AND no suite components. */
+  unreachable: number;
   missingTags: number;
   avgFieldLen: Record<IndexField, number>;
   /**
