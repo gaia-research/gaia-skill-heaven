@@ -211,17 +211,20 @@ Stated so it does not creep in:
 
 ## Umbrella issues
 
-Five umbrellas on `gaia-research/gaia-skill-heaven`, one per phase, each holding
-its work items as a checklist and each linking back to the relevant `SPEC.md`
+One umbrella per phase on `gaia-research/gaia-skill-heaven`, each holding its
+work items as a checklist and each linking back to the relevant `SPEC.md`
 section. Existing issues are absorbed rather than duplicated:
 
-| Umbrella | Absorbs |
-|---|---|
-| Phase 0 — Ground truth | *(new)* |
-| Phase 1 — Index, rank, refuse | #103, #104, #85 (invariants), #93 (groundwork) |
-| Phase 2 — Semantic recall | *(conditional)* |
-| Phase 3 — Ultra | *(new)* |
-| Phase 4 — Arbor + SEP-2640 | #47 (surface copy follows the data) |
+| Umbrella | Issue | Absorbs |
+|---|---|---|
+| Phase 0 — Ground truth | [#108](https://github.com/gaia-research/gaia-skill-heaven/issues/108) | *(new)* |
+| Phase 1 — Index, rank, refuse | [#109](https://github.com/gaia-research/gaia-skill-heaven/issues/109) | #103, #104, #85 (invariants), #93 (groundwork) |
+| Phase 2 — Semantic recall | [#110](https://github.com/gaia-research/gaia-skill-heaven/issues/110) | *(conditional — may not ship)* |
+| Phase 3 — Ultra, stable | [#111](https://github.com/gaia-research/gaia-skill-heaven/issues/111) | *(new)* |
+| Phase 4 — Arbor + SEP-2640 | [#112](https://github.com/gaia-research/gaia-skill-heaven/issues/112) | #47 (surface copy follows the data) |
+| Phase 5 — Entropy curve | [#113](https://github.com/gaia-research/gaia-skill-heaven/issues/113) | *(research)* |
+
+Plan PR: [#107](https://github.com/gaia-research/gaia-skill-heaven/pull/107).
 
 Out-of-scope open issues stay where they are and are untouched by this plan:
 #94, #88, #87, #86 (platform/install), #79, #73 (frontend), #41, #35, #34, #33
