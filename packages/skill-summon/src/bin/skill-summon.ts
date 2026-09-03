@@ -15,7 +15,7 @@ import { displayTrustFields } from "../trust.js";
 const LABEL_WIDTH = 8;
 
 const USAGE = `Usage:
-  skill-summon summon "<intent>" [--count N] [--card | --json]
+  skill-summon summon "<intent>" [--count N] [--source <url|owner/repo>] [--preview] [--card | --json]
   skill-summon list [--json]
   skill-summon sessions [--json]
   skill-summon attach <session-id|name|root> [--json]
@@ -35,6 +35,8 @@ type ParsedArgs = {
   json: boolean;
   card: boolean;
   dryRun: boolean;
+  source: string | undefined;
+  preview: boolean;
 };
 
 async function main(): Promise<void> {
@@ -77,6 +79,8 @@ async function runSummon(args: ParsedArgs): Promise<void> {
   const outcome = await summon(service, session, {
     query: args.query,
     limit: args.limit,
+    ...(args.source === undefined ? {} : { source: args.source }),
+    ...(args.preview ? { preview: true } : {}),
   });
 
   if (args.json) {
@@ -84,6 +88,11 @@ async function runSummon(args: ParsedArgs): Promise<void> {
   } else if (args.card) {
     process.stdout.write(`${outcome.cards.join("\n\n")}\n`);
   } else {
+    for (const preview of outcome.previewed) {
+      process.stdout.write(
+        `  preview   ${preview.id}  score ${preview.retrieval.score.toFixed(2)} · margin ${preview.retrieval.margin.toFixed(2)} · ${preview.retrieval.matchKind}\n`,
+      );
+    }
     for (const result of outcome.summoned) {
       printSkillLine("summoned", result.id, mergedTrust(result), result.path, {
         totalSeconds: result.totalSeconds,
@@ -108,7 +117,28 @@ async function runSummon(args: ParsedArgs): Promise<void> {
     process.stdout.write(`  total     ${outcome.totalSeconds.toFixed(3)}s\n`);
   }
 
-  if (outcome.summoned.length === 0) {
+  if (outcome.noMatch) {
+    // Declining is a result, not a failure to explain away. Print what was
+    // close, and what was withheld and why (SPEC §4.2).
+    process.stderr.write(
+      `skill-summon: no match for "${outcome.query}" in ${outcome.source} (${outcome.noMatch.reason}).\n`,
+    );
+    for (const candidate of outcome.noMatch.topCandidates) {
+      process.stderr.write(
+        `  closest ${candidate.id}  score ${candidate.score.toFixed(2)}` +
+          (candidate.floor === null ? "" : ` (floor ${candidate.floor.toFixed(2)})`) +
+          "\n",
+      );
+    }
+    for (const withheld of outcome.noMatch.filtered.slice(0, 5)) {
+      process.stderr.write(`  withheld ${withheld.id}: ${withheld.why}\n`);
+    }
+    process.stderr.write(`  ${outcome.noMatch.suggestion}\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  if (outcome.summoned.length === 0 && outcome.previewed.length === 0) {
     process.stderr.write(
       `skill-summon: no skill could be summoned for "${outcome.query}".\n`,
     );
@@ -299,6 +329,8 @@ function parseArgs(argv: string[]): ParsedArgs {
   let json = false;
   let card = false;
   let dryRun = false;
+  let source: string | undefined;
+  let preview = false;
   const positionals: string[] = [];
 
   for (let i = 0; i < rest.length; i++) {
@@ -333,6 +365,21 @@ function parseArgs(argv: string[]): ParsedArgs {
       limit = parseCount(arg.slice("--limit=".length));
       continue;
     }
+    if (arg === "--source") {
+      const value = rest[i + 1];
+      if (value === undefined) throw new UsageError("--source requires a value.");
+      source = value;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--source=")) {
+      source = arg.slice("--source=".length);
+      continue;
+    }
+    if (arg === "--preview") {
+      preview = true;
+      continue;
+    }
     if (arg.startsWith("-")) {
       throw new UsageError(`Unknown flag: ${arg}\n\n${USAGE}`);
     }
@@ -348,11 +395,17 @@ function parseArgs(argv: string[]): ParsedArgs {
   if (limit !== undefined && command !== "summon") {
     throw new UsageError("--count is only valid with summon.");
   }
+  if (source !== undefined && command !== "summon") {
+    throw new UsageError("--source is only valid with summon.");
+  }
+  if (preview && command !== "summon") {
+    throw new UsageError("--preview is only valid with summon.");
+  }
   if (card && json) {
     throw new UsageError("--card and --json cannot be used together.");
   }
 
-  return { command, query: positionals[0], limit, json, card, dryRun };
+  return { command, query: positionals[0], limit, json, card, dryRun, source, preview };
 }
 
 function parseCount(value: string): number {
