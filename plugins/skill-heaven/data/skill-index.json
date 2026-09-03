@@ -1,6 +1,6 @@
 {
   "schema": "gaia.skill-index/v1",
-  "generatedAt": "2026-09-03T16:44:43.364Z",
+  "generatedAt": "2026-09-03T16:50:52.285Z",
   "source": "https://gaiaskilltree.com",
   "sourceDigest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
   "builder": {
@@ -10,7 +10,7 @@
   "stats": {
     "docs": 274,
     "awaitingClassification": 52,
-    "unreachable": 80,
+    "unreachable": 86,
     "missingTags": 99,
     "avgFieldLen": {
       "name": 2.1387,
@@ -27,7 +27,7 @@
       "answerableAdmitted": 0.9082,
       "unanswerableRejected": 0.55,
       "goldSetRevision": "bef70b19e710",
-      "calibratedAt": "2026-09-03T16:45:09.216Z",
+      "calibratedAt": "2026-09-03T16:51:03.070Z",
       "note": "G2 (>=90% of the unanswerable set refused) is NOT met at a floor that keeps the product usable. The two score distributions overlap: raw BM25F separates them on 85% of pairs, and reaching 90% rejection would cost more than 10% of answerable queries. Recorded as a finding (D8) rather than resolved by moving the threshold. n=20 negatives is also small; expansion (PLAN 1.7) should lift answerable scores without lifting unanswerable ones, and this is re-run after it."
     }
   },
@@ -55,6 +55,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -86,6 +87,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -122,6 +124,7 @@
         "addy-osmani/spec-driven-development",
         "addy-osmani/test-driven-development"
       ],
+      "registryOnly": false,
       "level": "5★",
       "trust": {
         "level": "5★",
@@ -149,6 +152,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -176,6 +180,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -203,6 +208,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -236,6 +242,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -263,6 +270,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -290,6 +298,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -317,6 +326,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -353,6 +363,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -387,6 +398,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -420,6 +432,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -447,6 +460,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -474,6 +488,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -501,6 +516,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -527,6 +543,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -558,6 +575,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -589,6 +607,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -621,6 +640,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -648,6 +668,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -681,6 +702,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -708,6 +730,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -739,6 +762,7 @@
         "disler/opinion",
         "disler/plan-synthesis"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -766,6 +790,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -793,6 +818,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -820,6 +846,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -847,6 +874,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -873,6 +901,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -899,6 +928,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -925,6 +955,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -951,6 +982,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -977,6 +1009,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -1003,6 +1036,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -1029,6 +1063,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -1055,6 +1090,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -1082,6 +1118,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1110,6 +1147,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1138,6 +1176,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -1166,6 +1205,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -1194,6 +1234,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1233,6 +1274,7 @@
         "firecrawl/firecrawl-build-search",
         "firecrawl/firecrawl-research-index"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -1260,6 +1302,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1287,6 +1330,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -1313,6 +1357,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1346,6 +1391,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1378,6 +1424,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1410,6 +1457,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1443,6 +1491,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1475,6 +1524,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1507,6 +1557,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1539,6 +1590,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1571,6 +1623,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1605,6 +1658,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1638,6 +1692,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1671,6 +1726,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1703,6 +1759,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1736,6 +1793,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1768,6 +1826,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1801,6 +1860,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -1833,6 +1893,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1865,6 +1926,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -1904,6 +1966,7 @@
         "garrytan/design-review",
         "garrytan/office-hours"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -1987,6 +2050,7 @@
         "garrytan/sync-gbrain",
         "garrytan/unfreeze"
       ],
+      "registryOnly": false,
       "level": "5★",
       "trust": {
         "level": "5★",
@@ -2019,6 +2083,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2051,6 +2116,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2083,6 +2149,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2116,6 +2183,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2149,6 +2217,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2181,6 +2250,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2213,6 +2283,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2245,6 +2316,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2279,6 +2351,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2311,6 +2384,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2343,6 +2417,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2376,6 +2451,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2409,6 +2485,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2442,6 +2519,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2475,6 +2553,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2507,6 +2586,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2540,6 +2620,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2572,6 +2653,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2604,6 +2686,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2637,6 +2720,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2669,6 +2753,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2701,6 +2786,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2733,6 +2819,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2765,6 +2852,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2798,6 +2886,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2830,6 +2919,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -2862,6 +2952,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2894,6 +2985,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2923,6 +3015,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -2956,6 +3049,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -2990,6 +3084,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3017,6 +3112,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3044,6 +3140,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3081,6 +3178,7 @@
         "gsd-build/ship",
         "gsd-build/verify-work"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -3108,6 +3206,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3135,6 +3234,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3162,6 +3262,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3196,6 +3297,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3230,6 +3332,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3264,6 +3367,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3298,6 +3402,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3332,6 +3437,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3364,6 +3470,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -3398,6 +3505,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3433,6 +3541,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3468,6 +3577,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3500,6 +3610,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3532,6 +3643,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3566,6 +3678,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3599,6 +3712,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3633,6 +3747,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3667,6 +3782,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3694,6 +3810,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -3720,6 +3837,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -3747,6 +3865,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -3774,6 +3893,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3801,6 +3921,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3828,6 +3949,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -3855,6 +3977,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3882,6 +4005,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -3909,6 +4033,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3936,6 +4061,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -3963,6 +4089,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -3995,6 +4122,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4026,6 +4154,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4060,6 +4189,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4087,6 +4217,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4114,6 +4245,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4141,6 +4273,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4175,6 +4308,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4202,6 +4336,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4229,6 +4364,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4263,6 +4399,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4303,6 +4440,7 @@
         "mattpocock/wizard",
         "mattpocock/zoom-out"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -4330,6 +4468,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4364,6 +4503,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4400,6 +4540,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4427,6 +4568,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4454,6 +4596,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4481,6 +4624,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4516,6 +4660,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4543,6 +4688,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4573,6 +4719,7 @@
         "mattpocock/scaffold-exercises",
         "mattpocock/setup-pre-commit"
       ],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4600,6 +4747,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4628,6 +4776,7 @@
         "mattpocock/edit-article",
         "mattpocock/obsidian-vault"
       ],
+      "registryOnly": true,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4660,6 +4809,7 @@
         "mattpocock/wait-what",
         "mattpocock/write-a-skill"
       ],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4687,6 +4837,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4714,6 +4865,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4741,6 +4893,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4768,6 +4921,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4795,6 +4949,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4822,6 +4977,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4875,6 +5031,7 @@
         "mattpocock/write-a-skill",
         "mattpocock/zoom-out"
       ],
+      "registryOnly": false,
       "level": "5★",
       "trust": {
         "level": "5★",
@@ -4902,6 +5059,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -4929,6 +5087,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4956,6 +5115,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -4990,6 +5150,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5025,6 +5186,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5059,6 +5221,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5094,6 +5257,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5121,6 +5285,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5148,6 +5313,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5175,6 +5341,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5209,6 +5376,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5236,6 +5404,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5270,6 +5439,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5302,6 +5472,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5333,6 +5504,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5366,6 +5538,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5397,6 +5570,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5428,6 +5602,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5459,6 +5634,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5491,6 +5667,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5523,6 +5700,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5554,6 +5732,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5585,6 +5764,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5616,6 +5796,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -5648,6 +5829,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5680,6 +5862,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -5707,6 +5890,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -5739,6 +5923,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5771,6 +5956,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5804,6 +5990,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5837,6 +6024,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5869,6 +6057,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -5902,6 +6091,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5935,6 +6125,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -5968,6 +6159,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6001,6 +6193,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6046,6 +6239,7 @@
         "obra/verification-before-completion",
         "obra/writing-plans"
       ],
+      "registryOnly": false,
       "level": "5★",
       "trust": {
         "level": "5★",
@@ -6079,6 +6273,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -6112,6 +6307,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6145,6 +6341,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -6178,6 +6375,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6210,6 +6408,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6242,6 +6441,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -6269,6 +6469,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -6296,6 +6497,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -6328,6 +6530,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6365,6 +6568,7 @@
         "remotion-dev/remotion-studio",
         "remotion-dev/remotion-upgrade"
       ],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6389,6 +6593,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6413,6 +6618,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6437,6 +6643,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6461,6 +6668,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6485,6 +6693,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6509,6 +6718,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6533,6 +6743,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6557,6 +6768,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6581,6 +6793,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6605,6 +6818,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6629,6 +6843,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6653,6 +6868,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -6692,6 +6908,7 @@
         "ruvnet/agentdb-optimization",
         "ruvnet/agentdb-vector-search"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -6726,6 +6943,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6759,6 +6977,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -6792,6 +7011,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6825,6 +7045,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6859,6 +7080,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6893,6 +7115,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6927,6 +7150,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -6961,6 +7185,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -6995,6 +7220,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7033,6 +7259,7 @@
         "ruvnet/dual-coordinate",
         "ruvnet/dual-spawn"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -7067,6 +7294,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7106,6 +7334,7 @@
         "ruvnet/flow-nexus-platform",
         "ruvnet/flow-nexus-swarm"
       ],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -7140,6 +7369,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7174,6 +7404,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7208,6 +7439,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7241,6 +7473,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7275,6 +7508,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7309,6 +7543,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7343,6 +7578,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7383,6 +7619,7 @@
         "ruvnet/github-release-management",
         "ruvnet/github-workflow-automation"
       ],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -7416,6 +7653,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7449,6 +7687,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -7483,6 +7722,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7517,6 +7757,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7551,6 +7792,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7587,6 +7829,7 @@
         "ruvnet/reasoningbank-agentdb",
         "ruvnet/reasoningbank-intelligence"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -7620,6 +7863,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7653,6 +7897,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7736,6 +7981,7 @@
         "ruvnet/worker-benchmarks",
         "ruvnet/worker-integration"
       ],
+      "registryOnly": false,
       "level": "5★",
       "trust": {
         "level": "5★",
@@ -7783,6 +8029,7 @@
         "ruvnet/v3-security-overhaul",
         "ruvnet/v3-swarm-coordination"
       ],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -7817,6 +8064,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7851,6 +8099,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -7885,6 +8134,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7919,6 +8169,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7953,6 +8204,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -7987,6 +8239,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8021,6 +8274,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8055,6 +8309,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8089,6 +8344,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8123,6 +8379,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8157,6 +8414,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8192,6 +8450,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8226,6 +8485,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8260,6 +8520,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8294,6 +8555,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8328,6 +8590,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",
@@ -8362,6 +8625,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8393,6 +8657,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -8424,6 +8689,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8458,6 +8724,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8486,6 +8753,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "4★",
       "trust": {
         "level": "4★",
@@ -8511,6 +8779,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8535,6 +8804,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8566,6 +8836,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": true,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8593,6 +8864,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "3★",
       "trust": {
         "level": "3★",
@@ -8626,6 +8898,7 @@
       "invocation": "any",
       "installable": true,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "2★",
       "trust": {
         "level": "2★",
@@ -8662,6 +8935,7 @@
       "invocation": "any",
       "installable": false,
       "suiteComponents": [],
+      "registryOnly": false,
       "level": "1★",
       "trust": {
         "level": "1★",

@@ -122,17 +122,21 @@ describe("skill-summon MCP protocol", () => {
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({
       query: "automated testing",
+      // A registry-only skill can never install, so it is WITHHELD with a
+      // reason (SPEC §4.2) rather than attempted and skipped. The caller can
+      // see why a plausible skill did not appear.
       summoned: [],
-      skipped: [
+      filtered: [
         {
           id: "example/health",
-          reason: expect.stringContaining("registry-only"),
+          why: expect.stringContaining("registry-only"),
         },
       ],
       ranking: {
         mode: "relevance-only",
-        disclosure:
-          "Tree published no comparable trust signals; candidates are ranked by relevance only.",
+        // Heaven/Hell stamps are not built, and the disclosure has to keep
+        // saying so on every result.
+        disclosure: expect.stringContaining("no behavioural stamps"),
       },
     });
   });

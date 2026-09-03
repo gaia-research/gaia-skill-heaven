@@ -32,6 +32,8 @@ export type ProjectionSkill = {
   trustMagnitude?: number | undefined;
   links?: Record<string, unknown> | undefined;
   suiteComponents?: string[] | undefined;
+  /** Top-level registry-only guard, distinct from `links.installable`. */
+  installable?: boolean | undefined;
 };
 
 export type NamedProjection = {
@@ -78,6 +80,7 @@ export function isInstallableLink(links: Record<string, unknown> | undefined): b
  * treating them as uninstallable drops them from every result silently.
  */
 export function isReachable(doc: IndexedSkill): boolean {
+  if (doc.registryOnly) return false;
   return doc.installable || doc.suiteComponents.length > 0;
 }
 
@@ -191,6 +194,7 @@ function toIndexedSkill(
     invocation: readInvocation(skill.invocation),
     installable: isInstallableLink(links),
     suiteComponents: [...(skill.suiteComponents ?? [])],
+    registryOnly: skill.installable === false,
     ...(skill.level ? { level: skill.level } : {}),
     trust: {
       ...(skill.level ? { level: skill.level } : {}),

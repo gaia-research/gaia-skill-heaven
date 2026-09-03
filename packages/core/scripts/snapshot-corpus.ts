@@ -88,6 +88,7 @@ function trim(skill: ProjectionSkill): ProjectionSkill {
     // A suite root carries no link of its own; its components do. Dropping
     // this field made every suite look uninstallable.
     ...(skill.suiteComponents?.length ? { suiteComponents: [...skill.suiteComponents] } : {}),
+    ...(skill.installable === false ? { installable: false } : {}),
     links: {
       ...(typeof links.github === "string" ? { github: links.github } : {}),
       ...(links.installable === false ? { installable: false } : {}),

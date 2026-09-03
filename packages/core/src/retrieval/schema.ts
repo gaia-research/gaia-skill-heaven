@@ -63,6 +63,8 @@ export type IndexedSkill = {
    * with components is summonable even when `installable` is false.
    */
   suiteComponents: string[];
+  /** Registry-only guard: `false` means this skill must refuse to install. */
+  registryOnly: boolean;
   level?: string | undefined;
   trust: IndexedTrust;
   retrieval: RetrievalSurface;

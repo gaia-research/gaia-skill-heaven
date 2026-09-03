@@ -228,7 +228,8 @@ async function runGc(args: ParsedArgs): Promise<void> {
 }
 
 function createService(): GaiaService {
-  return new GaiaService(resolveSkillSource().source);
+  const { source, sourceUrl } = resolveSkillSource();
+  return new GaiaService(source, { sourceUrl });
 }
 
 function noteIfCreated(created: boolean, root: string): void {

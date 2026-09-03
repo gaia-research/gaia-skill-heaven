@@ -22,6 +22,16 @@ const SESSION_DIR_PREFIX = "skill-summon-session-";
 const MANIFEST_FILE = "session.json";
 const DEFAULT_SESSION_TTL_HOURS = 4;
 
+/** What the ranker knew about this skill when it chose it (SPEC §5.2). */
+export type RetrievalDisclosure = {
+  score: number;
+  /** `(top − next) / top` across the admitted set. */
+  margin: number;
+  matchKind: "exact" | "ranked";
+  /** False means the summoned skill is not the one the query named — the card must say so. */
+  nameMatchesQuery: boolean;
+};
+
 export type InstalledSkill = {
   id: string;
   name: string;
@@ -45,6 +55,10 @@ export type InstalledSkill = {
   cache: "cold" | "warm";
   cacheSource: "remote" | "payload" | "session";
   inspectUrl: string;
+  /** Where this skill came from — `source` can now vary per call (SPEC §5.4). */
+  source?: string | undefined;
+  /** Retrieval disclosure, carried onto the card and into `structuredContent`. */
+  retrieval?: RetrievalDisclosure | undefined;
   card: string;
   cloneSeconds: number;
   materializeSeconds: number;
