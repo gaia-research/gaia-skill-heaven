@@ -1,3 +1,4 @@
+import { normalize, scoreMatch } from "skill-zero";
 import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
 
 import type { GaiaRegistrySource } from "./data/source.js";
@@ -407,14 +408,6 @@ function toNamedSummary(skill: NamedSkill): NamedSkillSummary {
   };
 }
 
-function normalize(value: string): string {
-  return value
-    .toLocaleLowerCase("en-US")
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 export function starCount(level: string | undefined): number {
   if (!level) return -1;
   const match = /^(\d)★/.exec(level);
@@ -431,24 +424,8 @@ export function isInstallable(skill: NamedSkill): boolean {
   );
 }
 
-export function scoreMatch(
-  query: string,
-  weightedFields: ReadonlyArray<readonly [value: string, weight: number]>,
-): number {
-  const normalizedQuery = normalize(query);
-  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
-  let score = 0;
-
-  for (const [rawValue, weight] of weightedFields) {
-    const value = normalize(rawValue);
-    if (!value) continue;
-    if (value === normalizedQuery) score += weight * 10;
-    else if (value.includes(normalizedQuery)) score += weight * 5;
-    for (const token of tokens) {
-      if (value.split(" ").includes(token)) score += weight;
-      else if (value.includes(token)) score += weight / 2;
-    }
-  }
-
-  return score;
-}
+// `normalize` and `scoreMatch` live in `skill-zero` so the benchmark scores the
+// SAME function the product runs (packages/core/src/retrieval/lexical.ts). A
+// second copy here would drift, and the baseline number would stop meaning
+// anything. Re-exported because callers across this package import them here.
+export { normalize, scoreMatch };
