@@ -109,6 +109,16 @@ export {
   type BaselineMode,
 } from "./retrieval/baseline.js";
 export {
+  BAND,
+  MARGIN,
+  decide,
+  type Decision,
+  type DecideOptions,
+  type FilterReason,
+  type NoMatch,
+  type SummonSurface,
+} from "./retrieval/decide.js";
+export {
   mean,
   mulberry32,
   pairedBootstrap,

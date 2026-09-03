@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker, marginOf, type ScoredSkill } from "../src/retrieval/bm25f.js";
 import { rankBaseline } from "../src/retrieval/baseline.js";
+import { decide } from "../src/retrieval/decide.js";
 import {
   mean,
   pairedBootstrap,
@@ -22,7 +23,7 @@ import {
   reciprocalRank,
   type BootstrapResult,
 } from "../src/retrieval/metrics.js";
-import { assertSkillIndex, type SkillIndex } from "../src/retrieval/schema.js";
+import { assertSkillIndex, type IndexedSkill, type SkillIndex } from "../src/retrieval/schema.js";
 import { INDEX_BUILDER_VERSION } from "../src/retrieval/version.js";
 
 globalThis.fetch = (() => {
@@ -59,6 +60,14 @@ type System = {
   rank: (query: string) => ScoredSkill[];
   /** True when this system declines rather than returning the best of a bad set. */
   refuses: (ranked: ScoredSkill[]) => boolean;
+  /**
+   * Whether this system could return `doc` at all. 33 of the 100 gold targets
+   * publish no installable SKILL.md link, so any system that filters for
+   * installability has a hard MRR ceiling of 0.67 no matter how good its
+   * retrieval is. Reporting MRR without that ceiling would blame the ranker
+   * for a curation problem.
+   */
+  reachable: (doc: IndexedSkill) => boolean;
 };
 
 const index = loadIndex();
@@ -74,18 +83,29 @@ const systems: System[] = [
     // Today's only refusal: nothing cleared MIN_RELEVANCE. There is no
     // absolute floor, which is exactly issue #104.
     refuses: (ranked) => ranked.length === 0,
+    reachable: (doc) => doc.installable,
   },
   {
     id: "baseline-raw",
     label: "scoreMatch, ungated — ordering ability alone",
     rank: (query) => rankBaseline(index, query, "raw"),
     refuses: (ranked) => ranked.length === 0,
+    reachable: () => true,
   },
   {
     id: "bm25f",
-    label: "BM25F over the committed index + exact-name fast path",
+    label: "BM25F over the committed index + exact-name fast path (no floor)",
     rank: (query) => bm25f.rank(query),
     refuses: (ranked) => ranked.length === 0,
+    reachable: () => true,
+  },
+  {
+    id: "bm25f-decide",
+    label: "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
+    rank: (query) => decide({ index, query, ranked: bm25f.rank(query) }).admitted,
+    // A `noMatch` is a refusal. This is the system the product ships.
+    refuses: (ranked) => ranked.length === 0,
+    reachable: (doc) => doc.installable,
   },
 ];
 
@@ -171,9 +191,19 @@ function scoreSystem(system: System) {
     };
   });
 
+  const byId = new Map(index.docs.map((doc) => [doc.id, doc]));
+  const reachableRows = perQuery.filter((row) => {
+    const doc = byId.get(row.correctId);
+    return doc !== undefined && system.reachable(doc);
+  });
+
   return {
     system: system.id,
     label: system.label,
+    /** Gold targets this system could return at all. Its MRR ceiling is this / 100. */
+    reachableTargets: reachableRows.length,
+    /** MRR over the queries this system can actually answer — the ranker's own score. */
+    mrrOnReachable: round4(mean(reachableRows.map((row) => row.reciprocalRank))),
     mrr: round4(mean(perQuery.map((row) => row.reciprocalRank))),
     // Six gold entries name a target that no honest query can separate from a
     // sibling (README § Provenance). Reported both ways rather than quietly

@@ -20,6 +20,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");
 const snapshotPath = join(here, "..", "bench", "corpus", "named-projection.json");
 const expansionsPath = join(here, "..", "bench", "corpus", "expansions.json");
+const floorPath = join(here, "..", "bench", "corpus", "floor.json");
 const outPath = join(repoRoot, "plugins", "skill-heaven", "data", "skill-index.json");
 
 const snapshot = JSON.parse(readFileSync(snapshotPath, "utf8")) as NamedProjection & {
@@ -28,6 +29,13 @@ const snapshot = JSON.parse(readFileSync(snapshotPath, "utf8")) as NamedProjecti
 
 const expansions = readOptional(expansionsPath) as
   | Record<string, { expansions: string[]; expandedBy: string }>
+  | undefined;
+
+// The floor is calibrated by `calibrate-floor.ts` against the benchmark's
+// unanswerable set and committed as data. The builder folds it in; it never
+// invents one.
+const floor = readOptional(floorPath) as
+  | { floor: number; answerableAdmitted: number; unanswerableRejected: number; goldSetRevision: string; calibratedAt: string; note?: string }
   | undefined;
 
 const index = buildSkillIndex({
@@ -40,6 +48,17 @@ const index = buildSkillIndex({
   generatedAt: snapshot.snapshot.capturedAt,
   ...(expansions ? { expansions } : {}),
 });
+
+if (floor) {
+  index.stats.floor = floor.floor;
+  index.stats.floorCalibration = {
+    answerableAdmitted: floor.answerableAdmitted,
+    unanswerableRejected: floor.unanswerableRejected,
+    goldSetRevision: floor.goldSetRevision,
+    calibratedAt: floor.calibratedAt,
+    ...(floor.note ? { note: floor.note } : {}),
+  };
+}
 
 const serialized = `${JSON.stringify(index, null, 2)}\n`;
 
@@ -64,6 +83,7 @@ if (process.argv.includes("--check")) {
       `uninstallable     ${index.stats.uninstallable}`,
       `missing tags      ${index.stats.missingTags}`,
       `awaiting class.   ${index.stats.awaitingClassification} (not indexed — invisible to summon)`,
+      `floor             ${index.stats.floor ?? "uncalibrated"}`,
     ].join("\n"),
   );
 }
