@@ -79,6 +79,14 @@ export type IndexStats = {
   /** Documents summon cannot deliver: no installable link AND no suite components. */
   unreachable: number;
   missingTags: number;
+  /**
+   * Documents carrying generated expansions. PARTIAL COVERAGE IS NOT NEUTRAL:
+   * an expanded document has a field to match in that an unexpanded one does
+   * not, so a half-expanded index demotes the half without. Measured at 65
+   * expanded vs 35 unexpanded gold targets: +0.40 MRR for the expanded,
+   * -0.22 for the rest. Coverage is therefore a number the index has to carry.
+   */
+  expandedDocs: number;
   avgFieldLen: Record<IndexField, number>;
   /**
    * The absolute relevance floor (SPEC §4.4). `null` until calibrated against
