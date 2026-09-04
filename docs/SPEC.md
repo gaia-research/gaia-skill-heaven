@@ -8,7 +8,7 @@ Every threshold in this document marked **PROVISIONAL** is a starting value to
 be replaced by a measured one. It is written down so that it is one place, not
 five. A threshold marked **MEASURED** carries the run that set it; the
 benchmark ledger under `packages/core/bench/results/` is the record, and
-`docs/PHASE-0-1-STATUS.md` is the narrative.
+`docs/PHASES-0-4-STATUS.md` is the narrative.
 
 **This document changes as the tree grows.** The corpus is curated and moving:
 skills are added, links are fixed, tiers are re-graded. A threshold calibrated
