@@ -7,6 +7,7 @@ import { DOORS, PLATFORM_COMMANDS, type Platform } from '../product'
 import { HarnessMark } from '../harnessMarks'
 import { PlatformToggle } from '../components/PlatformToggle'
 import { LucyTunerHUD } from './hero/LucyTunerHUD'
+import { WingsTunerHUD } from './hero/WingsTunerHUD'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -326,11 +327,14 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             alt=""
             draggable={false}
             style={{
-              transform: `scale(${v.mWing})`,
-              opacity: v.oWing,
+              bottom: `calc(0vh + var(--wing-y, 0vh))`,
+              left: `calc(2% + var(--wing-x, 0vh))`,
+              transformOrigin: 'bottom center',
+              transform: `scale(calc(${v.mWing} * var(--wing-scale, 1))) rotate(calc(0deg - var(--wing-rot, 0deg)))`,
+              opacity: `calc(${v.oWing} * var(--wing-opacity-mul, 1))`,
               filter: wingFilter,
               transition:
-                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+                'var(--wing-drag-transition, opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))',
             }}
           />
           <img
@@ -339,11 +343,14 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             alt=""
             draggable={false}
             style={{
-              transform: `scale(${v.mWing})`,
-              opacity: v.oWing,
+              bottom: `calc(0vh + var(--wing-y, 0vh))`,
+              right: `calc(2% + var(--wing-x, 0vh))`,
+              transformOrigin: 'bottom center',
+              transform: `scale(calc(${v.mWing} * var(--wing-scale, 1))) rotate(calc(0deg + var(--wing-rot, 0deg)))`,
+              opacity: `calc(${v.oWing} * var(--wing-opacity-mul, 1))`,
               filter: wingFilter,
               transition:
-                'opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+                'var(--wing-drag-transition, opacity calc(600ms * var(--vh-t)) linear,transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))',
             }}
           />
         </>
@@ -725,6 +732,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           </div>
         </div>
       </div>
+
+      {/* Interactive Wings Tuner HUD for repositioning and scaling wings */}
+      <WingsTunerHUD
+        scene={v.scene}
+        rootRef={rootRef}
+        onSelectScene={onSelectScene}
+      />
 
       {/* Interactive Dev Tool HUD for dragging Lucy and tracking live coordinates & zoom (triggered via ?tuner=lucy or Cmd+Shift+L) */}
       {showTuner && (
