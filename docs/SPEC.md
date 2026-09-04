@@ -6,7 +6,15 @@ control and stamping surfaces. Companion to [`INTENT.md`](INTENT.md) (why) and
 
 Every threshold in this document marked **PROVISIONAL** is a starting value to
 be replaced by a measured one. It is written down so that it is one place, not
-five.
+five. A threshold marked **MEASURED** carries the run that set it; the
+benchmark ledger under `packages/core/bench/results/` is the record, and
+`docs/PHASE-0-1-STATUS.md` is the narrative.
+
+**This document changes as the tree grows.** The corpus is curated and moving:
+skills are added, links are fixed, tiers are re-graded. A threshold calibrated
+against 274 documents is not a constant, it is a reading. Re-run the benchmark
+when the corpus moves, and amend the numbers here in the PR that re-runs it.
+A stale MEASURED value is worse than an honest PROVISIONAL one.
 
 ---
 
@@ -52,7 +60,10 @@ Measured 2026-09-03 against live `https://gaiaskilltree.com/graph/named/index.js
 | Awaiting classification | 52 |
 | Description length (chars) | min 33 · **p50 154** · p90 305 · max 535 |
 | Missing `tags` | 148 (45%) |
-| Missing `links.github` (uninstallable) | 34 |
+| Missing `links.github` | 26 |
+| **Unreachable by summon** (no installable link AND no suite components) | **80** *(MEASURED 2026-09-03; §1 previously estimated 34 by counting missing links alone. 98 fail the link test; 18 of those are suite roots, which carry no link of their own and are reachable through their components.)* |
+| Bucketed, and therefore rankable | 274 |
+| `awaitingClassification` — **invisible to summon**, which reads `buckets` only | 52 |
 | Distinct vocabulary tokens | 2,599 |
 | Levels | 1★ 74 · 2★ 114 · 3★ 96 · 4★ 37 · 5★ 5 |
 
@@ -139,19 +150,40 @@ Generation is an offline LLM pass, run by a script in `packages/core/scripts/`,
 committed as data, and **diffable in review**. It is not a runtime dependency
 and does not ship a model.
 
-Two guardrails, both from the document-expansion literature (§9):
+Two guardrails were specified. One survived measurement and one did not.
 
-1. **Filter, don't trust.** An expansion that does not survive a round-trip
-   check — retrieve with the expansion as the query, confirm the source skill is
-   top-1 against the current index — is dropped. Unfiltered expansion injects
-   noise and measurably underperforms filtered expansion.
-2. **Expansion is capped and attributed.** Every expansion carries the builder
-   version that produced it, so a bad generation run is revertible as data.
+1. **~~Filter, don't trust.~~ MEASURED FALSE ON THIS CORPUS, 2026-09-03.** The
+   specified round-trip check — retrieve with the expansion as the query, keep
+   it only if the source skill is top-1 against the current index — removes the
+   expansions worth having. Survival was 199/696 at top-1, and MRR by cutoff
+   was 0.285 (top-1) · 0.351 (top-3) · 0.366 (top-10) · **0.466 (unfiltered)**.
+   Every loosening helped. The mechanism is plain in hindsight: the filter asks
+   whether the *current* index can already retrieve a skill from its expansion,
+   and an expansion that surfaces a skill the current index cannot surface is
+   exactly the one worth having. On a corpus whose pre-expansion MRR is 0.28,
+   the guardrail deletes the signal it was meant to protect. **The index ships
+   unfiltered** (`--rank-cutoff none`), and the filter remains available and
+   reportable so the decision can be re-examined when the corpus changes.
+   What the guardrail was actually protecting — hallucinated capability
+   entering the index — is now carried by the generation brief's "never invent
+   capability" rule, by the false-refusal rate, and by a standing test that no
+   expansion is instruction-shaped.
+2. **Expansion is capped and attributed.** Unchanged, and it earned its keep:
+   every expansion carries the builder version that produced it, so a bad
+   generation run is revertible as data.
 
-**Order of work: 5★ (5) → 4★ (37) → 3★ (96) → the rest.** Higher-tier skills are
-the ones people actually reach for, so they get the best retrieval surface
-first, and a partial index is useful from the first batch. `expansions: []` is
-valid and falls back to lexical fields alone.
+**Order of work: ~~5★ → 4★ → 3★ → the rest~~ — COVERAGE MUST BE COMPLETE.**
+The tiered order and the claim that *"a partial index is useful from the first
+batch"* were **MEASURED FALSE, 2026-09-03**. Expanding 101 of 274 skills raised
+aggregate MRR to 0.466 and, inside that aggregate, dropped the gold queries
+whose target had no expansions from **0.263 to 0.045**. An expanded document
+has a field to match in that an unexpanded one does not, so a half-expanded
+index does not merely help half the corpus — it demotes the other half.
+
+Tiered order is still the right order to *generate* in. It is not a valid order
+to *ship* in. The index carries `stats.expandedDocs` and the benchmark reports
+`coverageSplit` so a coverage gap cannot hide inside an average again.
+`expansions: []` remains structurally valid; it is no longer harmless.
 
 ---
 
@@ -187,6 +219,12 @@ f̃(t,d) = Σ_fields  w_f · f(t,d,f) / ( 1 − b_f + b_f · len(d,f)/avgLen(f) 
 
 The `k₁`/`b` defaults are the standard ones and are not worth tuning before G1
 is measured. Field weights are, and the benchmark is what tunes them.
+
+**Status 2026-09-03: still untuned, deliberately.** G1 was cleared by the index
+and the expansion surface, not by weight search, and tuning eight weights
+against 100 queries would overfit them long before it improved anything a user
+would feel. Revisit when the gold set is larger or drawn from real
+`summon-log.jsonl` traces.
 
 **Why this over `scoreMatch`:** IDF means a match on `refactor` counts for less
 than a match on `bisect`; length normalisation means a long description does not
@@ -249,10 +287,15 @@ terrible field is still a winner. Replace both with:
 
 ```
 FLOOR      the top candidate's score must exceed an absolute, calibrated
-           threshold, else → noMatch                    PROVISIONAL: see 4.4
+           threshold, else → noMatch          MEASURED: 27.5559 (see 4.4)
 BAND       candidates below BAND × topScore are dropped from the result set
                                                         PROVISIONAL: 0.6
 ```
+
+`FLOOR` is a reading of one index, not a constant. It moved 15.18 → 27.56 when
+expansion landed, because expansion raised answerable scores without raising
+unanswerable ones. **Recalibrate whenever the index changes**, and never in
+response to a gate failing.
 
 `FLOOR` is calibrated **on the benchmark's 20 unanswerable queries** (§7.2), not
 guessed. That is the whole reason those 20 exist.
@@ -313,6 +356,31 @@ an autonomous turn with a form is worse than returning two options.
 If the two distributions do not separate, that is a **finding**, recorded as
 such (D8), and the honest response is to keep the floor conservative and say the
 retriever cannot yet distinguish — not to pick a number that makes the gate pass.
+
+**The policy is fixed in advance and is not the one §4.4 step 3 describes.**
+Step 3 says "choose the threshold maximising separation — the value that admits
+the most answerable queries while rejecting ≥90% of unanswerable ones", which
+reads the rejection rate as a constraint to satisfy. Satisfying it is what
+tuning-to-pass looks like. `scripts/calibrate-floor.ts` instead takes the
+**highest threshold that still admits ≥90% of the gold set**, and *reports*
+whatever rejection rate that yields. Both numbers are written into the index.
+
+Both calibrations run so far, for the record:
+
+| index | FLOOR | admits (gold) | rejects (unanswerable) | separation (AUC) | G2 |
+|---|---|---|---|---|---|
+| lexical only | 15.18 | 91% | 55% | 0.845 | **fails** — recorded as a finding, floor kept conservative |
+| + expansion | **27.56** | 91% | **95%** | 0.956 | **passes** |
+
+The first row is why the policy matters: under it the honest answer was "the
+retriever cannot yet distinguish", and the fix was a better index rather than a
+higher number.
+
+**On the floor signal itself (MEASURED):** raw BM25F score is the best
+discriminator available. Per-query-term, per-matched-term, sqrt-length and
+term-coverage normalisations were all tried and all made separation worse
+(AUC 0.83 raw against 0.26–0.59 normalised) — the unanswerable queries in this
+set are simply longer, and normalising by length rewards them.
 
 ---
 
@@ -515,13 +583,38 @@ against measured evidence**, not a stretch goal on this plan.
 Two questions, in priority order. The first is a product gate. The second is the
 research thesis and is deliberately downstream of it.
 
+### 7.0 Where the gates stand (MEASURED 2026-09-03)
+
+| Gate | Requirement | Result |
+|---|---|---|
+| **G1** | Δ MRR CI excludes zero, vs. the shipped baseline | **PASS** — `+0.3433, 95% CI [+0.2593, +0.4313], n = 100` for the shipping configuration |
+| **G2** | ≥90% of the 20 unanswerable queries return `noMatch` | **PASS at 95%**, while still admitting 91% of the gold set. Failed at 55% before expansion, and was recorded as a failure rather than tuned around |
+| **G3** | The gold set runs green with egress blocked | **PASS** — asserted by the harness: `bench/run.ts` replaces `globalThis.fetch` with a throw before it does anything else |
+
+Baseline for comparison: today's shipped `scoreMatch` scores **MRR 0.0392,
+recall@5 0.06, and refuses 0 of 20 unanswerable queries.** PLAN's kill
+criterion for the whole programme was a baseline above ~0.85.
+
+The absolute MRR still has a hard ceiling below 1.0: 19 of the 100 gold targets
+publish neither an installable `SKILL.md` link nor suite components, so summon
+structurally cannot deliver them. That is curation, not retrieval, and the
+benchmark reports `mrrOnReachable` alongside `mrr` so the two are not confused.
+
 ### 7.1 Q1 — Did retrieval improve? (the gate)
 
-- **Gold set:** 100 hand-written capability-gap queries, each labelled with the
-  correct skill id. Written by a human against the registry, in the register an
-  agent actually uses ("I need to make this API faster"), **not** generated from
-  the documents — synthetic queries derived from the corpus bias in favour of
-  whatever indexed that corpus.
+- **Gold set:** 100 capability-gap queries, each labelled with the correct skill
+  id, in the register an agent actually uses ("I need to make this API faster").
+  **Provenance caveat, stated because it is weaker than this line originally
+  specified:** the current set was written by LLM subagents from the corpus
+  rather than by a human from session transcripts, because no transcripts
+  existed yet (`summon-log.jsonl` is PLAN 1.12; the next revision should be
+  drawn from it). Every query carries a self-audited `overlap` list of the
+  distinctive words it shares with its target's indexed text — 65 zero / 33 one
+  / 2 two — and six targets that no honest query separates from a sibling are
+  flagged `ambiguous` rather than fudged. Until a human reviews all 100 labels,
+  the load-bearing number is the **delta between systems on identical
+  queries**, not the absolute MRR. Full provenance:
+  `packages/core/bench/README.md`.
 - **Metric:** **MRR** (one correct answer per query), with recall@5 reported
   alongside. `MRR = (1/|Q|) Σ 1/rank_i`.
 - **Significance:** paired bootstrap over per-query reciprocal ranks, 10,000
