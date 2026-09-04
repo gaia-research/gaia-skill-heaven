@@ -29,7 +29,16 @@ type RawExpansion = { id: string; expansions: string[]; fromMetadataOnly?: boole
 const here = dirname(fileURLToPath(import.meta.url));
 const benchCorpus = join(here, "..", "bench", "corpus");
 const inputPath = argValue("--in") ?? join(benchCorpus, "expansions.raw.jsonl");
-const cutoff = Number(argValue("--rank-cutoff") ?? "1");
+// `--rank-cutoff none` keeps every generated expansion. It is a real option,
+// not an escape hatch: measured on this corpus the round-trip filter REMOVES
+// the expansions worth having (see docs/PHASE-0-1-STATUS.md), so the shipped
+// index is currently built unfiltered and this flag is what makes that
+// reproducible from one documented command.
+const cutoffArg = argValue("--rank-cutoff") ?? "1";
+const cutoff = cutoffArg === "none" ? Number.POSITIVE_INFINITY : Number(cutoffArg);
+if (!Number.isFinite(cutoff) && cutoffArg !== "none") {
+  throw new Error(`--rank-cutoff must be a positive integer or "none", got: ${cutoffArg}`);
+}
 const outputPath = join(benchCorpus, "expansions.json");
 
 const snapshot = JSON.parse(
@@ -81,7 +90,7 @@ for (const entry of raw) {
     for (const threshold of curve.keys()) {
       if (rank !== null && rank <= threshold) curve.set(threshold, (curve.get(threshold) ?? 0) + 1);
     }
-    if (rank !== null && rank <= cutoff) survivors.push(expansion);
+    if (cutoffArg === "none" || (rank !== null && rank <= cutoff)) survivors.push(expansion);
     else rejected.push({ id: entry.id, expansion, rank, top: ranked[0]?.doc.id ?? null });
   }
   if (survivors.length > 0) {
@@ -92,7 +101,7 @@ for (const entry of raw) {
 writeFileSync(outputPath, `${JSON.stringify(sortKeys(kept), null, 2)}\n`);
 writeFileSync(
   join(benchCorpus, "expansions.rejected.json"),
-  `${JSON.stringify({ cutoff, rejected }, null, 2)}\n`,
+  `${JSON.stringify({ cutoff: cutoffArg, rejected }, null, 2)}\n`,
 );
 
 console.log(
@@ -107,7 +116,7 @@ console.log(
         `  source in top ${String(threshold).padStart(2)}   ${count}/${considered} (${((count / (considered || 1)) * 100).toFixed(1)}%)`,
     ),
     "",
-    `cutoff used       ${cutoff}`,
+    `cutoff used       ${cutoffArg}`,
     `kept              ${Object.values(kept).reduce((total, entry) => total + entry.expansions.length, 0)} across ${Object.keys(kept).length} skills`,
     `wrote             ${outputPath}`,
   ].join("\n"),

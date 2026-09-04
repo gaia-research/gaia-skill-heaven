@@ -74,14 +74,22 @@ describe("the committed index", () => {
     expect(index.source).toBe("https://gaiaskilltree.com");
   });
 
-  it("reports a calibrated floor, and what that calibration achieved", () => {
-    return loadCommittedIndex().then((index) => {
-      expect(index.stats.floor).toBeGreaterThan(0);
-      // G2 is not met at a usable floor and the index says so rather than
-      // pretending otherwise.
-      expect(index.stats.floorCalibration?.unanswerableRejected).toBeLessThan(0.9);
-      expect(index.stats.floorCalibration?.note).toMatch(/G2/);
-    });
+  it("reports a calibrated floor, and what that calibration achieved", async () => {
+    const index = await loadCommittedIndex();
+    expect(index.stats.floor).toBeGreaterThan(0);
+
+    // The floor is calibrated, never guessed, and it always reports BOTH
+    // sides of the trade: what fraction of answerable queries it still admits
+    // and what fraction of unanswerable ones it rejects. A floor that bought
+    // its rejection rate by refusing real queries would be visible here.
+    const calibration = index.stats.floorCalibration;
+    expect(calibration?.answerableAdmitted).toBeGreaterThanOrEqual(0.9);
+    expect(calibration?.unanswerableRejected).toBeGreaterThanOrEqual(0.9);
+    // When G2 cannot be met at a usable floor, the index says so rather than
+    // moving the threshold until the gate passes.
+    if ((calibration?.unanswerableRejected ?? 0) < 0.9) {
+      expect(calibration?.note).toMatch(/G2/);
+    }
   });
 
   it("honours SKILL_INDEX_PATH, and skips an unreadable candidate rather than throwing", async () => {
