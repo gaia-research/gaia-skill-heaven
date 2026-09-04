@@ -12,7 +12,8 @@
       "running my test suite is slow, how do I parallelize it",
       "best way to structure integration tests against a real database in Python"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d2d6c976a3cc"
   },
   "Manavarya09/design-extract": {
     "expansions": [
@@ -24,7 +25,8 @@
       "copy a site's look without asking the designer for the source files",
       "scrape a live page for its color palette and spacing values"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:041af9ad083a"
   },
   "addy-osmani/agent-skills": {
     "expansions": [
@@ -37,7 +39,8 @@
       "need a suite that enforces spec-before-code and test-driven development together",
       "what's a good starter kit of engineering skills to install into Claude Code or Cursor"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:dafbc2d87d82"
   },
   "addy-osmani/code-review-and-quality": {
     "expansions": [
@@ -48,7 +51,8 @@
       "is this fix actually correct, and does the regression test cover it",
       "evaluate whether this change improves the codebase enough to approve"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f8f213afc717"
   },
   "addy-osmani/code-simplification": {
     "expansions": [
@@ -61,7 +65,8 @@
       "consolidate the duplication that crept in after the merge",
       "make this readable without touching its behavior"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f9335fb2e560"
   },
   "addy-osmani/incremental-implementation": {
     "expansions": [
@@ -74,7 +79,8 @@
       "guide me through vertical slicing this feature end to end",
       "stop scope creep while I'm implementing this"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:cffdfb5edeb3"
   },
   "addy-osmani/performance-optimization": {
     "expansions": [
@@ -87,7 +93,8 @@
       "stop premature optimization, help me measure before touching any code",
       "layout keeps jumping around on load, is that a CLS problem I can fix"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0992585e20cf"
   },
   "addy-osmani/planning-and-task-breakdown": {
     "expansions": [
@@ -100,7 +107,8 @@
       "map what depends on what before I start writing code",
       "how do I communicate the size of this work to a non-technical stakeholder"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b4b04fa23428"
   },
   "addy-osmani/shipping-and-launch": {
     "expansions": [
@@ -113,7 +121,8 @@
       "help me decide whether to roll forward or roll back based on error rates",
       "give me a pre-launch checklist covering security, performance, and accessibility"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:dd8025424988"
   },
   "addy-osmani/spec-driven-development": {
     "expansions": [
@@ -124,7 +133,8 @@
       "I'm about to make an architectural decision and want a spec reviewed first",
       "break this bundled requirement into separate testable capabilities"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:06a9b25dbef2"
   },
   "addy-osmani/test-driven-development": {
     "expansions": [
@@ -139,7 +149,8 @@
       "what test size should this be, unit or integration or e2e",
       "need a prove-it-first discipline for bug fixes"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:56b102540b74"
   },
   "anthropic/pptx": {
     "expansions": [
@@ -152,7 +163,8 @@
       "fix a corrupted pptx template",
       "turn a .potx template into a finished slide deck"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:463f6b6e16e6"
   },
   "anthropic/skill-creator": {
     "expansions": [
@@ -164,7 +176,8 @@
       "benchmark how well this skill performs across different prompts",
       "draft a SKILL.md file for a workflow I keep repeating manually"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:77cbd1693658"
   },
   "anthropics/brand-guidelines": {
     "expansions": [
@@ -176,7 +189,8 @@
       "swap these fonts and colors for Anthropic's official ones",
       "brand this output so it matches the company style guide"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2610939f1279"
   },
   "anthropics/canvas-design": {
     "expansions": [
@@ -189,7 +203,8 @@
       "produce a striking single-page visual composition for print",
       "turn a vague creative brief into a finished static design piece"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4fd7fb87c5f1"
   },
   "aplaceforallmystuff/log-to-daily": {
     "expansions": [
@@ -202,7 +217,8 @@
       "jot down next steps and decisions in my daily log",
       "end-of-day recap into my notes app, please"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1e0059582b0a"
   },
   "ayghri/i-have-adhd": {
     "expansions": [
@@ -215,7 +231,8 @@
       "cut the preamble and the closing 'let me know if you need anything else'",
       "make responses easier to act on for someone with ADHD or low working memory"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:493fdab7acf0"
   },
   "bradautomates/watch": {
     "expansions": [
@@ -229,7 +246,8 @@
       "download this video link and describe the visuals",
       "I want to ask questions about a video's content without watching it myself"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:908c62e36a54"
   },
   "browser-use/browser-harness": {
     "expansions": [
@@ -242,7 +260,8 @@
       "keep a single browser session open across multiple automation steps",
       "reuse my existing logged-in session instead of authenticating again"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f8aa87da6d37"
   },
   "browserbase/browse": {
     "expansions": [
@@ -253,7 +272,8 @@
       "my scraper breaks whenever the page layout is dynamic and I need AI to adapt on the fly",
       "building an agent that has to log in, click through, and complete a multi-step web flow"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f0700de87795"
   },
   "caioribeiroclw-pixel/evidence-attestation": {
     "expansions": [
@@ -268,7 +288,8 @@
       "what would make this proof stale, and how do I flag that upfront",
       "package a verdict plus its supporting evidence as a portable, privacy-safe object"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c3a1593d1f2c"
   },
   "devin-ai/autonomous-swe": {
     "expansions": [
@@ -279,7 +300,8 @@
       "hand off a whole coding task and get a working result back, not just suggestions",
       "something that closes the loop between writing code and verifying it actually runs"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:925cf1413f62"
   },
   "dietrichgebert/ponytail": {
     "expansions": [
@@ -292,7 +314,8 @@
       "am I about to write boilerplate nobody asked for",
       "just ship the minimal fix, skip the abstraction layer"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7ffc12d580f3"
   },
   "disler/agent-fusion": {
     "expansions": [
@@ -305,7 +328,8 @@
       "combine cheap and expensive models into one team that self-validates",
       "stop me from shipping one model's uncritiqued first answer"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1fb140533a66"
   },
   "disler/auto-review": {
     "expansions": [
@@ -316,7 +340,8 @@
       "gate task completion on an automated acceptance check",
       "catch it lying about being finished"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4a0a9d37f7af"
   },
   "disler/opinion": {
     "expansions": [
@@ -328,7 +353,8 @@
       "avoid analysis paralysis and just decide",
       "state a position and defend it briefly"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e7484814a1a1"
   },
   "disler/plan-synthesis": {
     "expansions": [
@@ -341,7 +367,8 @@
       "fuse parallel plan outputs into one without losing either author's intent",
       "stitch together plans produced separately so nothing contradicts"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9bf5bff0f740"
   },
   "favorchurch/attendees": {
     "expansions": [
@@ -354,7 +381,8 @@
       "get me attendance figures for the prayer gathering",
       "how full is this event right now"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:da27340cd962"
   },
   "favorchurch/count-checkin-by-church": {
     "expansions": [
@@ -366,7 +394,8 @@
       "dedupe church names before counting who showed up",
       "our summary cell is overcounting because it treats spelling differences as different churches"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:33ef2b6228c3"
   },
   "favorchurch/export-attendees": {
     "expansions": [
@@ -380,7 +409,8 @@
       "do the attendee export again like last time",
       "keep our headcount sheet current with new registrations"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4edcc96014ea"
   },
   "favorchurch/financial-assistance": {
     "expansions": [
@@ -391,7 +421,8 @@
       "I have to reconcile applicant pay amounts against live ticket prices before approving assistance",
       "calculate a percentage discount from a connection board and draft the approval email from the right sender address"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3f27d172fc91"
   },
   "favorchurch/resend-conference-emails-carefully-with-smtp": {
     "expansions": [
@@ -406,7 +437,8 @@
       "set up an SMTP relay to bulk resend event tickets instead of using the regular Gmail send limit",
       "dedupe attendees so each person only gets one bump even if they were sent multiple confirmations"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ad18c9397388"
   },
   "favorchurch/speak-like-favor": {
     "expansions": [
@@ -418,7 +450,8 @@
       "help me draft a warm message to volunteers about a schedule change",
       "clean up this copy so it sounds like our team, not generic ministry-speak"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:29234973a68d"
   },
   "favorchurch/ticket-transfer": {
     "expansions": [
@@ -430,7 +463,8 @@
       "handle a conference ticket reassignment end to end",
       "update attendee info because the original buyer can't make it anymore"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b16e1d4a5654"
   },
   "favorchurch/triage-conference": {
     "expansions": [
@@ -443,7 +477,8 @@
       "answer attendee FAQs using our knowledge base",
       "surface next steps from event ticket data"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2c98c794b7f5"
   },
   "favorchurch/update-unique-churches": {
     "expansions": [
@@ -456,7 +491,8 @@
       "audit our naming convention for churches in the tracking sheet",
       "incrementally update a Google Sheet count without redoing the whole thing"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e0bd6f9720f4"
   },
   "firecrawl/firecrawl-build-interact": {
     "expansions": [
@@ -466,7 +502,8 @@
       "drive a headless browser programmatically from my product logic",
       "add browser automation capability to my app, not just scraping"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f2d357c58231"
   },
   "firecrawl/firecrawl-build-onboarding": {
     "expansions": [
@@ -477,7 +514,8 @@
       "first-time setup so a coding agent can call a scraping API",
       "walk me through authenticating a new web-extraction tool for my agent"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b72486f40eae"
   },
   "firecrawl/firecrawl-build-scrape": {
     "expansions": [
@@ -490,7 +528,8 @@
       "fetch a page's content and metadata via API for a feature I'm building",
       "how do I pull the readable text off this URL into my code"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:101b93268588"
   },
   "firecrawl/firecrawl-build-search": {
     "expansions": [
@@ -501,7 +540,8 @@
       "hook live web search results into my pipeline",
       "integrate a crawler-backed search engine into my codebase"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:628facce1ee5"
   },
   "firecrawl/firecrawl-research-index": {
     "expansions": [
@@ -512,7 +552,8 @@
       "search scientific literature for prior work on this",
       "retrieve papers and let me query them for specifics"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4c9ba0edf428"
   },
   "firecrawl/firecrawl-skills": {
     "expansions": [
@@ -523,7 +564,8 @@
       "need to pull structured data off of many web pages for research",
       "help my agent do research by fetching and reading live web pages"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:49ad57f2384c"
   },
   "gaia-research/ci-churn": {
     "expansions": [
@@ -536,7 +578,8 @@
       "how many commits were just chasing a red build",
       "quantify the cost of our CI iteration overhead"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0ac41a09faea"
   },
   "gaia-research/cost": {
     "expansions": [
@@ -548,7 +591,8 @@
       "total up my AI usage cost for today across every tool I used",
       "price out my agent transcripts against current model rates"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fbe253667d7b"
   },
   "gaia-research/fuse": {
     "expansions": [
@@ -562,7 +606,8 @@
       "consolidate two skill nodes into a single capstone entry",
       "turn a pair of skills into a combined offering with proper registry links"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2d842ff21dd2"
   },
   "garrytan/benchmark": {
     "expansions": [
@@ -575,7 +620,8 @@
       "catch a performance regression before it ships",
       "how has our page speed trended across recent PRs"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e60bd0695007"
   },
   "garrytan/benchmark-models": {
     "expansions": [
@@ -586,7 +632,8 @@
       "need a ranked table of model performance so I can justify a model choice",
       "is switching models actually going to save money or hurt quality — show me data"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f10cd1c0aa79"
   },
   "garrytan/browse": {
     "expansions": [
@@ -599,7 +646,8 @@
       "I need fast headless page checks, not a full test suite",
       "dogfood this user flow the way a real visitor would experience it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:65f4fbf122b1"
   },
   "garrytan/canary": {
     "expansions": [
@@ -610,7 +658,8 @@
       "detect broken links automatically after shipping a change",
       "keep an eye on the app for the first few minutes after a release goes out"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fd07386b3141"
   },
   "garrytan/careful": {
     "expansions": [
@@ -621,7 +670,8 @@
       "don't let the agent run dangerous bash commands without my explicit okay",
       "make the agent double-check with me before any operation I can't undo"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d11667ddd1a9"
   },
   "garrytan/codex": {
     "expansions": [
@@ -636,7 +686,8 @@
       "get an independent code review that isn't just my own assistant rubber-stamping itself",
       "run my plan past another model for a gut check with session continuity for follow-up questions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:09820e62746a"
   },
   "garrytan/context-restore": {
     "expansions": [
@@ -648,7 +699,8 @@
       "where did I leave off on this",
       "bring back my previous session state so I'm not starting from zero"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:50f1e07c96de"
   },
   "garrytan/context-save": {
     "expansions": [
@@ -659,7 +711,8 @@
       "checkpoint my progress on this branch",
       "capture what's done and what's left before I switch tasks"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:61c1d398dea8"
   },
   "garrytan/cso": {
     "expansions": [
@@ -672,7 +725,8 @@
       "do a deep security review, not just a quick pass",
       "check for OWASP top ten issues in this codebase"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:46904e85b0a1"
   },
   "garrytan/design-consultation": {
     "expansions": [
@@ -684,7 +738,8 @@
       "generate previews of font and color options for the new product",
       "define our design tokens before the team starts building screens"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:767a57174710"
   },
   "garrytan/design-html": {
     "expansions": [
@@ -696,7 +751,8 @@
       "implement the frontend for a design that's already been signed off",
       "build me a page from scratch based on what I describe"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f93ec7dd347b"
   },
   "garrytan/design-review": {
     "expansions": [
@@ -709,7 +765,8 @@
       "spot janky or slow interactions on this page",
       "tidy up an interface that feels off"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:09e487ef90f4"
   },
   "garrytan/design-shotgun": {
     "expansions": [
@@ -720,7 +777,8 @@
       "collect structured feedback on design variants and iterate toward a favorite",
       "explore what this feature could look like before we build it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7c647267fec3"
   },
   "garrytan/devex-review": {
     "expansions": [
@@ -733,7 +791,8 @@
       "audit our getting-started flow and give me a scored report with fixes",
       "how rough is our onboarding compared to best-in-class tools like Stripe or Vercel"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:77ddc0ad2061"
   },
   "garrytan/document-generate": {
     "expansions": [
@@ -744,7 +803,8 @@
       "explain how this part of the codebase works for someone unfamiliar with it",
       "write onboarding docs organized by tutorial, how-to, reference, and explanation"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c69a485b2ec3"
   },
   "garrytan/document-release": {
     "expansions": [
@@ -757,7 +817,8 @@
       "polish the changelog wording so it reads well to users",
       "find gaps in documentation coverage after a ship"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6e033777b1fd"
   },
   "garrytan/freeze": {
     "expansions": [
@@ -769,7 +830,8 @@
       "restrict the blast radius of an editing session to a single directory",
       "prevent accidental changes to files that aren't part of what I'm working on"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:77aa38e23b97"
   },
   "garrytan/garrytan": {
     "expansions": [
@@ -781,7 +843,8 @@
       "auto-decide on this the way a founder juggling every hat would",
       "check this plan the way a CEO, a designer, and an engineer each would"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3652543b8fb8"
   },
   "garrytan/gstack": {
     "expansions": [
@@ -794,7 +857,8 @@
       "point me at the right specialist instead of me hunting through skill names",
       "which of these dev tools actually fits what I'm trying to do right now"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:cfe52a3badeb"
   },
   "garrytan/gstack-upgrade": {
     "expansions": [
@@ -807,7 +871,8 @@
       "refresh my local gstack install to whatever's current",
       "is my gstack behind, and if so fix it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7ac262f9b97e"
   },
   "garrytan/guard": {
     "expansions": [
@@ -818,7 +883,8 @@
       "lock down the agent so it can't wander outside a specific directory",
       "turn on maximum caution mode before I let the agent near prod"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0137047e602c"
   },
   "garrytan/health": {
     "expansions": [
@@ -833,7 +899,8 @@
       "wrap my existing test runner, linter, and type checker into one composite health report",
       "spot newly introduced test failures compared to the last run"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:356e8d4d45b6"
   },
   "garrytan/investigate": {
     "expansions": [
@@ -845,7 +912,8 @@
       "investigate this failure like a real postmortem, not guesswork",
       "form a hypothesis and verify it before changing anything"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b5a020514f88"
   },
   "garrytan/land-and-deploy": {
     "expansions": [
@@ -857,7 +925,8 @@
       "take this from approved PR to confirmed-live",
       "don't just merge, make sure production is actually healthy after"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:121e3bde7f9e"
   },
   "garrytan/landing-report": {
     "expansions": [
@@ -868,7 +937,8 @@
       "what's likely to land next across the team's in-progress work",
       "check the ship queue before I pick a version slot"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d2d2a5784c7d"
   },
   "garrytan/learn": {
     "expansions": [
@@ -879,7 +949,8 @@
       "dump accumulated project knowledge into the docs",
       "show me patterns and pitfalls this agent picked up over time"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d0352ad0b635"
   },
   "garrytan/make-pdf": {
     "expansions": [
@@ -891,7 +962,8 @@
       "add a cover page and headers to my document",
       "convert markdown to a clean, publication-ready file"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:32fcc4afe672"
   },
   "garrytan/office-hours": {
     "expansions": [
@@ -904,7 +976,8 @@
       "what's the smallest wedge I could ship to test this idea",
       "force me to get specific instead of staying vague about my plan"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:48b52c070691"
   },
   "garrytan/open-gstack-browser": {
     "expansions": [
@@ -917,7 +990,8 @@
       "launch a browser session ready for automation commands",
       "set up chromium so I can observe the agent's browsing actions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bea05f73edac"
   },
   "garrytan/pair-agent": {
     "expansions": [
@@ -930,7 +1004,8 @@
       "generate a connection code for cross-agent browser access",
       "bridge two AI tools through the same browser tab"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4ee4ba53a278"
   },
   "garrytan/plan-ceo-review": {
     "expansions": [
@@ -942,7 +1017,8 @@
       "give me a rigorous strategic gut-check on this proposal",
       "challenge my assumptions about what this product actually needs to be"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c9783a183fd5"
   },
   "garrytan/plan-design-review": {
     "expansions": [
@@ -953,7 +1029,8 @@
       "give this plan a designer's eye pass, not a code review",
       "check whether this UI plan risks looking like generic AI-generated slop"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3525940b7466"
   },
   "garrytan/plan-devex-review": {
     "expansions": [
@@ -965,7 +1042,8 @@
       "score how good our developer onboarding actually is",
       "check whether our error messages actually help developers"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bbdd0ee16b54"
   },
   "garrytan/plan-eng-review": {
     "expansions": [
@@ -977,7 +1055,8 @@
       "make sure my data flow and diagrams actually make sense before I commit to them",
       "sanity check this design doc like a staff engineer would"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:09bfd2404955"
   },
   "garrytan/plan-tune": {
     "expansions": [
@@ -989,7 +1068,8 @@
       "review the questions this agent has asked me and let me set defaults",
       "surface the gap between my stated preferences and my actual choices over time"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e67c2c471f5c"
   },
   "garrytan/qa": {
     "expansions": [
@@ -1002,7 +1082,8 @@
       "I need evidence this app is ready to ship, not just a gut feeling",
       "run through the app and document every issue with screenshots"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:37f283e728b5"
   },
   "garrytan/qa-only": {
     "expansions": [
@@ -1014,7 +1095,8 @@
       "run a narrow test pass scoped to what I just touched",
       "quick sanity test on this route only, don't run the full pipeline"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:64a3c19fa1c6"
   },
   "garrytan/retro": {
     "expansions": [
@@ -1025,7 +1107,8 @@
       "what went wrong and what went right this sprint",
       "generate a retro doc without me manually digging through every PR"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:aa25c6f64706"
   },
   "garrytan/review": {
     "expansions": [
@@ -1036,7 +1119,8 @@
       "pre-merge review that goes beyond a checklist and actually tries to break the change",
       "have specialist reviewers look at testing, security, and performance separately before I ship this"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2f9cc14f1262"
   },
   "garrytan/scrape": {
     "expansions": [
@@ -1047,7 +1131,8 @@
       "extract product info from a rendered page for downstream analysis",
       "fetch this URL and parse out the data, read-only, no clicking or form submission needed"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a319ebe41edc"
   },
   "garrytan/setup-browser-cookies": {
     "expansions": [
@@ -1062,7 +1147,8 @@
       "transfer session cookies from Chromium into the agent's browser automation tool",
       "test a page that requires login without hardcoding or typing in credentials each run"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:dc17617eee59"
   },
   "garrytan/setup-deploy": {
     "expansions": [
@@ -1073,7 +1159,8 @@
       "onboard a new project onto our deploy pipeline",
       "detect whether this is Vercel, Netlify, Fly, or something else and configure accordingly"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e2d120c42104"
   },
   "garrytan/setup-gbrain": {
     "expansions": [
@@ -1084,7 +1171,8 @@
       "first-time setup for cross-session recall",
       "register the memory tool as an MCP server"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7677c1afb557"
   },
   "garrytan/ship": {
     "expansions": [
@@ -1096,7 +1184,8 @@
       "deploy this change and open the PR",
       "handle the whole release checklist for this branch"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:29a1bce2b52a"
   },
   "garrytan/skillify": {
     "expansions": [
@@ -1107,7 +1196,8 @@
       "generate a script plus test from what I just did in the browser",
       "speed up repeat scrapes by turning them into saved skills"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2ff89ea7fad6"
   },
   "garrytan/sync-gbrain": {
     "expansions": [
@@ -1119,7 +1209,8 @@
       "fix stale search results in our knowledge tool",
       "reindex everything after a refactor"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:30c3827d38b8"
   },
   "garrytan/unfreeze": {
     "expansions": [
@@ -1132,7 +1223,8 @@
       "cancel the freeze boundary that was set earlier",
       "reopen the codebase to changes after a restricted period"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:737a020a99d9"
   },
   "getagentseal/codeburn": {
     "expansions": [
@@ -1145,7 +1237,8 @@
       "break down my token consumption by project",
       "dashboard for AI agent expenses over time"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:acfc1ba28971"
   },
   "glincker/readme-generator": {
     "expansions": [
@@ -1156,7 +1249,8 @@
       "detect what language and framework this project uses and document it accordingly",
       "turn my directory structure and dependency manifests into a professional README"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:43e8384e0a47"
   },
   "gooseworks/notte-browser": {
     "expansions": [
@@ -1168,7 +1262,8 @@
       "drive a headless browser through a multi-step web flow",
       "have something browse the web and extract information without me doing it manually"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7bac0cb2e31d"
   },
   "gsd-build/discuss-phase": {
     "expansions": [
@@ -1180,7 +1275,8 @@
       "record what we decided so downstream agents don't have to ask me again",
       "adaptive questioning to lock in scope before implementation starts"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:96444b120675"
   },
   "gsd-build/execute-phase": {
     "expansions": [
@@ -1191,7 +1287,8 @@
       "step through this phase's work interactively with checkpoints instead of firing everything unattended",
       "orchestrate a bunch of plan executions without blowing my context budget on the coordinator"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2d67e9e0d5e5"
   },
   "gsd-build/get-shit-done": {
     "expansions": [
@@ -1203,7 +1300,8 @@
       "stop me from jumping straight to code before the plan is agreed",
       "give me a consistent software delivery workflow, not ad hoc coding"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1679c68c77c2"
   },
   "gsd-build/plan-phase": {
     "expansions": [
@@ -1215,7 +1313,8 @@
       "just show me the existing research doc for this phase without regenerating anything",
       "help me pick the next unplanned phase off the roadmap and flesh it out"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:dbda39e2fccc"
   },
   "gsd-build/ship": {
     "expansions": [
@@ -1226,7 +1325,8 @@
       "close out this phase of the plan and prep for the next",
       "run review and get this ready to land"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:73d269b803cb"
   },
   "gsd-build/verify-work": {
     "expansions": [
@@ -1238,7 +1338,8 @@
       "don't just tell me it's done, verify it interactively with me",
       "track test results for this phase so we have a record"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3ae94e7c7bac"
   },
   "huggingface/hf-cli": {
     "expansions": [
@@ -1250,7 +1351,8 @@
       "sync a local dataset folder with a Hugging Face bucket",
       "browse or search academic papers and datasets on the hub"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:44b941d8a7f8"
   },
   "huggingface/huggingface-datasets": {
     "expansions": [
@@ -1265,7 +1367,8 @@
       "find column statistics for a dataset without loading it into pandas",
       "validate that a dataset repo actually exists and is accessible before trying to use it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2d18088b90c3"
   },
   "huggingface/huggingface-llm-trainer": {
     "expansions": [
@@ -1277,7 +1380,8 @@
       "set up preference-based alignment training on a hosted job runner",
       "estimate how much a training run is going to cost before I kick it off"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6b4a98c89d1b"
   },
   "huggingface/huggingface-papers": {
     "expansions": [
@@ -1289,7 +1393,8 @@
       "look up metadata for an AI paper by its arxiv id",
       "explain this research paper in plain terms"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:36ec36638501"
   },
   "huggingface/huggingface-vision-trainer": {
     "expansions": [
@@ -1302,7 +1407,8 @@
       "build a model that finds objects in photos from my own data",
       "train ResNet or ViT on a Hugging Face dataset"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9d2c43a8a289"
   },
   "huggingface/semantic-cache": {
     "expansions": [
@@ -1315,7 +1421,8 @@
       "build a cache layer that understands paraphrased questions are the same question",
       "lower latency and spend on an LLM app with high query overlap"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ef2eb9757909"
   },
   "huggingface/transformers-js": {
     "expansions": [
@@ -1328,7 +1435,8 @@
       "get object detection working in a web app with WASM fallback",
       "use a HF model in TypeScript on the server, not just the browser"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1b4208523e60"
   },
   "intelligentcode-ai/database-engineer": {
     "expansions": [
@@ -1340,7 +1448,8 @@
       "I need someone to think through data modeling tradeoffs across SQL, graph, and time-series stores",
       "tune this database for sub-second response times at scale"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a2f1b99745c5"
   },
   "intelligentcode-ai/devops-engineer": {
     "expansions": [
@@ -1354,7 +1463,8 @@
       "act like a devops specialist and sort out our pipeline",
       "plan a blue-green or canary rollout for releases"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:323597375e33"
   },
   "intelligentcode-ai/mcp-client": {
     "expansions": [
@@ -1365,7 +1475,8 @@
       "how do I authenticate to a remote MCP server that uses OAuth",
       "enumerate available MCP tools before deciding which one to invoke"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4d26054434a1"
   },
   "intelligentcode-ai/parallel-execution": {
     "expansions": [
@@ -1380,7 +1491,8 @@
       "continue processing the rest of the queue even if one item fails",
       "figure out execution order when some tasks are on the critical path and others aren't"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c333b34fe83f"
   },
   "intelligentcode-ai/release": {
     "expansions": [
@@ -1391,7 +1503,8 @@
       "ship a patch release and make sure the gates pass first",
       "what's the process for tagging a new GitHub release from a PR"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bc0fdfe54521"
   },
   "intelligentcode-ai/requirements-engineer": {
     "expansions": [
@@ -1403,7 +1516,8 @@
       "gather requirements before we start coding",
       "bridge the gap between what the client wants and what devs need to know"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c4ce9f73238b"
   },
   "intelligentcode-ai/security-engineer": {
     "expansions": [
@@ -1416,7 +1530,8 @@
       "harden this system against breaches",
       "assess our OWASP Top 10 exposure"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:99a05476663e"
   },
   "intelligentcode-ai/user-tester": {
     "expansions": [
@@ -1429,7 +1544,8 @@
       "simulate real usage patterns end to end, not just unit tests",
       "confirm the mobile experience holds up under touch interactions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3322f0d75385"
   },
   "juliusbrussee/caveman": {
     "expansions": [
@@ -1442,7 +1558,8 @@
       "less chatty, more compressed answers please",
       "minimize verbosity while keeping technical accuracy intact"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:190391a8efba"
   },
   "k-dense-ai/deepchem": {
     "expansions": [
@@ -1456,7 +1573,8 @@
       "convert chemical structures into ML-ready fingerprints or graph representations",
       "predict crystal or materials properties like bandgap from structure"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:aaf7d0396006"
   },
   "k-dense-ai/pymc": {
     "expansions": [
@@ -1469,7 +1587,8 @@
       "run MCMC and tell me if it actually converged",
       "I want confidence intervals that come from a real probabilistic model, not a bootstrap hack"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8d86556dea7c"
   },
   "k-dense-ai/pytorch-lightning": {
     "expansions": [
@@ -1482,7 +1601,8 @@
       "structure a neural network training project the professional way",
       "set up DDP, FSDP, or DeepSpeed for distributed model training"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fe3d2b246317"
   },
   "k-dense-ai/qiskit": {
     "expansions": [
@@ -1494,7 +1614,8 @@
       "sample measurement outcomes from a circuit and get back bitstring counts",
       "which quantum SDK do I use to build and execute circuits on IBM's cloud"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c14b23e54765"
   },
   "k-dense-ai/rdkit": {
     "expansions": [
@@ -1506,7 +1627,8 @@
       "compute descriptors and fingerprints for cheminformatics analysis in Python",
       "I need fine-grained control over molecule sanitization, not a high-level wrapper"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1f2f0a3d3029"
   },
   "k-dense-ai/scanpy": {
     "expansions": [
@@ -1517,7 +1639,8 @@
       "find marker genes and trajectories from single-cell sequencing output",
       "my data is an RDS file from R and I need it in a format Python's single-cell tools can read"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:031f3c395841"
   },
   "k-dense-ai/scvi-tools": {
     "expansions": [
@@ -1530,7 +1653,8 @@
       "combine RNA and protein single-cell modalities into one embedding",
       "differential expression analysis with confidence intervals on single-cell data"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ae9ac3f40577"
   },
   "k-dense-ai/stable-baselines3": {
     "expansions": [
@@ -1542,7 +1666,8 @@
       "get a reliable single-agent RL baseline running quickly",
       "optimize hyperparameters for my reinforcement learning agent"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f16f9c0fb7fe"
   },
   "k-dense-ai/torch-geometric": {
     "expansions": [
@@ -1553,7 +1678,8 @@
       "this is not a plain PyTorch model, it's a graph and I need graph-specific tooling",
       "building a custom graph dataset and want the standard PyTorch graph learning library"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a36070db8a68"
   },
   "k-dense-ai/transformers": {
     "expansions": [
@@ -1566,7 +1692,8 @@
       "train a vision or audio model using the Trainer API",
       "get an AutoModel and tokenizer working together for custom inference"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:256b9c243de9"
   },
   "karpathy/autoresearch-universal": {
     "expansions": [
@@ -1577,7 +1704,8 @@
       "self-improving optimization loop for a prompt, not just a one-shot rewrite",
       "help me pick a measurable target to optimize in this codebase, then iterate toward it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:36eb9f3b7973"
   },
   "laravel/upgrade-laravel-v13": {
     "expansions": [
@@ -1592,7 +1720,8 @@
       "validate that nothing broke after upgrading the underlying framework version",
       "step-by-step guide for a risky framework version migration"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8907ec40e32b"
   },
   "martin-stepanoski/nielsen-heuristics-audit": {
     "expansions": [
@@ -1605,7 +1734,8 @@
       "I need a systematic usability evaluation, not just a gut check",
       "compare my interface against Nielsen's ten principles"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:32e34da2db4d"
   },
   "mattpocock/ask-matt": {
     "expansions": [
@@ -1615,7 +1745,8 @@
       "I'm lost, what's the entry point for what I'm trying to do",
       "help me pick the correct flow instead of picking wrong and redoing work"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:57dae55f2f00"
   },
   "mattpocock/code-review": {
     "expansions": [
@@ -1626,7 +1757,8 @@
       "run two independent reviews so style nitpicks don't bury a missed requirement",
       "audit this PR along two separate axes instead of one mixed opinion"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:060d3f10219a"
   },
   "mattpocock/codebase-design": {
     "expansions": [
@@ -1639,7 +1771,8 @@
       "tidy up an interface that leaks implementation details",
       "where should the seam go in this refactor"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1fdd3a980044"
   },
   "mattpocock/diagnose": {
     "expansions": [
@@ -1651,7 +1784,8 @@
       "systematically root-cause a performance regression instead of poking at it",
       "I need a tight pass/fail signal for a flaky failure that only shows up occasionally"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f6edc6d6b2ce"
   },
   "mattpocock/diagnosing-bugs": {
     "expansions": [
@@ -1664,7 +1798,8 @@
       "rank a few theories for why this is happening before testing any of them",
       "this only fails sometimes, help me raise how often it reproduces"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8c6eb309a546"
   },
   "mattpocock/domain-modeling": {
     "expansions": [
@@ -1677,7 +1812,8 @@
       "keep a living document of the decisions and why we made them",
       "our terminology is fuzzy and it's causing confusion in the team"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6d1ddefe8d31"
   },
   "mattpocock/edit-article": {
     "expansions": [
@@ -1688,7 +1824,8 @@
       "clean up the prose in this write-up before I publish it",
       "reorganize this article so the sections actually flow in a sensible order"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:086cdd35383d"
   },
   "mattpocock/engineering": {
     "expansions": [
@@ -1699,7 +1836,8 @@
       "is there a container skill for all the dev-focused ones",
       "group these coding skills under one engineering heading"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b1fb5cceffd1"
   },
   "mattpocock/git-guardrails-claude-code": {
     "expansions": [
@@ -1710,7 +1848,8 @@
       "set up guardrails so branch -D and checkout . get blocked automatically",
       "keep Claude Code from accidentally trashing uncommitted work"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:89eeac177d36"
   },
   "mattpocock/grill-me": {
     "expansions": [
@@ -1722,7 +1861,8 @@
       "grill me on this proposal until the weak points show",
       "find what I haven't considered in this design"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:918bd0e107d2"
   },
   "mattpocock/grill-with-docs": {
     "expansions": [
@@ -1734,7 +1874,8 @@
       "I want a persistent record of why we decided this, not just a conversation",
       "put this plan through a rigorous questioning pass before we build"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b30783ea06ec"
   },
   "mattpocock/grilling": {
     "expansions": [
@@ -1747,7 +1888,8 @@
       "make sure I've actually thought this through before building it",
       "play devil's advocate on this design"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9520ddefe50e"
   },
   "mattpocock/handoff": {
     "expansions": [
@@ -1759,7 +1901,8 @@
       "redact any secrets before writing out this session summary",
       "bridge this work to a new agent without losing the plan we already agreed on"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1b38fcca53e3"
   },
   "mattpocock/implement": {
     "expansions": [
@@ -1770,7 +1913,8 @@
       "build out this PRD end to end and commit when finished",
       "code review after implementation is done too, not just the build step"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:03777d3e37e4"
   },
   "mattpocock/improve-codebase-architecture": {
     "expansions": [
@@ -1785,7 +1929,8 @@
       "help me pick one architectural pain point and actually design a better structure for it",
       "identify deepening opportunities so this code is easier for both humans and AI agents to navigate"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a8e63f295185"
   },
   "mattpocock/migrate-to-shoehorn": {
     "expansions": [
@@ -1796,7 +1941,8 @@
       "get rid of `as unknown as` hacks in my spec files",
       "restructure test fixtures so I stop lying to the type checker"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e0a99cddfd59"
   },
   "mattpocock/misc": {
     "expansions": [
@@ -1806,7 +1952,8 @@
       "help migrating this project's setup to something new",
       "miscellaneous project setup work that doesn't fit anywhere else"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6e745347ab11"
   },
   "mattpocock/obsidian-vault": {
     "expansions": [
@@ -1817,7 +1964,8 @@
       "my note-taking system is getting messy, tidy it up and keep it organized going forward",
       "file this new note into my vault following my existing conventions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:85713259c727"
   },
   "mattpocock/personal": {
     "expansions": [
@@ -1826,7 +1974,8 @@
       "organize non-work skills separately from engineering ones",
       "is there a container for personal-use skills"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6050753d38e3"
   },
   "mattpocock/productivity": {
     "expansions": [
@@ -1837,7 +1986,8 @@
       "which of Matt Pocock's skills are about personal productivity",
       "I need lightweight productivity tooling, not engineering skills"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6e42a2723070"
   },
   "mattpocock/prototype": {
     "expansions": [
@@ -1846,7 +1996,8 @@
       "build a throwaway version to answer a design question",
       "quick and dirty version just to see if this approach works"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e378908a8d87"
   },
   "mattpocock/research": {
     "expansions": [
@@ -1859,7 +2010,8 @@
       "investigate this question and save the findings to a file",
       "verify this against official documentation, not secondhand writeups"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f213e1648ea0"
   },
   "mattpocock/resolving-merge-conflicts": {
     "expansions": [
@@ -1872,7 +2024,8 @@
       "untangle a messy merge and make sure tests still pass after",
       "clean up conflict markers left over from a failed merge attempt"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:620f8aa78124"
   },
   "mattpocock/scaffold-exercises": {
     "expansions": [
@@ -1885,7 +2038,8 @@
       "stub out a new module's directory tree quickly",
       "make sure every exercise variant has the required files"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0c4a6c92704f"
   },
   "mattpocock/setup-matt-pocock-skills": {
     "expansions": [
@@ -1897,7 +2051,8 @@
       "set up where ADRs and domain docs live for a new project",
       "onboard this codebase onto the team's engineering workflow conventions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a4d26c02f047"
   },
   "mattpocock/setup-pre-commit": {
     "expansions": [
@@ -1908,7 +2063,8 @@
       "get pre-commit hooks working in this repo without hand-rolling the config",
       "stop bad commits from getting in by gating them on typecheck and test scripts"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ec5b0bbbbaa9"
   },
   "mattpocock/skills": {
     "expansions": [
@@ -1920,7 +2076,8 @@
       "is there an all-in-one pack that covers Matt Pocock's engineering and life skills",
       "get every Matt Pocock skill installed at once"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9d80ae791b97"
   },
   "mattpocock/tdd": {
     "expansions": [
@@ -1932,7 +2089,8 @@
       "build this feature one small test-then-code cycle at a time, not tests then code in bulk",
       "stop writing every test up front before any implementation exists"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6f457ca1fb2c"
   },
   "mattpocock/teach": {
     "expansions": [
@@ -1944,7 +2102,8 @@
       "I want spaced practice and quizzes on a topic, not a one-off summary",
       "create a workspace that tracks my learning journey on a subject"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1286cf76c120"
   },
   "mattpocock/to-questionnaire": {
     "expansions": [
@@ -1955,7 +2114,8 @@
       "I don't have the context, but someone on the team does — get it out of them in writing",
       "build a form the recipient can answer at their own pace instead of a live meeting"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fd2ccd6305a5"
   },
   "mattpocock/to-spec": {
     "expansions": [
@@ -1964,7 +2124,8 @@
       "synthesize this discussion into user stories and post it to the issue tracker",
       "I already explained the problem, now package it as a spec ready for an agent to pick up"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e8024aa687a8"
   },
   "mattpocock/to-tickets": {
     "expansions": [
@@ -1976,7 +2137,8 @@
       "decide which parts of this work an agent can do unattended versus need me",
       "map the dependency order for these tasks"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2e3931c8188a"
   },
   "mattpocock/triage": {
     "expansions": [
@@ -1989,7 +2151,8 @@
       "decide whether this PR is ready to merge or needs a human",
       "clean up my untriaged issue backlog"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d5e08203582e"
   },
   "mattpocock/ubiquitous-language": {
     "expansions": [
@@ -2000,7 +2163,8 @@
       "eliminate ambiguity in how we name things across code and conversation",
       "formalize the vocabulary this project actually uses"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4aa002a12921"
   },
   "mattpocock/wait-what": {
     "expansions": [
@@ -2015,7 +2179,8 @@
       "I don't think you understood, let me restate it more clearly",
       "quick gut check: rephrase what I just asked for so I know we're aligned"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8002dc4fcb12"
   },
   "mattpocock/wayfinder": {
     "expansions": [
@@ -2026,7 +2191,8 @@
       "help me chart a path through a greenfield project when I can't see the whole route yet",
       "plan a large migration as a sequence of resolvable decisions instead of one big spec"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:be2bc3165e26"
   },
   "mattpocock/wizard": {
     "expansions": [
@@ -2037,7 +2203,8 @@
       "help a non-technical teammate get through this provisioning process",
       "script that pauses at each step and asks me to confirm before continuing"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:90fad6dc2123"
   },
   "mattpocock/write-a-skill": {
     "expansions": [
@@ -2049,7 +2216,8 @@
       "interview me about what this skill should do, then generate it",
       "build a skill file with progressive disclosure and bundled scripts"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c5014031d970"
   },
   "mattpocock/writing-for-agents": {
     "expansions": [
@@ -2062,7 +2230,8 @@
       "reduce token cost of my always-loaded prompt without losing reliability",
       "why does my instruction file produce inconsistent behavior run to run"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0907283ee2f8"
   },
   "mattpocock/zoom-out": {
     "expansions": [
@@ -2075,7 +2244,8 @@
       "I need a lay of the land before making changes here",
       "show me callers and module relationships, skip the internals for now"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1c1f9fbae522"
   },
   "mbtiongson1/gaia-audit": {
     "expansions": [
@@ -2087,7 +2257,8 @@
       "does this skill deserve the rank it currently has",
       "re-check one contributor's skill for stale or superseded evidence"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3af09b79fc15"
   },
   "mbtiongson1/gaia-bot-curate": {
     "expansions": [
@@ -2099,7 +2270,8 @@
       "triage a batch of auto-discovered skills and reject the noise",
       "process the queue of bot-submitted skill proposals and open a PR"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3ebe5016d386"
   },
   "mbtiongson1/gaia-curate": {
     "expansions": [
@@ -2110,7 +2282,8 @@
       "pull the content hash and origin for this skill so we can track provenance",
       "stop short of writing to the registry — just produce the shortlist for review"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:224acbf08d1a"
   },
   "mbtiongson1/gaia-curation-review": {
     "expansions": [
@@ -2125,7 +2298,8 @@
       "review a taxonomy or naming change against the project's vocabulary rules before merging",
       "gate a canonical registry change without actually touching or merging the branch"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3471967206f0"
   },
   "mbtiongson1/gaia-docs-sync": {
     "expansions": [
@@ -2136,7 +2310,8 @@
       "keep the wiki and the README saying the same thing after a docs change",
       "make sure the docs build doesn't leave gitignored files half-committed"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:008b1cbb3acb"
   },
   "mbtiongson1/gaia-draft-curate": {
     "expansions": [
@@ -2147,7 +2322,8 @@
       "review what got pushed into the intake queue without touching the registry yet",
       "gate skill proposals before they're promoted to canonical"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:44b587366c15"
   },
   "mbtiongson1/gaia-integrity": {
     "expansions": [
@@ -2159,7 +2335,8 @@
       "catch a bad ID collision before it merges",
       "verify the registry is internally consistent"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5fe58713acaf"
   },
   "mbtiongson1/gaia-meta-audit": {
     "expansions": [
@@ -2172,7 +2349,8 @@
       "surface weak spots so I know where to focus a cleanup effort",
       "triage the backlog of data quality issues into a ranked queue"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8eeb0d340475"
   },
   "mbtiongson1/gaia-preview": {
     "expansions": [
@@ -2185,7 +2363,8 @@
       "check that my curated content shows up right on the live site",
       "preview my docs changes without waiting for a full merge"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:de2c2a8006bd"
   },
   "mbtiongson1/gaia-triage": {
     "expansions": [
@@ -2197,7 +2376,8 @@
       "group related issues into an umbrella and assign owners across the whole org",
       "clean up stale tickets that nobody has looked at in a while"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2c29ce4fa284"
   },
   "mbtiongson1/gaia-wiki-sync": {
     "expansions": [
@@ -2208,7 +2388,8 @@
       "sync documentation pages so they're not stale",
       "push the newest registry state out to the project wiki"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:27e31d9b2999"
   },
   "mbtiongson1/graphify-triage": {
     "expansions": [
@@ -2219,7 +2400,8 @@
       "audit the code topology and push labelled issues to the tracker, but let me review first",
       "scan for architectural smells and convert the report into actionable tickets"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b24c745963ad"
   },
   "mvanhorn/last30days": {
     "expansions": [
@@ -2232,7 +2414,8 @@
       "I want citations for what people online have actually said lately, not stale info",
       "scan multiple platforms for hiring signals or sentiment shifts on this company"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:255bac9b0e43"
   },
   "nextlevelbuilder/ui-ux-pro-max": {
     "expansions": [
@@ -2246,7 +2429,8 @@
       "evaluate whether my layout causes cumulative layout shift or horizontal scroll",
       "recommend a technology stack appropriate UI pattern for this feature"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6e3f9c481e9c"
   },
   "nexu-io/open-design": {
     "expansions": [
@@ -2261,7 +2445,8 @@
       "draft brand assets and interface mockups without a designer on hand",
       "spin up prototype screens for a new product concept quickly"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0776806d41be"
   },
   "nousresearch/feed-monitoring": {
     "expansions": [
@@ -2271,7 +2456,8 @@
       "surface new signal from a pile of feeds instead of me scrolling through all of it",
       "watch content sources over time and flag what's worth my attention"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:af8846ff81c2"
   },
   "obra/brainstorming": {
     "expansions": [
@@ -2283,7 +2469,8 @@
       "help me scope this properly instead of just diving straight into implementation",
       "figure out if this is a quick experiment or a real architectural change before we start building"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:0c5ff3367ead"
   },
   "obra/dispatching-parallel-agents": {
     "expansions": [
@@ -2293,7 +2480,8 @@
       "delegate independent pieces of this problem to separate isolated workers",
       "don't burn my context investigating things a subagent could handle in parallel"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fa5bb5ac43b4"
   },
   "obra/executing-plans": {
     "expansions": [
@@ -2305,7 +2493,8 @@
       "stick to the plan's scope, don't add anything extra",
       "implement this plan in a fresh session and report back"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e23133673126"
   },
   "obra/finishing-a-development-branch": {
     "expansions": [
@@ -2316,7 +2505,8 @@
       "should I merge this locally or push it for review",
       "finish off this piece of work and tidy the workspace after"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:23e9cf801e5e"
   },
   "obra/receiving-code-review": {
     "expansions": [
@@ -2329,7 +2519,8 @@
       "handle unclear or conflicting review feedback properly",
       "evaluate whether a suggested change is actually needed here"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e166e3dc9f5d"
   },
   "obra/requesting-code-review": {
     "expansions": [
@@ -2342,7 +2533,8 @@
       "dispatch an isolated reviewer so I don't burn my own context on it",
       "sanity-check my implementation against the plan before proceeding"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:21086f6612e4"
   },
   "obra/subagent-driven-development": {
     "expansions": [
@@ -2354,7 +2546,8 @@
       "execute a plan with quality gates between steps but no human-in-the-loop pauses",
       "dispatch isolated workers per task so mistakes in one don't pollute the next"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8182074e5bfb"
   },
   "obra/superpowers": {
     "expansions": [
@@ -2368,7 +2561,8 @@
       "how do I make an agent work autonomously for hours without going off the rails",
       "install a full methodology, not just one trick, for how the agent builds software"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:87e9353223e4"
   },
   "obra/systematic-debugging": {
     "expansions": [
@@ -2381,7 +2575,8 @@
       "compare this broken code against a working example to find the difference",
       "something intermittent is failing in production and I can't reproduce it reliably"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:243c7f996177"
   },
   "obra/using-git-worktrees": {
     "expansions": [
@@ -2392,7 +2587,8 @@
       "make sure feature work happens somewhere isolated instead of the main checkout",
       "detect if I'm already in an isolated workspace before creating a new one"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5f9f2b3bdc38"
   },
   "obra/verification-before-completion": {
     "expansions": [
@@ -2404,7 +2600,8 @@
       "catch an agent that says a bug is fixed without re-running the failing test",
       "no PR or commit until the verification command has actually been executed this turn"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:771523e7e5ea"
   },
   "obra/writing-plans": {
     "expansions": [
@@ -2417,7 +2614,8 @@
       "map out the architecture and task list before implementation starts",
       "I need a plan document, not just a vague spec"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e8332b02837c"
   },
   "openai/few-shot-learning": {
     "expansions": [
@@ -2429,7 +2627,8 @@
       "I need in-context examples, not a training run",
       "help the model generalize from a handful of labeled cases"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3df35cc04a69"
   },
   "openai/self-consistency": {
     "expansions": [
@@ -2439,7 +2638,8 @@
       "I want more confidence in the model's answer to a tricky problem",
       "average out randomness in the model's reasoning by sampling it repeatedly"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:29376facd217"
   },
   "oso95/scroll-world": {
     "expansions": [
@@ -2449,7 +2649,8 @@
       "need a cinematic scroll experience stitched from generated video clips",
       "make a browse-through-the-industry hero section, not a static homepage"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3c5e34d81961"
   },
   "panniantong/agent-reach": {
     "expansions": [
@@ -2460,7 +2661,8 @@
       "hook up web requests through MCP instead of hand-rolling each one",
       "reach the internet from an agent that otherwise has no network access"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d29ed6c96b76"
   },
   "pbakaus/impeccable": {
     "expansions": [
@@ -2474,7 +2676,8 @@
       "iterate live on this component in the browser until it looks right",
       "give this landing page an actual point of view instead of generic polish"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:323113da90f2"
   },
   "remotion-dev/remotion-best-practices": {
     "expansions": [
@@ -2487,7 +2690,8 @@
       "Remotion coding standards",
       "best way to set up a Remotion composition"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f394e22d5ec6"
   },
   "remotion-dev/remotion-captions": {
     "expansions": [
@@ -2498,7 +2702,8 @@
       "I need word-level subtitle timing for a video I'm rendering in code",
       "caption a talking-head clip automatically instead of typing timestamps by hand"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4e427fb263ec"
   },
   "remotion-dev/remotion-create": {
     "expansions": [
@@ -2507,7 +2712,8 @@
       "scaffold a Remotion video from scratch",
       "start a new motion graphics project rendered with code"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ab64f9cbc078"
   },
   "remotion-dev/remotion-docs": {
     "expansions": [
@@ -2518,7 +2724,8 @@
       "point me to Remotion's docs for rendering or compositions",
       "need answers about Remotion configuration without leaving the terminal"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bf00a433cf25"
   },
   "remotion-dev/remotion-interactivity": {
     "expansions": [
@@ -2533,7 +2740,8 @@
       "hook up interactivity so a rendered video isn't just a passive animation",
       "add dynamic, input-driven behavior to a React-based video project"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e85a5e2658c0"
   },
   "remotion-dev/remotion-maps": {
     "expansions": [
@@ -2542,7 +2750,8 @@
       "build a map animation as a React video component",
       "render geographic visuals into an exportable video clip"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:564ba4a03e26"
   },
   "remotion-dev/remotion-multimedia": {
     "expansions": [
@@ -2555,7 +2764,8 @@
       "produce an mp4 from a component-based video definition",
       "automate rendering a short video with dynamic content"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5742d0f7274e"
   },
   "remotion-dev/remotion-render": {
     "expansions": [
@@ -2568,7 +2778,8 @@
       "generate the final video from a Remotion project",
       "batch render multiple Remotion compositions"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7cd40893bb74"
   },
   "remotion-dev/remotion-saas": {
     "expansions": [
@@ -2579,7 +2790,8 @@
       "I want billing and user accounts wired up around a video-rendering backend",
       "stand up a hosted product where customers render their own videos"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:74f5cf2d0cf0"
   },
   "remotion-dev/remotion-studio": {
     "expansions": [
@@ -2594,7 +2806,8 @@
       "run the Remotion development studio to inspect a composition's timeline",
       "get a live preview UI for a code-defined video before exporting it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b9c6bc9729b1"
   },
   "remotion-dev/remotion-upgrade": {
     "expansions": [
@@ -2603,7 +2816,8 @@
       "migrate my video project to a newer Remotion release",
       "my Remotion setup is behind, bring it current"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:7a1c6d5f0288"
   },
   "rico-favor/implement-with-discernment": {
     "expansions": [
@@ -2614,7 +2828,8 @@
       "stop me from adding complexity that isn't proportionate to the value",
       "exercise judgment on whether to defer or reject part of this ask"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a5ace757dd62"
   },
   "ruvnet/agentdb": {
     "expansions": [
@@ -2625,7 +2840,8 @@
       "learn recurring patterns from past runs and reuse them automatically",
       "build a shared knowledge store my agents can read from and write to"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bec522e7c0e6"
   },
   "ruvnet/agentdb-advanced": {
     "expansions": [
@@ -2638,7 +2854,8 @@
       "hybrid search over vectors and structured fields at once",
       "sync a vector database across nodes without noticeable delay"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:bfb96f30d2b1"
   },
   "ruvnet/agentdb-learning": {
     "expansions": [
@@ -2648,7 +2865,8 @@
       "adapt how the agent retrieves information based on what's worked historically",
       "give an agent persistent memory backed by vector search so it improves with use"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:4bdd10a76e0c"
   },
   "ruvnet/agentdb-memory-patterns": {
     "expansions": [
@@ -2657,7 +2875,8 @@
       "recall related past interactions, not just exact matches",
       "pick a memory storage pattern that won't grow unbounded"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3d973bbe004b"
   },
   "ruvnet/agentdb-optimization": {
     "expansions": [
@@ -2668,7 +2887,8 @@
       "speed up retrieval from a big embedding store",
       "optimize AgentDB for high query volume"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6e5edc6fdb9b"
   },
   "ruvnet/agentdb-vector-search": {
     "expansions": [
@@ -2681,7 +2901,8 @@
       "semantic search across a large set of vector embeddings",
       "find similar items using an approximate nearest neighbor index"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:6487d731b8ed"
   },
   "ruvnet/agentic-jujutsu": {
     "expansions": [
@@ -2692,7 +2913,8 @@
       "analyze commit history for hotspots that keep breaking",
       "tell me which parts of this changeset need the most careful review"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:fd2441201048"
   },
   "ruvnet/browser": {
     "expansions": [
@@ -2707,7 +2929,8 @@
       "automate repetitive web interactions like login, click, and form submit",
       "pull content from pages that require scrolling, clicking, or waiting to load"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:22f822418ad3"
   },
   "ruvnet/dual-collect": {
     "expansions": [
@@ -2718,7 +2941,8 @@
       "filter and summarize what all the parallel Codex runs produced",
       "give me a status report on the workers plus their outputs"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:282b41d9ac7c"
   },
   "ruvnet/dual-coordinate": {
     "expansions": [
@@ -2729,7 +2953,8 @@
       "hybrid workflow where some steps need my attention and others just run",
       "orchestrate parallel execution alongside an interactive session"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:31b9310f66bf"
   },
   "ruvnet/dual-mode": {
     "expansions": [
@@ -2740,7 +2965,8 @@
       "how do I orchestrate parallel agent execution across two different tools",
       "run the same job through two different models and reconcile what they each produce"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2066e93ffb71"
   },
   "ruvnet/dual-spawn": {
     "expansions": [
@@ -2753,7 +2979,8 @@
       "fan out work to several headless agents running concurrently",
       "delegate a subtask to a worker process while staying in this session"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1deca9f2b2f7"
   },
   "ruvnet/flow-nexus": {
     "expansions": [
@@ -2765,7 +2992,8 @@
       "run distributed training instead of a single-machine job",
       "orchestrate agent topology and cloud infra together"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1e19be578ab2"
   },
   "ruvnet/flow-nexus-neural": {
     "expansions": [
@@ -2775,7 +3003,8 @@
       "find or publish a trained model on a marketplace instead of training from scratch",
       "spin up distributed compute for deep learning experiments"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ced3ae021445"
   },
   "ruvnet/flow-nexus-platform": {
     "expansions": [
@@ -2784,7 +3013,8 @@
       "handle authentication and sandbox lifecycle end to end",
       "run the full backend for this cloud platform's challenge system"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a35f9fa361f2"
   },
   "ruvnet/flow-nexus-swarm": {
     "expansions": [
@@ -2795,7 +3025,8 @@
       "process a message queue with multiple cooperating agents",
       "build a multi-agent workflow with different topology shapes"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c0f7bb3c39cb"
   },
   "ruvnet/github-code-review": {
     "expansions": [
@@ -2808,7 +3039,8 @@
       "have an agent do a first-pass review of my PR",
       "automate approval gating for incoming pull requests"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:c57d4161e654"
   },
   "ruvnet/github-multi-repo": {
     "expansions": [
@@ -2819,7 +3051,8 @@
       "coordinate a bulk change across our whole GitHub org",
       "fan out one automation across many repositories at once"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b5cc544c0862"
   },
   "ruvnet/github-project-management": {
     "expansions": [
@@ -2834,7 +3067,8 @@
       "automate project board hygiene so issues don't go stale",
       "wire up GitHub milestones and sprints into an automated planning workflow"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a8f3b3acef34"
   },
   "ruvnet/github-release-management": {
     "expansions": [
@@ -2845,7 +3079,8 @@
       "tag this version and push out the release notes",
       "automate creating and publishing GitHub releases"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5207a26a47ed"
   },
   "ruvnet/github-suite": {
     "expansions": [
@@ -2856,7 +3091,8 @@
       "set up a workflow that handles releases, reviews, and repo coordination together",
       "full GitHub platform automation combining review, releases, and project management"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:2674fb2fc1d5"
   },
   "ruvnet/github-workflow-automation": {
     "expansions": [
@@ -2867,7 +3103,8 @@
       "build a CI workflow that reacts to pull requests automatically",
       "manage GitHub Actions configuration for automated triggers"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:115cd60b4b9e"
   },
   "ruvnet/hive-mind": {
     "expansions": [
@@ -2878,7 +3115,8 @@
       "set up a leader-follower structure for my multi-agent system",
       "handle disagreement between agents using a formal consensus strategy instead of just picking one"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:063123e7a65e"
   },
   "ruvnet/hooks-automation": {
     "expansions": [
@@ -2891,7 +3129,8 @@
       "build automated checks that run in the background without manual invocation",
       "hook into the agent's lifecycle to enforce a rule automatically"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:287940e4ae63"
   },
   "ruvnet/pair-programming": {
     "expansions": [
@@ -2900,7 +3139,8 @@
       "structure a collaborative coding session with built-in critique",
       "have a second agent catch mistakes in real time instead of at the end"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5e0ef0fcbbe9"
   },
   "ruvnet/performance-analysis": {
     "expansions": [
@@ -2910,7 +3150,8 @@
       "where is the I/O hotspot in this pipeline",
       "hunt down what's eating up all the time or memory"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e4668e2f8298"
   },
   "ruvnet/reasoningbank": {
     "expansions": [
@@ -2922,7 +3163,8 @@
       "store reasoning patterns so future tasks go faster",
       "cross-session memory for repeated problem types"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:25defdc1a0da"
   },
   "ruvnet/reasoningbank-agentdb": {
     "expansions": [
@@ -2933,7 +3175,8 @@
       "help the agent learn from its own history over time",
       "recall prior reasoning traces relevant to the current problem"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b9926e8a4862"
   },
   "ruvnet/reasoningbank-intelligence": {
     "expansions": [
@@ -2946,7 +3189,8 @@
       "let the agent get smarter about decisions the more it runs",
       "pattern recognition across cumulative agent experience"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:44111e2fd408"
   },
   "ruvnet/ruflo": {
     "expansions": [
@@ -2959,7 +3203,8 @@
       "set up hierarchical sub-agent swarms with a coordinator on top",
       "track token spend and cost across a bunch of parallel agent runs"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f5628b050c55"
   },
   "ruvnet/ruflo-v3": {
     "expansions": [
@@ -2972,7 +3217,8 @@
       "optimize how our MCP integration is set up during this modernization",
       "run a full-stack overhaul: CLI, core, security, performance, all at once"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:517fa34ca9ab"
   },
   "ruvnet/skill-builder": {
     "expansions": [
@@ -2983,7 +3229,8 @@
       "guide me through building and publishing a new skill from a template",
       "set up the testing and publishing workflow for a skill I'm authoring"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1b4f035d5c3b"
   },
   "ruvnet/sparc-methodology": {
     "expansions": [
@@ -2998,7 +3245,8 @@
       "break a big feature into Specification, Architecture, and Completion phases",
       "apply a rigorous, multi-agent workflow instead of ad hoc coding"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:65439c021743"
   },
   "ruvnet/stream-chain": {
     "expansions": [
@@ -3009,7 +3257,8 @@
       "link these outputs together so nothing gets lost between steps",
       "wire up a sequential pipeline of agent transformations"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1daca8f96b00"
   },
   "ruvnet/swarm-advanced": {
     "expansions": [
@@ -3020,7 +3269,8 @@
       "domain-specific orchestration patterns for a swarm of workers",
       "neural learning across a swarm so agents get better at a task over time"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9657292091b0"
   },
   "ruvnet/swarm-orchestration": {
     "expansions": [
@@ -3033,7 +3283,8 @@
       "design a fault-tolerant network of cooperating agents",
       "manage load balancing across a team of autonomous agents"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:d297126de54c"
   },
   "ruvnet/v3-cli-modernization": {
     "expansions": [
@@ -3042,7 +3293,8 @@
       "clean up an old CLI's architecture and extensibility",
       "modernize command-line conventions and flag handling"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:ca8dffd07f7d"
   },
   "ruvnet/v3-core-implementation": {
     "expansions": [
@@ -3051,7 +3303,8 @@
       "lay the foundational architecture pieces for this sprint",
       "wire up the core plugin system before other features can build on it"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:56f4ded078fe"
   },
   "ruvnet/v3-ddd-architecture": {
     "expansions": [
@@ -3062,7 +3315,8 @@
       "model domain events for this system",
       "organize the architecture around business domains, not layers"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:a8ab61e1cb7c"
   },
   "ruvnet/v3-integration-deep": {
     "expansions": [
@@ -3075,7 +3329,8 @@
       "cross-component integration for the v3 sprint",
       "event-driven glue code connecting several subsystems"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:8d8b84942565"
   },
   "ruvnet/v3-mcp-optimization": {
     "expansions": [
@@ -3086,7 +3341,8 @@
       "tune connection pooling for an MCP server under load",
       "cut down round-trip time on our MCP integration"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b7c4ce8bf50e"
   },
   "ruvnet/v3-memory-unification": {
     "expansions": [
@@ -3101,7 +3357,8 @@
       "merge overlapping memory implementations left over from earlier framework versions",
       "standardize how an agent framework reads and writes memory across backends"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b3d35677a5cf"
   },
   "ruvnet/v3-performance-optimization": {
     "expansions": [
@@ -3112,7 +3369,8 @@
       "the platform is sluggish and I don't know which part is the bottleneck",
       "optimize startup time and request handling for v3"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:985e8ffd1c09"
   },
   "ruvnet/v3-security-overhaul": {
     "expansions": [
@@ -3123,7 +3381,8 @@
       "harden the federation layer against untrusted peers",
       "comprehensive security pass covering PII, auth, and vulnerability scanning"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:5529db2d37eb"
   },
   "ruvnet/v3-swarm-coordination": {
     "expansions": [
@@ -3136,7 +3395,8 @@
       "implement neural-pattern learning across a coordinated agent swarm",
       "stand up an upgraded swarm topology for a specific sprint"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:85b1de596f85"
   },
   "ruvnet/verification-quality": {
     "expansions": [
@@ -3145,7 +3405,8 @@
       "set up quality gates so incomplete work doesn't slip through",
       "run a structured pre-completion review before finalizing"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:9f63651dbaa6"
   },
   "ruvnet/worker-benchmarks": {
     "expansions": [
@@ -3154,7 +3415,8 @@
       "score worker quality alongside its performance numbers",
       "benchmark memory usage of background jobs"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b45310337d2a"
   },
   "ruvnet/worker-integration": {
     "expansions": [
@@ -3165,7 +3427,8 @@
       "wire up event-driven background task dispatching",
       "pick which worker should handle an incoming task"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:e0e22d76b747"
   },
   "safishamsi/graphify": {
     "expansions": [
@@ -3178,7 +3441,8 @@
       "which files in this codebase are the most tangled together",
       "build a queryable graph from AST analysis instead of reading every file by hand"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f63c824858f7"
   },
   "santifer/career-ops": {
     "expansions": [
@@ -3191,7 +3455,8 @@
       "help me prep for an upcoming interview based on the JD",
       "compare multiple job offers and rank them"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:1661a4094187"
   },
   "spring-ai/readme-generate": {
     "expansions": [
@@ -3202,7 +3467,8 @@
       "scan my Spring AI project and write structured docs for each module",
       "keep documentation in sync every time the module's endpoints change"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:465c227c05ae"
   },
   "stanfordnlp/dspy": {
     "expansions": [
@@ -3214,7 +3480,8 @@
       "evaluate and iterate on a multi-step LLM pipeline systematically",
       "compose several LLM calls into one program I can optimize end-to-end"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:3c88ca1930cb"
   },
   "supabase/supabase": {
     "expansions": [
@@ -3229,7 +3496,8 @@
       "get client-side config like the project URL and public API key for my app",
       "run local development against a Supabase-backed backend before deploying"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:b8280069ea64"
   },
   "supabase/supabase-postgres-best-practices": {
     "expansions": [
@@ -3240,7 +3508,8 @@
       "give me guidance on structuring a Supabase Postgres project",
       "sanity check my SQL schema against recommended patterns"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:f02b093022b3"
   },
   "upsonic/unittest-generator": {
     "expansions": [
@@ -3251,7 +3520,8 @@
       "autonomously produce Python unittest suites from existing source",
       "cover the edge cases in this module with tests I didn't think to write"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:68283c0147fc"
   },
   "vercel-labs/vercel-react-best-practices": {
     "expansions": [
@@ -3262,7 +3532,8 @@
       "apply Vercel's official performance rules when refactoring this code",
       "check my server-side data fetching for anything slowing the page down"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:167abc50faf9"
   },
   "vercel/find-skills": {
     "expansions": [
@@ -3275,7 +3546,8 @@
       "check if someone already solved this before I reinvent it",
       "discover and pull in a community skill by name or topic"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:800816c0ba80"
   },
   "yonatangross/orchestkit-rag": {
     "expansions": [
@@ -3287,6 +3559,7 @@
       "build a self-correcting retrieval loop that checks its own results",
       "which RAG pattern should I use for pgvector-backed search"
     ],
-    "expandedBy": "skill-index-builder/0.1.0"
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": "sha256:cb27d6d8390d"
   }
 }

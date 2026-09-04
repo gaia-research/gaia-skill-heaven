@@ -14,6 +14,7 @@ import { INDEX_FIELDS, type IndexField, type IndexedSkill, type SkillIndex } fro
 export const DEFAULT_BM25F_PARAMS = {
   k1: 1.2,
   b: 0.75,
+  fieldPresenceNormalization: false,
   weights: {
     name: 10,
     id: 8,
@@ -30,6 +31,34 @@ export type Bm25fParams = {
   k1: number;
   b: number;
   weights: Record<IndexField, number>;
+  /**
+   * Scale each document's weighted frequency by the share of field weight it
+   * actually has fields for.
+   *
+   * Without this, field ABSENCE is a penalty rather than a neutral: a document
+   * with no `tags` (99 of 274) and no generated `expansions` has strictly
+   * fewer places to match than one with both, so it loses on every query where
+   * both are relevant. That is how a half-expanded index demoted the half it
+   * had not reached yet — measured at 0.263 -> 0.045 MRR for unexpanded gold
+   * targets — and it is why an expansion pass could not safely lag the tree.
+   *
+   * MEASURED 2026-09-03, and it does NOT fix that. At 37% coverage it moved
+   * unexpanded-target MRR from 0.046 to 0.047; at full coverage it costs 0.006
+   * overall (0.657 -> 0.651). Mirroring a document's authored text into the
+   * generated fields was tried too and reached only 0.059 against a 0.290
+   * no-expansion baseline.
+   *
+   * The reason both fail is that the demotion is not an artefact to normalise
+   * away: expansion gives a document vocabulary an unexpanded document simply
+   * does not have, and that vocabulary is what the query matches. There is no
+   * ranking-side fix. **Coverage is the fix**, which is why it is enforced by
+   * a test and made cheap by `scripts/expansion-plan.ts` rather than wished
+   * for.
+   *
+   * Kept, and defaulted OFF, because it is a legitimate BM25F variant and the
+   * measurement is worth being able to re-run.
+   */
+  fieldPresenceNormalization: boolean;
 };
 
 export type MatchKind = "exact" | "ranked";
@@ -58,6 +87,8 @@ type DocumentPostings = {
   terms: Map<string, FieldPosting[]>;
   fieldLength: Record<IndexField, number>;
   exactKeys: Set<string>;
+  /** Share of total field weight this document actually has content for. */
+  presentWeightShare: number;
 };
 
 export class Bm25fRanker {
@@ -69,7 +100,8 @@ export class Bm25fRanker {
 
   constructor(index: SkillIndex, params: Bm25fParams = { ...DEFAULT_BM25F_PARAMS }) {
     this.#params = params;
-    this.#documents = index.docs.map((doc) => indexDocument(doc));
+    const totalWeight = INDEX_FIELDS.reduce((total, field) => total + params.weights[field], 0);
+    this.#documents = index.docs.map((doc) => indexDocument(doc, params.weights, totalWeight));
 
     for (const document of this.#documents) {
       for (const term of document.terms.keys()) {
@@ -158,6 +190,9 @@ export class Bm25fRanker {
             : 1 - b + (b * document.fieldLength[field]) / averageLength;
         weightedFrequency += (weights[field] * frequency) / normalizer;
       }
+      if (this.#params.fieldPresenceNormalization && document.presentWeightShare > 0) {
+        weightedFrequency /= document.presentWeightShare;
+      }
 
       score += this.#idf(term) * ((weightedFrequency * (k1 + 1)) / (weightedFrequency + k1));
     }
@@ -185,7 +220,11 @@ export function marginOf(ranked: readonly ScoredSkill[]): number {
   return (top.score - next.score) / top.score;
 }
 
-function indexDocument(doc: IndexedSkill): DocumentPostings {
+function indexDocument(
+  doc: IndexedSkill,
+  weights: Record<IndexField, number>,
+  totalWeight: number,
+): DocumentPostings {
   const terms = new Map<string, FieldPosting[]>();
   const fieldLength = {} as Record<IndexField, number>;
 
@@ -207,7 +246,18 @@ function indexDocument(doc: IndexedSkill): DocumentPostings {
       .filter((value) => value.length > 0),
   );
 
-  return { doc, terms, fieldLength, exactKeys };
+  const presentWeight = INDEX_FIELDS.reduce(
+    (total, field) => total + (fieldLength[field] > 0 ? weights[field] : 0),
+    0,
+  );
+
+  return {
+    doc,
+    terms,
+    fieldLength,
+    exactKeys,
+    presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight,
+  };
 }
 
 function compareIds(left: IndexedSkill, right: IndexedSkill): number {

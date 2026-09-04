@@ -21,7 +21,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker } from "../src/retrieval/bm25f.js";
-import { buildSkillIndex, type NamedProjection } from "../src/retrieval/build-index.js";
+import {
+  buildSkillIndex,
+  expansionFingerprint,
+  type NamedProjection,
+  type ProjectionSkill,
+} from "../src/retrieval/build-index.js";
 import { INDEX_BUILDER_VERSION } from "../src/retrieval/version.js";
 
 type RawExpansion = { id: string; expansions: string[]; fromMetadataOnly?: boolean };
@@ -73,7 +78,15 @@ const curve = new Map<number, number>([
 let considered = 0;
 let unknownIds = 0;
 
-const kept: Record<string, { expansions: string[]; expandedBy: string }> = {};
+const kept: Record<
+  string,
+  { expansions: string[]; expandedBy: string; expandedFrom: string }
+> = {};
+const projectionById = new Map<string, ProjectionSkill>(
+  Object.values(snapshot.buckets ?? {})
+    .flat()
+    .map((skill) => [skill.id, skill]),
+);
 const rejected: Array<{ id: string; expansion: string; rank: number | null; top: string | null }> = [];
 
 for (const entry of raw) {
@@ -94,7 +107,14 @@ for (const entry of raw) {
     else rejected.push({ id: entry.id, expansion, rank, top: ranked[0]?.doc.id ?? null });
   }
   if (survivors.length > 0) {
-    kept[entry.id] = { expansions: survivors, expandedBy: INDEX_BUILDER_VERSION };
+    const skill = projectionById.get(entry.id);
+    kept[entry.id] = {
+      expansions: survivors,
+      expandedBy: INDEX_BUILDER_VERSION,
+      // Stamped so `expansion-plan.ts` can tell a refresh which skills actually
+      // moved, instead of regenerating the whole corpus every time the tree does.
+      expandedFrom: skill ? expansionFingerprint(skill) : "",
+    };
   }
 }
 
