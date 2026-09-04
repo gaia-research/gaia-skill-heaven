@@ -369,12 +369,43 @@ Both calibrations run so far, for the record:
 
 | index | FLOOR | admits (gold) | rejects (unanswerable) | separation (AUC) | G2 |
 |---|---|---|---|---|---|
-| lexical only | 15.18 | 91% | 55% | 0.845 | **fails** — recorded as a finding, floor kept conservative |
-| + expansion | **27.56** | 91% | **95%** | 0.956 | **passes** |
+| lexical only | 15.18 | 91% | 55% | 0.845 | fails |
+| + expansion, 37% coverage | 27.56 | 91% | 95% | 0.956 | passes |
+| + expansion, **full coverage** | **26.98** | 91% | **75%** | 0.953 | **fails** |
 
 The first row is why the policy matters: under it the honest answer was "the
 retriever cannot yet distinguish", and the fix was a better index rather than a
 higher number.
+
+**The third row is a structural finding about this design, not a regression in
+the index** (MRR rose from 0.466 to 0.657 between rows two and three).
+Separation barely moved — 0.956 → 0.953 — but the *threshold* that realises it
+did, because expansion raises scores for everything, unanswerable queries
+included: a query with no right answer now matches the expansions of adjacent
+skills. **An absolute floor on a raw BM25F score is therefore
+coverage-sensitive**, and re-derives differently every time the corpus or the
+expansion set grows. It is a threshold on a quantity with no fixed scale.
+
+The trade at full coverage, so the choice is visible rather than implied:
+
+| admits (gold) | FLOOR | rejects (unanswerable) |
+|---|---|---|
+| 95% | 23.01 | 75% |
+| **91% (the policy)** | **26.98** | **75%** |
+| 85% | 27.52 | 80% |
+| 79% | 31.13 | 90% — G2 would pass |
+| 70% | 35.19 | 100% |
+
+G2 is reachable by moving one number. It is not moved, because the policy was
+declared before the run and picking 31.13 after seeing 26.98 fail is precisely
+the failure the risk register names. **G2 is recorded as failing at 75%** and
+the floor stays where the policy puts it.
+
+The principled fix is not a different threshold but a different quantity:
+a score normalised against the index's own distribution, or the margin, neither
+of which drifts as the corpus grows. That is the first thing Phase 2 should
+evaluate — ahead of dense retrieval, which addresses a problem the measurements
+suggest is smaller.
 
 **On the floor signal itself (MEASURED):** raw BM25F score is the best
 discriminator available. Per-query-term, per-matched-term, sqrt-length and

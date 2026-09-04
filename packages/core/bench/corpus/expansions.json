@@ -1,4 +1,31 @@
 {
+  "0xdarkmatter/pytest-patterns": {
+    "expansions": [
+      "how do I write pytest fixtures that set up and tear down a database connection",
+      "my tests share too much duplicated setup code, how do I dedupe it with fixtures",
+      "I need to run the same test with a bunch of different input/output pairs",
+      "how do I mock an external API call in a Python unit test",
+      "what's the right way to test an async function with pytest",
+      "clean up my messy conftest.py so fixtures are organized across test files",
+      "I want a coverage report to see which lines my tests miss",
+      "how do I test that a function raises the right exception with the right message",
+      "running my test suite is slow, how do I parallelize it",
+      "best way to structure integration tests against a real database in Python"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "Manavarya09/design-extract": {
+    "expansions": [
+      "I need the exact colors, spacing, and fonts a competitor's site is using",
+      "pull the Tailwind config off a live website so I can match it",
+      "grab the Figma variables from a page I don't have design file access to",
+      "how do I reverse-engineer a design system from a URL",
+      "extract the tokens and typography scale from this website into something I can reuse",
+      "copy a site's look without asking the designer for the source files",
+      "scrape a live page for its color palette and spacing values"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "addy-osmani/agent-skills": {
     "expansions": [
       "I need a consistent workflow my coding agent follows from idea to deployed code",
@@ -99,6 +126,34 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "addy-osmani/test-driven-development": {
+    "expansions": [
+      "how do I make sure this bug fix doesn't come back",
+      "force myself to write the test before the code",
+      "I keep skipping tests because I'm in a hurry, help me not do that",
+      "enforce red-green-refactor on this codebase",
+      "stop the agent from writing implementation code before a failing test exists",
+      "reproduce this bug with a test before touching the fix",
+      "my tests are too tied to internal implementation, they break on every refactor",
+      "set up a workflow that blocks code generation until a test fails first",
+      "what test size should this be, unit or integration or e2e",
+      "need a prove-it-first discipline for bug fixes"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "anthropic/pptx": {
+    "expansions": [
+      "I need to pull the text out of a PowerPoint file",
+      "edit slides in a .pptx without opening PowerPoint",
+      "build a pitch deck from scratch as slides",
+      "change the wording on an existing presentation programmatically",
+      "read speaker notes from a deck file",
+      "combine two slide decks into one file",
+      "fix a corrupted pptx template",
+      "turn a .potx template into a finished slide deck"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "anthropic/skill-creator": {
     "expansions": [
       "help me turn this idea into a proper agent skill",
@@ -123,6 +178,59 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "anthropics/canvas-design": {
+    "expansions": [
+      "I need a poster or piece of print-ready art made from scratch",
+      "generate an original piece of visual art for a poster or flyer",
+      "make me a museum-quality static graphic, not a website mockup",
+      "design a one-page visual artifact with a coherent aesthetic direction",
+      "create abstract art that doesn't copy any existing artist's style",
+      "I want a PDF or PNG of a designed piece, not code or a document",
+      "produce a striking single-page visual composition for print",
+      "turn a vague creative brief into a finished static design piece"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "aplaceforallmystuff/log-to-daily": {
+    "expansions": [
+      "log what I just did into my daily notes",
+      "I want to record the decisions we made this session before I close the laptop",
+      "append a summary of this work session to today's journal entry",
+      "capture what got done and why so I don't forget by tomorrow",
+      "write today's outcomes into my vault so I can look back later",
+      "I'm switching context, save a record of what happened first",
+      "jot down next steps and decisions in my daily log",
+      "end-of-day recap into my notes app, please"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ayghri/i-have-adhd": {
+    "expansions": [
+      "I read a wall of text and lose track of what I'm supposed to do next",
+      "give me the next action first, not a bunch of context I have to wade through",
+      "I can't hold this whole plan in my head, break it into small numbered steps",
+      "tell me what changed and what to do now, skip the recap and the pleasantries",
+      "I need time estimates in actual minutes, not 'this will take a while'",
+      "stop burying the win, show me what actually works now in plain terms",
+      "cut the preamble and the closing 'let me know if you need anything else'",
+      "make responses easier to act on for someone with ADHD or low working memory"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "bradautomates/watch": {
+    "expansions": [
+      "I have a video file but no way to actually see what's in it",
+      "can you watch this video and tell me what happens in it",
+      "pull the transcript and key frames out of this video for me",
+      "summarize what's said and shown in this recording",
+      "I need frame-by-frame screenshots plus captions from a video URL",
+      "this video has no subtitles, can you transcribe the audio",
+      "what does the person do on screen in this clip",
+      "download this video link and describe the visuals",
+      "I want to ask questions about a video's content without watching it myself"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "browser-use/browser-harness": {
     "expansions": [
       "click through a logged-in dashboard and pull data that needs JS to render",
@@ -133,6 +241,43 @@
       "interact with a bot-protected page that a simple fetch can't reach",
       "keep a single browser session open across multiple automation steps",
       "reuse my existing logged-in session instead of authenticating again"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "browserbase/browse": {
+    "expansions": [
+      "I need my agent to click and fill forms on a real website, not just scrape static HTML",
+      "how do I give an AI agent deterministic control over a browser while letting it improvise page interaction",
+      "looking for an SDK to build a browser agent that can navigate sites reliably",
+      "need something between raw Playwright scripting and pure AI vibes for browser automation",
+      "my scraper breaks whenever the page layout is dynamic and I need AI to adapt on the fly",
+      "building an agent that has to log in, click through, and complete a multi-step web flow"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "caioribeiroclw-pixel/evidence-attestation": {
+    "expansions": [
+      "I need to prove this code review actually happened without pasting the whole transcript",
+      "how do I hand off work between agents with proof but not leak the raw logs",
+      "give reviewers something they can check without seeing private prompts or customer data",
+      "I need a compact receipt that shows what was checked before a deploy goes out",
+      "how do I attest to a benchmark score without exposing the underlying session",
+      "summarize what evidence supports this claim and what was left out, safely",
+      "I want an audit trail for an approval gate that doesn't replay sensitive transcripts",
+      "redact secrets and diffs but still let a verifier confirm the claim is backed by something",
+      "what would make this proof stale, and how do I flag that upfront",
+      "package a verdict plus its supporting evidence as a portable, privacy-safe object"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "devin-ai/autonomous-swe": {
+    "expansions": [
+      "I want an agent that can go fix this bug across the codebase on its own without me babysitting every step",
+      "who can write the code, run it, notice it's broken, and correct itself",
+      "I need something that can work through a multi-file change end to end unsupervised",
+      "an agent that debugs and self-corrects instead of just generating a first draft",
+      "hand off a whole coding task and get a working result back, not just suggestions",
+      "something that closes the loop between writing code and verifying it actually runs"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -159,6 +304,157 @@
       "cut cost by only sending the hard parts to the expensive model",
       "combine cheap and expensive models into one team that self-validates",
       "stop me from shipping one model's uncritiqued first answer"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "disler/auto-review": {
+    "expansions": [
+      "I don't trust the agent's own claim that it finished",
+      "have the agent double check its own work before saying done",
+      "write a script that verifies the output actually meets the ask",
+      "self-critique before marking a task complete",
+      "gate task completion on an automated acceptance check",
+      "catch it lying about being finished"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "disler/opinion": {
+    "expansions": [
+      "I want a clear yes-or-no recommendation instead of hedging",
+      "give me your actual take, not five options",
+      "stop waffling and just pick one",
+      "I need a decisive verdict on this choice",
+      "cut through the on-one-hand-on-the-other-hand and commit to an answer",
+      "avoid analysis paralysis and just decide",
+      "state a position and defend it briefly"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "disler/plan-synthesis": {
+    "expansions": [
+      "these two plans disagree, help me merge them into one",
+      "combine multiple drafts of a plan into a single agreed version",
+      "where do these two independently written plans conflict and where do they agree",
+      "I have competing proposals and need one attributed, reconciled result",
+      "reconcile divergent plans while keeping track of who suggested what",
+      "surface consensus points and disagreements across several plan documents",
+      "fuse parallel plan outputs into one without losing either author's intent",
+      "stitch together plans produced separately so nothing contradicts"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/attendees": {
+    "expansions": [
+      "how many people signed up for the event",
+      "what's our RSVP count for this weekend",
+      "check ticket sales against actual check-ins for the conference",
+      "I need a headcount for the small group meeting",
+      "pull registration numbers from the ticketing system",
+      "did more people register than showed up",
+      "get me attendance figures for the prayer gathering",
+      "how full is this event right now"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/count-checkin-by-church": {
+    "expansions": [
+      "our attendee count per church is wrong because the same church is spelled five different ways",
+      "how many unique churches actually checked in, not just raw text matches",
+      "fix the check-in tally so name variants of the same church get folded into one row",
+      "the live count sheet only reads one column and misses check-ins entered elsewhere",
+      "refresh the per-church attendance numbers on our conference tracking spreadsheet",
+      "dedupe church names before counting who showed up",
+      "our summary cell is overcounting because it treats spelling differences as different churches"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/export-attendees": {
+    "expansions": [
+      "get the latest signups into our spreadsheet",
+      "I need the registration list copied over to Sheets",
+      "pull who's checked in for the conference into the masterlist",
+      "update the attendee tracker with fresh ticket data",
+      "sync the sign-up CSV into our shared sheet",
+      "can you paste the newest registrants into the tracker",
+      "refresh the roster in Google Sheets from the ticketing system",
+      "do the attendee export again like last time",
+      "keep our headcount sheet current with new registrations"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/financial-assistance": {
+    "expansions": [
+      "I need to process a stack of conference scholarship requests and calculate the discount for each applicant",
+      "help me assign coupon codes and update the tracker sheet for financial aid applicants",
+      "someone applied for assistance with their ticket price and I need to email them a discount code",
+      "move these kanban cards to the right lane once the coupon email actually sends",
+      "I have to reconcile applicant pay amounts against live ticket prices before approving assistance",
+      "calculate a percentage discount from a connection board and draft the approval email from the right sender address"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/resend-conference-emails-carefully-with-smtp": {
+    "expansions": [
+      "I need to resend the ticket confirmation to everyone who already got one without spamming the ones who transferred their ticket away",
+      "bump thousands of QR code emails back to the top of people's inbox before the event",
+      "our conference mailer bounced for some people and I need to figure out who to exclude before resending",
+      "how do I bulk resend without blowing past Gmail's daily sending cap",
+      "resurface an existing ticket email as a threaded reply instead of a brand new message",
+      "safely re-send registration emails to a big attendee list with a resumable process that won't double-send if it crashes",
+      "remind everyone with a valid ticket about the event without emailing people who already got a refund",
+      "I need to warm up a bulk send with a small batch before blasting the whole list",
+      "set up an SMTP relay to bulk resend event tickets instead of using the regular Gmail send limit",
+      "dedupe attendees so each person only gets one bump even if they were sent multiple confirmations"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/speak-like-favor": {
+    "expansions": [
+      "make this email sound like it's actually from our church, not corporate",
+      "check this event invite follows our style before I send it out",
+      "rewrite this so it doesn't sound preachy or use churchy jargon",
+      "QA this social caption for our house style and tone",
+      "get the date, time, and venue formatting right for this announcement",
+      "help me draft a warm message to volunteers about a schedule change",
+      "clean up this copy so it sounds like our team, not generic ministry-speak"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/ticket-transfer": {
+    "expansions": [
+      "someone wants to give their conference ticket to another person, walk me through it",
+      "process a request to swap the name on an event registration",
+      "check the kanban board for pending name-change requests on tickets",
+      "look up whether this attendee is already registered before transferring their spot",
+      "draft an email confirming the ticket transfer went through",
+      "handle a conference ticket reassignment end to end",
+      "update attendee info because the original buyer can't make it anymore"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/triage-conference": {
+    "expansions": [
+      "catch me up on the conference inbox",
+      "who registered for the event and what do they need",
+      "draft replies to attendee emails automatically",
+      "check what's unread in the conferences mailbox",
+      "summarize new registrations and questions from attendees",
+      "clear out the conference inbox backlog",
+      "answer attendee FAQs using our knowledge base",
+      "surface next steps from event ticket data"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "favorchurch/update-unique-churches": {
+    "expansions": [
+      "how many unique churches signed up so far, recount them",
+      "fold new signups into our running church attendance tally",
+      "the attendance spreadsheet needs its church count refreshed, not rebuilt",
+      "dedupe and merge duplicate church name variants in our tracking sheet",
+      "update the normalized church list with today's new registrations",
+      "recompute the unique-church count now that some people cancelled",
+      "audit our naming convention for churches in the tracking sheet",
+      "incrementally update a Google Sheet count without redoing the whole thing"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -229,6 +525,45 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "gaia-research/ci-churn": {
+    "expansions": [
+      "how much time did we waste re-fixing CI on this PR",
+      "tell me if this pull request had a lot of avoidable back-and-forth with the pipeline",
+      "which of these commits were actual feature work versus just patching build failures",
+      "I want a report on wasted build minutes for this branch",
+      "what pre-push checks would have caught these failures locally",
+      "measure how inefficient our push-fix-push cycle was",
+      "how many commits were just chasing a red build",
+      "quantify the cost of our CI iteration overhead"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "gaia-research/cost": {
+    "expansions": [
+      "how much did this coding session actually cost me in dollars",
+      "break down my token spend across Claude Code, Codex, and other agent sessions",
+      "how much am I saving from prompt caching versus paying full price",
+      "which model in my agent logs is burning the most money",
+      "give me a real USD estimate from my session logs, not a self-reported guess",
+      "total up my AI usage cost for today across every tool I used",
+      "price out my agent transcripts against current model rates"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "gaia-research/fuse": {
+    "expansions": [
+      "I have two skills doing related things, can they become one",
+      "combine these two agent capabilities into a single tool",
+      "merge these skill files into one unified thing",
+      "stitch together two named skills under one contributor",
+      "take these separate skill implementations and make an ultimate version out of them",
+      "I want a suite that bundles multiple existing skills together",
+      "roll these components into one bigger skill and open a PR for it",
+      "consolidate two skill nodes into a single capstone entry",
+      "turn a pair of skills into a combined offering with proper registry links"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/benchmark": {
     "expansions": [
       "did this PR make the site slower",
@@ -239,6 +574,17 @@
       "run a lighthouse-style check on load time",
       "catch a performance regression before it ships",
       "how has our page speed trended across recent PRs"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/benchmark-models": {
+    "expansions": [
+      "which model should I actually use for this task instead of just guessing",
+      "I want hard numbers on latency and cost before picking a model, not vibes",
+      "run the same prompt through several LLMs and tell me which one wins",
+      "compare Claude against GPT and Gemini side by side on my own prompt",
+      "need a ranked table of model performance so I can justify a model choice",
+      "is switching models actually going to save money or hurt quality — show me data"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -274,6 +620,44 @@
       "turn on a conservative mode that logs every risky side effect",
       "don't let the agent run dangerous bash commands without my explicit okay",
       "make the agent double-check with me before any operation I can't undo"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/codex": {
+    "expansions": [
+      "I want a second opinion from a different AI model before merging this diff",
+      "get an adversarial reviewer to try to poke holes in my implementation before I ship it",
+      "have another model challenge my code so I don't just get agreement from the same one that wrote it",
+      "review this pull request diff with a different model than the one who wrote the code",
+      "I want a blunt, no-nonsense critique of my code that isn't afraid to disagree with me",
+      "cross-check my plan with an outside model before I commit to it",
+      "ask a rival AI to stress-test my approach and surface flaws I might have missed",
+      "catch design flaws before they land by having a second model argue against the implementation",
+      "get an independent code review that isn't just my own assistant rubber-stamping itself",
+      "run my plan past another model for a gut check with session continuity for follow-up questions"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/context-restore": {
+    "expansions": [
+      "I got pulled away mid-task and need to remember what I was doing",
+      "pick up exactly where I left off yesterday without re-explaining everything",
+      "what was the last decision we made before I closed this session",
+      "reload my saved progress so I don't have to recap the whole thing",
+      "resume work after switching machines or workspaces",
+      "where did I leave off on this",
+      "bring back my previous session state so I'm not starting from zero"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/context-save": {
+    "expansions": [
+      "I'm about to run out of context, save what I'm doing",
+      "write down where I left off so I can pick this up tomorrow",
+      "snapshot my git state and decisions before I close this session",
+      "don't want to lose track of remaining work after a compaction",
+      "checkpoint my progress on this branch",
+      "capture what's done and what's left before I switch tasks"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -314,6 +698,19 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/design-review": {
+    "expansions": [
+      "does this screen look sloppy or inconsistent",
+      "check my UI for spacing and alignment problems",
+      "find the AI-slop patterns in this interface",
+      "review the app for visual polish issues",
+      "is the hierarchy on this page confusing",
+      "QA the look and feel of a live site before shipping",
+      "spot janky or slow interactions on this page",
+      "tidy up an interface that feels off"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/design-shotgun": {
     "expansions": [
       "I don't like how this screen looks but I don't know what I actually want instead",
@@ -325,6 +722,19 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/devex-review": {
+    "expansions": [
+      "actually try our onboarding flow like a new developer would",
+      "time how long it takes a stranger to get to hello world with our product",
+      "test our docs and CLI the way a real user experiences them, not just read the code",
+      "find out where developers get stuck signing up or getting started",
+      "compare what we planned the dev experience to be against what it's really like",
+      "screenshot the errors a new user would actually see and grade them",
+      "audit our getting-started flow and give me a scored report with fixes",
+      "how rough is our onboarding compared to best-in-class tools like Stripe or Vercel"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/document-generate": {
     "expansions": [
       "there's no documentation for this feature and I need it written from scratch",
@@ -333,6 +743,31 @@
       "fill in the documentation gap this project has been missing",
       "explain how this part of the codebase works for someone unfamiliar with it",
       "write onboarding docs organized by tutorial, how-to, reference, and explanation"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/document-release": {
+    "expansions": [
+      "update the README and changelog after we shipped this",
+      "docs are stale, bring them in line with what actually changed",
+      "write release notes from the diff between these two tags",
+      "did we forget to update CONTRIBUTING or the architecture doc after this feature landed",
+      "clean up leftover TODOs and check for doc drift post-merge",
+      "make sure the docs still describe the system after this release",
+      "polish the changelog wording so it reads well to users",
+      "find gaps in documentation coverage after a ship"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/freeze": {
+    "expansions": [
+      "stop the agent from touching files outside this one folder",
+      "I want to scope edits to just this module while I'm debugging so nothing else gets 'fixed'",
+      "lock down which directory can be written to for this session",
+      "block writes and edits anywhere outside a path I choose",
+      "keep the AI from wandering into unrelated code while I work on this one piece",
+      "restrict the blast radius of an editing session to a single directory",
+      "prevent accidental changes to files that aren't part of what I'm working on"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -361,6 +796,45 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/gstack-upgrade": {
+    "expansions": [
+      "check if there's a newer version of gstack and get it",
+      "my gstack tooling feels out of date, bring it current",
+      "install the latest gstack release automatically",
+      "see what changed in the newest gstack version and apply it",
+      "keep my workspace tools patched to the newest release",
+      "update to the latest gstack build without me babysitting it",
+      "refresh my local gstack install to whatever's current",
+      "is my gstack behind, and if so fix it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/guard": {
+    "expansions": [
+      "stop me before I accidentally run rm -rf or force-push to main",
+      "I'm about to touch production and want extra safety rails on",
+      "restrict edits to only one folder so nothing outside it gets touched by mistake",
+      "warn me before any destructive command runs while I'm debugging a live system",
+      "lock down the agent so it can't wander outside a specific directory",
+      "turn on maximum caution mode before I let the agent near prod"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/health": {
+    "expansions": [
+      "give me one overall number for how healthy this codebase is right now",
+      "run all my linters, type checker, and tests and roll it into a single score",
+      "is code quality getting better or worse over the last few commits",
+      "track quality trends over time so I can see if a regression crept in",
+      "which category — tests, lint, types, dead code — is dragging my score down the most",
+      "run a full quality dashboard using whatever tools this project already has configured",
+      "find unused exports and dead code across the repo as part of a quality check",
+      "what should I fix first to move the needle on code quality",
+      "wrap my existing test runner, linter, and type checker into one composite health report",
+      "spot newly introduced test failures compared to the last run"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/investigate": {
     "expansions": [
       "why is this actually broken, not just where the error shows up",
@@ -385,6 +859,40 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/landing-report": {
+    "expansions": [
+      "which version number is still open for me to claim",
+      "show me what's currently sitting in the release queue",
+      "is anyone else about to ship something that'll collide with my PR",
+      "give me a quick status snapshot of open pull requests without changing anything",
+      "what's likely to land next across the team's in-progress work",
+      "check the ship queue before I pick a version slot"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/learn": {
+    "expansions": [
+      "what mistakes have we already made on this project",
+      "search past session insights for a fix we found before",
+      "didn't we already solve this problem, check the notes",
+      "clean up stale or contradicting lessons learned",
+      "dump accumulated project knowledge into the docs",
+      "show me patterns and pitfalls this agent picked up over time"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/make-pdf": {
+    "expansions": [
+      "turn my markdown notes into a nice-looking PDF",
+      "I need a document with page numbers and a table of contents",
+      "export this write-up as something I can print and share",
+      "make this look like a finished report, not a draft",
+      "generate a formatted PDF from plain text",
+      "add a cover page and headers to my document",
+      "convert markdown to a clean, publication-ready file"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/office-hours": {
     "expansions": [
       "is this startup idea actually worth building or am I fooling myself",
@@ -395,6 +903,32 @@
       "brainstorm a hackathon project with me, this is just for fun",
       "what's the smallest wedge I could ship to test this idea",
       "force me to get specific instead of staying vague about my plan"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/open-gstack-browser": {
+    "expansions": [
+      "open a visible browser window so I can watch what you're doing",
+      "launch chrome where I can see every click and navigation happen live",
+      "start a browser session with anti-bot stealth already configured",
+      "I want a headed browser I can watch in real time, not headless",
+      "spin up a browser with the environment and extensions preloaded",
+      "give me a browser I can talk to via a chat sidebar",
+      "launch a browser session ready for automation commands",
+      "set up chromium so I can observe the agent's browsing actions"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/pair-agent": {
+    "expansions": [
+      "let another AI agent control my browser tab",
+      "connect a remote coding assistant to what I'm looking at in-browser",
+      "give Codex access to my current webpage session",
+      "set up a pairing key so a different tool can drive my browser",
+      "share my browser with another agent for this task",
+      "how do I hook up a second AI to see what's on my screen",
+      "generate a connection code for cross-agent browser access",
+      "bridge two AI tools through the same browser tab"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -445,6 +979,18 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/plan-tune": {
+    "expansions": [
+      "I'm getting asked the same clarifying question over and over, make it stop",
+      "let me set a preference so this tool never asks me that again",
+      "show me a profile of how I actually make decisions versus what I say I prefer",
+      "too many confirmation prompts interrupting my workflow, tune them down",
+      "I want to always auto-pick the recommended option for a certain kind of question",
+      "review the questions this agent has asked me and let me set defaults",
+      "surface the gap between my stated preferences and my actual choices over time"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/qa": {
     "expansions": [
       "find the bugs on this site before I ship it",
@@ -455,6 +1001,18 @@
       "commit atomic fixes for each bug you find and re-verify them",
       "I need evidence this app is ready to ship, not just a gut feeling",
       "run through the app and document every issue with screenshots"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/qa-only": {
+    "expansions": [
+      "run just the tests for this one feature, not the whole suite",
+      "I only changed one route, do a quick regression check on it",
+      "fast-check this single flow without kicking off full QA",
+      "targeted end-to-end test for this piece, skip everything else",
+      "spot-check this feature works before I move on",
+      "run a narrow test pass scoped to what I just touched",
+      "quick sanity test on this route only, don't run the full pipeline"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -480,6 +1038,54 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "garrytan/scrape": {
+    "expansions": [
+      "pull the data off this webpage into JSON for me",
+      "what's actually on this page — get me the content without opening a browser myself",
+      "I need structured output from a page that only renders after JavaScript runs",
+      "grab this listing page and hand me clean markdown, not raw HTML soup",
+      "extract product info from a rendered page for downstream analysis",
+      "fetch this URL and parse out the data, read-only, no clicking or form submission needed"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/setup-browser-cookies": {
+    "expansions": [
+      "I need my automated browser session to already be logged into a site without doing the login flow again",
+      "copy my real browser's cookies into the headless test session so it's authenticated",
+      "skip the manual login step for automated QA on pages behind auth",
+      "import my Chrome session cookies so the scraper doesn't hit a login wall",
+      "how do I get an automation script to inherit my existing logged-in session",
+      "pull cookies from my real browser profile into the headless one for testing gated pages",
+      "set up an authenticated browser context without re-entering credentials",
+      "give the automation access to a site I'm already logged into on my machine",
+      "transfer session cookies from Chromium into the agent's browser automation tool",
+      "test a page that requires login without hardcoding or typing in credentials each run"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/setup-deploy": {
+    "expansions": [
+      "get this project ready to deploy for the first time",
+      "figure out which hosting platform this repo is set up for and wire it up",
+      "I need my secrets and env vars configured before the first push to prod",
+      "set up health checks and a deploy status command automatically",
+      "onboard a new project onto our deploy pipeline",
+      "detect whether this is Vercel, Netlify, Fly, or something else and configure accordingly"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/setup-gbrain": {
+    "expansions": [
+      "get a persistent memory store wired up for this project",
+      "bootstrap a searchable knowledge base from scratch",
+      "connect the agent to a long-term memory backend",
+      "install and initialize the project's brain/index",
+      "first-time setup for cross-session recall",
+      "register the memory tool as an MCP server"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "garrytan/ship": {
     "expansions": [
       "get this code out the door end to end",
@@ -500,6 +1106,67 @@
       "make this scraping flow permanent instead of redoing it manually",
       "generate a script plus test from what I just did in the browser",
       "speed up repeat scrapes by turning them into saved skills"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/sync-gbrain": {
+    "expansions": [
+      "the knowledge base search isn't finding recent code changes",
+      "re-index the repo so search results are current",
+      "refresh the internal docs after a big code change",
+      "make sure new files are searchable by the assistant",
+      "update the embeddings for this codebase",
+      "fix stale search results in our knowledge tool",
+      "reindex everything after a refactor"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "garrytan/unfreeze": {
+    "expansions": [
+      "lift the change freeze so merges can happen again",
+      "I need to unlock edit restrictions across the repo",
+      "undo the freeze that's currently blocking certain directories",
+      "restore normal merge permissions after a lockdown",
+      "clear the active change-freeze flag",
+      "allow edits everywhere again, the freeze is over",
+      "cancel the freeze boundary that was set earlier",
+      "reopen the codebase to changes after a restricted period"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "getagentseal/codeburn": {
+    "expansions": [
+      "how much am I spending on AI coding agents this month",
+      "track token usage across my different coding tools",
+      "which model is burning through my budget the fastest",
+      "I need visibility into agent spend per project",
+      "compare cost between the models I've been using",
+      "set up cost monitoring for my AI development spend",
+      "break down my token consumption by project",
+      "dashboard for AI agent expenses over time"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "glincker/readme-generator": {
+    "expansions": [
+      "I have a project with no README, write one by looking at the code",
+      "generate installation and usage docs by scanning my repo's package files",
+      "this project has zero documentation and I need a starting point fast",
+      "draft a README covering setup, usage, and contributing based on what's actually in the codebase",
+      "detect what language and framework this project uses and document it accordingly",
+      "turn my directory structure and dependency manifests into a professional README"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "gooseworks/notte-browser": {
+    "expansions": [
+      "I need an agent to click through a website and fill out a form for me",
+      "scrape this page's content automatically",
+      "control a browser session and take screenshots of what loads",
+      "run an autonomous web agent that navigates pages on its own",
+      "automate logging into a site and grabbing data from it",
+      "drive a headless browser through a multi-step web flow",
+      "have something browse the web and extract information without me doing it manually"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -573,6 +1240,210 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "huggingface/hf-cli": {
+    "expansions": [
+      "how do I download a model from the Hugging Face hub from the command line",
+      "upload my fine-tuned checkpoints to a HF repo",
+      "huggingface-cli is deprecated, what replaces it",
+      "authenticate against Hugging Face and check who I'm logged in as",
+      "schedule a training job to run on Hugging Face infrastructure",
+      "sync a local dataset folder with a Hugging Face bucket",
+      "browse or search academic papers and datasets on the hub"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/huggingface-datasets": {
+    "expansions": [
+      "I want to preview the first few rows of a dataset on Hugging Face without downloading the whole thing",
+      "how do I page through a huge dataset's rows without loading it all into memory",
+      "search for a keyword inside a specific column of a Hugging Face dataset",
+      "what splits and configs does this dataset even have",
+      "get the parquet file links for a dataset so I can query it with SQL",
+      "filter dataset rows by a condition through the API instead of downloading and filtering locally",
+      "check how big a dataset is before deciding whether to download it",
+      "upload my agent session traces as a dataset for others to browse",
+      "find column statistics for a dataset without loading it into pandas",
+      "validate that a dataset repo actually exists and is accessible before trying to use it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/huggingface-llm-trainer": {
+    "expansions": [
+      "fine-tune a model without setting up my own GPU box",
+      "I want to run SFT or DPO training in the cloud and not lose the results",
+      "train a model on rented GPUs and make sure it actually saves to a place I can use it",
+      "which hardware size do I need for a 10k example dataset",
+      "convert my fine-tuned model to GGUF so I can run it locally in Ollama",
+      "set up preference-based alignment training on a hosted job runner",
+      "estimate how much a training run is going to cost before I kick it off"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/huggingface-papers": {
+    "expansions": [
+      "someone sent me an arxiv link, summarize what it's about",
+      "pull the authors and linked code repo for this paper",
+      "find the github implementation tied to this research paper",
+      "who submitted this and what models/datasets cite it",
+      "fetch the full text of this paper as readable markdown",
+      "look up metadata for an AI paper by its arxiv id",
+      "explain this research paper in plain terms"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/huggingface-vision-trainer": {
+    "expansions": [
+      "train an object detection model on my own images",
+      "fine-tune a classifier without setting up a local GPU",
+      "I have a dataset of bounding boxes and need a detector",
+      "train a segmentation model with SAM on custom masks",
+      "fine-tune an image classifier in the cloud",
+      "estimate the cost of training a vision model on rented GPUs",
+      "build a model that finds objects in photos from my own data",
+      "train ResNet or ViT on a Hugging Face dataset"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/semantic-cache": {
+    "expansions": [
+      "cache LLM responses so I don't pay for the same question twice",
+      "reduce repeated API calls to the model using similarity matching",
+      "reuse a past answer when a new prompt means almost the same thing",
+      "cut LLM inference costs by skipping duplicate-ish requests",
+      "store and retrieve model responses by meaning, not exact text match",
+      "speed up my chatbot by short-circuiting near-identical queries",
+      "build a cache layer that understands paraphrased questions are the same question",
+      "lower latency and spend on an LLM app with high query overlap"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "huggingface/transformers-js": {
+    "expansions": [
+      "run a machine learning model directly in the browser without a backend",
+      "do sentiment analysis in JavaScript with no Python server",
+      "classify images client-side using WebGPU",
+      "I need speech-to-text running purely in the frontend",
+      "load a pretrained model from Hugging Face into my Node app",
+      "in-browser text summarization without hitting an API",
+      "get object detection working in a web app with WASM fallback",
+      "use a HF model in TypeScript on the server, not just the browser"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/database-engineer": {
+    "expansions": [
+      "my queries are slow and I don't know how to speed them up",
+      "help me design a schema that won't fall apart as data grows",
+      "should I use a relational or NoSQL store for this workload",
+      "review my indexing strategy for a high-write table",
+      "plan a migration without breaking referential integrity",
+      "I need someone to think through data modeling tradeoffs across SQL, graph, and time-series stores",
+      "tune this database for sub-second response times at scale"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/devops-engineer": {
+    "expansions": [
+      "set up a CI/CD pipeline for this project",
+      "I need help automating our deployments",
+      "design a release process with rollback if something breaks",
+      "get our build system publishing artifacts automatically",
+      "help me move code from staging to production safely",
+      "build out a Kubernetes deployment strategy",
+      "wire up automated environment promotion",
+      "act like a devops specialist and sort out our pipeline",
+      "plan a blue-green or canary rollout for releases"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/mcp-client": {
+    "expansions": [
+      "I want to call a tool on an MCP server that isn't wired into my agent yet",
+      "list the tools a Model Context Protocol server exposes without loading giant schemas into context",
+      "need a lightweight way to hit an MCP server on demand from the CLI",
+      "connect to any MCP-compatible backend without locking into one platform's config",
+      "how do I authenticate to a remote MCP server that uses OAuth",
+      "enumerate available MCP tools before deciding which one to invoke"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/parallel-execution": {
+    "expansions": [
+      "run these independent tasks at the same time instead of one after another",
+      "how do I know which of my queued work items are safe to run concurrently versus which depend on each other",
+      "cap how many background jobs run simultaneously so I don't overload the system",
+      "track the status of several background tasks without blocking on any single one",
+      "launch a batch of non-conflicting file edits in parallel and wait for them all to finish",
+      "what's blocking this task from running until another one completes first",
+      "coordinate a fork-join pattern where results get aggregated after parallel work finishes",
+      "keep working on other things while a long background task runs, then check back on it",
+      "continue processing the rest of the queue even if one item fails",
+      "figure out execution order when some tasks are on the critical path and others aren't"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/release": {
+    "expansions": [
+      "bump the version, update the changelog, and tag it all in one go",
+      "cut a release without forgetting a step",
+      "merge this to main and publish the release notes",
+      "I need the version number to follow semver automatically",
+      "ship a patch release and make sure the gates pass first",
+      "what's the process for tagging a new GitHub release from a PR"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/requirements-engineer": {
+    "expansions": [
+      "turn this vague ask from the client into concrete specs",
+      "write user stories with acceptance criteria for this feature",
+      "I have a stakeholder who keeps changing their mind, help structure the requirements",
+      "translate business needs into something engineering can build",
+      "what are the non-functional requirements we're missing",
+      "gather requirements before we start coding",
+      "bridge the gap between what the client wants and what devs need to know"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/security-engineer": {
+    "expansions": [
+      "review this system for security holes",
+      "help me pass a SOC2 or GDPR compliance audit",
+      "think through this design like an attacker would",
+      "find vulnerabilities before a penetration test does",
+      "design access controls with least privilege in mind",
+      "what would a security review flag in this architecture",
+      "harden this system against breaches",
+      "assess our OWASP Top 10 exposure"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "intelligentcode-ai/user-tester": {
+    "expansions": [
+      "walk through the app like a real user and tell me what breaks",
+      "test the full signup-to-checkout flow across different browsers",
+      "check that the site works the same in Chrome, Firefox, and Safari",
+      "automate clicking through the UI to catch broken user journeys",
+      "verify the page still looks right after this change, visual regression check",
+      "make sure keyboard-only and screen-reader users can get through the flow",
+      "simulate real usage patterns end to end, not just unit tests",
+      "confirm the mobile experience holds up under touch interactions"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "juliusbrussee/caveman": {
+    "expansions": [
+      "make your replies way shorter and cut the fluff",
+      "stop being so wordy, just give me the facts",
+      "I want terser output to save on tokens",
+      "drop the pleasantries and get to the point",
+      "respond in short fragments, skip the filler words",
+      "talk like you're rationing every word",
+      "less chatty, more compressed answers please",
+      "minimize verbosity while keeping technical accuracy intact"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "k-dense-ai/deepchem": {
     "expansions": [
       "predict whether this molecule is toxic before running a wet-lab experiment",
@@ -625,6 +1496,18 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "k-dense-ai/rdkit": {
+    "expansions": [
+      "parse this SMILES string and give me the molecular weight and LogP",
+      "find molecules similar to this one using fingerprint similarity",
+      "I need to search a compound library for a specific substructure",
+      "generate 3D coordinates for this molecule and optimize the geometry",
+      "apply a reaction SMARTS to transform this set of molecules",
+      "compute descriptors and fingerprints for cheminformatics analysis in Python",
+      "I need fine-grained control over molecule sanitization, not a high-level wrapper"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "k-dense-ai/scanpy": {
     "expansions": [
       "I have single-cell RNA-seq data and need to cluster and QC it",
@@ -633,6 +1516,19 @@
       "standard pipeline for filtering, normalizing, and visualizing single-cell counts",
       "find marker genes and trajectories from single-cell sequencing output",
       "my data is an RDS file from R and I need it in a format Python's single-cell tools can read"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "k-dense-ai/scvi-tools": {
+    "expansions": [
+      "I need to correct batch effects across my single-cell samples",
+      "help me integrate multimodal single-cell data like CITE-seq",
+      "build a probabilistic model for scRNA-seq with uncertainty estimates",
+      "transfer learning for annotating cell types from a reference dataset",
+      "my single-cell data has strong batch effects, how do I remove them",
+      "deep generative modeling for omics data beyond standard scanpy pipelines",
+      "combine RNA and protein single-cell modalities into one embedding",
+      "differential expression analysis with confidence intervals on single-cell data"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -672,6 +1568,32 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "karpathy/autoresearch-universal": {
+    "expansions": [
+      "I want an agent that keeps improving a prompt on its own over many iterations",
+      "scan my repo and suggest what's worth optimizing without me pointing at anything specific",
+      "set up a generate-score-mutate loop that gets my prompt better without me babysitting it",
+      "define a pass/fail eval automatically so I don't have to hand-write test criteria",
+      "self-improving optimization loop for a prompt, not just a one-shot rewrite",
+      "help me pick a measurable target to optimize in this codebase, then iterate toward it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "laravel/upgrade-laravel-v13": {
+    "expansions": [
+      "walk me through upgrading a Laravel app to the next major version without breaking things",
+      "what changed between Laravel 12 and 13 that could break my app",
+      "I need to bump my Laravel dependencies and fix whatever breaks after a major version jump",
+      "help me migrate my config files to the new Laravel version's expected format",
+      "run the test suite after a framework upgrade to catch regressions before I ship",
+      "safely move a production app onto a new Laravel major release",
+      "identify breaking changes in a framework upgrade before I touch any code",
+      "update composer dependencies for a Laravel major version bump and resolve conflicts",
+      "validate that nothing broke after upgrading the underlying framework version",
+      "step-by-step guide for a risky framework version migration"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "martin-stepanoski/nielsen-heuristics-audit": {
     "expansions": [
       "evaluate my app against standard usability heuristics before user testing",
@@ -685,6 +1607,40 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "mattpocock/ask-matt": {
+    "expansions": [
+      "I don't know which of these tools I'm supposed to use for this situation",
+      "point me to the right workflow instead of me guessing",
+      "which command handles this kind of task in this setup",
+      "I'm lost, what's the entry point for what I'm trying to do",
+      "help me pick the correct flow instead of picking wrong and redoing work"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/code-review": {
+    "expansions": [
+      "check this branch against both the coding standards and the original ticket",
+      "did I actually build what the issue asked for, separately from code quality",
+      "review my diff for code smells like duplicated logic or bad naming",
+      "compare what changed since main to the spec it was supposed to implement",
+      "run two independent reviews so style nitpicks don't bury a missed requirement",
+      "audit this PR along two separate axes instead of one mixed opinion"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/codebase-design": {
+    "expansions": [
+      "this module's interface is too big and confusing",
+      "help me decide where the boundary should go in this code",
+      "make this class easier to test",
+      "the API surface here is doing too little for how complex it is",
+      "clean up a shallow wrapper that just forwards calls",
+      "restructure this code so callers need to know less",
+      "tidy up an interface that leaks implementation details",
+      "where should the seam go in this refactor"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "mattpocock/diagnose": {
     "expansions": [
       "this bug is really hard to pin down and I don't know where to start",
@@ -694,6 +1650,32 @@
       "this only fails sometimes and I can't get a consistent reproduction",
       "systematically root-cause a performance regression instead of poking at it",
       "I need a tight pass/fail signal for a flaky failure that only shows up occasionally"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/diagnosing-bugs": {
+    "expansions": [
+      "this bug is really hard to pin down and I don't know where to start",
+      "the app is randomly slow and I can't reproduce it reliably",
+      "help me build a script that reliably triggers this failure before I start guessing",
+      "something's broken intermittently and staring at the code isn't working",
+      "I need a tight repro loop before I try to fix this performance regression",
+      "narrow this bug down to the smallest case that still fails",
+      "rank a few theories for why this is happening before testing any of them",
+      "this only fails sometimes, help me raise how often it reproduces"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/domain-modeling": {
+    "expansions": [
+      "we keep using the word 'account' to mean different things, let's pin it down",
+      "help me build out a glossary of terms for this codebase",
+      "challenge me when my language contradicts what the code actually does",
+      "should we write an ADR for this architectural choice we just made",
+      "sharpen the vocabulary we use so the team means the same thing",
+      "stress-test this domain concept with edge-case scenarios",
+      "keep a living document of the decisions and why we made them",
+      "our terminology is fuzzy and it's causing confusion in the team"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -716,6 +1698,17 @@
       "organize my skills by engineering versus other categories",
       "is there a container skill for all the dev-focused ones",
       "group these coding skills under one engineering heading"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/git-guardrails-claude-code": {
+    "expansions": [
+      "stop the agent from force-pushing or wiping my git history",
+      "I want a hook that blocks dangerous commands like reset --hard before they run",
+      "prevent an AI coding assistant from running destructive git operations on its own",
+      "add a safety net so git push and git clean can't fire without me noticing",
+      "set up guardrails so branch -D and checkout . get blocked automatically",
+      "keep Claude Code from accidentally trashing uncommitted work"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -743,6 +1736,19 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "mattpocock/grilling": {
+    "expansions": [
+      "poke holes in my plan before I commit to it",
+      "ask me hard questions about this decision until we're sure",
+      "stress-test my thinking on this idea",
+      "don't let me hand-wave, push back on the weak parts of this proposal",
+      "interrogate this plan step by step so nothing's assumed",
+      "challenge my reasoning here instead of just agreeing with me",
+      "make sure I've actually thought this through before building it",
+      "play devil's advocate on this design"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "mattpocock/handoff": {
     "expansions": [
       "summarize this conversation so a fresh agent session can pick up where I left off",
@@ -752,6 +1758,43 @@
       "save my progress so I can resume this later without repeating myself",
       "redact any secrets before writing out this session summary",
       "bridge this work to a new agent without losing the plan we already agreed on"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/implement": {
+    "expansions": [
+      "turn this spec into working code using test-driven development",
+      "I have a set of tickets and need someone to actually build them",
+      "implement this at the seams we already agreed on, don't restructure everything",
+      "write the code for these requirements and run the tests before calling it done",
+      "build out this PRD end to end and commit when finished",
+      "code review after implementation is done too, not just the build step"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/improve-codebase-architecture": {
+    "expansions": [
+      "this module's interface is basically as complicated as its implementation, help me fix that",
+      "find the parts of my codebase where you have to bounce between five files just to understand one concept",
+      "which of my modules would actually get simpler if I deleted them versus just moving the mess elsewhere",
+      "clean up or restructure the tangled parts of my code that keep coming up in every recent change",
+      "my pure functions are tested but the real bugs are in how they get wired together, what's wrong with my design",
+      "tidy up the shallow abstractions in this codebase so tests are easier to write",
+      "show me visually which parts of my architecture are causing the most friction",
+      "where are my modules leaking implementation details across their boundaries",
+      "help me pick one architectural pain point and actually design a better structure for it",
+      "identify deepening opportunities so this code is easier for both humans and AI agents to navigate"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/migrate-to-shoehorn": {
+    "expansions": [
+      "clean up these `as Type` casts in my test files",
+      "I'm faking a huge object just to satisfy one field, there's got to be a better way",
+      "replace type assertions in tests with something type-safe",
+      "tidy up test mocks that only need a couple of properties filled in",
+      "get rid of `as unknown as` hacks in my spec files",
+      "restructure test fixtures so I stop lying to the type checker"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -796,6 +1839,54 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "mattpocock/prototype": {
+    "expansions": [
+      "I just want to test an idea quickly without worrying about code quality",
+      "spike this out before committing to a real implementation",
+      "build a throwaway version to answer a design question",
+      "quick and dirty version just to see if this approach works"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/research": {
+    "expansions": [
+      "look up the real facts on this topic before I write anything",
+      "find primary sources for how this API actually works, not blog posts",
+      "dig into the docs and write up what you found",
+      "I need someone to go read the spec and summarize it",
+      "fact-check a claim against the original source",
+      "offload the reading so I can keep working",
+      "investigate this question and save the findings to a file",
+      "verify this against official documentation, not secondhand writeups"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/resolving-merge-conflicts": {
+    "expansions": [
+      "I'm stuck mid-rebase with conflicting hunks I don't know how to combine",
+      "help me finish this merge without losing either side's changes",
+      "git says there are conflicts, walk me through resolving them properly",
+      "figure out why both branches touched this file and reconcile the intent",
+      "don't just pick one side blindly, understand what each change was trying to do",
+      "get this rebase unstuck and continue it to completion",
+      "untangle a messy merge and make sure tests still pass after",
+      "clean up conflict markers left over from a failed merge attempt"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/scaffold-exercises": {
+    "expansions": [
+      "set up the folder structure for a new course section",
+      "generate stub directories for problem, solution, and explainer",
+      "create exercise scaffolding that passes our linter",
+      "I need placeholder readmes for a batch of new lessons",
+      "build out numbered exercise folders from this outline",
+      "renumber and move these exercises while keeping git history",
+      "stub out a new module's directory tree quickly",
+      "make sure every exercise variant has the required files"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "mattpocock/setup-matt-pocock-skills": {
     "expansions": [
       "configure this repo before I start using the other engineering skills",
@@ -805,6 +1896,17 @@
       "decide whether this repo uses GitHub issues or local markdown for tracking",
       "set up where ADRs and domain docs live for a new project",
       "onboard this codebase onto the team's engineering workflow conventions"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/setup-pre-commit": {
+    "expansions": [
+      "wire up formatting and type checks to run automatically before every commit",
+      "I want tests to run before a commit goes through so broken code never lands",
+      "set up Husky and lint-staged so Prettier runs on staged files only",
+      "configure commit-time linting, type checking, and testing in one pass",
+      "get pre-commit hooks working in this repo without hand-rolling the config",
+      "stop bad commits from getting in by gating them on typecheck and test scripts"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -829,6 +1931,29 @@
       "avoid writing a test that just recomputes the same formula the code uses",
       "build this feature one small test-then-code cycle at a time, not tests then code in bulk",
       "stop writing every test up front before any implementation exists"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/teach": {
+    "expansions": [
+      "I want to actually learn this topic over time, not just get an answer",
+      "set up a learning plan and track my progress on a subject",
+      "build me lessons and reference material for something I'm studying",
+      "help me build long-term retention of this skill, not just a quick explainer",
+      "act as a tutor and check in on what I've learned so far",
+      "I want spaced practice and quizzes on a topic, not a one-off summary",
+      "create a workspace that tracks my learning journey on a subject"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/to-questionnaire": {
+    "expansions": [
+      "I can't answer this myself, I need to ask someone else the right questions",
+      "turn this open question into a doc someone can fill out async",
+      "help me interview a stakeholder without knowing exactly what to ask them",
+      "draft a set of questions to send to the person who actually knows the answer",
+      "I don't have the context, but someone on the team does — get it out of them in writing",
+      "build a form the recipient can answer at their own pace instead of a live meeting"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -877,6 +2002,225 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "mattpocock/wait-what": {
+    "expansions": [
+      "hold on, I don't think I explained that clearly, let me try again",
+      "that didn't come across right, say it back to me simply",
+      "wait, back up — restate what you think I meant in plain language",
+      "I think my last message was confusing, can we re-pitch it",
+      "stop, that message didn't land, give me a simpler recap using our shared vocabulary",
+      "pause and rephrase what I just said in really basic terms",
+      "that explanation was unclear, break it down super plainly",
+      "hang on, re-explain my last point using simple, unambiguous language",
+      "I don't think you understood, let me restate it more clearly",
+      "quick gut check: rephrase what I just asked for so I know we're aligned"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/wayfinder": {
+    "expansions": [
+      "this project is way too big to plan in one sitting, I need a way to break it down over many sessions",
+      "turn this vague, foggy idea into a set of decisions I can work through one at a time",
+      "track open questions on a huge effort so I don't lose the thread across sessions",
+      "I need a shared map other people can pick up tickets from as things unblock",
+      "help me chart a path through a greenfield project when I can't see the whole route yet",
+      "plan a large migration as a sequence of resolvable decisions instead of one big spec"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/wizard": {
+    "expansions": [
+      "walk me step by step through setting up these API keys",
+      "I need a guided script for a manual dashboard setup I can't automate",
+      "generate something that opens the right URLs and tells me what to click",
+      "build an interactive setup flow for a one-off migration only a human can run",
+      "help a non-technical teammate get through this provisioning process",
+      "script that pauses at each step and asks me to confirm before continuing"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/write-a-skill": {
+    "expansions": [
+      "help me turn this workflow into a reusable agent skill",
+      "I want to package this process so an agent can trigger it automatically",
+      "walk me through writing a SKILL.md file",
+      "scaffold a new skill with the right trigger description",
+      "structure a skill so it works across Claude Code, Cursor, and Codex",
+      "interview me about what this skill should do, then generate it",
+      "build a skill file with progressive disclosure and bundled scripts"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/writing-for-agents": {
+    "expansions": [
+      "my AGENTS.md file is a mess and the agent keeps missing instructions",
+      "how should I structure a skill file so the model actually follows it reliably",
+      "this doc is too long and the agent skims past the important parts",
+      "help me decide what goes inline versus in a separate reference file",
+      "the agent keeps stopping early before finishing the whole task",
+      "give me principles for writing instructions an LLM will actually obey consistently",
+      "reduce token cost of my always-loaded prompt without losing reliability",
+      "why does my instruction file produce inconsistent behavior run to run"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mattpocock/zoom-out": {
+    "expansions": [
+      "I'm lost in this unfamiliar codebase, give me the big picture first",
+      "map out the modules and callers before we dive into details",
+      "don't explain the implementation yet, just show me how things connect",
+      "orient me at a higher level before we touch any code",
+      "what are the relevant domain terms in this part of the system",
+      "step back and summarize the architecture around this area",
+      "I need a lay of the land before making changes here",
+      "show me callers and module relationships, skip the internals for now"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-audit": {
+    "expansions": [
+      "check whether this one skill's star rating actually matches its evidence",
+      "this entry looks overpromoted, verify the sources and fix it if wrong",
+      "a link on this registry item is dead, correct it and log why",
+      "I just want to fix one entry properly, not run a full sweep",
+      "verify the evidence backing a single skill and file the smallest correction needed",
+      "does this skill deserve the rank it currently has",
+      "re-check one contributor's skill for stale or superseded evidence"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-bot-curate": {
+    "expansions": [
+      "go through the crawler results and decide what's worth keeping",
+      "clean up the pending bot proposal branches",
+      "filter out the junk from an automated skill crawl",
+      "turn the scraped candidates into real registry entries",
+      "review what the crawler found and merge the good ones",
+      "triage a batch of auto-discovered skills and reject the noise",
+      "process the queue of bot-submitted skill proposals and open a PR"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-curate": {
+    "expansions": [
+      "find a new skill candidate from this page and prep it for someone to review",
+      "fetch a real SKILL.md from this listing and dedupe it against what's already registered",
+      "I found a source page with some skills on it, get it ready for a human sign-off, don't register it yet",
+      "normalize this candidate's metadata and flag whether it maps to an existing generic skill",
+      "pull the content hash and origin for this skill so we can track provenance",
+      "stop short of writing to the registry — just produce the shortlist for review"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-curation-review": {
+    "expansions": [
+      "check this pull request against the registry rules before anyone merges it",
+      "does this curation PR's description actually match what it changes",
+      "find blocking issues in a skill registry submission before approval",
+      "verify the prerequisite skills form a valid dependency graph and nothing was silently removed",
+      "check whether the evidence attached to this skill submission is legitimate and not just a dead or subjective link",
+      "confirm the generated site artifacts were regenerated after this registry change",
+      "is this skill-tree PR safe to merge, or does it need more review",
+      "catch a registry PR that claims to add skills but the diff doesn't actually show them",
+      "review a taxonomy or naming change against the project's vocabulary rules before merging",
+      "gate a canonical registry change without actually touching or merging the branch"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-docs-sync": {
+    "expansions": [
+      "the live site is showing stale data after I changed the registry",
+      "CI is failing because the generated docs are out of sync with the source",
+      "regenerate the site graph and commit the right files this time",
+      "I edited the skill registry, now make the website reflect it",
+      "keep the wiki and the README saying the same thing after a docs change",
+      "make sure the docs build doesn't leave gitignored files half-committed"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-draft-curate": {
+    "expansions": [
+      "decide which of these submitted skill proposals should move forward",
+      "triage the incoming batch of skill submissions before they go to curation",
+      "is this proposed skill a duplicate of something already in the registry",
+      "sort pending intake items into accept, reject, or needs more evidence",
+      "review what got pushed into the intake queue without touching the registry yet",
+      "gate skill proposals before they're promoted to canonical"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-integrity": {
+    "expansions": [
+      "check the registry for broken schema or duplicate IDs",
+      "validate that our data files won't break the build",
+      "find inconsistencies before we ship a registry change",
+      "are there dangling cross-references in this dataset",
+      "run a structural integrity check on the skill registry",
+      "catch a bad ID collision before it merges",
+      "verify the registry is internally consistent"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-meta-audit": {
+    "expansions": [
+      "what parts of our catalog are overdue for a review pass",
+      "find broken links and stale entries across the whole registry before I fix anything",
+      "give me a prioritized list of what's wrong, don't fix it yet",
+      "scan for mis-classified or inconsistent entries and rank by severity",
+      "which registry items need attention most urgently",
+      "catch problems introduced by a big batch of new entries before release",
+      "surface weak spots so I know where to focus a cleanup effort",
+      "triage the backlog of data quality issues into a ranked queue"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-preview": {
+    "expansions": [
+      "let me see how this branch will actually look before merging",
+      "spin up a live preview of my changes without a local build",
+      "I'm in a container and can't run localhost, how do I check the site render",
+      "deploy this branch somewhere I can click around and verify design",
+      "confirm this new page renders correctly before opening the PR",
+      "get a shareable URL for reviewing these UI changes",
+      "check that my curated content shows up right on the live site",
+      "preview my docs changes without waiting for a full merge"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-triage": {
+    "expansions": [
+      "go through the open issue backlog and tell me what's actually still valid",
+      "sort this pile of tickets by priority and size so we know what to work on first",
+      "review the pending skill submissions and decide which to accept or reject",
+      "close out issues that are already fixed and comment on the ones that need more info",
+      "the backlog is a mess, help me figure out what's actually blocking things",
+      "group related issues into an umbrella and assign owners across the whole org",
+      "clean up stale tickets that nobody has looked at in a while"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/gaia-wiki-sync": {
+    "expansions": [
+      "the wiki is out of date, bring it in line with the registry",
+      "update the contributor pages to match what's actually approved now",
+      "refresh the changelog on the wiki after these registry changes",
+      "make sure the wiki reflects the latest curation state",
+      "sync documentation pages so they're not stale",
+      "push the newest registry state out to the project wiki"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "mbtiongson1/graphify-triage": {
+    "expansions": [
+      "find the most over-coupled parts of this codebase and file tickets for them",
+      "run a dependency graph over the repo and turn the findings into GitHub issues",
+      "what's structurally rotten in this architecture that I should fix",
+      "god nodes are killing this codebase, surface them and log tracked work",
+      "audit the code topology and push labelled issues to the tracker, but let me review first",
+      "scan for architectural smells and convert the report into actionable tickets"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "mvanhorn/last30days": {
     "expansions": [
       "what is everyone saying about this on Reddit and Twitter right now",
@@ -901,6 +2245,31 @@
       "I need a design system reasoning profile, not just a random palette",
       "evaluate whether my layout causes cumulative layout shift or horizontal scroll",
       "recommend a technology stack appropriate UI pattern for this feature"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "nexu-io/open-design": {
+    "expansions": [
+      "generate a UI mockup from a rough description of what I want",
+      "turn my product idea into a set of brand assets and prototype screens",
+      "I need high-fidelity UI prototypes without hand-coding every screen",
+      "produce design assets locally instead of relying on a hosted design tool",
+      "take a structured brief and turn it into UX prototypes automatically",
+      "build out a design system starting point from just intent, not existing components",
+      "generate multiple UI variations for a screen so I can pick a direction",
+      "I want a local-first way to go from an idea to visual design artifacts",
+      "draft brand assets and interface mockups without a designer on hand",
+      "spin up prototype screens for a new product concept quickly"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "nousresearch/feed-monitoring": {
+    "expansions": [
+      "keep an eye on these RSS feeds and tell me when something new and relevant shows up",
+      "I don't want to manually check ten different feeds every day",
+      "track a set of sources continuously and remember what I've already seen",
+      "surface new signal from a pile of feeds instead of me scrolling through all of it",
+      "watch content sources over time and flag what's worth my attention"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -935,6 +2304,43 @@
       "pick up this written plan and carry it out",
       "stick to the plan's scope, don't add anything extra",
       "implement this plan in a fresh session and report back"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "obra/finishing-a-development-branch": {
+    "expansions": [
+      "I'm done coding, what do I do with this branch now",
+      "tests pass, help me decide whether to merge or open a PR",
+      "clean up my worktree once this feature is finished",
+      "wrap up this branch the right way instead of just leaving it dangling",
+      "should I merge this locally or push it for review",
+      "finish off this piece of work and tidy the workspace after"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "obra/receiving-code-review": {
+    "expansions": [
+      "a reviewer left feedback and I'm not sure it's actually right",
+      "how should I respond to code review comments without just agreeing blindly",
+      "verify a review suggestion against the codebase before implementing it",
+      "push back on a code review comment with technical reasoning",
+      "process a list of review items one at a time and test each fix",
+      "don't just say 'you're absolutely right' to every reviewer comment",
+      "handle unclear or conflicting review feedback properly",
+      "evaluate whether a suggested change is actually needed here"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "obra/requesting-code-review": {
+    "expansions": [
+      "get a second set of eyes on this before I merge to main",
+      "spin up a fresh reviewer that hasn't seen my whole conversation history",
+      "catch issues in what I just built before they cascade downstream",
+      "have someone independently check this against the original requirements",
+      "I want a structured review report, not just a vague thumbs up",
+      "review this diff between two commits for problems I might have missed",
+      "dispatch an isolated reviewer so I don't burn my own context on it",
+      "sanity-check my implementation against the plan before proceeding"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -1070,6 +2476,146 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "remotion-dev/remotion-best-practices": {
+    "expansions": [
+      "what's the recommended way to structure a Remotion project",
+      "give me guidance on writing Remotion compositions the right way",
+      "common pitfalls to avoid when building video with Remotion",
+      "conventions and patterns for Remotion projects",
+      "how should I organize my Remotion code",
+      "tips for maintainable Remotion video code",
+      "Remotion coding standards",
+      "best way to set up a Remotion composition"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-captions": {
+    "expansions": [
+      "add auto-generated captions to a Remotion video render",
+      "burn subtitles into my programmatic video output",
+      "sync spoken audio to on-screen caption text in a video composition",
+      "generate timed captions for a video I'm building with Remotion",
+      "I need word-level subtitle timing for a video I'm rendering in code",
+      "caption a talking-head clip automatically instead of typing timestamps by hand"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-create": {
+    "expansions": [
+      "I need to programmatically generate a video with code",
+      "set up a new video project using React components",
+      "scaffold a Remotion video from scratch",
+      "start a new motion graphics project rendered with code"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-docs": {
+    "expansions": [
+      "how do I use Remotion to build a video with React",
+      "looking for documentation on Remotion's API and components",
+      "I need reference material for programmatic video generation with React",
+      "help me look up how a Remotion component or hook works",
+      "point me to Remotion's docs for rendering or compositions",
+      "need answers about Remotion configuration without leaving the terminal"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-interactivity": {
+    "expansions": [
+      "make my Remotion video respond to clicks or user input",
+      "add interactive elements to a video I'm building with Remotion",
+      "how do I wire up event handlers inside a Remotion composition",
+      "build a video that reacts to state changes, not just plays back frames",
+      "I want playback controls or clickable regions in a Remotion-generated video",
+      "trigger animation changes based on user interaction in a programmatic video",
+      "connect UI events to a Remotion timeline or composition",
+      "make a Remotion render interactive instead of a fixed linear video",
+      "hook up interactivity so a rendered video isn't just a passive animation",
+      "add dynamic, input-driven behavior to a React-based video project"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-maps": {
+    "expansions": [
+      "I want to render an animated map video programmatically",
+      "generate a video showing a route or location using code instead of a video editor",
+      "build a map animation as a React video component",
+      "render geographic visuals into an exportable video clip"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-multimedia": {
+    "expansions": [
+      "generate a video programmatically with code",
+      "render motion graphics from React components",
+      "build a video composition using Remotion",
+      "turn data into an animated video output",
+      "script a video render instead of editing frame by frame",
+      "assemble a multimedia clip from code rather than a video editor",
+      "produce an mp4 from a component-based video definition",
+      "automate rendering a short video with dynamic content"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-render": {
+    "expansions": [
+      "render my Remotion video to a file",
+      "export this Remotion composition to mp4",
+      "how do I run the Remotion rendering pipeline",
+      "kick off a video render job for this project",
+      "turn my React video composition into an actual video file",
+      "render Remotion output from the command line",
+      "generate the final video from a Remotion project",
+      "batch render multiple Remotion compositions"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-saas": {
+    "expansions": [
+      "scaffold a SaaS product built on top of Remotion for video generation",
+      "set up a subscription-based video rendering service",
+      "build a multi-tenant app around programmatic video creation",
+      "turn my Remotion video pipeline into a sellable web product",
+      "I want billing and user accounts wired up around a video-rendering backend",
+      "stand up a hosted product where customers render their own videos"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-studio": {
+    "expansions": [
+      "preview and edit my Remotion video composition locally before rendering",
+      "open a local studio to iterate on a programmatic video project",
+      "I want to see my Remotion animation live as I tweak the code",
+      "launch the visual editor for a Remotion project instead of rendering blind",
+      "debug timing and frames in a Remotion composition interactively",
+      "spin up the local dev environment for building a React-based video",
+      "preview individual scenes of a video project without a full render",
+      "iterate on video composition props and see changes reflected instantly",
+      "run the Remotion development studio to inspect a composition's timeline",
+      "get a live preview UI for a code-defined video before exporting it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "remotion-dev/remotion-upgrade": {
+    "expansions": [
+      "bump my Remotion project to the latest version",
+      "update the Remotion package and fix anything that breaks",
+      "migrate my video project to a newer Remotion release",
+      "my Remotion setup is behind, bring it current"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "rico-favor/implement-with-discernment": {
+    "expansions": [
+      "should I even build this feature or is it not worth the complexity",
+      "help me push back on scope creep before writing any code",
+      "I want to scope this down to the minimum instead of gold-plating it",
+      "evaluate whether this request is actually worth implementing before I start",
+      "stop me from adding complexity that isn't proportionate to the value",
+      "exercise judgment on whether to defer or reject part of this ask"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "ruvnet/agentdb": {
     "expansions": [
       "I need vector search that stays in sync across multiple machines",
@@ -1081,6 +2627,110 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "ruvnet/agentdb-advanced": {
+    "expansions": [
+      "I need vector search that stays in sync across multiple machines instantly",
+      "find similar embeddings fast even when nodes are spread across a network",
+      "combine metadata filters with similarity search over vectors",
+      "retrieve diverse results, not just the top-N nearest neighbors",
+      "keep vector indexes consistent across distributed nodes with minimal lag",
+      "set up a low-latency shared memory store for embeddings across agents",
+      "hybrid search over vectors and structured fields at once",
+      "sync a vector database across nodes without noticeable delay"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/agentdb-learning": {
+    "expansions": [
+      "I want my agent to get better at a task over repeated runs instead of starting fresh every time",
+      "remember which strategies worked before and reuse them",
+      "build a memory system that learns from past task successes",
+      "adapt how the agent retrieves information based on what's worked historically",
+      "give an agent persistent memory backed by vector search so it improves with use"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/agentdb-memory-patterns": {
+    "expansions": [
+      "design a caching layer for agent memory with eviction",
+      "set up sqlite-backed persistent memory for an agent",
+      "recall related past interactions, not just exact matches",
+      "pick a memory storage pattern that won't grow unbounded"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/agentdb-optimization": {
+    "expansions": [
+      "queries against our agent memory store are getting slow",
+      "tune a vector database index for a large agent deployment",
+      "shard a database so it scales across distributed agents",
+      "monitor production performance of a vector index",
+      "speed up retrieval from a big embedding store",
+      "optimize AgentDB for high query volume"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/agentdb-vector-search": {
+    "expansions": [
+      "find the most similar embeddings to this query vector",
+      "do a nearest-neighbor search over my embedding database",
+      "which stored vectors are closest by cosine similarity",
+      "I need semantic search over high-dimensional vectors",
+      "set up HNSW indexing for fast similarity lookups",
+      "compare embeddings using dot-product or Euclidean distance",
+      "semantic search across a large set of vector embeddings",
+      "find similar items using an approximate nearest neighbor index"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/agentic-jujutsu": {
+    "expansions": [
+      "which of these changed files in my diff are actually risky to merge",
+      "score this pull request's churn and complexity so reviewers know where to focus",
+      "flag the dangerous parts of a large diff before someone approves it",
+      "help me prioritize what to review first in a big changeset",
+      "analyze commit history for hotspots that keep breaking",
+      "tell me which parts of this changeset need the most careful review"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/browser": {
+    "expansions": [
+      "automate filling out and submitting a web form without doing it by hand",
+      "scrape data off a bunch of web pages programmatically",
+      "write an end-to-end test that drives a real browser through my app's flows",
+      "take a screenshot of a webpage as part of an automated workflow",
+      "control a headless browser to click through a multi-step web process",
+      "extract structured data from a website's HTML using automation",
+      "run browser-based integration tests as part of an agent workflow",
+      "navigate a website and interact with elements programmatically instead of manually",
+      "automate repetitive web interactions like login, click, and form submit",
+      "pull content from pages that require scrolling, clicking, or waiting to load"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/dual-collect": {
+    "expansions": [
+      "gather the results from all my background workers into one place",
+      "pull outputs from the headless jobs I kicked off earlier",
+      "check the health status of the workers and collect what finished",
+      "aggregate the results sitting in shared memory across agents",
+      "filter and summarize what all the parallel Codex runs produced",
+      "give me a status report on the workers plus their outputs"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/dual-coordinate": {
+    "expansions": [
+      "route some of this work to run in the background while I keep talking interactively",
+      "split tasks between Claude and Codex so heavy work runs in parallel",
+      "I want an interactive reasoning session that can also kick off background jobs",
+      "coordinate two different coding agents on the same task without me manually switching",
+      "hybrid workflow where some steps need my attention and others just run",
+      "orchestrate parallel execution alongside an interactive session"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "ruvnet/dual-mode": {
     "expansions": [
       "I want two coding agents working on the same task in parallel and combining results",
@@ -1089,6 +2739,19 @@
       "set up a hybrid workflow where separate agent runs get merged together",
       "how do I orchestrate parallel agent execution across two different tools",
       "run the same job through two different models and reconcile what they each produce"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/dual-spawn": {
+    "expansions": [
+      "run a second AI worker in the background while I keep working here",
+      "offload a task to a headless coding agent without switching windows",
+      "launch parallel background workers that share memory with each other",
+      "kick off multiple worker processes with different configurations at once",
+      "spawn a background agent so I don't have to babysit a foreground session",
+      "run a coding task in the background and check on it later",
+      "fan out work to several headless agents running concurrently",
+      "delegate a subtask to a worker process while staying in this session"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -1104,6 +2767,86 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "ruvnet/flow-nexus-neural": {
+    "expansions": [
+      "train a neural net across a cluster of cloud sandboxes instead of one machine",
+      "I need distributed training support for LSTM, GAN, or transformer architectures",
+      "set up federated learning across multiple sandbox nodes",
+      "find or publish a trained model on a marketplace instead of training from scratch",
+      "spin up distributed compute for deep learning experiments"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/flow-nexus-platform": {
+    "expansions": [
+      "manage user accounts and sandboxes on this cloud AI platform",
+      "set up payment processing and app store deployment for the platform",
+      "handle authentication and sandbox lifecycle end to end",
+      "run the full backend for this cloud platform's challenge system"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/flow-nexus-swarm": {
+    "expansions": [
+      "coordinate a bunch of agents working together on cloud infrastructure",
+      "set up an event-driven pipeline across multiple agents",
+      "assign tasks intelligently across a swarm of workers",
+      "orchestrate a mesh or hierarchical network of agents",
+      "process a message queue with multiple cooperating agents",
+      "build a multi-agent workflow with different topology shapes"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/github-code-review": {
+    "expansions": [
+      "automatically review this pull request's diff",
+      "leave inline comments on a GitHub PR",
+      "gate PR approval until checks pass",
+      "set up automated code review on my GitHub repo",
+      "assign reviewers and analyze the diff automatically",
+      "streamline the pull request review workflow",
+      "have an agent do a first-pass review of my PR",
+      "automate approval gating for incoming pull requests"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/github-multi-repo": {
+    "expansions": [
+      "open the same pull request across a dozen repos at once",
+      "keep dependency versions in sync across multiple GitHub repositories",
+      "run one workflow that touches several repos in a single pass",
+      "track which repos are out of date with a shared dependency",
+      "coordinate a bulk change across our whole GitHub org",
+      "fan out one automation across many repositories at once"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/github-project-management": {
+    "expansions": [
+      "set up sprint planning and milestones for my GitHub repo automatically",
+      "manage my GitHub Projects board and issue tracking through automation",
+      "organize a backlog of GitHub issues into a project board with milestones",
+      "automate moving issues across columns as work progresses",
+      "track sprint progress and issue status without manually updating the board",
+      "coordinate milestone and issue planning across a GitHub project",
+      "I need a workflow that keeps my GitHub Projects board in sync with issue state",
+      "bulk manage GitHub issues and milestones for sprint planning",
+      "automate project board hygiene so issues don't go stale",
+      "wire up GitHub milestones and sprints into an automated planning workflow"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/github-release-management": {
+    "expansions": [
+      "cut a new GitHub release for this repo",
+      "auto-generate release notes and a changelog",
+      "bump the version and publish a release",
+      "I need semantic versioning applied and a changelog written",
+      "tag this version and push out the release notes",
+      "automate creating and publishing GitHub releases"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "ruvnet/github-suite": {
     "expansions": [
       "automate code review across several repos at once",
@@ -1112,6 +2855,17 @@
       "I need multi-repo GitHub automation, not just single-repo scripts",
       "set up a workflow that handles releases, reviews, and repo coordination together",
       "full GitHub platform automation combining review, releases, and project management"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/github-workflow-automation": {
+    "expansions": [
+      "set up a GitHub Actions workflow that triggers on a schedule",
+      "I need CI/CD automation but don't want to hand-write the YAML from scratch",
+      "design an event-driven pipeline that fires an agent task on a GitHub event",
+      "help me wire up scheduled jobs in GitHub Actions",
+      "build a CI workflow that reacts to pull requests automatically",
+      "manage GitHub Actions configuration for automated triggers"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -1126,6 +2880,38 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "ruvnet/hooks-automation": {
+    "expansions": [
+      "run a check automatically every time the agent finishes a step",
+      "set up scheduled background tasks that fire on a timer",
+      "I want quality gates that trigger without me remembering to run them",
+      "wire up lifecycle events so something happens automatically at each stage",
+      "automate a recurring task so it runs on its own schedule",
+      "design triggers that fire on agent start, stop, or specific events",
+      "build automated checks that run in the background without manual invocation",
+      "hook into the agent's lifecycle to enforce a rule automatically"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/pair-programming": {
+    "expansions": [
+      "I want one agent writing code while another one reviews it as I go",
+      "set up a continuous feedback loop between an implementer and a reviewer agent",
+      "structure a collaborative coding session with built-in critique",
+      "have a second agent catch mistakes in real time instead of at the end"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/performance-analysis": {
+    "expansions": [
+      "the build is slow and I don't know which step",
+      "find the CPU or memory bottleneck in this system",
+      "profile execution and tell me what to optimize",
+      "where is the I/O hotspot in this pipeline",
+      "hunt down what's eating up all the time or memory"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "ruvnet/reasoningbank": {
     "expansions": [
       "I want the agent to remember what worked last time",
@@ -1135,6 +2921,30 @@
       "improve itself over time based on what succeeded or failed before",
       "store reasoning patterns so future tasks go faster",
       "cross-session memory for repeated problem types"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/reasoningbank-agentdb": {
+    "expansions": [
+      "remember what worked last time and reuse it",
+      "store an agent's reasoning so it improves across sessions",
+      "retrieve similar past solutions semantically before starting a new task",
+      "persist decision patterns in a vector memory store",
+      "help the agent learn from its own history over time",
+      "recall prior reasoning traces relevant to the current problem"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/reasoningbank-intelligence": {
+    "expansions": [
+      "help the agent learn from past decisions to make better ones over time",
+      "improve strategy selection based on accumulated experience",
+      "build a system that recognizes patterns across many agent runs",
+      "meta-learning so the agent's decision quality improves with use",
+      "optimize the agent's strategy using historical outcomes",
+      "adaptive learning loop for an AI agent's choices",
+      "let the agent get smarter about decisions the more it runs",
+      "pattern recognition across cumulative agent experience"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -1164,6 +2974,199 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "ruvnet/skill-builder": {
+    "expansions": [
+      "I want to create a new agent skill but don't know where to start",
+      "walk me through templating, testing, and publishing a new skill",
+      "scaffold a skill package from scratch with the right structure",
+      "help me author and ship a new capability for this framework",
+      "guide me through building and publishing a new skill from a template",
+      "set up the testing and publishing workflow for a skill I'm authoring"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/sparc-methodology": {
+    "expansions": [
+      "I want a structured multi-phase process for building a feature from spec to done",
+      "walk me through a systematic spec, design, build, refine, ship workflow with AI agents",
+      "coordinate a team of agent modes across a formal development methodology",
+      "use a phased approach — specification then architecture then implementation — instead of jumping straight to code",
+      "how do I organize a complex build into pseudocode, architecture, and refinement stages",
+      "structure an AI-driven development process with clear phase gates",
+      "I need a repeatable methodology for taking a project from requirements to a finished, tested result",
+      "orchestrate multiple specialized agent roles through a formal development lifecycle",
+      "break a big feature into Specification, Architecture, and Completion phases",
+      "apply a rigorous, multi-agent workflow instead of ad hoc coding"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/stream-chain": {
+    "expansions": [
+      "I need each step to see the output of the one before it",
+      "chain these agent calls together so context carries forward",
+      "build a multi-stage pipeline where data transforms at each step",
+      "pass results sequentially through a series of processing stages",
+      "link these outputs together so nothing gets lost between steps",
+      "wire up a sequential pipeline of agent transformations"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/swarm-advanced": {
+    "expansions": [
+      "coordinate a bunch of agents working together on research or dev tasks",
+      "I want agents that remember what worked across sessions, not start from scratch each time",
+      "set up a multi-agent swarm for testing and analysis workflows",
+      "need cross-session state persistence for a group of cooperating agents",
+      "domain-specific orchestration patterns for a swarm of workers",
+      "neural learning across a swarm so agents get better at a task over time"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/swarm-orchestration": {
+    "expansions": [
+      "coordinate a bunch of agents working together on one problem",
+      "set up multiple agents talking to each other in a mesh or hierarchy",
+      "distribute work across agents and keep it balanced if one gets overloaded",
+      "build a multi-agent system that keeps working even if one node fails",
+      "organize several AI workers into a coordinated topology",
+      "spin up a group of agents that share state and split the workload",
+      "design a fault-tolerant network of cooperating agents",
+      "manage load balancing across a team of autonomous agents"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-cli-modernization": {
+    "expansions": [
+      "this CLI feels dated, help me bring its UX up to modern conventions",
+      "refactor the command-line interface to support plugins",
+      "clean up an old CLI's architecture and extensibility",
+      "modernize command-line conventions and flag handling"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-core-implementation": {
+    "expansions": [
+      "build out the plugin discovery mechanism for this platform",
+      "implement the server lifecycle and API contracts for v3",
+      "lay the foundational architecture pieces for this sprint",
+      "wire up the core plugin system before other features can build on it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-ddd-architecture": {
+    "expansions": [
+      "structure this codebase around domain-driven design",
+      "define bounded contexts for a v3 architecture rewrite",
+      "design aggregate roots for this domain model",
+      "apply DDD principles and a shared ubiquitous language",
+      "model domain events for this system",
+      "organize the architecture around business domains, not layers"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-integration-deep": {
+    "expansions": [
+      "wire these subsystems together so they talk to each other properly",
+      "connect components through a shared event bus",
+      "make sure v3 modules stay compatible when integrated",
+      "set up contracts between subsystems for consistent behavior",
+      "integrate multiple system components coherently",
+      "build a compatibility layer between two subsystems",
+      "cross-component integration for the v3 sprint",
+      "event-driven glue code connecting several subsystems"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-mcp-optimization": {
+    "expansions": [
+      "my MCP server is slow, help me figure out why",
+      "reduce latency on tool calls going through the protocol layer",
+      "cache tool schemas so we're not refetching them every request",
+      "batch requests instead of firing them one at a time to cut overhead",
+      "tune connection pooling for an MCP server under load",
+      "cut down round-trip time on our MCP integration"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-memory-unification": {
+    "expansions": [
+      "my agent's memory is split across several incompatible subsystems, how do I merge them",
+      "unify AgentDB, RAG memory, and vector storage into one coherent layer",
+      "I have fragmented memory backends and need a single consistent interface over them",
+      "consolidate multiple memory stores in my agent framework into one system",
+      "reconcile disparate memory subsystems that don't talk to each other",
+      "build a single memory management layer on top of several existing storage backends",
+      "fix memory fragmentation across different subsystems in an agent framework",
+      "bring RAG memory and a database-backed memory system under one unified API",
+      "merge overlapping memory implementations left over from earlier framework versions",
+      "standardize how an agent framework reads and writes memory across backends"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-performance-optimization": {
+    "expansions": [
+      "the app feels slow on startup, help me figure out why",
+      "find where the request latency is coming from",
+      "profile memory usage and cut down the footprint",
+      "throughput is too low under load, help me speed it up",
+      "the platform is sluggish and I don't know which part is the bottleneck",
+      "optimize startup time and request handling for v3"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-security-overhaul": {
+    "expansions": [
+      "lock down service-to-service auth with mTLS and zero trust",
+      "scan the codebase for exposed personal information before shipping",
+      "I need CVE scanning wired into this security push",
+      "set up ed25519-based authentication between services",
+      "harden the federation layer against untrusted peers",
+      "comprehensive security pass covering PII, auth, and vulnerability scanning"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/v3-swarm-coordination": {
+    "expansions": [
+      "coordinate agents in a hybrid structure that resists drifting off task",
+      "set up a multi-agent system that learns patterns over time",
+      "combine hierarchical and mesh coordination for a team of agents",
+      "keep a swarm of agents aligned so they don't diverge from the goal",
+      "build the next-generation version of a multi-agent coordination setup",
+      "give my agent team anti-drift safeguards during a long sprint",
+      "implement neural-pattern learning across a coordinated agent swarm",
+      "stand up an upgraded swarm topology for a specific sprint"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/verification-quality": {
+    "expansions": [
+      "make sure nothing gets marked done until it actually passes the checks",
+      "I want a checklist enforced before a task can be closed out",
+      "set up quality gates so incomplete work doesn't slip through",
+      "run a structured pre-completion review before finalizing"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/worker-benchmarks": {
+    "expansions": [
+      "how fast are our background workers actually running",
+      "measure worker latency and throughput across the board",
+      "score worker quality alongside its performance numbers",
+      "benchmark memory usage of background jobs"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "ruvnet/worker-integration": {
+    "expansions": [
+      "route this trigger event to the right background worker",
+      "dispatch background tasks to the best-fit agent automatically",
+      "track performance of task assignments and adapt over time",
+      "map events to agent combinations for async processing",
+      "wire up event-driven background task dispatching",
+      "pick which worker should handle an incoming task"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "safishamsi/graphify": {
     "expansions": [
       "map how all the files and modules in this codebase actually connect",
@@ -1174,6 +3177,30 @@
       "generate a wiki-style overview of how this project is structured",
       "which files in this codebase are the most tangled together",
       "build a queryable graph from AST analysis instead of reading every file by hand"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "santifer/career-ops": {
+    "expansions": [
+      "I found a job posting, evaluate whether it's worth applying to",
+      "tailor my resume for this specific job description",
+      "scan job boards for new openings that match my profile",
+      "track the status of all the jobs I've applied to",
+      "draft a cold outreach message to a recruiter on LinkedIn",
+      "generate an ATS-friendly PDF resume for this role",
+      "help me prep for an upcoming interview based on the JD",
+      "compare multiple job offers and rank them"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "spring-ai/readme-generate": {
+    "expansions": [
+      "generate a README for this Spring Boot module in Chinese and English",
+      "document every REST endpoint in this controller automatically",
+      "I need API docs with curl examples pulled straight from the code",
+      "produce module documentation that lists dependencies, config, and test instructions",
+      "scan my Spring AI project and write structured docs for each module",
+      "keep documentation in sync every time the module's endpoints change"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
@@ -1189,6 +3216,43 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   },
+  "supabase/supabase": {
+    "expansions": [
+      "set up a Postgres database with built-in auth and realtime for my app",
+      "I need row-level security and instant APIs without hand-rolling a backend",
+      "spin up a backend with database, auth, storage, and edge functions together",
+      "query my database and check for security advisories before shipping",
+      "generate TypeScript types straight from my database schema",
+      "manage database migrations and branches for a hosted Postgres project",
+      "deploy a serverless function alongside my database backend",
+      "debug a query or check logs on my hosted database project",
+      "get client-side config like the project URL and public API key for my app",
+      "run local development against a Supabase-backed backend before deploying"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "supabase/supabase-postgres-best-practices": {
+    "expansions": [
+      "am I setting up my Supabase database schema correctly",
+      "review my Postgres tables for best practices in Supabase",
+      "check my row-level security policies are sound",
+      "is my database design going to cause problems at scale",
+      "give me guidance on structuring a Supabase Postgres project",
+      "sanity check my SQL schema against recommended patterns"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "upsonic/unittest-generator": {
+    "expansions": [
+      "write unit tests for this source file automatically",
+      "I need test coverage generated for code that has none",
+      "generate a TestCase suite with fixtures and edge cases without me writing it by hand",
+      "organize generated tests into folders by concept instead of one giant file",
+      "autonomously produce Python unittest suites from existing source",
+      "cover the edge cases in this module with tests I didn't think to write"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
   "vercel-labs/vercel-react-best-practices": {
     "expansions": [
       "review this React component for performance problems before I ship it",
@@ -1197,6 +3261,31 @@
       "this component re-renders too much, what's causing it",
       "apply Vercel's official performance rules when refactoring this code",
       "check my server-side data fetching for anything slowing the page down"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "vercel/find-skills": {
+    "expansions": [
+      "is there already a skill for this so I don't build it myself",
+      "search an existing registry for a tool that does what I need",
+      "find the most popular, battle-tested option before writing my own",
+      "look up install counts to see what's trustworthy in a skill marketplace",
+      "auto-install a skill into my project once I find the right one",
+      "browse a skills marketplace by keyword or category",
+      "check if someone already solved this before I reinvent it",
+      "discover and pull in a community skill by name or topic"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0"
+  },
+  "yonatangross/orchestkit-rag": {
+    "expansions": [
+      "my retrieval results are mediocre, I need better search over my documents",
+      "set up hybrid search combining keyword and vector matching",
+      "improve RAG accuracy with reranking after the initial retrieval pass",
+      "I want the query itself rewritten before it hits the vector store, not just embedded as-is",
+      "chunk multimodal content properly instead of naive text splitting",
+      "build a self-correcting retrieval loop that checks its own results",
+      "which RAG pattern should I use for pgvector-backed search"
     ],
     "expandedBy": "skill-index-builder/0.1.0"
   }

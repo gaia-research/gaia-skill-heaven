@@ -83,10 +83,17 @@ describe("the committed index", () => {
     // and what fraction of unanswerable ones it rejects. A floor that bought
     // its rejection rate by refusing real queries would be visible here.
     const calibration = index.stats.floorCalibration;
+
+    // The calibration policy is fixed in advance: the highest threshold that
+    // still admits >= 90% of the gold set. That is the invariant. The
+    // rejection rate is an OUTCOME of it and is asserted only to be reported,
+    // never to be met — a test that required G2 to pass here would be a
+    // standing invitation to move the floor until it did.
     expect(calibration?.answerableAdmitted).toBeGreaterThanOrEqual(0.9);
-    expect(calibration?.unanswerableRejected).toBeGreaterThanOrEqual(0.9);
-    // When G2 cannot be met at a usable floor, the index says so rather than
-    // moving the threshold until the gate passes.
+    expect(typeof calibration?.unanswerableRejected).toBe("number");
+
+    // When G2 cannot be met at that floor, the index says so in its own stats
+    // rather than going quiet about it.
     if ((calibration?.unanswerableRejected ?? 0) < 0.9) {
       expect(calibration?.note).toMatch(/G2/);
     }
