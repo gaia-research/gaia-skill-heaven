@@ -512,6 +512,16 @@ Owns or develops:
 
 The HH Index remains research-led while its representation is still being discovered.
 
+The flow across the three repositories is one-directional (§10.1):
+
+```
+gaia-research          gaia-skill-tree          gaia-skill-heaven
+   publishes      ──►      records         ──►      consumes
+   the result           the accepted result
+```
+
+The Tree never calculates it. Skill Heaven never produces it.
+
 ---
 
 ### `gaia-skill-heaven`
@@ -540,17 +550,68 @@ It must not fork their meaning.
 
 The Hell-Heaven Index is Arbor's dominant behavioral index.
 
-At this stage, `INTENT.md` intentionally does not define its formula or require that it be one scalar.
-
 Its semantic job is:
 
 > **Describe the demonstrated behavioral effect of a capability along the Heaven-Hell operating space, under stated conditions and evidence.**
 
-The HH Index may eventually involve several dimensions.
+`INTENT.md` intentionally does not define its formula.
 
-That is a research question.
+But the formula is the only part that is open.
 
-It must remain independent from TrustMagnitude.
+### 10.1 What is already decided
+
+*Alignment pass, 2026-09-04. A scout of the founder docs found the HH Index considerably more specified than the first draft of this section implied. Recording it here so that `SPEC.md` and `PLAN.md`, which are re-derived from this document, cannot drift from decisions that already exist.*
+
+| | Decided | Where |
+|---|---|---|
+| The name, and the schema key `hellHeaven` | ratified, **CURRENT** | `gaia-research` RATIFICATION **N6** |
+| **A result is a profile, not merely a scalar** — polarity, behavior dimensions, per-regime effectiveness and safety, coverage — with a worked example | specified | `gaia-skill-tree/founder/ENDGAME - SCHEMA.md` §9 |
+| **Index independence.** `HH ↛ TM ↛ HH` is forbidden. Both derive from raw observation; projections may freely join their outputs | specified | `ENDGAME - SCHEMA.md` §14 |
+| **Recomputability.** Delete every generated HH artifact, recompute from receipts, reproduce the same Arbor projection | stated as the core invariant | `ENDGAME - SCHEMA.md` §16 |
+| Stamps are **earned by trial** — rubric-first predictions, validated against a paired benchmark, then shipped. Values `heaven-native`, `auto@tier`, `hell-safe@tier` | specified | `gaia-research/content/reports/hh-benchmark/methodology.md` §5 |
+| `hh-ledger/v1` frozen; the validator is the hard gate; no seeds, N repeats and confidence intervals | specified | methodology §6 |
+| **The flow is one-directional.** Research publishes the result. The Tree records the accepted result. Skill Heaven consumes it. The Tree never calculates it | specified | ROADMAP Program 3 |
+
+So the answer to *"may it be several dimensions?"* is already yes.
+
+The open question is narrower, and it is asked in `gaia-research`'s own methodology §7:
+
+> **Does a continuous score survive, or do the discrete stamps make it redundant?**
+
+That remains a research question, and this document does not pre-empt it.
+
+### 10.2 The question the consumer needs answered
+
+One thing is genuinely undecided, and it is not the formula.
+
+ENDGAME calls the HH Index **Arbor's dominant index**.
+
+But the ratified `gaia.arbor-profile/v1` has no field for it. Its claims carry `facet`, `conditions` and `support`, and index-shaped fields are not among them.
+
+So:
+
+```
+        does HH land INSIDE the Arbor profile
+                       │
+                       ├──► the contract needs a field
+                       │
+        or does it sit BESIDE it
+                       │
+                       └──► a consumer joins two artifacts,
+                            and needs to know on what key
+```
+
+Until that is answered, Skill Heaven consumes the Arbor profile and treats HH as absent.
+
+That is honest, and it is shippable.
+
+It is also the ceiling on §6 and §12: without it, Heaven and Hell can only differ by how many candidates they return.
+
+**This is the single decision that unblocks the most product surface.**
+
+### 10.3 Independence
+
+The HH Index must remain independent from TrustMagnitude.
 
 ```
                      OBSERVATION
@@ -886,7 +947,7 @@ This direction does not require:
 - runtime embedding dependencies
 - model-decided loadouts by default
 - merging the three Gaia repositories
-- fully defining the HH Index before evidence exists
+- fully defining the HH Index's **formula** before evidence exists — its name, shape, independence rule, recomputability constraint and governance are already decided (§10.1) and are not reopened by this line
 - delaying useful retrieval improvements until Arbor is complete
 
 The architecture should allow incomplete knowledge.

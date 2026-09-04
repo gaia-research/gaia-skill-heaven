@@ -490,6 +490,12 @@ score survives alongside the discrete stamps, or the stamps make it redundant.
 That question is already asked, in `gaia-research`'s own methodology §7, and
 this document does not re-ask it — see §12 Q2.
 
+**What is undecided and matters more to this layer** is where an HH result
+lives relative to `gaia.arbor-profile/v1`: inside it, which needs a field on the
+ratified contract, or beside it, which needs a join key. Until that is answered
+this layer consumes the Arbor profile and treats HH as absent — honest and
+shippable, and the ceiling on §6 (INTENT §10.2). Tracked as Q2b.
+
 Per ENDGAME §6 the index must remain independent from Trust Magnitude: one
 benchmark receipt may feed both, and each interprets it differently.
 
@@ -534,7 +540,8 @@ carrying the question.
 | # | Question | Owner |
 |---|---|---|
 | Q1 | What is the contract for Arbor interaction edges, and what projection publishes them? (§5.1) | `gaia-skill-tree` |
-| Q2 | Does a continuous 0–100 score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7, tracking `gaia-research#62`. Not re-asked here | `gaia-research` |
+| Q2 | Does a continuous score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7. Its tracking issue `gaia-research#62` was closed 2026-09-02; re-tracked at `gaia-research#207` | `gaia-research` |
+| Q2b | **Does the HH Index land inside `gaia.arbor-profile/v1`, or beside it?** The ratified profile has no field for it. The single decision that unblocks the most product surface (INTENT §10.2) — `gaia-research#207` | `gaia-research` / `gaia-skill-tree` |
 | Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
 | Q4 | Should the retrieval artifact be renamed to end the collision in §10.1? | this repo |
 | Q5 | Does upstream publish an installability determination this layer can consume? (§3.5) | `gaia-skill-tree` |
