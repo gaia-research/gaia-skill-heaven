@@ -28,6 +28,19 @@
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:041af9ad083a"
   },
+  "Taoidle/plan-decompose-gh-plan-cascade": {
+    "expansions": [
+      "I have a big feature to build and don't know how to break it into steps",
+      "help me turn this vague project idea into an actual dev plan",
+      "I need to split this task into smaller pieces before I start coding",
+      "plan out a multi-stage build for me from a rough spec",
+      "cascade this plan into sequential dev phases",
+      "decompose this project into an actionable roadmap",
+      "turn my one-line request into a structured implementation plan"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
   "addy-osmani/agent-skills": {
     "expansions": [
       "I need a consistent workflow my coding agent follows from idea to deployed code",
@@ -290,6 +303,20 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:c3a1593d1f2c"
+  },
+  "changkun/plan-decompose-gh-wallfacer": {
+    "expansions": [
+      "I want an agent that turns a spec into tickets and code",
+      "tool that chats with me, writes tasks, then implements them",
+      "platform for autonomous software engineering from requirements to code",
+      "break a project brief down into actionable engineering tasks automatically",
+      "I need something that plans then codes without me managing every step",
+      "end-to-end system that goes from conversation to shipped code",
+      "decompose a big feature request into smaller trackable work items",
+      "autonomous dev platform that handles spec, planning, and implementation"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
   },
   "devin-ai/autonomous-swe": {
     "expansions": [
@@ -608,6 +635,36 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:2d842ff21dd2"
+  },
+  "gaiabot/gaia-triage": {
+    "expansions": [
+      "our issue tracker is a mess and I don't know what's stale",
+      "help me sort the backlog into priorities",
+      "which of these pending skill proposals should actually get merged",
+      "clean up old issues that are probably already fixed",
+      "I need to size and prioritize a pile of tickets across repos",
+      "what's clogging up our GitHub issues right now",
+      "review draft skill batches waiting for approval",
+      "gate new skills before they enter the registry",
+      "figure out which issues are P0 versus nice-to-have",
+      "sweep multiple repos and consolidate everything into one tracker"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "gaiabot/repo-docs-before-pr": {
+    "expansions": [
+      "did I forget to update the docs before opening this PR",
+      "check if my documentation is stale before I submit",
+      "my CI keeps failing on a docs freshness check, what do I run",
+      "remind me to regenerate docs before pushing",
+      "make sure the readme and docs match the code changes in this branch",
+      "is there a drift between my code changes and the docs",
+      "give me the command to fix docs so the PR gate passes",
+      "gate my pull request on documentation being current"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
   },
   "garrytan/benchmark": {
     "expansions": [
@@ -1252,6 +1309,495 @@
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:43e8384e0a47"
   },
+  "google-deepmind/alphafold-database-fetch-and-analyze": {
+    "expansions": [
+      "how confident is this predicted protein structure",
+      "I have a UniProt ID and want to know if the fold prediction is reliable",
+      "check if this protein has disordered regions before I run docking",
+      "get the pLDDT scores for this accession",
+      "find where the rigid domains are in this predicted structure",
+      "is this AlphaFold model trustworthy enough to use downstream",
+      "download the predicted structure and error matrix for this protein and assess quality",
+      "which parts of this protein are floppy versus well-folded"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/alphagenome-single-variant-analysis": {
+    "expansions": [
+      "will this non-coding mutation actually disrupt gene expression",
+      "I have a variant in chr:pos:ref>alt format and need to know its effect",
+      "does this variant sit in an enhancer or promoter and change regulation",
+      "predict whether this SNP disrupts splicing",
+      "how does this variant affect chromatin accessibility in a specific cell type",
+      "map this tissue name to the right ontology term for my analysis",
+      "is this variant likely pathogenic based on its regulatory impact",
+      "score the functional consequence of a mutation outside the coding region"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/chembl-database": {
+    "expansions": [
+      "what's the IC50 of this compound against this target",
+      "look up approved drugs that hit this protein target",
+      "I need the chemical structure for this drug molecule",
+      "find bioactivity data for a small molecule I'm researching",
+      "search for compounds similar to aspirin by molecular weight",
+      "what is the binding affinity data for this drug target pair",
+      "pull drug mechanism of action info for this molecule",
+      "download an SDF file for a compound so I can visualize it in PyMOL"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/clinical-trials-database": {
+    "expansions": [
+      "find recruiting trials for a patient with this condition",
+      "how many trials are testing this drug for this disease",
+      "who is running trials for this cancer type",
+      "look up eligibility criteria for a specific NCT number",
+      "which sponsors are active in this therapeutic area",
+      "search government trial registry by drug and phase",
+      "count active studies across time periods for a condition",
+      "is there a phase 3 trial recruiting kids with this disease near me"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/clinvar-database": {
+    "expansions": [
+      "is this variant classified as pathogenic or benign clinically",
+      "I need the clinical evidence behind a variant's classification",
+      "find me confirmed pathogenic variants in a gene to use as test controls",
+      "check if labs disagree on how to classify this mutation",
+      "what condition and star rating does ClinVar assign this variant",
+      "get the clinician's rationale for calling this variant likely pathogenic",
+      "I need known-positive and known-negative variants for benchmarking a model",
+      "look up the consensus clinical significance for a human genomic variant"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/dbsnp-database": {
+    "expansions": [
+      "I have a chromosome position and need to know the rsID",
+      "convert this VCF variant to its dbSNP identifier",
+      "what gene is this SNP associated with",
+      "look up the clinical significance of this rsID",
+      "translate an HGVS notation string into genomic coordinates",
+      "find all known variants in this genomic region",
+      "what's the allele frequency for this genetic variant across populations",
+      "resolve rs7412 to its coordinates on GRCh38"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/embl-ebi-ols": {
+    "expansions": [
+      "what does this biomedical ontology term actually mean",
+      "find the parent category of this disease code",
+      "look up children or subtypes of this phenotype term",
+      "autocomplete a partial ontology term name",
+      "navigate the hierarchy of a GO or DOID identifier",
+      "cross-reference terms across gene ontology and disease ontology",
+      "get definitions and synonyms for a controlled vocabulary term",
+      "explore ancestor categories for a cell type or anatomy term"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/encode-ccres-database": {
+    "expansions": [
+      "find regulatory DNA elements near this genomic region",
+      "which cell types show DNase or H3K27ac signal at this locus",
+      "identify candidate enhancers and promoters around a gene",
+      "pull raw ChIP-seq peak data for a specific experiment",
+      "query cis-regulatory element annotations across human cell types",
+      "get experiment and file metadata from the ENCODE portal",
+      "is this non-coding region an active enhancer in a given tissue"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/ensembl-database": {
+    "expansions": [
+      "convert this gene symbol to its stable Ensembl ID",
+      "I have a RefSeq ID and need the corresponding gene id",
+      "fetch the exon structure for this transcript",
+      "what protein sequence does this transcript translate to",
+      "predict the effect of this variant on the protein",
+      "cross-reference this gene ID to UniProt",
+      "which transcript is the canonical one for this gene",
+      "get the genomic sequence for this gene region",
+      "translate between ENSG, ENST, and ENSP identifiers"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/foldseek-structural-search": {
+    "expansions": [
+      "I have a pdb file and want proteins with a similar 3D shape",
+      "find structural homologs for this coordinate file",
+      "search PDB and AlphaFold databases by structure not sequence",
+      "what other proteins fold like this one",
+      "identify the likely function of this structure by comparing shapes",
+      "structural similarity search using an actual 3D model",
+      "match this mmcif file against known structures to infer its role",
+      "given this experimental structure, what family does it belong to"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/gnomad-database": {
+    "expansions": [
+      "how rare is this genetic variant in the general population",
+      "check the allele frequency of a mutation across ancestry groups",
+      "is this gene tolerant or intolerant of loss-of-function mutations",
+      "get the pLI or LOEUF score for a gene",
+      "find all known structural variants in this genomic region",
+      "what's the filtering allele frequency for this variant",
+      "look up population-scale variant frequency, not an individual patient's genome"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/gtex-database": {
+    "expansions": [
+      "which tissues express this gene the most",
+      "I need baseline RNA expression levels for a gene across the body",
+      "find eQTLs linked to this variant",
+      "is this gene highly expressed in normal liver tissue",
+      "get the TPM values for this gene across all tissue types",
+      "contextualize a GWAS hit using tissue expression data",
+      "look up variant-expression associations for this SNP",
+      "what's the normal, non-diseased expression pattern for this transcript"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/human-protein-atlas-database": {
+    "expansions": [
+      "does this gene actually make protein, not just mRNA",
+      "where in the cell does this protein localize",
+      "check tissue-level protein expression for this gene",
+      "is the RNA and protein expression consistent for this target",
+      "find genes that are highly expressed in a specific brain region",
+      "which organelle does this protein live in",
+      "semi-quantitative staining data for a gene across tissues and cancers",
+      "confirm protein presence beyond RNA-seq evidence"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/interpro-database": {
+    "expansions": [
+      "what protein domains does this sequence contain",
+      "find every protein that shares this domain, even with different names",
+      "which species have proteins in this family",
+      "annotate a genome with protein family and GO term info",
+      "identify functional sites and motifs in a protein",
+      "search across many domain databases at once instead of one at a time",
+      "explore the domain architecture of a protein sequence"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/jaspar-database": {
+    "expansions": [
+      "what transcription factors bind this DNA motif",
+      "get the binding profile matrix for this TF",
+      "I need the PWM for CTCF",
+      "which regulators bind near this genomic region",
+      "resolve this TF gene symbol to its motif database ID",
+      "download a position frequency matrix in MEME format",
+      "find the metadata and family classification for a transcription factor",
+      "infer a binding motif from this TF protein sequence"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/literature-search-arxiv": {
+    "expansions": [
+      "find preprints on this research topic",
+      "download the PDF for this arxiv paper",
+      "search recent papers by this author",
+      "get the abstract and metadata for an arxiv ID",
+      "pull the LaTeX source for a paper I'm citing",
+      "look up the newest submissions in a subfield",
+      "find the paper that introduced this method on arxiv",
+      "fetch full text of a preprint for close reading"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/literature-search-biorxiv": {
+    "expansions": [
+      "pull recent biology preprints from a specific date range",
+      "I have a DOI and need the paper's metadata",
+      "find medRxiv papers in a category over the last couple weeks",
+      "fetch preprint details without going through peer review databases",
+      "browse newly posted life-science manuscripts by topic and date",
+      "get metadata for a preprint I already know the identifier of"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/literature-search-europepmc": {
+    "expansions": [
+      "find open-access papers on this research topic",
+      "I need the full text of a paper, not just the abstract",
+      "download the PDF for this PMC article",
+      "get the citation list for this scientific paper",
+      "search for recent publications by this author in life sciences",
+      "look up a paper by its DOI and get the full XML",
+      "find free full-text biology or medical articles on a topic",
+      "pull the bibliography for a given article"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/literature-search-openalex": {
+    "expansions": [
+      "how many times has this paper been cited",
+      "find all publications by this researcher",
+      "resolve a DOI to full paper metadata",
+      "what is this author's h-index",
+      "download an open-access PDF for this work",
+      "aggregate citation counts across a research group",
+      "explore which institutions publish most in this field",
+      "bibliometric lookup for funders and journals behind a paper"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/ncbi-sequence-fetch": {
+    "expansions": [
+      "fetch a protein sequence by its accession number",
+      "translate a coding sequence into the amino acid sequence",
+      "find the protein sequence linked to a PubMed article",
+      "search for a gene's sequence by name and organism",
+      "pull a nucleotide sequence for a specific locus tag",
+      "extract a protein sequence cited in a patent",
+      "look up a sequence when I only know the organism and approximate length"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/openfda-database": {
+    "expansions": [
+      "has this drug been recalled",
+      "look up adverse events reported for this medication",
+      "check FDA approval status for this drug",
+      "find safety and regulatory data on this medical device",
+      "search NDC codes for a drug product",
+      "are there any shortages reported for this medication",
+      "get 510(k) clearance info for a device",
+      "pull FDA labeling information for a drug",
+      "search recalls across foods, cosmetics, or tobacco products"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/opentargets-database": {
+    "expansions": [
+      "is this gene a good drug target for this disease",
+      "what evidence links this target to this condition",
+      "find druggable genes associated with a disease",
+      "check tractability and safety data before pursuing a target",
+      "what drugs already exist for genes linked to this disease",
+      "GWAS and genetics evidence connecting a variant to a gene",
+      "rank candidate targets by strength of disease association",
+      "find known compounds targeting this protein"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/pdb-database": {
+    "expansions": [
+      "find the 3D structure of this protein",
+      "search for structures similar to a given sequence or fold",
+      "download an experimentally solved structure with a bound ligand",
+      "get metadata about how a structure was determined experimentally",
+      "search structures by chemical or other attributes",
+      "find crystal structures containing a particular nucleic acid or ligand"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/protein-sequence-msa": {
+    "expansions": [
+      "compare these protein sequences to see how similar they are",
+      "which residues are conserved across these homologs",
+      "align a bunch of protein sequences I have in a FASTA file",
+      "check if this domain is conserved across species",
+      "find key conserved residues across multiple protein variants",
+      "run a multiple sequence alignment on my protein set",
+      "assess similarity across up to a few thousand protein sequences"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/protein-sequence-similarity-search": {
+    "expansions": [
+      "I have a raw amino acid sequence and want to know what it does",
+      "find homologous proteins for this FASTA file",
+      "infer function of a protein from sequence matches",
+      "BLAST this sequence against a curated database",
+      "fast similarity search for a protein sequence I just got",
+      "what protein family does this sequence belong to",
+      "search only within human or bacterial proteins for a match",
+      "given this sequence, find close evolutionary relatives"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/pubchem-database": {
+    "expansions": [
+      "look up the properties of a specific chemical compound",
+      "convert a drug name to its SMILES string or CID",
+      "find compounds structurally similar to this molecule",
+      "check the bioactivity data for a small molecule",
+      "resolve a chemical name to standard identifiers for cheminformatics",
+      "substructure search for molecules containing a given fragment"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/pubmed-database": {
+    "expansions": [
+      "search medical literature for clinical trials on this drug",
+      "find the abstract and full text for this paper",
+      "link this gene to related published research",
+      "verify the spelling of this medical term",
+      "match a raw citation to its PubMed entry",
+      "cache a bulk set of search results for later processing",
+      "find papers connecting this compound to a specific gene",
+      "look up published research via NCBI E-utilities"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/pymol": {
+    "expansions": [
+      "make a picture of this protein structure",
+      "align two structures and measure how similar they are",
+      "color a structure by confidence score for a figure",
+      "highlight the binding site residues in this structure",
+      "measure the distance between two atoms in a protein model",
+      "render a publication-quality image of a molecule",
+      "check contacts between a protein and a ligand",
+      "superimpose two protein structures and visualize the overlap"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/quickgo-database": {
+    "expansions": [
+      "what biological process is this gene involved in",
+      "find all genes annotated to a specific GO term or pathway",
+      "map a gene to its molecular function and cellular component",
+      "explore the Gene Ontology hierarchy for a term",
+      "get functional annotations for a gene, not its drug targets",
+      "filter GO annotations to only experimentally verified evidence"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/reactome-database": {
+    "expansions": [
+      "run pathway enrichment analysis on my gene list",
+      "which biological pathways is this gene involved in",
+      "find the inputs and outputs of this reaction",
+      "get the top-level pathway hierarchy for a species",
+      "which genes from my list weren't found in the pathway analysis",
+      "export a pathway diagram highlighting my genes",
+      "cross-reference this identifier to a pathway database entry",
+      "search the pathway knowledgebase for a specific process",
+      "retrieve enrichment analysis results using a previous token"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/string-database": {
+    "expansions": [
+      "which proteins does this protein physically interact with",
+      "get the confidence score for a protein-protein interaction",
+      "find enriched pathways for a set of proteins",
+      "check homology relationships between proteins across species",
+      "build an interaction network for a list of gene names",
+      "how strong is the interaction evidence between two proteins"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/ucsc-conservation-and-tfbs": {
+    "expansions": [
+      "is this non-coding variant evolutionarily conserved",
+      "check if this genomic position has changed across species",
+      "find conservation peaks across this regulatory element",
+      "is this base under strong evolutionary constraint",
+      "does this region overlap a transcription factor binding site",
+      "get phyloP and phastCons scores for a variant",
+      "find TFBS from ENCODE or JASPAR near this locus",
+      "assess whether a mutation hits a functionally important site"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/unibind-database": {
+    "expansions": [
+      "find experimentally confirmed binding sites for this transcription factor",
+      "download BED coordinates of TF binding events for a cell line",
+      "which transcription factors bind DNA in this cell type",
+      "get validated ChIP-seq derived binding site data, not predicted motifs",
+      "list available TF-DNA interaction datasets by species",
+      "direct evidence of where a transcription factor actually binds",
+      "pull real binding site coordinates for local motif analysis",
+      "search curated TF binding data across multiple organisms"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/uniprot-database": {
+    "expansions": [
+      "look up what this protein does and where it's expressed",
+      "map an identifier from one protein database to another",
+      "get the taxonomy and organism info for a protein entry",
+      "retrieve publications and functional annotations for a protein",
+      "find non-model organism proteins related to a known sequence",
+      "fetch a previous version of a protein entry that's since been updated",
+      "search proteins by function across UniProtKB and UniRef"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/uv": {
+    "expansions": [
+      "make sure uv is installed before running this",
+      "check if the Python package manager is set up",
+      "install uv if it's missing and add it to PATH",
+      "verify the environment has the right Python tooling before proceeding",
+      "bootstrap uv as a prerequisite for another skill",
+      "confirm uv --version works before running scripts"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "google-deepmind/workflow-skill-creator": {
+    "expansions": [
+      "turn what we just did together into a reusable tool",
+      "package this multi-step process so I can run it again later",
+      "make this conversation into something I can invoke next time",
+      "capture this workflow as a repeatable skill",
+      "I want to save this exact sequence of steps for future use",
+      "distill this interaction into an agent capability",
+      "convert my ad-hoc process into a packaged skill",
+      "never want to re-explain this workflow again, save it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
   "gooseworks/notte-browser": {
     "expansions": [
       "I need an agent to click through a website and fill out a form for me",
@@ -1706,6 +2252,71 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:36eb9f3b7973"
+  },
+  "langgenius/backend-code-review": {
+    "expansions": [
+      "review my API changes before I open a PR",
+      "check this backend diff for security or authorization holes",
+      "audit a pending change to our server-side code",
+      "is this database migration going to cause a data integrity problem",
+      "review pasted backend diff for maintainability issues",
+      "catch bugs in service-layer or SQLAlchemy code before merging",
+      "flag anything that breaks the repository boundary pattern"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "langgenius/component-refactoring": {
+    "expansions": [
+      "this React component is too tangled, help me clean it up",
+      "break up a bloated frontend component into smaller pieces",
+      "this file has too much going on, restructure it",
+      "simplify a high-complexity component in Dify's frontend",
+      "tidy up messy component logic before it gets worse",
+      "reduce the complexity of this UI component"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "langgenius/e2e-cucumber-playwright": {
+    "expansions": [
+      "writing a new end-to-end test scenario in gherkin",
+      "my e2e feature file step definitions need review",
+      "add browser automation coverage for a critical user flow",
+      "how should I word this Cucumber scenario",
+      "review my Playwright locators and assertions for flakiness",
+      "adding a step definition that doesn't exist yet",
+      "keep e2e tests from becoming flaky across scenarios",
+      "tag and organize end-to-end test scenarios properly"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "langgenius/frontend-code-review": {
+    "expansions": [
+      "review this UI component change for accessibility problems",
+      "audit my frontend diff before merging",
+      "check for broken keyboard navigation or focus handling",
+      "did this change break the design system's primitive contracts",
+      "review a React component for state or effect bugs",
+      "catch performance regressions in this frontend change",
+      "is this form accessible and does it use the right ARIA attributes"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "langgenius/frontend-testing": {
+    "expansions": [
+      "write Vitest tests for this React component",
+      "I need test coverage for a Dify frontend component but don't know where to start",
+      "generate React Testing Library tests for this UI behavior",
+      "what's the smallest test boundary for this component's behavior",
+      "review whether my existing frontend test strategy actually covers the risk",
+      "should I delete these low-value frontend tests",
+      "set up a failing test first for this new component feature"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
   },
   "laravel/upgrade-laravel-v13": {
     "expansions": [
@@ -2679,6 +3290,20 @@
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:323113da90f2"
   },
+  "pexp13/sentiment-analysis": {
+    "expansions": [
+      "classify whether this text is positive, negative, or neutral",
+      "figure out the emotional tone of user reviews",
+      "build a pipeline to score sentiment from raw noisy text",
+      "determine affective polarity of social media posts",
+      "preprocess and normalize text before sentiment scoring",
+      "fine-grained sentiment classification beyond just positive/negative",
+      "need a tool-agnostic way to do sentiment inference",
+      "clean up messy user-generated text and label its sentiment"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
   "remotion-dev/remotion-best-practices": {
     "expansions": [
       "what's the recommended way to structure a Remotion project",
@@ -3458,6 +4083,41 @@
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:1661a4094187"
   },
+  "sickn33/ai-dev-jobs-mcp": {
+    "expansions": [
+      "find me job openings for AI developers",
+      "search for machine learning engineering positions",
+      "what AI dev jobs are currently listed",
+      "help me look for a new job in AI development"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "sickn33/mcp-builder": {
+    "expansions": [
+      "help me scaffold a Model Context Protocol server",
+      "I want to build an MCP server in Python",
+      "create a new MCP tool server from scratch in Node.js",
+      "set up boilerplate for an MCP integration",
+      "how do I wire up an MCP server for my tool"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
+  "sickn33/n8n-mcp-tools-expert": {
+    "expansions": [
+      "connect MCP tools into my n8n automation",
+      "expose an MCP server's tools as n8n workflow nodes",
+      "build a workflow in n8n that calls Model Context Protocol tools",
+      "integrate n8n with an MCP server",
+      "use n8n workflows to serve tools over MCP",
+      "wire up n8n so an agent can call it via MCP",
+      "automation platform bridging MCP and n8n",
+      "help designing n8n workflows that consume MCP tools"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
   "spring-ai/readme-generate": {
     "expansions": [
       "generate a README for this Spring Boot module in Chinese and English",
@@ -3549,6 +4209,20 @@
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:800816c0ba80"
   },
+  "xquik-dev/hermes-tweet": {
+    "expansions": [
+      "check what people are saying about us on Twitter",
+      "monitor a hashtag or account for new mentions",
+      "look up a Twitter user's profile and recent activity",
+      "find who follows a given account on X",
+      "draft a reply to a tweet but don't post it without my approval",
+      "search X for recent posts on a topic",
+      "pull a summary of a thread on Twitter",
+      "post a tweet after I confirm it"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
+  },
   "yonatangross/orchestkit-rag": {
     "expansions": [
       "my retrieval results are mediocre, I need better search over my documents",
@@ -3561,5 +4235,16 @@
     ],
     "expandedBy": "skill-index-builder/0.1.0",
     "expandedFrom": "sha256:cb27d6d8390d"
+  },
+  "yundu-ai/mcp-tool-developer": {
+    "expansions": [
+      "build and deploy a full MCP server with tests",
+      "I need to publish my MCP server to a registry",
+      "develop MCP tools end to end in TypeScript",
+      "take my MCP server idea from scratch through deployment",
+      "set up testing and deployment for a Model Context Protocol tool"
+    ],
+    "expandedBy": "skill-index-builder/0.1.0",
+    "expandedFrom": ""
   }
 }

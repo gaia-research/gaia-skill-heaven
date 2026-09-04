@@ -16,11 +16,14 @@ describe("the expansion surface", () => {
   it("never rewrites a contributor description", () => {
     const snapshot = JSON.parse(
       readFileSync(join(import.meta.dirname, "..", "bench", "corpus", "named-projection.json"), "utf8"),
-    ) as { buckets: Record<string, Array<{ id: string; description?: string }>> };
+    ) as {
+      buckets: Record<string, Array<{ id: string; description?: string }>>;
+      awaitingClassification?: Array<{ id: string; description?: string }>;
+    };
     const upstream = new Map(
-      Object.values(snapshot.buckets)
-        .flat()
-        .map((skill) => [skill.id, skill.description ?? ""]),
+      [...Object.values(snapshot.buckets).flat(), ...(snapshot.awaitingClassification ?? [])].map(
+        (skill) => [skill.id, skill.description ?? ""],
+      ),
     );
     for (const doc of index.docs) {
       expect(doc.description).toBe(upstream.get(doc.id));

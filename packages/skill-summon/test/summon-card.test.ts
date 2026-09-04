@@ -73,7 +73,13 @@ describe("summon result card", () => {
     const mismatched = renderSummonCard(
       {
         ...base,
-        retrieval: { score: 12.5, margin: 0.4, matchKind: "ranked", nameMatchesQuery: false },
+        retrieval: {
+          score: 12.5,
+          margin: 0.4,
+          matchKind: "ranked",
+          classified: true,
+          nameMatchesQuery: false,
+        },
       },
       { mode: "relevance-only", trustFields: [], disclosure: "relevance", ...index },
     );
@@ -83,11 +89,34 @@ describe("summon result card", () => {
     const matched = renderSummonCard(
       {
         ...base,
-        retrieval: { score: 12.5, margin: 0.4, matchKind: "exact", nameMatchesQuery: true },
+        retrieval: {
+          score: 12.5,
+          margin: 0.4,
+          matchKind: "exact",
+          classified: true,
+          nameMatchesQuery: true,
+        },
       },
       { mode: "relevance-only", trustFields: [], disclosure: "relevance", ...index },
     );
     expect(matched).not.toContain("Name mismatch");
+  });
+
+  it("discloses when the tree has not classified the skill it summoned", () => {
+    const card = renderSummonCard(
+      {
+        ...base,
+        retrieval: {
+          score: 9,
+          margin: 0.5,
+          matchKind: "ranked",
+          classified: false,
+          nameMatchesQuery: true,
+        },
+      },
+      { mode: "relevance-only", trustFields: [], disclosure: "relevance", ...index },
+    );
+    expect(card).toContain("Classification: the tree has not filed this skill");
   });
 
   it("flags a stale index rather than quietly ranking on old data", () => {

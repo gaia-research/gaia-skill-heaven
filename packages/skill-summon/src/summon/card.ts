@@ -62,6 +62,11 @@ export function renderSummonCard(
     lines.push(
       `  Match: ${skill.retrieval.matchKind} · score ${skill.retrieval.score.toFixed(2)} · margin ${skill.retrieval.margin.toFixed(2)}`,
     );
+    if (!skill.retrieval.classified) {
+      lines.push(
+        "  Classification: the tree has not filed this skill under a generic node yet — it is indexed, but its bucket and trust context are missing.",
+      );
+    }
   }
 
   lines.push(

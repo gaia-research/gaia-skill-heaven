@@ -52,12 +52,19 @@ const options = {
 };
 
 describe("buildSkillIndex", () => {
-  it("indexes bucketed skills only, and records what it left out", () => {
+  it("indexes unbucketed skills too, and flags them as unclassified", () => {
     const index = buildSkillIndex(options);
-    expect(index.docs.map((doc) => doc.id)).toEqual(["acme/no-source", "garrytan/health"]);
-    // The 52 awaiting-classification skills upstream are invisible to summon.
-    // Recording the count keeps that gap visible instead of silently shrinking
-    // the corpus.
+    // Reading `buckets` only made 52 real skills unsummonable for a reason
+    // that has nothing to do with whether they are any good: the tree had not
+    // filed them under a generic node yet. They are indexed, and the card
+    // says the classification is missing.
+    expect(index.docs.map((doc) => doc.id)).toEqual([
+      "acme/no-source",
+      "garrytan/health",
+      "someone/unclassified",
+    ]);
+    expect(index.docs.find((doc) => doc.id === "someone/unclassified")?.classified).toBe(false);
+    expect(index.docs.find((doc) => doc.id === "garrytan/health")?.classified).toBe(true);
     expect(index.stats.awaitingClassification).toBe(1);
   });
 
@@ -65,7 +72,7 @@ describe("buildSkillIndex", () => {
     const index = buildSkillIndex(options);
     expect(index.docs.find((doc) => doc.id === "acme/no-source")?.installable).toBe(false);
     expect(index.docs.find((doc) => doc.id === "garrytan/health")?.installable).toBe(true);
-    expect(index.stats.unreachable).toBe(1);
+    expect(index.stats.unreachable).toBe(2);
   });
 
   it("counts a linkless suite root as reachable — its components carry the payloads", () => {
@@ -98,7 +105,9 @@ describe("buildSkillIndex", () => {
 
   it("never rewrites the contributor description", () => {
     const index = buildSkillIndex(options);
-    expect(index.docs[1]?.description).toBe("Executes the full automated test suite.");
+    expect(index.docs.find((doc) => doc.id === "garrytan/health")?.description).toBe(
+      "Executes the full automated test suite.",
+    );
   });
 
   it("reports expansion:none until a generation batch is supplied", () => {
@@ -113,7 +122,9 @@ describe("buildSkillIndex", () => {
       },
     });
     expect(expanded.builder.expansion).toBe("generated");
-    expect(expanded.docs[1]?.retrieval.expandedBy).toBe("test/0.0.0");
+    expect(
+      expanded.docs.find((doc) => doc.id === "garrytan/health")?.retrieval.expandedBy,
+    ).toBe("test/0.0.0");
   });
 
   it("counts how many documents carry expansions — partial coverage is not neutral", () => {
@@ -128,7 +139,7 @@ describe("buildSkillIndex", () => {
     // not, so a half-expanded index demotes the half without it. The count is
     // carried so that gap cannot hide.
     expect(partial.stats.expandedDocs).toBe(1);
-    expect(partial.stats.docs).toBe(2);
+    expect(partial.stats.docs).toBe(3);
   });
 
   it("leaves the floor uncalibrated rather than guessing one", () => {

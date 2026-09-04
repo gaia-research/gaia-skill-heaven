@@ -81,8 +81,9 @@ if (process.argv.includes("--check")) {
       `docs              ${index.stats.docs}`,
       `expansion         ${index.builder.expansion}`,
       `unreachable       ${index.stats.unreachable}`,
+      `expanded          ${index.stats.expandedDocs}/${index.stats.docs}`,
       `missing tags      ${index.stats.missingTags}`,
-      `awaiting class.   ${index.stats.awaitingClassification} (not indexed — invisible to summon)`,
+      `unclassified      ${index.stats.awaitingClassification} (indexed; the tree has not bucketed them)`,
       `floor             ${index.stats.floor ?? "uncalibrated"}`,
     ].join("\n"),
   );
