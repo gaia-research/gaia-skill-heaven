@@ -15,9 +15,9 @@ interface WingsTunerHUDProps {
 }
 
 const DEFAULT_WING_PRESETS: Record<string, WingPreset> = {
-  heaven: { scale: 1.0, x: 0, y: 0, rot: 0, opacity: 0.55 },
-  hell: { scale: 1.0, x: 0, y: 0, rot: 0, opacity: 0.55 },
-  ultra: { scale: 1.0, x: 0, y: 0, rot: 0, opacity: 0.55 },
+  heaven: { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0, opacity: 0.55 },
+  hell: { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0, opacity: 0.55 },
+  ultra: { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0, opacity: 0.55 },
 }
 
 export function WingsTunerHUD({ scene, rootRef, onSelectScene }: WingsTunerHUDProps) {

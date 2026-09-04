@@ -70,12 +70,25 @@ function isTunerRequested(): boolean {
   return false
 }
 
+function isWingsTunerRequested(): boolean {
+  if (typeof window === 'undefined') return false
+  const params = new URLSearchParams(window.location.search)
+  const hash = window.location.hash
+  if (params.get('tuner') === 'wings') return true
+  if (hash.includes('tuner=wings')) return true
+  try {
+    if (localStorage.getItem('wings-tuner') === 'true') return true
+  } catch {}
+  return false
+}
+
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder, resetZoom } = useHeroEngine('a')
   const navigate = useNavigate()
   const [showTuner, setShowTuner] = useState(isTunerRequested)
+  const [showWingsTuner, setShowWingsTuner] = useState(isWingsTunerRequested)
 
-  // Hotkey toggle: Ctrl+Shift+L or Cmd+Shift+L toggles the Lucy tuner anytime
+  // Hotkey toggle: Ctrl+Shift+L toggles Lucy tuner, Ctrl+Shift+W toggles Wings tuner
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
@@ -85,6 +98,17 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           try {
             if (next) localStorage.setItem('lucy-tuner', 'true')
             else localStorage.removeItem('lucy-tuner')
+          } catch {}
+          return next
+        })
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault()
+        setShowWingsTuner((prev) => {
+          const next = !prev
+          try {
+            if (next) localStorage.setItem('wings-tuner', 'true')
+            else localStorage.removeItem('wings-tuner')
           } catch {}
           return next
         })
@@ -327,10 +351,10 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             alt=""
             draggable={false}
             style={{
-              bottom: `calc(0vh + var(--wing-y, 0vh))`,
-              left: `calc(2% + var(--wing-x, 0vh))`,
+              bottom: `calc(var(--wing-y, ${v.wingY}vh))`,
+              left: `calc(2% + var(--wing-x, ${v.wingX}vh))`,
               transformOrigin: 'bottom center',
-              transform: `scale(calc(${v.mWing} * var(--wing-scale, 1))) rotate(calc(0deg - var(--wing-rot, 0deg)))`,
+              transform: `scale(calc(${v.mWing} * var(--wing-scale, ${v.wingScale}))) rotate(calc(0deg - var(--wing-rot, ${v.wingRot}deg)))`,
               opacity: `calc(${v.oWing} * var(--wing-opacity-mul, 1))`,
               filter: wingFilter,
               transition:
@@ -343,10 +367,10 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             alt=""
             draggable={false}
             style={{
-              bottom: `calc(0vh + var(--wing-y, 0vh))`,
-              right: `calc(2% + var(--wing-x, 0vh))`,
+              bottom: `calc(var(--wing-y, ${v.wingY}vh))`,
+              right: `calc(2% + var(--wing-x, ${v.wingX}vh))`,
               transformOrigin: 'bottom center',
-              transform: `scale(calc(${v.mWing} * var(--wing-scale, 1))) rotate(calc(0deg + var(--wing-rot, 0deg)))`,
+              transform: `scale(calc(${v.mWing} * var(--wing-scale, ${v.wingScale}))) rotate(calc(0deg + var(--wing-rot, ${v.wingRot}deg)))`,
               opacity: `calc(${v.oWing} * var(--wing-opacity-mul, 1))`,
               filter: wingFilter,
               transition:
@@ -733,12 +757,14 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         </div>
       </div>
 
-      {/* Interactive Wings Tuner HUD for repositioning and scaling wings */}
-      <WingsTunerHUD
-        scene={v.scene}
-        rootRef={rootRef}
-        onSelectScene={onSelectScene}
-      />
+      {/* Interactive Wings Tuner HUD for repositioning and scaling wings (triggered via ?tuner=wings or Cmd+Shift+W) */}
+      {showWingsTuner && (
+        <WingsTunerHUD
+          scene={v.scene}
+          rootRef={rootRef}
+          onSelectScene={onSelectScene}
+        />
+      )}
 
       {/* Interactive Dev Tool HUD for dragging Lucy and tracking live coordinates & zoom (triggered via ?tuner=lucy or Cmd+Shift+L) */}
       {showTuner && (

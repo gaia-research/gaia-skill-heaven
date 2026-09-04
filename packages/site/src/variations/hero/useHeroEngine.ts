@@ -54,6 +54,13 @@ function isMobileViewport() {
     : false
 }
 
+function getViewportCategory(): 'desktop' | 'tablet' | 'mobile' {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'desktop'
+  if (window.matchMedia('(max-width: 640px)').matches) return 'mobile'
+  if (window.matchMedia('(max-width: 1024px)').matches) return 'tablet'
+  return 'desktop'
+}
+
 type EngineState = {
   act: number
   flash: 0 | 1 | 2
@@ -106,10 +113,34 @@ export const FIG_CONFIG = {
   ultra: { zoom: 1.40, x: 3.55, y: 2.00, origin: '45% 24%' },
 } as const
 
+// Per-band wing framing presets across responsive viewports.
+export const WING_CONFIG = {
+  heaven: { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+  hell:   { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+  ultra:  { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+} as const
+
+export const WING_CONFIG_TABLET = {
+  heaven: { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+  hell:   { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+  ultra:  { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+} as const
+
+export const WING_CONFIG_MOBILE = {
+  heaven: { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+  hell:   { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+  ultra:  { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+} as const
+
 // Pure translation of state -> every derived style value. Nothing here
 // mutates state; `variant` only steers the two style knobs (cut angle, CTA
 // alignment) that differ between the Reredos and Guillotine layouts.
-function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
+function computeVals(
+  state: EngineState,
+  variant: 'a' | 'b',
+  mobile: boolean,
+  viewport: 'desktop' | 'tablet' | 'mobile' = 'desktop',
+) {
   const { act, flash, stop, glitch, od } = state
   const lane = LADDER[stop].lane
   const atLadder = act === N - 1
@@ -238,6 +269,22 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
     // present through the intro and at the ladder for heaven/hell/ultra; Zero
     // carries none (canon).
     oWing: atLadder ? (scene === 'zero' ? 0 : 0.55) : [0.5, 0.4, 0.28, 0.14, 0][act],
+    wingScale:
+      scene === 'zero'
+        ? 1.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].scale,
+    wingX:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].x,
+    wingY:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].y,
+    wingRot:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].rot,
     haloRot: pick([0, -3, -7, -12, -12]),
     lucyY: pick([0, -1.5, -3, 0, 0]),
     lucyXB: pick([0, -1, -2, 1, 6]),
@@ -335,13 +382,22 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
   const [od, setOd] = useState<0 | 1 | 2>(0)
   const [mobile, setMobile] = useState(isMobileViewport)
+  const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>(getViewportCategory)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined
-    const mq = window.matchMedia('(max-width: 640px)')
-    const onChange = () => setMobile(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
+    const mqMobile = window.matchMedia('(max-width: 640px)')
+    const mqTablet = window.matchMedia('(max-width: 1024px)')
+    const onChange = () => {
+      setMobile(mqMobile.matches)
+      setViewport(getViewportCategory())
+    }
+    mqMobile.addEventListener?.('change', onChange)
+    mqTablet.addEventListener?.('change', onChange)
+    return () => {
+      mqMobile.removeEventListener?.('change', onChange)
+      mqTablet.removeEventListener?.('change', onChange)
+    }
   }, [])
 
   const actRef = useRef(act)
@@ -662,7 +718,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [act, stop])
 
-  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile)
+  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile, viewport)
 
   const dots = Array.from({ length: N }, (_, i) => ({
     aria: 'Act ' + (i + 1),
