@@ -36,7 +36,7 @@ const benchCorpus = join(here, "..", "bench", "corpus");
 const inputPath = argValue("--in") ?? join(benchCorpus, "expansions.raw.jsonl");
 // `--rank-cutoff none` keeps every generated expansion. It is a real option,
 // not an escape hatch: measured on this corpus the round-trip filter REMOVES
-// the expansions worth having (see docs/PHASES-0-4-STATUS.md), so the shipped
+// the expansions worth having (see docs/EVIDENCE.md), so the shipped
 // index is currently built unfiltered and this flag is what makes that
 // reproducible from one documented command.
 const cutoffArg = argValue("--rank-cutoff") ?? "1";

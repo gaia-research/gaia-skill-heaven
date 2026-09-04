@@ -1,16 +1,29 @@
-# Phases 0–4 — what was built, what was measured, what changed the spec
+# EVIDENCE — what was measured
 
-**Status:** implementation record for [`PLAN.md`](PLAN.md) Phases 0–4, against
-[`SPEC.md`](SPEC.md). Branch `claude/skill-heaven-phases-0-1-474exr`, PR #114,
-based on the docs branch. Umbrella issues #108, #109, #110, #111, #112.
+**Status:** the measurement record for [`SPEC.md`](SPEC.md) and
+[`PLAN.md`](PLAN.md). Per SPEC §0.1 every number lives here or in
+`packages/core/bench/results/`, never as a normative value in the spec.
 
-| Phase | Outcome |
+**Provenance:** produced under the superseded 2026-09-03 SPEC/PLAN, whose
+*direction* was replaced by [`INTENT.md`](INTENT.md) on 2026-09-04. The
+measurements below were not invalidated by that replan — a negative result about
+dense retrieval or expansion coverage stands regardless of which document
+commissioned it. Section headings still name the old phase structure; they are
+kept as-is because rewriting a record after the fact is worse than an
+out-of-date label.
+
+Work recorded here maps onto the new lanes as: **Lane R** (everything
+retrieval), **Lane X** (the SEP resource surface), **Lane S-now** (the
+deterministic controller), and one item that is now debt rather than progress —
+the repo-local Arbor type, retired by **Lane A1**.
+
+| Old phase | Outcome |
 |---|---|
 | **0 — Ground truth** (#108) | Shipped. The ruler exists and the baseline is 0.039 |
 | **1 — Index, rank, refuse** (#109) | Shipped, all 12 items. G1 and G3 pass; G2 fails at 75% and is recorded rather than tuned around |
 | **2 — Semantic recall** (#110) | **Does not ship.** 2.1's failure analysis killed it: zero vocabulary-gap misses. Negative result (D8) |
-| **3 — Ultra** (#111) | Shipped. Controller, calibrated thresholds, stability gate. Kill criterion cleared with room |
-| **4 — Arbor + SEP** (#112) | Split. 4.4/4.5/4.6 shipped — and 4.6 went further than "watch", because the SEP stabilised. 4.1–4.3 blocked on Phase 5 |
+| **3 — Ultra** (#111) | Shipped. Controller, calibrated thresholds, stability gate. Superseded intent adds SPEC INV-11: `noMatch` must not drive exploration |
+| **4 — Arbor + SEP** (#112) | Split — and the split is now a specified anti-pattern (SPEC INV-16). The SEP half shipped; the Arbor half shipped a local schema that Lane A1 retires |
 
 This document exists because five things were measured that the spec had
 guessed, and two of those guesses were wrong in ways that would have shipped a
@@ -298,3 +311,56 @@ npx tsx packages/core/scripts/build-skill-index.ts
 npx tsx packages/core/scripts/calibrate-floor.ts && npx tsx packages/core/scripts/build-skill-index.ts
 npx tsx packages/core/bench/run.ts --calibrate
 ```
+
+---
+
+## Yggdrasil III — what a full recalibration costs the runtime layer
+
+**Measured 2026-09-04**, `gaia-skill-tree` `origin/main...dev/integration-ygg3-playbooks-2026-09-02`
+(PR #1688, 1,098 files, open and founder-gated at time of measurement).
+
+Method: parse YAML frontmatter on both sides of every `registry/named/**/*.md`
+present in both trees; classify each modified file by which *class* of field
+changed. Ranked fields are the ones the retrieval index scores (`name`, `title`,
+`description`, `tags`, `genericSkillRef`); reach fields decide whether a skill
+can be materialized (`installable`, `suiteRef`, `suiteComponents`, `status`,
+`links`); prestige fields are Yggdrasil's (`level`, `trustMagnitude`,
+`overallTrustGrade`, `provisional`).
+
+| | Count |
+|---|---|
+| Named skills, before → after | 326 → 339 |
+| Modified | 291 |
+| Unchanged | 35 |
+| Newly added | 13 |
+| **Modified, prestige fields only** | **287** |
+| Modified, a ranked field changed | 1 (`pbakaus/impeccable`, `genericSkillRef`) |
+| Modified, a reach field changed | 3 (`remotion-dev/*`, `suiteRef`) |
+| Modified, body text changed — invalidating generated expansions | **0** |
+
+Underlying prestige movement: 154 `trustMagnitude` values and 76 `level` values
+changed.
+
+**Reading.** A complete Trust Magnitude recalibration of the entire catalogue
+costs the retrieval index 13 new documents and four field touches, with zero
+expansion regeneration. This is the concrete answer to the maintainability
+question raised on 2026-09-03, measured against a real meta shift rather than
+argued.
+
+**What it is evidence for.** SPEC INV-5 — the index ranks only on
+capability-descriptive fields, and carries prestige without scoring it. The
+result is a consequence of that separation. Had Arbor stamping or ranking been
+sequenced by star rank, as the superseded SPEC specified, this single PR would
+have invalidated 76 `level` values and 154 `trustMagnitude` values and required
+re-stamping most of the catalogue.
+
+**What it is not evidence for.** It says nothing about retrieval *quality* under
+the new corpus. 13 new documents need expansion generation, and no evaluation
+has been run against the Yggdrasil III corpus — that is Lane R4.
+
+**Caveat.** Frontmatter was parsed with a line-oriented reader rather than a
+YAML library; a multi-line value reformatted without changing meaning would
+register as a change. The direction of that bias is conservative — it would
+*over*-report ranked-field churn, and ranked-field churn measured at 1.
+
+Script: `packages/core/bench/scripts/ygg3-churn.py`.

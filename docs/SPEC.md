@@ -1,967 +1,568 @@
-# SPEC — the Summon Stack
+# SPEC — the Gaia runtime capability layer
 
-> [!WARNING]
-> **STALE as of 2026-09-04 — founder is replanning.** Do not build from this
-> document, and do not treat its rulings as current. An audit of `INTENT.md`
-> comes first: Arbor appears to have been reduced to a Yggdrasil-ranked scalar,
-> its behavioral graph and the Hell-Heaven Index are absent, and §8 forks a
-> contract that `gaia-skill-tree/registry/arbor/` has already ratified.
-> See [#115](https://github.com/gaia-research/gaia-skill-heaven/issues/115).
->
-> What was measured against this document is still valid as evidence —
-> `docs/PHASES-0-4-STATUS.md` and `packages/core/bench/results/` — and the
-> retrieval work does not depend on §8.
+**Status:** Derived from [`INTENT.md`](INTENT.md) (founder direction, 2026-09-04).
+**Supersedes:** the 2026-09-03 "Summon Stack" SPEC, which specified a retrieval
+pipeline and treated Arbor as one field on a retrieval document.
+**Scope:** the Gaia ecosystem — three repositories, one capability universe.
 
-**Status:** Specification of record for Skill Heaven's retrieval, refusal,
-control and stamping surfaces. Companion to [`INTENT.md`](INTENT.md) (why) and
-[`PLAN.md`](PLAN.md) (when).
+Upstream conceptual authority, in order:
 
-Every threshold in this document marked **PROVISIONAL** is a starting value to
-be replaced by a measured one. It is written down so that it is one place, not
-five. A threshold marked **MEASURED** carries the run that set it; the
-benchmark ledger under `packages/core/bench/results/` is the record, and
-`docs/PHASES-0-4-STATUS.md` is the narrative.
+1. `gaia-skill-tree/founder/ENDGAME.md` — the capability-graph model
+2. `gaia-skill-tree/registry/arbor/contracts/` — the ratified Arbor contracts
+3. `gaia-research/founder/RATIFICATION.md` — decisions
+4. [`INTENT.md`](INTENT.md) — what this layer is for
 
-**This document changes as the tree grows.** The corpus is curated and moving:
-skills are added, links are fixed, tiers are re-graded. A threshold calibrated
-against 274 documents is not a constant, it is a reading. Re-run the benchmark
-when the corpus moves, and amend the numbers here in the PR that re-runs it.
-A stale MEASURED value is worse than an honest PROVISIONAL one.
+This document specifies **contracts and boundaries**. It does not specify an
+implementation, and it deliberately carries almost no numbers.
 
 ---
 
-## 0. Scope
+## 0. How to maintain this document
 
-### What this specifies
+This section exists because the previous SPEC had to be declared stale five days
+after it was written. It went stale for two reasons that are both preventable:
+it fused decisions with measurements, and it made retrieval's shape the shape of
+the whole system.
 
-The path from *an agent has a capability gap* to *the right skill directory is
-on disk and disclosed* — and the controller that decides how wide to reach.
+**The maintenance rule:**
 
-### What this does not touch
+| Layer | Lives | Changes when |
+|---|---|---|
+| **Contracts & invariants** | this document | a decision changes — a founder ruling, an upstream contract revision |
+| **Measurements** | `packages/core/bench/results/`, `docs/EVIDENCE.md` | any run. Never quoted here as a normative value |
+| **Corpus facts** | the registry, upstream | continuously, and this document must not notice |
+| **Parameters** | code, with the measurement that set them | recalibration |
 
-The ladder (N13 — seven rungs, four bands, one mechanic), the launcher's boot
-dial, the posture compiler, P3, D12, the door packages, the site. Any change
-that appears to require touching those is out of scope and is a signal the
-design is wrong.
+**Three rules follow.**
 
-### The stack
+**0.1 — A number in this document is a citation, not a threshold.** Where a
+figure appears it carries a date and a pointer to the artifact that produced it.
+Normative statements are about *shape*: which fields exist, what refuses, what
+must be disclosed. If you find yourself editing this file because a metric
+moved, the metric did not belong here.
 
-```
-L0  INDEX      skill-index.json — built offline, committed, offline-first
-L1  RETRIEVE   BM25F over expanded fields  ⊕  vector recall  →  RRF
-L2  DECIDE     absolute floor · margin check · refuse or disambiguate
-L3  DISCLOSE   the card · structuredContent · resource_link
-LC  CONTROL    Ultra: margin → EWMA → hysteresis → dwell
-```
+**0.2 — Upstream contracts are referenced, never restated.** Arbor's schemas
+live in `gaia-skill-tree/registry/arbor/contracts/`. This document names them
+and specifies how they are *consumed*. Copying a field list here creates a fork
+that drifts silently — which is exactly the debt the previous SPEC created.
 
-Each layer ships independently and degrades to the layer below it. L1 without
-vectors is still better than today. L2 without elicitation still refuses. LC
-absent means the rung is whatever the user set — exactly today's behaviour.
+**0.3 — A section may only specify one Tree.** Relevance, Yggdrasil and Arbor
+answer different questions (§2). A section that reaches across them is the
+failure mode this document is structured to prevent.
 
----
+### Why this is not theoretical
 
-## 1. Corpus, measured
+The largest meta shift in months — Yggdrasil III, `gaia-skill-tree#1688`,
+1,098 files — landed while this document was being written. Measured against it
+on 2026-09-04 (`origin/main...dev/integration-ygg3-playbooks-2026-09-02`; full
+method, caveats and script in [`EVIDENCE.md`](EVIDENCE.md)):
 
-Measured 2026-09-03 against live `https://gaiaskilltree.com/graph/named/index.json`
-(HTTP 200; the 403 in #103 did not reproduce).
-
-| Property | Value |
+| Named skills | Count |
 |---|---|
-| Named skills | 326 |
-| Generic buckets | 180 |
-| Awaiting classification | 52 |
-| Description length (chars) | min 33 · **p50 154** · p90 305 · max 535 |
-| Missing `tags` | 148 (45%) |
-| Missing `links.github` | 26 |
-| **Unreachable by summon** (no installable link AND no suite components) | **80** *(MEASURED 2026-09-03; §1 previously estimated 34 by counting missing links alone. 98 fail the link test; 18 of those are suite roots, which carry no link of their own and are reachable through their components.)* |
-| Bucketed under a generic node | 274 |
-| `awaitingClassification` — not bucketed. **Was invisible to summon**, which read `buckets` only; now indexed and disclosed on the card | 52 *(12 are 4★ and 25 are 3★ — they were unsummonable for a reason unrelated to whether they are any good)* |
-| **Indexed, and therefore rankable** | **326** |
-| Distinct vocabulary tokens | 2,599 |
-| Levels | 1★ 74 · 2★ 114 · 3★ 96 · 4★ 37 · 5★ 5 |
+| Modified | 291 of 326 |
+| …of those, **prestige fields only** (`trustMagnitude`, `overallTrustGrade`, `level`) | **287** |
+| …changed a field the retrieval index ranks on | **1** (`genericSkillRef`) |
+| …changed a reachability field | **3** (`suiteRef`) |
+| …changed body text, invalidating generated expansions | **0** |
+| Newly added | 13 |
 
-Two facts drive the whole design. **The documents are tiny** — a p50 description
-is roughly 38 tokens, which is not enough surface for a lexical matcher to hit.
-**The corpus is small and static** — 326 documents is small enough that index-time
-work is cheap and exhaustive scoring at query time is free.
+A full Trust Magnitude recalibration of the entire catalogue cost the runtime
+layer **13 new documents and four field touches**. Nothing regenerated.
+
+That result is a *consequence of the separation in §2*, not luck. Had Arbor
+stamping or ranking been sequenced by star rank — as the superseded SPEC
+specified — this one PR would have invalidated 76 changed `level` values and
+154 changed `trustMagnitude` values, and required re-stamping most of the
+catalogue. The measurement is the argument for the invariant in §3.2.
 
 ---
 
-## 2. L0 — The Index
+## 1. Scope and ownership
 
-### 2.1 Contract
+Per INTENT §9. Three repositories, one capability universe, no shared schema
+ownership.
 
-A single committed artifact, `plugins/skill-heaven/data/skill-index.json`,
-built by `packages/core` and regenerated by CI. It is the **only** thing the
-runtime reads to rank. Network fetches refresh it; they are never on the
-critical path of a summon.
+```
+gaia-skill-tree            gaia-research            gaia-skill-heaven
+canonical record           research & evidence      runtime consumer
 
-```jsonc
-{
-  "schema": "gaia.skill-index/v1",
-  "generatedAt": "2026-09-03T00:00:00Z",
-  "source": "https://gaiaskilltree.com",
-  "sourceDigest": "sha256:…",        // of the projections it was built from
-  "builder": { "version": "…", "expansion": "none|generated" },
-  "stats": { "docs": 326, "avgFieldLen": { "name": 2.7, "…": 0 } },
-  "docs": [
-    {
-      "id": "garrytan/health",
-      "name": "Health",
-      "title": "Gstack Health — Automated Test Suite Runner",
-      "contributor": "garrytan",
-      "genericSkillRef": "automated-testing",
-      "description": "…",             // VERBATIM. Displayed. Never rewritten.
-      "tags": ["automated-testing", "ci", "quality"],
-      "links": { "github": "…/blob/main/health/SKILL.md" },
-      "invocation": "any|model|human",
-      "trust": { "level": "2★", "grade": "B", "trustNumber": 70 },
-      "retrieval": {                  // GENERATED. Ranked on. Never displayed.
-        "expansions": [
-          "run the full test suite and report failures",
-          "check whether my tests still pass",
-          "find newly introduced test failures",
-          "get coverage delta after a change"
-        ],
-        "terms": ["test", "suite", "coverage", "ci", "regression", "pass", "fail"],
-        "vector": null                // Phase 2; null until then
-      },
-      "arbor": null                   // Phase 4; null until receipts exist
-    }
-  ]
-}
+skill identity             HH Index methodology     Reach / summon
+Yggdrasil                  behavioral hypotheses    Heaven runtime
+Arbor contracts            focused benchmarks       Hell runtime
+Arbor sources              interpretation method    Ultra control
+governed interpretations   reproducible artifacts   Skill Zero integration
+generated profiles                                  disclosure & fallback
+published projections                               local opt-in telemetry
+        │                          │                        │
+        └────── published ─────────┴──── consumed ──────────┘
+                projections              read-only
 ```
 
-### 2.2 Rules
+**The boundary rule.** This repository may cache or project upstream records for
+performance. It must not fork their meaning. A field this repository invents to
+stand in for an upstream concept is a defect, regardless of how convenient it is.
 
-- **`description` is never rewritten.** It is the contributor's text and the
-  thing the card shows. Expansion lands in a sibling `retrieval` object. A
-  system that quietly edits what it displays has lied to the user.
-- **`retrieval` is never displayed.** It is index data. Showing generated
-  phrasings as if they were the skill's own description would be the same lie
-  from the other direction.
-- **The index is committed.** Not fetched at install, not cached on first run.
-  This is what makes offline-first structural rather than best-effort.
-- **A stale index is usable and says so.** `generatedAt` older than
-  `STALE_AFTER_DAYS` (**PROVISIONAL: 30**) adds one line to the card. It never
-  blocks a summon.
-- **Refresh is explicit and additive.** A successful fetch writes a refreshed
-  index into the *session root*, never over the committed one (P3).
+**What this document specifies:** the runtime layer's contracts, and the shape
+of what it consumes across the boundary.
 
-### 2.3 Expansion — how `retrieval` is generated
-
-For each skill, at build time, from `SKILL.md` (body included, not just the
-frontmatter description), generate:
-
-- **`expansions`**: 6–10 first-person capability-gap phrasings — the sentences a
-  caller would actually write. Target the vocabulary of the *need*, not the
-  *solution*.
-- **`terms`**: deduplicated content terms from name, title, tags, description,
-  expansions, and the generic bucket label.
-
-Generation is an offline LLM pass, run by a script in `packages/core/scripts/`,
-committed as data, and **diffable in review**. It is not a runtime dependency
-and does not ship a model.
-
-Two guardrails were specified. One survived measurement and one did not.
-
-1. **~~Filter, don't trust.~~ MEASURED FALSE ON THIS CORPUS, 2026-09-03.** The
-   specified round-trip check — retrieve with the expansion as the query, keep
-   it only if the source skill is top-1 against the current index — removes the
-   expansions worth having. Survival was 199/696 at top-1, and MRR by cutoff
-   was 0.285 (top-1) · 0.351 (top-3) · 0.366 (top-10) · **0.466 (unfiltered)**.
-   Every loosening helped. The mechanism is plain in hindsight: the filter asks
-   whether the *current* index can already retrieve a skill from its expansion,
-   and an expansion that surfaces a skill the current index cannot surface is
-   exactly the one worth having. On a corpus whose pre-expansion MRR is 0.28,
-   the guardrail deletes the signal it was meant to protect. **The index ships
-   unfiltered** (`--rank-cutoff none`), and the filter remains available and
-   reportable so the decision can be re-examined when the corpus changes.
-   What the guardrail was actually protecting — hallucinated capability
-   entering the index — is now carried by the generation brief's "never invent
-   capability" rule, by the false-refusal rate, and by a standing test that no
-   expansion is instruction-shaped.
-2. **Expansion is capped and attributed.** Unchanged, and it earned its keep:
-   every expansion carries the builder version that produced it, so a bad
-   generation run is revertible as data.
-
-**Order of work: ~~5★ → 4★ → 3★ → the rest~~ — COVERAGE MUST BE COMPLETE.**
-The tiered order and the claim that *"a partial index is useful from the first
-batch"* were **MEASURED FALSE, 2026-09-03**. Expanding 101 of 274 skills raised
-aggregate MRR to 0.466 and, inside that aggregate, dropped the gold queries
-whose target had no expansions from **0.263 to 0.045**. An expanded document
-has a field to match in that an unexpanded one does not, so a half-expanded
-index does not merely help half the corpus — it demotes the other half.
-
-Tiered order is still the right order to *generate* in. It is not a valid order
-to *ship* in. The index carries `stats.expandedDocs` and the benchmark reports
-`coverageSplit` so a coverage gap cannot hide inside an average again.
-`expansions: []` remains structurally valid; it is no longer harmless.
+**What it does not specify:** Arbor's contracts (upstream, ratified), the HH
+Index's formula (research, undetermined by design), Yggdrasil's grading
+(upstream), or any harness's internals.
 
 ---
 
-## 3. L1 — Retrieval
+## 2. Three questions, three Trees
 
-### 3.1 Lexical — BM25F
+The load-bearing invariant of the whole system.
 
-Replaces `scoreMatch`. Standard BM25 with per-field weights and length
-normalisation, implemented in TypeScript with no dependencies (~100 lines).
+| | Question | Owner | Example inputs |
+|---|---|---|---|
+| **Relevance** | Could this capability help with *this* gap? | this repo | task language, description, expansions, aliases |
+| **Yggdrasil** | How strongly should Gaia trust its standing? | `gaia-skill-tree` | stars, rank, Trust Magnitude, grade, evidence |
+| **Arbor** | What does it do to the agent, and to other capabilities? | `gaia-skill-tree` | facets, conditions, interaction edges, HH evidence |
 
-For query terms `t ∈ Q` and document `d`:
+**INV-1 — No master score.** These three are never collapsed into one number,
+one ordering, or one field. A capability may be highly relevant and untrusted;
+highly trusted and irrelevant; behaviorally hostile and both.
 
-```
-score(d,Q) = Σ_t  IDF(t) · ( f̃(t,d) · (k₁+1) ) / ( f̃(t,d) + k₁ )
+**INV-2 — Yggdrasil never enters Arbor's ontology.** Stars, ranks, Trust
+Magnitude, grades and prestige fields are rejected recursively by the Arbor
+sidecar. This repository must not reintroduce them by projection, by naming, or
+by sequencing work in rank order.
 
-IDF(t)  = ln( 1 + (N − n(t) + 0.5) / (n(t) + 0.5) )
+**INV-3 — Relevance is not evidence of behavior.** A retrieval score says a
+capability matched a query. It says nothing about what happens when it runs.
+Nothing in the steering layer (§6, §7) may read a retrieval score as a
+behavioral signal.
 
-f̃(t,d) = Σ_fields  w_f · f(t,d,f) / ( 1 − b_f + b_f · len(d,f)/avgLen(f) )
-```
-
-**PROVISIONAL** parameters — `k₁ = 1.2`, `b_f = 0.75` for all fields, and:
-
-| Field | `w_f` | Note |
-|---|---|---|
-| `name` | 10 | |
-| `id` | 8 | includes contributor |
-| `title` | 6 | |
-| `tags` | 5 | absent on 45% of docs |
-| `genericSkillRef` | 4 | the bucket label is a real signal |
-| `retrieval.expansions` | 4 | the point of the whole exercise |
-| `retrieval.terms` | 2 | |
-| `description` | 3 | |
-
-The `k₁`/`b` defaults are the standard ones and are not worth tuning before G1
-is measured. Field weights are, and the benchmark is what tunes them.
-
-**Status 2026-09-03: still untuned, deliberately.** G1 was cleared by the index
-and the expansion surface, not by weight search, and tuning eight weights
-against 100 queries would overfit them long before it improved anything a user
-would feel. Revisit when the gold set is larger or drawn from real
-`summon-log.jsonl` traces.
-
-**Why this over `scoreMatch`:** IDF means a match on `refactor` counts for less
-than a match on `bisect`; length normalisation means a long description does not
-outrank a precise name; and the whole thing is defined rather than emergent.
-
-### 3.2 Vector recall — Phase 2, optional by construction
-
-`retrieval.vector` is a precomputed document embedding. Documents are static, so
-only the **query** needs embedding at runtime, and the runtime must stay
-dependency-free. Two routes, evaluated in that order:
-
-1. **Static token-vector table** (model2vec / distilled-embedding style): a
-   committed token→vector table; query embedding is the mean of its token
-   vectors. Pure arithmetic, no ONNX, no WASM, no npm dependency. Ships as data.
-2. **No runtime embedding at all** — vectors used only to *build* the index
-   (clustering near-duplicate skills, seeding `terms`), never at query time.
-
-Route 2 is the fallback and is always available. **If neither route clears G1's
-delta over Phase 1 alone, vectors are dropped.** Phase 1 is designed to be
-sufficient; Phase 2 must earn its place against a measurement.
-
-### DROPPED — MEASURED 2026-09-03, negative result (D8)
-
-Neither route ships. The failure analysis PLAN 2.1 requires
-(`packages/core/bench/analyze-misses.ts`, report in
-`bench/results/miss-analysis.json`) classified all 59 misses on the gold set:
-
-| class | n | can a ranker fix it? |
-|---|---|---|
-| **zero-term-overlap** — query and correct skill share no lexical term | **0** | this is the class vectors exist for |
-| unreachable — the correct skill cannot be summoned at all | 22 | no; curation |
-| ranked-low — right skill returned, not first | 20 | yes; ranking signal |
-| refused — the floor declined the query | 11 | yes; see §4.4 |
-| outranked-by-sibling | 6 | yes; ranking signal |
-
-**Not one miss is a pure vocabulary mismatch.** After index-time expansion,
-every gold query shares at least one term with its correct skill — median 10
-shared terms among the `ranked-low` misses, and 8 of those 20 are at rank 2.
-The gap dense retrieval exists to close does not occur in this corpus at this
-scale, because expansion already closed it. That is INTENT §3's bet — *move the
-intelligence to index time* — resolving in the direction it was made, and it
-means a runtime embedding would have been paid for and bought nothing.
-
-The residual is two different problems, and neither is a representation
-problem: **22 misses are curation** (the skill publishes no installable link),
-and **26 are ordering** (the right skill is in the list, near the top, behind a
-sibling). Ordering wants a better ranking signal — field weights tuned against
-a larger gold set, or the trust dimensions the tree already publishes — and
-refusal wants the scale-free score of §4.4. Both are cheaper than vectors and
-both address misses that actually exist.
-
-Re-open this only if the corpus grows enough to change the first row. The
-analysis is one command and re-runs against any index.
-
-### 3.3 Fusion — RRF
-
-When two ranked lists exist, fuse by Reciprocal Rank Fusion rather than
-normalising scores:
-
-```
-RRF(d) = Σ_lists  1 / (k + rank_list(d))        k = 60
-```
-
-`k = 60` is the canonical value from Cormack, Clarke & Buettcher (SIGIR 2009)
-and the production default across search engines; the literature reports the
-40–80 range as indistinguishable, so it is not a tuning knob. RRF is used
-because it needs no score calibration between a BM25 score and a cosine
-similarity — a rank is a rank.
-
-With one list, RRF is order-preserving and the fusion step is a no-op. That is
-why Phase 1 ships without it and Phase 2 adds it without re-plumbing.
-
-### 3.4 Exact-name fast path
-
-Before ranking: if the normalised query exactly equals a document's `name`,
-`id`, or `catalogRef`, that document is returned as an exact match with
-`matchKind: "exact"` and ranking is skipped. This is the first half of #104 —
-*"summon scout-fleet"* is the most common invocation there is and it must not go
-through a relevance band at all.
+**INV-4 — Unknown is a valid state, and is distinct from negative.** Absent
+Arbor evidence means *we have not observed this*, never *this is safe* and never
+*this is unsafe*. Every surface that could imply otherwise must disclose.
 
 ---
 
-## 4. L2 — Decide: refuse, disambiguate, or answer
+## 3. Reach — finding a capability
 
-This section is the fix for #104 and, in the founder's terms, the difference
-between a tool you trust and one you check.
+Reach answers exactly one question: **could this capability help with the
+current gap?** It is the front door, not the house.
 
-### 4.1 The absolute floor
+### 3.1 What Reach owns
 
-Today's `MIN_RELEVANCE = 6` is a raw-score threshold on an unnormalised counter,
-and `RELEVANCE_BAND = 0.5` is relative to the best candidate — so a uniformly
-terrible field is still a winner. Replace both with:
+capability retrieval · build-time retrieval expansion · exact and directed
+lookup · ranking · refusal (`noMatch`) · offline operation · index freshness ·
+retrieval explanation · standards-compatible discovery surfaces (§10)
 
-```
-FLOOR      the top candidate's score must exceed an absolute, calibrated
-           threshold, else → noMatch          MEASURED: 27.5559 (see 4.4)
-BAND       candidates below BAND × topScore are dropped from the result set
-                                                        PROVISIONAL: 0.6
-```
+### 3.2 The ranked-field invariant
 
-`FLOOR` is a reading of one index, not a constant. It moved 15.18 → 27.56 when
-expansion landed, because expansion raised answerable scores without raising
-unanswerable ones. **Recalibrate whenever the index changes**, and never in
-response to a gate failing.
+**INV-5 — The retrieval index ranks only on capability-descriptive fields.**
 
-`FLOOR` is calibrated **on the benchmark's 20 unanswerable queries** (§7.2), not
-guessed. That is the whole reason those 20 exist.
+A field may be ranked on if it describes *what the capability does*. Prestige
+fields, behavioral fields, and evidence fields may be **carried** in the index
+for display and policy, and must not be **scored**.
 
-### 4.2 `noMatch` is a first-class result
-
-When nothing clears the floor, `summon` returns an empty `summoned` array and a
-`noMatch` object. It never returns the best of a bad set.
-
-```jsonc
-{
-  "summoned": [],
-  "noMatch": {
-    "reason": "below_floor",         // | "no_candidates" | "all_filtered"
-    "query": "…",
-    "topCandidates": [               // shown so the caller can judge, not use
-      { "id": "vercel/find-skills", "score": 2.1, "floor": 6.5 }
-    ],
-    "filtered": [
-      { "id": "…", "why": "surface:heaven excludes model-led" },
-      { "id": "…", "why": "not installable — no links.github" }
-    ],
-    "suggestion": "No skill in <source> matches. Try naming the repo explicitly: summon(query, source: \"owner/repo\")."
-  }
-}
-```
-
-The `filtered` list matters as much as the floor: 34 skills in the corpus are
-uninstallable and today they vanish silently. A caller who can see *why* a
-plausible skill was withheld can act; one who cannot will assume the tool is
-broken.
-
-### 4.3 Disambiguation
-
-When the top two candidates are within `MARGIN` (**PROVISIONAL: 0.15** of
-normalised top score) **and** the call is human-initiated (`/summon`), return an
-MCP `InputRequiredResult` with an `elicitation/create` form asking which one.
-
-This is spec-legal on the 2026-07-28 revision — verified — via multi-round-trip
-tool results, and elicitation is supported by Claude Code. **Sampling is not
-used**: it is absent from the current client-features list and must not be
-built against.
-
-For model-initiated calls at Heaven/Hell rungs, do **not** elicit — return both
-and let the agent choose, with the margin disclosed on each card. Interrupting
-an autonomous turn with a form is worse than returning two options.
-
-### 4.4 Calibrating `FLOOR`
-
-`FLOOR` is per-index, computed at build time and stored in the index:
-
-1. Score every gold query against the index; record the top score for each.
-2. Score every unanswerable query; record the top score for each.
-3. Choose the threshold maximising separation — the value that admits the most
-   answerable queries while rejecting ≥90% of unanswerable ones (G2).
-4. Write it to `skill-index.json` as `stats.floor`, with the separation achieved.
-
-If the two distributions do not separate, that is a **finding**, recorded as
-such (D8), and the honest response is to keep the floor conservative and say the
-retriever cannot yet distinguish — not to pick a number that makes the gate pass.
-
-**The policy is fixed in advance and is not the one §4.4 step 3 describes.**
-Step 3 says "choose the threshold maximising separation — the value that admits
-the most answerable queries while rejecting ≥90% of unanswerable ones", which
-reads the rejection rate as a constraint to satisfy. Satisfying it is what
-tuning-to-pass looks like. `scripts/calibrate-floor.ts` instead takes the
-**highest threshold that still admits ≥90% of the gold set**, and *reports*
-whatever rejection rate that yields. Both numbers are written into the index.
-
-Both calibrations run so far, for the record:
-
-| index | FLOOR | admits (gold) | rejects (unanswerable) | separation (AUC) | G2 |
-|---|---|---|---|---|---|
-| lexical only | 15.18 | 91% | 55% | 0.845 | fails |
-| + expansion, 37% coverage | 27.56 | 91% | 95% | 0.956 | passes |
-| + expansion, **full coverage** | **26.98** | 91% | **75%** | 0.953 | **fails** |
-
-The first row is why the policy matters: under it the honest answer was "the
-retriever cannot yet distinguish", and the fix was a better index rather than a
-higher number.
-
-**The third row is a structural finding about this design, not a regression in
-the index** (MRR rose from 0.466 to 0.657 between rows two and three).
-Separation barely moved — 0.956 → 0.953 — but the *threshold* that realises it
-did, because expansion raises scores for everything, unanswerable queries
-included: a query with no right answer now matches the expansions of adjacent
-skills. **An absolute floor on a raw BM25F score is therefore
-coverage-sensitive**, and re-derives differently every time the corpus or the
-expansion set grows. It is a threshold on a quantity with no fixed scale.
-
-The trade at full coverage, so the choice is visible rather than implied:
-
-| admits (gold) | FLOOR | rejects (unanswerable) |
-|---|---|---|
-| 95% | 23.01 | 75% |
-| **91% (the policy)** | **26.98** | **75%** |
-| 85% | 27.52 | 80% |
-| 79% | 31.13 | 90% — G2 would pass |
-| 70% | 35.19 | 100% |
-
-G2 is reachable by moving one number. It is not moved, because the policy was
-declared before the run and picking 31.13 after seeing 26.98 fail is precisely
-the failure the risk register names. **G2 is recorded as failing at 75%** and
-the floor stays where the policy puts it.
-
-The principled fix is not a different threshold but a different quantity:
-a score normalised against the index's own distribution, or the margin, neither
-of which drifts as the corpus grows. That is the first thing Phase 2 should
-evaluate — ahead of dense retrieval, which addresses a problem the measurements
-suggest is smaller.
-
-**On the floor signal itself (MEASURED):** raw BM25F score is the best
-discriminator available. Per-query-term, per-matched-term, sqrt-length and
-term-coverage normalisations were all tried and all made separation worse
-(AUC 0.83 raw against 0.26–0.59 normalised) — the unanswerable queries in this
-set are simply longer, and normalising by length rewards them.
-
----
-
-## 5. L2/L3 — The `summon` tool surface
-
-### 5.1 One tool, more arguments
-
-The tool count stays at **one**. Published evidence is consistent that agent
-tool-selection accuracy degrades as the tool surface grows (§9), and "one
-mechanic" is the product's own rule. New capability arrives as arguments and as
-*resources*, never as a second tool.
-
-```jsonc
-{
-  "name": "summon",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "query":   { "type": "string" },
-      "limit":   { "type": "integer", "exclusiveMinimum": 0 },
-      "surface": { "enum": ["any", "heaven", "hell"] },
-      "source":  { "type": "string",
-                   "description": "Override the configured Skill URL for this call. A website root, or owner/repo for a flat GitHub fleet." },
-      "preview": { "type": "boolean", "default": false,
-                   "description": "Rank and disclose without materialising anything to disk." }
-    },
-    "required": ["query"]
-  },
-  "outputSchema": { "$ref": "#/definitions/SummonResult" },
-  "annotations": { "readOnlyHint": false, "idempotentHint": true }
-}
-```
-
-- **`source`** is the second half of #104. It overrides `SKILL_SOURCE` for one
-  call and is echoed on every card so the caller can see where a skill came
-  from. An unresolvable `source` is an error, never a silent fallback to the
-  configured source.
-- **`preview`** gives the Ultra controller (and a cautious human) a way to ask
-  "what would you summon?" for the cost of a rank and none of the disk I/O. It
-  is a flag rather than a `skill_peek` tool precisely because of the tool-count
-  finding.
-- **`limit`** keeps its current contract: no upper cap, malformed values refused
-  rather than clamped.
-- **`idempotentHint: true`** — the same query against the same index yields the
-  same ranking; materialisation is content-addressed.
-
-### 5.2 Structured output
-
-Every result carries `structuredContent` conforming to `outputSchema`, plus the
-human-readable card in `content` for backward compatibility, as the spec directs.
-This is what lets the Ultra controller read a margin without parsing prose.
-
-```jsonc
-{
-  "summoned": [
-    {
-      "id": "garrytan/health",
-      "name": "Health",
-      "path": "/tmp/skill-summon-…/garrytan-health",
-      "score": 18.4,
-      "margin": 0.42,               // (top − next) / top
-      "matchKind": "exact|ranked",
-      "nameMatchesQuery": true,     // false ⇒ card must say so
-      "source": "https://gaiaskilltree.com",
-      "trust": { "level": "3★", "grade": "B" },
-      "arbor": null,
-      "install": { "ms": 412, "cache": "cold|warm" }
-    }
-  ],
-  "noMatch": null,
-  "ranking": {
-    "mode": "lexical|hybrid|trust-then-relevance|relevance-only",
-    "disclosure": "…",
-    "indexGeneratedAt": "2026-09-03T…",
-    "stale": false
-  }
-}
-```
-
-### 5.3 Resource links
-
-Each summoned skill also returns a `resource_link` content item pointing at the
-materialised `SKILL.md`:
-
-```jsonc
-{ "type": "resource_link",
-  "uri": "skill://garrytan/health/SKILL.md",
-  "name": "Health",
-  "description": "Gstack Health — Automated Test Suite Runner",
-  "mimeType": "text/markdown" }
-```
-
-Verified against the 2026-07-28 tools spec. This costs nothing today in clients
-that ignore it, and it is the on-ramp to §8.
-
-### 5.4 The card gains three lines
-
-The card contract is otherwise unchanged. It adds:
-
-- **Name mismatch** — when `nameMatchesQuery` is false, the card says so
-  explicitly. #104's silent substitution becomes visible on the surface the
-  agent prints.
-- **Source** — which tree or fleet this came from, always, since `source` can
-  now vary per call.
-- **Index freshness** — `generatedAt`, and a staleness note past the threshold.
-
-**Why the card and not the body.** Anthropic's published progressive-disclosure
-costs put skill metadata at **~100 tokens per skill, always loaded**, a
-`SKILL.md` body at **under 5k tokens on trigger**, and bundled files at **zero
-until read**. The card is the L1 listing entry for a skill the harness never saw
-at boot — roughly two orders of magnitude cheaper than pasting the body, which is
-what the first prototype did. This is the quantitative basis for the existing
-card mechanic in `LADDER-FLOW.md`, and it is also the reason climbing the ladder
-is affordable at all: a rung adds cards, not bodies.
-
-### 5.5 Session memory
-
-The session root already survives the session (P3-safe, disposable). It gains
-`summon-log.jsonl`: one line per summon — query, chosen id, score, margin,
-`noMatch` reason, and whether the skill's path was subsequently read.
-
-This is local-only, never transmitted, and it is the substrate for two things:
-the alias/shortcut layer already filed as
-[#93](https://github.com/gaia-research/gaia-skill-heaven/issues/93), and the
-Ultra controller's signal history. It is not telemetry and does not leave the
-machine.
-
----
-
-## 6. LC — The Ultra controller
-
-`ultra` is the crown rung: it picks direction and depth **per gap**. The
-requirement the founder set is *stability*. The specification is therefore
-deliberately, explicitly **deterministic — no learning, no bandit, no model.**
-
-### 6.1 Why deterministic first
-
-Ultra makes on the order of tens of decisions in a session. Every learned
-approach — Thompson sampling, UCB, contextual bandits — is sample-hungry
-relative to that, and a learned controller with n < 50 observations does not
-converge; it oscillates, and it oscillates *unexplainably*. The stable pattern
-for a one-dimensional adaptive signal is the one every autoscaler uses: smooth
-the signal, add a dead band, enforce a dwell time. That is what this is.
-
-### 6.2 The signal
-
-The controller consumes exactly one number from L1/L2, already computed and
-already in `structuredContent`:
-
-```
-margin = (score_top1 − score_top2) / score_top1
-```
-
-A high margin means the index knows exactly which skill this is — converge, one
-skill is enough. A low margin means several skills are plausible and the index
-cannot separate them — explore, put more experts in context. Absolute score
-below `FLOOR` means neither: this is a gap the corpus does not cover, and the
-honest move is to report that rather than to widen.
-
-### 6.3 The controller
-
-```
-on each capability gap:
-  m        = margin from a preview summon
-  m̄       = α·m + (1−α)·m̄            EWMA           α = 0.3   PROVISIONAL
-  if gapsAtCurrentRung < DWELL:          hold        DWELL = 3 PROVISIONAL
-  else if m̄ > T_high:                    step toward Heaven    T_high = 0.274  MEASURED
-  else if m̄ < T_low:                     step toward Hell      T_low  = 0.123  MEASURED
-  else:                                  hold                  (dead band)
-  clamp to [low, max]; ultra never selects zero
-  record (gap, m, m̄, decision, reason)
-```
-
-**The thresholds were recalibrated, and the originals would have been actively
-bad** (MEASURED 2026-09-03, `scripts/calibrate-ultra.ts`). 0.20 / 0.45 were set
-before anyone looked at what `margin` does on this index. Its real distribution
-is far more ambiguous than they assume — p50 is 0.214 — so those values read
-**46% of gaps as "explore" against 19% "converge"**, and Ultra would have
-drifted toward `max` on an ordinary session while appearing to follow its
-rules.
-
-At 0.123 / 0.274 the three decisions split 33/34/34, and the controller is also
-*more* stable on the same trace — **5 rung changes over 80 gaps against 9** —
-because a dead band straddling the bulk of the distribution stops treating a
-typical margin as a signal.
-
-Provenance is a **proxy and labelled as one**: these margins come from the gold
-set, whose queries are answerable by construction and therefore skew more
-decisive than a real session's, which include gaps the corpus does not cover.
-`calibrate-ultra.ts --log <summon-log.jsonl>` re-derives them from real traces,
-which is what this section originally asked for and what should replace them
-once `summon-log.jsonl` has accumulated.
-
-**A `noMatch` is not a signal about depth.** It is not in the spec text above
-and it needs to be: reaching wider cannot summon a skill the corpus does not
-contain, so a refused gap holds the rung. Without that rule the controller
-reads every curation gap as ambiguity and walks itself to `max`.
-
-Four stability properties, each load-bearing:
-
-- **EWMA** — one noisy gap cannot move the rung.
-- **Hysteresis** — `T_low` and `T_high` are separate, so the band between them
-  is a dead zone and the controller cannot chatter across a single threshold.
-- **Dwell** — a minimum of `DWELL` gaps at a rung before it may change again.
-- **Single step** — it moves one rung at a time. Never a jump from `low` to `max`.
-
-### 6.4 Explainability is a hard requirement
-
-Every rung change emits one line naming the smoothed margin, the threshold
-crossed, and the new rung. A controller nobody can interrogate is one nobody
-will leave switched on, and *"ultra is boring in the best way"* is the product
-requirement it exists to satisfy.
-
-### 6.5 Explicit non-goals
-
-No bandit. No learned classifier. No per-user model. No cross-session state.
-`summon-log.jsonl` accumulates the data that would make a learned controller
-possible later; building one is **out of scope and requires a fresh decision
-against measured evidence**, not a stretch goal on this plan.
-
----
-
-## 7. The benchmark — minimal by design
-
-Two questions, in priority order. The first is a product gate. The second is the
-research thesis and is deliberately downstream of it.
-
-### 7.0 Where the gates stand (MEASURED 2026-09-03)
-
-| Gate | Requirement | Result |
-|---|---|---|
-| **G1** | Δ MRR CI excludes zero, vs. the shipped baseline | **PASS** — `+0.3433, 95% CI [+0.2593, +0.4313], n = 100` for the shipping configuration |
-| **G2** | ≥90% of the 20 unanswerable queries return `noMatch` | **PASS at 95%**, while still admitting 91% of the gold set. Failed at 55% before expansion, and was recorded as a failure rather than tuned around |
-| **G3** | The gold set runs green with egress blocked | **PASS** — asserted by the harness: `bench/run.ts` replaces `globalThis.fetch` with a throw before it does anything else |
-
-Baseline for comparison: today's shipped `scoreMatch` scores **MRR 0.0392,
-recall@5 0.06, and refuses 0 of 20 unanswerable queries.** PLAN's kill
-criterion for the whole programme was a baseline above ~0.85.
-
-The absolute MRR still has a hard ceiling below 1.0: 19 of the 100 gold targets
-publish neither an installable `SKILL.md` link nor suite components, so summon
-structurally cannot deliver them. That is curation, not retrieval, and the
-benchmark reports `mrrOnReachable` alongside `mrr` so the two are not confused.
-
-### 7.1 Q1 — Did retrieval improve? (the gate)
-
-- **Gold set:** 100 capability-gap queries, each labelled with the correct skill
-  id, in the register an agent actually uses ("I need to make this API faster").
-  **Provenance caveat, stated because it is weaker than this line originally
-  specified:** the current set was written by LLM subagents from the corpus
-  rather than by a human from session transcripts, because no transcripts
-  existed yet (`summon-log.jsonl` is PLAN 1.12; the next revision should be
-  drawn from it). Every query carries a self-audited `overlap` list of the
-  distinctive words it shares with its target's indexed text — 65 zero / 33 one
-  / 2 two — and six targets that no honest query separates from a sibling are
-  flagged `ambiguous` rather than fudged. Until a human reviews all 100 labels,
-  the load-bearing number is the **delta between systems on identical
-  queries**, not the absolute MRR. Full provenance:
-  `packages/core/bench/README.md`.
-- **Metric:** **MRR** (one correct answer per query), with recall@5 reported
-  alongside. `MRR = (1/|Q|) Σ 1/rank_i`.
-- **Significance:** paired bootstrap over per-query reciprocal ranks, 10,000
-  resamples, 95% CI on the delta. Report as
-  `Δ MRR = +0.xx, 95% CI [a, b], n = 100`.
-- **Gate:** the CI on the delta excludes zero.
-
-n = 100 is chosen because the IR literature puts usable signal at 30–50 and
-standard practice at ~100; going past 200 buys precision we have no use for.
-
-### 7.2 Q2 — Does it decline correctly? (pass/fail)
-
-20 additional queries with **no** correct answer in the corpus — plausible-
-sounding capability gaps nothing covers. Gate: ≥90% return `noMatch`. These
-queries also calibrate `FLOOR` (§4.4), so they are built first, not last.
-
-### 7.3 Q3 — The entropy curve (research, later, small)
-
-The N13 thesis is that quality rises with skill entropy and then turns. Measuring
-it needs a task benchmark, not a retrieval one, and it is a **separate, later,
-deliberately small** instrument:
-
-- Arms: `low`, `high`, `max` — three rungs, not seven. The bands' representative
-  rungs plus one extreme is enough to see a turn or fail to.
-- Tasks: 20 real coding tasks with objective pass/fail.
-- Cost: measured through `gaia-research/skill-cost` against persisted session
-  logs. Never self-reported.
-- Reported as a curve with error bars, or as *"no turn detected at this scale"* —
-  which is a publishable finding and must be reported as one.
-
-The context-engineering literature (§9) predicts a turn driven by attention
-dilution rather than token cost, which is an argument for keeping arms few and
-tasks real.
-
-### 7.4 What we are deliberately not building
-
-Stated so that the benchmark stays a day to re-run:
-
-no cross-validation · no per-contributor breakdowns · no nDCG (there is one
-right answer) · no LLM-as-judge for Q1 (100 hand labels are cheaper than
-calibrating a judge) · no synthetic query generation · no leaderboard · no CI
-job that runs the full suite on every push.
-
-### 7.5 Reproducibility contract
-
-A run is not a result until: the index digest, builder version, gold-set
-revision, seed, and per-query scores are committed as JSONL under
-`packages/core/bench/`; the command that produced it is one line in the README;
-and cost is attributed via `skill-cost`. A number without those is a claim, not
-a measurement.
-
----
-
-## 8. Arbor I and SEP-2640
-
-### 8.1 Arbor's first fill — the minimum summon can consume
-
-`registry/arbor/` in `gaia-skill-tree` holds four contract schemas and no data.
-The temptation is the full behavioural node from ENDGAME §7 — thirteen
-dimensions. That is the wrong first move: it needs benchmark receipts that do
-not exist, and an unfilled thirteen-dimension schema is worth less than a filled
-one-dimension one.
-
-**The first fill is one derived field:**
-
-```jsonc
-"arbor": {
-  "polarity": "heaven-native | hell-native | dual-safe | unknown",
-  "derivedFrom": ["receipt://…"],
-  "confidence": "low|medium|high",
-  "asOf": "2026-…"
-}
-```
-
-`polarity` is exactly what §5.1's `surface` argument already needs. Today that
-routing is inferred from `disable-model-invocation` — a contributor's
-declaration. `polarity` replaces a claim with a measurement, and it is the
-smallest field that changes a real decision.
-
-Two rules:
-
-- **Derived, never authored.** ENDGAME §7 is explicit that these are derived
-  properties, not contributor claims. No frontmatter field sets polarity.
-- **Stamping order is 5★ → 4★ → 3★.** Founder direction: higher-tier skills are
-  the ones people reach for. That is 5 skills, then 37, then 96 — tractable, and
-  useful from the first batch.
-
-**Until receipts exist, `arbor` is `null` and every surface keeps saying
-"relevance-only."** This plan builds the stamps; it is not permission to describe
-stamp-gated routing as running before it is.
-
-### Status 2026-09-03 — the consumption path is built, the stamps are not
-
-**PLAN 4.4 shipped.** `decide()` routes on `arbor.polarity` when it is present,
-falls back to the tree's `invocation` declaration when it is not, and reports
-which it used as `routing: "arbor.polarity" | "invocation" | "none"` — surfaced
-on the card, in `structuredContent`, and in the ranking disclosure. A skill
-excluded by a lane says so in `filtered`, naming the signal that excluded it.
-When receipts land, nothing else has to change.
-
-**PLAN 4.1–4.3 did not ship, and could not have.** Polarity is *whether a skill
-helps an agent converging, exploring, or both*. Deriving it needs a TASK
-benchmark; the Phase 0/1 instrument is a RETRIEVAL benchmark and cannot answer
-that question. It could be made to produce a number — margin is right there —
-but a skill's retrieval margin measures how well the INDEX separates it from
-its siblings, not what it does to an agent. Shipping that as `polarity` would
-be a measurement of the index wearing the label of a measurement of the skill,
-and §8.1's own rule is *derived, never authored*: inferred-from-the-wrong-thing
-is a species of authored.
-
-So `arbor` stays `null` across all 326 documents, and the disclosure the live
-corpus produces is the honest one:
-
-    Routing: none — no Arbor polarity and no invocation lane published,
-             so surface excluded nothing
-
-That second clause is worth stating plainly: **`invocation` is absent on all
-326 skills**, so even the fallback signal does not exist. `surface` is
-currently a no-op end to end. The card says so on every summon rather than
-letting a reader assume a lane was applied.
-
-Stamping waits on Phase 5's task benchmark, which is the instrument that can
-produce a receipt. That is a dependency the plan did not draw — Phase 4 is
-listed as parallel to Phase 5 — and it is now drawn.
-
-### 8.2 SEP-2640 — track the standard
-
-MCP's Skills Over MCP working group (Anthropic + Nordstrom leads; Google,
-GitHub, AWS, Databricks, Bloomberg participating) has a draft **Skills
-Extension**, SEP-2640, standardising skill discovery and consumption over MCP on
-a `skill://` convention with `skills/list` and `skills/get`, negotiated as
-`extensions["io.modelcontextprotocol/skills"]`. Status: open draft.
-
-Our position: **conformant early, not parallel and clever.**
-
-- **Now, spec-legal today:** adopt `skill://<source>/<id>/SKILL.md` as the card's
-  canonical identifier and return `resource_link` items (§5.3). Costs nothing;
-  clients that ignore it are unaffected.
-- **When the SEP stabilises:** expose the index as MCP **resources** —
-  `skill://index.json` plus per-skill entries — so a conformant client can browse
-  before summoning. Resources, not tools: it adds no tool-selection surface.
-- **Not now:** implementing `skills/list` / `skills/get` against a draft that is
-  still moving. Tracked, re-checked each phase, built when it stops moving.
-
-### Re-read at the Phase 3/4 boundary, 2026-09-03
-
-The SEP has been **accepted by core maintainers** and the design has stabilised:
-`skill://index.json` for discovery, `skill://<skill-path>/SKILL.md` for content,
-extension id `io.modelcontextprotocol/skills`, and recent refinements around
-dynamic-resource marking, per-skill limits (512 resources, 16 MiB) and size
-fields for pre-fetch budgeting. It is still an open PR awaiting a reference
-implementation and conformance tests.
-
-So the ruling splits, as this section always intended it to:
-
-- **Built now** — the resource surface. `skill://index.json` lists the whole
-  corpus, and `skill://<id>/SKILL.md` serves one skill's index entry. Both are
-  plain MCP resources, spec-legal today, answering from the committed offline
-  index and touching no network. Resources, not tools: a conformant client can
-  browse before summoning and the tool count stays at one.
-- **Metadata only.** A resource read never serves third-party skill content.
-  Materialising a body stays behind `summon`, which is where session-locking
-  and disclosure live.
-- **Still not built** — `skills/list` / `skills/get`. Accepted is not
-  implemented: adopting the method names ahead of the reference implementation
-  and conformance tests is how you end up non-conformant with the thing you
-  were early for.
-
-The asset is not the protocol. It is that Gaia can speak the standard **and**
-carry trust (Yggdrasil) and behaviour (Arbor) — signals the sweep in §9 found
-nobody else publishing.
-
----
-
-## 9. Evidence base
-
-Research sweep run 2026-09-03 by a fan-out of eight parallel Haiku scouts, one
-per question, each returning citations. **Provenance is marked** because this
-repo's M0/D8 discipline distinguishes what was checked from what was reported.
-
-### Verified directly in this session
-
-| Claim | How verified |
+| Ranked | Carried, never scored |
 |---|---|
-| MCP spec revision is **2026-07-28**; client features list **Elicitation** only — sampling is not among them | Fetched `modelcontextprotocol.io/specification/latest` |
-| Tool results support `resource_link`, embedded `resource`, `structuredContent` + `outputSchema`, and annotations | Fetched the 2026-07-28 tools spec |
-| MCP has no protocol session; cross-call state is an explicit handle returned in a tool result | Same page, "Stateful Tools" |
-| Deterministic `tools/list` ordering improves prompt-cache hit rates | Same page |
-| **SEP-2640** exists, is an open draft, Resources-based, `skill://` convention, `skills/list`/`skills/get`, ext id `io.modelcontextprotocol/skills` | Fetched the WG charter and PR #2640 |
-| **#103's 403 does not reproduce** — `graph/gaia.json` and `graph/named/index.json` both return 200, with and without a User-Agent | `curl` from this session, 2026-09-03 |
-| Corpus statistics in §1 | Computed from the live projection |
-| **Agent Skills progressive disclosure token costs**: L1 metadata ~100 tokens/skill, always loaded · L2 `SKILL.md` body under 5k, on trigger · L3+ bundled files, **zero until read** | Fetched [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) |
-| **Multi-agent context isolation**: a multi-agent system outperformed the single-agent baseline by **90.2%** on Anthropic's internal research eval, at **~15× the tokens of a chat** (vs ~4× for single-agent) | Fetched [Multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) |
-| Anthropic's own Skills guidance: *"a malicious Skill can direct Claude to invoke tools or execute code in ways that don't match the Skill's stated purpose"*; skills fetching external content are called out as *"particular risk"* | Agent Skills overview, Security considerations |
+| name, id, title, tags, generic capability ref, generated expansions, generated terms, description | Yggdrasil level / grade / Trust Magnitude, Arbor profile, reachability flags, freshness |
 
-### Reported by scouts, cited, not independently re-derived
+This is what made the Yggdrasil III recalibration free (§0). It is also what
+keeps relevance honest: a highly-starred skill does not outrank a better-matched
+one because of its standing.
 
-| Finding | Source |
-|---|---|
-| RRF `k = 60`, and rank fusion beating score normalisation | Cormack, Clarke & Buettcher, SIGIR 2009 — [paper](https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf) |
-| Contextual retrieval: 35% failure reduction from contextual embeddings, 49% adding contextual BM25, 67% adding reranking | [Anthropic, Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval) |
-| Document expansion with relevance filtering beats unfiltered; filtering also cuts index size and latency | [Doc2Query++, arXiv 2510.09557](https://arxiv.org/pdf/2510.09557) |
-| Retrieval over MCP tools substantially improves selection accuracy vs. exposing all tools | [RAG-MCP, arXiv 2505.03275](https://arxiv.org/abs/2505.03275) |
-| Agent tool-selection accuracy degrades as tool count grows | Scout-reported across several 2025–2026 benchmarks; **treat as directional** — the specific figures were not re-derived here |
-| Rewriting tool/skill descriptions improves retrieval more than swapping embedding models | Scout-reported; the mechanism is the basis of §2.3 |
-| Adaptive-RAG: a complexity classifier routing retrieval depth matches always-retrieve quality at ~60% of cost | [NAACL 2024](https://aclanthology.org/2024.naacl-long.389/) |
-| Thompson sampling beats UCB/ε-greedy at small n, but deterministic hysteresis is more *stable* — the basis of §6.1 | Scout synthesis + [Kubernetes HPA stabilisation](https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/) |
-| Lost-in-the-middle persists on long-context models; context length degrades performance even with perfect retrieval | [Chroma Context Rot](https://www.trychroma.com/research/context-rot); [ACL Findings 2025](https://aclanthology.org/2025.findings-emnlp.1264/) |
-| Anthropic prompt caching: 1.25× write (5-min), 2× (1-hour), 0.1× read | [Prompt caching docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) |
-| IR eval: usable signal at 30–50 queries, ~100 standard; paired bootstrap for significance | [BEIR, arXiv 2104.08663](https://arxiv.org/pdf/2104.08663) |
-| **No skill registry does semantic retrieval; none publish behavioural measurements** — the §4 INTENT position | Landscape sweep across MCP Registry, Smithery, Glama, SkillsMD, Cursor Marketplace, agentskills.io |
-| Skill-ecosystem security: prompt injection via skills is an active 2025–26 attack surface | Scout-reported; motivates §10 |
+### 3.3 Index-time intelligence
 
-Scout-reported rows are **directional inputs to design, not measurements of our
-system.** Where one drives a threshold, that threshold is marked PROVISIONAL and
-the benchmark replaces it.
+**The architectural bet, restated from INTENT §3 and unchanged:** move retrieval
+intelligence to index time where practical. The corpus is small enough to
+enrich offline; the runtime stays fast, deterministic, inspectable and
+dependency-light.
+
+Contract obligations for the index artifact:
+
+- **Committed and versioned.** One artifact is the only thing a summon reads to
+  rank. It carries a schema identifier and a builder version, so a bad
+  generation run is revertible.
+- **Offline by construction.** A summon never blocks on the network. Refresh is
+  a separate, explicit step.
+- **Incrementally refreshable.** Generated content records a fingerprint of the
+  source text it was derived from, so a corpus change invalidates only the
+  documents it actually touched. Without this, the maintainability result in
+  §0 does not hold.
+- **Drift-gated.** CI proves the committed artifact matches what the builder
+  produces from the recorded snapshot.
+
+### 3.4 Refusal
+
+**INV-6 — Refusal is a first-class result.** When no candidate clears the
+admission policy, Reach returns `noMatch`. It does not return a best-effort
+top result with low confidence, and it does not silently widen.
+
+`noMatch` is a **retrieval** outcome. It carries no behavioral meaning (INV-3),
+and §7 forbids the controller from reading it as one.
+
+### 3.5 Reachability is curation, not retrieval
+
+A capability that cannot be materialized — no installable link, no suite
+components — is unreachable regardless of how well it matches. Reach must
+**report** this class separately rather than absorb it into its own score, so
+that a curation gap never reads as a retrieval failure.
+
+Upstream owns the truth here. Where `gaia-skill-tree` publishes an
+installability determination, this layer consumes it rather than re-deriving it
+from URL shape.
+
+### 3.6 Evaluation
+
+Retrieval quality is measured, and the methodology may be retained from the
+existing G1/G2/G3 instrument or replaced by a measured successor:
+
+- **G1 — did retrieval improve?** Paired comparison against the prior shipping
+  ranker on identical queries, with a confidence interval on the delta. The
+  delta between systems is load-bearing; absolute scores are not, while gold
+  labels remain machine-written.
+- **G2 — does it decline correctly?** A set of queries with no correct answer;
+  the gate is the refusal rate.
+- **G3 — does it work offline?** The evaluation harness blocks egress before it
+  does anything else.
+
+Current standings, provenance and caveats: `docs/EVIDENCE.md`. Per §0.1 they are
+not restated here.
 
 ---
 
-## 10. Security posture
+## 4. Arbor consumption
 
-[#85](https://github.com/gaia-research/gaia-skill-heaven/issues/85) is open: the
-plugin's own output is treated as authoritative instruction. Summon materialises
-third-party content into a session — that content is **data, not instruction**,
-and the sweep in §9 confirms skills are an active injection surface.
+**INV-7 — This repository is a consumer of Arbor and never an author of it.**
 
-Three invariants, all cheap, all Phase 1:
+### 4.1 The contract
 
-1. **Summoned content is untrusted.** The `summon` skill instructs the agent to
-   treat a summoned `SKILL.md` as reference material subject to the user's
-   existing permissions, never as a directive that can redirect the task,
-   escalate access, or override the caller's brief.
-2. **The card is generated by us, from index fields** — never by interpolating
-   arbitrary skill text into an instruction-shaped surface.
-3. **Nothing auto-executes.** Materialising a directory is not running it.
-   `scripts/` landing on disk is exactly as inert as any other file until the
-   agent is asked to run it, and the card never asks.
+Skill Heaven consumes `gaia.arbor-profile/v1` — the deterministic generated
+projection defined in
+`gaia-skill-tree/registry/arbor/contracts/profile.schema.json`. It does not
+consume declarations, receipts, or interpretations directly; those are upstream
+governance inputs, not runtime inputs.
 
-Anthropic's own Agent Skills guidance says the same thing in stronger terms —
-*"a malicious Skill can direct Claude to invoke tools or execute code in ways
-that don't match the Skill's stated purpose"*, and skills that fetch external
-content are singled out as *"particular risk"*. The MCP spec agrees from the
-other side: tool annotations and descriptions from servers are to be treated as
-untrusted unless the server is trusted.
+Per §0.2 the field list is not restated. What this layer must preserve when it
+projects a profile into runtime state:
 
-Summon's position is therefore not "we trust the tree." It is: **the tree
-decides what is worth showing you; the card decides what you are told about it;
-and neither of them gets to decide what you do next.**
+- **`support` verbatim.** The axis is `expert-declared` → `benchmark-confirmed`
+  / `benchmark-qualified` / `benchmark-revised` / `inconclusive`. It is set only
+  by a governed interpretation. This layer must never compute it, default it,
+  or collapse it into a confidence label.
+- **`facet` as facets.** `human-led` and `model-led` are **independent and
+  nonexclusive**; both may describe one skill under different stated conditions.
+  A representation that can hold only one is wrong.
+- **`conditions` alongside every claim.** A behavioral claim without its stated
+  conditions is not the claim. A surface that shows the conclusion and drops the
+  condition is misreporting.
+- **Digests.** `declarationSource`, `benchmarkSources`, `interpretationSource`
+  and `inputDigest` make a runtime decision auditable back to its sources.
+
+### 4.2 Forbidden
+
+Stated explicitly because each of these was built, or nearly built, under the
+superseded SPEC:
+
+- **A local Arbor schema.** No `ArborStamp`, no repo-local profile type.
+- **`polarity` + `confidence` as a substitute.** A four-value enum cannot hold
+  independent facets, and `confidence` is not an upstream concept.
+- **Receipt → verdict automation.** A receipt is an observation linked to a
+  claim, never a verdict. No threshold, count, or aggregate in this repository
+  may promote one into a support classification.
+- **Rank-ordered Arbor work.** Sequencing by stars violates INV-2 and, per §0,
+  makes the work re-churn on every recalibration.
+- **Arbor as a retrieval feature.** Arbor may change a *composition* or a
+  *posture* decision. It does not adjust a relevance score.
+
+### 4.3 Degradation
+
+The catalogue has almost no Arbor evidence today, and per INTENT §11 it is not
+supposed to acquire it in bulk. Therefore:
+
+**INV-8 — Absent Arbor evidence degrades to relevance-only behavior, and the
+fallback is disclosed.** Not silently, and not as a footnote in a log. The
+surface that made the decision says which lens it had.
+
+The smallest valid implementation consumes existing profiles and nothing else.
+That is *preferable* to a richer schema this layer invented.
+
+---
+
+## 5. The Arbor interaction graph
+
+Per ENDGAME §8 and INTENT §5, the deeper Arbor primitive is a graph, not a
+stamp. Consumer labels (Heaven-native, Hell-safe, Ultra-ready, …) are
+**derived projections** of it, never contributor-authored claims.
+
+Relationships (upstream's list, ENDGAME §8):
+
+```
+stabilizes   amplifies   conflicts   recovers   compresses-after   unlocks   duplicates
+```
+
+**INV-9 — Arbor interaction and Yggdrasil fusion are separate semantics.**
+
+> **Yggdrasil fusion:** A + B structurally compose capability C.
+> **Arbor interaction:** A changes what happens when B executes.
+
+A pair may carry both. They must never be read as one edge type, merged into one
+graph, or substituted for one another.
+
+### 5.1 Status and the consumption gap
+
+Arbor's four ratified contracts cover declarations, receipts, interpretations
+and profiles — all **per-skill**. The interaction graph is specified in ENDGAME
+but has **no ratified contract and no published projection**.
+
+This is a real gap and it is upstream's to close. This document records it
+rather than working around it, because working around it means inventing an edge
+schema in the wrong repository.
+
+**Until an edge projection exists, composition (§6.3) degrades to relevance-only
+and discloses it.** That is the honest state, and it is acceptable.
+
+---
+
+## 6. Heaven and Hell
+
+Two opposing runtime steering directions over the same summon mechanic.
+
+```
+HEAVEN  ←──────────────────────────→  HELL
+converge                              explore
+reduce search space                   expand search space
+verify                                challenge
+compress                              branch
+reconcile                             mutate
+stabilize                             diversify
+```
+
+Neither is superior. The useful direction depends on the gap and the state of
+the work.
+
+### 6.1 The bar
+
+**INV-10 — Heaven must do more than return fewer candidates; Hell must do more
+than return more.**
+
+Returning a longer list is expanded *search*, not expanded *capability*. A
+system that only knows relevance can retrieve more things; a system that
+understands Arbor can reason about which things should operate together
+(INTENT §12).
+
+This is the bar the surfaces are held to. Until it is met, a surface must say
+which behavior it is actually delivering — see §8.
+
+### 6.2 What is honest today
+
+Heaven and Hell currently differ by breadth of relevance-ranked results. Per
+INV-8 and §8 that is disclosable, shippable, and must not be described as
+behavior-aware routing.
+
+Heaven/Hell stamps are not built. No surface may present stamp-gated routing as
+running.
+
+### 6.3 Composition
+
+The runtime advantage appears when the layer stops choosing isolated skills.
+Given candidates A, B, C, D, a relevance-only system asks which are closest. An
+Arbor-aware runtime can additionally ask: does A amplify B? does C conflict with
+A? does B recover a known failure mode of D? are A and C redundant? does D
+unlock something none of the others provide?
+
+**The completion bar (INTENT §15C):** at least one runtime path uses Arbor
+interaction evidence to change a composition decision — avoid a conflict, prefer
+an amplifier, drop a duplicate, add a recovery capability, unlock a gap.
+
+One path, on real evidence, is the bar. Not coverage.
+
+---
+
+## 7. Ultra
+
+Ultra is the **adaptive controller** over the Heaven↔Hell runtime. It is not
+"more Hell", and it is not a third polarity.
+
+### 7.1 What it decides
+
+explore · converge · increase or decrease depth · checkpoint · recover · reopen
+search · compress discoveries · hold · stop
+
+### 7.2 Contract
+
+- **Explainable.** Every transition states the signal, the policy, and the
+  posture it moved from and to. An unexplainable transition is a defect.
+- **Stable.** It does not oscillate because a score moved slightly. Holding
+  position is a first-class outcome and the common one.
+- **Recoverable.** It can reopen a search it closed.
+- **Deterministic given its inputs.** Replayable from a recorded trace.
+
+**INV-11 — Ultra must not infer behavioral posture from non-behavioral signals.**
+Named explicitly because it was built the other way: `noMatch` is a retrieval
+outcome (§3.4) and must never count as evidence to explore. A retrieval score's
+jitter is not a behavioral signal (INV-3).
+
+**INV-12 — Ultra must not convert Arbor into a single optimization target.** A
+controller that maximizes an Arbor-derived scalar has reintroduced the master
+score INV-1 forbids.
+
+### 7.3 Success
+
+> Its success is not "moves frequently." Its success is "moves appropriately."
+
+Ultra should be deliberately boring to operate.
+
+---
+
+## 8. Disclosure
+
+The rule that makes an incomplete system trustworthy rather than misleading.
+
+**INV-13 — A surface discloses which lenses informed its decision, and which
+were absent.**
+
+Concretely, a runtime decision states:
+- what it matched on (relevance), and how confident that is
+- whether Arbor evidence existed for the candidates, and its `support` state
+- when it fell back to relevance-only, and why
+- when the index is stale, and how stale
+
+Unknown is displayed as unknown. It is never rendered as a neutral default, an
+empty field, or a passing state.
+
+> When Gaia does not know, it says so. — INTENT §1
+
+---
+
+## 9. Skill Zero
+
+Skill Zero is the mode-neutral launcher and executor. It owns runtime mechanics:
+controlled launch, ephemeral skill materialization, session isolation,
+clean-room behavior, restoration, telemetry, runtime state, harness-specific
+execution.
+
+**INV-14 — Skill Zero executes; it does not interpret.** Gaia's canonical
+interpretation of capability behavior lives upstream. This separation is what
+lets the execution layer stay small while capability knowledge improves
+independently.
+
+`P3` continues to apply: the launcher never mutates the user's shared state.
+Writes live inside a disposable session directory.
+
+---
+
+## 10. The HH Index
+
+The Hell-Heaven Index is Arbor's **dominant behavioral index**. Its semantic
+job:
+
+> Describe the demonstrated behavioral effect of a capability along the
+> Heaven-Hell operating space, under stated conditions and evidence.
+
+**Its formula is deliberately undefined.** It may not be one scalar. It may have
+several dimensions. That is a research question, owned by `gaia-research`, and
+this document does not pre-empt it. Per ENDGAME §6 it must remain independent
+from Trust Magnitude: one benchmark receipt may feed both, and each interprets
+it differently.
+
+### 10.1 Naming — a collision to resolve
+
+This repository ships an artifact called a **skill index** (§3.3) — a lexical
+retrieval index. The **HH Index** is a behavioral index in a different
+repository. Adjacent names, unrelated things.
+
+**INV-15 — The retrieval artifact must never be referred to as an index over
+behavior, and must not occupy the HH Index's name in code, docs, or user-facing
+copy.** A durable renaming of the retrieval artifact is an open question (§12).
+
+---
+
+## 11. Standards — a separate lane
+
+Skills-over-MCP and SEP-2640 matter for interoperability. Conformance is
+worth having.
+
+But the standard answers *how a skill is discovered or transported between
+systems*. It does not answer which capability to use, what it does to the agent,
+which capabilities should operate together, or whether to explore or converge.
+
+**INV-16 — Standards work has its own lane and its own conformance tests, and
+never shares a phase with Arbor.**
+
+This is a process invariant with a cause. Under the superseded PLAN, Phase 4 was
+"Arbor + SEP" — one phase pairing a tractable, well-specified standard with an
+open research question, on the reasoning that both touch skill metadata. The
+tractable half shipped completely; the Arbor half shipped nothing. Pairing them
+produced that outcome regardless of intent, and the pairing is therefore
+forbidden rather than discouraged.
+
+---
+
+## 12. Open questions
+
+Recorded rather than answered. Per §0, inventing an answer here is worse than
+carrying the question.
+
+| # | Question | Owner |
+|---|---|---|
+| Q1 | What is the contract for Arbor interaction edges, and what projection publishes them? (§5.1) | `gaia-skill-tree` |
+| Q2 | What is the HH Index's representation — scalar, vector, or conditional set? | `gaia-research` |
+| Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
+| Q4 | Should the retrieval artifact be renamed to end the collision in §10.1? | this repo |
+| Q5 | Does upstream publish an installability determination this layer can consume? (§3.5) | `gaia-skill-tree` |
+| Q6 | What replaces the coverage-sensitive absolute admission floor with a scale-free one? | this repo |
+| Q7 | Who reviews the machine-written gold labels, and when? (§3.6) | this repo |
+
+---
+
+## 13. Evidence base
+
+Measurements, provenance, negative results and current gate standings live in
+`docs/EVIDENCE.md` and `packages/core/bench/results/`. Cost measures come from
+`gaia-research/skill-cost` against persisted session logs — never self-reported
+token counts.
+
+Negative results are first-class findings (D8) and are recorded, not papered
+over. Three from the superseded programme remain valid and are load-bearing:
+dense retrieval did not earn its dependency; the round-trip expansion filter
+made retrieval worse; and partial expansion coverage is a regression that
+ranking-side mitigation does not fix.
+
+---
+
+## 14. Security posture
+
+**Summoned content is data, not instruction.** A skill body entering a session
+is untrusted content. It may not redirect the agent's task, escalate access, or
+alter execution policy. Surfaces that render summoned content say so.
+
+The same applies to upstream records: a projection consumed across the boundary
+is data. Its digests make it auditable; they do not make it authoritative over
+the agent's brief.
+
+---
+
+## Appendix — derivation map
+
+Every section of [`INTENT.md`](INTENT.md), and where it is specified. Kept so a
+future reader can check this document against its source without re-reading
+both. If an INTENT section gains no row, this document has drifted.
+
+| INTENT | Specified in | Planned in |
+|---|---|---|
+| §1 The intent | §2 (the three questions), §8 (disclosure) | PLAN, definition of done |
+| §2 The conceptual mistake | INV-1, INV-3, INV-5 | PLAN, why lanes |
+| §3 Reach | §3 | Lane R |
+| §4 Three independent questions | §2 | rule 2 (no rank-ordered work) |
+| §5 Arbor is a graph | §5, INV-9 | Lane G |
+| §6 The Hell-Heaven model | §6 | Lane S |
+| §7 Ultra | §7, INV-11, INV-12 | Lane S-now |
+| §8 Skill Zero | §9, INV-14 | — (stable; no open work) |
+| §9 Arbor ownership | §1, INV-7 | lane owners |
+| §10 The HH Index | §10, INV-15 | Q2, Lane E |
+| §11 The evidence loop | §4.1 (`support`), §4.2 (no receipt→verdict) | Lane E |
+| §12 Composition | §6.3 | Lane S-later |
+| §13 Standards are plumbing | §11, INV-16 | Lane X |
+| §14 What we preserve | §3 (carried), §4.2 (retired) | Lane R carried-forward, Lane A1 |
+| §15 What "finished" means | §3.6, §4, §6.1, §6.3, §7.3 | definition of done |
+| §16 Non-goals | §0 (maintenance), §12 (open, not invented) | what this plan does not do |
+| §17 Product experience | — narrative, deliberately unspecified | — |
+| §18 The end state | — narrative, deliberately unspecified | — |
