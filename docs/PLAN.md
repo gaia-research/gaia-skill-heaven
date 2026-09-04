@@ -207,6 +207,16 @@ relevance up as behavior.
 
 **Owner:** `gaia-research` · **Entry:** one concrete runtime uncertainty
 
+**This lane does not start from scratch, and must not duplicate what exists.** A
+scout of the founder docs on 2026-09-04 found the methodology already drafted
+and partly ratified: ROADMAP **Program 3** carries the HH Index's standing goal,
+its ten-question target set and kill criteria KC1–KC6; `hh-ledger/v1` is frozen
+with its validator as the hard gate; the R0→R5 phase sequence (dose census →
+rubric + seed labels → objective corpus → paired trial → validate labels →
+stamps) is written; and `hh-benchmark/methodology.md` §5 specifies that stamps
+are earned by trial rather than assigned. Lane E's job is to *close one loop
+against that method*, not to redesign it.
+
 The lane most at risk of becoming a treadmill, so its scope is fixed at **one
 closed path**:
 
@@ -219,7 +229,7 @@ runtime observation → concrete uncertainty → focused benchmark → receipt
 
 | # | Item |
 |---|---|
-| E1 | Identify one real uncertainty from runtime observation. Not a survey — one question worth answering |
+| E1 | Identify one real uncertainty from runtime observation. Not a survey — one question worth answering. The R1 seed set and stamp rubric are the natural starting corpus |
 | E2 | A focused benchmark targeting one declaration claim: control and treatment arms, same closed environment, pinned artifacts |
 | E3 | A receipt: conclusion-free, per the ratified contract |
 | E4 | A governed interpretation — a curator record, the only thing that may set `support` |

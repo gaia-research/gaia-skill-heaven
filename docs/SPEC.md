@@ -98,6 +98,10 @@ published projections                               local opt-in telemetry
                 projections              read-only
 ```
 
+**The flow is one-directional** (ROADMAP Program 3): *research publishes the
+result · the Tree records the accepted result · Skill Heaven consumes it.* The
+Tree never calculates it, and this repository never produces it.
+
 **The boundary rule.** This repository may cache or project upstream records for
 performance. It must not fork their meaning. A field this repository invents to
 stand in for an upstream concept is a defect, regardless of how convenient it is.
@@ -262,8 +266,13 @@ Stated explicitly because each of these was built, or nearly built, under the
 superseded SPEC:
 
 - **A local Arbor schema.** No `ArborStamp`, no repo-local profile type.
-- **`polarity` + `confidence` as a substitute.** A four-value enum cannot hold
-  independent facets, and `confidence` is not an upstream concept.
+- **`polarity` + `confidence` as a substitute.** Both words *are* upstream — but
+  on a different contract. `polarity` is a **continuous** value plus a derived
+  label on the HH Index result profile (`ENDGAME - SCHEMA.md` §9), and
+  `confidence` is a field on `hh-stamp/v1` (ROADMAP Program 3). Neither belongs
+  on an Arbor profile claim, whose axis is `support`. Two errors compounded
+  here: borrowing HH's vocabulary for Arbor's contract, and flattening a
+  continuous profile into a four-value enum that cannot hold independent facets.
 - **Receipt → verdict automation.** A receipt is an observation linked to a
   claim, never a verdict. No threshold, count, or aggregate in this repository
   may promote one into a support classification.
@@ -457,11 +466,32 @@ job:
 > Describe the demonstrated behavioral effect of a capability along the
 > Heaven-Hell operating space, under stated conditions and evidence.
 
-**Its formula is deliberately undefined.** It may not be one scalar. It may have
-several dimensions. That is a research question, owned by `gaia-research`, and
-this document does not pre-empt it. Per ENDGAME §6 it must remain independent
-from Trust Magnitude: one benchmark receipt may feed both, and each interprets
-it differently.
+**It is more specified upstream than INTENT §10 implies, and this document must
+not re-open what is already settled.** A scout of the founder docs on 2026-09-04
+found four load-bearing decisions:
+
+| | Settled | Where |
+|---|---|---|
+| The name and schema key — `hellHeaven` | ratified, **CURRENT** | `gaia-research` RATIFICATION **N6** |
+| **A result is a profile, not merely a scalar** — polarity, behavior dimensions, per-regime effectiveness/safety, coverage | specified with a worked example | `gaia-skill-tree/founder/ENDGAME - SCHEMA.md` §9 |
+| **Index independence** — `HH ↛ TM ↛ HH` is forbidden; both derive from raw observation, and projections may join their outputs | specified | `ENDGAME - SCHEMA.md` §14 |
+| **Recomputability** — deleting every generated HH artifact and recomputing from receipts must reproduce the same Arbor projection | stated as the core invariant | `ENDGAME - SCHEMA.md` §16 |
+
+The consumer-facing stamp values are `heaven-native`, `auto@tier` and
+`hell-safe@tier`, earned by trial rather than assigned — rubric-first
+predictions, validated against a paired benchmark, and only then shipped
+(`gaia-research/content/reports/hh-benchmark/methodology.md` §5; rubric in
+`docs/skill-heaven/r1-stamp-rubric.md`). The stamp sketch is `hh-stamp/v1`
+(ROADMAP Program 3), and the ledger `hh-ledger/v1` is frozen with its validator
+as the hard gate.
+
+**What is genuinely open** is narrower than "the formula": whether a continuous
+score survives alongside the discrete stamps, or the stamps make it redundant.
+That question is already asked, in `gaia-research`'s own methodology §7, and
+this document does not re-ask it — see §12 Q2.
+
+Per ENDGAME §6 the index must remain independent from Trust Magnitude: one
+benchmark receipt may feed both, and each interprets it differently.
 
 ### 10.1 Naming — a collision to resolve
 
@@ -504,7 +534,7 @@ carrying the question.
 | # | Question | Owner |
 |---|---|---|
 | Q1 | What is the contract for Arbor interaction edges, and what projection publishes them? (§5.1) | `gaia-skill-tree` |
-| Q2 | What is the HH Index's representation — scalar, vector, or conditional set? | `gaia-research` |
+| Q2 | Does a continuous 0–100 score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7, tracking `gaia-research#62`. Not re-asked here | `gaia-research` |
 | Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
 | Q4 | Should the retrieval artifact be renamed to end the collision in §10.1? | this repo |
 | Q5 | Does upstream publish an installability determination this layer can consume? (§3.5) | `gaia-skill-tree` |
