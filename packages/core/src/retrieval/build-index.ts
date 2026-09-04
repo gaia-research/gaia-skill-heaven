@@ -159,8 +159,15 @@ export function buildSkillIndex({
   expansions,
 }: BuildIndexOptions): SkillIndex {
   const bucketed = Object.values(projection.buckets ?? {}).flat();
-  const docs = bucketed
-    .map((skill) => toIndexedSkill(skill, expansions?.[skill.id]))
+  const unclassified = projection.awaitingClassification ?? [];
+  // Both are indexed. Reading `buckets` only made 52 real skills — 12 of them
+  // 4-star and 25 of them 3-star — unsummonable for a reason that has nothing
+  // to do with whether they are any good: the tree simply had not filed them
+  // under a generic node yet.
+  const docs = [
+    ...bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], true)),
+    ...unclassified.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], false)),
+  ]
     .sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
 
   const avgFieldLen = Object.fromEntries(
@@ -188,10 +195,7 @@ export function buildSkillIndex({
     },
     stats: {
       docs: docs.length,
-      // Recorded, not indexed: these 52 skills are invisible to summon today
-      // because the runtime reads `buckets` only. Stating the number keeps the
-      // gap visible instead of silently shrinking the corpus.
-      awaitingClassification: (projection.awaitingClassification ?? []).length,
+      awaitingClassification: docs.filter((doc) => !doc.classified).length,
       unreachable: docs.filter((doc) => !isReachable(doc)).length,
       missingTags: docs.filter((doc) => doc.tags.length === 0).length,
       expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
@@ -207,6 +211,7 @@ export function buildSkillIndex({
 function toIndexedSkill(
   skill: ProjectionSkill,
   expansion: { expansions: string[]; expandedBy: string; expandedFrom?: string } | undefined,
+  classified: boolean,
 ): IndexedSkill {
   const fingerprint = expansionFingerprint(skill);
   const links = skill.links ?? {};
@@ -224,6 +229,7 @@ function toIndexedSkill(
     installable: isInstallableLink(links),
     suiteComponents: [...(skill.suiteComponents ?? [])],
     registryOnly: skill.installable === false,
+    classified,
     ...(skill.level ? { level: skill.level } : {}),
     trust: {
       ...(skill.level ? { level: skill.level } : {}),

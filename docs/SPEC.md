@@ -62,8 +62,9 @@ Measured 2026-09-03 against live `https://gaiaskilltree.com/graph/named/index.js
 | Missing `tags` | 148 (45%) |
 | Missing `links.github` | 26 |
 | **Unreachable by summon** (no installable link AND no suite components) | **80** *(MEASURED 2026-09-03; §1 previously estimated 34 by counting missing links alone. 98 fail the link test; 18 of those are suite roots, which carry no link of their own and are reachable through their components.)* |
-| Bucketed, and therefore rankable | 274 |
-| `awaitingClassification` — **invisible to summon**, which reads `buckets` only | 52 |
+| Bucketed under a generic node | 274 |
+| `awaitingClassification` — not bucketed. **Was invisible to summon**, which read `buckets` only; now indexed and disclosed on the card | 52 *(12 are 4★ and 25 are 3★ — they were unsummonable for a reason unrelated to whether they are any good)* |
+| **Indexed, and therefore rankable** | **326** |
 | Distinct vocabulary tokens | 2,599 |
 | Levels | 1★ 74 · 2★ 114 · 3★ 96 · 4★ 37 · 5★ 5 |
 

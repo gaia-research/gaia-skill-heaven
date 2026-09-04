@@ -28,6 +28,8 @@ export type RetrievalDisclosure = {
   /** `(top − next) / top` across the admitted set. */
   margin: number;
   matchKind: "exact" | "ranked";
+  /** False when the tree has not bucketed this skill under a generic node. */
+  classified: boolean;
   /** False means the summoned skill is not the one the query named — the card must say so. */
   nameMatchesQuery: boolean;
 };

@@ -313,6 +313,7 @@ function disclosureById(decision: Decision, query: string): Map<string, Retrieva
         score: Math.round(hit.score * 10_000) / 10_000,
         margin: decision.margin,
         matchKind: hit.matchKind,
+        classified: hit.doc.classified,
         nameMatchesQuery:
           normalize(hit.doc.name) === normalizedQuery ||
           normalize(hit.doc.id) === normalizedQuery ||

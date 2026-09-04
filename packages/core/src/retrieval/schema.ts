@@ -73,6 +73,13 @@ export type IndexedSkill = {
   suiteComponents: string[];
   /** Registry-only guard: `false` means this skill must refuse to install. */
   registryOnly: boolean;
+  /**
+   * False when the tree has not bucketed this skill under a generic node yet.
+   * Such skills were invisible to summon entirely — the runtime read `buckets`
+   * only — and 37 of the 52 are 3-star or above. They are indexed, and the
+   * card discloses that the tree has not classified them.
+   */
+  classified: boolean;
   level?: string | undefined;
   trust: IndexedTrust;
   retrieval: RetrievalSurface;
@@ -82,7 +89,7 @@ export type IndexedSkill = {
 
 export type IndexStats = {
   docs: number;
-  /** Named Skills the upstream projection has not bucketed — invisible to summon. */
+  /** Indexed skills the upstream projection has not bucketed under a generic node. */
   awaitingClassification: number;
   /** Documents summon cannot deliver: no installable link AND no suite components. */
   unreachable: number;
