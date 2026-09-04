@@ -1,6 +1,6 @@
 {
   "schema": "gaia.bench-ledger/v1",
-  "ranAt": "2026-09-04T00:38:50.244Z",
+  "ranAt": "2026-09-04T00:43:17.016Z",
   "index": {
     "schema": "gaia.skill-index/v1",
     "generatedAt": "2026-09-03T16:50:52.285Z",
@@ -10,8 +10,8 @@
       "expansion": "generated"
     },
     "docs": 274,
-    "expandedDocs": 101,
-    "expansionCoverage": 0.3686
+    "expandedDocs": 273,
+    "expansionCoverage": 0.9964
   },
   "builderVersion": "skill-index-builder/0.1.0",
   "goldSet": {
@@ -29,12 +29,12 @@
       "mrrOnReachable": 0.0585,
       "coverageSplit": {
         "expandedTargets": {
-          "n": 65,
-          "mrr": 0.0424
+          "n": 100,
+          "mrr": 0.0392
         },
         "unexpandedTargets": {
-          "n": 35,
-          "mrr": 0.0333
+          "n": 0,
+          "mrr": 0
         }
       },
       "mrr": 0.0392,
@@ -192,12 +192,12 @@
       "mrrOnReachable": 0.0501,
       "coverageSplit": {
         "expandedTargets": {
-          "n": 65,
-          "mrr": 0.0406
+          "n": 100,
+          "mrr": 0.0501
         },
         "unexpandedTargets": {
-          "n": 35,
-          "mrr": 0.0676
+          "n": 0,
+          "mrr": 0
         }
       },
       "mrr": 0.0501,
@@ -352,20 +352,20 @@
       "system": "bm25f",
       "label": "BM25F over the committed index + exact-name fast path (no floor)",
       "reachableTargets": 100,
-      "mrrOnReachable": 0.4658,
+      "mrrOnReachable": 0.6573,
       "coverageSplit": {
         "expandedTargets": {
-          "n": 65,
-          "mrr": 0.6925
+          "n": 100,
+          "mrr": 0.6573
         },
         "unexpandedTargets": {
-          "n": 35,
-          "mrr": 0.0447
+          "n": 0,
+          "mrr": 0
         }
       },
-      "mrr": 0.4658,
-      "mrrExcludingAmbiguous": 0.4629,
-      "recallAt5": 0.58,
+      "mrr": 0.6573,
+      "mrrExcludingAmbiguous": 0.6673,
+      "recallAt5": 0.8,
       "refusalRate": 0,
       "falseRefusalRate": 0.02,
       "refusals": [
@@ -373,141 +373,141 @@
           "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
           "distance": "near",
           "refused": false,
-          "topScore": 17.509899253086203,
-          "topId": "firecrawl/firecrawl-build-interact"
+          "topScore": 16.925200742454557,
+          "topId": "garrytan/make-pdf"
         },
         {
           "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
           "distance": "near",
           "refused": false,
-          "topScore": 27.33128218513205,
+          "topScore": 22.859864009880035,
           "topId": "obra/systematic-debugging"
         },
         {
           "query": "build a browser extension that autofills expense reports from email receipts",
           "distance": "far",
           "refused": false,
-          "topScore": 14.999171654928848,
+          "topScore": 15.315784963648117,
           "topId": "garrytan/open-gstack-browser"
         },
         {
           "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
           "distance": "near",
           "refused": false,
-          "topScore": 25.471742116463297,
+          "topScore": 21.67985502438749,
           "topId": "addy-osmani/code-review-and-quality"
         },
         {
           "query": "draft the Terraform for a three-region VPC with private subnets and peering",
           "distance": "mid",
           "refused": false,
-          "topScore": 10.692948156653774,
-          "topId": "mbtiongson1/gaia-draft-curate"
+          "topScore": 11.713816185413103,
+          "topId": "intelligentcode-ai/devops-engineer"
         },
         {
           "query": "even out the volume and strip the hiss from a two-hour interview recording",
           "distance": "mid",
           "refused": false,
-          "topScore": 14.96189088056196,
+          "topScore": 13.33888004126895,
           "topId": "k-dense-ai/pymc"
         },
         {
           "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
           "distance": "far",
           "refused": false,
-          "topScore": 22.28244941532361,
-          "topId": "mattpocock/triage"
+          "topScore": 30.832615629404103,
+          "topId": "ruvnet/v3-performance-optimization"
         },
         {
           "query": "get single sign-on working for enterprise customers against their Okta tenant",
           "distance": "far",
           "refused": false,
-          "topScore": 18.637326341833994,
-          "topId": "ruvnet/dual-mode"
+          "topScore": 27.373246859775172,
+          "topId": "remotion-dev/remotion-saas"
         },
         {
           "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
           "distance": "near",
           "refused": false,
-          "topScore": 27.477078152858123,
+          "topScore": 22.87559902720642,
           "topId": "k-dense-ai/transformers"
         },
         {
           "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
           "distance": "mid",
           "refused": false,
-          "topScore": 20.581737368033462,
+          "topScore": 29.09958476142365,
           "topId": "favorchurch/triage-conference"
         },
         {
           "query": "move a decades-old COBOL batch job onto something maintainable",
           "distance": "far",
           "refused": false,
-          "topScore": 8.687655420494236,
-          "topId": "gsd-build/ship"
+          "topScore": 16.644208522736147,
+          "topId": "mbtiongson1/gaia-draft-curate"
         },
         {
           "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
           "distance": "mid",
           "refused": false,
-          "topScore": 14.526285911929385,
-          "topId": "garrytan/retro"
+          "topScore": 14.646856551072657,
+          "topId": "favorchurch/export-attendees"
         },
         {
           "query": "sketch out a points-based loyalty program our users would actually want",
           "distance": "far",
           "refused": false,
-          "topScore": 24.070554185857166,
+          "topScore": 20.895856628918605,
           "topId": "garrytan/plan-devex-review"
         },
         {
           "query": "the app freezes for a couple seconds only on older Android phones right after opening",
           "distance": "mid",
           "refused": false,
-          "topScore": 21.955039183132513,
-          "topId": "garrytan/canary"
+          "topScore": 18.70429629140909,
+          "topId": "garrytan/scrape"
         },
         {
           "query": "the jump in our platformer feels floaty, help me dial in the arc",
           "distance": "mid",
           "refused": false,
-          "topScore": 13.180771928703553,
-          "topId": "garrytan/design-consultation"
+          "topScore": 14.622286919472808,
+          "topId": "favorchurch/speak-like-favor"
         },
         {
           "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
           "distance": "near",
           "refused": false,
-          "topScore": 42.34059395891915,
-          "topId": "addy-osmani/incremental-implementation"
+          "topScore": 35.15452134636265,
+          "topId": "mattpocock/wayfinder"
         },
         {
           "query": "this pod keeps getting killed for using too much memory and I can't tell why",
           "distance": "near",
           "refused": false,
-          "topScore": 25.634954749354915,
+          "topScore": 22.28604189150613,
           "topId": "k-dense-ai/pymc"
         },
         {
           "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
           "distance": "mid",
           "refused": false,
-          "topScore": 20.3489374229297,
-          "topId": "garrytan/review"
+          "topScore": 22.190165056642407,
+          "topId": "mbtiongson1/gaia-meta-audit"
         },
         {
           "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
           "distance": "near",
           "refused": false,
-          "topScore": 20.757238118491106,
-          "topId": "obra/using-git-worktrees"
+          "topScore": 31.01958790110799,
+          "topId": "intelligentcode-ai/user-tester"
         },
         {
           "query": "we're still on an ancient Python 2 codebase and need a path off it",
           "distance": "near",
           "refused": false,
-          "topScore": 20.18539784245845,
-          "topId": "gsd-build/plan-phase"
+          "topScore": 14.826989441426331,
+          "topId": "garrytan/context-restore"
         }
       ]
     },
@@ -518,12 +518,12 @@
       "mrrOnReachable": 0.28,
       "coverageSplit": {
         "expandedTargets": {
-          "n": 65,
-          "mrr": 0.2891
+          "n": 100,
+          "mrr": 0.28
         },
         "unexpandedTargets": {
-          "n": 35,
-          "mrr": 0.2632
+          "n": 0,
+          "mrr": 0
         }
       },
       "mrr": 0.28,
@@ -678,22 +678,22 @@
       "system": "bm25f-decide",
       "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
       "reachableTargets": 78,
-      "mrrOnReachable": 0.4904,
+      "mrrOnReachable": 0.6136,
       "coverageSplit": {
         "expandedTargets": {
-          "n": 65,
-          "mrr": 0.5808
+          "n": 100,
+          "mrr": 0.4786
         },
         "unexpandedTargets": {
-          "n": 35,
-          "mrr": 0.0143
+          "n": 0,
+          "mrr": 0
         }
       },
-      "mrr": 0.3825,
-      "mrrExcludingAmbiguous": 0.3857,
-      "recallAt5": 0.47,
-      "refusalRate": 0.95,
-      "falseRefusalRate": 0.17,
+      "mrr": 0.4786,
+      "mrrExcludingAmbiguous": 0.4879,
+      "recallAt5": 0.58,
+      "refusalRate": 0.85,
+      "falseRefusalRate": 0.2,
       "refusals": [
         {
           "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
@@ -761,9 +761,9 @@
         {
           "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
           "distance": "mid",
-          "refused": true,
-          "topScore": 0,
-          "topId": null
+          "refused": false,
+          "topScore": 29.09958476142365,
+          "topId": "favorchurch/triage-conference"
         },
         {
           "query": "move a decades-old COBOL batch job onto something maintainable",
@@ -804,8 +804,8 @@
           "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
           "distance": "near",
           "refused": false,
-          "topScore": 42.34059395891915,
-          "topId": "addy-osmani/incremental-implementation"
+          "topScore": 35.15452134636265,
+          "topId": "mattpocock/wayfinder"
         },
         {
           "query": "this pod keeps getting killed for using too much memory and I can't tell why",
@@ -824,9 +824,9 @@
         {
           "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
           "distance": "near",
-          "refused": true,
-          "topScore": 0,
-          "topId": null
+          "refused": false,
+          "topScore": 31.01958790110799,
+          "topId": "intelligentcode-ai/user-tester"
         },
         {
           "query": "we're still on an ancient Python 2 codebase and need a path off it",
@@ -852,9 +852,9 @@
     {
       "system": "bm25f",
       "against": "baseline-shipped",
-      "delta": 0.4265459195801806,
-      "ciLow": 0.3407286637505124,
-      "ciHigh": 0.5130636131207243,
+      "delta": 0.6180733796808797,
+      "ciLow": 0.536747309680582,
+      "ciHigh": 0.6957867303071269,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true
@@ -872,9 +872,9 @@
     {
       "system": "bm25f-decide",
       "against": "baseline-shipped",
-      "delta": 0.34328982908270844,
-      "ciLow": 0.2592996297619924,
-      "ciHigh": 0.4313210371477012,
+      "delta": 0.439361257654137,
+      "ciLow": 0.34860532408637757,
+      "ciHigh": 0.5283181614540586,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true
@@ -882,9 +882,9 @@
     {
       "system": "bm25f",
       "against": "bm25f-no-expansion",
-      "delta": 0.18575986540178252,
-      "ciLow": 0.09185614908068232,
-      "ciHigh": 0.28268067002272623,
+      "delta": 0.3772873255024816,
+      "ciLow": 0.28913138962235685,
+      "ciHigh": 0.46570431279307845,
       "resamples": 10000,
       "seed": 20260903,
       "excludesZero": true
@@ -893,128 +893,128 @@
   "floorSweep": {
     "exactBypass": 0,
     "answerableTopScores": [
-      29.4246,
-      34.0269,
-      42.7845,
-      28.9645,
-      28.6596,
-      48.7483,
-      51.8065,
-      45.977,
-      48.7589,
-      27.7026,
-      40.4607,
-      29.9868,
-      62.3598,
-      24.0227,
-      29.3445,
-      36.2652,
-      56.4723,
-      38.7637,
-      29.1284,
-      26.0101,
-      75.2056,
-      36.8962,
-      49.482,
-      34.3396,
-      71.5439,
-      32.9679,
-      59.7439,
-      58.2744,
-      35.9587,
-      37.619,
-      71.2942,
-      33.8171,
-      36.5516,
-      27.3516,
-      53.7037,
-      34.4841,
-      35.9513,
-      47.8714,
-      51.4784,
-      35.3187,
-      56.3637,
-      62.6132,
-      26.3411,
-      36.537,
-      38.3268,
-      41.6179,
-      22.1351,
-      25.6254,
-      30.9475,
-      31.7522,
-      60.2207,
-      25.6773,
-      48.4641,
-      73.4394,
+      49.0116,
+      55.0471,
+      38.3134,
+      28.7404,
+      25.1995,
+      39.3527,
+      40.1411,
+      40.9212,
+      44.2007,
+      52.2887,
+      34.0526,
+      30.2082,
+      55.8748,
+      42.5549,
+      37.9033,
+      27.6925,
+      49.5507,
+      39.0908,
+      55.2905,
+      23.2613,
+      66.256,
+      36.7046,
+      45.6828,
+      33.0705,
+      59.5933,
+      50.6119,
+      52.4345,
+      49.639,
+      30.8876,
+      40.0346,
+      63.3698,
+      39.3676,
+      33.9578,
+      24.703,
+      45.4131,
+      45.9832,
+      31.328,
+      39.0352,
+      44.5413,
+      29.0765,
+      44.5694,
+      53.6401,
+      52.8729,
+      32.4985,
+      38.3551,
+      72.9802,
+      21.3081,
+      24.9853,
+      32.2256,
+      26.7791,
+      52.5094,
+      61.9365,
+      42.4783,
+      67.8287,
       0,
-      43.8543,
-      44.4795,
-      31.9905,
-      39.4728,
+      37.6509,
+      40.0123,
+      27.9952,
+      37.1086,
       0,
-      29.2403,
-      47.256,
-      45.873,
-      56.6384,
-      44.6815,
-      49.0411,
-      31.3952,
-      35.4039,
-      34.0187,
-      49.2606,
-      48.3688,
-      40.0771,
-      69.9045,
-      29.5187,
-      56.6242,
-      49.0174,
-      32.3506,
-      46.6546,
-      53.673,
-      53.3472,
-      30.9521,
-      37.7321,
-      32.9211,
-      34.2102,
-      54.5941,
-      42.209,
-      36.4721,
-      40.023,
-      79.4118,
-      23.9801,
-      45.3222,
-      37.6958,
-      33.475,
-      41.3339,
-      42.8433,
-      53.1304,
-      27.5925,
-      41.8443,
-      30.9769,
-      25.2608
+      27.5216,
+      39.8256,
+      41.7753,
+      49.1923,
+      35.9903,
+      45.3365,
+      54.3563,
+      90.2306,
+      39.4206,
+      49.5009,
+      43.7108,
+      35.1668,
+      57.8793,
+      46.4371,
+      48.9663,
+      45.42,
+      27.024,
+      39.1846,
+      47.483,
+      49.7549,
+      29.5487,
+      32.2943,
+      30.8642,
+      45.578,
+      50.7983,
+      39.0898,
+      53.2616,
+      51.7025,
+      69.1892,
+      25.3258,
+      36.2311,
+      56.2422,
+      42.3538,
+      39.36,
+      39.1342,
+      52.6368,
+      36.853,
+      56.6375,
+      25.6782,
+      23.5306
     ],
     "unanswerableTopScores": [
-      17.5099,
-      27.3313,
-      14.9992,
-      25.4717,
-      10.6929,
-      14.9619,
-      22.2824,
-      18.6373,
-      27.4771,
-      20.5817,
-      8.6877,
-      14.5263,
-      24.0706,
-      21.955,
-      13.1808,
-      42.3406,
-      25.635,
-      20.3489,
-      20.7572,
-      20.1854
+      16.9252,
+      22.8599,
+      15.3158,
+      21.6799,
+      11.7138,
+      13.3389,
+      30.8326,
+      27.3732,
+      22.8756,
+      29.0996,
+      16.6442,
+      14.6469,
+      20.8959,
+      18.7043,
+      14.6223,
+      35.1545,
+      22.286,
+      22.1902,
+      31.0196,
+      14.827
     ],
     "points": [
       {
@@ -1023,1010 +1023,1010 @@
         "unanswerableRejected": 0
       },
       {
-        "floor": 0.3971,
+        "floor": 0.4512,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 0.7941,
+        "floor": 0.9023,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 1.1912,
+        "floor": 1.3535,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 1.5882,
+        "floor": 1.8046,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 1.9853,
+        "floor": 2.2558,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 2.3824,
+        "floor": 2.7069,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 2.7794,
+        "floor": 3.1581,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 3.1765,
+        "floor": 3.6092,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 3.5735,
+        "floor": 4.0604,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 3.9706,
+        "floor": 4.5115,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 4.3677,
+        "floor": 4.9627,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 4.7647,
+        "floor": 5.4138,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 5.1618,
+        "floor": 5.865,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 5.5588,
+        "floor": 6.3161,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 5.9559,
+        "floor": 6.7673,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 6.3529,
+        "floor": 7.2184,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 6.75,
+        "floor": 7.6696,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 7.1471,
+        "floor": 8.1208,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 7.5441,
+        "floor": 8.5719,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 7.9412,
+        "floor": 9.0231,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 8.3382,
+        "floor": 9.4742,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0
       },
       {
-        "floor": 8.7353,
+        "floor": 9.9254,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 10.3765,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 10.8277,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 11.2788,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 11.73,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.05
       },
       {
-        "floor": 9.1324,
+        "floor": 12.1811,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.05
       },
       {
-        "floor": 9.5294,
+        "floor": 12.6323,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.05
       },
       {
-        "floor": 9.9265,
+        "floor": 13.0834,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.05
       },
       {
-        "floor": 10.3235,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.05
-      },
-      {
-        "floor": 10.7206,
+        "floor": 13.5346,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.1
       },
       {
-        "floor": 11.1177,
+        "floor": 13.9857,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.1
       },
       {
-        "floor": 11.5147,
+        "floor": 14.4369,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.1
       },
       {
-        "floor": 11.9118,
+        "floor": 14.888,
         "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.1
+        "unanswerableRejected": 0.25
       },
       {
-        "floor": 12.3088,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.1
-      },
-      {
-        "floor": 12.7059,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.1
-      },
-      {
-        "floor": 13.103,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.1
-      },
-      {
-        "floor": 13.5,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.15
-      },
-      {
-        "floor": 13.8971,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.15
-      },
-      {
-        "floor": 14.2941,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.15
-      },
-      {
-        "floor": 14.6912,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.2
-      },
-      {
-        "floor": 15.0882,
+        "floor": 15.3392,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.3
       },
       {
-        "floor": 15.4853,
+        "floor": 15.7903,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.3
       },
       {
-        "floor": 15.8824,
+        "floor": 16.2415,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.3
       },
       {
-        "floor": 16.2794,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.3
-      },
-      {
-        "floor": 16.6765,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.3
-      },
-      {
-        "floor": 17.0735,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.3
-      },
-      {
-        "floor": 17.4706,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.3
-      },
-      {
-        "floor": 17.8677,
+        "floor": 16.6927,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.35
       },
       {
-        "floor": 18.2647,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.35
-      },
-      {
-        "floor": 18.6618,
+        "floor": 17.1438,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.4
       },
       {
-        "floor": 19.0588,
+        "floor": 17.595,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.4
       },
       {
-        "floor": 19.4559,
+        "floor": 18.0461,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.4
       },
       {
-        "floor": 19.853,
+        "floor": 18.4973,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.4
       },
       {
-        "floor": 20.25,
+        "floor": 18.9484,
         "answerableAdmitted": 0.98,
         "unanswerableRejected": 0.45
       },
       {
-        "floor": 20.6471,
+        "floor": 19.3996,
         "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 19.8507,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 20.3019,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 20.753,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 21.2042,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.5
+      },
+      {
+        "floor": 21.6553,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.5
+      },
+      {
+        "floor": 22.1065,
+        "answerableAdmitted": 0.97,
         "unanswerableRejected": 0.55
       },
       {
-        "floor": 21.0441,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.6
-      },
-      {
-        "floor": 21.4412,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.6
-      },
-      {
-        "floor": 21.8383,
-        "answerableAdmitted": 0.98,
-        "unanswerableRejected": 0.6
-      },
-      {
-        "floor": 22.2353,
+        "floor": 22.5576,
         "answerableAdmitted": 0.97,
         "unanswerableRejected": 0.65
       },
       {
-        "floor": 22.6324,
+        "floor": 23.0088,
         "answerableAdmitted": 0.97,
-        "unanswerableRejected": 0.7
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 23.0294,
-        "answerableAdmitted": 0.97,
-        "unanswerableRejected": 0.7
+        "floor": 23.4599,
+        "answerableAdmitted": 0.96,
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 23.4265,
-        "answerableAdmitted": 0.97,
-        "unanswerableRejected": 0.7
-      },
-      {
-        "floor": 23.8235,
-        "answerableAdmitted": 0.97,
-        "unanswerableRejected": 0.7
-      },
-      {
-        "floor": 24.2206,
+        "floor": 23.9111,
         "answerableAdmitted": 0.95,
         "unanswerableRejected": 0.75
       },
       {
-        "floor": 24.6177,
+        "floor": 24.3623,
         "answerableAdmitted": 0.95,
         "unanswerableRejected": 0.75
       },
       {
-        "floor": 25.0147,
-        "answerableAdmitted": 0.95,
-        "unanswerableRejected": 0.75
-      },
-      {
-        "floor": 25.4118,
+        "floor": 24.8134,
         "answerableAdmitted": 0.94,
         "unanswerableRejected": 0.75
       },
       {
-        "floor": 25.8088,
+        "floor": 25.2646,
         "answerableAdmitted": 0.92,
-        "unanswerableRejected": 0.85
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 26.2059,
-        "answerableAdmitted": 0.91,
-        "unanswerableRejected": 0.85
-      },
-      {
-        "floor": 26.603,
+        "floor": 25.7157,
         "answerableAdmitted": 0.9,
-        "unanswerableRejected": 0.85
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 27,
+        "floor": 26.1669,
         "answerableAdmitted": 0.9,
-        "unanswerableRejected": 0.85
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 27.3971,
-        "answerableAdmitted": 0.89,
-        "unanswerableRejected": 0.9
+        "floor": 26.618,
+        "answerableAdmitted": 0.9,
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 27.7941,
-        "answerableAdmitted": 0.87,
-        "unanswerableRejected": 0.95
+        "floor": 27.0692,
+        "answerableAdmitted": 0.88,
+        "unanswerableRejected": 0.75
       },
       {
-        "floor": 28.1912,
-        "answerableAdmitted": 0.87,
-        "unanswerableRejected": 0.95
+        "floor": 27.5203,
+        "answerableAdmitted": 0.88,
+        "unanswerableRejected": 0.8
       },
       {
-        "floor": 28.5883,
-        "answerableAdmitted": 0.87,
-        "unanswerableRejected": 0.95
+        "floor": 27.9715,
+        "answerableAdmitted": 0.86,
+        "unanswerableRejected": 0.8
       },
       {
-        "floor": 28.9853,
+        "floor": 28.4226,
         "answerableAdmitted": 0.85,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 0.8
       },
       {
-        "floor": 29.3824,
+        "floor": 28.8738,
+        "answerableAdmitted": 0.84,
+        "unanswerableRejected": 0.8
+      },
+      {
+        "floor": 29.3249,
+        "answerableAdmitted": 0.83,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 29.7761,
         "answerableAdmitted": 0.82,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 0.85
       },
       {
-        "floor": 29.7794,
-        "answerableAdmitted": 0.8,
-        "unanswerableRejected": 0.95
+        "floor": 30.2272,
+        "answerableAdmitted": 0.81,
+        "unanswerableRejected": 0.85
       },
       {
-        "floor": 30.1765,
+        "floor": 30.6784,
+        "answerableAdmitted": 0.81,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 31.1295,
         "answerableAdmitted": 0.79,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 30.5736,
-        "answerableAdmitted": 0.79,
+        "floor": 31.5807,
+        "answerableAdmitted": 0.78,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 30.9706,
-        "answerableAdmitted": 0.77,
+        "floor": 32.0319,
+        "answerableAdmitted": 0.78,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 31.3677,
+        "floor": 32.483,
         "answerableAdmitted": 0.76,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 31.7647,
+        "floor": 32.9342,
+        "answerableAdmitted": 0.75,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 33.3853,
         "answerableAdmitted": 0.74,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 32.1618,
-        "answerableAdmitted": 0.73,
+        "floor": 33.8365,
+        "answerableAdmitted": 0.74,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 32.5588,
+        "floor": 34.2876,
         "answerableAdmitted": 0.72,
         "unanswerableRejected": 0.95
       },
       {
-        "floor": 32.9559,
+        "floor": 34.7388,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 35.1899,
         "answerableAdmitted": 0.71,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 33.353,
+        "floor": 35.6411,
+        "answerableAdmitted": 0.71,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 36.0922,
         "answerableAdmitted": 0.7,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 33.75,
+        "floor": 36.5434,
         "answerableAdmitted": 0.69,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 34.1471,
+        "floor": 36.9945,
+        "answerableAdmitted": 0.67,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 37.4457,
         "answerableAdmitted": 0.66,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 34.5441,
+        "floor": 37.8968,
+        "answerableAdmitted": 0.65,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 38.348,
         "answerableAdmitted": 0.63,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 34.9412,
-        "answerableAdmitted": 0.63,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 35.3383,
+        "floor": 38.7991,
         "answerableAdmitted": 0.62,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 35.7353,
-        "answerableAdmitted": 0.61,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 36.1324,
-        "answerableAdmitted": 0.59,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 36.5294,
+        "floor": 39.2503,
         "answerableAdmitted": 0.57,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 36.9265,
-        "answerableAdmitted": 0.54,
-        "unanswerableRejected": 0.95
+        "floor": 39.7014,
+        "answerableAdmitted": 0.53,
+        "unanswerableRejected": 1
       },
       {
-        "floor": 37.3236,
-        "answerableAdmitted": 0.54,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 37.7206,
-        "answerableAdmitted": 0.52,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 38.1177,
-        "answerableAdmitted": 0.51,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 38.5147,
-        "answerableAdmitted": 0.5,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 38.9118,
+        "floor": 40.1526,
         "answerableAdmitted": 0.49,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 39.3089,
+        "floor": 40.6038,
         "answerableAdmitted": 0.49,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 39.7059,
+        "floor": 41.0549,
         "answerableAdmitted": 0.48,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 40.103,
+        "floor": 41.5061,
+        "answerableAdmitted": 0.48,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 41.9572,
+        "answerableAdmitted": 0.47,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 42.4084,
         "answerableAdmitted": 0.46,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 40.5,
-        "answerableAdmitted": 0.45,
-        "unanswerableRejected": 0.95
+        "floor": 42.8595,
+        "answerableAdmitted": 0.44,
+        "unanswerableRejected": 1
       },
       {
-        "floor": 40.8971,
-        "answerableAdmitted": 0.45,
-        "unanswerableRejected": 0.95
+        "floor": 43.3107,
+        "answerableAdmitted": 0.44,
+        "unanswerableRejected": 1
       },
       {
-        "floor": 41.2941,
-        "answerableAdmitted": 0.45,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 41.6912,
+        "floor": 43.7618,
         "answerableAdmitted": 0.43,
-        "unanswerableRejected": 0.95
+        "unanswerableRejected": 1
       },
       {
-        "floor": 42.0883,
+        "floor": 44.213,
         "answerableAdmitted": 0.42,
-        "unanswerableRejected": 0.95
-      },
-      {
-        "floor": 42.4853,
-        "answerableAdmitted": 0.41,
         "unanswerableRejected": 1
       },
       {
-        "floor": 42.8824,
-        "answerableAdmitted": 0.39,
+        "floor": 44.6641,
+        "answerableAdmitted": 0.4,
         "unanswerableRejected": 1
       },
       {
-        "floor": 43.2794,
-        "answerableAdmitted": 0.39,
+        "floor": 45.1153,
+        "answerableAdmitted": 0.4,
         "unanswerableRejected": 1
       },
       {
-        "floor": 43.6765,
-        "answerableAdmitted": 0.39,
+        "floor": 45.5664,
+        "answerableAdmitted": 0.37,
         "unanswerableRejected": 1
       },
       {
-        "floor": 44.0736,
-        "answerableAdmitted": 0.38,
+        "floor": 46.0176,
+        "answerableAdmitted": 0.34,
         "unanswerableRejected": 1
       },
       {
-        "floor": 44.4706,
-        "answerableAdmitted": 0.38,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 44.8677,
-        "answerableAdmitted": 0.36,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 45.2647,
-        "answerableAdmitted": 0.36,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 45.6618,
-        "answerableAdmitted": 0.35,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 46.0589,
+        "floor": 46.4687,
         "answerableAdmitted": 0.33,
         "unanswerableRejected": 1
       },
       {
-        "floor": 46.4559,
+        "floor": 46.9199,
         "answerableAdmitted": 0.33,
         "unanswerableRejected": 1
       },
       {
-        "floor": 46.853,
+        "floor": 47.371,
+        "answerableAdmitted": 0.33,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 47.8222,
         "answerableAdmitted": 0.32,
         "unanswerableRejected": 1
       },
       {
-        "floor": 47.25,
+        "floor": 48.2734,
         "answerableAdmitted": 0.32,
         "unanswerableRejected": 1
       },
       {
-        "floor": 47.6471,
-        "answerableAdmitted": 0.31,
+        "floor": 48.7245,
+        "answerableAdmitted": 0.32,
         "unanswerableRejected": 1
       },
       {
-        "floor": 48.0442,
+        "floor": 49.1757,
         "answerableAdmitted": 0.3,
         "unanswerableRejected": 1
       },
       {
-        "floor": 48.4412,
-        "answerableAdmitted": 0.29,
+        "floor": 49.6268,
+        "answerableAdmitted": 0.27,
         "unanswerableRejected": 1
       },
       {
-        "floor": 48.8383,
-        "answerableAdmitted": 0.26,
+        "floor": 50.078,
+        "answerableAdmitted": 0.25,
         "unanswerableRejected": 1
       },
       {
-        "floor": 49.2353,
-        "answerableAdmitted": 0.24,
+        "floor": 50.5291,
+        "answerableAdmitted": 0.25,
         "unanswerableRejected": 1
       },
       {
-        "floor": 49.6324,
+        "floor": 50.9803,
+        "answerableAdmitted": 0.23,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.4314,
+        "answerableAdmitted": 0.23,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.8826,
         "answerableAdmitted": 0.22,
         "unanswerableRejected": 1
       },
       {
-        "floor": 50.0294,
-        "answerableAdmitted": 0.22,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 50.4265,
-        "answerableAdmitted": 0.22,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 50.8236,
-        "answerableAdmitted": 0.22,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 51.2206,
-        "answerableAdmitted": 0.22,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 51.6177,
+        "floor": 52.3337,
         "answerableAdmitted": 0.21,
         "unanswerableRejected": 1
       },
       {
-        "floor": 52.0147,
-        "answerableAdmitted": 0.2,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 52.4118,
-        "answerableAdmitted": 0.2,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 52.8089,
-        "answerableAdmitted": 0.2,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 53.2059,
-        "answerableAdmitted": 0.19,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 53.603,
+        "floor": 52.7849,
         "answerableAdmitted": 0.18,
         "unanswerableRejected": 1
       },
       {
-        "floor": 54,
-        "answerableAdmitted": 0.16,
+        "floor": 53.236,
+        "answerableAdmitted": 0.17,
         "unanswerableRejected": 1
       },
       {
-        "floor": 54.3971,
-        "answerableAdmitted": 0.16,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 54.7942,
+        "floor": 53.6872,
         "answerableAdmitted": 0.15,
         "unanswerableRejected": 1
       },
       {
-        "floor": 55.1912,
+        "floor": 54.1383,
         "answerableAdmitted": 0.15,
         "unanswerableRejected": 1
       },
       {
-        "floor": 55.5883,
-        "answerableAdmitted": 0.15,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 55.9853,
-        "answerableAdmitted": 0.15,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 56.3824,
+        "floor": 54.5895,
         "answerableAdmitted": 0.14,
         "unanswerableRejected": 1
       },
       {
-        "floor": 56.7795,
+        "floor": 55.0406,
+        "answerableAdmitted": 0.14,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.4918,
+        "answerableAdmitted": 0.12,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.943,
         "answerableAdmitted": 0.11,
         "unanswerableRejected": 1
       },
       {
-        "floor": 57.1765,
-        "answerableAdmitted": 0.11,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 57.5736,
-        "answerableAdmitted": 0.11,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 57.9706,
-        "answerableAdmitted": 0.11,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 58.3677,
+        "floor": 56.3941,
         "answerableAdmitted": 0.1,
         "unanswerableRejected": 1
       },
       {
-        "floor": 58.7648,
-        "answerableAdmitted": 0.1,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 59.1618,
-        "answerableAdmitted": 0.1,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 59.5589,
-        "answerableAdmitted": 0.1,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 59.9559,
+        "floor": 56.8453,
         "answerableAdmitted": 0.09,
         "unanswerableRejected": 1
       },
       {
-        "floor": 60.353,
+        "floor": 57.2964,
+        "answerableAdmitted": 0.09,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.7476,
+        "answerableAdmitted": 0.09,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 58.1987,
         "answerableAdmitted": 0.08,
         "unanswerableRejected": 1
       },
       {
-        "floor": 60.75,
+        "floor": 58.6499,
         "answerableAdmitted": 0.08,
         "unanswerableRejected": 1
       },
       {
-        "floor": 61.1471,
+        "floor": 59.101,
         "answerableAdmitted": 0.08,
         "unanswerableRejected": 1
       },
       {
-        "floor": 61.5442,
+        "floor": 59.5522,
         "answerableAdmitted": 0.08,
         "unanswerableRejected": 1
       },
       {
-        "floor": 61.9412,
-        "answerableAdmitted": 0.08,
+        "floor": 60.0033,
+        "answerableAdmitted": 0.07,
         "unanswerableRejected": 1
       },
       {
-        "floor": 62.3383,
-        "answerableAdmitted": 0.08,
+        "floor": 60.4545,
+        "answerableAdmitted": 0.07,
         "unanswerableRejected": 1
       },
       {
-        "floor": 62.7353,
+        "floor": 60.9056,
+        "answerableAdmitted": 0.07,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.3568,
+        "answerableAdmitted": 0.07,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.8079,
+        "answerableAdmitted": 0.07,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 62.2591,
         "answerableAdmitted": 0.06,
         "unanswerableRejected": 1
       },
       {
-        "floor": 63.1324,
+        "floor": 62.7102,
         "answerableAdmitted": 0.06,
         "unanswerableRejected": 1
       },
       {
-        "floor": 63.5295,
+        "floor": 63.1614,
         "answerableAdmitted": 0.06,
         "unanswerableRejected": 1
       },
       {
-        "floor": 63.9265,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 64.3236,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 64.7206,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 65.1177,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 65.5148,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 65.9118,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 66.3089,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 66.7059,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 67.103,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 67.5001,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 67.8971,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 68.2942,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 68.6912,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 69.0883,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 69.4853,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 69.8824,
-        "answerableAdmitted": 0.06,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 70.2795,
+        "floor": 63.6125,
         "answerableAdmitted": 0.05,
         "unanswerableRejected": 1
       },
       {
-        "floor": 70.6765,
+        "floor": 64.0637,
         "answerableAdmitted": 0.05,
         "unanswerableRejected": 1
       },
       {
-        "floor": 71.0736,
+        "floor": 64.5149,
         "answerableAdmitted": 0.05,
         "unanswerableRejected": 1
       },
       {
-        "floor": 71.4706,
+        "floor": 64.966,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.4172,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.8683,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.3195,
         "answerableAdmitted": 0.04,
         "unanswerableRejected": 1
       },
       {
-        "floor": 71.8677,
+        "floor": 66.7706,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.2218,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.6729,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 68.1241,
         "answerableAdmitted": 0.03,
         "unanswerableRejected": 1
       },
       {
-        "floor": 72.2648,
+        "floor": 68.5752,
         "answerableAdmitted": 0.03,
         "unanswerableRejected": 1
       },
       {
-        "floor": 72.6618,
+        "floor": 69.0264,
         "answerableAdmitted": 0.03,
         "unanswerableRejected": 1
       },
       {
-        "floor": 73.0589,
-        "answerableAdmitted": 0.03,
-        "unanswerableRejected": 1
-      },
-      {
-        "floor": 73.4559,
+        "floor": 69.4775,
         "answerableAdmitted": 0.02,
         "unanswerableRejected": 1
       },
       {
-        "floor": 73.853,
+        "floor": 69.9287,
         "answerableAdmitted": 0.02,
         "unanswerableRejected": 1
       },
       {
-        "floor": 74.2501,
+        "floor": 70.3798,
         "answerableAdmitted": 0.02,
         "unanswerableRejected": 1
       },
       {
-        "floor": 74.6471,
+        "floor": 70.831,
         "answerableAdmitted": 0.02,
         "unanswerableRejected": 1
       },
       {
-        "floor": 75.0442,
+        "floor": 71.2821,
         "answerableAdmitted": 0.02,
         "unanswerableRejected": 1
       },
       {
-        "floor": 75.4412,
+        "floor": 71.7333,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.1845,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.6356,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.0868,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 75.8383,
+        "floor": 73.5379,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 76.2354,
+        "floor": 73.9891,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 76.6324,
+        "floor": 74.4402,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 77.0295,
+        "floor": 74.8914,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 77.4265,
+        "floor": 75.3425,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 77.8236,
+        "floor": 75.7937,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 78.2206,
+        "floor": 76.2448,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 78.6177,
+        "floor": 76.696,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 79.0148,
+        "floor": 77.1471,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       },
       {
-        "floor": 79.4118,
+        "floor": 77.5983,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.0494,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.5006,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.9517,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.4029,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.8541,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 80.3052,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 80.7564,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 81.2075,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 81.6587,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 82.1098,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 82.561,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 83.0121,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 83.4633,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 83.9144,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 84.3656,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 84.8167,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 85.2679,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 85.719,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 86.1702,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 86.6213,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 87.0725,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 87.5237,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 87.9748,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 88.426,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 88.8771,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 89.3283,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 89.7794,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 90.2306,
         "answerableAdmitted": 0.01,
         "unanswerableRejected": 1
       }
     ],
     "recommended": {
-      "floor": 27.3971,
-      "answerableAdmitted": 0.89,
-      "unanswerableRejected": 0.9
+      "floor": 31.1295,
+      "answerableAdmitted": 0.79,
+      "unanswerableRejected": 0.95
     }
   }
 }
