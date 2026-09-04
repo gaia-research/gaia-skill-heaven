@@ -99,7 +99,16 @@ ranker, refusal + arguments, expansion — so review stays tractable.
 
 ---
 
-## Phase 2 — Semantic recall *(conditional)*
+## Phase 2 — Semantic recall *(conditional — RESOLVED: does not ship)*
+
+> **Outcome, 2026-09-03.** The precondition was met — Phase 1 landed and G1 was
+> measured — and step 2.1 was run. **It killed the phase.** Zero of 59 misses
+> are vocabulary mismatch; the residual is 22 curation-bound and 26 ordering.
+> Dense retrieval is dropped and recorded as a negative result (D8), with the
+> classification in `packages/core/bench/results/miss-analysis.json` and the
+> reasoning in [`SPEC.md` §3.2](SPEC.md#32-vector-recall--phase-2-optional-by-construction).
+> Per this section's own instruction, the budget moves to Phase 4.
+
 
 **Goal:** close the residual vocabulary gap that lexical retrieval cannot,
 without taking a runtime dependency.

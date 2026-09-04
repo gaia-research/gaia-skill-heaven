@@ -246,6 +246,39 @@ Route 2 is the fallback and is always available. **If neither route clears G1's
 delta over Phase 1 alone, vectors are dropped.** Phase 1 is designed to be
 sufficient; Phase 2 must earn its place against a measurement.
 
+### DROPPED — MEASURED 2026-09-03, negative result (D8)
+
+Neither route ships. The failure analysis PLAN 2.1 requires
+(`packages/core/bench/analyze-misses.ts`, report in
+`bench/results/miss-analysis.json`) classified all 59 misses on the gold set:
+
+| class | n | can a ranker fix it? |
+|---|---|---|
+| **zero-term-overlap** — query and correct skill share no lexical term | **0** | this is the class vectors exist for |
+| unreachable — the correct skill cannot be summoned at all | 22 | no; curation |
+| ranked-low — right skill returned, not first | 20 | yes; ranking signal |
+| refused — the floor declined the query | 11 | yes; see §4.4 |
+| outranked-by-sibling | 6 | yes; ranking signal |
+
+**Not one miss is a pure vocabulary mismatch.** After index-time expansion,
+every gold query shares at least one term with its correct skill — median 10
+shared terms among the `ranked-low` misses, and 8 of those 20 are at rank 2.
+The gap dense retrieval exists to close does not occur in this corpus at this
+scale, because expansion already closed it. That is INTENT §3's bet — *move the
+intelligence to index time* — resolving in the direction it was made, and it
+means a runtime embedding would have been paid for and bought nothing.
+
+The residual is two different problems, and neither is a representation
+problem: **22 misses are curation** (the skill publishes no installable link),
+and **26 are ordering** (the right skill is in the list, near the top, behind a
+sibling). Ordering wants a better ranking signal — field weights tuned against
+a larger gold set, or the trust dimensions the tree already publishes — and
+refusal wants the scale-free score of §4.4. Both are cheaper than vectors and
+both address misses that actually exist.
+
+Re-open this only if the corpus grows enough to change the first row. The
+analysis is one command and re-runs against any index.
+
 ### 3.3 Fusion — RRF
 
 When two ranked lists exist, fuse by Reciprocal Rank Fusion rather than
