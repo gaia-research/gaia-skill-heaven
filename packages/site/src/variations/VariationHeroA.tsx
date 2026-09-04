@@ -6,6 +6,7 @@ import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import { DOORS, PLATFORM_COMMANDS, type Platform } from '../product'
 import { HarnessMark } from '../harnessMarks'
 import { PlatformToggle } from '../components/PlatformToggle'
+import { LucyTunerHUD } from './hero/LucyTunerHUD'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -56,12 +57,52 @@ function ZeroCompat({ fg }: { fg: string }) {
   )
 }
 
+function isTunerRequested(): boolean {
+  if (typeof window === 'undefined') return false
+  const params = new URLSearchParams(window.location.search)
+  const hash = window.location.hash
+  if (params.get('tuner') === 'lucy' || params.get('tuner') === 'true' || params.get('dev') === 'true') return true
+  if (hash.includes('tuner=lucy') || hash.includes('tuner=true')) return true
+  try {
+    if (localStorage.getItem('lucy-tuner') === 'true') return true
+  } catch {}
+  return false
+}
+
 export function VariationHeroA({ assetSet }: VariationHeroProps) {
-  const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder } = useHeroEngine('a')
+  const { v, act, actCount, dots, rungs, rootRef, enterStory, enterLadder, resetZoom } = useHeroEngine('a')
   const navigate = useNavigate()
+  const [showTuner, setShowTuner] = useState(isTunerRequested)
+
+  // Hotkey toggle: Ctrl+Shift+L or Cmd+Shift+L toggles the Lucy tuner anytime
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault()
+        setShowTuner((prev) => {
+          const next = !prev
+          try {
+            if (next) localStorage.setItem('lucy-tuner', 'true')
+            else localStorage.removeItem('lucy-tuner')
+          } catch {}
+          return next
+        })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   const assets = HERO_ASSET_SETS[set][v.lucyState]
+
+  const onSelectScene = useCallback(
+    (targetScene: 'zero' | 'heaven' | 'hell' | 'ultra') => {
+      const idx = targetScene === 'zero' ? 0 : targetScene === 'heaven' ? 1 : targetScene === 'hell' ? 3 : 6
+      rungs[idx]?.pick()
+    },
+    [rungs],
+  )
   // Heaven stays on set-A: set-B's master ships a baked-in checkerboard (bad
   // export) and set-C's has an opaque white ground that can't sit on the black
   // Heaven back on set-A per owner.
@@ -179,6 +220,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       ref={rootRef}
       className={`vha${bare ? ' vha--bare' : ''}${focus ? ' vha--focus' : ''}`}
       onClick={onHeroClick}
+      onDoubleClick={resetZoom}
       style={{
         position: 'fixed',
         inset: 0,
@@ -315,14 +357,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           bottom: 0,
           height: '92vh',
           translate: '-50% 0',
-          // transform-origin travels WITH transform now — leaving it out of the
-          // transition meant the pivot point snapped instantly on every band
-          // change (each FIG entry carries its own face-anchored origin), so
-          // the figure looked like it was jumping mid-animation even though
-          // the scale/position themselves were easing correctly.
+          // Positioning only — scale is moved onto the <img> so Safari samples
+          // from the full-resolution source bitmap rather than a GPU-rasterized
+          // layout-size texture. The transition/origin still live here so the
+          // face-anchor easing is preserved.
           transition:
-            'transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
-          transform: `translateX(${v.figX}vh) translateY(${(v.lucyY + v.figY).toFixed(2)}vh) scale(${(Number(v.mLucy) * v.figZoom).toFixed(3)})`,
+            'var(--lucy-drag-transition, transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)),transform-origin calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1)',
+          transform: `translateX(calc(${v.figX}vh + var(--lucy-offset-x, 0vh))) translateY(calc(${(v.lucyY + v.figY).toFixed(2)}vh + var(--lucy-offset-y, 0vh)))`,
           transformOrigin: v.figOrigin,
           zIndex: 1,
           pointerEvents: 'none',
@@ -330,6 +371,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       >
         {(['zero', 'heaven', 'hell', 'ultra'] as const).map((state) => {
           const isCurrent = v.lucyState === state
+          const scale = (Number(v.mLucy) * v.figZoom).toFixed(3)
           return (
             <img
               key={state}
@@ -342,8 +384,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
                 display: isCurrent ? 'block' : 'none',
                 height: '92vh',
                 width: 'auto',
+                // Scale on the img itself: Safari then samples from the source
+                // bitmap at the true rendered size rather than upscaling a
+                // composited layer texture. transformOrigin mirrors the
+                // face-anchor origin from the engine so framing is identical.
+                // Multiplied by --lucy-user-zoom via trackpad gesture pinch-to-zoom.
+                transform: `scale(calc(${scale} * var(--lucy-user-zoom, 1)))`,
+                transformOrigin: v.figOrigin,
                 mixBlendMode: v.lucyBlend,
-                transition: 'filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
+                transition: `var(--lucy-drag-transition, var(--lucy-zoom-transition, transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))),filter 0ms,opacity calc(600ms * var(--vh-t)) linear`,
                 opacity: isCurrent ? v.oLucy : 0,
                 filter: isCurrent ? v.lucyFilter : 'none',
               }}
@@ -676,6 +725,17 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           </div>
         </div>
       </div>
+
+      {/* Interactive Dev Tool HUD for dragging Lucy and tracking live coordinates & zoom (triggered via ?tuner=lucy or Cmd+Shift+L) */}
+      {showTuner && (
+        <LucyTunerHUD
+          scene={v.scene}
+          figBase={v.figBase}
+          rootRef={rootRef}
+          onReset={resetZoom}
+          onSelectScene={onSelectScene}
+        />
+      )}
     </div>
   )
 }

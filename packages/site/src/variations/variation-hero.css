@@ -116,6 +116,16 @@ body.vh-hero-page {
   -webkit-user-drag: none;
 }
 
+/* Force highest-quality resampling on Chrome/Firefox when the compositor
+   scales the figure up. high-quality tells the browser to resample from the
+   source bitmap rather than the GPU-rasterized layer texture.
+   Safari uses high-quality bilinear by default so no override is needed there;
+   -webkit-optimize-contrast would wrongly enable nearest-neighbor (pixel art
+   mode) and must NOT be set. */
+.vha-lucy {
+  image-rendering: high-quality;
+}
+
 .vha-wing {
   bottom: 0;
   height: 100%;
@@ -401,23 +411,41 @@ body.vh-hero-page {
   bottom: 7vh;
   translate: -50% 0;
   width: min(90vw, 660px);
-  z-index: 6;
+  z-index: 50;
   text-align: center;
   padding-top: 26px;
   /* Legibility scrim so the ladder + commands read over the busy figure. */
   background: linear-gradient(to top, var(--vha-bg) 4%, var(--vha-bg-soft) 52%, var(--vha-bg-none) 100%);
 }
 
+.vha-ladderband {
+  position: relative;
+  z-index: 52;
+  pointer-events: auto;
+}
+
 .vha-chiprow {
+  position: relative;
+  z-index: 53;
+  pointer-events: auto;
   display: flex;
   gap: 4px;
   margin-bottom: 9px;
 }
 .vha-rungrow {
+  position: relative;
+  z-index: 53;
+  pointer-events: auto;
   display: flex;
   gap: 4px;
   align-items: flex-end;
   margin-bottom: 12px;
+}
+.vha-rung-btn {
+  position: relative;
+  z-index: 54;
+  pointer-events: auto;
+  cursor: pointer;
 }
 .vha-stopnote {
   font-size: 11px;
@@ -1326,10 +1354,8 @@ a.vha-cta-mini:hover,
     padding-top: 0;
     background: none;
     text-align: left;
-    /* Above the wordmark's layer. The two do not overlap in this composition,
-       but the ordering is what makes the scrim, the type and the interface read
-       in that order back to front. */
-    z-index: 8;
+    /* Above the wordmark's layer and dragger. Sits on top of the figure dragger. */
+    z-index: 50;
   }
 
   /* The two plates flank her HEAD, in the upper band where the frame's outer
