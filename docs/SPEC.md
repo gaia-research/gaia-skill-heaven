@@ -1,5 +1,17 @@
 # SPEC — the Summon Stack
 
+> [!WARNING]
+> **STALE as of 2026-09-04 — founder is replanning.** Do not build from this
+> document, and do not treat its rulings as current. An audit of `INTENT.md`
+> comes first: Arbor appears to have been reduced to a Yggdrasil-ranked scalar,
+> its behavioral graph and the Hell-Heaven Index are absent, and §8 forks a
+> contract that `gaia-skill-tree/registry/arbor/` has already ratified.
+> See [#115](https://github.com/gaia-research/gaia-skill-heaven/issues/115).
+>
+> What was measured against this document is still valid as evidence —
+> `docs/PHASES-0-4-STATUS.md` and `packages/core/bench/results/` — and the
+> retrieval work does not depend on §8.
+
 **Status:** Specification of record for Skill Heaven's retrieval, refusal,
 control and stamping surfaces. Companion to [`INTENT.md`](INTENT.md) (why) and
 [`PLAN.md`](PLAN.md) (when).
