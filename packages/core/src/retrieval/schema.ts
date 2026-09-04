@@ -38,6 +38,14 @@ export type RetrievalSurface = {
   vector: number[] | null;
   /** Builder version that produced the expansions, so a bad run is revertible. */
   expandedBy?: string | undefined;
+  /**
+   * Fingerprint of the skill text the expansions were written from. When it no
+   * longer matches the corpus, the expansions are stale and the skill needs a
+   * regeneration pass — this is what makes a refresh incremental.
+   */
+  expandedFrom?: string | undefined;
+  /** True when the expansions no longer match the skill's current text. */
+  stale?: boolean | undefined;
 };
 
 export type IndexedSkill = {
@@ -87,6 +95,8 @@ export type IndexStats = {
    * -0.22 for the rest. Coverage is therefore a number the index has to carry.
    */
   expandedDocs: number;
+  /** Documents whose expansions were written against text that has since changed. */
+  staleExpansions: number;
   avgFieldLen: Record<IndexField, number>;
   /**
    * The absolute relevance floor (SPEC §4.4). `null` until calibrated against

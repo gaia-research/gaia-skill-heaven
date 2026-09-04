@@ -13,6 +13,7 @@
     "unreachable": 86,
     "missingTags": 99,
     "expandedDocs": 273,
+    "staleExpansions": 0,
     "avgFieldLen": {
       "name": 2.1387,
       "id": 3.3212,
@@ -28,7 +29,7 @@
       "answerableAdmitted": 0.9082,
       "unanswerableRejected": 0.75,
       "goldSetRevision": "bef70b19e710",
-      "calibratedAt": "2026-09-04T00:43:11.505Z",
+      "calibratedAt": "2026-09-04T00:50:06.821Z",
       "note": "G2 (>=90% of the unanswerable set refused) is NOT met at a floor that keeps the product usable. The two score distributions overlap: raw BM25F separates them on 95% of pairs, and reaching 90% rejection would cost more than 10% of answerable queries. Recorded as a finding (D8) rather than resolved by moving the threshold. n=20 negatives is also small; expansion (PLAN 1.7) should lift answerable scores without lifting unanswerable ones, and this is re-run after it."
     }
   },
@@ -163,7 +164,8 @@
           "real"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d2d6c976a3cc"
       },
       "arbor": null
     },
@@ -268,7 +270,8 @@
           "values"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:041af9ad083a"
       },
       "arbor": null
     },
@@ -401,7 +404,8 @@
           "cursor"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:dafbc2d87d82"
       },
       "arbor": null
     },
@@ -494,7 +498,8 @@
           "approve"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f8f213afc717"
       },
       "arbor": null
     },
@@ -587,7 +592,8 @@
           "behavior"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f9335fb2e560"
       },
       "arbor": null
     },
@@ -690,7 +696,8 @@
           "implementing"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:cffdfb5edeb3"
       },
       "arbor": null
     },
@@ -831,7 +838,8 @@
           "can"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0992585e20cf"
       },
       "arbor": null
     },
@@ -945,7 +953,8 @@
           "stakeholder"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b4b04fa23428"
       },
       "arbor": null
     },
@@ -1058,7 +1067,8 @@
           "accessibility"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:dd8025424988"
       },
       "arbor": null
     },
@@ -1153,7 +1163,8 @@
           "capabilities"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:06a9b25dbef2"
       },
       "arbor": null
     },
@@ -1301,7 +1312,8 @@
           "fixes"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:56b102540b74"
       },
       "arbor": null
     },
@@ -1407,7 +1419,8 @@
           "finished"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:463f6b6e16e6"
       },
       "arbor": null
     },
@@ -1526,7 +1539,8 @@
           "manually"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:77cbd1693658"
       },
       "arbor": null
     },
@@ -1609,7 +1623,8 @@
           "guide"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2610939f1279"
       },
       "arbor": null
     },
@@ -1711,7 +1726,8 @@
           "finished"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4fd7fb87c5f1"
       },
       "arbor": null
     },
@@ -1810,7 +1826,8 @@
           "please"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1e0059582b0a"
       },
       "arbor": null
     },
@@ -1934,7 +1951,8 @@
           "memory"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:493fdab7acf0"
       },
       "arbor": null
     },
@@ -2044,7 +2062,8 @@
           "myself"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:908c62e36a54"
       },
       "arbor": null
     },
@@ -2166,7 +2185,8 @@
           "again"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f8aa87da6d37"
       },
       "arbor": null
     },
@@ -2272,7 +2292,8 @@
           "flow"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f0700de87795"
       },
       "arbor": null
     },
@@ -2417,7 +2438,8 @@
           "object"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c3a1593d1f2c"
       },
       "arbor": null
     },
@@ -2534,7 +2556,8 @@
           "runs"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:925cf1413f62"
       },
       "arbor": null
     },
@@ -2649,7 +2672,8 @@
           "layer"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7ffc12d580f3"
       },
       "arbor": null
     },
@@ -2766,7 +2790,8 @@
           "answer"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1fb140533a66"
       },
       "arbor": null
     },
@@ -2851,7 +2876,8 @@
           "being"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4a0a9d37f7af"
       },
       "arbor": null
     },
@@ -2941,7 +2967,8 @@
           "briefly"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e7484814a1a1"
       },
       "arbor": null
     },
@@ -3045,7 +3072,8 @@
           "contradicts"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9bf5bff0f740"
       },
       "arbor": null
     },
@@ -3137,7 +3165,8 @@
           "now"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:da27340cd962"
       },
       "arbor": null
     },
@@ -3240,7 +3269,8 @@
           "differences"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:33ef2b6228c3"
       },
       "arbor": null
     },
@@ -3337,7 +3367,8 @@
           "registrations"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4edcc96014ea"
       },
       "arbor": null
     },
@@ -3440,7 +3471,8 @@
           "address"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3f27d172fc91"
       },
       "arbor": null
     },
@@ -3580,7 +3612,8 @@
           "confirmations"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ad18c9397388"
       },
       "arbor": null
     },
@@ -3680,7 +3713,8 @@
           "ministry"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:29234973a68d"
       },
       "arbor": null
     },
@@ -3773,7 +3807,8 @@
           "anymore"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b16e1d4a5654"
       },
       "arbor": null
     },
@@ -3859,7 +3894,8 @@
           "data"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2c98c794b7f5"
       },
       "arbor": null
     },
@@ -3957,7 +3993,8 @@
           "thing"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e0bd6f9720f4"
       },
       "arbor": null
     },
@@ -4036,7 +4073,8 @@
           "scraping"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f2d357c58231"
       },
       "arbor": null
     },
@@ -4115,7 +4153,8 @@
           "extraction"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b72486f40eae"
       },
       "arbor": null
     },
@@ -4212,7 +4251,8 @@
           "this"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:101b93268588"
       },
       "arbor": null
     },
@@ -4288,7 +4328,8 @@
           "codebase"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:628facce1ee5"
       },
       "arbor": null
     },
@@ -4362,7 +4403,8 @@
           "specifics"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4c9ba0edf428"
       },
       "arbor": null
     },
@@ -4463,7 +4505,8 @@
           "live"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:49ad57f2384c"
       },
       "arbor": null
     },
@@ -4573,7 +4616,8 @@
           "overhead"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0ac41a09faea"
       },
       "arbor": null
     },
@@ -4681,7 +4725,8 @@
           "rates"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fbe253667d7b"
       },
       "arbor": null
     },
@@ -4801,7 +4846,8 @@
           "links"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2d842ff21dd2"
       },
       "arbor": null
     },
@@ -4910,7 +4956,8 @@
           "prs"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e60bd0695007"
       },
       "arbor": null
     },
@@ -5025,7 +5072,8 @@
           "data"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f10cd1c0aa79"
       },
       "arbor": null
     },
@@ -5144,7 +5192,8 @@
           "experience"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:65f4fbf122b1"
       },
       "arbor": null
     },
@@ -5256,7 +5305,8 @@
           "out"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fd07386b3141"
       },
       "arbor": null
     },
@@ -5365,7 +5415,8 @@
           "undo"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d11667ddd1a9"
       },
       "arbor": null
     },
@@ -5505,7 +5556,8 @@
           "questions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:09820e62746a"
       },
       "arbor": null
     },
@@ -5615,7 +5667,8 @@
           "zero"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:50f1e07c96de"
       },
       "arbor": null
     },
@@ -5716,7 +5769,8 @@
           "tasks"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:61c1d398dea8"
       },
       "arbor": null
     },
@@ -5831,7 +5885,8 @@
           "codebase"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:46904e85b0a1"
       },
       "arbor": null
     },
@@ -5947,7 +6002,8 @@
           "screens"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:767a57174710"
       },
       "arbor": null
     },
@@ -6064,7 +6120,8 @@
           "describe"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f93ec7dd347b"
       },
       "arbor": null
     },
@@ -6164,7 +6221,8 @@
           "off"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:09e487ef90f4"
       },
       "arbor": null
     },
@@ -6273,7 +6331,8 @@
           "build"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7c647267fec3"
       },
       "arbor": null
     },
@@ -6394,7 +6453,8 @@
           "vercel"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:77ddc0ad2061"
       },
       "arbor": null
     },
@@ -6505,7 +6565,8 @@
           "explanation"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c69a485b2ec3"
       },
       "arbor": null
     },
@@ -6618,7 +6679,8 @@
           "ship"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6e033777b1fd"
       },
       "arbor": null
     },
@@ -6738,7 +6800,8 @@
           "working"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:77aa38e23b97"
       },
       "arbor": null
     },
@@ -6864,7 +6927,8 @@
           "engineer"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3652543b8fb8"
       },
       "arbor": null
     },
@@ -7050,7 +7114,8 @@
           "now"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:cfe52a3badeb"
       },
       "arbor": null
     },
@@ -7148,7 +7213,8 @@
           "fix"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7ac262f9b97e"
       },
       "arbor": null
     },
@@ -7261,7 +7327,8 @@
           "prod"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0137047e602c"
       },
       "arbor": null
     },
@@ -7407,7 +7474,8 @@
           "compared"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:356e8d4d45b6"
       },
       "arbor": null
     },
@@ -7519,7 +7587,8 @@
           "anything"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b5a020514f88"
       },
       "arbor": null
     },
@@ -7632,7 +7701,8 @@
           "healthy"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:121e3bde7f9e"
       },
       "arbor": null
     },
@@ -7737,7 +7807,8 @@
           "slot"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d2d2a5784c7d"
       },
       "arbor": null
     },
@@ -7842,7 +7913,8 @@
           "time"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d0352ad0b635"
       },
       "arbor": null
     },
@@ -7943,7 +8015,8 @@
           "file"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:32fcc4afe672"
       },
       "arbor": null
     },
@@ -8075,7 +8148,8 @@
           "plan"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:48b52c070691"
       },
       "arbor": null
     },
@@ -8182,7 +8256,8 @@
           "actions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bea05f73edac"
       },
       "arbor": null
     },
@@ -8291,7 +8366,8 @@
           "same"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4ee4ba53a278"
       },
       "arbor": null
     },
@@ -8408,7 +8484,8 @@
           "needs"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c9783a183fd5"
       },
       "arbor": null
     },
@@ -8515,7 +8592,8 @@
           "generated"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3525940b7466"
       },
       "arbor": null
     },
@@ -8623,7 +8701,8 @@
           "developers"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bbdd0ee16b54"
       },
       "arbor": null
     },
@@ -8734,7 +8813,8 @@
           "would"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:09bfd2404955"
       },
       "arbor": null
     },
@@ -8858,7 +8938,8 @@
           "time"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e67c2c471f5c"
       },
       "arbor": null
     },
@@ -8985,7 +9066,8 @@
           "issue"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:37f283e728b5"
       },
       "arbor": null
     },
@@ -9078,7 +9160,8 @@
           "don"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:64a3c19fa1c6"
       },
       "arbor": null
     },
@@ -9177,7 +9260,8 @@
           "every"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:aa25c6f64706"
       },
       "arbor": null
     },
@@ -9298,7 +9382,8 @@
           "ship"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2f9cc14f1262"
       },
       "arbor": null
     },
@@ -9407,7 +9492,8 @@
           "needed"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a319ebe41edc"
       },
       "arbor": null
     },
@@ -9526,7 +9612,8 @@
           "run"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:dc17617eee59"
       },
       "arbor": null
     },
@@ -9627,7 +9714,8 @@
           "accordingly"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e2d120c42104"
       },
       "arbor": null
     },
@@ -9720,7 +9808,8 @@
           "server"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7677c1afb557"
       },
       "arbor": null
     },
@@ -9821,7 +9910,8 @@
           "checklist"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:29a1bce2b52a"
       },
       "arbor": null
     },
@@ -9937,7 +10027,8 @@
           "skills"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2ff89ea7fad6"
       },
       "arbor": null
     },
@@ -10035,7 +10126,8 @@
           "refactor"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:30c3827d38b8"
       },
       "arbor": null
     },
@@ -10135,7 +10227,8 @@
           "period"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:737a020a99d9"
       },
       "arbor": null
     },
@@ -10229,7 +10322,8 @@
           "time"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:acfc1ba28971"
       },
       "arbor": null
     },
@@ -10328,7 +10422,8 @@
           "into"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:43e8384e0a47"
       },
       "arbor": null
     },
@@ -10439,7 +10534,8 @@
           "manually"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7bac0cb2e31d"
       },
       "arbor": null
     },
@@ -10536,7 +10632,8 @@
           "starts"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:96444b120675"
       },
       "arbor": null
     },
@@ -10633,7 +10730,8 @@
           "coordinator"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2d67e9e0d5e5"
       },
       "arbor": null
     },
@@ -10749,7 +10847,8 @@
           "coding"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1679c68c77c2"
       },
       "arbor": null
     },
@@ -10849,7 +10948,8 @@
           "out"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:dbda39e2fccc"
       },
       "arbor": null
     },
@@ -10927,7 +11027,8 @@
           "land"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:73d269b803cb"
       },
       "arbor": null
     },
@@ -11029,7 +11130,8 @@
           "record"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3ae94e7c7bac"
       },
       "arbor": null
     },
@@ -11133,7 +11235,8 @@
           "papers"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:44b941d8a7f8"
       },
       "arbor": null
     },
@@ -11268,7 +11371,8 @@
           "use"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2d18088b90c3"
       },
       "arbor": null
     },
@@ -11392,7 +11496,8 @@
           "off"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6b4a98c89d1b"
       },
       "arbor": null
     },
@@ -11492,7 +11597,8 @@
           "terms"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:36ec36638501"
       },
       "arbor": null
     },
@@ -11599,7 +11705,8 @@
           "vit"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9d2c43a8a289"
       },
       "arbor": null
     },
@@ -11719,7 +11826,8 @@
           "overlap"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ef2eb9757909"
       },
       "arbor": null
     },
@@ -11829,7 +11937,8 @@
           "just"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1b4208523e60"
       },
       "arbor": null
     },
@@ -11942,7 +12051,8 @@
           "scale"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a2f1b99745c5"
       },
       "arbor": null
     },
@@ -12049,7 +12159,8 @@
           "releases"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:323597375e33"
       },
       "arbor": null
     },
@@ -12154,7 +12265,8 @@
           "invoke"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4d26054434a1"
       },
       "arbor": null
     },
@@ -12309,7 +12421,8 @@
           "aren"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c333b34fe83f"
       },
       "arbor": null
     },
@@ -12403,7 +12516,8 @@
           "from"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bc0fdfe54521"
       },
       "arbor": null
     },
@@ -12516,7 +12630,8 @@
           "know"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c4ce9f73238b"
       },
       "arbor": null
     },
@@ -12621,7 +12736,8 @@
           "exposure"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:99a05476663e"
       },
       "arbor": null
     },
@@ -12749,7 +12865,8 @@
           "interactions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3322f0d75385"
       },
       "arbor": null
     },
@@ -12862,7 +12979,8 @@
           "intact"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:190391a8efba"
       },
       "arbor": null
     },
@@ -12975,7 +13093,8 @@
           "structure"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:aaf7d0396006"
       },
       "arbor": null
     },
@@ -13094,7 +13213,8 @@
           "hack"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8d86556dea7c"
       },
       "arbor": null
     },
@@ -13193,7 +13313,8 @@
           "deepspeed"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fe3d2b246317"
       },
       "arbor": null
     },
@@ -13282,7 +13403,8 @@
           "cloud"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c14b23e54765"
       },
       "arbor": null
     },
@@ -13374,7 +13496,8 @@
           "wrapper"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1f2f0a3d3029"
       },
       "arbor": null
     },
@@ -13458,7 +13581,8 @@
           "read"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:031f3c395841"
       },
       "arbor": null
     },
@@ -13557,7 +13681,8 @@
           "intervals"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ae9ac3f40577"
       },
       "arbor": null
     },
@@ -13642,7 +13767,8 @@
           "hyperparameters"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f16f9c0fb7fe"
       },
       "arbor": null
     },
@@ -13731,7 +13857,8 @@
           "library"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a36070db8a68"
       },
       "arbor": null
     },
@@ -13828,7 +13955,8 @@
           "custom"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:256b9c243de9"
       },
       "arbor": null
     },
@@ -13947,7 +14075,8 @@
           "toward"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:36eb9f3b7973"
       },
       "arbor": null
     },
@@ -14071,7 +14200,8 @@
           "risky"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8907ec40e32b"
       },
       "arbor": null
     },
@@ -14188,7 +14318,8 @@
           "principles"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:32e34da2db4d"
       },
       "arbor": null
     },
@@ -14268,7 +14399,8 @@
           "work"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:57dae55f2f00"
       },
       "arbor": null
     },
@@ -14385,7 +14517,8 @@
           "opinion"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:060d3f10219a"
       },
       "arbor": null
     },
@@ -14480,7 +14613,8 @@
           "refactor"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1fdd3a980044"
       },
       "arbor": null
     },
@@ -14618,7 +14752,8 @@
           "occasionally"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f6edc6d6b2ce"
       },
       "arbor": null
     },
@@ -14726,7 +14861,8 @@
           "reproduces"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8c6eb309a546"
       },
       "arbor": null
     },
@@ -14831,7 +14967,8 @@
           "confusion"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6d1ddefe8d31"
       },
       "arbor": null
     },
@@ -14935,7 +15072,8 @@
           "sensible"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:086cdd35383d"
       },
       "arbor": null
     },
@@ -15024,7 +15162,8 @@
           "heading"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b1fb5cceffd1"
       },
       "arbor": null
     },
@@ -15118,7 +15257,8 @@
           "work"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:89eeac177d36"
       },
       "arbor": null
     },
@@ -15227,7 +15367,8 @@
           "considered"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:918bd0e107d2"
       },
       "arbor": null
     },
@@ -15352,7 +15493,8 @@
           "build"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b30783ea06ec"
       },
       "arbor": null
     },
@@ -15443,7 +15585,8 @@
           "advocate"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9520ddefe50e"
       },
       "arbor": null
     },
@@ -15545,7 +15688,8 @@
           "agreed"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1b38fcca53e3"
       },
       "arbor": null
     },
@@ -15639,7 +15783,8 @@
           "step"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:03777d3e37e4"
       },
       "arbor": null
     },
@@ -15805,7 +15950,8 @@
           "navigate"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a8e63f295185"
       },
       "arbor": null
     },
@@ -15892,7 +16038,8 @@
           "checker"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e0a99cddfd59"
       },
       "arbor": null
     },
@@ -15973,7 +16120,8 @@
           "else"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6e745347ab11"
       },
       "arbor": null
     },
@@ -16058,7 +16206,8 @@
           "conventions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:85713259c727"
       },
       "arbor": null
     },
@@ -16118,7 +16267,8 @@
           "use"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6050753d38e3"
       },
       "arbor": null
     },
@@ -16194,7 +16344,8 @@
           "engineering"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6e42a2723070"
       },
       "arbor": null
     },
@@ -16267,7 +16418,8 @@
           "works"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e378908a8d87"
       },
       "arbor": null
     },
@@ -16376,7 +16528,8 @@
           "writeups"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f213e1648ea0"
       },
       "arbor": null
     },
@@ -16492,7 +16645,8 @@
           "attempt"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:620f8aa78124"
       },
       "arbor": null
     },
@@ -16595,7 +16749,8 @@
           "files"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0c4a6c92704f"
       },
       "arbor": null
     },
@@ -16695,7 +16850,8 @@
           "conventions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a4d26c02f047"
       },
       "arbor": null
     },
@@ -16789,7 +16945,8 @@
           "scripts"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ec5b0bbbbaa9"
       },
       "arbor": null
     },
@@ -16907,7 +17064,8 @@
           "once"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9d80ae791b97"
       },
       "arbor": null
     },
@@ -17006,7 +17164,8 @@
           "exists"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6f457ca1fb2c"
       },
       "arbor": null
     },
@@ -17103,7 +17262,8 @@
           "journey"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1286cf76c120"
       },
       "arbor": null
     },
@@ -17198,7 +17358,8 @@
           "meeting"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fd2ccd6305a5"
       },
       "arbor": null
     },
@@ -17303,7 +17464,8 @@
           "pick"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e8024aa687a8"
       },
       "arbor": null
     },
@@ -17425,7 +17587,8 @@
           "for"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2e3931c8188a"
       },
       "arbor": null
     },
@@ -17547,7 +17710,8 @@
           "backlog"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d5e08203582e"
       },
       "arbor": null
     },
@@ -17656,7 +17820,8 @@
           "uses"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4aa002a12921"
       },
       "arbor": null
     },
@@ -17768,7 +17933,8 @@
           "aligned"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8002dc4fcb12"
       },
       "arbor": null
     },
@@ -17884,7 +18050,8 @@
           "spec"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:be2bc3165e26"
       },
       "arbor": null
     },
@@ -17989,7 +18156,8 @@
           "continuing"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:90fad6dc2123"
       },
       "arbor": null
     },
@@ -18104,7 +18272,8 @@
           "build"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c5014031d970"
       },
       "arbor": null
     },
@@ -18212,7 +18381,8 @@
           "run"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0907283ee2f8"
       },
       "arbor": null
     },
@@ -18336,7 +18506,8 @@
           "now"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1c1f9fbae522"
       },
       "arbor": null
     },
@@ -18447,7 +18618,8 @@
           "superseded"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3af09b79fc15"
       },
       "arbor": null
     },
@@ -18556,7 +18728,8 @@
           "open"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3ebe5016d386"
       },
       "arbor": null
     },
@@ -18678,7 +18851,8 @@
           "shortlist"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:224acbf08d1a"
       },
       "arbor": null
     },
@@ -18818,7 +18992,8 @@
           "branch"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3471967206f0"
       },
       "arbor": null
     },
@@ -18920,7 +19095,8 @@
           "committed"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:008b1cbb3acb"
       },
       "arbor": null
     },
@@ -19027,7 +19203,8 @@
           "canonical"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:44b587366c15"
       },
       "arbor": null
     },
@@ -19123,7 +19300,8 @@
           "consistent"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5fe58713acaf"
       },
       "arbor": null
     },
@@ -19247,7 +19425,8 @@
           "ranked"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8eeb0d340475"
       },
       "arbor": null
     },
@@ -19361,7 +19540,8 @@
           "merge"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:de2c2a8006bd"
       },
       "arbor": null
     },
@@ -19482,7 +19662,8 @@
           "while"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2c29ce4fa284"
       },
       "arbor": null
     },
@@ -19568,7 +19749,8 @@
           "newest"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:27e31d9b2999"
       },
       "arbor": null
     },
@@ -19683,7 +19865,8 @@
           "actionable"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b24c745963ad"
       },
       "arbor": null
     },
@@ -19812,7 +19995,8 @@
           "company"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:255bac9b0e43"
       },
       "arbor": null
     },
@@ -19936,7 +20120,8 @@
           "feature"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6e3f9c481e9c"
       },
       "arbor": null
     },
@@ -20055,7 +20240,8 @@
           "quickly"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0776806d41be"
       },
       "arbor": null
     },
@@ -20150,7 +20336,8 @@
           "attention"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:af8846ff81c2"
       },
       "arbor": null
     },
@@ -20265,7 +20452,8 @@
           "change"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:0c5ff3367ead"
       },
       "arbor": null
     },
@@ -20368,7 +20556,8 @@
           "could"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fa5bb5ac43b4"
       },
       "arbor": null
     },
@@ -20468,7 +20657,8 @@
           "back"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e23133673126"
       },
       "arbor": null
     },
@@ -20573,7 +20763,8 @@
           "after"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:23e9cf801e5e"
       },
       "arbor": null
     },
@@ -20689,7 +20880,8 @@
           "here"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e166e3dc9f5d"
       },
       "arbor": null
     },
@@ -20805,7 +20997,8 @@
           "proceeding"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:21086f6612e4"
       },
       "arbor": null
     },
@@ -20936,7 +21129,8 @@
           "pollute"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8182074e5bfb"
       },
       "arbor": null
     },
@@ -21082,7 +21276,8 @@
           "builds"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:87e9353223e4"
       },
       "arbor": null
     },
@@ -21203,7 +21398,8 @@
           "reliably"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:243c7f996177"
       },
       "arbor": null
     },
@@ -21310,7 +21506,8 @@
           "one"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5f9f2b3bdc38"
       },
       "arbor": null
     },
@@ -21424,7 +21621,8 @@
           "turn"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:771523e7e5ea"
       },
       "arbor": null
     },
@@ -21543,7 +21741,8 @@
           "vague"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e8332b02837c"
       },
       "arbor": null
     },
@@ -21653,7 +21852,8 @@
           "cases"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3df35cc04a69"
       },
       "arbor": null
     },
@@ -21744,7 +21944,8 @@
           "repeatedly"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:29376facd217"
       },
       "arbor": null
     },
@@ -21834,7 +22035,8 @@
           "homepage"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3c5e34d81961"
       },
       "arbor": null
     },
@@ -21923,7 +22125,8 @@
           "network"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d29ed6c96b76"
       },
       "arbor": null
     },
@@ -22041,7 +22244,8 @@
           "instead"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:323113da90f2"
       },
       "arbor": null
     },
@@ -22128,7 +22332,8 @@
           "set"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f394e22d5ec6"
       },
       "arbor": null
     },
@@ -22204,7 +22409,8 @@
           "hand"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4e427fb263ec"
       },
       "arbor": null
     },
@@ -22262,7 +22468,8 @@
           "rendered"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ab64f9cbc078"
       },
       "arbor": null
     },
@@ -22335,7 +22542,8 @@
           "terminal"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bf00a433cf25"
       },
       "arbor": null
     },
@@ -22433,7 +22641,8 @@
           "project"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e85a5e2658c0"
       },
       "arbor": null
     },
@@ -22494,7 +22703,8 @@
           "clip"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:564ba4a03e26"
       },
       "arbor": null
     },
@@ -22601,7 +22811,8 @@
           "content"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5742d0f7274e"
       },
       "arbor": null
     },
@@ -22671,7 +22882,8 @@
           "compositions"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7cd40893bb74"
       },
       "arbor": null
     },
@@ -22749,7 +22961,8 @@
           "videos"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:74f5cf2d0cf0"
       },
       "arbor": null
     },
@@ -22843,7 +23056,8 @@
           "exporting"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b9c6bc9729b1"
       },
       "arbor": null
     },
@@ -22902,7 +23116,8 @@
           "current"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:7a1c6d5f0288"
       },
       "arbor": null
     },
@@ -22993,7 +23208,8 @@
           "ask"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a5ace757dd62"
       },
       "arbor": null
     },
@@ -23102,7 +23318,8 @@
           "write"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bec522e7c0e6"
       },
       "arbor": null
     },
@@ -23223,7 +23440,8 @@
           "delay"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:bfb96f30d2b1"
       },
       "arbor": null
     },
@@ -23325,7 +23543,8 @@
           "use"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:4bdd10a76e0c"
       },
       "arbor": null
     },
@@ -23409,7 +23628,8 @@
           "unbounded"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3d973bbe004b"
       },
       "arbor": null
     },
@@ -23496,7 +23716,8 @@
           "volume"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6e5edc6fdb9b"
       },
       "arbor": null
     },
@@ -23590,7 +23811,8 @@
           "index"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:6487d731b8ed"
       },
       "arbor": null
     },
@@ -23694,7 +23916,8 @@
           "careful"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:fd2441201048"
       },
       "arbor": null
     },
@@ -23821,7 +24044,8 @@
           "load"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:22f822418ad3"
       },
       "arbor": null
     },
@@ -23919,7 +24143,8 @@
           "their"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:282b41d9ac7c"
       },
       "arbor": null
     },
@@ -24023,7 +24248,8 @@
           "alongside"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:31b9310f66bf"
       },
       "arbor": null
     },
@@ -24138,7 +24364,8 @@
           "produce"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2066e93ffb71"
       },
       "arbor": null
     },
@@ -24251,7 +24478,8 @@
           "this"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1deca9f2b2f7"
       },
       "arbor": null
     },
@@ -24358,7 +24586,8 @@
           "infra"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1e19be578ab2"
       },
       "arbor": null
     },
@@ -24449,7 +24678,8 @@
           "experiments"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ced3ae021445"
       },
       "arbor": null
     },
@@ -24528,7 +24758,8 @@
           "system"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a35f9fa361f2"
       },
       "arbor": null
     },
@@ -24624,7 +24855,8 @@
           "shapes"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c0f7bb3c39cb"
       },
       "arbor": null
     },
@@ -24711,7 +24943,8 @@
           "requests"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:c57d4161e654"
       },
       "arbor": null
     },
@@ -24808,7 +25041,8 @@
           "many"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b5cc544c0862"
       },
       "arbor": null
     },
@@ -24911,7 +25145,8 @@
           "wire"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a8f3b3acef34"
       },
       "arbor": null
     },
@@ -24990,7 +25225,8 @@
           "releases"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5207a26a47ed"
       },
       "arbor": null
     },
@@ -25090,7 +25326,8 @@
           "combining"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:2674fb2fc1d5"
       },
       "arbor": null
     },
@@ -25177,7 +25414,8 @@
           "automated"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:115cd60b4b9e"
       },
       "arbor": null
     },
@@ -25290,7 +25528,8 @@
           "picking"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:063123e7a65e"
       },
       "arbor": null
     },
@@ -25398,7 +25637,8 @@
           "rule"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:287940e4ae63"
       },
       "arbor": null
     },
@@ -25484,7 +25724,8 @@
           "end"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5e0ef0fcbbe9"
       },
       "arbor": null
     },
@@ -25568,7 +25809,8 @@
           "time"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e4668e2f8298"
       },
       "arbor": null
     },
@@ -25676,7 +25918,8 @@
           "types"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:25defdc1a0da"
       },
       "arbor": null
     },
@@ -25773,7 +26016,8 @@
           "problem"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b9926e8a4862"
       },
       "arbor": null
     },
@@ -25874,7 +26118,8 @@
           "more"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:44111e2fd408"
       },
       "arbor": null
     },
@@ -26067,7 +26312,8 @@
           "runs"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f5628b050c55"
       },
       "arbor": null
     },
@@ -26191,7 +26437,8 @@
           "once"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:517fa34ca9ab"
       },
       "arbor": null
     },
@@ -26280,7 +26527,8 @@
           "workflow"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1b4f035d5c3b"
       },
       "arbor": null
     },
@@ -26407,7 +26655,8 @@
           "coding"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:65439c021743"
       },
       "arbor": null
     },
@@ -26502,7 +26751,8 @@
           "transformations"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1daca8f96b00"
       },
       "arbor": null
     },
@@ -26601,7 +26851,8 @@
           "over"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9657292091b0"
       },
       "arbor": null
     },
@@ -26717,7 +26968,8 @@
           "autonomous"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:d297126de54c"
       },
       "arbor": null
     },
@@ -26791,7 +27043,8 @@
           "handling"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:ca8dffd07f7d"
       },
       "arbor": null
     },
@@ -26869,7 +27122,8 @@
           "can"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:56f4ded078fe"
       },
       "arbor": null
     },
@@ -26949,7 +27203,8 @@
           "layers"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:a8ab61e1cb7c"
       },
       "arbor": null
     },
@@ -27051,7 +27306,8 @@
           "several"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:8d8b84942565"
       },
       "arbor": null
     },
@@ -27149,7 +27405,8 @@
           "our"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b7c4ce8bf50e"
       },
       "arbor": null
     },
@@ -27267,7 +27524,8 @@
           "writes"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b3d35677a5cf"
       },
       "arbor": null
     },
@@ -27361,7 +27619,8 @@
           "for"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:985e8ffd1c09"
       },
       "arbor": null
     },
@@ -27454,7 +27713,8 @@
           "vulnerability"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:5529db2d37eb"
       },
       "arbor": null
     },
@@ -27562,7 +27822,8 @@
           "specific"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:85b1de596f85"
       },
       "arbor": null
     },
@@ -27645,7 +27906,8 @@
           "finalizing"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:9f63651dbaa6"
       },
       "arbor": null
     },
@@ -27720,7 +27982,8 @@
           "jobs"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b45310337d2a"
       },
       "arbor": null
     },
@@ -27809,7 +28072,8 @@
           "incoming"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:e0e22d76b747"
       },
       "arbor": null
     },
@@ -27921,7 +28185,8 @@
           "hand"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f63c824858f7"
       },
       "arbor": null
     },
@@ -28026,7 +28291,8 @@
           "them"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:1661a4094187"
       },
       "arbor": null
     },
@@ -28125,7 +28391,8 @@
           "change"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:465c227c05ae"
       },
       "arbor": null
     },
@@ -28230,7 +28497,8 @@
           "end"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:3c88ca1930cb"
       },
       "arbor": null
     },
@@ -28336,7 +28604,8 @@
           "deploying"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:b8280069ea64"
       },
       "arbor": null
     },
@@ -28404,7 +28673,8 @@
           "patterns"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:f02b093022b3"
       },
       "arbor": null
     },
@@ -28509,7 +28779,8 @@
           "think"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:68283c0147fc"
       },
       "arbor": null
     },
@@ -28600,7 +28871,8 @@
           "slowing"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:167abc50faf9"
       },
       "arbor": null
     },
@@ -28706,7 +28978,8 @@
           "topic"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:800816c0ba80"
       },
       "arbor": null
     },
@@ -28831,7 +29104,8 @@
           "backed"
         ],
         "vector": null,
-        "expandedBy": "skill-index-builder/0.1.0"
+        "expandedBy": "skill-index-builder/0.1.0",
+        "expandedFrom": "sha256:cb27d6d8390d"
       },
       "arbor": null
     }

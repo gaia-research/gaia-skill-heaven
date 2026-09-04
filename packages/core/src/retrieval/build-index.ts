@@ -51,11 +51,37 @@ export type BuildIndexOptions = {
   builderVersion: string;
   generatedAt?: string | undefined;
   /** Expansions keyed by skill id, when a generation batch has been run. */
-  expansions?: Record<string, { expansions: string[]; expandedBy: string }> | undefined;
+  expansions?:
+    | Record<string, { expansions: string[]; expandedBy: string; expandedFrom?: string }>
+    | undefined;
 };
 
 export function sha256(bytes: string | Uint8Array): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+
+/**
+ * Fingerprint of the fields an expansion was written from. Expansion is the
+ * expensive step in a refresh — an offline LLM pass over the corpus — and the
+ * tree moves constantly. Keying expansions on this turns "re-expand 274" into
+ * "expand the handful whose text actually changed", which is the difference
+ * between a routine refresh and a project.
+ *
+ * Deliberately narrow: it covers what the generation brief reads and nothing
+ * else, so a re-graded trust level or a fixed link does not invalidate a
+ * perfectly good expansion.
+ */
+export function expansionFingerprint(skill: ProjectionSkill): string {
+  return sha256(
+    JSON.stringify([
+      skill.id,
+      skill.name,
+      skill.title ?? "",
+      [...(skill.tags ?? [])].sort(),
+      skill.description ?? "",
+      skill.genericSkillRef ?? "",
+    ]),
+  ).slice(0, 19);
 }
 
 /**
@@ -169,6 +195,7 @@ export function buildSkillIndex({
       unreachable: docs.filter((doc) => !isReachable(doc)).length,
       missingTags: docs.filter((doc) => doc.tags.length === 0).length,
       expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
+      staleExpansions: docs.filter((doc) => doc.retrieval.stale === true).length,
       avgFieldLen,
       floor: null,
       floorCalibration: null,
@@ -179,8 +206,9 @@ export function buildSkillIndex({
 
 function toIndexedSkill(
   skill: ProjectionSkill,
-  expansion: { expansions: string[]; expandedBy: string } | undefined,
+  expansion: { expansions: string[]; expandedBy: string; expandedFrom?: string } | undefined,
 ): IndexedSkill {
+  const fingerprint = expansionFingerprint(skill);
   const links = skill.links ?? {};
   const doc: IndexedSkill = {
     id: skill.id,
@@ -209,6 +237,13 @@ function toIndexedSkill(
       terms: [],
       vector: null,
       ...(expansion ? { expandedBy: expansion.expandedBy } : {}),
+      ...(expansion ? { expandedFrom: expansion.expandedFrom ?? fingerprint } : {}),
+      // Recorded, never acted on here: a stale expansion still ranks. It is
+      // out-of-date retrieval surface, not wrong retrieval surface, and
+      // dropping it would re-create the coverage hole it was written to fill.
+      ...(expansion && expansion.expandedFrom !== undefined && expansion.expandedFrom !== fingerprint
+        ? { stale: true }
+        : {}),
     },
     arbor: null,
   };
