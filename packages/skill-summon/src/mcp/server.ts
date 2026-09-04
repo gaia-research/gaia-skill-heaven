@@ -1,6 +1,8 @@
 import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+
+import { isStale } from "skill-zero";
 
 import type { GaiaService } from "../service.js";
 import { resolveSession, type SummonSession } from "../summon/session.js";
@@ -78,6 +80,8 @@ export function createSkillSummonMcpServer({
     return sessionPromise;
   }
 
+  registerSkillResources(server, service);
+
   server.registerTool(
     "summon",
     {
@@ -140,6 +144,126 @@ export function createSkillSummonMcpServer({
   return server;
 }
 
+/**
+ * SEP-2640's discovery surface, as RESOURCES rather than tools (SPEC §8.2).
+ *
+ * The SEP was an open draft when SPEC §8.2 was written and the ruling was
+ * "tracked, not built, until it stops moving". Re-read at this phase boundary
+ * (2026-09-03): it has been **accepted by core maintainers** and the design has
+ * stabilised on `skill://index.json` for discovery, `skill://<path>/SKILL.md`
+ * for content, and the extension id `io.modelcontextprotocol/skills`. So the
+ * half that is spec-legal MCP today gets built.
+ *
+ * Deliberately resources and not tools: a conformant client can browse the
+ * corpus before summoning, and the tool count stays at one — the published
+ * finding is that agent tool-selection accuracy degrades as the surface grows.
+ *
+ * `skills/list` / `skills/get` are still NOT implemented. The SEP is accepted
+ * but its PR is open and awaiting a reference implementation and conformance
+ * tests; adopting the method names ahead of those is how you end up
+ * non-conformant with the thing you were early for.
+ *
+ * Metadata only, never third-party content: a resource read answers from the
+ * committed index and touches no network. Fetching a skill's actual body stays
+ * behind `summon`, which is where session-locking and disclosure live.
+ */
+function registerSkillResources(server: McpServer, service: GaiaService): void {
+  server.registerResource(
+    "skill-index",
+    "skill://index.json",
+    {
+      title: "Skill index",
+      description:
+        "Every skill this server can summon: id, name, description, tags, trust and reachability, from the committed offline index. Metadata only — summon materializes the body.",
+      mimeType: "application/json",
+    },
+    async (uri) => {
+      const { index, source } = await service.skillIndex();
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                source,
+                generatedAt: index.generatedAt,
+                stale: isStale(index),
+                count: index.docs.length,
+                // `retrieval` is index data and is never displayed (SPEC §2.2),
+                // so it does not leave through this surface either.
+                skills: index.docs.map((doc) => ({
+                  uri: skillUri(doc.id),
+                  id: doc.id,
+                  name: doc.name,
+                  ...(doc.title ? { title: doc.title } : {}),
+                  description: doc.description,
+                  tags: doc.tags,
+                  ...(doc.level ? { level: doc.level } : {}),
+                  reachable: doc.installable || doc.suiteComponents.length > 0,
+                  classified: doc.classified,
+                  arbor: doc.arbor,
+                })),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    },
+  );
+
+  server.registerResource(
+    "skill",
+    new ResourceTemplate("skill://{contributor}/{slug}/SKILL.md", { list: undefined }),
+    {
+      title: "One skill's index entry",
+      description:
+        "Metadata for a single skill, from the committed offline index. The body is materialized by summon, not served here.",
+      mimeType: "application/json",
+    },
+    async (uri, variables) => {
+      const { index, source } = await service.skillIndex();
+      const id = `${String(variables.contributor)}/${String(variables.slug)}`;
+      const doc = index.docs.find((entry) => entry.id === id);
+      if (!doc) {
+        throw new Error(`No skill '${id}' in the index for ${source}.`);
+      }
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                id: doc.id,
+                name: doc.name,
+                ...(doc.title ? { title: doc.title } : {}),
+                contributor: doc.contributor,
+                description: doc.description,
+                tags: doc.tags,
+                links: doc.links,
+                trust: doc.trust,
+                reachable: doc.installable || doc.suiteComponents.length > 0,
+                classified: doc.classified,
+                ...(doc.suiteComponents.length > 0
+                  ? { suiteComponents: doc.suiteComponents }
+                  : {}),
+                // Not built. Routing is relevance only and every surface says so.
+                arbor: doc.arbor,
+                source,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    },
+  );
+}
+
 function toolResult(outcome: SummonOutcome): CallToolResult {
   return {
     content: [
@@ -159,16 +283,31 @@ function toolResult(outcome: SummonOutcome): CallToolResult {
 function resourceLinks(outcome: SummonOutcome): ContentBlock[] {
   return outcome.summoned.map((skill) => ({
     type: "resource_link" as const,
-    uri: skillUri(skill.source ?? outcome.source, skill.id),
+    uri: skillUri(skill.id),
     name: skill.name,
-    ...(skill.contributor ? { description: `${skill.name} — ${skill.contributor}` } : {}),
+    description: `${skill.name} — ${skill.contributor} · ${skill.source ?? outcome.source}`,
     mimeType: "text/markdown",
   }));
 }
 
-export function skillUri(source: string, id: string): string {
-  const authority = source.replace(/^https?:\/\//u, "").replace(/\/+$/u, "");
-  return `skill://${authority}/${id}/SKILL.md`;
+/**
+ * SEP-2640's identifier shape: `skill://<skill-path>/SKILL.md`.
+ *
+ * SPEC §5.3 guessed `skill://<source>/<id>/SKILL.md`, putting the source
+ * authority in the path. That was written when the SEP was an open draft; on
+ * re-reading it at this phase boundary the accepted shape has no source
+ * segment, and encoding one broke on any source whose URL carries a path — a
+ * `owner/repo` fleet produces three segments where a bare host produces one,
+ * so nothing could match a fixed template.
+ *
+ * One server serves one source, so the source does not need to be in the URI.
+ * It is disclosed on the card, in the resource payload, and on the
+ * `resource_link` instead. Being conformant is the entire point of adopting
+ * this early; keeping our own dialect would have been the liability the spec
+ * set out to avoid.
+ */
+export function skillUri(id: string): string {
+  return `skill://${id.replace(/^\/+/u, "")}/SKILL.md`;
 }
 
 function toolError(error: unknown): CallToolResult {

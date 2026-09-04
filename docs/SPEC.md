@@ -532,7 +532,7 @@ materialised `SKILL.md`:
 
 ```jsonc
 { "type": "resource_link",
-  "uri": "skill://gaiaskilltree.com/garrytan/health/SKILL.md",
+  "uri": "skill://garrytan/health/SKILL.md",
   "name": "Health",
   "description": "Gstack Health — Automated Test Suite Runner",
   "mimeType": "text/markdown" }
@@ -814,6 +814,30 @@ Our position: **conformant early, not parallel and clever.**
   before summoning. Resources, not tools: it adds no tool-selection surface.
 - **Not now:** implementing `skills/list` / `skills/get` against a draft that is
   still moving. Tracked, re-checked each phase, built when it stops moving.
+
+### Re-read at the Phase 3/4 boundary, 2026-09-03
+
+The SEP has been **accepted by core maintainers** and the design has stabilised:
+`skill://index.json` for discovery, `skill://<skill-path>/SKILL.md` for content,
+extension id `io.modelcontextprotocol/skills`, and recent refinements around
+dynamic-resource marking, per-skill limits (512 resources, 16 MiB) and size
+fields for pre-fetch budgeting. It is still an open PR awaiting a reference
+implementation and conformance tests.
+
+So the ruling splits, as this section always intended it to:
+
+- **Built now** — the resource surface. `skill://index.json` lists the whole
+  corpus, and `skill://<id>/SKILL.md` serves one skill's index entry. Both are
+  plain MCP resources, spec-legal today, answering from the committed offline
+  index and touching no network. Resources, not tools: a conformant client can
+  browse before summoning and the tool count stays at one.
+- **Metadata only.** A resource read never serves third-party skill content.
+  Materialising a body stays behind `summon`, which is where session-locking
+  and disclosure live.
+- **Still not built** — `skills/list` / `skills/get`. Accepted is not
+  implemented: adopting the method names ahead of the reference implementation
+  and conformance tests is how you end up non-conformant with the thing you
+  were early for.
 
 The asset is not the protocol. It is that Gaia can speak the standard **and**
 carry trust (Yggdrasil) and behaviour (Arbor) — signals the sweep in §9 found

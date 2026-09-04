@@ -20926,6 +20926,228 @@ var McpZodTypeKind;
   McpZodTypeKind2["Completable"] = "McpCompletable";
 })(McpZodTypeKind || (McpZodTypeKind = {}));
 
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/uriTemplate.js
+var MAX_TEMPLATE_LENGTH = 1e6;
+var MAX_VARIABLE_LENGTH = 1e6;
+var MAX_TEMPLATE_EXPRESSIONS = 1e4;
+var MAX_REGEX_LENGTH = 1e6;
+var UriTemplate = class _UriTemplate {
+  /**
+   * Returns true if the given string contains any URI template expressions.
+   * A template expression is a sequence of characters enclosed in curly braces,
+   * like {foo} or {?bar}.
+   */
+  static isTemplate(str) {
+    return /\{[^}\s]+\}/.test(str);
+  }
+  static validateLength(str, max, context) {
+    if (str.length > max) {
+      throw new Error(`${context} exceeds maximum length of ${max} characters (got ${str.length})`);
+    }
+  }
+  get variableNames() {
+    return this.parts.flatMap((part) => typeof part === "string" ? [] : part.names);
+  }
+  constructor(template) {
+    _UriTemplate.validateLength(template, MAX_TEMPLATE_LENGTH, "Template");
+    this.template = template;
+    this.parts = this.parse(template);
+  }
+  toString() {
+    return this.template;
+  }
+  parse(template) {
+    const parts = [];
+    let currentText = "";
+    let i = 0;
+    let expressionCount = 0;
+    while (i < template.length) {
+      if (template[i] === "{") {
+        if (currentText) {
+          parts.push(currentText);
+          currentText = "";
+        }
+        const end = template.indexOf("}", i);
+        if (end === -1)
+          throw new Error("Unclosed template expression");
+        expressionCount++;
+        if (expressionCount > MAX_TEMPLATE_EXPRESSIONS) {
+          throw new Error(`Template contains too many expressions (max ${MAX_TEMPLATE_EXPRESSIONS})`);
+        }
+        const expr = template.slice(i + 1, end);
+        const operator = this.getOperator(expr);
+        const exploded = expr.includes("*");
+        const names = this.getNames(expr);
+        const name = names[0];
+        for (const name2 of names) {
+          _UriTemplate.validateLength(name2, MAX_VARIABLE_LENGTH, "Variable name");
+        }
+        parts.push({ name, operator, names, exploded });
+        i = end + 1;
+      } else {
+        currentText += template[i];
+        i++;
+      }
+    }
+    if (currentText) {
+      parts.push(currentText);
+    }
+    return parts;
+  }
+  getOperator(expr) {
+    const operators = ["+", "#", ".", "/", "?", "&"];
+    return operators.find((op) => expr.startsWith(op)) || "";
+  }
+  getNames(expr) {
+    const operator = this.getOperator(expr);
+    return expr.slice(operator.length).split(",").map((name) => name.replace("*", "").trim()).filter((name) => name.length > 0);
+  }
+  encodeValue(value, operator) {
+    _UriTemplate.validateLength(value, MAX_VARIABLE_LENGTH, "Variable value");
+    if (operator === "+" || operator === "#") {
+      return encodeURI(value);
+    }
+    return encodeURIComponent(value);
+  }
+  expandPart(part, variables) {
+    if (part.operator === "?" || part.operator === "&") {
+      const pairs = part.names.map((name) => {
+        const value2 = variables[name];
+        if (value2 === void 0)
+          return "";
+        const encoded2 = Array.isArray(value2) ? value2.map((v) => this.encodeValue(v, part.operator)).join(",") : this.encodeValue(value2.toString(), part.operator);
+        return `${name}=${encoded2}`;
+      }).filter((pair) => pair.length > 0);
+      if (pairs.length === 0)
+        return "";
+      const separator = part.operator === "?" ? "?" : "&";
+      return separator + pairs.join("&");
+    }
+    if (part.names.length > 1) {
+      const values2 = part.names.map((name) => variables[name]).filter((v) => v !== void 0);
+      if (values2.length === 0)
+        return "";
+      return values2.map((v) => Array.isArray(v) ? v[0] : v).join(",");
+    }
+    const value = variables[part.name];
+    if (value === void 0)
+      return "";
+    const values = Array.isArray(value) ? value : [value];
+    const encoded = values.map((v) => this.encodeValue(v, part.operator));
+    switch (part.operator) {
+      case "":
+        return encoded.join(",");
+      case "+":
+        return encoded.join(",");
+      case "#":
+        return "#" + encoded.join(",");
+      case ".":
+        return "." + encoded.join(".");
+      case "/":
+        return "/" + encoded.join("/");
+      default:
+        return encoded.join(",");
+    }
+  }
+  expand(variables) {
+    let result = "";
+    let hasQueryParam = false;
+    for (const part of this.parts) {
+      if (typeof part === "string") {
+        result += part;
+        continue;
+      }
+      const expanded = this.expandPart(part, variables);
+      if (!expanded)
+        continue;
+      if ((part.operator === "?" || part.operator === "&") && hasQueryParam) {
+        result += expanded.replace("?", "&");
+      } else {
+        result += expanded;
+      }
+      if (part.operator === "?" || part.operator === "&") {
+        hasQueryParam = true;
+      }
+    }
+    return result;
+  }
+  escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  partToRegExp(part) {
+    const patterns = [];
+    for (const name2 of part.names) {
+      _UriTemplate.validateLength(name2, MAX_VARIABLE_LENGTH, "Variable name");
+    }
+    if (part.operator === "?" || part.operator === "&") {
+      for (let i = 0; i < part.names.length; i++) {
+        const name2 = part.names[i];
+        const prefix = i === 0 ? "\\" + part.operator : "&";
+        patterns.push({
+          pattern: prefix + this.escapeRegExp(name2) + "=([^&]+)",
+          name: name2
+        });
+      }
+      return patterns;
+    }
+    let pattern;
+    const name = part.name;
+    switch (part.operator) {
+      case "":
+        pattern = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
+        break;
+      case "+":
+      case "#":
+        pattern = "(.+)";
+        break;
+      case ".":
+        pattern = "\\.([^/,]+)";
+        break;
+      case "/":
+        pattern = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
+        break;
+      default:
+        pattern = "([^/]+)";
+    }
+    patterns.push({ pattern, name });
+    return patterns;
+  }
+  match(uri) {
+    _UriTemplate.validateLength(uri, MAX_TEMPLATE_LENGTH, "URI");
+    let pattern = "^";
+    const names = [];
+    for (const part of this.parts) {
+      if (typeof part === "string") {
+        pattern += this.escapeRegExp(part);
+      } else {
+        const patterns = this.partToRegExp(part);
+        for (const { pattern: partPattern, name } of patterns) {
+          pattern += partPattern;
+          names.push({ name, exploded: part.exploded });
+        }
+      }
+    }
+    pattern += "$";
+    _UriTemplate.validateLength(pattern, MAX_REGEX_LENGTH, "Generated regex pattern");
+    const regex = new RegExp(pattern);
+    const match = uri.match(regex);
+    if (!match)
+      return null;
+    const result = {};
+    for (let i = 0; i < names.length; i++) {
+      const { name, exploded } = names[i];
+      const value = match[i + 1];
+      const cleanName = name.replace("*", "");
+      if (exploded && value.includes(",")) {
+        result[cleanName] = value.split(",");
+      } else {
+        result[cleanName] = value;
+      }
+    }
+    return result;
+  }
+};
+
 // node_modules/@modelcontextprotocol/sdk/dist/esm/shared/toolNameValidation.js
 var TOOL_NAME_REGEX = /^[A-Za-z0-9._-]{1,128}$/;
 function validateToolName(name) {
@@ -21715,6 +21937,30 @@ var McpServer = class {
     }
   }
 };
+var ResourceTemplate = class {
+  constructor(uriTemplate, _callbacks) {
+    this._callbacks = _callbacks;
+    this._uriTemplate = typeof uriTemplate === "string" ? new UriTemplate(uriTemplate) : uriTemplate;
+  }
+  /**
+   * Gets the URI template pattern.
+   */
+  get uriTemplate() {
+    return this._uriTemplate;
+  }
+  /**
+   * Gets the list callback, if one was provided.
+   */
+  get listCallback() {
+    return this._callbacks.list;
+  }
+  /**
+   * Gets the callback for completing a specific URI template variable, if one was provided.
+   */
+  completeCallback(variable) {
+    return this._callbacks.complete?.[variable];
+  }
+};
 var EMPTY_OBJECT_JSON_SCHEMA = {
   type: "object",
   properties: {}
@@ -21790,6 +22036,484 @@ var EMPTY_COMPLETION_RESULT = {
     hasMore: false
   }
 };
+
+// packages/core/src/retrieval/schema.ts
+var SKILL_INDEX_SCHEMA = "gaia.skill-index/v1";
+var STALE_AFTER_DAYS = 30;
+var INDEX_FIELDS = [
+  "name",
+  "id",
+  "title",
+  "tags",
+  "genericSkillRef",
+  "expansions",
+  "terms",
+  "description"
+];
+var SkillIndexError = class extends Error {
+  name = "SkillIndexError";
+};
+function assertSkillIndex(value) {
+  const index = value;
+  if (typeof index !== "object" || index === null) {
+    throw new SkillIndexError("Skill index is not an object.");
+  }
+  if (index.schema !== SKILL_INDEX_SCHEMA) {
+    throw new SkillIndexError(
+      `Skill index advertises unsupported schema ${String(index.schema)}; this build reads ${SKILL_INDEX_SCHEMA}.`
+    );
+  }
+  if (!Array.isArray(index.docs) || index.docs.length === 0) {
+    throw new SkillIndexError("Skill index contains no documents.");
+  }
+  if (typeof index.generatedAt !== "string" || Number.isNaN(Date.parse(index.generatedAt))) {
+    throw new SkillIndexError("Skill index has no valid generatedAt timestamp.");
+  }
+  for (const doc of index.docs) {
+    if (typeof doc?.id !== "string" || doc.id.length === 0) {
+      throw new SkillIndexError("Skill index contains a document with no id.");
+    }
+    if (typeof doc.retrieval !== "object" || doc.retrieval === null) {
+      throw new SkillIndexError(`Indexed skill ${doc.id} has no retrieval surface.`);
+    }
+  }
+}
+function indexAgeDays(index, now = /* @__PURE__ */ new Date()) {
+  const generated = Date.parse(index.generatedAt);
+  if (Number.isNaN(generated)) return null;
+  return (now.getTime() - generated) / 864e5;
+}
+function isStale(index, now = /* @__PURE__ */ new Date()) {
+  const age = indexAgeDays(index, now);
+  return age !== null && age > STALE_AFTER_DAYS;
+}
+
+// packages/core/src/retrieval/lexical.ts
+function normalize(value) {
+  return value.toLocaleLowerCase("en-US").normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+}
+function tokenizeText(value) {
+  return [...new Set(normalize(value).split(" ").filter(Boolean))];
+}
+function scoreMatch(query, weightedFields) {
+  const normalizedQuery = normalize(query);
+  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
+  let score = 0;
+  for (const [rawValue, weight] of weightedFields) {
+    const value = normalize(rawValue);
+    if (!value) continue;
+    if (value === normalizedQuery) score += weight * 10;
+    else if (value.includes(normalizedQuery)) score += weight * 5;
+    for (const token of tokens) {
+      if (value.split(" ").includes(token)) score += weight;
+      else if (value.includes(token)) score += weight / 2;
+    }
+  }
+  return score;
+}
+
+// packages/core/src/retrieval/build-index.ts
+import { createHash } from "node:crypto";
+function sha256(bytes) {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+function expansionFingerprint(skill) {
+  return sha256(
+    JSON.stringify([
+      skill.id,
+      skill.name,
+      skill.title ?? "",
+      [...skill.tags ?? []].sort(),
+      skill.description ?? "",
+      skill.genericSkillRef ?? ""
+    ])
+  ).slice(0, 19);
+}
+function isInstallableLink(links) {
+  if (!links) return false;
+  if (links.installable === false) return false;
+  return typeof links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(links.github);
+}
+function isReachable(doc) {
+  if (doc.registryOnly) return false;
+  return doc.installable || doc.suiteComponents.length > 0;
+}
+function fieldText(doc, field) {
+  switch (field) {
+    case "name":
+      return doc.name;
+    case "id":
+      return doc.id;
+    case "title":
+      return doc.title ?? "";
+    case "tags":
+      return doc.tags.join(" ");
+    case "genericSkillRef":
+      return doc.genericSkillRef ?? "";
+    case "expansions":
+      return doc.retrieval.expansions.join(" ");
+    case "terms":
+      return doc.retrieval.terms.join(" ");
+    case "description":
+      return doc.description;
+  }
+}
+function deriveTerms(doc) {
+  if (doc.retrieval.expansions.length === 0) return [];
+  const source = [
+    doc.name,
+    doc.title ?? "",
+    doc.tags.join(" "),
+    doc.genericSkillRef ?? "",
+    doc.description,
+    doc.retrieval.expansions.join(" ")
+  ].join(" ");
+  return tokenizeText(source).filter((token) => token.length > 2);
+}
+function buildSkillIndex({
+  projection,
+  source,
+  sourceDigest,
+  builderVersion,
+  generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
+  expansions
+}) {
+  const bucketed = Object.values(projection.buckets ?? {}).flat();
+  const unclassified = projection.awaitingClassification ?? [];
+  const docs = [
+    ...bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], true)),
+    ...unclassified.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], false))
+  ].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  const avgFieldLen = Object.fromEntries(
+    INDEX_FIELDS.map((field) => [
+      field,
+      docs.length === 0 ? 0 : round4(
+        docs.reduce((total, doc) => total + tokenCount(fieldText(doc, field)), 0) / docs.length
+      )
+    ])
+  );
+  return {
+    schema: SKILL_INDEX_SCHEMA,
+    generatedAt,
+    source,
+    sourceDigest,
+    builder: {
+      version: builderVersion,
+      expansion: docs.some((doc) => doc.retrieval.expansions.length > 0) ? "generated" : "none"
+    },
+    stats: {
+      docs: docs.length,
+      awaitingClassification: docs.filter((doc) => !doc.classified).length,
+      unreachable: docs.filter((doc) => !isReachable(doc)).length,
+      missingTags: docs.filter((doc) => doc.tags.length === 0).length,
+      expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
+      staleExpansions: docs.filter((doc) => doc.retrieval.stale === true).length,
+      avgFieldLen,
+      floor: null,
+      floorCalibration: null
+    },
+    docs
+  };
+}
+function toIndexedSkill(skill, expansion, classified) {
+  const fingerprint = expansionFingerprint(skill);
+  const links = skill.links ?? {};
+  const doc = {
+    id: skill.id,
+    name: skill.name,
+    ...skill.title ? { title: skill.title } : {},
+    contributor: skill.contributor ?? skill.id.split("/")[0] ?? "",
+    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
+    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
+    description: skill.description ?? "",
+    tags: [...skill.tags ?? []],
+    links: typeof links.github === "string" ? { github: links.github } : {},
+    invocation: readInvocation(skill.invocation),
+    installable: isInstallableLink(links),
+    suiteComponents: [...skill.suiteComponents ?? []],
+    registryOnly: skill.installable === false,
+    classified,
+    ...skill.level ? { level: skill.level } : {},
+    trust: {
+      ...skill.level ? { level: skill.level } : {},
+      ...skill.overallTrustGrade ? { grade: skill.overallTrustGrade } : {},
+      ...skill.trustMagnitude === void 0 ? {} : { trustNumber: skill.trustMagnitude }
+    },
+    retrieval: {
+      expansions: expansion?.expansions ?? [],
+      terms: [],
+      vector: null,
+      ...expansion ? { expandedBy: expansion.expandedBy } : {},
+      ...expansion ? { expandedFrom: expansion.expandedFrom ?? fingerprint } : {},
+      // Recorded, never acted on here: a stale expansion still ranks. It is
+      // out-of-date retrieval surface, not wrong retrieval surface, and
+      // dropping it would re-create the coverage hole it was written to fill.
+      ...expansion && expansion.expandedFrom !== void 0 && expansion.expandedFrom !== fingerprint ? { stale: true } : {}
+    },
+    arbor: null
+  };
+  doc.retrieval.terms = deriveTerms(doc);
+  return doc;
+}
+function readInvocation(value) {
+  return value === "model" || value === "human" ? value : "any";
+}
+function tokenCount(text) {
+  const normalized = normalize(text);
+  return normalized.length === 0 ? 0 : normalized.split(" ").length;
+}
+function round4(value) {
+  return Math.round(value * 1e4) / 1e4;
+}
+
+// packages/core/src/retrieval/bm25f.ts
+var DEFAULT_BM25F_PARAMS = {
+  k1: 1.2,
+  b: 0.75,
+  fieldPresenceNormalization: false,
+  weights: {
+    name: 10,
+    id: 8,
+    title: 6,
+    tags: 5,
+    genericSkillRef: 4,
+    expansions: 4,
+    terms: 2,
+    description: 3
+  }
+};
+var EXACT_MATCH_SCORE = 1e6;
+var Bm25fRanker = class {
+  #params;
+  #documents;
+  #documentFrequency = /* @__PURE__ */ new Map();
+  #averageFieldLength;
+  #exact = /* @__PURE__ */ new Map();
+  constructor(index, params = { ...DEFAULT_BM25F_PARAMS }) {
+    this.#params = params;
+    const totalWeight = INDEX_FIELDS.reduce((total, field) => total + params.weights[field], 0);
+    this.#documents = index.docs.map((doc) => indexDocument(doc, params.weights, totalWeight));
+    for (const document of this.#documents) {
+      for (const term of document.terms.keys()) {
+        this.#documentFrequency.set(term, (this.#documentFrequency.get(term) ?? 0) + 1);
+      }
+      for (const key of document.exactKeys) {
+        const bucket = this.#exact.get(key);
+        if (bucket) bucket.push(document.doc);
+        else this.#exact.set(key, [document.doc]);
+      }
+    }
+    this.#averageFieldLength = Object.fromEntries(
+      INDEX_FIELDS.map((field) => [
+        field,
+        this.#documents.length === 0 ? 0 : this.#documents.reduce((total, document) => total + document.fieldLength[field], 0) / this.#documents.length
+      ])
+    );
+  }
+  get size() {
+    return this.#documents.length;
+  }
+  /**
+   * Rank every document against `query`, best first. Zero-scoring documents are
+   * dropped; the floor decision (SPEC §4) belongs to the caller, not here.
+   */
+  rank(query) {
+    const exact = this.#exactMatches(query);
+    if (exact.length > 0) return exact;
+    const terms = tokenizeText(query);
+    if (terms.length === 0) return [];
+    const scored = [];
+    for (const document of this.#documents) {
+      const { score, matchedTerms } = this.#score(document, terms);
+      if (score > 0) {
+        scored.push({ doc: document.doc, score, matchKind: "ranked", matchedTerms });
+      }
+    }
+    scored.sort((left, right) => right.score - left.score || compareIds(left.doc, right.doc));
+    return scored;
+  }
+  /**
+   * SPEC §3.4 — "summon scout-fleet" is the most common invocation there is and
+   * must not go through a relevance band at all.
+   */
+  #exactMatches(query) {
+    const key = normalize(query);
+    if (key.length === 0) return [];
+    const docs = this.#exact.get(key);
+    if (!docs || docs.length === 0) return [];
+    return docs.map((doc) => ({
+      doc,
+      score: EXACT_MATCH_SCORE,
+      matchKind: "exact",
+      matchedTerms: tokenizeText(query)
+    }));
+  }
+  #score(document, terms) {
+    const { k1, b, weights } = this.#params;
+    let score = 0;
+    const matchedTerms = [];
+    for (const term of terms) {
+      const postings = document.terms.get(term);
+      if (!postings) continue;
+      matchedTerms.push(term);
+      let weightedFrequency = 0;
+      for (const { field, frequency } of postings) {
+        const averageLength = this.#averageFieldLength[field];
+        const normalizer = averageLength === 0 ? 1 : 1 - b + b * document.fieldLength[field] / averageLength;
+        weightedFrequency += weights[field] * frequency / normalizer;
+      }
+      if (this.#params.fieldPresenceNormalization && document.presentWeightShare > 0) {
+        weightedFrequency /= document.presentWeightShare;
+      }
+      score += this.#idf(term) * (weightedFrequency * (k1 + 1) / (weightedFrequency + k1));
+    }
+    return { score, matchedTerms };
+  }
+  #idf(term) {
+    const n = this.#documents.length;
+    const df = this.#documentFrequency.get(term) ?? 0;
+    return Math.log(1 + (n - df + 0.5) / (df + 0.5));
+  }
+};
+function marginOf(ranked) {
+  const top = ranked[0];
+  if (!top) return 0;
+  const next = ranked[1];
+  if (!next || top.score <= 0) return 1;
+  return (top.score - next.score) / top.score;
+}
+function indexDocument(doc, weights, totalWeight) {
+  const terms = /* @__PURE__ */ new Map();
+  const fieldLength = {};
+  for (const field of INDEX_FIELDS) {
+    const tokens = normalize(fieldText(doc, field)).split(" ").filter(Boolean);
+    fieldLength[field] = tokens.length;
+    const counts = /* @__PURE__ */ new Map();
+    for (const token of tokens) counts.set(token, (counts.get(token) ?? 0) + 1);
+    for (const [token, frequency] of counts) {
+      const postings = terms.get(token);
+      if (postings) postings.push({ field, frequency });
+      else terms.set(token, [{ field, frequency }]);
+    }
+  }
+  const exactKeys = new Set(
+    [doc.name, doc.id, doc.catalogRef ?? ""].map((value) => normalize(value)).filter((value) => value.length > 0)
+  );
+  const presentWeight = INDEX_FIELDS.reduce(
+    (total, field) => total + (fieldLength[field] > 0 ? weights[field] : 0),
+    0
+  );
+  return {
+    doc,
+    terms,
+    fieldLength,
+    exactKeys,
+    presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight
+  };
+}
+function compareIds(left, right) {
+  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+}
+
+// packages/core/src/retrieval/decide.ts
+var BAND = 0.6;
+var MARGIN = 0.15;
+function decide({
+  index,
+  query,
+  ranked,
+  surface = "any",
+  source
+}) {
+  const floor = index.stats.floor;
+  const filtered = [];
+  const eligible = [];
+  for (const hit of ranked) {
+    const why = withholdReason(hit.doc, surface);
+    if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
+    else eligible.push(hit);
+  }
+  const top = eligible[0];
+  if (!top) {
+    return noMatchDecision(
+      query,
+      ranked.length === 0 ? "no_candidates" : "all_filtered",
+      ranked,
+      filtered,
+      floor,
+      source
+    );
+  }
+  if (top.matchKind === "exact") {
+    const exact = eligible.filter((hit) => hit.matchKind === "exact");
+    return {
+      admitted: exact,
+      noMatch: null,
+      margin: marginOf(exact),
+      ambiguous: exact.length > 1,
+      filtered,
+      floor
+    };
+  }
+  if (floor !== null && top.score < floor) {
+    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
+  }
+  const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
+  const margin = marginOf(admitted);
+  return {
+    admitted,
+    noMatch: null,
+    margin,
+    ambiguous: admitted.length > 1 && margin < MARGIN,
+    filtered,
+    floor
+  };
+}
+function withholdReason(doc, surface) {
+  if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
+  if (!isReachable(doc)) {
+    return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
+  }
+  if (surface === "heaven" && doc.invocation === "model") {
+    return "surface:heaven excludes model-led skills";
+  }
+  if (surface === "hell" && doc.invocation === "human") {
+    return "surface:hell excludes human-led skills";
+  }
+  return null;
+}
+function noMatchDecision(query, reason, considered, filtered, floor, source) {
+  return {
+    admitted: [],
+    noMatch: {
+      reason,
+      query,
+      topCandidates: considered.slice(0, 3).map((hit) => ({
+        id: hit.doc.id,
+        name: hit.doc.name,
+        score: Math.round(hit.score * 1e4) / 1e4,
+        floor
+      })),
+      filtered,
+      suggestion: suggestionFor(reason, source)
+    },
+    margin: 0,
+    ambiguous: false,
+    filtered,
+    floor
+  };
+}
+function suggestionFor(reason, source) {
+  const where = source ? `\`${source}\`` : "the configured source";
+  switch (reason) {
+    case "no_candidates":
+      return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
+    case "below_floor":
+      return `Nothing in ${where} scored above the calibrated relevance floor. The closest candidates are listed with their scores; none of them is a match. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
+    case "all_filtered":
+      return `Every candidate in ${where} was withheld \u2014 see \`filtered\` for why. Most commonly the skill publishes no installable SKILL.md link.`;
+  }
+}
 
 // packages/skill-summon/src/summon/session.ts
 import { randomUUID } from "node:crypto";
@@ -22005,447 +22729,6 @@ function errorMessage3(error2) {
 // packages/skill-summon/src/summon/summon.ts
 import { stat as stat4 } from "node:fs/promises";
 import path7 from "node:path";
-
-// packages/core/src/retrieval/schema.ts
-var SKILL_INDEX_SCHEMA = "gaia.skill-index/v1";
-var STALE_AFTER_DAYS = 30;
-var INDEX_FIELDS = [
-  "name",
-  "id",
-  "title",
-  "tags",
-  "genericSkillRef",
-  "expansions",
-  "terms",
-  "description"
-];
-var SkillIndexError = class extends Error {
-  name = "SkillIndexError";
-};
-function assertSkillIndex(value) {
-  const index = value;
-  if (typeof index !== "object" || index === null) {
-    throw new SkillIndexError("Skill index is not an object.");
-  }
-  if (index.schema !== SKILL_INDEX_SCHEMA) {
-    throw new SkillIndexError(
-      `Skill index advertises unsupported schema ${String(index.schema)}; this build reads ${SKILL_INDEX_SCHEMA}.`
-    );
-  }
-  if (!Array.isArray(index.docs) || index.docs.length === 0) {
-    throw new SkillIndexError("Skill index contains no documents.");
-  }
-  if (typeof index.generatedAt !== "string" || Number.isNaN(Date.parse(index.generatedAt))) {
-    throw new SkillIndexError("Skill index has no valid generatedAt timestamp.");
-  }
-  for (const doc of index.docs) {
-    if (typeof doc?.id !== "string" || doc.id.length === 0) {
-      throw new SkillIndexError("Skill index contains a document with no id.");
-    }
-    if (typeof doc.retrieval !== "object" || doc.retrieval === null) {
-      throw new SkillIndexError(`Indexed skill ${doc.id} has no retrieval surface.`);
-    }
-  }
-}
-function indexAgeDays(index, now = /* @__PURE__ */ new Date()) {
-  const generated = Date.parse(index.generatedAt);
-  if (Number.isNaN(generated)) return null;
-  return (now.getTime() - generated) / 864e5;
-}
-function isStale(index, now = /* @__PURE__ */ new Date()) {
-  const age = indexAgeDays(index, now);
-  return age !== null && age > STALE_AFTER_DAYS;
-}
-
-// packages/core/src/retrieval/lexical.ts
-function normalize(value) {
-  return value.toLocaleLowerCase("en-US").normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
-}
-function tokenizeText(value) {
-  return [...new Set(normalize(value).split(" ").filter(Boolean))];
-}
-function scoreMatch(query, weightedFields) {
-  const normalizedQuery = normalize(query);
-  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
-  let score = 0;
-  for (const [rawValue, weight] of weightedFields) {
-    const value = normalize(rawValue);
-    if (!value) continue;
-    if (value === normalizedQuery) score += weight * 10;
-    else if (value.includes(normalizedQuery)) score += weight * 5;
-    for (const token of tokens) {
-      if (value.split(" ").includes(token)) score += weight;
-      else if (value.includes(token)) score += weight / 2;
-    }
-  }
-  return score;
-}
-
-// packages/core/src/retrieval/build-index.ts
-import { createHash } from "node:crypto";
-function sha256(bytes) {
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-}
-function isInstallableLink(links) {
-  if (!links) return false;
-  if (links.installable === false) return false;
-  return typeof links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(links.github);
-}
-function isReachable(doc) {
-  if (doc.registryOnly) return false;
-  return doc.installable || doc.suiteComponents.length > 0;
-}
-function fieldText(doc, field) {
-  switch (field) {
-    case "name":
-      return doc.name;
-    case "id":
-      return doc.id;
-    case "title":
-      return doc.title ?? "";
-    case "tags":
-      return doc.tags.join(" ");
-    case "genericSkillRef":
-      return doc.genericSkillRef ?? "";
-    case "expansions":
-      return doc.retrieval.expansions.join(" ");
-    case "terms":
-      return doc.retrieval.terms.join(" ");
-    case "description":
-      return doc.description;
-  }
-}
-function deriveTerms(doc) {
-  if (doc.retrieval.expansions.length === 0) return [];
-  const source = [
-    doc.name,
-    doc.title ?? "",
-    doc.tags.join(" "),
-    doc.genericSkillRef ?? "",
-    doc.description,
-    doc.retrieval.expansions.join(" ")
-  ].join(" ");
-  return tokenizeText(source).filter((token) => token.length > 2);
-}
-function buildSkillIndex({
-  projection,
-  source,
-  sourceDigest,
-  builderVersion,
-  generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
-  expansions
-}) {
-  const bucketed = Object.values(projection.buckets ?? {}).flat();
-  const docs = bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id])).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
-  const avgFieldLen = Object.fromEntries(
-    INDEX_FIELDS.map((field) => [
-      field,
-      docs.length === 0 ? 0 : round4(
-        docs.reduce((total, doc) => total + tokenCount(fieldText(doc, field)), 0) / docs.length
-      )
-    ])
-  );
-  return {
-    schema: SKILL_INDEX_SCHEMA,
-    generatedAt,
-    source,
-    sourceDigest,
-    builder: {
-      version: builderVersion,
-      expansion: docs.some((doc) => doc.retrieval.expansions.length > 0) ? "generated" : "none"
-    },
-    stats: {
-      docs: docs.length,
-      // Recorded, not indexed: these 52 skills are invisible to summon today
-      // because the runtime reads `buckets` only. Stating the number keeps the
-      // gap visible instead of silently shrinking the corpus.
-      awaitingClassification: (projection.awaitingClassification ?? []).length,
-      unreachable: docs.filter((doc) => !isReachable(doc)).length,
-      missingTags: docs.filter((doc) => doc.tags.length === 0).length,
-      avgFieldLen,
-      floor: null,
-      floorCalibration: null
-    },
-    docs
-  };
-}
-function toIndexedSkill(skill, expansion) {
-  const links = skill.links ?? {};
-  const doc = {
-    id: skill.id,
-    name: skill.name,
-    ...skill.title ? { title: skill.title } : {},
-    contributor: skill.contributor ?? skill.id.split("/")[0] ?? "",
-    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
-    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
-    description: skill.description ?? "",
-    tags: [...skill.tags ?? []],
-    links: typeof links.github === "string" ? { github: links.github } : {},
-    invocation: readInvocation(skill.invocation),
-    installable: isInstallableLink(links),
-    suiteComponents: [...skill.suiteComponents ?? []],
-    registryOnly: skill.installable === false,
-    ...skill.level ? { level: skill.level } : {},
-    trust: {
-      ...skill.level ? { level: skill.level } : {},
-      ...skill.overallTrustGrade ? { grade: skill.overallTrustGrade } : {},
-      ...skill.trustMagnitude === void 0 ? {} : { trustNumber: skill.trustMagnitude }
-    },
-    retrieval: {
-      expansions: expansion?.expansions ?? [],
-      terms: [],
-      vector: null,
-      ...expansion ? { expandedBy: expansion.expandedBy } : {}
-    },
-    arbor: null
-  };
-  doc.retrieval.terms = deriveTerms(doc);
-  return doc;
-}
-function readInvocation(value) {
-  return value === "model" || value === "human" ? value : "any";
-}
-function tokenCount(text) {
-  const normalized = normalize(text);
-  return normalized.length === 0 ? 0 : normalized.split(" ").length;
-}
-function round4(value) {
-  return Math.round(value * 1e4) / 1e4;
-}
-
-// packages/core/src/retrieval/bm25f.ts
-var DEFAULT_BM25F_PARAMS = {
-  k1: 1.2,
-  b: 0.75,
-  weights: {
-    name: 10,
-    id: 8,
-    title: 6,
-    tags: 5,
-    genericSkillRef: 4,
-    expansions: 4,
-    terms: 2,
-    description: 3
-  }
-};
-var EXACT_MATCH_SCORE = 1e6;
-var Bm25fRanker = class {
-  #params;
-  #documents;
-  #documentFrequency = /* @__PURE__ */ new Map();
-  #averageFieldLength;
-  #exact = /* @__PURE__ */ new Map();
-  constructor(index, params = { ...DEFAULT_BM25F_PARAMS }) {
-    this.#params = params;
-    this.#documents = index.docs.map((doc) => indexDocument(doc));
-    for (const document of this.#documents) {
-      for (const term of document.terms.keys()) {
-        this.#documentFrequency.set(term, (this.#documentFrequency.get(term) ?? 0) + 1);
-      }
-      for (const key of document.exactKeys) {
-        const bucket = this.#exact.get(key);
-        if (bucket) bucket.push(document.doc);
-        else this.#exact.set(key, [document.doc]);
-      }
-    }
-    this.#averageFieldLength = Object.fromEntries(
-      INDEX_FIELDS.map((field) => [
-        field,
-        this.#documents.length === 0 ? 0 : this.#documents.reduce((total, document) => total + document.fieldLength[field], 0) / this.#documents.length
-      ])
-    );
-  }
-  get size() {
-    return this.#documents.length;
-  }
-  /**
-   * Rank every document against `query`, best first. Zero-scoring documents are
-   * dropped; the floor decision (SPEC §4) belongs to the caller, not here.
-   */
-  rank(query) {
-    const exact = this.#exactMatches(query);
-    if (exact.length > 0) return exact;
-    const terms = tokenizeText(query);
-    if (terms.length === 0) return [];
-    const scored = [];
-    for (const document of this.#documents) {
-      const { score, matchedTerms } = this.#score(document, terms);
-      if (score > 0) {
-        scored.push({ doc: document.doc, score, matchKind: "ranked", matchedTerms });
-      }
-    }
-    scored.sort((left, right) => right.score - left.score || compareIds(left.doc, right.doc));
-    return scored;
-  }
-  /**
-   * SPEC §3.4 — "summon scout-fleet" is the most common invocation there is and
-   * must not go through a relevance band at all.
-   */
-  #exactMatches(query) {
-    const key = normalize(query);
-    if (key.length === 0) return [];
-    const docs = this.#exact.get(key);
-    if (!docs || docs.length === 0) return [];
-    return docs.map((doc) => ({
-      doc,
-      score: EXACT_MATCH_SCORE,
-      matchKind: "exact",
-      matchedTerms: tokenizeText(query)
-    }));
-  }
-  #score(document, terms) {
-    const { k1, b, weights } = this.#params;
-    let score = 0;
-    const matchedTerms = [];
-    for (const term of terms) {
-      const postings = document.terms.get(term);
-      if (!postings) continue;
-      matchedTerms.push(term);
-      let weightedFrequency = 0;
-      for (const { field, frequency } of postings) {
-        const averageLength = this.#averageFieldLength[field];
-        const normalizer = averageLength === 0 ? 1 : 1 - b + b * document.fieldLength[field] / averageLength;
-        weightedFrequency += weights[field] * frequency / normalizer;
-      }
-      score += this.#idf(term) * (weightedFrequency * (k1 + 1) / (weightedFrequency + k1));
-    }
-    return { score, matchedTerms };
-  }
-  #idf(term) {
-    const n = this.#documents.length;
-    const df = this.#documentFrequency.get(term) ?? 0;
-    return Math.log(1 + (n - df + 0.5) / (df + 0.5));
-  }
-};
-function marginOf(ranked) {
-  const top = ranked[0];
-  if (!top) return 0;
-  const next = ranked[1];
-  if (!next || top.score <= 0) return 1;
-  return (top.score - next.score) / top.score;
-}
-function indexDocument(doc) {
-  const terms = /* @__PURE__ */ new Map();
-  const fieldLength = {};
-  for (const field of INDEX_FIELDS) {
-    const tokens = normalize(fieldText(doc, field)).split(" ").filter(Boolean);
-    fieldLength[field] = tokens.length;
-    const counts = /* @__PURE__ */ new Map();
-    for (const token of tokens) counts.set(token, (counts.get(token) ?? 0) + 1);
-    for (const [token, frequency] of counts) {
-      const postings = terms.get(token);
-      if (postings) postings.push({ field, frequency });
-      else terms.set(token, [{ field, frequency }]);
-    }
-  }
-  const exactKeys = new Set(
-    [doc.name, doc.id, doc.catalogRef ?? ""].map((value) => normalize(value)).filter((value) => value.length > 0)
-  );
-  return { doc, terms, fieldLength, exactKeys };
-}
-function compareIds(left, right) {
-  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
-}
-
-// packages/core/src/retrieval/decide.ts
-var BAND = 0.6;
-var MARGIN = 0.15;
-function decide({
-  index,
-  query,
-  ranked,
-  surface = "any",
-  source
-}) {
-  const floor = index.stats.floor;
-  const filtered = [];
-  const eligible = [];
-  for (const hit of ranked) {
-    const why = withholdReason(hit.doc, surface);
-    if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
-    else eligible.push(hit);
-  }
-  const top = eligible[0];
-  if (!top) {
-    return noMatchDecision(
-      query,
-      ranked.length === 0 ? "no_candidates" : "all_filtered",
-      ranked,
-      filtered,
-      floor,
-      source
-    );
-  }
-  if (top.matchKind === "exact") {
-    const exact = eligible.filter((hit) => hit.matchKind === "exact");
-    return {
-      admitted: exact,
-      noMatch: null,
-      margin: marginOf(exact),
-      ambiguous: exact.length > 1,
-      filtered,
-      floor
-    };
-  }
-  if (floor !== null && top.score < floor) {
-    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
-  }
-  const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
-  const margin = marginOf(admitted);
-  return {
-    admitted,
-    noMatch: null,
-    margin,
-    ambiguous: admitted.length > 1 && margin < MARGIN,
-    filtered,
-    floor
-  };
-}
-function withholdReason(doc, surface) {
-  if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
-  if (!isReachable(doc)) {
-    return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
-  }
-  if (surface === "heaven" && doc.invocation === "model") {
-    return "surface:heaven excludes model-led skills";
-  }
-  if (surface === "hell" && doc.invocation === "human") {
-    return "surface:hell excludes human-led skills";
-  }
-  return null;
-}
-function noMatchDecision(query, reason, considered, filtered, floor, source) {
-  return {
-    admitted: [],
-    noMatch: {
-      reason,
-      query,
-      topCandidates: considered.slice(0, 3).map((hit) => ({
-        id: hit.doc.id,
-        name: hit.doc.name,
-        score: Math.round(hit.score * 1e4) / 1e4,
-        floor
-      })),
-      filtered,
-      suggestion: suggestionFor(reason, source)
-    },
-    margin: 0,
-    ambiguous: false,
-    filtered,
-    floor
-  };
-}
-function suggestionFor(reason, source) {
-  const where = source ? `\`${source}\`` : "the configured source";
-  switch (reason) {
-    case "no_candidates":
-      return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
-    case "below_floor":
-      return `Nothing in ${where} scored above the calibrated relevance floor. The closest candidates are listed with their scores; none of them is a match. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
-    case "all_filtered":
-      return `Every candidate in ${where} was withheld \u2014 see \`filtered\` for why. Most commonly the skill publishes no installable SKILL.md link.`;
-  }
-}
 
 // packages/skill-summon/src/data/skill-index-source.ts
 import { readFile as readFile3 } from "node:fs/promises";
@@ -22979,6 +23262,11 @@ function renderSummonCard(skill, ranking) {
     lines.push(
       `  Match: ${skill.retrieval.matchKind} \xB7 score ${skill.retrieval.score.toFixed(2)} \xB7 margin ${skill.retrieval.margin.toFixed(2)}`
     );
+    if (!skill.retrieval.classified) {
+      lines.push(
+        "  Classification: the tree has not filed this skill under a generic node yet \u2014 it is indexed, but its bucket and trust context are missing."
+      );
+    }
   }
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
@@ -23404,6 +23692,7 @@ function disclosureById(decision, query) {
         score: Math.round(hit.score * 1e4) / 1e4,
         margin: decision.margin,
         matchKind: hit.matchKind,
+        classified: hit.doc.classified,
         nameMatchesQuery: normalize(hit.doc.name) === normalizedQuery || normalize(hit.doc.id) === normalizedQuery || normalize(hit.doc.catalogRef ?? "") === normalizedQuery || normalizedQuery.includes(normalize(hit.doc.name))
       }
     ])
@@ -23797,6 +24086,7 @@ function createSkillSummonMcpServer({
     sessionPromise ??= resolveSession().then(({ session }) => session);
     return sessionPromise;
   }
+  registerSkillResources(server, service);
   server.registerTool(
     "summon",
     {
@@ -23839,6 +24129,97 @@ function createSkillSummonMcpServer({
   );
   return server;
 }
+function registerSkillResources(server, service) {
+  server.registerResource(
+    "skill-index",
+    "skill://index.json",
+    {
+      title: "Skill index",
+      description: "Every skill this server can summon: id, name, description, tags, trust and reachability, from the committed offline index. Metadata only \u2014 summon materializes the body.",
+      mimeType: "application/json"
+    },
+    async (uri) => {
+      const { index, source } = await service.skillIndex();
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                source,
+                generatedAt: index.generatedAt,
+                stale: isStale(index),
+                count: index.docs.length,
+                // `retrieval` is index data and is never displayed (SPEC §2.2),
+                // so it does not leave through this surface either.
+                skills: index.docs.map((doc) => ({
+                  uri: skillUri(doc.id),
+                  id: doc.id,
+                  name: doc.name,
+                  ...doc.title ? { title: doc.title } : {},
+                  description: doc.description,
+                  tags: doc.tags,
+                  ...doc.level ? { level: doc.level } : {},
+                  reachable: doc.installable || doc.suiteComponents.length > 0,
+                  classified: doc.classified,
+                  arbor: doc.arbor
+                }))
+              },
+              null,
+              2
+            )
+          }
+        ]
+      };
+    }
+  );
+  server.registerResource(
+    "skill",
+    new ResourceTemplate("skill://{contributor}/{slug}/SKILL.md", { list: void 0 }),
+    {
+      title: "One skill's index entry",
+      description: "Metadata for a single skill, from the committed offline index. The body is materialized by summon, not served here.",
+      mimeType: "application/json"
+    },
+    async (uri, variables) => {
+      const { index, source } = await service.skillIndex();
+      const id = `${String(variables.contributor)}/${String(variables.slug)}`;
+      const doc = index.docs.find((entry) => entry.id === id);
+      if (!doc) {
+        throw new Error(`No skill '${id}' in the index for ${source}.`);
+      }
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                id: doc.id,
+                name: doc.name,
+                ...doc.title ? { title: doc.title } : {},
+                contributor: doc.contributor,
+                description: doc.description,
+                tags: doc.tags,
+                links: doc.links,
+                trust: doc.trust,
+                reachable: doc.installable || doc.suiteComponents.length > 0,
+                classified: doc.classified,
+                ...doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {},
+                // Not built. Routing is relevance only and every surface says so.
+                arbor: doc.arbor,
+                source
+              },
+              null,
+              2
+            )
+          }
+        ]
+      };
+    }
+  );
+}
 function toolResult(outcome) {
   return {
     content: [
@@ -23851,15 +24232,14 @@ function toolResult(outcome) {
 function resourceLinks(outcome) {
   return outcome.summoned.map((skill) => ({
     type: "resource_link",
-    uri: skillUri(skill.source ?? outcome.source, skill.id),
+    uri: skillUri(skill.id),
     name: skill.name,
-    ...skill.contributor ? { description: `${skill.name} \u2014 ${skill.contributor}` } : {},
+    description: `${skill.name} \u2014 ${skill.contributor} \xB7 ${skill.source ?? outcome.source}`,
     mimeType: "text/markdown"
   }));
 }
-function skillUri(source, id) {
-  const authority = source.replace(/^https?:\/\//u, "").replace(/\/+$/u, "");
-  return `skill://${authority}/${id}/SKILL.md`;
+function skillUri(id) {
+  return `skill://${id.replace(/^\/+/u, "")}/SKILL.md`;
 }
 function toolError(error2) {
   const message = error2 instanceof Error ? error2.message : String(error2);
