@@ -1,264 +1,316 @@
-# PLAN — five phases to a summoner you can trust
+# PLAN — six lanes, no master phase
 
-**Status:** Plan of record for Skill Heaven, 2026-09-03. Supersedes
-`GAIA_ROADMAP v5 (BUILD).md` for this product. Companions:
-[`INTENT.md`](INTENT.md) (why), [`SPEC.md`](SPEC.md) (contracts).
-
-Each phase is **independently shippable** and **independently valuable**. Each
-carries a **kill criterion** — the measurement that would stop it. A phase that
-cannot state what would falsify it is not a phase, it is a wish.
+**Status:** Derived from [`INTENT.md`](INTENT.md) and [`SPEC.md`](SPEC.md), 2026-09-04.
+**Supersedes:** the 2026-09-03 five-phase plan.
+**Scope:** the Gaia ecosystem — work is assigned to the repository that owns it.
 
 ---
 
-## Sequencing, and why this order
+## Why lanes instead of phases
 
-The instinct is to start with the retriever. That is wrong, and it is the
-mistake this plan is built to avoid.
+The superseded plan was a sequence: Phase 0 → 1 → 2 → 3 → 4 → 5. Two things
+went wrong with that shape, and both are structural rather than accidental.
 
-**Phase 0 is the gold set, and it comes first, because every threshold in
-`SPEC.md` is currently a guess.** `FLOOR`, `BAND`, `MARGIN`, the BM25 field
-weights, `T_low`, `T_high` — all marked PROVISIONAL. Without a measurement
-harness, Phase 1 ships new guesses in place of old ones and nobody can tell
-whether it helped. With one, every later phase is a decision instead of an
-opinion.
+**A phase pairing unequal work gets eaten by its tractable half.** Phase 4 was
+"Arbor + SEP". SEP-2640 is a written standard with a conformance surface; Arbor
+was an open research question. The SEP half shipped completely and the Arbor
+half shipped nothing. SPEC INV-16 now forbids that pairing.
 
-It is also the cheapest phase, and it produces the one artifact that makes the
-"declines correctly" gate possible at all: the 20 unanswerable queries that
-calibrate the floor.
+**A sequence makes independent work falsely dependent.** Retrieval quality,
+Arbor consumption, and standards conformance share almost no surface. Ordering
+them meant the slowest question gated the fastest one.
+
+So: **six lanes, each with its own owner, entry condition and kill criterion.**
+Lanes run concurrently unless a dependency is stated explicitly. A blocked lane
+blocks itself and nothing else.
 
 ```
-Phase 0  GROUND TRUTH ──▶ Phase 1  INDEX + RANK + REFUSE ──┬──▶ Phase 2  SEMANTIC
-   the ruler                    the product fix            │      (conditional)
-                                                           ├──▶ Phase 3  ULTRA
-                                                           └──▶ Phase 4  ARBOR + SEP
+  R  REACH          retrieval quality, refusal, freshness      gaia-skill-heaven
+  A  ARBOR          consume canonical profiles honestly        gaia-skill-heaven ← gaia-skill-tree
+  G  GRAPH          the interaction-edge contract              gaia-skill-tree
+  S  STEER          Heaven / Hell / Ultra as behavior          gaia-skill-heaven
+  E  EVIDENCE       one closed loop, demand-driven             gaia-research
+  X  STANDARDS      SEP / MCP conformance, isolated            gaia-skill-heaven
+
+     R ────────────────────────────────────────────────►  independent
+     A ──────────► needs a published profile
+     G ──────────► upstream contract work
+     S ──────────► degraded now; behavior-aware after A+G
+     E ──────────► needs one real uncertainty, not a campaign
+     X ──────────► independent, never joins A or G
 ```
 
-Phases 2, 3 and 4 are parallel after Phase 1 and are ordered by value, not
-dependency. **Phase 2 is conditional**: if Phase 1 alone clears G1 comfortably,
-Phase 2 does not ship.
+---
+
+## The three rules this plan is built to satisfy
+
+**1. No benchmaxxing.** No lane requires stamping the catalogue, pre-labelling
+skills, exhaustive benchmarking, or a coverage percentage. Every Arbor-side
+exit criterion is *one real path*, not a fraction of the corpus. INTENT §11 is
+explicit that the evidence loop is deliberately slower than computing a score,
+and that this is a feature.
+
+**2. No rank-ordered work.** No lane sequences by stars, Trust Magnitude or
+grade (SPEC INV-2). Beyond violating the Tree separation, it re-churns on every
+recalibration — Yggdrasil III moved `level` on 76 skills and `trustMagnitude` on
+154 in a single PR.
+
+**3. Unknown is shippable.** Every lane has a defined degraded state that is
+honest and disclosable (SPEC INV-8, INV-13). No lane is allowed to block on
+evidence that does not exist yet; it falls back and says so.
 
 ---
 
-## Phase 0 — Ground truth
+## Lane R — Reach
 
-**Goal:** be able to tell whether anything we do next is an improvement.
+**Owner:** `gaia-skill-heaven` · **Entry:** open · **Status:** substantially built
 
-**Ships:** `packages/core/bench/` containing the gold set, the runner, the
-baseline ledger, and a one-line command in the README.
+Retrieval was the one thing the superseded programme got right, and INTENT §14
+says to preserve it. This lane finishes it and then stops growing.
 
-| # | Work |
-|---|---|
-| 0.1 | **100 gold queries.** Hand-written capability gaps in the register an agent uses, each labelled with the correct skill id. Drawn across the corpus with 5★/4★/3★ over-represented, since those are the ones people reach for. Human-written — **not** generated from the documents. |
-| 0.2 | **20 unanswerable queries.** Plausible capability gaps nothing in the corpus covers. These calibrate `FLOOR` (SPEC §4.4) and gate G2. |
-| 0.3 | **The runner.** Zero-dependency; scores a ranker against the gold set, emits per-query JSONL, computes MRR + recall@5, runs the paired bootstrap. |
-| 0.4 | **The baseline.** Run today's `scoreMatch` against the gold set and commit the result. This number is the thing everything else is compared to, and it is worth knowing precisely how bad it is. |
-| 0.5 | **Offline harness.** The runner must work with egress blocked — which requires a committed corpus snapshot, which is the first draft of Phase 1's index. |
+### Carried forward
 
-**Kill criterion:** if today's baseline MRR is already above ~0.85, retrieval is
-not the bottleneck and this whole plan is aimed at the wrong problem. Stop,
-publish the finding, re-diagnose from the session logs.
+The improved offline index · build-time expansion · BM25F or a measured
+successor · explicit refusal and `noMatch` · reproducible evaluation ·
+offline-by-construction · freshness and coverage tooling · the negative findings ·
+the registry and installability fixes the index build uncovered.
 
-**Effort:** small. The gold set is the only slow part and it is a day of careful
-human work, not an engineering project.
+### Work
 
----
-
-## Phase 1 — The Index, the ranker, and the refusal
-
-**Goal:** the product fix. This is the phase that closes #104 and #103 and makes
-`/summon` trustworthy.
-
-**Ships:** a committed `skill-index.json`, BM25F ranking, an absolute floor with
-`noMatch`, `source` and `preview` arguments, `structuredContent`, and a card
-that discloses mismatch, source and index age.
-
-| # | Work | Closes |
+| # | Item | Note |
 |---|---|---|
-| 1.1 | **Index builder** in `packages/core` → `plugins/skill-heaven/data/skill-index.json`, per SPEC §2. CI regenerates and fails on drift, exactly as the MCP bundle already does. | #103 |
-| 1.2 | **Offline-first resolution.** The committed index is the read path. A network fetch is a refresh into the session root, never a precondition. | #103 |
-| 1.3 | **BM25F ranker** (SPEC §3.1) replacing `scoreMatch` for summon ranking. `scoreMatch` stays where the service layer still uses it until 1.7. | |
-| 1.4 | **Exact-name fast path** (SPEC §3.4). | #104 |
-| 1.5 | **`source` argument** — per-call override, echoed on the card, hard error when unresolvable. | #104 |
-| 1.6 | **Absolute floor + `noMatch`** with `topCandidates` and `filtered` reasons (SPEC §4.1–4.2). Floor calibrated against Phase 0's unanswerable set. | #104 |
-| 1.7 | **Retrieval expansion** (SPEC §2.3): the offline generation script, the round-trip filter, and the first stamped batch — **5★ then 4★ then 3★**. | |
-| 1.8 | **`preview` argument** — rank and disclose, no disk write. | |
-| 1.9 | **`structuredContent` + `outputSchema` + `resource_link`** (SPEC §5.2–5.3). | |
-| 1.10 | **Card additions**: name-mismatch line, source line, index-freshness line. | #104 |
-| 1.11 | **Security invariants** (SPEC §10): summoned content is data, the card is generated from index fields, nothing auto-executes. | #85 |
-| 1.12 | **Session log** `summon-log.jsonl` in the session root — local only, never transmitted. | groundwork for #93 |
+| R1 | Consume an upstream installability determination instead of URL-shape heuristics | SPEC §3.5, Q5. Largest single miss class in the current evaluation |
+| R2 | Replace the coverage-sensitive absolute admission floor with a scale-free criterion | SPEC Q6. The present floor moves when corpus coverage moves, which makes its calibration perishable |
+| R3 | Human review of the gold labels | SPEC Q7. Until then, only the *delta between systems* is load-bearing |
+| R4 | Rebuild against the Yggdrasil III corpus when `gaia-skill-tree#1688` lands | 13 new documents; expansion regeneration for those alone |
+| R5 | Decide the retrieval artifact's name | SPEC Q4 / INV-15 — it currently collides with the HH Index |
 
-**Gates:** G1 (MRR delta CI excludes zero), G2 (≥90% correct refusal), G3 (full
-gold set green with egress blocked). All three from Phase 0's harness.
+### Kill criterion
 
-**Kill criterion for 1.7 specifically:** if expansion does not move MRR beyond
-what 1.3 delivers alone, drop it and keep the index without it. The index is
-independently worth having for #103; expansion has to earn its own keep.
+If R1 and R2 land and the paired delta against the prior ranker no longer
+excludes zero, retrieval is done improving and further work on this lane stops.
+Reach is a front door. It is not the product.
 
-**Effort:** the bulk of the plan. Split into at least four PRs — index builder,
-ranker, refusal + arguments, expansion — so review stays tractable.
+### Explicitly not in this lane
+
+Dense retrieval (measured, rejected — reopening needs a new argument, not a new
+attempt) · a leaderboard · per-contributor breakdowns · cross-validation ·
+any ranking signal drawn from Yggdrasil or Arbor (SPEC INV-5).
 
 ---
 
-## Phase 2 — Semantic recall *(conditional)*
+## Lane A — Arbor consumption
 
-**Goal:** close the residual vocabulary gap that lexical retrieval cannot,
-without taking a runtime dependency.
+**Owner:** `gaia-skill-heaven`, consuming `gaia-skill-tree`
+**Entry:** at least one published `gaia.arbor-profile/v1`
 
-**Precondition:** Phase 1 lands and G1 is measured. If Phase 1's MRR clears the
-bar with room, **this phase does not ship** and its budget goes to Phase 4.
+The smallest honest implementation, and nothing more.
 
-| # | Work |
+### Work
+
+| # | Item |
 |---|---|
-| 2.1 | **Failure analysis.** Take Phase 1's misses and classify them. If they are mostly vocabulary mismatch, vectors help. If they are mostly *missing skills*, vectors change nothing and the answer is curation, not retrieval. This step decides the phase. |
-| 2.2 | **Static token-vector table** (SPEC §3.2 route 1): committed table, query embedding by token-vector mean, pure arithmetic, no npm dependency, no ONNX, no WASM. |
-| 2.3 | **RRF fusion** at `k = 60` over the lexical and dense rankings (SPEC §3.3). |
-| 2.4 | **Re-measure.** Same harness, same gold set, paired bootstrap against Phase 1. |
+| A1 | Remove the repo-local Arbor type introduced under the superseded SPEC. It forks `gaia.arbor-profile/v1` and must not set precedent |
+| A2 | Consume `gaia.arbor-profile/v1` verbatim — `support` preserved, `facet` as independent facets, `conditions` carried with every claim, digests retained |
+| A3 | Disclosure: state which lenses informed a decision and which were absent (SPEC INV-13) |
+| A4 | Distinguish unknown from negative at every surface (SPEC INV-4) |
 
-**Kill criterion:** if 2.1 shows misses are dominated by absent skills, or if 2.4
-shows no significant delta over Phase 1, drop dense retrieval entirely and record
-it as a negative result (D8). *A measured "we tried it and it didn't help" is a
-better artifact than an unmeasured feature.*
+### Exit
 
-**Effort:** medium, and genuinely optional. It is written down mainly so nobody
-builds it before Phase 1 is measured.
+Skill Heaven consumes canonical Arbor profiles, invents no fields, preserves
+upstream support state, derives no behavioral truth from receipts, exposes no
+Yggdrasil prestige as Arbor behavior, and discloses absence.
+
+**If zero profiles are published, this lane's correct output is A1, A3, A4 and a
+consumption path with nothing to consume.** That is a complete and honest
+result, not a blocked one.
+
+### Kill criterion
+
+If implementing A2 requires inventing a field, stop and raise it upstream. The
+missing field is upstream's to define. Adding it here is the exact debt this
+plan exists to avoid.
 
 ---
 
-## Phase 3 — Ultra, stable
+## Lane G — The interaction graph
 
-**Goal:** make the crown rung something the founder leaves switched on.
+**Owner:** `gaia-skill-tree` · **Entry:** open · **Blocks:** the behavior-aware
+half of Lane S
 
-**Ships:** the deterministic controller of SPEC §6, wired into
-`/skill-ultra`, with an explainability line on every rung change.
+Arbor's four ratified contracts are all per-skill. The interaction graph —
+`stabilizes`, `amplifies`, `conflicts`, `recovers`, `compresses-after`,
+`unlocks`, `duplicates` — is specified in ENDGAME §8 and has **no contract and
+no published projection**. It is the dominant Arbor structure and the thing
+Skill Hell needs to mean more than a longer list.
 
-| # | Work |
+### Work
+
+| # | Item |
 |---|---|
-| 3.1 | **Margin plumbing.** `margin` in `structuredContent` (already Phase 1) surfaced to the controller via `preview`. |
-| 3.2 | **The controller**: EWMA → hysteresis dead band → dwell → single-step clamp. Pure function, unit-tested against synthetic margin traces including adversarial oscillating input. |
-| 3.3 | **Explainability line** on every rung change: smoothed margin, threshold crossed, new rung. |
-| 3.4 | **Threshold calibration** from real `summon-log.jsonl` traces, replacing the PROVISIONAL values in SPEC §6.3. |
-| 3.5 | **Stability test as a gate**: replay a recorded margin trace and assert the rung changes fewer than *N* times. Oscillation becomes a test failure, not a vibe. |
+| G1 | An edge contract, alongside the existing four, rejecting prestige recursively as they do |
+| G2 | Edge provenance on the same declaration → observation → governed interpretation axis. An edge is a claim under conditions, not a fact |
+| G3 | Separation from Yggdrasil fusion enforced structurally, not by convention (SPEC INV-9) |
+| G4 | A published projection consumers can read |
 
-**Kill criterion:** if the controller changes rung more than once per `DWELL`
-window on real traces after calibration, the margin signal is too noisy to
-control on. Fall back to `ultra` = "Hell with disclosure" and say so plainly.
+### Why it is not in this repository
 
-**Explicitly out of scope:** bandits, learned classifiers, per-user models,
-cross-session state. Revisiting that needs a fresh decision against data
-`summon-log.jsonl` will by then have accumulated.
+Writing an edge schema in `gaia-skill-heaven` would fork Arbor's ontology in the
+consumer — the precise mistake this replan corrects. Recorded as SPEC Q1.
 
-**Effort:** small. The controller is a few dozen lines. The tests are the work.
+### Degraded state
+
+Until G4 exists, composition is relevance-only and discloses it (SPEC §5.1).
+Acceptable, indefinitely.
 
 ---
 
-## Phase 4 — Arbor's first fill, and the standard
+## Lane S — Steering
 
-**Goal:** start the one dataset nobody else in the ecosystem has, and get on the
-right side of the MCP skills standard.
+**Owner:** `gaia-skill-heaven` · **Entry:** open for correctness work; the
+behavior-aware half needs A + G
 
-| # | Work |
+Two halves, and only the first can start now.
+
+### S-now — correctness of what exists
+
+| # | Item |
 |---|---|
-| 4.1 | **`polarity` contract** in `gaia-skill-tree`'s `registry/arbor/` (SPEC §8.1). One derived field, not thirteen. Derived-only — no contributor authors it. |
-| 4.2 | **Receipt → polarity derivation** from the Phase 0/1 benchmark record: whether a skill helps when converging, when exploring, or both. |
-| 4.3 | **Stamp 5★ (5), then 4★ (37), then 3★ (96)** — founder direction, and useful from the first batch. |
-| 4.4 | **Summon consumes `arbor.polarity`** for `surface` routing when present, falling back to `disable-model-invocation` when absent, and **disclosing which one it used** on the card. |
-| 4.5 | **`skill://` identifiers + resource surface** (SPEC §8.2): canonical ids and `resource_link` now; `skill://index.json` as an MCP resource next. |
-| 4.6 | **SEP-2640 watch.** Re-read the SEP at each phase boundary. Implement `skills/list` / `skills/get` only once the draft stops moving. |
+| S1 | Ultra must not read `noMatch` as a reason to explore (SPEC INV-11). A retrieval refusal is not a behavioral signal |
+| S2 | Ultra must not read retrieval-score jitter as posture evidence (SPEC INV-3) |
+| S3 | Every transition explains itself: signal, policy, from-posture, to-posture |
+| S4 | Holding position is a first-class outcome, and the common one |
+| S5 | Recover and reopen are real transitions, not absences |
+| S6 | Heaven and Hell state honestly that they currently differ by breadth of relevance results (SPEC §6.2). No surface presents stamp-gated routing as running |
 
-**Kill criterion:** if benchmark receipts cannot separate skills by polarity —
-if every skill looks dual-safe — then polarity is not a real dimension at this
-scale. Record the negative result and leave `arbor` null rather than shipping a
-field that always says the same thing.
+The deterministic controller work survives a corrected intent where it remains
+valid after semantic review. Its calibrated parameters are code-side and dated;
+per SPEC §0.1 they are not normative here.
 
-**Hard constraint, restated:** until receipts exist, `arbor` is `null` and every
-surface says "relevance-only." This phase builds the stamps. It is not
-permission to describe stamp-gated routing as running.
+### S-later — behavior-aware, needs Lane A and Lane G
 
-**Effort:** medium, and the highest long-term value in the plan. It is also the
-only phase that touches `gaia-skill-tree`, on `dev/integration-ygg3-playbooks-2026-09-02`
-lineage.
+**The completion bar: one runtime path uses Arbor interaction evidence to change
+a composition decision** — avoid a conflict, prefer an amplifier, drop a
+duplicate, add a recovery capability, or unlock a missing capability.
 
----
+One path. On real evidence. Not coverage, and not every gap.
 
-## Phase 5 — The entropy curve *(research, deliberately last and small)*
+### Kill criterion
 
-Only after Phases 1–4. Three arms (`low`, `high`, `max`), 20 real tasks with
-objective pass/fail, cost via `gaia-research/skill-cost`. Reported as a curve
-with error bars — or as *"no turn detected at this scale,"* which is a real
-finding and gets published as one.
-
-This is last because the N13 thesis is about a product that reliably summons.
-Measuring the entropy curve on a retriever that picks the wrong skill measures
-the retriever, not the curve.
+If S-later cannot demonstrate one such path once A and G land, Heaven and Hell
+remain breadth directions and the plan says so plainly rather than dressing
+relevance up as behavior.
 
 ---
 
-## What this plan explicitly does not do
+## Lane E — The evidence loop
 
-Stated so it does not creep in:
+**Owner:** `gaia-research` · **Entry:** one concrete runtime uncertainty
 
-- **Does not touch the ladder.** No new rung, no rename, no count on a rung.
-- **Does not add a second MCP tool.** Capability arrives as arguments and
-  resources. (SPEC §5.1.)
-- **Does not ship a runtime model.** No ONNX, no WASM, no npm dependency. If
-  semantic recall cannot be had within that constraint, it does not ship.
-- **Does not build the full Arbor node.** One derived field, not thirteen.
-- **Does not implement a draft SEP.** Tracked, not built, until it stabilises.
-- **Does not build a learned Ultra.**
-- **Does not rewrite the site, the doors, or the launcher.**
+**This lane does not start from scratch, and must not duplicate what exists.** A
+scout of the founder docs on 2026-09-04 found the methodology already drafted
+and partly ratified: ROADMAP **Program 3** carries the HH Index's standing goal,
+its ten-question target set and kill criteria KC1–KC6; `hh-ledger/v1` is frozen
+with its validator as the hard gate; the R0→R5 phase sequence (dose census →
+rubric + seed labels → objective corpus → paired trial → validate labels →
+stamps) is written; and `hh-benchmark/methodology.md` §5 specifies that stamps
+are earned by trial rather than assigned. Lane E's job is to *close one loop
+against that method*, not to redesign it.
+
+The lane most at risk of becoming a treadmill, so its scope is fixed at **one
+closed path**:
+
+```
+runtime observation → concrete uncertainty → focused benchmark → receipt
+  → governed interpretation → updated Arbor projection → changed runtime knowledge
+```
+
+### Work
+
+| # | Item |
+|---|---|
+| E1 | Identify one real uncertainty from runtime observation. Not a survey — one question worth answering. The R1 seed set and stamp rubric are the natural starting corpus |
+| E2 | A focused benchmark targeting one declaration claim: control and treatment arms, same closed environment, pinned artifacts |
+| E3 | A receipt: conclusion-free, per the ratified contract |
+| E4 | A governed interpretation — a curator record, the only thing that may set `support` |
+| E5 | Show the updated projection changing a runtime decision |
+
+### The rule that keeps it honest
+
+> **Observation is not interpretation.**
+
+A receipt may support an interpretation. It does not become one. No threshold in
+any repository may silently convert telemetry into behavioral truth.
+
+### Exit
+
+One path demonstrated end to end. **Not** *n* skills covered, not a coverage
+percentage, not a benchmark suite. The proof is that the loop closes at all.
+
+### Kill criterion
+
+If the loop cannot close on one skill, more skills will not help. Report that
+as a finding (D8) and stop rather than widening.
 
 ---
 
-## Umbrella issues
+## Lane X — Standards
 
-One umbrella per phase on `gaia-research/gaia-skill-heaven`, each holding its
-work items as a checklist and each linking back to the relevant `SPEC.md`
-section. Existing issues are absorbed rather than duplicated:
+**Owner:** `gaia-skill-heaven` · **Entry:** open · **Isolation: mandatory**
 
-| Umbrella | Issue | Absorbs |
-|---|---|---|
-| Phase 0 — Ground truth | [#108](https://github.com/gaia-research/gaia-skill-heaven/issues/108) | *(new)* |
-| Phase 1 — Index, rank, refuse | [#109](https://github.com/gaia-research/gaia-skill-heaven/issues/109) | #103, #104, #85 (invariants), #93 (groundwork) |
-| Phase 2 — Semantic recall | [#110](https://github.com/gaia-research/gaia-skill-heaven/issues/110) | *(conditional — may not ship)* |
-| Phase 3 — Ultra, stable | [#111](https://github.com/gaia-research/gaia-skill-heaven/issues/111) | *(new)* |
-| Phase 4 — Arbor + SEP-2640 | [#112](https://github.com/gaia-research/gaia-skill-heaven/issues/112) | #47 (surface copy follows the data) |
-| Phase 5 — Entropy curve | [#113](https://github.com/gaia-research/gaia-skill-heaven/issues/113) | *(research)* |
+SEP-2640 and skills-over-MCP conformance, with its own conformance tests.
 
-Plan PR: [#107](https://github.com/gaia-research/gaia-skill-heaven/pull/107).
+**This lane may never merge with Lane A or Lane G** (SPEC INV-16). Not for one
+sprint, not for one PR, not because both touch skill metadata. That pairing is
+what produced the Arbor gap this replan corrects.
 
-Out-of-scope open issues stay where they are and are untouched by this plan:
-#94, #88, #87, #86 (platform/install), #79, #73 (frontend), #41, #35, #34, #33
-(delivery/CI), #29, #25 (launcher), #26 (benchmark multiplexer), #59, #72, #53,
-#40, #77 (packaging).
+Standards compatibility is infrastructure. It is not a conceptual pillar, and it
+does not compete with Arbor for a phase.
+
+Carried forward: the SEP-compatible resource surfaces that remain conformant as
+the standard settles. When the standard moves, this lane moves. Nothing else does.
 
 ---
 
-## Risk register
+## What this plan does not do
 
-| Risk | Signal it is happening | Response |
-|---|---|---|
-| **The gold set is written to flatter the design** | Baseline scores suspiciously low; queries read like the descriptions | Write queries *before* touching the ranker, from real session transcripts where possible. Phase 0 lands before Phase 1 for exactly this reason. |
-| **Expansion becomes an LLM-slop generator** | Expansions read generically; MRR barely moves | The round-trip filter (SPEC §2.3) plus a diffable committed artifact. Cap and attribute every batch. |
-| **The floor is set to make the gate pass** | `FLOOR` tuned after seeing G2 fail | Floor is calibrated on the unanswerable set only, and the separation achieved is written into the index. Poor separation is a finding, not a knob. |
-| **The index goes stale silently** | Card never mentions age | Staleness is a card line and a CI drift check from day one (1.1, 1.10). |
-| **Ultra oscillates** | Rung changes every gap | Stability is a test (3.5), not a review opinion. |
-| **Arbor grows thirteen dimensions before it has one** | Schema work outpaces receipts | Phase 4 ships exactly one field. The others need a fresh decision. |
-| **SEP-2640 moves under us** | Our `skill://` shape diverges | Re-read at each phase boundary (4.6). We adopt only what is spec-legal today. |
-| **Scope creep into the launcher/site** | PRs touching `packages/*-zero` or `packages/site` | Any such change is out of scope and a signal the design is wrong (SPEC §0). |
+Stated so the boundary is checkable, per INTENT §16:
+
+no rewrite of Skill Heaven · no new ladder · no new prestige system ·
+no Yggdrasil III work in this repository (it is upstream's, and it is landing) ·
+no global capability score · no exhaustive benchmarking · no pre-stamping the
+catalogue · no runtime embedding dependency · no model-decided loadouts by
+default · no repository merge · no HH Index formula defined ahead of evidence ·
+no retrieval improvement held back waiting for Arbor
 
 ---
 
 ## Definition of done
 
-Skill Heaven is **complete for this cycle** when all of the following hold:
+Per INTENT §15, six independent capabilities. Not one metric.
 
-1. G1, G2, G3 pass and the numbers are committed with their ledger.
-2. `/summon` resolves an exact name, honours an explicit `source`, and refuses
-   when it should — #104 closed against a test, not a vibe.
-3. A summon works with the network down — #103 closed structurally.
-4. `ultra` runs a full session without oscillating, and can say why it moved.
-5. `arbor.polarity` is stamped for 3★+ **or** the negative result is recorded.
-6. Every surface's claim about what is running matches what is running.
+| | Capability | Lane | Degraded state |
+|---|---|---|---|
+| **A** | Reach works — the right capability, or an honest refusal, offline | R | — |
+| **B** | Arbor consumption is honest — no invented fields, unknown ≠ negative | A | consume nothing, disclose it |
+| **C** | Composition is behavior-aware on at least one path | S-later + G | relevance-only, disclosed |
+| **D** | Heaven and Hell mean behavior, not list length | S + G | breadth directions, disclosed |
+| **E** | Ultra governs rather than guesses | S-now | hold position |
+| **F** | The evidence loop closes once, end to end | E | recorded as not yet closed |
 
-Point 6 is not decoration. It is the standing rule this repo has held all the
-way through, and it is the one that makes the other five believable.
+**A, B, E and the disclosure obligations are reachable now.** C, D and F depend
+on evidence and contracts that do not exist yet, and the plan's job is to keep
+them honest until they do — not to manufacture them.
+
+---
+
+## Risk register
+
+| Risk | Mitigation |
+|---|---|
+| Arbor stays empty and the layer never becomes behavior-aware | Lane A's degraded state is a complete result; Lane G names what is actually missing rather than substituting for it |
+| Retrieval work expands to fill the space Arbor left | Lane R has a kill criterion and an explicit not-in-scope list |
+| A tractable lane eats an open one again | INV-16 forbids the pairing; lanes carry separate owners and gates |
+| Upstream contracts change under us | SPEC §0.2 references upstream rather than restating it; a change lands in one place |
+| The meta churns and the layer churns with it | SPEC INV-5 keeps prestige out of ranked fields — measured against Yggdrasil III at 287 of 291 modified skills costing nothing |
+| The evidence loop becomes a coverage campaign | Lane E's exit is one path, and its kill criterion forbids widening |

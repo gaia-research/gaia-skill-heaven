@@ -1,6 +1,14 @@
+import { normalize, scoreMatch } from "skill-zero";
 import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
 
 import type { GaiaRegistrySource } from "./data/source.js";
+import {
+  indexFromSnapshot,
+  loadCommittedIndex,
+  resolveIndex,
+  sameSource,
+  type ResolvedIndex,
+} from "./data/skill-index-source.js";
 import {
   TREE_CONTRACT_VERSION,
   type GaiaRegistrySnapshot,
@@ -23,6 +31,13 @@ export type GaiaServiceOptions = {
   now?: () => Date;
   maxDataAgeMs?: number;
   serverVersion?: string;
+  /**
+   * The source this service was configured for. Supplied by the caller that
+   * resolved it, so `skillIndex()` can answer from the committed index without
+   * a network round trip. Omitted (tests, in-memory sources) means "load and
+   * build from whatever this source returns".
+   */
+  sourceUrl?: string | undefined;
 };
 
 type ScoredResult = SearchResultItem & { score: number };
@@ -32,12 +47,39 @@ export class GaiaService {
   readonly #now: () => Date;
   readonly #maxDataAgeMs: number;
   readonly #serverVersion: string;
+  readonly #sourceUrl: string | undefined;
 
   constructor(source: GaiaRegistrySource, options: GaiaServiceOptions = {}) {
     this.#source = source;
     this.#now = options.now ?? (() => new Date());
     this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
     this.#serverVersion = options.serverVersion ?? VERSION;
+    this.#sourceUrl = options.sourceUrl;
+  }
+
+  /**
+   * The index summon ranks against (SPEC §2.2, PLAN 1.2).
+   *
+   * With no override and a configured source the committed index was built
+   * from, this returns that index and touches no network at all — the point of
+   * the whole exercise. An explicit `override` names a different tree or fleet
+   * and IS resolved over the network; failing to resolve it is an error, never
+   * a quiet fallback to the configured source (SPEC §5.1).
+   */
+  async skillIndex(override?: string | undefined): Promise<ResolvedIndex> {
+    if (override !== undefined) return resolveIndex({ source: override });
+
+    if (this.#sourceUrl !== undefined) {
+      const committed = await loadCommittedIndex();
+      if (sameSource(this.#sourceUrl, committed.source)) {
+        return { index: committed, source: committed.source, origin: "committed" };
+      }
+    }
+
+    const snapshot = await this.#source.load();
+    const sourceUrl =
+      this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
+    return { index: indexFromSnapshot(snapshot, sourceUrl), source: sourceUrl, origin: "fetched" };
   }
 
   async search(input: SearchInput): Promise<SearchResult> {
@@ -407,18 +449,26 @@ function toNamedSummary(skill: NamedSkill): NamedSkillSummary {
   };
 }
 
-function normalize(value: string): string {
-  return value
-    .toLocaleLowerCase("en-US")
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 export function starCount(level: string | undefined): number {
   if (!level) return -1;
   const match = /^(\d)★/.exec(level);
   return match?.[1] === undefined ? -1 : Number(match[1]);
+}
+
+/**
+ * Whether summon can deliver this skill at all. A suite root carries no
+ * `links.github` of its own — its components do (gaia-skill-tree CONTRIBUTING
+ * §12) — so gating candidates on `isInstallable` alone dropped all 20 suites
+ * in the corpus from every result, silently. Payload-level installability is
+ * still `isInstallable`; this is the ranking gate.
+ */
+export function isSummonable(skill: NamedSkill): boolean {
+  // The registry-only guard lives at the top level, while `isInstallable`
+  // reads `links.installable` — so before this check a registry-only skill
+  // ranked, was chosen, and only then refused inside installSingle. Now it is
+  // withheld with a reason instead of wasting the summon.
+  if (skill.installable === false) return false;
+  return isInstallable(skill) || (skill.suiteComponents?.length ?? 0) > 0;
 }
 
 export function isInstallable(skill: NamedSkill): boolean {
@@ -431,24 +481,8 @@ export function isInstallable(skill: NamedSkill): boolean {
   );
 }
 
-export function scoreMatch(
-  query: string,
-  weightedFields: ReadonlyArray<readonly [value: string, weight: number]>,
-): number {
-  const normalizedQuery = normalize(query);
-  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
-  let score = 0;
-
-  for (const [rawValue, weight] of weightedFields) {
-    const value = normalize(rawValue);
-    if (!value) continue;
-    if (value === normalizedQuery) score += weight * 10;
-    else if (value.includes(normalizedQuery)) score += weight * 5;
-    for (const token of tokens) {
-      if (value.split(" ").includes(token)) score += weight;
-      else if (value.includes(token)) score += weight / 2;
-    }
-  }
-
-  return score;
-}
+// `normalize` and `scoreMatch` live in `skill-zero` so the benchmark scores the
+// SAME function the product runs (packages/core/src/retrieval/lexical.ts). A
+// second copy here would drift, and the baseline number would stop meaning
+// anything. Re-exported because callers across this package import them here.
+export { normalize, scoreMatch };

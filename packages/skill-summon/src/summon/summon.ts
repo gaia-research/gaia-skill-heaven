@@ -1,7 +1,19 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
+import {
+  Bm25fRanker,
+  decide,
+  indexAgeDays,
+  isStale,
+  normalize,
+  type Decision,
+  type IndexedSkill,
+  type SkillIndex,
+} from "skill-zero";
+
 import type { NamedSkill } from "../domain/types.js";
+import type { ResolvedIndex } from "../data/skill-index-source.js";
 import { starCount } from "../service.js";
 import type { GaiaService } from "../service.js";
 import { trustFields } from "../trust.js";
@@ -14,14 +26,11 @@ import {
 import { parseGithubUrl } from "./giturl.js";
 import { materializeSkillDir } from "./materialize.js";
 import { PayloadCache } from "./payload-cache.js";
-import {
-  rankCandidatesWithDetails,
-  type RankingSummary,
-  type SummonSurface,
-} from "./rank.js";
+import { type RankingSummary, type SummonSurface } from "./rank.js";
+import { appendSummonLog } from "./log.js";
 import { elapsedSeconds, startTiming } from "./timing.js";
 import { reapSessions } from "./session.js";
-import type { InstalledSkill, SummonSession } from "./session.js";
+import type { InstalledSkill, RetrievalDisclosure, SummonSession } from "./session.js";
 
 const DEFAULT_LIMIT = 1;
 // There is NO upper cap. How many skills a gap warrants is the agent's call —
@@ -33,6 +42,34 @@ export type SummonOptions = {
   query: string;
   limit?: number | undefined;
   surface?: SummonSurface | undefined;
+  /** Override the configured Skill URL for this call. Unresolvable is an error, never a fallback. */
+  source?: string | undefined;
+  /** Rank and disclose without materialising anything to disk (SPEC §5.1). */
+  preview?: boolean | undefined;
+};
+
+/** One ranked candidate, disclosed without being installed (SPEC §5.1 `preview`). */
+export type PreviewedSkill = {
+  id: string;
+  name: string;
+  title?: string | undefined;
+  description: string;
+  level?: string | undefined;
+  sourceUrl?: string | undefined;
+  source: string;
+  retrieval: RetrievalDisclosure;
+};
+
+/** Retrieval disclosure attached to every result (SPEC §5.2 `ranking`). */
+export type RankingDisclosure = RankingSummary & {
+  /** Which signal decided surface routing — or `"none"` when nothing did. */
+  routing: "arbor.polarity" | "invocation" | "none";
+  indexGeneratedAt: string;
+  indexAgeDays: number | null;
+  stale: boolean;
+  /** "committed" needed no network to rank; "fetched" reached the named source. */
+  indexOrigin: "committed" | "fetched";
+  source: string;
 };
 
 export type SkippedCandidate = {
@@ -54,11 +91,20 @@ export type SuiteAttempt = {
 export type SummonOutcome = {
   query: string;
   surface: SummonSurface;
+  source: string;
   summoned: InstalledSkill[];
+  /** Populated only for `preview: true`. Nothing was written to disk. */
+  previewed: PreviewedSkill[];
+  /** Non-null when summon declined. It never returns the best of a bad set (#104). */
+  noMatch: Decision["noMatch"];
+  /** Every candidate withheld, with the reason. 80 of 274 skills are unreachable. */
+  filtered: Decision["filtered"];
+  /** `(top − next) / top` — the Ultra controller reads this (SPEC §6.2). */
+  margin: number;
   skipped: SkippedCandidate[];
   suites: SuiteAttempt[];
   sessionRoot: string;
-  ranking: RankingSummary;
+  ranking: RankingDisclosure;
   cards: string[];
   /** Wall-clock time for this whole invocation, seconds with ms precision. */
   totalSeconds: number;
@@ -68,7 +114,8 @@ type InstallContext = {
   session: SummonSession;
   registry: readonly NamedSkill[];
   payloadCache: PayloadCache;
-  ranking: RankingSummary;
+  ranking: RankingDisclosure;
+  disclosures: Map<string, RetrievalDisclosure>;
 };
 
 type InstallOutcome = {
@@ -92,7 +139,7 @@ type InstallOutcome = {
 export async function summon(
   service: GaiaService,
   session: SummonSession,
-  { query, limit = DEFAULT_LIMIT, surface = "hell" }: SummonOptions,
+  { query, limit = DEFAULT_LIMIT, surface = "hell", source, preview = false }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -105,17 +152,89 @@ export async function summon(
     );
   }
 
+  // The session root exists before anything else so that a `noMatch` and a
+  // `preview` are logged too — the Ultra controller needs the gaps that
+  // returned nothing at least as much as the ones that returned a skill.
   await reapSessions({ excludeRoots: [session.root] });
-  const registry = await service.namedSkills();
-  const ranked = rankCandidatesWithDetails(registry, trimmedQuery, surface);
-  const candidates = ranked.candidates;
   await session.ensureRoots();
+
+  // Offline-first: the committed index is the read path (SPEC §2.2). Only an
+  // explicit `source` we hold no index for reaches the network, and it fails
+  // loudly rather than falling back to the configured source.
+  const resolved = await service.skillIndex(source);
+  const decision = decide({
+    index: resolved.index,
+    query: trimmedQuery,
+    ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
+    surface,
+    source: resolved.source,
+  });
+  const ranking = disclose(resolved, decision);
+  const registry = resolved.index.docs.map(toNamedSkill);
+  const disclosures = disclosureById(decision, trimmedQuery);
+
+  if (decision.noMatch) {
+    const outcome: SummonOutcome = {
+      query: trimmedQuery,
+      surface,
+      source: resolved.source,
+      summoned: [],
+      previewed: [],
+      noMatch: decision.noMatch,
+      filtered: decision.filtered,
+      margin: 0,
+      skipped: [],
+      suites: [],
+      sessionRoot: session.root,
+      ranking,
+      cards: [],
+      totalSeconds: elapsedSeconds(runStartedAt),
+    };
+    await appendSummonLog(session, outcome);
+    return outcome;
+  }
+
+  if (preview) {
+    // Rank and disclose, no disk write. A flag rather than a second tool,
+    // because agent tool-selection accuracy degrades as the surface grows
+    // (SPEC §5.1).
+    const outcome: SummonOutcome = {
+      query: trimmedQuery,
+      surface,
+      source: resolved.source,
+      summoned: [],
+      previewed: decision.admitted.slice(0, limit).map((hit) => ({
+        id: hit.doc.id,
+        name: hit.doc.name,
+        ...(hit.doc.title ? { title: hit.doc.title } : {}),
+        description: hit.doc.description,
+        ...(hit.doc.level ? { level: hit.doc.level } : {}),
+        ...(hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {}),
+        source: resolved.source,
+        retrieval: disclosures.get(hit.doc.id) as RetrievalDisclosure,
+      })),
+      noMatch: null,
+      filtered: decision.filtered,
+      margin: decision.margin,
+      skipped: [],
+      suites: [],
+      sessionRoot: session.root,
+      ranking,
+      cards: [],
+      totalSeconds: elapsedSeconds(runStartedAt),
+    };
+    await appendSummonLog(session, outcome);
+    return outcome;
+  }
+
+  const candidates = decision.admitted.map((hit) => hit.doc);
 
   const ctx: InstallContext = {
     session,
     registry,
     payloadCache: new PayloadCache(),
-    ranking: ranked.ranking,
+    ranking,
+    disclosures,
   };
   const summoned: InstalledSkill[] = [];
   const skipped: SkippedCandidate[] = [];
@@ -140,16 +259,101 @@ export async function summon(
     }
   }
 
-  return {
+  const outcome: SummonOutcome = {
     query: trimmedQuery,
     surface,
+    source: resolved.source,
     summoned,
+    previewed: [],
+    noMatch: null,
+    filtered: decision.filtered,
+    margin: decision.margin,
     skipped,
     suites,
     sessionRoot: session.root,
-    ranking: ranked.ranking,
+    ranking,
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt),
+  };
+  await appendSummonLog(session, outcome);
+  return outcome;
+}
+
+function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosure {
+  const { index } = resolved;
+  const routingNote =
+    decision.routing === "arbor.polarity"
+      ? "Surface routing used measured Arbor polarity."
+      : decision.routing === "invocation"
+        ? "Surface routing used the tree's invocation declaration; Arbor has published no polarity."
+        : "Surface routing had no signal to use: neither Arbor polarity nor an invocation lane is published, so `surface` did not exclude anything.";
+  const floorNote =
+    decision.floor === null
+      ? "no calibrated relevance floor in this index — summon cannot yet decline on relevance"
+      : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
+  return {
+    // Heaven/Hell stamps are not built. Routing is relevance only, and this
+    // string is the surface that has to keep saying so.
+    mode: "relevance-only",
+    trustFields: [],
+    routing: decision.routing,
+    disclosure:
+      `Ranked by BM25F over the committed skill index; ${floorNote}. ` +
+      `The tree publishes no behavioural stamps, so no trust ordering is applied. ${routingNote}`,
+    indexGeneratedAt: index.generatedAt,
+    indexAgeDays: indexAgeDays(index),
+    stale: isStale(index),
+    indexOrigin: resolved.origin,
+    source: resolved.source,
+  };
+}
+
+/**
+ * `nameMatchesQuery` is false when the summoned skill is not the one the query
+ * named. #104 is exactly this case going unremarked, so it is computed once
+ * here and printed on the card.
+ */
+function disclosureById(decision: Decision, query: string): Map<string, RetrievalDisclosure> {
+  const normalizedQuery = normalize(query);
+  return new Map(
+    decision.admitted.map((hit) => [
+      hit.doc.id,
+      {
+        score: Math.round(hit.score * 10_000) / 10_000,
+        margin: decision.margin,
+        matchKind: hit.matchKind,
+        classified: hit.doc.classified,
+        nameMatchesQuery:
+          normalize(hit.doc.name) === normalizedQuery ||
+          normalize(hit.doc.id) === normalizedQuery ||
+          normalize(hit.doc.catalogRef ?? "") === normalizedQuery ||
+          normalizedQuery.includes(normalize(hit.doc.name)),
+      },
+    ]),
+  );
+}
+
+/** The index carries everything install needs; nothing else has to be fetched. */
+function toNamedSkill(doc: IndexedSkill): NamedSkill {
+  return {
+    id: doc.id,
+    name: doc.name,
+    ...(doc.title ? { title: doc.title } : {}),
+    contributor: doc.contributor,
+    ...(doc.genericSkillRef ? { genericSkillRef: doc.genericSkillRef } : {}),
+    ...(doc.catalogRef ? { catalogRef: doc.catalogRef } : {}),
+    ...(doc.invocation === "any" ? {} : { invocation: doc.invocation }),
+    origin: "tree",
+    status: "named",
+    ...(doc.level ? { level: doc.level } : {}),
+    description: doc.description,
+    tags: doc.tags,
+    links: { ...doc.links },
+    ...(doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {}),
+    evidence: [],
+    ...(doc.trust.trustNumber === undefined ? {} : { trustMagnitude: doc.trust.trustNumber }),
+    ...(doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {}),
+    ...(doc.registryOnly ? { installable: false } : {}),
   };
 }
 
@@ -385,6 +589,8 @@ async function installSingle(
       cache: "warm",
       cacheSource: "session",
       inspectUrl: inspectUrl(githubUrl, repoUrl),
+      source: ctx.ranking.source,
+      ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt),
@@ -509,6 +715,8 @@ async function installSingle(
       cache: cacheState,
       cacheSource,
       inspectUrl: inspectUrl(githubUrl, repoUrl),
+      source: ctx.ranking.source,
+      ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt),

@@ -1,0 +1,35 @@
+{
+  "source": "PROXY: gold-set margins. Gold queries are answerable by construction, so these skew more decisive than a real session's. Re-run with --log against a real summon-log.jsonl.",
+  "samples": 80,
+  "quantiles": {
+    "p10": 0.025,
+    "p25": 0.087,
+    "p50": 0.214,
+    "p75": 0.361,
+    "p90": 1
+  },
+  "provisional": {
+    "tLow": 0.2,
+    "tHigh": 0.45
+  },
+  "provisionalShares": {
+    "explore": 0.463,
+    "hold": 0.35,
+    "converge": 0.188
+  },
+  "measured": {
+    "tLow": 0.123,
+    "tHigh": 0.274
+  },
+  "measuredShares": {
+    "explore": 0.325,
+    "hold": 0.338,
+    "converge": 0.338
+  },
+  "stability": {
+    "provisionalChanges": 9,
+    "measuredChanges": 5,
+    "gaps": 80
+  },
+  "calibratedAt": "2026-09-04T00:53:47.293Z"
+}
