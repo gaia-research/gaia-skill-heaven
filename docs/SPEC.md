@@ -796,6 +796,40 @@ Two rules:
 "relevance-only."** This plan builds the stamps; it is not permission to describe
 stamp-gated routing as running before it is.
 
+### Status 2026-09-03 — the consumption path is built, the stamps are not
+
+**PLAN 4.4 shipped.** `decide()` routes on `arbor.polarity` when it is present,
+falls back to the tree's `invocation` declaration when it is not, and reports
+which it used as `routing: "arbor.polarity" | "invocation" | "none"` — surfaced
+on the card, in `structuredContent`, and in the ranking disclosure. A skill
+excluded by a lane says so in `filtered`, naming the signal that excluded it.
+When receipts land, nothing else has to change.
+
+**PLAN 4.1–4.3 did not ship, and could not have.** Polarity is *whether a skill
+helps an agent converging, exploring, or both*. Deriving it needs a TASK
+benchmark; the Phase 0/1 instrument is a RETRIEVAL benchmark and cannot answer
+that question. It could be made to produce a number — margin is right there —
+but a skill's retrieval margin measures how well the INDEX separates it from
+its siblings, not what it does to an agent. Shipping that as `polarity` would
+be a measurement of the index wearing the label of a measurement of the skill,
+and §8.1's own rule is *derived, never authored*: inferred-from-the-wrong-thing
+is a species of authored.
+
+So `arbor` stays `null` across all 326 documents, and the disclosure the live
+corpus produces is the honest one:
+
+    Routing: none — no Arbor polarity and no invocation lane published,
+             so surface excluded nothing
+
+That second clause is worth stating plainly: **`invocation` is absent on all
+326 skills**, so even the fallback signal does not exist. `surface` is
+currently a no-op end to end. The card says so on every summon rather than
+letting a reader assume a lane was applied.
+
+Stamping waits on Phase 5's task benchmark, which is the instrument that can
+produce a receipt. That is a dependency the plan did not draw — Phase 4 is
+listed as parallel to Phase 5 — and it is now drawn.
+
 ### 8.2 SEP-2640 — track the standard
 
 MCP's Skills Over MCP working group (Anthropic + Nordstrom leads; Google,

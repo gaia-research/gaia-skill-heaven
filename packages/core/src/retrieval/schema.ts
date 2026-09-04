@@ -23,6 +23,14 @@ export const INDEX_FIELDS = [
 
 export type IndexField = (typeof INDEX_FIELDS)[number];
 
+/** SPEC §8.1 — one derived field, not thirteen. */
+export type ArborStamp = {
+  polarity: "heaven-native" | "hell-native" | "dual-safe" | "unknown";
+  derivedFrom: string[];
+  confidence: "low" | "medium" | "high";
+  asOf: string;
+};
+
 export type IndexedTrust = {
   level?: string | undefined;
   grade?: string | undefined;
@@ -83,8 +91,17 @@ export type IndexedSkill = {
   level?: string | undefined;
   trust: IndexedTrust;
   retrieval: RetrievalSurface;
-  /** Phase 4. `null` until benchmark receipts exist (SPEC §8.1). */
-  arbor: null;
+  /**
+   * Phase 4 — Arbor's first fill (SPEC §8.1). `null` until behavioural
+   * receipts exist, which is the state today: deriving polarity needs a TASK
+   * benchmark (does this skill help an agent converging, exploring, or both),
+   * and the Phase 0/1 instrument is a RETRIEVAL benchmark. It cannot answer
+   * that question, and inferring polarity from retrieval margins would be a
+   * measurement of the index dressed up as a measurement of the skill.
+   *
+   * Derived, never authored: no contributor frontmatter field sets this.
+   */
+  arbor: ArborStamp | null;
 };
 
 export type IndexStats = {

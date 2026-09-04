@@ -5,6 +5,7 @@ import type { InstalledSkill } from "../src/summon/session.js";
 import type { RankingDisclosure } from "../src/summon/summon.js";
 
 const index = {
+  routing: "none" as const,
   indexGeneratedAt: "2026-09-03T00:00:00.000Z",
   indexAgeDays: 2,
   stale: false,

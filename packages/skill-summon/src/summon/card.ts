@@ -4,6 +4,23 @@ import type { InstalledSkill } from "./session.js";
 
 type CardSkill = Omit<InstalledSkill, "card">;
 
+/**
+ * PLAN 4.4 — say which signal routed this, always. `arbor` is null everywhere
+ * today and `invocation` is absent on all 326 skills, so the honest line is
+ * that nothing routed it. A surface that stayed quiet here would let a reader
+ * assume a lane had been applied.
+ */
+function routingNote(ranking: RankingDisclosure): string {
+  switch (ranking.routing) {
+    case "arbor.polarity":
+      return "measured Arbor polarity";
+    case "invocation":
+      return "the tree's invocation declaration (Arbor has published no polarity)";
+    case "none":
+      return "none — no Arbor polarity and no invocation lane published, so surface excluded nothing";
+  }
+}
+
 function indexAgeNote(ranking: RankingDisclosure): string {
   if (ranking.indexAgeDays === null) return "";
   const days = Math.floor(ranking.indexAgeDays);
@@ -70,6 +87,7 @@ export function renderSummonCard(
   }
 
   lines.push(
+    `  Routing: ${routingNote(ranking)}`,
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s · ${skill.cache}/${skill.cacheSource} · ${skill.fileCount} files`,
     `  Path: ${skill.path}`,

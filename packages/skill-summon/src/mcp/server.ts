@@ -44,6 +44,7 @@ const summonOutputSchema = z.object({
     mode: z.string(),
     trustFields: z.array(z.string()),
     disclosure: z.string(),
+    routing: z.enum(["arbor.polarity", "invocation", "none"]),
     indexGeneratedAt: z.string(),
     indexAgeDays: z.number().nullable(),
     stale: z.boolean(),

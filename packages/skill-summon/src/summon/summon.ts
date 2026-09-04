@@ -62,6 +62,8 @@ export type PreviewedSkill = {
 
 /** Retrieval disclosure attached to every result (SPEC §5.2 `ranking`). */
 export type RankingDisclosure = RankingSummary & {
+  /** Which signal decided surface routing — or `"none"` when nothing did. */
+  routing: "arbor.polarity" | "invocation" | "none";
   indexGeneratedAt: string;
   indexAgeDays: number | null;
   stale: boolean;
@@ -279,6 +281,12 @@ export async function summon(
 
 function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosure {
   const { index } = resolved;
+  const routingNote =
+    decision.routing === "arbor.polarity"
+      ? "Surface routing used measured Arbor polarity."
+      : decision.routing === "invocation"
+        ? "Surface routing used the tree's invocation declaration; Arbor has published no polarity."
+        : "Surface routing had no signal to use: neither Arbor polarity nor an invocation lane is published, so `surface` did not exclude anything.";
   const floorNote =
     decision.floor === null
       ? "no calibrated relevance floor in this index — summon cannot yet decline on relevance"
@@ -288,9 +296,10 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
+    routing: decision.routing,
     disclosure:
       `Ranked by BM25F over the committed skill index; ${floorNote}. ` +
-      "The tree publishes no behavioural stamps, so no trust ordering is applied.",
+      `The tree publishes no behavioural stamps, so no trust ordering is applied. ${routingNote}`,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),

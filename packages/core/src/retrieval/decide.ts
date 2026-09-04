@@ -17,6 +17,23 @@ export const MARGIN = 0.15;
 
 export type SummonSurface = "any" | "heaven" | "hell";
 
+/**
+ * Which signal decided surface routing for a candidate (SPEC §8.1, PLAN 4.4).
+ *
+ * `arbor.polarity` replaces a contributor's claim with a measurement, so it
+ * wins when present. It is absent everywhere today — no receipts exist — and
+ * the fallback is the tree's `invocation` field, which is ALSO absent on all
+ * 326 skills. So routing is currently doing nothing at all, and the honest
+ * disclosure says exactly that rather than implying a lane was applied.
+ */
+export type RoutingSignal = "arbor.polarity" | "invocation" | "none";
+
+export function routingSignalOf(doc: IndexedSkill): RoutingSignal {
+  if (doc.arbor && doc.arbor.polarity !== "unknown") return "arbor.polarity";
+  if (doc.invocation !== "any") return "invocation";
+  return "none";
+}
+
 export type FilterReason = {
   id: string;
   name: string;
@@ -40,9 +57,15 @@ export type Decision = {
   margin: number;
   /** True when the top two are within `MARGIN` and a caller should be asked. */
   ambiguous: boolean;
-  /** Everything withheld, with a reason. 98 of 274 skills are uninstallable and today they vanish silently. */
+  /** Everything withheld, with a reason. Unreachable skills vanish silently otherwise. */
   filtered: FilterReason[];
   floor: number | null;
+  /**
+   * What actually decided surface routing across the admitted set. `"none"`
+   * means neither Arbor nor the tree published a lane and `surface` had no
+   * effect — which is the case for the whole corpus today.
+   */
+  routing: RoutingSignal;
 };
 
 export type DecideOptions = {
@@ -80,6 +103,7 @@ export function decide({
       filtered,
       floor,
       source,
+      routingOf(ranked, surface),
     );
   }
 
@@ -94,11 +118,12 @@ export function decide({
       ambiguous: exact.length > 1,
       filtered,
       floor,
+      routing: routingOf(ranked, surface),
     };
   }
 
   if (floor !== null && top.score < floor) {
-    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
+    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source, routingOf(ranked, surface));
   }
 
   const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
@@ -110,7 +135,25 @@ export function decide({
     ambiguous: admitted.length > 1 && margin < MARGIN,
     filtered,
     floor,
+    routing: routingOf(ranked, surface),
   };
+}
+
+/**
+ * The strongest signal available across everything the surface filter looked
+ * at — not just what survived it. A skill excluded BY its lane is evidence
+ * that a lane was in use, so reporting only the admitted set would say "none"
+ * exactly when routing did the most work.
+ */
+function routingOf(considered: readonly ScoredSkill[], surface: SummonSurface): RoutingSignal {
+  // `surface: "any"` applies no lane, so nothing routed — whatever was
+  // published. Reporting a signal here would describe data that existed rather
+  // than a decision that was made.
+  if (surface === "any") return "none";
+  const signals = new Set(considered.map((hit) => routingSignalOf(hit.doc)));
+  if (signals.has("arbor.polarity")) return "arbor.polarity";
+  if (signals.has("invocation")) return "invocation";
+  return "none";
 }
 
 /**
@@ -124,6 +167,19 @@ function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | nul
       ? "not installable — links.github does not resolve to a SKILL.md"
       : "not installable — the tree publishes no links.github and no suiteComponents";
   }
+  if (surface === "any") return null;
+
+  // A measurement beats a claim: when Arbor has stamped a polarity it decides
+  // the lane, and the contributor's `invocation` declaration is the fallback.
+  const polarity = doc.arbor?.polarity;
+  if (polarity === "heaven-native" && surface === "hell") {
+    return "surface:hell excludes heaven-native skills (arbor.polarity)";
+  }
+  if (polarity === "hell-native" && surface === "heaven") {
+    return "surface:heaven excludes hell-native skills (arbor.polarity)";
+  }
+  if (polarity !== undefined && polarity !== "unknown") return null;
+
   if (surface === "heaven" && doc.invocation === "model") {
     return "surface:heaven excludes model-led skills";
   }
@@ -140,6 +196,7 @@ function noMatchDecision(
   filtered: FilterReason[],
   floor: number | null,
   source: string | undefined,
+  routing: RoutingSignal,
 ): Decision {
   return {
     admitted: [],
@@ -159,6 +216,10 @@ function noMatchDecision(
     ambiguous: false,
     filtered,
     floor,
+    // A refusal still reports what signal was available. Hardcoding "none"
+    // here said "nothing routed this" precisely when routing may have been
+    // what emptied the set.
+    routing,
   };
 }
 

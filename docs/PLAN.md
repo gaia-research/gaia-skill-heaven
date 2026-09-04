@@ -162,6 +162,18 @@ cross-session state. Revisiting that needs a fresh decision against data
 
 ## Phase 4 — Arbor's first fill, and the standard
 
+> **Status, 2026-09-03.** Split outcome.
+> **Shipped:** 4.4 (summon consumes `arbor.polarity`, falls back to
+> `invocation`, and discloses which — `arbor` is null everywhere, so the live
+> disclosure is "none"), 4.5 (`skill://` identifiers and `resource_link`), and
+> **4.6 went further than "watch"**: SEP-2640 has been accepted by core
+> maintainers and stabilised, so the MCP **resource** surface
+> (`skill://index.json` and per-skill entries) is built. `skills/list` /
+> `skills/get` remain unbuilt pending the reference implementation.
+> **Blocked:** 4.1–4.3. Polarity needs behavioural receipts, which need a TASK
+> benchmark — that is Phase 5. This plan lists 4 and 5 as parallel; they are
+> not. See [`SPEC.md` §8.1](SPEC.md#status-2026-09-03--the-consumption-path-is-built-the-stamps-are-not).
+
 **Goal:** start the one dataset nobody else in the ecosystem has, and get on the
 right side of the MCP skills standard.
 

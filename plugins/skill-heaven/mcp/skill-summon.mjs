@@ -22418,6 +22418,11 @@ function compareIds(left, right) {
 // packages/core/src/retrieval/decide.ts
 var BAND = 0.6;
 var MARGIN = 0.15;
+function routingSignalOf(doc) {
+  if (doc.arbor && doc.arbor.polarity !== "unknown") return "arbor.polarity";
+  if (doc.invocation !== "any") return "invocation";
+  return "none";
+}
 function decide({
   index,
   query,
@@ -22441,7 +22446,8 @@ function decide({
       ranked,
       filtered,
       floor,
-      source
+      source,
+      routingOf(ranked, surface)
     );
   }
   if (top.matchKind === "exact") {
@@ -22452,11 +22458,12 @@ function decide({
       margin: marginOf(exact),
       ambiguous: exact.length > 1,
       filtered,
-      floor
+      floor,
+      routing: routingOf(ranked, surface)
     };
   }
   if (floor !== null && top.score < floor) {
-    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
+    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source, routingOf(ranked, surface));
   }
   const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
   const margin = marginOf(admitted);
@@ -22466,14 +22473,31 @@ function decide({
     margin,
     ambiguous: admitted.length > 1 && margin < MARGIN,
     filtered,
-    floor
+    floor,
+    routing: routingOf(ranked, surface)
   };
+}
+function routingOf(considered, surface) {
+  if (surface === "any") return "none";
+  const signals = new Set(considered.map((hit) => routingSignalOf(hit.doc)));
+  if (signals.has("arbor.polarity")) return "arbor.polarity";
+  if (signals.has("invocation")) return "invocation";
+  return "none";
 }
 function withholdReason(doc, surface) {
   if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
   if (!isReachable(doc)) {
     return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
   }
+  if (surface === "any") return null;
+  const polarity = doc.arbor?.polarity;
+  if (polarity === "heaven-native" && surface === "hell") {
+    return "surface:hell excludes heaven-native skills (arbor.polarity)";
+  }
+  if (polarity === "hell-native" && surface === "heaven") {
+    return "surface:heaven excludes hell-native skills (arbor.polarity)";
+  }
+  if (polarity !== void 0 && polarity !== "unknown") return null;
   if (surface === "heaven" && doc.invocation === "model") {
     return "surface:heaven excludes model-led skills";
   }
@@ -22482,7 +22506,7 @@ function withholdReason(doc, surface) {
   }
   return null;
 }
-function noMatchDecision(query, reason, considered, filtered, floor, source) {
+function noMatchDecision(query, reason, considered, filtered, floor, source, routing) {
   return {
     admitted: [],
     noMatch: {
@@ -22500,7 +22524,11 @@ function noMatchDecision(query, reason, considered, filtered, floor, source) {
     margin: 0,
     ambiguous: false,
     filtered,
-    floor
+    floor,
+    // A refusal still reports what signal was available. Hardcoding "none"
+    // here said "nothing routed this" precisely when routing may have been
+    // what emptied the set.
+    routing
   };
 }
 function suggestionFor(reason, source) {
@@ -23224,6 +23252,16 @@ function humanizeTrustKey(key) {
 }
 
 // packages/skill-summon/src/summon/card.ts
+function routingNote(ranking) {
+  switch (ranking.routing) {
+    case "arbor.polarity":
+      return "measured Arbor polarity";
+    case "invocation":
+      return "the tree's invocation declaration (Arbor has published no polarity)";
+    case "none":
+      return "none \u2014 no Arbor polarity and no invocation lane published, so surface excluded nothing";
+  }
+}
 function indexAgeNote(ranking) {
   if (ranking.indexAgeDays === null) return "";
   const days = Math.floor(ranking.indexAgeDays);
@@ -23269,6 +23307,7 @@ function renderSummonCard(skill, ranking) {
     }
   }
   lines.push(
+    `  Routing: ${routingNote(ranking)}`,
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s \xB7 ${skill.cache}/${skill.cacheSource} \xB7 ${skill.fileCount} files`,
     `  Path: ${skill.path}`,
@@ -23669,13 +23708,15 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
 }
 function disclose(resolved, decision) {
   const { index } = resolved;
+  const routingNote2 = decision.routing === "arbor.polarity" ? "Surface routing used measured Arbor polarity." : decision.routing === "invocation" ? "Surface routing used the tree's invocation declaration; Arbor has published no polarity." : "Surface routing had no signal to use: neither Arbor polarity nor an invocation lane is published, so `surface` did not exclude anything.";
   const floorNote = decision.floor === null ? "no calibrated relevance floor in this index \u2014 summon cannot yet decline on relevance" : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure: `Ranked by BM25F over the committed skill index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied.`,
+    routing: decision.routing,
+    disclosure: `Ranked by BM25F over the committed skill index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied. ${routingNote2}`,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
@@ -24062,6 +24103,7 @@ var summonOutputSchema = external_exports.object({
     mode: external_exports.string(),
     trustFields: external_exports.array(external_exports.string()),
     disclosure: external_exports.string(),
+    routing: external_exports.enum(["arbor.polarity", "invocation", "none"]),
     indexGeneratedAt: external_exports.string(),
     indexAgeDays: external_exports.number().nullable(),
     stale: external_exports.boolean(),

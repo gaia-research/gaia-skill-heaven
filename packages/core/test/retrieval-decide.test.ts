@@ -140,3 +140,72 @@ describe("decide", () => {
     expect(decision.admitted.length).toBeGreaterThan(0);
   });
 });
+
+// PLAN 4.4 — summon consumes `arbor.polarity` for surface routing when present,
+// falls back to the tree's `invocation` declaration when it is not, and
+// DISCLOSES which one it used. Arbor is null across the whole corpus today and
+// `invocation` is absent on all 326 skills, so the live answer is "neither",
+// and a surface that stayed quiet about that would let a reader assume a lane
+// had been applied.
+describe("surface routing and its disclosure", () => {
+  const reachable = "https://github.com/a/b/blob/main/SKILL.md";
+
+  function withArbor(polarity: "heaven-native" | "hell-native" | "dual-safe") {
+    const built = makeIndex([
+      {
+        id: "someone/stamped",
+        name: "Stamped",
+        contributor: "someone",
+        description: "Finds the slow path in a request.",
+        links: { github: reachable },
+      },
+    ]);
+    const doc = built.docs[0];
+    if (doc) {
+      doc.arbor = { polarity, derivedFrom: ["receipt://test"], confidence: "medium", asOf: "2026-09-03" };
+    }
+    return built;
+  }
+
+  it("reports routing:none when nothing published a lane", () => {
+    const decision = decide({ index, query, ranked: ranker.rank(query) });
+    expect(decision.routing).toBe("none");
+  });
+
+  it("reports routing:invocation when only the tree declared one", () => {
+    const decision = decide({
+      index,
+      query,
+      ranked: ranker.rank(query),
+      surface: "heaven",
+    });
+    // The human-only fixture carries invocation:"human".
+    expect(decision.routing).toBe("invocation");
+  });
+
+  it("lets a measured polarity decide the lane, over the contributor's claim", () => {
+    const stamped = withArbor("heaven-native");
+    const ranked = new Bm25fRanker(stamped).rank(query);
+
+    const heaven = decide({ index: stamped, query, ranked, surface: "heaven" });
+    expect(heaven.admitted.map((hit) => hit.doc.id)).toEqual(["someone/stamped"]);
+    expect(heaven.routing).toBe("arbor.polarity");
+
+    const hell = decide({ index: stamped, query, ranked, surface: "hell" });
+    expect(hell.admitted).toEqual([]);
+    expect(hell.filtered[0]?.why).toMatch(/arbor\.polarity/);
+  });
+
+  it("admits a dual-safe skill on both surfaces", () => {
+    const stamped = withArbor("dual-safe");
+    const ranked = new Bm25fRanker(stamped).rank(query);
+    expect(decide({ index: stamped, query, ranked, surface: "heaven" }).admitted).toHaveLength(1);
+    expect(decide({ index: stamped, query, ranked, surface: "hell" }).admitted).toHaveLength(1);
+  });
+
+  it("never routes on surface:any, whatever is stamped", () => {
+    const stamped = withArbor("hell-native");
+    const ranked = new Bm25fRanker(stamped).rank(query);
+    expect(decide({ index: stamped, query, ranked, surface: "any" }).admitted).toHaveLength(1);
+  });
+});
