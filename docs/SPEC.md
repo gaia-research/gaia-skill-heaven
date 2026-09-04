@@ -611,12 +611,37 @@ on each capability gap:
   m        = margin from a preview summon
   m̄       = α·m + (1−α)·m̄            EWMA           α = 0.3   PROVISIONAL
   if gapsAtCurrentRung < DWELL:          hold        DWELL = 3 PROVISIONAL
-  else if m̄ > T_high:                    step toward Heaven    T_high = 0.45
-  else if m̄ < T_low:                     step toward Hell      T_low  = 0.20
+  else if m̄ > T_high:                    step toward Heaven    T_high = 0.274  MEASURED
+  else if m̄ < T_low:                     step toward Hell      T_low  = 0.123  MEASURED
   else:                                  hold                  (dead band)
   clamp to [low, max]; ultra never selects zero
   record (gap, m, m̄, decision, reason)
 ```
+
+**The thresholds were recalibrated, and the originals would have been actively
+bad** (MEASURED 2026-09-03, `scripts/calibrate-ultra.ts`). 0.20 / 0.45 were set
+before anyone looked at what `margin` does on this index. Its real distribution
+is far more ambiguous than they assume — p50 is 0.214 — so those values read
+**46% of gaps as "explore" against 19% "converge"**, and Ultra would have
+drifted toward `max` on an ordinary session while appearing to follow its
+rules.
+
+At 0.123 / 0.274 the three decisions split 33/34/34, and the controller is also
+*more* stable on the same trace — **5 rung changes over 80 gaps against 9** —
+because a dead band straddling the bulk of the distribution stops treating a
+typical margin as a signal.
+
+Provenance is a **proxy and labelled as one**: these margins come from the gold
+set, whose queries are answerable by construction and therefore skew more
+decisive than a real session's, which include gaps the corpus does not cover.
+`calibrate-ultra.ts --log <summon-log.jsonl>` re-derives them from real traces,
+which is what this section originally asked for and what should replace them
+once `summon-log.jsonl` has accumulated.
+
+**A `noMatch` is not a signal about depth.** It is not in the spec text above
+and it needs to be: reaching wider cannot summon a skill the corpus does not
+contain, so a refused gap holds the rung. Without that rule the controller
+reads every curation gap as ambiguity and walks itself to `max`.
 
 Four stability properties, each load-bearing:
 

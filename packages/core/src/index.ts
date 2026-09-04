@@ -128,3 +128,20 @@ export {
   type BootstrapResult,
 } from "./retrieval/metrics.js";
 export { INDEX_BUILDER_VERSION } from "./retrieval/version.js";
+// LC — the Ultra controller (SPEC §6). Deterministic by construction: pure
+// function of (state, margin), no clock, no randomness, no learning.
+export {
+  DEFAULT_ULTRA_PARAMS,
+  RUNGS,
+  ULTRA_CEILING,
+  ULTRA_FLOOR,
+  initialUltraState,
+  replayUltra,
+  stepUltra,
+  type Rung,
+  type UltraDecision,
+  type UltraObservation,
+  type UltraParams,
+  type UltraState,
+  type UltraStep,
+} from "./retrieval/ultra.js";
