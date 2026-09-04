@@ -12,6 +12,7 @@
     "awaitingClassification": 52,
     "unreachable": 86,
     "missingTags": 99,
+    "expandedDocs": 101,
     "avgFieldLen": {
       "name": 2.1387,
       "id": 3.3212,
@@ -27,7 +28,7 @@
       "answerableAdmitted": 0.9082,
       "unanswerableRejected": 0.95,
       "goldSetRevision": "bef70b19e710",
-      "calibratedAt": "2026-09-03T17:02:57.488Z"
+      "calibratedAt": "2026-09-04T00:38:43.996Z"
     }
   },
   "docs": [

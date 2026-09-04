@@ -1,6 +1,6 @@
 {
   "schema": "gaia.bench-ledger/v1",
-  "ranAt": "2026-09-03T17:03:05.077Z",
+  "ranAt": "2026-09-04T00:38:50.244Z",
   "index": {
     "schema": "gaia.skill-index/v1",
     "generatedAt": "2026-09-03T16:50:52.285Z",
@@ -9,7 +9,9 @@
       "version": "skill-index-builder/0.1.0",
       "expansion": "generated"
     },
-    "docs": 274
+    "docs": 274,
+    "expandedDocs": 101,
+    "expansionCoverage": 0.3686
   },
   "builderVersion": "skill-index-builder/0.1.0",
   "goldSet": {
@@ -25,6 +27,16 @@
       "label": "scoreMatch as shipped (installable + MIN_RELEVANCE + BAND)",
       "reachableTargets": 67,
       "mrrOnReachable": 0.0585,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 65,
+          "mrr": 0.0424
+        },
+        "unexpandedTargets": {
+          "n": 35,
+          "mrr": 0.0333
+        }
+      },
       "mrr": 0.0392,
       "mrrExcludingAmbiguous": 0.0386,
       "recallAt5": 0.06,
@@ -178,6 +190,16 @@
       "label": "scoreMatch, ungated — ordering ability alone",
       "reachableTargets": 100,
       "mrrOnReachable": 0.0501,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 65,
+          "mrr": 0.0406
+        },
+        "unexpandedTargets": {
+          "n": 35,
+          "mrr": 0.0676
+        }
+      },
       "mrr": 0.0501,
       "mrrExcludingAmbiguous": 0.0504,
       "recallAt5": 0.06,
@@ -331,6 +353,16 @@
       "label": "BM25F over the committed index + exact-name fast path (no floor)",
       "reachableTargets": 100,
       "mrrOnReachable": 0.4658,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 65,
+          "mrr": 0.6925
+        },
+        "unexpandedTargets": {
+          "n": 35,
+          "mrr": 0.0447
+        }
+      },
       "mrr": 0.4658,
       "mrrExcludingAmbiguous": 0.4629,
       "recallAt5": 0.58,
@@ -484,6 +516,16 @@
       "label": "BM25F over the same index with expansions stripped",
       "reachableTargets": 100,
       "mrrOnReachable": 0.28,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 65,
+          "mrr": 0.2891
+        },
+        "unexpandedTargets": {
+          "n": 35,
+          "mrr": 0.2632
+        }
+      },
       "mrr": 0.28,
       "mrrExcludingAmbiguous": 0.2653,
       "recallAt5": 0.38,
@@ -637,6 +679,16 @@
       "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
       "reachableTargets": 78,
       "mrrOnReachable": 0.4904,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 65,
+          "mrr": 0.5808
+        },
+        "unexpandedTargets": {
+          "n": 35,
+          "mrr": 0.0143
+        }
+      },
       "mrr": 0.3825,
       "mrrExcludingAmbiguous": 0.3857,
       "recallAt5": 0.47,
