@@ -74,3 +74,31 @@ One real session in which (a) the rung is visible to the model without the user
 typing anything, (b) `zero_cuts: all` actually refuses a summon, and (c) a
 receipt for that session exists on disk that `skill-cost` can price. Hook 2 is
 measured separately, against the entropy curve, and is not required for done.
+
+---
+
+## What shipped (implementation notes)
+
+All six hooks are implemented in `plugins/skill-heaven/hooks/`, dispatched by
+`hooks/hooks.json`, covered by `test/hooks.test.ts` (19 cases). Three decisions
+made during implementation are worth recording because they differ from the plan
+above:
+
+1. **Hook 2 injects no catalogue content at all.** The plan said "inject a ranked
+   candidate card"; #85 makes that the wrong first step. The shipped hook emits
+   only plugin-authored text naming the armed rung and the tool. The card stays
+   behind an explicit tool call the model makes and shows, where its disclosure
+   travels with it. Ranked-card injection is deferred until #85 is resolved, and
+   automatic summoning is off unless `auto_summon` is set to `on`.
+2. **`PreCompact` carries no `additionalContext`**, so hook 5 writes a durable
+   snapshot and the next `UserPromptSubmit` re-injects it exactly once.
+3. **Rung arming had to be built.** The rung commands render text; nothing
+   persisted where a session sat, so no other hook could resolve a rung.
+   `UserPromptSubmit` now records a rung command into session state. This is the
+   most version-sensitive part of the change — it depends on the hook seeing the
+   raw prompt — and resolution falls back to the launcher manifest and then the
+   floor when it does not fire.
+
+**Not done, deliberately:** no probe against a pinned Claude Code version yet.
+Until that runs, this is code with unit coverage, not an M0 finding — the exit
+criteria above are not met.
