@@ -4,7 +4,7 @@
 [`PLAN.md`](PLAN.md). Per SPEC §0.1 every number lives here or in
 `packages/core/bench/results/`, never as a normative value in the spec.
 
-**Historical Corpus Notice (2026-09-06, #116 / APPROVED.md):**
+**Historical Corpus Notice (2026-09-06, [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527)):**
 The measurements and corpus statistics in this document (e.g. 274/326 skills,
 MRR values, G2 refusal percentages, Yggdrasil III churn) represent historical
 measurement artifacts from the September 2026 test corpus and benchmark runs.
@@ -40,7 +40,7 @@ is the narrative around them.
 | Gate | Requirement | Result |
 |---|---|---|
 | **G1** | Δ MRR CI excludes zero | **PASS** — `+0.3433, 95% CI [+0.2593, +0.4313], n = 100` |
-| **G2** | ≥90% of 20 unanswerable queries return `noMatch` | **PASS at 95%**, admitting 91% of the gold set |
+| **G2** | ≥90% of 20 unanswerable queries return `noMatch` | **FAIL at the committed floor** — `floor.json` records 75% rejection while admitting 90.82% of gold; the 95% result is historical partial-coverage data |
 | **G3** | Gold set runs green with egress blocked | **PASS**, asserted by the harness rather than promised |
 
 ## The systems
@@ -55,6 +55,21 @@ is the narrative around them.
 `bm25f-decide` is what the product ships. `baseline-shipped` is what it shipped
 before this work: it put the right skill first for **four queries in a hundred**
 and returned a confident card for **all twenty** queries that have no answer.
+
+### G2 artifact reconciliation
+
+The three refusal percentages in older notes are not interchangeable:
+
+| Artifact and stage | Exact identity | Reported result | Interpretation |
+|---|---|---|---|
+| Historical partial-expansion index (`88a6ac6`, 2026-09-04 00:38 UTC) | `gaia.skill-index/v1`, 274 docs, 101 expanded; `floor.json` at that commit | floor `27.5559`, answerable `90.82%`, unanswerable rejected `95%` | Historical calibration; superseded when the remaining expansions landed |
+| Historical full bucketed index (`fd663a4`, 2026-09-04 00:43 UTC) | `gaia.skill-index/v1`, 274 docs, 273 expanded; `floor.json` at that commit | floor `26.9789`, answerable `90.82%`, unanswerable rejected `75%` | Negative G2 result preserved; not tuned away |
+| Current committed Reach artifact | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Current product calibration and the value this branch carries |
+| Benchmark ledger run (`packages/core/bench/results/ledger.json`, 2026-09-04 00:56 UTC) | Historical v1 ledger over 326 docs/324 expanded | `bm25f-decide.refusalRate = 85%`; its floor sweep's hypothetical 95% point admits only 79% of gold | The 85% value is the whole decide-layer `noMatch` rate, not `floor.json`'s score-distribution rejection; the 95% point is not the shipped floor |
+
+The committed floor therefore still fails G2. The 95% and 85% figures remain
+useful historical measurements only; none is collapsed into the current 75%
+calibration outcome.
 
 ---
 
@@ -153,15 +168,18 @@ worth having. Ships unfiltered.
 
 ### 8. The absolute floor is coverage-sensitive, which is a design weakness
 
-FLOOR moved 15.18 → 27.56 → 26.98 as coverage went 0% → 37% → 100%, and G2
-flipped from failing (55%) to passing (95%) to failing (75%) — while MRR rose
-monotonically 0.28 → 0.466 → 0.657. Separation barely moved (0.845 → 0.956 →
-0.953). What moves is the *threshold*, because expansion raises scores for
-everything, unanswerable queries included. A threshold on a raw BM25F score has
-no fixed scale. G2 is one number away — FLOOR 31.13 rejects 90% and admits 79%
-— and it is not moved, because the calibration policy was declared before the
-run. The principled fix is a different quantity (score normalised against the
-index's own distribution, or the margin), not a different threshold.
+Across the historical 274-document stages, FLOOR moved 15.18 → 27.56 →
+26.98 as coverage went 0% → 37% → 100%, and G2 flipped from failing (55%) to
+passing (95%) to failing (75%) — while MRR rose monotonically 0.28 → 0.466 →
+0.657. The current 326-document artifact is a later 75% result (27.8563), as
+the reconciliation table above records. Separation barely moved (0.845 →
+0.956 → 0.953). What moves is the *threshold*, because expansion raises scores
+for everything, unanswerable queries included. A threshold on a raw BM25F score
+has no fixed scale. At the historical full-bucketed stage, the ledger's
+hypothetical FLOOR 31.13 rejects 90% and admits 79%; it is not moved, because
+the calibration policy was declared before the run. The principled fix is a
+different quantity (score normalised against the index's own distribution, or
+the margin), not a different threshold.
 
 ### 9. Ultra's provisional thresholds would have walked it to `max`
 
@@ -225,7 +243,12 @@ inputs; running them is a human-triggered step. That is the residual cost of a
 moving corpus, and it is now proportional to what moved rather than to the size
 of the tree.
 
-## What shipped
+## What shipped (historical programme record)
+
+The tables below preserve the pre-extraction programme history. PR128's Reach
+foundation intentionally does **not** carry the historical SEP `resource_link`
+or repo-local Arbor surfaces; current boundaries are in `PLAN.md`, while this
+record keeps the superseded measurements traceable.
 
 **Phase 0 — `packages/core/bench/`**: 100 gold queries, 20 unanswerable, a
 zero-dependency runner (MRR, recall@5, refusal rates, seeded paired bootstrap,

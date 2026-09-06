@@ -15,7 +15,7 @@ Upstream conceptual authority, in order:
 This document specifies **contracts and boundaries**. It does not specify an
 implementation, and it deliberately carries almost no numbers.
 
-**Directional Updates (2026-09-06, #116 / APPROVED.md):**
+**Directional Updates (2026-09-06, [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527)):**
 - **Decision 1 (Arbor & HH):** HH belongs INSIDE Arbor conceptually. Arbor houses HH node behavior, interaction graph, conditions/provenance/governed interpretation. HH is independent of Trust Magnitude computations, not a separate behavioral authority independent of Arbor. Current `gaia.arbor-profile/v1` is narrower than the intended domain; upstream will own a broader canonical Arbor runtime projection containing/referencing current claims, HH result profiles, and interaction evidence. Internals may be independently versioned. Do not silently add fields to closed v1 or fork ontology in skill-heaven. Continuous score vs discrete stamps and compaction efficacy remain research-open.
 - **Decision 2 (Source-Agnostic Runtime):** Skill Heaven is source-agnostic: Tree snapshot/API, other skill APIs, Git/local sources via adapter boundaries. Gaia catalogue membership is not required. Optional canonical Arbor enrichment requires identity/content/version + conditions match. Missing Gaia installability is UNKNOWN, not unreachable. External ratings are not Arbor or relevance evidence. Normal retrieval remains offline; API discovery/refresh hydrates cache.
 - **Decision 3 (Parity Operator Policy):** Tree's parity operator tool explicitly must NOT run in workflows/CI. Parity PASS != materializable; expected NO_SOURCE refusal passes; comparator FAIL can coexist with successful materialization.
@@ -218,7 +218,7 @@ Upstream owns the truth here. Where `gaia-skill-tree` publishes an
 installability determination, this layer consumes it rather than re-deriving it
 from URL shape.
 
-**Source-Agnostic Runtime & Operator Policy (2026-09-06, APPROVED.md Decisions 2 & 3):**
+**Source-Agnostic Runtime & Operator Policy (2026-09-06, [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527), Decisions 2 & 3):**
 Skill Heaven is source-agnostic: Tree snapshot/API, other skill APIs, and Git/local
 sources via adapter boundaries. Gaia catalogue membership is not required. Optional
 canonical Arbor enrichment requires identity/content/version + conditions match.
@@ -556,7 +556,7 @@ carrying the question.
 |---|---|---|
 | Q1 | What is the contract for Arbor interaction edges, and what projection publishes them? (§5.1) | `gaia-skill-tree` |
 | Q2 | Does a continuous score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7. Its tracking issue `gaia-research#62` was closed 2026-09-02; re-tracked at `gaia-research#207` | `gaia-research` |
-| Q2b | **Does the HH Index land inside `gaia.arbor-profile/v1`, or beside it?** Conceptually resolved in APPROVED.md (2026-09-06): HH belongs INSIDE Arbor; upstream will own a broader canonical Arbor runtime projection referencing HH result profiles and interaction evidence. Formal schema proposal in flight (`gaia-research#207`). | `gaia-research` / `gaia-skill-tree` |
+| Q2b | **Does the HH Index land inside `gaia.arbor-profile/v1`, or beside it?** Conceptually resolved in the [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527) (2026-09-06): HH belongs INSIDE Arbor; upstream will own a broader canonical Arbor runtime projection referencing HH result profiles and interaction evidence. Formal schema proposal in flight (`gaia-research#207`). | `gaia-research` / `gaia-skill-tree` |
 | Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
 | Q4 | Should the retrieval artifact be renamed to end the collision in §10.1? | this repo |
 | Q5 | Does upstream publish an installability determination this layer can consume? (§3.5) | `gaia-skill-tree` |
