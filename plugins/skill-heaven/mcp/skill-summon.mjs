@@ -22086,6 +22086,18 @@ import { createHash } from "node:crypto";
 function sha256(bytes) {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
+function expansionFingerprint(skill) {
+  return sha256(
+    JSON.stringify([
+      skill.id,
+      skill.name,
+      skill.title ?? "",
+      [...skill.tags ?? []].sort(),
+      skill.description ?? "",
+      skill.genericSkillRef ?? ""
+    ])
+  ).slice(0, 19);
+}
 function isInstallableLink(links) {
   if (!links) return false;
   if (links.installable === false) return false;
@@ -22136,7 +22148,11 @@ function buildSkillIndex({
   expansions
 }) {
   const bucketed = Object.values(projection.buckets ?? {}).flat();
-  const docs = bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id])).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  const unclassified = projection.awaitingClassification ?? [];
+  const docs = [
+    ...bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], true)),
+    ...unclassified.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], false))
+  ].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
   const avgFieldLen = Object.fromEntries(
     INDEX_FIELDS.map((field) => [
       field,
@@ -22156,12 +22172,11 @@ function buildSkillIndex({
     },
     stats: {
       docs: docs.length,
-      // Recorded, not indexed: these 52 skills are invisible to summon today
-      // because the runtime reads `buckets` only. Stating the number keeps the
-      // gap visible instead of silently shrinking the corpus.
-      awaitingClassification: (projection.awaitingClassification ?? []).length,
+      awaitingClassification: docs.filter((doc) => !doc.classified).length,
       unreachable: docs.filter((doc) => !isReachable(doc)).length,
       missingTags: docs.filter((doc) => doc.tags.length === 0).length,
+      expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
+      staleExpansions: docs.filter((doc) => doc.retrieval.stale === true).length,
       avgFieldLen,
       floor: null,
       floorCalibration: null
@@ -22169,7 +22184,8 @@ function buildSkillIndex({
     docs
   };
 }
-function toIndexedSkill(skill, expansion) {
+function toIndexedSkill(skill, expansion, classified) {
+  const fingerprint = expansionFingerprint(skill);
   const links = skill.links ?? {};
   const doc = {
     id: skill.id,
@@ -22185,6 +22201,7 @@ function toIndexedSkill(skill, expansion) {
     installable: isInstallableLink(links),
     suiteComponents: [...skill.suiteComponents ?? []],
     registryOnly: skill.installable === false,
+    classified,
     ...skill.level ? { level: skill.level } : {},
     trust: {
       ...skill.level ? { level: skill.level } : {},
@@ -22195,7 +22212,12 @@ function toIndexedSkill(skill, expansion) {
       expansions: expansion?.expansions ?? [],
       terms: [],
       vector: null,
-      ...expansion ? { expandedBy: expansion.expandedBy } : {}
+      ...expansion ? { expandedBy: expansion.expandedBy } : {},
+      ...expansion ? { expandedFrom: expansion.expandedFrom ?? fingerprint } : {},
+      // Recorded, never acted on here: a stale expansion still ranks. It is
+      // out-of-date retrieval surface, not wrong retrieval surface, and
+      // dropping it would re-create the coverage hole it was written to fill.
+      ...expansion && expansion.expandedFrom !== void 0 && expansion.expandedFrom !== fingerprint ? { stale: true } : {}
     },
     arbor: null
   };
@@ -22217,6 +22239,7 @@ function round4(value) {
 var DEFAULT_BM25F_PARAMS = {
   k1: 1.2,
   b: 0.75,
+  fieldPresenceNormalization: false,
   weights: {
     name: 10,
     id: 8,
@@ -22237,7 +22260,8 @@ var Bm25fRanker = class {
   #exact = /* @__PURE__ */ new Map();
   constructor(index, params = { ...DEFAULT_BM25F_PARAMS }) {
     this.#params = params;
-    this.#documents = index.docs.map((doc) => indexDocument(doc));
+    const totalWeight = INDEX_FIELDS.reduce((total, field) => total + params.weights[field], 0);
+    this.#documents = index.docs.map((doc) => indexDocument(doc, params.weights, totalWeight));
     for (const document of this.#documents) {
       for (const term of document.terms.keys()) {
         this.#documentFrequency.set(term, (this.#documentFrequency.get(term) ?? 0) + 1);
@@ -22307,6 +22331,9 @@ var Bm25fRanker = class {
         const normalizer = averageLength === 0 ? 1 : 1 - b + b * document.fieldLength[field] / averageLength;
         weightedFrequency += weights[field] * frequency / normalizer;
       }
+      if (this.#params.fieldPresenceNormalization && document.presentWeightShare > 0) {
+        weightedFrequency /= document.presentWeightShare;
+      }
       score += this.#idf(term) * (weightedFrequency * (k1 + 1) / (weightedFrequency + k1));
     }
     return { score, matchedTerms };
@@ -22324,7 +22351,7 @@ function marginOf(ranked) {
   if (!next || top.score <= 0) return 1;
   return (top.score - next.score) / top.score;
 }
-function indexDocument(doc) {
+function indexDocument(doc, weights, totalWeight) {
   const terms = /* @__PURE__ */ new Map();
   const fieldLength = {};
   for (const field of INDEX_FIELDS) {
@@ -22341,7 +22368,17 @@ function indexDocument(doc) {
   const exactKeys = new Set(
     [doc.name, doc.id, doc.catalogRef ?? ""].map((value) => normalize(value)).filter((value) => value.length > 0)
   );
-  return { doc, terms, fieldLength, exactKeys };
+  const presentWeight = INDEX_FIELDS.reduce(
+    (total, field) => total + (fieldLength[field] > 0 ? weights[field] : 0),
+    0
+  );
+  return {
+    doc,
+    terms,
+    fieldLength,
+    exactKeys,
+    presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight
+  };
 }
 function compareIds(left, right) {
   return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
@@ -22979,6 +23016,11 @@ function renderSummonCard(skill, ranking) {
     lines.push(
       `  Match: ${skill.retrieval.matchKind} \xB7 score ${skill.retrieval.score.toFixed(2)} \xB7 margin ${skill.retrieval.margin.toFixed(2)}`
     );
+    if (!skill.retrieval.classified) {
+      lines.push(
+        "  Classification: the tree has not filed this skill under a generic node yet \u2014 it is indexed, but its bucket and trust context are missing."
+      );
+    }
   }
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
@@ -23404,6 +23446,7 @@ function disclosureById(decision, query) {
         score: Math.round(hit.score * 1e4) / 1e4,
         margin: decision.margin,
         matchKind: hit.matchKind,
+        classified: hit.doc.classified,
         nameMatchesQuery: normalize(hit.doc.name) === normalizedQuery || normalize(hit.doc.id) === normalizedQuery || normalize(hit.doc.catalogRef ?? "") === normalizedQuery || normalizedQuery.includes(normalize(hit.doc.name))
       }
     ])
