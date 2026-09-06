@@ -13044,9 +13044,9 @@ var StdioServerTransport = class {
 };
 
 // packages/skill-summon/src/data/fleet-source.ts
-import { lstat, mkdtemp, readFile, readdir, rm as rm2, stat as stat2 } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path2 from "node:path";
+import { lstat as lstat2, mkdtemp as mkdtemp2, readFile as readFile2, readdir as readdir2, rm as rm3, stat as stat2 } from "node:fs/promises";
+import { tmpdir as tmpdir2 } from "node:os";
+import path3 from "node:path";
 
 // packages/skill-summon/src/summon/clone.ts
 import { execFile } from "node:child_process";
@@ -13173,6 +13173,310 @@ function errorMessage(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 
+// packages/skill-summon/src/summon/session.ts
+import { randomUUID } from "node:crypto";
+import { realpathSync } from "node:fs";
+import {
+  lstat,
+  mkdir as mkdir2,
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rm as rm2,
+  writeFile
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path2 from "node:path";
+var SESSION_DIR_PREFIX = "skill-summon-session-";
+var MANIFEST_FILE = "session.json";
+var DEFAULT_SESSION_TTL_HOURS = 4;
+var SummonSession = class _SummonSession {
+  root;
+  id;
+  #manifestPath;
+  #manifest;
+  constructor(root, manifest) {
+    this.root = root;
+    this.id = manifest.id;
+    this.#manifestPath = path2.join(root, MANIFEST_FILE);
+    this.#manifest = manifest;
+  }
+  static async createAt(root, id) {
+    await assertDisposableSessionRoot(root);
+    const manifest = {
+      id,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      pid: process.pid,
+      skills: []
+    };
+    const session = new _SummonSession(root, manifest);
+    await session.#writeManifest();
+    return session;
+  }
+  static async loadAt(root) {
+    await assertDisposableSessionRoot(root);
+    const manifestPath = path2.join(root, MANIFEST_FILE);
+    let raw;
+    try {
+      raw = await readFile(manifestPath, "utf8");
+    } catch (error2) {
+      throw new Error(
+        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage2(error2)}`
+      );
+    }
+    const manifest = JSON.parse(raw);
+    return new _SummonSession(root, manifest);
+  }
+  get createdAt() {
+    return this.#manifest.createdAt;
+  }
+  get skills() {
+    return this.#manifest.skills;
+  }
+  /** Directory for transient clone scaffolding: <root>/cache/. */
+  get cacheRoot() {
+    return path2.join(this.root, "cache");
+  }
+  /** Directory under which materialized skills for this session live: <root>/skills/. */
+  get skillsRoot() {
+    return path2.join(this.root, "skills");
+  }
+  async ensureRoots() {
+    await assertDisposableSessionRoot(this.root);
+    await ensureConfinedDirectory(this.root, this.cacheRoot);
+    await ensureConfinedDirectory(this.root, this.skillsRoot);
+  }
+  /** Record a skill (or suite component) already materialized on disk into the session manifest. */
+  async recordSkill(skill, opts = {}) {
+    const record2 = {
+      ...skill,
+      ...opts.viaSuite === void 0 ? {} : { viaSuite: opts.viaSuite },
+      materializedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    this.#manifest.skills.push(record2);
+    await this.#writeManifest();
+  }
+  async close() {
+    await rm2(this.root, { recursive: true, force: true });
+  }
+  async #writeManifest() {
+    await writeFile(
+      this.#manifestPath,
+      JSON.stringify(this.#manifest, null, 2),
+      "utf8"
+    );
+  }
+};
+async function openSession(opts = {}) {
+  const root = await mkdtemp(path2.join(tmpdir(), SESSION_DIR_PREFIX));
+  return SummonSession.createAt(root, opts.id ?? randomUUID());
+}
+function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  const resolved = path2.resolve(root);
+  const name = path2.basename(resolved);
+  if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
+  if (path2.dirname(resolved) === path2.resolve(tempRoot)) return true;
+  try {
+    return realpathSync(path2.dirname(resolved)) === realpathSync(tempRoot);
+  } catch {
+    return false;
+  }
+}
+async function assertDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  if (!isDisposableSessionRoot(root, tempRoot)) {
+    throw new Error(
+      `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`
+    );
+  }
+  let rootStat;
+  try {
+    rootStat = await lstat(root);
+  } catch (error2) {
+    throw new Error(`Session root ${root} is not an existing directory: ${errorMessage2(error2)}`);
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
+  }
+  const [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
+  if (path2.dirname(rootReal) !== tempReal || !path2.basename(rootReal).startsWith(SESSION_DIR_PREFIX)) {
+    throw new Error(
+      `Session root ${root} resolves outside the disposable temp-root namespace.`
+    );
+  }
+}
+async function assertConfinedPath(root, target, label = "Path") {
+  const rootResolved = path2.resolve(root);
+  const targetResolved = path2.resolve(target);
+  if (!isWithin(rootResolved, targetResolved)) {
+    throw new Error(`${label} escapes session root: ${target}`);
+  }
+  const rootReal = await realpath(rootResolved);
+  let current = targetResolved;
+  while (true) {
+    let currentStat;
+    try {
+      currentStat = await lstat(current);
+    } catch (error2) {
+      const code = error2.code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw error2;
+      if (current === rootResolved) throw error2;
+      current = path2.dirname(current);
+      continue;
+    }
+    if (currentStat.isSymbolicLink()) {
+      throw new Error(`${label} traverses a symlink: ${current}`);
+    }
+    if (current !== targetResolved && !currentStat.isDirectory()) {
+      throw new Error(`${label} traverses a non-directory path: ${current}`);
+    }
+    const currentReal = await realpath(current);
+    if (!isWithin(rootReal, currentReal)) {
+      throw new Error(`${label} resolves outside session root: ${target}`);
+    }
+    if (current === rootResolved) return;
+    current = path2.dirname(current);
+  }
+}
+function isWithin(parent, child) {
+  const relative = path2.relative(parent, child);
+  return relative === "" || !relative.startsWith(`..${path2.sep}`) && relative !== ".." && !path2.isAbsolute(relative);
+}
+async function ensureConfinedDirectory(root, target) {
+  await assertConfinedPath(root, target, "Session directory");
+  try {
+    const targetStat = await lstat(target);
+    if (targetStat.isSymbolicLink() || !targetStat.isDirectory()) {
+      throw new Error(`Session directory ${target} must be a real directory.`);
+    }
+  } catch (error2) {
+    if (error2.code !== "ENOENT") throw error2;
+    await mkdir2(target);
+  }
+  await assertConfinedPath(root, target, "Session directory");
+}
+async function resolveSession(opts = {}) {
+  const existingRoot = process.env.SKILL_SUMMON_SESSION;
+  if (existingRoot) {
+    if (!isDisposableSessionRoot(existingRoot)) {
+      throw new Error(
+        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable session directory. A session root must be a "${SESSION_DIR_PREFIX}*" directory directly under the OS temp dir (${tmpdir()}); summon refuses to write into or delete any other path.`
+      );
+    }
+    return {
+      session: await SummonSession.loadAt(existingRoot),
+      created: false
+    };
+  }
+  return { session: await openSession(opts), created: true };
+}
+async function reapSessions(opts = {}) {
+  const dryRun = opts.dryRun ?? false;
+  const ttlHours = opts.ttlHours ?? sessionTtlHours();
+  if (!Number.isFinite(ttlHours) || ttlHours < 0) {
+    throw new Error(
+      `Session TTL must be a non-negative number, got: ${ttlHours}`
+    );
+  }
+  const root = opts.tempRoot ?? tmpdir();
+  const excluded = new Set(
+    (opts.excludeRoots ?? []).map((item) => path2.resolve(item))
+  );
+  const now = (opts.now ?? /* @__PURE__ */ new Date()).getTime();
+  const candidates = [];
+  const liveProtected = [];
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error2) {
+    throw new Error(
+      `Could not scan session roots in ${root}: ${errorMessage2(error2)}`
+    );
+  }
+  let scanned = 0;
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
+      continue;
+    const sessionRoot = path2.join(root, entry.name);
+    if (excluded.has(path2.resolve(sessionRoot))) continue;
+    scanned++;
+    const manifest = await readManifestSafely(sessionRoot);
+    if (manifest?.pid !== void 0 && isProcessLive(manifest.pid)) {
+      liveProtected.push(sessionRoot);
+      continue;
+    }
+    let sessionStat;
+    try {
+      sessionStat = await lstat(sessionRoot);
+    } catch {
+      continue;
+    }
+    const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
+    const startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
+    const ageHours = Math.max(0, (now - startedAt) / 36e5);
+    if (ageHours < ttlHours) continue;
+    let bytes = 0;
+    try {
+      bytes = await directorySize(sessionRoot);
+    } catch {
+      continue;
+    }
+    candidates.push({ root: sessionRoot, ageHours, bytes });
+    if (!dryRun) await rm2(sessionRoot, { recursive: true, force: true });
+  }
+  return {
+    dryRun,
+    ttlHours,
+    scanned,
+    candidates,
+    reclaimedBytes: candidates.reduce((total, item) => total + item.bytes, 0),
+    liveProtected
+  };
+}
+function sessionTtlHours() {
+  const configured = process.env.SKILL_SUMMON_TTL_HOURS;
+  if (configured === void 0) return DEFAULT_SESSION_TTL_HOURS;
+  const value = Number(configured);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(
+      `SKILL_SUMMON_TTL_HOURS must be a non-negative number, got: ${configured}`
+    );
+  }
+  return value;
+}
+async function readManifestSafely(root) {
+  try {
+    return JSON.parse(
+      await readFile(path2.join(root, MANIFEST_FILE), "utf8")
+    );
+  } catch {
+    return void 0;
+  }
+}
+function isProcessLive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ESRCH") return false;
+    return true;
+  }
+}
+async function directorySize(root) {
+  const target = await lstat(root);
+  if (!target.isDirectory()) return target.size;
+  let bytes = target.size;
+  for (const entry of await readdir(root)) {
+    bytes += await directorySize(path2.join(root, entry));
+  }
+  return bytes;
+}
+function errorMessage2(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
 // packages/skill-summon/src/summon/giturl.ts
 var BLOB_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.*)/;
 var TREE_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)(.*)/;
@@ -13183,7 +13487,8 @@ function parseGithubUrl(url) {
   const blobMatch = BLOB_URL.exec(trimmed);
   if (blobMatch) {
     const [, owner, repo, branch, filePath] = blobMatch;
-    const subpath = filePath.endsWith(".md") ? dirname(filePath) : filePath;
+    const decodedPath = decodeGithubPath(filePath);
+    const subpath = decodedPath.endsWith(".md") ? dirname(decodedPath) : decodedPath;
     return {
       repoUrl: `https://github.com/${owner}/${repo}.git`,
       branch,
@@ -13196,7 +13501,7 @@ function parseGithubUrl(url) {
     return {
       repoUrl: `https://github.com/${owner}/${repo}.git`,
       branch,
-      subpath: rest.replace(/^\/+/, "")
+      subpath: decodeGithubPath(rest.replace(/^\/+/, ""))
     };
   }
   const repoMatch = REPO_URL.exec(trimmed);
@@ -13213,6 +13518,31 @@ function parseGithubUrl(url) {
 function dirname(filePath) {
   const index = filePath.lastIndexOf("/");
   return index === -1 ? "" : filePath.slice(0, index);
+}
+function decodeGithubPath(value) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch (error2) {
+    throw new Error(`GitHub URL contains an invalid encoded path: ${errorMessage3(error2)}`);
+  }
+  if (decoded.includes("\0") || decoded.startsWith("/") || decoded.startsWith("\\")) {
+    throw new Error(`GitHub URL contains an absolute subpath: ${value}`);
+  }
+  let depth = 0;
+  for (const segment of decoded.split(/[\\/]/u)) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      if (depth === 0) throw new Error(`GitHub URL subpath escapes the repository: ${value}`);
+      depth--;
+    } else {
+      depth++;
+    }
+  }
+  return decoded;
+}
+function errorMessage3(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
 }
 
 // packages/skill-summon/src/data/fleet-source.ts
@@ -13261,16 +13591,13 @@ async function checkoutGithubFleet(sourceUrl) {
   if (!/^https:\/\/github\.com\//u.test(sourceUrl) || !parsed.repoUrl.endsWith(".git")) {
     throw new Error(`Skill fleet source must be a GitHub repository URL, got: ${sourceUrl}`);
   }
-  const root = await mkdtemp(path2.join(tmpdir(), "skill-summon-fleet-"));
-  const repoPath = path2.join(root, "repo");
+  const root = await mkdtemp2(path3.join(tmpdir2(), "skill-summon-fleet-"));
+  const repoPath = path3.join(root, "repo");
   try {
     const clone2 = await ensureCachedRepo(repoPath, parsed.repoUrl, parsed.branch);
-    const scanRoot = path2.resolve(clone2.path, parsed.subpath);
-    const relative = path2.relative(path2.resolve(clone2.path), scanRoot);
-    if (relative.startsWith("..") || path2.isAbsolute(relative)) {
-      throw new Error(`Fleet subpath escapes repository root: ${parsed.subpath}`);
-    }
-    const scanStat = await lstat(scanRoot);
+    const scanRoot = path3.resolve(clone2.path, parsed.subpath);
+    await assertConfinedPath(clone2.path, scanRoot, "Fleet subpath");
+    const scanStat = await lstat2(scanRoot);
     if (scanStat.isSymbolicLink() || !scanStat.isDirectory()) {
       throw new Error(`Fleet path is not a real directory: ${parsed.subpath}`);
     }
@@ -13284,11 +13611,11 @@ async function checkoutGithubFleet(sourceUrl) {
       contributor,
       cleanup: async () => {
         await discardCachedRepo(repoPath);
-        await rm2(root, { recursive: true, force: true });
+        await rm3(root, { recursive: true, force: true });
       }
     };
   } catch (error2) {
-    await rm2(root, { recursive: true, force: true });
+    await rm3(root, { recursive: true, force: true });
     throw error2;
   }
 }
@@ -13296,20 +13623,20 @@ async function discoverFleetSkills(checkout) {
   const discovered = [];
   async function walk(directory, depth) {
     if (depth > MAX_DISCOVERY_DEPTH || discovered.length >= MAX_DISCOVERED_SKILLS) return;
-    const entries = (await readdir(directory, { withFileTypes: true })).sort(
+    const entries = (await readdir2(directory, { withFileTypes: true })).sort(
       (a, b) => a.name.localeCompare(b.name)
     );
     const skillFile = entries.find((entry) => entry.name === "SKILL.md" && entry.isFile());
     if (skillFile) {
-      const skillPath = path2.join(directory, skillFile.name);
+      const skillPath = path3.join(directory, skillFile.name);
       const skillStat = await stat2(skillPath);
       if (skillStat.size > MAX_SKILL_MD_BYTES) {
         throw new Error(`Fleet SKILL.md exceeds ${MAX_SKILL_MD_BYTES} bytes: ${skillPath}`);
       }
-      const source = await readFile(skillPath, "utf8");
+      const source = await readFile2(skillPath, "utf8");
       const frontmatter = readSkillFrontmatter(source);
-      const relativeDirectory = path2.relative(checkout.path, directory).split(path2.sep).join("/");
-      const fallbackName = path2.basename(directory);
+      const relativeDirectory = path3.relative(checkout.path, directory).split(path3.sep).join("/");
+      const fallbackName = path3.basename(directory);
       const name = frontmatter.name || fallbackName;
       const idPath = relativeDirectory || fallbackName;
       const skillMdPath = relativeDirectory ? `${relativeDirectory}/SKILL.md` : "SKILL.md";
@@ -13332,7 +13659,7 @@ async function discoverFleetSkills(checkout) {
     }
     for (const entry of entries) {
       if (!entry.isDirectory() || SKIP_DIRECTORIES.has(entry.name)) continue;
-      await walk(path2.join(directory, entry.name), depth + 1);
+      await walk(path3.join(directory, entry.name), depth + 1);
       if (discovered.length >= MAX_DISCOVERED_SKILLS) break;
     }
   }
@@ -13389,6 +13716,28 @@ function encodeGithubPath(value) {
 
 // packages/skill-summon/src/domain/types.ts
 var TREE_CONTRACT_VERSION = "gaia-public-v1";
+function flattenNamedSkills(document) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const skill of [
+    ...Object.values(document.buckets).flat(),
+    ...document.awaitingClassification ?? []
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...previous.suiteComponents ?? [],
+      ...skill.suiteComponents ?? []
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
+    });
+  }
+  return [...byId.values()];
+}
 
 // node_modules/zod/v3/external.js
 var external_exports = {};
@@ -13881,15 +14230,15 @@ var makeIssue = (params) => {
       message: issueData.message
     };
   }
-  let errorMessage5 = "";
+  let errorMessage6 = "";
   const maps = errorMaps.filter((m) => !!m).slice().reverse();
   for (const map of maps) {
-    errorMessage5 = map(fullIssue, { data, defaultError: errorMessage5 }).message;
+    errorMessage6 = map(fullIssue, { data, defaultError: errorMessage6 }).message;
   }
   return {
     ...issueData,
     path: fullPath,
-    message: errorMessage5
+    message: errorMessage6
   };
 };
 var EMPTY_PATH = [];
@@ -17504,7 +17853,8 @@ var namedRegistrySchema = external_exports.object({
   contractVersion: external_exports.string().optional(),
   schemaVersion: external_exports.string().optional(),
   generatedAt: external_exports.string().min(1),
-  buckets: external_exports.record(external_exports.array(namedSkillSchema))
+  buckets: external_exports.record(external_exports.array(namedSkillSchema)),
+  awaitingClassification: external_exports.array(namedSkillSchema).optional()
 }).passthrough();
 
 // packages/skill-summon/src/data/source.ts
@@ -17561,7 +17911,10 @@ var HttpGaiaRegistrySource = class {
       );
     }
     const genericIds = new Set(generic.data.skills.map((skill) => skill.id));
-    const namedSkills = Object.values(named.data.buckets).flat();
+    const namedSkills = [
+      ...Object.values(named.data.buckets).flat(),
+      ...named.data.awaitingClassification ?? []
+    ];
     if (namedSkills.length === 0) {
       throw new GaiaDataError(
         `Named Gaia projection at ${this.#namedUrl} contains no Named Skills. Restore/regenerate the projection, then retry.`
@@ -17585,7 +17938,13 @@ var HttpGaiaRegistrySource = class {
             bucket,
             skills.map((skill) => ({ ...skill, origin: "tree" }))
           ])
-        )
+        ),
+        ...named.data.awaitingClassification ? {
+          awaitingClassification: named.data.awaitingClassification.map((skill) => ({
+            ...skill,
+            origin: "tree"
+          }))
+        } : {}
       },
       source: {
         kind: "tree",
@@ -17611,7 +17970,7 @@ var HttpGaiaRegistrySource = class {
       });
     } catch (error2) {
       throw new GaiaDataError(
-        `Could not fetch Gaia projection ${url}: ${errorMessage2(error2)}`
+        `Could not fetch Gaia projection ${url}: ${errorMessage4(error2)}`
       );
     }
     if (!response.ok) {
@@ -17623,12 +17982,12 @@ var HttpGaiaRegistrySource = class {
       return await response.json();
     } catch (error2) {
       throw new GaiaDataError(
-        `Gaia projection ${url} is not valid JSON: ${errorMessage2(error2)}`
+        `Gaia projection ${url} is not valid JSON: ${errorMessage4(error2)}`
       );
     }
   }
 };
-function errorMessage2(error2) {
+function errorMessage4(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 function assertSupportedContract(value, url) {
@@ -17992,19 +18351,19 @@ var getRefs = (options) => {
 };
 
 // node_modules/zod-to-json-schema/dist/esm/errorMessages.js
-function addErrorMessage(res, key, errorMessage5, refs) {
+function addErrorMessage(res, key, errorMessage6, refs) {
   if (!refs?.errorMessages)
     return;
-  if (errorMessage5) {
+  if (errorMessage6) {
     res.errorMessage = {
       ...res.errorMessage,
-      [key]: errorMessage5
+      [key]: errorMessage6
     };
   }
 }
-function setResponseValueAndErrors(res, key, value, errorMessage5, refs) {
+function setResponseValueAndErrors(res, key, value, errorMessage6, refs) {
   res[key] = value;
-  addErrorMessage(res, key, errorMessage5, refs);
+  addErrorMessage(res, key, errorMessage6, refs);
 }
 
 // node_modules/zod-to-json-schema/dist/esm/getRelativePath.js
@@ -19315,8 +19674,8 @@ var Protocol = class {
                   if (queuedMessage.type === "response") {
                     resolver(message);
                   } else {
-                    const errorMessage5 = message;
-                    const error2 = new McpError(errorMessage5.error.code, errorMessage5.error.message, errorMessage5.error.data);
+                    const errorMessage6 = message;
+                    const error2 = new McpError(errorMessage6.error.code, errorMessage6.error.message, errorMessage6.error.data);
                     resolver(error2);
                   }
                 } else {
@@ -20616,23 +20975,23 @@ var Server = class extends Protocol {
       const wrappedHandler = async (request, extra) => {
         const validatedRequest = safeParse3(CallToolRequestSchema, request);
         if (!validatedRequest.success) {
-          const errorMessage5 = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage5}`);
+          const errorMessage6 = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage6}`);
         }
         const { params } = validatedRequest.data;
         const result = await Promise.resolve(handler(request, extra));
         if (params.task) {
           const taskValidationResult = safeParse3(CreateTaskResultSchema, result);
           if (!taskValidationResult.success) {
-            const errorMessage5 = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
-            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage5}`);
+            const errorMessage6 = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
+            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage6}`);
           }
           return taskValidationResult.data;
         }
         const validationResult = safeParse3(CallToolResultSchema, result);
         if (!validationResult.success) {
-          const errorMessage5 = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call result: ${errorMessage5}`);
+          const errorMessage6 = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call result: ${errorMessage6}`);
         }
         return validationResult.data;
       };
@@ -21126,12 +21485,12 @@ var McpServer = class {
    * @param errorMessage - The error message.
    * @returns The tool error result.
    */
-  createToolError(errorMessage5) {
+  createToolError(errorMessage6) {
     return {
       content: [
         {
           type: "text",
-          text: errorMessage5
+          text: errorMessage6
         }
       ],
       isError: true
@@ -21149,8 +21508,8 @@ var McpServer = class {
     const parseResult = await safeParseAsync3(schemaToParse, args);
     if (!parseResult.success) {
       const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage5 = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${toolName}: ${errorMessage5}`);
+      const errorMessage6 = getParseErrorMessage(error2);
+      throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${toolName}: ${errorMessage6}`);
     }
     return parseResult.data;
   }
@@ -21174,8 +21533,8 @@ var McpServer = class {
     const parseResult = await safeParseAsync3(outputObj, result.structuredContent);
     if (!parseResult.success) {
       const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage5 = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${toolName}: ${errorMessage5}`);
+      const errorMessage6 = getParseErrorMessage(error2);
+      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${toolName}: ${errorMessage6}`);
     }
   }
   /**
@@ -21387,8 +21746,8 @@ var McpServer = class {
         const parseResult = await safeParseAsync3(argsObj, request.params.arguments);
         if (!parseResult.success) {
           const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-          const errorMessage5 = getParseErrorMessage(error2);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage5}`);
+          const errorMessage6 = getParseErrorMessage(error2);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage6}`);
         }
         const args = parseResult.data;
         const cb = prompt.callback;
@@ -21791,233 +22150,12 @@ var EMPTY_COMPLETION_RESULT = {
   }
 };
 
-// packages/skill-summon/src/summon/session.ts
-import { randomUUID } from "node:crypto";
-import {
-  lstat as lstat2,
-  mkdir as mkdir2,
-  mkdtemp as mkdtemp2,
-  readFile as readFile2,
-  readdir as readdir2,
-  rm as rm3,
-  writeFile
-} from "node:fs/promises";
-import { tmpdir as tmpdir2 } from "node:os";
-import path3 from "node:path";
-var SESSION_DIR_PREFIX = "skill-summon-session-";
-var MANIFEST_FILE = "session.json";
-var DEFAULT_SESSION_TTL_HOURS = 4;
-var SummonSession = class _SummonSession {
-  root;
-  id;
-  #manifestPath;
-  #manifest;
-  constructor(root, manifest) {
-    this.root = root;
-    this.id = manifest.id;
-    this.#manifestPath = path3.join(root, MANIFEST_FILE);
-    this.#manifest = manifest;
-  }
-  static async createAt(root, id) {
-    const manifest = {
-      id,
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      pid: process.pid,
-      skills: []
-    };
-    const session = new _SummonSession(root, manifest);
-    await session.#writeManifest();
-    return session;
-  }
-  static async loadAt(root) {
-    const manifestPath = path3.join(root, MANIFEST_FILE);
-    let raw;
-    try {
-      raw = await readFile2(manifestPath, "utf8");
-    } catch (error2) {
-      throw new Error(
-        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage3(error2)}`
-      );
-    }
-    const manifest = JSON.parse(raw);
-    return new _SummonSession(root, manifest);
-  }
-  get createdAt() {
-    return this.#manifest.createdAt;
-  }
-  get skills() {
-    return this.#manifest.skills;
-  }
-  /** Directory for transient clone scaffolding: <root>/cache/. */
-  get cacheRoot() {
-    return path3.join(this.root, "cache");
-  }
-  /** Directory under which materialized skills for this session live: <root>/skills/. */
-  get skillsRoot() {
-    return path3.join(this.root, "skills");
-  }
-  async ensureRoots() {
-    await mkdir2(this.cacheRoot, { recursive: true });
-    await mkdir2(this.skillsRoot, { recursive: true });
-  }
-  /** Record a skill (or suite component) already materialized on disk into the session manifest. */
-  async recordSkill(skill, opts = {}) {
-    const record2 = {
-      ...skill,
-      ...opts.viaSuite === void 0 ? {} : { viaSuite: opts.viaSuite },
-      materializedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    this.#manifest.skills.push(record2);
-    await this.#writeManifest();
-  }
-  async close() {
-    await rm3(this.root, { recursive: true, force: true });
-  }
-  async #writeManifest() {
-    await writeFile(
-      this.#manifestPath,
-      JSON.stringify(this.#manifest, null, 2),
-      "utf8"
-    );
-  }
-};
-async function openSession(opts = {}) {
-  const root = await mkdtemp2(path3.join(tmpdir2(), SESSION_DIR_PREFIX));
-  return SummonSession.createAt(root, opts.id ?? randomUUID());
-}
-function isDisposableSessionRoot(root, tempRoot = tmpdir2()) {
-  const resolved = path3.resolve(root);
-  if (path3.dirname(resolved) !== path3.resolve(tempRoot)) return false;
-  return path3.basename(resolved).startsWith(SESSION_DIR_PREFIX);
-}
-async function resolveSession(opts = {}) {
-  const existingRoot = process.env.SKILL_SUMMON_SESSION;
-  if (existingRoot) {
-    if (!isDisposableSessionRoot(existingRoot)) {
-      throw new Error(
-        `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable session directory. A session root must be a "${SESSION_DIR_PREFIX}*" directory directly under the OS temp dir (${tmpdir2()}); summon refuses to write into or delete any other path.`
-      );
-    }
-    return {
-      session: await SummonSession.loadAt(existingRoot),
-      created: false
-    };
-  }
-  return { session: await openSession(opts), created: true };
-}
-async function reapSessions(opts = {}) {
-  const dryRun = opts.dryRun ?? false;
-  const ttlHours = opts.ttlHours ?? sessionTtlHours();
-  if (!Number.isFinite(ttlHours) || ttlHours < 0) {
-    throw new Error(
-      `Session TTL must be a non-negative number, got: ${ttlHours}`
-    );
-  }
-  const root = opts.tempRoot ?? tmpdir2();
-  const excluded = new Set(
-    (opts.excludeRoots ?? []).map((item) => path3.resolve(item))
-  );
-  const now = (opts.now ?? /* @__PURE__ */ new Date()).getTime();
-  const candidates = [];
-  const liveProtected = [];
-  let entries;
-  try {
-    entries = await readdir2(root, { withFileTypes: true });
-  } catch (error2) {
-    throw new Error(
-      `Could not scan session roots in ${root}: ${errorMessage3(error2)}`
-    );
-  }
-  let scanned = 0;
-  for (const entry of entries) {
-    if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
-      continue;
-    const sessionRoot = path3.join(root, entry.name);
-    if (excluded.has(path3.resolve(sessionRoot))) continue;
-    scanned++;
-    const manifest = await readManifestSafely(sessionRoot);
-    if (manifest?.pid !== void 0 && isProcessLive(manifest.pid)) {
-      liveProtected.push(sessionRoot);
-      continue;
-    }
-    let sessionStat;
-    try {
-      sessionStat = await lstat2(sessionRoot);
-    } catch {
-      continue;
-    }
-    const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
-    const startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
-    const ageHours = Math.max(0, (now - startedAt) / 36e5);
-    if (ageHours < ttlHours) continue;
-    let bytes = 0;
-    try {
-      bytes = await directorySize(sessionRoot);
-    } catch {
-      continue;
-    }
-    candidates.push({ root: sessionRoot, ageHours, bytes });
-    if (!dryRun) await rm3(sessionRoot, { recursive: true, force: true });
-  }
-  return {
-    dryRun,
-    ttlHours,
-    scanned,
-    candidates,
-    reclaimedBytes: candidates.reduce((total, item) => total + item.bytes, 0),
-    liveProtected
-  };
-}
-function sessionTtlHours() {
-  const configured = process.env.SKILL_SUMMON_TTL_HOURS;
-  if (configured === void 0) return DEFAULT_SESSION_TTL_HOURS;
-  const value = Number(configured);
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error(
-      `SKILL_SUMMON_TTL_HOURS must be a non-negative number, got: ${configured}`
-    );
-  }
-  return value;
-}
-async function readManifestSafely(root) {
-  try {
-    return JSON.parse(
-      await readFile2(path3.join(root, MANIFEST_FILE), "utf8")
-    );
-  } catch {
-    return void 0;
-  }
-}
-function isProcessLive(pid) {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error2) {
-    const code = error2.code;
-    if (code === "ESRCH") return false;
-    return true;
-  }
-}
-async function directorySize(root) {
-  const target = await lstat2(root);
-  if (!target.isDirectory()) return target.size;
-  let bytes = target.size;
-  for (const entry of await readdir2(root)) {
-    bytes += await directorySize(path3.join(root, entry));
-  }
-  return bytes;
-}
-function errorMessage3(error2) {
-  return error2 instanceof Error ? error2.message : String(error2);
-}
-
 // packages/skill-summon/src/summon/summon.ts
 import { stat as stat4 } from "node:fs/promises";
 import path7 from "node:path";
 
 // packages/core/src/retrieval/schema.ts
-var SKILL_INDEX_SCHEMA = "gaia.skill-index/v1";
+var SKILL_INDEX_SCHEMA = "gaia.skill-index/v2";
 var STALE_AFTER_DAYS = 30;
 var INDEX_FIELDS = [
   "name",
@@ -22093,6 +22231,28 @@ function scoreMatch(query, weightedFields) {
 
 // packages/core/src/retrieval/build-index.ts
 import { createHash } from "node:crypto";
+function allProjectionSkills(projection) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const skill of [
+    ...Object.values(projection.buckets ?? {}).flat(),
+    ...projection.awaitingClassification ?? []
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...previous.suiteComponents ?? [],
+      ...skill.suiteComponents ?? []
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
+    });
+  }
+  return [...byId.values()];
+}
 function sha256(bytes) {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
@@ -22157,12 +22317,8 @@ function buildSkillIndex({
   generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
   expansions
 }) {
-  const bucketed = Object.values(projection.buckets ?? {}).flat();
-  const unclassified = projection.awaitingClassification ?? [];
-  const docs = [
-    ...bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], true)),
-    ...unclassified.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], false))
-  ].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  const bucketedIds = new Set(Object.values(projection.buckets ?? {}).flat().map((skill) => skill.id));
+  const docs = allProjectionSkills(projection).map((skill) => toIndexedSkill(skill, expansions?.[skill.id], bucketedIds.has(skill.id))).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
   const avgFieldLen = Object.fromEntries(
     INDEX_FIELDS.map((field) => [
       field,
@@ -22228,8 +22384,7 @@ function toIndexedSkill(skill, expansion, classified) {
       // out-of-date retrieval surface, not wrong retrieval surface, and
       // dropping it would re-create the coverage hole it was written to fill.
       ...expansion && expansion.expandedFrom !== void 0 && expansion.expandedFrom !== fingerprint ? { stale: true } : {}
-    },
-    arbor: null
+    }
   };
   doc.retrieval.terms = deriveTerms(doc);
   return doc;
@@ -22565,9 +22720,15 @@ async function resolveIndex({
   return fetchIndex(expandSource(requested), environment, fetchFn);
 }
 function indexFromSnapshot(snapshot, sourceUrl) {
-  const named = Object.values(snapshot.named.buckets).flat();
+  const named = flattenNamedSkills(snapshot.named);
+  const bucketedIds = new Set(Object.values(snapshot.named.buckets).flat().map((skill) => skill.id));
+  const bucketed = named.filter((skill) => bucketedIds.has(skill.id));
+  const awaitingClassification = named.filter((skill) => !bucketedIds.has(skill.id));
   return buildSkillIndex({
-    projection: { buckets: { fetched: named.map(toProjectionSkill) } },
+    projection: {
+      buckets: { fetched: bucketed.map(toProjectionSkill) },
+      ...awaitingClassification.length > 0 ? { awaitingClassification: awaitingClassification.map(toProjectionSkill) } : {}
+    },
     source: sourceUrl,
     sourceDigest: sha256(JSON.stringify(named)),
     builderVersion: "runtime-fetch",
@@ -22920,7 +23081,7 @@ var GaiaService = class {
   }
 };
 function flattenNamed(snapshot) {
-  return Object.values(snapshot.named.buckets).flat();
+  return flattenNamedSkills(snapshot.named);
 }
 function toNamedSummary(skill) {
   return {
@@ -23046,10 +23207,11 @@ function renderSummonCard(skill, ranking) {
 
 // packages/skill-summon/src/summon/materialize.ts
 import { createHash as createHash2 } from "node:crypto";
-import { cp, readFile as readFile4, readdir as readdir3 } from "node:fs/promises";
+import { cp, lstat as lstat3, readFile as readFile4, readdir as readdir3 } from "node:fs/promises";
 import path4 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
+  await rejectSymlinks(sourceDir);
   await cp(sourceDir, destDir, {
     recursive: true,
     dereference: false,
@@ -23066,6 +23228,12 @@ async function materializeSkillDir(sourceDir, destDir) {
   return { path: destDir, materializeSeconds, fileCount, sha256: sha2562 };
 }
 async function rejectSymlinks(dir) {
+  const root = await lstat3(dir);
+  if (root.isSymbolicLink() || !root.isDirectory()) {
+    throw new Error(
+      `refusing to materialize skill: '${dir}' is not a real directory.`
+    );
+  }
   for (const entry of await readdir3(dir, { withFileTypes: true })) {
     const full = path4.join(dir, entry.name);
     if (entry.isSymbolicLink()) {
@@ -23495,7 +23663,7 @@ async function installSkill(ref, ctx, visited, viaSuite) {
       ok: false,
       installed: [],
       suites: [],
-      reason: errorMessage4(error2)
+      reason: errorMessage5(error2)
     };
   }
   if (!resolved) {
@@ -23659,7 +23827,7 @@ async function installSingle(skill, ctx, viaSuite) {
       ok: false,
       installed: [],
       suites: [],
-      reason: `Could not resolve ${repoUrl}: ${errorMessage4(error2)}`
+      reason: `Could not resolve ${repoUrl}: ${errorMessage5(error2)}`
     };
   }
   const requestedIdentity = { repoUrl, commit: resolvedCommit, subpath };
@@ -23678,19 +23846,31 @@ async function installSingle(skill, ctx, viaSuite) {
         ""
       );
       const cacheDir = path7.join(ctx.session.cacheRoot, cacheOwner, repoName);
-      transientClone = cacheDir;
       let cloneOutcome;
       try {
+        await assertConfinedPath(ctx.session.root, cacheDir, "Cache path");
+        transientClone = cacheDir;
         cloneOutcome = await ensureCachedRepo(cacheDir, repoUrl, branch);
       } catch (error2) {
         return {
           ok: false,
           installed: [],
           suites: [],
-          reason: `Could not clone ${repoUrl}: ${errorMessage4(error2)}`
+          reason: `Could not clone ${repoUrl}: ${errorMessage5(error2)}`
         };
       }
-      sourceSkillPath = path7.join(cloneOutcome.path, subpath);
+      try {
+        const candidatePath = path7.resolve(cloneOutcome.path, subpath);
+        await assertConfinedPath(cloneOutcome.path, candidatePath, "Skill source path");
+        sourceSkillPath = candidatePath;
+      } catch (error2) {
+        return {
+          ok: false,
+          installed: [],
+          suites: [],
+          reason: `Unsafe skill subpath '${subpath}' in ${repoUrl}: ${errorMessage5(error2)}`
+        };
+      }
       retainedIdentity = { repoUrl, commit: cloneOutcome.commit, subpath };
     }
     let sourceStat;
@@ -23725,13 +23905,14 @@ async function installSingle(skill, ctx, viaSuite) {
     const destDir = path7.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
+      await assertConfinedPath(ctx.session.root, destDir, "Materialization path");
       materializeOutcome = await materializeSkillDir(sourceSkillPath, destDir);
     } catch (error2) {
       return {
         ok: false,
         installed: [],
         suites: [],
-        reason: `Could not materialize ${sourceSkillPath}: ${errorMessage4(error2)}`
+        reason: `Could not materialize ${sourceSkillPath}: ${errorMessage5(error2)}`
       };
     }
     if (cacheState === "cold") {
@@ -23797,7 +23978,7 @@ async function pathExists3(target) {
     return false;
   }
 }
-function errorMessage4(error2) {
+function errorMessage5(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 
@@ -23894,25 +24075,12 @@ function createSkillSummonMcpServer({
 }
 function toolResult(outcome) {
   return {
-    content: [
-      { type: "text", text: JSON.stringify(outcome, null, 2) },
-      ...resourceLinks(outcome)
-    ],
+    // The text JSON and structuredContent surfaces are the Reach contract. SEP
+    // resource links are deliberately deferred to Lane X; no `skill://`
+    // resource is emitted by the foundation server.
+    content: [{ type: "text", text: JSON.stringify(outcome, null, 2) }],
     structuredContent: { ...outcome }
   };
-}
-function resourceLinks(outcome) {
-  return outcome.summoned.map((skill) => ({
-    type: "resource_link",
-    uri: skillUri(skill.source ?? outcome.source, skill.id),
-    name: skill.name,
-    ...skill.contributor ? { description: `${skill.name} \u2014 ${skill.contributor}` } : {},
-    mimeType: "text/markdown"
-  }));
-}
-function skillUri(source, id) {
-  const authority = source.replace(/^https?:\/\//u, "").replace(/\/+$/u, "");
-  return `skill://${authority}/${id}/SKILL.md`;
 }
 function toolError(error2) {
   const message = error2 instanceof Error ? error2.message : String(error2);

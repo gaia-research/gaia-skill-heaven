@@ -80,8 +80,9 @@ build-time expansion · BM25F ranker with exact-name fast path · explicit refus
 and `noMatch` below calibrated floor (FLOOR = 26.98) · reproducible evaluation ·
 offline-by-construction · freshness and coverage tooling · the negative findings
 (dense retrieval dropped, round-trip filter rejected, coverage split demotion) ·
-MCP `--source` and `--preview` arguments with structuredContent and resource_link
-blocks · session logging (`summon-log.jsonl`).
+MCP `--source` and `--preview` arguments with text JSON and structuredContent
+(the SEP `resource_link` surface is deferred to isolated Lane X) · session logging
+(`summon-log.jsonl`).
 
 **Slice boundaries:** The first bounded slice (Reach foundation, PR #128) extracts
 this core retrieval foundation WITHOUT Ultra controller (Lane S), WITHOUT SEP

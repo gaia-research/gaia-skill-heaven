@@ -278,7 +278,6 @@ function toIndexedSkill(
         ? { stale: true }
         : {}),
     },
-    arbor: null,
   };
   doc.retrieval.terms = deriveTerms(doc);
   return doc;

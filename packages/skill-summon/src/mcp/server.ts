@@ -1,4 +1,4 @@
-import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -142,33 +142,12 @@ export function createSkillSummonMcpServer({
 
 function toolResult(outcome: SummonOutcome): CallToolResult {
   return {
-    content: [
-      { type: "text", text: JSON.stringify(outcome, null, 2) },
-      ...resourceLinks(outcome),
-    ],
+    // The text JSON and structuredContent surfaces are the Reach contract. SEP
+    // resource links are deliberately deferred to Lane X; no `skill://`
+    // resource is emitted by the foundation server.
+    content: [{ type: "text", text: JSON.stringify(outcome, null, 2) }],
     structuredContent: { ...outcome },
   };
-}
-
-/**
- * SPEC §5.3 / §8.2 — a `resource_link` per summoned skill, on the
- * `skill://<source>/<id>/SKILL.md` convention SEP-2640 is standardising.
- * Costs nothing in clients that ignore it, and it is the on-ramp to exposing
- * the index as an MCP resource once the SEP stops moving.
- */
-function resourceLinks(outcome: SummonOutcome): ContentBlock[] {
-  return outcome.summoned.map((skill) => ({
-    type: "resource_link" as const,
-    uri: skillUri(skill.source ?? outcome.source, skill.id),
-    name: skill.name,
-    ...(skill.contributor ? { description: `${skill.name} — ${skill.contributor}` } : {}),
-    mimeType: "text/markdown",
-  }));
-}
-
-export function skillUri(source: string, id: string): string {
-  const authority = source.replace(/^https?:\/\//u, "").replace(/\/+$/u, "");
-  return `skill://${authority}/${id}/SKILL.md`;
 }
 
 function toolError(error: unknown): CallToolResult {

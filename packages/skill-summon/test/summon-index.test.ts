@@ -100,7 +100,7 @@ describe("the committed index", () => {
 
   it("loads without a network call and carries the corpus", async () => {
     const index = await loadCommittedIndex();
-    expect(index.schema).toBe("gaia.skill-index/v1");
+    expect(index.schema).toBe("gaia.skill-index/v2");
     expect(index.docs.length).toBeGreaterThan(250);
     expect(index.source).toBe("https://gaiaskilltree.com");
   });

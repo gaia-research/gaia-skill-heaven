@@ -1,10 +1,12 @@
-// The `gaia.skill-index/v1` contract — SPEC.md §2.1.
+// The `gaia.skill-index/v2` contract — Reach's retrieval artifact. v2 removes
+// the deferred Arbor field; Arbor is an upstream-owned contract consumed only
+// by Lane A, not an invented field in this index.
 //
 // One committed artifact is the only thing the runtime reads to rank. Network
 // fetches refresh it into the session root; they are never on the critical
 // path of a summon (SPEC §2.2, INTENT §3).
 
-export const SKILL_INDEX_SCHEMA = "gaia.skill-index/v1" as const;
+export const SKILL_INDEX_SCHEMA = "gaia.skill-index/v2" as const;
 
 /** `generatedAt` older than this adds one card line. It never blocks a summon. */
 export const STALE_AFTER_DAYS = 30;
@@ -83,8 +85,6 @@ export type IndexedSkill = {
   level?: string | undefined;
   trust: IndexedTrust;
   retrieval: RetrievalSurface;
-  /** Phase 4. `null` until benchmark receipts exist (SPEC §8.1). */
-  arbor: null;
 };
 
 export type IndexStats = {

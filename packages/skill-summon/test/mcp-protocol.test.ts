@@ -120,6 +120,11 @@ describe("skill-summon MCP protocol", () => {
     });
 
     expect(result.isError).not.toBe(true);
+    const content = result.content as Array<{ type?: string }>;
+    expect(content.every((block) => block.type === "text")).toBe(true);
+    expect(content).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "resource_link" }),
+    ]));
     expect(result.structuredContent).toMatchObject({
       query: "automated testing",
       // A registry-only skill can never install, so it is WITHHELD with a

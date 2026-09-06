@@ -222,7 +222,7 @@ describe("isInstallableLink", () => {
 
 describe("assertSkillIndex", () => {
   it("rejects an unknown schema rather than ranking on it", () => {
-    expect(() => assertSkillIndex({ schema: "gaia.skill-index/v2", docs: [{ id: "a" }] })).toThrow(
+    expect(() => assertSkillIndex({ schema: "gaia.skill-index/v1", docs: [{ id: "a" }] })).toThrow(
       SkillIndexError,
     );
   });
