@@ -12,7 +12,11 @@ Tracking issue: <!-- link the plan issue here -->
 
 ## Evidence
 
-<!-- List tests, review evidence, and any known blocked or deferred checks. -->
+<!-- List tests, review evidence, and any known blocked, deferred, or degraded states. -->
+
+## Related work
+
+<!-- Link parent, child, dependency, and superseded issues or PRs. -->
 
 ## Follow-ups
 
