@@ -45,17 +45,21 @@ describe("plugin.json — userConfig", () => {
     readFileSync(join(PLUGIN, ".claude-plugin", "plugin.json"), "utf-8"),
   );
 
-  it("declares exactly skill_url and zero_cuts", () => {
+  it("declares exactly skill_url, zero_cuts and auto_summon", () => {
     expect(Object.keys(pluginJson.userConfig).sort()).toEqual(
-      ["skill_url", "zero_cuts"].sort(),
+      ["skill_url", "zero_cuts", "auto_summon"].sort(),
     );
+  });
+
+  it("keeps automatic summoning off by default — it is the research surface", () => {
+    expect(pluginJson.userConfig.auto_summon.default).toBe("off");
   });
 
   // Claude Code's userConfig schema (docs.claude.com/en/docs/claude-code/plugins-reference)
   // supports only type: string | number | boolean | directory | file — there
   // is no enum type. Every option here must be type "string" with `type`,
   // `title`, and `description` all present (title/description are required).
-  for (const key of ["skill_url", "zero_cuts"]) {
+  for (const key of ["skill_url", "zero_cuts", "auto_summon"]) {
     it(`${key} is a well-formed string option (type, title, description all present)`, () => {
       const option = pluginJson.userConfig[key];
       expect(option.type).toBe("string");
