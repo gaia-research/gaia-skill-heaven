@@ -1,5 +1,14 @@
+import { vi } from "vitest";
+
+vi.mock("node:fs/promises", async () => {
+  const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+  return { ...actual, lstat: vi.fn(actual.lstat) };
+});
+
+import { lstat as lstatMock } from "node:fs/promises";
 import {
   access,
+  chmod,
   mkdir,
   mkdtemp,
   rm,
@@ -14,6 +23,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   findSession,
+  isConcurrentRemoval,
   isDisposableSessionRoot,
   listSessions,
   reapSessions,
@@ -48,6 +58,48 @@ describe("summon session garbage collection", () => {
     await expect(access(abandoned)).rejects.toThrow();
     await expect(access(live)).resolves.toBeUndefined();
     await expect(access(recent)).resolves.toBeUndefined();
+  });
+
+  it("tolerates a session disappearing during the reap stat", async () => {
+    const parent = await temporaryParent();
+    await sessionRoot(parent, "disappearing", "2026-04-01T05:00:00.000Z", 99_999_999);
+    const statMock = lstatMock as unknown as {
+      mockRejectedValueOnce: (error: unknown) => unknown;
+    };
+    statMock.mockRejectedValueOnce(
+      Object.assign(new Error("session disappeared"), { code: "ENOENT" }),
+    );
+    const outcome = await reapSessions({
+      tempRoot: parent,
+      ttlHours: 4,
+      now: new Date("2026-04-01T12:00:00.000Z"),
+    });
+    expect(outcome.scanned).toBe(1);
+    expect(outcome.candidates).toEqual([]);
+    expect(isConcurrentRemoval(Object.assign(new Error("not a directory"), { code: "ENOTDIR" }))).toBe(true);
+    expect(isConcurrentRemoval(Object.assign(new Error("permission denied"), { code: "EACCES" }))).toBe(false);
+    expect(isConcurrentRemoval(Object.assign(new Error("disk error"), { code: "EIO" }))).toBe(false);
+  });
+
+  it("propagates an actual unreadable child instead of treating it as an empty candidate", async () => {
+    if (process.getuid?.() === 0) return;
+    const parent = await temporaryParent();
+    const root = await sessionRoot(parent, "unreadable", "2026-04-01T05:00:00.000Z", 99_999_999);
+    const locked = path.join(root, "locked");
+    await mkdir(locked);
+    await writeFile(path.join(locked, "secret"), "no read");
+    await chmod(locked, 0o000);
+    try {
+      await expect(
+        reapSessions({
+          tempRoot: parent,
+          ttlHours: 4,
+          now: new Date("2026-04-01T12:00:00.000Z"),
+        }),
+      ).rejects.toMatchObject({ code: "EACCES" });
+    } finally {
+      await chmod(locked, 0o700);
+    }
   });
 
   it("reports dry-run candidates without deleting them", async () => {

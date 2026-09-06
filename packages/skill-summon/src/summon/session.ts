@@ -481,7 +481,7 @@ export async function reapSessions(
   for (const entry of entries) {
     if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
       continue;
-    const sessionRoot = path.join(root, entry.name);
+      const sessionRoot = path.join(root, entry.name);
     if (excluded.has(path.resolve(sessionRoot))) continue;
     scanned++;
 
@@ -494,8 +494,9 @@ export async function reapSessions(
     let sessionStat;
     try {
       sessionStat = await lstat(sessionRoot);
-    } catch {
-      continue;
+    } catch (error) {
+      if (isConcurrentRemoval(error)) continue;
+      throw error;
     }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     const startedAt = Number.isFinite(createdAt)
@@ -507,8 +508,9 @@ export async function reapSessions(
     let bytes = 0;
     try {
       bytes = await directorySize(sessionRoot);
-    } catch {
-      continue;
+    } catch (error) {
+      if (isConcurrentRemoval(error)) continue;
+      throw error;
     }
     candidates.push({ root: sessionRoot, ageHours, bytes });
     if (!dryRun) await rm(sessionRoot, { recursive: true, force: true });
@@ -568,6 +570,11 @@ async function directorySize(root: string): Promise<number> {
     bytes += await directorySize(path.join(root, entry));
   }
   return bytes;
+}
+
+export function isConcurrentRemoval(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException)?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
 }
 
 function errorMessage(error: unknown): string {
