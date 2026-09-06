@@ -3,6 +3,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { SkillIndexError } from "skill-zero";
+
 import {
   indexFromSnapshot,
   loadCommittedIndex,
@@ -128,6 +130,15 @@ describe("the committed index", () => {
     if ((calibration?.unanswerableRejected ?? 0) < 0.9) {
       expect(calibration?.note).toMatch(/G2/);
     }
+  });
+
+  it("reports malformed JSON as SkillIndexError", async () => {
+    const root = await mkdtemp(join(tmpdir(), "skill-index-malformed-"));
+    roots.push(root);
+    await writeFile(join(root, "skill-index.json"), "{not-json");
+    process.env.SKILL_INDEX_PATH = join(root, "skill-index.json");
+
+    await expect(loadCommittedIndex()).rejects.toBeInstanceOf(SkillIndexError);
   });
 
   it("honours SKILL_INDEX_PATH, and skips an unreadable candidate rather than throwing", async () => {
