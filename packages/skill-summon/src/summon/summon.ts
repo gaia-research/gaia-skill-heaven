@@ -29,7 +29,7 @@ import { PayloadCache } from "./payload-cache.js";
 import { type RankingSummary, type SummonSurface } from "./rank.js";
 import { appendSummonLog } from "./log.js";
 import { elapsedSeconds, startTiming } from "./timing.js";
-import { reapSessions } from "./session.js";
+import { assertConfinedPath, reapSessions } from "./session.js";
 import type { InstalledSkill, RetrievalDisclosure, SummonSession } from "./session.js";
 
 const DEFAULT_LIMIT = 1;
@@ -623,9 +623,10 @@ async function installSingle(
         "",
       );
       const cacheDir = path.join(ctx.session.cacheRoot, cacheOwner, repoName);
-      transientClone = cacheDir;
       let cloneOutcome;
       try {
+        await assertConfinedPath(ctx.session.root, cacheDir, "Cache path");
+        transientClone = cacheDir;
         cloneOutcome = await ensureCachedRepo(cacheDir, repoUrl, branch);
       } catch (error) {
         return {
@@ -635,7 +636,18 @@ async function installSingle(
           reason: `Could not clone ${repoUrl}: ${errorMessage(error)}`,
         };
       }
-      sourceSkillPath = path.join(cloneOutcome.path, subpath);
+      try {
+        const candidatePath = path.resolve(cloneOutcome.path, subpath);
+        await assertConfinedPath(cloneOutcome.path, candidatePath, "Skill source path");
+        sourceSkillPath = candidatePath;
+      } catch (error) {
+        return {
+          ok: false,
+          installed: [],
+          suites: [],
+          reason: `Unsafe skill subpath '${subpath}' in ${repoUrl}: ${errorMessage(error)}`,
+        };
+      }
       retainedIdentity = { repoUrl, commit: cloneOutcome.commit, subpath };
     }
 
@@ -672,6 +684,7 @@ async function installSingle(
     const destDir = path.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
+      await assertConfinedPath(ctx.session.root, destDir, "Materialization path");
       materializeOutcome = await materializeSkillDir(sourceSkillPath, destDir);
     } catch (error) {
       return {
