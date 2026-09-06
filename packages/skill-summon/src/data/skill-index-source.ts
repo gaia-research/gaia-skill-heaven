@@ -18,7 +18,7 @@ import {
   type SkillIndex,
 } from "skill-zero";
 
-import type { GaiaRegistrySnapshot, NamedSkill } from "../domain/types.js";
+import { flattenNamedSkills, type GaiaRegistrySnapshot, type NamedSkill } from "../domain/types.js";
 import { resolveSkillSource } from "./configured-source.js";
 import { GaiaDataError } from "./source.js";
 
@@ -137,9 +137,17 @@ export async function resolveIndex({
 
 /** Build an in-memory index from an already-loaded snapshot, so a fetched source ranks through exactly the same code as the committed one. */
 export function indexFromSnapshot(snapshot: GaiaRegistrySnapshot, sourceUrl: string): SkillIndex {
-  const named = Object.values(snapshot.named.buckets).flat();
+  const named = flattenNamedSkills(snapshot.named);
+  const bucketedIds = new Set(Object.values(snapshot.named.buckets).flat().map((skill) => skill.id));
+  const bucketed = named.filter((skill) => bucketedIds.has(skill.id));
+  const awaitingClassification = named.filter((skill) => !bucketedIds.has(skill.id));
   return buildSkillIndex({
-    projection: { buckets: { fetched: named.map(toProjectionSkill) } },
+    projection: {
+      buckets: { fetched: bucketed.map(toProjectionSkill) },
+      ...(awaitingClassification.length > 0
+        ? { awaitingClassification: awaitingClassification.map(toProjectionSkill) }
+        : {}),
+    },
     source: sourceUrl,
     sourceDigest: sha256(JSON.stringify(named)),
     builderVersion: "runtime-fetch",

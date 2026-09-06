@@ -18,6 +18,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  allProjectionSkills,
   expansionFingerprint,
   type NamedProjection,
   type ProjectionSkill,
@@ -40,7 +41,7 @@ const existing = new Map<string, { expandedFrom?: string; expansions: string[] }
   ),
 );
 
-const skills = Object.values(snapshot.buckets ?? {}).flat();
+const skills = allProjectionSkills(snapshot);
 const missing: ProjectionSkill[] = [];
 const stale: ProjectionSkill[] = [];
 const current: ProjectionSkill[] = [];

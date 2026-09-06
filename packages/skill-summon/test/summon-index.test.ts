@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  indexFromSnapshot,
   loadCommittedIndex,
   resetCommittedIndexCache,
   expandSource,
@@ -67,6 +68,36 @@ async function session() {
 }
 
 describe("the committed index", () => {
+  it("indexes awaiting classifications from fetched snapshots with suite metadata", () => {
+    const snapshot = {
+      ...structuredClone(documents),
+      named: {
+        ...structuredClone(documents.named),
+        awaitingClassification: [
+          {
+            ...structuredClone(documents.named.buckets["automated-testing"]?.[0]),
+            id: "example/unclassified-suite",
+            name: "Unclassified Suite",
+            suiteComponents: ["example/health"],
+          },
+        ],
+      },
+      source: {
+        kind: "tree" as const,
+        genericUrl: "memory://generic",
+        namedUrl: "memory://named",
+        fetchedAt: "2026-07-16T00:00:00Z",
+      },
+    };
+    const index = indexFromSnapshot(snapshot, "memory://source");
+    expect(index.docs).toHaveLength(2);
+    expect(index.stats.awaitingClassification).toBe(1);
+    expect(index.docs.find((doc) => doc.id === "example/unclassified-suite")).toMatchObject({
+      classified: false,
+      suiteComponents: ["example/health"],
+    });
+  });
+
   it("loads without a network call and carries the corpus", async () => {
     const index = await loadCommittedIndex();
     expect(index.schema).toBe("gaia.skill-index/v1");

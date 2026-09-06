@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker } from "../src/retrieval/bm25f.js";
 import {
+  allProjectionSkills,
   buildSkillIndex,
   expansionFingerprint,
   type NamedProjection,
@@ -83,9 +84,7 @@ const kept: Record<
   { expansions: string[]; expandedBy: string; expandedFrom: string }
 > = {};
 const projectionById = new Map<string, ProjectionSkill>(
-  Object.values(snapshot.buckets ?? {})
-    .flat()
-    .map((skill) => [skill.id, skill]),
+  allProjectionSkills(snapshot).map((skill) => [skill.id, skill]),
 );
 const rejected: Array<{ id: string; expansion: string; rank: number | null; top: string | null }> = [];
 

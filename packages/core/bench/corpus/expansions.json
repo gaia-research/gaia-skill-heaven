@@ -39,7 +39,7 @@
       "turn my one-line request into a structured implementation plan"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:3ac8499058d6"
   },
   "addy-osmani/agent-skills": {
     "expansions": [
@@ -316,7 +316,7 @@
       "autonomous dev platform that handles spec, planning, and implementation"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:2d6246dacee7"
   },
   "devin-ai/autonomous-swe": {
     "expansions": [
@@ -650,7 +650,7 @@
       "sweep multiple repos and consolidate everything into one tracker"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:6268b34918ad"
   },
   "gaiabot/repo-docs-before-pr": {
     "expansions": [
@@ -664,7 +664,7 @@
       "gate my pull request on documentation being current"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:f176437cb0f7"
   },
   "garrytan/benchmark": {
     "expansions": [
@@ -1321,7 +1321,7 @@
       "which parts of this protein are floppy versus well-folded"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:78e4a9cfc76f"
   },
   "google-deepmind/alphagenome-single-variant-analysis": {
     "expansions": [
@@ -1335,7 +1335,7 @@
       "score the functional consequence of a mutation outside the coding region"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:c68a95b4f769"
   },
   "google-deepmind/chembl-database": {
     "expansions": [
@@ -1349,7 +1349,7 @@
       "download an SDF file for a compound so I can visualize it in PyMOL"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:76fff51150f1"
   },
   "google-deepmind/clinical-trials-database": {
     "expansions": [
@@ -1363,7 +1363,7 @@
       "is there a phase 3 trial recruiting kids with this disease near me"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:36ca6c340f3a"
   },
   "google-deepmind/clinvar-database": {
     "expansions": [
@@ -1377,7 +1377,7 @@
       "look up the consensus clinical significance for a human genomic variant"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:8ca7be3717b8"
   },
   "google-deepmind/dbsnp-database": {
     "expansions": [
@@ -1391,7 +1391,7 @@
       "resolve rs7412 to its coordinates on GRCh38"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:e2dd3f637b30"
   },
   "google-deepmind/embl-ebi-ols": {
     "expansions": [
@@ -1405,7 +1405,7 @@
       "explore ancestor categories for a cell type or anatomy term"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:05e257f48dfd"
   },
   "google-deepmind/encode-ccres-database": {
     "expansions": [
@@ -1418,7 +1418,7 @@
       "is this non-coding region an active enhancer in a given tissue"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:3675a17fcaff"
   },
   "google-deepmind/ensembl-database": {
     "expansions": [
@@ -1433,7 +1433,7 @@
       "translate between ENSG, ENST, and ENSP identifiers"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:fc95cf385e3c"
   },
   "google-deepmind/foldseek-structural-search": {
     "expansions": [
@@ -1447,7 +1447,7 @@
       "given this experimental structure, what family does it belong to"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:a4ce44355960"
   },
   "google-deepmind/gnomad-database": {
     "expansions": [
@@ -1460,7 +1460,7 @@
       "look up population-scale variant frequency, not an individual patient's genome"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:07eaafebe127"
   },
   "google-deepmind/gtex-database": {
     "expansions": [
@@ -1474,7 +1474,7 @@
       "what's the normal, non-diseased expression pattern for this transcript"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:8cfc84f7d363"
   },
   "google-deepmind/human-protein-atlas-database": {
     "expansions": [
@@ -1488,7 +1488,7 @@
       "confirm protein presence beyond RNA-seq evidence"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:694608da5b6a"
   },
   "google-deepmind/interpro-database": {
     "expansions": [
@@ -1501,7 +1501,7 @@
       "explore the domain architecture of a protein sequence"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:333a30def81a"
   },
   "google-deepmind/jaspar-database": {
     "expansions": [
@@ -1515,7 +1515,7 @@
       "infer a binding motif from this TF protein sequence"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:9be080c23468"
   },
   "google-deepmind/literature-search-arxiv": {
     "expansions": [
@@ -1529,7 +1529,7 @@
       "fetch full text of a preprint for close reading"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:aa39e0a8f6f2"
   },
   "google-deepmind/literature-search-biorxiv": {
     "expansions": [
@@ -1541,7 +1541,7 @@
       "get metadata for a preprint I already know the identifier of"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:9c5c170dbdf9"
   },
   "google-deepmind/literature-search-europepmc": {
     "expansions": [
@@ -1555,7 +1555,7 @@
       "pull the bibliography for a given article"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:5af90c9222ab"
   },
   "google-deepmind/literature-search-openalex": {
     "expansions": [
@@ -1569,7 +1569,7 @@
       "bibliometric lookup for funders and journals behind a paper"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:94a18c757ee0"
   },
   "google-deepmind/ncbi-sequence-fetch": {
     "expansions": [
@@ -1582,7 +1582,7 @@
       "look up a sequence when I only know the organism and approximate length"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:6b1d5228a681"
   },
   "google-deepmind/openfda-database": {
     "expansions": [
@@ -1597,7 +1597,7 @@
       "search recalls across foods, cosmetics, or tobacco products"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:1dbd203114e4"
   },
   "google-deepmind/opentargets-database": {
     "expansions": [
@@ -1611,7 +1611,7 @@
       "find known compounds targeting this protein"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:6d9ec464c67a"
   },
   "google-deepmind/pdb-database": {
     "expansions": [
@@ -1623,7 +1623,7 @@
       "find crystal structures containing a particular nucleic acid or ligand"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:cbb963ef4536"
   },
   "google-deepmind/protein-sequence-msa": {
     "expansions": [
@@ -1636,7 +1636,7 @@
       "assess similarity across up to a few thousand protein sequences"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:771a63db036c"
   },
   "google-deepmind/protein-sequence-similarity-search": {
     "expansions": [
@@ -1650,7 +1650,7 @@
       "given this sequence, find close evolutionary relatives"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:3de1cee04a8c"
   },
   "google-deepmind/pubchem-database": {
     "expansions": [
@@ -1662,7 +1662,7 @@
       "substructure search for molecules containing a given fragment"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:8be80b66bac6"
   },
   "google-deepmind/pubmed-database": {
     "expansions": [
@@ -1676,7 +1676,7 @@
       "look up published research via NCBI E-utilities"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:95a70af3a40e"
   },
   "google-deepmind/pymol": {
     "expansions": [
@@ -1690,7 +1690,7 @@
       "superimpose two protein structures and visualize the overlap"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:e3b93675376a"
   },
   "google-deepmind/quickgo-database": {
     "expansions": [
@@ -1702,7 +1702,7 @@
       "filter GO annotations to only experimentally verified evidence"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:c90cdd5c1073"
   },
   "google-deepmind/reactome-database": {
     "expansions": [
@@ -1717,7 +1717,7 @@
       "retrieve enrichment analysis results using a previous token"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:94baa3226b4e"
   },
   "google-deepmind/string-database": {
     "expansions": [
@@ -1729,7 +1729,7 @@
       "how strong is the interaction evidence between two proteins"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:46a0a19db160"
   },
   "google-deepmind/ucsc-conservation-and-tfbs": {
     "expansions": [
@@ -1743,7 +1743,7 @@
       "assess whether a mutation hits a functionally important site"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:e8c0fac8b0b0"
   },
   "google-deepmind/unibind-database": {
     "expansions": [
@@ -1757,7 +1757,7 @@
       "search curated TF binding data across multiple organisms"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:051a6aeff317"
   },
   "google-deepmind/uniprot-database": {
     "expansions": [
@@ -1770,7 +1770,7 @@
       "search proteins by function across UniProtKB and UniRef"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:421363aaac72"
   },
   "google-deepmind/uv": {
     "expansions": [
@@ -1782,7 +1782,7 @@
       "confirm uv --version works before running scripts"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:d1d1675dd572"
   },
   "google-deepmind/workflow-skill-creator": {
     "expansions": [
@@ -1796,7 +1796,7 @@
       "never want to re-explain this workflow again, save it"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:e4d566ba8b48"
   },
   "gooseworks/notte-browser": {
     "expansions": [
@@ -2264,7 +2264,7 @@
       "flag anything that breaks the repository boundary pattern"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:bbadc2c1c488"
   },
   "langgenius/component-refactoring": {
     "expansions": [
@@ -2276,7 +2276,7 @@
       "reduce the complexity of this UI component"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:b23cd00bb1fc"
   },
   "langgenius/e2e-cucumber-playwright": {
     "expansions": [
@@ -2290,7 +2290,7 @@
       "tag and organize end-to-end test scenarios properly"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:aecb09937d64"
   },
   "langgenius/frontend-code-review": {
     "expansions": [
@@ -2303,7 +2303,7 @@
       "is this form accessible and does it use the right ARIA attributes"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:c7768e2ab680"
   },
   "langgenius/frontend-testing": {
     "expansions": [
@@ -2316,7 +2316,7 @@
       "set up a failing test first for this new component feature"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:64cac235be67"
   },
   "laravel/upgrade-laravel-v13": {
     "expansions": [
@@ -3302,7 +3302,7 @@
       "clean up messy user-generated text and label its sentiment"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:3aad52feaf87"
   },
   "remotion-dev/remotion-best-practices": {
     "expansions": [
@@ -4091,7 +4091,7 @@
       "help me look for a new job in AI development"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:fabfd59fd186"
   },
   "sickn33/mcp-builder": {
     "expansions": [
@@ -4102,7 +4102,7 @@
       "how do I wire up an MCP server for my tool"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:14a7b07dfefd"
   },
   "sickn33/n8n-mcp-tools-expert": {
     "expansions": [
@@ -4116,7 +4116,7 @@
       "help designing n8n workflows that consume MCP tools"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:ab3d6bd2d236"
   },
   "spring-ai/readme-generate": {
     "expansions": [
@@ -4221,7 +4221,7 @@
       "post a tweet after I confirm it"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:08c082d6b357"
   },
   "yonatangross/orchestkit-rag": {
     "expansions": [
@@ -4245,6 +4245,6 @@
       "set up testing and deployment for a Model Context Protocol tool"
     ],
     "expandedBy": "skill-index-builder/0.1.0",
-    "expandedFrom": ""
+    "expandedFrom": "sha256:6b3905bc80ed"
   }
 }

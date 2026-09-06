@@ -11,6 +11,7 @@ import {
 } from "./data/skill-index-source.js";
 import {
   TREE_CONTRACT_VERSION,
+  flattenNamedSkills,
   type GaiaRegistrySnapshot,
   type InspectResult,
   type NamedSkill,
@@ -423,7 +424,7 @@ export class GaiaService {
 }
 
 function flattenNamed(snapshot: GaiaRegistrySnapshot): NamedSkill[] {
-  return Object.values(snapshot.named.buckets).flat();
+  return flattenNamedSkills(snapshot.named);
 }
 
 function toNamedSummary(skill: NamedSkill): NamedSkillSummary {

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
+  allProjectionSkills,
   buildSkillIndex,
   deriveTerms,
   isInstallableLink,
@@ -52,6 +53,39 @@ const options = {
 };
 
 describe("buildSkillIndex", () => {
+  it("unifies the two named collections and merges duplicate suite metadata", () => {
+    const duplicate: NamedProjection = {
+      buckets: {
+        bucket: [
+          {
+            id: "acme/suite",
+            name: "Suite",
+            contributor: "acme",
+            description: "Bucket copy.",
+            suiteComponents: ["acme/one"],
+          },
+        ],
+      },
+      awaitingClassification: [
+        {
+          id: "acme/suite",
+          name: "Different duplicate",
+          contributor: "acme",
+          description: "Awaiting copy.",
+          suiteComponents: ["acme/two", "acme/one"],
+        },
+      ],
+    };
+    expect(allProjectionSkills(duplicate)).toHaveLength(1);
+    const doc = buildSkillIndex({ ...options, projection: duplicate }).docs[0];
+    expect(doc).toMatchObject({
+      id: "acme/suite",
+      name: "Suite",
+      classified: true,
+      suiteComponents: ["acme/one", "acme/two"],
+    });
+  });
+
   it("indexes unbucketed skills too, and flags them as unclassified", () => {
     const index = buildSkillIndex(options);
     // Reading `buckets` only made 52 real skills unsummonable for a reason

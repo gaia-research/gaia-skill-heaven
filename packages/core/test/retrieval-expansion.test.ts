@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { Bm25fRanker } from "../src/retrieval/bm25f.js";
+import { allProjectionSkills, type NamedProjection } from "../src/retrieval/build-index.js";
 import { assertSkillIndex, type SkillIndex } from "../src/retrieval/schema.js";
 
 // Expansions are INDEX DATA: ranked on, never displayed (SPEC §2.2). These
@@ -13,6 +14,25 @@ import { assertSkillIndex, type SkillIndex } from "../src/retrieval/schema.js";
 const index = loadIndex();
 
 describe("the expansion surface", () => {
+  it("keeps all 52 awaiting skills in the deterministic corpus and retains 51 expansions", () => {
+    const snapshot = JSON.parse(
+      readFileSync(join(import.meta.dirname, "..", "bench", "corpus", "named-projection.json"), "utf8"),
+    ) as unknown as NamedProjection & {
+      awaitingClassification?: Array<{ id: string }>;
+    };
+    const expansions = JSON.parse(
+      readFileSync(join(import.meta.dirname, "..", "bench", "corpus", "expansions.json"), "utf8"),
+    ) as Record<string, { expansions: string[] }>;
+    const all = allProjectionSkills(snapshot);
+    const awaiting = snapshot.awaitingClassification ?? [];
+
+    expect(all).toHaveLength(326);
+    expect(awaiting).toHaveLength(52);
+    expect(awaiting.filter((skill) => expansions[skill.id]?.expansions.length > 0)).toHaveLength(51);
+    expect(index.docs.filter((doc) => !doc.classified)).toHaveLength(52);
+    expect(index.docs.filter((doc) => !doc.classified && doc.retrieval.expansions.length > 0)).toHaveLength(51);
+  });
+
   it("never rewrites a contributor description", () => {
     const snapshot = JSON.parse(
       readFileSync(join(import.meta.dirname, "..", "bench", "corpus", "named-projection.json"), "utf8"),

@@ -42,6 +42,37 @@ export type NamedProjection = {
   awaitingClassification?: ProjectionSkill[] | undefined;
 };
 
+/**
+ * Return one deterministic collection for both projection surfaces. A malformed
+ * upstream refresh can repeat an id in a bucket and awaitingClassification;
+ * bucket order wins for authored metadata, while suite components are merged so
+ * a duplicate cannot silently erase installable suite information.
+ */
+export function allProjectionSkills(projection: NamedProjection): ProjectionSkill[] {
+  const byId = new Map<string, ProjectionSkill>();
+  for (const skill of [
+    ...Object.values(projection.buckets ?? {}).flat(),
+    ...(projection.awaitingClassification ?? []),
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...(previous.suiteComponents ?? []),
+      ...(skill.suiteComponents ?? []),
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...(suiteComponents.length > 0
+        ? { suiteComponents: [...new Set(suiteComponents)] }
+        : {}),
+    });
+  }
+  return [...byId.values()];
+}
+
 export type BuildIndexOptions = {
   projection: NamedProjection;
   /** Root the projection was served from, echoed on every card. */
@@ -158,16 +189,12 @@ export function buildSkillIndex({
   generatedAt = new Date().toISOString(),
   expansions,
 }: BuildIndexOptions): SkillIndex {
-  const bucketed = Object.values(projection.buckets ?? {}).flat();
-  const unclassified = projection.awaitingClassification ?? [];
-  // Both are indexed. Reading `buckets` only made 52 real skills — 12 of them
-  // 4-star and 25 of them 3-star — unsummonable for a reason that has nothing
-  // to do with whether they are any good: the tree simply had not filed them
-  // under a generic node yet.
-  const docs = [
-    ...bucketed.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], true)),
-    ...unclassified.map((skill) => toIndexedSkill(skill, expansions?.[skill.id], false)),
-  ]
+  const bucketedIds = new Set(Object.values(projection.buckets ?? {}).flat().map((skill) => skill.id));
+  // Both collections are indexed. Reading `buckets` only made 52 real skills
+  // unsummonable for a reason that has nothing to do with whether they are any
+  // good: the tree simply had not filed them under a generic node yet.
+  const docs = allProjectionSkills(projection)
+    .map((skill) => toIndexedSkill(skill, expansions?.[skill.id], bucketedIds.has(skill.id)))
     .sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
 
   const avgFieldLen = Object.fromEntries(
