@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { realpathSync } from "node:fs";
 import {
   lstat,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -144,6 +146,7 @@ export class SummonSession {
   }
 
   static async createAt(root: string, id: string): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root);
     const manifest: SessionManifest = {
       id,
       createdAt: new Date().toISOString(),
@@ -156,6 +159,7 @@ export class SummonSession {
   }
 
   static async loadAt(root: string): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root);
     const manifestPath = path.join(root, MANIFEST_FILE);
     let raw: string;
     try {
@@ -188,8 +192,12 @@ export class SummonSession {
   }
 
   async ensureRoots(): Promise<void> {
-    await mkdir(this.cacheRoot, { recursive: true });
-    await mkdir(this.skillsRoot, { recursive: true });
+    // The environment can name an existing directory, and both cache and
+    // skills are recursive write targets. Validate the physical root before
+    // creating either child so a symlink cannot redirect writes outside it.
+    await assertDisposableSessionRoot(this.root);
+    await ensureConfinedDirectory(this.root, this.cacheRoot);
+    await ensureConfinedDirectory(this.root, this.skillsRoot);
   }
 
   /** Record a skill (or suite component) already materialized on disk into the session manifest. */
@@ -242,8 +250,114 @@ export function isDisposableSessionRoot(
   tempRoot: string = tmpdir(),
 ): boolean {
   const resolved = path.resolve(root);
-  if (path.dirname(resolved) !== path.resolve(tempRoot)) return false;
-  return path.basename(resolved).startsWith(SESSION_DIR_PREFIX);
+  const name = path.basename(resolved);
+  if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
+  if (path.dirname(resolved) === path.resolve(tempRoot)) return true;
+
+  // macOS commonly exposes /tmp as an alias of /private/tmp. Keep the cheap
+  // synchronous predicate useful for callers that only have a path, while the
+  // async validator below checks the actual root and all physical boundaries.
+  try {
+    return realpathSync(path.dirname(resolved)) === realpathSync(tempRoot);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate an env-supplied session root before any session file is read or
+ * written. Lexical prefix checks are insufficient: the named root itself, or
+ * an ancestor reached through a platform alias, may be a symlink.
+ */
+export async function assertDisposableSessionRoot(
+  root: string,
+  tempRoot: string = tmpdir(),
+): Promise<void> {
+  if (!isDisposableSessionRoot(root, tempRoot)) {
+    throw new Error(
+      `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`,
+    );
+  }
+
+  let rootStat;
+  try {
+    rootStat = await lstat(root);
+  } catch (error) {
+    throw new Error(`Session root ${root} is not an existing directory: ${errorMessage(error)}`);
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
+  }
+
+  const [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
+  if (
+    path.dirname(rootReal) !== tempReal ||
+    !path.basename(rootReal).startsWith(SESSION_DIR_PREFIX)
+  ) {
+    throw new Error(
+      `Session root ${root} resolves outside the disposable temp-root namespace.`,
+    );
+  }
+}
+
+/** Validate an existing or not-yet-created path stays physically below root. */
+export async function assertConfinedPath(
+  root: string,
+  target: string,
+  label = "Path",
+): Promise<void> {
+  const rootResolved = path.resolve(root);
+  const targetResolved = path.resolve(target);
+  if (!isWithin(rootResolved, targetResolved)) {
+    throw new Error(`${label} escapes session root: ${target}`);
+  }
+
+  const rootReal = await realpath(rootResolved);
+  let current = targetResolved;
+  while (true) {
+    let currentStat;
+    try {
+      currentStat = await lstat(current);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw error;
+      if (current === rootResolved) throw error;
+      current = path.dirname(current);
+      continue;
+    }
+    if (currentStat.isSymbolicLink()) {
+      throw new Error(`${label} traverses a symlink: ${current}`);
+    }
+    if (current !== targetResolved && !currentStat.isDirectory()) {
+      throw new Error(`${label} traverses a non-directory path: ${current}`);
+    }
+    const currentReal = await realpath(current);
+    if (!isWithin(rootReal, currentReal)) {
+      throw new Error(`${label} resolves outside session root: ${target}`);
+    }
+    if (current === rootResolved) return;
+    current = path.dirname(current);
+  }
+}
+
+function isWithin(parent: string, child: string): boolean {
+  const relative = path.relative(parent, child);
+  return relative === "" ||
+    (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+async function ensureConfinedDirectory(root: string, target: string): Promise<void> {
+  await assertConfinedPath(root, target, "Session directory");
+  try {
+    const targetStat = await lstat(target);
+    if (targetStat.isSymbolicLink() || !targetStat.isDirectory()) {
+      throw new Error(`Session directory ${target} must be a real directory.`);
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    await mkdir(target);
+  }
+  await assertConfinedPath(root, target, "Session directory");
 }
 
 /**

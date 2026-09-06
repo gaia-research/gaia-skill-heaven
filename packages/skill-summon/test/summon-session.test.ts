@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   rm,
+  symlink,
   utimes,
   writeFile,
 } from "node:fs/promises";
@@ -111,9 +112,8 @@ describe("summon session garbage collection", () => {
   });
 
   it("close removes the complete owned root", async () => {
-    const parent = await temporaryParent();
-    const root = path.join(parent, "skill-summon-session-close");
-    await mkdir(root);
+    const root = await mkdtemp(path.join(tmpdir(), "skill-summon-session-close-"));
+    cleanupRoots.push(root);
     const session = await SummonSession.createAt(root, "close-test");
     await session.ensureRoots();
     await writeFile(path.join(session.cacheRoot, "scaffolding"), "clone");
@@ -153,6 +153,29 @@ describe("SKILL_SUMMON_SESSION confinement", () => {
     ).toBe(false);
     // Outside tmpdir() entirely.
     expect(isDisposableSessionRoot("/etc/skill-summon-session-abc")).toBe(false);
+  });
+
+  it("rejects a symlink root before loading or writing a manifest", async () => {
+    const outside = await mkdtemp(path.join(tmpdir(), "skill-summon-session-outside-"));
+    cleanupRoots.push(outside);
+    const link = path.join(tmpdir(), "skill-summon-session-symlink-test");
+    cleanupRoots.push(link);
+    await symlink(outside, link, "dir");
+    process.env.SKILL_SUMMON_SESSION = link;
+
+    await expect(resolveSession()).rejects.toThrow(/real directory|symlink/u);
+    await expect(access(path.join(outside, "cache"))).rejects.toThrow();
+  });
+
+  it("rejects a nested cache symlink before ensureRoots writes through it", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "skill-summon-session-nested-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "skill-summon-session-outside-"));
+    cleanupRoots.push(root, outside);
+    const session = await SummonSession.createAt(root, "nested-test");
+    await symlink(outside, session.cacheRoot, "dir");
+
+    await expect(session.ensureRoots()).rejects.toThrow(/symlink|outside/u);
+    await expect(access(path.join(outside, "skills"))).rejects.toThrow();
   });
 
   it("refuses to adopt an env-supplied root outside the disposable namespace", async () => {
