@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import {
   assertSkillIndex,
   buildSkillIndex,
+  SkillIndexError,
   sha256,
   type ProjectionSkill,
   type SkillIndex,
@@ -51,7 +52,14 @@ async function readCommittedIndex(): Promise<SkillIndex> {
     } catch {
       continue;
     }
-    const parsed: unknown = JSON.parse(raw);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      throw new SkillIndexError(
+        `Committed skill index is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     assertSkillIndex(parsed);
     return parsed;
   }

@@ -135,9 +135,19 @@ describe("the committed index", () => {
     roots.push(root);
     const override = join(root, "skill-index.json");
     const real = await loadCommittedIndex();
+    const docs = real.docs.slice(0, 2);
     await writeFile(
       override,
-      JSON.stringify({ ...real, source: "https://example.test", docs: real.docs.slice(0, 2) }),
+      JSON.stringify({
+        ...real,
+        source: "https://example.test",
+        stats: {
+          ...real.stats,
+          docs: docs.length,
+          awaitingClassification: docs.filter((doc) => !doc.classified).length,
+        },
+        docs,
+      }),
     );
 
     resetCommittedIndexCache();

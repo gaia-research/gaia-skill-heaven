@@ -227,6 +227,43 @@ describe("assertSkillIndex", () => {
     );
   });
 
+  it("rejects shallow documents before BM25F can throw a TypeError", () => {
+    expect(() =>
+      assertSkillIndex({
+        schema: "gaia.skill-index/v2",
+        generatedAt: "2026-09-03T00:00:00.000Z",
+        source: "memory://source",
+        sourceDigest: "sha256:test",
+        builder: { version: "test", expansion: "none" },
+        stats: { docs: 1 },
+        docs: [{ id: "acme/skill", retrieval: {} }],
+      }),
+    ).toThrow(SkillIndexError);
+  });
+
+  it.each([
+    ["nonfinite floor", { floor: Number.NaN }],
+    ["wrong retrieval expansions", { retrieval: { expansions: [3] } }],
+    ["invalid id", { id: "not-an-id" }],
+  ])("rejects malformed nested values: %s", (_label, override) => {
+    const valid = buildSkillIndex(options);
+    const doc = { ...valid.docs[0], ...override };
+    expect(() => assertSkillIndex({ ...valid, docs: [doc], stats: { ...valid.stats, docs: 1 } })).toThrow(
+      SkillIndexError,
+    );
+  });
+
+  it("rejects duplicate document ids", () => {
+    const valid = buildSkillIndex(options);
+    expect(() =>
+      assertSkillIndex({
+        ...valid,
+        stats: { ...valid.stats, docs: 2 },
+        docs: [valid.docs[0], valid.docs[0]],
+      }),
+    ).toThrow(SkillIndexError);
+  });
+
   it("accepts the committed index", () => {
     const raw = JSON.parse(
       readFileSync(
