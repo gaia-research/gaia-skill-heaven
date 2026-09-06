@@ -377,7 +377,12 @@ export async function reapSessions(
       continue;
     }
 
-    const sessionStat = await lstat(sessionRoot);
+    let sessionStat;
+    try {
+      sessionStat = await lstat(sessionRoot);
+    } catch {
+      continue;
+    }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     const startedAt = Number.isFinite(createdAt)
       ? createdAt
@@ -385,7 +390,12 @@ export async function reapSessions(
     const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
     if (ageHours < ttlHours) continue;
 
-    const bytes = await directorySize(sessionRoot);
+    let bytes = 0;
+    try {
+      bytes = await directorySize(sessionRoot);
+    } catch {
+      continue;
+    }
     candidates.push({ root: sessionRoot, ageHours, bytes });
     if (!dryRun) await rm(sessionRoot, { recursive: true, force: true });
   }

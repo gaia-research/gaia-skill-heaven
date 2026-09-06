@@ -21940,12 +21940,22 @@ async function reapSessions(opts = {}) {
       liveProtected.push(sessionRoot);
       continue;
     }
-    const sessionStat = await lstat2(sessionRoot);
+    let sessionStat;
+    try {
+      sessionStat = await lstat2(sessionRoot);
+    } catch {
+      continue;
+    }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     const startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
     const ageHours = Math.max(0, (now - startedAt) / 36e5);
     if (ageHours < ttlHours) continue;
-    const bytes = await directorySize(sessionRoot);
+    let bytes = 0;
+    try {
+      bytes = await directorySize(sessionRoot);
+    } catch {
+      continue;
+    }
     candidates.push({ root: sessionRoot, ageHours, bytes });
     if (!dryRun) await rm3(sessionRoot, { recursive: true, force: true });
   }
