@@ -14,6 +14,13 @@ import {
   type AvailableTokenUsage,
 } from "./telemetry.js";
 import type { Arm } from "./vendor/ledger-record.js";
+import {
+  DEFAULT_STEERING_POLICY,
+  initialSteeringState,
+  parseSteeringPolicy,
+  parseSteeringState,
+  stepSteering,
+} from "./steering.js";
 
 interface CliArgs {
   posture: Posture;
@@ -38,6 +45,9 @@ interface CliArgs {
     churnCount?: number;
   };
   telemetryValidate?: string;
+  steeringEvent?: string;
+  steeringState?: string;
+  steeringPolicy?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -69,6 +79,9 @@ export function parseArgs(argv: string[]): CliArgs {
   let telemetryRecoveryObserved: boolean | undefined;
   let telemetryChurnCount: number | undefined;
   let telemetryValidate: string | undefined;
+  let steeringEvent: string | undefined;
+  let steeringState: string | undefined;
+  let steeringPolicy: string | undefined;
 
   const need = (flag: string, i: number): string => {
     const v = argv[i];
@@ -128,7 +141,34 @@ export function parseArgs(argv: string[]): CliArgs {
       telemetryRecoveryObserved = value === "observed";
     } else if (a === "--telemetry-churn-count") telemetryChurnCount = Number(need(a, ++i));
     else if (a === "--telemetry-validate") telemetryValidate = need(a, ++i);
+    else if (a === "--steering-event" || a === "--steer-event") steeringEvent = need(a, ++i);
+    else if (a === "--steering-state") steeringState = need(a, ++i);
+    else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
+  }
+
+  const steeringRequested = steeringEvent !== undefined || steeringState !== undefined || steeringPolicy !== undefined;
+  if (steeringRequested) {
+    if (steeringEvent === undefined) {
+      throw new Error("--steering-state and --steering-policy require --steering-event");
+    }
+    if (
+      posture !== undefined ||
+      level !== undefined ||
+      skillPaths.length > 0 ||
+      doorPluginDir !== undefined ||
+      print ||
+      prompt !== undefined ||
+      model !== undefined ||
+      effort !== undefined ||
+      keepTemp ||
+      passthrough.length > 0 ||
+      record ||
+      telemetryOut !== undefined ||
+      telemetryValidate !== undefined
+    ) {
+      throw new Error("steering flags are standalone; do not combine them with launch, record, or telemetry flags");
+    }
   }
 
   // Heaven levels select boot postures. The upper band — high · xhigh · max ·
@@ -217,11 +257,27 @@ export function parseArgs(argv: string[]): CliArgs {
       },
     }),
     ...(telemetryValidate === undefined ? {} : { telemetryValidate }),
+    ...(steeringEvent === undefined ? {} : { steeringEvent }),
+    ...(steeringState === undefined ? {} : { steeringState }),
+    ...(steeringPolicy === undefined ? {} : { steeringPolicy }),
   };
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
+  if (args.steeringEvent !== undefined) {
+    const input = JSON.parse(args.steeringEvent) as unknown;
+    const state = args.steeringState === undefined
+      ? initialSteeringState()
+      : parseSteeringState(JSON.parse(args.steeringState) as unknown);
+    if (state === null) throw new Error("--steering-state must be JSON with rung and search from the steering state contract");
+    const policy = args.steeringPolicy === undefined
+      ? DEFAULT_STEERING_POLICY
+      : parseSteeringPolicy(JSON.parse(args.steeringPolicy) as unknown);
+    if (policy === null) throw new Error("--steering-policy must be JSON with version, floor, and ceiling from the steering policy contract");
+    console.log(JSON.stringify(stepSteering(state, input, policy), null, 2));
+    return 0;
+  }
   if (args.telemetryValidate) {
     const value: unknown = JSON.parse(readFileSync(args.telemetryValidate, "utf8"));
     validateRuntimeObservation(value);

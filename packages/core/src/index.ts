@@ -60,3 +60,35 @@ export {
 // materialize(fsPlan, theirSessionDir) and spawn themselves.
 export { materialize } from "./exec.js";
 export { tokenize, makeListingLine, readFrontmatter, contentSha256, type TokenizerId } from "./vendor/census-pure.js";
+
+// Steering (SPEC §7, PLAN Lane S-now): explicit behavioral events only. The
+// controller has no retrieval-score or refusal input and is safe to replay.
+export {
+  DEFAULT_STEERING_POLICY,
+  EVENT_TYPES,
+  SEARCH_STATES,
+  STEERING_POLICY_VERSION,
+  STEERING_RUNGS,
+  initialSteeringState,
+  parseSteeringEvent,
+  parseSteeringPolicy,
+  parseSteeringState,
+  replaySteering,
+  stepSteering,
+  type BehavioralEvent,
+  type EventAuthority,
+  type SearchState,
+  type SteeringDecision,
+  type SteeringDirection,
+  type SteeringEvent,
+  type SteeringEventType,
+  type SteeringPolicy,
+  type SteeringPosition,
+  type SteeringReplay,
+  type SteeringReplayOptions,
+  type SteeringRung,
+  type SteeringSignal,
+  type SteeringState,
+  type SteeringStep,
+  type SteeringTraceEntry,
+} from "./steering.js";
