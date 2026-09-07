@@ -19,11 +19,15 @@ reaches for the network fails the run instead of quietly being measured online.
 
 ## What is here
 
+The public name of the committed lexical artifact is the **retrieval index**.
+The HH Index is a separate behavioral-evidence artifact; the internal
+`skill-index.json` filename is retained for compatibility.
+
 | Path | What it is |
 |---|---|
 | `gold.jsonl` | 100 capability-gap queries, each labelled with one correct skill id |
 | `unanswerable.jsonl` | 20 plausible gaps nothing in the corpus covers — these calibrate `FLOOR` and gate G2 |
-| `corpus/named-projection.json` | The committed corpus snapshot everything reads. Refresh with `scripts/snapshot-corpus.ts` — the only step that touches the network |
+| `corpus/named-projection.json` | The committed corpus snapshot everything reads. A controlled refresh uses `scripts/snapshot-corpus.ts --source-file ... --source-revision ...`; the default URL path is the only networked step |
 | `run.ts` | The runner: MRR, recall@5, refusal rates, paired bootstrap, floor sweep |
 | `corpus/floor.json` | The calibrated absolute floor and what separation it achieved (`scripts/calibrate-floor.ts`) |
 | `corpus/expansions.json` | Generated retrieval expansions that survived the round-trip filter |

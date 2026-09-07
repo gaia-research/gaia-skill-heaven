@@ -106,6 +106,11 @@ describe("the committed index", () => {
     expect(index.schema).toBe("gaia.skill-index/v2");
     expect(index.docs.length).toBeGreaterThan(250);
     expect(index.source).toBe("https://gaiaskilltree.com");
+    expect(index.sourceRevision).toBe("abf41d304f35fa27bbd8e32be5f6d7d880d6b232");
+    expect(index.sourceVersion).toBe("v8.4.1");
+    expect(index.sourceWorkflow).toBe(
+      "gaia-skill-tree/scripts/generateNamedIndex.py -> docs/graph/named/index.json",
+    );
   });
 
   it("reports a calibrated floor, and what that calibration achieved", async () => {

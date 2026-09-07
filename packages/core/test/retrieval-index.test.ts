@@ -137,6 +137,20 @@ describe("buildSkillIndex", () => {
     expect(JSON.stringify(buildSkillIndex(options))).toBe(JSON.stringify(buildSkillIndex(options)));
   });
 
+  it("carries pinned source provenance without making it a ranking field", () => {
+    const index = buildSkillIndex({
+      ...options,
+      sourceRevision: "tree-revision",
+      sourceVersion: "v8.4.1",
+      sourceWorkflow: "generateNamedIndex.py -> docs/graph/named/index.json",
+    });
+    expect(index).toMatchObject({
+      sourceRevision: "tree-revision",
+      sourceVersion: "v8.4.1",
+      sourceWorkflow: "generateNamedIndex.py -> docs/graph/named/index.json",
+    });
+  });
+
   it("never rewrites the contributor description", () => {
     const index = buildSkillIndex(options);
     expect(index.docs.find((doc) => doc.id === "garrytan/health")?.description).toBe(

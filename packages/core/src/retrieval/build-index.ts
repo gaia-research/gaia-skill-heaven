@@ -79,6 +79,12 @@ export type BuildIndexOptions = {
   source: string;
   /** sha256 of the upstream bytes. `sha256(...)` computes it for you. */
   sourceDigest: string;
+  /** Immutable upstream revision for a committed source refresh. */
+  sourceRevision?: string | undefined;
+  /** Upstream release/version label for a committed source refresh. */
+  sourceVersion?: string | undefined;
+  /** Upstream generator and path that produced the source projection. */
+  sourceWorkflow?: string | undefined;
   builderVersion: string;
   generatedAt?: string | undefined;
   /** Expansions keyed by skill id, when a generation batch has been run. */
@@ -185,6 +191,9 @@ export function buildSkillIndex({
   projection,
   source,
   sourceDigest,
+  sourceRevision,
+  sourceVersion,
+  sourceWorkflow,
   builderVersion,
   generatedAt = new Date().toISOString(),
   expansions,
@@ -214,6 +223,9 @@ export function buildSkillIndex({
     generatedAt,
     source,
     sourceDigest,
+    ...(sourceRevision ? { sourceRevision } : {}),
+    ...(sourceVersion ? { sourceVersion } : {}),
+    ...(sourceWorkflow ? { sourceWorkflow } : {}),
     builder: {
       version: builderVersion,
       expansion: docs.some((doc) => doc.retrieval.expansions.length > 0)

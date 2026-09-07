@@ -57,14 +57,14 @@ async function readCommittedIndex(): Promise<SkillIndex> {
       parsed = JSON.parse(raw);
     } catch (error) {
       throw new SkillIndexError(
-        `Committed skill index is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+        `Committed retrieval index is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
     assertSkillIndex(parsed);
     return parsed;
   }
   throw new GaiaDataError(
-    `Could not find the committed skill index. Looked in:\n  ${attempted.join("\n  ")}\n` +
+    `Could not find the committed retrieval index. Looked in:\n  ${attempted.join("\n  ")}\n` +
       "Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with " +
       "`npx tsx packages/core/scripts/build-skill-index.ts`.",
   );

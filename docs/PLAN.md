@@ -96,8 +96,8 @@ resources (Lane X), and WITHOUT repo-local Arbor schema (Lane A1).
 | R1 | Consume an upstream installability determination instead of URL-shape heuristics | SPEC §3.5, Q5. Largest single miss class in the current evaluation |
 | R2 | Replace the coverage-sensitive absolute admission floor with a scale-free criterion | SPEC Q6. The present floor moves when corpus coverage moves, which makes its calibration perishable |
 | R3 | Human review of the gold labels | SPEC Q7. Until then, only the *delta between systems* is load-bearing |
-| R4 | Rebuild against current Tree corpus (v8.1.0) | Tree current is v8.1.0 (Ygg III #1688 was reverted; integrity sweep #1721 landed). Freshness R4 is a controlled update against current tree. |
-| R5 | Decide the retrieval artifact's name | SPEC Q4 / INV-15 — it currently collides with the HH Index |
+| R4 | Rebuild against current Tree corpus (pinned v8.4.1) | Controlled update from Tree revision `abf41d304f35fa27bbd8e32be5f6d7d880d6b232`; source workflow, digest, and builder provenance are committed with the snapshot. |
+| R5 | Name the retrieval artifact | **Resolved:** public name is **retrieval index**; HH Index remains measured behavioral evidence. Internal `gaia.skill-index/v2` / `skill-index.json` compatibility names stay. |
 
 ### Kill criterion
 
