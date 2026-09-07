@@ -14,6 +14,8 @@ zero · low · med · high · xhigh · max · ultra
 
 Skill Heaven is the human-led convergence surface. On a capability gap, converge narrowly and call the `summon` tool with `surface: "heaven"` and a depth appropriate to the gap. No rung carries a count and no summon is capped.
 
+Behavioral evidence is not available to this surface yet: Heaven currently changes the breadth of relevance-ranked results, not behavior-aware composition. No Heaven stamp gate is running.
+
 Fleet skills marked `disable-model-invocation: true` belong here and must not be reached by an unprompted model-led summon. The user's invocation of this skill is explicit; it does not make human-led skills globally self-invokable.
 
 For each summon, show each returned card before using the skill. Read the `SKILL.md` at the card's path and apply relevant guidance to the current task. Resolve sibling files from that materialized directory. The card is the listing entry, not the skill body.

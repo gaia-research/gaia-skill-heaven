@@ -19,6 +19,11 @@ Apply relevant guidance from summoned skills to the current task.
 
 State your choice concisely before each summon — direction, depth, and rationale.
 
+The S-now controller only changes direction or depth for an explicit validated
+behavioral runtime event. Retrieval refusal and ranking scores are not
+behavioral evidence; absent or malformed events hold. The core `skill-zero`
+package exposes the caller contract and replayable trace.
+
 Honor source invocation metadata: fleet skills marked
 `disable-model-invocation: true` are human-led and excluded from the
 automatic model-led path. The card carries the classification.
