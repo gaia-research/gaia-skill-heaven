@@ -119,14 +119,18 @@ async function discoverFleetSkills(checkout: GithubFleetCheckout): Promise<Named
         throw new Error(`Fleet SKILL.md exceeds ${MAX_SKILL_MD_BYTES} bytes: ${skillPath}`);
       }
       const source = await readFile(skillPath, "utf8");
-      const frontmatter = readSkillFrontmatter(source);
+      // Keep the legacy scalar extraction for fleet naming and routing, but
+      // never expose that lossy view as MCP frontmatter. The protocol gets a
+      // separately verified subset only.
+      const legacyFrontmatter = readSkillFrontmatter(source);
+      const verifiedFrontmatter = readVerifiedSkillFrontmatter(source);
       const relativeDirectory = path.relative(checkout.path, directory).split(path.sep).join("/");
       const fallbackName = path.basename(directory);
-      const name = frontmatter.name || fallbackName;
+      const name = legacyFrontmatter.name || fallbackName;
       const idPath = relativeDirectory || fallbackName;
       const skillMdPath = relativeDirectory ? `${relativeDirectory}/SKILL.md` : "SKILL.md";
       const sourceUrl = `${checkout.webUrl}/blob/${checkout.commit}/${encodeGithubPath(skillMdPath)}`;
-      const humanLed = frontmatter["disable-model-invocation"] === "true";
+      const humanLed = legacyFrontmatter["disable-model-invocation"] === "true";
       discovered.push({
         id: `${checkout.contributor}/${slug(idPath)}`,
         name,
@@ -135,8 +139,8 @@ async function discoverFleetSkills(checkout: GithubFleetCheckout): Promise<Named
         origin: "fleet",
         status: "fleet",
         description:
-          frontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
-        frontmatter,
+          legacyFrontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
+        ...(verifiedFrontmatter ? { frontmatter: verifiedFrontmatter } : {}),
         catalogRef: slug(name),
         tags: [...new Set([...words(name), ...words(relativeDirectory)])],
         links: { github: sourceUrl },
@@ -190,6 +194,78 @@ export function readSkillFrontmatter(source: string): Record<string, string> {
   }
   flush();
   return out;
+}
+
+/**
+ * Return protocol metadata only for a deliberately small, lossless YAML subset.
+ *
+ * This is not a YAML parser. It accepts a closed document containing a flat
+ * mapping of plain, single-line scalar values and the unambiguous YAML scalar
+ * types boolean, number, and null. Collections, indentation, quotes, block
+ * scalars, aliases/tags, comments, duplicate keys, and other YAML syntax are
+ * rejected. The legacy reader above remains the compatibility path for fleet
+ * naming and invocation classification; callers must treat `undefined` as
+ * "frontmatter unavailable" rather than falling back to that lossy view.
+ */
+export function readVerifiedSkillFrontmatter(
+  source: string,
+): Record<string, unknown> | undefined {
+  const lines = source.split(/\r?\n/u);
+  if (lines[0]?.trim() !== "---") return undefined;
+
+  const unsupported = Symbol("unsupported-yaml-scalar");
+  const parseScalar = (value: string): unknown | typeof unsupported => {
+    if (
+      /["'{}\[\]\\|>&*!#%@`]/u.test(value) ||
+      value.includes(":") ||
+      /^[-?:](?:\s|$)/u.test(value)
+    ) {
+      return unsupported;
+    }
+    if (/^(?:true|false)$/iu.test(value)) {
+      return value.toLocaleLowerCase("en-US") === "true";
+    }
+    if (/^(?:null|~)$/iu.test(value)) return null;
+    // YAML 1.1 treats these as booleans while YAML 1.2 treats them as plain
+    // strings. Refuse the ambiguity instead of choosing a schema silently.
+    if (/^(?:yes|no|on|off)$/iu.test(value)) return unsupported;
+    if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
+      const number = Number(value);
+      return Number.isFinite(number) && !Object.is(number, -0)
+        ? number
+        : unsupported;
+    }
+    // Dates, exponents, leading-zero numbers, .inf/.nan, and other numeric
+    // looking scalars are outside this strict subset.
+    if (/^[+-]?(?:[0-9]|\.)/u.test(value)) return unsupported;
+    return value;
+  };
+
+  const result = Object.create(null) as Record<string, unknown>;
+  const keys = new Set<string>();
+  let closed = false;
+  for (let index = 1; index < lines.length; index++) {
+    const line = lines[index] ?? "";
+    if (line === "---") {
+      closed = true;
+      break;
+    }
+    if (line.trim() === "") continue;
+
+    const colon = line.indexOf(":");
+    if (colon <= 0) return undefined;
+    const key = line.slice(0, colon);
+    if (!/^[A-Za-z_][\w-]*$/u.test(key) || keys.has(key)) return undefined;
+    const rawValue = line.slice(colon + 1);
+    if (rawValue.includes("\t")) return undefined;
+    const value = rawValue.trim();
+    const parsed = value === "" ? null : parseScalar(value);
+    if (parsed === unsupported) return undefined;
+    keys.add(key);
+    result[key] = parsed;
+  }
+
+  return closed ? result : undefined;
 }
 
 function stripQuotes(value: string): string {

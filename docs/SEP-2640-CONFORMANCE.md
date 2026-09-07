@@ -58,8 +58,12 @@ time.
   `description`. Those entries are omitted from this resource surface rather
   than receiving fabricated frontmatter or a URI based on a registry alias.
   Entries are also omitted when the existing installability refusal applies or
-  the source route is not one this reader can prove. Fleet discovery preserves
-  the parsed frontmatter it already reads.
+  the source route is not one this reader can prove. Fleet retrieval retains
+  its legacy scalar extraction for naming, descriptions, and invocation
+  routing, but protocol metadata is attached only for a separately verified
+  flat scalar subset. Nested maps/arrays, quoted or multiline values, duplicate
+  keys, aliases/tags, and other unsupported YAML are omitted rather than
+  flattened or stringified.
 - No historical `skill://index.json` resource is exposed. The extension's
   `skills/list` method is the discovery authority.
 - No Arbor schema, Reach index/data model, stamp-gated routing, or pending Reach

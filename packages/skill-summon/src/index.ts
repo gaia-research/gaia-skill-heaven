@@ -11,6 +11,7 @@ export {
   GithubFleetSource,
   checkoutGithubFleet,
   readSkillFrontmatter,
+  readVerifiedSkillFrontmatter,
 } from "./data/fleet-source.js";
 export type {
   GithubFleetCheckout,

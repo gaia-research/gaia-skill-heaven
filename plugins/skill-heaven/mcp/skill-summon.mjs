@@ -13307,14 +13307,15 @@ async function discoverFleetSkills(checkout) {
         throw new Error(`Fleet SKILL.md exceeds ${MAX_SKILL_MD_BYTES} bytes: ${skillPath}`);
       }
       const source = await readFile(skillPath, "utf8");
-      const frontmatter = readSkillFrontmatter(source);
+      const legacyFrontmatter = readSkillFrontmatter(source);
+      const verifiedFrontmatter = readVerifiedSkillFrontmatter(source);
       const relativeDirectory = path2.relative(checkout.path, directory).split(path2.sep).join("/");
       const fallbackName = path2.basename(directory);
-      const name = frontmatter.name || fallbackName;
+      const name = legacyFrontmatter.name || fallbackName;
       const idPath = relativeDirectory || fallbackName;
       const skillMdPath = relativeDirectory ? `${relativeDirectory}/SKILL.md` : "SKILL.md";
       const sourceUrl = `${checkout.webUrl}/blob/${checkout.commit}/${encodeGithubPath(skillMdPath)}`;
-      const humanLed = frontmatter["disable-model-invocation"] === "true";
+      const humanLed = legacyFrontmatter["disable-model-invocation"] === "true";
       discovered.push({
         id: `${checkout.contributor}/${slug(idPath)}`,
         name,
@@ -13322,8 +13323,8 @@ async function discoverFleetSkills(checkout) {
         invocation: humanLed ? "human" : "model",
         origin: "fleet",
         status: "fleet",
-        description: frontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
-        frontmatter,
+        description: legacyFrontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
+        ...verifiedFrontmatter ? { frontmatter: verifiedFrontmatter } : {},
         catalogRef: slug(name),
         tags: [.../* @__PURE__ */ new Set([...words(name), ...words(relativeDirectory)])],
         links: { github: sourceUrl },
@@ -13371,6 +13372,50 @@ function readSkillFrontmatter(source) {
   }
   flush();
   return out;
+}
+function readVerifiedSkillFrontmatter(source) {
+  const lines = source.split(/\r?\n/u);
+  if (lines[0]?.trim() !== "---") return void 0;
+  const unsupported = /* @__PURE__ */ Symbol("unsupported-yaml-scalar");
+  const parseScalar = (value) => {
+    if (/["'{}\[\]\\|>&*!#%@`]/u.test(value) || value.includes(":") || /^[-?:](?:\s|$)/u.test(value)) {
+      return unsupported;
+    }
+    if (/^(?:true|false)$/iu.test(value)) {
+      return value.toLocaleLowerCase("en-US") === "true";
+    }
+    if (/^(?:null|~)$/iu.test(value)) return null;
+    if (/^(?:yes|no|on|off)$/iu.test(value)) return unsupported;
+    if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
+      const number3 = Number(value);
+      return Number.isFinite(number3) && !Object.is(number3, -0) ? number3 : unsupported;
+    }
+    if (/^[+-]?(?:[0-9]|\.)/u.test(value)) return unsupported;
+    return value;
+  };
+  const result = /* @__PURE__ */ Object.create(null);
+  const keys = /* @__PURE__ */ new Set();
+  let closed = false;
+  for (let index = 1; index < lines.length; index++) {
+    const line = lines[index] ?? "";
+    if (line === "---") {
+      closed = true;
+      break;
+    }
+    if (line.trim() === "") continue;
+    const colon = line.indexOf(":");
+    if (colon <= 0) return void 0;
+    const key = line.slice(0, colon);
+    if (!/^[A-Za-z_][\w-]*$/u.test(key) || keys.has(key)) return void 0;
+    const rawValue = line.slice(colon + 1);
+    if (rawValue.includes("	")) return void 0;
+    const value = rawValue.trim();
+    const parsed = value === "" ? null : parseScalar(value);
+    if (parsed === unsupported) return void 0;
+    keys.add(key);
+    result[key] = parsed;
+  }
+  return closed ? result : void 0;
 }
 function stripQuotes(value) {
   if (value.length >= 2 && (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'"))) {
