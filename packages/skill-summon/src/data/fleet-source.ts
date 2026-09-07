@@ -136,6 +136,7 @@ async function discoverFleetSkills(checkout: GithubFleetCheckout): Promise<Named
         status: "fleet",
         description:
           frontmatter.description || `Skill from ${checkout.webUrl} at ${skillMdPath}.`,
+        frontmatter,
         catalogRef: slug(name),
         tags: [...new Set([...words(name), ...words(relativeDirectory)])],
         links: { github: sourceUrl },

@@ -31,6 +31,18 @@ export type {
 export * from "./domain/types.js";
 export { createSkillSummonMcpServer } from "./mcp/server.js";
 export type { CreateSkillSummonMcpServerOptions } from "./mcp/server.js";
+export {
+  SKILLS_EXTENSION_ID,
+  SKILL_RESOURCE_TEMPLATE,
+  skillUri,
+} from "./mcp/skills.js";
+export type {
+  DescribeSkill,
+  ReadSkillResource,
+  SkillEntry,
+  SkillResourceManifestEntry,
+  SkillResourceRead,
+} from "./mcp/skills.js";
 export { GaiaService } from "./service.js";
 export type { GaiaServiceOptions } from "./service.js";
 export { VERSION } from "./version.js";

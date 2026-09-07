@@ -54,6 +54,8 @@ export type NamedSkill = {
   status: string;
   level?: string | undefined;
   description: string;
+  /** Source-provided SKILL.md frontmatter, when the projection preserves it. */
+  frontmatter?: Record<string, unknown> | undefined;
   catalogRef?: string | undefined;
   tags: string[];
   links: Record<string, unknown>;
