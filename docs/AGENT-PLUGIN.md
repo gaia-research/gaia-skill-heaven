@@ -201,7 +201,8 @@ text or as the configured value. Neither was run here.
 
 ## What the MCP exposes
 
-One server, `skill-summon`, one tool:
+One server, `skill-summon`, one tool plus the isolated
+`io.modelcontextprotocol/skills` resource extension:
 
 - **`summon`** — input `{ query: string, limit?: positive integer, surface?: "any" | "heaven" | "hell" }`. **There is
   no upper cap** — nothing assigns a ceiling, so the engine must not invent one.
@@ -211,7 +212,15 @@ One server, `skill-summon`, one tool:
   temp dir and returns a printable card per skill, plus source invocation and
   ranking disclosures. `heaven` excludes model-led-only fleet skills; `hell`
   excludes human-led-only fleet skills and is the safe omitted default; explicit
-  manual `/summon` passes `any`.
+  manual `/summon` passes `any`. Successful results also include a
+  `resource_link` to each `skill://.../SKILL.md`.
+- **`skills/list` / `skills/get`** — metadata discovery methods from the Skills
+  extension. They return frontmatter plus a complete digest manifest where the
+  registry has one, otherwise an explicit dynamic entry; discovery never fetches
+  bodies. Skill files are read lazily through standard `resources/read` under
+  the advertised `skill://{+resourcePath}` template. Directory reads are not
+  enabled. The pinned SEP revision and its not-yet-ratified status are recorded in
+  `docs/SEP-2640-CONFORMANCE.md`.
 
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
@@ -224,8 +233,8 @@ Presented as routing guidance for `/skill-heaven`, `/skill-hell` and
 > On a real capability gap — never preemptively — call the `summon` tool with
 > `surface: "heaven"` while converging or `surface: "hell"` while exploring,
 > and a depth you judge the gap needs. Show the returned card before using the
-> skill, read the `SKILL.md` at the card's path, and apply relevant guidance to
-> the current task. The card is the listing entry, not the skill body.
+> skill, read the `SKILL.md` through its resource link, and apply relevant guidance to
+> the current task. The card is the disclosure; the resource read is the skill body.
 
 The card is the disclosure: it names the skill being summoned and carries the
 ranking disclosure with it.
