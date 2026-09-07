@@ -65,7 +65,8 @@ Absent or malformed event data is a first-class hold. Each step includes:
 `replaySteering()` returns a self-contained `SteeringReplayRecord` with the
 initial state, final state, full policy, and trace. `serializeSteeringRecord()`
 serializes only a record that verifies. `verifySteeringRecord()` recomputes each
-transition from the recorded signal descriptor and rejects tampered policy,
+transition from the recorded signal descriptor under the exact recorded policy
+and rejects tampered policy,
 version, state, provenance, action, signal, from/to, explanation, or extra
 shape. A verified record is an audit description, not a new authority for live
 steering.
