@@ -14,7 +14,7 @@ zero · low · med · high · xhigh · max · ultra
 
 On a capability gap, choose whether to converge or explore and how far to reach, then call the `summon` tool at the depth appropriate to the gap. Pass `surface: "heaven"` for the human-led path and `surface: "hell"` for the model-led path. The core S-now controller is deterministic and event-driven; absent an explicit validated behavioral event, it holds. No rung carries a count and no summon is capped.
 
-The S-now controller changes posture only from an explicit validated behavioral runtime event. Retrieval refusal and ranking scores are not behavioral evidence; absent or malformed events hold. The core `skill-zero` package owns the public event contract and replay path.
+The S-now controller changes behavioral direction or depth only from an explicit validated host-runtime event or an explicit lifecycle reopen control. Retrieval refusal and ranking scores are not behavioral evidence; absent or malformed events hold. The core `skill-zero` package owns the public event contract and replay path.
 
 Honor source invocation metadata. Fleet skills with `disable-model-invocation: true` are human-led Skill Heaven skills; they require explicit human invocation and must not leak into the model-led Skill Hell path. Fleet skills without that flag are model-led and may self-invoke through Hell.
 

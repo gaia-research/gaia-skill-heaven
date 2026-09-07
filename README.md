@@ -150,7 +150,7 @@ One mechanic — **`/summon`**, one skill into context, one session, nothing ins
 
 > **Status.** The launchers and all five in-session commands ship and work today as actively tested prototypes. GitHub fleets now route invocation safety from `SKILL.md` metadata and route candidates by relevance. Benchmark-derived trust routing is still not built.
 
-The S-now Ultra controller is deterministic and event-driven: only explicit validated behavioral events may change its rung; absent or malformed events hold. [Controller contract and replay path →](docs/STEERING.md)
+The S-now Ultra controller is deterministic and event-driven: host-runtime behavioral events drive explore/recover, while explicit operator controls manage lifecycle and reopening; absent or malformed events hold. [Controller contract and replay path →](docs/STEERING.md)
 
 ---
 
