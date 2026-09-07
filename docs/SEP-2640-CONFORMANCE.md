@@ -22,6 +22,12 @@ claim or upgrading the implementation.
 
 ## Supported surface
 
+The package is pinned to `@modelcontextprotocol/sdk@1.29.0`. That SDK does not
+ship typed SEP-2640 methods or the newer cache-result fields, so this lane uses
+its underlying `Server` request-handler API and emits the extension fields as
+wire-level JSON. The committed bundle includes the SDK and remains dependency
+free at install time.
+
 - The server advertises `io.modelcontextprotocol/skills` and the mandatory
   `skills/list` and `skills/get` methods.
 - `skills/list` and `skills/get` return the registry's frontmatter projection,
