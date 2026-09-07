@@ -232,7 +232,9 @@ export function readVerifiedSkillFrontmatter(
     if (/^(?:yes|no|on|off|y|n)$/iu.test(value)) return unsupported;
     if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
       const number = Number(value);
-      return Number.isFinite(number) && !Object.is(number, -0)
+      return Number.isFinite(number) &&
+        !Object.is(number, -0) &&
+        (!Number.isInteger(number) || Number.isSafeInteger(number))
         ? number
         : unsupported;
     }
@@ -256,9 +258,20 @@ export function readVerifiedSkillFrontmatter(
     const colon = line.indexOf(":");
     if (colon <= 0) return undefined;
     const key = line.slice(0, colon);
-    if (!/^[A-Za-z_][\w-]*$/u.test(key) || keys.has(key)) return undefined;
+    if (
+      !/^[A-Za-z_][\w-]*$/u.test(key) ||
+      isAmbiguousYamlKey(key) ||
+      keys.has(key)
+    ) {
+      return undefined;
+    }
     const rawValue = line.slice(colon + 1);
-    if (rawValue.includes("\t")) return undefined;
+    if (
+      rawValue.includes("\t") ||
+      (rawValue !== "" && !rawValue.startsWith(" "))
+    ) {
+      return undefined;
+    }
     const value = rawValue.trim();
     const parsed = value === "" ? null : parseScalar(value);
     if (parsed === unsupported) return undefined;
@@ -267,6 +280,12 @@ export function readVerifiedSkillFrontmatter(
   }
 
   return closed ? result : undefined;
+}
+
+function isAmbiguousYamlKey(value: string): boolean {
+  return /^(?:true|True|TRUE|false|False|FALSE|null|Null|NULL|~|yes|no|on|off|y|n)$/iu.test(
+    value,
+  );
 }
 
 function stripQuotes(value: string): string {

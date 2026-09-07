@@ -251,6 +251,33 @@ describe("readSkillFrontmatter", () => {
     ).toMatchObject({ "metadata-flag": expected });
   });
 
+  it("omits an unsafe integer instead of emitting a rounded number", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\nmetadata-number: 9007199254740993\n---\n`,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("omits mapping syntax without YAML separation whitespace", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\nflag:value\n---\n`,
+      ),
+    ).toBeUndefined();
+  });
+
+  it.each(["true", "yes", "y", "null"])(
+    "omits YAML-typed or ambiguous mapping key %s",
+    (key) => {
+      expect(
+        readVerifiedSkillFrontmatter(
+          `---\nname: demo\ndescription: safe\n${key}: value\n---\n`,
+        ),
+      ).toBeUndefined();
+    },
+  );
+
   it.each([
     [
       "nested maps and arrays",

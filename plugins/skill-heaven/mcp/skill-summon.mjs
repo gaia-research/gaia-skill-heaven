@@ -13388,7 +13388,7 @@ function readVerifiedSkillFrontmatter(source) {
     if (/^(?:yes|no|on|off|y|n)$/iu.test(value)) return unsupported;
     if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
       const number3 = Number(value);
-      return Number.isFinite(number3) && !Object.is(number3, -0) ? number3 : unsupported;
+      return Number.isFinite(number3) && !Object.is(number3, -0) && (!Number.isInteger(number3) || Number.isSafeInteger(number3)) ? number3 : unsupported;
     }
     if (/^[+-]?(?:[0-9]|\.)/u.test(value)) return unsupported;
     return value;
@@ -13406,9 +13406,13 @@ function readVerifiedSkillFrontmatter(source) {
     const colon = line.indexOf(":");
     if (colon <= 0) return void 0;
     const key = line.slice(0, colon);
-    if (!/^[A-Za-z_][\w-]*$/u.test(key) || keys.has(key)) return void 0;
+    if (!/^[A-Za-z_][\w-]*$/u.test(key) || isAmbiguousYamlKey(key) || keys.has(key)) {
+      return void 0;
+    }
     const rawValue = line.slice(colon + 1);
-    if (rawValue.includes("	")) return void 0;
+    if (rawValue.includes("	") || rawValue !== "" && !rawValue.startsWith(" ")) {
+      return void 0;
+    }
     const value = rawValue.trim();
     const parsed = value === "" ? null : parseScalar(value);
     if (parsed === unsupported) return void 0;
@@ -13416,6 +13420,11 @@ function readVerifiedSkillFrontmatter(source) {
     result[key] = parsed;
   }
   return closed ? result : void 0;
+}
+function isAmbiguousYamlKey(value) {
+  return /^(?:true|True|TRUE|false|False|FALSE|null|Null|NULL|~|yes|no|on|off|y|n)$/iu.test(
+    value
+  );
 }
 function stripQuotes(value) {
   if (value.length >= 2 && (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'"))) {
