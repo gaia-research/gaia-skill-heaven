@@ -21002,7 +21002,7 @@ var UriTemplate = class _UriTemplate {
   }
   getNames(expr) {
     const operator = this.getOperator(expr);
-    return expr.slice(operator.length).split(",").map((name) => name.replace("*", "").trim()).filter((name) => name.length > 0);
+    return expr.slice(operator.length).split(",").map((name) => name.replaceAll("*", "").trim()).filter((name) => name.length > 0);
   }
   encodeValue(value, operator) {
     _UriTemplate.validateLength(value, MAX_VARIABLE_LENGTH, "Variable value");
@@ -21139,7 +21139,7 @@ var UriTemplate = class _UriTemplate {
     for (let i = 0; i < names.length; i++) {
       const { name, exploded } = names[i];
       const value = match[i + 1];
-      const cleanName = name.replace("*", "");
+      const cleanName = name.replaceAll("*", "");
       if (exploded && value.includes(",")) {
         result[cleanName] = value.split(",");
       } else {
@@ -23336,6 +23336,8 @@ var SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._~-]*$/u;
 var SAFE_RESOURCE_SEGMENT = /^[^/\\\u0000-\u001f\u007f]+$/u;
 var SAFE_SKILL_NAME = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 var ENCODED_PATH_ESCAPE = /%(?:2e|2f|5c)/iu;
+var GITHUB_REPOSITORY = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/u;
+var GITHUB_BRANCH = /^[A-Za-z0-9._/-]+$/u;
 async function buildInternalEntries(skills, describeSkill) {
   const sorted = [...skills].sort(
     (left, right) => left.id.localeCompare(right.id)
@@ -23345,6 +23347,7 @@ async function buildInternalEntries(skills, describeSkill) {
   for (const skill of sorted) {
     const description = await describeSkill?.(skill);
     const frontmatter = frontmatterFor(skill, description?.frontmatter);
+    if (!frontmatter || !isReadableSkillSource(skill)) continue;
     const pathSegments = skillPathSegments(skill, frontmatter.name);
     const uri = uriFromSegments([...pathSegments, SKILL_MD]);
     if (seenUris.has(uri)) {
@@ -23365,6 +23368,9 @@ async function buildInternalEntries(skills, describeSkill) {
 }
 function skillUriForSkill(skill) {
   const frontmatter = frontmatterFor(skill);
+  if (!frontmatter) {
+    throw new Error(`Skill '${skill.id}' has no authoritative frontmatter.`);
+  }
   return uriFromSegments([
     ...skillPathSegments(skill, frontmatter.name),
     SKILL_MD
@@ -23484,8 +23490,31 @@ function frontmatterFor(skill, supplied) {
   if (candidate && validSkillName(candidate.name) && typeof candidate.description === "string") {
     return structuredClone(candidate);
   }
-  const name = slug2(skill.id.split("/").at(-1) ?? skill.name);
-  return { name, description: skill.description };
+  return void 0;
+}
+function isReadableSkillSource(skill) {
+  return skill.installable !== false && isInstallable(skill) && githubResourceSource(skill) !== void 0;
+}
+function githubResourceSource(skill) {
+  const sourceUrl = typeof skill.links.github === "string" ? skill.links.github : void 0;
+  if (!sourceUrl || !/^https:\/\/github\.com\//u.test(sourceUrl)) return void 0;
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(sourceUrl);
+  } catch {
+    return void 0;
+  }
+  if (parsedUrl.search || parsedUrl.hash) return void 0;
+  const parsed = parseGithubUrl(sourceUrl);
+  if (!GITHUB_REPOSITORY.test(parsed.repoUrl) || parsed.branch !== null && (!GITHUB_BRANCH.test(parsed.branch) || parsed.branch.includes(".."))) {
+    return void 0;
+  }
+  try {
+    safeRelativePath(parsed.subpath, "skill source", true);
+  } catch {
+    return void 0;
+  }
+  return parsed;
 }
 function skillPathSegments(skill, name) {
   const identifiers = splitIdentifier(skill.id);
@@ -23493,7 +23522,12 @@ function skillPathSegments(skill, name) {
   return [...prefix, name];
 }
 function splitIdentifier(identifier) {
-  const cleaned = identifier.trim().replace(/^\/+|\/+$/gu, "");
+  const trimmed = identifier.trim();
+  let start = 0;
+  while (start < trimmed.length && trimmed.charCodeAt(start) === 47) start++;
+  let end = trimmed.length;
+  while (end > start && trimmed.charCodeAt(end - 1) === 47) end--;
+  const cleaned = trimmed.slice(start, end);
   const segments = cleaned.split("/");
   if (!cleaned || segments.some(
     (segment) => !segment || segment === "." || segment === ".." || segment.includes("\\") || !SAFE_SEGMENT.test(segment)
@@ -23504,10 +23538,6 @@ function splitIdentifier(identifier) {
 }
 function validSkillName(value) {
   return typeof value === "string" && SAFE_SKILL_NAME.test(value);
-}
-function slug2(value) {
-  const result = value.toLocaleLowerCase("en-US").normalize("NFKD").replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "").slice(0, 64);
-  return validSkillName(result) ? result : "skill";
 }
 function uriFromSegments(segments) {
   if (segments.length < 2 || segments.some((segment) => !SAFE_SEGMENT.test(segment))) {
@@ -23547,14 +23577,9 @@ function invalidResource(message) {
 }
 async function readRemoteSkillResource(skill, relativePath, tempRoot) {
   const sourceUrl = typeof skill.links.github === "string" ? skill.links.github : void 0;
-  if (!sourceUrl || !/^https:\/\/github\.com\//u.test(sourceUrl)) {
+  const parsed = githubResourceSource(skill);
+  if (!sourceUrl || !parsed) {
     throw new Error(`Skill '${skill.id}' has no supported remote resource source.`);
-  }
-  const parsed = parseGithubUrl(sourceUrl);
-  if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/u.test(
-    parsed.repoUrl
-  ) || parsed.branch !== null && (!/^[A-Za-z0-9._/-]+$/u.test(parsed.branch) || parsed.branch.includes(".."))) {
-    throw new Error("Skill resource source is not a supported GitHub repository reference.");
   }
   const sourceSubpath = safeRelativePath(parsed.subpath, "skill source", true);
   const resourceSubpath = safeRelativePath(relativePath, "resource");
@@ -23812,13 +23837,16 @@ function createSkillSummonMcpServer({
     async ({ query, limit, surface }) => {
       try {
         const session = await getSession();
-        return toolResult(
-          await summon(service, session, {
-            query,
-            ...limit === void 0 ? {} : { limit },
-            ...surface === void 0 ? {} : { surface }
-          })
+        const outcome = await summon(service, session, {
+          query,
+          ...limit === void 0 ? {} : { limit },
+          ...surface === void 0 ? {} : { surface }
+        });
+        const entries = await buildInternalEntries(
+          await service.namedSkills(),
+          describeSkill
         );
+        return toolResult(outcome, entries.map((entry) => entry.skill));
       } catch (error2) {
         return toolError(error2);
       }
@@ -23826,46 +23854,41 @@ function createSkillSummonMcpServer({
   );
   return server;
 }
-function toolResult(value) {
+function toolResult(value, linkSkills = []) {
   const content = [
     { type: "text", text: JSON.stringify(value, null, 2) },
-    ...resourceLinks(value)
+    ...resourceLinks(value, linkSkills)
   ];
   return {
     content,
     structuredContent: { ...value }
   };
 }
-function resourceLinks(value) {
+function resourceLinks(value, linkSkills) {
   const summoned = value.summoned;
   if (!Array.isArray(summoned)) return [];
+  const byId = new Map(linkSkills.map((skill) => [skill.id, skill]));
   return summoned.flatMap((candidate) => {
     if (!candidate || typeof candidate !== "object") return [];
-    const skill = candidate;
-    if (typeof skill.id !== "string" || typeof skill.name !== "string") return [];
+    const installed = candidate;
+    if (typeof installed.id !== "string") return [];
+    const skill = byId.get(installed.id);
+    if (!skill || !skill.frontmatter || typeof skill.frontmatter.name !== "string") {
+      return [];
+    }
     let uri;
     try {
-      uri = skillUriForSkill({
-        id: skill.id,
-        name: skill.name,
-        contributor: "resource-link",
-        genericSkillRef: "resource-link",
-        status: "summoned",
-        description: "",
-        tags: [],
-        links: {},
-        evidence: []
-      });
+      uri = skillUriForSkill(skill);
     } catch {
       return [];
     }
-    const source = typeof skill.sourceUrl === "string" ? skill.sourceUrl : "unknown";
-    const digest = typeof skill.sha256 === "string" ? ` sha256=${skill.sha256}` : "";
+    const source = typeof installed.sourceUrl === "string" ? installed.sourceUrl : "unknown";
+    const digest = typeof installed.sha256 === "string" ? ` sha256=${installed.sha256}` : "";
     return [
       {
         type: "resource_link",
         uri,
-        name: skill.name,
+        name: skill.frontmatter.name,
         description: `Read the summoned SKILL.md. Source: ${source}.${digest}`,
         mimeType: "text/markdown",
         annotations: {

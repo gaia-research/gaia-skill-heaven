@@ -213,14 +213,17 @@ One server, `skill-summon`, one tool plus the isolated
   ranking disclosures. `heaven` excludes model-led-only fleet skills; `hell`
   excludes human-led-only fleet skills and is the safe omitted default; explicit
   manual `/summon` passes `any`. Successful results also include a
-  `resource_link` to each `skill://.../SKILL.md`.
+  `resource_link` to each `skill://.../SKILL.md` when that registry entry has
+  authoritative metadata and a proven reader route.
 - **`skills/list` / `skills/get`** — metadata discovery methods from the Skills
-  extension. They return frontmatter plus a complete digest manifest where the
-  registry has one, otherwise an explicit dynamic entry; discovery never fetches
-  bodies. Skill files are read lazily through standard `resources/read` under
-  the advertised `skill://{+resourcePath}` template. Directory reads are not
-  enabled. The pinned SEP revision and its not-yet-ratified status are recorded in
-  `docs/SEP-2640-CONFORMANCE.md`.
+  extension. They return only entries with preserved, authoritative frontmatter
+  and a proven reader route, plus a complete digest manifest where the registry
+  has one or an explicit dynamic entry. Entries that cannot prove those facts,
+  including explicit installability refusals, are omitted; discovery never
+  fetches bodies. Skill files are read lazily through standard `resources/read`
+  under the advertised `skill://{+resourcePath}` template. Directory reads are
+  not enabled. The pinned SEP revision and its not-yet-ratified status are
+  recorded in `docs/SEP-2640-CONFORMANCE.md`.
 
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
@@ -234,7 +237,8 @@ Presented as routing guidance for `/skill-heaven`, `/skill-hell` and
 > `surface: "heaven"` while converging or `surface: "hell"` while exploring,
 > and a depth you judge the gap needs. Show the returned card before using the
 > skill, read the `SKILL.md` through its resource link, and apply relevant guidance to
-> the current task. The card is the disclosure; the resource read is the skill body.
+> the current task. The card is the disclosure; when a resource link is present, the
+> resource read is the skill body.
 
 The card is the disclosure: it names the skill being summoned and carries the
 ranking disclosure with it.

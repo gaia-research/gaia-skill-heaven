@@ -17,7 +17,7 @@
 // (.github/workflows/ci.yml — "MCP bundle is up to date").
 
 import { build } from "esbuild";
-import { readFileSync, mkdirSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,6 +25,55 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
 const entry = join(repoRoot, "packages/skill-summon/src/bin/skill-summon-mcp.ts");
 const outfile = join(repoRoot, "plugins/skill-heaven/mcp/skill-summon.mjs");
+const sdkUriTemplate = join(
+  repoRoot,
+  "node_modules/@modelcontextprotocol/sdk/dist/esm/shared/uriTemplate.js",
+);
+
+// SDK 1.29.0's RFC 6570 helper removes the exploded-variable marker with
+// String#replace, which CodeQL correctly rejects for uncontrolled template
+// input. Patch only that pinned module at the bundle boundary. This does not
+// mutate node_modules and fails closed if the pinned source changes, so an SDK
+// upgrade cannot silently drop the hardening or change semantics unnoticed.
+let sdkUriTemplateHardeningApplied = false;
+const sdkUriTemplateHardening = {
+  name: "sdk-uri-template-hardening",
+  /** @param {import("esbuild").PluginBuild} buildContext */
+  setup(buildContext) {
+    buildContext.onLoad(
+      { filter: /uriTemplate\.(?:js|ts)$/ },
+      /** @param {import("esbuild").OnLoadArgs} args */
+      (args) => {
+        if (args.path !== sdkUriTemplate) return undefined;
+        const source = readFileSync(args.path, "utf8");
+        const vulnerable = "name.replace('*', '')";
+        const occurrences = source.split(vulnerable).length - 1;
+        if (occurrences !== 2) {
+          throw new Error(
+            `Expected exactly two SDK UriTemplate marker removals; found ${occurrences}. Review the pinned SDK before rebuilding.`,
+          );
+        }
+        sdkUriTemplateHardeningApplied = true;
+        return {
+          contents: source.replaceAll(vulnerable, "name.replaceAll('*', '')"),
+          loader: "js",
+        };
+      },
+    );
+  },
+};
+
+const sdkVersion = JSON.parse(
+  readFileSync(
+    join(repoRoot, "node_modules/@modelcontextprotocol/sdk/package.json"),
+    "utf8",
+  ),
+).version;
+if (sdkVersion !== "1.29.0") {
+  throw new Error(
+    `The SDK UriTemplate hardening is pinned to @modelcontextprotocol/sdk 1.29.0; found ${sdkVersion}. Review and update the build boundary first.`,
+  );
+}
 
 const esbuildVersion = JSON.parse(
   readFileSync(join(repoRoot, "node_modules/esbuild/package.json"), "utf8"),
@@ -50,7 +99,15 @@ const result = await build({
   banner: { js: banner },
   logLevel: "info",
   metafile: true,
+  write: false,
+  plugins: [sdkUriTemplateHardening],
 });
+
+if (!sdkUriTemplateHardeningApplied) {
+  throw new Error(
+    `SDK UriTemplate hardening did not run for ${sdkUriTemplate}; refuse to emit an unpatched bundle.`,
+  );
+}
 
 // Guard: fail loudly if anything bare (a bundled dependency's own import of a
 // node builtin, or a stray package) slipped through as an external instead of
@@ -67,5 +124,11 @@ for (const output of Object.values(result.metafile.outputs)) {
     }
   }
 }
+
+const bundledOutput = result.outputFiles?.find((file) => file.path === outfile);
+if (!bundledOutput) {
+  throw new Error(`esbuild did not produce the expected MCP bundle: ${outfile}`);
+}
+writeFileSync(outfile, bundledOutput.contents);
 
 process.stdout.write(`Bundled ${entry}\n  -> ${outfile}\n`);

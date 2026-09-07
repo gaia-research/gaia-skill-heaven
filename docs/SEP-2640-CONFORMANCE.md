@@ -25,15 +25,18 @@ claim or upgrading the implementation.
 The package is pinned to `@modelcontextprotocol/sdk@1.29.0`. That SDK does not
 ship typed SEP-2640 methods or the newer cache-result fields, so this lane uses
 its underlying `Server` request-handler API and emits the extension fields as
-wire-level JSON. The committed bundle includes the SDK and remains dependency
-free at install time.
+wire-level JSON. Its RFC 6570 helper also uses an unsafe single-marker
+`String#replace`; `scripts/build-mcp.mjs` applies a fail-closed, exact-source
+hardening transform at the bundle boundary without mutating `node_modules`.
+The committed bundle includes the SDK and remains dependency free at install
+time.
 
 - The server advertises `io.modelcontextprotocol/skills` and the mandatory
   `skills/list` and `skills/get` methods.
-- `skills/list` and `skills/get` return the registry's frontmatter projection,
-  a `skill://.../SKILL.md` URI, and either a validated digest/size manifest or
-  an explicit `resources: "dynamic"` declaration. Listing is deterministic and
-  cursor-paginated.
+- `skills/list` and `skills/get` return only entries with preserved,
+  authoritative frontmatter, a `skill://.../SKILL.md` URI, and either a
+  validated digest/size manifest or an explicit `resources: "dynamic"`
+  declaration. Listing is deterministic and cursor-paginated.
 - `resources/read` serves `SKILL.md` and supporting files in the same
   `skill://` namespace. A resource template is advertised as
   `skill://{+resourcePath}`. Static manifests also appear in `resources/list`;
@@ -52,9 +55,11 @@ free at install time.
   directory enumeration is deferred until the source can provide a trustworthy
   manifest without fetching every body.
 - Tree projections from older registries may preserve only top-level `name` and
-  `description`. Those entries use an explicit dynamic fallback and do not claim
-  that an unobserved complete YAML frontmatter object or digest manifest exists.
-  Fleet discovery preserves the parsed frontmatter it already reads.
+  `description`. Those entries are omitted from this resource surface rather
+  than receiving fabricated frontmatter or a URI based on a registry alias.
+  Entries are also omitted when the existing installability refusal applies or
+  the source route is not one this reader can prove. Fleet discovery preserves
+  the parsed frontmatter it already reads.
 - No historical `skill://index.json` resource is exposed. The extension's
   `skills/list` method is the discovery authority.
 - No Arbor schema, Reach index/data model, stamp-gated routing, or pending Reach

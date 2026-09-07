@@ -10,6 +10,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { z } from "zod";
 
 import type { GaiaService } from "../service.js";
+import type { NamedSkill } from "../domain/types.js";
 import { resolveSession, type SummonSession } from "../summon/session.js";
 import { summon } from "../summon/summon.js";
 import { VERSION } from "../version.js";
@@ -240,13 +241,19 @@ export function createSkillSummonMcpServer({
     async ({ query, limit, surface }): Promise<CallToolResult> => {
       try {
         const session = await getSession();
-        return toolResult(
-          await summon(service, session, {
-            query,
-            ...(limit === undefined ? {} : { limit }),
-            ...(surface === undefined ? {} : { surface }),
-          }),
+        const outcome = await summon(service, session, {
+          query,
+          ...(limit === undefined ? {} : { limit }),
+          ...(surface === undefined ? {} : { surface }),
+        });
+        // Resource links are emitted only when the same registry entry has
+        // authoritative frontmatter and an eligible reader route. This is a
+        // metadata-only second lookup; it never fetches a skill body.
+        const entries = await buildInternalEntries(
+          await service.namedSkills(),
+          describeSkill,
         );
+        return toolResult(outcome, entries.map((entry) => entry.skill));
       } catch (error) {
         return toolError(error);
       }
@@ -256,10 +263,13 @@ export function createSkillSummonMcpServer({
   return server;
 }
 
-function toolResult(value: object): CallToolResult {
+function toolResult(
+  value: object,
+  linkSkills: readonly NamedSkill[] = [],
+): CallToolResult {
   const content: ContentBlock[] = [
     { type: "text", text: JSON.stringify(value, null, 2) },
-    ...resourceLinks(value),
+    ...resourceLinks(value, linkSkills),
   ];
   return {
     content,
@@ -267,44 +277,43 @@ function toolResult(value: object): CallToolResult {
   };
 }
 
-function resourceLinks(value: object): ContentBlock[] {
+function resourceLinks(
+  value: object,
+  linkSkills: readonly NamedSkill[],
+): ContentBlock[] {
   const summoned = (value as { summoned?: unknown }).summoned;
   if (!Array.isArray(summoned)) return [];
+  const byId = new Map(linkSkills.map((skill) => [skill.id, skill]));
 
   return summoned.flatMap((candidate): ContentBlock[] => {
     if (!candidate || typeof candidate !== "object") return [];
-    const skill = candidate as {
+    const installed = candidate as {
       id?: unknown;
-      name?: unknown;
       sourceUrl?: unknown;
       sha256?: unknown;
     };
-    if (typeof skill.id !== "string" || typeof skill.name !== "string") return [];
-    let uri: string;
-    try {
-      uri = skillUriForSkill({
-        id: skill.id,
-        name: skill.name,
-        contributor: "resource-link",
-        genericSkillRef: "resource-link",
-        status: "summoned",
-        description: "",
-        tags: [],
-        links: {},
-        evidence: [],
-      });
-    } catch {
-      // A malformed registry id is already disclosed in summon.skipped; do not
-      // turn a successful tool result into an unsafe resource URI.
+    if (typeof installed.id !== "string") return [];
+    const skill = byId.get(installed.id);
+    if (!skill || !skill.frontmatter || typeof skill.frontmatter.name !== "string") {
       return [];
     }
-    const source = typeof skill.sourceUrl === "string" ? skill.sourceUrl : "unknown";
-    const digest = typeof skill.sha256 === "string" ? ` sha256=${skill.sha256}` : "";
+    let uri: string;
+    try {
+      uri = skillUriForSkill(skill);
+    } catch {
+      // A malformed registry entry is omitted from the resource surface; do
+      // not turn a successful summon result into an unsafe resource URI.
+      return [];
+    }
+    const source =
+      typeof installed.sourceUrl === "string" ? installed.sourceUrl : "unknown";
+    const digest =
+      typeof installed.sha256 === "string" ? ` sha256=${installed.sha256}` : "";
     return [
       {
         type: "resource_link",
         uri,
-        name: skill.name,
+        name: skill.frontmatter.name,
         description: `Read the summoned SKILL.md. Source: ${source}.${digest}`,
         mimeType: "text/markdown",
         annotations: {

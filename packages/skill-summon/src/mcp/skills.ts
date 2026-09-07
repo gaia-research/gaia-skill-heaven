@@ -11,6 +11,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import type { NamedSkill } from "../domain/types.js";
+import { isInstallable } from "../service.js";
 import { ensureCachedRepo, resolveRemoteCommit } from "../summon/clone.js";
 import { parseGithubUrl } from "../summon/giturl.js";
 
@@ -25,6 +26,9 @@ const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._~-]*$/u;
 const SAFE_RESOURCE_SEGMENT = /^[^/\\\u0000-\u001f\u007f]+$/u;
 const SAFE_SKILL_NAME = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 const ENCODED_PATH_ESCAPE = /%(?:2e|2f|5c)/iu;
+const GITHUB_REPOSITORY =
+  /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/u;
+const GITHUB_BRANCH = /^[A-Za-z0-9._/-]+$/u;
 
 export type SkillResourceManifestEntry = {
   uri: string;
@@ -66,6 +70,11 @@ type ParsedSkillUri = {
   segments: string[];
 };
 
+type AuthoritativeFrontmatter = Record<string, unknown> & {
+  name: string;
+  description: string;
+};
+
 type BuiltSkillEntry = SkillEntry & {
   skill: NamedSkill;
   pathSegments: string[];
@@ -93,7 +102,8 @@ export async function buildInternalEntries(
   for (const skill of sorted) {
     const description = await describeSkill?.(skill);
     const frontmatter = frontmatterFor(skill, description?.frontmatter);
-    const pathSegments = skillPathSegments(skill, frontmatter.name as string);
+    if (!frontmatter || !isReadableSkillSource(skill)) continue;
+    const pathSegments = skillPathSegments(skill, frontmatter.name);
     const uri = uriFromSegments([...pathSegments, SKILL_MD]);
     if (seenUris.has(uri)) {
       throw new Error(`Duplicate MCP skill URI: ${uri}`);
@@ -129,8 +139,11 @@ export function skillUri(id: string, name?: string): string {
 
 export function skillUriForSkill(skill: NamedSkill): string {
   const frontmatter = frontmatterFor(skill);
+  if (!frontmatter) {
+    throw new Error(`Skill '${skill.id}' has no authoritative frontmatter.`);
+  }
   return uriFromSegments([
-    ...skillPathSegments(skill, frontmatter.name as string),
+    ...skillPathSegments(skill, frontmatter.name),
     SKILL_MD,
   ]);
 }
@@ -319,7 +332,7 @@ function resourceContents(
 function frontmatterFor(
   skill: NamedSkill,
   supplied?: Record<string, unknown>,
-): Record<string, unknown> {
+): AuthoritativeFrontmatter | undefined {
   const candidate = supplied ?? skill.frontmatter;
   if (
     candidate &&
@@ -328,14 +341,47 @@ function frontmatterFor(
   ) {
     // structuredClone prevents a caller's metadata object from being mutated
     // after skills/list or skills/get has returned it.
-    return structuredClone(candidate);
+    return structuredClone(candidate) as AuthoritativeFrontmatter;
   }
+  return undefined;
+}
 
-  // Older Tree projections carry these two frontmatter values as top-level
-  // fields but do not preserve the complete YAML object. The fallback is
-  // explicit and uses dynamic resources; it never claims a digest manifest.
-  const name = slug(skill.id.split("/").at(-1) ?? skill.name);
-  return { name, description: skill.description };
+function isReadableSkillSource(skill: NamedSkill): boolean {
+  // Keep direct-resource eligibility aligned with the existing summon gate.
+  // `installable: false` is an explicit registry refusal; missing or unknown
+  // descriptors are omitted because this reader cannot prove readability.
+  return (
+    skill.installable !== false &&
+    isInstallable(skill) &&
+    githubResourceSource(skill) !== undefined
+  );
+}
+
+function githubResourceSource(skill: NamedSkill) {
+  const sourceUrl = typeof skill.links.github === "string" ? skill.links.github : undefined;
+  if (!sourceUrl || !/^https:\/\/github\.com\//u.test(sourceUrl)) return undefined;
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(sourceUrl);
+  } catch {
+    return undefined;
+  }
+  if (parsedUrl.search || parsedUrl.hash) return undefined;
+
+  const parsed = parseGithubUrl(sourceUrl);
+  if (
+    !GITHUB_REPOSITORY.test(parsed.repoUrl) ||
+    (parsed.branch !== null &&
+      (!GITHUB_BRANCH.test(parsed.branch) || parsed.branch.includes("..")))
+  ) {
+    return undefined;
+  }
+  try {
+    safeRelativePath(parsed.subpath, "skill source", true);
+  } catch {
+    return undefined;
+  }
+  return parsed;
 }
 
 function skillPathSegments(skill: NamedSkill, name: string): string[] {
@@ -345,7 +391,12 @@ function skillPathSegments(skill: NamedSkill, name: string): string[] {
 }
 
 function splitIdentifier(identifier: string): string[] {
-  const cleaned = identifier.trim().replace(/^\/+|\/+$/gu, "");
+  const trimmed = identifier.trim();
+  let start = 0;
+  while (start < trimmed.length && trimmed.charCodeAt(start) === 47) start++;
+  let end = trimmed.length;
+  while (end > start && trimmed.charCodeAt(end - 1) === 47) end--;
+  const cleaned = trimmed.slice(start, end);
   const segments = cleaned.split("/");
   if (
     !cleaned ||
@@ -438,20 +489,9 @@ async function readRemoteSkillResource(
   tempRoot: string,
 ): Promise<SkillResourceRead> {
   const sourceUrl = typeof skill.links.github === "string" ? skill.links.github : undefined;
-  if (!sourceUrl || !/^https:\/\/github\.com\//u.test(sourceUrl)) {
+  const parsed = githubResourceSource(skill);
+  if (!sourceUrl || !parsed) {
     throw new Error(`Skill '${skill.id}' has no supported remote resource source.`);
-  }
-
-  const parsed = parseGithubUrl(sourceUrl);
-  if (
-    !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/u.test(
-      parsed.repoUrl,
-    ) ||
-    (parsed.branch !== null &&
-      (!/^[A-Za-z0-9._/-]+$/u.test(parsed.branch) ||
-        parsed.branch.includes("..")))
-  ) {
-    throw new Error("Skill resource source is not a supported GitHub repository reference.");
   }
   const sourceSubpath = safeRelativePath(parsed.subpath, "skill source", true);
   const resourceSubpath = safeRelativePath(relativePath, "resource");

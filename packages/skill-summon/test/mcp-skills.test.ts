@@ -50,7 +50,7 @@ const documents: GaiaRegistryDocuments = {
           tags: [],
           links: { github: "https://github.com/example/health/blob/main/SKILL.md" },
           evidence: [],
-          installable: false,
+          installable: true,
         },
       ],
     },
@@ -165,9 +165,15 @@ describe("SEP-2640 MCP Skills extension surface", () => {
       status: "named",
       description: `Skill ${index}`,
       tags: [],
-      links: {},
+      links: {
+        github: `https://github.com/example/skill-${index}/blob/main/SKILL.md`,
+      },
       evidence: [],
-      installable: false,
+      frontmatter: {
+        name: `skill-${index}`,
+        description: `Skill ${index}`,
+      },
+      installable: true,
     }));
     const manyDocuments: GaiaRegistryDocuments = {
       generic: documents.generic,
@@ -191,6 +197,81 @@ describe("SEP-2640 MCP Skills extension surface", () => {
     ) as { skills: unknown[]; nextCursor?: string };
     expect(second.skills).toHaveLength(1);
     expect(second.nextCursor).toBeUndefined();
+  });
+
+  it("uses only authoritative frontmatter and omits refused or unproven entries", async () => {
+    const mixed = structuredClone(documents);
+    mixed.named.buckets["automated-testing"] = [
+      ...mixed.named.buckets["automated-testing"],
+      {
+        id: "example/missing-frontmatter",
+        name: "Fabricated display name",
+        contributor: "example",
+        genericSkillRef: "automated-testing",
+        status: "named",
+        description: "Registry description must not become frontmatter.",
+        tags: [],
+        links: {
+          github: "https://github.com/example/missing-frontmatter/blob/main/SKILL.md",
+        },
+        evidence: [],
+        installable: true,
+      },
+      {
+        id: "example/refused",
+        name: "Refused",
+        contributor: "example",
+        genericSkillRef: "automated-testing",
+        status: "named",
+        description: "Explicitly refused.",
+        tags: [],
+        links: { github: "https://github.com/example/refused/blob/main/SKILL.md" },
+        evidence: [],
+        frontmatter: { name: "refused", description: "Authoritative but refused" },
+        installable: false,
+      },
+      {
+        id: "mattpocock/diagnose",
+        name: "Registry alias that must not win",
+        contributor: "mattpocock",
+        genericSkillRef: "automated-testing",
+        status: "named",
+        description: "Authoritative diagnose metadata.",
+        tags: [],
+        links: { github: "https://github.com/mattpocock/diagnose/blob/main/SKILL.md" },
+        evidence: [],
+        frontmatter: {
+          name: "diagnose-command",
+          description: "Authoritative diagnose metadata.",
+          license: "MIT",
+        },
+        installable: true,
+      },
+    ];
+    const { client } = await connect(mixed);
+    const rawRequest = (client.request as unknown as Function).bind(client);
+    const listed = await rawRequest(
+      { method: "skills/list", params: {} },
+      z.any(),
+    ) as { skills: Array<Record<string, unknown>> };
+    expect(listed.skills.map((skill) => skill.uri)).toEqual([
+      skillUri,
+      "skill://mattpocock/diagnose-command/SKILL.md",
+    ]);
+    expect(listed.skills[1]).toMatchObject({
+      frontmatter: {
+        name: "diagnose-command",
+        description: "Authoritative diagnose metadata.",
+        license: "MIT",
+      },
+    });
+    expect(listed.skills.some((skill) => skill.uri === "skill://example/refused/SKILL.md")).toBe(false);
+    await expect(
+      rawRequest(
+        { method: "resources/read", params: { uri: "skill://example/refused/SKILL.md" } },
+        z.any(),
+      ),
+    ).rejects.toMatchObject({ code: -32602 });
   });
 
   it("reads exact text and manifest-listed supporting files with MIME types", async () => {
