@@ -10,6 +10,7 @@ import {
   loadCommittedIndex,
   resetCommittedIndexCache,
   expandSource,
+  sameSource,
 } from "../src/data/skill-index-source.js";
 import { InMemoryGaiaRegistrySource } from "../src/data/source.js";
 import { GaiaService } from "../src/service.js";
@@ -253,7 +254,23 @@ describe("summon-log.jsonl", () => {
   });
 });
 
-describe("expandSource", () => {
+describe("source canonicalization", () => {
+  it("resolves equivalent sources with a linear trailing-slash scan", () => {
+    const manySlashes = "/".repeat(100_000);
+    expect(
+      sameSource(
+        `  HTTPS://GITHUB.COM/GAIA-RESEARCH/SKILL-SCOUT-FLEET${manySlashes} \t`,
+        "https://github.com/gaia-research/skill-scout-fleet",
+      ),
+    ).toBe(true);
+  });
+
+  it("canonicalizes slash-only, empty, and whitespace-padded values consistently", () => {
+    expect(sameSource("////", "")).toBe(true);
+    expect(sameSource(" \t////\n", "   ")).toBe(true);
+    expect(sameSource("https://gaiaskilltree.com/// \t", "HTTPS://GAIASKILLTREE.COM")).toBe(true);
+  });
+
   it("accepts owner/repo shorthand for a flat fleet", () => {
     expect(expandSource("gaia-research/skill-scout-fleet")).toBe(
       "https://github.com/gaia-research/skill-scout-fleet",

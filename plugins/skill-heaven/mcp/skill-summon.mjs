@@ -22925,7 +22925,10 @@ function sameSource(left, right) {
   return canonical(left) === canonical(right);
 }
 function canonical(value) {
-  return expandSource(value).trim().replace(/\/+$/u, "").toLocaleLowerCase("en-US");
+  const trimmed = expandSource(value).trim();
+  let end = trimmed.length;
+  while (end > 0 && trimmed.charCodeAt(end - 1) === 47) end -= 1;
+  return trimmed.slice(0, end).toLocaleLowerCase("en-US");
 }
 
 // packages/skill-summon/src/version.ts

@@ -225,8 +225,8 @@ function sameSource(left: string, right: string): boolean {
 }
 
 function canonical(value: string): string {
-  return expandSource(value)
-    .trim()
-    .replace(/\/+$/u, "")
-    .toLocaleLowerCase("en-US");
+  const trimmed = expandSource(value).trim();
+  let end = trimmed.length;
+  while (end > 0 && trimmed.charCodeAt(end - 1) === 0x2f) end -= 1;
+  return trimmed.slice(0, end).toLocaleLowerCase("en-US");
 }
