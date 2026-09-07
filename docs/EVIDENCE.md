@@ -64,12 +64,14 @@ The three refusal percentages in older notes are not interchangeable:
 |---|---|---|---|
 | Historical partial-expansion index (`88a6ac6`, 2026-09-04 00:38 UTC) | `gaia.skill-index/v1`, 274 docs, 101 expanded; `floor.json` at that commit | floor `27.5559`, answerable `90.82%`, unanswerable rejected `95%` | Historical calibration; superseded when the remaining expansions landed |
 | Historical full bucketed index (`fd663a4`, 2026-09-04 00:43 UTC) | `gaia.skill-index/v1`, 274 docs, 273 expanded; `floor.json` at that commit | floor `26.9789`, answerable `90.82%`, unanswerable rejected `75%` | Negative G2 result preserved; not tuned away |
-| Current committed Reach artifact | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Current product calibration and the value this branch carries |
+| Inherited historical Reach artifact (pre-R4) | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | recorded floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Historical/inherited calibration only; the R4 artifact has **354 docs, 354 expansions, and 48 awaiting classifications**. The preserved floor was not revalidated on the refreshed corpus. |
 | Benchmark ledger run (`packages/core/bench/results/ledger.json`, 2026-09-04 00:56 UTC) | Historical v1 ledger over 326 docs/324 expanded | `bm25f-decide.refusalRate = 85%`; its floor sweep's hypothetical 95% point admits only 79% of gold | The 85% value is the whole decide-layer `noMatch` rate, not `floor.json`'s score-distribution rejection; the 95% point is not the shipped floor |
 
-The committed floor therefore still fails G2. The 95% and 85% figures remain
-useful historical measurements only; none is collapsed into the current 75%
-calibration outcome.
+The inherited floor record reports a historical G2 failure. R4 preserved
+`floor.json` byte-for-byte but did **not** revalidate that floor against the
+354-document refreshed corpus, so no fresh G2 result is claimed. The 95% and
+85% figures remain useful historical measurements only; none is collapsed into
+a current refreshed-corpus calibration outcome.
 
 ---
 
