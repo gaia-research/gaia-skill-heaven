@@ -13385,7 +13385,7 @@ function readVerifiedSkillFrontmatter(source) {
       return value.toLocaleLowerCase("en-US") === "true";
     }
     if (/^(?:null|~)$/iu.test(value)) return null;
-    if (/^(?:yes|no|on|off)$/iu.test(value)) return unsupported;
+    if (/^(?:yes|no|on|off|y|n)$/iu.test(value)) return unsupported;
     if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
       const number3 = Number(value);
       return Number.isFinite(number3) && !Object.is(number3, -0) ? number3 : unsupported;

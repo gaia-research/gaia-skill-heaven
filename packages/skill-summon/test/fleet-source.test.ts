@@ -220,6 +220,25 @@ describe("readSkillFrontmatter", () => {
     });
   });
 
+  it.each(["y", "Y", "n", "N"])(
+    "omits YAML 1.1-compatible ambiguous scalar %s",
+    (value) => {
+      expect(
+        readVerifiedSkillFrontmatter(
+          `---\nname: demo\ndescription: safe\nmetadata-flag: ${value}\n---\n`,
+        ),
+      ).toBeUndefined();
+    },
+  );
+
+  it("accepts ordinary strings that are not exact ambiguous scalars", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\nmetadata-flag: yesterday\n---\n`,
+      ),
+    ).toMatchObject({ "metadata-flag": "yesterday" });
+  });
+
   it.each([
     [
       "nested maps and arrays",

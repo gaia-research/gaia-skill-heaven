@@ -226,9 +226,10 @@ export function readVerifiedSkillFrontmatter(
       return value.toLocaleLowerCase("en-US") === "true";
     }
     if (/^(?:null|~)$/iu.test(value)) return null;
-    // YAML 1.1 treats these as booleans while YAML 1.2 treats them as plain
-    // strings. Refuse the ambiguity instead of choosing a schema silently.
-    if (/^(?:yes|no|on|off)$/iu.test(value)) return unsupported;
+    // YAML 1.1 may treat these as booleans while YAML 1.2 treats them as
+    // plain strings. Refuse the ambiguity instead of choosing a schema
+    // silently.
+    if (/^(?:yes|no|on|off|y|n)$/iu.test(value)) return unsupported;
     if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
       const number = Number(value);
       return Number.isFinite(number) && !Object.is(number, -0)
