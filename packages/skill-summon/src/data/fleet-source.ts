@@ -222,10 +222,10 @@ export function readVerifiedSkillFrontmatter(
     ) {
       return unsupported;
     }
-    if (/^(?:true|false)$/iu.test(value)) {
+    if (/^(?:true|True|TRUE|false|False|FALSE)$/u.test(value)) {
       return value.toLocaleLowerCase("en-US") === "true";
     }
-    if (/^(?:null|~)$/iu.test(value)) return null;
+    if (/^(?:null|Null|NULL|~)$/u.test(value)) return null;
     // YAML 1.1 may treat these as booleans while YAML 1.2 treats them as
     // plain strings. Refuse the ambiguity instead of choosing a schema
     // silently.

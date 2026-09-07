@@ -13381,10 +13381,10 @@ function readVerifiedSkillFrontmatter(source) {
     if (/["'{}\[\]\\|>&*!#%@`]/u.test(value) || value.includes(":") || /^[-?:](?:\s|$)/u.test(value)) {
       return unsupported;
     }
-    if (/^(?:true|false)$/iu.test(value)) {
+    if (/^(?:true|True|TRUE|false|False|FALSE)$/u.test(value)) {
       return value.toLocaleLowerCase("en-US") === "true";
     }
-    if (/^(?:null|~)$/iu.test(value)) return null;
+    if (/^(?:null|Null|NULL|~)$/u.test(value)) return null;
     if (/^(?:yes|no|on|off|y|n)$/iu.test(value)) return unsupported;
     if (/^[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)) {
       const number3 = Number(value);

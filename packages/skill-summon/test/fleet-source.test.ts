@@ -240,6 +240,18 @@ describe("readSkillFrontmatter", () => {
   });
 
   it.each([
+    ["tRuE", "tRuE"],
+    ["fAlSe", "fAlSe"],
+    ["nUlL", "nUlL"],
+  ])("preserves mixed-case scalar %s as a string", (value, expected) => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\nmetadata-flag: ${value}\n---\n`,
+      ),
+    ).toMatchObject({ "metadata-flag": expected });
+  });
+
+  it.each([
     [
       "nested maps and arrays",
       `---\nname: nested\ndescription: Nested metadata\nmetadata:\n  version: 2.1.0\n  labels: [alpha, beta]\n---\n`,
