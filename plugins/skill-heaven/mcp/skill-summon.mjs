@@ -13398,7 +13398,9 @@ function readVerifiedSkillFrontmatter(source) {
   let closed = false;
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
-    if (line.includes("\0")) return void 0;
+    if (/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/u.test(line)) {
+      return void 0;
+    }
     if (line === "---") {
       closed = true;
       break;

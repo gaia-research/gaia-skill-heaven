@@ -22,6 +22,12 @@ import { GaiaService } from "../src/service.js";
 
 const roots: string[] = [];
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
+const UNSUPPORTED_CONTROL_CODE_POINTS = [
+  ...Array.from({ length: 0x20 }, (_, codePoint) => codePoint),
+  ...Array.from({ length: 0x21 }, (_, index) => 0x7f + index),
+  0x2028,
+  0x2029,
+];
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -236,13 +242,16 @@ describe("readSkillFrontmatter", () => {
     ).toMatchObject({ description: "safe\u00a0" });
   });
 
-  it("omits literal NUL control syntax", () => {
-    expect(
-      readVerifiedSkillFrontmatter(
-        `---\nname: demo\ndescription: safe\u0000\n---\n`,
-      ),
-    ).toBeUndefined();
-  });
+  it.each(UNSUPPORTED_CONTROL_CODE_POINTS)(
+    "omits unsupported YAML control U+%s",
+    (codePoint) => {
+      expect(
+        readVerifiedSkillFrontmatter(
+          `---\nname: demo\ndescription: safe${String.fromCodePoint(codePoint)} tail\n---\n`,
+        ),
+      ).toBeUndefined();
+    },
+  );
 
   it.each(["y", "Y", "n", "N"])(
     "omits YAML 1.1-compatible ambiguous scalar %s",

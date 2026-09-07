@@ -249,8 +249,11 @@ export function readVerifiedSkillFrontmatter(
   let closed = false;
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
-    // Check unsupported control syntax before treating a line as blank.
-    if (line.includes("\u0000")) return undefined;
+    // Check YAML-unsupported control/line-separator syntax before treating a
+    // line as blank. CRLF/LF have already been split above.
+    if (/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/u.test(line)) {
+      return undefined;
+    }
     if (line === "---") {
       closed = true;
       break;
