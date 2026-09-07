@@ -13375,7 +13375,7 @@ function readSkillFrontmatter(source) {
 }
 function readVerifiedSkillFrontmatter(source) {
   const lines = source.split(/\r?\n/u);
-  if (lines[0]?.trim() !== "---") return void 0;
+  if (lines[0] !== "---") return void 0;
   const unsupported = /* @__PURE__ */ Symbol("unsupported-yaml-scalar");
   const parseScalar = (value) => {
     if (/["'{}\[\]\\|>&*!#%@`]/u.test(value) || value.includes(":") || /^[-?:](?:\s|$)/u.test(value)) {
@@ -13398,11 +13398,12 @@ function readVerifiedSkillFrontmatter(source) {
   let closed = false;
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
+    if (line.includes("\0")) return void 0;
     if (line === "---") {
       closed = true;
       break;
     }
-    if (line.trim() === "") continue;
+    if (isAsciiBlankLine(line)) continue;
     const colon = line.indexOf(":");
     if (colon <= 0) return void 0;
     const key = line.slice(0, colon);
@@ -13410,10 +13411,10 @@ function readVerifiedSkillFrontmatter(source) {
       return void 0;
     }
     const rawValue = line.slice(colon + 1);
-    if (rawValue.includes("	") || rawValue !== "" && !rawValue.startsWith(" ")) {
+    if (rawValue.includes("	") || rawValue !== "" && rawValue.charCodeAt(0) !== 32) {
       return void 0;
     }
-    const value = rawValue.trim();
+    const value = trimAsciiSpaces(rawValue);
     const parsed = value === "" ? null : parseScalar(value);
     if (parsed === unsupported) return void 0;
     keys.add(key);
@@ -13425,6 +13426,20 @@ function isAmbiguousYamlKey(value) {
   return /^(?:true|True|TRUE|false|False|FALSE|null|Null|NULL|~|yes|no|on|off|y|n)$/iu.test(
     value
   );
+}
+function isAsciiBlankLine(value) {
+  if (value === "") return true;
+  for (let index = 0; index < value.length; index++) {
+    if (value.charCodeAt(index) !== 32) return false;
+  }
+  return true;
+}
+function trimAsciiSpaces(value) {
+  let start = 0;
+  while (start < value.length && value.charCodeAt(start) === 32) start++;
+  let end = value.length;
+  while (end > start && value.charCodeAt(end - 1) === 32) end--;
+  return value.slice(start, end);
 }
 function stripQuotes(value) {
   if (value.length >= 2 && (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'"))) {

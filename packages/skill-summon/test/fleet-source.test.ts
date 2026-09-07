@@ -220,6 +220,30 @@ describe("readSkillFrontmatter", () => {
     });
   });
 
+  it("requires the exact frontmatter opening delimiter", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        ` ---\nname: demo\ndescription: safe\n---\n`,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("preserves a non-breaking space in a scalar value", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\u00a0\n---\n`,
+      ),
+    ).toMatchObject({ description: "safe\u00a0" });
+  });
+
+  it("omits literal NUL control syntax", () => {
+    expect(
+      readVerifiedSkillFrontmatter(
+        `---\nname: demo\ndescription: safe\u0000\n---\n`,
+      ),
+    ).toBeUndefined();
+  });
+
   it.each(["y", "Y", "n", "N"])(
     "omits YAML 1.1-compatible ambiguous scalar %s",
     (value) => {

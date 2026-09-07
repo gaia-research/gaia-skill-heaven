@@ -211,7 +211,7 @@ export function readVerifiedSkillFrontmatter(
   source: string,
 ): Record<string, unknown> | undefined {
   const lines = source.split(/\r?\n/u);
-  if (lines[0]?.trim() !== "---") return undefined;
+  if (lines[0] !== "---") return undefined;
 
   const unsupported = Symbol("unsupported-yaml-scalar");
   const parseScalar = (value: string): unknown | typeof unsupported => {
@@ -249,11 +249,13 @@ export function readVerifiedSkillFrontmatter(
   let closed = false;
   for (let index = 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
+    // Check unsupported control syntax before treating a line as blank.
+    if (line.includes("\u0000")) return undefined;
     if (line === "---") {
       closed = true;
       break;
     }
-    if (line.trim() === "") continue;
+    if (isAsciiBlankLine(line)) continue;
 
     const colon = line.indexOf(":");
     if (colon <= 0) return undefined;
@@ -268,11 +270,11 @@ export function readVerifiedSkillFrontmatter(
     const rawValue = line.slice(colon + 1);
     if (
       rawValue.includes("\t") ||
-      (rawValue !== "" && !rawValue.startsWith(" "))
+      (rawValue !== "" && rawValue.charCodeAt(0) !== 32)
     ) {
       return undefined;
     }
-    const value = rawValue.trim();
+    const value = trimAsciiSpaces(rawValue);
     const parsed = value === "" ? null : parseScalar(value);
     if (parsed === unsupported) return undefined;
     keys.add(key);
@@ -286,6 +288,22 @@ function isAmbiguousYamlKey(value: string): boolean {
   return /^(?:true|True|TRUE|false|False|FALSE|null|Null|NULL|~|yes|no|on|off|y|n)$/iu.test(
     value,
   );
+}
+
+function isAsciiBlankLine(value: string): boolean {
+  if (value === "") return true;
+  for (let index = 0; index < value.length; index++) {
+    if (value.charCodeAt(index) !== 32) return false;
+  }
+  return true;
+}
+
+function trimAsciiSpaces(value: string): string {
+  let start = 0;
+  while (start < value.length && value.charCodeAt(start) === 32) start++;
+  let end = value.length;
+  while (end > start && value.charCodeAt(end - 1) === 32) end--;
+  return value.slice(start, end);
 }
 
 function stripQuotes(value: string): string {
