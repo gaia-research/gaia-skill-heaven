@@ -61,6 +61,57 @@ export {
 export { materialize } from "./exec.js";
 export { tokenize, makeListingLine, readFrontmatter, contentSha256, type TokenizerId } from "./vendor/census-pure.js";
 
+// Steering (SPEC §7, PLAN Lane S-now): explicit behavioral events only. The
+// controller has no retrieval-score or refusal input and is safe to replay.
+export {
+  DEFAULT_STEERING_POLICY,
+  EVENT_TYPES,
+  OPERATOR_EVENT_TYPES,
+  RUNTIME_EVENT_TYPES,
+  SEARCH_STATES,
+  STEERING_POLICY_VERSION,
+  STEERING_TRACE_SCHEMA,
+  STEERING_RUNGS,
+  createOperatorEvent,
+  createRuntimeAdapter,
+  createRuntimeEvent,
+  initialSteeringState,
+  parseOperatorCommand,
+  parseSteeringEvent,
+  parseSteeringPolicy,
+  parseSteeringState,
+  replaySteering,
+  serializeSteeringRecord,
+  stepSteering,
+  toSteeringRecord,
+  verifySteeringRecord,
+  type BehavioralEvent,
+  type OperatorCommand,
+  type OperatorEvent,
+  type OperatorEventType,
+  type RuntimeAdapterCapability,
+  type RuntimeBehavioralEvent,
+  type RuntimeEventType,
+  type SearchState,
+  type SteeringDecision,
+  type SteeringDirection,
+  type SteeringEvent,
+  type SteeringEventType,
+  type SteeringPolicy,
+  type SteeringPosition,
+  type SteeringProvenance,
+  type SteeringReplay,
+  type SteeringReplayOptions,
+  type SteeringReplayRecord,
+  type SteeringRung,
+  type SteeringSignal,
+  type SteeringSignalDescriptor,
+  type SteeringState,
+  type SteeringStep,
+  type SteeringTraceEntry,
+  type SteeringVerification,
+} from "./steering.js";
+
 // Retrieval (SPEC §2–§4): the committed index contract, the offline builder,
 // the BM25F ranker, the shipped baseline, and the benchmark metrics. The
 // runtime (`skill-summon`) and the benchmark read the same implementations —

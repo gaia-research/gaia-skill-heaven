@@ -215,9 +215,10 @@ eligibility, and relevance-band filtering remain unshipped.
 
 ## Open
 
-- `ultra` is ratified (N13); what is outstanding is the controller's
-  heuristics, not permission. The usable Hell engine does not establish a
-  score band, HH score, or routing-eligibility policy for its levels.
+- `ultra` is ratified (N13); S-now supplies a deterministic event-driven
+  controller, while behavior-aware Arbor composition remains open. The usable
+  Hell engine does not establish a score band, HH score, or routing-eligibility
+  policy for its levels.
 - Relevance-band filtering and routing eligibility are open engine seams.
 - Delivery is the **Claude Code plugin** (`/plugin install
   skill-heaven@gaia-skill-heaven`), with `install.sh` as the optional

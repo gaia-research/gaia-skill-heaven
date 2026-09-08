@@ -22160,6 +22160,24 @@ var EMPTY_COMPLETION_RESULT = {
 import { stat as stat4 } from "node:fs/promises";
 import path7 from "node:path";
 
+// packages/core/src/steering.ts
+var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
+var STEERING_POLICY_VERSION = "gaia-steering-policy/v1";
+var SEARCH_STATES = ["open", "checkpointed", "closed", "stopped"];
+var RUNTIME_EVENT_TYPES = ["behavioral-failure", "behavioral-recovery"];
+var OPERATOR_EVENT_TYPES = ["reopen-search", "checkpoint", "close-search", "stop"];
+var EVENT_TYPES = [...RUNTIME_EVENT_TYPES, ...OPERATOR_EVENT_TYPES];
+var DEFAULT_STEERING_POLICY = Object.freeze({
+  version: STEERING_POLICY_VERSION,
+  floor: "low",
+  ceiling: "max"
+});
+var EVENT_TYPE_SET = new Set(EVENT_TYPES);
+var RUNTIME_EVENT_TYPE_SET = new Set(RUNTIME_EVENT_TYPES);
+var OPERATOR_EVENT_TYPE_SET = new Set(OPERATOR_EVENT_TYPES);
+var RUNG_SET = new Set(STEERING_RUNGS);
+var SEARCH_STATE_SET = new Set(SEARCH_STATES);
+
 // packages/core/src/retrieval/schema.ts
 var SKILL_INDEX_SCHEMA = "gaia.skill-index/v2";
 var STALE_AFTER_DAYS = 30;

@@ -14,6 +14,8 @@ zero · low · med · high · xhigh · max · ultra
 
 Skill Hell is the model-led exploration surface. On a capability gap, explore widely and call the `summon` tool with `surface: "hell"` and a depth appropriate to the gap. No rung carries a count and no summon is capped.
 
+Behavioral evidence is not available to this surface yet: Hell currently changes the breadth of relevance-ranked results, not behavior-aware composition. No Hell stamp gate is running.
+
 Only model-invokable or unclassified tree skills may be reached automatically. A fleet skill marked `disable-model-invocation: true` is human-led and must be excluded even when it scores highest.
 
 For each summon, show each returned card before using the skill. Read the `SKILL.md` at the card's path and apply relevant guidance to the current task. Resolve sibling files from that materialized directory. The card is the listing entry, not the skill body.
