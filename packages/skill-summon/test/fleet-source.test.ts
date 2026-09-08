@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -9,6 +9,7 @@ import {
   readSkillFrontmatter,
   type GithubFleetCheckout,
 } from "../src/data/fleet-source.js";
+import { assertConfinedPath } from "../src/summon/session.js";
 import { GaiaService } from "../src/service.js";
 
 const roots: string[] = [];
@@ -109,6 +110,22 @@ describe("GithubFleetSource", () => {
     });
     await expect(source.load()).rejects.toThrow("no discoverable SKILL.md");
     expect(cleanup).toHaveBeenCalledOnce();
+  });
+});
+
+describe("repository path confinement", () => {
+  it("rejects traversal and physical symlink escapes before a scan can stat/copy", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "fleet-confinement-root-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "fleet-confinement-outside-"));
+    roots.push(root, outside);
+    await symlink(outside, path.join(root, "skills"), "dir");
+
+    await expect(
+      assertConfinedPath(root, path.join(root, "skills", "SKILL.md"), "Fleet subpath"),
+    ).rejects.toThrow(/symlink|outside/u);
+    await expect(
+      assertConfinedPath(root, path.join(root, "..", "outside"), "Fleet subpath"),
+    ).rejects.toThrow(/escapes/u);
   });
 });
 

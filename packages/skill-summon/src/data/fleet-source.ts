@@ -5,6 +5,7 @@ import path from "node:path";
 import type { GaiaRegistrySource } from "./source.js";
 import type { GaiaRegistrySnapshot, NamedSkill } from "../domain/types.js";
 import { discardCachedRepo, ensureCachedRepo } from "../summon/clone.js";
+import { assertConfinedPath } from "../summon/session.js";
 import { parseGithubUrl } from "../summon/giturl.js";
 
 const MAX_DISCOVERY_DEPTH = 8;
@@ -76,10 +77,7 @@ export async function checkoutGithubFleet(sourceUrl: string): Promise<GithubFlee
   try {
     const clone = await ensureCachedRepo(repoPath, parsed.repoUrl, parsed.branch);
     const scanRoot = path.resolve(clone.path, parsed.subpath);
-    const relative = path.relative(path.resolve(clone.path), scanRoot);
-    if (relative.startsWith("..") || path.isAbsolute(relative)) {
-      throw new Error(`Fleet subpath escapes repository root: ${parsed.subpath}`);
-    }
+    await assertConfinedPath(clone.path, scanRoot, "Fleet subpath");
     const scanStat = await lstat(scanRoot);
     if (scanStat.isSymbolicLink() || !scanStat.isDirectory()) {
       throw new Error(`Fleet path is not a real directory: ${parsed.subpath}`);
