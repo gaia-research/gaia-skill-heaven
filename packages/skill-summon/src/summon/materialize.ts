@@ -33,6 +33,9 @@ export async function materializeSkillDir(
   destDir: string,
 ): Promise<MaterializeOutcome> {
   const startedAt = startTiming();
+  // Check the source before copying it. A symlink at the source root or in a
+  // nested directory must not be followed into an external tree.
+  await rejectSymlinks(sourceDir);
   await cp(sourceDir, destDir, {
     recursive: true,
     dereference: false,
@@ -56,6 +59,12 @@ export async function materializeSkillDir(
  * materialization so a link can never redirect a later `readFile` outside it.
  */
 async function rejectSymlinks(dir: string): Promise<void> {
+  const root = await lstat(dir);
+  if (root.isSymbolicLink() || !root.isDirectory()) {
+    throw new Error(
+      `refusing to materialize skill: '${dir}' is not a real directory.`,
+    );
+  }
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isSymbolicLink()) {

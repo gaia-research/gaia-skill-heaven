@@ -1,0 +1,12 @@
+{
+  "floor": 27.8563,
+  "policy": "highest threshold admitting >= 0.9 of the gold set",
+  "answerableAdmitted": 0.9082,
+  "unanswerableRejected": 0.75,
+  "separation": 0.952,
+  "goldSetRevision": "bef70b19e710",
+  "unanswerableSetRevision": "0fcf0f3b786d",
+  "calibratedAt": "2026-09-04T00:56:10.227Z",
+  "meetsG2": false,
+  "note": "G2 (>=90% of the unanswerable set refused) is NOT met at a floor that keeps the product usable. The two score distributions overlap: raw BM25F separates them on 95% of pairs, and reaching 90% rejection would cost more than 10% of answerable queries. Recorded as a finding (D8) rather than resolved by moving the threshold. n=20 negatives is also small; expansion (PLAN 1.7) should lift answerable scores without lifting unanswerable ones, and this is re-run after it."
+}
