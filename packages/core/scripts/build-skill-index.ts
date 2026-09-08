@@ -24,7 +24,14 @@ const floorPath = join(here, "..", "bench", "corpus", "floor.json");
 const outPath = join(repoRoot, "plugins", "skill-heaven", "data", "skill-index.json");
 
 const snapshot = JSON.parse(readFileSync(snapshotPath, "utf8")) as NamedProjection & {
-  snapshot: { source: string; digest: string; capturedAt: string };
+  snapshot: {
+    source: string;
+    digest: string;
+    capturedAt: string;
+    sourceRevision?: string;
+    sourceVersion?: string;
+    sourceWorkflow?: string;
+  };
 };
 
 const expansions = readOptional(expansionsPath) as
@@ -42,6 +49,15 @@ const index = buildSkillIndex({
   projection: snapshot,
   source: snapshot.snapshot.source,
   sourceDigest: snapshot.snapshot.digest,
+  ...(snapshot.snapshot.sourceRevision
+    ? { sourceRevision: snapshot.snapshot.sourceRevision }
+    : {}),
+  ...(snapshot.snapshot.sourceVersion
+    ? { sourceVersion: snapshot.snapshot.sourceVersion }
+    : {}),
+  ...(snapshot.snapshot.sourceWorkflow
+    ? { sourceWorkflow: snapshot.snapshot.sourceWorkflow }
+    : {}),
   builderVersion: INDEX_BUILDER_VERSION,
   // The index is a deterministic function of the snapshot, so its stamp is the
   // snapshot's capture time. Using "now" would make every CI rebuild a diff.

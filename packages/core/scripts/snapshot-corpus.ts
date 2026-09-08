@@ -3,15 +3,18 @@
 //
 //   npx tsx packages/core/scripts/snapshot-corpus.ts
 //
-// Network is used HERE and only here. Everything downstream — the index build,
-// the benchmark, the runtime — reads the committed snapshot, which is what
-// makes offline-first structural rather than best-effort (INTENT §3).
+// Network is used HERE and only here for the moving-source path. A controlled
+// refresh may instead pass --source-file from an immutable upstream checkout;
+// that path is required for pinned release data and never contacts the network.
+// Everything downstream — the index build, the benchmark, the runtime — reads
+// the committed snapshot, which is what makes offline-first structural rather
+// than best-effort (INTENT §3).
 //
 // The snapshot is trimmed to the fields retrieval actually reads. Timelines and
 // evidence bodies are ~4x the bytes and change on every curation pass; carrying
 // them would make every refresh an unreviewable diff.
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,15 +23,23 @@ import { sha256, type NamedProjection, type ProjectionSkill } from "../src/retri
 const NAMED_URL =
   process.env.GAIA_NAMED_PROJECTION_URL ?? "https://gaiaskilltree.com/graph/named/index.json";
 const SOURCE_ROOT = new URL(NAMED_URL).origin;
+const sourceFile = argValue("--source-file");
+const sourceRevision = argValue("--source-revision");
+const sourceVersion = argValue("--source-version");
+const sourceWorkflow = argValue("--source-workflow");
+
+if (sourceFile && !sourceRevision) {
+  throw new Error("--source-file requires --source-revision so the refresh is auditable.");
+}
+if (!sourceFile && (sourceRevision || sourceVersion || sourceWorkflow)) {
+  throw new Error("--source-revision/--source-version/--source-workflow require --source-file.");
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "bench", "corpus");
-
-const response = await fetch(NAMED_URL, { headers: { accept: "application/json" } });
-if (!response.ok) {
-  throw new Error(`Could not fetch ${NAMED_URL}: HTTP ${response.status}`);
-}
-const bytes = await response.text();
+const bytes = sourceFile
+  ? readFileSync(sourceFile, "utf8")
+  : await fetchProjection(NAMED_URL);
 const digest = sha256(bytes);
 const upstream = JSON.parse(bytes) as {
   generatedAt?: string;
@@ -37,13 +48,24 @@ const upstream = JSON.parse(bytes) as {
 };
 
 const snapshot: NamedProjection & {
-  snapshot: { url: string; source: string; digest: string; capturedAt: string };
+  snapshot: {
+    url: string;
+    source: string;
+    digest: string;
+    capturedAt: string;
+    sourceRevision?: string;
+    sourceVersion?: string;
+    sourceWorkflow?: string;
+  };
 } = {
   snapshot: {
     url: NAMED_URL,
     source: SOURCE_ROOT,
     digest,
     capturedAt: new Date().toISOString(),
+    ...(sourceRevision ? { sourceRevision } : {}),
+    ...(sourceVersion ? { sourceVersion } : {}),
+    ...(sourceWorkflow ? { sourceWorkflow } : {}),
   },
   ...(upstream.generatedAt ? { generatedAt: upstream.generatedAt } : {}),
   buckets: Object.fromEntries(
@@ -61,6 +83,9 @@ const bucketed = Object.values(snapshot.buckets).flat();
 console.log(
   [
     `source            ${NAMED_URL}`,
+    ...(sourceRevision ? [`revision          ${sourceRevision}`] : []),
+    ...(sourceVersion ? [`version           ${sourceVersion}`] : []),
+    ...(sourceWorkflow ? [`workflow          ${sourceWorkflow}`] : []),
     `digest            ${digest}`,
     `buckets           ${Object.keys(snapshot.buckets).length}`,
     `bucketed skills   ${bucketed.length}`,
@@ -98,4 +123,17 @@ function trim(skill: ProjectionSkill): ProjectionSkill {
 
 function byId(left: ProjectionSkill, right: ProjectionSkill): number {
   return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+}
+
+async function fetchProjection(url: string): Promise<string> {
+  const response = await fetch(url, { headers: { accept: "application/json" } });
+  if (!response.ok) {
+    throw new Error(`Could not fetch ${url}: HTTP ${response.status}`);
+  }
+  return response.text();
+}
+
+function argValue(flag: string): string | undefined {
+  const at = process.argv.indexOf(flag);
+  return at === -1 ? undefined : process.argv[at + 1];
 }

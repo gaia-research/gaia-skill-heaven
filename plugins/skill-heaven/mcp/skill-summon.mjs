@@ -22189,6 +22189,9 @@ function assertSkillIndex(value) {
   }
   requiredString(index, "source", "Skill index");
   requiredString(index, "sourceDigest", "Skill index");
+  optionalString(index, "sourceRevision", "Skill index");
+  optionalString(index, "sourceVersion", "Skill index");
+  optionalString(index, "sourceWorkflow", "Skill index");
   const builder = asRecord(index.builder, "Skill index builder");
   requiredString(builder, "version", "Skill index builder");
   if (builder.expansion !== "none" && builder.expansion !== "generated") {
@@ -22449,6 +22452,9 @@ function buildSkillIndex({
   projection,
   source,
   sourceDigest,
+  sourceRevision,
+  sourceVersion,
+  sourceWorkflow,
   builderVersion,
   generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
   expansions
@@ -22468,6 +22474,9 @@ function buildSkillIndex({
     generatedAt,
     source,
     sourceDigest,
+    ...sourceRevision ? { sourceRevision } : {},
+    ...sourceVersion ? { sourceVersion } : {},
+    ...sourceWorkflow ? { sourceWorkflow } : {},
     builder: {
       version: builderVersion,
       expansion: docs.some((doc) => doc.retrieval.expansions.length > 0) ? "generated" : "none"
@@ -22810,14 +22819,14 @@ async function readCommittedIndex() {
       parsed = JSON.parse(raw);
     } catch (error2) {
       throw new SkillIndexError(
-        `Committed skill index is not valid JSON: ${error2 instanceof Error ? error2.message : String(error2)}`
+        `Committed retrieval index is not valid JSON: ${error2 instanceof Error ? error2.message : String(error2)}`
       );
     }
     assertSkillIndex(parsed);
     return parsed;
   }
   throw new GaiaDataError(
-    `Could not find the committed skill index. Looked in:
+    `Could not find the committed retrieval index. Looked in:
   ${attempted.join("\n  ")}
 Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with \`npx tsx packages/core/scripts/build-skill-index.ts\`.`
   );
@@ -23753,7 +23762,7 @@ function disclose(resolved, decision) {
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure: `Ranked by BM25F over the committed skill index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied.`,
+    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied.`,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),

@@ -514,15 +514,17 @@ shippable, and the ceiling on §6 (INTENT §10.2). Tracked as Q2b.
 Per ENDGAME §6 the index must remain independent from Trust Magnitude: one
 benchmark receipt may feed both, and each interprets it differently.
 
-### 10.1 Naming — a collision to resolve
+### 10.1 Naming — resolved
 
-This repository ships an artifact called a **skill index** (§3.3) — a lexical
-retrieval index. The **HH Index** is a behavioral index in a different
-repository. Adjacent names, unrelated things.
+This repository ships an artifact called the **retrieval index** (§3.3) — a
+lexical index over capability-descriptive fields. The **HH Index** is a
+behavioral index in a different repository. Adjacent names, unrelated things.
+The internal compatibility schema (`gaia.skill-index/v2`) and file name
+(`skill-index.json`) remain unchanged.
 
-**INV-15 — The retrieval artifact must never be referred to as an index over
-behavior, and must not occupy the HH Index's name in code, docs, or user-facing
-copy.** A durable renaming of the retrieval artifact is an open question (§12).
+**INV-15 — The retrieval artifact must be called the retrieval index in public
+code, docs, disclosures, and user-facing copy.** The HH Index name is reserved
+for measured behavioral evidence; it must never describe retrieval.
 
 ---
 
@@ -558,7 +560,7 @@ carrying the question.
 | Q2 | Does a continuous score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7. Its tracking issue `gaia-research#62` was closed 2026-09-02; re-tracked at `gaia-research#207` | `gaia-research` |
 | Q2b | **Does the HH Index land inside `gaia.arbor-profile/v1`, or beside it?** Conceptually resolved in the [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527) (2026-09-06): HH belongs INSIDE Arbor; upstream will own a broader canonical Arbor runtime projection referencing HH result profiles and interaction evidence. Formal schema proposal in flight (`gaia-research#207`). | `gaia-research` / `gaia-skill-tree` |
 | Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
-| Q4 | Should the retrieval artifact be renamed to end the collision in §10.1? | this repo |
+| Q4 | **Resolved (R5):** the public name is **retrieval index**. The internal `gaia.skill-index/v2` schema and `skill-index.json` compatibility path remain unchanged. | this repo |
 | Q5 | Does upstream publish an installability determination this layer can consume? (§3.5) | `gaia-skill-tree` |
 | Q6 | What replaces the coverage-sensitive absolute admission floor with a scale-free one? | this repo |
 | Q7 | Who reviews the machine-written gold labels, and when? (§3.6) | this repo |
@@ -609,7 +611,7 @@ both. If an INTENT section gains no row, this document has drifted.
 | §7 Ultra | §7, INV-11, INV-12 | Lane S-now |
 | §8 Skill Zero | §9, INV-14 | — (stable; no open work) |
 | §9 Arbor ownership | §1, INV-7 | lane owners |
-| §10 The HH Index | §10, INV-15 | Q2, Lane E |
+| §10 The HH Index | §10, INV-15 | R5 naming decision, Q2/Lane E for behavioral evidence |
 | §11 The evidence loop | §4.1 (`support`), §4.2 (no receipt→verdict) | Lane E |
 | §12 Composition | §6.3 | Lane S-later |
 | §13 Standards are plumbing | §11, INV-16 | Lane X |

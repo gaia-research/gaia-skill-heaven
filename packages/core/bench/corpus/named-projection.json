@@ -2,10 +2,13 @@
   "snapshot": {
     "url": "https://gaiaskilltree.com/graph/named/index.json",
     "source": "https://gaiaskilltree.com",
-    "digest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
-    "capturedAt": "2026-09-03T16:50:52.285Z"
+    "digest": "sha256:16215ffe5bccdab6b9e14d3c02e4ff2f0fb3b73776cabe1ac23d500fd9ec5bb8",
+    "capturedAt": "2026-09-07T11:51:19.675Z",
+    "sourceRevision": "abf41d304f35fa27bbd8e32be5f6d7d880d6b232",
+    "sourceVersion": "v8.4.1",
+    "sourceWorkflow": "gaia-skill-tree/scripts/generateNamedIndex.py -> docs/graph/named/index.json"
   },
-  "generatedAt": "2026-09-01",
+  "generatedAt": "2026-09-07",
   "buckets": {
     "adaptive-pattern-learning": [
       {
@@ -69,9 +72,9 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 79.76,
+        "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/firecrawl/skills/blob/main/skills/firecrawl-build-onboarding/SKILL.md"
+          "github": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-onboarding/SKILL.md"
         }
       },
       {
@@ -100,17 +103,17 @@
         "genericSkillRef": "agent-fusion",
         "description": "Orchestrate multiple specialized AI models as a fused agentic team: form opinions, merge parallel plans, and auto-validate outputs to achieve frontier performance at reduced cost.",
         "tags": [],
-        "level": "4★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 127.54,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 37.54,
         "suiteComponents": [
           "disler/auto-review",
           "disler/opinion",
           "disler/plan-synthesis"
         ],
         "links": {
-          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/README.md"
+          "github": "https://github.com/disler/fusion-harness/blob/main/README.md"
         }
       }
     ],
@@ -194,10 +197,10 @@
           "ultimate",
           "memory-platform"
         ],
-        "level": "4★",
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 201,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 81,
         "suiteComponents": [
           "ruvnet/agentdb-advanced",
           "ruvnet/agentdb-learning",
@@ -219,7 +222,7 @@
         "genericSkillRef": "agent-reach",
         "description": "Gives an AI agent internet access by routing web requests across 16+ platforms with MCP support and harness-agnostic integration.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 53.86,
@@ -278,6 +281,24 @@
         }
       }
     ],
+    "audio-mixing": [
+      {
+        "id": "heygen-com/hyperframes-audio",
+        "name": "Hyperframes Audio",
+        "title": "The Sound Engineer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "audio-mixing",
+        "description": "Use when audio already placed in a HyperFrames composition needs to be mixed: fade-in/fade-out, crossfade, track gain or volume, volume automation, ducking, a music bed that fights a voiceover (voiceover carve), effects on a track (EQ, compressor, limiter, gate, saturation, delay, reverb, chorus, phaser, bitcrush), automation envelopes drawn on a track's volume or any effect parameter, or one submix bus carrying a chain, a fader and an automation clock for several tracks at once (`<hf-audio-group>`). Don't use for sourcing or generating audio — finding BGM, SFX, or making a voiceover is `/media-use`. Don't use for clip timing or track layout, which is `/hyperframes-core`.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-audio/SKILL.md"
+        }
+      }
+    ],
     "auto-review": [
       {
         "id": "disler/auto-review",
@@ -292,7 +313,7 @@
         "overallTrustGrade": "C",
         "trustMagnitude": 36.34,
         "links": {
-          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/USER_PROMPT_VALIDATOR.md"
+          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_VALIDATOR.md"
         }
       }
     ],
@@ -346,30 +367,6 @@
     ],
     "autonomous-debug": [
       {
-        "id": "devin-ai/autonomous-swe",
-        "name": "Autonomous SWE",
-        "title": "The Codebreaker's Will",
-        "contributor": "devin-ai",
-        "genericSkillRef": "autonomous-debug",
-        "catalogRef": "devin-ai-autonomous-swe",
-        "description": "Autonomous software engineering agent capable of end-to-end debugging, code generation, and self-correction across complex multi-file codebases.",
-        "tags": [
-          "software-engineering",
-          "autonomous",
-          "debugging",
-          "code-generation",
-          "self-correction"
-        ],
-        "level": "2★",
-        "status": "named",
-        "overallTrustGrade": "C",
-        "trustMagnitude": 30,
-        "installable": false,
-        "links": {
-          "github": "https://github.com/cognition-labs/devin"
-        }
-      },
-      {
         "id": "mattpocock/diagnose",
         "name": "Diagnose",
         "title": "The Disciplined Diagnosis Loop",
@@ -386,8 +383,8 @@
         ],
         "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 106.13,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 94.92,
         "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md"
@@ -396,10 +393,10 @@
     ],
     "autonomous-web-research": [
       {
-        "id": "karpathy/autoresearch-universal",
+        "id": "balukosuri/autoresearch-universal",
         "name": "AutoResearch",
         "title": "The Scholar's Compass",
-        "contributor": "karpathy",
+        "contributor": "balukosuri",
         "genericSkillRef": "autonomous-web-research",
         "catalogRef": "karpathy-autoresearch",
         "description": "Autonomous research agent that iteratively searches, reads, and synthesizes academic papers into structured summaries.",
@@ -432,7 +429,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 133.55,
+        "trustMagnitude": 205.15,
         "links": {
           "github": "https://github.com/mvanhorn/last30days-skill/blob/main/skills/last30days/SKILL.md"
         }
@@ -450,7 +447,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 52.15,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/discuss-phase.md"
         }
@@ -469,7 +466,7 @@
           "collaboration",
           "pre-implementation"
         ],
-        "level": "3★",
+        "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
         "trustMagnitude": 110.15,
@@ -487,12 +484,28 @@
         "genericSkillRef": "brand-guideline-application",
         "description": "Applies Anthropic's official brand colors, typography, and visual rules to artifacts that need Anthropic's look and feel.",
         "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 184.32,
+        "links": {
+          "github": "https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/brandkit",
+        "name": "brandkit",
+        "title": "Brandkit",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "brand-guideline-application",
+        "description": "Visual identity director generating comprehensive brand guidelines, color palettes, typography moodboards, and logo systems from briefs.",
+        "tags": [],
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 79.23,
+        "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md"
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/brandkit/SKILL.md"
         }
       }
     ],
@@ -587,6 +600,22 @@
         }
       },
       {
+        "id": "citrolabs/ego-browser",
+        "name": "Ego Browser",
+        "title": "The Ego Browser",
+        "contributor": "citrolabs",
+        "genericSkillRef": "browser-control",
+        "description": "A Chromium-based browser runtime for AI agents and human users, providing isolated browser sessions and direct interaction with web pages.",
+        "tags": [],
+        "level": "2★",
+        "status": "named",
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
+        "links": {
+          "github": "https://github.com/citrolabs/ego-lite/blob/5ca3c36cba2240b8df2e22ba32127747029039d5/skills/ego-browser/SKILL.md"
+        }
+      },
+      {
         "id": "firecrawl/firecrawl-build-interact",
         "name": "Firecrawl Interact",
         "title": "Firecrawl Interact",
@@ -598,9 +627,9 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 79.76,
+        "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/firecrawl/skills/blob/main/skills/firecrawl-build-interact/SKILL.md"
+          "github": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-interact/SKILL.md"
         }
       },
       {
@@ -692,16 +721,16 @@
     "cheminformatics-analysis": [
       {
         "id": "k-dense-ai/rdkit",
-        "name": "RDKit",
-        "title": "RDKit",
+        "name": "RDKit Prompt Wrapper",
+        "title": "RDKit Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "cheminformatics-analysis",
         "description": "Perform cheminformatics analysis with RDKit for molecular parsing, descriptors, fingerprints, reactions, and similarity.",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 51.3,
+        "overallTrustGrade": "ungraded",
+        "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/rdkit/SKILL.md"
         }
@@ -819,7 +848,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/design-html/SKILL.md"
         }
@@ -837,7 +866,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 58.83,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/code-review-and-quality/SKILL.md"
         }
@@ -881,7 +910,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/review/SKILL.md"
         }
@@ -906,6 +935,24 @@
         "trustMagnitude": 0,
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
+        }
+      }
+    ],
+    "concept-synthesis": [
+      {
+        "id": "garrytan/concept-synthesis",
+        "name": "Concept Synthesis",
+        "title": "GBrain Concept Synthesis",
+        "contributor": "garrytan",
+        "genericSkillRef": "concept-synthesis",
+        "description": "Synthesizes and curates raw knowledge concepts into a grounded, tiered intellectual map.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/concept-synthesis/SKILL.md"
         }
       }
     ],
@@ -962,9 +1009,28 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0.79,
         "links": {
           "github": "https://github.com/JuliusBrussee/caveman/blob/main/skills/caveman/SKILL.md"
+        }
+      }
+    ],
+    "context-safe-execution": [
+      {
+        "id": "mksglu/context-mode",
+        "name": "Context Mode",
+        "title": "Context Mode",
+        "contributor": "mksglu",
+        "genericSkillRef": "context-safe-execution",
+        "description": "Use context-mode tools (ctx_execute, ctx_execute_file) instead of Bash/cat when processing large outputs. Triggers: \"analyze logs\", \"summarize output\", \"process data\", \"parse JSON\", \"filter results\", \"extract errors\", \"check build output\", \"analyze dependencies\", \"process API response\", \"large file analysis\", \"page snapshot\", \"browser snapshot\", \"DOM structure\", \"inspect page\", \"accessibility tree\", \"Playwright snapshot\", \"run tests\", \"test output\", \"coverage report\", \"git log\", \"recent commits\", \"diff between branches\", \"list containers\", \"pod status\", \"disk usage\", \"fetch docs\", \"API reference\", \"index documentation\", \"call API\", \"check response\", \"query results\", \"find TODOs\", \"count lines\", \"codebase statistics\", \"security audit\", \"outdated packages\", \"dependency tree\", \"cloud resources\", \"CI/CD output\".\n  Also triggers on ANY MCP tool output that may exceed 20 lines.\n  Subagent routing is handled automatically via PreToolUse hook.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 151.89,
+        "links": {
+          "github": "https://github.com/mksglu/context-mode/blob/6b8bf61f83abed6c3faf4e7c3ba02c162fadfedf/skills/context-mode/SKILL.md"
         }
       }
     ],
@@ -993,6 +1059,24 @@
         }
       }
     ],
+    "creative-direction": [
+      {
+        "id": "heygen-com/hyperframes-creative",
+        "name": "Hyperframes Creative",
+        "title": "The Visual Director",
+        "contributor": "heygen-com",
+        "genericSkillRef": "creative-direction",
+        "description": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patterns, and brand / style decisions. For atomic motion patterns and scene blueprints, use `hyperframes-animation`.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-creative/SKILL.md"
+        }
+      }
+    ],
     "crm-data-cleanup": [
       {
         "id": "favorchurch/update-unique-churches",
@@ -1004,6 +1088,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/update-unique-churches/SKILL.md"
@@ -1071,7 +1156,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/land-and-deploy/SKILL.md"
         }
@@ -1144,6 +1229,99 @@
     ],
     "design-generation": [
       {
+        "id": "leonxlnx/brutalist-skill",
+        "name": "brutalist-skill",
+        "title": "Industrial Brutalist UI",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-generation",
+        "description": "Industrial brutalism UI archetype with aerospace telemetry aesthetics, high-density monospace typography, and raw structural borders.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/brutalist-skill/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/gpt-tasteskill",
+        "name": "gpt-tasteskill",
+        "title": "GPT Taste",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-generation",
+        "description": "Awwwards-grade kinetic typography, GSAP ScrollTrigger animation systems, and bento grid layout generation.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/gpt-tasteskill/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/minimalist-skill",
+        "name": "minimalist-skill",
+        "title": "Minimalist UI",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-generation",
+        "description": "Utilitarian editorial minimalism UI archetype featuring macro-whitespace, monochrome palettes, and clean document-inspired layouts.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/minimalist-skill/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/soft-skill",
+        "name": "soft-skill",
+        "title": "Luxury Soft UI",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-generation",
+        "description": "Luxury tactile visual design archetype with subtle lighting, smooth neumorphic depth, and premium agency aesthetics.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/soft-skill/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/taste-skill",
+        "name": "taste-skill",
+        "title": "Taste Skill",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-generation",
+        "description": "Anti-slop frontend master skill for landing pages, portfolios, and redesigns. Infers design direction, dials visual variance and density, applies real design systems, and runs strict pre-flight checks.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 172.43,
+        "suiteComponents": [
+          "leonxlnx/brandkit",
+          "leonxlnx/brutalist-skill",
+          "leonxlnx/gpt-tasteskill",
+          "leonxlnx/image-to-code-skill",
+          "leonxlnx/imagegen-frontend-mobile",
+          "leonxlnx/imagegen-frontend-web",
+          "leonxlnx/minimalist-skill",
+          "leonxlnx/output-skill",
+          "leonxlnx/redesign-skill",
+          "leonxlnx/soft-skill",
+          "leonxlnx/stitch-skill"
+        ],
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/taste-skill/SKILL.md"
+        }
+      },
+      {
         "id": "nexu-io/open-design",
         "name": "Open Design",
         "title": "The Artisan's Forge",
@@ -1162,6 +1340,27 @@
         "trustMagnitude": 36,
         "links": {
           "github": "https://github.com/nexu-io/open-design"
+        }
+      },
+      {
+        "id": "pbakaus/impeccable",
+        "name": "Impeccable",
+        "title": "The Aesthetic Shield",
+        "contributor": "pbakaus",
+        "genericSkillRef": "design-generation",
+        "description": "Elite design vocabulary and audit tool for polishing AI-generated frontend code.",
+        "tags": [
+          "design",
+          "audit",
+          "frontend",
+          "polishing"
+        ],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 169.34,
+        "links": {
+          "github": "https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md"
         }
       }
     ],
@@ -1183,7 +1382,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/design-shotgun/SKILL.md"
         }
@@ -1202,6 +1401,24 @@
         "trustMagnitude": 41,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"
+        }
+      }
+    ],
+    "design-source-import": [
+      {
+        "id": "heygen-com/figma",
+        "name": "Figma",
+        "title": "The Design Importer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "design-source-import",
+        "description": "Import Figma content into a HyperFrames composition — rendered assets, brand tokens, components, storyboard sections → reconstructed motion (frames read as states, not slides) (REST/CLI), connector-assisted motion when available, and shaders from a connector or native export. Use when the user pastes a figma.com link or asks to bring a Figma design, frame, logo, brand, or animation into a video/composition.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/figma/SKILL.md"
         }
       }
     ],
@@ -1244,9 +1461,25 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/design-consultation/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/stitch-skill",
+        "name": "stitch-skill",
+        "title": "Stitch Design Taste",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "design-system-extraction",
+        "description": "Google Stitch semantic token and DESIGN.md system integration for natural-language UI visual styling.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/stitch-skill/SKILL.md"
         }
       }
     ],
@@ -1268,7 +1501,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/canary/SKILL.md"
         }
@@ -1292,7 +1525,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 86,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md"
         }
@@ -1316,7 +1549,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 98.54,
+        "trustMagnitude": 95.02,
         "links": {
           "github": "https://github.com/ruvnet/ruflo/blob/main/.agents/skills/hive-mind/SKILL.md"
         }
@@ -1413,7 +1646,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/document-generate/SKILL.md"
         }
@@ -1454,10 +1687,10 @@
           "section-structure",
           "clarity"
         ],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 106.13,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 94.92,
         "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/personal/edit-article/SKILL.md"
@@ -1498,10 +1731,10 @@
           "parallel-execution",
           "orchestration"
         ],
-        "level": "4★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 126,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
         "suiteComponents": [
           "ruvnet/dual-collect",
           "ruvnet/dual-coordinate",
@@ -1530,7 +1763,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/qa/SKILL.md"
         }
@@ -1592,7 +1825,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 351.96,
+        "trustMagnitude": 102.5,
         "suiteComponents": [
           "mattpocock/code-review",
           "mattpocock/diagnose",
@@ -1630,7 +1863,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/benchmark/SKILL.md"
         }
@@ -1652,7 +1885,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/plan-ceo-review/SKILL.md"
         }
@@ -1669,6 +1902,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/attendees/SKILL.md"
@@ -1684,6 +1918,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/count-checkin-by-church/SKILL.md"
@@ -1701,6 +1936,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/export-attendees/SKILL.md"
@@ -1718,6 +1954,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/triage-conference/SKILL.md"
@@ -1735,6 +1972,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/ticket-transfer/SKILL.md"
@@ -1752,6 +1990,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 7.34,
         "links": {
           "github": "https://github.com/caioribeiroclw-pixel/pluribus/blob/main/skills/evidence-attestation/SKILL.md"
@@ -1769,8 +2008,8 @@
         "tags": [],
         "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 103.83,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 95,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/incremental-implementation/SKILL.md"
         }
@@ -1837,31 +2076,6 @@
         "links": {}
       }
     ],
-    "few-shot-learning": [
-      {
-        "id": "openai/few-shot-learning",
-        "name": "Few-Shot Learning",
-        "title": "The In-Context Learner",
-        "contributor": "openai",
-        "genericSkillRef": "few-shot-learning",
-        "catalogRef": "openai-few-shot-learning",
-        "description": "Conditions the model on a small set of examples within the prompt to adapt to new tasks without weight updates.",
-        "tags": [
-          "few-shot",
-          "icl",
-          "prompt-engineering",
-          "gpt-3",
-          "unique"
-        ],
-        "level": "4★",
-        "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 220.96,
-        "links": {
-          "installable": false
-        }
-      }
-    ],
     "fine-tune": [
       {
         "id": "huggingface/huggingface-llm-trainer",
@@ -1899,7 +2113,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 58.83,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/shipping-and-launch/SKILL.md"
         }
@@ -1921,7 +2135,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/ship/SKILL.md"
         }
@@ -1937,7 +2151,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 52.15,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/ship.md"
         }
@@ -1980,10 +2194,10 @@
           "extraction",
           "crawler"
         ],
-        "level": "4★",
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 229.76,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 70.69,
         "suiteComponents": [
           "firecrawl/firecrawl-build-interact",
           "firecrawl/firecrawl-build-onboarding",
@@ -2005,10 +2219,10 @@
         "genericSkillRef": "format-output",
         "description": "Structures raw output into a specified format such as markdown, JSON, CSV, HTML, or cognitive accessibility layout constraints.",
         "tags": [],
-        "level": "1★",
+        "level": "4★",
         "status": "named",
-        "overallTrustGrade": "C",
-        "trustMagnitude": 26.24,
+        "overallTrustGrade": "A",
+        "trustMagnitude": 119.66,
         "links": {
           "github": "https://github.com/ayghri/i-have-adhd/blob/main/skills/i-have-adhd/SKILL.md"
         }
@@ -2033,6 +2247,22 @@
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/make-pdf/SKILL.md"
         }
+      },
+      {
+        "id": "leonxlnx/output-skill",
+        "name": "output-skill",
+        "title": "Full Output Enforcement",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "format-output",
+        "description": "Anti-truncation execution directive preventing LLMs from skipping code blocks, omitting sections, or using placeholder comments.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/output-skill/SKILL.md"
+        }
       }
     ],
     "founder-mode-orchestration": [
@@ -2056,7 +2286,7 @@
         "level": "5★",
         "status": "named",
         "overallTrustGrade": "S",
-        "trustMagnitude": 594.27,
+        "trustMagnitude": 355.66,
         "suiteComponents": [
           "garrytan/benchmark",
           "garrytan/benchmark-models",
@@ -2112,6 +2342,22 @@
     ],
     "framework-upgrade": [
       {
+        "id": "heygen-com/remotion-to-hyperframes",
+        "name": "Remotion To Hyperframes",
+        "title": "The Framework Migrator",
+        "contributor": "heygen-com",
+        "genericSkillRef": "framework-upgrade",
+        "description": "Port an existing Remotion (React) composition's source to HyperFrames HTML. Use ONLY on an explicit ask to port/convert/migrate/translate a Remotion source — one-way, Remotion-only. A passing Remotion mention, reference-only code, or \"make something like my Remotion video\" is a fresh build (/general-video). Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/remotion-to-hyperframes/SKILL.md"
+        }
+      },
+      {
         "id": "laravel/upgrade-laravel-v13",
         "name": "Upgrade Laravel v13",
         "title": "The Versionist's Trial",
@@ -2125,10 +2371,10 @@
           "framework-upgrade",
           "migration"
         ],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "C",
-        "trustMagnitude": 36,
+        "overallTrustGrade": "ungraded",
+        "trustMagnitude": 0,
         "installable": false,
         "links": {}
       },
@@ -2140,10 +2386,34 @@
         "genericSkillRef": "framework-upgrade",
         "description": "remotion-dev named skill for remotion-upgrade",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
+      }
+    ],
+    "gbrain": [
+      {
+        "id": "garrytan/gbrain",
+        "name": "GBrain",
+        "title": "GBrain — Knowledge Intelligence Suite",
+        "contributor": "garrytan",
+        "genericSkillRef": "gbrain",
+        "description": "The installable GBrain router and capstone for knowledge capture, operations, and concept synthesis.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 121.52,
+        "suiteComponents": [
+          "garrytan/brain-ops",
+          "garrytan/capture",
+          "garrytan/concept-synthesis"
+        ],
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/README.md"
+        }
       }
     ],
     "generate-test": [
@@ -2165,7 +2435,7 @@
         "level": "2★",
         "status": "named",
         "overallTrustGrade": "C",
-        "trustMagnitude": 33,
+        "trustMagnitude": 30,
         "installable": false,
         "links": {}
       }
@@ -2179,8 +2449,9 @@
         "genericSkillRef": "generative-media",
         "description": "remotion-dev named skill for remotion-multimedia",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -2242,10 +2513,10 @@
           "releases",
           "automation"
         ],
-        "level": "3★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 66,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
         "suiteComponents": [
           "ruvnet/github-code-review",
           "ruvnet/github-multi-repo",
@@ -2267,10 +2538,10 @@
         "genericSkillRef": "git-ship-done-pipeline",
         "description": "Production-grade engineering command suite for AI coding agents spanning the full development lifecycle — spec, plan, build, test, review, web performance, ship, and simplify.",
         "tags": [],
-        "level": "5★",
+        "level": "4★",
         "status": "named",
-        "overallTrustGrade": "S",
-        "trustMagnitude": 298.83,
+        "overallTrustGrade": "A",
+        "trustMagnitude": 174.62,
         "suiteComponents": [
           "addy-osmani/code-review-and-quality",
           "addy-osmani/code-simplification",
@@ -2300,7 +2571,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 202.15,
+        "trustMagnitude": 169.36,
         "suiteComponents": [
           "gsd-build/discuss-phase",
           "gsd-build/execute-phase",
@@ -2324,6 +2595,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/financial-assistance/SKILL.md"
@@ -2356,16 +2628,16 @@
     "graph-neural-network-modeling": [
       {
         "id": "k-dense-ai/torch-geometric",
-        "name": "Torch Geometric",
-        "title": "Torch Geometric",
+        "name": "Torch Geometric Prompt Wrapper",
+        "title": "Torch Geometric Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "graph-neural-network-modeling",
         "description": "Build graph neural network workflows with PyTorch Geometric for node, link, and graph prediction.",
         "tags": [],
-        "level": "4★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 139.3,
+        "trustMagnitude": 111,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/torch-geometric/SKILL.md"
         }
@@ -2620,6 +2892,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/speak-like-favor/SKILL.md"
@@ -2651,6 +2924,40 @@
         }
       }
     ],
+    "image-generate": [
+      {
+        "id": "leonxlnx/imagegen-frontend-mobile",
+        "name": "imagegen-frontend-mobile",
+        "title": "Imagegen Frontend Mobile",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "image-generate",
+        "description": "Mobile app mockup prompt engineering generating realistic iOS and Android UI screen concept art for diffusion models.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/imagegen-frontend-mobile/SKILL.md"
+        }
+      },
+      {
+        "id": "leonxlnx/imagegen-frontend-web",
+        "name": "imagegen-frontend-web",
+        "title": "Imagegen Frontend Web",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "image-generate",
+        "description": "Section-by-section web reference image prompt engineering for diffusion models to establish website hero and section art direction.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/imagegen-frontend-web/SKILL.md"
+        }
+      }
+    ],
     "implement-with-discernment": [
       {
         "id": "dietrichgebert/ponytail",
@@ -2663,24 +2970,28 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 109.09,
+        "trustMagnitude": 221.96,
         "links": {
           "github": "https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md"
         }
-      },
+      }
+    ],
+    "interactive-presentation-authoring": [
       {
-        "id": "rico-favor/implement-with-discernment",
-        "name": "implement-with-discernment",
-        "title": "Implement With Discernment",
-        "contributor": "rico-favor",
-        "genericSkillRef": "implement-with-discernment",
-        "description": "Applies deliberate judgment before writing code: evaluating whether to implement at all, scoping to the minimum needed, deferring or rejecting features that add complexity without proportionate value.",
+        "id": "heygen-com/slideshow",
+        "name": "Slideshow",
+        "title": "The Deck Architect",
+        "contributor": "heygen-com",
+        "genericSkillRef": "interactive-presentation-authoring",
+        "description": "Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation, and built-in presenter mode with speaker notes; also converts an existing page into a deck. Output is a navigable deck, not a rendered MP4. If the user didn't explicitly ask for a slideshow, confirm before authoring. Unclear → /hyperframes.",
         "tags": [],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
-        "trustMagnitude": 2.19,
-        "installable": false,
-        "links": {}
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/slideshow/SKILL.md"
+        }
       }
     ],
     "issue-triage": [
@@ -2741,16 +3052,32 @@
           "rag",
           "ast"
         ],
-        "level": "4★",
+        "level": "5★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 160.99,
+        "overallTrustGrade": "S",
+        "trustMagnitude": 316.88,
         "links": {
           "github": "https://github.com/safishamsi/graphify/blob/v8/graphify/__init__.py"
         }
       }
     ],
     "knowledge-management": [
+      {
+        "id": "garrytan/brain-ops",
+        "name": "Brain Ops",
+        "title": "GBrain Brain Operations",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-management",
+        "description": "Performs the brain-first read, enrich, write, attribution, and backlink cycle for a persistent knowledge base.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/brain-ops/SKILL.md"
+        }
+      },
       {
         "id": "garrytan/setup-gbrain",
         "name": "Setup GBrain",
@@ -2845,12 +3172,12 @@
         "catalogRef": "firecrawl-firecrawl-research-index",
         "description": "Retrieve and query academic literature through Firecrawl Research.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 154.38,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/firecrawl/skills/blob/main/skills/firecrawl-research-index/SKILL.md"
+          "github": "https://github.com/firecrawl/skills/blob/main/skills/core/firecrawl-research-index/SKILL.md"
         }
       }
     ],
@@ -2863,8 +3190,9 @@
         "genericSkillRef": "map-animation",
         "description": "remotion-dev named skill for remotion-maps",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -2878,10 +3206,10 @@
         "genericSkillRef": "mattpocock-misc",
         "description": "Utility and setup skills that do not fit the engineering/productivity split: guardrails, migration, exercise scaffolding, and pre-commit setup.",
         "tags": [],
-        "level": "3★",
+        "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 120,
+        "trustMagnitude": 199.13,
         "suiteComponents": [
           "mattpocock/git-guardrails-claude-code",
           "mattpocock/migrate-to-shoehorn",
@@ -2958,6 +3286,24 @@
         }
       }
     ],
+    "media-asset-orchestration": [
+      {
+        "id": "heygen-com/media-use",
+        "name": "Media Use",
+        "title": "The Media Steward",
+        "contributor": "heygen-com",
+        "genericSkillRef": "media-asset-orchestration",
+        "description": "Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT into a frozen local file or paste-ready block + ledger record (one verb, `resolve`); generate via TTS / music / image models when the catalog misses; produce voiceover, transcription, captions, and background removal through one shared audio engine; operate on media (cut / reframe / transform); and reuse assets across projects. Also use for vague feedback that real footage looks dark, flat, boring, should feel retro/camcorder/print/ASCII, needs privacy, or needs a media reveal.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/media-use/SKILL.md"
+        }
+      }
+    ],
     "memory-manage": [
       {
         "id": "garrytan/learn",
@@ -3031,16 +3377,16 @@
     "molecular-machine-learning": [
       {
         "id": "k-dense-ai/deepchem",
-        "name": "DeepChem",
-        "title": "DeepChem",
+        "name": "DeepChem Prompt Wrapper",
+        "title": "DeepChem Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "molecular-machine-learning",
         "description": "Run molecular machine learning workflows with DeepChem for property prediction, featurization, and benchmarked datasets.",
         "tags": [],
-        "level": "4★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 139.3,
+        "trustMagnitude": 111,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/deepchem/SKILL.md"
         }
@@ -3134,10 +3480,10 @@
           "neural-training",
           "queen-seraphina"
         ],
-        "level": "3★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 96,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
         "suiteComponents": [
           "ruvnet/flow-nexus-neural",
           "ruvnet/flow-nexus-platform",
@@ -3190,10 +3536,10 @@
           "multi-agent",
           "platform"
         ],
-        "level": "5★",
+        "level": "4★",
         "status": "named",
-        "overallTrustGrade": "S",
-        "trustMagnitude": 488.28,
+        "overallTrustGrade": "A",
+        "trustMagnitude": 174.59,
         "suiteComponents": [
           "ruvnet/agentdb",
           "ruvnet/agentdb-advanced",
@@ -3276,16 +3622,16 @@
     "neural-training-orchestration": [
       {
         "id": "k-dense-ai/pytorch-lightning",
-        "name": "PyTorch Lightning",
-        "title": "PyTorch Lightning",
+        "name": "PyTorch Lightning Prompt Wrapper",
+        "title": "PyTorch Lightning Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "neural-training-orchestration",
         "description": "Orchestrate scalable PyTorch training with Lightning modules, trainers, callbacks, and distributed execution.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 69.3,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 41,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/pytorch-lightning/SKILL.md"
         }
@@ -3330,7 +3676,7 @@
         "overallTrustGrade": "C",
         "trustMagnitude": 36.34,
         "links": {
-          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/USER_PROMPT_OPINION.md"
+          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_OPINION.md"
         }
       }
     ],
@@ -3372,10 +3718,10 @@
           "profiling",
           "web-performance"
         ],
-        "level": "4★",
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 127.33,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/performance-optimization/SKILL.md"
         }
@@ -3437,10 +3783,10 @@
         "genericSkillRef": "personal",
         "description": "Personal category suite for Matt Pocock's skills. Removed from mattpocock/skills suite in v1.0.1.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 60,
+        "overallTrustGrade": "ungraded",
+        "trustMagnitude": 0,
         "suiteComponents": [
           "mattpocock/edit-article",
           "mattpocock/obsidian-vault"
@@ -3451,6 +3797,22 @@
     ],
     "personal-knowledge-management": [
       {
+        "id": "garrytan/capture",
+        "name": "Capture",
+        "title": "GBrain Capture",
+        "contributor": "garrytan",
+        "genericSkillRef": "personal-knowledge-management",
+        "description": "Captures thoughts and content into a persistent personal knowledge brain through one idempotent ingestion entrypoint.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/capture/SKILL.md"
+        }
+      },
+      {
         "id": "mattpocock/obsidian-vault",
         "name": "Obsidian Vault Manager",
         "title": "The Obsidian Vault Mapper",
@@ -3458,10 +3820,10 @@
         "genericSkillRef": "personal-knowledge-management",
         "description": "Manage notes and organization in a specific Obsidian vault using Title Case and wikilinks.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 106.13,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 94.92,
         "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/personal/obsidian-vault"
@@ -3500,7 +3862,7 @@
         "overallTrustGrade": "C",
         "trustMagnitude": 36.34,
         "links": {
-          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/USER_PROMPT_FUSION_MERGE.md"
+          "github": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_FUSION_MERGE.md"
         }
       }
     ],
@@ -3521,10 +3883,10 @@
           "security",
           "memory-unification"
         ],
-        "level": "4★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 216,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
         "suiteComponents": [
           "ruvnet/swarm-advanced",
           "ruvnet/swarm-orchestration",
@@ -3552,8 +3914,9 @@
         "genericSkillRef": "postgres-best-practices",
         "description": "supabase named skill for supabase-postgres-best-practices",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {}
       }
@@ -3570,7 +3933,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 88.83,
+        "trustMagnitude": 80,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/spec-driven-development/SKILL.md"
         }
@@ -3602,16 +3965,16 @@
     "probabilistic-programming": [
       {
         "id": "k-dense-ai/pymc",
-        "name": "PyMC",
-        "title": "PyMC",
+        "name": "PyMC Prompt Wrapper",
+        "title": "PyMC Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "probabilistic-programming",
         "description": "Build Bayesian models with PyMC using hierarchical models, MCMC, variational inference, and posterior checks.",
         "tags": [],
-        "level": "4★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 148.3,
+        "trustMagnitude": 120,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/pymc/SKILL.md"
         }
@@ -3626,10 +3989,10 @@
         "genericSkillRef": "productivity",
         "description": "Productivity category suite for Matt Pocock's skills. Removed from mattpocock/skills suite in v1.0.1.",
         "tags": [],
-        "level": "3★",
+        "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 180,
+        "trustMagnitude": 102.5,
         "suiteComponents": [
           "mattpocock/grill-me",
           "mattpocock/handoff",
@@ -3708,23 +4071,6 @@
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/plan-tune/SKILL.md"
         }
-      },
-      {
-        "id": "stanfordnlp/dspy",
-        "name": "DSPy",
-        "title": "The Programmatic Prompt Engineer",
-        "contributor": "stanfordnlp",
-        "genericSkillRef": "prompt-optimization",
-        "catalogRef": "stanfordnlp-dspy",
-        "description": "Declarative programming of language model pipelines, automatically optimizing prompts and RAG retrieval using bootstrapping and teleprompters.",
-        "tags": [],
-        "level": "4★",
-        "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 100,
-        "links": {
-          "github": "https://github.com/stanfordnlp/dspy/blob/main/dspy/__init__.py"
-        }
       }
     ],
     "prototype": [
@@ -3748,16 +4094,16 @@
     "quantum-circuit-programming": [
       {
         "id": "k-dense-ai/qiskit",
-        "name": "Qiskit",
-        "title": "Qiskit",
+        "name": "Qiskit Prompt Wrapper",
+        "title": "Qiskit Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "quantum-circuit-programming",
         "description": "Build, simulate, transpile, and execute quantum circuits with Qiskit and IBM Quantum Runtime.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 95.26,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 48.96,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/qiskit/SKILL.md"
         }
@@ -3842,10 +4188,10 @@
         "genericSkillRef": "react-performance-optimization",
         "description": "Optimizes component rendering, data fetching, and bundle composition in React applications while preserving requested behavior.",
         "tags": [],
-        "level": "3★",
+        "level": "4★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 50.84,
+        "overallTrustGrade": "A",
+        "trustMagnitude": 162.66,
         "links": {
           "github": "https://github.com/vercel-labs/agent-skills/blob/main/skills/react-best-practices/SKILL.md"
         }
@@ -3866,10 +4212,10 @@
           "memory-integration",
           "self-improvement"
         ],
-        "level": "4★",
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 118.5,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 88.5,
         "suiteComponents": [
           "ruvnet/reasoningbank-agentdb",
           "ruvnet/reasoningbank-intelligence"
@@ -3912,10 +4258,10 @@
         "genericSkillRef": "refactor-code",
         "description": "Code simplification workflow identifying opportunities to reduce cognitive complexity.",
         "tags": [],
-        "level": "3★",
+        "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 198.83,
+        "trustMagnitude": 190,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/code-simplification/SKILL.md"
         }
@@ -4155,16 +4501,16 @@
     "reinforcement-learning-training": [
       {
         "id": "k-dense-ai/stable-baselines3",
-        "name": "Stable Baselines3",
-        "title": "Stable Baselines3",
+        "name": "Stable Baselines3 Prompt Wrapper",
+        "title": "Stable Baselines3 Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "reinforcement-learning-training",
         "description": "Train reinforcement learning agents with Stable-Baselines3 using PPO, SAC, DQN, TD3, and related algorithms.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 78.3,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/stable-baselines3/SKILL.md"
         }
@@ -4344,6 +4690,24 @@
         }
       }
     ],
+    "scroll-driven-web-design": [
+      {
+        "id": "nateherkai/scroll-craft",
+        "name": "Scroll Craft",
+        "title": "Scroll Craft",
+        "contributor": "nateherkai",
+        "genericSkillRef": "scroll-driven-web-design",
+        "description": "Build premium scroll-driven landing pages for service, product, food, and drink brands. Plan the visitor journey, page grammar, emotional peak, and bespoke signature move. Create dimensional heroes with independent visual planes, restrained motion, and separate mobile composition. Use supplied photos and footage or generate photoreal assets through kie.ai, write semantic HTML, and verify desktop, mobile, and reduced-motion scroll states visually. Use for \"scrollcraft\", \"scroll craft\", \"layered hero\", \"premium hero\", \"cinematic hero\", \"scrollytelling\", \"scroll animation site\", \"a site where scrolling plays a video\", \"Apple-style landing page\", \"3D scroll world\", \"interactive landing page\", \"make my brand a scroll experience\", \"this looks like a template\", or requests for a distinctive website that feels like an experience rather than a document.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 82.22,
+        "links": {
+          "github": "https://github.com/nateherkai/scroll-craft/blob/0b816225945e45380397d6a0487efa3c98916858/plugins/nateherk-design/skills/scroll-craft/SKILL.md"
+        }
+      }
+    ],
     "scroll-world": [
       {
         "id": "oso95/scroll-world",
@@ -4381,7 +4745,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/cso/SKILL.md"
         }
@@ -4433,55 +4797,6 @@
         }
       }
     ],
-    "self-consistency": [
-      {
-        "id": "openai/self-consistency",
-        "name": "Self-Consistency",
-        "title": "The Majority Consensus",
-        "contributor": "openai",
-        "genericSkillRef": "self-consistency",
-        "catalogRef": "openai-self-consistency",
-        "description": "Samples multiple reasoning paths and selects the most consistent answer by majority vote.",
-        "tags": [
-          "self-consistency",
-          "reasoning",
-          "ensemble",
-          "cot",
-          "unique"
-        ],
-        "level": "3★",
-        "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 100,
-        "links": {
-          "installable": false
-        }
-      }
-    ],
-    "semantic-cache": [
-      {
-        "id": "huggingface/semantic-cache",
-        "name": "Semantic Cache",
-        "title": "The Neural Memory",
-        "contributor": "huggingface",
-        "genericSkillRef": "semantic-cache",
-        "catalogRef": "huggingface-semantic-cache",
-        "description": "High-performance semantic caching for LLM responses using embedding similarity.",
-        "tags": [
-          "semantic-cache",
-          "embeddings",
-          "vector-search",
-          "cost-optimization",
-          "unique"
-        ],
-        "level": "2★",
-        "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 125.46,
-        "installable": false,
-        "links": {}
-      }
-    ],
     "sequential-agent-pipeline": [
       {
         "id": "ruvnet/stream-chain",
@@ -4518,7 +4833,8 @@
         "tags": [],
         "level": "1★",
         "status": "named",
-        "trustMagnitude": 1.26,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 21.51,
         "links": {
           "github": "https://github.com/aplaceforallmystuff/daily-patterns-pack/blob/main/skills/log-to-daily/SKILL.md"
         }
@@ -4527,16 +4843,16 @@
     "single-cell-analysis": [
       {
         "id": "k-dense-ai/scanpy",
-        "name": "Scanpy",
-        "title": "Scanpy",
+        "name": "Scanpy Prompt Wrapper",
+        "title": "Scanpy Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "single-cell-analysis",
         "description": "Run standard single-cell RNA-seq analysis with Scanpy for QC, clustering, visualization, and differential expression.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 78.3,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/scanpy/SKILL.md"
         }
@@ -4545,16 +4861,16 @@
     "single-cell-omics-modeling": [
       {
         "id": "k-dense-ai/scvi-tools",
-        "name": "scvi-tools",
-        "title": "scvi-tools",
+        "name": "scvi-tools Prompt Wrapper",
+        "title": "scvi-tools Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "single-cell-omics-modeling",
         "description": "Model single-cell omics data with scvi-tools for batch correction, transfer learning, and multimodal integration.",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 51.3,
+        "overallTrustGrade": "ungraded",
+        "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/scvi-tools/SKILL.md"
         }
@@ -4577,7 +4893,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/skillify/SKILL.md"
         }
@@ -4640,6 +4956,22 @@
     ],
     "skill-discovery": [
       {
+        "id": "heygen-com/hyperframes-registry",
+        "name": "Hyperframes Registry",
+        "title": "The Component Curator",
+        "contributor": "heygen-com",
+        "genericSkillRef": "skill-discovery",
+        "description": "Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, installing one item or every block matching a tag, wiring an installed item into index.html, or working with hyperframes.json. Covers discovery, install locations, block sub-composition wiring, component snippet merging, and authoring a new block or component to contribute upstream (idea → scaffold → validate → PR).",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-registry/SKILL.md"
+        }
+      },
+      {
         "id": "vercel/find-skills",
         "name": "Find Skills",
         "title": "The Registry Scout",
@@ -4692,7 +5024,7 @@
         "level": "5★",
         "status": "named",
         "overallTrustGrade": "S",
-        "trustMagnitude": 529.4,
+        "trustMagnitude": 373.22,
         "suiteComponents": [
           "mattpocock/code-review",
           "mattpocock/diagnose",
@@ -4819,7 +5151,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 52.15,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/execute-phase.md"
         }
@@ -4879,8 +5211,9 @@
         "genericSkillRef": "supabase",
         "description": "supabase named skill for supabase core integration",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {}
       }
@@ -4900,10 +5233,10 @@
           "discipline",
           "multi-skill"
         ],
-        "level": "5★",
+        "level": "4★",
         "status": "named",
-        "overallTrustGrade": "S",
-        "trustMagnitude": 445.15,
+        "overallTrustGrade": "A",
+        "trustMagnitude": 220.81,
         "suiteComponents": [
           "obra/brainstorming",
           "obra/dispatching-parallel-agents",
@@ -4990,7 +5323,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/investigate/SKILL.md"
         }
@@ -5031,6 +5364,24 @@
         "trustMagnitude": 65.15,
         "links": {
           "github": "https://github.com/obra/superpowers/blob/main/skills/systematic-debugging/SKILL.md"
+        }
+      }
+    ],
+    "task-depth-enforcement": [
+      {
+        "id": "leonxlnx/unlazy",
+        "name": "unlazy",
+        "title": "Unlazy",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "task-depth-enforcement",
+        "description": "Anti-laziness execution discipline for substantial tasks. Decomposes work into recursive depth trees and enforces completion criteria through gate files and runnable checks.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 65.81,
+        "links": {
+          "github": "https://github.com/leonxlnx/unlazy/blob/main/SKILL.md"
         }
       }
     ],
@@ -5079,6 +5430,54 @@
     ],
     "timeline-animation": [
       {
+        "id": "heygen-com/hyperframes-animation",
+        "name": "HyperFrames Animation",
+        "title": "The Motion Architect",
+        "contributor": "heygen-com",
+        "genericSkillRef": "timeline-animation",
+        "description": "Timeline-based motion driver compiling HTML/CSS/DOM transforms, physics springs, and bezier easings into frame-accurate video sequences.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-animation/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/hyperframes-keyframes",
+        "name": "Hyperframes Keyframes",
+        "title": "The Camera Choreographer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "timeline-animation",
+        "description": "Use when a HyperFrames composition needs a punch-in, punch-out, zoom, reframe, Ken Burns treatment, camera move, visual match/whip handoff, or other seek-safe 2D/3D keyframes; also for GSAP, CSS keyframes, Anime.js, WAAPI, FLIP, paths, masks, SVG morph/draw, text trails, 3D depth, or `hyperframes keyframes` diagnostics. Don't use for broad scene strategy, brand design, media sourcing, captions, or general video planning.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-keyframes/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/motion-graphics",
+        "name": "Motion Graphics",
+        "title": "The Motion Designer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "timeline-animation",
+        "description": "A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, lower-third / callout / social overlay, animated map (highlight regions, connect places, zoom to a location), animated tweet / news-article / headline, webpage / UI animation (scroll, cursor, callouts), or fusing a real image's geometry into a chart. Usually under 10s (up to ~30s), no narration or live-action subject; renders to MP4 or transparent overlay. Longer / narrated / multi-scene → /general-video. Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/motion-graphics/SKILL.md"
+        }
+      },
+      {
         "id": "remotion-dev/remotion-markup",
         "name": "Remotion Markup",
         "title": "Remotion Markup",
@@ -5086,8 +5485,9 @@
         "genericSkillRef": "timeline-animation",
         "description": "remotion-dev named skill for remotion-markup",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -5103,29 +5503,11 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/gaia-research/skill-cost/blob/main/SKILL.md"
         }
-      },
-      {
-        "id": "getagentseal/codeburn",
-        "name": "CodeBurn",
-        "title": "The Ledger of Light",
-        "contributor": "getagentseal",
-        "genericSkillRef": "token-observability",
-        "description": "Cost and token observability tool for tracking AI coding agent spending across models and projects.",
-        "tags": [
-          "observability",
-          "cost",
-          "tokens"
-        ],
-        "level": "2★",
-        "status": "named",
-        "overallTrustGrade": "C",
-        "trustMagnitude": 36,
-        "installable": false,
-        "links": {}
       }
     ],
     "tool-creation": [
@@ -5143,10 +5525,10 @@
           "claude-code",
           "tool-creation"
         ],
-        "level": "3★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 211.52,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 30,
         "links": {
           "github": "https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md"
         }
@@ -5187,6 +5569,7 @@
         "tags": [],
         "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 5,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/resend-conference-emails-carefully-with-smtp/SKILL.md"
@@ -5196,16 +5579,16 @@
     "transformer-model-engineering": [
       {
         "id": "k-dense-ai/transformers",
-        "name": "Transformers",
-        "title": "Transformers",
+        "name": "Transformers Prompt Wrapper",
+        "title": "Transformers Prompt Wrapper",
         "contributor": "k-dense-ai",
         "genericSkillRef": "transformer-model-engineering",
         "description": "Work with Hugging Face Transformers for model loading, pipeline inference, generation, and trainer fine-tuning.",
         "tags": [],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 78.3,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/transformers/SKILL.md"
         }
@@ -5228,10 +5611,10 @@
           "terminology",
           "alignment"
         ],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 106.13,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 94.92,
         "installable": false,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/deprecated/ubiquitous-language/SKILL.md"
@@ -5284,24 +5667,19 @@
         }
       },
       {
-        "id": "pbakaus/impeccable",
-        "name": "Impeccable",
-        "title": "The Aesthetic Shield",
-        "contributor": "pbakaus",
+        "id": "leonxlnx/redesign-skill",
+        "name": "redesign-skill",
+        "title": "Redesign Skill",
+        "contributor": "leonxlnx",
         "genericSkillRef": "ui-audit",
-        "description": "Elite design vocabulary and audit tool for polishing AI-generated frontend code.",
-        "tags": [
-          "design",
-          "audit",
-          "frontend",
-          "polishing"
-        ],
-        "level": "4★",
+        "description": "Systematic UI/UX audit and overhaul workflow for existing web codebases, diagnosing AI layout anti-patterns and applying non-breaking redesigns.",
+        "tags": [],
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 149.32,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md"
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/redesign-skill/SKILL.md"
         }
       }
     ],
@@ -5368,7 +5746,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/plan-design-review/SKILL.md"
         }
@@ -5390,7 +5768,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 68.67,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/plan-devex-review/SKILL.md"
         }
@@ -5410,10 +5788,10 @@
           "heuristics",
           "accessibility"
         ],
-        "level": "3★",
+        "level": "1★",
         "status": "named",
-        "overallTrustGrade": "B",
-        "trustMagnitude": 94.9,
+        "overallTrustGrade": "ungraded",
+        "trustMagnitude": 4.9,
         "links": {
           "github": "https://github.com/mastepanoski/claude-skills/blob/main/skills/nielsen-heuristics-audit/SKILL.md"
         }
@@ -5429,7 +5807,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 206.97,
+        "trustMagnitude": 226.5,
         "links": {
           "github": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/ui-ux-pro-max/SKILL.md"
         }
@@ -5496,7 +5874,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 52.15,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/verify-work.md"
         }
@@ -5558,8 +5936,8 @@
         "tags": [],
         "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 103.83,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 95,
         "links": {
           "github": "https://github.com/addyosmani/agent-skills/blob/main/skills/planning-and-task-breakdown/SKILL.md"
         }
@@ -5579,10 +5957,10 @@
           "ceo-review",
           "orchestration"
         ],
-        "level": "4★",
+        "level": "2★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 156,
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36,
         "suiteComponents": [
           "garrytan/browse",
           "garrytan/cso",
@@ -5611,14 +5989,30 @@
         ],
         "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 106.13,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 94.92,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md"
         }
       }
     ],
     "video-captions": [
+      {
+        "id": "heygen-com/embedded-captions",
+        "name": "Embedded Captions",
+        "title": "The Typographic Director",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-captions",
+        "description": "Subtitle and caption synchronization engine for code-defined video, generating word-level animated typography, styling, and transcript alignments.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/embedded-captions/SKILL.md"
+        }
+      },
       {
         "id": "remotion-dev/remotion-captions",
         "name": "Remotion Captions",
@@ -5627,13 +6021,130 @@
         "genericSkillRef": "video-captions",
         "description": "remotion-dev named skill for remotion-captions",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
     ],
     "video-composition": [
+      {
+        "id": "heygen-com/faceless-explainer",
+        "name": "Faceless Explainer",
+        "title": "The Explainer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals are invented per scene (typography, abstract graphics, diagrams, data-viz). Use for topic explainers, concept breakdowns, how-tos, listicles. Not a video built from a website (/product-launch-video — promo or tour). Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/faceless-explainer/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/hyperframes",
+        "name": "HyperFrames",
+        "title": "HyperFrames",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Suite orchestrator and router for HyperFrames: programmatic video composition framework compiling HTML, CSS, JavaScript, WebGL, WebGPU, and Canvas into production videos.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 163.63,
+        "suiteComponents": [
+          "heygen-com/embedded-captions",
+          "heygen-com/faceless-explainer",
+          "heygen-com/figma",
+          "heygen-com/hyperframes-animation",
+          "heygen-com/hyperframes-audio",
+          "heygen-com/hyperframes-cli",
+          "heygen-com/hyperframes-core",
+          "heygen-com/hyperframes-creative",
+          "heygen-com/hyperframes-keyframes",
+          "heygen-com/hyperframes-registry",
+          "heygen-com/media-use",
+          "heygen-com/motion-graphics",
+          "heygen-com/music-to-video",
+          "heygen-com/pr-to-video",
+          "heygen-com/product-launch-video",
+          "heygen-com/remotion-to-hyperframes",
+          "heygen-com/slideshow",
+          "heygen-com/talking-head-recut"
+        ],
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/music-to-video",
+        "name": "Music To Video",
+        "title": "The Beat Director",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slideshow, or kinetic promo. The music drives all pacing; any user-supplied images/videos are cut onto the same beat grid, and a complete video needs zero assets. Narrated pieces → the input-matched workflow (see /hyperframes). Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/music-to-video/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/pr-to-video",
+        "name": "Pr To Video",
+        "title": "The Change Narrator",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal, fix, or refactor walkthrough built from the diff, commits, and files: the input is a code change, not a website. Not a product promo (/product-launch-video) or a no-PR topic explainer (/faceless-explainer). Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/pr-to-video/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/product-launch-video",
+        "name": "Product Launch Video",
+        "title": "The Launch Director",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and company launches. Use when the user wants to market, launch, promote, or reveal a product; the default for any commercial URL. Site tours / showcases of a website route here too — the brief carries the show-it-as-is intent. Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/product-launch-video/SKILL.md"
+        }
+      },
+      {
+        "id": "heygen-com/talking-head-recut",
+        "name": "Talking Head Recut",
+        "title": "The Overlay Producer",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts, quotes, side panels, picture-in-picture — synced to the transcript, on a 16:9 / 9:16 / 4:5 canvas of your choice; the clip plays untouched underneath. Trigger on \"graphic overlays\", \"on-screen graphics\", \"package / dress up my video\". Not plain subtitles (/embedded-captions). Unclear → /hyperframes.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/talking-head-recut/SKILL.md"
+        }
+      },
       {
         "id": "remotion-dev/remotion-best-practices",
         "name": "Remotion Best Practices",
@@ -5642,8 +6153,9 @@
         "genericSkillRef": "video-composition",
         "description": "remotion-dev named skill for remotion-best-practices",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "suiteComponents": [
           "remotion-dev/remotion-captions",
@@ -5692,8 +6204,9 @@
         "genericSkillRef": "video-interactivity",
         "description": "remotion-dev named skill for remotion-interactivity",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -5707,13 +6220,30 @@
         "genericSkillRef": "video-preview",
         "description": "remotion-dev named skill for remotion-studio",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
     ],
     "video-rendering": [
+      {
+        "id": "heygen-com/hyperframes-core",
+        "name": "HyperFrames Core",
+        "title": "The DOM Render Engine",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-rendering",
+        "description": "Core rendering pipeline orchestrating headless browser execution, WebGL canvas capture, audio-video multiplexing, and deterministic frame export.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-core/SKILL.md"
+        }
+      },
       {
         "id": "remotion-dev/remotion-render",
         "name": "Remotion Render",
@@ -5722,8 +6252,9 @@
         "genericSkillRef": "video-rendering",
         "description": "remotion-dev named skill for remotion-render",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -5737,13 +6268,30 @@
         "genericSkillRef": "video-saas",
         "description": "remotion-dev named skill for remotion-saas",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
     ],
     "video-scaffolding": [
+      {
+        "id": "heygen-com/hyperframes-cli",
+        "name": "HyperFrames CLI",
+        "title": "The Project Scaffolder",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-scaffolding",
+        "description": "Project initialization, template scaffolding, skill lifecycle management, and CI render runner for HyperFrames video projects.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-cli/SKILL.md"
+        }
+      },
       {
         "id": "remotion-dev/remotion-create",
         "name": "Remotion Create",
@@ -5752,10 +6300,29 @@
         "genericSkillRef": "video-scaffolding",
         "description": "remotion-dev named skill for remotion-create",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
+      }
+    ],
+    "vision-qa": [
+      {
+        "id": "leonxlnx/image-to-code-skill",
+        "name": "image-to-code-skill",
+        "title": "Image to Code",
+        "contributor": "leonxlnx",
+        "genericSkillRef": "vision-qa",
+        "description": "Multimodal visual decomposition and pixel-accurate translation of UI mockups into responsive frontend code.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 50,
+        "links": {
+          "github": "https://github.com/leonxlnx/taste-skill/blob/main/skills/image-to-code-skill/SKILL.md"
+        }
       }
     ],
     "web-scrape": [
@@ -5771,9 +6338,9 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 139.78,
+        "trustMagnitude": 110.02,
         "links": {
-          "github": "https://github.com/firecrawl/skills/blob/main/skills/firecrawl-build-scrape/SKILL.md"
+          "github": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-scrape/SKILL.md"
         }
       },
       {
@@ -5808,12 +6375,12 @@
         "catalogRef": "firecrawl-firecrawl-build-search",
         "description": "Integrate Firecrawl web search into product code.",
         "tags": [],
-        "level": "4★",
+        "level": "3★",
         "status": "named",
-        "overallTrustGrade": "A",
-        "trustMagnitude": 113.38,
+        "overallTrustGrade": "B",
+        "trustMagnitude": 83.62,
         "links": {
-          "github": "https://github.com/firecrawl/skills/blob/main/skills/firecrawl-build-search/SKILL.md"
+          "github": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-search/SKILL.md"
         }
       }
     ],
@@ -5826,8 +6393,9 @@
         "genericSkillRef": "wiki-search",
         "description": "remotion-dev named skill for remotion-docs",
         "tags": [],
-        "level": "2★",
+        "level": "1★",
         "status": "named",
+        "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
       }
@@ -6007,7 +6575,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 52.15,
+        "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/plan-phase.md"
         }
@@ -6037,32 +6605,6 @@
     ]
   },
   "awaitingClassification": [
-    {
-      "id": "Taoidle/plan-decompose-gh-plan-cascade",
-      "name": "Plan Cascade",
-      "contributor": "Taoidle",
-      "genericSkillRef": "autonomous-engineering-platform",
-      "description": "AI-powered cascading development framework.",
-      "tags": [],
-      "level": "1★",
-      "status": "awakened",
-      "overallTrustGrade": "ungraded",
-      "trustMagnitude": 0,
-      "links": {}
-    },
-    {
-      "id": "changkun/plan-decompose-gh-wallfacer",
-      "name": "Wallfacer",
-      "contributor": "changkun",
-      "genericSkillRef": "autonomous-engineering-platform",
-      "description": "Chat, specs, tasks, and code. An autonomous engineering platform.",
-      "tags": [],
-      "level": "1★",
-      "status": "awakened",
-      "overallTrustGrade": "ungraded",
-      "trustMagnitude": 0,
-      "links": {}
-    },
     {
       "id": "gaiabot/gaia-triage",
       "name": "Gaia Triage (Internal)",
@@ -6097,7 +6639,7 @@
         "quality-gate",
         "repo-maintenance"
       ],
-      "level": "2★",
+      "level": "1★",
       "status": "awakened",
       "overallTrustGrade": "C",
       "trustMagnitude": 36,
@@ -6111,10 +6653,10 @@
       "genericSkillRef": "computational-biology-workflows",
       "description": "Retrieve and analyze AlphaFold predicted structures for a protein. Use when the user provides a specific UniProt Accession ID and wants structural confidence metrics (pLDDT), domain boundary analysis, or disorder assessment. Do not use if the user only has a protein name, gene name, or amino acid sequence — ask for a UniProt ID first.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/alphafold_database_fetch_and_analyze/SKILL.md"
       }
@@ -6126,10 +6668,10 @@
       "genericSkillRef": "computational-biology-workflows",
       "description": "Analyzes genetic variant effects on gene expression (RNA-seq), chromatin accessibility (DNASE), histone marks (ChIP), and transcription factors using the AlphaGenome API. Use when the user asks about non-coding variant effects, pathogenicity, clinical significance, disease associations, functional effects, gene expression changes, splicing disruption, or regulatory effects in promoters and enhancers. Also use for resolving biological terms to tissue/cell-type ontologies (UBERON/CL) or analyzing variants in chr:pos:ref>alt format.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/alphagenome_single_variant_analysis/SKILL.md"
       }
@@ -6141,10 +6683,10 @@
       "genericSkillRef": "molecular-databases",
       "description": "Query the ChEMBL database for bioactive molecules, drug targets, bioactivity data, approved drugs, and chemical structures. Use when the user asks about compounds, targets, IC50/Ki values, drug mechanisms, or structure searches.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/chembl_database/SKILL.md"
       }
@@ -6156,10 +6698,10 @@
       "genericSkillRef": "clinical-data-retrieval",
       "description": "Query ClinicalTrials.gov via APIv2. Use when you want to search for trials by condition, drug, location, status, or phase; retrieve trial details by NCT ID; check eligibility/inclusion criteria; count trials across conditions or time periods; identify a sponsor's trial portfolio; find recruiting trials for patient matching.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/clinical_trials_database/SKILL.md"
       }
@@ -6171,10 +6713,10 @@
       "genericSkillRef": "clinical-data-retrieval",
       "description": "Use when needing clinical significance, pathogenicity classifications (e.g., Pathogenic, Benign, VUS), clinical evidence rationales, or finding \"hard positive\" benchmark controls for human genomic variants.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/clinvar_database/SKILL.md"
       }
@@ -6186,10 +6728,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Use when you want to look up, map, and search for short genetic variants (SNPs, indels) in NCBI's dbSNP database. Resolves between rsIDs, genomic coordinates in VCF format, and HGVS strings. For an rsID, returns variant type, gene associations, clinical significance, allele frequencies, and genomic coordinates (GRCh38).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/dbsnp_database/SKILL.md"
       }
@@ -6201,10 +6743,10 @@
       "genericSkillRef": "pathway-ontology-retrieval",
       "description": "Query and search the EMBL-EBI Ontology Lookup Service (OLS) for biomedical ontology terms, definitions, and hierarchies across 250+ ontologies (e.g., GO, DOID, HP). Use when the user asks to search for terms, retrieve details, navigate hierarchies (parents, children, ancestors), look up properties and individuals, get autocomplete suggestions, or access ontology metadata and statistics.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/embl_ebi_ols/SKILL.md"
       }
@@ -6216,10 +6758,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Query the ENCODE Registry of cis-Regulatory Elements (cCREs) via the SCREEN GraphQL API, or make custom queries to the ENCODE Portal REST API for experiments and files (ChIP-seq peaks, etc.). Use when you want to query regulatory annotations or raw experimental data across human cell types.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/encode_ccres_database/SKILL.md"
       }
@@ -6231,10 +6773,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Query the Ensembl database to resolve gene, transcript, and protein IDs, fetch genomic or protein sequences, retrieve gene structures (exons), and get variant consequence and effect predictions (VEP). Use this skill as a primary ID translator, genomic sequence database and variant effect prediction tool.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/ensembl_database/SKILL.md"
       }
@@ -6246,10 +6788,10 @@
       "genericSkillRef": "protein-structure-analysis",
       "description": "Performs 3D structural searches of proteins against various databases (PDB, AlphaFold, CATH, MGnify, etc.) using the Foldseek API. Use ONLY when the user provides a physical 3D coordinate file (.cif, .mmcif, or .pdb) and wants to find structurally similar proteins. Do NOT use if the user only provides a protein sequence, gene name, or UniProt ID.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/foldseek_structural_search/SKILL.md"
       }
@@ -6261,10 +6803,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Query the Genome Aggregation Database (gnomAD). Use when determining the rarity or allele frequency of specific genetic variants, retrieving gene constraint metrics (pLI, LOEUF) to assess loss-of-function intolerance, finding variants in a genomic region or gene, or querying structural variants. Don't use for analyzing individual patient genomes, tracking somatic mutations in cancer (use COSMIC), or requesting raw sequencing reads (use ENA).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/gnomad_database/SKILL.md"
       }
@@ -6276,10 +6818,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Use when you want to retrieve quantitative RNA expression data and variant eQTL information from the GTEx (Genotype-Tissue Expression) Project across 54 non-diseased tissue sites.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/gtex_database/SKILL.md"
       }
@@ -6291,10 +6833,10 @@
       "genericSkillRef": "proteomic-data-retrieval",
       "description": "Use when you want to retrieve semi-quantitative protein expression and spatial localisation data from the Human Protein Atlas (HPA).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/human_protein_atlas_database/SKILL.md"
       }
@@ -6306,10 +6848,10 @@
       "genericSkillRef": "proteomic-data-retrieval",
       "description": "Identify domains, families, and sites in proteins; find all proteins in a family or sharing a domain; explore species distribution for a domain; annotate genomes with protein families and GO terms. InterPro combines 14 databases (e.g., Pfam, CDD) into one searchable resource. InterPro-N significantly expands annotation and sequence coverage with deep learning. Includes domain architecture (IDA) search.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/interpro_database/SKILL.md"
       }
@@ -6321,10 +6863,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Query the JASPAR database for Transcription Factor (TF) binding profiles. Use when retrieving Position Frequency Matrices (PFMs) or Position Weight Matrices (PWMs) for specific TFs, resolving gene symbols to JASPAR Matrix IDs, or getting TF metadata. Supports multiple output formats (MEME, TRANSFAC, PFM, JASPAR, YAML).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/jaspar_database/SKILL.md"
       }
@@ -6336,10 +6878,10 @@
       "genericSkillRef": "scientific-literature-retrieval",
       "description": "Search for scientific papers, preprints, and publications on arXiv. Extract metadata, abstracts, and download full-text PDFs or HTML versions of papers. Use when the user asks to find research papers, literature, or specific arXiv IDs.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_arxiv/SKILL.md"
       }
@@ -6351,10 +6893,10 @@
       "genericSkillRef": "scientific-literature-retrieval",
       "description": "Browse, filter, and download life sciences, biology, and medical preprints from bioRxiv and medRxiv. Supports fetching paper metadata by DOI, and browsing by date range with category and keyword filters. Keyword filtering is local, so date ranges MUST be narrow (1-4 weeks) with a category to prevent timeouts.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_biorxiv/SKILL.md"
       }
@@ -6366,10 +6908,10 @@
       "genericSkillRef": "scientific-literature-retrieval",
       "description": "Search Europe PMC for scientific literature and download open-access full texts and PDFs. Retrieve full-text XML/plain text by PMCID, get citation lists and bibliography.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_europepmc/SKILL.md"
       }
@@ -6381,10 +6923,10 @@
       "genericSkillRef": "scientific-literature-retrieval",
       "description": "Query the OpenAlex scholarly database for research papers, authors, institutions, topics, sources, publishers, funders, geo-locations, and keywords. Use when searching academic papers, resolving DOIs, downloading open-access PDFs, finding an author's publications, aggregating bibliometric data (citation counts, h-index, impact factor), exploring the research taxonomies, or performing DOI lookups.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_openalex/SKILL.md"
       }
@@ -6396,10 +6938,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Retrieve protein and nucleotide sequences from NCBI databases using E-utilities. Supports direct accession lookup, CDS translation, gene+organism search, locus lookup, PubMed-linked sequences, patent protein extraction, and organism+length fallback search. Use when you need to fetch biological sequences by accession, gene name, locus tag, PubMed ID, or patent number.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/ncbi_sequence_fetch/SKILL.md"
       }
@@ -6411,10 +6953,10 @@
       "genericSkillRef": "clinical-data-retrieval",
       "description": "Query, search, and download data from the openFDA API for drugs, devices, foods, tobacco, cosmetics, animal and veterinary products, substances, and transparency data. Use for FDA adverse events, recalls, labeling, approvals, shortages, 510(k) clearances, NDC lookups, and any FDA safety or regulatory data query across all 28 API endpoints.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/openfda_database/SKILL.md"
       }
@@ -6426,10 +6968,10 @@
       "genericSkillRef": "clinical-data-retrieval",
       "description": "Query Open Targets Platform for target-disease associations, drug target discovery, tractability/safety data, genetics/omics evidence, known drugs, for therapeutic target identification.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/opentargets_database/SKILL.md"
       }
@@ -6441,10 +6983,10 @@
       "genericSkillRef": "protein-structure-analysis",
       "description": "Use when you want to search for or download experimentally-determined 3D structures for biomolecules (proteins, nucleic acids, bound ligands). Supports searching by sequence similarity, structure similarity, chemical and other attributes. Also use to get metadata about biomolecular structure experiments.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/pdb_database/SKILL.md"
       }
@@ -6456,10 +6998,10 @@
       "genericSkillRef": "computational-biology-workflows",
       "description": "Performs multiple sequence alignment of proteins with EBI Clustal Omega. Use when you need to align multiple sequences to assess similarity, domain conservation, or key residue conservation. Supports up to 4000 sequences and a maximum file size of 4 MB. Do not use to search for homologous proteins in a database (use MMseqs2, BLAST), align non-protein sequences (DNA, RNA), perform structural alignment (use Foldseek, PyMOL), or if you only have a single sequence.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/protein_sequence_msa/SKILL.md"
       }
@@ -6471,10 +7013,10 @@
       "genericSkillRef": "bioinformatic-sequence-analysis",
       "description": "Searches for homologous protein sequences using MMseqs2 (fast, default) or BLAST (comprehensive, fallback). Trigger this whenever the user provides a protein sequence or FASTA file and asks to find homologues, sequence matches, or wants to infer protein function based on sequence similarity, but not when the user wants to infer protein function based on structural similarity.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/protein_sequence_similarity_search/SKILL.md"
       }
@@ -6486,10 +7028,10 @@
       "genericSkillRef": "molecular-databases",
       "description": "Query PubChem, search by name/CID/SMILES, retrieve properties, similarity/substructure searches, bioactivity, for cheminformatics. Use when a user asks about a specific chemical, drug, or molecule.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/pubchem_database/SKILL.md"
       }
@@ -6501,10 +7043,10 @@
       "genericSkillRef": "scientific-literature-retrieval",
       "description": "Search PubMed for scientific literature, including published clinical trials. Fetch abstracts and full text. Link published research to biological databases (gene, protein, nucleotide, PubChem) to discover associations between papers and specific compounds or genes. Verify medical spelling, match raw citations, and cache result sets for bulk processing. Interfaces NCBI E-utilities and PMC BioC APIs.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/pubmed_database/SKILL.md"
       }
@@ -6516,10 +7058,10 @@
       "genericSkillRef": "molecular-visualization",
       "description": "Visualize, analyze, and render protein and molecular structures using PyMOL. Use when the user wants to create images of protein structures, perform structural alignments or superposition, measure distances or contacts, highlight binding sites or active site residues, color by B-factor/pLDDT, or analyze protein-ligand interactions. Do not use for docking, molecular dynamics, or sequence-only analysis.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/pymol/SKILL.md"
       }
@@ -6531,10 +7073,10 @@
       "genericSkillRef": "pathway-ontology-retrieval",
       "description": "Query the QuickGO and Evidence & Conclusion Ontology (ECO) REST API. Use this when you need to map genes to biological processes, molecular functions, or cellular components, find genes associated with a specific pathway/GO term, or explore the Gene Ontology hierarchy. Do not use for querying drug targets (use OpenTargets) or mechanistic signaling pathway diagrams (use KEGG).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/quickgo_database/SKILL.md"
       }
@@ -6546,28 +7088,12 @@
       "genericSkillRef": "pathway-ontology-retrieval",
       "description": "Query the Reactome database (Analysis and Content Services). Use when the user asks about pathway analysis, gene list enrichment, retrieving results by token, finding unmapped or not-found identifiers, mapping identifiers, reaction participants (inputs, outputs), pathway hierarchy (including top-level pathways), diagram export, cross-reference mapping, or searching the knowledgebase.",
       "tags": [],
-      "level": "4★",
-      "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
-      "links": {
-        "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/reactome_database/SKILL.md"
-      }
-    },
-    {
-      "id": "google-deepmind/science_skills_common",
-      "name": "Science-Skills-Common",
-      "contributor": "google-deepmind",
-      "genericSkillRef": "core-platform-implementation",
-      "description": "Shared Python package for Science Skills, currently containing http_client -- a unified HTTP client with rate limiting, retries, and exponential backoff. Not a standalone agent skill. Do not invoke directly.",
-      "tags": [],
       "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
-      "installable": false,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
-        "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/science_skills_common"
+        "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/reactome_database/SKILL.md"
       }
     },
     {
@@ -6577,10 +7103,10 @@
       "genericSkillRef": "proteomic-data-retrieval",
       "description": "Query the STRING database for protein-protein interactions (PPIs), functional enrichment, and homology. Use when the user asks about interactions between specific proteins, interaction evidence, confidence scores, protein interaction partners, or pathway enrichments.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/string_database/SKILL.md"
       }
@@ -6592,10 +7118,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Fetch Evolutionary Conservation scores (phyloP, phastCons) and Transcription Factor Binding Sites (TFBS) from the UCSC Genome Browser. Use when analyzing whether genomic variants or regions are evolutionarily conserved, functionally important, or bounded by TF regulators across major projects (ENCODE, JASPAR, ReMap).",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/ucsc_conservation_and_tfbs/SKILL.md"
       }
@@ -6607,10 +7133,10 @@
       "genericSkillRef": "genomic-data-retrieval",
       "description": "Queries the UniBind database for experimentally validated transcription factor (TF) binding sites. Use when retrieving direct TF-DNA interaction datasets, downloading binding site coordinates (BED/FASTA) for local analysis, or listing available datasets by species, cell line, or TF name. Don't use to query specific intervals, locations, genes, motif models or expression data.",
       "tags": [],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/unibind_database/SKILL.md"
       }
@@ -6622,10 +7148,10 @@
       "genericSkillRef": "proteomic-data-retrieval",
       "description": "Access protein metadata, function, taxonomy, and sequences across UniProtKB, UniParc, and UniRef. Use when searching for proteins, mapping identifiers, or retrieving functional annotations and publications. Don't use for sequence alignment, protein folding, or sequence similarity search (use specialized skills for those tasks).",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "B",
-      "trustMagnitude": 70.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/uniprot_database/SKILL.md"
       }
@@ -6637,10 +7163,10 @@
       "genericSkillRef": "computational-science-platform",
       "description": "Checks whether the uv Python package manager is installed and installs it if missing. Ensures uv is on PATH. Use when another skill requires uv as a prerequisite.",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "A",
-      "trustMagnitude": 100.82,
+      "overallTrustGrade": "ungraded",
+      "trustMagnitude": 10.82,
       "links": {
         "github": "https://github.com/google-deepmind/science-skills/blob/main/skills/uv/SKILL.md"
       }
@@ -6652,7 +7178,7 @@
       "genericSkillRef": "skill-authoring",
       "description": "Distills a completed user workflow or interaction into a reusable agent skill. Use when the user asks to turn their workflow, interaction, or multi-step process into a skill, or when they say \"make this a skill\", \"create a skill from what we just did\", \"package this workflow\" or similar. Do not use for creating skills from scratch without an existing workflow (use a generic skill-creator for that).",
       "tags": [],
-      "level": "4★",
+      "level": "1★",
       "status": "awakened",
       "overallTrustGrade": "A",
       "trustMagnitude": 100.82,
@@ -6688,7 +7214,7 @@
       "trustMagnitude": 0,
       "installable": false,
       "links": {
-        "github": "https://github.com/langgenius/dify/blob/main/.agents/skills/component-refactoring/SKILL.md"
+        "github": "https://github.com/langgenius/dify/blob/main/.agents/skills/how-to-write-component/SKILL.md"
       }
     },
     {
@@ -6745,8 +7271,8 @@
       "tags": [],
       "level": "1★",
       "status": "awakened",
-      "overallTrustGrade": "ungraded",
-      "trustMagnitude": 0,
+      "overallTrustGrade": "A",
+      "trustMagnitude": 126.07,
       "installable": false,
       "links": {}
     },
@@ -6803,26 +7329,13 @@
         "hermes-agent",
         "monitoring"
       ],
-      "level": "3★",
+      "level": "1★",
       "status": "awakened",
       "overallTrustGrade": "C",
       "trustMagnitude": 42.47,
       "links": {
         "github": "https://github.com/Xquik-dev/hermes-tweet/blob/master/skills/hermes-tweet/SKILL.md"
       }
-    },
-    {
-      "id": "yundu-ai/mcp-tool-developer",
-      "name": "mcp-tool-developer",
-      "contributor": "yundu-ai",
-      "genericSkillRef": "mcp-integration",
-      "description": "Build Model Context Protocol (MCP) servers and tools from scratch. Full-stack MCP development with TypeScript/Python, testing, deployment, and registry publishing.",
-      "tags": [],
-      "level": "1★",
-      "status": "awakened",
-      "overallTrustGrade": "ungraded",
-      "trustMagnitude": 0,
-      "links": {}
     }
   ]
 }

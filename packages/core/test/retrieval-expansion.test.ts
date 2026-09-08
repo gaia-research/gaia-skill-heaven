@@ -14,7 +14,7 @@ import { assertSkillIndex, type SkillIndex } from "../src/retrieval/schema.js";
 const index = loadIndex();
 
 describe("the expansion surface", () => {
-  it("keeps all 52 awaiting skills in the deterministic corpus and retains 51 expansions", () => {
+  it("keeps all 48 awaiting skills in the deterministic corpus and retains their expansions", () => {
     const snapshot = JSON.parse(
       readFileSync(join(import.meta.dirname, "..", "bench", "corpus", "named-projection.json"), "utf8"),
     ) as unknown as NamedProjection & {
@@ -26,11 +26,11 @@ describe("the expansion surface", () => {
     const all = allProjectionSkills(snapshot);
     const awaiting = snapshot.awaitingClassification ?? [];
 
-    expect(all).toHaveLength(326);
-    expect(awaiting).toHaveLength(52);
-    expect(awaiting.filter((skill) => expansions[skill.id]?.expansions.length > 0)).toHaveLength(51);
-    expect(index.docs.filter((doc) => !doc.classified)).toHaveLength(52);
-    expect(index.docs.filter((doc) => !doc.classified && doc.retrieval.expansions.length > 0)).toHaveLength(51);
+    expect(all).toHaveLength(354);
+    expect(awaiting).toHaveLength(48);
+    expect(awaiting.filter((skill) => expansions[skill.id]?.expansions.length > 0)).toHaveLength(48);
+    expect(index.docs.filter((doc) => !doc.classified)).toHaveLength(48);
+    expect(index.docs.filter((doc) => !doc.classified && doc.retrieval.expansions.length > 0)).toHaveLength(48);
   });
 
   it("never rewrites a contributor description", () => {

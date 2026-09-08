@@ -289,7 +289,7 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
     mode: "relevance-only",
     trustFields: [],
     disclosure:
-      `Ranked by BM25F over the committed skill index; ${floorNote}. ` +
+      `Ranked by BM25F over the committed retrieval index; ${floorNote}. ` +
       "The tree publishes no behavioural stamps, so no trust ordering is applied.",
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),

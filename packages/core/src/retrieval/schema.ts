@@ -130,6 +130,12 @@ export type SkillIndex = {
   source: string;
   /** sha256 of the upstream projection bytes this index was built from. */
   sourceDigest: string;
+  /** Immutable upstream revision used for this committed retrieval index. */
+  sourceRevision?: string | undefined;
+  /** Upstream release/version label, when the source publishes one. */
+  sourceVersion?: string | undefined;
+  /** The upstream generator and path that produced the source projection. */
+  sourceWorkflow?: string | undefined;
   builder: { version: string; expansion: "none" | "generated" };
   stats: IndexStats;
   docs: IndexedSkill[];
@@ -156,6 +162,9 @@ export function assertSkillIndex(value: unknown): asserts value is SkillIndex {
   }
   requiredString(index, "source", "Skill index");
   requiredString(index, "sourceDigest", "Skill index");
+  optionalString(index, "sourceRevision", "Skill index");
+  optionalString(index, "sourceVersion", "Skill index");
+  optionalString(index, "sourceWorkflow", "Skill index");
 
   const builder = asRecord(index.builder, "Skill index builder");
   requiredString(builder, "version", "Skill index builder");

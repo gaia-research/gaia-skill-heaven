@@ -9,8 +9,8 @@ The measurements and corpus statistics in this document (e.g. 274/326 skills,
 MRR values, G2 refusal percentages, Yggdrasil III churn) represent historical
 measurement artifacts from the September 2026 test corpus and benchmark runs.
 They stand as preserved empirical evidence and negative findings. They are NOT
-claimed as freshly reproduced or current for the moving Tree (which is at v8.1.0
-following Ygg III revert #1688 and integrity sweep #1721).
+claimed as freshly reproduced for the moving Tree. R4 separately records the
+controlled v8.4.1 snapshot below; it does not rewrite this historical evidence.
 
 **Provenance:** produced under the superseded 2026-09-03 SPEC/PLAN, whose
 *direction* was replaced by [`INTENT.md`](INTENT.md) on 2026-09-04. The
@@ -64,12 +64,14 @@ The three refusal percentages in older notes are not interchangeable:
 |---|---|---|---|
 | Historical partial-expansion index (`88a6ac6`, 2026-09-04 00:38 UTC) | `gaia.skill-index/v1`, 274 docs, 101 expanded; `floor.json` at that commit | floor `27.5559`, answerable `90.82%`, unanswerable rejected `95%` | Historical calibration; superseded when the remaining expansions landed |
 | Historical full bucketed index (`fd663a4`, 2026-09-04 00:43 UTC) | `gaia.skill-index/v1`, 274 docs, 273 expanded; `floor.json` at that commit | floor `26.9789`, answerable `90.82%`, unanswerable rejected `75%` | Negative G2 result preserved; not tuned away |
-| Current committed Reach artifact | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Current product calibration and the value this branch carries |
+| Inherited historical Reach artifact (pre-R4) | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | recorded floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Historical/inherited calibration only; the R4 artifact has **354 docs, 354 expansions, and 48 awaiting classifications**. The preserved floor was not revalidated on the refreshed corpus. |
 | Benchmark ledger run (`packages/core/bench/results/ledger.json`, 2026-09-04 00:56 UTC) | Historical v1 ledger over 326 docs/324 expanded | `bm25f-decide.refusalRate = 85%`; its floor sweep's hypothetical 95% point admits only 79% of gold | The 85% value is the whole decide-layer `noMatch` rate, not `floor.json`'s score-distribution rejection; the 95% point is not the shipped floor |
 
-The committed floor therefore still fails G2. The 95% and 85% figures remain
-useful historical measurements only; none is collapsed into the current 75%
-calibration outcome.
+The inherited floor record reports a historical G2 failure. R4 preserved
+`floor.json` byte-for-byte but did **not** revalidate that floor against the
+354-document refreshed corpus, so no fresh G2 result is claimed. The 95% and
+85% figures remain useful historical measurements only; none is collapsed into
+a current refreshed-corpus calibration outcome.
 
 ---
 
@@ -328,10 +330,51 @@ of 59 misses curation-bound, that is not hypothetical.
    calibration are shipped and tested; `/skill-ultra` carries the procedure for
    the agent to follow. Nothing yet runs it as code across a session.
 
+## R4 — controlled current-corpus refresh
+
+The committed retrieval index was refreshed from the immutable Tree release
+`v8.4.1`, revision
+`abf41d304f35fa27bbd8e32be5f6d7d880d6b232`. The source workflow was run in an
+isolated archive of that revision:
+`gaia-skill-tree/scripts/generateNamedIndex.py` →
+`docs/graph/named/index.json`. The source projection bytes have digest
+`sha256:16215ffe5bccdab6b9e14d3c02e4ff2f0fb3b73776cabe1ac23d500fd9ec5bb8`.
+The prior committed projection digest was
+`sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268`.
+
+The capability-descriptive diff is exact: **40 added, 12 removed, 11 changed,
+303 unchanged** among the 326 prior and 354 refreshed documents. The 11 changed
+records touched 10 `name` values, 10 `title` values, and one
+`genericSkillRef`; no common-record `tags` or `description` changed. The
+refresh also carries the source's **306 bucketed / 48 awaiting-classification**
+status without inventing classification.
+
+Expansion provenance is incremental. **302** existing expansion records were
+preserved byte-for-byte; **41** missing and **11** fingerprint-invalidated
+records were regenerated locally from the refreshed capability metadata; **11**
+removed-source records were dropped. The resulting retrieval index is
+`gaia.skill-index/v2`, built by `skill-index-builder/0.1.0`, with **354/354
+expanded** and zero stale expansions. The committed floor and its calibration
+were not changed: the historical G2 result remains **75% rejection** and
+`meetsG2: false`. No labels, thresholds, ranker parameters, or benchmark
+provenance were changed, and no retrieval-quality comparison is claimed here:
+old and new corpora are not a paired ranker experiment.
+
+R5 resolves the public naming collision: this artifact is the **retrieval
+index**. **HH Index** refers only to measured behavioral evidence; the internal
+`gaia.skill-index/v2` schema and `skill-index.json` path remain compatibility
+names.
+
 ## Reproducing any of it
 
 ```bash
-npx tsx packages/core/scripts/snapshot-corpus.ts      # the only networked step
+# Controlled R4 refresh: generate the pinned Tree projection in an isolated
+# checkout/archive, then pass its bytes and immutable revision to this repo.
+npx tsx packages/core/scripts/snapshot-corpus.ts \
+  --source-file /path/to/named-generated.json \
+  --source-revision abf41d304f35fa27bbd8e32be5f6d7d880d6b232 \
+  --source-version v8.4.1 \
+  --source-workflow 'gaia-skill-tree/scripts/generateNamedIndex.py -> docs/graph/named/index.json'
 npx tsx packages/core/scripts/filter-expansions.ts --in packages/core/bench/corpus/expansions.raw.jsonl --rank-cutoff none
 npx tsx packages/core/scripts/build-skill-index.ts
 npx tsx packages/core/scripts/calibrate-floor.ts && npx tsx packages/core/scripts/build-skill-index.ts
@@ -381,8 +424,9 @@ have invalidated 76 `level` values and 154 `trustMagnitude` values and required
 re-stamping most of the catalogue.
 
 **What it is not evidence for.** It says nothing about retrieval *quality* under
-the new corpus. 13 new documents need expansion generation, and no evaluation
-has been run against the Yggdrasil III corpus — that is Lane R4.
+that historical corpus. The later controlled R4 refresh is recorded above, but
+its changed corpus is not a paired ranker comparison and does not rewrite this
+historical result.
 
 **Caveat.** Frontmatter was parsed with a line-oriented reader rather than a
 YAML library; a multi-line value reformatted without changing meaning would
