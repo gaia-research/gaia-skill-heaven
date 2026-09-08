@@ -334,8 +334,10 @@ Stated here so no surface implies otherwise:
   out in use until it lands.
 - **Hard enforcement of the `zero` cut.** It is a standing instruction, not a
   server-side gate.
-- **Ultra controller heuristics.** At `ultra` the agent picks direction and
-  depth unaided.
+- **Behavior-aware Ultra composition.** The core S-now controller is
+  deterministic and event-driven; it holds without an explicit validated
+  behavioral event. Arbor-backed composition and campaign orchestration are
+  not built here.
 - **Relevance-band filtering.** The engine takes a depth, not a score band.
 - **Every possible client's install UX.** The package is portable, but the
   Agent Plugins specification leaves install and enable flows to clients. The

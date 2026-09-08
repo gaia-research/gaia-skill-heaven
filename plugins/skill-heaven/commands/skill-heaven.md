@@ -11,7 +11,9 @@ Show the output above.
 
 This session's routing posture is Skill Heaven at the indicated rung. On a
 capability gap, call the `summon` tool with `surface: "heaven"` and a depth
-appropriate to the gap. Show each returned card before using the skill. Read the
+appropriate to the gap. Today this surface changes relevance-result breadth;
+canonical behavioral evidence and Heaven stamp-gated routing are not running.
+Show each returned card before using the skill. Read the
 SKILL.md at the card's path and resolve sibling files from the same directory.
 Apply relevant guidance from summoned skills to the current task.
 
