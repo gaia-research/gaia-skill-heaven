@@ -17,6 +17,7 @@
     "packages/*/src",
     "packages/*/test",
     "packages/*/scripts",
+    "packages/*/bench",
     "plugins/*/scripts",
     "scripts",
     "test"

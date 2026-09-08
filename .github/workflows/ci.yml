@@ -31,6 +31,14 @@ jobs:
           npm run build:mcp
           git diff --exit-code -- plugins/skill-heaven/mcp/
 
+      # The committed skill index is the runtime's only read path (SPEC §2.2),
+      # and it is a deterministic function of the committed corpus snapshot.
+      # A diff here means someone edited the snapshot or the builder without
+      # rebuilding — which would ship a plugin whose index does not match the
+      # corpus it claims to index.
+      - name: Skill index is up to date
+        run: npx tsx packages/core/scripts/build-skill-index.ts --check
+
       # The plugin is the shipped artifact: validate its manifest with the real
       # Claude Code CLI, not just our own tests. `plugin validate` is a static
       # manifest check — it starts no session and needs no credentials.

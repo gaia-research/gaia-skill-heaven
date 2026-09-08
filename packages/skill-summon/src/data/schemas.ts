@@ -91,5 +91,6 @@ export const namedRegistrySchema = z
     schemaVersion: z.string().optional(),
     generatedAt: z.string().min(1),
     buckets: z.record(z.array(namedSkillSchema)),
+    awaitingClassification: z.array(namedSkillSchema).optional(),
   })
   .passthrough();
