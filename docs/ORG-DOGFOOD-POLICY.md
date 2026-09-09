@@ -52,8 +52,9 @@ current supported harness actually provides to deduplicate/search and file one
 issue in [`gaia-research/gaia-skill-heaven`](https://github.com/gaia-research/gaia-skill-heaven).
 The dispatch must respect active worker limits, explicit no-delegation
 instructions, and repository-specific approval gates. The issue writer must
-not invoke another issue writer or restart this loop. Aggregate one underlying
-problem, and add new facts to an existing issue when that is the better match.
+not invoke another issue writer or restart this loop; avoid duplicate reports.
+Aggregate one underlying problem, and add new facts to an existing issue when
+that is the better match.
 If dispatch or filing is blocked, save a local draft and report the blocker; do
 not bootstrap another harness or override a gate.
 
