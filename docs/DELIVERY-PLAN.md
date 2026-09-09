@@ -140,7 +140,10 @@ not an external package. It ships as a committed MCP bundle inside the plugin
 path and no separate binary to select.
 
 The bundle exposes one tool, `summon` (`{ query: string, limit?: positive
-integer, surface?: "any" | "heaven" | "hell" }`). There is no upper cap —
+integer, surface?: "any" | "heaven" | "hell" }`) plus the isolated
+`io.modelcontextprotocol/skills` resource surface (`skills/list`, `skills/get`,
+and lazy `resources/read`). See `docs/SEP-2640-CONFORMANCE.md` for the
+pinned proposal status and deferred pieces. There is no upper cap —
 nothing assigns a ceiling, so the engine must not invent one; a malformed
 `limit` is refused, never clamped.
 `gaia_search`, `gaia_inspect`, and `gaia_status` — tools the old external

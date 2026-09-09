@@ -82,12 +82,15 @@ historical stages are reconciled in `EVIDENCE.md`) · reproducible evaluation ·
 offline-by-construction · freshness and coverage tooling · the negative findings
 (dense retrieval dropped, round-trip filter rejected, coverage split demotion) ·
 MCP `--source` and `--preview` arguments with text JSON and structuredContent
-(the SEP `resource_link` surface is deferred to isolated Lane X) · session logging
-(`summon-log.jsonl`).
+(the pinned MCP Skills resource surface remains isolated in Lane X; its
+conditional `resource_link` surface is available only with authoritative
+metadata and a proven reader route) · session logging (`summon-log.jsonl`).
 
 **Slice boundaries:** The first bounded slice (Reach foundation, PR #128) extracts
-this core retrieval foundation WITHOUT Ultra controller (Lane S), WITHOUT SEP
-resources (Lane X), and WITHOUT repo-local Arbor schema (Lane A1).
+this core retrieval foundation WITHOUT the Ultra controller (Lane S) and
+WITHOUT repo-local Arbor schema (Lane A1). The current branch also carries the
+isolated Lane X MCP Skills compatibility surface; that surface does not add
+Arbor data or a new skill catalogue.
 
 ### Work
 

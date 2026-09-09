@@ -248,9 +248,11 @@ of the tree.
 ## What shipped (historical programme record)
 
 The tables below preserve the pre-extraction programme history. PR128's Reach
-foundation intentionally does **not** carry the historical SEP `resource_link`
-or repo-local Arbor surfaces; current boundaries are in `PLAN.md`, while this
-record keeps the superseded measurements traceable.
+foundation intentionally did **not** carry the historical SEP `resource_link`
+or repo-local Arbor surfaces. The later bounded integration keeps that Reach
+history intact while adding the isolated Lane X Skills API surface; current
+boundaries are in `PLAN.md`, and this record keeps the superseded measurements
+traceable.
 
 **Phase 0 — `packages/core/bench/`**: 100 gold queries, 20 unanswerable, a
 zero-dependency runner (MRR, recall@5, refusal rates, seeded paired bootstrap,
@@ -346,8 +348,10 @@ The capability-descriptive diff is exact: **40 added, 12 removed, 11 changed,
 303 unchanged** among the 326 prior and 354 refreshed documents. The 11 changed
 records touched 10 `name` values, 10 `title` values, and one
 `genericSkillRef`; no common-record `tags` or `description` changed. The
-refresh also carries the source's **306 bucketed / 48 awaiting-classification**
-status without inventing classification.
+refresh also carries the merged default corpus's **354 documents**: **306
+bucketed / 48 awaiting-classification**. The count is corpus size, not a promise
+that all 354 entries are Skills API-advertisable; entries without authoritative
+frontmatter remain an honest omission from `skills/list`.
 
 Expansion provenance is incremental. **302** existing expansion records were
 preserved byte-for-byte; **41** missing and **11** fingerprint-invalidated

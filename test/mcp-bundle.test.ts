@@ -106,6 +106,14 @@ describe("plugins/skill-heaven/mcp/skill-summon.mjs — the committed bundle", (
     expect(match, `found what looks like a live require() of a bare package: ${match?.[0]}`).toBeNull();
   });
 
+  it("ships hardened URI-template marker handling", () => {
+    // SDK 1.29.0 is pinned for this lane. The build boundary hardens its two
+    // uncontrolled-marker removals without editing node_modules or the output
+    // by hand; this regression keeps the committed artifact honest.
+    expect(bundle).not.toMatch(/name\.replace\(["']\*["'],\s*["']["']\)/);
+    expect(bundle).toMatch(/name\.replaceAll\(["']\*["'],\s*["']["']\)/);
+  });
+
   it("has no relative import reaching outside the bundle (e.g. back into packages/)", () => {
     // A path traversal like `../../../packages/skill-summon/...` surviving
     // into the output would mean esbuild left something unbundled instead of
