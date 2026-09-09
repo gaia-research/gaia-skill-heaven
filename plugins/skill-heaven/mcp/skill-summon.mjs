@@ -25033,13 +25033,15 @@ function createSkillSummonMcpServer({
           ...preview === void 0 ? {} : { preview }
         });
         let linkSkills = [];
-        try {
-          const entries = await buildInternalEntries(
-            await service.namedSkills(),
-            describeSkill
-          );
-          linkSkills = entries.map((entry) => entry.skill);
-        } catch {
+        if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
+          try {
+            const entries = await buildInternalEntries(
+              await service.namedSkills(),
+              describeSkill
+            );
+            linkSkills = entries.map((entry) => entry.skill);
+          } catch {
+          }
         }
         return toolResult(outcome, linkSkills);
       } catch (error2) {

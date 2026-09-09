@@ -72,13 +72,14 @@ function serviceFor(
   sourceUrl: string,
   indexSkill: NamedSkill,
   metadata: () => Promise<NamedSkill[]>,
+  origin: "fetched" | "committed" = "fetched",
 ): GaiaService {
   const index = indexFromSnapshot(fixtureSnapshot(sourceUrl, indexSkill), sourceUrl);
   return {
     skillIndex: async () => ({
       index,
       source: sourceUrl,
-      origin: "fetched" as const,
+      origin,
     }),
     namedSkills: metadata,
   } as unknown as GaiaService;
@@ -119,11 +120,13 @@ async function primeResident(
 async function callSummon(
   service: GaiaService,
   args: Record<string, unknown>,
+  prepare?: ((session: SummonSession) => Promise<void>) | undefined,
 ): Promise<Awaited<ReturnType<Client["callTool"]>>> {
   const session = await openSession();
   sessions.push(session);
   const previousSession = process.env.SKILL_SUMMON_SESSION;
   process.env.SKILL_SUMMON_SESSION = session.root;
+  await prepare?.(session);
   const server = createSkillSummonMcpServer({ service });
   const client = new Client({ name: "wire-regression", version: "1" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -183,6 +186,29 @@ describe("summon resource-link enrichment", () => {
     }
   });
 
+  it("does not fetch metadata for a committed resident success", async () => {
+    const skill = fixtureSkill(DEFAULT_SOURCE);
+    let metadataCalls = 0;
+    const service = serviceFor(
+      "https://github.com/default/repo",
+      skill,
+      async () => {
+        metadataCalls++;
+        return [skill];
+      },
+      "committed",
+    );
+    const result = await callSummon(
+      service,
+      { query: "health", surface: "any" },
+      (session) => primeResident(session, skill, DEFAULT_SOURCE),
+    );
+    expect(result.isError).toBeFalsy();
+    expect((result.structuredContent as { summoned: unknown[] }).summoned).toHaveLength(1);
+    expect(metadataCalls).toBe(0);
+    expect(resourceLinks(result)).toEqual([]);
+  });
+
   it("omits links for a same-ID different-route explicit source override", async () => {
     const overrideSkill = fixtureSkill(OVERRIDE_SOURCE, "Override Health");
     const configuredSkill = fixtureSkill(DEFAULT_SOURCE, "Override Health");
@@ -221,9 +247,11 @@ describe("summon resource-link enrichment", () => {
     }
   });
 
-  it("preserves noMatch and preview outcomes when metadata enrichment fails", async () => {
+  it("preserves noMatch and preview outcomes without metadata calls", async () => {
     const skill = fixtureSkill(DEFAULT_SOURCE);
+    let metadataCalls = 0;
     const metadata = async (): Promise<NamedSkill[]> => {
+      metadataCalls++;
       throw new Error("metadata source unavailable");
     };
     const service = serviceFor(
@@ -243,6 +271,7 @@ describe("summon resource-link enrichment", () => {
       noMatch: expect.any(Object),
     });
     expect(resourceLinks(noMatch)).toEqual([]);
+    expect(metadataCalls).toBe(0);
 
     const preview = await callSummon(service, {
       query: "health",
@@ -256,6 +285,7 @@ describe("summon resource-link enrichment", () => {
       noMatch: null,
     });
     expect(resourceLinks(preview)).toEqual([]);
+    expect(metadataCalls).toBe(0);
   });
 
   it("still returns a wire error when summon source resolution fails", async () => {

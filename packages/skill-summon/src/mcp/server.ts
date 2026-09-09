@@ -301,15 +301,20 @@ export function createSkillSummonMcpServer({
         // remain successful when the metadata source is unavailable; in that
         // case the structured outcome is returned without links.
         let linkSkills: NamedSkill[] = [];
-        try {
-          const entries = await buildInternalEntries(
-            await service.namedSkills(),
-            describeSkill,
-          );
-          linkSkills = entries.map((entry) => entry.skill);
-        } catch {
-          // Do not turn a valid offline/override result into a tool error just
-          // because optional metadata enrichment could not be completed.
+        // No links are possible for a refusal or preview, and committed-index
+        // outcomes must remain offline even when a resident payload exists.
+        // Fetched outcomes may enrich only after a successful materialization.
+        if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
+          try {
+            const entries = await buildInternalEntries(
+              await service.namedSkills(),
+              describeSkill,
+            );
+            linkSkills = entries.map((entry) => entry.skill);
+          } catch {
+            // Do not turn a valid fetched result into a tool error just because
+            // optional metadata enrichment could not be completed.
+          }
         }
         return toolResult(outcome, linkSkills);
       } catch (error) {
