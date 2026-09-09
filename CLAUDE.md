@@ -223,3 +223,13 @@ of those, it does not add a third.
 - Plan of record: `gaia-research/docs/plans/skill-heaven-continuation-plan.md`
 - Evidence matrix: `gaia-research/docs/labs/harness-capability-matrix.md`
 - Ledger of record + validator: `gaia-research/scripts/hell-heaven-bench/`
+
+## Organization dogfooding and feedback
+
+The shared-repo dogfooding policy is recorded in `docs/ORG-DOGFOOD-POLICY.md`; the following rules are local and must be obeyed without fetching that document. During real work, use the existing Skill Heaven plugin or native skills only for a genuine task need. Do not summon for a quota, pretend a client supports an unavailable surface, silently install a plugin, or edit user-global configuration. `/summon` adds one skill for the current session; it is not a permanent installation. Preserve zero posture and human intent.
+
+At task end, record only new actionable friction actually observed during relevant work or from human feedback. Keep expected versus observed behavior, repo/commit, harness/version, route/source when known, safe reproduction, impact, and evidence versus inference. Retrieval score, materialization, and exit code do not prove usefulness or task success. Do not alter existing selection policy, labels, evidence semantics, or curator gates.
+
+If the current harness safely supports a light agent, use the smallest such capability to deduplicate/search and file one issue in `gaia-research/gaia-skill-heaven`; do not recurse or duplicate one underlying problem. Public issues require a synthetic/redacted reproduction and must exclude raw prompts, transcripts, session logs, tokens, credentials, personal data, private code, private URLs/paths, customer identifiers, and confidential details. If privacy, auth, or tooling blocks safe filing, save a local draft and say so; never claim it was filed. Use only labels that exist.
+
+Existing optional telemetry is caller-controlled and local only: `skill-zero --telemetry-out FILE` is opt-in and can be checked with `skill-zero --telemetry-validate FILE` when that route is actually available. Do not add upload, transcript capture, daemons, autonomous issue floods, or automatic policy tuning. Standalone `skill-*` repos, archived/forks, Milim/apps/pets, `marketing-tasks`, and private `.github` repos are exempt. The owner/orchestrator reviews and merges; workers do not merge their own policy PRs.
