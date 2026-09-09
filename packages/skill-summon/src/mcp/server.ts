@@ -297,14 +297,21 @@ export function createSkillSummonMcpServer({
           ...(source === undefined ? {} : { source }),
           ...(preview === undefined ? {} : { preview }),
         });
-        // Resource links are emitted only when the same registry entry has
-        // authoritative frontmatter and an eligible reader route. This is a
-        // metadata-only second lookup; it never fetches a skill body.
-        const entries = await buildInternalEntries(
-          await service.namedSkills(),
-          describeSkill,
-        );
-        return toolResult(outcome, entries.map((entry) => entry.skill));
+        // Resource links are optional enrichment. A successful summon must
+        // remain successful when the metadata source is unavailable; in that
+        // case the structured outcome is returned without links.
+        let linkSkills: NamedSkill[] = [];
+        try {
+          const entries = await buildInternalEntries(
+            await service.namedSkills(),
+            describeSkill,
+          );
+          linkSkills = entries.map((entry) => entry.skill);
+        } catch {
+          // Do not turn a valid offline/override result into a tool error just
+          // because optional metadata enrichment could not be completed.
+        }
+        return toolResult(outcome, linkSkills);
       } catch (error) {
         return toolError(error);
       }
@@ -334,7 +341,14 @@ function resourceLinks(
 ): ContentBlock[] {
   const summoned = (value as { summoned?: unknown }).summoned;
   if (!Array.isArray(summoned)) return [];
-  const byId = new Map(linkSkills.map((skill) => [skill.id, skill]));
+  const byIdentity = new Map(
+    linkSkills.flatMap((skill) => {
+      const source = canonicalSourceUrl(skill.links.github);
+      return source === undefined
+        ? []
+        : [[sourceIdentity(skill.id, source), skill] as const];
+    }),
+  );
 
   return summoned.flatMap((candidate): ContentBlock[] => {
     if (!candidate || typeof candidate !== "object") return [];
@@ -343,9 +357,18 @@ function resourceLinks(
       sourceUrl?: unknown;
       sha256?: unknown;
     };
-    if (typeof installed.id !== "string") return [];
-    const skill = byId.get(installed.id);
-    if (!skill || !skill.frontmatter || typeof skill.frontmatter.name !== "string") {
+    if (typeof installed.id !== "string" || typeof installed.sourceUrl !== "string") {
+      return [];
+    }
+    const source = canonicalSourceUrl(installed.sourceUrl);
+    if (source === undefined) return [];
+    const skill = byIdentity.get(sourceIdentity(installed.id, source));
+    if (
+      !skill ||
+      skill.name !== (installed as { name?: unknown }).name ||
+      !skill.frontmatter ||
+      typeof skill.frontmatter.name !== "string"
+    ) {
       return [];
     }
     let uri: string;
@@ -356,16 +379,14 @@ function resourceLinks(
       // not turn a successful summon result into an unsafe resource URI.
       return [];
     }
-    const source =
-      typeof installed.sourceUrl === "string" ? installed.sourceUrl : "unknown";
-    const digest =
-      typeof installed.sha256 === "string" ? ` sha256=${installed.sha256}` : "";
     return [
       {
         type: "resource_link",
         uri,
         name: skill.frontmatter.name,
-        description: `Read the summoned SKILL.md. Source: ${source}.${digest}`,
+        description:
+          `Read the source-routed SKILL.md. The source may move after summon; ` +
+          `this link does not guarantee the materialized bytes. Source: ${installed.sourceUrl}.`,
         mimeType: "text/markdown",
         annotations: {
           audience: ["assistant"],
@@ -374,6 +395,34 @@ function resourceLinks(
       },
     ];
   });
+}
+
+function sourceIdentity(id: string, source: string): string {
+  return `${id}\u0000${source}`;
+}
+
+function canonicalSourceUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.trim().length === 0) return undefined;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return undefined;
+  }
+  if (
+    url.protocol !== "https:" ||
+    url.hostname.toLocaleLowerCase("en-US") !== "github.com" ||
+    url.username ||
+    url.password ||
+    url.port ||
+    url.search ||
+    url.hash
+  ) {
+    return undefined;
+  }
+  let pathname = url.pathname;
+  while (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+  return `https://github.com${pathname}`;
 }
 
 function resourceName(uri: string): string {

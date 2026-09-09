@@ -25032,11 +25032,16 @@ function createSkillSummonMcpServer({
           ...source === void 0 ? {} : { source },
           ...preview === void 0 ? {} : { preview }
         });
-        const entries = await buildInternalEntries(
-          await service.namedSkills(),
-          describeSkill
-        );
-        return toolResult(outcome, entries.map((entry) => entry.skill));
+        let linkSkills = [];
+        try {
+          const entries = await buildInternalEntries(
+            await service.namedSkills(),
+            describeSkill
+          );
+          linkSkills = entries.map((entry) => entry.skill);
+        } catch {
+        }
+        return toolResult(outcome, linkSkills);
       } catch (error2) {
         return toolError(error2);
       }
@@ -25057,13 +25062,22 @@ function toolResult(value, linkSkills = []) {
 function resourceLinks(value, linkSkills) {
   const summoned = value.summoned;
   if (!Array.isArray(summoned)) return [];
-  const byId = new Map(linkSkills.map((skill) => [skill.id, skill]));
+  const byIdentity = new Map(
+    linkSkills.flatMap((skill) => {
+      const source = canonicalSourceUrl(skill.links.github);
+      return source === void 0 ? [] : [[sourceIdentity(skill.id, source), skill]];
+    })
+  );
   return summoned.flatMap((candidate) => {
     if (!candidate || typeof candidate !== "object") return [];
     const installed = candidate;
-    if (typeof installed.id !== "string") return [];
-    const skill = byId.get(installed.id);
-    if (!skill || !skill.frontmatter || typeof skill.frontmatter.name !== "string") {
+    if (typeof installed.id !== "string" || typeof installed.sourceUrl !== "string") {
+      return [];
+    }
+    const source = canonicalSourceUrl(installed.sourceUrl);
+    if (source === void 0) return [];
+    const skill = byIdentity.get(sourceIdentity(installed.id, source));
+    if (!skill || skill.name !== installed.name || !skill.frontmatter || typeof skill.frontmatter.name !== "string") {
       return [];
     }
     let uri;
@@ -25072,14 +25086,12 @@ function resourceLinks(value, linkSkills) {
     } catch {
       return [];
     }
-    const source = typeof installed.sourceUrl === "string" ? installed.sourceUrl : "unknown";
-    const digest = typeof installed.sha256 === "string" ? ` sha256=${installed.sha256}` : "";
     return [
       {
         type: "resource_link",
         uri,
         name: skill.frontmatter.name,
-        description: `Read the summoned SKILL.md. Source: ${source}.${digest}`,
+        description: `Read the source-routed SKILL.md. The source may move after summon; this link does not guarantee the materialized bytes. Source: ${installed.sourceUrl}.`,
         mimeType: "text/markdown",
         annotations: {
           audience: ["assistant"],
@@ -25088,6 +25100,24 @@ function resourceLinks(value, linkSkills) {
       }
     ];
   });
+}
+function sourceIdentity(id, source) {
+  return `${id}\0${source}`;
+}
+function canonicalSourceUrl(value) {
+  if (typeof value !== "string" || value.trim().length === 0) return void 0;
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    return void 0;
+  }
+  if (url.protocol !== "https:" || url.hostname.toLocaleLowerCase("en-US") !== "github.com" || url.username || url.password || url.port || url.search || url.hash) {
+    return void 0;
+  }
+  let pathname = url.pathname;
+  while (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+  return `https://github.com${pathname}`;
 }
 function resourceName(uri) {
   const lastSlash = uri.lastIndexOf("/");
