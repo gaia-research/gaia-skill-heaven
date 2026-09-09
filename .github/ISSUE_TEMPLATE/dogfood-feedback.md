@@ -8,8 +8,9 @@ assignees: ""
 
 <!--
 Public issue: redact before submitting. Do not include prompts, transcripts,
-session logs, token data, credentials, personal data, private code, private
-URLs or paths, customer identifiers, or confidential details. If the case
+session logs, credentials, access tokens, raw tokenized content, personal
+data, private code, private URLs or paths, customer identifiers, or
+confidential details. If the case
 cannot be reduced to a synthetic safe reproduction, save a local draft and ask
 the owner instead.
 -->
@@ -49,5 +50,6 @@ the owner instead.
 ## Privacy check
 
 - [ ] This report is reduced to a synthetic or explicitly redacted public case.
-- [ ] It contains no raw prompt, transcript, session log, token data, credential, personal data, private code, private URL/path, customer identifier, or confidential detail.
+- [ ] It contains no raw prompt, transcript, session log, credential, access token, raw tokenized content, personal data, private code, private URL/path, customer identifier, or confidential detail.
+- [ ] If aggregate cost or usage is included, it comes from canonical `gaia-research/skill-cost` with provenance, not a UI or model self-report.
 - [ ] Any claim about human behavior is clearly identified as a human report, not curated behavioral evidence.
