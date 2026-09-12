@@ -87,6 +87,14 @@ describe("one-command installer", () => {
     expect(installer).toContain("--workspace=pi-zero");
     expect(installer).toContain("--include-workspace-root");
   });
+
+  it("automatically links door binaries into user bin and cleans them up on uninstall (#139)", () => {
+    expect(installer).toContain('USER_BIN=${XDG_BIN_HOME:-"$HOME/.local/bin"}');
+    expect(installer).toContain(".user-bin-links");
+    expect(installer).toContain('ln -sf "$BIN_DIR/$door-zero"');
+    expect(installer).toContain('while IFS= read -r link_path');
+    expect(installer).toContain('rm -f "$link_path"');
+  });
 });
 
 describe("windows PowerShell installers", () => {
@@ -139,6 +147,13 @@ describe("windows PowerShell installers", () => {
     expect(INSTALL.agentPluginPs1.command).toContain("install-agent-plugin.ps1");
     expect(INSTALL.shPs1).toContain("irm");
     expect(INSTALL.shPs1).toContain("install.ps1");
+  });
+
+  it("configures user bin and user PATH in PowerShell installer and cleans up on uninstall (#139)", () => {
+    expect(ps1Installer).toContain(".user-bin-links");
+    expect(ps1Installer).toContain(".path-managed");
+    expect(ps1Installer).toContain("Linked door launchers to $USER_BIN");
+    expect(ps1Installer).toContain("Get-Content $userBinLinksFile");
   });
 });
 

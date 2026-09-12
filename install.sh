@@ -10,6 +10,8 @@ PROGRAM=gaia-skill-heaven-install
 DEFAULT_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}/gaia-skill-heaven
 INSTALL_HOME=${SKILL_HEAVEN_HOME:-$DEFAULT_HOME}
 BIN_DIR=$INSTALL_HOME/bin
+USER_BIN=${XDG_BIN_HOME:-"$HOME/.local/bin"}
+USER_BIN_LINKS=$INSTALL_HOME/.user-bin-links
 SOURCE_REF=${SKILL_HEAVEN_REF:-main}
 SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/gaia-skill-heaven/tar.gz/$SOURCE_REF"}
 PLUGIN_ID=skill-heaven@gaia-skill-heaven
@@ -75,6 +77,15 @@ uninstall_all() {
   fi
 
   say "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
+
+  if [ -f "$USER_BIN_LINKS" ]; then
+    while IFS= read -r link_path || [ -n "$link_path" ]; do
+      [ -n "$link_path" ] || continue
+      if [ -L "$link_path" ]; then
+        rm -f "$link_path"
+      fi
+    done < "$USER_BIN_LINKS"
+  fi
 
   if [ -f "$PLUGIN_MANAGED" ]; then
     if claude_is_working; then
@@ -212,6 +223,14 @@ claude_is_working() {
 }
 
 printf '%s\n' "Skill Heaven working prototype — uninstalling everything from $ROOT"
+if [ -f "$ROOT/.user-bin-links" ]; then
+  while IFS= read -r link_path || [ -n "$link_path" ]; do
+    [ -n "$link_path" ] || continue
+    if [ -L "$link_path" ]; then
+      rm -f "$link_path"
+    fi
+  done < "$ROOT/.user-bin-links"
+fi
 if [ -f "$ROOT/.claude-plugin-managed" ]; then
   if claude_is_working; then
     printf '%s\n' "Removing Claude plugin $PLUGIN_ID ..."
@@ -255,6 +274,17 @@ mv "$STAGE" "$INSTALL_HOME"
 STAGE=""
 rm -rf "$OLD"
 OLD=""
+
+USER_BIN_LINKS_FILE="$INSTALL_HOME/.user-bin-links"
+: > "$USER_BIN_LINKS_FILE"
+if mkdir -p "$USER_BIN" 2>/dev/null; then
+  for door in claude pi codex hermes grok; do
+    target="$USER_BIN/$door-zero"
+    ln -sf "$BIN_DIR/$door-zero" "$target"
+    printf '%s\n' "$target" >> "$USER_BIN_LINKS_FILE"
+  done
+  say "Linked door launchers to $USER_BIN"
+fi
 
 if claude_is_working; then
   say "Claude Code detected and functional; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
@@ -305,12 +335,15 @@ for harness in claude pi codex hermes grok; do
 done
 
 case :$PATH: in
+  *:"$USER_BIN":*)
+    say "PATH already includes $USER_BIN; door launchers are immediately callable."
+    ;;
   *:"$BIN_DIR":*)
-    say "PATH already includes $BIN_DIR"
+    say "PATH already includes $BIN_DIR; door launchers are immediately callable."
     ;;
   *)
-    say "Add the install directory to PATH (this installer does not edit shell rc files):"
-    say "  export PATH=\"$BIN_DIR:\$PATH\""
+    say "Add $USER_BIN to PATH (this installer does not edit shell rc files):"
+    say "  export PATH=\"$USER_BIN:\$PATH\""
     ;;
 esac
 say "Uninstall everything this command added with:"
