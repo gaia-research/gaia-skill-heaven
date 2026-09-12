@@ -176,13 +176,34 @@ export function readArborPublication(
     // the subject's other two lenses.
     const claimsLens = document.lenses.claims;
     if (claimsLens.profile !== null) {
+      let quarantine: string | null = null;
       try {
         assertArborProfile(claimsLens.profile, `${path} lenses.claims.profile`);
+        // CROSS-IDENTITY GUARD. The runtime contract types the embedded profile
+        // as a bare object, so a schema-valid profile for one skill can sit
+        // inside another skill's aggregate. Without this check the join reports
+        // beta's identity as proven while handing back alpha's claims — the
+        // worst possible failure for a layer whose whole job is saying what an
+        // identity establishes. Both the id and the exact content pin must match
+        // the subject; neither is defaulted or repaired.
+        const embedded = claimsLens.profile.skill;
+        if (embedded.id !== document.subject.id) {
+          quarantine =
+            `embedded profile is for skill '${embedded.id}' but the aggregate's subject is ` +
+            `'${document.subject.id}'; the lens was quarantined and no claim was consumed`;
+        } else if (embedded.contentSha256 !== document.subject.contentSha256) {
+          quarantine =
+            `embedded profile pins content ${embedded.contentSha256} but the aggregate's subject ` +
+            `pins ${document.subject.contentSha256}; the lens was quarantined and no claim was consumed`;
+        }
       } catch (error) {
-        problems.push({ where: `${path} lenses.claims.profile`, detail: describe(error) });
-        // Mark it unreadable for this consumer WITHOUT rewriting the upstream
-        // status: `profile: null` with a preserved status is how the join layer
-        // learns the payload could not be read.
+        quarantine = describe(error);
+      }
+      if (quarantine !== null) {
+        problems.push({ where: `${path} lenses.claims.profile`, detail: quarantine });
+        // Quarantine WITHOUT rewriting the upstream status: `profile: null` with
+        // a preserved status is how the join layer learns the payload could not
+        // be read, and it keeps the subject's other two lenses usable.
         runtimes.set(subjectKey(document.subject), {
           ...document,
           lenses: {

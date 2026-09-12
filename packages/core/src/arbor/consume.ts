@@ -48,7 +48,36 @@ export type ArborCandidate = {
    * source is a different corpus: an id collision there says nothing.
    */
   canonicalSource: boolean;
+  /**
+   * Why no content pin was available, in the caller's own words, when
+   * `contentSha256` is null. Carried onto the unknown reason so a reader learns
+   * WHICH unknown this is rather than a generic one.
+   */
+  identityNote?: string | undefined;
+  /**
+   * What, if anything, was actually delivered for this candidate. Kept strictly
+   * apart from claim identity: proving which canonical record a claim belongs to
+   * says nothing about the artifact that landed on disk.
+   */
+  delivery?: ArborDeliveryContext | undefined;
 };
+
+/**
+ * The execution side of the question, which canonical identity does not answer.
+ *
+ * There is deliberately no "verified" value. The canonical Tree file a claim is
+ * bound to is a registry record, not the SKILL.md a summon materializes, so no
+ * byte comparison available today could promote a delivery to proven — and a
+ * state this layer cannot reach is a state it must not name.
+ */
+export type ArborDeliveryContext =
+  /** Nothing was materialized: a preview, or a refusal. */
+  | "not-materialized"
+  /**
+   * A payload was materialized. It was NOT proven to be the canonical artifact
+   * the claims are bound to, and its conditions were not evaluated.
+   */
+  | "delivered-unverified";
 
 export type ArborJoin =
   /** `id` and exact content bytes both matched a published subject. */
@@ -126,6 +155,8 @@ export type ArborSubjectReport = {
    * so no surface can quietly imply otherwise.
    */
   conditionsEvaluated: false;
+  /** Whether anything was delivered, and whether it was proven canonical. */
+  deliveryContext: ArborDeliveryContext;
   problems: readonly ArborProblem[];
   /** One sentence for a human surface. */
   note: string;
@@ -220,7 +251,22 @@ export function consumeArbor(
 
   const lenses = {} as Record<ArborLensName, ArborLensReport>;
   for (const lens of ARBOR_LENSES) {
-    lenses[lens] = reportLens(lens, join, runtime?.lenses[lens]);
+    // A `present` claims lens whose profile did not survive validation — or was
+    // quarantined for naming another subject — read NOTHING. Reporting it as
+    // consulted would claim a lens informed a decision that in fact supplied no
+    // record at all (SPEC INV-13), so the payload's readability is part of the
+    // question, not just upstream's status word.
+    const payloadUnreadable =
+      lens === "claims" &&
+      runtime?.lenses.claims.status === "present" &&
+      runtime.lenses.claims.profile === null;
+    lenses[lens] = reportLens(
+      lens,
+      join,
+      runtime?.lenses[lens],
+      candidate.identityNote,
+      payloadUnreadable,
+    );
   }
 
   const claimsLens = runtime?.lenses.claims;
@@ -274,8 +320,18 @@ export function consumeArbor(
     claims,
     interactions,
     conditionsEvaluated: false,
+    deliveryContext: candidate.delivery ?? "not-materialized",
     problems,
-    note: subjectNote(join, lensesConsulted, lensesAbsent, lensesUnknown, claims.length, interactions.length),
+    note: subjectNote(
+      join,
+      lensesConsulted,
+      lensesAbsent,
+      lensesUnknown,
+      claims.length,
+      interactions.length,
+      candidate.delivery ?? "not-materialized",
+      candidate.identityNote,
+    ),
   };
 }
 
@@ -304,6 +360,8 @@ function reportLens(
   lens: ArborLensName,
   join: ArborJoin,
   upstream: { status: ArborLensStatus; sourceDigest: string | null } | undefined,
+  identityNote: string | undefined,
+  payloadUnreadable = false,
 ): ArborLensReport {
   if (join !== "content-pinned" || upstream === undefined) {
     return {
@@ -311,10 +369,23 @@ function reportLens(
       availability: "unknown",
       upstreamStatus: null,
       sourceDigest: null,
-      reason: joinReason(join),
+      reason: identityNote && join === "identity-unproven"
+        ? `${joinReason(join)} — ${identityNote}`
+        : joinReason(join),
     };
   }
   if (upstream.status === "present") {
+    if (payloadUnreadable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason:
+          "upstream reports a record for this subject, but its payload was not usable — " +
+          "it either failed the pinned contract or does not belong to this subject; nothing was read from it",
+      };
+    }
     return {
       lens,
       availability: "consulted",
@@ -382,6 +453,8 @@ function subjectNote(
   unknown: readonly ArborLensName[],
   claimCount: number,
   edgeCount: number,
+  delivery: ArborDeliveryContext,
+  identityNote: string | undefined,
 ): string {
   const parts = [
     `lenses — consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
@@ -389,11 +462,20 @@ function subjectNote(
     `unknown: ${unknown.length > 0 ? unknown.join(", ") : "none"}`,
   ];
   let note = `${parts.join(" · ")}. ${joinNote(join)}`;
+  if (join === "identity-unproven" && identityNote) note += ` (${identityNote})`;
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }
   if (edgeCount > 0) {
     note += ` ${edgeCount} ordered interaction edge(s) carried verbatim; publication-time pairApplicable is not runtime assurance.`;
+  }
+  // Identity and execution are different questions, and a surface that answers
+  // the first must not be read as having answered the second.
+  if (claimCount > 0 || consulted.length > 0) {
+    note +=
+      delivery === "delivered-unverified"
+        ? " A payload was materialized; it was NOT proven to be the canonical artifact these records are bound to."
+        : " Nothing was materialized: this describes what is declared about the canonical record, not that a future execution will satisfy its conditions.";
   }
   return note;
 }

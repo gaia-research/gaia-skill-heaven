@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import { consumeArbor, describeArborPublication } from "../src/arbor/consume.js";
 import { arborSubjectLines, claimLine, interactionLine } from "../src/arbor/disclose.js";
+import type { ArborSubjectRef } from "../src/arbor/contract.js";
 import {
   readArborPublication,
   unavailableArborPublication,
@@ -256,6 +257,11 @@ describe("invalid optional data degrades instead of failing", () => {
     const report = consumeArbor(publication, canonical);
     expect(report.claims).toEqual([]);
     expect(report.problems[0]?.detail).toMatch(/could not be read against/u);
+    // Upstream said `present`, but nothing was readable — so the lens is
+    // unknown, not consulted. Claiming it informed anything would be the
+    // misreport INV-13 exists to prevent.
+    expect(report.lenses.claims.availability).toBe("unknown");
+    expect(report.lenses.claims.upstreamStatus).toBe("present");
     expect(report.lenses.interactions.availability).toBe("absent");
   });
 
@@ -367,5 +373,90 @@ describe("disclosure never becomes a verdict", () => {
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(/consulted: none/u);
     expect(lines[0]).toMatch(/unknown: claims, hellHeaven, interactions/u);
+  });
+});
+
+// Fix 2 (independent review P2): a schema-valid runtime whose embedded profile
+// belongs to a DIFFERENT subject must never have that profile's claims served as
+// the runtime subject's own. The lens is quarantined and the defect disclosed —
+// beta never speaks with alpha's voice.
+describe("an embedded profile that does not belong to the runtime subject", () => {
+  const betaCanonical = {
+    skillId: OTHER.id,
+    contentSha256: OTHER.contentSha256,
+    canonicalSource: true,
+  };
+
+  /** A runtime for `beta` whose claims lens embeds a profile for some other skill. */
+  function betaCarrying(embedded: ArborSubjectRef) {
+    return readArborPublication(
+      publicationDocuments([
+        runtime({
+          subject: OTHER,
+          claims: {
+            status: "present",
+            sourceDigest: digest("8"),
+            profile: { ...profile([claim({ conditions: "alpha's own condition" })]), skill: embedded },
+          },
+        }),
+      ]),
+    );
+  }
+
+  it("quarantines the lens when the embedded profile names another id (synthetic)", () => {
+    const publication = betaCarrying(SUBJECT);
+    expect(publication.state).toBe("loaded");
+    expect(publication.problems[0]?.detail).toMatch(
+      /embedded profile is for skill 'synthetic\/alpha' but the aggregate's subject is 'synthetic\/beta'/u,
+    );
+
+    const report = consumeArbor(publication, betaCanonical);
+    // The subject identity really is proven — the defect is in the lens, not the
+    // join, and conflating the two would hide which part is untrustworthy.
+    expect(report.join).toBe("content-pinned");
+    expect(report.claims).toEqual([]);
+    expect(report.lenses.claims.availability).toBe("unknown");
+    expect(report.lenses.claims.upstreamStatus).toBe("present");
+    expect(arborSubjectLines(report).join("\n")).not.toMatch(/alpha's own condition/u);
+  });
+
+  it("quarantines a hash-only mismatch too — same id, other bytes (synthetic)", () => {
+    // The dangerous near-miss: everything reads as beta, but the profile is
+    // pinned to a different revision of beta's canonical file.
+    const publication = betaCarrying({ id: OTHER.id, contentSha256: digest("9") });
+    expect(publication.problems[0]?.detail).toMatch(
+      new RegExp(`embedded profile pins content ${digest("9")} but the aggregate's subject pins`, "u"),
+    );
+    const report = consumeArbor(publication, betaCanonical);
+    expect(report.claims).toEqual([]);
+    expect(report.lenses.claims.availability).toBe("unknown");
+  });
+
+  it("invents no default and leaves the other lenses usable (synthetic)", () => {
+    const publication = readArborPublication(
+      publicationDocuments([
+        runtime({
+          subject: OTHER,
+          claims: {
+            status: "present",
+            sourceDigest: digest("8"),
+            profile: { ...profile(), skill: SUBJECT },
+          },
+          hellHeaven: {
+            status: "present",
+            sourceDigest: digest("7"),
+            // Opaque by design: the HH payload contract is research-owned and
+            // this consumer never parses it.
+            result: { acceptedAt: "2026-09-01T00:00:00Z" },
+          },
+        }),
+      ]),
+    );
+    const report = consumeArbor(publication, betaCanonical);
+    expect(report.claims).toEqual([]);
+    // Quarantine is scoped to the defective lens; an unrelated accepted record
+    // is still consulted.
+    expect(report.lenses.hellHeaven.availability).toBe("consulted");
+    expect(report.lenses.hellHeaven.sourceDigest).toBe(digest("7"));
   });
 });
