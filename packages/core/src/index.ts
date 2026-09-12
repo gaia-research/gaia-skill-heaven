@@ -179,3 +179,83 @@ export {
   type BootstrapResult,
 } from "./retrieval/metrics.js";
 export { INDEX_BUILDER_VERSION } from "./retrieval/version.js";
+
+// Arbor consumption (SPEC §4, INV-7/INV-8/INV-13; issue #118 Lane A).
+//
+// This repository is a CONSUMER of Arbor and never an author. Everything below
+// mirrors pinned upstream contracts in `gaia-skill-tree/registry/arbor/
+// contracts/` or describes THIS consumer's own join and disclosure state. None
+// of it extends, defaults, or computes an Arbor field, and none of it produces
+// a number a ranker could read.
+export {
+  ARBOR_EDGE_INDEX_SCHEMA,
+  ARBOR_EDGE_SCHEMA,
+  ARBOR_FACETS,
+  ARBOR_LENSES,
+  ARBOR_LENS_STATUS,
+  ARBOR_PROFILE_SCHEMA,
+  ARBOR_RELATIONS,
+  ARBOR_RUNTIME_INDEX_SCHEMA,
+  ARBOR_RUNTIME_SCHEMA,
+  EDGE_ABSENCE_MEANING,
+  EDGE_STRUCTURAL_OVERLAP,
+  GOVERNED_SUPPORT,
+  PROJECTED_SUPPORT,
+  type ArborAuthority,
+  type ArborClaim,
+  type ArborClaimsLens,
+  type ArborEdge,
+  type ArborEdgeIndex,
+  type ArborFacet,
+  type ArborHellHeavenLens,
+  type ArborInteractionsLens,
+  type ArborLensName,
+  type ArborLensStatus,
+  type ArborProfile,
+  type ArborRelation,
+  type ArborRuntime,
+  type ArborRuntimeIndex,
+  type ArborSubjectRef,
+  type GovernedSupport,
+  type ProjectedSupport,
+} from "./arbor/contract.js";
+export {
+  ArborContractError,
+  assertArborClaim,
+  assertArborEdge,
+  assertArborEdgeIndex,
+  assertArborProfile,
+  assertArborRuntime,
+  assertArborRuntimeIndex,
+  assertArborSubjectRef,
+  isGovernedSupport,
+  isProjectedSupport,
+} from "./arbor/validate.js";
+export {
+  readArborPublication,
+  subjectKey,
+  unavailableArborPublication,
+  type ArborProblem,
+  type ArborPublication,
+  type ArborPublicationDocuments,
+  type ArborPublicationProvenance,
+  type ArborPublicationState,
+} from "./arbor/publication.js";
+export {
+  consumeArbor,
+  describeArborPublication,
+  type ArborCandidate,
+  type ArborDisclosure,
+  type ArborInteractionReport,
+  type ArborJoin,
+  type ArborLensAvailability,
+  type ArborLensReport,
+  type ArborSubjectReport,
+  type ConsumeArborOptions,
+} from "./arbor/consume.js";
+export {
+  arborPublicationLines,
+  arborSubjectLines,
+  claimLine,
+  interactionLine,
+} from "./arbor/disclose.js";
