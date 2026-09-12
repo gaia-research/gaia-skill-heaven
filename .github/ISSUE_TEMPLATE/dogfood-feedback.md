@@ -54,7 +54,7 @@ gates.
 
 ## Deduplication
 
-<!-- Before publication, deduplicate using the already-sanitized packet. Keep one underlying problem; link an existing issue if this adds facts, otherwise say that no matching issue was found. The issue writer must not invoke another issue writer or restart this feedback loop. -->
+<!-- Before publication, deduplicate using the already-sanitized packet. Keep one underlying problem; link an existing issue if this adds facts, otherwise say that no matching issue was found. The issue writer must not launch another issue writer or restart this feedback loop. -->
 
 ## Privacy check
 

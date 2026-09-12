@@ -75,7 +75,7 @@ actionable friction in that Skill Heaven scope, use the smallest safe
 light-agent capability that the current supported harness actually provides to
 deduplicate/search and prepare one sanitized, approval-ready issue in
 [`gaia-research/gaia-skill-heaven`](https://github.com/gaia-research/gaia-skill-heaven).
-The issue writer **MUST NOT** invoke another issue writer or restart this
+The issue writer **MUST NOT** launch another issue writer or restart this
 feedback loop. Deduplicate before publication using the already-sanitized
 packet; aggregate one underlying problem and add new facts to an existing issue
 when that is the better match. Dispatch must respect active worker limits,
