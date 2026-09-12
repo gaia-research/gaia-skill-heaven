@@ -40,7 +40,12 @@ to override:
 EOF
 }
 
+claude_is_working() {
+  command -v claude >/dev/null 2>&1 && claude --version >/dev/null 2>&1
+}
+
 plugin_is_installed() {
+  claude_is_working || return 1
   plugin_json=$INSTALL_HOME/.plugin-list.$$
   if ! claude plugin list --json >"$plugin_json" 2>/dev/null; then
     rm -f "$plugin_json"
@@ -59,6 +64,7 @@ plugin_is_installed() {
 }
 
 marketplace_is_configured() {
+  claude_is_working || return 1
   claude plugin marketplace list 2>/dev/null | grep -q "$MARKETPLACE"
 }
 
@@ -71,24 +77,30 @@ uninstall_all() {
   say "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
 
   if [ -f "$PLUGIN_MANAGED" ]; then
-    if command -v claude >/dev/null 2>&1; then
+    if claude_is_working; then
       say "Removing Claude plugin $PLUGIN_ID ..."
-      claude plugin uninstall "$PLUGIN_ID"
+      claude plugin uninstall "$PLUGIN_ID" || true
+    elif command -v claude >/dev/null 2>&1; then
+      say "Claude Code binary is present but execution failed (--version error)."
+      say "Skipping automated plugin uninstall. Remove it manually once Claude is fixed:"
+      say "  claude plugin uninstall $PLUGIN_ID"
     else
       say "Claude Code is not on PATH; remove the installer-managed plugin later with:"
       say "  claude plugin uninstall $PLUGIN_ID"
-      fail "doors were left installed so the managed-plugin record is not lost"
     fi
   fi
 
   if [ -f "$MARKETPLACE_MANAGED" ]; then
-    if command -v claude >/dev/null 2>&1; then
+    if claude_is_working; then
       say "Removing Claude marketplace $MARKETPLACE ..."
-      claude plugin marketplace remove "$MARKETPLACE"
+      claude plugin marketplace remove "$MARKETPLACE" || true
+    elif command -v claude >/dev/null 2>&1; then
+      say "Claude Code binary is present but execution failed (--version error)."
+      say "Skipping automated marketplace removal. Remove it manually once Claude is fixed:"
+      say "  claude plugin marketplace remove $MARKETPLACE"
     else
       say "Claude Code is not on PATH; remove the installer-managed marketplace later with:"
       say "  claude plugin marketplace remove $MARKETPLACE"
-      fail "doors were left installed so the managed-marketplace record is not lost"
     fi
   fi
 
@@ -117,6 +129,7 @@ say "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use."
 say "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 say "Harnesses are never installed; every door uses the user's own harness binary."
 
+say "[1/5] Checking prerequisites..."
 missing=
 for tool in node npm curl tar mktemp; do
   if ! command -v "$tool" >/dev/null 2>&1; then
@@ -140,14 +153,28 @@ mkdir -p "$INSTALL_PARENT"
 STAGE=$(mktemp -d "$INSTALL_PARENT/.gaia-skill-heaven-install.XXXXXX")
 OLD=$INSTALL_PARENT/.gaia-skill-heaven-old.$$
 cleanup() {
-  rm -rf "$STAGE" "$OLD"
+  if [ -n "${STAGE:-}" ] && [ -d "$STAGE" ]; then
+    rm -rf "$STAGE"
+  fi
+  if [ -n "${OLD:-}" ] && [ -d "$OLD" ]; then
+    rm -rf "$OLD"
+  fi
 }
-trap cleanup EXIT HUP INT TERM
+
+on_interrupt() {
+  say ""
+  say "Installation cancelled by user. Cleaned up temporary files."
+  cleanup
+  exit 130
+}
+trap on_interrupt INT TERM HUP
+trap cleanup EXIT
 
 mkdir -p "$STAGE/source" "$STAGE/bin"
 ARCHIVE=$STAGE/source.tar.gz
-say "Fetching Skill Heaven source ($SOURCE_REF) ..."
+say "[2/5] Fetching Skill Heaven source ($SOURCE_REF) ..."
 curl -fsSL "$SOURCE_ARCHIVE" -o "$ARCHIVE" || fail "could not download $SOURCE_ARCHIVE. Check the URL/network; nothing was installed."
+say "[3/5] Extracting source archive..."
 tar -xzf "$ARCHIVE" -C "$STAGE/source" --strip-components=1 || fail "downloaded source could not be extracted; nothing was installed."
 rm -f "$ARCHIVE"
 
@@ -155,12 +182,20 @@ for door in claude pi codex hermes grok; do
   [ -f "$STAGE/source/packages/$door-zero/bin/$door-zero.mjs" ] || fail "source archive is missing $door-zero; nothing was installed."
 done
 
-say "Installing launcher runtime dependencies ..."
+say "[4/5] Installing launcher runtime dependencies ..."
 (
   cd "$STAGE/source"
-  npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+  npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
+    --workspace=skill-zero \
+    --workspace=claude-zero \
+    --workspace=pi-zero \
+    --workspace=codex-zero \
+    --workspace=hermes-zero \
+    --workspace=grok-zero \
+    --include-workspace-root
 ) || fail "launcher dependency installation failed; nothing was installed."
 
+say "[5/5] Configuring Skill Zero doors and harness plugins..."
 for door in claude pi codex hermes grok; do
   ln -s "../source/packages/$door-zero/bin/$door-zero.mjs" "$STAGE/bin/$door-zero"
 done
@@ -171,24 +206,36 @@ ROOT=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
 PLUGIN_ID=skill-heaven@gaia-skill-heaven
 MARKETPLACE=gaia-skill-heaven
 
+claude_is_working() {
+  command -v claude >/dev/null 2>&1 && claude --version >/dev/null 2>&1
+}
+
 printf '%s\n' "Skill Heaven working prototype — uninstalling everything from $ROOT"
 if [ -f "$ROOT/.claude-plugin-managed" ]; then
-  if ! command -v claude >/dev/null 2>&1; then
+  if claude_is_working; then
+    printf '%s\n' "Removing Claude plugin $PLUGIN_ID ..."
+    claude plugin uninstall "$PLUGIN_ID" || true
+  elif command -v claude >/dev/null 2>&1; then
+    printf '%s\n' "Claude Code binary is present but execution failed (--version error)." >&2
+    printf '%s\n' "Skipping automated plugin uninstall. Remove it manually when Claude is fixed:" >&2
+    printf '%s\n' "  claude plugin uninstall $PLUGIN_ID" >&2
+  else
     printf '%s\n' "Claude Code is not on PATH; run this later before uninstalling:" >&2
     printf '%s\n' "  claude plugin uninstall $PLUGIN_ID" >&2
-    exit 1
   fi
-  printf '%s\n' "Removing Claude plugin $PLUGIN_ID ..."
-  claude plugin uninstall "$PLUGIN_ID"
 fi
 if [ -f "$ROOT/.claude-marketplace-managed" ]; then
-  if ! command -v claude >/dev/null 2>&1; then
+  if claude_is_working; then
+    printf '%s\n' "Removing Claude marketplace $MARKETPLACE ..."
+    claude plugin marketplace remove "$MARKETPLACE" || true
+  elif command -v claude >/dev/null 2>&1; then
+    printf '%s\n' "Claude Code binary is present but execution failed (--version error)." >&2
+    printf '%s\n' "Skipping automated marketplace removal. Remove it manually when Claude is fixed:" >&2
+    printf '%s\n' "  claude plugin marketplace remove $MARKETPLACE" >&2
+  else
     printf '%s\n' "Claude Code is not on PATH; run this later before uninstalling:" >&2
     printf '%s\n' "  claude plugin marketplace remove $MARKETPLACE" >&2
-    exit 1
   fi
-  printf '%s\n' "Removing Claude marketplace $MARKETPLACE ..."
-  claude plugin marketplace remove "$MARKETPLACE"
 fi
 rm -rf "$ROOT"
 printf '%s\n' "Removed the five doors and installer-managed Claude plugin state."
@@ -204,25 +251,33 @@ if [ -d "$INSTALL_HOME" ]; then
   mv "$INSTALL_HOME" "$OLD"
 fi
 mv "$STAGE" "$INSTALL_HOME"
-STAGE=$INSTALL_PARENT/.gaia-skill-heaven-stage-moved.$$
+STAGE=""
 rm -rf "$OLD"
+OLD=""
 
-if command -v claude >/dev/null 2>&1; then
-  say "Claude Code detected; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
+if claude_is_working; then
+  say "Claude Code detected and functional; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
   if marketplace_is_configured; then
-    claude plugin marketplace update "$MARKETPLACE"
+    claude plugin marketplace update "$MARKETPLACE" || true
   else
-    claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git
+    claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git || true
     touch "$MARKETPLACE_MANAGED"
   fi
 
   if plugin_is_installed; then
-    claude plugin update "$PLUGIN_ID"
+    claude plugin update "$PLUGIN_ID" || true
   else
-    claude plugin install --scope user "$PLUGIN_ID"
+    claude plugin install --scope user "$PLUGIN_ID" || true
     touch "$PLUGIN_MANAGED"
   fi
   say "Claude plugin ready: /summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra."
+elif command -v claude >/dev/null 2>&1; then
+  say "Claude Code binary detected at $(command -v claude), but 'claude --version' failed."
+  say "This typically indicates missing platform-native binaries (e.g. on Android/Termux or unsupported Linux architectures)."
+  say "Skipping Claude plugin auto-registration. The Skill Zero doors were installed successfully."
+  say "Once Claude Code is functional on this platform, register the plugin manually with:"
+  say "  claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git"
+  say "  claude plugin install --scope user $PLUGIN_ID"
 else
   say "Claude Code was not detected, so no harness was installed and plugin registration is deferred."
   say "After installing Claude Code yourself, register the already-delivered plugin with:"
@@ -238,7 +293,11 @@ done
 say "Harnesses detected (not installed by this script):"
 for harness in claude pi codex hermes grok; do
   if command -v "$harness" >/dev/null 2>&1; then
-    say "  $harness: yes"
+    if "$harness" --version >/dev/null 2>&1; then
+      say "  $harness: yes (functional)"
+    else
+      say "  $harness: binary present, but failed execution (--version failed)"
+    fi
   else
     say "  $harness: no"
   fi

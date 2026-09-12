@@ -65,6 +65,7 @@ case ${1:-} in
     ;;
 esac
 
+say "[1/4] Checking prerequisites..."
 missing=
 for tool in node curl tar mktemp git; do
   if ! command -v "$tool" >/dev/null 2>&1; then
@@ -98,14 +99,24 @@ cleanup() {
   rm -rf "$WORK"
   [ "$BACKED_UP" -eq 1 ] || rm -rf "$OLD"
 }
-trap cleanup EXIT HUP INT TERM
+
+on_interrupt() {
+  say ""
+  say "Installation cancelled by user. Cleaning up..."
+  cleanup
+  exit 130
+}
+trap on_interrupt INT TERM HUP
+trap cleanup EXIT
 
 mkdir -p "$WORK/source" "$NEXT/marketplace/plugins"
 ARCHIVE=$WORK/source.tar.gz
-say "Fetching Skill Heaven Agent Plugin ($SOURCE_REF) ..."
+say "[2/4] Fetching Skill Heaven Agent Plugin ($SOURCE_REF) ..."
 curl -fsSL "$SOURCE_ARCHIVE" -o "$ARCHIVE" || fail "could not download $SOURCE_ARCHIVE. Nothing was installed."
+say "[3/4] Extracting plugin archive..."
 tar -xzf "$ARCHIVE" -C "$WORK/source" --strip-components=1 || fail "downloaded source could not be extracted. Nothing was installed."
 
+say "[4/4] Staging portable Agent Plugin artifact..."
 SOURCE_PLUGIN=$WORK/source/plugins/skill-heaven
 for required in plugin.json mcp.json skills/summon/SKILL.md mcp/skill-summon.mjs; do
   [ -f "$SOURCE_PLUGIN/$required" ] || fail "source archive is missing plugins/skill-heaven/$required. Nothing was installed."
