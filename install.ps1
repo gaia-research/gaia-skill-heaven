@@ -21,6 +21,13 @@ $DEFAULT_HOME = if ($env:LOCALAPPDATA) {
 }
 $INSTALL_HOME = if ($env:SKILL_HEAVEN_HOME) { $env:SKILL_HEAVEN_HOME } else { $DEFAULT_HOME }
 $BIN_DIR = Join-Path $INSTALL_HOME "bin"
+$USER_BIN = if ($env:USERPROFILE) {
+  Join-Path $env:USERPROFILE ".local\bin"
+} else {
+  Join-Path $HOME ".local\bin"
+}
+$USER_BIN_LINKS = Join-Path $INSTALL_HOME ".user-bin-links"
+$PATH_MANAGED = Join-Path $INSTALL_HOME ".path-managed"
 $SOURCE_REF = if ($env:SKILL_HEAVEN_REF) { $env:SKILL_HEAVEN_REF } else { "main" }
 $SOURCE_ARCHIVE = if ($env:SKILL_HEAVEN_ARCHIVE_URL) {
   $env:SKILL_HEAVEN_ARCHIVE_URL
@@ -99,6 +106,27 @@ function Uninstall-All {
   }
 
   Say-Message "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
+
+  if (Test-Path $USER_BIN_LINKS) {
+    try {
+      Get-Content $USER_BIN_LINKS | ForEach-Object {
+        $linkPath = $_.Trim()
+        if ($linkPath -and (Test-Path $linkPath)) {
+          Remove-Item -Force $linkPath -ErrorAction SilentlyContinue
+        }
+      }
+    } catch {}
+  }
+
+  if (Test-Path $PATH_MANAGED) {
+    try {
+      $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+      if ($userPath) {
+        $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $BIN_DIR }) -join ';'
+        [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
+      }
+    } catch {}
+  }
 
   if (Test-Path $PLUGIN_MANAGED) {
     if (Test-ClaudeWorking) {
@@ -257,6 +285,28 @@ function Test-ClaudeWorking {
 }
 
 Write-Host "Skill Heaven working prototype — uninstalling everything from $ROOT"
+$userBinLinksFile = Join-Path $ROOT ".user-bin-links"
+if (Test-Path $userBinLinksFile) {
+  try {
+    Get-Content $userBinLinksFile | ForEach-Object {
+      $linkPath = $_.Trim()
+      if ($linkPath -and (Test-Path $linkPath)) {
+        Remove-Item -Force $linkPath -ErrorAction SilentlyContinue
+      }
+    }
+  } catch {}
+}
+$pathManagedFile = Join-Path $ROOT ".path-managed"
+if (Test-Path $pathManagedFile) {
+  try {
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    if ($userPath) {
+      $binDir = Join-Path $ROOT "bin"
+      $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $binDir }) -join ';'
+      [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
+    }
+  } catch {}
+}
 $pluginManaged = Join-Path $ROOT ".claude-plugin-managed"
 if (Test-Path $pluginManaged) {
   if (Test-ClaudeWorking) {
@@ -302,6 +352,21 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
   if (Test-Path $OLD) {
     Remove-Item -Recurse -Force $OLD -ErrorAction SilentlyContinue
   }
+
+  $userBinLinksList = @()
+  try {
+    if (-not (Test-Path $USER_BIN)) {
+      New-Item -ItemType Directory -Force -Path $USER_BIN | Out-Null
+    }
+    foreach ($door in $doors) {
+      $cmdSource = Join-Path $BIN_DIR "$door-zero.cmd"
+      $cmdDest = Join-Path $USER_BIN "$door-zero.cmd"
+      Copy-Item -Path $cmdSource -Destination $cmdDest -Force
+      $userBinLinksList += $cmdDest
+    }
+    Set-Content -Path (Join-Path $INSTALL_HOME ".user-bin-links") -Value $userBinLinksList -Encoding UTF8
+    Say-Message "Linked door launchers to $USER_BIN"
+  } catch {}
 
   if (Test-ClaudeWorking) {
     Say-Message "Claude Code detected and functional; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
@@ -357,11 +422,23 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
   }
 
   $pathEntries = if ($env:Path) { $env:Path -split ';' } else { @() }
-  if ($pathEntries -contains $BIN_DIR) {
-    Say-Message "PATH already includes $BIN_DIR"
+  if (($pathEntries -contains $USER_BIN) -or ($pathEntries -contains $BIN_DIR)) {
+    Say-Message "PATH already includes door launchers."
   } else {
-    Say-Message "Add the install directory to PATH (this installer does not edit shell profile files):"
-    Say-Message "  `$env:Path = `"$BIN_DIR;`$env:Path`""
+    try {
+      $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+      $userParts = if ($userPath) { $userPath -split ';' | Where-Object { $_ } } else { @() }
+      if ($userParts -notcontains $BIN_DIR) {
+        $newUserPath = if ($userPath) { "$BIN_DIR;$userPath" } else { $BIN_DIR }
+        [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+        $env:Path = "$BIN_DIR;$env:Path"
+        New-Item -ItemType File -Force -Path (Join-Path $INSTALL_HOME ".path-managed") | Out-Null
+        Say-Message "Added $BIN_DIR to User PATH."
+      }
+    } catch {
+      Say-Message "Add the install directory to PATH (this installer does not edit shell profile files):"
+      Say-Message "  `$env:Path = `"$BIN_DIR;`$env:Path`""
+    }
   }
   Say-Message "Uninstall everything this command added with:"
   Say-Message "  $INSTALL_HOME\uninstall.ps1"

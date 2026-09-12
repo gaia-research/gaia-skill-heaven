@@ -89,11 +89,11 @@ claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
 
 Run one instead of your usual harness command. The installer also registers the Agent Plugin above if your `claude` binary is already on `PATH`.
 
-It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin` (or `%LOCALAPPDATA%\gaia-skill-heaven\bin` on Windows); add it to your `PATH` if your shell doesn't pick it up:
+It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin` (or `%LOCALAPPDATA%\gaia-skill-heaven\bin` on Windows) and are automatically linked into `$HOME/.local/bin` (or added to User PATH on Windows). If your shell does not yet include `~/.local/bin` in `PATH`, add it:
 
 **macOS / Linux (POSIX):**
 ```bash
-export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 **Windows (PowerShell):**
