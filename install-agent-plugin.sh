@@ -101,6 +101,7 @@ cleanup() {
 }
 
 on_interrupt() {
+  trap - EXIT HUP INT TERM
   say ""
   say "Installation cancelled by user. Cleaning up..."
   cleanup

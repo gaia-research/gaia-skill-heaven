@@ -83,10 +83,10 @@ uninstall_all() {
     elif command -v claude >/dev/null 2>&1; then
       say "Claude Code binary is present but execution failed (--version error)."
       say "Skipping automated plugin uninstall. Remove it manually once Claude is fixed:"
-      say "  claude plugin uninstall $PLUGIN_ID"
+      say "  claude plugin uninstall \"$PLUGIN_ID\""
     else
       say "Claude Code is not on PATH; remove the installer-managed plugin later with:"
-      say "  claude plugin uninstall $PLUGIN_ID"
+      say "  claude plugin uninstall \"$PLUGIN_ID\""
     fi
   fi
 
@@ -97,10 +97,10 @@ uninstall_all() {
     elif command -v claude >/dev/null 2>&1; then
       say "Claude Code binary is present but execution failed (--version error)."
       say "Skipping automated marketplace removal. Remove it manually once Claude is fixed:"
-      say "  claude plugin marketplace remove $MARKETPLACE"
+      say "  claude plugin marketplace remove \"$MARKETPLACE\""
     else
       say "Claude Code is not on PATH; remove the installer-managed marketplace later with:"
-      say "  claude plugin marketplace remove $MARKETPLACE"
+      say "  claude plugin marketplace remove \"$MARKETPLACE\""
     fi
   fi
 
@@ -162,6 +162,7 @@ cleanup() {
 }
 
 on_interrupt() {
+  trap - EXIT HUP INT TERM
   say ""
   say "Installation cancelled by user. Cleaned up temporary files."
   cleanup
@@ -218,10 +219,10 @@ if [ -f "$ROOT/.claude-plugin-managed" ]; then
   elif command -v claude >/dev/null 2>&1; then
     printf '%s\n' "Claude Code binary is present but execution failed (--version error)." >&2
     printf '%s\n' "Skipping automated plugin uninstall. Remove it manually when Claude is fixed:" >&2
-    printf '%s\n' "  claude plugin uninstall $PLUGIN_ID" >&2
+    printf '%s\n' "  claude plugin uninstall \"$PLUGIN_ID\"" >&2
   else
     printf '%s\n' "Claude Code is not on PATH; run this later before uninstalling:" >&2
-    printf '%s\n' "  claude plugin uninstall $PLUGIN_ID" >&2
+    printf '%s\n' "  claude plugin uninstall \"$PLUGIN_ID\"" >&2
   fi
 fi
 if [ -f "$ROOT/.claude-marketplace-managed" ]; then
@@ -231,10 +232,10 @@ if [ -f "$ROOT/.claude-marketplace-managed" ]; then
   elif command -v claude >/dev/null 2>&1; then
     printf '%s\n' "Claude Code binary is present but execution failed (--version error)." >&2
     printf '%s\n' "Skipping automated marketplace removal. Remove it manually when Claude is fixed:" >&2
-    printf '%s\n' "  claude plugin marketplace remove $MARKETPLACE" >&2
+    printf '%s\n' "  claude plugin marketplace remove \"$MARKETPLACE\"" >&2
   else
     printf '%s\n' "Claude Code is not on PATH; run this later before uninstalling:" >&2
-    printf '%s\n' "  claude plugin marketplace remove $MARKETPLACE" >&2
+    printf '%s\n' "  claude plugin marketplace remove \"$MARKETPLACE\"" >&2
   fi
 fi
 rm -rf "$ROOT"
