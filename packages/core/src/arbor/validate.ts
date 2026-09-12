@@ -48,9 +48,29 @@ const SHA256 = /^[a-f0-9]{64}$/u;
 const RECORD_ID = /^[a-z][a-z0-9.-]*$/u;
 const SKILL_ID =
   /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
-// RFC 3339, which is what JSON Schema's `date-time` format means here.
+/**
+ * `date-time` as the PINNED upstream checker defines it, not as RFC 3339
+ * loosely allows.
+ *
+ * Upstream (`gaia_cli/arbor.py`, `FORMAT_CHECKER.checks("date-time")`) is two
+ * gates, and a consumer that implements only the first accepts records upstream
+ * would reject — which is how an impossible calendar date reaches a surface as
+ * a consulted claim:
+ *
+ *   1. this exact pattern — uppercase `T`, uppercase `Z`, an offset that always
+ *      carries its colon; and
+ *   2. `datetime.fromisoformat(value.replace("Z", "+00:00"))`, which enforces
+ *      real calendar validity, Python's year bounds, its end-of-day `24:00:00`
+ *      allowance, and an offset strictly inside ±24h.
+ *
+ * `isUpstreamDateTime` below mirrors BOTH, including the quirks: `24:00:00` is
+ * accepted only with zero minutes, seconds and no fraction; an offset's minute
+ * field may exceed 59 and carries into hours; second 60 is rejected, so no leap
+ * second is expressible. `test/arbor-date-time-parity.test.ts` checks every case
+ * against verdicts produced by running the upstream checker itself.
+ */
 const DATE_TIME =
-  /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$/u;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/u;
 
 /** Whether `value` is one of the four values a governed interpretation may set. */
 export function isGovernedSupport(value: string): value is GovernedSupport {
@@ -334,9 +354,61 @@ function objectOrNull(record: Record<string, unknown>, key: string, label: strin
 
 function dateTime(record: Record<string, unknown>, key: string, label: string): void {
   const value = nonEmpty(record, key, label);
-  if (!DATE_TIME.test(value)) {
-    throw new ArborContractError(`${label}.${key} must be an RFC 3339 date-time.`);
+  if (!isUpstreamDateTime(value)) {
+    throw new ArborContractError(
+      `${label}.${key} is not a date-time the pinned upstream checker accepts: ${JSON.stringify(value)}.`,
+    );
   }
+}
+
+/** Days in `month` (1-12) of `year`, proleptic Gregorian. */
+function daysInMonth(year: number, month: number): number {
+  if (month === 2) {
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leap ? 29 : 28;
+  }
+  return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
+}
+
+/**
+ * Exactly what the pinned upstream `date-time` checker accepts. Exported so the
+ * parity test can drive it with upstream's own verdicts.
+ */
+export function isUpstreamDateTime(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const match = DATE_TIME.exec(value);
+  if (match === null) return false;
+  const [, rawYear, rawMonth, rawDay, rawHour, rawMinute, rawSecond, offset] = match as unknown as
+    string[];
+  const year = Number(rawYear);
+  const month = Number(rawMonth);
+  const day = Number(rawDay);
+  const hour = Number(rawHour);
+  const minute = Number(rawMinute);
+  const second = Number(rawSecond);
+
+  // Python's MINYEAR is 1, so `0000-…` is not a date at all.
+  if (year < 1) return false;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > daysInMonth(year, month)) return false;
+  // No leap second is representable, and `fromisoformat` rejects minute 60.
+  if (minute > 59 || second > 59) return false;
+  if (hour > 24) return false;
+  if (hour === 24) {
+    // End-of-day is accepted only as exactly 24:00:00 with no fraction, and it
+    // rolls into the next day — which cannot exist past 9999-12-31.
+    if (minute !== 0 || second !== 0) return false;
+    if (value.includes(".")) return false;
+    if (year === 9999 && month === 12 && day === 31) return false;
+  }
+
+  if (offset !== "Z") {
+    // The minute field carries into hours (`+05:60` is a valid +06:00), and the
+    // total must be strictly inside ±24h.
+    const offsetMinutes = Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6));
+    if (offsetMinutes >= 24 * 60) return false;
+  }
+  return true;
 }
 
 function enumeration(
