@@ -54,6 +54,8 @@ export type NamedSkill = {
   status: string;
   level?: string | undefined;
   description: string;
+  /** Source-provided SKILL.md frontmatter, when the projection preserves it. */
+  frontmatter?: Record<string, unknown> | undefined;
   catalogRef?: string | undefined;
   tags: string[];
   links: Record<string, unknown>;
@@ -83,12 +85,39 @@ export type NamedRegistryDocument = {
   schemaVersion?: string | undefined;
   generatedAt: string;
   buckets: Record<string, NamedSkill[]>;
+  awaitingClassification?: NamedSkill[] | undefined;
 };
 
 export type GaiaRegistryDocuments = {
   generic: GenericRegistryDocument;
   named: NamedRegistryDocument;
 };
+
+/** Flatten both named projection surfaces without duplicating a skill id. */
+export function flattenNamedSkills(document: NamedRegistryDocument): NamedSkill[] {
+  const byId = new Map<string, NamedSkill>();
+  for (const skill of [
+    ...Object.values(document.buckets).flat(),
+    ...(document.awaitingClassification ?? []),
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...(previous.suiteComponents ?? []),
+      ...(skill.suiteComponents ?? []),
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...(suiteComponents.length > 0
+        ? { suiteComponents: [...new Set(suiteComponents)] }
+        : {}),
+    });
+  }
+  return [...byId.values()];
+}
 
 export type RegistrySourceInfo = {
   kind?: "tree" | "fleet" | undefined;

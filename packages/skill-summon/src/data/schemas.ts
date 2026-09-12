@@ -60,6 +60,7 @@ const namedSkillSchema = z
     status: z.string(),
     level: z.string().optional(),
     description: z.string(),
+    frontmatter: z.record(z.unknown()).optional(),
     catalogRef: z.string().min(1).optional(),
     tags: z.array(z.string()).default([]),
     links: z.record(z.unknown()).default({}),
@@ -90,5 +91,6 @@ export const namedRegistrySchema = z
     schemaVersion: z.string().optional(),
     generatedAt: z.string().min(1),
     buckets: z.record(z.array(namedSkillSchema)),
+    awaitingClassification: z.array(namedSkillSchema).optional(),
   })
   .passthrough();
