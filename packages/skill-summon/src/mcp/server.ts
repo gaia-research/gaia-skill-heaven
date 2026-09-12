@@ -107,6 +107,13 @@ const summonOutputSchema = z.object({
       canonical: z.boolean(),
       sameUpstreamRevision: z.boolean().nullable(),
     }),
+    identity: z.object({
+      commit: z.string().nullable(),
+      matchesCorpusRevision: z.boolean(),
+      pinnedSkills: z.number(),
+      sha256: z.string().nullable(),
+      problem: z.string().nullable(),
+    }),
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),

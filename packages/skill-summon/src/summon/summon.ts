@@ -5,11 +5,15 @@ import {
   Bm25fRanker,
   consumeArbor,
   decide,
+  describeArborIdentityMiss,
   describeArborPublication,
   indexAgeDays,
   isStale,
   normalize,
+  resolveArborIdentity,
+  type ArborDeliveryContext,
   type ArborDisclosure,
+  type ArborIdentityContext,
   type ArborPublication,
   type ArborSubjectReport,
   type Decision,
@@ -18,6 +22,7 @@ import {
 } from "skill-zero";
 
 import type { NamedSkill } from "../domain/types.js";
+import { loadArborIdentityContext } from "../data/arbor-identity-source.js";
 import { loadArborPublication } from "../data/arbor-source.js";
 import type { ResolvedIndex } from "../data/skill-index-source.js";
 import { starCount } from "../service.js";
@@ -90,6 +95,23 @@ export type SummonArborDisclosure = ArborDisclosure & {
      */
     sameUpstreamRevision: boolean | null;
   };
+  /**
+   * The canonical identity context this summon could prove candidates against.
+   * Separate from the publication on purpose: one answers "which subject is
+   * this candidate", the other "what has been published about that subject".
+   */
+  identity: {
+    /** Present only when a usable context was loaded. */
+    commit: string | null;
+    /** True when the context is pinned at the corpus's own revision. */
+    matchesCorpusRevision: boolean;
+    /** How many ids the context pins at that revision. */
+    pinnedSkills: number;
+    /** sha256 of the exact context bytes consulted. */
+    sha256: string | null;
+    /** Set when a context was found but could not be used. */
+    problem: string | null;
+  };
 };
 
 /** Retrieval disclosure attached to every result (SPEC §5.2 `ranking`). */
@@ -154,7 +176,7 @@ type InstallContext = {
   ranking: RankingDisclosure;
   disclosures: Map<string, RetrievalDisclosure>;
   /** Arbor disclosure for one candidate id. Never affects what is installed. */
-  arborFor: (skillId: string) => ArborSubjectReport;
+  arborFor: (skillId: string, delivery?: ArborDeliveryContext) => ArborSubjectReport;
 };
 
 type InstallOutcome = {
@@ -219,18 +241,34 @@ export async function summon(
   // the summon — a missing or malformed publication degrades to a disclosed
   // unknown (SPEC INV-8).
   const publication = await loadArborPublication();
-  const arbor = summonArborDisclosure(publication, resolved);
-  const arborFor = (skillId: string): ArborSubjectReport =>
-    consumeArbor(publication, {
+  const identity = await loadArborIdentityContext();
+  const arbor = summonArborDisclosure(publication, resolved, identity);
+  const linkById = new Map(
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github] as const),
+  );
+  const arborFor = (
+    skillId: string,
+    delivery: ArborDeliveryContext = "not-materialized",
+  ): ArborSubjectReport => {
+    // The canonical content pin comes from the identity context, and ONLY when
+    // it was pinned at the same Tree revision this corpus was built from. A hash
+    // borrowed across revisions — including from a newer Arbor publication —
+    // would describe other bytes, so a miss stays honestly unknown.
+    const resolution = resolveArborIdentity(arbor.corpus.canonical ? identity.context : null, {
       skillId,
-      // This runtime holds NO canonical content pin for a retrieval candidate:
-      // the Gaia named projection publishes no per-skill `contentSha256`, and a
-      // materialized payload digest is a different artifact entirely. Passing
-      // null is what keeps the join honestly unknown instead of manufacturing a
-      // match out of an id.
-      contentSha256: null,
-      canonicalSource: arbor.corpus.canonical,
+      sourceUrl: linkById.get(skillId),
+      corpusRevision: arbor.corpus.revision,
     });
+    return consumeArbor(publication, {
+      skillId,
+      contentSha256: resolution.pinned ? resolution.contentSha256 : null,
+      canonicalSource: arbor.corpus.canonical,
+      ...(resolution.pinned
+        ? {}
+        : { identityNote: describeArborIdentityMiss(resolution.miss) }),
+      delivery,
+    });
+  };
 
   if (decision.noMatch) {
     const outcome: SummonOutcome = {
@@ -378,6 +416,7 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
 function summonArborDisclosure(
   publication: ArborPublication,
   resolved: ResolvedIndex,
+  identity: { context: ArborIdentityContext | null; problem: string | null; sha256: string | null },
 ): SummonArborDisclosure {
   const base = describeArborPublication(publication);
   const workflow = resolved.index.sourceWorkflow;
@@ -402,10 +441,26 @@ function summonArborDisclosure(
       " a shared id across the two is not evidence of shared content.";
   }
 
+  const identityMatches =
+    identity.context !== null && revision !== null && identity.context.commit === revision;
+  if (canonical && !identityMatches) {
+    note +=
+      identity.context === null
+        ? " No canonical identity context is available, so no candidate's content pin could be proven."
+        : " The canonical identity context is pinned at a different Tree revision than this corpus, so no content pin was used.";
+  }
+
   return {
     ...base,
     note,
     corpus: { source: resolved.source, revision, canonical, sameUpstreamRevision },
+    identity: {
+      commit: identity.context?.commit ?? null,
+      matchesCorpusRevision: identityMatches,
+      pinnedSkills: identity.context ? Object.keys(identity.context.skills).length : 0,
+      sha256: identity.sha256,
+      problem: identity.problem,
+    },
   };
 }
 
@@ -692,7 +747,7 @@ async function installSingle(
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
-      arbor: ctx.arborFor(skill.id),
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt),
@@ -832,7 +887,7 @@ async function installSingle(
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
-      arbor: ctx.arborFor(skill.id),
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt),

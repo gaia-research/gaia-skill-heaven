@@ -18,22 +18,48 @@ import type {
 } from "./consume.js";
 import type { ArborClaim } from "./contract.js";
 
+/** What a caller could prove about candidate identity, if anything. */
+export type ArborIdentityDisclosure = {
+  commit: string | null;
+  matchesCorpusRevision: boolean;
+  pinnedSkills: number;
+  problem: string | null;
+};
+
 /** Publication-level lines, printed once per summon. */
-export function arborPublicationLines(disclosure: ArborDisclosure): string[] {
+export function arborPublicationLines(
+  disclosure: ArborDisclosure,
+  identity?: ArborIdentityDisclosure | undefined,
+): string[] {
   const lines = [`  Arbor: ${disclosure.note}`];
   const provenance = disclosure.provenance;
   if (provenance) {
     lines.push(
       `  Arbor source: ${provenance.upstream}@${provenance.commit} ${provenance.path} (captured ${provenance.capturedAt})`,
+      // Say exactly what the digest check bought. Hashing files against a
+      // manifest that ships beside them proves the cache is internally
+      // consistent; it is a self-supplied receipt, not a signature and not
+      // upstream's admission that this revision published these bytes.
+      `  Arbor receipt: ${Object.keys(provenance.files).length} cached file(s) match the digests recorded next to them — byte consistency only, not an authenticated upstream attestation.`,
     );
   } else if (disclosure.publicationState !== "unavailable") {
     lines.push(
-      "  Arbor source: UNKNOWN — the cached publication records no upstream revision, so it cannot be audited back to a source.",
+      "  Arbor source: UNAUDITABLE — this cache records no upstream revision and its bytes were checked against no manifest.",
     );
   }
   lines.push(
     `  Arbor contracts: ${disclosure.contracts.runtime} · ${disclosure.contracts.profile} · ${disclosure.contracts.edgeIndex}`,
   );
+  if (identity) {
+    lines.push(
+      identity.matchesCorpusRevision
+        ? `  Arbor identity: ${identity.pinnedSkills} canonical content pin(s) at ${identity.commit}, the same revision this corpus was built from.`
+        : identity.commit === null
+          ? "  Arbor identity: NONE — no candidate's canonical content pin could be proven, so every join is unknown."
+          : `  Arbor identity: UNUSABLE — pinned at ${identity.commit}, which is not the revision this corpus was built from; a hash from another revision describes other bytes.`,
+    );
+    if (identity.problem) lines.push(`  Arbor identity defect: ${identity.problem}`);
+  }
   for (const problem of disclosure.problems) {
     lines.push(`  Arbor defect: ${problem.where} — ${problem.detail}`);
   }

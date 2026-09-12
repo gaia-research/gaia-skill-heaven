@@ -245,6 +245,7 @@ export {
   consumeArbor,
   describeArborPublication,
   type ArborCandidate,
+  type ArborDeliveryContext,
   type ArborDisclosure,
   type ArborInteractionReport,
   type ArborJoin,
@@ -254,8 +255,21 @@ export {
   type ConsumeArborOptions,
 } from "./arbor/consume.js";
 export {
+  ARBOR_IDENTITY_SCHEMA,
+  ArborIdentityError,
+  assertArborIdentityContext,
+  describeArborIdentityMiss,
+  resolveArborIdentity,
+  type ArborIdentityContext,
+  type ArborIdentityEntry,
+  type ArborIdentityMiss,
+  type ArborIdentityQuery,
+  type ArborIdentityResolution,
+} from "./arbor/identity.js";
+export {
   arborPublicationLines,
   arborSubjectLines,
   claimLine,
   interactionLine,
+  type ArborIdentityDisclosure,
 } from "./arbor/disclose.js";
