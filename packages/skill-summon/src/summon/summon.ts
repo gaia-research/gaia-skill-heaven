@@ -3,16 +3,22 @@ import path from "node:path";
 
 import {
   Bm25fRanker,
+  consumeArbor,
   decide,
+  describeArborPublication,
   indexAgeDays,
   isStale,
   normalize,
+  type ArborDisclosure,
+  type ArborPublication,
+  type ArborSubjectReport,
   type Decision,
   type IndexedSkill,
   type SkillIndex,
 } from "skill-zero";
 
 import type { NamedSkill } from "../domain/types.js";
+import { loadArborPublication } from "../data/arbor-source.js";
 import type { ResolvedIndex } from "../data/skill-index-source.js";
 import { starCount } from "../service.js";
 import type { GaiaService } from "../service.js";
@@ -58,6 +64,32 @@ export type PreviewedSkill = {
   sourceUrl?: string | undefined;
   source: string;
   retrieval: RetrievalDisclosure;
+  /** Which Arbor lenses were consulted for this candidate, and which were not. */
+  arbor: ArborSubjectReport;
+};
+
+/**
+ * The summon-level Arbor disclosure (SPEC INV-13, issue #118 A3/A4).
+ *
+ * `corpus` is this layer's own honesty note, not an Arbor field: the retrieval
+ * index and the Arbor publication are pinned to upstream revisions
+ * INDEPENDENTLY, and a reader has to be told when they disagree before drawing
+ * any conclusion from an id that appears in both.
+ */
+export type SummonArborDisclosure = ArborDisclosure & {
+  corpus: {
+    /** The source the ranked candidates came from. */
+    source: string;
+    /** The upstream revision the retrieval index was built from, when published. */
+    revision: string | null;
+    /** True only when the corpus is the canonical Gaia tree projection. */
+    canonical: boolean;
+    /**
+     * Whether the corpus and the Arbor publication pin the SAME upstream
+     * revision. `null` when either side does not publish one.
+     */
+    sameUpstreamRevision: boolean | null;
+  };
 };
 
 /** Retrieval disclosure attached to every result (SPEC §5.2 `ranking`). */
@@ -103,6 +135,13 @@ export type SummonOutcome = {
   suites: SuiteAttempt[];
   sessionRoot: string;
   ranking: RankingDisclosure;
+  /**
+   * Which behavioral lenses informed this outcome and which were absent
+   * (SPEC INV-13). Always present, including on a refusal: "we consulted
+   * nothing" is the answer disclosure asks for, and it is not the same answer
+   * as saying nothing at all.
+   */
+  arbor: SummonArborDisclosure;
   cards: string[];
   /** Wall-clock time for this whole invocation, seconds with ms precision. */
   totalSeconds: number;
@@ -114,6 +153,8 @@ type InstallContext = {
   payloadCache: PayloadCache;
   ranking: RankingDisclosure;
   disclosures: Map<string, RetrievalDisclosure>;
+  /** Arbor disclosure for one candidate id. Never affects what is installed. */
+  arborFor: (skillId: string) => ArborSubjectReport;
 };
 
 type InstallOutcome = {
@@ -171,6 +212,26 @@ export async function summon(
   const registry = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
 
+  // Arbor is consumed AFTER the decision is made, from a committed local cache,
+  // and it feeds nothing back into scoring or ordering: `decision.admitted` is
+  // already fixed above and is never re-sorted, filtered or re-scored below
+  // (SPEC INV-3, §4.2 "Arbor as a retrieval feature"). Reading it cannot fail
+  // the summon — a missing or malformed publication degrades to a disclosed
+  // unknown (SPEC INV-8).
+  const publication = await loadArborPublication();
+  const arbor = summonArborDisclosure(publication, resolved);
+  const arborFor = (skillId: string): ArborSubjectReport =>
+    consumeArbor(publication, {
+      skillId,
+      // This runtime holds NO canonical content pin for a retrieval candidate:
+      // the Gaia named projection publishes no per-skill `contentSha256`, and a
+      // materialized payload digest is a different artifact entirely. Passing
+      // null is what keeps the join honestly unknown instead of manufacturing a
+      // match out of an id.
+      contentSha256: null,
+      canonicalSource: arbor.corpus.canonical,
+    });
+
   if (decision.noMatch) {
     const outcome: SummonOutcome = {
       query: trimmedQuery,
@@ -185,6 +246,7 @@ export async function summon(
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt),
     };
@@ -210,6 +272,7 @@ export async function summon(
         ...(hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {}),
         source: resolved.source,
         retrieval: disclosures.get(hit.doc.id) as RetrievalDisclosure,
+        arbor: arborFor(hit.doc.id),
       })),
       noMatch: null,
       filtered: decision.filtered,
@@ -218,6 +281,7 @@ export async function summon(
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt),
     };
@@ -233,6 +297,7 @@ export async function summon(
     payloadCache: new PayloadCache(),
     ranking,
     disclosures,
+    arborFor,
   };
   const summoned: InstalledSkill[] = [];
   const skipped: SkippedCandidate[] = [];
@@ -270,6 +335,7 @@ export async function summon(
     suites,
     sessionRoot: session.root,
     ranking,
+    arbor,
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt),
   };
@@ -296,6 +362,50 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source,
+  };
+}
+
+/**
+ * The summon-level Arbor disclosure.
+ *
+ * Canonicality is decided on a signal the index actually publishes: the
+ * committed index records the upstream generator that produced its source
+ * projection (`gaia-skill-tree/scripts/…`). An index built at runtime from a
+ * flat GitHub fleet or an explicitly overridden source records none, so its
+ * candidates are correctly reported as outside the corpus the canonical Arbor
+ * projection describes — an id that collides there proves nothing.
+ */
+function summonArborDisclosure(
+  publication: ArborPublication,
+  resolved: ResolvedIndex,
+): SummonArborDisclosure {
+  const base = describeArborPublication(publication);
+  const workflow = resolved.index.sourceWorkflow;
+  const canonical =
+    resolved.origin === "committed" &&
+    typeof workflow === "string" &&
+    workflow.startsWith("gaia-skill-tree/");
+  const revision = resolved.index.sourceRevision ?? null;
+  const publicationCommit = publication.provenance?.commit ?? null;
+  const sameUpstreamRevision =
+    revision === null || publicationCommit === null || publicationCommit === "unknown"
+      ? null
+      : revision === publicationCommit;
+
+  let note = base.note;
+  if (!canonical) {
+    note +=
+      " These candidates are outside the canonical corpus that projection describes, so no Arbor record can apply to them.";
+  } else if (sameUpstreamRevision === false) {
+    note +=
+      ` The retrieval corpus (${revision}) and the Arbor publication (${publicationCommit}) are pinned to different upstream revisions;` +
+      " a shared id across the two is not evidence of shared content.";
+  }
+
+  return {
+    ...base,
+    note,
+    corpus: { source: resolved.source, revision, canonical, sameUpstreamRevision },
   };
 }
 
@@ -582,6 +692,7 @@ async function installSingle(
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
+      arbor: ctx.arborFor(skill.id),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt),
@@ -721,6 +832,7 @@ async function installSingle(
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
+      arbor: ctx.arborFor(skill.id),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt),

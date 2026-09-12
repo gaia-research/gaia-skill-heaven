@@ -773,9 +773,9 @@ var require_codegen = __commonJS({
       scopeCode() {
         return this._extScope.scopeCode(this._values);
       }
-      _def(varKind, nameOrPrefix, rhs, constant) {
+      _def(varKind, nameOrPrefix, rhs, constant2) {
         const name = this._scope.toName(nameOrPrefix);
-        if (rhs !== void 0 && constant)
+        if (rhs !== void 0 && constant2)
           this._constants[name.str] = rhs;
         this._leafNode(new Def(varKind, name, rhs));
         return name;
@@ -1785,14 +1785,14 @@ var require_code2 = __commonJS({
     }
     exports.callValidateCode = callValidateCode;
     var newRegExp = (0, codegen_1._)`new RegExp`;
-    function usePattern({ gen, it: { opts } }, pattern) {
+    function usePattern({ gen, it: { opts } }, pattern2) {
       const u = opts.unicodeRegExp ? "u" : "";
       const { regExp } = opts.code;
-      const rx = regExp(pattern, u);
+      const rx = regExp(pattern2, u);
       return gen.scopeValue("pattern", {
         key: rx.toString(),
         ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
+        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern2}, ${u})`
       });
     }
     exports.usePattern = usePattern;
@@ -3752,12 +3752,12 @@ var require_fast_uri = __commonJS({
       if (options.reference !== "suffix" && component.scheme) {
         uriTokens.push(component.scheme, ":");
       }
-      const authority = recomposeAuthority(component);
-      if (authority !== void 0) {
+      const authority2 = recomposeAuthority(component);
+      if (authority2 !== void 0) {
         if (options.reference !== "suffix") {
           uriTokens.push("//");
         }
-        uriTokens.push(authority);
+        uriTokens.push(authority2);
         if (component.path && component.path[0] !== "/") {
           uriTokens.push("/");
         }
@@ -3767,7 +3767,7 @@ var require_fast_uri = __commonJS({
         if (!options.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
           s = removeDotSegments(s);
         }
-        if (authority === void 0 && s[0] === "/" && s[1] === "/") {
+        if (authority2 === void 0 && s[0] === "/" && s[1] === "/") {
           s = "/%2F" + s.slice(2);
         }
         uriTokens.push(s);
@@ -6750,8 +6750,8 @@ var require_formats = __commonJS({
     function getDateTime(strictTimeZone) {
       const time3 = getTime(strictTimeZone);
       return function date_time(str) {
-        const dateTime = str.split(DATE_TIME_SEPARATOR);
-        return dateTime.length === 2 && date3(dateTime[0]) && time3(dateTime[1]);
+        const dateTime2 = str.split(DATE_TIME_SEPARATOR);
+        return dateTime2.length === 2 && date3(dateTime2[0]) && time3(dateTime2[1]);
       };
     }
     function compareDateTime(dt1, dt2) {
@@ -7055,8 +7055,8 @@ function getEnumValues(entries) {
   const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
   return values;
 }
-function joinValues(array2, separator = "|") {
-  return array2.map((val) => stringifyPrimitive(val)).join(separator);
+function joinValues(array3, separator = "|") {
+  return array3.map((val) => stringifyPrimitive(val)).join(separator);
 }
 function jsonStringifyReplacer(_, value) {
   if (typeof value === "bigint")
@@ -8001,12 +8001,12 @@ var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (ins
 var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
   $ZodCheck.init(inst, def);
   const escapedRegex = escapeRegex(def.includes);
-  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
-  def.pattern = pattern;
+  const pattern2 = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
+  def.pattern = pattern2;
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.includes(def.includes, def.position))
@@ -8024,12 +8024,12 @@ var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst,
 });
 var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`^${escapeRegex(def.prefix)}.*`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.startsWith(def.prefix))
@@ -8047,12 +8047,12 @@ var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (i
 });
 var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`.*${escapeRegex(def.suffix)}$`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.endsWith(def.suffix))
@@ -9160,8 +9160,8 @@ var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)})?$`) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     if (def.innerType._zod.optin === "optional") {
@@ -9178,8 +9178,8 @@ var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
   defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
   defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)}|null)$`) : void 0;
   });
   defineLazy(inst._zod, "values", () => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
@@ -9866,12 +9866,12 @@ function _length(length, params) {
     length
   });
 }
-function _regex(pattern, params) {
+function _regex(pattern2, params) {
   return new $ZodCheckRegex({
     check: "string_format",
     format: "regex",
     ...normalizeParams(params),
-    pattern
+    pattern: pattern2
   });
 }
 function _lowercase(params) {
@@ -10380,11 +10380,11 @@ var JSONSchemaGenerator = class {
           }
           case "template_literal": {
             const json = _json;
-            const pattern = schema._zod.pattern;
-            if (!pattern)
+            const pattern2 = schema._zod.pattern;
+            if (!pattern2)
               throw new Error("Pattern not found in template literal");
             json.type = "string";
-            json.pattern = pattern.source;
+            json.pattern = pattern2.source;
             break;
           }
           case "pipe": {
@@ -13978,8 +13978,8 @@ var util;
     return void 0;
   };
   util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-  function joinValues2(array2, separator = " | ") {
-    return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+  function joinValues2(array3, separator = " | ") {
+    return array3.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
   util2.jsonStringifyReplacer = (_, value) => {
@@ -18960,13 +18960,13 @@ function stringifyRegExpWithFlags(regex, refs) {
     // `.` matches newlines
   };
   const source = flags.i ? regex.source.toLowerCase() : regex.source;
-  let pattern = "";
+  let pattern2 = "";
   let isEscaped = false;
   let inCharGroup = false;
   let inCharRange = false;
   for (let i = 0; i < source.length; i++) {
     if (isEscaped) {
-      pattern += source[i];
+      pattern2 += source[i];
       isEscaped = false;
       continue;
     }
@@ -18974,40 +18974,40 @@ function stringifyRegExpWithFlags(regex, refs) {
       if (inCharGroup) {
         if (source[i].match(/[a-z]/)) {
           if (inCharRange) {
-            pattern += source[i];
-            pattern += `${source[i - 2]}-${source[i]}`.toUpperCase();
+            pattern2 += source[i];
+            pattern2 += `${source[i - 2]}-${source[i]}`.toUpperCase();
             inCharRange = false;
           } else if (source[i + 1] === "-" && source[i + 2]?.match(/[a-z]/)) {
-            pattern += source[i];
+            pattern2 += source[i];
             inCharRange = true;
           } else {
-            pattern += `${source[i]}${source[i].toUpperCase()}`;
+            pattern2 += `${source[i]}${source[i].toUpperCase()}`;
           }
           continue;
         }
       } else if (source[i].match(/[a-z]/)) {
-        pattern += `[${source[i]}${source[i].toUpperCase()}]`;
+        pattern2 += `[${source[i]}${source[i].toUpperCase()}]`;
         continue;
       }
     }
     if (flags.m) {
       if (source[i] === "^") {
-        pattern += `(^|(?<=[\r
+        pattern2 += `(^|(?<=[\r
 ]))`;
         continue;
       } else if (source[i] === "$") {
-        pattern += `($|(?=[\r
+        pattern2 += `($|(?=[\r
 ]))`;
         continue;
       }
     }
     if (flags.s && source[i] === ".") {
-      pattern += inCharGroup ? `${source[i]}\r
+      pattern2 += inCharGroup ? `${source[i]}\r
 ` : `[${source[i]}\r
 ]`;
       continue;
     }
-    pattern += source[i];
+    pattern2 += source[i];
     if (source[i] === "\\") {
       isEscaped = true;
     } else if (inCharGroup && source[i] === "]") {
@@ -19017,12 +19017,12 @@ function stringifyRegExpWithFlags(regex, refs) {
     }
   }
   try {
-    new RegExp(pattern);
+    new RegExp(pattern2);
   } catch {
     console.warn(`Could not convert regex pattern at ${refs.currentPath.join("/")} to a flag-independent form! Falling back to the flag-ignorant source`);
     return regex.source;
   }
-  return pattern;
+  return pattern2;
 }
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/record.js
@@ -21528,46 +21528,46 @@ var UriTemplate = class _UriTemplate {
       }
       return patterns;
     }
-    let pattern;
+    let pattern2;
     const name = part.name;
     switch (part.operator) {
       case "":
-        pattern = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
+        pattern2 = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
         break;
       case "+":
       case "#":
-        pattern = "(.+)";
+        pattern2 = "(.+)";
         break;
       case ".":
-        pattern = "\\.([^/,]+)";
+        pattern2 = "\\.([^/,]+)";
         break;
       case "/":
-        pattern = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
+        pattern2 = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
         break;
       default:
-        pattern = "([^/]+)";
+        pattern2 = "([^/]+)";
     }
-    patterns.push({ pattern, name });
+    patterns.push({ pattern: pattern2, name });
     return patterns;
   }
   match(uri) {
     _UriTemplate.validateLength(uri, MAX_TEMPLATE_LENGTH, "URI");
-    let pattern = "^";
+    let pattern2 = "^";
     const names = [];
     for (const part of this.parts) {
       if (typeof part === "string") {
-        pattern += this.escapeRegExp(part);
+        pattern2 += this.escapeRegExp(part);
       } else {
         const patterns = this.partToRegExp(part);
         for (const { pattern: partPattern, name } of patterns) {
-          pattern += partPattern;
+          pattern2 += partPattern;
           names.push({ name, exploded: part.exploded });
         }
       }
     }
-    pattern += "$";
-    _UriTemplate.validateLength(pattern, MAX_REGEX_LENGTH, "Generated regex pattern");
-    const regex = new RegExp(pattern);
+    pattern2 += "$";
+    _UriTemplate.validateLength(pattern2, MAX_REGEX_LENGTH, "Generated regex pattern");
+    const regex = new RegExp(pattern2);
     const match = uri.match(regex);
     if (!match)
       return null;
@@ -23131,11 +23131,750 @@ function suggestionFor(reason, source) {
   }
 }
 
-// packages/skill-summon/src/data/skill-index-source.ts
+// packages/core/src/arbor/contract.ts
+var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
+var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
+var ARBOR_EDGE_SCHEMA = "gaia.arbor-edge/v1";
+var ARBOR_EDGE_INDEX_SCHEMA = "gaia.arbor-edge-index/v1";
+var ARBOR_RUNTIME_INDEX_SCHEMA = "gaia.arbor-runtime-index/v1";
+var PROJECTED_SUPPORT = [
+  "expert-declared",
+  "benchmark-confirmed",
+  "benchmark-qualified",
+  "benchmark-revised",
+  "inconclusive"
+];
+var ARBOR_FACETS = ["human-led", "model-led"];
+var ARBOR_RELATIONS = [
+  "stabilizes",
+  "amplifies",
+  "conflicts",
+  "recovers",
+  "compresses-after",
+  "unlocks",
+  "duplicates"
+];
+var ARBOR_LENS_STATUS = [
+  "present",
+  "absent-no-accepted-record",
+  "absent-subject-version-mismatch",
+  "absent-superseded",
+  "unavailable-unsupported-payload"
+];
+var EDGE_ABSENCE_MEANING = "not-evaluated";
+var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
+
+// packages/core/src/arbor/validate.ts
+var ArborContractError = class extends Error {
+  name = "ArborContractError";
+};
+var SHA256 = /^[a-f0-9]{64}$/u;
+var RECORD_ID = /^[a-z][a-z0-9.-]*$/u;
+var SKILL_ID = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
+var DATE_TIME = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$/u;
+function assertArborProfile(value, label = "Arbor profile") {
+  const profile = closedRecord(value, label, [
+    "schema",
+    "skill",
+    "inputDigest",
+    "sources",
+    "claims"
+  ]);
+  constant(profile, "schema", ARBOR_PROFILE_SCHEMA, label);
+  subjectRef(profile.skill, `${label}.skill`);
+  sha2562(profile, "inputDigest", label);
+  const sources = closedRecord(profile.sources, `${label}.sources`, [
+    "declarations",
+    "benchmarkReceipts",
+    "interpretations"
+  ]);
+  for (const key of ["declarations", "benchmarkReceipts", "interpretations"]) {
+    digestList(sources[key], `${label}.sources.${key}`);
+  }
+  const claims = array2(profile.claims, `${label}.claims`);
+  if (claims.length === 0) {
+    throw new ArborContractError(`${label}.claims must contain at least one claim.`);
+  }
+  claims.forEach((claim, position) => assertArborClaim(claim, `${label}.claims[${position}]`));
+}
+function assertArborClaim(value, label) {
+  const claim = closedRecord(value, label, [
+    "id",
+    "facet",
+    "conditions",
+    "rationale",
+    "authority",
+    "support",
+    "declarationId",
+    "declaredAt",
+    "declarationSource",
+    "benchmarkSources",
+    "interpretationSource"
+  ]);
+  pattern(claim, "id", RECORD_ID, label);
+  enumeration(claim, "facet", ARBOR_FACETS, label);
+  nonEmpty(claim, "conditions", label);
+  nonEmpty(claim, "rationale", label);
+  authority(claim.authority, `${label}.authority`);
+  enumeration(claim, "support", PROJECTED_SUPPORT, label);
+  pattern(claim, "declarationId", RECORD_ID, label);
+  dateTime(claim, "declaredAt", label);
+  sha2562(claim, "declarationSource", label);
+  digestList(claim.benchmarkSources, `${label}.benchmarkSources`);
+  sha256OrNull(claim, "interpretationSource", label);
+}
+function assertArborEdge(value, label = "Arbor edge") {
+  const edge = closedRecord(value, label, [
+    "schema",
+    "edgeKey",
+    "pair",
+    "target",
+    "relation",
+    "conditions",
+    "authority",
+    "support",
+    "declarationSource",
+    "observationSources",
+    "interpretationSource",
+    "structuralOverlap",
+    "pairApplicable"
+  ]);
+  constant(edge, "schema", ARBOR_EDGE_SCHEMA, label);
+  sha2562(edge, "edgeKey", label);
+  const pair = closedRecord(edge.pair, `${label}.pair`, ["from", "to"]);
+  subjectRef(pair.from, `${label}.pair.from`);
+  subjectRef(pair.to, `${label}.pair.to`);
+  const target = closedRecord(edge.target, `${label}.target`, ["declarationSha256", "claimId"]);
+  sha2562(target, "declarationSha256", `${label}.target`);
+  pattern(target, "claimId", RECORD_ID, `${label}.target`);
+  enumeration(edge, "relation", ARBOR_RELATIONS, label);
+  nonEmpty(edge, "conditions", label);
+  authority(edge.authority, `${label}.authority`);
+  enumeration(edge, "support", PROJECTED_SUPPORT, label);
+  sha2562(edge, "declarationSource", label);
+  digestList(edge.observationSources, `${label}.observationSources`);
+  sha256OrNull(edge, "interpretationSource", label);
+  constant(edge, "structuralOverlap", EDGE_STRUCTURAL_OVERLAP, label);
+  if (typeof edge.pairApplicable !== "boolean") {
+    throw new ArborContractError(`${label}.pairApplicable must be a boolean.`);
+  }
+}
+function assertArborEdgeIndex(value, label = "Arbor edge index") {
+  const index = closedRecord(value, label, ["schema", "edgeSetVersion", "coverage", "edges"]);
+  constant(index, "schema", ARBOR_EDGE_INDEX_SCHEMA, label);
+  nonEmpty(index, "edgeSetVersion", label);
+  const coverage = closedRecord(index.coverage, `${label}.coverage`, [
+    "pairsEvaluated",
+    "absenceMeaning"
+  ]);
+  nonNegativeInteger2(coverage, "pairsEvaluated", `${label}.coverage`);
+  constant(coverage, "absenceMeaning", EDGE_ABSENCE_MEANING, `${label}.coverage`);
+  const edges = array2(index.edges, `${label}.edges`);
+  edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
+}
+function assertArborRuntime(value, label = "Arbor runtime") {
+  const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
+  constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
+  subjectRef(runtime.subject, `${label}.subject`);
+  sha2562(runtime, "inputDigest", label);
+  const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
+    "claims",
+    "hellHeaven",
+    "interactions"
+  ]);
+  const claimsLens = closedRecord(lenses.claims, `${label}.lenses.claims`, [
+    "status",
+    "sourceDigest",
+    "profile"
+  ]);
+  enumeration(claimsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.claims`);
+  sha256OrNull(claimsLens, "sourceDigest", `${label}.lenses.claims`);
+  objectOrNull(claimsLens, "profile", `${label}.lenses.claims`);
+  const hhLens = closedRecord(lenses.hellHeaven, `${label}.lenses.hellHeaven`, [
+    "status",
+    "sourceDigest",
+    "result"
+  ]);
+  enumeration(hhLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.hellHeaven`);
+  sha256OrNull(hhLens, "sourceDigest", `${label}.lenses.hellHeaven`);
+  objectOrNull(hhLens, "result", `${label}.lenses.hellHeaven`);
+  const interactionsLens = closedRecord(lenses.interactions, `${label}.lenses.interactions`, [
+    "status",
+    "sourceDigest",
+    "edges"
+  ]);
+  enumeration(interactionsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.interactions`);
+  sha256OrNull(interactionsLens, "sourceDigest", `${label}.lenses.interactions`);
+  const edges = array2(interactionsLens.edges, `${label}.lenses.interactions.edges`);
+  edges.forEach(
+    (edge, position) => assertArborEdge(edge, `${label}.lenses.interactions.edges[${position}]`)
+  );
+}
+function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
+  const index = closedRecord(value, label, ["schema", "runtimeVersion", "subjects"]);
+  constant(index, "schema", ARBOR_RUNTIME_INDEX_SCHEMA, label);
+  constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
+  const subjects = array2(index.subjects, `${label}.subjects`);
+  subjects.forEach(
+    (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
+  );
+}
+function closedRecord(value, label, allowed) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborContractError(`${label} must be an object.`);
+  }
+  const record2 = value;
+  for (const key of Object.keys(record2)) {
+    if (!allowed.includes(key)) {
+      throw new ArborContractError(
+        `${label} carries unknown field '${key}'. The Arbor contracts are closed; a consumer that accepted it would be forking the schema.`
+      );
+    }
+  }
+  for (const key of allowed) {
+    if (!(key in record2)) {
+      throw new ArborContractError(`${label} is missing required field '${key}'.`);
+    }
+  }
+  return record2;
+}
+function array2(value, label) {
+  if (!Array.isArray(value)) throw new ArborContractError(`${label} must be an array.`);
+  return value;
+}
+function constant(record2, key, expected, label) {
+  if (record2[key] !== expected) {
+    throw new ArborContractError(
+      `${label}.${key} must be '${expected}', got ${JSON.stringify(record2[key])}. This build reads only the pinned contract version.`
+    );
+  }
+}
+function nonEmpty(record2, key, label) {
+  const value = record2[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-empty string.`);
+  }
+  return value;
+}
+function pattern(record2, key, expression, label) {
+  const value = nonEmpty(record2, key, label);
+  if (!expression.test(value)) {
+    throw new ArborContractError(`${label}.${key} does not match ${String(expression)}.`);
+  }
+  return value;
+}
+function sha2562(record2, key, label) {
+  return pattern(record2, key, SHA256, label);
+}
+function sha256OrNull(record2, key, label) {
+  if (record2[key] === null) return;
+  sha2562(record2, key, label);
+}
+function objectOrNull(record2, key, label) {
+  const value = record2[key];
+  if (value === null) return;
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new ArborContractError(`${label}.${key} must be an object or null.`);
+  }
+}
+function dateTime(record2, key, label) {
+  const value = nonEmpty(record2, key, label);
+  if (!DATE_TIME.test(value)) {
+    throw new ArborContractError(`${label}.${key} must be an RFC 3339 date-time.`);
+  }
+}
+function enumeration(record2, key, allowed, label) {
+  const value = record2[key];
+  if (typeof value !== "string" || !allowed.includes(value)) {
+    throw new ArborContractError(
+      `${label}.${key} must be one of ${allowed.join(", ")}; got ${JSON.stringify(value)}.`
+    );
+  }
+}
+function digestList(value, label) {
+  const digests = array2(value, label);
+  const seen = /* @__PURE__ */ new Set();
+  digests.forEach((digest, position) => {
+    if (typeof digest !== "string" || !SHA256.test(digest)) {
+      throw new ArborContractError(`${label}[${position}] must be a sha256 digest.`);
+    }
+    if (seen.has(digest)) {
+      throw new ArborContractError(`${label} repeats digest ${digest}; upstream requires uniqueness.`);
+    }
+    seen.add(digest);
+  });
+}
+function nonNegativeInteger2(record2, key, label) {
+  const value = record2[key];
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-negative integer.`);
+  }
+}
+function subjectRef(value, label) {
+  const subject = closedRecord(value, label, ["id", "contentSha256"]);
+  pattern(subject, "id", SKILL_ID, label);
+  sha2562(subject, "contentSha256", label);
+}
+function authority(value, label) {
+  const record2 = closedRecord(value, label, ["actor", "basis"]);
+  nonEmpty(record2, "actor", label);
+  nonEmpty(record2, "basis", label);
+}
+
+// packages/core/src/arbor/publication.ts
+var CONTRACTS = {
+  runtimeIndex: ARBOR_RUNTIME_INDEX_SCHEMA,
+  runtime: ARBOR_RUNTIME_SCHEMA,
+  profile: ARBOR_PROFILE_SCHEMA,
+  edgeIndex: ARBOR_EDGE_INDEX_SCHEMA
+};
+function subjectKey(subject) {
+  return `${subject.id}@${subject.contentSha256}`;
+}
+function unavailableArborPublication(problems = []) {
+  return {
+    state: "unavailable",
+    provenance: null,
+    subjects: [],
+    runtimes: /* @__PURE__ */ new Map(),
+    edgeIndex: null,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function readArborPublication(documents) {
+  if (documents === null) return unavailableArborPublication();
+  const problems = [];
+  let runtimeIndex;
+  try {
+    assertArborRuntimeIndex(documents.runtimeIndex, "runtime/index.json");
+    runtimeIndex = documents.runtimeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([
+        { where: "runtime/index.json", detail: describe(error2) }
+      ]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  let edgeIndex;
+  try {
+    assertArborEdgeIndex(documents.edgeIndex, "edges.json");
+    edgeIndex = documents.edgeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([{ where: "edges.json", detail: describe(error2) }]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  const runtimes = /* @__PURE__ */ new Map();
+  for (const { path: path9, document } of documents.runtimes) {
+    try {
+      assertArborRuntime(document, path9);
+    } catch (error2) {
+      problems.push({ where: path9, detail: describe(error2) });
+      continue;
+    }
+    const claimsLens = document.lenses.claims;
+    if (claimsLens.profile !== null) {
+      try {
+        assertArborProfile(claimsLens.profile, `${path9} lenses.claims.profile`);
+      } catch (error2) {
+        problems.push({ where: `${path9} lenses.claims.profile`, detail: describe(error2) });
+        runtimes.set(subjectKey(document.subject), {
+          ...document,
+          lenses: {
+            ...document.lenses,
+            claims: { ...claimsLens, profile: null }
+          }
+        });
+        continue;
+      }
+    }
+    for (const claim of claimsLens.profile?.claims ?? []) {
+      const governed = claim.interpretationSource !== null;
+      if (governed === (claim.support === "expert-declared")) {
+        problems.push({
+          where: `${path9} lenses.claims.profile claim '${claim.id}'`,
+          detail: governed ? "support is 'expert-declared' but a governed interpretationSource is present" : `support is '${claim.support}' with no interpretationSource; only a governed interpretation may set it`
+        });
+      }
+    }
+    runtimes.set(subjectKey(document.subject), document);
+  }
+  for (const subject of runtimeIndex.subjects) {
+    if (!runtimes.has(subjectKey(subject))) {
+      problems.push({
+        where: subjectKey(subject),
+        detail: "listed in runtime/index.json but no readable aggregate document was found"
+      });
+    }
+  }
+  return {
+    state: "loaded",
+    provenance: documents.provenance,
+    subjects: runtimeIndex.subjects,
+    runtimes,
+    edgeIndex,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function describe(error2) {
+  if (error2 instanceof ArborContractError) return error2.message;
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/core/src/arbor/consume.ts
+function describeArborPublication(publication) {
+  const subjectsPublished = publication.subjects.length;
+  const edgesPublished = publication.edgeIndex?.edges.length ?? 0;
+  const edgeCoverage = publication.edgeIndex ? { ...publication.edgeIndex.coverage } : null;
+  let note;
+  if (publication.state === "unavailable") {
+    note = "no published projection is available to this runtime, so no behavioral lens was consulted. That is unknown, not a clean bill of health.";
+  } else if (publication.state === "unreadable") {
+    note = "a publication was found but does not conform to the pinned contracts, so it was not consumed. Treated as unknown and disclosed rather than partially read.";
+  } else if (subjectsPublished === 0 && edgesPublished === 0) {
+    note = "the canonical projection is published and EMPTY \u2014 0 subjects, 0 interaction edges. Upstream records that absence means not-evaluated, so nothing here is evidence about any skill.";
+  } else {
+    note = `canonical projection consulted \u2014 ${subjectsPublished} published subject(s), ${edgesPublished} interaction edge(s). Absence of a record means not-evaluated.`;
+  }
+  if (publication.problems.length > 0) {
+    note += ` ${publication.problems.length} publication defect(s) disclosed; the affected records were not consumed.`;
+  }
+  return {
+    publicationState: publication.state,
+    provenance: publication.provenance,
+    contracts: publication.contracts,
+    subjectsPublished,
+    edgesPublished,
+    edgeCoverage,
+    problems: publication.problems,
+    note
+  };
+}
+function consumeArbor(publication, candidate, options = {}) {
+  const join3 = resolveJoin(publication, candidate);
+  const matchedSubject = join3 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
+  const runtime = matchedSubject ? publication.runtimes.get(subjectKey(matchedSubject)) : void 0;
+  const lenses = {};
+  for (const lens of ARBOR_LENSES) {
+    lenses[lens] = reportLens(lens, join3, runtime?.lenses[lens]);
+  }
+  const claimsLens = runtime?.lenses.claims;
+  const claims = lenses.claims.availability === "consulted" && claimsLens?.profile ? claimsLens.profile.claims : [];
+  const problems = [];
+  const interactions = [];
+  if (lenses.interactions.availability === "consulted" && matchedSubject) {
+    for (const edge of runtime.lenses.interactions.edges) {
+      const report = describeInteraction(edge, matchedSubject, options.knownContentSha256);
+      if (report === null) {
+        problems.push({
+          where: `${subjectKey(matchedSubject)} lenses.interactions edge ${edge.edgeKey}`,
+          detail: "the edge names neither endpoint as this subject at its pinned bytes; not consumed"
+        });
+        continue;
+      }
+      interactions.push(report);
+    }
+  }
+  if (runtime && runtime.lenses.claims.status === "present" && runtime.lenses.claims.profile === null) {
+    problems.push({
+      where: `${subjectKey(runtime.subject)} lenses.claims`,
+      detail: "upstream reports the claims lens present, but its embedded profile could not be read against gaia.arbor-profile/v1; no claim was consumed for this subject"
+    });
+  }
+  const lensesConsulted = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "consulted");
+  const lensesAbsent = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "absent");
+  const lensesUnknown = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "unknown");
+  return {
+    skillId: candidate.skillId,
+    contentSha256: candidate.contentSha256,
+    canonicalSource: candidate.canonicalSource,
+    join: join3,
+    matchedSubject,
+    lenses,
+    lensesConsulted,
+    lensesAbsent,
+    lensesUnknown,
+    claims,
+    interactions,
+    conditionsEvaluated: false,
+    problems,
+    note: subjectNote(join3, lensesConsulted, lensesAbsent, lensesUnknown, claims.length, interactions.length)
+  };
+}
+function resolveJoin(publication, candidate) {
+  if (publication.state !== "loaded") return "publication-unavailable";
+  if (!candidate.canonicalSource) return "source-not-canonical";
+  const pinsForId = publication.subjects.filter((subject) => subject.id === candidate.skillId);
+  if (pinsForId.length === 0) return "no-published-subject";
+  if (candidate.contentSha256 === null) return "identity-unproven";
+  const matched = pinsForId.some(
+    (subject) => subject.contentSha256 === candidate.contentSha256
+  );
+  if (!matched) return "subject-version-unmatched";
+  return publication.runtimes.has(
+    subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
+  ) ? "content-pinned" : "identity-unproven";
+}
+function reportLens(lens, join3, upstream) {
+  if (join3 !== "content-pinned" || upstream === void 0) {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: null,
+      sourceDigest: null,
+      reason: joinReason(join3)
+    };
+  }
+  if (upstream.status === "present") {
+    return {
+      lens,
+      availability: "consulted",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "a record is published for this exact subject pin and was read verbatim"
+    };
+  }
+  if (upstream.status === "unavailable-unsupported-payload") {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "an accepted record exists for this subject but its payload contract is not published; this runtime cannot read it and derives nothing from it"
+    };
+  }
+  return {
+    lens,
+    availability: "absent",
+    upstreamStatus: upstream.status,
+    sourceDigest: upstream.sourceDigest,
+    reason: absentReason(upstream.status)
+  };
+}
+function absentReason(status) {
+  switch (status) {
+    case "absent-no-accepted-record":
+      return "no accepted record has been published for this subject \u2014 not evaluated, not a negative finding";
+    case "absent-subject-version-mismatch":
+      return "a record exists but is pinned to different content bytes, so it does not describe this version";
+    case "absent-superseded":
+      return "the record for this subject has been superseded and no successor is published";
+    default:
+      return "no record was consulted";
+  }
+}
+function joinReason(join3) {
+  switch (join3) {
+    case "publication-unavailable":
+      return "no readable Arbor publication is available to this runtime";
+    case "source-not-canonical":
+      return "this candidate came from a source the canonical Arbor projection does not describe, so a matching id would prove nothing";
+    case "no-published-subject":
+      return "the readable publication lists no subject with this id \u2014 not evaluated, not a negative finding";
+    case "subject-version-unmatched":
+      return "the publication pins different content bytes for this id, so its records describe other content";
+    case "identity-unproven":
+      return "this runtime holds no canonical content pin for this candidate, so applicability is unknown \u2014 an id match alone proves neither source nor current content";
+    default:
+      return "";
+  }
+}
+function subjectNote(join3, consulted, absent, unknown2, claimCount, edgeCount) {
+  const parts = [
+    `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
+    `absent: ${absent.length > 0 ? absent.join(", ") : "none"}`,
+    `unknown: ${unknown2.length > 0 ? unknown2.join(", ") : "none"}`
+  ];
+  let note = `${parts.join(" \xB7 ")}. ${joinNote(join3)}`;
+  if (claimCount > 0) {
+    note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
+  }
+  if (edgeCount > 0) {
+    note += ` ${edgeCount} ordered interaction edge(s) carried verbatim; publication-time pairApplicable is not runtime assurance.`;
+  }
+  return note;
+}
+function joinNote(join3) {
+  switch (join3) {
+    case "content-pinned":
+      return "Subject identity proven by id and exact content pin.";
+    case "identity-unproven":
+      return "Subject identity NOT proven: unknown applicability, which is neither a denial nor an assurance.";
+    case "subject-version-unmatched":
+      return "Published records pin different content bytes: unknown for this version.";
+    case "no-published-subject":
+      return "Nothing is published about this skill: not evaluated.";
+    case "source-not-canonical":
+      return "Candidate is outside the canonical corpus: no Arbor record can apply to it.";
+    default:
+      return "No Arbor publication was consulted.";
+  }
+}
+function describeInteraction(edge, subject, known) {
+  const matches = (endpoint) => endpoint.id === subject.id && endpoint.contentSha256 === subject.contentSha256;
+  const subjectIsFrom = matches(edge.pair.from);
+  if (!subjectIsFrom && !matches(edge.pair.to)) return null;
+  const counterpart = subjectIsFrom ? edge.pair.to : edge.pair.from;
+  const knownPin = known?.[counterpart.id];
+  const counterpartPin = knownPin === void 0 ? "unverified" : knownPin === counterpart.contentSha256 ? "verified" : "mismatched";
+  return {
+    edge,
+    direction: subjectIsFrom ? "subject-acts-on" : "acts-on-subject",
+    counterpart,
+    counterpartPin
+  };
+}
+
+// packages/core/src/arbor/disclose.ts
+function arborSubjectLines(report) {
+  const lines = [`  Arbor: ${report.note}`];
+  for (const claim of report.claims) lines.push(`  Arbor claim: ${claimLine(claim)}`);
+  for (const interaction of report.interactions) {
+    lines.push(`  Arbor edge: ${interactionLine(interaction)}`);
+  }
+  for (const problem of report.problems) {
+    lines.push(`  Arbor defect: ${problem.where} \u2014 ${problem.detail}`);
+  }
+  return lines;
+}
+function claimLine(claim) {
+  const governance = claim.interpretationSource === null ? "no governed interpretation (support is the declaration's own state)" : `governed interpretation ${short(claim.interpretationSource)}`;
+  return `${claim.facet} \xB7 support ${claim.support} \xB7 ONLY UNDER: ${claim.conditions} \xB7 ${governance} \xB7 declaration ${short(claim.declarationSource)}` + (claim.benchmarkSources.length > 0 ? ` \xB7 ${claim.benchmarkSources.length} benchmark receipt(s), which are observations and never verdicts` : "");
+}
+function interactionLine(interaction) {
+  const { edge, direction, counterpart, counterpartPin } = interaction;
+  const arrow = direction === "subject-acts-on" ? `this skill ${edge.relation} ${counterpart.id}` : `${counterpart.id} ${edge.relation} this skill`;
+  const pin = counterpartPin === "verified" ? "counterpart content pin verified" : counterpartPin === "mismatched" ? "counterpart content pin MISMATCHED \u2014 this edge describes other bytes" : "counterpart content pin UNVERIFIED \u2014 applicability unknown";
+  return `${arrow} \xB7 support ${edge.support} \xB7 ONLY UNDER: ${edge.conditions} \xB7 ${pin}`;
+}
+function short(digest) {
+  return digest.slice(0, 12);
+}
+
+// packages/skill-summon/src/data/arbor-source.ts
 import { readFile as readFile3 } from "node:fs/promises";
 import { dirname as dirname2, join } from "node:path";
 import { fileURLToPath } from "node:url";
-var INDEX_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "skill-index.json");
+var ARBOR_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor");
+var cached2;
+function loadArborPublication() {
+  cached2 ??= readArborPublicationFromDisk();
+  return cached2;
+}
+async function readArborPublicationDir(root) {
+  const problems = [];
+  const runtimeIndex = await readJson(join(root, "runtime", "index.json"));
+  const edgeIndex = await readJson(join(root, "edges.json"));
+  if (runtimeIndex === void 0 || edgeIndex === void 0) {
+    return unavailableArborPublication(
+      runtimeIndex === void 0 && edgeIndex === void 0 ? [] : [
+        {
+          where: root,
+          detail: "an Arbor publication directory is present but is missing edges.json or runtime/index.json"
+        }
+      ]
+    );
+  }
+  const provenance = await readProvenance(join(root, "provenance.json"), problems);
+  const runtimes = [];
+  try {
+    assertArborRuntimeIndex(runtimeIndex);
+    for (const subject of runtimeIndex.subjects) {
+      const relative = join("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
+      const document = await readJson(join(root, relative));
+      if (document === void 0) {
+        problems.push({
+          where: relative,
+          detail: "listed in runtime/index.json but the aggregate document is missing or unreadable"
+        });
+        continue;
+      }
+      runtimes.push({ path: relative, document });
+    }
+  } catch {
+  }
+  const publication = readArborPublication({
+    provenance,
+    runtimeIndex,
+    edgeIndex,
+    runtimes
+  });
+  return problems.length === 0 ? publication : { ...publication, problems: [...publication.problems, ...problems] };
+}
+async function readArborPublicationFromDisk() {
+  for (const candidate of candidatePaths()) {
+    const publication = await readArborPublicationDir(candidate);
+    if (publication.state !== "unavailable" || publication.problems.length > 0) {
+      return publication;
+    }
+  }
+  return unavailableArborPublication();
+}
+function candidatePaths() {
+  const configured = process.env.ARBOR_PUBLICATION_PATH?.trim();
+  const here = dirname2(fileURLToPath(import.meta.url));
+  const paths = configured ? [configured] : [];
+  paths.push(join(here, "..", "data", "arbor"));
+  let directory = here;
+  for (let depth = 0; depth < 8; depth++) {
+    paths.push(join(directory, ARBOR_RELATIVE_PATH));
+    const parent = dirname2(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return paths;
+}
+async function readJson(path9) {
+  let raw;
+  try {
+    raw = await readFile3(path9, "utf8");
+  } catch {
+    return void 0;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+async function readProvenance(path9, problems) {
+  const value = await readJson(path9);
+  if (value === void 0 || value === null || typeof value !== "object" || Array.isArray(value)) {
+    problems.push({
+      where: "provenance.json",
+      detail: "no readable provenance record; the cached publication cannot be audited to an upstream revision"
+    });
+    return null;
+  }
+  const record2 = value;
+  const upstream = stringOr(record2.upstream, "unknown");
+  const commit = stringOr(record2.commit, "unknown");
+  const pathField = stringOr(record2.path, "unknown");
+  const capturedAt = stringOr(record2.capturedAt, "unknown");
+  const files = {};
+  if (record2.files && typeof record2.files === "object" && !Array.isArray(record2.files)) {
+    for (const [key, digest] of Object.entries(record2.files)) {
+      if (typeof digest === "string") files[key] = digest;
+    }
+  }
+  return { upstream, commit, path: pathField, capturedAt, files };
+}
+function stringOr(value, fallback) {
+  return typeof value === "string" && value.length > 0 ? value : fallback;
+}
+
+// packages/skill-summon/src/data/skill-index-source.ts
+import { readFile as readFile4 } from "node:fs/promises";
+import { dirname as dirname3, join as join2 } from "node:path";
+import { fileURLToPath as fileURLToPath2 } from "node:url";
+var INDEX_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "skill-index.json");
 var committed;
 function loadCommittedIndex() {
   committed ??= readCommittedIndex();
@@ -23143,11 +23882,11 @@ function loadCommittedIndex() {
 }
 async function readCommittedIndex() {
   const attempted = [];
-  for (const candidate of candidatePaths()) {
+  for (const candidate of candidatePaths2()) {
     attempted.push(candidate);
     let raw;
     try {
-      raw = await readFile3(candidate, "utf8");
+      raw = await readFile4(candidate, "utf8");
     } catch {
       continue;
     }
@@ -23168,15 +23907,15 @@ async function readCommittedIndex() {
 Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with \`npx tsx packages/core/scripts/build-skill-index.ts\`.`
   );
 }
-function candidatePaths() {
+function candidatePaths2() {
   const configured = process.env.SKILL_INDEX_PATH?.trim();
-  const here = dirname2(fileURLToPath(import.meta.url));
+  const here = dirname3(fileURLToPath2(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join(here, "..", "data", "skill-index.json"));
+  paths.push(join2(here, "..", "data", "skill-index.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join(directory, INDEX_RELATIVE_PATH));
-    const parent = dirname2(directory);
+    paths.push(join2(directory, INDEX_RELATIVE_PATH));
+    const parent = dirname3(directory);
     if (parent === directory) break;
     directory = parent;
   }
@@ -23685,6 +24424,7 @@ function renderSummonCard(skill, ranking) {
       );
     }
   }
+  if (skill.arbor) lines.push(...arborSubjectLines(skill.arbor));
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s \xB7 ${skill.cache}/${skill.cacheSource} \xB7 ${skill.fileCount} files`,
@@ -23699,7 +24439,7 @@ function renderSummonCard(skill, ranking) {
 
 // packages/skill-summon/src/summon/materialize.ts
 import { createHash as createHash2 } from "node:crypto";
-import { cp, lstat as lstat3, readFile as readFile4, readdir as readdir3 } from "node:fs/promises";
+import { cp, lstat as lstat3, readFile as readFile5, readdir as readdir3 } from "node:fs/promises";
 import path4 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
@@ -23714,10 +24454,10 @@ async function materializeSkillDir(sourceDir, destDir) {
   });
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
-  const skillContent = await readFile4(path4.join(destDir, "SKILL.md"));
-  const sha2562 = createHash2("sha256").update(skillContent).digest("hex");
+  const skillContent = await readFile5(path4.join(destDir, "SKILL.md"));
+  const sha2563 = createHash2("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
-  return { path: destDir, materializeSeconds, fileCount, sha256: sha2562 };
+  return { path: destDir, materializeSeconds, fileCount, sha256: sha2563 };
 }
 async function rejectSymlinks(dir) {
   const root = await lstat3(dir);
@@ -23752,7 +24492,7 @@ import {
   cp as cp2,
   lstat as lstat4,
   mkdir as mkdir3,
-  readFile as readFile5,
+  readFile as readFile6,
   readdir as readdir4,
   rename,
   rm as rm4,
@@ -23786,7 +24526,7 @@ var PayloadCache = class {
     const payload = path5.join(entryRoot, PAYLOAD_DIR);
     try {
       const metadata = JSON.parse(
-        await readFile5(path5.join(entryRoot, METADATA_FILE), "utf8")
+        await readFile6(path5.join(entryRoot, METADATA_FILE), "utf8")
       );
       if (metadata.key !== cacheKey(identity)) return void 0;
       if (!(await stat3(path5.join(payload, "SKILL.md"))).isFile())
@@ -23996,6 +24736,18 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   const ranking = disclose(resolved, decision);
   const registry2 = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
+  const publication = await loadArborPublication();
+  const arbor = summonArborDisclosure(publication, resolved);
+  const arborFor = (skillId) => consumeArbor(publication, {
+    skillId,
+    // This runtime holds NO canonical content pin for a retrieval candidate:
+    // the Gaia named projection publishes no per-skill `contentSha256`, and a
+    // materialized payload digest is a different artifact entirely. Passing
+    // null is what keeps the join honestly unknown instead of manufacturing a
+    // match out of an id.
+    contentSha256: null,
+    canonicalSource: arbor.corpus.canonical
+  });
   if (decision.noMatch) {
     const outcome2 = {
       query: trimmedQuery,
@@ -24010,6 +24762,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24030,7 +24783,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
         ...hit.doc.level ? { level: hit.doc.level } : {},
         ...hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {},
         source: resolved.source,
-        retrieval: disclosures.get(hit.doc.id)
+        retrieval: disclosures.get(hit.doc.id),
+        arbor: arborFor(hit.doc.id)
       })),
       noMatch: null,
       filtered: decision.filtered,
@@ -24039,6 +24793,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24051,7 +24806,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     registry: registry2,
     payloadCache: new PayloadCache(),
     ranking,
-    disclosures
+    disclosures,
+    arborFor
   };
   const summoned = [];
   const skipped = [];
@@ -24085,6 +24841,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     suites,
     sessionRoot: session.root,
     ranking,
+    arbor,
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt)
   };
@@ -24105,6 +24862,25 @@ function disclose(resolved, decision) {
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source
+  };
+}
+function summonArborDisclosure(publication, resolved) {
+  const base = describeArborPublication(publication);
+  const workflow = resolved.index.sourceWorkflow;
+  const canonical2 = resolved.origin === "committed" && typeof workflow === "string" && workflow.startsWith("gaia-skill-tree/");
+  const revision = resolved.index.sourceRevision ?? null;
+  const publicationCommit = publication.provenance?.commit ?? null;
+  const sameUpstreamRevision = revision === null || publicationCommit === null || publicationCommit === "unknown" ? null : revision === publicationCommit;
+  let note = base.note;
+  if (!canonical2) {
+    note += " These candidates are outside the canonical corpus that projection describes, so no Arbor record can apply to them.";
+  } else if (sameUpstreamRevision === false) {
+    note += ` The retrieval corpus (${revision}) and the Arbor publication (${publicationCommit}) are pinned to different upstream revisions; a shared id across the two is not evidence of shared content.`;
+  }
+  return {
+    ...base,
+    note,
+    corpus: { source: resolved.source, revision, canonical: canonical2, sameUpstreamRevision }
   };
 }
 function disclosureById(decision, query) {
@@ -24300,6 +25076,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24430,6 +25207,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24697,8 +25475,8 @@ function uriFromSegments(segments) {
   if (segments.length < 2 || segments.some((segment) => !SAFE_SEGMENT.test(segment))) {
     throw new Error("Cannot create an MCP skill URI from unsafe path segments.");
   }
-  const [authority, ...pathSegments] = segments;
-  return `skill://${authority.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+  const [authority2, ...pathSegments] = segments;
+  return `skill://${authority2.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
 }
 function validateManifest(skillUriValue, resources) {
   if (resources === "dynamic") return;
@@ -24868,6 +25646,28 @@ var summonOutputSchema = external_exports.object({
     stale: external_exports.boolean(),
     indexOrigin: external_exports.enum(["committed", "fetched"]),
     source: external_exports.string()
+  }),
+  // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
+  // the wire, not only on the printed card, so a controller reading
+  // `structuredContent` sees the same unknowns a human does. The lens reports
+  // are kept as `unknown` here for the same reason the rest of this schema is:
+  // the authored shape lives in `skill-zero`, and restating it in zod would give
+  // the wire a second, drifting copy of the contract.
+  arbor: external_exports.object({
+    publicationState: external_exports.enum(["loaded", "unavailable", "unreadable"]),
+    provenance: external_exports.unknown().nullable(),
+    contracts: external_exports.record(external_exports.string(), external_exports.string()),
+    subjectsPublished: external_exports.number(),
+    edgesPublished: external_exports.number(),
+    edgeCoverage: external_exports.unknown().nullable(),
+    problems: external_exports.array(external_exports.object({ where: external_exports.string(), detail: external_exports.string() })),
+    note: external_exports.string(),
+    corpus: external_exports.object({
+      source: external_exports.string(),
+      revision: external_exports.string().nullable(),
+      canonical: external_exports.boolean(),
+      sameUpstreamRevision: external_exports.boolean().nullable()
+    })
   }),
   cards: external_exports.array(external_exports.string()),
   totalSeconds: external_exports.number()

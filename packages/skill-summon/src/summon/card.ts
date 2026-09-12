@@ -1,3 +1,5 @@
+import { arborSubjectLines } from "skill-zero";
+
 import { displayTrustFields } from "../trust.js";
 import type { RankingDisclosure } from "./summon.js";
 import type { InstalledSkill } from "./session.js";
@@ -68,6 +70,12 @@ export function renderSummonCard(
       );
     }
   }
+
+  // SPEC INV-13: the surface that made the decision says which behavioral
+  // lenses it had. Printed for every skill, including when the answer is that
+  // none could be consulted — an unknown rendered as a blank line is exactly
+  // the misreport this rule exists to prevent.
+  if (skill.arbor) lines.push(...arborSubjectLines(skill.arbor));
 
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
