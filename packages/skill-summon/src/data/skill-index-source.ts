@@ -96,6 +96,14 @@ export type ResolvedIndex = {
   source: string;
   /** "committed" needed no network; "fetched" reached the named source. */
   origin: "committed" | "fetched";
+  /** Source class gates Tree-only installability evidence. */
+  sourceKind?: "tree" | "fleet" | undefined;
+  /** Optional evidence adapter status, disclosed without affecting retrieval. */
+  installability?: {
+    status: "not-configured" | "applied" | "not-applicable" | "unavailable";
+    projectionIndexPath?: string | undefined;
+    warning?: string | undefined;
+  } | undefined;
 };
 
 export type ResolveIndexOptions = {
@@ -128,7 +136,12 @@ export async function resolveIndex({
       ...(fetchFn ? { fetchFn } : {}),
     });
     if (sameSource(configured.sourceUrl, committedIndex.source)) {
-      return { index: committedIndex, source: committedIndex.source, origin: "committed" };
+      return {
+        index: committedIndex,
+        source: committedIndex.source,
+        origin: "committed",
+        sourceKind: "tree",
+      };
     }
     return fetchIndex(configured.sourceUrl, environment, fetchFn);
   }
@@ -138,7 +151,12 @@ export async function resolveIndex({
     throw new GaiaDataError("summon(source) must not be empty.");
   }
   if (sameSource(requested, committedIndex.source)) {
-    return { index: committedIndex, source: committedIndex.source, origin: "committed" };
+    return {
+      index: committedIndex,
+      source: committedIndex.source,
+      origin: "committed",
+      sourceKind: "tree",
+    };
   }
   return fetchIndex(expandSource(requested), environment, fetchFn);
 }
@@ -190,6 +208,7 @@ async function fetchIndex(
     index: indexFromSnapshot(snapshot, resolution.sourceUrl),
     source: resolution.sourceUrl,
     origin: "fetched",
+    sourceKind: resolution.kind,
   };
 }
 
@@ -210,6 +229,7 @@ function toProjectionSkill(skill: NamedSkill): ProjectionSkill {
     ...(skill.trustMagnitude === undefined ? {} : { trustMagnitude: skill.trustMagnitude }),
     ...(skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {}),
     ...(skill.installable === false ? { installable: false } : {}),
+    ...(skill.installability ? { installability: skill.installability } : {}),
     links: skill.links,
   };
 }

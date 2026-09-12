@@ -14,6 +14,7 @@ import {
   type IndexedSkill,
   type SkillIndex,
 } from "./schema.js";
+import type { InstallabilityAssessment } from "./installability.js";
 
 /** The subset of the upstream named projection the index is built from. */
 export type ProjectionSkill = {
@@ -34,6 +35,8 @@ export type ProjectionSkill = {
   suiteComponents?: string[] | undefined;
   /** Top-level registry-only guard, distinct from `links.installable`. */
   installable?: boolean | undefined;
+  /** Optional consumer-side installability assessment. */
+  installability?: InstallabilityAssessment | undefined;
 };
 
 export type NamedProjection = {
@@ -122,9 +125,10 @@ export function expansionFingerprint(skill: ProjectionSkill): string {
 }
 
 /**
- * `links.github` must point at a SKILL.md (or a raw host) for the materializer
- * to have anything to fetch. Mirrors `skill-summon`'s `isInstallable`; the two
- * are pinned together by `packages/skill-summon/test/index-parity.test.ts`.
+ * Legacy compatibility hint: `links.github` must point at a SKILL.md (or a
+ * raw host) for the old index/baseline path to have anything to fetch. The
+ * production summon path consumes scoped upstream installability evidence
+ * instead; this helper remains pinned to `skill-summon` for baseline parity.
  */
 export function isInstallableLink(links: Record<string, unknown> | undefined): boolean {
   if (!links) return false;
@@ -144,6 +148,15 @@ export function isInstallableLink(links: Record<string, unknown> | undefined): b
  */
 export function isReachable(doc: IndexedSkill): boolean {
   if (doc.registryOnly) return false;
+  // Once the consumer has an installability assessment, only an exact,
+  // verified upstream negative withholds. Unknown is deliberately reachable:
+  // absence or stale/operational evidence is not proof of unreachability.
+  if (doc.installability !== undefined) {
+    return doc.installability.applicability !== "verified" ||
+      doc.installability.state !== "not-materializable";
+  }
+  // Legacy indexes remain readable for compatibility. Production summon
+  // decorates them with an explicit unknown assessment before deciding.
   return doc.installable || doc.suiteComponents.length > 0;
 }
 
@@ -268,6 +281,7 @@ function toIndexedSkill(
     installable: isInstallableLink(links),
     suiteComponents: [...(skill.suiteComponents ?? [])],
     registryOnly: skill.installable === false,
+    ...(skill.installability ? { installability: skill.installability } : {}),
     classified,
     ...(skill.level ? { level: skill.level } : {}),
     trust: {

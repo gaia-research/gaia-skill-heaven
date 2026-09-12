@@ -22497,6 +22497,137 @@ var OPERATOR_EVENT_TYPE_SET = new Set(OPERATOR_EVENT_TYPES);
 var RUNG_SET = new Set(STEERING_RUNGS);
 var SEARCH_STATE_SET = new Set(SEARCH_STATES);
 
+// packages/core/src/retrieval/installability.ts
+var INSTALLABILITY_STATES = [
+  "materializable",
+  "not-materializable",
+  "unknown"
+];
+var INSTALLABILITY_REASONS = [
+  "gaia-materialized",
+  "no-source",
+  "intrinsic-content-failure",
+  "subject-changed",
+  "route-changed",
+  "not-observed",
+  "inaccessible-at-check",
+  "unclassified-install-failure",
+  "timeout",
+  "unexpected-refusal",
+  "contradictory-observation",
+  "suite-component-failed",
+  "ambiguous-observation"
+];
+function unknownInstallabilityAssessment(projectionIndexPath = null, applicabilityReason = "not-observed", upstream = null) {
+  return {
+    state: "unknown",
+    reason: "unverified-applicability",
+    applicability: "unknown",
+    applicabilityReason,
+    projectionIndexPath,
+    upstream
+  };
+}
+function withInstallability(index, assessments) {
+  return {
+    ...index,
+    docs: index.docs.map((doc) => ({
+      ...doc,
+      installability: assessments.get(doc.id)
+    }))
+  };
+}
+function withUnknownInstallability(index, projectionIndexPath = null, applicabilityReason = "not-observed") {
+  const assessments = new Map(
+    index.docs.map((doc) => [
+      doc.id,
+      unknownInstallabilityAssessment(projectionIndexPath, applicabilityReason)
+    ])
+  );
+  return withInstallability(index, assessments);
+}
+function isInstallabilityState(value) {
+  return typeof value === "string" && INSTALLABILITY_STATES.includes(value);
+}
+function isInstallabilityReason(value) {
+  return typeof value === "string" && INSTALLABILITY_REASONS.includes(value);
+}
+function assertInstallabilityAssessment(value, label = "Installability assessment") {
+  const assessment = asRecord(value, label);
+  if (!isInstallabilityState(assessment.state)) {
+    throw new Error(`${label}.state is invalid.`);
+  }
+  if (assessment.reason !== "unverified-applicability" && !isInstallabilityReason(assessment.reason)) {
+    throw new Error(`${label}.reason is invalid.`);
+  }
+  if (assessment.applicability !== "verified" && assessment.applicability !== "unknown") {
+    throw new Error(`${label}.applicability is invalid.`);
+  }
+  const applicabilityReasons = [
+    "matched",
+    "not-observed",
+    "source-mismatch",
+    "content-mismatch",
+    "revision-unverified",
+    "revision-mismatch",
+    "fleet-source",
+    "invalid-context"
+  ];
+  if (!applicabilityReasons.includes(String(assessment.applicabilityReason))) {
+    throw new Error(`${label}.applicabilityReason is invalid.`);
+  }
+  if (assessment.projectionIndexPath !== null && typeof assessment.projectionIndexPath !== "string") {
+    throw new Error(`${label}.projectionIndexPath must be a string or null.`);
+  }
+  if (assessment.upstream !== null) {
+    assertInstallabilityProjectionSkill(assessment.upstream, `${label}.upstream`);
+  }
+}
+function assertInstallabilityProjectionSkill(value, label = "Installability projection skill") {
+  const skill = asRecord(value, label);
+  if (!isInstallabilityState(skill.state)) throw new Error(`${label}.state is invalid.`);
+  if (!isInstallabilityReason(skill.reason)) throw new Error(`${label}.reason is invalid.`);
+  optionalSha(skill.observationDigest, `${label}.observationDigest`);
+  optionalTimestamp(skill.observedAt, `${label}.observedAt`);
+  optionalRoute(skill.currentSourceRoute, `${label}.currentSourceRoute`);
+  optionalSha(skill.currentSkillContentSha256, `${label}.currentSkillContentSha256`);
+  optionalRoute(skill.observedSourceRoute, `${label}.observedSourceRoute`);
+  optionalSha(skill.observedSkillContentSha256, `${label}.observedSkillContentSha256`);
+  optionalRevision(skill.resolvedRevision, `${label}.resolvedRevision`);
+  optionalSha(skill.deliveredContentSha256, `${label}.deliveredContentSha256`);
+}
+function asRecord(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value;
+}
+function optionalSha(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{64}$/iu.test(value))) {
+    throw new Error(`${label} must be a sha256 string or null.`);
+  }
+}
+function optionalRevision(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{40}$/iu.test(value))) {
+    throw new Error(`${label} must be a revision string or null.`);
+  }
+}
+function optionalTimestamp(value, label) {
+  if (value !== null && (typeof value !== "string" || !Number.isFinite(Date.parse(value)))) {
+    throw new Error(`${label} must be an ISO timestamp or null.`);
+  }
+}
+function optionalRoute(value, label) {
+  if (value === null) return;
+  const route = asRecord(value, label);
+  for (const key of ["url", "owner", "repo", "subpath", "entrypoint", "installSubpath"]) {
+    if (typeof route[key] !== "string") throw new Error(`${label}.${key} must be a string.`);
+  }
+  if (route.ref !== null && typeof route.ref !== "string") {
+    throw new Error(`${label}.ref must be a string or null.`);
+  }
+}
+
 // packages/core/src/retrieval/schema.ts
 var SKILL_INDEX_SCHEMA = "gaia.skill-index/v2";
 var STALE_AFTER_DAYS = 30;
@@ -22514,7 +22645,7 @@ var SkillIndexError = class extends Error {
   name = "SkillIndexError";
 };
 function assertSkillIndex(value) {
-  const index = asRecord(value, "Skill index");
+  const index = asRecord2(value, "Skill index");
   if (index.schema !== SKILL_INDEX_SCHEMA) {
     throw new SkillIndexError(
       `Skill index advertises unsupported schema ${String(index.schema)}; this build reads ${SKILL_INDEX_SCHEMA}.`
@@ -22529,12 +22660,12 @@ function assertSkillIndex(value) {
   optionalString(index, "sourceRevision", "Skill index");
   optionalString(index, "sourceVersion", "Skill index");
   optionalString(index, "sourceWorkflow", "Skill index");
-  const builder = asRecord(index.builder, "Skill index builder");
+  const builder = asRecord2(index.builder, "Skill index builder");
   requiredString(builder, "version", "Skill index builder");
   if (builder.expansion !== "none" && builder.expansion !== "generated") {
     throw new SkillIndexError("Skill index builder.expansion must be 'none' or 'generated'.");
   }
-  const stats = asRecord(index.stats, "Skill index stats");
+  const stats = asRecord2(index.stats, "Skill index stats");
   for (const field of [
     "docs",
     "awaitingClassification",
@@ -22552,14 +22683,14 @@ function assertSkillIndex(value) {
       `Skill index stats.docs is ${String(stats.docs)}, but the artifact contains ${docs.length} documents.`
     );
   }
-  const avgFieldLen = asRecord(stats.avgFieldLen, "Skill index stats.avgFieldLen");
+  const avgFieldLen = asRecord2(stats.avgFieldLen, "Skill index stats.avgFieldLen");
   for (const field of INDEX_FIELDS) finiteNonNegative(avgFieldLen[field], `Skill index stats.avgFieldLen.${field}`);
   if (stats.floor !== null) finiteNonNegative(stats.floor, "Skill index stats.floor");
   if (stats.floorCalibration !== null) validateFloorCalibration(stats.floorCalibration);
   const ids = /* @__PURE__ */ new Set();
   let awaitingClassification = 0;
   for (const [position, rawDoc] of docs.entries()) {
-    const doc = asRecord(rawDoc, `Skill index document ${position}`);
+    const doc = asRecord2(rawDoc, `Skill index document ${position}`);
     const id = requiredString(doc, "id", `Skill index document ${position}`);
     if (!id.includes("/") || /\s/u.test(id)) {
       throw new SkillIndexError(`Indexed skill ${id} has an invalid id.`);
@@ -22573,7 +22704,7 @@ function assertSkillIndex(value) {
     optionalString(doc, "genericSkillRef", `Indexed skill ${id}`);
     optionalString(doc, "catalogRef", `Indexed skill ${id}`);
     stringArray(doc.tags, `Indexed skill ${id}.tags`);
-    const links = asRecord(doc.links, `Indexed skill ${id}.links`);
+    const links = asRecord2(doc.links, `Indexed skill ${id}.links`);
     optionalString(links, "github", `Indexed skill ${id}.links`);
     if (!isInvocation(doc.invocation)) {
       throw new SkillIndexError(`Indexed skill ${id} has an invalid invocation.`);
@@ -22583,12 +22714,15 @@ function assertSkillIndex(value) {
     requiredBoolean(doc, "registryOnly", `Indexed skill ${id}`);
     const classified = requiredBoolean(doc, "classified", `Indexed skill ${id}`);
     if (!classified) awaitingClassification++;
+    if (doc.installability !== void 0) {
+      assertInstallabilityAssessment(doc.installability, `Indexed skill ${id}.installability`);
+    }
     optionalString(doc, "level", `Indexed skill ${id}`);
-    const trust = asRecord(doc.trust, `Indexed skill ${id}.trust`);
+    const trust = asRecord2(doc.trust, `Indexed skill ${id}.trust`);
     optionalString(trust, "level", `Indexed skill ${id}.trust`);
     optionalString(trust, "grade", `Indexed skill ${id}.trust`);
     if (trust.trustNumber !== void 0) finiteNumber(trust.trustNumber, `Indexed skill ${id}.trust.trustNumber`);
-    const retrieval = asRecord(doc.retrieval, `Indexed skill ${id}.retrieval`);
+    const retrieval = asRecord2(doc.retrieval, `Indexed skill ${id}.retrieval`);
     stringArray(retrieval.expansions, `Indexed skill ${id}.retrieval.expansions`);
     stringArray(retrieval.terms, `Indexed skill ${id}.retrieval.terms`);
     if (retrieval.vector !== null) finiteNumberArray(retrieval.vector, `Indexed skill ${id}.retrieval.vector`);
@@ -22604,7 +22738,7 @@ function assertSkillIndex(value) {
     );
   }
 }
-function asRecord(value, label) {
+function asRecord2(value, label) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new SkillIndexError(`${label} must be an object.`);
   }
@@ -22660,7 +22794,7 @@ function isTimestamp(value) {
   return Number.isFinite(Date.parse(value));
 }
 function validateFloorCalibration(value) {
-  const calibration = asRecord(value, "Skill index stats.floorCalibration");
+  const calibration = asRecord2(value, "Skill index stats.floorCalibration");
   finiteNonNegative(calibration.answerableAdmitted, "Skill index stats.floorCalibration.answerableAdmitted");
   finiteNonNegative(calibration.unanswerableRejected, "Skill index stats.floorCalibration.unanswerableRejected");
   if (calibration.answerableAdmitted > 1 || calibration.unanswerableRejected > 1) {
@@ -22751,6 +22885,9 @@ function isInstallableLink(links) {
 }
 function isReachable(doc) {
   if (doc.registryOnly) return false;
+  if (doc.installability !== void 0) {
+    return doc.installability.applicability !== "verified" || doc.installability.state !== "not-materializable";
+  }
   return doc.installable || doc.suiteComponents.length > 0;
 }
 function fieldText(doc, field) {
@@ -22849,6 +22986,7 @@ function toIndexedSkill(skill, expansion, classified) {
     installable: isInstallableLink(links),
     suiteComponents: [...skill.suiteComponents ?? []],
     registryOnly: skill.installable === false,
+    ...skill.installability ? { installability: skill.installability } : {},
     classified,
     ...skill.level ? { level: skill.level } : {},
     trust: {
@@ -23088,6 +23226,12 @@ function decide({
 function withholdReason(doc, surface) {
   if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
   if (!isReachable(doc)) {
+    const evidence = doc.installability;
+    if (evidence?.applicability === "verified" && evidence.state === "not-materializable") {
+      const upstream = evidence.upstream;
+      const provenance = upstream?.observationDigest ? `; observation ${upstream.observationDigest}` : "";
+      return `not materializable \u2014 upstream Tree installability reason: ${evidence.reason}${provenance}`;
+    }
     return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
   }
   if (surface === "heaven" && doc.invocation === "model") {
@@ -23195,7 +23339,12 @@ async function resolveIndex({
       ...fetchFn ? { fetchFn } : {}
     });
     if (sameSource(configured.sourceUrl, committedIndex.source)) {
-      return { index: committedIndex, source: committedIndex.source, origin: "committed" };
+      return {
+        index: committedIndex,
+        source: committedIndex.source,
+        origin: "committed",
+        sourceKind: "tree"
+      };
     }
     return fetchIndex(configured.sourceUrl, environment, fetchFn);
   }
@@ -23204,7 +23353,12 @@ async function resolveIndex({
     throw new GaiaDataError("summon(source) must not be empty.");
   }
   if (sameSource(requested, committedIndex.source)) {
-    return { index: committedIndex, source: committedIndex.source, origin: "committed" };
+    return {
+      index: committedIndex,
+      source: committedIndex.source,
+      origin: "committed",
+      sourceKind: "tree"
+    };
   }
   return fetchIndex(expandSource(requested), environment, fetchFn);
 }
@@ -23240,7 +23394,8 @@ async function fetchIndex(sourceUrl, env, fetchFn) {
   return {
     index: indexFromSnapshot(snapshot, resolution.sourceUrl),
     source: resolution.sourceUrl,
-    origin: "fetched"
+    origin: "fetched",
+    sourceKind: resolution.kind
   };
 }
 function toProjectionSkill(skill) {
@@ -23260,6 +23415,7 @@ function toProjectionSkill(skill) {
     ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
     ...skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {},
     ...skill.installable === false ? { installable: false } : {},
+    ...skill.installability ? { installability: skill.installability } : {},
     links: skill.links
   };
 }
@@ -23290,12 +23446,14 @@ var GaiaService = class {
   #maxDataAgeMs;
   #serverVersion;
   #sourceUrl;
+  #installabilityAdapter;
   constructor(source, options = {}) {
     this.#source = source;
     this.#now = options.now ?? (() => /* @__PURE__ */ new Date());
     this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
     this.#serverVersion = options.serverVersion ?? VERSION;
     this.#sourceUrl = options.sourceUrl;
+    this.#installabilityAdapter = options.installabilityAdapter;
   }
   /**
    * The index summon ranks against (SPEC §2.2, PLAN 1.2).
@@ -23307,16 +23465,58 @@ var GaiaService = class {
    * a quiet fallback to the configured source (SPEC §5.1).
    */
   async skillIndex(override) {
-    if (override !== void 0) return resolveIndex({ source: override });
+    if (override !== void 0) {
+      return this.#decorateInstallability(await resolveIndex({ source: override }));
+    }
     if (this.#sourceUrl !== void 0) {
       const committed2 = await loadCommittedIndex();
       if (sameSource(this.#sourceUrl, committed2.source)) {
-        return { index: committed2, source: committed2.source, origin: "committed" };
+        return this.#decorateInstallability({
+          index: committed2,
+          source: committed2.source,
+          origin: "committed",
+          sourceKind: "tree"
+        });
       }
     }
     const snapshot = await this.#source.load();
     const sourceUrl = this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
-    return { index: indexFromSnapshot(snapshot, sourceUrl), source: sourceUrl, origin: "fetched" };
+    return this.#decorateInstallability({
+      index: indexFromSnapshot(snapshot, sourceUrl),
+      source: sourceUrl,
+      origin: "fetched",
+      sourceKind: snapshot.source.kind ?? "tree"
+    });
+  }
+  async #decorateInstallability(resolved) {
+    const unknown2 = withUnknownInstallability(resolved.index);
+    if (this.#installabilityAdapter === void 0) {
+      return {
+        ...resolved,
+        index: unknown2,
+        installability: { status: "not-configured" }
+      };
+    }
+    try {
+      const applied = await this.#installabilityAdapter.apply(unknown2, {
+        source: resolved.source,
+        sourceKind: resolved.sourceKind ?? "tree"
+      });
+      return {
+        ...resolved,
+        index: applied.index,
+        installability: applied.status
+      };
+    } catch (error2) {
+      return {
+        ...resolved,
+        index: unknown2,
+        installability: {
+          status: "unavailable",
+          warning: error2 instanceof Error ? error2.message : String(error2)
+        }
+      };
+    }
   }
   async search(input) {
     const query = input.query.trim();
@@ -23670,6 +23870,17 @@ function renderSummonCard(skill, ranking) {
     lines.push(
       "  Name mismatch: this is NOT the skill your query named \u2014 it is the best relevance match."
     );
+  }
+  if (skill.installability) {
+    if (skill.installability.applicability === "verified") {
+      lines.push(
+        `  Installability: ${skill.installability.state} \xB7 ${skill.installability.reason}`
+      );
+    } else {
+      lines.push(
+        `  Installability: unknown \xB7 upstream evidence applicability is unverified (${skill.installability.applicabilityReason})`
+      );
+    }
   }
   lines.push(
     `  Source: ${skill.source ?? ranking.source}`,
@@ -24029,6 +24240,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
         description: hit.doc.description,
         ...hit.doc.level ? { level: hit.doc.level } : {},
         ...hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {},
+        ...hit.doc.installability ? { installability: hit.doc.installability } : {},
         source: resolved.source,
         retrieval: disclosures.get(hit.doc.id)
       })),
@@ -24094,17 +24306,19 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
 function disclose(resolved, decision) {
   const { index } = resolved;
   const floorNote = decision.floor === null ? "no calibrated relevance floor in this index \u2014 summon cannot yet decline on relevance" : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
+  const installabilityNote = resolved.installability?.status === "applied" ? `Tree installability projection applied from ${resolved.installability.projectionIndexPath ?? "an unspecified path"}; only exact verified negatives can withhold.` : resolved.installability?.status === "unavailable" ? `Optional Tree installability projection unavailable; materializability is unknown and summon continued offline (${resolved.installability.warning ?? "source error"}).` : resolved.installability?.status === "not-applicable" ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative." : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied.`,
+    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied. ` + installabilityNote,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
     indexOrigin: resolved.origin,
-    source: resolved.source
+    source: resolved.source,
+    ...resolved.installability ? { installability: resolved.installability } : {}
   };
 }
 function disclosureById(decision, query) {
@@ -24139,6 +24353,7 @@ function toNamedSkill(doc) {
     links: { ...doc.links },
     ...doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {},
     evidence: [],
+    ...doc.installability ? { installability: doc.installability } : {},
     ...doc.trust.trustNumber === void 0 ? {} : { trustMagnitude: doc.trust.trustNumber },
     ...doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {},
     ...doc.registryOnly ? { installable: false } : {}
@@ -24286,6 +24501,7 @@ async function installSingle(skill, ctx, viaSuite) {
       name: skill.name,
       contributor: skill.contributor,
       ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.installability ? { installability: skill.installability } : {},
       ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
@@ -24416,6 +24632,7 @@ async function installSingle(skill, ctx, viaSuite) {
       name: skill.name,
       contributor: skill.contributor,
       ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.installability ? { installability: skill.installability } : {},
       ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
@@ -24867,7 +25084,12 @@ var summonOutputSchema = external_exports.object({
     indexAgeDays: external_exports.number().nullable(),
     stale: external_exports.boolean(),
     indexOrigin: external_exports.enum(["committed", "fetched"]),
-    source: external_exports.string()
+    source: external_exports.string(),
+    installability: external_exports.object({
+      status: external_exports.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
+      projectionIndexPath: external_exports.string().optional(),
+      warning: external_exports.string().optional()
+    }).optional()
   }),
   cards: external_exports.array(external_exports.string()),
   totalSeconds: external_exports.number()

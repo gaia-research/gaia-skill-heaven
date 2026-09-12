@@ -1,3 +1,5 @@
+import type { InstallabilityAssessment } from "skill-zero";
+
 export const TREE_CONTRACT_VERSION = "gaia-public-v1" as const;
 
 export type GaiaEvidence = {
@@ -68,6 +70,8 @@ export type NamedSkill = {
   updatedAt?: string | undefined;
   /** Registry-only guard: `false` means this skill must refuse to install. */
   installable?: boolean | undefined;
+  /** Consumer-side Tree installability evidence, never used for ranking. */
+  installability?: InstallabilityAssessment | undefined;
   /** Skill ids/catalogRefs/bare-names installed recursively as a suite. */
   suiteComponents?: string[] | undefined;
 };

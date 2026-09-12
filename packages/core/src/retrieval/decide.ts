@@ -120,6 +120,14 @@ export function decide({
 function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | null {
   if (doc.registryOnly) return "registry-only — the tree marks this skill installable: false";
   if (!isReachable(doc)) {
+    const evidence = doc.installability;
+    if (evidence?.applicability === "verified" && evidence.state === "not-materializable") {
+      const upstream = evidence.upstream;
+      const provenance = upstream?.observationDigest
+        ? `; observation ${upstream.observationDigest}`
+        : "";
+      return `not materializable — upstream Tree installability reason: ${evidence.reason}${provenance}`;
+    }
     return doc.links.github
       ? "not installable — links.github does not resolve to a SKILL.md"
       : "not installable — the tree publishes no links.github and no suiteComponents";

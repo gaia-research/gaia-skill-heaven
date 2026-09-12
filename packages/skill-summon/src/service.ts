@@ -1,4 +1,8 @@
-import { normalize, scoreMatch } from "skill-zero";
+import {
+  normalize,
+  scoreMatch,
+  withUnknownInstallability,
+} from "skill-zero";
 import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
 
 import type { GaiaRegistrySource } from "./data/source.js";
@@ -9,6 +13,7 @@ import {
   sameSource,
   type ResolvedIndex,
 } from "./data/skill-index-source.js";
+import type { GaiaInstallabilityAdapter } from "./data/installability.js";
 import {
   TREE_CONTRACT_VERSION,
   flattenNamedSkills,
@@ -39,6 +44,8 @@ export type GaiaServiceOptions = {
    * build from whatever this source returns".
    */
   sourceUrl?: string | undefined;
+  /** Optional Tree installability projection. Never fetched unless supplied. */
+  installabilityAdapter?: Pick<GaiaInstallabilityAdapter, "apply"> | undefined;
 };
 
 type ScoredResult = SearchResultItem & { score: number };
@@ -49,6 +56,9 @@ export class GaiaService {
   readonly #maxDataAgeMs: number;
   readonly #serverVersion: string;
   readonly #sourceUrl: string | undefined;
+  readonly #installabilityAdapter:
+    | Pick<GaiaInstallabilityAdapter, "apply">
+    | undefined;
 
   constructor(source: GaiaRegistrySource, options: GaiaServiceOptions = {}) {
     this.#source = source;
@@ -56,6 +66,7 @@ export class GaiaService {
     this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
     this.#serverVersion = options.serverVersion ?? VERSION;
     this.#sourceUrl = options.sourceUrl;
+    this.#installabilityAdapter = options.installabilityAdapter;
   }
 
   /**
@@ -68,19 +79,68 @@ export class GaiaService {
    * a quiet fallback to the configured source (SPEC §5.1).
    */
   async skillIndex(override?: string | undefined): Promise<ResolvedIndex> {
-    if (override !== undefined) return resolveIndex({ source: override });
+    if (override !== undefined) {
+      return this.#decorateInstallability(await resolveIndex({ source: override }));
+    }
 
     if (this.#sourceUrl !== undefined) {
       const committed = await loadCommittedIndex();
       if (sameSource(this.#sourceUrl, committed.source)) {
-        return { index: committed, source: committed.source, origin: "committed" };
+        return this.#decorateInstallability({
+          index: committed,
+          source: committed.source,
+          origin: "committed",
+          sourceKind: "tree",
+        });
       }
     }
 
     const snapshot = await this.#source.load();
     const sourceUrl =
       this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
-    return { index: indexFromSnapshot(snapshot, sourceUrl), source: sourceUrl, origin: "fetched" };
+    return this.#decorateInstallability({
+      index: indexFromSnapshot(snapshot, sourceUrl),
+      source: sourceUrl,
+      origin: "fetched",
+      sourceKind: snapshot.source.kind ?? "tree",
+    });
+  }
+
+  async #decorateInstallability(resolved: ResolvedIndex): Promise<ResolvedIndex> {
+    // The URL heuristic remains only as a compatibility field on old indexes.
+    // Every production summon decision gets an explicit unknown assessment
+    // first, so absent or unverified Tree evidence cannot become unreachable.
+    const unknown = withUnknownInstallability(resolved.index);
+    if (this.#installabilityAdapter === undefined) {
+      return {
+        ...resolved,
+        index: unknown,
+        installability: { status: "not-configured" },
+      };
+    }
+
+    try {
+      const applied = await this.#installabilityAdapter.apply(unknown, {
+        source: resolved.source,
+        sourceKind: resolved.sourceKind ?? "tree",
+      });
+      return {
+        ...resolved,
+        index: applied.index,
+        installability: applied.status,
+      };
+    } catch (error) {
+      // Optional evidence is never allowed to destroy a successful offline
+      // summon, preview, or no-match. The safe degraded output is unknown.
+      return {
+        ...resolved,
+        index: unknown,
+        installability: {
+          status: "unavailable",
+          warning: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
   }
 
   async search(input: SearchInput): Promise<SearchResult> {
@@ -464,14 +524,18 @@ export function starCount(level: string | undefined): number {
  * still `isInstallable`; this is the ranking gate.
  */
 export function isSummonable(skill: NamedSkill): boolean {
-  // The registry-only guard lives at the top level, while `isInstallable`
-  // reads `links.installable` — so before this check a registry-only skill
-  // ranked, was chosen, and only then refused inside installSingle. Now it is
-  // withheld with a reason instead of wasting the summon.
+  // The registry-only guard is an explicit registry refusal, not a URL-shape
+  // inference. Once scoped upstream evidence is present, unknown remains
+  // summonable; only a verified not-materializable result withholds.
   if (skill.installable === false) return false;
+  if (skill.installability !== undefined) {
+    return skill.installability.applicability !== "verified" ||
+      skill.installability.state !== "not-materializable";
+  }
   return isInstallable(skill) || (skill.suiteComponents?.length ?? 0) > 0;
 }
 
+/** Legacy link-shape helper used by the compatibility search/baseline surface. */
 export function isInstallable(skill: NamedSkill): boolean {
   if (skill.links.installable === false) return false;
   return (

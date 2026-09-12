@@ -85,6 +85,13 @@ const summonOutputSchema = z.object({
     stale: z.boolean(),
     indexOrigin: z.enum(["committed", "fetched"]),
     source: z.string(),
+    installability: z
+      .object({
+        status: z.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
+        projectionIndexPath: z.string().optional(),
+        warning: z.string().optional(),
+      })
+      .optional(),
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),

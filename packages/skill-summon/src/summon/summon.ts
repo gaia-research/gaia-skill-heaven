@@ -9,6 +9,7 @@ import {
   normalize,
   type Decision,
   type IndexedSkill,
+  type InstallabilityAssessment,
   type SkillIndex,
 } from "skill-zero";
 
@@ -57,6 +58,7 @@ export type PreviewedSkill = {
   level?: string | undefined;
   sourceUrl?: string | undefined;
   source: string;
+  installability?: InstallabilityAssessment | undefined;
   retrieval: RetrievalDisclosure;
 };
 
@@ -68,6 +70,11 @@ export type RankingDisclosure = RankingSummary & {
   /** "committed" needed no network to rank; "fetched" reached the named source. */
   indexOrigin: "committed" | "fetched";
   source: string;
+  installability?: {
+    status: "not-configured" | "applied" | "not-applicable" | "unavailable";
+    projectionIndexPath?: string | undefined;
+    warning?: string | undefined;
+  } | undefined;
 };
 
 export type SkippedCandidate = {
@@ -208,6 +215,7 @@ export async function summon(
         description: hit.doc.description,
         ...(hit.doc.level ? { level: hit.doc.level } : {}),
         ...(hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {}),
+        ...(hit.doc.installability ? { installability: hit.doc.installability } : {}),
         source: resolved.source,
         retrieval: disclosures.get(hit.doc.id) as RetrievalDisclosure,
       })),
@@ -283,6 +291,14 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
     decision.floor === null
       ? "no calibrated relevance floor in this index — summon cannot yet decline on relevance"
       : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
+  const installabilityNote =
+    resolved.installability?.status === "applied"
+      ? `Tree installability projection applied from ${resolved.installability.projectionIndexPath ?? "an unspecified path"}; only exact verified negatives can withhold.`
+      : resolved.installability?.status === "unavailable"
+        ? `Optional Tree installability projection unavailable; materializability is unknown and summon continued offline (${resolved.installability.warning ?? "source error"}).`
+        : resolved.installability?.status === "not-applicable"
+          ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative."
+          : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
@@ -290,12 +306,14 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
     trustFields: [],
     disclosure:
       `Ranked by BM25F over the committed retrieval index; ${floorNote}. ` +
-      "The tree publishes no behavioural stamps, so no trust ordering is applied.",
+      "The tree publishes no behavioural stamps, so no trust ordering is applied. " +
+      installabilityNote,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source,
+    ...(resolved.installability ? { installability: resolved.installability } : {}),
   };
 }
 
@@ -342,6 +360,7 @@ function toNamedSkill(doc: IndexedSkill): NamedSkill {
     links: { ...doc.links },
     ...(doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {}),
     evidence: [],
+    ...(doc.installability ? { installability: doc.installability } : {}),
     ...(doc.trust.trustNumber === undefined ? {} : { trustMagnitude: doc.trust.trustNumber }),
     ...(doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {}),
     ...(doc.registryOnly ? { installable: false } : {}),
@@ -568,6 +587,7 @@ async function installSingle(
       name: skill.name,
       contributor: skill.contributor,
       ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.installability ? { installability: skill.installability } : {}),
       ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
@@ -707,6 +727,7 @@ async function installSingle(
       name: skill.name,
       contributor: skill.contributor,
       ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.installability ? { installability: skill.installability } : {}),
       ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
