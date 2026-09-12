@@ -57,7 +57,20 @@ to override:
 "@
 }
 
+function Test-ClaudeWorking {
+  if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+  try {
+    $null = claude --version 2>$null
+    return ($LASTEXITCODE -eq 0)
+  } catch {
+    return $false
+  }
+}
+
 function Plugin-Is-Installed {
+  if (-not (Test-ClaudeWorking)) { return $false }
   try {
     $pluginJson = claude plugin list --json 2>$null
     if (-not $pluginJson) { return $false }
@@ -69,6 +82,7 @@ function Plugin-Is-Installed {
 }
 
 function Marketplace-Is-Configured {
+  if (-not (Test-ClaudeWorking)) { return $false }
   try {
     $marketplaces = claude plugin marketplace list 2>$null
     if (-not $marketplaces) { return $false }
@@ -87,24 +101,30 @@ function Uninstall-All {
   Say-Message "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
 
   if (Test-Path $PLUGIN_MANAGED) {
-    if (Get-Command claude -ErrorAction SilentlyContinue) {
+    if (Test-ClaudeWorking) {
       Say-Message "Removing Claude plugin $PLUGIN_ID ..."
-      claude plugin uninstall $PLUGIN_ID
+      try { claude plugin uninstall $PLUGIN_ID } catch {}
+    } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
+      Say-Message "Claude Code binary is present but execution failed (--version error)."
+      Say-Message "Skipping automated plugin uninstall. Remove it manually once Claude is fixed:"
+      Say-Message "  claude plugin uninstall $PLUGIN_ID"
     } else {
       Say-Message "Claude Code is not on PATH; remove the installer-managed plugin later with:"
       Say-Message "  claude plugin uninstall $PLUGIN_ID"
-      Fail-Installation "doors were left installed so the managed-plugin record is not lost"
     }
   }
 
   if (Test-Path $MARKETPLACE_MANAGED) {
-    if (Get-Command claude -ErrorAction SilentlyContinue) {
+    if (Test-ClaudeWorking) {
       Say-Message "Removing Claude marketplace $MARKETPLACE ..."
-      claude plugin marketplace remove $MARKETPLACE
+      try { claude plugin marketplace remove $MARKETPLACE } catch {}
+    } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
+      Say-Message "Claude Code binary is present but execution failed (--version error)."
+      Say-Message "Skipping automated marketplace removal. Remove it manually once Claude is fixed:"
+      Say-Message "  claude plugin marketplace remove $MARKETPLACE"
     } else {
       Say-Message "Claude Code is not on PATH; remove the installer-managed marketplace later with:"
       Say-Message "  claude plugin marketplace remove $MARKETPLACE"
-      Fail-Installation "doors were left installed so the managed-marketplace record is not lost"
     }
   }
 
@@ -126,6 +146,7 @@ Say-Message "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use.
 Say-Message "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 Say-Message "Harnesses are never installed; every door uses the user's own harness binary."
 
+Say-Message "[1/5] Checking prerequisites..."
 $missing = @()
 foreach ($tool in @("node", "npm", "git")) {
   if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
@@ -165,9 +186,10 @@ try {
   New-Item -ItemType Directory -Force -Path (Join-Path $STAGE "bin") | Out-Null
 
   $ARCHIVE = Join-Path $STAGE "source.zip"
-  Say-Message "Fetching Skill Heaven source ($SOURCE_REF) ..."
+  Say-Message "[2/5] Fetching Skill Heaven source ($SOURCE_REF) ..."
   Invoke-WebRequest -Uri $SOURCE_ARCHIVE -OutFile $ARCHIVE -UseBasicParsing
 
+  Say-Message "[3/5] Extracting source archive..."
   $EXTRACT_TEMP = Join-Path $STAGE "extract_temp"
   Expand-Archive -Path $ARCHIVE -DestinationPath $EXTRACT_TEMP -Force
   Remove-Item -Force $ARCHIVE
@@ -188,16 +210,25 @@ try {
     }
   }
 
-  Say-Message "Installing launcher runtime dependencies ..."
+  Say-Message "[4/5] Installing launcher runtime dependencies ..."
   Push-Location (Join-Path $STAGE "source")
   try {
-    npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+    npm ci --omit=dev --ignore-scripts --no-audit --no-fund `
+      --workspace=skill-zero `
+      --workspace=claude-zero `
+      --workspace=pi-zero `
+      --workspace=codex-zero `
+      --workspace=hermes-zero `
+      --workspace=grok-zero `
+      --include-workspace-root
     if ($LASTEXITCODE -ne 0) {
       Fail-Installation "launcher dependency installation failed; nothing was installed."
     }
   } finally {
     Pop-Location
   }
+
+  Say-Message "[5/5] Configuring Skill Zero doors and harness plugins..."
 
   foreach ($door in $doors) {
     $cmdContent = "@echo off`r`nnode `"%~dp0..\source\packages\$door-zero\bin\$door-zero.mjs`" %*"
@@ -213,26 +244,40 @@ $ROOT = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvoca
 $PLUGIN_ID = "skill-heaven@gaia-skill-heaven"
 $MARKETPLACE = "gaia-skill-heaven"
 
+function Test-ClaudeWorking {
+  if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+    return $false
+  }
+  try {
+    $null = claude --version 2>$null
+    return ($LASTEXITCODE -eq 0)
+  } catch {
+    return $false
+  }
+}
+
 Write-Host "Skill Heaven working prototype — uninstalling everything from $ROOT"
 $pluginManaged = Join-Path $ROOT ".claude-plugin-managed"
 if (Test-Path $pluginManaged) {
-  if (Get-Command claude -ErrorAction SilentlyContinue) {
+  if (Test-ClaudeWorking) {
     Write-Host "Removing Claude plugin $PLUGIN_ID ..."
-    claude plugin uninstall $PLUGIN_ID
+    try { claude plugin uninstall $PLUGIN_ID } catch {}
+  } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
+    Write-Warning "Claude Code binary is present but execution failed; skipping plugin uninstall."
   } else {
-    Write-Error "Claude Code is not on PATH; run this later before uninstalling:`n  claude plugin uninstall $PLUGIN_ID"
-    exit 1
+    Write-Warning "Claude Code is not on PATH; run this later before uninstalling:`n  claude plugin uninstall $PLUGIN_ID"
   }
 }
 
 $marketplaceManaged = Join-Path $ROOT ".claude-marketplace-managed"
 if (Test-Path $marketplaceManaged) {
-  if (Get-Command claude -ErrorAction SilentlyContinue) {
+  if (Test-ClaudeWorking) {
     Write-Host "Removing Claude marketplace $MARKETPLACE ..."
-    claude plugin marketplace remove $MARKETPLACE
+    try { claude plugin marketplace remove $MARKETPLACE } catch {}
+  } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
+    Write-Warning "Claude Code binary is present but execution failed; skipping marketplace removal."
   } else {
-    Write-Error "Claude Code is not on PATH; run this later before uninstalling:`n  claude plugin marketplace remove $MARKETPLACE"
-    exit 1
+    Write-Warning "Claude Code is not on PATH; run this later before uninstalling:`n  claude plugin marketplace remove $MARKETPLACE"
   }
 }
 
@@ -258,8 +303,8 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
     Remove-Item -Recurse -Force $OLD -ErrorAction SilentlyContinue
   }
 
-  if (Get-Command claude -ErrorAction SilentlyContinue) {
-    Say-Message "Claude Code detected; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
+  if (Test-ClaudeWorking) {
+    Say-Message "Claude Code detected and functional; installing its /summon, /skill-zero, /skill-heaven, /skill-hell, and /skill-ultra plugin ..."
     if (Marketplace-Is-Configured) {
       claude plugin marketplace update $MARKETPLACE
     } else {
@@ -274,6 +319,13 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
       New-Item -ItemType File -Force -Path (Join-Path $INSTALL_HOME ".claude-plugin-managed") | Out-Null
     }
     Say-Message "Claude plugin ready: /summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra."
+  } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
+    Say-Message "Claude Code binary detected, but 'claude --version' failed."
+    Say-Message "This typically indicates missing platform-native binaries or an unsupported architecture."
+    Say-Message "Skipping Claude plugin auto-registration. The Skill Zero doors were installed successfully."
+    Say-Message "Once Claude Code is functional on this platform, register the plugin manually with:"
+    Say-Message "  claude plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git"
+    Say-Message "  claude plugin install --scope user $PLUGIN_ID"
   } else {
     Say-Message "Claude Code was not detected, so no harness was installed and plugin registration is deferred."
     Say-Message "After installing Claude Code yourself, register the already-delivered plugin with:"
@@ -289,7 +341,16 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
   Say-Message "Harnesses detected (not installed by this script):"
   foreach ($harness in $doors) {
     if (Get-Command $harness -ErrorAction SilentlyContinue) {
-      Say-Message "  ${harness}: yes"
+      try {
+        $null = & $harness --version 2>$null
+        if ($LASTEXITCODE -eq 0) {
+          Say-Message "  ${harness}: yes (functional)"
+        } else {
+          Say-Message "  ${harness}: binary present, but failed execution (--version failed)"
+        }
+      } catch {
+        Say-Message "  ${harness}: binary present, but failed execution"
+      }
     } else {
       Say-Message "  ${harness}: no"
     }

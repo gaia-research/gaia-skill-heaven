@@ -7,7 +7,9 @@ import { INSTALL } from "../../site/src/product.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const installerPath = resolve(root, "install.sh");
+const agentPluginInstallerPath = resolve(root, "install-agent-plugin.sh");
 const installer = readFileSync(installerPath, "utf8");
+const agentPluginInstaller = readFileSync(agentPluginInstallerPath, "utf8");
 const pagesWorkflow = readFileSync(resolve(root, ".github/workflows/pages.yml"), "utf8");
 const ps1InstallerPath = resolve(root, "install.ps1");
 const ps1AgentPluginPath = resolve(root, "install-agent-plugin.ps1");
@@ -17,6 +19,7 @@ const ps1AgentPlugin = readFileSync(ps1AgentPluginPath, "utf8");
 describe("one-command installer", () => {
   it("is valid POSIX-sh syntax and identifies itself as a working prototype", () => {
     execFileSync("sh", ["-n", installerPath]);
+    execFileSync("sh", ["-n", agentPluginInstallerPath]);
     const help = execFileSync("sh", [installerPath, "--help"], { encoding: "utf8" });
     expect(help).toContain("WORKING PROTOTYPE");
     expect(help).toContain("https://gaia-research.github.io/gaia-skill-heaven/install.sh");
@@ -54,6 +57,36 @@ describe("one-command installer", () => {
     expect(pagesWorkflow).toContain("- 'install.sh'");
     expect(pagesWorkflow).toContain("cp install.sh packages/site/dist/install.sh");
   });
+
+  it("preflights Claude Code execution and handles broken binaries gracefully (#88)", () => {
+    expect(installer).toContain("claude_is_working()");
+    expect(installer).toContain("claude --version");
+    expect(installer).toContain("missing platform-native binaries");
+    expect(installer).toContain("failed execution (--version failed)");
+  });
+
+  it("includes numbered progress steps and graceful interrupt handling (#87)", () => {
+    expect(installer).toContain("[1/5] Checking prerequisites...");
+    expect(installer).toContain("[2/5] Fetching Skill Heaven source");
+    expect(installer).toContain("[3/5] Extracting source archive...");
+    expect(installer).toContain("[4/5] Installing launcher runtime dependencies");
+    expect(installer).toContain("[5/5] Configuring Skill Zero doors");
+    expect(installer).toContain("on_interrupt()");
+    expect(installer).toContain("Installation cancelled by user");
+
+    expect(agentPluginInstaller).toContain("[1/4] Checking prerequisites...");
+    expect(agentPluginInstaller).toContain("[2/4] Fetching Skill Heaven Agent Plugin");
+    expect(agentPluginInstaller).toContain("[3/4] Extracting plugin archive...");
+    expect(agentPluginInstaller).toContain("[4/4] Staging portable Agent Plugin artifact...");
+    expect(agentPluginInstaller).toContain("on_interrupt()");
+  });
+
+  it("scopes npm ci to launcher workspaces to optimize disk and install performance (#86)", () => {
+    expect(installer).toContain("--workspace=skill-zero");
+    expect(installer).toContain("--workspace=claude-zero");
+    expect(installer).toContain("--workspace=pi-zero");
+    expect(installer).toContain("--include-workspace-root");
+  });
 });
 
 describe("windows PowerShell installers", () => {
@@ -89,6 +122,16 @@ describe("windows PowerShell installers", () => {
     expect(pagesWorkflow).toContain(
       "cp install-agent-plugin.ps1 packages/site/dist/install-agent-plugin.ps1"
     );
+  });
+
+  it("includes Claude execution preflight and progress indicators in PowerShell installers (#88, #87)", () => {
+    expect(ps1Installer).toContain("Test-ClaudeWorking");
+    expect(ps1Installer).toContain("claude --version");
+    expect(ps1Installer).toContain("[1/5] Checking prerequisites...");
+    expect(ps1Installer).toContain("[4/5] Installing launcher runtime dependencies");
+    expect(ps1Installer).toContain("--workspace=skill-zero");
+    expect(ps1AgentPlugin).toContain("[1/4] Checking prerequisites...");
+    expect(ps1AgentPlugin).toContain("[4/4] Staging portable Agent Plugin artifact...");
   });
 
   it("INSTALL exports Windows PS1 commands", () => {

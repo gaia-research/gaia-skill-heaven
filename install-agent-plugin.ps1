@@ -80,6 +80,7 @@ if ($Uninstall) {
   exit 0
 }
 
+Say-Message "[1/4] Checking prerequisites..."
 $missing = @()
 foreach ($tool in @("node", "git")) {
   if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
@@ -122,9 +123,10 @@ try {
   New-Item -ItemType Directory -Force -Path (Join-Path $NEXT "marketplace\.claude-plugin") | Out-Null
 
   $ARCHIVE = Join-Path $WORK "source.zip"
-  Say-Message "Fetching Skill Heaven Agent Plugin ($SOURCE_REF) ..."
+  Say-Message "[2/4] Fetching Skill Heaven Agent Plugin ($SOURCE_REF) ..."
   Invoke-WebRequest -Uri $SOURCE_ARCHIVE -OutFile $ARCHIVE -UseBasicParsing
 
+  Say-Message "[3/4] Extracting plugin archive..."
   $EXTRACT_TEMP = Join-Path $WORK "extract_temp"
   Expand-Archive -Path $ARCHIVE -DestinationPath $EXTRACT_TEMP -Force
   Remove-Item -Force $ARCHIVE
@@ -137,6 +139,7 @@ try {
   }
   Remove-Item -Recurse -Force $EXTRACT_TEMP
 
+  Say-Message "[4/4] Staging portable Agent Plugin artifact..."
   $SOURCE_PLUGIN = Join-Path $WORK "source\plugins\skill-heaven"
   $requiredFiles = @("plugin.json", "mcp.json", "skills\summon\SKILL.md", "mcp\skill-summon.mjs")
   foreach ($req in $requiredFiles) {
