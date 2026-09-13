@@ -85,6 +85,14 @@ const summonOutputSchema = z.object({
     stale: z.boolean(),
     indexOrigin: z.enum(["committed", "fetched"]),
     source: z.string(),
+    installability: z
+      .object({
+        status: z.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
+        projectionIndexPath: z.string().optional(),
+        sourceUrl: z.string().optional(),
+        warning: z.string().optional(),
+      })
+      .optional(),
   }),
   // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
   // the wire, not only on the printed card, so a controller reading

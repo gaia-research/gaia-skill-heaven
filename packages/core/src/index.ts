@@ -132,6 +132,30 @@ export {
   type RetrievalSurface,
   type SkillIndex,
 } from "./retrieval/schema.js";
+export {
+  INSTALLABILITY_PROJECTION_SCHEMA,
+  INSTALLABILITY_OBSERVATION_SCHEMA,
+  INSTALLABILITY_STATES,
+  INSTALLABILITY_REASONS,
+  assessInstallability,
+  assertInstallabilityAssessment,
+  assertInstallabilityProjectionSkill,
+  isInstallabilityState,
+  isInstallabilityReason,
+  unknownInstallabilityAssessment,
+  withInstallability,
+  withUnknownInstallability,
+  type InstallabilityState,
+  type InstallabilityReason,
+  type InstallabilitySourceRoute,
+  type InstallabilityObservationRef,
+  type InstallabilityProjectionSkill,
+  type InstallabilityProjection,
+  type InstallabilityApplicability,
+  type InstallabilityApplicabilityReason,
+  type InstallabilityAssessment,
+  type InstallabilityCandidateContext,
+} from "./retrieval/installability.js";
 export { normalize, tokenizeText, scoreMatch } from "./retrieval/lexical.js";
 export {
   buildSkillIndex,
