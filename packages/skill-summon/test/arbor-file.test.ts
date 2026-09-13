@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, rename, rm, symlink, writeFile } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { readConfinedArborFile } from "../src/data/arbor-file.js";
+import { readConfinedFile } from "../src/data/confined-file.js";
 import * as session from "../src/summon/session.js";
 
 const roots: string[] = [];
@@ -29,7 +29,7 @@ describe("Arbor kernel-enforced file opening", () => {
 
   it("reads an ordinary regular file", async () => {
     const { root, file } = await fixture();
-    expect((await readConfinedArborFile(root, file)).toString()).toBe("inside");
+    expect((await readConfinedFile(root, file)).toString()).toBe("inside");
   });
 
   it.each(["leaf", "directory", "ancestor"])(
@@ -48,7 +48,7 @@ describe("Arbor kernel-enforced file opening", () => {
         // Prove a plain post-check read WOULD follow the substituted path.
         expect(await readFile(f.file, "utf8")).toBe("outside");
       });
-      await expect(readConfinedArborFile(f.root, f.file)).rejects.toThrow();
+      await expect(readConfinedFile(f.root, f.file)).rejects.toThrow();
     },
   );
 });

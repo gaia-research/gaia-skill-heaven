@@ -291,6 +291,14 @@ export {
   type ArborIdentityResolution,
 } from "./arbor/identity.js";
 export {
+  inspectArborComposition,
+  arborCompositionLines,
+  type ArborCompositionReport,
+  type CompositionMember,
+  type CompositionRole,
+  type CompositionInteraction,
+} from "./arbor/composition.js";
+export {
   arborPublicationLines,
   arborSubjectLines,
   claimLine,

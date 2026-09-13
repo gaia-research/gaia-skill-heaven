@@ -91,10 +91,10 @@ const named = JSON.parse(namedBytes.toString("utf8")) as {
   buckets: Record<string, { id: string; links?: { github?: string } }[]>;
   awaitingClassification?: { id: string; links?: { github?: string } }[];
 };
-const routeById = new Map<string, string>();
+const routeById = new Map<string, string | null>();
 for (const record of [...Object.values(named.buckets).flat(), ...(named.awaitingClassification ?? [])]) {
   const github = record.links?.github;
-  if (typeof github === "string" && github.length > 0) routeById.set(record.id, github);
+  routeById.set(record.id, typeof github === "string" && github.length > 0 ? github : null);
 }
 
 // Upstream's installability projection, when it exists at this revision.
@@ -124,10 +124,10 @@ for (const doc of committedIndex.docs) {
     );
   }
   const contentSha256 = publishedDigest ?? derivedDigest;
-  if (!contentSha256 || !route) {
-    // No canonical record or no published route at this revision: this id has no
-    // provable identity here, and the runtime leaves it unknown rather than
-    // guessing one.
+  if (!contentSha256 || route === undefined) {
+    // Missing canonical bytes or a missing named record is unknown. An explicit
+    // absent route on an existing named record is instead a provable null; it
+    // is not itself a negative installability observation.
     unresolved += 1;
     continue;
   }

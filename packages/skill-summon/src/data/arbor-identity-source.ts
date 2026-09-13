@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { assertArborIdentityContext, type ArborIdentityContext } from "skill-zero";
 
-import { readConfinedArborFile } from "./arbor-file.js";
+import { readConfinedFile } from "./confined-file.js";
 
 /** Where the committed identity context lives relative to the repository root. */
 const IDENTITY_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor-identity.json");
@@ -40,7 +40,7 @@ export function resetArborIdentityCache(): void {
 export async function readArborIdentityFile(path: string): Promise<ArborIdentityLoad> {
   const directory = dirname(path);
   try {
-    const bytes = await readConfinedArborFile(directory, path);
+    const bytes = await readConfinedFile(directory, path);
     const digest = createHash("sha256").update(bytes).digest("hex");
     let parsed: unknown;
     try {

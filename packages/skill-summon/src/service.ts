@@ -46,8 +46,8 @@ export type GaiaServiceOptions = {
   sourceUrl?: string | undefined;
   /**
    * Optional Tree installability projection. Never fetched unless supplied.
-   * The shipped CLI/MCP constructors intentionally leave this undefined;
-   * programmatic hosts must explicitly inject the adapter and its source.
+   * The shared CLI/MCP factory leaves this undefined unless the operator sets
+   * SKILL_SUMMON_INSTALLABILITY. Programmatic hosts may explicitly inject it.
    */
   installabilityAdapter?: Pick<GaiaInstallabilityAdapter, "apply"> | undefined;
 };

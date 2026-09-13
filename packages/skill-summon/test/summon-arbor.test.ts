@@ -307,6 +307,11 @@ describe("summon discloses its behavioral lenses", () => {
     });
     expect(outcome.arbor.publicationState).toBe("loaded");
     expect(outcome.arbor.subjectsPublished).toBe(0);
+    expect(outcome.composition).toMatchObject({
+      mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
+      deliveryVerified: false, interactions: [],
+    });
+    expect(outcome.composition.members.every((member) => member.role === "proposed")).toBe(true);
     expect(outcome.arbor.edgeCoverage).toEqual({
       pairsEvaluated: 0,
       absenceMeaning: "not-evaluated",
@@ -680,10 +685,14 @@ describe("the public wire", () => {
       });
       const structured = result.structuredContent as {
         arbor?: { publicationState?: string; note?: string; corpus?: { canonical?: boolean } };
+        composition?: { mode?: string; selectionChanged?: boolean; conditionsEvaluated?: boolean };
       };
       expect(structured.arbor?.publicationState).toBe("loaded");
       expect(structured.arbor?.corpus?.canonical).toBe(false);
       expect(structured.arbor?.note).toMatch(/outside the canonical corpus/u);
+      expect(structured.composition).toMatchObject({
+        mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
+      });
     } finally {
       await client.close();
       await server.close();

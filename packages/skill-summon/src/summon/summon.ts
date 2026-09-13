@@ -11,7 +11,9 @@ import {
   isStale,
   normalize,
   resolveArborIdentity,
+  type ArborCompositionReport,
   type ArborDeliveryContext,
+  type CompositionMember,
   type ArborDisclosure,
   type ArborIdentityContext,
   type ArborPublication,
@@ -30,6 +32,7 @@ import { starCount } from "../service.js";
 import type { GaiaService } from "../service.js";
 import { trustFields } from "../trust.js";
 import { inspectUrl, renderSummonCard } from "./card.js";
+import { sessionComposition } from "./composition.js";
 import {
   discardCachedRepo,
   ensureCachedRepo,
@@ -157,9 +160,9 @@ export type SummonOutcome = {
   previewed: PreviewedSkill[];
   /** Non-null when summon declined. It never returns the best of a bad set (#104). */
   noMatch: Decision["noMatch"];
-  /** Every candidate withheld, with the reason. 80 of 274 skills are unreachable. */
+  /** Every candidate withheld, with the current scoped reason. */
   filtered: Decision["filtered"];
-  /** `(top − next) / top` — the Ultra controller reads this (SPEC §6.2). */
+  /** `(top − next) / top` — a retrieval diagnostic, never behavioral transition authority. */
   margin: number;
   skipped: SkippedCandidate[];
   suites: SuiteAttempt[];
@@ -172,6 +175,8 @@ export type SummonOutcome = {
    * as saying nothing at all.
    */
   arbor: SummonArborDisclosure;
+  /** Ordered records concerning this session/proposed set; no runtime assurance. */
+  composition: ArborCompositionReport;
   cards: string[];
   /** Wall-clock time for this whole invocation, seconds with ms precision. */
   totalSeconds: number;
@@ -254,6 +259,17 @@ export async function summon(
   const linkById = new Map(
     resolved.index.docs.map((doc) => [doc.id, doc.links.github] as const),
   );
+  const canonicalIdentity = arbor.corpus.canonical &&
+    identity.context?.corpusSource === resolved.source &&
+    identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree"
+    ? identity.context : null;
+  const knownContentSha256: Record<string, string> = Object.create(null);
+  for (const [skillId, sourceUrl] of linkById) {
+    const pin = resolveArborIdentity(canonicalIdentity, {
+      skillId, sourceUrl, corpusRevision: arbor.corpus.revision,
+    });
+    if (pin.pinned) knownContentSha256[skillId] = pin.contentSha256;
+  }
   const arborFor = (
     skillId: string,
     delivery: ArborDeliveryContext = "not-materialized",
@@ -262,7 +278,7 @@ export async function summon(
     // it was pinned at the same Tree revision this corpus was built from. A hash
     // borrowed across revisions — including from a newer Arbor publication —
     // would describe other bytes, so a miss stays honestly unknown.
-    const resolution = resolveArborIdentity(arbor.corpus.canonical ? identity.context : null, {
+    const resolution = resolveArborIdentity(canonicalIdentity, {
       skillId,
       sourceUrl: linkById.get(skillId),
       corpusRevision: arbor.corpus.revision,
@@ -275,8 +291,14 @@ export async function summon(
         ? {}
         : { identityNote: describeArborIdentityMiss(resolution.miss) }),
       delivery,
-    });
+    }, { knownContentSha256 });
   };
+
+  const before = [...session.skills];
+  const compositionFor = (additions: readonly CompositionMember[]) => sessionComposition(
+    publication, resolved.source, linkById, before,
+    (id) => arborFor(id, "delivered-unverified"), additions,
+  );
 
   if (decision.noMatch) {
     const outcome: SummonOutcome = {
@@ -288,6 +310,7 @@ export async function summon(
       noMatch: decision.noMatch,
       filtered: decision.filtered,
       margin: 0,
+      composition: compositionFor([]),
       skipped: [],
       suites: [],
       sessionRoot: session.root,
@@ -324,6 +347,9 @@ export async function summon(
       noMatch: null,
       filtered: decision.filtered,
       margin: decision.margin,
+      composition: compositionFor(decision.admitted.slice(0, limit).map((hit) => ({
+        role: "proposed", report: arborFor(hit.doc.id),
+      }))),
       skipped: [],
       suites: [],
       sessionRoot: session.root,
@@ -383,6 +409,9 @@ export async function summon(
     sessionRoot: session.root,
     ranking,
     arbor,
+    composition: compositionFor(summoned.map((skill) => ({
+      role: "materialized", report: skill.arbor ?? arborFor(skill.id, "delivered-unverified"),
+    }))),
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt),
   };

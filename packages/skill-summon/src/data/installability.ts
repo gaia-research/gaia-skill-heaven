@@ -1,6 +1,5 @@
-import { constants } from "node:fs";
-import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
+import { readConfinedFile } from "./confined-file.js";
 
 import {
   INSTALLABILITY_PROJECTION_SCHEMA,
@@ -85,17 +84,9 @@ export class FileInstallabilitySource implements InstallabilitySource {
   }
 
   async load(): Promise<unknown> {
-    const resolvedPath = await assertNoSymlinkComponents(this.#path);
-    const handle = await open(resolvedPath, constants.O_RDONLY | constants.O_NOFOLLOW);
-    try {
-      const info = await handle.stat();
-      if (!info.isFile()) {
-        throw new Error(`Installability projection is not a regular file: ${this.#path}`);
-      }
-      return JSON.parse(await handle.readFile("utf8")) as unknown;
-    } finally {
-      await handle.close();
-    }
+    const target = path.resolve(this.#path);
+    const bytes = await readConfinedFile(path.dirname(target), target);
+    return JSON.parse(bytes.toString("utf8")) as unknown;
   }
 }
 
@@ -476,35 +467,6 @@ function exactKeys(
   for (const key of expected) {
     if (!(key in value)) throw new Error(`${label} is missing ${key}.`);
   }
-}
-
-async function assertNoSymlinkComponents(filePath: string): Promise<string> {
-  const lexical = path.resolve(filePath);
-  const parsed = path.parse(lexical);
-  let cursor = parsed.root;
-  const parts = lexical.slice(parsed.root.length).split(path.sep).filter(Boolean);
-  for (const part of parts) {
-    cursor = path.join(cursor, part);
-    let info;
-    try {
-      info = await lstat(cursor);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
-      throw error;
-    }
-    if (info.isSymbolicLink()) {
-      const resolved = await realpath(cursor).catch(() => "");
-      // macOS exposes the system temp roots through /private aliases. These
-      // are benign platform aliases, not user-controlled traversal.
-      const benignAlias =
-        (cursor === "/tmp" && resolved === "/private/tmp") ||
-        (cursor === "/var" && resolved === "/private/var");
-      if (!benignAlias) {
-        throw new Error(`Installability projection path traverses a symlink: ${cursor}`);
-      }
-    }
-  }
-  return realpath(lexical);
 }
 
 function sameHttpUrl(left: string, right: string): boolean {

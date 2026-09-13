@@ -36,7 +36,7 @@ import {
   type ArborPublicationProvenance,
 } from "skill-zero";
 
-import { readConfinedArborFile } from "./arbor-file.js";
+import { readConfinedFile } from "./confined-file.js";
 
 /** Where the cached publication lives relative to the repository root. */
 const ARBOR_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor");
@@ -196,7 +196,7 @@ async function readConfinedJson(
 ): Promise<ReadFile | undefined> {
   const target = join(root, relativePath);
   try {
-    const bytes = await readConfinedArborFile(root, target);
+    const bytes = await readConfinedFile(root, target);
     const digest = createHash("sha256").update(bytes).digest("hex");
     try {
       return { value: JSON.parse(bytes.toString("utf8")) as unknown, sha256: digest };

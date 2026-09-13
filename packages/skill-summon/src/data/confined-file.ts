@@ -5,8 +5,8 @@ import { resolve } from "node:path";
 import { assertConfinedPath } from "../summon/session.js";
 
 /** Kernel-enforced no-symlink opening; a check followed by plain open is not safe. */
-export async function readConfinedArborFile(root: string, target: string): Promise<Buffer> {
-  await assertConfinedPath(root, target, "Arbor file");
+export async function readConfinedFile(root: string, target: string): Promise<Buffer> {
+  await assertConfinedPath(root, target, "Optional evidence file");
   let absolute = resolve(target);
   const handles: FileHandle[] = [];
   try {
@@ -27,7 +27,7 @@ export async function readConfinedArborFile(root: string, target: string): Promi
       let parent = await open("/", constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
       handles.push(parent);
       const parts = absolute.split("/").filter(Boolean);
-      if (parts.length === 0) throw new Error("Arbor file is not a regular file");
+      if (parts.length === 0) throw new Error("Evidence file is not a regular file");
       for (const part of parts.slice(0, -1)) {
         parent = await open(`/proc/self/fd/${parent.fd}/${part}`,
           constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
@@ -37,9 +37,9 @@ export async function readConfinedArborFile(root: string, target: string): Promi
         constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW);
       handles.push(file);
     } else {
-      throw new Error("Secure Arbor file opening is unavailable on this platform");
+      throw new Error("Secure evidence file opening is unavailable on this platform");
     }
-    if (!(await file.stat()).isFile()) throw new Error("Arbor file is not a regular file");
+    if (!(await file.stat()).isFile()) throw new Error("Evidence file is not a regular file");
     return await file.readFile();
   } finally {
     await Promise.all(handles.map((handle) => handle.close()));

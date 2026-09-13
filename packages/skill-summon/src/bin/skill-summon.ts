@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { arborPublicationLines, arborSubjectLines } from "skill-zero";
+import { arborCompositionLines, arborPublicationLines, arborSubjectLines } from "skill-zero";
 
-import { resolveSkillSource } from "../data/configured-source.js";
+import { createConfiguredService } from "../configured-service.js";
 import type { TrustFields } from "../domain/types.js";
-import { GaiaService } from "../service.js";
 import {
   findSession,
   listSessions,
@@ -24,6 +23,10 @@ const USAGE = `Usage:
   skill-summon path [--json]
   skill-summon close [--json]
   skill-summon gc [--dry-run] [--json]
+
+Optional evidence (off by default):
+  SKILL_SUMMON_INSTALLABILITY=<local-json-path|file-url|http(s)-url>
+  Explicit HTTP(S) opts into one projection fetch per summon. Failures stay unknown.
 `;
 
 class UsageError extends Error {
@@ -74,7 +77,7 @@ async function runSummon(args: ParsedArgs): Promise<void> {
   if (!args.query) {
     throw new UsageError(`summon requires a query.\n\n${USAGE}`);
   }
-  const service = createService();
+  const service = createConfiguredService();
   const { session, created } = await resolveSession();
   noteIfCreated(created, session.root);
 
@@ -85,6 +88,10 @@ async function runSummon(args: ParsedArgs): Promise<void> {
     ...(args.preview ? { preview: true } : {}),
   });
 
+  if (!args.json) {
+    process.stdout.write(`${outcome.ranking.disclosure}\n`);
+    process.stdout.write(`${arborCompositionLines(outcome.composition).join("\n")}\n`);
+  }
   if (args.json) {
     writeJson(outcome);
   } else if (args.card) {
@@ -271,11 +278,6 @@ async function runGc(args: ParsedArgs): Promise<void> {
   process.stdout.write(
     `  protected ${outcome.liveProtected.length} live session(s); ${action} ${outcome.candidates.length}, ${formatBytes(outcome.reclaimedBytes)}\n`,
   );
-}
-
-function createService(): GaiaService {
-  const { source, sourceUrl } = resolveSkillSource();
-  return new GaiaService(source, { sourceUrl });
 }
 
 function noteIfCreated(created: boolean, root: string): void {

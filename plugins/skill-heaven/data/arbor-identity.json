@@ -5,11 +5,11 @@
   "corpusSource": "https://gaiaskilltree.com",
   "derivation": "sha256(exact bytes of registry/named/<id>.md at this revision), the canonical path registry/arbor/README.md specifies",
   "routeSource": "docs/graph/named/index.json links.github at this revision",
-  "capturedAt": "2026-09-12",
+  "capturedAt": "2026-09-13",
   "counts": {
     "indexed": 354,
-    "resolved": 328,
-    "unresolved": 26
+    "resolved": 354,
+    "unresolved": 0
   },
   "skills": {
     "0xdarkmatter/pytest-patterns": {
@@ -246,6 +246,11 @@
       "contentSha256": "81f6312190d3e35fdb73acd6343eafc20b0bb328f0d80917d858d549faf682c9",
       "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-triage/SKILL.md",
       "canonicalPath": "registry/named/gaiabot/gaia-triage.md"
+    },
+    "gaiabot/repo-docs-before-pr": {
+      "contentSha256": "c9ba6b07ff8d271fc2ecaf72ab1bae50a3c65348307e9755e6f3909a3cfaf9b8",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/gaiabot/repo-docs-before-pr.md"
     },
     "garrytan/benchmark": {
       "contentSha256": "3f98f5ec6a588be5250a0eb8dcc74b75131e4393da8596aa06dd4aa88c6a51ce",
@@ -967,6 +972,11 @@
       "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/frontend-testing/SKILL.md",
       "canonicalPath": "registry/named/langgenius/frontend-testing.md"
     },
+    "laravel/upgrade-laravel-v13": {
+      "contentSha256": "6b90d2515e88df3bf6165fb3d036935b0f8386eaa203a18b79e4484e6255f891",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/laravel/upgrade-laravel-v13.md"
+    },
     "leonxlnx/brandkit": {
       "contentSha256": "2fb9555c6fbddb64133705f1062834e97a1bb08e34588c5ed46a4c5590b895b7",
       "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/brandkit/SKILL.md",
@@ -1072,6 +1082,11 @@
       "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/personal/edit-article/SKILL.md",
       "canonicalPath": "registry/named/mattpocock/edit-article.md"
     },
+    "mattpocock/engineering": {
+      "contentSha256": "e01b8c83c989d7aed2c5cdffa51b12f0ae12e31dae1bfff3faaf74a655285cfe",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/engineering.md"
+    },
     "mattpocock/git-guardrails-claude-code": {
       "contentSha256": "df1c82b3c540de85d9d8fcd79dd4047692878f7036a7fbbe8a4d2f2b7cedd4ba",
       "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/git-guardrails-claude-code/SKILL.md",
@@ -1112,10 +1127,25 @@
       "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/migrate-to-shoehorn/SKILL.md",
       "canonicalPath": "registry/named/mattpocock/migrate-to-shoehorn.md"
     },
+    "mattpocock/misc": {
+      "contentSha256": "811da42c8a86d281baf6696fb5c2f988fd5701f1036294614a73b7af819d8dfe",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/misc.md"
+    },
     "mattpocock/obsidian-vault": {
       "contentSha256": "d5a8743b06f31d504cbe3937d34f464d0624bc1c1de357fa25249fb78715b712",
       "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/personal/obsidian-vault",
       "canonicalPath": "registry/named/mattpocock/obsidian-vault.md"
+    },
+    "mattpocock/personal": {
+      "contentSha256": "bf41012324a0d0718107670ccb720e7f1317221d65da23f97018bb637cba4e7d",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/personal.md"
+    },
+    "mattpocock/productivity": {
+      "contentSha256": "64facdf10f83e83314f6ed2144f5e488471e9e8a1b0b4ec06751a6e94904f6e2",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/productivity.md"
     },
     "mattpocock/prototype": {
       "contentSha256": "58060b96863326192751b09933e23e816dfdd24d147c52fe92ea450410f305a3",
@@ -1302,6 +1332,11 @@
       "sourceUrl": "https://github.com/nexu-io/open-design",
       "canonicalPath": "registry/named/nexu-io/open-design.md"
     },
+    "nousresearch/feed-monitoring": {
+      "contentSha256": "7bda75c25effb129a7ea7c8b55a4741710cda2d6196289a866b4ceb11480bf01",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/nousresearch/feed-monitoring.md"
+    },
     "obra/brainstorming": {
       "contentSha256": "4b88547826efb8a6e989119a49267a85107bdd349d0de77ed71aa679923932b9",
       "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md",
@@ -1376,6 +1411,71 @@
       "contentSha256": "9ec0322853e3d448e32ff8f085643db25d4f2fab8c06dfcc0405b3f397dde4d6",
       "sourceUrl": "https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md",
       "canonicalPath": "registry/named/pbakaus/impeccable.md"
+    },
+    "pexp13/sentiment-analysis": {
+      "contentSha256": "b27b81c324726243e7dbb945a7b4af714f48e9ee4cbc26340efa15e566751ad6",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/pexp13/sentiment-analysis.md"
+    },
+    "remotion-dev/remotion-best-practices": {
+      "contentSha256": "4bc24b4c6c5d8f71f9627a925afebe165dccf24e4454894d1bd261c8d4e1c75b",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-best-practices.md"
+    },
+    "remotion-dev/remotion-captions": {
+      "contentSha256": "28c30e0b2044ad3a45ecba5eb31dc6938bb11cfa339d16df04423943599fa115",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-captions.md"
+    },
+    "remotion-dev/remotion-create": {
+      "contentSha256": "6ed2a1d919b9d6cc6855ea87c941517f5b5794984695cc05a2fc12566f04c9a6",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-create.md"
+    },
+    "remotion-dev/remotion-docs": {
+      "contentSha256": "9e0fd5a1c620f8470f6b0154b578735a27fe072a02f5470c0698c42a1a4fc47a",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-docs.md"
+    },
+    "remotion-dev/remotion-interactivity": {
+      "contentSha256": "0372331ec38bb55279b69514eea0f4ac33fa2f36421e8cc1769ae6090ddbcb13",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-interactivity.md"
+    },
+    "remotion-dev/remotion-maps": {
+      "contentSha256": "715222b4529c487f0d457baceba07421906f4e7945f9d49eaeabe96b7ecbed4c",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-maps.md"
+    },
+    "remotion-dev/remotion-markup": {
+      "contentSha256": "2549de054ba56aada1fb5e3503a9082456d3d25cd10d5338abfbec2685ddab35",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-markup.md"
+    },
+    "remotion-dev/remotion-multimedia": {
+      "contentSha256": "5b12ae6f2b5a82e42e5ce3a547b6ad7daac7d68de69683e6e62425536b72123d",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-multimedia.md"
+    },
+    "remotion-dev/remotion-render": {
+      "contentSha256": "f18a5d6cf3af4b0a86a4dd8121166f76c04ae1325d32f9338483302359d8d6bf",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-render.md"
+    },
+    "remotion-dev/remotion-saas": {
+      "contentSha256": "052fdb7244c522201bd016e5ba6ce7bb155992da31dfd288c6c11723c42443b8",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-saas.md"
+    },
+    "remotion-dev/remotion-studio": {
+      "contentSha256": "48c4707b67f5059d0d762577c2904079be4995bffc1270cb9ff1e6c462bfafe0",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-studio.md"
+    },
+    "remotion-dev/remotion-upgrade": {
+      "contentSha256": "51d77cd25f4cf4d3f8735eae25705b1d0aa79a62ce8c9d18b7764bfa5e8af928",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-upgrade.md"
     },
     "ruvnet/agentdb": {
       "contentSha256": "62db8c805e049a140d44e73f44b74e711675ee880a225ca1a1f23597faa4046f",
@@ -1627,10 +1727,40 @@
       "sourceUrl": "https://github.com/santifer/career-ops/blob/main/.agents/skills/career-ops/SKILL.md",
       "canonicalPath": "registry/named/santifer/career-ops.md"
     },
+    "sickn33/ai-dev-jobs-mcp": {
+      "contentSha256": "1fdb44012f444b4e24112135146c7c350c2546ddd8e6cb03d09a309923d69f3b",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/ai-dev-jobs-mcp.md"
+    },
+    "sickn33/mcp-builder": {
+      "contentSha256": "4007fb7074a434ce79f5f3db4423a6e89646c2a61eee887685130cf6f32eb739",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/mcp-builder.md"
+    },
+    "sickn33/n8n-mcp-tools-expert": {
+      "contentSha256": "379c27ef9903854fc635d84bcb1128d5e6860f7c3e37fb6b1d3ccec558b74954",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/n8n-mcp-tools-expert.md"
+    },
     "spring-ai/readme-generate": {
       "contentSha256": "fcb44964f58c7ff84f3840eb7d494f9feb3d7da64d6814409ba6df92670f289b",
       "sourceUrl": "https://github.com/spring-ai-alibaba/examples/blob/main/.claude/skills/readme-generate/SKILL.md",
       "canonicalPath": "registry/named/spring-ai/readme-generate.md"
+    },
+    "supabase/supabase": {
+      "contentSha256": "a47b7d547f72a2082f9166dea8d5a1a9eb7c8dfa9c38a8a2480938ec6d80f688",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/supabase/supabase.md"
+    },
+    "supabase/supabase-postgres-best-practices": {
+      "contentSha256": "6cad0493f83bd2fbe1295e13db4b33b4084ea7a831b96178dd2ac089f0b77f59",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/supabase/supabase-postgres-best-practices.md"
+    },
+    "upsonic/unittest-generator": {
+      "contentSha256": "67eb5b0d7e75a6c6aad667a4e145d9754d97ffe36b079b2cae1c8db4ce062c35",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/upsonic/unittest-generator.md"
     },
     "vercel-labs/vercel-react-best-practices": {
       "contentSha256": "ffff755ac51bbfd5c6a5ec61e811876b7b61451711f10514d2a5c1bda06526a5",

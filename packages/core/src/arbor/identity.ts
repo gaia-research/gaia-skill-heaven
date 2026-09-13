@@ -25,8 +25,8 @@ export const ARBOR_IDENTITY_SCHEMA = "skill-heaven.arbor-identity-context/v1" as
 export type ArborIdentityEntry = {
   /** sha256 of the exact canonical Tree file bytes at `commit`. */
   contentSha256: string;
-  /** The canonical source route published for this id at `commit`. */
-  sourceUrl: string;
+  /** The canonical route at `commit`; null records explicit source absence. */
+  sourceUrl: string | null;
   /** The canonical path the digest was taken from, for audit. */
   canonicalPath: string;
 };
@@ -75,7 +75,7 @@ export type ArborIdentityResolution =
 export type ArborIdentityQuery = {
   skillId: string;
   /** The candidate's own source link, as the retrieval corpus published it. */
-  sourceUrl: string | undefined;
+  sourceUrl: string | null | undefined;
   /** The Tree revision the retrieval corpus was built from, when it publishes one. */
   corpusRevision: string | null;
 };
@@ -151,7 +151,10 @@ export function assertArborIdentityContext(
     if (typeof fields.contentSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(fields.contentSha256)) {
       throw new ArborIdentityError(`${label}.skills['${id}'].contentSha256 must be a sha256 digest.`);
     }
-    for (const key of ["sourceUrl", "canonicalPath"]) {
+    if (fields.sourceUrl !== null && (typeof fields.sourceUrl !== "string" || fields.sourceUrl.length === 0)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'].sourceUrl must be a non-empty string or explicit null.`);
+    }
+    for (const key of ["canonicalPath"]) {
       if (typeof fields[key] !== "string" || (fields[key] as string).length === 0) {
         throw new ArborIdentityError(`${label}.skills['${id}'].${key} must be a non-empty string.`);
       }

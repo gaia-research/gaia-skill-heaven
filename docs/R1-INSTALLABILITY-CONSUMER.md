@@ -20,15 +20,19 @@ comparator result into materializability.
   `not-materializable` evidence can withhold, and only for its published
   scoped reason (`no-source` or `intrinsic-content-failure`). Explicit
   registry-only refusal remains its separate existing guard.
-- The optional adapter is opt-in. The shipped CLI/MCP constructors currently
-  do not configure it: the default bundle reports `not-configured`, does not
-  fetch or read the publication, and uses explicit unknown assessments without
-  URL-shape filtering. The exported
-  `GaiaServiceOptions.installabilityAdapter` is a usable documented
-  programmatic seam; wiring a public CLI/MCP entrypoint is intentionally left
-  for central integration rather than invented here. An adapter failure
-  degrades to the same unknown path and is disclosed in the public ranking
-  output. Explicit GitHub fleet candidates do not inherit Tree evidence.
+- The shared CLI/MCP constructor accepts `SKILL_SUMMON_INSTALLABILITY` as a
+  local JSON path, `file:` URL, or explicit HTTP(S) URL. Unset remains
+  `not-configured`, with no projection I/O and no URL-shape filtering. HTTP(S)
+  explicitly opts into fetching that projection; redirects are refused.
+  Invalid configuration and load failures degrade to disclosed unknown.
+- The configured path applies only to the pinned canonical Tree corpus. It
+  proves canonical content against the candidate revision's identity artifact,
+  not against the observation itself. That artifact now records explicit null
+  routes for canonical source-less records; absence alone is never a negative.
+  Remote revisions are supplied only by immutable candidate routes, never by
+  copying an observation's resolved revision. Mutable routes stay unverified
+  whenever a remote revision is required. Fleet/private sources inherit nothing.
+- `GaiaServiceOptions.installabilityAdapter` remains the embedding seam.
 
 The projection intentionally omits the observation comparator and some
 operator context. A verified `materializable` projection record therefore
@@ -53,8 +57,9 @@ assessment envelope.
 - `packages/skill-summon/src/summon/*` and MCP output preserve/disclose the
   assessment on previews, installed skills, cards, and filtered reasons.
 
-No Arbor field, ranking field, admission floor, band, margin, corpus, label,
-expansion, or installer/door policy was changed.
+No upstream Arbor field, admission floor, band, margin, corpus, label,
+expansion, or installer/door policy is changed by this integration. New shared
+configuration and source-less identity tests await the resumed review pass.
 
 ## Verification
 

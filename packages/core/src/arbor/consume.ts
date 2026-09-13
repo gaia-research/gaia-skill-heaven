@@ -183,7 +183,8 @@ export type ArborDisclosure = {
 export type ConsumeArborOptions = {
   /**
    * Canonical content pins the caller can prove for OTHER skills, used only to
-   * check an interaction edge's counterpart endpoint. Production passes none.
+   * check an interaction edge's counterpart endpoint. These are canonical
+   * registry pins, never delivery proof or assurance of a pair's conditions.
    */
   knownContentSha256?: Readonly<Record<string, string>> | undefined;
 };

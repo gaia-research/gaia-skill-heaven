@@ -61,8 +61,8 @@ const summonAnnotations = {
 
 /**
  * SPEC §5.2 — every result carries `structuredContent` conforming to this,
- * plus the human-readable card in `content`. This is what lets the Ultra
- * controller read a margin without parsing prose.
+ * plus human-readable content. Retrieval margins remain diagnostics, never
+ * behavioral events or authority for an Ultra transition.
  */
 const summonOutputSchema = z.object({
   query: z.string(),
@@ -122,6 +122,15 @@ const summonOutputSchema = z.object({
       sha256: z.string().nullable(),
       problem: z.string().nullable(),
     }),
+  }),
+  composition: z.object({
+    mode: z.literal("relevance-only"),
+    selectionChanged: z.literal(false),
+    conditionsEvaluated: z.literal(false),
+    deliveryVerified: z.literal(false),
+    members: z.array(z.unknown()),
+    interactions: z.array(z.unknown()),
+    note: z.string(),
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),
