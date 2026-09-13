@@ -6,16 +6,16 @@ import { assertConfinedPath } from "../summon/session.js";
 
 /** Kernel-enforced no-symlink opening; a check followed by plain open is not safe. */
 export async function readConfinedFile(root: string, target: string): Promise<Buffer> {
-  await assertConfinedPath(root, target, "Optional evidence file");
-  let absolute = resolve(target);
+  // On macOS /tmp and /var are symlink aliases of /private/tmp and
+  // /private/var. Canonicalize only those OS-owned aliases before the
+  // confinement check; user-controlled symlink components still fail closed.
+  const confinedRoot = darwinAlias(resolve(root));
+  const absolute = darwinAlias(resolve(target));
+  await assertConfinedPath(confinedRoot, absolute, "Optional evidence file");
   const handles: FileHandle[] = [];
   try {
     let file: FileHandle;
     if (process.platform === "darwin") {
-      // Only the standard OS aliases are canonicalized, never an arbitrary
-      // realpath supplied by a concurrently replaceable publication directory.
-      if (absolute.startsWith("/tmp/")) absolute = `/private${absolute}`;
-      if (absolute.startsWith("/var/")) absolute = `/private${absolute}`;
       // Darwin sys/fcntl.h: O_NOFOLLOW_ANY rejects symlinks in EVERY component.
       // Node exposes O_NOFOLLOW (leaf only), but not this kernel flag.
       // Unsupported kernels fail closed rather than falling back to plain open.
@@ -44,4 +44,11 @@ export async function readConfinedFile(root: string, target: string): Promise<Bu
   } finally {
     await Promise.all(handles.map((handle) => handle.close()));
   }
+}
+
+function darwinAlias(value: string): string {
+  if (process.platform !== "darwin") return value;
+  if (value === "/tmp" || value.startsWith("/tmp/")) return `/private${value}`;
+  if (value === "/var" || value.startsWith("/var/")) return `/private${value}`;
+  return value;
 }

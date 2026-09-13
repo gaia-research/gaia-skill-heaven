@@ -20531,14 +20531,13 @@ import { constants } from "node:fs";
 import { open } from "node:fs/promises";
 import { resolve } from "node:path";
 async function readConfinedFile(root, target) {
-  await assertConfinedPath(root, target, "Optional evidence file");
-  let absolute = resolve(target);
+  const confinedRoot = darwinAlias(resolve(root));
+  const absolute = darwinAlias(resolve(target));
+  await assertConfinedPath(confinedRoot, absolute, "Optional evidence file");
   const handles = [];
   try {
     let file;
     if (process.platform === "darwin") {
-      if (absolute.startsWith("/tmp/")) absolute = `/private${absolute}`;
-      if (absolute.startsWith("/var/")) absolute = `/private${absolute}`;
       file = await open(absolute, constants.O_RDONLY | constants.O_NONBLOCK | 536870912);
       handles.push(file);
     } else if (process.platform === "linux") {
@@ -20566,6 +20565,12 @@ async function readConfinedFile(root, target) {
   } finally {
     await Promise.all(handles.map((handle) => handle.close()));
   }
+}
+function darwinAlias(value) {
+  if (process.platform !== "darwin") return value;
+  if (value === "/tmp" || value.startsWith("/tmp/")) return `/private${value}`;
+  if (value === "/var" || value.startsWith("/var/")) return `/private${value}`;
+  return value;
 }
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
