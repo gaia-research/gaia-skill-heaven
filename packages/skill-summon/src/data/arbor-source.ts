@@ -11,9 +11,8 @@
 //     `..` segment, but it says nothing about symlinks. A listed subject
 //     directory that is a link to somewhere else would turn bytes outside the
 //     declared publication into Arbor evidence, rendered to a caller as though
-//     upstream had published it. Every path is confined with the same primitive
-//     the session root uses, and files are read through an open handle so the
-//     check and the read cannot be separated.
+//     upstream had published it. A shared kernel-enforced no-symlink reader
+//     closes the gap between path checks and opening the file.
 //   * Digest VERIFICATION. A provenance record naming an upstream commit is only
 //     a receipt for the bytes beside it. Unless those bytes are hashed, a cache
 //     whose content does not match its own manifest still presents the claimed
@@ -24,7 +23,6 @@
 // unknown and leaves retrieval byte-for-byte unchanged (SPEC INV-8).
 
 import { createHash } from "node:crypto";
-import { open } from "node:fs/promises";
 import { dirname, join, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,7 +36,7 @@ import {
   type ArborPublicationProvenance,
 } from "skill-zero";
 
-import { assertConfinedPath } from "../summon/session.js";
+import { readConfinedArborFile } from "./arbor-file.js";
 
 /** Where the cached publication lives relative to the repository root. */
 const ARBOR_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor");
@@ -198,42 +196,19 @@ async function readConfinedJson(
 ): Promise<ReadFile | undefined> {
   const target = join(root, relativePath);
   try {
-    // Rejects a symlinked root, a symlinked or non-directory component anywhere
-    // between the root and the target, and anything whose real path lands
-    // outside the root.
-    await assertConfinedPath(root, target, `Arbor publication file '${relativePath}'`);
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    // ENOENT from the walk is ordinary absence, not a confinement failure.
-    if (code === "ENOENT" || code === "ENOTDIR") return undefined;
-    problems.push({ where: relativePath, detail: describe(error) });
-    return undefined;
-  }
-
-  let handle;
-  try {
-    handle = await open(target, "r");
-  } catch {
-    return undefined;
-  }
-  try {
-    // Read through the handle the check was made against, and confirm through
-    // that same handle that it is a regular file — so the path cannot be swapped
-    // between the confinement check and the read.
-    const stat = await handle.stat();
-    if (!stat.isFile()) {
-      problems.push({ where: relativePath, detail: "is not a regular file" });
-      return undefined;
-    }
-    const bytes = await handle.readFile();
+    const bytes = await readConfinedArborFile(root, target);
     const digest = createHash("sha256").update(bytes).digest("hex");
     try {
       return { value: JSON.parse(bytes.toString("utf8")) as unknown, sha256: digest };
     } catch {
       return { value: null, sha256: digest };
     }
-  } finally {
-    await handle.close();
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== "ENOENT" && code !== "ENOTDIR") {
+      problems.push({ where: relativePath, detail: describe(error) });
+    }
+    return undefined;
   }
 }
 

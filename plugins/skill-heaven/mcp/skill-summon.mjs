@@ -417,11 +417,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants2);
+          this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -438,10 +438,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants2);
+        this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -502,8 +502,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants2) {
-        this.code = optimizeExpr(this.code, names, constants2);
+      optimizeNames(names, constants3) {
+        this.code = optimizeExpr(this.code, names, constants3);
         return this;
       }
       get names() {
@@ -532,12 +532,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants2))
+          if (n.optimizeNames(names, constants3))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -590,12 +590,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        if (!(super.optimizeNames(names, constants2) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        if (!(super.optimizeNames(names, constants3) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants2);
+        this.condition = optimizeExpr(this.condition, names, constants3);
         return this;
       }
       get names() {
@@ -618,10 +618,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants2);
+        this.iteration = optimizeExpr(this.iteration, names, constants3);
         return this;
       }
       get names() {
@@ -657,10 +657,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants2);
+        this.iterable = optimizeExpr(this.iterable, names, constants3);
         return this;
       }
       get names() {
@@ -702,11 +702,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a, _b;
-        super.optimizeNames(names, constants2);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants2);
+        super.optimizeNames(names, constants3);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants3);
         return this;
       }
       get names() {
@@ -1007,7 +1007,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants2) {
+    function optimizeExpr(expr, names, constants3) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1022,14 +1022,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants2[n.str];
+        const c = constants3[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants2[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants3[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve.call(this, root, ref);
+      let _sch = resolve2.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve(root, ref) {
+    function resolve2(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3649,7 +3649,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve(baseURI, relativeURI, options) {
+    function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
       const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
@@ -3933,7 +3933,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve,
+      resolve: resolve2,
       resolveComponent,
       equal,
       serialize,
@@ -13032,12 +13032,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve) => {
+    return new Promise((resolve2) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve();
+        resolve2();
       } else {
-        this._stdout.once("drain", resolve);
+        this._stdout.once("drain", resolve2);
       }
     });
   }
@@ -20200,7 +20200,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -20217,7 +20217,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -20295,7 +20295,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve(parseResult.data);
+            resolve2(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -20556,12 +20556,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve, interval);
+      const timeoutId = setTimeout(resolve2, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -21883,7 +21883,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -23902,9 +23902,52 @@ function short(digest) {
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
 import { createHash as createHash2 } from "node:crypto";
-import { open } from "node:fs/promises";
 import { dirname as dirname2, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+// packages/skill-summon/src/data/arbor-file.ts
+import { constants } from "node:fs";
+import { open } from "node:fs/promises";
+import { resolve } from "node:path";
+async function readConfinedArborFile(root, target) {
+  await assertConfinedPath(root, target, "Arbor file");
+  let absolute = resolve(target);
+  const handles = [];
+  try {
+    let file;
+    if (process.platform === "darwin") {
+      if (absolute.startsWith("/tmp/")) absolute = `/private${absolute}`;
+      if (absolute.startsWith("/var/")) absolute = `/private${absolute}`;
+      file = await open(absolute, constants.O_RDONLY | constants.O_NONBLOCK | 536870912);
+      handles.push(file);
+    } else if (process.platform === "linux") {
+      let parent = await open("/", constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      handles.push(parent);
+      const parts = absolute.split("/").filter(Boolean);
+      if (parts.length === 0) throw new Error("Arbor file is not a regular file");
+      for (const part of parts.slice(0, -1)) {
+        parent = await open(
+          `/proc/self/fd/${parent.fd}/${part}`,
+          constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW
+        );
+        handles.push(parent);
+      }
+      file = await open(
+        `/proc/self/fd/${parent.fd}/${parts.at(-1)}`,
+        constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW
+      );
+      handles.push(file);
+    } else {
+      throw new Error("Secure Arbor file opening is unavailable on this platform");
+    }
+    if (!(await file.stat()).isFile()) throw new Error("Arbor file is not a regular file");
+    return await file.readFile();
+  } finally {
+    await Promise.all(handles.map((handle) => handle.close()));
+  }
+}
+
+// packages/skill-summon/src/data/arbor-identity-source.ts
 var IDENTITY_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor-identity.json");
 var cached2;
 function loadArborIdentityContext() {
@@ -23914,24 +23957,7 @@ function loadArborIdentityContext() {
 async function readArborIdentityFile(path9) {
   const directory = dirname2(path9);
   try {
-    await assertConfinedPath(directory, path9, "Arbor identity context");
-  } catch (error2) {
-    const code = error2.code;
-    if (code === "ENOENT" || code === "ENOTDIR") return absent();
-    return { context: null, problem: describe2(error2), sha256: null };
-  }
-  let handle;
-  try {
-    handle = await open(path9, "r");
-  } catch {
-    return absent();
-  }
-  try {
-    const stat5 = await handle.stat();
-    if (!stat5.isFile()) {
-      return { context: null, problem: "identity context is not a regular file", sha256: null };
-    }
-    const bytes = await handle.readFile();
+    const bytes = await readConfinedArborFile(directory, path9);
     const digest = createHash2("sha256").update(bytes).digest("hex");
     let parsed;
     try {
@@ -23945,8 +23971,10 @@ async function readArborIdentityFile(path9) {
       return { context: null, problem: describe2(error2), sha256: digest };
     }
     return { context: parsed, problem: null, sha256: digest };
-  } finally {
-    await handle.close();
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return absent();
+    return { context: null, problem: describe2(error2), sha256: null };
   }
 }
 async function readIdentityFromDisk() {
@@ -23979,7 +24007,6 @@ function describe2(error2) {
 
 // packages/skill-summon/src/data/arbor-source.ts
 import { createHash as createHash3 } from "node:crypto";
-import { open as open2 } from "node:fs/promises";
 import { dirname as dirname3, join as join2, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 var ARBOR_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "arbor");
@@ -24072,34 +24099,19 @@ function candidatePaths2() {
 async function readConfinedJson(root, relativePath, problems) {
   const target = join2(root, relativePath);
   try {
-    await assertConfinedPath(root, target, `Arbor publication file '${relativePath}'`);
-  } catch (error2) {
-    const code = error2.code;
-    if (code === "ENOENT" || code === "ENOTDIR") return void 0;
-    problems.push({ where: relativePath, detail: describe3(error2) });
-    return void 0;
-  }
-  let handle;
-  try {
-    handle = await open2(target, "r");
-  } catch {
-    return void 0;
-  }
-  try {
-    const stat5 = await handle.stat();
-    if (!stat5.isFile()) {
-      problems.push({ where: relativePath, detail: "is not a regular file" });
-      return void 0;
-    }
-    const bytes = await handle.readFile();
+    const bytes = await readConfinedArborFile(root, target);
     const digest = createHash3("sha256").update(bytes).digest("hex");
     try {
       return { value: JSON.parse(bytes.toString("utf8")), sha256: digest };
     } catch {
       return { value: null, sha256: digest };
     }
-  } finally {
-    await handle.close();
+  } catch (error2) {
+    const code = error2.code;
+    if (code !== "ENOENT" && code !== "ENOTDIR") {
+      problems.push({ where: relativePath, detail: describe3(error2) });
+    }
+    return void 0;
   }
 }
 async function verifyProvenance(root, expected, digests, problems) {
@@ -25594,9 +25606,9 @@ function errorMessage5(error2) {
 }
 
 // packages/skill-summon/src/mcp/skills.ts
-import { constants } from "node:fs";
+import { constants as constants2 } from "node:fs";
 import { createHash as createHash6 } from "node:crypto";
-import { mkdtemp as mkdtemp3, lstat as lstat5, open as open3, rm as rm5 } from "node:fs/promises";
+import { mkdtemp as mkdtemp3, lstat as lstat5, open as open2, rm as rm5 } from "node:fs/promises";
 import { tmpdir as tmpdir4 } from "node:os";
 import path8 from "node:path";
 var SKILLS_EXTENSION_ID = "io.modelcontextprotocol/skills";
@@ -25867,8 +25879,8 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
     const filePath = path8.resolve(skillRoot, resourceSubpath);
     assertInside(skillRoot, filePath);
     await assertNoSymlinkPath(skillRoot, resourceSubpath);
-    const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
-    const handle = await open3(filePath, flags);
+    const flags = constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0);
+    const handle = await open2(filePath, flags);
     try {
       const fileStat = await handle.stat();
       if (!fileStat.isFile()) {

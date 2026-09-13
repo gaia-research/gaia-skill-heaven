@@ -6,13 +6,12 @@
 // as it was before this file existed.
 
 import { createHash } from "node:crypto";
-import { open } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { assertArborIdentityContext, type ArborIdentityContext } from "skill-zero";
 
-import { assertConfinedPath } from "../summon/session.js";
+import { readConfinedArborFile } from "./arbor-file.js";
 
 /** Where the committed identity context lives relative to the repository root. */
 const IDENTITY_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor-identity.json");
@@ -41,25 +40,7 @@ export function resetArborIdentityCache(): void {
 export async function readArborIdentityFile(path: string): Promise<ArborIdentityLoad> {
   const directory = dirname(path);
   try {
-    await assertConfinedPath(directory, path, "Arbor identity context");
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code === "ENOENT" || code === "ENOTDIR") return absent();
-    return { context: null, problem: describe(error), sha256: null };
-  }
-
-  let handle;
-  try {
-    handle = await open(path, "r");
-  } catch {
-    return absent();
-  }
-  try {
-    const stat = await handle.stat();
-    if (!stat.isFile()) {
-      return { context: null, problem: "identity context is not a regular file", sha256: null };
-    }
-    const bytes = await handle.readFile();
+    const bytes = await readConfinedArborFile(directory, path);
     const digest = createHash("sha256").update(bytes).digest("hex");
     let parsed: unknown;
     try {
@@ -73,8 +54,10 @@ export async function readArborIdentityFile(path: string): Promise<ArborIdentity
       return { context: null, problem: describe(error), sha256: digest };
     }
     return { context: parsed, problem: null, sha256: digest };
-  } finally {
-    await handle.close();
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") return absent();
+    return { context: null, problem: describe(error), sha256: null };
   }
 }
 
