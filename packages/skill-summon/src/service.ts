@@ -44,7 +44,11 @@ export type GaiaServiceOptions = {
    * build from whatever this source returns".
    */
   sourceUrl?: string | undefined;
-  /** Optional Tree installability projection. Never fetched unless supplied. */
+  /**
+   * Optional Tree installability projection. Never fetched unless supplied.
+   * The shipped CLI/MCP constructors intentionally leave this undefined;
+   * programmatic hosts must explicitly inject the adapter and its source.
+   */
   installabilityAdapter?: Pick<GaiaInstallabilityAdapter, "apply"> | undefined;
 };
 
@@ -102,7 +106,7 @@ export class GaiaService {
       index: indexFromSnapshot(snapshot, sourceUrl),
       source: sourceUrl,
       origin: "fetched",
-      sourceKind: snapshot.source.kind ?? "tree",
+      sourceKind: snapshot.source.kind,
     });
   }
 
@@ -122,7 +126,7 @@ export class GaiaService {
     try {
       const applied = await this.#installabilityAdapter.apply(unknown, {
         source: resolved.source,
-        sourceKind: resolved.sourceKind ?? "tree",
+        sourceKind: resolved.sourceKind ?? "unknown",
       });
       return {
         ...resolved,
@@ -405,7 +409,7 @@ export class GaiaService {
   }
 
   #metadata(snapshot: GaiaRegistrySnapshot): ResultMetadata {
-    const sourceKind = snapshot.source.kind ?? "tree";
+    const sourceKind = snapshot.source.kind ?? "unknown";
     const generatedTimes = [
       Date.parse(snapshot.generic.generatedAt),
       Date.parse(snapshot.named.generatedAt),
@@ -431,6 +435,10 @@ export class GaiaService {
     if (sourceKind === "fleet") {
       warnings.push(
         "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active.",
+      );
+    } else if (sourceKind === "unknown") {
+      warnings.push(
+        "Source kind is unknown; Tree-scoped installability evidence is not applied.",
       );
     } else if (!upstreamDeclaresContractVersion) {
       warnings.push(

@@ -89,6 +89,7 @@ const summonOutputSchema = z.object({
       .object({
         status: z.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
         projectionIndexPath: z.string().optional(),
+        sourceUrl: z.string().optional(),
         warning: z.string().optional(),
       })
       .optional(),

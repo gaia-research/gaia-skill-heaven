@@ -124,7 +124,7 @@ export function flattenNamedSkills(document: NamedRegistryDocument): NamedSkill[
 }
 
 export type RegistrySourceInfo = {
-  kind?: "tree" | "fleet" | undefined;
+  kind?: "tree" | "fleet" | "unknown" | undefined;
   rootUrl?: string | undefined;
   genericUrl: string;
   namedUrl: string;
@@ -140,7 +140,7 @@ export type GaiaRegistrySnapshot = GaiaRegistryDocuments & {
 export type ResultMetadata = {
   serverVersion: string;
   mode: "registry";
-  sourceKind: "tree" | "fleet";
+  sourceKind: "tree" | "fleet" | "unknown";
   routingMode: "generic-map+collection" | "collection-only";
   contractVersion: typeof TREE_CONTRACT_VERSION;
   supportedContractVersions: [typeof TREE_CONTRACT_VERSION];

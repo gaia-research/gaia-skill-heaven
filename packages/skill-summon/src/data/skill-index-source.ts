@@ -97,11 +97,12 @@ export type ResolvedIndex = {
   /** "committed" needed no network; "fetched" reached the named source. */
   origin: "committed" | "fetched";
   /** Source class gates Tree-only installability evidence. */
-  sourceKind?: "tree" | "fleet" | undefined;
+  sourceKind?: "tree" | "fleet" | "unknown" | undefined;
   /** Optional evidence adapter status, disclosed without affecting retrieval. */
   installability?: {
     status: "not-configured" | "applied" | "not-applicable" | "unavailable";
     projectionIndexPath?: string | undefined;
+    sourceUrl?: string | undefined;
     warning?: string | undefined;
   } | undefined;
 };

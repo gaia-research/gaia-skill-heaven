@@ -1,10 +1,19 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { readFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   FileInstallabilitySource,
   GaiaInstallabilityAdapter,
+  HttpInstallabilitySource,
   InMemoryGaiaRegistrySource,
   StaticInstallabilitySource,
   parseInstallabilityProjection,
@@ -16,10 +25,11 @@ import type {
   GaiaRegistryDocuments,
   NamedSkill,
 } from "../src/domain/types.js";
-import type {
-  InstallabilityProjection,
-  InstallabilityProjectionSkill,
-  InstallabilitySourceRoute,
+import {
+  assessInstallability,
+  type InstallabilityProjection,
+  type InstallabilityProjectionSkill,
+  type InstallabilitySourceRoute,
 } from "skill-zero";
 import { summon } from "../src/summon/summon.js";
 
@@ -169,6 +179,127 @@ describe("Tree installability projection adapter", () => {
       upstream: { deliveredContentSha256: HASH_B },
     });
     expect(outcome.ranking.installability?.status).toBe("applied");
+  });
+
+  it("also fails closed at the exported core assessment boundary", () => {
+    const id = "example/raw-cast";
+    const malformed = projection({ [id]: record({
+      observationDigest: null,
+      observedAt: null,
+      observedSourceRoute: null,
+      observedSkillContentSha256: null,
+      resolvedRevision: null,
+      deliveredContentSha256: null,
+    }) });
+    const assessment = assessInstallability(
+      malformed,
+      id,
+      { id, sourceRoute: SOURCE_ROUTE, skillContentSha256: HASH_A },
+      "tree",
+    );
+    expect(assessment).toMatchObject({
+      state: "unknown",
+      reason: "unverified-applicability",
+      applicability: "unknown",
+      applicabilityReason: "invalid-evidence",
+    });
+  });
+
+  it("downgrades semantically malformed positive and negative records to unknown", async () => {
+    const positive = skill("example/malformed-positive", "Malformed Positive");
+    const negative = skill("example/malformed-negative", "Malformed Negative");
+    const malformedPositive = record({
+      observationDigest: null,
+      observedAt: null,
+      observedSourceRoute: null,
+      observedSkillContentSha256: null,
+      resolvedRevision: null,
+      deliveredContentSha256: null,
+    });
+    const malformedNegative = record({
+      state: "not-materializable",
+      reason: "intrinsic-content-failure",
+      observationDigest: HASH_B,
+    });
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(documents([positive, negative])),
+      {
+        installabilityAdapter: adapter(
+          projection({
+            [positive.id]: malformedPositive,
+            [negative.id]: malformedNegative,
+          }),
+          {
+            [positive.id]: {
+              sourceRoute: SOURCE_ROUTE,
+              skillContentSha256: HASH_A,
+            },
+            [negative.id]: {
+              sourceRoute: SOURCE_ROUTE,
+              skillContentSha256: HASH_A,
+            },
+          },
+        ),
+      },
+    );
+
+    const outcome = await summon(service, await open(), {
+      query: "malformed",
+      preview: true,
+      limit: 2,
+      surface: "any",
+    });
+
+    expect(outcome.filtered).toEqual([]);
+    expect(outcome.previewed).toHaveLength(2);
+    expect(outcome.previewed.map((item) => item.installability)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          state: "unknown",
+          reason: "unverified-applicability",
+          applicabilityReason: "invalid-evidence",
+        }),
+      ]),
+    );
+    expect(
+      outcome.previewed.find((item) => item.id === negative.id)?.installability,
+    ).toMatchObject({
+      state: "unknown",
+      reason: "unverified-applicability",
+      upstream: { observationDigest: HASH_B },
+    });
+  });
+
+  it("requires an upstream resolved revision for materializable evidence", async () => {
+    const candidate = skill("example/missing-revision", "Missing Revision");
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(documents([candidate])),
+      {
+        installabilityAdapter: adapter(
+          projection({ [candidate.id]: record({ resolvedRevision: null }) }),
+          {
+            [candidate.id]: {
+              sourceRoute: SOURCE_ROUTE,
+              skillContentSha256: HASH_A,
+            },
+          },
+        ),
+      },
+    );
+
+    const outcome = await summon(service, await open(), {
+      query: "missing revision",
+      preview: true,
+      surface: "any",
+    });
+
+    expect(outcome.filtered).toEqual([]);
+    expect(outcome.previewed[0]?.installability).toMatchObject({
+      state: "unknown",
+      applicability: "unknown",
+      applicabilityReason: "invalid-evidence",
+      upstream: { resolvedRevision: null },
+    });
   });
 
   it.each([
@@ -402,6 +533,116 @@ describe("Tree installability projection adapter", () => {
     expect(outcome.previewed).toHaveLength(1);
     expect(outcome.previewed[0]?.installability?.applicabilityReason).toBe("fleet-source");
     expect(outcome.ranking.installability?.status).toBe("not-applicable");
+  });
+
+  it("does not apply Tree evidence to a source whose kind is unknown", async () => {
+    const candidate = skill("example/private", "Private Source");
+    const privateSource = {
+      async load() {
+        return {
+          ...documents([candidate]),
+          source: {
+            genericUrl: "file:///private/generic.json",
+            namedUrl: "file:///private/named.json",
+            fetchedAt: CHECKED_AT,
+          },
+        };
+      },
+    };
+    const service = new GaiaService(privateSource, {
+      installabilityAdapter: adapter(
+        projection({ [candidate.id]: record() }),
+        {
+          [candidate.id]: {
+            sourceRoute: SOURCE_ROUTE,
+            skillContentSha256: HASH_A,
+            resolvedRevision: REVISION_A,
+          },
+        },
+      ),
+    });
+
+    const outcome = await summon(service, await open(), {
+      query: "private source",
+      preview: true,
+      surface: "any",
+    });
+
+    expect(outcome.previewed[0]?.installability).toMatchObject({
+      state: "unknown",
+      applicability: "unknown",
+      applicabilityReason: "invalid-context",
+    });
+    expect(outcome.ranking.installability?.status).toBe("not-applicable");
+  });
+
+  it("recomputes runtime unreachable stats from assessed eligibility", async () => {
+    const candidate = skill("example/no-source", "No Source", { links: {} });
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(documents([candidate])),
+    );
+    const resolved = await service.skillIndex();
+    const outcome = await summon(service, await open(), {
+      query: "no source",
+      preview: true,
+      surface: "any",
+    });
+
+    expect(resolved.index.docs[0]?.installability?.state).toBe("unknown");
+    expect(resolved.index.stats.unreachable).toBe(0);
+    expect(outcome.previewed).toHaveLength(1);
+  });
+
+  it("rejects symlinked physical parents for file projections", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "skill-heaven-r1-file-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "skill-heaven-r1-outside-"));
+    const outsideFile = path.join(outside, "projection.json");
+    const linkedParent = path.join(root, "linked");
+    try {
+      await writeFile(outsideFile, "{}", "utf8");
+      await expect(
+        new FileInstallabilitySource(outsideFile).load(),
+      ).resolves.toEqual({});
+      await symlink(outside, linkedParent);
+
+      await expect(
+        new FileInstallabilitySource(path.join(linkedParent, "projection.json")).load(),
+      ).rejects.toThrow(/symlink/iu);
+    } finally {
+      await Promise.all([
+        rm(root, { recursive: true, force: true }),
+        rm(outside, { recursive: true, force: true }),
+      ]);
+    }
+  });
+
+  it("rejects redirected HTTP projections and accepts an exact final URL", async () => {
+    const requested = "https://trusted.example/installability.json";
+    const projectionDocument = projection({ "example/http": record() });
+    const redirected = new HttpInstallabilitySource({
+      url: requested,
+      fetchFn: async () => ({
+        ok: true,
+        status: 200,
+        redirected: true,
+        url: "https://untrusted.example/installability.json",
+        json: async () => projectionDocument,
+      } as unknown as Response),
+    });
+    await expect(redirected.load()).rejects.toThrow(/redirected/iu);
+
+    const exact = new HttpInstallabilitySource({
+      url: requested,
+      fetchFn: async () => ({
+        ok: true,
+        status: 200,
+        redirected: false,
+        url: requested,
+        json: async () => projectionDocument,
+      } as unknown as Response),
+    });
+    await expect(exact.load()).resolves.toEqual(projectionDocument);
+    expect(exact.sourceUrl).toBe(requested);
   });
 
   it("keeps suites summonable when Tree evidence is absent", async () => {

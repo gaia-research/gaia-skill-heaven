@@ -20,11 +20,15 @@ comparator result into materializability.
   `not-materializable` evidence can withhold, and only for its published
   scoped reason (`no-source` or `intrinsic-content-failure`). Explicit
   registry-only refusal remains its separate existing guard.
-- The optional adapter is opt-in. Without it, production summon decorates the
-  index with explicit unknown assessments and does not use URL shape to filter.
-  An adapter failure degrades to the same unknown path and is disclosed in the
-  public ranking output. Explicit GitHub fleet candidates do not inherit Tree
-  evidence.
+- The optional adapter is opt-in. The shipped CLI/MCP constructors currently
+  do not configure it: the default bundle reports `not-configured`, does not
+  fetch or read the publication, and uses explicit unknown assessments without
+  URL-shape filtering. The exported
+  `GaiaServiceOptions.installabilityAdapter` is a usable documented
+  programmatic seam; wiring a public CLI/MCP entrypoint is intentionally left
+  for central integration rather than invented here. An adapter failure
+  degrades to the same unknown path and is disclosed in the public ranking
+  output. Explicit GitHub fleet candidates do not inherit Tree evidence.
 
 The projection intentionally omits the observation comparator and some
 operator context. A verified `materializable` projection record therefore
@@ -41,7 +45,9 @@ assessment envelope.
 - `packages/core/src/retrieval/build-index.ts` / `schema.ts` / `decide.ts`
   carry assessments without scoring them and withhold only verified negatives.
 - `packages/skill-summon/src/data/installability.ts` is the optional static,
-  file, or explicit HTTP adapter and strict offline projection parser.
+  file, or explicit HTTP adapter and strict offline projection parser. File
+  sources reject symlinked physical components; HTTP sources reject redirects
+  and disclose the verified final URL.
 - `packages/skill-summon/src/service.ts` applies the adapter best-effort after
   index resolution; it never makes optional evidence a summon prerequisite.
 - `packages/skill-summon/src/summon/*` and MCP output preserve/disclose the
@@ -60,9 +66,11 @@ expansion, or installer/door policy was changed.
 
 The focused R1 tests exercise the production adapter, service, `summon`
 preview/public output, filtered output, suite handling, and fleet routing. They
-cover exact materializable evidence, source/id/content/revision mismatch,
-malformed/absent/operational artifacts, unknown timeout evidence, scoped
-no-source and intrinsic negatives, delivered-content/comparator difference,
-explicit fleet skills, and offline no-match behavior. The final full suite
-passes: 53 files, 665 tests. The deterministic index check and MCP bundle
+cover exact materializable evidence, semantic provenance/ref/state validation,
+source/id/content/revision mismatch, malformed/absent/operational artifacts,
+unknown timeout evidence, scoped no-source and intrinsic negatives,
+delivered-content/comparator difference, explicit fleet/private/unknown
+sources, symlinked parents, redirect rejection, runtime stats, and offline
+no-match behavior. The final full suite passes: 53 files, 672 tests. The
+focused R1 file now has 23 tests. The deterministic index check and MCP bundle
 rebuild also pass; the site production build passes.

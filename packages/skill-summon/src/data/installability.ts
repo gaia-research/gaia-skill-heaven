@@ -1,10 +1,11 @@
-import { lstat, readFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, open, realpath } from "node:fs/promises";
+import path from "node:path";
 
 import {
   INSTALLABILITY_PROJECTION_SCHEMA,
   assessInstallability,
   assertInstallabilityProjectionSkill,
-  unknownInstallabilityAssessment,
   withInstallability,
   withUnknownInstallability,
   type InstallabilityAssessment,
@@ -44,16 +45,19 @@ const ROUTE_KEYS = new Set([
 
 export type InstallabilitySource = {
   load(): Promise<unknown>;
+  /** Actual source URL after a successful load, when the source has one. */
+  sourceUrl?: string | undefined;
 };
 
 export type InstallabilitySourceContext = {
   source: string;
-  sourceKind: "tree" | "fleet";
+  sourceKind: "tree" | "fleet" | "unknown";
 };
 
 export type InstallabilityAdapterStatus = {
   status: "applied" | "not-applicable" | "unavailable";
   projectionIndexPath?: string | undefined;
+  sourceUrl?: string | undefined;
   warning?: string | undefined;
 };
 
@@ -81,11 +85,17 @@ export class FileInstallabilitySource implements InstallabilitySource {
   }
 
   async load(): Promise<unknown> {
-    const info = await lstat(this.#path);
-    if (info.isSymbolicLink() || !info.isFile()) {
-      throw new Error(`Installability projection is not a regular file: ${this.#path}`);
+    const resolvedPath = await assertNoSymlinkComponents(this.#path);
+    const handle = await open(resolvedPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    try {
+      const info = await handle.stat();
+      if (!info.isFile()) {
+        throw new Error(`Installability projection is not a regular file: ${this.#path}`);
+      }
+      return JSON.parse(await handle.readFile("utf8")) as unknown;
+    } finally {
+      await handle.close();
     }
-    return JSON.parse(await readFile(this.#path, "utf8")) as unknown;
   }
 }
 
@@ -94,15 +104,27 @@ export class HttpInstallabilitySource implements InstallabilitySource {
   readonly #url: string;
   readonly #fetchFn: typeof fetch;
   readonly #timeoutMs: number;
+  #lastUrl: string | undefined;
 
   constructor(options: {
     url: string;
     fetchFn?: typeof fetch;
     timeoutMs?: number;
   }) {
+    const parsed = new URL(options.url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      throw new Error(`Optional installability source must use HTTP(S): ${options.url}`);
+    }
+    if (parsed.username || parsed.password) {
+      throw new Error("Optional installability source must not contain credentials.");
+    }
     this.#url = options.url;
     this.#fetchFn = options.fetchFn ?? fetch;
     this.#timeoutMs = options.timeoutMs ?? 15_000;
+  }
+
+  get sourceUrl(): string | undefined {
+    return this.#lastUrl;
   }
 
   async load(): Promise<unknown> {
@@ -110,6 +132,7 @@ export class HttpInstallabilitySource implements InstallabilitySource {
     try {
       response = await this.#fetchFn(this.#url, {
         headers: { accept: "application/json" },
+        redirect: "error",
         signal: AbortSignal.timeout(this.#timeoutMs),
       });
     } catch (error) {
@@ -122,6 +145,18 @@ export class HttpInstallabilitySource implements InstallabilitySource {
         `Could not fetch optional installability projection ${this.#url}: HTTP ${response.status}`,
       );
     }
+    const finalUrl = response.url;
+    if (
+      response.redirected ||
+      typeof finalUrl !== "string" ||
+      finalUrl.length === 0 ||
+      !sameHttpUrl(finalUrl, this.#url)
+    ) {
+      throw new Error(
+        `Rejected redirected optional installability projection: requested ${this.#url}, final ${finalUrl || "<missing>"}`,
+      );
+    }
+    this.#lastUrl = finalUrl;
     try {
       return await response.json();
     } catch (error) {
@@ -163,9 +198,13 @@ export class GaiaInstallabilityAdapter {
     index: SkillIndex,
     context: InstallabilitySourceContext,
   ): Promise<InstallabilityAdapterResult> {
-    if (context.sourceKind === "fleet") {
+    if (context.sourceKind !== "tree") {
       return {
-        index: withUnknownInstallability(index, null, "fleet-source"),
+        index: withUnknownInstallability(
+          index,
+          null,
+          context.sourceKind === "fleet" ? "fleet-source" : "invalid-context",
+        ),
         status: { status: "not-applicable" },
       };
     }
@@ -184,6 +223,7 @@ export class GaiaInstallabilityAdapter {
       status: {
         status: "applied",
         projectionIndexPath: projection.indexPath,
+        ...(this.#source.sourceUrl ? { sourceUrl: this.#source.sourceUrl } : {}),
       },
     };
   }
@@ -371,9 +411,11 @@ function validateRoute(value: unknown, label: string): void {
       throw new Error(`${label}.${key} does not match its URL.`);
     }
   }
-  if ((route.installSubpath as string).startsWith("/") ||
-      (route.installSubpath as string).split("/").includes("..")) {
-    throw new Error(`${label}.installSubpath contains path traversal.`);
+  for (const key of ["subpath", "entrypoint", "installSubpath"] as const) {
+    const value = route[key] as string;
+    if (value.startsWith("/") || value.split("/").includes("..")) {
+      throw new Error(`${label}.${key} contains path traversal.`);
+    }
   }
 }
 
@@ -433,6 +475,43 @@ function exactKeys(
   }
   for (const key of expected) {
     if (!(key in value)) throw new Error(`${label} is missing ${key}.`);
+  }
+}
+
+async function assertNoSymlinkComponents(filePath: string): Promise<string> {
+  const lexical = path.resolve(filePath);
+  const parsed = path.parse(lexical);
+  let cursor = parsed.root;
+  const parts = lexical.slice(parsed.root.length).split(path.sep).filter(Boolean);
+  for (const part of parts) {
+    cursor = path.join(cursor, part);
+    let info;
+    try {
+      info = await lstat(cursor);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    if (info.isSymbolicLink()) {
+      const resolved = await realpath(cursor).catch(() => "");
+      // macOS exposes the system temp roots through /private aliases. These
+      // are benign platform aliases, not user-controlled traversal.
+      const benignAlias =
+        (cursor === "/tmp" && resolved === "/private/tmp") ||
+        (cursor === "/var" && resolved === "/private/var");
+      if (!benignAlias) {
+        throw new Error(`Installability projection path traverses a symlink: ${cursor}`);
+      }
+    }
+  }
+  return realpath(lexical);
+}
+
+function sameHttpUrl(left: string, right: string): boolean {
+  try {
+    return new URL(left).toString() === new URL(right).toString();
+  } catch {
+    return false;
   }
 }
 

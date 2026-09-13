@@ -73,6 +73,7 @@ export type RankingDisclosure = RankingSummary & {
   installability?: {
     status: "not-configured" | "applied" | "not-applicable" | "unavailable";
     projectionIndexPath?: string | undefined;
+    sourceUrl?: string | undefined;
     warning?: string | undefined;
   } | undefined;
 };

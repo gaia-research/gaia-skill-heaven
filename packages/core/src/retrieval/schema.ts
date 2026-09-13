@@ -97,7 +97,12 @@ export type IndexStats = {
   docs: number;
   /** Indexed skills the upstream projection has not bucketed under a generic node. */
   awaitingClassification: number;
-  /** Documents summon cannot deliver: no installable link AND no suite components. */
+  /**
+   * Documents withheld by the index's reachability view. Build artifacts use
+   * the legacy link-shape count; runtime installability decoration recomputes
+   * this field from verified evidence so unknown candidates are not counted as
+   * unreachable.
+   */
   unreachable: number;
   missingTags: number;
   /**
