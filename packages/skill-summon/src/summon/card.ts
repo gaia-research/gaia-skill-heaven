@@ -48,6 +48,17 @@ export function renderSummonCard(
       "  Name mismatch: this is NOT the skill your query named — it is the best relevance match.",
     );
   }
+  if (skill.installability) {
+    if (skill.installability.applicability === "verified") {
+      lines.push(
+        `  Installability: ${skill.installability.state} · ${skill.installability.reason}`,
+      );
+    } else {
+      lines.push(
+        `  Installability: unknown · upstream evidence applicability is unverified (${skill.installability.applicabilityReason})`,
+      );
+    }
+  }
 
   lines.push(
     `  Source: ${skill.source ?? ranking.source}`,
