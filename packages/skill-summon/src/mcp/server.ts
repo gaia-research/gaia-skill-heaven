@@ -86,6 +86,35 @@ const summonOutputSchema = z.object({
     indexOrigin: z.enum(["committed", "fetched"]),
     source: z.string(),
   }),
+  // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
+  // the wire, not only on the printed card, so a controller reading
+  // `structuredContent` sees the same unknowns a human does. The lens reports
+  // are kept as `unknown` here for the same reason the rest of this schema is:
+  // the authored shape lives in `skill-zero`, and restating it in zod would give
+  // the wire a second, drifting copy of the contract.
+  arbor: z.object({
+    publicationState: z.enum(["loaded", "unavailable", "unreadable"]),
+    provenance: z.unknown().nullable(),
+    contracts: z.record(z.string(), z.string()),
+    subjectsPublished: z.number(),
+    edgesPublished: z.number(),
+    edgeCoverage: z.unknown().nullable(),
+    problems: z.array(z.object({ where: z.string(), detail: z.string() })),
+    note: z.string(),
+    corpus: z.object({
+      source: z.string(),
+      revision: z.string().nullable(),
+      canonical: z.boolean(),
+      sameUpstreamRevision: z.boolean().nullable(),
+    }),
+    identity: z.object({
+      commit: z.string().nullable(),
+      matchesCorpusRevision: z.boolean(),
+      pinnedSkills: z.number(),
+      sha256: z.string().nullable(),
+      problem: z.string().nullable(),
+    }),
+  }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),
 });

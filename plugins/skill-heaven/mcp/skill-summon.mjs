@@ -417,11 +417,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants2);
+          this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -438,10 +438,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants2);
+        this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -502,8 +502,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants2) {
-        this.code = optimizeExpr(this.code, names, constants2);
+      optimizeNames(names, constants3) {
+        this.code = optimizeExpr(this.code, names, constants3);
         return this;
       }
       get names() {
@@ -532,12 +532,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants2))
+          if (n.optimizeNames(names, constants3))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -590,12 +590,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        if (!(super.optimizeNames(names, constants2) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        if (!(super.optimizeNames(names, constants3) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants2);
+        this.condition = optimizeExpr(this.condition, names, constants3);
         return this;
       }
       get names() {
@@ -618,10 +618,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants2);
+        this.iteration = optimizeExpr(this.iteration, names, constants3);
         return this;
       }
       get names() {
@@ -657,10 +657,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants2);
+        this.iterable = optimizeExpr(this.iterable, names, constants3);
         return this;
       }
       get names() {
@@ -702,11 +702,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a, _b;
-        super.optimizeNames(names, constants2);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants2);
+        super.optimizeNames(names, constants3);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants3);
         return this;
       }
       get names() {
@@ -773,9 +773,9 @@ var require_codegen = __commonJS({
       scopeCode() {
         return this._extScope.scopeCode(this._values);
       }
-      _def(varKind, nameOrPrefix, rhs, constant) {
+      _def(varKind, nameOrPrefix, rhs, constant2) {
         const name = this._scope.toName(nameOrPrefix);
-        if (rhs !== void 0 && constant)
+        if (rhs !== void 0 && constant2)
           this._constants[name.str] = rhs;
         this._leafNode(new Def(varKind, name, rhs));
         return name;
@@ -1007,7 +1007,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants2) {
+    function optimizeExpr(expr, names, constants3) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1022,14 +1022,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants2[n.str];
+        const c = constants3[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants2[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants3[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -1785,14 +1785,14 @@ var require_code2 = __commonJS({
     }
     exports.callValidateCode = callValidateCode;
     var newRegExp = (0, codegen_1._)`new RegExp`;
-    function usePattern({ gen, it: { opts } }, pattern) {
+    function usePattern({ gen, it: { opts } }, pattern2) {
       const u = opts.unicodeRegExp ? "u" : "";
       const { regExp } = opts.code;
-      const rx = regExp(pattern, u);
+      const rx = regExp(pattern2, u);
       return gen.scopeValue("pattern", {
         key: rx.toString(),
         ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
+        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern2}, ${u})`
       });
     }
     exports.usePattern = usePattern;
@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve.call(this, root, ref);
+      let _sch = resolve2.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve(root, ref) {
+    function resolve2(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3649,7 +3649,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve(baseURI, relativeURI, options) {
+    function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
       const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
@@ -3660,49 +3660,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3710,7 +3710,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -3752,12 +3752,12 @@ var require_fast_uri = __commonJS({
       if (options.reference !== "suffix" && component.scheme) {
         uriTokens.push(component.scheme, ":");
       }
-      const authority = recomposeAuthority(component);
-      if (authority !== void 0) {
+      const authority2 = recomposeAuthority(component);
+      if (authority2 !== void 0) {
         if (options.reference !== "suffix") {
           uriTokens.push("//");
         }
-        uriTokens.push(authority);
+        uriTokens.push(authority2);
         if (component.path && component.path[0] !== "/") {
           uriTokens.push("/");
         }
@@ -3767,7 +3767,7 @@ var require_fast_uri = __commonJS({
         if (!options.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
           s = removeDotSegments(s);
         }
-        if (authority === void 0 && s[0] === "/" && s[1] === "/") {
+        if (authority2 === void 0 && s[0] === "/" && s[1] === "/") {
           s = "/%2F" + s.slice(2);
         }
         uriTokens.push(s);
@@ -3933,7 +3933,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve,
+      resolve: resolve2,
       resolveComponent,
       equal,
       serialize,
@@ -6750,8 +6750,8 @@ var require_formats = __commonJS({
     function getDateTime(strictTimeZone) {
       const time3 = getTime(strictTimeZone);
       return function date_time(str) {
-        const dateTime = str.split(DATE_TIME_SEPARATOR);
-        return dateTime.length === 2 && date3(dateTime[0]) && time3(dateTime[1]);
+        const dateTime2 = str.split(DATE_TIME_SEPARATOR);
+        return dateTime2.length === 2 && date3(dateTime2[0]) && time3(dateTime2[1]);
       };
     }
     function compareDateTime(dt1, dt2) {
@@ -7055,8 +7055,8 @@ function getEnumValues(entries) {
   const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
   return values;
 }
-function joinValues(array2, separator = "|") {
-  return array2.map((val) => stringifyPrimitive(val)).join(separator);
+function joinValues(array3, separator = "|") {
+  return array3.map((val) => stringifyPrimitive(val)).join(separator);
 }
 function jsonStringifyReplacer(_, value) {
   if (typeof value === "bigint")
@@ -8001,12 +8001,12 @@ var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (ins
 var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
   $ZodCheck.init(inst, def);
   const escapedRegex = escapeRegex(def.includes);
-  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
-  def.pattern = pattern;
+  const pattern2 = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
+  def.pattern = pattern2;
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.includes(def.includes, def.position))
@@ -8024,12 +8024,12 @@ var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst,
 });
 var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`^${escapeRegex(def.prefix)}.*`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.startsWith(def.prefix))
@@ -8047,12 +8047,12 @@ var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (i
 });
 var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`.*${escapeRegex(def.suffix)}$`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.endsWith(def.suffix))
@@ -9160,8 +9160,8 @@ var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)})?$`) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     if (def.innerType._zod.optin === "optional") {
@@ -9178,8 +9178,8 @@ var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
   defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
   defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)}|null)$`) : void 0;
   });
   defineLazy(inst._zod, "values", () => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
@@ -9866,12 +9866,12 @@ function _length(length, params) {
     length
   });
 }
-function _regex(pattern, params) {
+function _regex(pattern2, params) {
   return new $ZodCheckRegex({
     check: "string_format",
     format: "regex",
     ...normalizeParams(params),
-    pattern
+    pattern: pattern2
   });
 }
 function _lowercase(params) {
@@ -10380,11 +10380,11 @@ var JSONSchemaGenerator = class {
           }
           case "template_literal": {
             const json = _json;
-            const pattern = schema._zod.pattern;
-            if (!pattern)
+            const pattern2 = schema._zod.pattern;
+            if (!pattern2)
               throw new Error("Pattern not found in template literal");
             json.type = "string";
-            json.pattern = pattern.source;
+            json.pattern = pattern2.source;
             break;
           }
           case "pipe": {
@@ -13032,12 +13032,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve) => {
+    return new Promise((resolve2) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve();
+        resolve2();
       } else {
-        this._stdout.once("drain", resolve);
+        this._stdout.once("drain", resolve2);
       }
     });
   }
@@ -13339,8 +13339,8 @@ async function assertConfinedPath(root, target, label = "Path") {
   }
 }
 function isWithin(parent, child) {
-  const relative = path2.relative(parent, child);
-  return relative === "" || !relative.startsWith(`..${path2.sep}`) && relative !== ".." && !path2.isAbsolute(relative);
+  const relative2 = path2.relative(parent, child);
+  return relative2 === "" || !relative2.startsWith(`..${path2.sep}`) && relative2 !== ".." && !path2.isAbsolute(relative2);
 }
 async function ensureConfinedDirectory(root, target) {
   await assertConfinedPath(root, target, "Session directory");
@@ -13978,8 +13978,8 @@ var util;
     return void 0;
   };
   util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-  function joinValues2(array2, separator = " | ") {
-    return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+  function joinValues2(array3, separator = " | ") {
+    return array3.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
   util2.jsonStringifyReplacer = (_, value) => {
@@ -18960,13 +18960,13 @@ function stringifyRegExpWithFlags(regex, refs) {
     // `.` matches newlines
   };
   const source = flags.i ? regex.source.toLowerCase() : regex.source;
-  let pattern = "";
+  let pattern2 = "";
   let isEscaped = false;
   let inCharGroup = false;
   let inCharRange = false;
   for (let i = 0; i < source.length; i++) {
     if (isEscaped) {
-      pattern += source[i];
+      pattern2 += source[i];
       isEscaped = false;
       continue;
     }
@@ -18974,40 +18974,40 @@ function stringifyRegExpWithFlags(regex, refs) {
       if (inCharGroup) {
         if (source[i].match(/[a-z]/)) {
           if (inCharRange) {
-            pattern += source[i];
-            pattern += `${source[i - 2]}-${source[i]}`.toUpperCase();
+            pattern2 += source[i];
+            pattern2 += `${source[i - 2]}-${source[i]}`.toUpperCase();
             inCharRange = false;
           } else if (source[i + 1] === "-" && source[i + 2]?.match(/[a-z]/)) {
-            pattern += source[i];
+            pattern2 += source[i];
             inCharRange = true;
           } else {
-            pattern += `${source[i]}${source[i].toUpperCase()}`;
+            pattern2 += `${source[i]}${source[i].toUpperCase()}`;
           }
           continue;
         }
       } else if (source[i].match(/[a-z]/)) {
-        pattern += `[${source[i]}${source[i].toUpperCase()}]`;
+        pattern2 += `[${source[i]}${source[i].toUpperCase()}]`;
         continue;
       }
     }
     if (flags.m) {
       if (source[i] === "^") {
-        pattern += `(^|(?<=[\r
+        pattern2 += `(^|(?<=[\r
 ]))`;
         continue;
       } else if (source[i] === "$") {
-        pattern += `($|(?=[\r
+        pattern2 += `($|(?=[\r
 ]))`;
         continue;
       }
     }
     if (flags.s && source[i] === ".") {
-      pattern += inCharGroup ? `${source[i]}\r
+      pattern2 += inCharGroup ? `${source[i]}\r
 ` : `[${source[i]}\r
 ]`;
       continue;
     }
-    pattern += source[i];
+    pattern2 += source[i];
     if (source[i] === "\\") {
       isEscaped = true;
     } else if (inCharGroup && source[i] === "]") {
@@ -19017,12 +19017,12 @@ function stringifyRegExpWithFlags(regex, refs) {
     }
   }
   try {
-    new RegExp(pattern);
+    new RegExp(pattern2);
   } catch {
     console.warn(`Could not convert regex pattern at ${refs.currentPath.join("/")} to a flag-independent form! Falling back to the flag-ignorant source`);
     return regex.source;
   }
-  return pattern;
+  return pattern2;
 }
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/record.js
@@ -20200,7 +20200,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -20217,7 +20217,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -20295,7 +20295,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve(parseResult.data);
+            resolve2(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -20556,12 +20556,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve, interval);
+      const timeoutId = setTimeout(resolve2, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -21528,46 +21528,46 @@ var UriTemplate = class _UriTemplate {
       }
       return patterns;
     }
-    let pattern;
+    let pattern2;
     const name = part.name;
     switch (part.operator) {
       case "":
-        pattern = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
+        pattern2 = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
         break;
       case "+":
       case "#":
-        pattern = "(.+)";
+        pattern2 = "(.+)";
         break;
       case ".":
-        pattern = "\\.([^/,]+)";
+        pattern2 = "\\.([^/,]+)";
         break;
       case "/":
-        pattern = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
+        pattern2 = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
         break;
       default:
-        pattern = "([^/]+)";
+        pattern2 = "([^/]+)";
     }
-    patterns.push({ pattern, name });
+    patterns.push({ pattern: pattern2, name });
     return patterns;
   }
   match(uri) {
     _UriTemplate.validateLength(uri, MAX_TEMPLATE_LENGTH, "URI");
-    let pattern = "^";
+    let pattern2 = "^";
     const names = [];
     for (const part of this.parts) {
       if (typeof part === "string") {
-        pattern += this.escapeRegExp(part);
+        pattern2 += this.escapeRegExp(part);
       } else {
         const patterns = this.partToRegExp(part);
         for (const { pattern: partPattern, name } of patterns) {
-          pattern += partPattern;
+          pattern2 += partPattern;
           names.push({ name, exploded: part.exploded });
         }
       }
     }
-    pattern += "$";
-    _UriTemplate.validateLength(pattern, MAX_REGEX_LENGTH, "Generated regex pattern");
-    const regex = new RegExp(pattern);
+    pattern2 += "$";
+    _UriTemplate.validateLength(pattern2, MAX_REGEX_LENGTH, "Generated regex pattern");
+    const regex = new RegExp(pattern2);
     const match = uri.match(regex);
     if (!match)
       return null;
@@ -21883,7 +21883,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -23131,11 +23131,1084 @@ function suggestionFor(reason, source) {
   }
 }
 
-// packages/skill-summon/src/data/skill-index-source.ts
-import { readFile as readFile3 } from "node:fs/promises";
+// packages/core/src/arbor/contract.ts
+var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
+var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
+var ARBOR_EDGE_SCHEMA = "gaia.arbor-edge/v1";
+var ARBOR_EDGE_INDEX_SCHEMA = "gaia.arbor-edge-index/v1";
+var ARBOR_RUNTIME_INDEX_SCHEMA = "gaia.arbor-runtime-index/v1";
+var PROJECTED_SUPPORT = [
+  "expert-declared",
+  "benchmark-confirmed",
+  "benchmark-qualified",
+  "benchmark-revised",
+  "inconclusive"
+];
+var ARBOR_FACETS = ["human-led", "model-led"];
+var ARBOR_RELATIONS = [
+  "stabilizes",
+  "amplifies",
+  "conflicts",
+  "recovers",
+  "compresses-after",
+  "unlocks",
+  "duplicates"
+];
+var ARBOR_LENS_STATUS = [
+  "present",
+  "absent-no-accepted-record",
+  "absent-subject-version-mismatch",
+  "absent-superseded",
+  "unavailable-unsupported-payload"
+];
+var EDGE_ABSENCE_MEANING = "not-evaluated";
+var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
+
+// packages/core/src/arbor/validate.ts
+var ArborContractError = class extends Error {
+  name = "ArborContractError";
+};
+var SHA256 = /^[a-f0-9]{64}$/u;
+var RECORD_ID = /^[a-z][a-z0-9.-]*$/u;
+var SKILL_ID = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
+var DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/u;
+function assertArborProfile(value, label = "Arbor profile") {
+  const profile = closedRecord(value, label, [
+    "schema",
+    "skill",
+    "inputDigest",
+    "sources",
+    "claims"
+  ]);
+  constant(profile, "schema", ARBOR_PROFILE_SCHEMA, label);
+  subjectRef(profile.skill, `${label}.skill`);
+  sha2562(profile, "inputDigest", label);
+  const sources = closedRecord(profile.sources, `${label}.sources`, [
+    "declarations",
+    "benchmarkReceipts",
+    "interpretations"
+  ]);
+  for (const key of ["declarations", "benchmarkReceipts", "interpretations"]) {
+    digestList(sources[key], `${label}.sources.${key}`);
+  }
+  const claims = array2(profile.claims, `${label}.claims`);
+  if (claims.length === 0) {
+    throw new ArborContractError(`${label}.claims must contain at least one claim.`);
+  }
+  claims.forEach((claim, position) => assertArborClaim(claim, `${label}.claims[${position}]`));
+}
+function assertArborClaim(value, label) {
+  const claim = closedRecord(value, label, [
+    "id",
+    "facet",
+    "conditions",
+    "rationale",
+    "authority",
+    "support",
+    "declarationId",
+    "declaredAt",
+    "declarationSource",
+    "benchmarkSources",
+    "interpretationSource"
+  ]);
+  pattern(claim, "id", RECORD_ID, label);
+  enumeration(claim, "facet", ARBOR_FACETS, label);
+  nonEmpty(claim, "conditions", label);
+  nonEmpty(claim, "rationale", label);
+  authority(claim.authority, `${label}.authority`);
+  enumeration(claim, "support", PROJECTED_SUPPORT, label);
+  pattern(claim, "declarationId", RECORD_ID, label);
+  dateTime(claim, "declaredAt", label);
+  sha2562(claim, "declarationSource", label);
+  digestList(claim.benchmarkSources, `${label}.benchmarkSources`);
+  sha256OrNull(claim, "interpretationSource", label);
+}
+function assertArborEdge(value, label = "Arbor edge") {
+  const edge = closedRecord(value, label, [
+    "schema",
+    "edgeKey",
+    "pair",
+    "target",
+    "relation",
+    "conditions",
+    "authority",
+    "support",
+    "declarationSource",
+    "observationSources",
+    "interpretationSource",
+    "structuralOverlap",
+    "pairApplicable"
+  ]);
+  constant(edge, "schema", ARBOR_EDGE_SCHEMA, label);
+  sha2562(edge, "edgeKey", label);
+  const pair = closedRecord(edge.pair, `${label}.pair`, ["from", "to"]);
+  subjectRef(pair.from, `${label}.pair.from`);
+  subjectRef(pair.to, `${label}.pair.to`);
+  const target = closedRecord(edge.target, `${label}.target`, ["declarationSha256", "claimId"]);
+  sha2562(target, "declarationSha256", `${label}.target`);
+  pattern(target, "claimId", RECORD_ID, `${label}.target`);
+  enumeration(edge, "relation", ARBOR_RELATIONS, label);
+  nonEmpty(edge, "conditions", label);
+  authority(edge.authority, `${label}.authority`);
+  enumeration(edge, "support", PROJECTED_SUPPORT, label);
+  sha2562(edge, "declarationSource", label);
+  digestList(edge.observationSources, `${label}.observationSources`);
+  sha256OrNull(edge, "interpretationSource", label);
+  constant(edge, "structuralOverlap", EDGE_STRUCTURAL_OVERLAP, label);
+  if (typeof edge.pairApplicable !== "boolean") {
+    throw new ArborContractError(`${label}.pairApplicable must be a boolean.`);
+  }
+}
+function assertArborEdgeIndex(value, label = "Arbor edge index") {
+  const index = closedRecord(value, label, ["schema", "edgeSetVersion", "coverage", "edges"]);
+  constant(index, "schema", ARBOR_EDGE_INDEX_SCHEMA, label);
+  nonEmpty(index, "edgeSetVersion", label);
+  const coverage = closedRecord(index.coverage, `${label}.coverage`, [
+    "pairsEvaluated",
+    "absenceMeaning"
+  ]);
+  nonNegativeInteger2(coverage, "pairsEvaluated", `${label}.coverage`);
+  constant(coverage, "absenceMeaning", EDGE_ABSENCE_MEANING, `${label}.coverage`);
+  const edges = array2(index.edges, `${label}.edges`);
+  edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
+}
+function assertArborRuntime(value, label = "Arbor runtime") {
+  const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
+  constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
+  subjectRef(runtime.subject, `${label}.subject`);
+  sha2562(runtime, "inputDigest", label);
+  const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
+    "claims",
+    "hellHeaven",
+    "interactions"
+  ]);
+  const claimsLens = closedRecord(lenses.claims, `${label}.lenses.claims`, [
+    "status",
+    "sourceDigest",
+    "profile"
+  ]);
+  enumeration(claimsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.claims`);
+  sha256OrNull(claimsLens, "sourceDigest", `${label}.lenses.claims`);
+  objectOrNull(claimsLens, "profile", `${label}.lenses.claims`);
+  const hhLens = closedRecord(lenses.hellHeaven, `${label}.lenses.hellHeaven`, [
+    "status",
+    "sourceDigest",
+    "result"
+  ]);
+  enumeration(hhLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.hellHeaven`);
+  sha256OrNull(hhLens, "sourceDigest", `${label}.lenses.hellHeaven`);
+  objectOrNull(hhLens, "result", `${label}.lenses.hellHeaven`);
+  const interactionsLens = closedRecord(lenses.interactions, `${label}.lenses.interactions`, [
+    "status",
+    "sourceDigest",
+    "edges"
+  ]);
+  enumeration(interactionsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.interactions`);
+  sha256OrNull(interactionsLens, "sourceDigest", `${label}.lenses.interactions`);
+  const edges = array2(interactionsLens.edges, `${label}.lenses.interactions.edges`);
+  edges.forEach(
+    (edge, position) => assertArborEdge(edge, `${label}.lenses.interactions.edges[${position}]`)
+  );
+}
+function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
+  const index = closedRecord(value, label, ["schema", "runtimeVersion", "subjects"]);
+  constant(index, "schema", ARBOR_RUNTIME_INDEX_SCHEMA, label);
+  constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
+  const subjects = array2(index.subjects, `${label}.subjects`);
+  subjects.forEach(
+    (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
+  );
+}
+function closedRecord(value, label, allowed) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborContractError(`${label} must be an object.`);
+  }
+  const record2 = value;
+  for (const key of Object.keys(record2)) {
+    if (!allowed.includes(key)) {
+      throw new ArborContractError(
+        `${label} carries unknown field '${key}'. The Arbor contracts are closed; a consumer that accepted it would be forking the schema.`
+      );
+    }
+  }
+  for (const key of allowed) {
+    if (!(key in record2)) {
+      throw new ArborContractError(`${label} is missing required field '${key}'.`);
+    }
+  }
+  return record2;
+}
+function array2(value, label) {
+  if (!Array.isArray(value)) throw new ArborContractError(`${label} must be an array.`);
+  return value;
+}
+function constant(record2, key, expected, label) {
+  if (record2[key] !== expected) {
+    throw new ArborContractError(
+      `${label}.${key} must be '${expected}', got ${JSON.stringify(record2[key])}. This build reads only the pinned contract version.`
+    );
+  }
+}
+function nonEmpty(record2, key, label) {
+  const value = record2[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-empty string.`);
+  }
+  return value;
+}
+function pattern(record2, key, expression, label) {
+  const value = nonEmpty(record2, key, label);
+  if (!expression.test(value)) {
+    throw new ArborContractError(`${label}.${key} does not match ${String(expression)}.`);
+  }
+  return value;
+}
+function sha2562(record2, key, label) {
+  return pattern(record2, key, SHA256, label);
+}
+function sha256OrNull(record2, key, label) {
+  if (record2[key] === null) return;
+  sha2562(record2, key, label);
+}
+function objectOrNull(record2, key, label) {
+  const value = record2[key];
+  if (value === null) return;
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new ArborContractError(`${label}.${key} must be an object or null.`);
+  }
+}
+function dateTime(record2, key, label) {
+  const value = nonEmpty(record2, key, label);
+  if (!isUpstreamDateTime(value)) {
+    throw new ArborContractError(
+      `${label}.${key} is not a date-time the pinned upstream checker accepts: ${JSON.stringify(value)}.`
+    );
+  }
+}
+function daysInMonth(year, month) {
+  if (month === 2) {
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leap ? 29 : 28;
+  }
+  return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
+}
+function isUpstreamDateTime(value) {
+  if (typeof value !== "string") return false;
+  const match = DATE_TIME.exec(value);
+  if (match === null) return false;
+  const [, rawYear, rawMonth, rawDay, rawHour, rawMinute, rawSecond, offset] = match;
+  const year = Number(rawYear);
+  const month = Number(rawMonth);
+  const day = Number(rawDay);
+  const hour = Number(rawHour);
+  const minute = Number(rawMinute);
+  const second = Number(rawSecond);
+  if (year < 1) return false;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > daysInMonth(year, month)) return false;
+  if (minute > 59 || second > 59) return false;
+  if (hour > 24) return false;
+  if (hour === 24) {
+    if (minute !== 0 || second !== 0) return false;
+    if (value.includes(".")) return false;
+    if (year === 9999 && month === 12 && day === 31) return false;
+  }
+  if (offset !== "Z") {
+    const offsetMinutes = Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6));
+    if (offsetMinutes >= 24 * 60) return false;
+  }
+  return true;
+}
+function enumeration(record2, key, allowed, label) {
+  const value = record2[key];
+  if (typeof value !== "string" || !allowed.includes(value)) {
+    throw new ArborContractError(
+      `${label}.${key} must be one of ${allowed.join(", ")}; got ${JSON.stringify(value)}.`
+    );
+  }
+}
+function digestList(value, label) {
+  const digests = array2(value, label);
+  const seen = /* @__PURE__ */ new Set();
+  digests.forEach((digest, position) => {
+    if (typeof digest !== "string" || !SHA256.test(digest)) {
+      throw new ArborContractError(`${label}[${position}] must be a sha256 digest.`);
+    }
+    if (seen.has(digest)) {
+      throw new ArborContractError(`${label} repeats digest ${digest}; upstream requires uniqueness.`);
+    }
+    seen.add(digest);
+  });
+}
+function nonNegativeInteger2(record2, key, label) {
+  const value = record2[key];
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-negative integer.`);
+  }
+}
+function subjectRef(value, label) {
+  const subject = closedRecord(value, label, ["id", "contentSha256"]);
+  pattern(subject, "id", SKILL_ID, label);
+  sha2562(subject, "contentSha256", label);
+}
+function authority(value, label) {
+  const record2 = closedRecord(value, label, ["actor", "basis"]);
+  nonEmpty(record2, "actor", label);
+  nonEmpty(record2, "basis", label);
+}
+
+// packages/core/src/arbor/publication.ts
+var CONTRACTS = {
+  runtimeIndex: ARBOR_RUNTIME_INDEX_SCHEMA,
+  runtime: ARBOR_RUNTIME_SCHEMA,
+  profile: ARBOR_PROFILE_SCHEMA,
+  edgeIndex: ARBOR_EDGE_INDEX_SCHEMA
+};
+function subjectKey(subject) {
+  return `${subject.id}@${subject.contentSha256}`;
+}
+function unavailableArborPublication(problems = []) {
+  return {
+    state: "unavailable",
+    provenance: null,
+    subjects: [],
+    runtimes: /* @__PURE__ */ new Map(),
+    edgeIndex: null,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function readArborPublication(documents) {
+  if (documents === null) return unavailableArborPublication();
+  const problems = [];
+  let runtimeIndex;
+  try {
+    assertArborRuntimeIndex(documents.runtimeIndex, "runtime/index.json");
+    runtimeIndex = documents.runtimeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([
+        { where: "runtime/index.json", detail: describe(error2) }
+      ]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  let edgeIndex;
+  try {
+    assertArborEdgeIndex(documents.edgeIndex, "edges.json");
+    edgeIndex = documents.edgeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([{ where: "edges.json", detail: describe(error2) }]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  const runtimes = /* @__PURE__ */ new Map();
+  for (const { path: path9, document } of documents.runtimes) {
+    try {
+      assertArborRuntime(document, path9);
+    } catch (error2) {
+      problems.push({ where: path9, detail: describe(error2) });
+      continue;
+    }
+    const claimsLens = document.lenses.claims;
+    if (claimsLens.profile !== null) {
+      let quarantine = null;
+      try {
+        assertArborProfile(claimsLens.profile, `${path9} lenses.claims.profile`);
+        const embedded = claimsLens.profile.skill;
+        if (embedded.id !== document.subject.id) {
+          quarantine = `embedded profile is for skill '${embedded.id}' but the aggregate's subject is '${document.subject.id}'; the lens was quarantined and no claim was consumed`;
+        } else if (embedded.contentSha256 !== document.subject.contentSha256) {
+          quarantine = `embedded profile pins content ${embedded.contentSha256} but the aggregate's subject pins ${document.subject.contentSha256}; the lens was quarantined and no claim was consumed`;
+        }
+      } catch (error2) {
+        quarantine = describe(error2);
+      }
+      if (quarantine !== null) {
+        problems.push({ where: `${path9} lenses.claims.profile`, detail: quarantine });
+        runtimes.set(subjectKey(document.subject), {
+          ...document,
+          lenses: {
+            ...document.lenses,
+            claims: { ...claimsLens, profile: null }
+          }
+        });
+        continue;
+      }
+    }
+    for (const claim of claimsLens.profile?.claims ?? []) {
+      const governed = claim.interpretationSource !== null;
+      if (governed === (claim.support === "expert-declared")) {
+        problems.push({
+          where: `${path9} lenses.claims.profile claim '${claim.id}'`,
+          detail: governed ? "support is 'expert-declared' but a governed interpretationSource is present" : `support is '${claim.support}' with no interpretationSource; only a governed interpretation may set it`
+        });
+      }
+    }
+    runtimes.set(subjectKey(document.subject), document);
+  }
+  for (const subject of runtimeIndex.subjects) {
+    if (!runtimes.has(subjectKey(subject))) {
+      problems.push({
+        where: subjectKey(subject),
+        detail: "listed in runtime/index.json but no readable aggregate document was found"
+      });
+    }
+  }
+  return {
+    state: "loaded",
+    provenance: documents.provenance,
+    subjects: runtimeIndex.subjects,
+    runtimes,
+    edgeIndex,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function describe(error2) {
+  if (error2 instanceof ArborContractError) return error2.message;
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/core/src/arbor/consume.ts
+function describeArborPublication(publication) {
+  const subjectsPublished = publication.subjects.length;
+  const edgesPublished = publication.edgeIndex?.edges.length ?? 0;
+  const edgeCoverage = publication.edgeIndex ? { ...publication.edgeIndex.coverage } : null;
+  let note;
+  if (publication.state === "unavailable") {
+    note = "no published projection is available to this runtime, so no behavioral lens was consulted. That is unknown, not a clean bill of health.";
+  } else if (publication.state === "unreadable") {
+    note = "a publication was found but does not conform to the pinned contracts, so it was not consumed. Treated as unknown and disclosed rather than partially read.";
+  } else if (subjectsPublished === 0 && edgesPublished === 0) {
+    note = "the canonical projection is published and EMPTY \u2014 0 subjects, 0 interaction edges. Upstream records that absence means not-evaluated, so nothing here is evidence about any skill.";
+  } else {
+    note = `canonical projection consulted \u2014 ${subjectsPublished} published subject(s), ${edgesPublished} interaction edge(s). Absence of a record means not-evaluated.`;
+  }
+  if (publication.problems.length > 0) {
+    note += ` ${publication.problems.length} publication defect(s) disclosed; the affected records were not consumed.`;
+  }
+  return {
+    publicationState: publication.state,
+    provenance: publication.provenance,
+    contracts: publication.contracts,
+    subjectsPublished,
+    edgesPublished,
+    edgeCoverage,
+    problems: publication.problems,
+    note
+  };
+}
+function consumeArbor(publication, candidate, options = {}) {
+  const join4 = resolveJoin(publication, candidate);
+  const matchedSubject = join4 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
+  const runtime = matchedSubject ? publication.runtimes.get(subjectKey(matchedSubject)) : void 0;
+  const lenses = {};
+  for (const lens of ARBOR_LENSES) {
+    const payloadUnreadable = lens === "claims" && runtime?.lenses.claims.status === "present" && runtime.lenses.claims.profile === null;
+    lenses[lens] = reportLens(
+      lens,
+      join4,
+      runtime?.lenses[lens],
+      candidate.identityNote,
+      payloadUnreadable
+    );
+  }
+  const claimsLens = runtime?.lenses.claims;
+  const claims = lenses.claims.availability === "consulted" && claimsLens?.profile ? claimsLens.profile.claims : [];
+  const problems = [];
+  const interactions = [];
+  if (lenses.interactions.availability === "consulted" && matchedSubject) {
+    for (const edge of runtime.lenses.interactions.edges) {
+      const report = describeInteraction(edge, matchedSubject, options.knownContentSha256);
+      if (report === null) {
+        problems.push({
+          where: `${subjectKey(matchedSubject)} lenses.interactions edge ${edge.edgeKey}`,
+          detail: "the edge names neither endpoint as this subject at its pinned bytes; not consumed"
+        });
+        continue;
+      }
+      interactions.push(report);
+    }
+  }
+  if (runtime && runtime.lenses.claims.status === "present" && runtime.lenses.claims.profile === null) {
+    problems.push({
+      where: `${subjectKey(runtime.subject)} lenses.claims`,
+      detail: "upstream reports the claims lens present, but its embedded profile could not be read against gaia.arbor-profile/v1; no claim was consumed for this subject"
+    });
+  }
+  const lensesConsulted = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "consulted");
+  const lensesAbsent = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "absent");
+  const lensesUnknown = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "unknown");
+  return {
+    skillId: candidate.skillId,
+    contentSha256: candidate.contentSha256,
+    canonicalSource: candidate.canonicalSource,
+    join: join4,
+    matchedSubject,
+    lenses,
+    lensesConsulted,
+    lensesAbsent,
+    lensesUnknown,
+    claims,
+    interactions,
+    conditionsEvaluated: false,
+    deliveryContext: candidate.delivery ?? "not-materialized",
+    problems,
+    note: subjectNote(
+      join4,
+      lensesConsulted,
+      lensesAbsent,
+      lensesUnknown,
+      claims.length,
+      interactions.length,
+      candidate.delivery ?? "not-materialized",
+      candidate.identityNote
+    )
+  };
+}
+function resolveJoin(publication, candidate) {
+  if (publication.state !== "loaded") return "publication-unavailable";
+  if (!candidate.canonicalSource) return "source-not-canonical";
+  const pinsForId = publication.subjects.filter((subject) => subject.id === candidate.skillId);
+  if (pinsForId.length === 0) return "no-published-subject";
+  if (candidate.contentSha256 === null) return "identity-unproven";
+  const matched = pinsForId.some(
+    (subject) => subject.contentSha256 === candidate.contentSha256
+  );
+  if (!matched) return "subject-version-unmatched";
+  return publication.runtimes.has(
+    subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
+  ) ? "content-pinned" : "identity-unproven";
+}
+function reportLens(lens, join4, upstream, identityNote, payloadUnreadable = false) {
+  if (join4 !== "content-pinned" || upstream === void 0) {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: null,
+      sourceDigest: null,
+      reason: identityNote && join4 === "identity-unproven" ? `${joinReason(join4)} \u2014 ${identityNote}` : joinReason(join4)
+    };
+  }
+  if (upstream.status === "present") {
+    if (payloadUnreadable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason: "upstream reports a record for this subject, but its payload was not usable \u2014 it either failed the pinned contract or does not belong to this subject; nothing was read from it"
+      };
+    }
+    return {
+      lens,
+      availability: "consulted",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "a record is published for this exact subject pin and was read verbatim"
+    };
+  }
+  if (upstream.status === "unavailable-unsupported-payload") {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "an accepted record exists for this subject but its payload contract is not published; this runtime cannot read it and derives nothing from it"
+    };
+  }
+  return {
+    lens,
+    availability: "absent",
+    upstreamStatus: upstream.status,
+    sourceDigest: upstream.sourceDigest,
+    reason: absentReason(upstream.status)
+  };
+}
+function absentReason(status) {
+  switch (status) {
+    case "absent-no-accepted-record":
+      return "no accepted record has been published for this subject \u2014 not evaluated, not a negative finding";
+    case "absent-subject-version-mismatch":
+      return "a record exists but is pinned to different content bytes, so it does not describe this version";
+    case "absent-superseded":
+      return "the record for this subject has been superseded and no successor is published";
+    default:
+      return "no record was consulted";
+  }
+}
+function joinReason(join4) {
+  switch (join4) {
+    case "publication-unavailable":
+      return "no readable Arbor publication is available to this runtime";
+    case "source-not-canonical":
+      return "this candidate came from a source the canonical Arbor projection does not describe, so a matching id would prove nothing";
+    case "no-published-subject":
+      return "the readable publication lists no subject with this id \u2014 not evaluated, not a negative finding";
+    case "subject-version-unmatched":
+      return "the publication pins different content bytes for this id, so its records describe other content";
+    case "identity-unproven":
+      return "this runtime holds no canonical content pin for this candidate, so applicability is unknown \u2014 an id match alone proves neither source nor current content";
+    default:
+      return "";
+  }
+}
+function subjectNote(join4, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+  const parts = [
+    `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
+    `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
+    `unknown: ${unknown2.length > 0 ? unknown2.join(", ") : "none"}`
+  ];
+  let note = `${parts.join(" \xB7 ")}. ${joinNote(join4)}`;
+  if (join4 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  if (claimCount > 0) {
+    note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
+  }
+  if (edgeCount > 0) {
+    note += ` ${edgeCount} ordered interaction edge(s) carried verbatim; publication-time pairApplicable is not runtime assurance.`;
+  }
+  if (claimCount > 0 || consulted.length > 0) {
+    note += delivery === "delivered-unverified" ? " A payload was materialized; it was NOT proven to be the canonical artifact these records are bound to." : " Nothing was materialized: this describes what is declared about the canonical record, not that a future execution will satisfy its conditions.";
+  }
+  return note;
+}
+function joinNote(join4) {
+  switch (join4) {
+    case "content-pinned":
+      return "Subject identity proven by id and exact content pin.";
+    case "identity-unproven":
+      return "Subject identity NOT proven: unknown applicability, which is neither a denial nor an assurance.";
+    case "subject-version-unmatched":
+      return "Published records pin different content bytes: unknown for this version.";
+    case "no-published-subject":
+      return "Nothing is published about this skill: not evaluated.";
+    case "source-not-canonical":
+      return "Candidate is outside the canonical corpus: no Arbor record can apply to it.";
+    default:
+      return "No Arbor publication was consulted.";
+  }
+}
+function describeInteraction(edge, subject, known) {
+  const matches = (endpoint) => endpoint.id === subject.id && endpoint.contentSha256 === subject.contentSha256;
+  const subjectIsFrom = matches(edge.pair.from);
+  if (!subjectIsFrom && !matches(edge.pair.to)) return null;
+  const counterpart = subjectIsFrom ? edge.pair.to : edge.pair.from;
+  const knownPin = known?.[counterpart.id];
+  const counterpartPin = knownPin === void 0 ? "unverified" : knownPin === counterpart.contentSha256 ? "verified" : "mismatched";
+  return {
+    edge,
+    direction: subjectIsFrom ? "subject-acts-on" : "acts-on-subject",
+    counterpart,
+    counterpartPin
+  };
+}
+
+// packages/core/src/arbor/identity.ts
+var ARBOR_IDENTITY_SCHEMA = "skill-heaven.arbor-identity-context/v1";
+var ArborIdentityError = class extends Error {
+  name = "ArborIdentityError";
+};
+function resolveArborIdentity(context, query) {
+  if (context === null) return { pinned: false, miss: "no-identity-context" };
+  if (query.corpusRevision === null || query.corpusRevision !== context.commit) {
+    return { pinned: false, miss: "revision-mismatch" };
+  }
+  const entry = context.skills[query.skillId];
+  if (entry === void 0) return { pinned: false, miss: "id-not-pinned" };
+  if (query.sourceUrl === void 0 || query.sourceUrl !== entry.sourceUrl) {
+    return { pinned: false, miss: "source-route-mismatch" };
+  }
+  return { pinned: true, contentSha256: entry.contentSha256, entry };
+}
+function describeArborIdentityMiss(miss) {
+  switch (miss) {
+    case "no-identity-context":
+      return "this runtime holds no canonical identity context, so no content pin could be proven";
+    case "revision-mismatch":
+      return "the canonical identity context was pinned at a different Tree revision than this corpus; a hash from another revision describes other bytes, so none was used";
+    case "id-not-pinned":
+      return "the canonical identity context pins no content for this id at the corpus revision";
+    case "source-route-mismatch":
+      return "this candidate's source route is not the canonical route recorded for that id, so a matching id would not prove the same skill";
+  }
+}
+function assertArborIdentityContext(value, label = "Arbor identity context") {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborIdentityError(`${label} must be an object.`);
+  }
+  const record2 = value;
+  if (record2.schema !== ARBOR_IDENTITY_SCHEMA) {
+    throw new ArborIdentityError(
+      `${label} advertises unsupported schema ${String(record2.schema)}; this build reads ${ARBOR_IDENTITY_SCHEMA}.`
+    );
+  }
+  for (const key of ["upstream", "corpusSource", "derivation", "routeSource", "capturedAt"]) {
+    if (typeof record2[key] !== "string" || record2[key].length === 0) {
+      throw new ArborIdentityError(`${label}.${key} must be a non-empty string.`);
+    }
+  }
+  if (typeof record2.commit !== "string" || !/^[a-f0-9]{40}$/u.test(record2.commit)) {
+    throw new ArborIdentityError(`${label}.commit must be a 40-character commit id.`);
+  }
+  if (!record2.skills || typeof record2.skills !== "object" || Array.isArray(record2.skills)) {
+    throw new ArborIdentityError(`${label}.skills must be an object.`);
+  }
+  for (const [id, entry] of Object.entries(record2.skills)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'] must be an object.`);
+    }
+    const fields = entry;
+    if (typeof fields.contentSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(fields.contentSha256)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'].contentSha256 must be a sha256 digest.`);
+    }
+    for (const key of ["sourceUrl", "canonicalPath"]) {
+      if (typeof fields[key] !== "string" || fields[key].length === 0) {
+        throw new ArborIdentityError(`${label}.skills['${id}'].${key} must be a non-empty string.`);
+      }
+    }
+  }
+}
+
+// packages/core/src/arbor/disclose.ts
+function arborSubjectLines(report) {
+  const lines = [`  Arbor: ${report.note}`];
+  for (const claim of report.claims) lines.push(`  Arbor claim: ${claimLine(claim)}`);
+  for (const interaction of report.interactions) {
+    lines.push(`  Arbor edge: ${interactionLine(interaction)}`);
+  }
+  for (const problem of report.problems) {
+    lines.push(`  Arbor defect: ${problem.where} \u2014 ${problem.detail}`);
+  }
+  return lines;
+}
+function claimLine(claim) {
+  const governance = claim.interpretationSource === null ? "no governed interpretation (support is the declaration's own state)" : `governed interpretation ${short(claim.interpretationSource)}`;
+  return `${claim.facet} \xB7 support ${claim.support} \xB7 ONLY UNDER: ${claim.conditions} \xB7 ${governance} \xB7 declaration ${short(claim.declarationSource)}` + (claim.benchmarkSources.length > 0 ? ` \xB7 ${claim.benchmarkSources.length} benchmark receipt(s), which are observations and never verdicts` : "");
+}
+function interactionLine(interaction) {
+  const { edge, direction, counterpart, counterpartPin } = interaction;
+  const arrow = direction === "subject-acts-on" ? `this skill ${edge.relation} ${counterpart.id}` : `${counterpart.id} ${edge.relation} this skill`;
+  const pin = counterpartPin === "verified" ? "counterpart content pin verified" : counterpartPin === "mismatched" ? "counterpart content pin MISMATCHED \u2014 this edge describes other bytes" : "counterpart content pin UNVERIFIED \u2014 applicability unknown";
+  return `${arrow} \xB7 support ${edge.support} \xB7 ONLY UNDER: ${edge.conditions} \xB7 ${pin}`;
+}
+function short(digest) {
+  return digest.slice(0, 12);
+}
+
+// packages/skill-summon/src/data/arbor-identity-source.ts
+import { createHash as createHash2 } from "node:crypto";
 import { dirname as dirname2, join } from "node:path";
 import { fileURLToPath } from "node:url";
-var INDEX_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "skill-index.json");
+
+// packages/skill-summon/src/data/arbor-file.ts
+import { constants } from "node:fs";
+import { open } from "node:fs/promises";
+import { resolve } from "node:path";
+async function readConfinedArborFile(root, target) {
+  await assertConfinedPath(root, target, "Arbor file");
+  let absolute = resolve(target);
+  const handles = [];
+  try {
+    let file;
+    if (process.platform === "darwin") {
+      if (absolute.startsWith("/tmp/")) absolute = `/private${absolute}`;
+      if (absolute.startsWith("/var/")) absolute = `/private${absolute}`;
+      file = await open(absolute, constants.O_RDONLY | constants.O_NONBLOCK | 536870912);
+      handles.push(file);
+    } else if (process.platform === "linux") {
+      let parent = await open("/", constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      handles.push(parent);
+      const parts = absolute.split("/").filter(Boolean);
+      if (parts.length === 0) throw new Error("Arbor file is not a regular file");
+      for (const part of parts.slice(0, -1)) {
+        parent = await open(
+          `/proc/self/fd/${parent.fd}/${part}`,
+          constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW
+        );
+        handles.push(parent);
+      }
+      file = await open(
+        `/proc/self/fd/${parent.fd}/${parts.at(-1)}`,
+        constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW
+      );
+      handles.push(file);
+    } else {
+      throw new Error("Secure Arbor file opening is unavailable on this platform");
+    }
+    if (!(await file.stat()).isFile()) throw new Error("Arbor file is not a regular file");
+    return await file.readFile();
+  } finally {
+    await Promise.all(handles.map((handle) => handle.close()));
+  }
+}
+
+// packages/skill-summon/src/data/arbor-identity-source.ts
+var IDENTITY_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "arbor-identity.json");
+var cached2;
+function loadArborIdentityContext() {
+  cached2 ??= readIdentityFromDisk();
+  return cached2;
+}
+async function readArborIdentityFile(path9) {
+  const directory = dirname2(path9);
+  try {
+    const bytes = await readConfinedArborFile(directory, path9);
+    const digest = createHash2("sha256").update(bytes).digest("hex");
+    let parsed;
+    try {
+      parsed = JSON.parse(bytes.toString("utf8"));
+    } catch (error2) {
+      return { context: null, problem: describe2(error2), sha256: digest };
+    }
+    try {
+      assertArborIdentityContext(parsed);
+    } catch (error2) {
+      return { context: null, problem: describe2(error2), sha256: digest };
+    }
+    return { context: parsed, problem: null, sha256: digest };
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return absent();
+    return { context: null, problem: describe2(error2), sha256: null };
+  }
+}
+async function readIdentityFromDisk() {
+  for (const candidate of candidatePaths()) {
+    const load = await readArborIdentityFile(candidate);
+    if (load.context !== null || load.problem !== null) return load;
+  }
+  return absent();
+}
+function candidatePaths() {
+  const configured = process.env.ARBOR_IDENTITY_PATH?.trim();
+  const here = dirname2(fileURLToPath(import.meta.url));
+  const paths = configured ? [configured] : [];
+  paths.push(join(here, "..", "data", "arbor-identity.json"));
+  let directory = here;
+  for (let depth = 0; depth < 8; depth++) {
+    paths.push(join(directory, IDENTITY_RELATIVE_PATH));
+    const parent = dirname2(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return paths;
+}
+function absent() {
+  return { context: null, problem: null, sha256: null };
+}
+function describe2(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/skill-summon/src/data/arbor-source.ts
+import { createHash as createHash3 } from "node:crypto";
+import { dirname as dirname3, join as join2, isAbsolute, relative, sep } from "node:path";
+import { fileURLToPath as fileURLToPath2 } from "node:url";
+var ARBOR_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "arbor");
+var EDGE_INDEX_FILE = "edges.json";
+var RUNTIME_INDEX_FILE = join2("runtime", "index.json");
+var PROVENANCE_FILE = "provenance.json";
+var cached3;
+function loadArborPublication() {
+  cached3 ??= readArborPublicationFromDisk();
+  return cached3;
+}
+async function readArborPublicationDir(root) {
+  const problems = [];
+  const digests = /* @__PURE__ */ new Map();
+  const edgeIndex = await readConfinedJson(root, EDGE_INDEX_FILE, problems);
+  const runtimeIndexFile = await readConfinedJson(root, RUNTIME_INDEX_FILE, problems);
+  if (edgeIndex === void 0 || runtimeIndexFile === void 0) {
+    return unavailableArborPublication(
+      edgeIndex === void 0 && runtimeIndexFile === void 0 && problems.length === 0 ? [] : [
+        ...problems,
+        ...edgeIndex === void 0 !== (runtimeIndexFile === void 0) ? [
+          {
+            where: root,
+            detail: "an Arbor publication directory is present but is missing edges.json or runtime/index.json"
+          }
+        ] : []
+      ]
+    );
+  }
+  digests.set(EDGE_INDEX_FILE, edgeIndex.sha256);
+  digests.set(RUNTIME_INDEX_FILE, runtimeIndexFile.sha256);
+  const runtimes = [];
+  const expected = /* @__PURE__ */ new Set([EDGE_INDEX_FILE, RUNTIME_INDEX_FILE]);
+  try {
+    assertArborRuntimeIndex(runtimeIndexFile.value);
+    for (const subject of runtimeIndexFile.value.subjects) {
+      const relativePath = join2("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
+      expected.add(relativePath);
+      const document = await readConfinedJson(root, relativePath, problems);
+      if (document === void 0) {
+        problems.push({
+          where: relativePath,
+          detail: "listed in runtime/index.json but the aggregate document is missing or unreadable"
+        });
+        continue;
+      }
+      digests.set(relativePath, document.sha256);
+      runtimes.push({ path: relativePath, document: document.value });
+    }
+  } catch {
+  }
+  const receipt = await verifyProvenance(root, expected, digests, problems);
+  if (receipt.rejected) {
+    return {
+      ...unavailableArborPublication(problems),
+      state: "unreadable"
+    };
+  }
+  const publication = readArborPublication({
+    provenance: receipt.provenance,
+    runtimeIndex: runtimeIndexFile.value,
+    edgeIndex: edgeIndex.value,
+    runtimes
+  });
+  return problems.length === 0 ? publication : { ...publication, problems: [...publication.problems, ...problems] };
+}
+async function readArborPublicationFromDisk() {
+  for (const candidate of candidatePaths2()) {
+    const publication = await readArborPublicationDir(candidate);
+    if (publication.state !== "unavailable" || publication.problems.length > 0) {
+      return publication;
+    }
+  }
+  return unavailableArborPublication();
+}
+function candidatePaths2() {
+  const configured = process.env.ARBOR_PUBLICATION_PATH?.trim();
+  const here = dirname3(fileURLToPath2(import.meta.url));
+  const paths = configured ? [configured] : [];
+  paths.push(join2(here, "..", "data", "arbor"));
+  let directory = here;
+  for (let depth = 0; depth < 8; depth++) {
+    paths.push(join2(directory, ARBOR_RELATIVE_PATH));
+    const parent = dirname3(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return paths;
+}
+async function readConfinedJson(root, relativePath, problems) {
+  const target = join2(root, relativePath);
+  try {
+    const bytes = await readConfinedArborFile(root, target);
+    const digest = createHash3("sha256").update(bytes).digest("hex");
+    try {
+      return { value: JSON.parse(bytes.toString("utf8")), sha256: digest };
+    } catch {
+      return { value: null, sha256: digest };
+    }
+  } catch (error2) {
+    const code = error2.code;
+    if (code !== "ENOENT" && code !== "ENOTDIR") {
+      problems.push({ where: relativePath, detail: describe3(error2) });
+    }
+    return void 0;
+  }
+}
+async function verifyProvenance(root, expected, digests, problems) {
+  const file = await readConfinedJson(root, PROVENANCE_FILE, problems);
+  if (file === void 0) {
+    problems.push({
+      where: PROVENANCE_FILE,
+      detail: "no provenance record; this cache is UNAUDITABLE \u2014 it names no upstream revision and its bytes were not checked against any manifest"
+    });
+    return { provenance: null, rejected: false };
+  }
+  const reject = (detail) => {
+    problems.push({ where: PROVENANCE_FILE, detail });
+    return { provenance: null, rejected: true };
+  };
+  if (file.value === null || typeof file.value !== "object" || Array.isArray(file.value)) {
+    return reject("provenance record is not a JSON object");
+  }
+  const record2 = file.value;
+  const upstream = record2.upstream;
+  const commit = record2.commit;
+  const path9 = record2.path;
+  const capturedAt = record2.capturedAt;
+  if (typeof upstream !== "string" || upstream.length === 0) {
+    return reject("provenance.upstream must be a non-empty string");
+  }
+  if (typeof commit !== "string" || !/^[a-f0-9]{40}$/u.test(commit)) {
+    return reject("provenance.commit must be a 40-character commit id");
+  }
+  if (typeof path9 !== "string" || path9.length === 0) {
+    return reject("provenance.path must be a non-empty string");
+  }
+  if (typeof capturedAt !== "string" || capturedAt.length === 0) {
+    return reject("provenance.capturedAt must be a non-empty string");
+  }
+  if (!record2.files || typeof record2.files !== "object" || Array.isArray(record2.files)) {
+    return reject("provenance.files must be an object of path -> sha256");
+  }
+  const declared = /* @__PURE__ */ new Map();
+  for (const [rawPath, digest] of Object.entries(record2.files)) {
+    if (typeof digest !== "string" || !/^[a-f0-9]{64}$/u.test(digest)) {
+      return reject(`provenance.files['${rawPath}'] must be a sha256 digest`);
+    }
+    const normalized = normalizeRelative(rawPath);
+    if (normalized === null) {
+      return reject(`provenance.files['${rawPath}'] escapes the publication directory`);
+    }
+    const existing = declared.get(normalized);
+    if (existing !== void 0) {
+      return reject(
+        existing === digest ? `provenance.files lists '${normalized}' more than once` : `provenance.files gives conflicting digests for '${normalized}'`
+      );
+    }
+    declared.set(normalized, digest);
+  }
+  for (const [relativePath, digest] of declared) {
+    if (!expected.has(relativePath)) {
+      return reject(
+        `provenance.files declares '${relativePath}', which is not part of this publication`
+      );
+    }
+    const actual = digests.get(relativePath);
+    if (actual === void 0) {
+      return reject(`provenance.files declares '${relativePath}', which could not be read`);
+    }
+    if (actual !== digest) {
+      return reject(
+        `'${relativePath}' hashes to ${actual}, but the provenance record claims ${digest}`
+      );
+    }
+  }
+  for (const relativePath of expected) {
+    if (!declared.has(relativePath)) {
+      return reject(`provenance.files does not cover '${relativePath}'`);
+    }
+  }
+  return {
+    provenance: { upstream, commit, path: path9, capturedAt, files: Object.fromEntries(declared) },
+    rejected: false
+  };
+}
+function normalizeRelative(value) {
+  if (value.length === 0 || isAbsolute(value)) return null;
+  const normalized = relative(".", join2(".", value));
+  if (normalized.length === 0) return null;
+  if (normalized === ".." || normalized.startsWith(`..${sep}`)) return null;
+  return normalized;
+}
+function describe3(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/skill-summon/src/data/skill-index-source.ts
+import { readFile as readFile3 } from "node:fs/promises";
+import { dirname as dirname4, join as join3 } from "node:path";
+import { fileURLToPath as fileURLToPath3 } from "node:url";
+var INDEX_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "skill-index.json");
 var committed;
 function loadCommittedIndex() {
   committed ??= readCommittedIndex();
@@ -23143,7 +24216,7 @@ function loadCommittedIndex() {
 }
 async function readCommittedIndex() {
   const attempted = [];
-  for (const candidate of candidatePaths()) {
+  for (const candidate of candidatePaths3()) {
     attempted.push(candidate);
     let raw;
     try {
@@ -23168,15 +24241,15 @@ async function readCommittedIndex() {
 Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with \`npx tsx packages/core/scripts/build-skill-index.ts\`.`
   );
 }
-function candidatePaths() {
+function candidatePaths3() {
   const configured = process.env.SKILL_INDEX_PATH?.trim();
-  const here = dirname2(fileURLToPath(import.meta.url));
+  const here = dirname4(fileURLToPath3(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join(here, "..", "data", "skill-index.json"));
+  paths.push(join3(here, "..", "data", "skill-index.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join(directory, INDEX_RELATIVE_PATH));
-    const parent = dirname2(directory);
+    paths.push(join3(directory, INDEX_RELATIVE_PATH));
+    const parent = dirname4(directory);
     if (parent === directory) break;
     directory = parent;
   }
@@ -23685,6 +24758,7 @@ function renderSummonCard(skill, ranking) {
       );
     }
   }
+  if (skill.arbor) lines.push(...arborSubjectLines(skill.arbor));
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s \xB7 ${skill.cache}/${skill.cacheSource} \xB7 ${skill.fileCount} files`,
@@ -23698,7 +24772,7 @@ function renderSummonCard(skill, ranking) {
 }
 
 // packages/skill-summon/src/summon/materialize.ts
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash4 } from "node:crypto";
 import { cp, lstat as lstat3, readFile as readFile4, readdir as readdir3 } from "node:fs/promises";
 import path4 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
@@ -23715,9 +24789,9 @@ async function materializeSkillDir(sourceDir, destDir) {
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
   const skillContent = await readFile4(path4.join(destDir, "SKILL.md"));
-  const sha2562 = createHash2("sha256").update(skillContent).digest("hex");
+  const sha2563 = createHash4("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
-  return { path: destDir, materializeSeconds, fileCount, sha256: sha2562 };
+  return { path: destDir, materializeSeconds, fileCount, sha256: sha2563 };
 }
 async function rejectSymlinks(dir) {
   const root = await lstat3(dir);
@@ -23747,7 +24821,7 @@ async function countFiles(dir) {
 }
 
 // packages/skill-summon/src/summon/payload-cache.ts
-import { createHash as createHash3, randomUUID as randomUUID2 } from "node:crypto";
+import { createHash as createHash5, randomUUID as randomUUID2 } from "node:crypto";
 import {
   cp as cp2,
   lstat as lstat4,
@@ -23897,7 +24971,7 @@ function payloadCacheMaxBytes() {
   return Math.floor(megabytes * 1024 ** 2);
 }
 function cacheKey(identity) {
-  return createHash3("sha256").update(
+  return createHash5("sha256").update(
     JSON.stringify([identity.repoUrl, identity.commit, identity.subpath])
   ).digest("hex");
 }
@@ -23996,6 +25070,26 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   const ranking = disclose(resolved, decision);
   const registry2 = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
+  const publication = await loadArborPublication();
+  const identity = await loadArborIdentityContext();
+  const arbor = summonArborDisclosure(publication, resolved, identity);
+  const linkById = new Map(
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github])
+  );
+  const arborFor = (skillId, delivery = "not-materialized") => {
+    const resolution = resolveArborIdentity(arbor.corpus.canonical ? identity.context : null, {
+      skillId,
+      sourceUrl: linkById.get(skillId),
+      corpusRevision: arbor.corpus.revision
+    });
+    return consumeArbor(publication, {
+      skillId,
+      contentSha256: resolution.pinned ? resolution.contentSha256 : null,
+      canonicalSource: arbor.corpus.canonical,
+      ...resolution.pinned ? {} : { identityNote: describeArborIdentityMiss(resolution.miss) },
+      delivery
+    });
+  };
   if (decision.noMatch) {
     const outcome2 = {
       query: trimmedQuery,
@@ -24010,6 +25104,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24030,7 +25125,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
         ...hit.doc.level ? { level: hit.doc.level } : {},
         ...hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {},
         source: resolved.source,
-        retrieval: disclosures.get(hit.doc.id)
+        retrieval: disclosures.get(hit.doc.id),
+        arbor: arborFor(hit.doc.id)
       })),
       noMatch: null,
       filtered: decision.filtered,
@@ -24039,6 +25135,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24051,7 +25148,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     registry: registry2,
     payloadCache: new PayloadCache(),
     ranking,
-    disclosures
+    disclosures,
+    arborFor
   };
   const summoned = [];
   const skipped = [];
@@ -24085,6 +25183,7 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     suites,
     sessionRoot: session.root,
     ranking,
+    arbor,
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt)
   };
@@ -24105,6 +25204,36 @@ function disclose(resolved, decision) {
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source
+  };
+}
+function summonArborDisclosure(publication, resolved, identity) {
+  const base = describeArborPublication(publication);
+  const workflow = resolved.index.sourceWorkflow;
+  const canonical2 = resolved.origin === "committed" && typeof workflow === "string" && workflow.startsWith("gaia-skill-tree/");
+  const revision = resolved.index.sourceRevision ?? null;
+  const publicationCommit = publication.provenance?.commit ?? null;
+  const sameUpstreamRevision = revision === null || publicationCommit === null || publicationCommit === "unknown" ? null : revision === publicationCommit;
+  let note = base.note;
+  if (!canonical2) {
+    note += " These candidates are outside the canonical corpus that projection describes, so no Arbor record can apply to them.";
+  } else if (sameUpstreamRevision === false) {
+    note += ` The retrieval corpus (${revision}) and the Arbor publication (${publicationCommit}) are pinned to different upstream revisions; a shared id across the two is not evidence of shared content.`;
+  }
+  const identityMatches = identity.context !== null && revision !== null && identity.context.commit === revision;
+  if (canonical2 && !identityMatches) {
+    note += identity.context === null ? " No canonical identity context is available, so no candidate's content pin could be proven." : " The canonical identity context is pinned at a different Tree revision than this corpus, so no content pin was used.";
+  }
+  return {
+    ...base,
+    note,
+    corpus: { source: resolved.source, revision, canonical: canonical2, sameUpstreamRevision },
+    identity: {
+      commit: identity.context?.commit ?? null,
+      matchesCorpusRevision: identityMatches,
+      pinnedSkills: identity.context ? Object.keys(identity.context.skills).length : 0,
+      sha256: identity.sha256,
+      problem: identity.problem
+    }
   };
 }
 function disclosureById(decision, query) {
@@ -24300,6 +25429,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24430,6 +25560,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24455,11 +25586,11 @@ function installedTrust(skill) {
   };
 }
 async function isResidentPayload(session, payloadPath) {
-  const relative = path7.relative(
+  const relative2 = path7.relative(
     path7.resolve(session.skillsRoot),
     path7.resolve(payloadPath)
   );
-  if (relative.startsWith("..") || path7.isAbsolute(relative)) return false;
+  if (relative2.startsWith("..") || path7.isAbsolute(relative2)) return false;
   return pathExists3(path7.join(payloadPath, "SKILL.md"));
 }
 async function pathExists3(target) {
@@ -24475,9 +25606,9 @@ function errorMessage5(error2) {
 }
 
 // packages/skill-summon/src/mcp/skills.ts
-import { constants } from "node:fs";
-import { createHash as createHash4 } from "node:crypto";
-import { mkdtemp as mkdtemp3, lstat as lstat5, open, rm as rm5 } from "node:fs/promises";
+import { constants as constants2 } from "node:fs";
+import { createHash as createHash6 } from "node:crypto";
+import { mkdtemp as mkdtemp3, lstat as lstat5, open as open2, rm as rm5 } from "node:fs/promises";
 import { tmpdir as tmpdir4 } from "node:os";
 import path8 from "node:path";
 var SKILLS_EXTENSION_ID = "io.modelcontextprotocol/skills";
@@ -24617,7 +25748,7 @@ function verifyResourceContent(uri, content, manifest) {
   if (bytes.byteLength > MAX_RESOURCE_BYTES) {
     throw new Error(`Skill resource exceeds ${MAX_RESOURCE_BYTES} bytes: ${uri}`);
   }
-  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash4("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
+  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash6("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
     throw new Error(`Skill resource failed manifest verification: ${uri}`);
   }
 }
@@ -24697,8 +25828,8 @@ function uriFromSegments(segments) {
   if (segments.length < 2 || segments.some((segment) => !SAFE_SEGMENT.test(segment))) {
     throw new Error("Cannot create an MCP skill URI from unsafe path segments.");
   }
-  const [authority, ...pathSegments] = segments;
-  return `skill://${authority.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+  const [authority2, ...pathSegments] = segments;
+  return `skill://${authority2.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
 }
 function validateManifest(skillUriValue, resources) {
   if (resources === "dynamic") return;
@@ -24748,8 +25879,8 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
     const filePath = path8.resolve(skillRoot, resourceSubpath);
     assertInside(skillRoot, filePath);
     await assertNoSymlinkPath(skillRoot, resourceSubpath);
-    const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
-    const handle = await open(filePath, flags);
+    const flags = constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0);
+    const handle = await open2(filePath, flags);
     try {
       const fileStat = await handle.stat();
       if (!fileStat.isFile()) {
@@ -24778,13 +25909,13 @@ function safeRelativePath(value, label, allowEmpty = false) {
   return segments.join(path8.sep);
 }
 function assertInside(root, target) {
-  const relative = path8.relative(path8.resolve(root), path8.resolve(target));
-  if (relative.startsWith("..") || path8.isAbsolute(relative)) {
+  const relative2 = path8.relative(path8.resolve(root), path8.resolve(target));
+  if (relative2.startsWith("..") || path8.isAbsolute(relative2)) {
     throw new Error("Skill resource path escapes its source root.");
   }
 }
-async function assertNoSymlinkPath(root, relative) {
-  const segments = relative ? relative.split(path8.sep) : [];
+async function assertNoSymlinkPath(root, relative2) {
+  const segments = relative2 ? relative2.split(path8.sep) : [];
   let current = path8.resolve(root);
   const rootStat = await lstat5(current);
   if (rootStat.isSymbolicLink()) throw new Error("Refusing symlinked skill resource root.");
@@ -24792,7 +25923,7 @@ async function assertNoSymlinkPath(root, relative) {
     current = path8.join(current, segment);
     const entry = await lstat5(current);
     if (entry.isSymbolicLink()) {
-      throw new Error(`Refusing symlinked skill resource path: ${relative}.`);
+      throw new Error(`Refusing symlinked skill resource path: ${relative2}.`);
     }
   }
 }
@@ -24868,6 +25999,35 @@ var summonOutputSchema = external_exports.object({
     stale: external_exports.boolean(),
     indexOrigin: external_exports.enum(["committed", "fetched"]),
     source: external_exports.string()
+  }),
+  // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
+  // the wire, not only on the printed card, so a controller reading
+  // `structuredContent` sees the same unknowns a human does. The lens reports
+  // are kept as `unknown` here for the same reason the rest of this schema is:
+  // the authored shape lives in `skill-zero`, and restating it in zod would give
+  // the wire a second, drifting copy of the contract.
+  arbor: external_exports.object({
+    publicationState: external_exports.enum(["loaded", "unavailable", "unreadable"]),
+    provenance: external_exports.unknown().nullable(),
+    contracts: external_exports.record(external_exports.string(), external_exports.string()),
+    subjectsPublished: external_exports.number(),
+    edgesPublished: external_exports.number(),
+    edgeCoverage: external_exports.unknown().nullable(),
+    problems: external_exports.array(external_exports.object({ where: external_exports.string(), detail: external_exports.string() })),
+    note: external_exports.string(),
+    corpus: external_exports.object({
+      source: external_exports.string(),
+      revision: external_exports.string().nullable(),
+      canonical: external_exports.boolean(),
+      sameUpstreamRevision: external_exports.boolean().nullable()
+    }),
+    identity: external_exports.object({
+      commit: external_exports.string().nullable(),
+      matchesCorpusRevision: external_exports.boolean(),
+      pinnedSkills: external_exports.number(),
+      sha256: external_exports.string().nullable(),
+      problem: external_exports.string().nullable()
+    })
   }),
   cards: external_exports.array(external_exports.string()),
   totalSeconds: external_exports.number()
