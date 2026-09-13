@@ -40,6 +40,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ARBOR_IDENTITY_SCHEMA, type ArborIdentityContext } from "../src/arbor/identity.js";
+import { identityArtifactIsCurrent } from "./lib/arbor-identity-freshness.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");
@@ -153,7 +154,9 @@ const context: ArborIdentityContext = {
 const serialized = `${JSON.stringify(context, null, 2)}\n`;
 if (check) {
   const existing = readFileSync(outputPath, "utf8");
-  if (existing !== serialized) {
+  // Keep the original capture receipt valid across days. All source-derived
+  // fields and serialization remain byte-checked; only capture time is ignored.
+  if (!identityArtifactIsCurrent(context, existing)) {
     process.stderr.write("arbor identity context is stale; rerun without --check.\n");
     process.exit(1);
   }
