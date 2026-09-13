@@ -6,7 +6,7 @@ specification.
 
 ## Pinned authority and status
 
-The conformance target is the stable extension rendering at
+The original implemented target was the stable extension rendering at
 [`modelcontextprotocol/ext-skills/specification/stable/skills.mdx`](https://github.com/modelcontextprotocol/ext-skills/blob/f1f8605b72274e8ab667b72194103fe8096e9552/specification/stable/skills.mdx),
 resolved on 2026-09-07 to file blob `e632647186f99caf0b47cc692839fa4d7f06642f`.
 That source identifies the extension as `io.modelcontextprotocol/skills` and
@@ -19,6 +19,35 @@ was open and not merged at the pinned check. Its accepted head was
 **SEP-2640 conformance target: accepted proposal / stable extension rendering**,
 not **ratified MCP support**. Re-check both references before changing the
 claim or upgrading the implementation.
+
+## Current revision: partial compatibility, not conformance
+
+The follow-up target is commit
+[`d866efdba298b55b8156c7b7aa1bdebc1b625f4c`](https://github.com/modelcontextprotocol/ext-skills/blob/d866efdba298b55b8156c7b7aa1bdebc1b625f4c/specification/stable/skills.mdx),
+file blob `e65b881c7440a7720acedbac000113d4946be08f`. It explicitly requires
+base MCP **2026-07-28 or later** and cacheable-result fields on both
+`skills/list` and `skills/get`.
+
+The cache fields are implemented, but **the pinned SDK does not support that
+base protocol**. Raw JSON-RPC initialization against both the production server
+and regenerated stdio bundle gives:
+
+| Requested protocol | Returned protocol |
+| --- | --- |
+| `2025-11-25` | `2025-11-25` |
+| `2026-07-28` | `2025-11-25` |
+
+This is an explicit compatibility limit, not successful 2026 negotiation. The
+existing extension advertisement and legacy methods are preserved for compatible
+clients; clients requiring the new base cannot treat them as current-extension
+conformance. No protocol version is forged and no SDK upgrade is hidden in this
+patch. The raw initialization regression in `mcp-skills.test.ts` deliberately
+pins the observed result so an SDK upgrade requires re-evaluation.
+
+Finishing current-revision conformance requires a separately reviewed base
+protocol implementation/SDK upgrade, negotiated wire probes, and regression
+coverage for resources, caching and existing tool behavior. Adding the missing
+cache fields alone does not close that gate.
 
 ## Supported surface
 
@@ -41,8 +70,8 @@ time.
   `skill://` namespace. A resource template is advertised as
   `skill://{+resourcePath}`. Static manifests also appear in `resources/list`;
   dynamic entries remain readable without being preloaded or enumerated.
-- Responses use the current cacheable-result fields (`resultType: "complete"`,
-  `ttlMs`, and `cacheScope`) where that contract applies. TTL is zero because
+- `skills/list`, `skills/get`, `resources/list` and `resources/read` responses
+  include `resultType: "complete"`, `ttlMs: 0`, and `cacheScope: "private"`. TTL is zero because
   registry branches can change between reads. Public resource metadata carries
   MIME types and assistant-facing annotations; the content itself stays
   unannotated.

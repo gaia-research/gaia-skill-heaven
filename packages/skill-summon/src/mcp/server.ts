@@ -208,6 +208,8 @@ export function createSkillSummonMcpServer({
           frontmatter: entry.frontmatter,
           resources: entry.resources,
         },
+        ttlMs: SKILL_LIST_TTL_MS,
+        cacheScope: "private",
       };
     });
 

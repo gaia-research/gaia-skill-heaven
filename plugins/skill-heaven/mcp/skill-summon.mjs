@@ -26408,7 +26408,9 @@ function createSkillSummonMcpServer({
           uri: entry.uri,
           frontmatter: entry.frontmatter,
           resources: entry.resources
-        }
+        },
+        ttlMs: SKILL_LIST_TTL_MS,
+        cacheScope: "private"
       };
     });
     server.server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
