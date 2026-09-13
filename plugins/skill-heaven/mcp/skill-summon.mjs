@@ -22616,6 +22616,9 @@ function assertInstallabilityAssessment(value, label = "Installability assessmen
   if (assessment.upstream !== null) {
     assertInstallabilityProjectionSkill(assessment.upstream, `${label}.upstream`);
     if (assessment.applicability === "verified") {
+      if (assessment.upstream.observationDigest === null || assessment.upstream.observedAt === null) {
+        throw new Error(`${label}.verified assessments require observation provenance.`);
+      }
       const stateError = stateSpecificError(assessment.upstream);
       if (stateError !== null) {
         throw new Error(`${label}.upstream is semantically invalid: ${stateError}`);
