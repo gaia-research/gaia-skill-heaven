@@ -22529,13 +22529,22 @@ function unknownInstallabilityAssessment(projectionIndexPath = null, applicabili
   };
 }
 function withInstallability(index, assessments) {
-  return {
-    ...index,
-    docs: index.docs.map((doc) => ({
-      ...doc,
-      installability: assessments.get(doc.id)
-    }))
-  };
+  const docs = index.docs.map((doc) => ({
+    ...doc,
+    installability: safeAssessment(assessments.get(doc.id))
+  }));
+  const decorated = { ...index, docs };
+  const stats = index.stats;
+  if (isStats(stats)) {
+    return {
+      ...decorated,
+      stats: {
+        ...stats,
+        unreachable: docs.filter(assessedUnreachable).length
+      }
+    };
+  }
+  return decorated;
 }
 function withUnknownInstallability(index, projectionIndexPath = null, applicabilityReason = "not-observed") {
   const assessments = new Map(
@@ -22545,6 +22554,30 @@ function withUnknownInstallability(index, projectionIndexPath = null, applicabil
     ])
   );
   return withInstallability(index, assessments);
+}
+function safeAssessment(value) {
+  if (value === void 0) return void 0;
+  try {
+    assertInstallabilityAssessment(value);
+    return value;
+  } catch {
+    return unknownInstallabilityAssessment(null, "invalid-evidence");
+  }
+}
+function isStats(value) {
+  return typeof value === "object" && value !== null && typeof value.unreachable === "number";
+}
+function assessedUnreachable(value) {
+  if (value.registryOnly === true) return true;
+  const assessment = value.installability;
+  if (assessment !== void 0) {
+    return assessment.applicability === "verified" && assessment.state === "not-materializable";
+  }
+  return value.installable !== true && (!Array.isArray(value.suiteComponents) || value.suiteComponents.length === 0);
+}
+function sameRoute(left, right) {
+  if (left === null || right === null) return left === right;
+  return ["url", "owner", "repo", "ref", "subpath", "entrypoint", "installSubpath"].every((key) => left[key] === right[key]);
 }
 function isInstallabilityState(value) {
   return typeof value === "string" && INSTALLABILITY_STATES.includes(value);
@@ -22571,7 +22604,8 @@ function assertInstallabilityAssessment(value, label = "Installability assessmen
     "revision-unverified",
     "revision-mismatch",
     "fleet-source",
-    "invalid-context"
+    "invalid-context",
+    "invalid-evidence"
   ];
   if (!applicabilityReasons.includes(String(assessment.applicabilityReason))) {
     throw new Error(`${label}.applicabilityReason is invalid.`);
@@ -22581,7 +22615,58 @@ function assertInstallabilityAssessment(value, label = "Installability assessmen
   }
   if (assessment.upstream !== null) {
     assertInstallabilityProjectionSkill(assessment.upstream, `${label}.upstream`);
+    if (assessment.applicability === "verified") {
+      const stateError = stateSpecificError(assessment.upstream);
+      if (stateError !== null) {
+        throw new Error(`${label}.upstream is semantically invalid: ${stateError}`);
+      }
+      if (assessment.applicabilityReason !== "matched") {
+        throw new Error(`${label}.verified assessments must have applicabilityReason matched.`);
+      }
+      if (assessment.state !== assessment.upstream.state || assessment.reason !== assessment.upstream.reason) {
+        throw new Error(`${label} does not preserve its upstream state and reason.`);
+      }
+    } else if (assessment.state !== "unknown" || assessment.reason !== "unverified-applicability") {
+      throw new Error(`${label}.unknown applicability must be effective unknown.`);
+    }
+  } else if (assessment.applicability !== "unknown" || assessment.state !== "unknown" || assessment.reason !== "unverified-applicability") {
+    throw new Error(`${label} without upstream evidence must be effective unknown.`);
   }
+}
+function stateSpecificError(record2) {
+  if (record2.state === "unknown" && (record2.reason === "gaia-materialized" || record2.reason === "no-source" || record2.reason === "intrinsic-content-failure")) {
+    return "unknown result has a contradictory decision reason";
+  }
+  if (record2.state === "materializable") {
+    if (record2.reason !== "gaia-materialized") return "positive result has the wrong reason";
+    if (record2.currentSourceRoute === null || record2.observedSourceRoute === null || !sameRoute(record2.currentSourceRoute, record2.observedSourceRoute)) {
+      return "materializable result lacks matching current and observed source identity";
+    }
+    if (record2.currentSkillContentSha256 === null || record2.observedSkillContentSha256 === null || record2.currentSkillContentSha256 !== record2.observedSkillContentSha256) {
+      return "materializable result lacks matching current and observed content identity";
+    }
+    if (record2.resolvedRevision === null) return "materializable result lacks resolved revision";
+    if (record2.deliveredContentSha256 === null) {
+      return "materializable result lacks delivered content provenance";
+    }
+    return null;
+  }
+  if (record2.state === "not-materializable") {
+    if (record2.reason === "no-source") {
+      if (record2.currentSourceRoute !== null || record2.observedSourceRoute !== null || record2.observedSkillContentSha256 !== null || record2.resolvedRevision !== null || record2.deliveredContentSha256 !== null) {
+        return "no-source result contains sourced observation fields";
+      }
+      return null;
+    }
+    if (record2.reason === "intrinsic-content-failure") {
+      if (record2.currentSourceRoute === null || record2.observedSourceRoute === null || !sameRoute(record2.currentSourceRoute, record2.observedSourceRoute)) {
+        return "intrinsic result lacks matching source identity";
+      }
+      return null;
+    }
+    return "negative result has an unscoped reason";
+  }
+  return null;
 }
 function assertInstallabilityProjectionSkill(value, label = "Installability projection skill") {
   const skill = asRecord(value, label);
@@ -23485,7 +23570,7 @@ var GaiaService = class {
       index: indexFromSnapshot(snapshot, sourceUrl),
       source: sourceUrl,
       origin: "fetched",
-      sourceKind: snapshot.source.kind ?? "tree"
+      sourceKind: snapshot.source.kind
     });
   }
   async #decorateInstallability(resolved) {
@@ -23500,7 +23585,7 @@ var GaiaService = class {
     try {
       const applied = await this.#installabilityAdapter.apply(unknown2, {
         source: resolved.source,
-        sourceKind: resolved.sourceKind ?? "tree"
+        sourceKind: resolved.sourceKind ?? "unknown"
       });
       return {
         ...resolved,
@@ -23710,7 +23795,7 @@ var GaiaService = class {
     return flattenNamed(snapshot);
   }
   #metadata(snapshot) {
-    const sourceKind = snapshot.source.kind ?? "tree";
+    const sourceKind = snapshot.source.kind ?? "unknown";
     const generatedTimes = [
       Date.parse(snapshot.generic.generatedAt),
       Date.parse(snapshot.named.generatedAt)
@@ -23727,6 +23812,10 @@ var GaiaService = class {
     if (sourceKind === "fleet") {
       warnings.push(
         "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active."
+      );
+    } else if (sourceKind === "unknown") {
+      warnings.push(
+        "Source kind is unknown; Tree-scoped installability evidence is not applied."
       );
     } else if (!upstreamDeclaresContractVersion) {
       warnings.push(
@@ -25088,6 +25177,7 @@ var summonOutputSchema = external_exports.object({
     installability: external_exports.object({
       status: external_exports.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
       projectionIndexPath: external_exports.string().optional(),
+      sourceUrl: external_exports.string().optional(),
       warning: external_exports.string().optional()
     }).optional()
   }),
