@@ -49,6 +49,21 @@ protocol implementation/SDK upgrade, negotiated wire probes, and regression
 coverage for resources, caching and existing tool behavior. Adding the missing
 cache fields alone does not close that gate.
 
+### Exact SDK 1.30.0 follow-up probe (2026-09-13)
+
+An isolated install of `@modelcontextprotocol/sdk@1.30.0` under Node
+`v22.23.1` was probed without changing the product dependency or bundle.
+Its published integrity was
+`sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==`.
+It exports `LATEST_PROTOCOL_VERSION = "2025-11-25"`; its supported-version
+list does not contain `2026-07-28`. An actual `initialize` request for
+`2026-07-28` over linked `InMemoryTransport` instances to its `Server`
+returned `2025-11-25`.
+
+This is an SDK-only negotiation result, not a full product compatibility
+pass. **Upgrading to 1.30.0 alone cannot close the protocol-base gate**, so
+no product upgrade was made. The product remains pinned to 1.29.0.
+
 ## Supported surface
 
 The package is pinned to `@modelcontextprotocol/sdk@1.29.0`. That SDK does not
