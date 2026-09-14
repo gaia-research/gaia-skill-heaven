@@ -2,7 +2,7 @@
   "name": "skill-heaven",
   "displayName": "Skill Heaven",
   "version": "0.1.0",
-  "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. One mechanic — /summon, one skill into context for one session, nothing installed — on one line: zero · low · med · high · xhigh · max · ultra, whose four surfaces are contiguous bands read from the current rung. /skill-zero is the floor, /skill-heaven converges, /skill-hell explores, and /skill-ultra is the crown rung whose controller picks direction and depth per gap. Nothing on the line refuses. No rung carries a count and no summon is capped — what each rung reaches for is being worked out in use while the benchmark is built. Interfaces may change. The zero-default launcher and standing-dose statusline live in the claude-zero package, run from a source checkout — not part of this marketplace install.",
+  "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. One mechanic \u2014 /summon, one skill into context for one session, nothing installed \u2014 on one line: zero \u00b7 low \u00b7 med \u00b7 high \u00b7 xhigh \u00b7 max \u00b7 ultra, whose four surfaces are contiguous bands read from the current rung. /skill-zero is the floor, /skill-heaven converges, /skill-hell explores, and /skill-ultra is the crown rung whose controller picks direction and depth per gap. Nothing on the line refuses. No rung carries a count and no summon is capped \u2014 what each rung reaches for is being worked out in use while the benchmark is built. Interfaces may change. The zero-default launcher and standing-dose statusline live in the claude-zero package, run from a source checkout \u2014 not part of this marketplace install.",
   "homepage": "https://github.com/gaia-research/gaia-skill-heaven#readme",
   "repository": "https://github.com/gaia-research/gaia-skill-heaven",
   "license": "MIT",
@@ -29,6 +29,12 @@
       "title": "Zero cuts (temporary/all) skills. Default is temporary.",
       "description": "\"temporary\" (default) cuts temporary automatic summons while manual /summon remains available. \"all\" cuts all skill summons, including manual /summon.",
       "default": "temporary"
+    },
+    "auto_summon": {
+      "type": "string",
+      "title": "Automatic summoning (off/on). Default is off.",
+      "description": "\"off\" (default) leaves summoning manual. \"on\" lets the UserPromptSubmit hook remind the session, at rungs above the floor, to summon on a capability gap. It injects plugin-authored text only \u2014 never catalogue content \u2014 and is the research surface for the entropy curve.",
+      "default": "off"
     }
   }
 }
