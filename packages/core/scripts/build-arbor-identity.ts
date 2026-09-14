@@ -41,6 +41,7 @@ import { fileURLToPath } from "node:url";
 
 import { ARBOR_IDENTITY_SCHEMA, type ArborIdentityContext } from "../src/arbor/identity.js";
 import { identityArtifactIsCurrent } from "./lib/arbor-identity-freshness.js";
+import { deriveCanonicalRoutes } from "./lib/arbor-identity-routes.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");
@@ -91,11 +92,10 @@ const named = JSON.parse(namedBytes.toString("utf8")) as {
   buckets: Record<string, { id: string; links?: { github?: string } }[]>;
   awaitingClassification?: { id: string; links?: { github?: string } }[];
 };
-const routeById = new Map<string, string | null>();
-for (const record of [...Object.values(named.buckets).flat(), ...(named.awaitingClassification ?? [])]) {
-  const github = record.links?.github;
-  routeById.set(record.id, typeof github === "string" && github.length > 0 ? github : null);
-}
+const routeById = deriveCanonicalRoutes([
+  ...Object.values(named.buckets).flat(),
+  ...(named.awaitingClassification ?? []),
+]);
 
 // Upstream's installability projection, when it exists at this revision.
 const installabilityBytes = show(revision, "docs/graph/installability/index.json");
@@ -112,6 +112,7 @@ let unresolved = 0;
 
 for (const doc of committedIndex.docs) {
   const route = routeById.get(doc.id);
+  const routeIsPresent = routeById.has(doc.id);
   const canonicalPath = `registry/named/${doc.id}.md`;
   const fileBytes = show(revision, canonicalPath);
   const derivedDigest = fileBytes ? createHash("sha256").update(fileBytes).digest("hex") : undefined;
@@ -124,10 +125,11 @@ for (const doc of committedIndex.docs) {
     );
   }
   const contentSha256 = publishedDigest ?? derivedDigest;
-  if (!contentSha256 || route === undefined) {
-    // Missing canonical bytes or a missing named record is unknown. An explicit
-    // absent route on an existing named record is instead a provable null; it
-    // is not itself a negative installability observation.
+  if (!contentSha256 || !routeIsPresent || route === undefined) {
+    // Missing canonical bytes, a missing named record, or conflicting duplicate
+    // routes is unknown. An explicit absent route on one unambiguous named
+    // record is instead a provable null; it is not itself a negative
+    // installability observation.
     unresolved += 1;
     continue;
   }

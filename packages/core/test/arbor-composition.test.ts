@@ -24,7 +24,11 @@ describe("session-scoped composition inspection", () => {
       edge: edge(), fromRoles: ["session-record"], toRoles: ["proposed"],
       endpointIdentity: "both-pinned", applicability: "conditions-unverified",
     });
-    expect(result).toMatchObject({ mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false, deliveryVerified: false });
+    expect(result).toMatchObject({
+      mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
+      deliveryVerified: false,
+      publication: { state: "loaded", subjectsPublished: 2, edgesPublished: 1, matchedEdges: 1, problems: [] },
+    });
     expect(arborCompositionLines(result).join("\n")).toContain(edge().conditions);
   });
   it("does not surface unrelated catalogue pairs", () => {
@@ -41,23 +45,83 @@ describe("session-scoped composition inspection", () => {
     const { publication, members } = fixture(edge({ pairApplicable: false }));
     expect(inspectArborComposition(publication, members).interactions[0]?.applicability).toBe("publication-inapplicable");
   });
-  it("treats colliding source identities as unverified rather than choosing a convenient occurrence", () => {
+  it("does not surface canonical edge text for colliding source identities", () => {
     const { publication, members } = fixture();
     members.push({ role: "session-record", report: consumeArbor(publication, {
       skillId: OTHER.id, contentSha256: OTHER.contentSha256, canonicalSource: false,
     }) });
-    expect(inspectArborComposition(publication, members).interactions[0]?.applicability).toBe("endpoints-unverified");
+    const result = inspectArborComposition(publication, members);
+    expect(result.interactions).toEqual([]);
+    expect(arborCompositionLines(result).join("\n")).not.toContain(edge().conditions);
+    expect(result.publication.matchedEdges).toBe(0);
   });
-  it("treats a stale endpoint as unknown", () => {
+  it("does not surface canonical edge text for a stale endpoint", () => {
     const { publication, members } = fixture();
     members[1]!.report = consumeArbor(publication, {
       skillId: OTHER.id, contentSha256: "0".repeat(64), canonicalSource: true,
     });
-    expect(inspectArborComposition(publication, members).interactions[0]?.endpointIdentity).toBe("unverified");
+    const result = inspectArborComposition(publication, members);
+    expect(result.interactions).toEqual([]);
+    expect(arborCompositionLines(result).join("\n")).not.toContain(edge().conditions);
   });
-  it("an absent publication is not a clean bill of health", () => {
+
+  it("does not surface canonical edge text when a listed aggregate is missing", () => {
+    const documents = publicationDocuments([runtime({ subject: SUBJECT })], [edge()]);
+    const publication = readArborPublication({
+      ...documents,
+      runtimeIndex: {
+        ...documents.runtimeIndex,
+        subjects: [SUBJECT, OTHER],
+      },
+    });
+    const members: CompositionMember[] = [
+      {
+        role: "session-record",
+        report: consumeArbor(publication, {
+          skillId: SUBJECT.id, contentSha256: SUBJECT.contentSha256, canonicalSource: true,
+        }),
+      },
+      {
+        role: "proposed",
+        report: consumeArbor(publication, {
+          skillId: OTHER.id, contentSha256: OTHER.contentSha256, canonicalSource: true,
+        }),
+      },
+    ];
+    const result = inspectArborComposition(publication, members);
+    expect(result.interactions).toEqual([]);
+    expect(result.publication).toMatchObject({
+      state: "loaded", edgesPublished: 1, matchedEdges: 0,
+    });
+    expect(result.publication.problems.length).toBeGreaterThan(0);
+    expect(result.note).toContain("none has two current canonical content-pinned endpoints");
+    expect(arborCompositionLines(result).join("\n")).not.toContain(edge().conditions);
+  });
+  it("distinguishes an unavailable publication from a loaded empty one", () => {
     const result = inspectArborComposition(unavailableArborPublication(), []);
     expect(result.interactions).toEqual([]);
+    expect(result.publication).toMatchObject({
+      state: "unavailable", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0,
+    });
+    expect(result.note).toContain("no publication was readable");
     expect(result.note).toContain("unknown, not compatible or conflict-free");
+
+    const broken = publicationDocuments([]);
+    (broken.runtimeIndex as Record<string, unknown>).runtimeVersion = "gaia.arbor-runtime/v2";
+    const unreadableResult = inspectArborComposition(readArborPublication(broken), []);
+    expect(unreadableResult.publication).toMatchObject({
+      state: "unreadable", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0,
+    });
+    expect(unreadableResult.publication.problems.length).toBeGreaterThan(0);
+    expect(unreadableResult.note).toContain("publication was unreadable");
+
+    const emptyResult = inspectArborComposition(
+      readArborPublication(publicationDocuments([])),
+      [],
+    );
+    expect(emptyResult.publication).toMatchObject({
+      state: "loaded", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0,
+    });
+    expect(emptyResult.note).toContain("no interaction edges");
   });
 });

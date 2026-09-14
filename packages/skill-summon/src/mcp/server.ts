@@ -128,6 +128,13 @@ const summonOutputSchema = z.object({
     selectionChanged: z.literal(false),
     conditionsEvaluated: z.literal(false),
     deliveryVerified: z.literal(false),
+    publication: z.object({
+      state: z.enum(["loaded", "unavailable", "unreadable"]),
+      subjectsPublished: z.number(),
+      edgesPublished: z.number(),
+      matchedEdges: z.number(),
+      problems: z.array(z.object({ where: z.string(), detail: z.string() })),
+    }),
     members: z.array(z.unknown()),
     interactions: z.array(z.unknown()),
     note: z.string(),

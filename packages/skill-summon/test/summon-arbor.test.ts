@@ -20,6 +20,7 @@ import {
   arborPublicationLines,
   arborSubjectLines,
   type ArborClaim,
+  type ArborEdge,
   type ArborIdentityContext,
 } from "skill-zero";
 
@@ -101,6 +102,8 @@ type SyntheticOptions = {
   tamper?: (files: Record<string, string>) => Record<string, string>;
   /** Ship no provenance record at all — the explicitly unauditable cache. */
   omitProvenance?: boolean;
+  /** Synthetic edge records for composition-only regression coverage. */
+  edges?: ArborEdge[];
 };
 
 /**
@@ -128,7 +131,7 @@ async function writePublication(
     schema: "gaia.arbor-edge-index/v1",
     edgeSetVersion: "gaia.arbor-edge/v1",
     coverage: { pairsEvaluated: 0, absenceMeaning: "not-evaluated" },
-    edges: [],
+    edges: options.edges ?? [],
   });
   await put(join("runtime", "index.json"), {
     schema: "gaia.arbor-runtime-index/v1",
@@ -309,7 +312,11 @@ describe("summon discloses its behavioral lenses", () => {
     expect(outcome.arbor.subjectsPublished).toBe(0);
     expect(outcome.composition).toMatchObject({
       mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
-      deliveryVerified: false, interactions: [],
+      deliveryVerified: false,
+      publication: {
+        state: "loaded", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0, problems: [],
+      },
+      interactions: [],
     });
     expect(outcome.composition.members.every((member) => member.role === "proposed")).toBe(true);
     expect(outcome.arbor.edgeCoverage).toEqual({
@@ -408,6 +415,82 @@ describe("the production path can prove a canonical content pin", () => {
     );
   });
 
+  it("proves every indexed explicit-null route on the production summon path", async () => {
+    const committed = await loadCommittedIndex();
+    const identity = await loadArborIdentityContext();
+    const nullRouteDocs = committed.docs.filter((doc) =>
+      !doc.links.github && identity.context?.skills[doc.id]?.sourceUrl === null,
+    );
+    expect(nullRouteDocs.length).toBeGreaterThan(0);
+    expect(identity.context?.counts.resolved).toBe(committed.docs.length);
+    await useSyntheticPublication(nullRouteDocs.map((doc) => ({
+      id: doc.id,
+      contentSha256: identity.context!.skills[doc.id]!.contentSha256,
+    })));
+
+    for (const doc of nullRouteDocs) {
+      const outcome = await summon(committedService(), await session(), {
+        query: doc.id,
+        preview: true,
+        surface: "any",
+        limit: 1,
+      });
+      const matching = outcome.previewed.find((preview) => preview.id === doc.id);
+      if (doc.registryOnly) {
+        expect(outcome.noMatch?.reason).toBe("all_filtered");
+        expect(outcome.filtered.find((item) => item.id === doc.id)?.why).toMatch(/registry-only/u);
+      } else {
+        expect(matching?.arbor).toMatchObject({
+          contentSha256: identity.context!.skills[doc.id]!.contentSha256,
+          join: "content-pinned",
+        });
+      }
+    }
+    // This is the number this corpus can prove, not merely the number of
+    // entries present in the identity artifact.
+    expect(
+      (await summon(committedService(), await session(), {
+        query: nullRouteDocs[0]!.id,
+        preview: true,
+        surface: "any",
+      })).arbor.identity.pinnedSkills,
+    ).toBe(committed.docs.length);
+  });
+
+  it("keeps an indexed id missing from identity context unknown on the production path", async () => {
+    const committed = await loadCommittedIndex();
+    const identity = await loadArborIdentityContext();
+    const candidate = committed.docs.find((doc) => !doc.links.github && !doc.registryOnly)!;
+    const pin = identity.context!.skills[candidate.id]!;
+    const originalPinned = Object.keys(identity.context!.skills).length;
+    await useSyntheticIdentity((context) => {
+      const skills = { ...context.skills };
+      delete skills[candidate.id];
+      return {
+        ...context,
+        skills,
+        counts: {
+          ...context.counts,
+          resolved: context.counts.resolved - 1,
+          unresolved: context.counts.unresolved + 1,
+        },
+      };
+    });
+    await useSyntheticPublication([{ id: candidate.id, contentSha256: pin.contentSha256, claims: [syntheticClaim()] }]);
+    const outcome = await summon(committedService(), await session(), {
+      query: candidate.id,
+      preview: true,
+      surface: "any",
+    });
+    const matching = outcome.previewed.find((preview) => preview.id === candidate.id);
+    expect(matching?.arbor).toMatchObject({
+      contentSha256: null,
+      join: "identity-unproven",
+    });
+    expect(matching?.arbor.lenses.claims.reason).toMatch(/pins no content for this id/u);
+    expect(outcome.arbor.identity.pinnedSkills).toBe(originalPinned - 1);
+  });
+
   it("joins a real candidate to a published subject and carries its claims (synthetic publication)", async () => {
     // REAL: the candidate, its id, its canonical content pin and its source
     // route, all from committed artifacts. SYNTHETIC: the published record —
@@ -454,11 +537,17 @@ describe("the production path can prove a canonical content pin", () => {
     await useSyntheticPublication([
       { id: REAL_ID, contentSha256: REAL_SHA, claims: [syntheticClaim()] },
     ]);
-    const matching = await previewReal();
+    const outcome = await summon(committedService(), await session(), {
+      query: "pytest patterns",
+      preview: true,
+      surface: "any",
+    });
+    const matching = outcome.previewed.find((preview) => preview.id === REAL_ID);
     expect(matching?.arbor.contentSha256).toBeNull();
     expect(matching?.arbor.join).toBe("identity-unproven");
     expect(matching?.arbor.claims).toEqual([]);
     expect(matching?.arbor.lenses.claims.reason).toMatch(/not the canonical route recorded/u);
+    expect(outcome.arbor.identity.pinnedSkills).toBe((await loadCommittedIndex()).docs.length - 1);
   });
 
   it("refuses the pin when the identity context is pinned at another revision", async () => {
@@ -469,11 +558,17 @@ describe("the production path can prove a canonical content pin", () => {
     await useSyntheticPublication([
       { id: REAL_ID, contentSha256: REAL_SHA, claims: [syntheticClaim()] },
     ]);
-    const matching = await previewReal();
+    const outcome = await summon(committedService(), await session(), {
+      query: "pytest patterns",
+      preview: true,
+      surface: "any",
+    });
+    const matching = outcome.previewed.find((preview) => preview.id === REAL_ID);
     expect(matching?.arbor.contentSha256).toBeNull();
     expect(matching?.arbor.join).toBe("identity-unproven");
     expect(matching?.arbor.claims).toEqual([]);
     expect(matching?.arbor.lenses.claims.reason).toMatch(/different Tree revision/u);
+    expect(outcome.arbor.identity.pinnedSkills).toBe(0);
   });
 
   it("does not join when the context pins other bytes for that id", async () => {
@@ -513,6 +608,7 @@ describe("the production path can prove a canonical content pin", () => {
     expect(matching?.arbor.join).toBe("identity-unproven");
     expect(matching?.arbor.claims).toEqual([]);
     expect(outcome.arbor.identity.matchesCorpusRevision).toBe(false);
+    expect(outcome.arbor.identity.pinnedSkills).toBe(0);
     expect(outcome.arbor.identity.problem).toMatch(/JSON/u);
     expect(outcome.arbor.note).toMatch(/No canonical identity context is available/u);
   });
@@ -685,13 +781,27 @@ describe("the public wire", () => {
       });
       const structured = result.structuredContent as {
         arbor?: { publicationState?: string; note?: string; corpus?: { canonical?: boolean } };
-        composition?: { mode?: string; selectionChanged?: boolean; conditionsEvaluated?: boolean };
+        composition?: {
+          mode?: string;
+          selectionChanged?: boolean;
+          conditionsEvaluated?: boolean;
+          publication?: {
+            state?: string;
+            subjectsPublished?: number;
+            edgesPublished?: number;
+            matchedEdges?: number;
+            problems?: unknown[];
+          };
+        };
       };
       expect(structured.arbor?.publicationState).toBe("loaded");
       expect(structured.arbor?.corpus?.canonical).toBe(false);
       expect(structured.arbor?.note).toMatch(/outside the canonical corpus/u);
       expect(structured.composition).toMatchObject({
         mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
+        publication: {
+          state: "loaded", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0, problems: [],
+        },
       });
     } finally {
       await client.close();

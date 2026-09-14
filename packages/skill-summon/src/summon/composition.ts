@@ -8,7 +8,7 @@ import type { MaterializedSkillRecord } from "./session.js";
 export function sessionComposition(
   publication: ArborPublication,
   source: string,
-  links: ReadonlyMap<string, string | undefined>,
+  links: ReadonlyMap<string, string | null | undefined>,
   before: readonly MaterializedSkillRecord[],
   reportFor: (id: string) => ArborSubjectReport,
   additions: readonly CompositionMember[],

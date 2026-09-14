@@ -37,17 +37,19 @@ describe("session composition source isolation", () => {
     expect(result.interactions[0]?.endpointIdentity).toBe("both-pinned");
     expect(result.deliveryVerified).toBe(false);
   });
-  it("does not borrow a canonical identity for a fleet resident with the same id", () => {
-    expect(inspect({ ...record(), source: "https://github.com/private/fleet" }).interactions[0]?.endpointIdentity).toBe("unverified");
+  it("does not surface canonical edge text for a fleet resident with the same id", () => {
+    const result = inspect({ ...record(), source: "https://github.com/private/fleet" });
+    expect(result.interactions).toEqual([]);
+    expect(result.note).toContain("none has two current canonical content-pinned endpoints");
   });
-  it("does not borrow a new canonical pin for old session metadata", () => {
+  it("does not surface canonical edge text for old session metadata", () => {
     const resident = record();
     resident.arbor = { ...resident.arbor!, contentSha256: "0".repeat(64) };
-    expect(inspect(resident).interactions[0]?.endpointIdentity).toBe("unverified");
+    expect(inspect(resident).interactions).toEqual([]);
   });
   it("keeps legacy manifests without canonical metadata unknown", () => {
     const resident = record();
     delete resident.arbor;
-    expect(inspect(resident).interactions[0]?.endpointIdentity).toBe("unverified");
+    expect(inspect(resident).interactions).toEqual([]);
   });
 });

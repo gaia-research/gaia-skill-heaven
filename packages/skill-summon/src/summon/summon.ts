@@ -255,21 +255,31 @@ export async function summon(
   // unknown (SPEC INV-8).
   const publication = await loadArborPublication();
   const identity = await loadArborIdentityContext();
-  const arbor = summonArborDisclosure(publication, resolved, identity);
-  const linkById = new Map(
-    resolved.index.docs.map((doc) => [doc.id, doc.links.github] as const),
+  // Keep an indexed candidate with no route distinct from an id absent from
+  // the index: explicit null is the only value that can match an identity
+  // entry recording a canonical source absence.
+  const linkById = new Map<string, string | null>(
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github ?? null]),
   );
-  const canonicalIdentity = arbor.corpus.canonical &&
+  const canonicalIdentity = resolved.origin === "committed" &&
+    resolved.index.sourceWorkflow?.startsWith("gaia-skill-tree/") &&
+    resolved.index.sourceRevision !== undefined &&
     identity.context?.corpusSource === resolved.source &&
     identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree"
     ? identity.context : null;
   const knownContentSha256: Record<string, string> = Object.create(null);
   for (const [skillId, sourceUrl] of linkById) {
     const pin = resolveArborIdentity(canonicalIdentity, {
-      skillId, sourceUrl, corpusRevision: arbor.corpus.revision,
+      skillId, sourceUrl, corpusRevision: resolved.index.sourceRevision ?? null,
     });
     if (pin.pinned) knownContentSha256[skillId] = pin.contentSha256;
   }
+  const arbor = summonArborDisclosure(
+    publication,
+    resolved,
+    identity,
+    Object.keys(knownContentSha256).length,
+  );
   const arborFor = (
     skillId: string,
     delivery: ArborDeliveryContext = "not-materialized",
@@ -465,6 +475,7 @@ function summonArborDisclosure(
   publication: ArborPublication,
   resolved: ResolvedIndex,
   identity: { context: ArborIdentityContext | null; problem: string | null; sha256: string | null },
+  pinnedSkills: number,
 ): SummonArborDisclosure {
   const base = describeArborPublication(publication);
   const workflow = resolved.index.sourceWorkflow;
@@ -505,7 +516,7 @@ function summonArborDisclosure(
     identity: {
       commit: identity.context?.commit ?? null,
       matchesCorpusRevision: identityMatches,
-      pinnedSkills: identity.context ? Object.keys(identity.context.skills).length : 0,
+      pinnedSkills,
       sha256: identity.sha256,
       problem: identity.problem,
     },

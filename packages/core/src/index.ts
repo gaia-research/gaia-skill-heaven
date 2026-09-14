@@ -293,6 +293,7 @@ export {
 export {
   inspectArborComposition,
   arborCompositionLines,
+  type ArborCompositionPublication,
   type ArborCompositionReport,
   type CompositionMember,
   type CompositionRole,

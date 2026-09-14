@@ -1,6 +1,6 @@
 import type { ArborEdge, ArborSubjectRef } from "./contract.js";
 import type { ArborSubjectReport } from "./consume.js";
-import type { ArborPublication } from "./publication.js";
+import type { ArborProblem, ArborPublication } from "./publication.js";
 
 /** Consumer disclosure, NOT an upstream ontology or a runtime steering event. */
 export type CompositionRole = "session-record" | "proposed" | "materialized";
@@ -16,11 +16,22 @@ export type CompositionInteraction = {
   endpointIdentity: "both-pinned" | "unverified";
   applicability: "conditions-unverified" | "endpoints-unverified" | "publication-inapplicable";
 };
+export type ArborCompositionPublication = {
+  /** Whether the optional publication was loaded, absent, or unreadable. */
+  state: ArborPublication["state"];
+  subjectsPublished: number;
+  edgesPublished: number;
+  /** Edges admitted after both ordered endpoints passed the current join. */
+  matchedEdges: number;
+  problems: readonly ArborProblem[];
+};
+
 export type ArborCompositionReport = {
   mode: "relevance-only";
   selectionChanged: false;
   conditionsEvaluated: false;
   deliveryVerified: false;
+  publication: ArborCompositionPublication;
   members: { id: string; role: CompositionRole; join: ArborSubjectReport["join"] }[];
   interactions: CompositionInteraction[];
   note: string;
@@ -47,26 +58,36 @@ export function inspectArborComposition(
       const from = byId.get(edge.pair.from.id);
       const to = byId.get(edge.pair.to.id);
       if (!from || !to) continue;
-      // If two sources collide on an id, every occurrence must prove the same
-      // canonical endpoint. Never silently choose the convenient occurrence.
-      const pinned = from.every((member) => matches(member.report, edge.pair.from)) &&
-        to.every((member) => matches(member.report, edge.pair.to));
+      // Do not surface an edge merely because its endpoint ids occur in the
+      // set. Every occurrence for both ordered endpoints must be a current
+      // canonical content-pinned join, or the edge text stays undisclosed.
+      if (!from.every((member) => matches(member.report, edge.pair.from)) ||
+          !to.every((member) => matches(member.report, edge.pair.to))) {
+        continue;
+      }
       interactions.push({
         edge,
         fromRoles: roles(from),
         toRoles: roles(to),
-        endpointIdentity: pinned ? "both-pinned" : "unverified",
-        applicability: !edge.pairApplicable ? "publication-inapplicable"
-          : pinned ? "conditions-unverified" : "endpoints-unverified",
+        endpointIdentity: "both-pinned",
+        applicability: edge.pairApplicable
+          ? "conditions-unverified"
+          : "publication-inapplicable",
       });
     }
   }
-  const note = interactions.length > 0
-    ? `${interactions.length} ordered interaction record(s) concern this set. Conditions and delivered artifacts are unverified; records are reference material, not instructions or compatibility verdicts. Selection remains relevance-only.`
-    : "No usable interaction record was found for this set. This means unknown, not compatible or conflict-free; selection remains relevance-only.";
+  const compositionPublication: ArborCompositionPublication = {
+    state: publication.state,
+    subjectsPublished: publication.subjects.length,
+    edgesPublished: publication.edgeIndex?.edges.length ?? 0,
+    matchedEdges: interactions.length,
+    problems: publication.problems,
+  };
+  const note = compositionNote(compositionPublication);
   return {
     mode: "relevance-only", selectionChanged: false,
     conditionsEvaluated: false, deliveryVerified: false,
+    publication: compositionPublication,
     members: members.map(({ role, report }) => ({ id: report.skillId, role, join: report.join })),
     interactions, note,
   };
@@ -83,6 +104,22 @@ export function arborCompositionLines(report: ArborCompositionReport): string[] 
     }
   }
   return lines;
+}
+
+function compositionNote(publication: ArborCompositionPublication): string {
+  if (publication.state === "unavailable") {
+    return "Arbor composition is unavailable because no publication was readable by this runtime. This is unknown, not compatible or conflict-free; selection remains relevance-only.";
+  }
+  if (publication.state === "unreadable") {
+    return `Arbor composition is unavailable because the publication was unreadable. ${publication.problems.length} defect(s) are disclosed; this is unknown, not compatible or conflict-free. Selection remains relevance-only.`;
+  }
+  if (publication.edgesPublished === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and no interaction edges. Edge absence means not-evaluated, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  if (publication.matchedEdges === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and ${publication.edgesPublished} interaction edge(s), but none has two current canonical content-pinned endpoints in this set. This is unknown, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  return `${publication.matchedEdges} ordered interaction record(s) concern this set. Conditions and delivered artifacts are unverified; records are reference material, not instructions or compatibility verdicts. Selection remains relevance-only.`;
 }
 
 function matches(report: ArborSubjectReport, subject: ArborSubjectRef): boolean {

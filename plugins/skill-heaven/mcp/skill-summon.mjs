@@ -14797,26 +14797,51 @@ function inspectArborComposition(publication, members) {
       const from = byId.get(edge.pair.from.id);
       const to = byId.get(edge.pair.to.id);
       if (!from || !to) continue;
-      const pinned = from.every((member) => matches(member.report, edge.pair.from)) && to.every((member) => matches(member.report, edge.pair.to));
+      if (!from.every((member) => matches(member.report, edge.pair.from)) || !to.every((member) => matches(member.report, edge.pair.to))) {
+        continue;
+      }
       interactions.push({
         edge,
         fromRoles: roles(from),
         toRoles: roles(to),
-        endpointIdentity: pinned ? "both-pinned" : "unverified",
-        applicability: !edge.pairApplicable ? "publication-inapplicable" : pinned ? "conditions-unverified" : "endpoints-unverified"
+        endpointIdentity: "both-pinned",
+        applicability: edge.pairApplicable ? "conditions-unverified" : "publication-inapplicable"
       });
     }
   }
-  const note = interactions.length > 0 ? `${interactions.length} ordered interaction record(s) concern this set. Conditions and delivered artifacts are unverified; records are reference material, not instructions or compatibility verdicts. Selection remains relevance-only.` : "No usable interaction record was found for this set. This means unknown, not compatible or conflict-free; selection remains relevance-only.";
+  const compositionPublication = {
+    state: publication.state,
+    subjectsPublished: publication.subjects.length,
+    edgesPublished: publication.edgeIndex?.edges.length ?? 0,
+    matchedEdges: interactions.length,
+    problems: publication.problems
+  };
+  const note = compositionNote(compositionPublication);
   return {
     mode: "relevance-only",
     selectionChanged: false,
     conditionsEvaluated: false,
     deliveryVerified: false,
+    publication: compositionPublication,
     members: members.map(({ role, report }) => ({ id: report.skillId, role, join: report.join })),
     interactions,
     note
   };
+}
+function compositionNote(publication) {
+  if (publication.state === "unavailable") {
+    return "Arbor composition is unavailable because no publication was readable by this runtime. This is unknown, not compatible or conflict-free; selection remains relevance-only.";
+  }
+  if (publication.state === "unreadable") {
+    return `Arbor composition is unavailable because the publication was unreadable. ${publication.problems.length} defect(s) are disclosed; this is unknown, not compatible or conflict-free. Selection remains relevance-only.`;
+  }
+  if (publication.edgesPublished === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and no interaction edges. Edge absence means not-evaluated, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  if (publication.matchedEdges === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and ${publication.edgesPublished} interaction edge(s), but none has two current canonical content-pinned endpoints in this set. This is unknown, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  return `${publication.matchedEdges} ordered interaction record(s) concern this set. Conditions and delivered artifacts are unverified; records are reference material, not instructions or compatibility verdicts. Selection remains relevance-only.`;
 }
 function matches(report, subject) {
   return report.canonicalSource && report.join === "content-pinned" && report.skillId === subject.id && report.contentSha256 === subject.contentSha256 && report.matchedSubject?.id === subject.id && report.matchedSubject.contentSha256 === subject.contentSha256;
@@ -25948,20 +25973,25 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   const disclosures = disclosureById(decision, trimmedQuery);
   const publication = await loadArborPublication();
   const identity = await loadArborIdentityContext();
-  const arbor = summonArborDisclosure(publication, resolved, identity);
   const linkById = new Map(
-    resolved.index.docs.map((doc) => [doc.id, doc.links.github])
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github ?? null])
   );
-  const canonicalIdentity = arbor.corpus.canonical && identity.context?.corpusSource === resolved.source && identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree" ? identity.context : null;
+  const canonicalIdentity = resolved.origin === "committed" && resolved.index.sourceWorkflow?.startsWith("gaia-skill-tree/") && resolved.index.sourceRevision !== void 0 && identity.context?.corpusSource === resolved.source && identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree" ? identity.context : null;
   const knownContentSha256 = /* @__PURE__ */ Object.create(null);
   for (const [skillId, sourceUrl] of linkById) {
     const pin = resolveArborIdentity(canonicalIdentity, {
       skillId,
       sourceUrl,
-      corpusRevision: arbor.corpus.revision
+      corpusRevision: resolved.index.sourceRevision ?? null
     });
     if (pin.pinned) knownContentSha256[skillId] = pin.contentSha256;
   }
+  const arbor = summonArborDisclosure(
+    publication,
+    resolved,
+    identity,
+    Object.keys(knownContentSha256).length
+  );
   const arborFor = (skillId, delivery = "not-materialized") => {
     const resolution = resolveArborIdentity(canonicalIdentity, {
       skillId,
@@ -26113,7 +26143,7 @@ function disclose(resolved, decision) {
     ...resolved.installability ? { installability: resolved.installability } : {}
   };
 }
-function summonArborDisclosure(publication, resolved, identity) {
+function summonArborDisclosure(publication, resolved, identity, pinnedSkills) {
   const base = describeArborPublication(publication);
   const workflow = resolved.index.sourceWorkflow;
   const canonical2 = resolved.origin === "committed" && typeof workflow === "string" && workflow.startsWith("gaia-skill-tree/");
@@ -26137,7 +26167,7 @@ function summonArborDisclosure(publication, resolved, identity) {
     identity: {
       commit: identity.context?.commit ?? null,
       matchesCorpusRevision: identityMatches,
-      pinnedSkills: identity.context ? Object.keys(identity.context.skills).length : 0,
+      pinnedSkills,
       sha256: identity.sha256,
       problem: identity.problem
     }
@@ -26950,6 +26980,13 @@ var summonOutputSchema = external_exports.object({
     selectionChanged: external_exports.literal(false),
     conditionsEvaluated: external_exports.literal(false),
     deliveryVerified: external_exports.literal(false),
+    publication: external_exports.object({
+      state: external_exports.enum(["loaded", "unavailable", "unreadable"]),
+      subjectsPublished: external_exports.number(),
+      edgesPublished: external_exports.number(),
+      matchedEdges: external_exports.number(),
+      problems: external_exports.array(external_exports.object({ where: external_exports.string(), detail: external_exports.string() }))
+    }),
     members: external_exports.array(external_exports.unknown()),
     interactions: external_exports.array(external_exports.unknown()),
     note: external_exports.string()

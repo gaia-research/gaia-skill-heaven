@@ -58,10 +58,16 @@ assessment envelope.
   assessment on previews, installed skills, cards, and filtered reasons.
 
 No upstream Arbor field, admission floor, band, margin, corpus, label,
-expansion, or installer/door policy is changed by this integration. New shared
-configuration and source-less identity tests await the resumed review pass.
+expansion, or installer/door policy is changed by this integration. The shared
+configuration and source-less identity tests were added in subsequent
+integrated runtime work and are not part of the historical verification below.
+That work has its own final-head review and Linux/integrated-CI gates; this
+record does not imply those gates passed.
 
-## Verification
+## Historical R1 verification (implementation head `7601d86a4d45f58d65e26640ab2305762512d544`)
+
+The commands and results in this section are the R1 record at that head. They
+must not be read as verification of later integrated runtime heads.
 
 - `npx vitest run packages/skill-summon/test/installability.test.ts`
 - `npx vitest run packages/core/test/retrieval-index.test.ts packages/core/test/retrieval-decide.test.ts packages/skill-summon/test/summon-index.test.ts packages/skill-summon/test/index-parity.test.ts`
@@ -76,6 +82,9 @@ source/id/content/revision mismatch, malformed/absent/operational artifacts,
 unknown timeout evidence, scoped no-source and intrinsic negatives,
 delivered-content/comparator difference, explicit fleet/private/unknown
 sources, symlinked parents, redirect rejection, runtime stats, and offline
-no-match behavior. The final full suite passes: 53 files, 672 tests. The
-focused R1 file now has 23 tests. The deterministic index check and MCP bundle
-rebuild also pass; the site production build passes.
+no-match behavior. The historical full-suite result at R1 head
+`7601d86a4d45f58d65e26640ab2305762512d544` was 53 files and 672 tests; this is
+not a timeless or final-head pass claim. The focused R1 file had 23 tests at
+this historical head. The deterministic index check and MCP bundle rebuild
+also passed there; the site production build also passed there. Later
+integration checks and any final-head review remain separate.
