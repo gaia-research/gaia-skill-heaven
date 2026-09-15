@@ -1,4 +1,4 @@
-﻿# Skill Heaven installer for the Skill Zero launcher doors (Windows PowerShell).
+# Skill Heaven installer for the Skill Zero launcher doors (Windows PowerShell).
 # Installs source-built doors under one user-owned directory, then registers the
 # Claude plugin (which bundles its own summon engine) when Claude Code is already
 # available. It never installs a harness.
@@ -57,7 +57,7 @@ Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 
 Installs the WORKING PROTOTYPE's five Skill Zero launcher doors and the Claude
 plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
-user's own claude binary is on PATH. The plugin bundles its own summon engine —
+user's own claude binary is on PATH. The plugin bundles its own summon engine -
 no external package is installed. No harness is installed. Set SKILL_HEAVEN_HOME
 to override:
   $INSTALL_HOME
@@ -105,7 +105,7 @@ function Uninstall-All {
     exit 0
   }
 
-  Say-Message "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
+  Say-Message "Skill Heaven working prototype - uninstalling everything from $INSTALL_HOME"
 
   if (Test-Path $USER_BIN_LINKS) {
     try {
@@ -170,7 +170,7 @@ if ($Uninstall) {
   Uninstall-All
 }
 
-Say-Message "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use."
+Say-Message "SKILL HEAVEN - WORKING PROTOTYPE, actively tested for public use."
 Say-Message "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 Say-Message "Harnesses are never installed; every door uses the user's own harness binary."
 
@@ -270,7 +270,7 @@ function Test-ClaudeWorking {
   }
 }
 
-Write-Host "Skill Heaven working prototype — uninstalling everything from $ROOT"
+Write-Host "Skill Heaven working prototype - uninstalling everything from $ROOT"
 $userBinLinksFile = Join-Path $ROOT ".user-bin-links"
 if (Test-Path $userBinLinksFile) {
   try {
@@ -462,6 +462,10 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
     Remove-Item -Recurse -Force $STAGE -ErrorAction SilentlyContinue
   }
   if (Test-Path $OLD) {
-    Remove-Item -Recurse -Force $OLD -ErrorAction SilentlyContinue
+    # $OLD is only still here if we never reached the confirmed-good cleanup
+    # after npm ci (e.g. interrupted mid install) - restore the last-known-good
+    # install rather than deleting the only backup of it.
+    Remove-Item -Recurse -Force $INSTALL_HOME -ErrorAction SilentlyContinue
+    Move-Item -Path $OLD -Destination $INSTALL_HOME -ErrorAction SilentlyContinue
   }
 }
