@@ -2,6 +2,7 @@
 name: skill-ultra
 description: Arm the ultra crown rung, choosing human-led convergence or model-led exploration and depth per capability gap.
 disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill Ultra

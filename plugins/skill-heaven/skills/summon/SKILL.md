@@ -2,6 +2,7 @@
 name: summon
 description: Explicitly summon the best-matching skill for a concrete capability gap into this session without installing it.
 disable-model-invocation: true
+user-invocable: false
 ---
 
 # Summon

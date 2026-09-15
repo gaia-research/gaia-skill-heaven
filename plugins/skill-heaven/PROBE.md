@@ -75,6 +75,27 @@ reports ten skill/command entries for five names. Invocation resolves to the
 plugin-qualified command and all four probes work, but the doubled inventory is
 a real compatibility wart and is recorded here rather than hidden.
 
+**Closed on Claude Code 2.1.272 (2026-09-15).** The wart was user-visible: typing
+`/` in a claude-zero session listed `/skill-heaven:summon` twice (the command's
+"Summon one skill into context…" and the portable skill's "Explicitly summon
+the best-matching skill…"), and portable twins such as `skill-ultra` ranked above
+exact matches like `/model`. Every portable skill now carries
+`user-invocable: false` beside `disable-model-invocation: true`.
+
+- Hard signal (`claude -p --output-format stream-json --verbose`, init event,
+  claude-zero's product-floor flags, plugin copy with `commands/` removed):
+  without the key, `skills` and `slash_commands` list all five
+  `skill-heaven:*` names; with it, both lists are empty. Claude drops the
+  portable skill entirely, leaving `commands/*.md` as the one Claude entry.
+- TUI (herdr pane): with the key, `/` shows one `/skill-heaven:summon` row.
+- Negative, 3 cells: a `skills` field in `.claude-plugin/plugin.json` (`[]`
+  or an empty directory) does **not** replace default `skills/` discovery.
+- Portability: Codex 0.154.0 app-server `skills/list` still returns the skill
+  `enabled: true` with the key, and Pi's loader reads only
+  `disable-model-invocation`. Hermes was not re-probed.
+- Where `/skill-heaven:summon` still sorts first on `/`, that is Claude's own
+  recent-use ranking (`skillUsage` in `~/.claude.json`), not plugin inventory.
+
 ### Hermes requires the package at Git root
 
 `hermes plugins install` accepts Git sources, and portable discovery expects

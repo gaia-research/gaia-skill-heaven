@@ -2,6 +2,7 @@
 name: skill-hell
 description: Arm the model-led explore band at high, xhigh, or max. User-invoked orchestrator for automatic Skill Hell routing.
 disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill Hell

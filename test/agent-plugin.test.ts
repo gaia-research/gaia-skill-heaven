@@ -56,7 +56,17 @@ describe("Agent Plugins 1.0.0 package", () => {
     expect(existsSync(path)).toBe(true);
     const source = readFileSync(path, "utf8");
     expect(source).toMatch(new RegExp(`^---\\nname: ${surface}\\n`));
-    expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\n---\n/);
+    expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\nuser-invocable: false\n---\n/);
+  });
+
+  // Claude discovers both skills/<x>/SKILL.md and commands/<x>.md and lists
+  // each one as a separate `/skill-heaven:<x>` row. `user-invocable: false`
+  // (with model invocation already off) drops the portable twin from Claude, so
+  // the command is the only entry. Codex and Pi ignore the key.
+  it.each(SURFACES)("keeps exactly one Claude slash entry for %s", (surface) => {
+    expect(existsSync(join(PLUGIN, "commands", `${surface}.md`))).toBe(true);
+    const source = readFileSync(join(PLUGIN, "skills", surface, "SKILL.md"), "utf8");
+    expect(source).toMatch(/\nuser-invocable: false\n/);
   });
 
   it("keeps Codex compatibility thin and rooted in the same bundled server", () => {
