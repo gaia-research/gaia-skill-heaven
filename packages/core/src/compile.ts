@@ -562,16 +562,30 @@ function compileCodex(
   const env = { ...base.env };
   const fsPlan = [...base.fsPlan];
   const notes = [...base.notes];
-  const argv: string[] = ["exec"];
+  // CompileInput's contract: headless when a prompt is present, interactive
+  // otherwise. `codex exec` with nothing to run exits "No prompt provided", so a
+  // bare door launch opens the interactive TUI. The exec-only flags
+  // (--skip-git-repo-check, --ephemeral, --ignore-rules) are rejected by the
+  // interactive CLI, and a read-only sandbox would leave an interactive session
+  // unable to work. Skill isolation (scoped CODEX_HOME + skills.config) is the
+  // same on both routes.
+  const headless = input.prompt !== undefined || (input.passthrough?.length ?? 0) > 0;
+  const argv: string[] = headless ? ["exec"] : [];
 
   if (input.posture !== "native") {
-    argv.push(
-      "--skip-git-repo-check",
-      "--ephemeral",
-      "--sandbox",
-      "read-only",
-      "--ignore-rules",
-    );
+    if (headless) {
+      argv.push(
+        "--skip-git-repo-check",
+        "--ephemeral",
+        "--sandbox",
+        "read-only",
+        "--ignore-rules",
+      );
+    } else {
+      notes.push(
+        "codex-cli 0.154.0 interactive route: no prompt or passthrough, so the door opens the Codex TUI with the same session-scoped CODEX_HOME and skills.config disables instead of `codex exec`, which refuses to start without a prompt.",
+      );
+    }
     env.CODEX_HOME = "$SESSION/codex";
     fsPlan.push({
       kind: "copyFileIfExists",
