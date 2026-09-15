@@ -93,9 +93,10 @@ if ($missing.Count -gt 0) {
 
 $NODE_MAJOR = 0
 try {
-  $nodeVer = node -p 'process.versions.node.split(".")[0]' 2>$null
-  if ($nodeVer -match '^\d+$') {
-    $NODE_MAJOR = [int]$nodeVer
+  $nodeVerRaw = (node --version 2>$null) -replace '^v', ''
+  $nodeVerParts = $nodeVerRaw -split '\.'
+  if ($nodeVerParts[0] -match '^\d+$') {
+    $NODE_MAJOR = [int]$nodeVerParts[0]
   }
 } catch {
   $NODE_MAJOR = 0

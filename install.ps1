@@ -1,4 +1,4 @@
-# Skill Heaven installer for the Skill Zero launcher doors (Windows PowerShell).
+﻿# Skill Heaven installer for the Skill Zero launcher doors (Windows PowerShell).
 # Installs source-built doors under one user-owned directory, then registers the
 # Claude plugin (which bundles its own summon engine) when Claude Code is already
 # available. It never installs a harness.
@@ -187,9 +187,10 @@ if ($missing.Count -gt 0) {
 
 $NODE_MAJOR = 0
 try {
-  $nodeVer = node -p 'process.versions.node.split(".")[0]' 2>$null
-  if ($nodeVer -match '^\d+$') {
-    $NODE_MAJOR = [int]$nodeVer
+  $nodeVerRaw = (node --version 2>$null) -replace '^v', ''
+  $nodeVerParts = $nodeVerRaw -split '\.'
+  if ($nodeVerParts[0] -match '^\d+$') {
+    $NODE_MAJOR = [int]$nodeVerParts[0]
   }
 } catch {
   $NODE_MAJOR = 0
@@ -238,28 +239,13 @@ try {
     }
   }
 
-  Say-Message "[4/5] Installing launcher runtime dependencies ..."
-  Push-Location (Join-Path $STAGE "source")
-  try {
-    npm ci --omit=dev --ignore-scripts --no-audit --no-fund `
-      --workspace=skill-zero `
-      --workspace=claude-zero `
-      --workspace=pi-zero `
-      --workspace=codex-zero `
-      --workspace=hermes-zero `
-      --workspace=grok-zero `
-      --include-workspace-root
-    if ($LASTEXITCODE -ne 0) {
-      Fail-Installation "launcher dependency installation failed; nothing was installed."
-    }
-  } finally {
-    Pop-Location
-  }
-
-  Say-Message "[5/5] Configuring Skill Zero doors and harness plugins..."
+  Say-Message "[4/5] Configuring Skill Zero doors and harness plugins..."
 
   foreach ($door in $doors) {
-    $cmdContent = "@echo off`r`nnode `"%~dp0..\source\packages\$door-zero\bin\$door-zero.mjs`" %*"
+    # An absolute path to the final install location, not a %~dp0-relative one:
+    # this same .cmd file gets copied into $USER_BIN below, which is not a
+    # sibling of "source", so a relative path would resolve to the wrong place.
+    $cmdContent = "@echo off`r`nnode `"$INSTALL_HOME\source\packages\$door-zero\bin\$door-zero.mjs`" %*"
     Set-Content -Path (Join-Path $STAGE "bin\$door-zero.cmd") -Value $cmdContent -Encoding ASCII
   }
 
@@ -348,6 +334,33 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
     Move-Item -Path $INSTALL_HOME -Destination $OLD
   }
   Move-Item -Path $STAGE -Destination $INSTALL_HOME
+
+  Say-Message "[5/5] Installing launcher runtime dependencies ..."
+  # npm ci must run at the install's final path, not in the staging directory:
+  # it bakes absolute-path symlinks for workspace packages (e.g.
+  # node_modules/skill-zero -> packages/core), and renaming the tree afterward
+  # (staging -> install home) would leave those symlinks dangling.
+  Push-Location (Join-Path $INSTALL_HOME "source")
+  try {
+    npm ci --omit=dev --ignore-scripts --no-audit --no-fund `
+      --workspace=skill-zero `
+      --workspace=claude-zero `
+      --workspace=pi-zero `
+      --workspace=codex-zero `
+      --workspace=hermes-zero `
+      --workspace=grok-zero `
+      --include-workspace-root
+    $npmExitCode = $LASTEXITCODE
+  } finally {
+    Pop-Location
+  }
+  if ($npmExitCode -ne 0) {
+    Remove-Item -Recurse -Force $INSTALL_HOME -ErrorAction SilentlyContinue
+    if (Test-Path $OLD) {
+      Move-Item -Path $OLD -Destination $INSTALL_HOME
+    }
+    Fail-Installation "launcher dependency installation failed; the previous installation (if any) was restored."
+  }
 
   if (Test-Path $OLD) {
     Remove-Item -Recurse -Force $OLD -ErrorAction SilentlyContinue
