@@ -208,3 +208,34 @@ CODEX_HEAVEN_OK
 tokens used
 1,594
 ```
+
+## Interactive door route (codex-cli 0.154.0, 2026-09-15)
+
+**Negative that prompted it:** a bare `codex-zero` (herdr pane `w7:p3Y`) composed
+`codex exec --skip-git-repo-check --ephemeral --sandbox read-only --ignore-rules` with no
+prompt and exited 1 with `No prompt provided. Either specify one as an argument or pipe the
+prompt into stdin.` The door could only run headlessly with a prompt.
+
+**Route:** core's `CompileInput` contract is "headless when a prompt is present, interactive
+otherwise". `compileCodex` now composes `codex exec` plus its exec-only flags only when there
+is a prompt or passthrough; otherwise argv is empty (plus `-m <model>` when given), so the door
+spawns the interactive TUI. `--skip-git-repo-check`, `--ephemeral` and `--ignore-rules` are not
+accepted by interactive `codex --help`, and a read-only sandbox would leave the session unable
+to work. Session scoping (`CODEX_HOME`, auth copy, `skills/list` + `skills.config` disables)
+is unchanged.
+
+**Evidence (same pane):**
+
+- `node packages/codex-zero/bin/codex-zero.mjs` from `/tmp` opened `OpenAI Codex (v0.154.0)`,
+  past the directory-trust prompt, to the input box.
+- While it ran, `skills/list` against the live session `CODEX_HOME` returned
+  `listed 40 enabled 0`, and `config.toml` held 40 `enabled = false` entries.
+- Headless regression: `codex-zero -- "Reply with exactly: CODEX_ZERO_HEADLESS_OK"` still
+  spawned `codex exec`, which authenticated and printed the session header. The account was at
+  its usage limit, so no model reply is claimed.
+
+**Open finding, not closed by this route:** the TUI `$` picker still listed `[Skill]` and `[App]`
+entries (for example `Audit`, `Build Report`). They come from
+`$CODEX_HOME/plugins/cache/openai-curated-remote/**`, 66 `SKILL.md` files that Codex 0.154.0
+syncs at startup, after the launcher's pre-spawn `skills/list` scan. This applies to both routes
+and is newer than the 0.146.0 WP14 probe. It needs its own probe before any disable is composed.

@@ -250,9 +250,14 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
       assert(!("userConfig" in portablePluginJson), "root plugin.json carries no non-portable userConfig field");
     }
     for (const skill of ["summon", "skill-zero", "skill-heaven", "skill-hell", "skill-ultra"]) {
+      const skillPath = join(installedPluginRoot, "skills", skill, "SKILL.md");
+      assert(existsSync(skillPath), `portable skills/${skill}/SKILL.md shipped at shallow discovery depth`);
+      if (!existsSync(skillPath)) continue;
+      // Without this Claude lists the portable skill beside commands/<skill>.md:
+      // two `/skill-heaven:<skill>` rows for one surface.
       assert(
-        existsSync(join(installedPluginRoot, "skills", skill, "SKILL.md")),
-        `portable skills/${skill}/SKILL.md shipped at shallow discovery depth`,
+        /\nuser-invocable: false\n/.test(readFileSync(skillPath, "utf-8")),
+        `portable skills/${skill}/SKILL.md is hidden from Claude (user-invocable: false), leaving commands/${skill}.md as its one slash entry`,
       );
     }
 

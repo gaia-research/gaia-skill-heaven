@@ -2,6 +2,7 @@
 name: skill-zero
 description: "Arm the zero rung: cut temporary automatic skills while manual summon remains available, or cut all skills."
 disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill Zero

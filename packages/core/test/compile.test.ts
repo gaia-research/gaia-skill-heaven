@@ -199,7 +199,7 @@ describe("pi mappings", () => {
 
 describe("non-native harness mappings", () => {
   it("codex compiles an exec route with session-scoped exact-path discovery", () => {
-    const r = compile({ posture: "floor", harness: "codex", skills: [] });
+    const r = compile({ posture: "floor", harness: "codex", skills: [], prompt: "hi" });
     expect(r.execSupport).toBe("exec");
     expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
     expect(r.argv).toEqual([
@@ -209,8 +209,24 @@ describe("non-native harness mappings", () => {
       "--sandbox",
       "read-only",
       "--ignore-rules",
+      "hi",
     ]);
     expect(r.notes.join(" ")).toMatch(/skills\/list/i);
+
+    // passthrough (e.g. `codex-zero -- -c k=v "prompt"`) stays headless too
+    const passthrough = compile({ posture: "product-floor", harness: "codex", skills: [], passthrough: ["hi"] });
+    expect(passthrough.argv[0]).toBe("exec");
+  });
+  it("codex opens the interactive TUI when there is no prompt (bare codex-zero)", () => {
+    // `codex exec` with no prompt exits "No prompt provided" — the door must not compose it.
+    for (const posture of ["product-floor", "curated", "floor"] as const) {
+      const r = compile({ posture, harness: "codex", skills: posture === "curated" ? [fakeSkill] : [] });
+      expect(r.argv).toEqual([]);
+      expect(r.env.CODEX_HOME).toBe("$SESSION/codex");
+      expect(r.execSupport).toBe("exec");
+    }
+    expect(compile({ posture: "product-floor", harness: "codex", skills: [], model: "m" }).argv).toEqual(["-m", "m"]);
+    expect(compile({ posture: "native", harness: "codex", skills: [] }).argv).toEqual([]);
   });
   it("cursor compiles a recipe with CURSOR_CONFIG_DIR", () => {
     const r = compile({ posture: "floor", harness: "cursor", skills: [] });

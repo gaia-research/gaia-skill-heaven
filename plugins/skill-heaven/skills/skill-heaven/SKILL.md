@@ -2,6 +2,7 @@
 name: skill-heaven
 description: Arm the human-led converge band at low or med. User-invoked orchestrator for explicit Skill Heaven routing.
 disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill Heaven
