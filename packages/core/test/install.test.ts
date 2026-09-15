@@ -136,7 +136,7 @@ describe("windows PowerShell installers", () => {
     expect(ps1Installer).toContain("Test-ClaudeWorking");
     expect(ps1Installer).toContain("claude --version");
     expect(ps1Installer).toContain("[1/5] Checking prerequisites...");
-    expect(ps1Installer).toContain("[4/5] Installing launcher runtime dependencies");
+    expect(ps1Installer).toContain("[5/5] Installing launcher runtime dependencies");
     expect(ps1Installer).toContain("--workspace=skill-zero");
     expect(ps1AgentPlugin).toContain("[1/4] Checking prerequisites...");
     expect(ps1AgentPlugin).toContain("[4/4] Staging portable Agent Plugin artifact...");
