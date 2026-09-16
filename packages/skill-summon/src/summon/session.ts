@@ -13,7 +13,10 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import type { ArborSubjectReport } from "skill-zero";
+
 import type { SkillInvocation, TrustFields } from "../domain/types.js";
+import type { InstallabilityAssessment } from "skill-zero";
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
 // cache directory (payload-cache.ts CACHE_DIR_NAME) also lives directly under
@@ -46,6 +49,8 @@ export type InstalledSkill = {
   trustMagnitude?: number | undefined;
   stars?: number | undefined;
   trust?: TrustFields | undefined;
+  /** Tree installability evidence, with unknown applicability kept explicit. */
+  installability?: InstallabilityAssessment | undefined;
   sourceUrl: string;
   repoUrl: string;
   branch: string | null;
@@ -63,6 +68,12 @@ export type InstalledSkill = {
   source?: string | undefined;
   /** Retrieval disclosure, carried onto the card and into `structuredContent`. */
   retrieval?: RetrievalDisclosure | undefined;
+  /**
+   * Arbor disclosure (SPEC INV-13, issue #118 A3/A4). Present on every summoned
+   * skill, including — especially — when no lens could be consulted: absence of
+   * behavioral evidence is stated, never left as an empty field.
+   */
+  arbor?: ArborSubjectReport | undefined;
   card: string;
   cloneSeconds: number;
   materializeSeconds: number;

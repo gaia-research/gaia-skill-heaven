@@ -13,6 +13,22 @@ export {
   readSkillFrontmatter,
   readVerifiedSkillFrontmatter,
 } from "./data/fleet-source.js";
+export {
+  FileInstallabilitySource,
+  GaiaInstallabilityAdapter,
+  HttpInstallabilitySource,
+  StaticInstallabilitySource,
+  parseInstallabilityProjection,
+  sourceRouteFromUrl,
+} from "./data/installability.js";
+export type {
+  GaiaInstallabilityAdapterOptions,
+  InstallabilityAdapterResult,
+  InstallabilityAdapterStatus,
+  InstallabilityContextFor,
+  InstallabilitySource,
+  InstallabilitySourceContext,
+} from "./data/installability.js";
 export type {
   GithubFleetCheckout,
   GithubFleetSourceOptions,

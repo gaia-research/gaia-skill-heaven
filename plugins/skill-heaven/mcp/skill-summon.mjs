@@ -417,11 +417,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants2);
+          this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -438,10 +438,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants2);
+        this.rhs = optimizeExpr(this.rhs, names, constants3);
         return this;
       }
       get names() {
@@ -502,8 +502,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants2) {
-        this.code = optimizeExpr(this.code, names, constants2);
+      optimizeNames(names, constants3) {
+        this.code = optimizeExpr(this.code, names, constants3);
         return this;
       }
       get names() {
@@ -532,12 +532,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants2))
+          if (n.optimizeNames(names, constants3))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -590,12 +590,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        if (!(super.optimizeNames(names, constants2) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        if (!(super.optimizeNames(names, constants3) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants2);
+        this.condition = optimizeExpr(this.condition, names, constants3);
         return this;
       }
       get names() {
@@ -618,10 +618,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants2);
+        this.iteration = optimizeExpr(this.iteration, names, constants3);
         return this;
       }
       get names() {
@@ -657,10 +657,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants2) {
-        if (!super.optimizeNames(names, constants2))
+      optimizeNames(names, constants3) {
+        if (!super.optimizeNames(names, constants3))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants2);
+        this.iterable = optimizeExpr(this.iterable, names, constants3);
         return this;
       }
       get names() {
@@ -702,11 +702,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants2) {
+      optimizeNames(names, constants3) {
         var _a, _b;
-        super.optimizeNames(names, constants2);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants2);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants2);
+        super.optimizeNames(names, constants3);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants3);
         return this;
       }
       get names() {
@@ -773,9 +773,9 @@ var require_codegen = __commonJS({
       scopeCode() {
         return this._extScope.scopeCode(this._values);
       }
-      _def(varKind, nameOrPrefix, rhs, constant) {
+      _def(varKind, nameOrPrefix, rhs, constant2) {
         const name = this._scope.toName(nameOrPrefix);
-        if (rhs !== void 0 && constant)
+        if (rhs !== void 0 && constant2)
           this._constants[name.str] = rhs;
         this._leafNode(new Def(varKind, name, rhs));
         return name;
@@ -1007,7 +1007,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants2) {
+    function optimizeExpr(expr, names, constants3) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1022,14 +1022,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants2[n.str];
+        const c = constants3[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants2[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants3[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -1785,14 +1785,14 @@ var require_code2 = __commonJS({
     }
     exports.callValidateCode = callValidateCode;
     var newRegExp = (0, codegen_1._)`new RegExp`;
-    function usePattern({ gen, it: { opts } }, pattern) {
+    function usePattern({ gen, it: { opts } }, pattern2) {
       const u = opts.unicodeRegExp ? "u" : "";
       const { regExp } = opts.code;
-      const rx = regExp(pattern, u);
+      const rx = regExp(pattern2, u);
       return gen.scopeValue("pattern", {
         key: rx.toString(),
         ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
+        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern2}, ${u})`
       });
     }
     exports.usePattern = usePattern;
@@ -2801,11 +2801,11 @@ var require_validate = __commonJS({
         jsonPointer = $data;
         data = names_1.default.rootData;
       } else {
-        const matches = RELATIVE_JSON_POINTER.exec($data);
-        if (!matches)
+        const matches2 = RELATIVE_JSON_POINTER.exec($data);
+        if (!matches2)
           throw new Error(`Invalid JSON-pointer: ${$data}`);
-        const up = +matches[1];
-        jsonPointer = matches[2];
+        const up = +matches2[1];
+        jsonPointer = matches2[2];
         if (jsonPointer === "#") {
           if (up >= dataLevel)
             throw new Error(errorMsg("property/index", up));
@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve.call(this, root, ref);
+      let _sch = resolve2.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve(root, ref) {
+    function resolve2(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3236,8 +3236,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path9) {
-      let input = path9;
+    function removeDotSegments(path10) {
+      let input = path10;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3489,8 +3489,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path9, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path9 && path9 !== "/" ? path9 : void 0;
+        const [path10, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path10 && path10 !== "/" ? path10 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -3502,11 +3502,11 @@ var require_schemes = __commonJS({
         urnComponent.error = "URN can not be parsed";
         return urnComponent;
       }
-      const matches = urnComponent.path.match(URN_REG);
-      if (matches) {
+      const matches2 = urnComponent.path.match(URN_REG);
+      if (matches2) {
         const scheme = options.scheme || urnComponent.scheme || "urn";
-        urnComponent.nid = matches[1].toLowerCase();
-        urnComponent.nss = matches[2];
+        urnComponent.nid = matches2[1].toLowerCase();
+        urnComponent.nss = matches2[2];
         const urnScheme = `${scheme}:${options.nid || urnComponent.nid}`;
         const schemeHandler = getSchemeHandler(urnScheme);
         urnComponent.path = void 0;
@@ -3649,7 +3649,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve(baseURI, relativeURI, options) {
+    function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
       const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
@@ -3660,49 +3660,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3710,7 +3710,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -3752,12 +3752,12 @@ var require_fast_uri = __commonJS({
       if (options.reference !== "suffix" && component.scheme) {
         uriTokens.push(component.scheme, ":");
       }
-      const authority = recomposeAuthority(component);
-      if (authority !== void 0) {
+      const authority2 = recomposeAuthority(component);
+      if (authority2 !== void 0) {
         if (options.reference !== "suffix") {
           uriTokens.push("//");
         }
-        uriTokens.push(authority);
+        uriTokens.push(authority2);
         if (component.path && component.path[0] !== "/") {
           uriTokens.push("/");
         }
@@ -3767,7 +3767,7 @@ var require_fast_uri = __commonJS({
         if (!options.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
           s = removeDotSegments(s);
         }
-        if (authority === void 0 && s[0] === "/" && s[1] === "/") {
+        if (authority2 === void 0 && s[0] === "/" && s[1] === "/") {
           s = "/%2F" + s.slice(2);
         }
         uriTokens.push(s);
@@ -3783,8 +3783,8 @@ var require_fast_uri = __commonJS({
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
     var AUTHORITY_PREFIX = /^(?:[^#/:?]+:)?\/\/([^/?#]*)/;
     var AUTHORITY_INTRODUCER_REGION = /^(?:[^#/:?]+:)?([/\\\t\n\r]*)/;
-    function getParseError(parsed, matches) {
-      if (matches[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
+    function getParseError(parsed, matches2) {
+      if (matches2[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
         return 'URI path must start with "/" when authority is present.';
       }
       if (typeof parsed.port === "number" && (parsed.port < 0 || parsed.port > 65535)) {
@@ -3831,19 +3831,19 @@ var require_fast_uri = __commonJS({
           }
         }
       }
-      const matches = uri.match(URI_PARSE);
-      if (matches) {
-        parsed.scheme = matches[1];
-        parsed.userinfo = matches[3];
-        parsed.host = matches[4];
-        parsed.port = parseInt(matches[5], 10);
-        parsed.path = matches[6] || "";
-        parsed.query = matches[7];
-        parsed.fragment = matches[8];
+      const matches2 = uri.match(URI_PARSE);
+      if (matches2) {
+        parsed.scheme = matches2[1];
+        parsed.userinfo = matches2[3];
+        parsed.host = matches2[4];
+        parsed.port = parseInt(matches2[5], 10);
+        parsed.path = matches2[6] || "";
+        parsed.query = matches2[7];
+        parsed.fragment = matches2[8];
         if (isNaN(parsed.port)) {
-          parsed.port = matches[5];
+          parsed.port = matches2[5];
         }
-        const parseError = getParseError(parsed, matches);
+        const parseError = getParseError(parsed, matches2);
         if (parseError !== void 0) {
           parsed.error = parsed.error || parseError;
           malformedAuthorityOrPort = true;
@@ -3933,7 +3933,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve,
+      resolve: resolve2,
       resolveComponent,
       equal,
       serialize,
@@ -6683,12 +6683,12 @@ var require_formats = __commonJS({
     var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     function date3(str) {
-      const matches = DATE.exec(str);
-      if (!matches)
+      const matches2 = DATE.exec(str);
+      if (!matches2)
         return false;
-      const year = +matches[1];
-      const month = +matches[2];
-      const day = +matches[3];
+      const year = +matches2[1];
+      const month = +matches2[2];
+      const day = +matches2[3];
       return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
     }
     function compareDate(d1, d2) {
@@ -6703,16 +6703,16 @@ var require_formats = __commonJS({
     var TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i;
     function getTime(strictTimeZone) {
       return function time3(str) {
-        const matches = TIME.exec(str);
-        if (!matches)
+        const matches2 = TIME.exec(str);
+        if (!matches2)
           return false;
-        const hr = +matches[1];
-        const min = +matches[2];
-        const sec = +matches[3];
-        const tz = matches[4];
-        const tzSign = matches[5] === "-" ? -1 : 1;
-        const tzH = +(matches[6] || 0);
-        const tzM = +(matches[7] || 0);
+        const hr = +matches2[1];
+        const min = +matches2[2];
+        const sec = +matches2[3];
+        const tz = matches2[4];
+        const tzSign = matches2[5] === "-" ? -1 : 1;
+        const tzH = +(matches2[6] || 0);
+        const tzM = +(matches2[7] || 0);
         if (tzH > 23 || tzM > 59 || strictTimeZone && !tz)
           return false;
         if (hr <= 23 && min <= 59 && sec < 60)
@@ -6750,8 +6750,8 @@ var require_formats = __commonJS({
     function getDateTime(strictTimeZone) {
       const time3 = getTime(strictTimeZone);
       return function date_time(str) {
-        const dateTime = str.split(DATE_TIME_SEPARATOR);
-        return dateTime.length === 2 && date3(dateTime[0]) && time3(dateTime[1]);
+        const dateTime2 = str.split(DATE_TIME_SEPARATOR);
+        return dateTime2.length === 2 && date3(dateTime2[0]) && time3(dateTime2[1]);
       };
     }
     function compareDateTime(dt1, dt2) {
@@ -7055,8 +7055,8 @@ function getEnumValues(entries) {
   const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
   return values;
 }
-function joinValues(array2, separator = "|") {
-  return array2.map((val) => stringifyPrimitive(val)).join(separator);
+function joinValues(array3, separator = "|") {
+  return array3.map((val) => stringifyPrimitive(val)).join(separator);
 }
 function jsonStringifyReplacer(_, value) {
   if (typeof value === "bigint")
@@ -7120,10 +7120,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path9) {
-  if (!path9)
+function getElementAtPath(obj, path10) {
+  if (!path10)
     return obj;
-  return path9.reduce((acc, key) => acc?.[key], obj);
+  return path10.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -7443,11 +7443,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path9, issues) {
+function prefixIssues(path10, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path9);
+    iss.path.unshift(path10);
     return iss;
   });
 }
@@ -8001,12 +8001,12 @@ var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (ins
 var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
   $ZodCheck.init(inst, def);
   const escapedRegex = escapeRegex(def.includes);
-  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
-  def.pattern = pattern;
+  const pattern2 = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
+  def.pattern = pattern2;
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.includes(def.includes, def.position))
@@ -8024,12 +8024,12 @@ var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst,
 });
 var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`^${escapeRegex(def.prefix)}.*`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.startsWith(def.prefix))
@@ -8047,12 +8047,12 @@ var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (i
 });
 var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
-  def.pattern ?? (def.pattern = pattern);
+  const pattern2 = new RegExp(`.*${escapeRegex(def.suffix)}$`);
+  def.pattern ?? (def.pattern = pattern2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-    bag.patterns.add(pattern);
+    bag.patterns.add(pattern2);
   });
   inst._zod.check = (payload) => {
     if (payload.value.endsWith(def.suffix))
@@ -9160,8 +9160,8 @@ var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)})?$`) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     if (def.innerType._zod.optin === "optional") {
@@ -9178,8 +9178,8 @@ var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
   defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
   defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
-    return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
+    const pattern2 = def.innerType._zod.pattern;
+    return pattern2 ? new RegExp(`^(${cleanRegex(pattern2.source)}|null)$`) : void 0;
   });
   defineLazy(inst._zod, "values", () => {
     return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
@@ -9866,12 +9866,12 @@ function _length(length, params) {
     length
   });
 }
-function _regex(pattern, params) {
+function _regex(pattern2, params) {
   return new $ZodCheckRegex({
     check: "string_format",
     format: "regex",
     ...normalizeParams(params),
-    pattern
+    pattern: pattern2
   });
 }
 function _lowercase(params) {
@@ -10380,11 +10380,11 @@ var JSONSchemaGenerator = class {
           }
           case "template_literal": {
             const json = _json;
-            const pattern = schema._zod.pattern;
-            if (!pattern)
+            const pattern2 = schema._zod.pattern;
+            if (!pattern2)
               throw new Error("Pattern not found in template literal");
             json.type = "string";
-            json.pattern = pattern.source;
+            json.pattern = pattern2.source;
             break;
           }
           case "pipe": {
@@ -13032,16 +13032,1879 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve) => {
+    return new Promise((resolve2) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve();
+        resolve2();
       } else {
-        this._stdout.once("drain", resolve);
+        this._stdout.once("drain", resolve2);
       }
     });
   }
 };
+
+// packages/skill-summon/src/configured-service.ts
+import { fileURLToPath as fileURLToPath3 } from "node:url";
+
+// packages/core/src/steering.ts
+var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
+var STEERING_POLICY_VERSION = "gaia-steering-policy/v1";
+var SEARCH_STATES = ["open", "checkpointed", "closed", "stopped"];
+var RUNTIME_EVENT_TYPES = ["behavioral-failure", "behavioral-recovery"];
+var OPERATOR_EVENT_TYPES = ["reopen-search", "checkpoint", "close-search", "stop"];
+var EVENT_TYPES = [...RUNTIME_EVENT_TYPES, ...OPERATOR_EVENT_TYPES];
+var DEFAULT_STEERING_POLICY = Object.freeze({
+  version: STEERING_POLICY_VERSION,
+  floor: "low",
+  ceiling: "max"
+});
+var EVENT_TYPE_SET = new Set(EVENT_TYPES);
+var RUNTIME_EVENT_TYPE_SET = new Set(RUNTIME_EVENT_TYPES);
+var OPERATOR_EVENT_TYPE_SET = new Set(OPERATOR_EVENT_TYPES);
+var RUNG_SET = new Set(STEERING_RUNGS);
+var SEARCH_STATE_SET = new Set(SEARCH_STATES);
+
+// packages/core/src/retrieval/installability.ts
+var INSTALLABILITY_PROJECTION_SCHEMA = "gaia.installability/v1";
+var INSTALLABILITY_STATES = [
+  "materializable",
+  "not-materializable",
+  "unknown"
+];
+var INSTALLABILITY_REASONS = [
+  "gaia-materialized",
+  "no-source",
+  "intrinsic-content-failure",
+  "subject-changed",
+  "route-changed",
+  "not-observed",
+  "inaccessible-at-check",
+  "unclassified-install-failure",
+  "timeout",
+  "unexpected-refusal",
+  "contradictory-observation",
+  "suite-component-failed",
+  "ambiguous-observation"
+];
+function unknownInstallabilityAssessment(projectionIndexPath = null, applicabilityReason = "not-observed", upstream = null) {
+  return {
+    state: "unknown",
+    reason: "unverified-applicability",
+    applicability: "unknown",
+    applicabilityReason,
+    projectionIndexPath,
+    upstream
+  };
+}
+function assessInstallability(projection, skillId, candidate, sourceKind = "unknown") {
+  if (sourceKind !== "tree") {
+    return unknownInstallabilityAssessment(
+      typeof projection?.indexPath === "string" ? projection.indexPath : null,
+      sourceKind === "fleet" ? "fleet-source" : "invalid-context"
+    );
+  }
+  const projectionIndexPath = typeof projection?.indexPath === "string" ? projection.indexPath : null;
+  if (typeof projection !== "object" || projection === null || typeof projection.skills !== "object" || projection.skills === null || Array.isArray(projection.skills)) {
+    return unknownInstallabilityAssessment(
+      projectionIndexPath,
+      "invalid-evidence"
+    );
+  }
+  const upstream = projection.skills[skillId];
+  if (upstream === void 0) {
+    return unknownInstallabilityAssessment(projection.indexPath, "not-observed");
+  }
+  const semanticError = projectionSemanticError(projection, skillId, upstream);
+  if (semanticError !== null) {
+    return unknownInstallabilityAssessment(
+      projection.indexPath,
+      "invalid-evidence",
+      upstream
+    );
+  }
+  if (candidate === void 0 || candidate.id !== skillId) {
+    return unknownInstallabilityAssessment(
+      projection.indexPath,
+      "invalid-context",
+      upstream
+    );
+  }
+  if (!sameRoute(candidate.sourceRoute, upstream.currentSourceRoute)) {
+    return unknownInstallabilityAssessment(
+      projection.indexPath,
+      "source-mismatch",
+      upstream
+    );
+  }
+  if (candidate.skillContentSha256 === void 0 || candidate.skillContentSha256 === null || upstream.currentSkillContentSha256 === null || candidate.skillContentSha256 !== upstream.currentSkillContentSha256) {
+    return unknownInstallabilityAssessment(
+      projection.indexPath,
+      "content-mismatch",
+      upstream
+    );
+  }
+  if (upstream.resolvedRevision !== null) {
+    if (candidate.resolvedRevision === void 0 || candidate.resolvedRevision === null) {
+      return unknownInstallabilityAssessment(
+        projection.indexPath,
+        "revision-unverified",
+        upstream
+      );
+    }
+    if (candidate.resolvedRevision !== upstream.resolvedRevision) {
+      return unknownInstallabilityAssessment(
+        projection.indexPath,
+        "revision-mismatch",
+        upstream
+      );
+    }
+  }
+  return {
+    state: upstream.state,
+    reason: upstream.reason,
+    applicability: "verified",
+    applicabilityReason: "matched",
+    projectionIndexPath: projection.indexPath,
+    upstream
+  };
+}
+function withInstallability(index, assessments) {
+  const docs = index.docs.map((doc) => ({
+    ...doc,
+    installability: safeAssessment(assessments.get(doc.id))
+  }));
+  const decorated = { ...index, docs };
+  const stats = index.stats;
+  if (isStats(stats)) {
+    return {
+      ...decorated,
+      stats: {
+        ...stats,
+        unreachable: docs.filter(assessedUnreachable).length
+      }
+    };
+  }
+  return decorated;
+}
+function withUnknownInstallability(index, projectionIndexPath = null, applicabilityReason = "not-observed") {
+  const assessments = new Map(
+    index.docs.map((doc) => [
+      doc.id,
+      unknownInstallabilityAssessment(projectionIndexPath, applicabilityReason)
+    ])
+  );
+  return withInstallability(index, assessments);
+}
+function safeAssessment(value) {
+  if (value === void 0) return void 0;
+  try {
+    assertInstallabilityAssessment(value);
+    return value;
+  } catch {
+    return unknownInstallabilityAssessment(null, "invalid-evidence");
+  }
+}
+function isStats(value) {
+  return typeof value === "object" && value !== null && typeof value.unreachable === "number";
+}
+function assessedUnreachable(value) {
+  if (value.registryOnly === true) return true;
+  const assessment = value.installability;
+  if (assessment !== void 0) {
+    return assessment.applicability === "verified" && assessment.state === "not-materializable";
+  }
+  return value.installable !== true && (!Array.isArray(value.suiteComponents) || value.suiteComponents.length === 0);
+}
+function sameRoute(left, right) {
+  if (left === null || right === null) return left === right;
+  return ["url", "owner", "repo", "ref", "subpath", "entrypoint", "installSubpath"].every((key) => left[key] === right[key]);
+}
+function isInstallabilityState(value) {
+  return typeof value === "string" && INSTALLABILITY_STATES.includes(value);
+}
+function isInstallabilityReason(value) {
+  return typeof value === "string" && INSTALLABILITY_REASONS.includes(value);
+}
+function assertInstallabilityAssessment(value, label = "Installability assessment") {
+  const assessment = asRecord(value, label);
+  if (!isInstallabilityState(assessment.state)) {
+    throw new Error(`${label}.state is invalid.`);
+  }
+  if (assessment.reason !== "unverified-applicability" && !isInstallabilityReason(assessment.reason)) {
+    throw new Error(`${label}.reason is invalid.`);
+  }
+  if (assessment.applicability !== "verified" && assessment.applicability !== "unknown") {
+    throw new Error(`${label}.applicability is invalid.`);
+  }
+  const applicabilityReasons = [
+    "matched",
+    "not-observed",
+    "source-mismatch",
+    "content-mismatch",
+    "revision-unverified",
+    "revision-mismatch",
+    "fleet-source",
+    "invalid-context",
+    "invalid-evidence"
+  ];
+  if (!applicabilityReasons.includes(String(assessment.applicabilityReason))) {
+    throw new Error(`${label}.applicabilityReason is invalid.`);
+  }
+  if (assessment.projectionIndexPath !== null && typeof assessment.projectionIndexPath !== "string") {
+    throw new Error(`${label}.projectionIndexPath must be a string or null.`);
+  }
+  if (assessment.upstream !== null) {
+    assertInstallabilityProjectionSkill(assessment.upstream, `${label}.upstream`);
+    if (assessment.applicability === "verified") {
+      if (assessment.upstream.observationDigest === null || assessment.upstream.observedAt === null) {
+        throw new Error(`${label}.verified assessments require observation provenance.`);
+      }
+      const stateError = stateSpecificError(assessment.upstream);
+      if (stateError !== null) {
+        throw new Error(`${label}.upstream is semantically invalid: ${stateError}`);
+      }
+      if (assessment.applicabilityReason !== "matched") {
+        throw new Error(`${label}.verified assessments must have applicabilityReason matched.`);
+      }
+      if (assessment.state !== assessment.upstream.state || assessment.reason !== assessment.upstream.reason) {
+        throw new Error(`${label} does not preserve its upstream state and reason.`);
+      }
+    } else if (assessment.state !== "unknown" || assessment.reason !== "unverified-applicability") {
+      throw new Error(`${label}.unknown applicability must be effective unknown.`);
+    }
+  } else if (assessment.applicability !== "unknown" || assessment.state !== "unknown" || assessment.reason !== "unverified-applicability") {
+    throw new Error(`${label} without upstream evidence must be effective unknown.`);
+  }
+}
+function projectionSemanticError(projection, skillId, record3) {
+  try {
+    assertInstallabilityProjectionSkill(record3, `Installability projection skill ${skillId}`);
+    if (typeof projection.indexPath !== "string" || projection.indexPath.length === 0) {
+      return "missing projection index path";
+    }
+    if (!Array.isArray(projection.observations)) return "missing observation refs";
+    const refs = projection.observations.filter(
+      (ref) => ref && typeof ref === "object"
+    );
+    if (refs.length !== projection.observations.length) return "malformed observation ref";
+    for (const ref of refs) {
+      if (typeof ref.digest !== "string" || !/^[0-9a-f]{64}$/iu.test(ref.digest) || typeof ref.checkedAt !== "string" || !Number.isFinite(Date.parse(ref.checkedAt)) || typeof ref.runId !== "string" || ref.runId.length === 0) {
+        return "malformed observation ref";
+      }
+    }
+    const sameDigest = refs.filter((ref) => ref.digest === record3.observationDigest);
+    if (record3.observationDigest !== null) {
+      if (sameDigest.length !== 1) return "orphan or conflicting observation ref";
+      if (record3.observedAt === null || record3.observedAt !== sameDigest[0]?.checkedAt) {
+        return "observation timestamp does not match its ref";
+      }
+    } else if (record3.observedAt !== null) {
+      if (record3.state !== "unknown" || record3.reason !== "ambiguous-observation" || !refs.some((ref) => ref.checkedAt === record3.observedAt)) {
+        return "observation timestamp has no selected ref";
+      }
+    } else if (record3.state !== "unknown" || record3.reason !== "not-observed") {
+      return "decision record has no observation provenance";
+    }
+    return stateSpecificError(record3);
+  } catch {
+    return `malformed record for ${skillId}`;
+  }
+}
+function stateSpecificError(record3) {
+  if (record3.state === "unknown" && (record3.reason === "gaia-materialized" || record3.reason === "no-source" || record3.reason === "intrinsic-content-failure")) {
+    return "unknown result has a contradictory decision reason";
+  }
+  if (record3.state === "materializable") {
+    if (record3.reason !== "gaia-materialized") return "positive result has the wrong reason";
+    if (record3.currentSourceRoute === null || record3.observedSourceRoute === null || !sameRoute(record3.currentSourceRoute, record3.observedSourceRoute)) {
+      return "materializable result lacks matching current and observed source identity";
+    }
+    if (record3.currentSkillContentSha256 === null || record3.observedSkillContentSha256 === null || record3.currentSkillContentSha256 !== record3.observedSkillContentSha256) {
+      return "materializable result lacks matching current and observed content identity";
+    }
+    if (record3.resolvedRevision === null) return "materializable result lacks resolved revision";
+    if (record3.deliveredContentSha256 === null) {
+      return "materializable result lacks delivered content provenance";
+    }
+    return null;
+  }
+  if (record3.state === "not-materializable") {
+    if (record3.reason === "no-source") {
+      if (record3.currentSourceRoute !== null || record3.observedSourceRoute !== null || record3.observedSkillContentSha256 !== null || record3.resolvedRevision !== null || record3.deliveredContentSha256 !== null) {
+        return "no-source result contains sourced observation fields";
+      }
+      return null;
+    }
+    if (record3.reason === "intrinsic-content-failure") {
+      if (record3.currentSourceRoute === null || record3.observedSourceRoute === null || !sameRoute(record3.currentSourceRoute, record3.observedSourceRoute)) {
+        return "intrinsic result lacks matching source identity";
+      }
+      return null;
+    }
+    return "negative result has an unscoped reason";
+  }
+  return null;
+}
+function assertInstallabilityProjectionSkill(value, label = "Installability projection skill") {
+  const skill = asRecord(value, label);
+  if (!isInstallabilityState(skill.state)) throw new Error(`${label}.state is invalid.`);
+  if (!isInstallabilityReason(skill.reason)) throw new Error(`${label}.reason is invalid.`);
+  optionalSha(skill.observationDigest, `${label}.observationDigest`);
+  optionalTimestamp(skill.observedAt, `${label}.observedAt`);
+  optionalRoute(skill.currentSourceRoute, `${label}.currentSourceRoute`);
+  optionalSha(skill.currentSkillContentSha256, `${label}.currentSkillContentSha256`);
+  optionalRoute(skill.observedSourceRoute, `${label}.observedSourceRoute`);
+  optionalSha(skill.observedSkillContentSha256, `${label}.observedSkillContentSha256`);
+  optionalRevision(skill.resolvedRevision, `${label}.resolvedRevision`);
+  optionalSha(skill.deliveredContentSha256, `${label}.deliveredContentSha256`);
+}
+function asRecord(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value;
+}
+function optionalSha(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{64}$/iu.test(value))) {
+    throw new Error(`${label} must be a sha256 string or null.`);
+  }
+}
+function optionalRevision(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{40}$/iu.test(value))) {
+    throw new Error(`${label} must be a revision string or null.`);
+  }
+}
+function optionalTimestamp(value, label) {
+  if (value !== null && (typeof value !== "string" || !Number.isFinite(Date.parse(value)))) {
+    throw new Error(`${label} must be an ISO timestamp or null.`);
+  }
+}
+function optionalRoute(value, label) {
+  if (value === null) return;
+  const route = asRecord(value, label);
+  for (const key of ["url", "owner", "repo", "subpath", "entrypoint", "installSubpath"]) {
+    if (typeof route[key] !== "string") throw new Error(`${label}.${key} must be a string.`);
+  }
+  if (route.ref !== null && typeof route.ref !== "string") {
+    throw new Error(`${label}.ref must be a string or null.`);
+  }
+}
+
+// packages/core/src/retrieval/schema.ts
+var SKILL_INDEX_SCHEMA = "gaia.skill-index/v2";
+var STALE_AFTER_DAYS = 30;
+var INDEX_FIELDS = [
+  "name",
+  "id",
+  "title",
+  "tags",
+  "genericSkillRef",
+  "expansions",
+  "terms",
+  "description"
+];
+var SkillIndexError = class extends Error {
+  name = "SkillIndexError";
+};
+function assertSkillIndex(value) {
+  const index = asRecord2(value, "Skill index");
+  if (index.schema !== SKILL_INDEX_SCHEMA) {
+    throw new SkillIndexError(
+      `Skill index advertises unsupported schema ${String(index.schema)}; this build reads ${SKILL_INDEX_SCHEMA}.`
+    );
+  }
+  const generatedAt = requiredString(index, "generatedAt", "Skill index");
+  if (!isTimestamp(generatedAt)) {
+    throw new SkillIndexError("Skill index has no valid generatedAt timestamp.");
+  }
+  requiredString(index, "source", "Skill index");
+  requiredString(index, "sourceDigest", "Skill index");
+  optionalString(index, "sourceRevision", "Skill index");
+  optionalString(index, "sourceVersion", "Skill index");
+  optionalString(index, "sourceWorkflow", "Skill index");
+  const builder = asRecord2(index.builder, "Skill index builder");
+  requiredString(builder, "version", "Skill index builder");
+  if (builder.expansion !== "none" && builder.expansion !== "generated") {
+    throw new SkillIndexError("Skill index builder.expansion must be 'none' or 'generated'.");
+  }
+  const stats = asRecord2(index.stats, "Skill index stats");
+  for (const field of [
+    "docs",
+    "awaitingClassification",
+    "unreachable",
+    "missingTags",
+    "expandedDocs",
+    "staleExpansions"
+  ]) {
+    nonNegativeInteger(stats[field], `Skill index stats.${field}`);
+  }
+  const docs = asArray(index.docs, "Skill index docs");
+  if (docs.length === 0) throw new SkillIndexError("Skill index contains no documents.");
+  if (stats.docs !== docs.length) {
+    throw new SkillIndexError(
+      `Skill index stats.docs is ${String(stats.docs)}, but the artifact contains ${docs.length} documents.`
+    );
+  }
+  const avgFieldLen = asRecord2(stats.avgFieldLen, "Skill index stats.avgFieldLen");
+  for (const field of INDEX_FIELDS) finiteNonNegative(avgFieldLen[field], `Skill index stats.avgFieldLen.${field}`);
+  if (stats.floor !== null) finiteNonNegative(stats.floor, "Skill index stats.floor");
+  if (stats.floorCalibration !== null) validateFloorCalibration(stats.floorCalibration);
+  const ids = /* @__PURE__ */ new Set();
+  let awaitingClassification = 0;
+  for (const [position, rawDoc] of docs.entries()) {
+    const doc = asRecord2(rawDoc, `Skill index document ${position}`);
+    const id = requiredString(doc, "id", `Skill index document ${position}`);
+    if (!id.includes("/") || /\s/u.test(id)) {
+      throw new SkillIndexError(`Indexed skill ${id} has an invalid id.`);
+    }
+    if (ids.has(id)) throw new SkillIndexError(`Skill index contains duplicate id ${id}.`);
+    ids.add(id);
+    requiredString(doc, "name", `Indexed skill ${id}`);
+    requiredString(doc, "contributor", `Indexed skill ${id}`);
+    requiredString(doc, "description", `Indexed skill ${id}`);
+    optionalString(doc, "title", `Indexed skill ${id}`);
+    optionalString(doc, "genericSkillRef", `Indexed skill ${id}`);
+    optionalString(doc, "catalogRef", `Indexed skill ${id}`);
+    stringArray(doc.tags, `Indexed skill ${id}.tags`);
+    const links = asRecord2(doc.links, `Indexed skill ${id}.links`);
+    optionalString(links, "github", `Indexed skill ${id}.links`);
+    if (!isInvocation(doc.invocation)) {
+      throw new SkillIndexError(`Indexed skill ${id} has an invalid invocation.`);
+    }
+    requiredBoolean(doc, "installable", `Indexed skill ${id}`);
+    stringArray(doc.suiteComponents, `Indexed skill ${id}.suiteComponents`);
+    requiredBoolean(doc, "registryOnly", `Indexed skill ${id}`);
+    const classified = requiredBoolean(doc, "classified", `Indexed skill ${id}`);
+    if (!classified) awaitingClassification++;
+    if (doc.installability !== void 0) {
+      assertInstallabilityAssessment(doc.installability, `Indexed skill ${id}.installability`);
+    }
+    optionalString(doc, "level", `Indexed skill ${id}`);
+    const trust = asRecord2(doc.trust, `Indexed skill ${id}.trust`);
+    optionalString(trust, "level", `Indexed skill ${id}.trust`);
+    optionalString(trust, "grade", `Indexed skill ${id}.trust`);
+    if (trust.trustNumber !== void 0) finiteNumber(trust.trustNumber, `Indexed skill ${id}.trust.trustNumber`);
+    const retrieval = asRecord2(doc.retrieval, `Indexed skill ${id}.retrieval`);
+    stringArray(retrieval.expansions, `Indexed skill ${id}.retrieval.expansions`);
+    stringArray(retrieval.terms, `Indexed skill ${id}.retrieval.terms`);
+    if (retrieval.vector !== null) finiteNumberArray(retrieval.vector, `Indexed skill ${id}.retrieval.vector`);
+    optionalString(retrieval, "expandedBy", `Indexed skill ${id}.retrieval`);
+    optionalString(retrieval, "expandedFrom", `Indexed skill ${id}.retrieval`);
+    if (retrieval.stale !== void 0 && typeof retrieval.stale !== "boolean") {
+      throw new SkillIndexError(`Indexed skill ${id}.retrieval.stale must be a boolean.`);
+    }
+  }
+  if (stats.awaitingClassification !== awaitingClassification) {
+    throw new SkillIndexError(
+      `Skill index stats.awaitingClassification is ${String(stats.awaitingClassification)}, but ${awaitingClassification} documents are unclassified.`
+    );
+  }
+}
+function asRecord2(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new SkillIndexError(`${label} must be an object.`);
+  }
+  return value;
+}
+function asArray(value, label) {
+  if (!Array.isArray(value)) throw new SkillIndexError(`${label} must be an array.`);
+  return value;
+}
+function requiredString(record3, key, label) {
+  const value = record3[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new SkillIndexError(`${label}.${key} must be a non-empty string.`);
+  }
+  return value;
+}
+function optionalString(record3, key, label) {
+  if (record3[key] !== void 0 && typeof record3[key] !== "string") {
+    throw new SkillIndexError(`${label}.${key} must be a string when present.`);
+  }
+}
+function requiredBoolean(record3, key, label) {
+  if (typeof record3[key] !== "boolean") throw new SkillIndexError(`${label}.${key} must be a boolean.`);
+  return record3[key];
+}
+function stringArray(value, label) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+    throw new SkillIndexError(`${label} must be an array of strings.`);
+  }
+}
+function finiteNumber(value, label) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new SkillIndexError(`${label} must be a finite number.`);
+  }
+}
+function finiteNonNegative(value, label) {
+  finiteNumber(value, label);
+  if (value < 0) throw new SkillIndexError(`${label} must be non-negative.`);
+}
+function nonNegativeInteger(value, label) {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new SkillIndexError(`${label} must be a non-negative integer.`);
+  }
+}
+function finiteNumberArray(value, label) {
+  if (!Array.isArray(value)) throw new SkillIndexError(`${label} must be an array.`);
+  for (const [position, item] of value.entries()) finiteNumber(item, `${label}[${position}]`);
+}
+function isInvocation(value) {
+  return value === "any" || value === "model" || value === "human";
+}
+function isTimestamp(value) {
+  return Number.isFinite(Date.parse(value));
+}
+function validateFloorCalibration(value) {
+  const calibration = asRecord2(value, "Skill index stats.floorCalibration");
+  finiteNonNegative(calibration.answerableAdmitted, "Skill index stats.floorCalibration.answerableAdmitted");
+  finiteNonNegative(calibration.unanswerableRejected, "Skill index stats.floorCalibration.unanswerableRejected");
+  if (calibration.answerableAdmitted > 1 || calibration.unanswerableRejected > 1) {
+    throw new SkillIndexError("Skill index floor calibration fractions must be at most 1.");
+  }
+  requiredString(calibration, "goldSetRevision", "Skill index stats.floorCalibration");
+  const calibratedAt = requiredString(calibration, "calibratedAt", "Skill index stats.floorCalibration");
+  if (!isTimestamp(calibratedAt)) throw new SkillIndexError("Skill index floor calibration has an invalid calibratedAt timestamp.");
+  optionalString(calibration, "note", "Skill index stats.floorCalibration");
+}
+function indexAgeDays(index, now = /* @__PURE__ */ new Date()) {
+  const generated = Date.parse(index.generatedAt);
+  if (Number.isNaN(generated)) return null;
+  return (now.getTime() - generated) / 864e5;
+}
+function isStale(index, now = /* @__PURE__ */ new Date()) {
+  const age = indexAgeDays(index, now);
+  return age !== null && age > STALE_AFTER_DAYS;
+}
+
+// packages/core/src/retrieval/lexical.ts
+function normalize(value) {
+  return value.toLocaleLowerCase("en-US").normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+}
+function tokenizeText(value) {
+  return [...new Set(normalize(value).split(" ").filter(Boolean))];
+}
+function scoreMatch(query, weightedFields) {
+  const normalizedQuery = normalize(query);
+  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
+  let score = 0;
+  for (const [rawValue, weight] of weightedFields) {
+    const value = normalize(rawValue);
+    if (!value) continue;
+    if (value === normalizedQuery) score += weight * 10;
+    else if (value.includes(normalizedQuery)) score += weight * 5;
+    for (const token of tokens) {
+      if (value.split(" ").includes(token)) score += weight;
+      else if (value.includes(token)) score += weight / 2;
+    }
+  }
+  return score;
+}
+
+// packages/core/src/retrieval/build-index.ts
+import { createHash } from "node:crypto";
+function allProjectionSkills(projection) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const skill of [
+    ...Object.values(projection.buckets ?? {}).flat(),
+    ...projection.awaitingClassification ?? []
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...previous.suiteComponents ?? [],
+      ...skill.suiteComponents ?? []
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
+    });
+  }
+  return [...byId.values()];
+}
+function sha256(bytes) {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+function expansionFingerprint(skill) {
+  return sha256(
+    JSON.stringify([
+      skill.id,
+      skill.name,
+      skill.title ?? "",
+      [...skill.tags ?? []].sort(),
+      skill.description ?? "",
+      skill.genericSkillRef ?? ""
+    ])
+  ).slice(0, 19);
+}
+function isInstallableLink(links) {
+  if (!links) return false;
+  if (links.installable === false) return false;
+  return typeof links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(links.github);
+}
+function isReachable(doc) {
+  if (doc.registryOnly) return false;
+  if (doc.installability !== void 0) {
+    return doc.installability.applicability !== "verified" || doc.installability.state !== "not-materializable";
+  }
+  return doc.installable || doc.suiteComponents.length > 0;
+}
+function fieldText(doc, field) {
+  switch (field) {
+    case "name":
+      return doc.name;
+    case "id":
+      return doc.id;
+    case "title":
+      return doc.title ?? "";
+    case "tags":
+      return doc.tags.join(" ");
+    case "genericSkillRef":
+      return doc.genericSkillRef ?? "";
+    case "expansions":
+      return doc.retrieval.expansions.join(" ");
+    case "terms":
+      return doc.retrieval.terms.join(" ");
+    case "description":
+      return doc.description;
+  }
+}
+function deriveTerms(doc) {
+  if (doc.retrieval.expansions.length === 0) return [];
+  const source = [
+    doc.name,
+    doc.title ?? "",
+    doc.tags.join(" "),
+    doc.genericSkillRef ?? "",
+    doc.description,
+    doc.retrieval.expansions.join(" ")
+  ].join(" ");
+  return tokenizeText(source).filter((token) => token.length > 2);
+}
+function buildSkillIndex({
+  projection,
+  source,
+  sourceDigest,
+  sourceRevision,
+  sourceVersion,
+  sourceWorkflow,
+  builderVersion,
+  generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
+  expansions
+}) {
+  const bucketedIds = new Set(Object.values(projection.buckets ?? {}).flat().map((skill) => skill.id));
+  const docs = allProjectionSkills(projection).map((skill) => toIndexedSkill(skill, expansions?.[skill.id], bucketedIds.has(skill.id))).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  const avgFieldLen = Object.fromEntries(
+    INDEX_FIELDS.map((field) => [
+      field,
+      docs.length === 0 ? 0 : round4(
+        docs.reduce((total, doc) => total + tokenCount(fieldText(doc, field)), 0) / docs.length
+      )
+    ])
+  );
+  return {
+    schema: SKILL_INDEX_SCHEMA,
+    generatedAt,
+    source,
+    sourceDigest,
+    ...sourceRevision ? { sourceRevision } : {},
+    ...sourceVersion ? { sourceVersion } : {},
+    ...sourceWorkflow ? { sourceWorkflow } : {},
+    builder: {
+      version: builderVersion,
+      expansion: docs.some((doc) => doc.retrieval.expansions.length > 0) ? "generated" : "none"
+    },
+    stats: {
+      docs: docs.length,
+      awaitingClassification: docs.filter((doc) => !doc.classified).length,
+      unreachable: docs.filter((doc) => !isReachable(doc)).length,
+      missingTags: docs.filter((doc) => doc.tags.length === 0).length,
+      expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
+      staleExpansions: docs.filter((doc) => doc.retrieval.stale === true).length,
+      avgFieldLen,
+      floor: null,
+      floorCalibration: null
+    },
+    docs
+  };
+}
+function toIndexedSkill(skill, expansion, classified) {
+  const fingerprint = expansionFingerprint(skill);
+  const links = skill.links ?? {};
+  const doc = {
+    id: skill.id,
+    name: skill.name,
+    ...skill.title ? { title: skill.title } : {},
+    contributor: skill.contributor ?? skill.id.split("/")[0] ?? "",
+    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
+    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
+    description: skill.description ?? "",
+    tags: [...skill.tags ?? []],
+    links: typeof links.github === "string" ? { github: links.github } : {},
+    invocation: readInvocation(skill.invocation),
+    installable: isInstallableLink(links),
+    suiteComponents: [...skill.suiteComponents ?? []],
+    registryOnly: skill.installable === false,
+    ...skill.installability ? { installability: skill.installability } : {},
+    classified,
+    ...skill.level ? { level: skill.level } : {},
+    trust: {
+      ...skill.level ? { level: skill.level } : {},
+      ...skill.overallTrustGrade ? { grade: skill.overallTrustGrade } : {},
+      ...skill.trustMagnitude === void 0 ? {} : { trustNumber: skill.trustMagnitude }
+    },
+    retrieval: {
+      expansions: expansion?.expansions ?? [],
+      terms: [],
+      vector: null,
+      ...expansion ? { expandedBy: expansion.expandedBy } : {},
+      ...expansion ? { expandedFrom: expansion.expandedFrom ?? fingerprint } : {},
+      // Recorded, never acted on here: a stale expansion still ranks. It is
+      // out-of-date retrieval surface, not wrong retrieval surface, and
+      // dropping it would re-create the coverage hole it was written to fill.
+      ...expansion && expansion.expandedFrom !== void 0 && expansion.expandedFrom !== fingerprint ? { stale: true } : {}
+    }
+  };
+  doc.retrieval.terms = deriveTerms(doc);
+  return doc;
+}
+function readInvocation(value) {
+  return value === "model" || value === "human" ? value : "any";
+}
+function tokenCount(text) {
+  const normalized = normalize(text);
+  return normalized.length === 0 ? 0 : normalized.split(" ").length;
+}
+function round4(value) {
+  return Math.round(value * 1e4) / 1e4;
+}
+
+// packages/core/src/retrieval/bm25f.ts
+var DEFAULT_BM25F_PARAMS = {
+  k1: 1.2,
+  b: 0.75,
+  fieldPresenceNormalization: false,
+  weights: {
+    name: 10,
+    id: 8,
+    title: 6,
+    tags: 5,
+    genericSkillRef: 4,
+    expansions: 4,
+    terms: 2,
+    description: 3
+  }
+};
+var EXACT_MATCH_SCORE = 1e6;
+var Bm25fRanker = class {
+  #params;
+  #documents;
+  #documentFrequency = /* @__PURE__ */ new Map();
+  #averageFieldLength;
+  #exact = /* @__PURE__ */ new Map();
+  constructor(index, params = { ...DEFAULT_BM25F_PARAMS }) {
+    this.#params = params;
+    const totalWeight = INDEX_FIELDS.reduce((total, field) => total + params.weights[field], 0);
+    this.#documents = index.docs.map((doc) => indexDocument(doc, params.weights, totalWeight));
+    for (const document of this.#documents) {
+      for (const term of document.terms.keys()) {
+        this.#documentFrequency.set(term, (this.#documentFrequency.get(term) ?? 0) + 1);
+      }
+      for (const key of document.exactKeys) {
+        const bucket = this.#exact.get(key);
+        if (bucket) bucket.push(document.doc);
+        else this.#exact.set(key, [document.doc]);
+      }
+    }
+    this.#averageFieldLength = Object.fromEntries(
+      INDEX_FIELDS.map((field) => [
+        field,
+        this.#documents.length === 0 ? 0 : this.#documents.reduce((total, document) => total + document.fieldLength[field], 0) / this.#documents.length
+      ])
+    );
+  }
+  get size() {
+    return this.#documents.length;
+  }
+  /**
+   * Rank every document against `query`, best first. Zero-scoring documents are
+   * dropped; the floor decision (SPEC §4) belongs to the caller, not here.
+   */
+  rank(query) {
+    const exact = this.#exactMatches(query);
+    if (exact.length > 0) return exact;
+    const terms = tokenizeText(query);
+    if (terms.length === 0) return [];
+    const scored = [];
+    for (const document of this.#documents) {
+      const { score, matchedTerms } = this.#score(document, terms);
+      if (score > 0) {
+        scored.push({ doc: document.doc, score, matchKind: "ranked", matchedTerms });
+      }
+    }
+    scored.sort((left, right) => right.score - left.score || compareIds(left.doc, right.doc));
+    return scored;
+  }
+  /**
+   * SPEC §3.4 — "summon scout-fleet" is the most common invocation there is and
+   * must not go through a relevance band at all.
+   */
+  #exactMatches(query) {
+    const key = normalize(query);
+    if (key.length === 0) return [];
+    const docs = this.#exact.get(key);
+    if (!docs || docs.length === 0) return [];
+    return docs.map((doc) => ({
+      doc,
+      score: EXACT_MATCH_SCORE,
+      matchKind: "exact",
+      matchedTerms: tokenizeText(query)
+    }));
+  }
+  #score(document, terms) {
+    const { k1, b, weights } = this.#params;
+    let score = 0;
+    const matchedTerms = [];
+    for (const term of terms) {
+      const postings = document.terms.get(term);
+      if (!postings) continue;
+      matchedTerms.push(term);
+      let weightedFrequency = 0;
+      for (const { field, frequency } of postings) {
+        const averageLength = this.#averageFieldLength[field];
+        const normalizer = averageLength === 0 ? 1 : 1 - b + b * document.fieldLength[field] / averageLength;
+        weightedFrequency += weights[field] * frequency / normalizer;
+      }
+      if (this.#params.fieldPresenceNormalization && document.presentWeightShare > 0) {
+        weightedFrequency /= document.presentWeightShare;
+      }
+      score += this.#idf(term) * (weightedFrequency * (k1 + 1) / (weightedFrequency + k1));
+    }
+    return { score, matchedTerms };
+  }
+  #idf(term) {
+    const n = this.#documents.length;
+    const df = this.#documentFrequency.get(term) ?? 0;
+    return Math.log(1 + (n - df + 0.5) / (df + 0.5));
+  }
+};
+function marginOf(ranked) {
+  const top = ranked[0];
+  if (!top) return 0;
+  const next = ranked[1];
+  if (!next || top.score <= 0) return 1;
+  return (top.score - next.score) / top.score;
+}
+function indexDocument(doc, weights, totalWeight) {
+  const terms = /* @__PURE__ */ new Map();
+  const fieldLength = {};
+  for (const field of INDEX_FIELDS) {
+    const tokens = normalize(fieldText(doc, field)).split(" ").filter(Boolean);
+    fieldLength[field] = tokens.length;
+    const counts = /* @__PURE__ */ new Map();
+    for (const token of tokens) counts.set(token, (counts.get(token) ?? 0) + 1);
+    for (const [token, frequency] of counts) {
+      const postings = terms.get(token);
+      if (postings) postings.push({ field, frequency });
+      else terms.set(token, [{ field, frequency }]);
+    }
+  }
+  const exactKeys2 = new Set(
+    [doc.name, doc.id, doc.catalogRef ?? ""].map((value) => normalize(value)).filter((value) => value.length > 0)
+  );
+  const presentWeight = INDEX_FIELDS.reduce(
+    (total, field) => total + (fieldLength[field] > 0 ? weights[field] : 0),
+    0
+  );
+  return {
+    doc,
+    terms,
+    fieldLength,
+    exactKeys: exactKeys2,
+    presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight
+  };
+}
+function compareIds(left, right) {
+  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+}
+
+// packages/core/src/retrieval/decide.ts
+var BAND = 0.6;
+var MARGIN = 0.15;
+function decide({
+  index,
+  query,
+  ranked,
+  surface = "any",
+  source
+}) {
+  const floor = index.stats.floor;
+  const filtered = [];
+  const eligible = [];
+  for (const hit of ranked) {
+    const why = withholdReason(hit.doc, surface);
+    if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
+    else eligible.push(hit);
+  }
+  const top = eligible[0];
+  if (!top) {
+    return noMatchDecision(
+      query,
+      ranked.length === 0 ? "no_candidates" : "all_filtered",
+      ranked,
+      filtered,
+      floor,
+      source
+    );
+  }
+  if (top.matchKind === "exact") {
+    const exact = eligible.filter((hit) => hit.matchKind === "exact");
+    return {
+      admitted: exact,
+      noMatch: null,
+      margin: marginOf(exact),
+      ambiguous: exact.length > 1,
+      filtered,
+      floor
+    };
+  }
+  if (floor !== null && top.score < floor) {
+    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
+  }
+  const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
+  const margin = marginOf(admitted);
+  return {
+    admitted,
+    noMatch: null,
+    margin,
+    ambiguous: admitted.length > 1 && margin < MARGIN,
+    filtered,
+    floor
+  };
+}
+function withholdReason(doc, surface) {
+  if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
+  if (!isReachable(doc)) {
+    const evidence = doc.installability;
+    if (evidence?.applicability === "verified" && evidence.state === "not-materializable") {
+      const upstream = evidence.upstream;
+      const provenance = upstream?.observationDigest ? `; observation ${upstream.observationDigest}` : "";
+      return `not materializable \u2014 upstream Tree installability reason: ${evidence.reason}${provenance}`;
+    }
+    return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
+  }
+  if (surface === "heaven" && doc.invocation === "model") {
+    return "surface:heaven excludes model-led skills";
+  }
+  if (surface === "hell" && doc.invocation === "human") {
+    return "surface:hell excludes human-led skills";
+  }
+  return null;
+}
+function noMatchDecision(query, reason, considered, filtered, floor, source) {
+  return {
+    admitted: [],
+    noMatch: {
+      reason,
+      query,
+      topCandidates: considered.slice(0, 3).map((hit) => ({
+        id: hit.doc.id,
+        name: hit.doc.name,
+        score: Math.round(hit.score * 1e4) / 1e4,
+        floor
+      })),
+      filtered,
+      suggestion: suggestionFor(reason, source)
+    },
+    margin: 0,
+    ambiguous: false,
+    filtered,
+    floor
+  };
+}
+function suggestionFor(reason, source) {
+  const where = source ? `\`${source}\`` : "the configured source";
+  switch (reason) {
+    case "no_candidates":
+      return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
+    case "below_floor":
+      return `Nothing in ${where} scored above the calibrated relevance floor. The closest candidates are listed with their scores; none of them is a match. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
+    case "all_filtered":
+      return `Every candidate in ${where} was withheld \u2014 see \`filtered\` for why. Most commonly the skill publishes no installable SKILL.md link.`;
+  }
+}
+
+// packages/core/src/arbor/contract.ts
+var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
+var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
+var ARBOR_EDGE_SCHEMA = "gaia.arbor-edge/v1";
+var ARBOR_EDGE_INDEX_SCHEMA = "gaia.arbor-edge-index/v1";
+var ARBOR_RUNTIME_INDEX_SCHEMA = "gaia.arbor-runtime-index/v1";
+var PROJECTED_SUPPORT = [
+  "expert-declared",
+  "benchmark-confirmed",
+  "benchmark-qualified",
+  "benchmark-revised",
+  "inconclusive"
+];
+var ARBOR_FACETS = ["human-led", "model-led"];
+var ARBOR_RELATIONS = [
+  "stabilizes",
+  "amplifies",
+  "conflicts",
+  "recovers",
+  "compresses-after",
+  "unlocks",
+  "duplicates"
+];
+var ARBOR_LENS_STATUS = [
+  "present",
+  "absent-no-accepted-record",
+  "absent-subject-version-mismatch",
+  "absent-superseded",
+  "unavailable-unsupported-payload"
+];
+var EDGE_ABSENCE_MEANING = "not-evaluated";
+var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
+
+// packages/core/src/arbor/validate.ts
+var ArborContractError = class extends Error {
+  name = "ArborContractError";
+};
+var SHA256 = /^[a-f0-9]{64}$/u;
+var RECORD_ID = /^[a-z][a-z0-9.-]*$/u;
+var SKILL_ID = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
+var DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/u;
+function assertArborProfile(value, label = "Arbor profile") {
+  const profile = closedRecord(value, label, [
+    "schema",
+    "skill",
+    "inputDigest",
+    "sources",
+    "claims"
+  ]);
+  constant(profile, "schema", ARBOR_PROFILE_SCHEMA, label);
+  subjectRef(profile.skill, `${label}.skill`);
+  sha2562(profile, "inputDigest", label);
+  const sources = closedRecord(profile.sources, `${label}.sources`, [
+    "declarations",
+    "benchmarkReceipts",
+    "interpretations"
+  ]);
+  for (const key of ["declarations", "benchmarkReceipts", "interpretations"]) {
+    digestList(sources[key], `${label}.sources.${key}`);
+  }
+  const claims = array2(profile.claims, `${label}.claims`);
+  if (claims.length === 0) {
+    throw new ArborContractError(`${label}.claims must contain at least one claim.`);
+  }
+  claims.forEach((claim, position) => assertArborClaim(claim, `${label}.claims[${position}]`));
+}
+function assertArborClaim(value, label) {
+  const claim = closedRecord(value, label, [
+    "id",
+    "facet",
+    "conditions",
+    "rationale",
+    "authority",
+    "support",
+    "declarationId",
+    "declaredAt",
+    "declarationSource",
+    "benchmarkSources",
+    "interpretationSource"
+  ]);
+  pattern(claim, "id", RECORD_ID, label);
+  enumeration(claim, "facet", ARBOR_FACETS, label);
+  nonEmpty(claim, "conditions", label);
+  nonEmpty(claim, "rationale", label);
+  authority(claim.authority, `${label}.authority`);
+  enumeration(claim, "support", PROJECTED_SUPPORT, label);
+  pattern(claim, "declarationId", RECORD_ID, label);
+  dateTime(claim, "declaredAt", label);
+  sha2562(claim, "declarationSource", label);
+  digestList(claim.benchmarkSources, `${label}.benchmarkSources`);
+  sha256OrNull(claim, "interpretationSource", label);
+}
+function assertArborEdge(value, label = "Arbor edge") {
+  const edge = closedRecord(value, label, [
+    "schema",
+    "edgeKey",
+    "pair",
+    "target",
+    "relation",
+    "conditions",
+    "authority",
+    "support",
+    "declarationSource",
+    "observationSources",
+    "interpretationSource",
+    "structuralOverlap",
+    "pairApplicable"
+  ]);
+  constant(edge, "schema", ARBOR_EDGE_SCHEMA, label);
+  sha2562(edge, "edgeKey", label);
+  const pair = closedRecord(edge.pair, `${label}.pair`, ["from", "to"]);
+  subjectRef(pair.from, `${label}.pair.from`);
+  subjectRef(pair.to, `${label}.pair.to`);
+  const target = closedRecord(edge.target, `${label}.target`, ["declarationSha256", "claimId"]);
+  sha2562(target, "declarationSha256", `${label}.target`);
+  pattern(target, "claimId", RECORD_ID, `${label}.target`);
+  enumeration(edge, "relation", ARBOR_RELATIONS, label);
+  nonEmpty(edge, "conditions", label);
+  authority(edge.authority, `${label}.authority`);
+  enumeration(edge, "support", PROJECTED_SUPPORT, label);
+  sha2562(edge, "declarationSource", label);
+  digestList(edge.observationSources, `${label}.observationSources`);
+  sha256OrNull(edge, "interpretationSource", label);
+  constant(edge, "structuralOverlap", EDGE_STRUCTURAL_OVERLAP, label);
+  if (typeof edge.pairApplicable !== "boolean") {
+    throw new ArborContractError(`${label}.pairApplicable must be a boolean.`);
+  }
+}
+function assertArborEdgeIndex(value, label = "Arbor edge index") {
+  const index = closedRecord(value, label, ["schema", "edgeSetVersion", "coverage", "edges"]);
+  constant(index, "schema", ARBOR_EDGE_INDEX_SCHEMA, label);
+  nonEmpty(index, "edgeSetVersion", label);
+  const coverage = closedRecord(index.coverage, `${label}.coverage`, [
+    "pairsEvaluated",
+    "absenceMeaning"
+  ]);
+  nonNegativeInteger2(coverage, "pairsEvaluated", `${label}.coverage`);
+  constant(coverage, "absenceMeaning", EDGE_ABSENCE_MEANING, `${label}.coverage`);
+  const edges = array2(index.edges, `${label}.edges`);
+  edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
+}
+function assertArborRuntime(value, label = "Arbor runtime") {
+  const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
+  constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
+  subjectRef(runtime.subject, `${label}.subject`);
+  sha2562(runtime, "inputDigest", label);
+  const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
+    "claims",
+    "hellHeaven",
+    "interactions"
+  ]);
+  const claimsLens = closedRecord(lenses.claims, `${label}.lenses.claims`, [
+    "status",
+    "sourceDigest",
+    "profile"
+  ]);
+  enumeration(claimsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.claims`);
+  sha256OrNull(claimsLens, "sourceDigest", `${label}.lenses.claims`);
+  objectOrNull(claimsLens, "profile", `${label}.lenses.claims`);
+  const hhLens = closedRecord(lenses.hellHeaven, `${label}.lenses.hellHeaven`, [
+    "status",
+    "sourceDigest",
+    "result"
+  ]);
+  enumeration(hhLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.hellHeaven`);
+  sha256OrNull(hhLens, "sourceDigest", `${label}.lenses.hellHeaven`);
+  objectOrNull(hhLens, "result", `${label}.lenses.hellHeaven`);
+  const interactionsLens = closedRecord(lenses.interactions, `${label}.lenses.interactions`, [
+    "status",
+    "sourceDigest",
+    "edges"
+  ]);
+  enumeration(interactionsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.interactions`);
+  sha256OrNull(interactionsLens, "sourceDigest", `${label}.lenses.interactions`);
+  const edges = array2(interactionsLens.edges, `${label}.lenses.interactions.edges`);
+  edges.forEach(
+    (edge, position) => assertArborEdge(edge, `${label}.lenses.interactions.edges[${position}]`)
+  );
+}
+function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
+  const index = closedRecord(value, label, ["schema", "runtimeVersion", "subjects"]);
+  constant(index, "schema", ARBOR_RUNTIME_INDEX_SCHEMA, label);
+  constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
+  const subjects = array2(index.subjects, `${label}.subjects`);
+  subjects.forEach(
+    (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
+  );
+}
+function closedRecord(value, label, allowed) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborContractError(`${label} must be an object.`);
+  }
+  const record3 = value;
+  for (const key of Object.keys(record3)) {
+    if (!allowed.includes(key)) {
+      throw new ArborContractError(
+        `${label} carries unknown field '${key}'. The Arbor contracts are closed; a consumer that accepted it would be forking the schema.`
+      );
+    }
+  }
+  for (const key of allowed) {
+    if (!(key in record3)) {
+      throw new ArborContractError(`${label} is missing required field '${key}'.`);
+    }
+  }
+  return record3;
+}
+function array2(value, label) {
+  if (!Array.isArray(value)) throw new ArborContractError(`${label} must be an array.`);
+  return value;
+}
+function constant(record3, key, expected, label) {
+  if (record3[key] !== expected) {
+    throw new ArborContractError(
+      `${label}.${key} must be '${expected}', got ${JSON.stringify(record3[key])}. This build reads only the pinned contract version.`
+    );
+  }
+}
+function nonEmpty(record3, key, label) {
+  const value = record3[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-empty string.`);
+  }
+  return value;
+}
+function pattern(record3, key, expression, label) {
+  const value = nonEmpty(record3, key, label);
+  if (!expression.test(value)) {
+    throw new ArborContractError(`${label}.${key} does not match ${String(expression)}.`);
+  }
+  return value;
+}
+function sha2562(record3, key, label) {
+  return pattern(record3, key, SHA256, label);
+}
+function sha256OrNull(record3, key, label) {
+  if (record3[key] === null) return;
+  sha2562(record3, key, label);
+}
+function objectOrNull(record3, key, label) {
+  const value = record3[key];
+  if (value === null) return;
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new ArborContractError(`${label}.${key} must be an object or null.`);
+  }
+}
+function dateTime(record3, key, label) {
+  const value = nonEmpty(record3, key, label);
+  if (!isUpstreamDateTime(value)) {
+    throw new ArborContractError(
+      `${label}.${key} is not a date-time the pinned upstream checker accepts: ${JSON.stringify(value)}.`
+    );
+  }
+}
+function daysInMonth(year, month) {
+  if (month === 2) {
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leap ? 29 : 28;
+  }
+  return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
+}
+function isUpstreamDateTime(value) {
+  if (typeof value !== "string") return false;
+  const match = DATE_TIME.exec(value);
+  if (match === null) return false;
+  const [, rawYear, rawMonth, rawDay, rawHour, rawMinute, rawSecond, offset] = match;
+  const year = Number(rawYear);
+  const month = Number(rawMonth);
+  const day = Number(rawDay);
+  const hour = Number(rawHour);
+  const minute = Number(rawMinute);
+  const second = Number(rawSecond);
+  if (year < 1) return false;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > daysInMonth(year, month)) return false;
+  if (minute > 59 || second > 59) return false;
+  if (hour > 24) return false;
+  if (hour === 24) {
+    if (minute !== 0 || second !== 0) return false;
+    if (value.includes(".")) return false;
+    if (year === 9999 && month === 12 && day === 31) return false;
+  }
+  if (offset !== "Z") {
+    const offsetMinutes = Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6));
+    if (offsetMinutes >= 24 * 60) return false;
+  }
+  return true;
+}
+function enumeration(record3, key, allowed, label) {
+  const value = record3[key];
+  if (typeof value !== "string" || !allowed.includes(value)) {
+    throw new ArborContractError(
+      `${label}.${key} must be one of ${allowed.join(", ")}; got ${JSON.stringify(value)}.`
+    );
+  }
+}
+function digestList(value, label) {
+  const digests = array2(value, label);
+  const seen = /* @__PURE__ */ new Set();
+  digests.forEach((digest, position) => {
+    if (typeof digest !== "string" || !SHA256.test(digest)) {
+      throw new ArborContractError(`${label}[${position}] must be a sha256 digest.`);
+    }
+    if (seen.has(digest)) {
+      throw new ArborContractError(`${label} repeats digest ${digest}; upstream requires uniqueness.`);
+    }
+    seen.add(digest);
+  });
+}
+function nonNegativeInteger2(record3, key, label) {
+  const value = record3[key];
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new ArborContractError(`${label}.${key} must be a non-negative integer.`);
+  }
+}
+function subjectRef(value, label) {
+  const subject = closedRecord(value, label, ["id", "contentSha256"]);
+  pattern(subject, "id", SKILL_ID, label);
+  sha2562(subject, "contentSha256", label);
+}
+function authority(value, label) {
+  const record3 = closedRecord(value, label, ["actor", "basis"]);
+  nonEmpty(record3, "actor", label);
+  nonEmpty(record3, "basis", label);
+}
+
+// packages/core/src/arbor/publication.ts
+var CONTRACTS = {
+  runtimeIndex: ARBOR_RUNTIME_INDEX_SCHEMA,
+  runtime: ARBOR_RUNTIME_SCHEMA,
+  profile: ARBOR_PROFILE_SCHEMA,
+  edgeIndex: ARBOR_EDGE_INDEX_SCHEMA
+};
+function subjectKey(subject) {
+  return `${subject.id}@${subject.contentSha256}`;
+}
+function unavailableArborPublication(problems = []) {
+  return {
+    state: "unavailable",
+    provenance: null,
+    subjects: [],
+    runtimes: /* @__PURE__ */ new Map(),
+    edgeIndex: null,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function readArborPublication(documents) {
+  if (documents === null) return unavailableArborPublication();
+  const problems = [];
+  let runtimeIndex;
+  try {
+    assertArborRuntimeIndex(documents.runtimeIndex, "runtime/index.json");
+    runtimeIndex = documents.runtimeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([
+        { where: "runtime/index.json", detail: describe(error2) }
+      ]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  let edgeIndex;
+  try {
+    assertArborEdgeIndex(documents.edgeIndex, "edges.json");
+    edgeIndex = documents.edgeIndex;
+  } catch (error2) {
+    return {
+      ...unavailableArborPublication([{ where: "edges.json", detail: describe(error2) }]),
+      state: "unreadable",
+      provenance: documents.provenance
+    };
+  }
+  const runtimes = /* @__PURE__ */ new Map();
+  for (const { path: path10, document } of documents.runtimes) {
+    try {
+      assertArborRuntime(document, path10);
+    } catch (error2) {
+      problems.push({ where: path10, detail: describe(error2) });
+      continue;
+    }
+    const claimsLens = document.lenses.claims;
+    if (claimsLens.profile !== null) {
+      let quarantine = null;
+      try {
+        assertArborProfile(claimsLens.profile, `${path10} lenses.claims.profile`);
+        const embedded = claimsLens.profile.skill;
+        if (embedded.id !== document.subject.id) {
+          quarantine = `embedded profile is for skill '${embedded.id}' but the aggregate's subject is '${document.subject.id}'; the lens was quarantined and no claim was consumed`;
+        } else if (embedded.contentSha256 !== document.subject.contentSha256) {
+          quarantine = `embedded profile pins content ${embedded.contentSha256} but the aggregate's subject pins ${document.subject.contentSha256}; the lens was quarantined and no claim was consumed`;
+        }
+      } catch (error2) {
+        quarantine = describe(error2);
+      }
+      if (quarantine !== null) {
+        problems.push({ where: `${path10} lenses.claims.profile`, detail: quarantine });
+        runtimes.set(subjectKey(document.subject), {
+          ...document,
+          lenses: {
+            ...document.lenses,
+            claims: { ...claimsLens, profile: null }
+          }
+        });
+        continue;
+      }
+    }
+    for (const claim of claimsLens.profile?.claims ?? []) {
+      const governed = claim.interpretationSource !== null;
+      if (governed === (claim.support === "expert-declared")) {
+        problems.push({
+          where: `${path10} lenses.claims.profile claim '${claim.id}'`,
+          detail: governed ? "support is 'expert-declared' but a governed interpretationSource is present" : `support is '${claim.support}' with no interpretationSource; only a governed interpretation may set it`
+        });
+      }
+    }
+    runtimes.set(subjectKey(document.subject), document);
+  }
+  for (const subject of runtimeIndex.subjects) {
+    if (!runtimes.has(subjectKey(subject))) {
+      problems.push({
+        where: subjectKey(subject),
+        detail: "listed in runtime/index.json but no readable aggregate document was found"
+      });
+    }
+  }
+  return {
+    state: "loaded",
+    provenance: documents.provenance,
+    subjects: runtimeIndex.subjects,
+    runtimes,
+    edgeIndex,
+    problems,
+    contracts: CONTRACTS
+  };
+}
+function describe(error2) {
+  if (error2 instanceof ArborContractError) return error2.message;
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/core/src/arbor/consume.ts
+function describeArborPublication(publication) {
+  const subjectsPublished = publication.subjects.length;
+  const edgesPublished = publication.edgeIndex?.edges.length ?? 0;
+  const edgeCoverage = publication.edgeIndex ? { ...publication.edgeIndex.coverage } : null;
+  let note;
+  if (publication.state === "unavailable") {
+    note = "no published projection is available to this runtime, so no behavioral lens was consulted. That is unknown, not a clean bill of health.";
+  } else if (publication.state === "unreadable") {
+    note = "a publication was found but does not conform to the pinned contracts, so it was not consumed. Treated as unknown and disclosed rather than partially read.";
+  } else if (subjectsPublished === 0 && edgesPublished === 0) {
+    note = "the canonical projection is published and EMPTY \u2014 0 subjects, 0 interaction edges. Upstream records that absence means not-evaluated, so nothing here is evidence about any skill.";
+  } else {
+    note = `canonical projection consulted \u2014 ${subjectsPublished} published subject(s), ${edgesPublished} interaction edge(s). Absence of a record means not-evaluated.`;
+  }
+  if (publication.problems.length > 0) {
+    note += ` ${publication.problems.length} publication defect(s) disclosed; the affected records were not consumed.`;
+  }
+  return {
+    publicationState: publication.state,
+    provenance: publication.provenance,
+    contracts: publication.contracts,
+    subjectsPublished,
+    edgesPublished,
+    edgeCoverage,
+    problems: publication.problems,
+    note
+  };
+}
+function consumeArbor(publication, candidate, options = {}) {
+  const join4 = resolveJoin(publication, candidate);
+  const matchedSubject = join4 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
+  const runtime = matchedSubject ? publication.runtimes.get(subjectKey(matchedSubject)) : void 0;
+  const lenses = {};
+  for (const lens of ARBOR_LENSES) {
+    const payloadUnreadable = lens === "claims" && runtime?.lenses.claims.status === "present" && runtime.lenses.claims.profile === null;
+    lenses[lens] = reportLens(
+      lens,
+      join4,
+      runtime?.lenses[lens],
+      candidate.identityNote,
+      payloadUnreadable
+    );
+  }
+  const claimsLens = runtime?.lenses.claims;
+  const claims = lenses.claims.availability === "consulted" && claimsLens?.profile ? claimsLens.profile.claims : [];
+  const problems = [];
+  const interactions = [];
+  if (lenses.interactions.availability === "consulted" && matchedSubject) {
+    for (const edge of runtime.lenses.interactions.edges) {
+      const report = describeInteraction(edge, matchedSubject, options.knownContentSha256);
+      if (report === null) {
+        problems.push({
+          where: `${subjectKey(matchedSubject)} lenses.interactions edge ${edge.edgeKey}`,
+          detail: "the edge names neither endpoint as this subject at its pinned bytes; not consumed"
+        });
+        continue;
+      }
+      interactions.push(report);
+    }
+  }
+  if (runtime && runtime.lenses.claims.status === "present" && runtime.lenses.claims.profile === null) {
+    problems.push({
+      where: `${subjectKey(runtime.subject)} lenses.claims`,
+      detail: "upstream reports the claims lens present, but its embedded profile could not be read against gaia.arbor-profile/v1; no claim was consumed for this subject"
+    });
+  }
+  const lensesConsulted = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "consulted");
+  const lensesAbsent = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "absent");
+  const lensesUnknown = ARBOR_LENSES.filter((lens) => lenses[lens].availability === "unknown");
+  return {
+    skillId: candidate.skillId,
+    contentSha256: candidate.contentSha256,
+    canonicalSource: candidate.canonicalSource,
+    join: join4,
+    matchedSubject,
+    lenses,
+    lensesConsulted,
+    lensesAbsent,
+    lensesUnknown,
+    claims,
+    interactions,
+    conditionsEvaluated: false,
+    deliveryContext: candidate.delivery ?? "not-materialized",
+    problems,
+    note: subjectNote(
+      join4,
+      lensesConsulted,
+      lensesAbsent,
+      lensesUnknown,
+      claims.length,
+      interactions.length,
+      candidate.delivery ?? "not-materialized",
+      candidate.identityNote
+    )
+  };
+}
+function resolveJoin(publication, candidate) {
+  if (publication.state !== "loaded") return "publication-unavailable";
+  if (!candidate.canonicalSource) return "source-not-canonical";
+  const pinsForId = publication.subjects.filter((subject) => subject.id === candidate.skillId);
+  if (pinsForId.length === 0) return "no-published-subject";
+  if (candidate.contentSha256 === null) return "identity-unproven";
+  const matched = pinsForId.some(
+    (subject) => subject.contentSha256 === candidate.contentSha256
+  );
+  if (!matched) return "subject-version-unmatched";
+  return publication.runtimes.has(
+    subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
+  ) ? "content-pinned" : "identity-unproven";
+}
+function reportLens(lens, join4, upstream, identityNote, payloadUnreadable = false) {
+  if (join4 !== "content-pinned" || upstream === void 0) {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: null,
+      sourceDigest: null,
+      reason: identityNote && join4 === "identity-unproven" ? `${joinReason(join4)} \u2014 ${identityNote}` : joinReason(join4)
+    };
+  }
+  if (upstream.status === "present") {
+    if (payloadUnreadable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason: "upstream reports a record for this subject, but its payload was not usable \u2014 it either failed the pinned contract or does not belong to this subject; nothing was read from it"
+      };
+    }
+    return {
+      lens,
+      availability: "consulted",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "a record is published for this exact subject pin and was read verbatim"
+    };
+  }
+  if (upstream.status === "unavailable-unsupported-payload") {
+    return {
+      lens,
+      availability: "unknown",
+      upstreamStatus: upstream.status,
+      sourceDigest: upstream.sourceDigest,
+      reason: "an accepted record exists for this subject but its payload contract is not published; this runtime cannot read it and derives nothing from it"
+    };
+  }
+  return {
+    lens,
+    availability: "absent",
+    upstreamStatus: upstream.status,
+    sourceDigest: upstream.sourceDigest,
+    reason: absentReason(upstream.status)
+  };
+}
+function absentReason(status) {
+  switch (status) {
+    case "absent-no-accepted-record":
+      return "no accepted record has been published for this subject \u2014 not evaluated, not a negative finding";
+    case "absent-subject-version-mismatch":
+      return "a record exists but is pinned to different content bytes, so it does not describe this version";
+    case "absent-superseded":
+      return "the record for this subject has been superseded and no successor is published";
+    default:
+      return "no record was consulted";
+  }
+}
+function joinReason(join4) {
+  switch (join4) {
+    case "publication-unavailable":
+      return "no readable Arbor publication is available to this runtime";
+    case "source-not-canonical":
+      return "this candidate came from a source the canonical Arbor projection does not describe, so a matching id would prove nothing";
+    case "no-published-subject":
+      return "the readable publication lists no subject with this id \u2014 not evaluated, not a negative finding";
+    case "subject-version-unmatched":
+      return "the publication pins different content bytes for this id, so its records describe other content";
+    case "identity-unproven":
+      return "this runtime holds no canonical content pin for this candidate, so applicability is unknown \u2014 an id match alone proves neither source nor current content";
+    default:
+      return "";
+  }
+}
+function subjectNote(join4, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+  const parts = [
+    `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
+    `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
+    `unknown: ${unknown2.length > 0 ? unknown2.join(", ") : "none"}`
+  ];
+  let note = `${parts.join(" \xB7 ")}. ${joinNote(join4)}`;
+  if (join4 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  if (claimCount > 0) {
+    note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
+  }
+  if (edgeCount > 0) {
+    note += ` ${edgeCount} ordered interaction edge(s) carried verbatim; publication-time pairApplicable is not runtime assurance.`;
+  }
+  if (claimCount > 0 || consulted.length > 0) {
+    note += delivery === "delivered-unverified" ? " A payload was materialized; it was NOT proven to be the canonical artifact these records are bound to." : " Nothing was materialized: this describes what is declared about the canonical record, not that a future execution will satisfy its conditions.";
+  }
+  return note;
+}
+function joinNote(join4) {
+  switch (join4) {
+    case "content-pinned":
+      return "Subject identity proven by id and exact content pin.";
+    case "identity-unproven":
+      return "Subject identity NOT proven: unknown applicability, which is neither a denial nor an assurance.";
+    case "subject-version-unmatched":
+      return "Published records pin different content bytes: unknown for this version.";
+    case "no-published-subject":
+      return "Nothing is published about this skill: not evaluated.";
+    case "source-not-canonical":
+      return "Candidate is outside the canonical corpus: no Arbor record can apply to it.";
+    default:
+      return "No Arbor publication was consulted.";
+  }
+}
+function describeInteraction(edge, subject, known) {
+  const matches2 = (endpoint) => endpoint.id === subject.id && endpoint.contentSha256 === subject.contentSha256;
+  const subjectIsFrom = matches2(edge.pair.from);
+  if (!subjectIsFrom && !matches2(edge.pair.to)) return null;
+  const counterpart = subjectIsFrom ? edge.pair.to : edge.pair.from;
+  const knownPin = known?.[counterpart.id];
+  const counterpartPin = knownPin === void 0 ? "unverified" : knownPin === counterpart.contentSha256 ? "verified" : "mismatched";
+  return {
+    edge,
+    direction: subjectIsFrom ? "subject-acts-on" : "acts-on-subject",
+    counterpart,
+    counterpartPin
+  };
+}
+
+// packages/core/src/arbor/identity.ts
+var ARBOR_IDENTITY_SCHEMA = "skill-heaven.arbor-identity-context/v1";
+var ArborIdentityError = class extends Error {
+  name = "ArborIdentityError";
+};
+function resolveArborIdentity(context, query) {
+  if (context === null) return { pinned: false, miss: "no-identity-context" };
+  if (query.corpusRevision === null || query.corpusRevision !== context.commit) {
+    return { pinned: false, miss: "revision-mismatch" };
+  }
+  const entry = context.skills[query.skillId];
+  if (entry === void 0) return { pinned: false, miss: "id-not-pinned" };
+  if (query.sourceUrl === void 0 || query.sourceUrl !== entry.sourceUrl) {
+    return { pinned: false, miss: "source-route-mismatch" };
+  }
+  return { pinned: true, contentSha256: entry.contentSha256, entry };
+}
+function describeArborIdentityMiss(miss) {
+  switch (miss) {
+    case "no-identity-context":
+      return "this runtime holds no canonical identity context, so no content pin could be proven";
+    case "revision-mismatch":
+      return "the canonical identity context was pinned at a different Tree revision than this corpus; a hash from another revision describes other bytes, so none was used";
+    case "id-not-pinned":
+      return "the canonical identity context pins no content for this id at the corpus revision";
+    case "source-route-mismatch":
+      return "this candidate's source route is not the canonical route recorded for that id, so a matching id would not prove the same skill";
+  }
+}
+function assertArborIdentityContext(value, label = "Arbor identity context") {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborIdentityError(`${label} must be an object.`);
+  }
+  const record3 = value;
+  if (record3.schema !== ARBOR_IDENTITY_SCHEMA) {
+    throw new ArborIdentityError(
+      `${label} advertises unsupported schema ${String(record3.schema)}; this build reads ${ARBOR_IDENTITY_SCHEMA}.`
+    );
+  }
+  for (const key of ["upstream", "corpusSource", "derivation", "routeSource", "capturedAt"]) {
+    if (typeof record3[key] !== "string" || record3[key].length === 0) {
+      throw new ArborIdentityError(`${label}.${key} must be a non-empty string.`);
+    }
+  }
+  if (typeof record3.commit !== "string" || !/^[a-f0-9]{40}$/u.test(record3.commit)) {
+    throw new ArborIdentityError(`${label}.commit must be a 40-character commit id.`);
+  }
+  if (!record3.skills || typeof record3.skills !== "object" || Array.isArray(record3.skills)) {
+    throw new ArborIdentityError(`${label}.skills must be an object.`);
+  }
+  for (const [id, entry] of Object.entries(record3.skills)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'] must be an object.`);
+    }
+    const fields = entry;
+    if (typeof fields.contentSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(fields.contentSha256)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'].contentSha256 must be a sha256 digest.`);
+    }
+    if (fields.sourceUrl !== null && (typeof fields.sourceUrl !== "string" || fields.sourceUrl.length === 0)) {
+      throw new ArborIdentityError(`${label}.skills['${id}'].sourceUrl must be a non-empty string or explicit null.`);
+    }
+    for (const key of ["canonicalPath"]) {
+      if (typeof fields[key] !== "string" || fields[key].length === 0) {
+        throw new ArborIdentityError(`${label}.skills['${id}'].${key} must be a non-empty string.`);
+      }
+    }
+  }
+}
+
+// packages/core/src/arbor/composition.ts
+function inspectArborComposition(publication, members) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const member of members) {
+    const group = byId.get(member.report.skillId) ?? [];
+    group.push(member);
+    byId.set(member.report.skillId, group);
+  }
+  const interactions = [];
+  if (publication.state === "loaded") {
+    for (const edge of publication.edgeIndex?.edges ?? []) {
+      const from = byId.get(edge.pair.from.id);
+      const to = byId.get(edge.pair.to.id);
+      if (!from || !to) continue;
+      if (!from.every((member) => matches(member.report, edge.pair.from)) || !to.every((member) => matches(member.report, edge.pair.to))) {
+        continue;
+      }
+      interactions.push({
+        edge,
+        fromRoles: roles(from),
+        toRoles: roles(to),
+        endpointIdentity: "both-pinned",
+        applicability: edge.pairApplicable ? "conditions-unverified" : "publication-inapplicable"
+      });
+    }
+  }
+  const compositionPublication = {
+    state: publication.state,
+    subjectsPublished: publication.subjects.length,
+    edgesPublished: publication.edgeIndex?.edges.length ?? 0,
+    matchedEdges: interactions.length,
+    problems: publication.problems
+  };
+  const note = compositionNote(compositionPublication);
+  return {
+    mode: "relevance-only",
+    selectionChanged: false,
+    conditionsEvaluated: false,
+    deliveryVerified: false,
+    publication: compositionPublication,
+    members: members.map(({ role, report }) => ({ id: report.skillId, role, join: report.join })),
+    interactions,
+    note
+  };
+}
+function compositionNote(publication) {
+  if (publication.state === "unavailable") {
+    return "Arbor composition is unavailable because no publication was readable by this runtime. This is unknown, not compatible or conflict-free; selection remains relevance-only.";
+  }
+  if (publication.state === "unreadable") {
+    return `Arbor composition is unavailable because the publication was unreadable. ${publication.problems.length} defect(s) are disclosed; this is unknown, not compatible or conflict-free. Selection remains relevance-only.`;
+  }
+  if (publication.edgesPublished === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and no interaction edges. Edge absence means not-evaluated, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  if (publication.matchedEdges === 0) {
+    return `Arbor publication loaded with ${publication.subjectsPublished} subject(s) and ${publication.edgesPublished} interaction edge(s), but none has two current canonical content-pinned endpoints in this set. This is unknown, not compatible or conflict-free; selection remains relevance-only.`;
+  }
+  return `${publication.matchedEdges} ordered interaction record(s) concern this set. Conditions and delivered artifacts are unverified; records are reference material, not instructions or compatibility verdicts. Selection remains relevance-only.`;
+}
+function matches(report, subject) {
+  return report.canonicalSource && report.join === "content-pinned" && report.skillId === subject.id && report.contentSha256 === subject.contentSha256 && report.matchedSubject?.id === subject.id && report.matchedSubject.contentSha256 === subject.contentSha256;
+}
+function roles(members) {
+  return [...new Set(members.map((member) => member.role))];
+}
+
+// packages/core/src/arbor/disclose.ts
+function arborSubjectLines(report) {
+  const lines = [`  Arbor: ${report.note}`];
+  for (const claim of report.claims) lines.push(`  Arbor claim: ${claimLine(claim)}`);
+  for (const interaction of report.interactions) {
+    lines.push(`  Arbor edge: ${interactionLine(interaction)}`);
+  }
+  for (const problem of report.problems) {
+    lines.push(`  Arbor defect: ${problem.where} \u2014 ${problem.detail}`);
+  }
+  return lines;
+}
+function claimLine(claim) {
+  const governance = claim.interpretationSource === null ? "no governed interpretation (support is the declaration's own state)" : `governed interpretation ${short(claim.interpretationSource)}`;
+  return `${claim.facet} \xB7 support ${claim.support} \xB7 ONLY UNDER: ${claim.conditions} \xB7 ${governance} \xB7 declaration ${short(claim.declarationSource)}` + (claim.benchmarkSources.length > 0 ? ` \xB7 ${claim.benchmarkSources.length} benchmark receipt(s), which are observations and never verdicts` : "");
+}
+function interactionLine(interaction) {
+  const { edge, direction, counterpart, counterpartPin } = interaction;
+  const arrow = direction === "subject-acts-on" ? `this skill ${edge.relation} ${counterpart.id}` : `${counterpart.id} ${edge.relation} this skill`;
+  const pin = counterpartPin === "verified" ? "counterpart content pin verified" : counterpartPin === "mismatched" ? "counterpart content pin MISMATCHED \u2014 this edge describes other bytes" : "counterpart content pin UNVERIFIED \u2014 applicability unknown";
+  return `${arrow} \xB7 support ${edge.support} \xB7 ONLY UNDER: ${edge.conditions} \xB7 ${pin}`;
+}
+function short(digest) {
+  return digest.slice(0, 12);
+}
+
+// packages/skill-summon/src/data/skill-index-source.ts
+import { readFile as readFile3 } from "node:fs/promises";
+import { dirname as dirname2, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// packages/skill-summon/src/domain/types.ts
+var TREE_CONTRACT_VERSION = "gaia-public-v1";
+function flattenNamedSkills(document) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const skill of [
+    ...Object.values(document.buckets).flat(),
+    ...document.awaitingClassification ?? []
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...previous.suiteComponents ?? [],
+      ...skill.suiteComponents ?? []
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
+    });
+  }
+  return [...byId.values()];
+}
 
 // packages/skill-summon/src/data/fleet-source.ts
 import { lstat as lstat2, mkdtemp as mkdtemp2, readFile as readFile2, readdir as readdir2, rm as rm3, stat as stat2 } from "node:fs/promises";
@@ -13249,12 +15112,12 @@ var SummonSession = class _SummonSession {
   }
   /** Record a skill (or suite component) already materialized on disk into the session manifest. */
   async recordSkill(skill, opts = {}) {
-    const record2 = {
+    const record3 = {
       ...skill,
       ...opts.viaSuite === void 0 ? {} : { viaSuite: opts.viaSuite },
       materializedAt: (/* @__PURE__ */ new Date()).toISOString()
     };
-    this.#manifest.skills.push(record2);
+    this.#manifest.skills.push(record3);
     await this.#writeManifest();
   }
   async close() {
@@ -13339,8 +15202,8 @@ async function assertConfinedPath(root, target, label = "Path") {
   }
 }
 function isWithin(parent, child) {
-  const relative = path2.relative(parent, child);
-  return relative === "" || !relative.startsWith(`..${path2.sep}`) && relative !== ".." && !path2.isAbsolute(relative);
+  const relative2 = path2.relative(parent, child);
+  return relative2 === "" || !relative2.startsWith(`..${path2.sep}`) && relative2 !== ".." && !path2.isAbsolute(relative2);
 }
 async function ensureConfinedDirectory(root, target) {
   await assertConfinedPath(root, target, "Session directory");
@@ -13792,31 +15655,6 @@ function encodeGithubPath(value) {
   return value.split("/").map(encodeURIComponent).join("/");
 }
 
-// packages/skill-summon/src/domain/types.ts
-var TREE_CONTRACT_VERSION = "gaia-public-v1";
-function flattenNamedSkills(document) {
-  const byId = /* @__PURE__ */ new Map();
-  for (const skill of [
-    ...Object.values(document.buckets).flat(),
-    ...document.awaitingClassification ?? []
-  ]) {
-    const previous = byId.get(skill.id);
-    if (!previous) {
-      byId.set(skill.id, skill);
-      continue;
-    }
-    const suiteComponents = [
-      ...previous.suiteComponents ?? [],
-      ...skill.suiteComponents ?? []
-    ];
-    byId.set(skill.id, {
-      ...previous,
-      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
-    });
-  }
-  return [...byId.values()];
-}
-
 // node_modules/zod/v3/external.js
 var external_exports = {};
 __export(external_exports, {
@@ -13978,8 +15816,8 @@ var util;
     return void 0;
   };
   util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-  function joinValues2(array2, separator = " | ") {
-    return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+  function joinValues2(array3, separator = " | ") {
+    return array3.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
   util2.jsonStringifyReplacer = (_, value) => {
@@ -14295,8 +16133,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path9, errorMaps, issueData } = params;
-  const fullPath = [...path9, ...issueData.path || []];
+  const { data, path: path10, errorMaps, issueData } = params;
+  const fullPath = [...path10, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -14308,15 +16146,15 @@ var makeIssue = (params) => {
       message: issueData.message
     };
   }
-  let errorMessage6 = "";
+  let errorMessage7 = "";
   const maps = errorMaps.filter((m) => !!m).slice().reverse();
   for (const map of maps) {
-    errorMessage6 = map(fullIssue, { data, defaultError: errorMessage6 }).message;
+    errorMessage7 = map(fullIssue, { data, defaultError: errorMessage7 }).message;
   }
   return {
     ...issueData,
     path: fullPath,
-    message: errorMessage6
+    message: errorMessage7
   };
 };
 var EMPTY_PATH = [];
@@ -14412,11 +16250,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path9, key) {
+  constructor(parent, value, path10, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path9;
+    this._path = path10;
     this._key = key;
   }
   get path() {
@@ -18179,6 +20017,1038 @@ function isGithubRepository(value) {
   }
 }
 
+// packages/skill-summon/src/data/skill-index-source.ts
+var INDEX_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "skill-index.json");
+var committed;
+function loadCommittedIndex() {
+  committed ??= readCommittedIndex();
+  return committed;
+}
+async function readCommittedIndex() {
+  const attempted = [];
+  for (const candidate of candidatePaths()) {
+    attempted.push(candidate);
+    let raw;
+    try {
+      raw = await readFile3(candidate, "utf8");
+    } catch {
+      continue;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error2) {
+      throw new SkillIndexError(
+        `Committed retrieval index is not valid JSON: ${error2 instanceof Error ? error2.message : String(error2)}`
+      );
+    }
+    assertSkillIndex(parsed);
+    return parsed;
+  }
+  throw new GaiaDataError(
+    `Could not find the committed retrieval index. Looked in:
+  ${attempted.join("\n  ")}
+Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with \`npx tsx packages/core/scripts/build-skill-index.ts\`.`
+  );
+}
+function candidatePaths() {
+  const configured = process.env.SKILL_INDEX_PATH?.trim();
+  const here = dirname2(fileURLToPath(import.meta.url));
+  const paths = configured ? [configured] : [];
+  paths.push(join(here, "..", "data", "skill-index.json"));
+  let directory = here;
+  for (let depth = 0; depth < 8; depth++) {
+    paths.push(join(directory, INDEX_RELATIVE_PATH));
+    const parent = dirname2(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return paths;
+}
+async function resolveIndex({
+  source,
+  env,
+  fetchFn
+} = {}) {
+  const committedIndex = await loadCommittedIndex();
+  const environment = env ?? process.env;
+  if (source === void 0) {
+    const configured = resolveSkillSource({
+      env: environment,
+      ...fetchFn ? { fetchFn } : {}
+    });
+    if (sameSource(configured.sourceUrl, committedIndex.source)) {
+      return {
+        index: committedIndex,
+        source: committedIndex.source,
+        origin: "committed",
+        sourceKind: "tree"
+      };
+    }
+    return fetchIndex(configured.sourceUrl, environment, fetchFn);
+  }
+  const requested = source.trim();
+  if (requested.length === 0) {
+    throw new GaiaDataError("summon(source) must not be empty.");
+  }
+  if (sameSource(requested, committedIndex.source)) {
+    return {
+      index: committedIndex,
+      source: committedIndex.source,
+      origin: "committed",
+      sourceKind: "tree"
+    };
+  }
+  return fetchIndex(expandSource(requested), environment, fetchFn);
+}
+function indexFromSnapshot(snapshot, sourceUrl) {
+  const named = flattenNamedSkills(snapshot.named);
+  const bucketedIds = new Set(Object.values(snapshot.named.buckets).flat().map((skill) => skill.id));
+  const bucketed = named.filter((skill) => bucketedIds.has(skill.id));
+  const awaitingClassification = named.filter((skill) => !bucketedIds.has(skill.id));
+  return buildSkillIndex({
+    projection: {
+      buckets: { fetched: bucketed.map(toProjectionSkill) },
+      ...awaitingClassification.length > 0 ? { awaitingClassification: awaitingClassification.map(toProjectionSkill) } : {}
+    },
+    source: sourceUrl,
+    sourceDigest: sha256(JSON.stringify(named)),
+    builderVersion: "runtime-fetch",
+    generatedAt: snapshot.named.generatedAt ?? snapshot.source.fetchedAt
+  });
+}
+async function fetchIndex(sourceUrl, env, fetchFn) {
+  const resolution = resolveSkillSource({
+    env: { ...env, SKILL_SOURCE: sourceUrl },
+    ...fetchFn ? { fetchFn } : {}
+  });
+  let snapshot;
+  try {
+    snapshot = await resolution.source.load();
+  } catch (error2) {
+    throw new GaiaDataError(
+      `Could not resolve source '${sourceUrl}': ${error2 instanceof Error ? error2.message : String(error2)}`
+    );
+  }
+  return {
+    index: indexFromSnapshot(snapshot, resolution.sourceUrl),
+    source: resolution.sourceUrl,
+    origin: "fetched",
+    sourceKind: resolution.kind
+  };
+}
+function toProjectionSkill(skill) {
+  return {
+    id: skill.id,
+    name: skill.name,
+    ...skill.title ? { title: skill.title } : {},
+    contributor: skill.contributor,
+    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
+    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
+    description: skill.description,
+    tags: skill.tags,
+    ...skill.level ? { level: skill.level } : {},
+    ...skill.status ? { status: skill.status } : {},
+    ...skill.invocation ? { invocation: skill.invocation } : {},
+    ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
+    ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
+    ...skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {},
+    ...skill.installable === false ? { installable: false } : {},
+    ...skill.installability ? { installability: skill.installability } : {},
+    links: skill.links
+  };
+}
+function expandSource(value) {
+  if (/^[\w.-]+\/[\w.-]+$/u.test(value)) return `https://github.com/${value}`;
+  return value;
+}
+function sameSource(left, right) {
+  return canonical(left) === canonical(right);
+}
+function canonical(value) {
+  const trimmed = expandSource(value).trim();
+  let end = trimmed.length;
+  while (end > 0 && trimmed.charCodeAt(end - 1) === 47) end -= 1;
+  return trimmed.slice(0, end).toLocaleLowerCase("en-US");
+}
+
+// packages/skill-summon/src/version.ts
+var VERSION = "0.1.0";
+
+// packages/skill-summon/src/service.ts
+var DEFAULT_LIMIT = 5;
+var MAX_LIMIT = 20;
+var DEFAULT_MAX_DATA_AGE_MS = 72 * 60 * 60 * 1e3;
+var GaiaService = class {
+  #source;
+  #now;
+  #maxDataAgeMs;
+  #serverVersion;
+  #sourceUrl;
+  #installabilityAdapter;
+  constructor(source, options = {}) {
+    this.#source = source;
+    this.#now = options.now ?? (() => /* @__PURE__ */ new Date());
+    this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
+    this.#serverVersion = options.serverVersion ?? VERSION;
+    this.#sourceUrl = options.sourceUrl;
+    this.#installabilityAdapter = options.installabilityAdapter;
+  }
+  /**
+   * The index summon ranks against (SPEC §2.2, PLAN 1.2).
+   *
+   * With no override and a configured source the committed index was built
+   * from, this returns that index and touches no network at all — the point of
+   * the whole exercise. An explicit `override` names a different tree or fleet
+   * and IS resolved over the network; failing to resolve it is an error, never
+   * a quiet fallback to the configured source (SPEC §5.1).
+   */
+  async skillIndex(override) {
+    if (override !== void 0) {
+      return this.#decorateInstallability(await resolveIndex({ source: override }));
+    }
+    if (this.#sourceUrl !== void 0) {
+      const committed2 = await loadCommittedIndex();
+      if (sameSource(this.#sourceUrl, committed2.source)) {
+        return this.#decorateInstallability({
+          index: committed2,
+          source: committed2.source,
+          origin: "committed",
+          sourceKind: "tree"
+        });
+      }
+    }
+    const snapshot = await this.#source.load();
+    const sourceUrl = this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
+    return this.#decorateInstallability({
+      index: indexFromSnapshot(snapshot, sourceUrl),
+      source: sourceUrl,
+      origin: "fetched",
+      sourceKind: snapshot.source.kind
+    });
+  }
+  async #decorateInstallability(resolved) {
+    const unknown2 = withUnknownInstallability(resolved.index);
+    if (this.#installabilityAdapter === void 0) {
+      return {
+        ...resolved,
+        index: unknown2,
+        installability: { status: "not-configured" }
+      };
+    }
+    try {
+      const applied = await this.#installabilityAdapter.apply(unknown2, {
+        source: resolved.source,
+        sourceKind: resolved.sourceKind ?? "unknown"
+      });
+      return {
+        ...resolved,
+        index: applied.index,
+        installability: applied.status
+      };
+    } catch (error2) {
+      return {
+        ...resolved,
+        index: unknown2,
+        installability: {
+          status: "unavailable",
+          warning: error2 instanceof Error ? error2.message : String(error2)
+        }
+      };
+    }
+  }
+  async search(input) {
+    const query = input.query.trim();
+    if (query.length === 0) {
+      throw new Error("Search query must not be empty.");
+    }
+    const snapshot = await this.#source.load();
+    const kinds = new Set(input.kinds ?? ["generic", "named"]);
+    const requestedTypes = [...input.types ?? [], ...input.tiers ?? []];
+    const allowedTypes = requestedTypes.length > 0 ? new Set(requestedTypes.map((value) => normalize(value))) : void 0;
+    const allowedContributors = input.contributors ? new Set(input.contributors.map((value) => normalize(value))) : void 0;
+    const namedSkills = flattenNamed(snapshot);
+    const genericTypes = new Map(
+      snapshot.generic.skills.map((skill) => [skill.id, skill.type])
+    );
+    const scored = [];
+    if (kinds.has("generic")) {
+      for (const skill of snapshot.generic.skills) {
+        if (allowedTypes && !allowedTypes.has(normalize(skill.type))) continue;
+        const implementations = namedSkills.filter(
+          (named) => named.genericSkillRef === skill.id
+        );
+        const installable = implementations.some(isInstallable);
+        const maxTrustMagnitude = Math.max(
+          ...implementations.map((named) => named.trustMagnitude ?? -1)
+        );
+        const maxStars = Math.max(
+          starCount(skill.namedMaxLevel),
+          ...implementations.map((named) => starCount(named.level))
+        );
+        if (input.minStars !== void 0 && maxStars < input.minStars) continue;
+        if (input.minTrustMagnitude !== void 0 && maxTrustMagnitude < input.minTrustMagnitude) {
+          continue;
+        }
+        if (allowedContributors && !implementations.some(
+          (named) => allowedContributors.has(normalize(named.contributor))
+        )) {
+          continue;
+        }
+        if (input.installable !== void 0 && installable !== input.installable) {
+          continue;
+        }
+        const score = scoreMatch(query, [
+          [skill.name, 12],
+          [skill.id, 10],
+          [skill.title ?? "", 8],
+          [skill.summary ?? "", 4],
+          [skill.description, 3]
+        ]);
+        if (score === 0) continue;
+        scored.push({
+          score: score + 1,
+          kind: "generic",
+          id: skill.id,
+          name: skill.name,
+          ...skill.title ? { title: skill.title } : {},
+          description: skill.description,
+          type: skill.type,
+          status: skill.status,
+          ...skill.namedMaxLevel ? { level: skill.namedMaxLevel } : {},
+          ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
+          evidenceCount: skill.evidence.length,
+          installable
+        });
+      }
+    }
+    if (kinds.has("named")) {
+      for (const skill of namedSkills) {
+        const resolvedType = skill.type ?? (skill.genericSkillRef ? genericTypes.get(skill.genericSkillRef) : void 0);
+        if (allowedTypes && (!resolvedType || !allowedTypes.has(normalize(resolvedType)))) {
+          continue;
+        }
+        if (allowedContributors && !allowedContributors.has(normalize(skill.contributor))) {
+          continue;
+        }
+        if (input.minStars !== void 0 && starCount(skill.level) < input.minStars) {
+          continue;
+        }
+        if (input.minTrustMagnitude !== void 0 && (skill.trustMagnitude ?? -1) < input.minTrustMagnitude) {
+          continue;
+        }
+        const installable = isInstallable(skill);
+        if (input.installable !== void 0 && installable !== input.installable) {
+          continue;
+        }
+        const score = scoreMatch(query, [
+          [skill.name, 12],
+          [skill.id, 10],
+          [skill.title ?? "", 10],
+          [skill.catalogRef ?? "", 8],
+          [skill.genericSkillRef ?? "", 8],
+          [skill.tags.join(" "), 6],
+          [skill.description, 3]
+        ]);
+        if (score === 0) continue;
+        scored.push({
+          score,
+          kind: "named",
+          id: skill.id,
+          name: skill.name,
+          ...skill.title ? { title: skill.title } : {},
+          description: skill.description,
+          ...resolvedType ? { type: resolvedType } : {},
+          status: skill.status,
+          ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
+          ...skill.invocation ? { invocation: skill.invocation } : {},
+          contributor: skill.contributor,
+          ...skill.level === void 0 ? {} : { level: skill.level },
+          ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
+          ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
+          ...skill.trust === void 0 ? {} : { trust: skill.trust },
+          evidenceCount: skill.evidence.length,
+          installable,
+          ...typeof skill.links.github === "string" ? { sourceUrl: skill.links.github } : {}
+        });
+      }
+    }
+    const limit = Math.min(
+      Math.max(input.limit ?? DEFAULT_LIMIT, 1),
+      MAX_LIMIT
+    );
+    const results = scored.sort(
+      (left, right) => right.score - left.score || left.kind.localeCompare(right.kind) || left.name.localeCompare(right.name)
+    ).slice(0, limit).map(({ score: _score, ...result }) => result);
+    return { query, results, meta: this.#metadata(snapshot) };
+  }
+  async inspect(identifier) {
+    const normalizedIdentifier = identifier.trim();
+    const snapshot = await this.#source.load();
+    const generic = snapshot.generic.skills.find(
+      (skill) => skill.id === normalizedIdentifier
+    );
+    if (generic) {
+      const namedImplementations = flattenNamed(snapshot).filter((skill) => skill.genericSkillRef === generic.id).map(toNamedSummary).sort(
+        (left, right) => (right.trustMagnitude ?? -1) - (left.trustMagnitude ?? -1) || left.name.localeCompare(right.name)
+      );
+      return {
+        skill: {
+          kind: "generic",
+          ...generic,
+          namedImplementations
+        },
+        meta: this.#metadata(snapshot)
+      };
+    }
+    const named = flattenNamed(snapshot).find(
+      (skill) => skill.id === normalizedIdentifier || skill.catalogRef === normalizedIdentifier
+    );
+    if (named) {
+      const genericSkill = snapshot.generic.skills.find(
+        (skill) => skill.id === named.genericSkillRef
+      );
+      return {
+        skill: {
+          kind: "named",
+          ...named,
+          ...genericSkill ? {
+            genericSkill: {
+              id: genericSkill.id,
+              name: genericSkill.name,
+              type: genericSkill.type,
+              status: genericSkill.status
+            }
+          } : {}
+        },
+        meta: this.#metadata(snapshot)
+      };
+    }
+    throw new Error(`Gaia skill not found: ${normalizedIdentifier}`);
+  }
+  async status() {
+    const snapshot = await this.#source.load();
+    return {
+      counts: {
+        genericSkills: snapshot.generic.skills.length,
+        namedSkills: flattenNamed(snapshot).length
+      },
+      tools: ["summon"],
+      bondedCapabilities: false,
+      missingCapabilities: [
+        "bonded-local-context",
+        "workspace-analysis",
+        "progression-paths"
+      ],
+      ...this.#metadata(snapshot)
+    };
+  }
+  /** Full pool of Named Skills, for callers (summon) that rank on raw fields. */
+  async namedSkills() {
+    const snapshot = await this.#source.load();
+    return flattenNamed(snapshot);
+  }
+  #metadata(snapshot) {
+    const sourceKind = snapshot.source.kind ?? "unknown";
+    const generatedTimes = [
+      Date.parse(snapshot.generic.generatedAt),
+      Date.parse(snapshot.named.generatedAt)
+    ].filter(Number.isFinite);
+    const oldestGeneratedAt = generatedTimes.length > 0 ? Math.min(...generatedTimes) : void 0;
+    const now = this.#now().getTime();
+    const stale = generatedTimes.length !== 2 || oldestGeneratedAt === void 0 || now - oldestGeneratedAt > this.#maxDataAgeMs;
+    const dataAgeSeconds = oldestGeneratedAt === void 0 ? null : Math.max(0, Math.floor((now - oldestGeneratedAt) / 1e3));
+    const upstreamDeclaresContractVersion = sourceKind === "fleet" || [
+      snapshot.generic.contractVersion ?? snapshot.generic.schemaVersion,
+      snapshot.named.contractVersion ?? snapshot.named.schemaVersion
+    ].every((version2) => version2 === TREE_CONTRACT_VERSION);
+    const warnings = [];
+    if (sourceKind === "fleet") {
+      warnings.push(
+        "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active."
+      );
+    } else if (sourceKind === "unknown") {
+      warnings.push(
+        "Source kind is unknown; Tree-scoped installability evidence is not applied."
+      );
+    } else if (!upstreamDeclaresContractVersion) {
+      warnings.push(
+        `Gaia's public projections do not both advertise a contract version. Compatibility is being enforced by the ${TREE_CONTRACT_VERSION} shape adapter; verify the source URLs before stateful follow-up work.`
+      );
+    }
+    if (snapshot.source.legacy) {
+      warnings.push(
+        "TREE_URL + TREE_NAMED_URL compatibility is deprecated; configure one SKILL_SOURCE root URL."
+      );
+    }
+    if (stale) {
+      warnings.push(
+        dataAgeSeconds === null ? "One or more Gaia projection timestamps are invalid. Regenerate the public projections or restore a valid generatedAt value." : `Gaia projection data is ${dataAgeSeconds} seconds old, beyond the ${Math.floor(this.#maxDataAgeMs / 1e3)}-second freshness window. Check the Gaia build pipeline or retry after regeneration.`
+      );
+    }
+    return {
+      serverVersion: this.#serverVersion,
+      mode: "registry",
+      sourceKind,
+      routingMode: sourceKind === "fleet" ? "collection-only" : "generic-map+collection",
+      contractVersion: TREE_CONTRACT_VERSION,
+      supportedContractVersions: [TREE_CONTRACT_VERSION],
+      upstreamDeclaresContractVersion,
+      freshness: stale ? "stale" : "fresh",
+      dataAgeSeconds,
+      genericGeneratedAt: snapshot.generic.generatedAt,
+      namedGeneratedAt: snapshot.named.generatedAt,
+      fetchedAt: snapshot.source.fetchedAt,
+      sources: {
+        generic: snapshot.source.genericUrl,
+        named: snapshot.source.namedUrl
+      },
+      compatibility: {
+        mcpSdk: "@modelcontextprotocol/sdk@1.29.0",
+        mcpProtocolVersions: [...SUPPORTED_PROTOCOL_VERSIONS],
+        gaiaPublicData: [TREE_CONTRACT_VERSION],
+        gaiaCli: "none",
+        node: ">=22.14.0",
+        transports: ["stdio"]
+      },
+      warnings
+    };
+  }
+};
+function flattenNamed(snapshot) {
+  return flattenNamedSkills(snapshot.named);
+}
+function toNamedSummary(skill) {
+  return {
+    id: skill.id,
+    name: skill.name,
+    ...skill.title ? { title: skill.title } : {},
+    contributor: skill.contributor,
+    ...skill.level === void 0 ? {} : { level: skill.level },
+    description: skill.description,
+    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
+    ...skill.invocation ? { invocation: skill.invocation } : {},
+    ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
+    ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
+    ...skill.trust === void 0 ? {} : { trust: skill.trust },
+    ...typeof skill.links.github === "string" ? { sourceUrl: skill.links.github } : {}
+  };
+}
+function starCount(level) {
+  if (!level) return -1;
+  const match = /^(\d)★/.exec(level);
+  return match?.[1] === void 0 ? -1 : Number(match[1]);
+}
+function isInstallable(skill) {
+  if (skill.links.installable === false) return false;
+  return typeof skill.links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(
+    skill.links.github
+  );
+}
+
+// packages/skill-summon/src/data/arbor-identity-source.ts
+import { createHash as createHash2 } from "node:crypto";
+import { dirname as dirname3, join as join2 } from "node:path";
+import { fileURLToPath as fileURLToPath2 } from "node:url";
+
+// packages/skill-summon/src/data/confined-file.ts
+import { constants } from "node:fs";
+import { open } from "node:fs/promises";
+import { resolve } from "node:path";
+async function readConfinedFile(root, target) {
+  const confinedRoot = darwinAlias(resolve(root));
+  const absolute = darwinAlias(resolve(target));
+  await assertConfinedPath(confinedRoot, absolute, "Optional evidence file");
+  const handles = [];
+  try {
+    let file;
+    if (process.platform === "darwin") {
+      file = await open(absolute, constants.O_RDONLY | constants.O_NONBLOCK | 536870912);
+      handles.push(file);
+    } else if (process.platform === "linux") {
+      let parent = await open("/", constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      handles.push(parent);
+      const parts = absolute.split("/").filter(Boolean);
+      if (parts.length === 0) throw new Error("Evidence file is not a regular file");
+      for (const part of parts.slice(0, -1)) {
+        parent = await open(
+          `/proc/self/fd/${parent.fd}/${part}`,
+          constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW
+        );
+        handles.push(parent);
+      }
+      file = await open(
+        `/proc/self/fd/${parent.fd}/${parts.at(-1)}`,
+        constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW
+      );
+      handles.push(file);
+    } else {
+      throw new Error("Secure evidence file opening is unavailable on this platform");
+    }
+    if (!(await file.stat()).isFile()) throw new Error("Evidence file is not a regular file");
+    return await file.readFile();
+  } finally {
+    await Promise.all(handles.map((handle) => handle.close()));
+  }
+}
+function darwinAlias(value) {
+  if (process.platform !== "darwin") return value;
+  if (value === "/tmp" || value.startsWith("/tmp/")) return `/private${value}`;
+  if (value === "/var" || value.startsWith("/var/")) return `/private${value}`;
+  return value;
+}
+
+// packages/skill-summon/src/data/arbor-identity-source.ts
+var IDENTITY_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "arbor-identity.json");
+var cached2;
+function loadArborIdentityContext() {
+  cached2 ??= readIdentityFromDisk();
+  return cached2;
+}
+async function readArborIdentityFile(path10) {
+  const directory = dirname3(path10);
+  try {
+    const bytes = await readConfinedFile(directory, path10);
+    const digest = createHash2("sha256").update(bytes).digest("hex");
+    let parsed;
+    try {
+      parsed = JSON.parse(bytes.toString("utf8"));
+    } catch (error2) {
+      return { context: null, problem: describe2(error2), sha256: digest };
+    }
+    try {
+      assertArborIdentityContext(parsed);
+    } catch (error2) {
+      return { context: null, problem: describe2(error2), sha256: digest };
+    }
+    return { context: parsed, problem: null, sha256: digest };
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return absent();
+    return { context: null, problem: describe2(error2), sha256: null };
+  }
+}
+async function readIdentityFromDisk() {
+  for (const candidate of candidatePaths2()) {
+    const load = await readArborIdentityFile(candidate);
+    if (load.context !== null || load.problem !== null) return load;
+  }
+  return absent();
+}
+function candidatePaths2() {
+  const configured = process.env.ARBOR_IDENTITY_PATH?.trim();
+  const here = dirname3(fileURLToPath2(import.meta.url));
+  const paths = configured ? [configured] : [];
+  paths.push(join2(here, "..", "data", "arbor-identity.json"));
+  let directory = here;
+  for (let depth = 0; depth < 8; depth++) {
+    paths.push(join2(directory, IDENTITY_RELATIVE_PATH));
+    const parent = dirname3(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return paths;
+}
+function absent() {
+  return { context: null, problem: null, sha256: null };
+}
+function describe2(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/skill-summon/src/data/installability.ts
+import path4 from "node:path";
+var PROJECTION_KEYS = /* @__PURE__ */ new Set(["schema", "indexPath", "observations", "skills"]);
+var OBSERVATION_REF_KEYS = /* @__PURE__ */ new Set(["digest", "checkedAt", "runId"]);
+var SKILL_KEYS = /* @__PURE__ */ new Set([
+  "state",
+  "reason",
+  "observationDigest",
+  "observedAt",
+  "currentSourceRoute",
+  "currentSkillContentSha256",
+  "observedSourceRoute",
+  "observedSkillContentSha256",
+  "resolvedRevision",
+  "deliveredContentSha256"
+]);
+var ROUTE_KEYS = /* @__PURE__ */ new Set([
+  "url",
+  "owner",
+  "repo",
+  "ref",
+  "subpath",
+  "entrypoint",
+  "installSubpath"
+]);
+var FileInstallabilitySource = class {
+  #path;
+  constructor(filePath) {
+    this.#path = filePath;
+  }
+  async load() {
+    const target = path4.resolve(this.#path);
+    const bytes = await readConfinedFile(path4.dirname(target), target);
+    return JSON.parse(bytes.toString("utf8"));
+  }
+};
+var HttpInstallabilitySource = class {
+  #url;
+  #fetchFn;
+  #timeoutMs;
+  #lastUrl;
+  constructor(options) {
+    const parsed = new URL(options.url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      throw new Error(`Optional installability source must use HTTP(S): ${options.url}`);
+    }
+    if (parsed.username || parsed.password) {
+      throw new Error("Optional installability source must not contain credentials.");
+    }
+    this.#url = options.url;
+    this.#fetchFn = options.fetchFn ?? fetch;
+    this.#timeoutMs = options.timeoutMs ?? 15e3;
+  }
+  get sourceUrl() {
+    return this.#lastUrl;
+  }
+  async load() {
+    let response;
+    try {
+      response = await this.#fetchFn(this.#url, {
+        headers: { accept: "application/json" },
+        redirect: "error",
+        signal: AbortSignal.timeout(this.#timeoutMs)
+      });
+    } catch (error2) {
+      throw new Error(
+        `Could not fetch optional installability projection ${this.#url}: ${errorMessage5(error2)}`
+      );
+    }
+    if (!response.ok) {
+      throw new Error(
+        `Could not fetch optional installability projection ${this.#url}: HTTP ${response.status}`
+      );
+    }
+    const finalUrl = response.url;
+    if (response.redirected || typeof finalUrl !== "string" || finalUrl.length === 0 || !sameHttpUrl(finalUrl, this.#url)) {
+      throw new Error(
+        `Rejected redirected optional installability projection: requested ${this.#url}, final ${finalUrl || "<missing>"}`
+      );
+    }
+    this.#lastUrl = finalUrl;
+    try {
+      return await response.json();
+    } catch (error2) {
+      throw new Error(
+        `Optional installability projection ${this.#url} is not valid JSON: ${errorMessage5(error2)}`
+      );
+    }
+  }
+};
+var GaiaInstallabilityAdapter = class {
+  #source;
+  #contextFor;
+  constructor(options) {
+    this.#source = options.source;
+    this.#contextFor = options.contextFor ?? defaultContextFor;
+  }
+  async apply(index, context) {
+    if (context.sourceKind !== "tree") {
+      return {
+        index: withUnknownInstallability(
+          index,
+          null,
+          context.sourceKind === "fleet" ? "fleet-source" : "invalid-context"
+        ),
+        status: { status: "not-applicable" }
+      };
+    }
+    const projection = parseInstallabilityProjection(await this.#source.load());
+    const assessments = /* @__PURE__ */ new Map();
+    for (const skill of index.docs) {
+      const candidate = this.#contextFor(skill, context);
+      assessments.set(
+        skill.id,
+        assessInstallability(projection, skill.id, candidate, context.sourceKind)
+      );
+    }
+    return {
+      index: withInstallability(index, assessments),
+      status: {
+        status: "applied",
+        projectionIndexPath: projection.indexPath,
+        ...this.#source.sourceUrl ? { sourceUrl: this.#source.sourceUrl } : {}
+      }
+    };
+  }
+};
+function parseInstallabilityProjection(value) {
+  const document = record2(value, "Installability projection");
+  exactKeys(document, PROJECTION_KEYS, "Installability projection");
+  if (document.schema !== INSTALLABILITY_PROJECTION_SCHEMA) {
+    throw new Error(
+      `Installability projection advertises unsupported schema ${String(document.schema)}.`
+    );
+  }
+  stringValue(document.indexPath, "Installability projection.indexPath");
+  if (!Array.isArray(document.observations)) {
+    throw new Error("Installability projection.observations must be an array.");
+  }
+  const observations = document.observations.map(
+    (value2, position) => {
+      const ref = record2(value2, `Installability observation reference ${position}`);
+      exactKeys(ref, OBSERVATION_REF_KEYS, `Installability observation reference ${position}`);
+      shaValue(ref.digest, `Installability observation reference ${position}.digest`);
+      timestampValue(ref.checkedAt, `Installability observation reference ${position}.checkedAt`);
+      stringValue(ref.runId, `Installability observation reference ${position}.runId`);
+      return {
+        digest: ref.digest,
+        checkedAt: ref.checkedAt,
+        runId: ref.runId
+      };
+    }
+  );
+  const observationKeys = observations.map(
+    (observation) => `${observation.digest}\0${observation.checkedAt}\0${observation.runId}`
+  );
+  if (new Set(observationKeys).size !== observationKeys.length) {
+    throw new Error("Installability projection.observations must be unique.");
+  }
+  const skills = record2(document.skills, "Installability projection.skills");
+  const parsedSkills = {};
+  for (const [id, value2] of Object.entries(skills)) {
+    if (!/^\S+\/\S+$/u.test(id)) {
+      throw new Error(`Installability projection has invalid skill id ${id}.`);
+    }
+    const skill = record2(value2, `Installability projection skill ${id}`);
+    exactKeys(skill, SKILL_KEYS, `Installability projection skill ${id}`);
+    assertInstallabilityProjectionSkill(skill, `Installability projection skill ${id}`);
+    validateProjectionSkillFields(skill, id);
+    parsedSkills[id] = skill;
+  }
+  return {
+    schema: INSTALLABILITY_PROJECTION_SCHEMA,
+    indexPath: document.indexPath,
+    observations,
+    skills: parsedSkills
+  };
+}
+function sourceRouteFromUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:" || parsed.hostname.toLocaleLowerCase("en-US") !== "github.com" || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    return null;
+  }
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  if (parts.length < 2) return null;
+  const owner = parts[0];
+  const repo = parts[1].replace(/\.git$/u, "");
+  if (parts.length === 2) {
+    return {
+      url,
+      owner,
+      repo,
+      ref: null,
+      subpath: "",
+      entrypoint: "",
+      installSubpath: ""
+    };
+  }
+  if (parts[2] !== "blob" && parts[2] !== "tree") return null;
+  if (parts.length < 4) return null;
+  const ref = parts[3];
+  const entrypoint = parts.slice(4).join("/");
+  const slash = entrypoint.lastIndexOf("/");
+  const subpath = parts[2] === "blob" && entrypoint.endsWith(".md") ? slash === -1 ? "" : entrypoint.slice(0, slash) : entrypoint;
+  return {
+    url,
+    owner,
+    repo,
+    ref,
+    subpath,
+    entrypoint,
+    installSubpath: subpath
+  };
+}
+function defaultContextFor(skill, _context) {
+  return {
+    id: skill.id,
+    sourceRoute: typeof skill.links.github === "string" ? sourceRouteFromUrl(skill.links.github) : null
+  };
+}
+function validateProjectionSkillFields(skill, id) {
+  for (const key of ["currentSourceRoute", "observedSourceRoute"]) {
+    validateRoute(skill[key], `Installability projection skill ${id}.${key}`);
+  }
+  for (const key of [
+    "observationDigest",
+    "currentSkillContentSha256",
+    "observedSkillContentSha256",
+    "deliveredContentSha256"
+  ]) {
+    optionalSha2(skill[key], `Installability projection skill ${id}.${key}`);
+  }
+  optionalRevision2(skill.resolvedRevision, `Installability projection skill ${id}.resolvedRevision`);
+  optionalTimestamp2(skill.observedAt, `Installability projection skill ${id}.observedAt`);
+  const state = skill.state;
+  const reason = skill.reason;
+  if (state === "materializable" && reason !== "gaia-materialized") {
+    throw new Error(`Installability projection skill ${id} has a contradictory positive result.`);
+  }
+  if (state === "not-materializable" && reason !== "no-source" && reason !== "intrinsic-content-failure") {
+    throw new Error(`Installability projection skill ${id} has an unscoped negative result.`);
+  }
+  if (reason === "no-source" && skill.currentSourceRoute !== null) {
+    throw new Error(`Installability projection skill ${id} marks a sourced skill as no-source.`);
+  }
+}
+function validateRoute(value, label) {
+  if (value === null) return;
+  const route = record2(value, label);
+  exactKeys(route, ROUTE_KEYS, label);
+  for (const key of ["url", "owner", "repo"]) {
+    stringValue(route[key], `${label}.${key}`);
+  }
+  for (const key of ["subpath", "entrypoint", "installSubpath"]) {
+    if (typeof route[key] !== "string") {
+      throw new Error(`${label}.${key} must be a string.`);
+    }
+  }
+  if (route.ref !== null && typeof route.ref !== "string") {
+    throw new Error(`${label}.ref must be a string or null.`);
+  }
+  const parsed = sourceRouteFromUrl(route.url);
+  if (parsed === null) throw new Error(`${label}.url is not a supported GitHub route.`);
+  for (const key of ["url", "owner", "repo", "ref", "subpath", "entrypoint"]) {
+    if (route[key] !== parsed[key]) {
+      throw new Error(`${label}.${key} does not match its URL.`);
+    }
+  }
+  for (const key of ["subpath", "entrypoint", "installSubpath"]) {
+    const value2 = route[key];
+    if (value2.startsWith("/") || value2.split("/").includes("..")) {
+      throw new Error(`${label}.${key} contains path traversal.`);
+    }
+  }
+}
+function optionalSha2(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{64}$/iu.test(value))) {
+    throw new Error(`${label} must be a sha256 string or null.`);
+  }
+}
+function shaValue(value, label) {
+  if (typeof value !== "string" || !/^[0-9a-f]{64}$/iu.test(value)) {
+    throw new Error(`${label} must be a sha256 string.`);
+  }
+}
+function optionalRevision2(value, label) {
+  if (value !== null && (typeof value !== "string" || !/^[0-9a-f]{40}$/iu.test(value))) {
+    throw new Error(`${label} must be a revision string or null.`);
+  }
+}
+function optionalTimestamp2(value, label) {
+  if (value !== null && (typeof value !== "string" || !Number.isFinite(Date.parse(value)))) {
+    throw new Error(`${label} must be an ISO timestamp or null.`);
+  }
+}
+function timestampValue(value, label) {
+  if (typeof value !== "string" || !Number.isFinite(Date.parse(value))) {
+    throw new Error(`${label} must be an ISO timestamp.`);
+  }
+}
+function stringValue(value, label) {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${label} must be a non-empty string.`);
+  }
+}
+function record2(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value;
+}
+function exactKeys(value, expected, label) {
+  for (const key of Object.keys(value)) {
+    if (!expected.has(key)) throw new Error(`${label} has unsupported field ${key}.`);
+  }
+  for (const key of expected) {
+    if (!(key in value)) throw new Error(`${label} is missing ${key}.`);
+  }
+}
+function sameHttpUrl(left, right) {
+  try {
+    return new URL(left).toString() === new URL(right).toString();
+  } catch {
+    return false;
+  }
+}
+function errorMessage5(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+
+// packages/skill-summon/src/configured-service.ts
+function createConfiguredService(options = {}) {
+  const { source, sourceUrl } = resolveSkillSource(options);
+  const value = (options.env ?? process.env).SKILL_SUMMON_INSTALLABILITY?.trim();
+  const configured = value && !/^\$\{[^}]+\}$/u.test(value) ? value : void 0;
+  return new GaiaService(source, {
+    sourceUrl,
+    ...configured === void 0 ? {} : {
+      installabilityAdapter: {
+        async apply(index, context) {
+          if (context.sourceKind !== "tree" || !sameSource(context.source, DEFAULT_SKILL_SOURCE) || !sameSource(index.source, context.source) || !index.sourceWorkflow?.startsWith("gaia-skill-tree/")) {
+            return {
+              index: withUnknownInstallability(
+                index,
+                null,
+                context.sourceKind === "fleet" ? "fleet-source" : "invalid-context"
+              ),
+              status: { status: "not-applicable" }
+            };
+          }
+          const projectionSource = /^https?:\/\//u.test(configured) ? new HttpInstallabilitySource({ url: configured, ...options.fetchFn ? { fetchFn: options.fetchFn } : {} }) : new FileInstallabilitySource(localPath(configured));
+          const identity = await loadArborIdentityContext();
+          const pins = identity.context !== null && sameSource(identity.context.corpusSource, context.source) && identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree" ? identity.context : null;
+          const adapter = new GaiaInstallabilityAdapter({
+            source: projectionSource,
+            contextFor(skill) {
+              const sourceUrl2 = typeof skill.links.github === "string" ? skill.links.github : null;
+              const pin = resolveArborIdentity(pins, {
+                skillId: skill.id,
+                sourceUrl: sourceUrl2,
+                corpusRevision: index.sourceRevision ?? null
+              });
+              const route = sourceUrl2 === null ? null : sourceRouteFromUrl(sourceUrl2);
+              return {
+                id: skill.id,
+                sourceRoute: route,
+                skillContentSha256: pin.pinned ? pin.contentSha256 : null,
+                // Never borrow the observed remote revision from the projection.
+                // Only an immutable candidate route can supply it offline.
+                resolvedRevision: route?.ref && /^[a-f0-9]{40}$/iu.test(route.ref) ? route.ref : null
+              };
+            }
+          });
+          return adapter.apply(index, context);
+        }
+      }
+    }
+  });
+}
+function localPath(value) {
+  if (!value.startsWith("file:")) return value;
+  const url = new URL(value);
+  if (url.search || url.hash || url.username || url.password) {
+    throw new Error("Optional installability file URL must not contain query, fragment, or credentials.");
+  }
+  return fileURLToPath3(url);
+}
+
 // node_modules/zod/v4/mini/schemas.js
 var ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
   if (!inst._zod)
@@ -18430,19 +21300,19 @@ var getRefs = (options) => {
 };
 
 // node_modules/zod-to-json-schema/dist/esm/errorMessages.js
-function addErrorMessage(res, key, errorMessage6, refs) {
+function addErrorMessage(res, key, errorMessage7, refs) {
   if (!refs?.errorMessages)
     return;
-  if (errorMessage6) {
+  if (errorMessage7) {
     res.errorMessage = {
       ...res.errorMessage,
-      [key]: errorMessage6
+      [key]: errorMessage7
     };
   }
 }
-function setResponseValueAndErrors(res, key, value, errorMessage6, refs) {
+function setResponseValueAndErrors(res, key, value, errorMessage7, refs) {
   res[key] = value;
-  addErrorMessage(res, key, errorMessage6, refs);
+  addErrorMessage(res, key, errorMessage7, refs);
 }
 
 // node_modules/zod-to-json-schema/dist/esm/getRelativePath.js
@@ -18960,13 +21830,13 @@ function stringifyRegExpWithFlags(regex, refs) {
     // `.` matches newlines
   };
   const source = flags.i ? regex.source.toLowerCase() : regex.source;
-  let pattern = "";
+  let pattern2 = "";
   let isEscaped = false;
   let inCharGroup = false;
   let inCharRange = false;
   for (let i = 0; i < source.length; i++) {
     if (isEscaped) {
-      pattern += source[i];
+      pattern2 += source[i];
       isEscaped = false;
       continue;
     }
@@ -18974,40 +21844,40 @@ function stringifyRegExpWithFlags(regex, refs) {
       if (inCharGroup) {
         if (source[i].match(/[a-z]/)) {
           if (inCharRange) {
-            pattern += source[i];
-            pattern += `${source[i - 2]}-${source[i]}`.toUpperCase();
+            pattern2 += source[i];
+            pattern2 += `${source[i - 2]}-${source[i]}`.toUpperCase();
             inCharRange = false;
           } else if (source[i + 1] === "-" && source[i + 2]?.match(/[a-z]/)) {
-            pattern += source[i];
+            pattern2 += source[i];
             inCharRange = true;
           } else {
-            pattern += `${source[i]}${source[i].toUpperCase()}`;
+            pattern2 += `${source[i]}${source[i].toUpperCase()}`;
           }
           continue;
         }
       } else if (source[i].match(/[a-z]/)) {
-        pattern += `[${source[i]}${source[i].toUpperCase()}]`;
+        pattern2 += `[${source[i]}${source[i].toUpperCase()}]`;
         continue;
       }
     }
     if (flags.m) {
       if (source[i] === "^") {
-        pattern += `(^|(?<=[\r
+        pattern2 += `(^|(?<=[\r
 ]))`;
         continue;
       } else if (source[i] === "$") {
-        pattern += `($|(?=[\r
+        pattern2 += `($|(?=[\r
 ]))`;
         continue;
       }
     }
     if (flags.s && source[i] === ".") {
-      pattern += inCharGroup ? `${source[i]}\r
+      pattern2 += inCharGroup ? `${source[i]}\r
 ` : `[${source[i]}\r
 ]`;
       continue;
     }
-    pattern += source[i];
+    pattern2 += source[i];
     if (source[i] === "\\") {
       isEscaped = true;
     } else if (inCharGroup && source[i] === "]") {
@@ -19017,12 +21887,12 @@ function stringifyRegExpWithFlags(regex, refs) {
     }
   }
   try {
-    new RegExp(pattern);
+    new RegExp(pattern2);
   } catch {
     console.warn(`Could not convert regex pattern at ${refs.currentPath.join("/")} to a flag-independent form! Falling back to the flag-ignorant source`);
     return regex.source;
   }
-  return pattern;
+  return pattern2;
 }
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/record.js
@@ -19753,8 +22623,8 @@ var Protocol = class {
                   if (queuedMessage.type === "response") {
                     resolver(message);
                   } else {
-                    const errorMessage6 = message;
-                    const error2 = new McpError(errorMessage6.error.code, errorMessage6.error.message, errorMessage6.error.data);
+                    const errorMessage7 = message;
+                    const error2 = new McpError(errorMessage7.error.code, errorMessage7.error.message, errorMessage7.error.data);
                     resolver(error2);
                   }
                 } else {
@@ -20200,7 +23070,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -20217,7 +23087,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -20295,7 +23165,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve(parseResult.data);
+            resolve2(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -20556,12 +23426,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve, interval);
+      const timeoutId = setTimeout(resolve2, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -21054,23 +23924,23 @@ var Server = class extends Protocol {
       const wrappedHandler = async (request, extra) => {
         const validatedRequest = safeParse3(CallToolRequestSchema, request);
         if (!validatedRequest.success) {
-          const errorMessage6 = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage6}`);
+          const errorMessage7 = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call request: ${errorMessage7}`);
         }
         const { params } = validatedRequest.data;
         const result = await Promise.resolve(handler(request, extra));
         if (params.task) {
           const taskValidationResult = safeParse3(CreateTaskResultSchema, result);
           if (!taskValidationResult.success) {
-            const errorMessage6 = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
-            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage6}`);
+            const errorMessage7 = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
+            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage7}`);
           }
           return taskValidationResult.data;
         }
         const validationResult = safeParse3(CallToolResultSchema, result);
         if (!validationResult.success) {
-          const errorMessage6 = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call result: ${errorMessage6}`);
+          const errorMessage7 = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid tools/call result: ${errorMessage7}`);
         }
         return validationResult.data;
       };
@@ -21528,46 +24398,46 @@ var UriTemplate = class _UriTemplate {
       }
       return patterns;
     }
-    let pattern;
+    let pattern2;
     const name = part.name;
     switch (part.operator) {
       case "":
-        pattern = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
+        pattern2 = part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)";
         break;
       case "+":
       case "#":
-        pattern = "(.+)";
+        pattern2 = "(.+)";
         break;
       case ".":
-        pattern = "\\.([^/,]+)";
+        pattern2 = "\\.([^/,]+)";
         break;
       case "/":
-        pattern = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
+        pattern2 = "/" + (part.exploded ? "([^/,]+(?:,[^/,]+)*)" : "([^/,]+)");
         break;
       default:
-        pattern = "([^/]+)";
+        pattern2 = "([^/]+)";
     }
-    patterns.push({ pattern, name });
+    patterns.push({ pattern: pattern2, name });
     return patterns;
   }
   match(uri) {
     _UriTemplate.validateLength(uri, MAX_TEMPLATE_LENGTH, "URI");
-    let pattern = "^";
+    let pattern2 = "^";
     const names = [];
     for (const part of this.parts) {
       if (typeof part === "string") {
-        pattern += this.escapeRegExp(part);
+        pattern2 += this.escapeRegExp(part);
       } else {
         const patterns = this.partToRegExp(part);
         for (const { pattern: partPattern, name } of patterns) {
-          pattern += partPattern;
+          pattern2 += partPattern;
           names.push({ name, exploded: part.exploded });
         }
       }
     }
-    pattern += "$";
-    _UriTemplate.validateLength(pattern, MAX_REGEX_LENGTH, "Generated regex pattern");
-    const regex = new RegExp(pattern);
+    pattern2 += "$";
+    _UriTemplate.validateLength(pattern2, MAX_REGEX_LENGTH, "Generated regex pattern");
+    const regex = new RegExp(pattern2);
     const match = uri.match(regex);
     if (!match)
       return null;
@@ -21786,12 +24656,12 @@ var McpServer = class {
    * @param errorMessage - The error message.
    * @returns The tool error result.
    */
-  createToolError(errorMessage6) {
+  createToolError(errorMessage7) {
     return {
       content: [
         {
           type: "text",
-          text: errorMessage6
+          text: errorMessage7
         }
       ],
       isError: true
@@ -21809,8 +24679,8 @@ var McpServer = class {
     const parseResult = await safeParseAsync3(schemaToParse, args);
     if (!parseResult.success) {
       const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage6 = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${toolName}: ${errorMessage6}`);
+      const errorMessage7 = getParseErrorMessage(error2);
+      throw new McpError(ErrorCode.InvalidParams, `Input validation error: Invalid arguments for tool ${toolName}: ${errorMessage7}`);
     }
     return parseResult.data;
   }
@@ -21834,8 +24704,8 @@ var McpServer = class {
     const parseResult = await safeParseAsync3(outputObj, result.structuredContent);
     if (!parseResult.success) {
       const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-      const errorMessage6 = getParseErrorMessage(error2);
-      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${toolName}: ${errorMessage6}`);
+      const errorMessage7 = getParseErrorMessage(error2);
+      throw new McpError(ErrorCode.InvalidParams, `Output validation error: Invalid structured content for tool ${toolName}: ${errorMessage7}`);
     }
   }
   /**
@@ -21883,7 +24753,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -22047,8 +24917,8 @@ var McpServer = class {
         const parseResult = await safeParseAsync3(argsObj, request.params.arguments);
         if (!parseResult.success) {
           const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
-          const errorMessage6 = getParseErrorMessage(error2);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage6}`);
+          const errorMessage7 = getParseErrorMessage(error2);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for prompt ${request.params.name}: ${errorMessage7}`);
         }
         const args = parseResult.data;
         const cb = prompt.callback;
@@ -22477,1130 +25347,205 @@ var EMPTY_COMPLETION_RESULT = {
 
 // packages/skill-summon/src/summon/summon.ts
 import { stat as stat4 } from "node:fs/promises";
-import path7 from "node:path";
+import path8 from "node:path";
 
-// packages/core/src/steering.ts
-var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
-var STEERING_POLICY_VERSION = "gaia-steering-policy/v1";
-var SEARCH_STATES = ["open", "checkpointed", "closed", "stopped"];
-var RUNTIME_EVENT_TYPES = ["behavioral-failure", "behavioral-recovery"];
-var OPERATOR_EVENT_TYPES = ["reopen-search", "checkpoint", "close-search", "stop"];
-var EVENT_TYPES = [...RUNTIME_EVENT_TYPES, ...OPERATOR_EVENT_TYPES];
-var DEFAULT_STEERING_POLICY = Object.freeze({
-  version: STEERING_POLICY_VERSION,
-  floor: "low",
-  ceiling: "max"
-});
-var EVENT_TYPE_SET = new Set(EVENT_TYPES);
-var RUNTIME_EVENT_TYPE_SET = new Set(RUNTIME_EVENT_TYPES);
-var OPERATOR_EVENT_TYPE_SET = new Set(OPERATOR_EVENT_TYPES);
-var RUNG_SET = new Set(STEERING_RUNGS);
-var SEARCH_STATE_SET = new Set(SEARCH_STATES);
-
-// packages/core/src/retrieval/schema.ts
-var SKILL_INDEX_SCHEMA = "gaia.skill-index/v2";
-var STALE_AFTER_DAYS = 30;
-var INDEX_FIELDS = [
-  "name",
-  "id",
-  "title",
-  "tags",
-  "genericSkillRef",
-  "expansions",
-  "terms",
-  "description"
-];
-var SkillIndexError = class extends Error {
-  name = "SkillIndexError";
-};
-function assertSkillIndex(value) {
-  const index = asRecord(value, "Skill index");
-  if (index.schema !== SKILL_INDEX_SCHEMA) {
-    throw new SkillIndexError(
-      `Skill index advertises unsupported schema ${String(index.schema)}; this build reads ${SKILL_INDEX_SCHEMA}.`
+// packages/skill-summon/src/data/arbor-source.ts
+import { createHash as createHash3 } from "node:crypto";
+import { dirname as dirname4, join as join3, isAbsolute, relative, sep } from "node:path";
+import { fileURLToPath as fileURLToPath4 } from "node:url";
+var ARBOR_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "arbor");
+var EDGE_INDEX_FILE = "edges.json";
+var RUNTIME_INDEX_FILE = join3("runtime", "index.json");
+var PROVENANCE_FILE = "provenance.json";
+var cached3;
+function loadArborPublication() {
+  cached3 ??= readArborPublicationFromDisk();
+  return cached3;
+}
+async function readArborPublicationDir(root) {
+  const problems = [];
+  const digests = /* @__PURE__ */ new Map();
+  const edgeIndex = await readConfinedJson(root, EDGE_INDEX_FILE, problems);
+  const runtimeIndexFile = await readConfinedJson(root, RUNTIME_INDEX_FILE, problems);
+  if (edgeIndex === void 0 || runtimeIndexFile === void 0) {
+    return unavailableArborPublication(
+      edgeIndex === void 0 && runtimeIndexFile === void 0 && problems.length === 0 ? [] : [
+        ...problems,
+        ...edgeIndex === void 0 !== (runtimeIndexFile === void 0) ? [
+          {
+            where: root,
+            detail: "an Arbor publication directory is present but is missing edges.json or runtime/index.json"
+          }
+        ] : []
+      ]
     );
   }
-  const generatedAt = requiredString(index, "generatedAt", "Skill index");
-  if (!isTimestamp(generatedAt)) {
-    throw new SkillIndexError("Skill index has no valid generatedAt timestamp.");
-  }
-  requiredString(index, "source", "Skill index");
-  requiredString(index, "sourceDigest", "Skill index");
-  optionalString(index, "sourceRevision", "Skill index");
-  optionalString(index, "sourceVersion", "Skill index");
-  optionalString(index, "sourceWorkflow", "Skill index");
-  const builder = asRecord(index.builder, "Skill index builder");
-  requiredString(builder, "version", "Skill index builder");
-  if (builder.expansion !== "none" && builder.expansion !== "generated") {
-    throw new SkillIndexError("Skill index builder.expansion must be 'none' or 'generated'.");
-  }
-  const stats = asRecord(index.stats, "Skill index stats");
-  for (const field of [
-    "docs",
-    "awaitingClassification",
-    "unreachable",
-    "missingTags",
-    "expandedDocs",
-    "staleExpansions"
-  ]) {
-    nonNegativeInteger(stats[field], `Skill index stats.${field}`);
-  }
-  const docs = asArray(index.docs, "Skill index docs");
-  if (docs.length === 0) throw new SkillIndexError("Skill index contains no documents.");
-  if (stats.docs !== docs.length) {
-    throw new SkillIndexError(
-      `Skill index stats.docs is ${String(stats.docs)}, but the artifact contains ${docs.length} documents.`
-    );
-  }
-  const avgFieldLen = asRecord(stats.avgFieldLen, "Skill index stats.avgFieldLen");
-  for (const field of INDEX_FIELDS) finiteNonNegative(avgFieldLen[field], `Skill index stats.avgFieldLen.${field}`);
-  if (stats.floor !== null) finiteNonNegative(stats.floor, "Skill index stats.floor");
-  if (stats.floorCalibration !== null) validateFloorCalibration(stats.floorCalibration);
-  const ids = /* @__PURE__ */ new Set();
-  let awaitingClassification = 0;
-  for (const [position, rawDoc] of docs.entries()) {
-    const doc = asRecord(rawDoc, `Skill index document ${position}`);
-    const id = requiredString(doc, "id", `Skill index document ${position}`);
-    if (!id.includes("/") || /\s/u.test(id)) {
-      throw new SkillIndexError(`Indexed skill ${id} has an invalid id.`);
-    }
-    if (ids.has(id)) throw new SkillIndexError(`Skill index contains duplicate id ${id}.`);
-    ids.add(id);
-    requiredString(doc, "name", `Indexed skill ${id}`);
-    requiredString(doc, "contributor", `Indexed skill ${id}`);
-    requiredString(doc, "description", `Indexed skill ${id}`);
-    optionalString(doc, "title", `Indexed skill ${id}`);
-    optionalString(doc, "genericSkillRef", `Indexed skill ${id}`);
-    optionalString(doc, "catalogRef", `Indexed skill ${id}`);
-    stringArray(doc.tags, `Indexed skill ${id}.tags`);
-    const links = asRecord(doc.links, `Indexed skill ${id}.links`);
-    optionalString(links, "github", `Indexed skill ${id}.links`);
-    if (!isInvocation(doc.invocation)) {
-      throw new SkillIndexError(`Indexed skill ${id} has an invalid invocation.`);
-    }
-    requiredBoolean(doc, "installable", `Indexed skill ${id}`);
-    stringArray(doc.suiteComponents, `Indexed skill ${id}.suiteComponents`);
-    requiredBoolean(doc, "registryOnly", `Indexed skill ${id}`);
-    const classified = requiredBoolean(doc, "classified", `Indexed skill ${id}`);
-    if (!classified) awaitingClassification++;
-    optionalString(doc, "level", `Indexed skill ${id}`);
-    const trust = asRecord(doc.trust, `Indexed skill ${id}.trust`);
-    optionalString(trust, "level", `Indexed skill ${id}.trust`);
-    optionalString(trust, "grade", `Indexed skill ${id}.trust`);
-    if (trust.trustNumber !== void 0) finiteNumber(trust.trustNumber, `Indexed skill ${id}.trust.trustNumber`);
-    const retrieval = asRecord(doc.retrieval, `Indexed skill ${id}.retrieval`);
-    stringArray(retrieval.expansions, `Indexed skill ${id}.retrieval.expansions`);
-    stringArray(retrieval.terms, `Indexed skill ${id}.retrieval.terms`);
-    if (retrieval.vector !== null) finiteNumberArray(retrieval.vector, `Indexed skill ${id}.retrieval.vector`);
-    optionalString(retrieval, "expandedBy", `Indexed skill ${id}.retrieval`);
-    optionalString(retrieval, "expandedFrom", `Indexed skill ${id}.retrieval`);
-    if (retrieval.stale !== void 0 && typeof retrieval.stale !== "boolean") {
-      throw new SkillIndexError(`Indexed skill ${id}.retrieval.stale must be a boolean.`);
-    }
-  }
-  if (stats.awaitingClassification !== awaitingClassification) {
-    throw new SkillIndexError(
-      `Skill index stats.awaitingClassification is ${String(stats.awaitingClassification)}, but ${awaitingClassification} documents are unclassified.`
-    );
-  }
-}
-function asRecord(value, label) {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new SkillIndexError(`${label} must be an object.`);
-  }
-  return value;
-}
-function asArray(value, label) {
-  if (!Array.isArray(value)) throw new SkillIndexError(`${label} must be an array.`);
-  return value;
-}
-function requiredString(record2, key, label) {
-  const value = record2[key];
-  if (typeof value !== "string" || value.length === 0) {
-    throw new SkillIndexError(`${label}.${key} must be a non-empty string.`);
-  }
-  return value;
-}
-function optionalString(record2, key, label) {
-  if (record2[key] !== void 0 && typeof record2[key] !== "string") {
-    throw new SkillIndexError(`${label}.${key} must be a string when present.`);
-  }
-}
-function requiredBoolean(record2, key, label) {
-  if (typeof record2[key] !== "boolean") throw new SkillIndexError(`${label}.${key} must be a boolean.`);
-  return record2[key];
-}
-function stringArray(value, label) {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-    throw new SkillIndexError(`${label} must be an array of strings.`);
-  }
-}
-function finiteNumber(value, label) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new SkillIndexError(`${label} must be a finite number.`);
-  }
-}
-function finiteNonNegative(value, label) {
-  finiteNumber(value, label);
-  if (value < 0) throw new SkillIndexError(`${label} must be non-negative.`);
-}
-function nonNegativeInteger(value, label) {
-  if (!Number.isSafeInteger(value) || value < 0) {
-    throw new SkillIndexError(`${label} must be a non-negative integer.`);
-  }
-}
-function finiteNumberArray(value, label) {
-  if (!Array.isArray(value)) throw new SkillIndexError(`${label} must be an array.`);
-  for (const [position, item] of value.entries()) finiteNumber(item, `${label}[${position}]`);
-}
-function isInvocation(value) {
-  return value === "any" || value === "model" || value === "human";
-}
-function isTimestamp(value) {
-  return Number.isFinite(Date.parse(value));
-}
-function validateFloorCalibration(value) {
-  const calibration = asRecord(value, "Skill index stats.floorCalibration");
-  finiteNonNegative(calibration.answerableAdmitted, "Skill index stats.floorCalibration.answerableAdmitted");
-  finiteNonNegative(calibration.unanswerableRejected, "Skill index stats.floorCalibration.unanswerableRejected");
-  if (calibration.answerableAdmitted > 1 || calibration.unanswerableRejected > 1) {
-    throw new SkillIndexError("Skill index floor calibration fractions must be at most 1.");
-  }
-  requiredString(calibration, "goldSetRevision", "Skill index stats.floorCalibration");
-  const calibratedAt = requiredString(calibration, "calibratedAt", "Skill index stats.floorCalibration");
-  if (!isTimestamp(calibratedAt)) throw new SkillIndexError("Skill index floor calibration has an invalid calibratedAt timestamp.");
-  optionalString(calibration, "note", "Skill index stats.floorCalibration");
-}
-function indexAgeDays(index, now = /* @__PURE__ */ new Date()) {
-  const generated = Date.parse(index.generatedAt);
-  if (Number.isNaN(generated)) return null;
-  return (now.getTime() - generated) / 864e5;
-}
-function isStale(index, now = /* @__PURE__ */ new Date()) {
-  const age = indexAgeDays(index, now);
-  return age !== null && age > STALE_AFTER_DAYS;
-}
-
-// packages/core/src/retrieval/lexical.ts
-function normalize(value) {
-  return value.toLocaleLowerCase("en-US").normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
-}
-function tokenizeText(value) {
-  return [...new Set(normalize(value).split(" ").filter(Boolean))];
-}
-function scoreMatch(query, weightedFields) {
-  const normalizedQuery = normalize(query);
-  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
-  let score = 0;
-  for (const [rawValue, weight] of weightedFields) {
-    const value = normalize(rawValue);
-    if (!value) continue;
-    if (value === normalizedQuery) score += weight * 10;
-    else if (value.includes(normalizedQuery)) score += weight * 5;
-    for (const token of tokens) {
-      if (value.split(" ").includes(token)) score += weight;
-      else if (value.includes(token)) score += weight / 2;
-    }
-  }
-  return score;
-}
-
-// packages/core/src/retrieval/build-index.ts
-import { createHash } from "node:crypto";
-function allProjectionSkills(projection) {
-  const byId = /* @__PURE__ */ new Map();
-  for (const skill of [
-    ...Object.values(projection.buckets ?? {}).flat(),
-    ...projection.awaitingClassification ?? []
-  ]) {
-    const previous = byId.get(skill.id);
-    if (!previous) {
-      byId.set(skill.id, skill);
-      continue;
-    }
-    const suiteComponents = [
-      ...previous.suiteComponents ?? [],
-      ...skill.suiteComponents ?? []
-    ];
-    byId.set(skill.id, {
-      ...previous,
-      ...suiteComponents.length > 0 ? { suiteComponents: [...new Set(suiteComponents)] } : {}
-    });
-  }
-  return [...byId.values()];
-}
-function sha256(bytes) {
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-}
-function expansionFingerprint(skill) {
-  return sha256(
-    JSON.stringify([
-      skill.id,
-      skill.name,
-      skill.title ?? "",
-      [...skill.tags ?? []].sort(),
-      skill.description ?? "",
-      skill.genericSkillRef ?? ""
-    ])
-  ).slice(0, 19);
-}
-function isInstallableLink(links) {
-  if (!links) return false;
-  if (links.installable === false) return false;
-  return typeof links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(links.github);
-}
-function isReachable(doc) {
-  if (doc.registryOnly) return false;
-  return doc.installable || doc.suiteComponents.length > 0;
-}
-function fieldText(doc, field) {
-  switch (field) {
-    case "name":
-      return doc.name;
-    case "id":
-      return doc.id;
-    case "title":
-      return doc.title ?? "";
-    case "tags":
-      return doc.tags.join(" ");
-    case "genericSkillRef":
-      return doc.genericSkillRef ?? "";
-    case "expansions":
-      return doc.retrieval.expansions.join(" ");
-    case "terms":
-      return doc.retrieval.terms.join(" ");
-    case "description":
-      return doc.description;
-  }
-}
-function deriveTerms(doc) {
-  if (doc.retrieval.expansions.length === 0) return [];
-  const source = [
-    doc.name,
-    doc.title ?? "",
-    doc.tags.join(" "),
-    doc.genericSkillRef ?? "",
-    doc.description,
-    doc.retrieval.expansions.join(" ")
-  ].join(" ");
-  return tokenizeText(source).filter((token) => token.length > 2);
-}
-function buildSkillIndex({
-  projection,
-  source,
-  sourceDigest,
-  sourceRevision,
-  sourceVersion,
-  sourceWorkflow,
-  builderVersion,
-  generatedAt = (/* @__PURE__ */ new Date()).toISOString(),
-  expansions
-}) {
-  const bucketedIds = new Set(Object.values(projection.buckets ?? {}).flat().map((skill) => skill.id));
-  const docs = allProjectionSkills(projection).map((skill) => toIndexedSkill(skill, expansions?.[skill.id], bucketedIds.has(skill.id))).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
-  const avgFieldLen = Object.fromEntries(
-    INDEX_FIELDS.map((field) => [
-      field,
-      docs.length === 0 ? 0 : round4(
-        docs.reduce((total, doc) => total + tokenCount(fieldText(doc, field)), 0) / docs.length
-      )
-    ])
-  );
-  return {
-    schema: SKILL_INDEX_SCHEMA,
-    generatedAt,
-    source,
-    sourceDigest,
-    ...sourceRevision ? { sourceRevision } : {},
-    ...sourceVersion ? { sourceVersion } : {},
-    ...sourceWorkflow ? { sourceWorkflow } : {},
-    builder: {
-      version: builderVersion,
-      expansion: docs.some((doc) => doc.retrieval.expansions.length > 0) ? "generated" : "none"
-    },
-    stats: {
-      docs: docs.length,
-      awaitingClassification: docs.filter((doc) => !doc.classified).length,
-      unreachable: docs.filter((doc) => !isReachable(doc)).length,
-      missingTags: docs.filter((doc) => doc.tags.length === 0).length,
-      expandedDocs: docs.filter((doc) => doc.retrieval.expansions.length > 0).length,
-      staleExpansions: docs.filter((doc) => doc.retrieval.stale === true).length,
-      avgFieldLen,
-      floor: null,
-      floorCalibration: null
-    },
-    docs
-  };
-}
-function toIndexedSkill(skill, expansion, classified) {
-  const fingerprint = expansionFingerprint(skill);
-  const links = skill.links ?? {};
-  const doc = {
-    id: skill.id,
-    name: skill.name,
-    ...skill.title ? { title: skill.title } : {},
-    contributor: skill.contributor ?? skill.id.split("/")[0] ?? "",
-    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
-    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
-    description: skill.description ?? "",
-    tags: [...skill.tags ?? []],
-    links: typeof links.github === "string" ? { github: links.github } : {},
-    invocation: readInvocation(skill.invocation),
-    installable: isInstallableLink(links),
-    suiteComponents: [...skill.suiteComponents ?? []],
-    registryOnly: skill.installable === false,
-    classified,
-    ...skill.level ? { level: skill.level } : {},
-    trust: {
-      ...skill.level ? { level: skill.level } : {},
-      ...skill.overallTrustGrade ? { grade: skill.overallTrustGrade } : {},
-      ...skill.trustMagnitude === void 0 ? {} : { trustNumber: skill.trustMagnitude }
-    },
-    retrieval: {
-      expansions: expansion?.expansions ?? [],
-      terms: [],
-      vector: null,
-      ...expansion ? { expandedBy: expansion.expandedBy } : {},
-      ...expansion ? { expandedFrom: expansion.expandedFrom ?? fingerprint } : {},
-      // Recorded, never acted on here: a stale expansion still ranks. It is
-      // out-of-date retrieval surface, not wrong retrieval surface, and
-      // dropping it would re-create the coverage hole it was written to fill.
-      ...expansion && expansion.expandedFrom !== void 0 && expansion.expandedFrom !== fingerprint ? { stale: true } : {}
-    }
-  };
-  doc.retrieval.terms = deriveTerms(doc);
-  return doc;
-}
-function readInvocation(value) {
-  return value === "model" || value === "human" ? value : "any";
-}
-function tokenCount(text) {
-  const normalized = normalize(text);
-  return normalized.length === 0 ? 0 : normalized.split(" ").length;
-}
-function round4(value) {
-  return Math.round(value * 1e4) / 1e4;
-}
-
-// packages/core/src/retrieval/bm25f.ts
-var DEFAULT_BM25F_PARAMS = {
-  k1: 1.2,
-  b: 0.75,
-  fieldPresenceNormalization: false,
-  weights: {
-    name: 10,
-    id: 8,
-    title: 6,
-    tags: 5,
-    genericSkillRef: 4,
-    expansions: 4,
-    terms: 2,
-    description: 3
-  }
-};
-var EXACT_MATCH_SCORE = 1e6;
-var Bm25fRanker = class {
-  #params;
-  #documents;
-  #documentFrequency = /* @__PURE__ */ new Map();
-  #averageFieldLength;
-  #exact = /* @__PURE__ */ new Map();
-  constructor(index, params = { ...DEFAULT_BM25F_PARAMS }) {
-    this.#params = params;
-    const totalWeight = INDEX_FIELDS.reduce((total, field) => total + params.weights[field], 0);
-    this.#documents = index.docs.map((doc) => indexDocument(doc, params.weights, totalWeight));
-    for (const document of this.#documents) {
-      for (const term of document.terms.keys()) {
-        this.#documentFrequency.set(term, (this.#documentFrequency.get(term) ?? 0) + 1);
+  digests.set(EDGE_INDEX_FILE, edgeIndex.sha256);
+  digests.set(RUNTIME_INDEX_FILE, runtimeIndexFile.sha256);
+  const runtimes = [];
+  const expected = /* @__PURE__ */ new Set([EDGE_INDEX_FILE, RUNTIME_INDEX_FILE]);
+  try {
+    assertArborRuntimeIndex(runtimeIndexFile.value);
+    for (const subject of runtimeIndexFile.value.subjects) {
+      const relativePath = join3("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
+      expected.add(relativePath);
+      const document = await readConfinedJson(root, relativePath, problems);
+      if (document === void 0) {
+        problems.push({
+          where: relativePath,
+          detail: "listed in runtime/index.json but the aggregate document is missing or unreadable"
+        });
+        continue;
       }
-      for (const key of document.exactKeys) {
-        const bucket = this.#exact.get(key);
-        if (bucket) bucket.push(document.doc);
-        else this.#exact.set(key, [document.doc]);
-      }
+      digests.set(relativePath, document.sha256);
+      runtimes.push({ path: relativePath, document: document.value });
     }
-    this.#averageFieldLength = Object.fromEntries(
-      INDEX_FIELDS.map((field) => [
-        field,
-        this.#documents.length === 0 ? 0 : this.#documents.reduce((total, document) => total + document.fieldLength[field], 0) / this.#documents.length
-      ])
-    );
+  } catch {
   }
-  get size() {
-    return this.#documents.length;
-  }
-  /**
-   * Rank every document against `query`, best first. Zero-scoring documents are
-   * dropped; the floor decision (SPEC §4) belongs to the caller, not here.
-   */
-  rank(query) {
-    const exact = this.#exactMatches(query);
-    if (exact.length > 0) return exact;
-    const terms = tokenizeText(query);
-    if (terms.length === 0) return [];
-    const scored = [];
-    for (const document of this.#documents) {
-      const { score, matchedTerms } = this.#score(document, terms);
-      if (score > 0) {
-        scored.push({ doc: document.doc, score, matchKind: "ranked", matchedTerms });
-      }
-    }
-    scored.sort((left, right) => right.score - left.score || compareIds(left.doc, right.doc));
-    return scored;
-  }
-  /**
-   * SPEC §3.4 — "summon scout-fleet" is the most common invocation there is and
-   * must not go through a relevance band at all.
-   */
-  #exactMatches(query) {
-    const key = normalize(query);
-    if (key.length === 0) return [];
-    const docs = this.#exact.get(key);
-    if (!docs || docs.length === 0) return [];
-    return docs.map((doc) => ({
-      doc,
-      score: EXACT_MATCH_SCORE,
-      matchKind: "exact",
-      matchedTerms: tokenizeText(query)
-    }));
-  }
-  #score(document, terms) {
-    const { k1, b, weights } = this.#params;
-    let score = 0;
-    const matchedTerms = [];
-    for (const term of terms) {
-      const postings = document.terms.get(term);
-      if (!postings) continue;
-      matchedTerms.push(term);
-      let weightedFrequency = 0;
-      for (const { field, frequency } of postings) {
-        const averageLength = this.#averageFieldLength[field];
-        const normalizer = averageLength === 0 ? 1 : 1 - b + b * document.fieldLength[field] / averageLength;
-        weightedFrequency += weights[field] * frequency / normalizer;
-      }
-      if (this.#params.fieldPresenceNormalization && document.presentWeightShare > 0) {
-        weightedFrequency /= document.presentWeightShare;
-      }
-      score += this.#idf(term) * (weightedFrequency * (k1 + 1) / (weightedFrequency + k1));
-    }
-    return { score, matchedTerms };
-  }
-  #idf(term) {
-    const n = this.#documents.length;
-    const df = this.#documentFrequency.get(term) ?? 0;
-    return Math.log(1 + (n - df + 0.5) / (df + 0.5));
-  }
-};
-function marginOf(ranked) {
-  const top = ranked[0];
-  if (!top) return 0;
-  const next = ranked[1];
-  if (!next || top.score <= 0) return 1;
-  return (top.score - next.score) / top.score;
-}
-function indexDocument(doc, weights, totalWeight) {
-  const terms = /* @__PURE__ */ new Map();
-  const fieldLength = {};
-  for (const field of INDEX_FIELDS) {
-    const tokens = normalize(fieldText(doc, field)).split(" ").filter(Boolean);
-    fieldLength[field] = tokens.length;
-    const counts = /* @__PURE__ */ new Map();
-    for (const token of tokens) counts.set(token, (counts.get(token) ?? 0) + 1);
-    for (const [token, frequency] of counts) {
-      const postings = terms.get(token);
-      if (postings) postings.push({ field, frequency });
-      else terms.set(token, [{ field, frequency }]);
-    }
-  }
-  const exactKeys = new Set(
-    [doc.name, doc.id, doc.catalogRef ?? ""].map((value) => normalize(value)).filter((value) => value.length > 0)
-  );
-  const presentWeight = INDEX_FIELDS.reduce(
-    (total, field) => total + (fieldLength[field] > 0 ? weights[field] : 0),
-    0
-  );
-  return {
-    doc,
-    terms,
-    fieldLength,
-    exactKeys,
-    presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight
-  };
-}
-function compareIds(left, right) {
-  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
-}
-
-// packages/core/src/retrieval/decide.ts
-var BAND = 0.6;
-var MARGIN = 0.15;
-function decide({
-  index,
-  query,
-  ranked,
-  surface = "any",
-  source
-}) {
-  const floor = index.stats.floor;
-  const filtered = [];
-  const eligible = [];
-  for (const hit of ranked) {
-    const why = withholdReason(hit.doc, surface);
-    if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
-    else eligible.push(hit);
-  }
-  const top = eligible[0];
-  if (!top) {
-    return noMatchDecision(
-      query,
-      ranked.length === 0 ? "no_candidates" : "all_filtered",
-      ranked,
-      filtered,
-      floor,
-      source
-    );
-  }
-  if (top.matchKind === "exact") {
-    const exact = eligible.filter((hit) => hit.matchKind === "exact");
+  const receipt = await verifyProvenance(root, expected, digests, problems);
+  if (receipt.rejected) {
     return {
-      admitted: exact,
-      noMatch: null,
-      margin: marginOf(exact),
-      ambiguous: exact.length > 1,
-      filtered,
-      floor
+      ...unavailableArborPublication(problems),
+      state: "unreadable"
     };
   }
-  if (floor !== null && top.score < floor) {
-    return noMatchDecision(query, "below_floor", eligible, filtered, floor, source);
-  }
-  const admitted = eligible.filter((hit) => hit.score >= top.score * BAND);
-  const margin = marginOf(admitted);
-  return {
-    admitted,
-    noMatch: null,
-    margin,
-    ambiguous: admitted.length > 1 && margin < MARGIN,
-    filtered,
-    floor
-  };
+  const publication = readArborPublication({
+    provenance: receipt.provenance,
+    runtimeIndex: runtimeIndexFile.value,
+    edgeIndex: edgeIndex.value,
+    runtimes
+  });
+  return problems.length === 0 ? publication : { ...publication, problems: [...publication.problems, ...problems] };
 }
-function withholdReason(doc, surface) {
-  if (doc.registryOnly) return "registry-only \u2014 the tree marks this skill installable: false";
-  if (!isReachable(doc)) {
-    return doc.links.github ? "not installable \u2014 links.github does not resolve to a SKILL.md" : "not installable \u2014 the tree publishes no links.github and no suiteComponents";
-  }
-  if (surface === "heaven" && doc.invocation === "model") {
-    return "surface:heaven excludes model-led skills";
-  }
-  if (surface === "hell" && doc.invocation === "human") {
-    return "surface:hell excludes human-led skills";
-  }
-  return null;
-}
-function noMatchDecision(query, reason, considered, filtered, floor, source) {
-  return {
-    admitted: [],
-    noMatch: {
-      reason,
-      query,
-      topCandidates: considered.slice(0, 3).map((hit) => ({
-        id: hit.doc.id,
-        name: hit.doc.name,
-        score: Math.round(hit.score * 1e4) / 1e4,
-        floor
-      })),
-      filtered,
-      suggestion: suggestionFor(reason, source)
-    },
-    margin: 0,
-    ambiguous: false,
-    filtered,
-    floor
-  };
-}
-function suggestionFor(reason, source) {
-  const where = source ? `\`${source}\`` : "the configured source";
-  switch (reason) {
-    case "no_candidates":
-      return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
-    case "below_floor":
-      return `Nothing in ${where} scored above the calibrated relevance floor. The closest candidates are listed with their scores; none of them is a match. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
-    case "all_filtered":
-      return `Every candidate in ${where} was withheld \u2014 see \`filtered\` for why. Most commonly the skill publishes no installable SKILL.md link.`;
-  }
-}
-
-// packages/skill-summon/src/data/skill-index-source.ts
-import { readFile as readFile3 } from "node:fs/promises";
-import { dirname as dirname2, join } from "node:path";
-import { fileURLToPath } from "node:url";
-var INDEX_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "skill-index.json");
-var committed;
-function loadCommittedIndex() {
-  committed ??= readCommittedIndex();
-  return committed;
-}
-async function readCommittedIndex() {
-  const attempted = [];
-  for (const candidate of candidatePaths()) {
-    attempted.push(candidate);
-    let raw;
-    try {
-      raw = await readFile3(candidate, "utf8");
-    } catch {
-      continue;
+async function readArborPublicationFromDisk() {
+  for (const candidate of candidatePaths3()) {
+    const publication = await readArborPublicationDir(candidate);
+    if (publication.state !== "unavailable" || publication.problems.length > 0) {
+      return publication;
     }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (error2) {
-      throw new SkillIndexError(
-        `Committed retrieval index is not valid JSON: ${error2 instanceof Error ? error2.message : String(error2)}`
-      );
-    }
-    assertSkillIndex(parsed);
-    return parsed;
   }
-  throw new GaiaDataError(
-    `Could not find the committed retrieval index. Looked in:
-  ${attempted.join("\n  ")}
-Set SKILL_INDEX_PATH to point at skill-index.json, or rebuild it with \`npx tsx packages/core/scripts/build-skill-index.ts\`.`
-  );
+  return unavailableArborPublication();
 }
-function candidatePaths() {
-  const configured = process.env.SKILL_INDEX_PATH?.trim();
-  const here = dirname2(fileURLToPath(import.meta.url));
+function candidatePaths3() {
+  const configured = process.env.ARBOR_PUBLICATION_PATH?.trim();
+  const here = dirname4(fileURLToPath4(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join(here, "..", "data", "skill-index.json"));
+  paths.push(join3(here, "..", "data", "arbor"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join(directory, INDEX_RELATIVE_PATH));
-    const parent = dirname2(directory);
+    paths.push(join3(directory, ARBOR_RELATIVE_PATH));
+    const parent = dirname4(directory);
     if (parent === directory) break;
     directory = parent;
   }
   return paths;
 }
-async function resolveIndex({
-  source,
-  env,
-  fetchFn
-} = {}) {
-  const committedIndex = await loadCommittedIndex();
-  const environment = env ?? process.env;
-  if (source === void 0) {
-    const configured = resolveSkillSource({
-      env: environment,
-      ...fetchFn ? { fetchFn } : {}
-    });
-    if (sameSource(configured.sourceUrl, committedIndex.source)) {
-      return { index: committedIndex, source: committedIndex.source, origin: "committed" };
-    }
-    return fetchIndex(configured.sourceUrl, environment, fetchFn);
-  }
-  const requested = source.trim();
-  if (requested.length === 0) {
-    throw new GaiaDataError("summon(source) must not be empty.");
-  }
-  if (sameSource(requested, committedIndex.source)) {
-    return { index: committedIndex, source: committedIndex.source, origin: "committed" };
-  }
-  return fetchIndex(expandSource(requested), environment, fetchFn);
-}
-function indexFromSnapshot(snapshot, sourceUrl) {
-  const named = flattenNamedSkills(snapshot.named);
-  const bucketedIds = new Set(Object.values(snapshot.named.buckets).flat().map((skill) => skill.id));
-  const bucketed = named.filter((skill) => bucketedIds.has(skill.id));
-  const awaitingClassification = named.filter((skill) => !bucketedIds.has(skill.id));
-  return buildSkillIndex({
-    projection: {
-      buckets: { fetched: bucketed.map(toProjectionSkill) },
-      ...awaitingClassification.length > 0 ? { awaitingClassification: awaitingClassification.map(toProjectionSkill) } : {}
-    },
-    source: sourceUrl,
-    sourceDigest: sha256(JSON.stringify(named)),
-    builderVersion: "runtime-fetch",
-    generatedAt: snapshot.named.generatedAt ?? snapshot.source.fetchedAt
-  });
-}
-async function fetchIndex(sourceUrl, env, fetchFn) {
-  const resolution = resolveSkillSource({
-    env: { ...env, SKILL_SOURCE: sourceUrl },
-    ...fetchFn ? { fetchFn } : {}
-  });
-  let snapshot;
+async function readConfinedJson(root, relativePath, problems) {
+  const target = join3(root, relativePath);
   try {
-    snapshot = await resolution.source.load();
+    const bytes = await readConfinedFile(root, target);
+    const digest = createHash3("sha256").update(bytes).digest("hex");
+    try {
+      return { value: JSON.parse(bytes.toString("utf8")), sha256: digest };
+    } catch {
+      return { value: null, sha256: digest };
+    }
   } catch (error2) {
-    throw new GaiaDataError(
-      `Could not resolve source '${sourceUrl}': ${error2 instanceof Error ? error2.message : String(error2)}`
-    );
+    const code = error2.code;
+    if (code !== "ENOENT" && code !== "ENOTDIR") {
+      problems.push({ where: relativePath, detail: describe3(error2) });
+    }
+    return void 0;
+  }
+}
+async function verifyProvenance(root, expected, digests, problems) {
+  const file = await readConfinedJson(root, PROVENANCE_FILE, problems);
+  if (file === void 0) {
+    problems.push({
+      where: PROVENANCE_FILE,
+      detail: "no provenance record; this cache is UNAUDITABLE \u2014 it names no upstream revision and its bytes were not checked against any manifest"
+    });
+    return { provenance: null, rejected: false };
+  }
+  const reject = (detail) => {
+    problems.push({ where: PROVENANCE_FILE, detail });
+    return { provenance: null, rejected: true };
+  };
+  if (file.value === null || typeof file.value !== "object" || Array.isArray(file.value)) {
+    return reject("provenance record is not a JSON object");
+  }
+  const record3 = file.value;
+  const upstream = record3.upstream;
+  const commit = record3.commit;
+  const path10 = record3.path;
+  const capturedAt = record3.capturedAt;
+  if (typeof upstream !== "string" || upstream.length === 0) {
+    return reject("provenance.upstream must be a non-empty string");
+  }
+  if (typeof commit !== "string" || !/^[a-f0-9]{40}$/u.test(commit)) {
+    return reject("provenance.commit must be a 40-character commit id");
+  }
+  if (typeof path10 !== "string" || path10.length === 0) {
+    return reject("provenance.path must be a non-empty string");
+  }
+  if (typeof capturedAt !== "string" || capturedAt.length === 0) {
+    return reject("provenance.capturedAt must be a non-empty string");
+  }
+  if (!record3.files || typeof record3.files !== "object" || Array.isArray(record3.files)) {
+    return reject("provenance.files must be an object of path -> sha256");
+  }
+  const declared = /* @__PURE__ */ new Map();
+  for (const [rawPath, digest] of Object.entries(record3.files)) {
+    if (typeof digest !== "string" || !/^[a-f0-9]{64}$/u.test(digest)) {
+      return reject(`provenance.files['${rawPath}'] must be a sha256 digest`);
+    }
+    const normalized = normalizeRelative(rawPath);
+    if (normalized === null) {
+      return reject(`provenance.files['${rawPath}'] escapes the publication directory`);
+    }
+    const existing = declared.get(normalized);
+    if (existing !== void 0) {
+      return reject(
+        existing === digest ? `provenance.files lists '${normalized}' more than once` : `provenance.files gives conflicting digests for '${normalized}'`
+      );
+    }
+    declared.set(normalized, digest);
+  }
+  for (const [relativePath, digest] of declared) {
+    if (!expected.has(relativePath)) {
+      return reject(
+        `provenance.files declares '${relativePath}', which is not part of this publication`
+      );
+    }
+    const actual = digests.get(relativePath);
+    if (actual === void 0) {
+      return reject(`provenance.files declares '${relativePath}', which could not be read`);
+    }
+    if (actual !== digest) {
+      return reject(
+        `'${relativePath}' hashes to ${actual}, but the provenance record claims ${digest}`
+      );
+    }
+  }
+  for (const relativePath of expected) {
+    if (!declared.has(relativePath)) {
+      return reject(`provenance.files does not cover '${relativePath}'`);
+    }
   }
   return {
-    index: indexFromSnapshot(snapshot, resolution.sourceUrl),
-    source: resolution.sourceUrl,
-    origin: "fetched"
+    provenance: { upstream, commit, path: path10, capturedAt, files: Object.fromEntries(declared) },
+    rejected: false
   };
 }
-function toProjectionSkill(skill) {
-  return {
-    id: skill.id,
-    name: skill.name,
-    ...skill.title ? { title: skill.title } : {},
-    contributor: skill.contributor,
-    ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
-    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
-    description: skill.description,
-    tags: skill.tags,
-    ...skill.level ? { level: skill.level } : {},
-    ...skill.status ? { status: skill.status } : {},
-    ...skill.invocation ? { invocation: skill.invocation } : {},
-    ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
-    ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
-    ...skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {},
-    ...skill.installable === false ? { installable: false } : {},
-    links: skill.links
-  };
+function normalizeRelative(value) {
+  if (value.length === 0 || isAbsolute(value)) return null;
+  const normalized = relative(".", join3(".", value));
+  if (normalized.length === 0) return null;
+  if (normalized === ".." || normalized.startsWith(`..${sep}`)) return null;
+  return normalized;
 }
-function expandSource(value) {
-  if (/^[\w.-]+\/[\w.-]+$/u.test(value)) return `https://github.com/${value}`;
-  return value;
-}
-function sameSource(left, right) {
-  return canonical(left) === canonical(right);
-}
-function canonical(value) {
-  const trimmed = expandSource(value).trim();
-  let end = trimmed.length;
-  while (end > 0 && trimmed.charCodeAt(end - 1) === 47) end -= 1;
-  return trimmed.slice(0, end).toLocaleLowerCase("en-US");
-}
-
-// packages/skill-summon/src/version.ts
-var VERSION = "0.1.0";
-
-// packages/skill-summon/src/service.ts
-var DEFAULT_LIMIT = 5;
-var MAX_LIMIT = 20;
-var DEFAULT_MAX_DATA_AGE_MS = 72 * 60 * 60 * 1e3;
-var GaiaService = class {
-  #source;
-  #now;
-  #maxDataAgeMs;
-  #serverVersion;
-  #sourceUrl;
-  constructor(source, options = {}) {
-    this.#source = source;
-    this.#now = options.now ?? (() => /* @__PURE__ */ new Date());
-    this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
-    this.#serverVersion = options.serverVersion ?? VERSION;
-    this.#sourceUrl = options.sourceUrl;
-  }
-  /**
-   * The index summon ranks against (SPEC §2.2, PLAN 1.2).
-   *
-   * With no override and a configured source the committed index was built
-   * from, this returns that index and touches no network at all — the point of
-   * the whole exercise. An explicit `override` names a different tree or fleet
-   * and IS resolved over the network; failing to resolve it is an error, never
-   * a quiet fallback to the configured source (SPEC §5.1).
-   */
-  async skillIndex(override) {
-    if (override !== void 0) return resolveIndex({ source: override });
-    if (this.#sourceUrl !== void 0) {
-      const committed2 = await loadCommittedIndex();
-      if (sameSource(this.#sourceUrl, committed2.source)) {
-        return { index: committed2, source: committed2.source, origin: "committed" };
-      }
-    }
-    const snapshot = await this.#source.load();
-    const sourceUrl = this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
-    return { index: indexFromSnapshot(snapshot, sourceUrl), source: sourceUrl, origin: "fetched" };
-  }
-  async search(input) {
-    const query = input.query.trim();
-    if (query.length === 0) {
-      throw new Error("Search query must not be empty.");
-    }
-    const snapshot = await this.#source.load();
-    const kinds = new Set(input.kinds ?? ["generic", "named"]);
-    const requestedTypes = [...input.types ?? [], ...input.tiers ?? []];
-    const allowedTypes = requestedTypes.length > 0 ? new Set(requestedTypes.map((value) => normalize(value))) : void 0;
-    const allowedContributors = input.contributors ? new Set(input.contributors.map((value) => normalize(value))) : void 0;
-    const namedSkills = flattenNamed(snapshot);
-    const genericTypes = new Map(
-      snapshot.generic.skills.map((skill) => [skill.id, skill.type])
-    );
-    const scored = [];
-    if (kinds.has("generic")) {
-      for (const skill of snapshot.generic.skills) {
-        if (allowedTypes && !allowedTypes.has(normalize(skill.type))) continue;
-        const implementations = namedSkills.filter(
-          (named) => named.genericSkillRef === skill.id
-        );
-        const installable = implementations.some(isInstallable);
-        const maxTrustMagnitude = Math.max(
-          ...implementations.map((named) => named.trustMagnitude ?? -1)
-        );
-        const maxStars = Math.max(
-          starCount(skill.namedMaxLevel),
-          ...implementations.map((named) => starCount(named.level))
-        );
-        if (input.minStars !== void 0 && maxStars < input.minStars) continue;
-        if (input.minTrustMagnitude !== void 0 && maxTrustMagnitude < input.minTrustMagnitude) {
-          continue;
-        }
-        if (allowedContributors && !implementations.some(
-          (named) => allowedContributors.has(normalize(named.contributor))
-        )) {
-          continue;
-        }
-        if (input.installable !== void 0 && installable !== input.installable) {
-          continue;
-        }
-        const score = scoreMatch(query, [
-          [skill.name, 12],
-          [skill.id, 10],
-          [skill.title ?? "", 8],
-          [skill.summary ?? "", 4],
-          [skill.description, 3]
-        ]);
-        if (score === 0) continue;
-        scored.push({
-          score: score + 1,
-          kind: "generic",
-          id: skill.id,
-          name: skill.name,
-          ...skill.title ? { title: skill.title } : {},
-          description: skill.description,
-          type: skill.type,
-          status: skill.status,
-          ...skill.namedMaxLevel ? { level: skill.namedMaxLevel } : {},
-          ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
-          evidenceCount: skill.evidence.length,
-          installable
-        });
-      }
-    }
-    if (kinds.has("named")) {
-      for (const skill of namedSkills) {
-        const resolvedType = skill.type ?? (skill.genericSkillRef ? genericTypes.get(skill.genericSkillRef) : void 0);
-        if (allowedTypes && (!resolvedType || !allowedTypes.has(normalize(resolvedType)))) {
-          continue;
-        }
-        if (allowedContributors && !allowedContributors.has(normalize(skill.contributor))) {
-          continue;
-        }
-        if (input.minStars !== void 0 && starCount(skill.level) < input.minStars) {
-          continue;
-        }
-        if (input.minTrustMagnitude !== void 0 && (skill.trustMagnitude ?? -1) < input.minTrustMagnitude) {
-          continue;
-        }
-        const installable = isInstallable(skill);
-        if (input.installable !== void 0 && installable !== input.installable) {
-          continue;
-        }
-        const score = scoreMatch(query, [
-          [skill.name, 12],
-          [skill.id, 10],
-          [skill.title ?? "", 10],
-          [skill.catalogRef ?? "", 8],
-          [skill.genericSkillRef ?? "", 8],
-          [skill.tags.join(" "), 6],
-          [skill.description, 3]
-        ]);
-        if (score === 0) continue;
-        scored.push({
-          score,
-          kind: "named",
-          id: skill.id,
-          name: skill.name,
-          ...skill.title ? { title: skill.title } : {},
-          description: skill.description,
-          ...resolvedType ? { type: resolvedType } : {},
-          status: skill.status,
-          ...skill.genericSkillRef ? { genericSkillRef: skill.genericSkillRef } : {},
-          ...skill.invocation ? { invocation: skill.invocation } : {},
-          contributor: skill.contributor,
-          ...skill.level === void 0 ? {} : { level: skill.level },
-          ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
-          ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
-          ...skill.trust === void 0 ? {} : { trust: skill.trust },
-          evidenceCount: skill.evidence.length,
-          installable,
-          ...typeof skill.links.github === "string" ? { sourceUrl: skill.links.github } : {}
-        });
-      }
-    }
-    const limit = Math.min(
-      Math.max(input.limit ?? DEFAULT_LIMIT, 1),
-      MAX_LIMIT
-    );
-    const results = scored.sort(
-      (left, right) => right.score - left.score || left.kind.localeCompare(right.kind) || left.name.localeCompare(right.name)
-    ).slice(0, limit).map(({ score: _score, ...result }) => result);
-    return { query, results, meta: this.#metadata(snapshot) };
-  }
-  async inspect(identifier) {
-    const normalizedIdentifier = identifier.trim();
-    const snapshot = await this.#source.load();
-    const generic = snapshot.generic.skills.find(
-      (skill) => skill.id === normalizedIdentifier
-    );
-    if (generic) {
-      const namedImplementations = flattenNamed(snapshot).filter((skill) => skill.genericSkillRef === generic.id).map(toNamedSummary).sort(
-        (left, right) => (right.trustMagnitude ?? -1) - (left.trustMagnitude ?? -1) || left.name.localeCompare(right.name)
-      );
-      return {
-        skill: {
-          kind: "generic",
-          ...generic,
-          namedImplementations
-        },
-        meta: this.#metadata(snapshot)
-      };
-    }
-    const named = flattenNamed(snapshot).find(
-      (skill) => skill.id === normalizedIdentifier || skill.catalogRef === normalizedIdentifier
-    );
-    if (named) {
-      const genericSkill = snapshot.generic.skills.find(
-        (skill) => skill.id === named.genericSkillRef
-      );
-      return {
-        skill: {
-          kind: "named",
-          ...named,
-          ...genericSkill ? {
-            genericSkill: {
-              id: genericSkill.id,
-              name: genericSkill.name,
-              type: genericSkill.type,
-              status: genericSkill.status
-            }
-          } : {}
-        },
-        meta: this.#metadata(snapshot)
-      };
-    }
-    throw new Error(`Gaia skill not found: ${normalizedIdentifier}`);
-  }
-  async status() {
-    const snapshot = await this.#source.load();
-    return {
-      counts: {
-        genericSkills: snapshot.generic.skills.length,
-        namedSkills: flattenNamed(snapshot).length
-      },
-      tools: ["summon"],
-      bondedCapabilities: false,
-      missingCapabilities: [
-        "bonded-local-context",
-        "workspace-analysis",
-        "progression-paths"
-      ],
-      ...this.#metadata(snapshot)
-    };
-  }
-  /** Full pool of Named Skills, for callers (summon) that rank on raw fields. */
-  async namedSkills() {
-    const snapshot = await this.#source.load();
-    return flattenNamed(snapshot);
-  }
-  #metadata(snapshot) {
-    const sourceKind = snapshot.source.kind ?? "tree";
-    const generatedTimes = [
-      Date.parse(snapshot.generic.generatedAt),
-      Date.parse(snapshot.named.generatedAt)
-    ].filter(Number.isFinite);
-    const oldestGeneratedAt = generatedTimes.length > 0 ? Math.min(...generatedTimes) : void 0;
-    const now = this.#now().getTime();
-    const stale = generatedTimes.length !== 2 || oldestGeneratedAt === void 0 || now - oldestGeneratedAt > this.#maxDataAgeMs;
-    const dataAgeSeconds = oldestGeneratedAt === void 0 ? null : Math.max(0, Math.floor((now - oldestGeneratedAt) / 1e3));
-    const upstreamDeclaresContractVersion = sourceKind === "fleet" || [
-      snapshot.generic.contractVersion ?? snapshot.generic.schemaVersion,
-      snapshot.named.contractVersion ?? snapshot.named.schemaVersion
-    ].every((version2) => version2 === TREE_CONTRACT_VERSION);
-    const warnings = [];
-    if (sourceKind === "fleet") {
-      warnings.push(
-        "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active."
-      );
-    } else if (!upstreamDeclaresContractVersion) {
-      warnings.push(
-        `Gaia's public projections do not both advertise a contract version. Compatibility is being enforced by the ${TREE_CONTRACT_VERSION} shape adapter; verify the source URLs before stateful follow-up work.`
-      );
-    }
-    if (snapshot.source.legacy) {
-      warnings.push(
-        "TREE_URL + TREE_NAMED_URL compatibility is deprecated; configure one SKILL_SOURCE root URL."
-      );
-    }
-    if (stale) {
-      warnings.push(
-        dataAgeSeconds === null ? "One or more Gaia projection timestamps are invalid. Regenerate the public projections or restore a valid generatedAt value." : `Gaia projection data is ${dataAgeSeconds} seconds old, beyond the ${Math.floor(this.#maxDataAgeMs / 1e3)}-second freshness window. Check the Gaia build pipeline or retry after regeneration.`
-      );
-    }
-    return {
-      serverVersion: this.#serverVersion,
-      mode: "registry",
-      sourceKind,
-      routingMode: sourceKind === "fleet" ? "collection-only" : "generic-map+collection",
-      contractVersion: TREE_CONTRACT_VERSION,
-      supportedContractVersions: [TREE_CONTRACT_VERSION],
-      upstreamDeclaresContractVersion,
-      freshness: stale ? "stale" : "fresh",
-      dataAgeSeconds,
-      genericGeneratedAt: snapshot.generic.generatedAt,
-      namedGeneratedAt: snapshot.named.generatedAt,
-      fetchedAt: snapshot.source.fetchedAt,
-      sources: {
-        generic: snapshot.source.genericUrl,
-        named: snapshot.source.namedUrl
-      },
-      compatibility: {
-        mcpSdk: "@modelcontextprotocol/sdk@1.29.0",
-        mcpProtocolVersions: [...SUPPORTED_PROTOCOL_VERSIONS],
-        gaiaPublicData: [TREE_CONTRACT_VERSION],
-        gaiaCli: "none",
-        node: ">=22.14.0",
-        transports: ["stdio"]
-      },
-      warnings
-    };
-  }
-};
-function flattenNamed(snapshot) {
-  return flattenNamedSkills(snapshot.named);
-}
-function toNamedSummary(skill) {
-  return {
-    id: skill.id,
-    name: skill.name,
-    ...skill.title ? { title: skill.title } : {},
-    contributor: skill.contributor,
-    ...skill.level === void 0 ? {} : { level: skill.level },
-    description: skill.description,
-    ...skill.catalogRef ? { catalogRef: skill.catalogRef } : {},
-    ...skill.invocation ? { invocation: skill.invocation } : {},
-    ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
-    ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
-    ...skill.trust === void 0 ? {} : { trust: skill.trust },
-    ...typeof skill.links.github === "string" ? { sourceUrl: skill.links.github } : {}
-  };
-}
-function starCount(level) {
-  if (!level) return -1;
-  const match = /^(\d)★/.exec(level);
-  return match?.[1] === void 0 ? -1 : Number(match[1]);
-}
-function isInstallable(skill) {
-  if (skill.links.installable === false) return false;
-  return typeof skill.links.github === "string" && /(?:\/SKILL\.md(?:$|[?#])|raw\.githubusercontent\.com)/i.test(
-    skill.links.github
-  );
+function describe3(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
 }
 
 // packages/skill-summon/src/trust.ts
@@ -23671,6 +25616,17 @@ function renderSummonCard(skill, ranking) {
       "  Name mismatch: this is NOT the skill your query named \u2014 it is the best relevance match."
     );
   }
+  if (skill.installability) {
+    if (skill.installability.applicability === "verified") {
+      lines.push(
+        `  Installability: ${skill.installability.state} \xB7 ${skill.installability.reason}`
+      );
+    } else {
+      lines.push(
+        `  Installability: unknown \xB7 upstream evidence applicability is unverified (${skill.installability.applicabilityReason})`
+      );
+    }
+  }
   lines.push(
     `  Source: ${skill.source ?? ranking.source}`,
     ranking.mode === "relevance-only" ? skill.origin === "fleet" ? "  Ranking: relevance only \u2014 flat fleet; no generic map or tree trust ordering" : "  Ranking: relevance only \u2014 the tree publishes no behavioural stamps" : `  Ranking: trust then relevance \u2014 ${ranking.trustFields.join(", ")}`
@@ -23685,6 +25641,7 @@ function renderSummonCard(skill, ranking) {
       );
     }
   }
+  if (skill.arbor) lines.push(...arborSubjectLines(skill.arbor));
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,
     `  Install: ${skill.totalSeconds.toFixed(3)}s \xB7 ${skill.cache}/${skill.cacheSource} \xB7 ${skill.fileCount} files`,
@@ -23697,10 +25654,28 @@ function renderSummonCard(skill, ranking) {
   return lines.join("\n");
 }
 
+// packages/skill-summon/src/summon/composition.ts
+function sessionComposition(publication, source, links, before, reportFor, additions) {
+  const members = before.map((record3) => {
+    const current = reportFor(record3.id);
+    const sameSource2 = record3.source === source && record3.sourceUrl === links.get(record3.id);
+    const samePin = current.contentSha256 !== null && record3.arbor?.canonicalSource === true && record3.arbor.contentSha256 === current.contentSha256;
+    const report = sameSource2 && samePin ? current : consumeArbor(publication, {
+      skillId: record3.id,
+      contentSha256: null,
+      canonicalSource: sameSource2 && current.canonicalSource,
+      delivery: "delivered-unverified",
+      identityNote: "the session record does not prove the current canonical source and content pin; no identity was borrowed by id"
+    });
+    return { role: "session-record", report };
+  });
+  return inspectArborComposition(publication, [...members, ...additions]);
+}
+
 // packages/skill-summon/src/summon/materialize.ts
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash4 } from "node:crypto";
 import { cp, lstat as lstat3, readFile as readFile4, readdir as readdir3 } from "node:fs/promises";
-import path4 from "node:path";
+import path5 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
   await rejectSymlinks(sourceDir);
@@ -23708,16 +25683,16 @@ async function materializeSkillDir(sourceDir, destDir) {
     recursive: true,
     dereference: false,
     filter: (source) => {
-      if (path4.basename(source) === ".git") return false;
+      if (path5.basename(source) === ".git") return false;
       return true;
     }
   });
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
-  const skillContent = await readFile4(path4.join(destDir, "SKILL.md"));
-  const sha2562 = createHash2("sha256").update(skillContent).digest("hex");
+  const skillContent = await readFile4(path5.join(destDir, "SKILL.md"));
+  const sha2563 = createHash4("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
-  return { path: destDir, materializeSeconds, fileCount, sha256: sha2562 };
+  return { path: destDir, materializeSeconds, fileCount, sha256: sha2563 };
 }
 async function rejectSymlinks(dir) {
   const root = await lstat3(dir);
@@ -23727,7 +25702,7 @@ async function rejectSymlinks(dir) {
     );
   }
   for (const entry of await readdir3(dir, { withFileTypes: true })) {
-    const full = path4.join(dir, entry.name);
+    const full = path5.join(dir, entry.name);
     if (entry.isSymbolicLink()) {
       throw new Error(
         `refusing to materialize skill: '${full}' is a symlink, which could redirect reads outside the summoned payload.`
@@ -23739,7 +25714,7 @@ async function rejectSymlinks(dir) {
 async function countFiles(dir) {
   let count = 0;
   for (const entry of await readdir3(dir, { withFileTypes: true })) {
-    const full = path4.join(dir, entry.name);
+    const full = path5.join(dir, entry.name);
     if (entry.isDirectory()) count += await countFiles(full);
     else count += 1;
   }
@@ -23747,7 +25722,7 @@ async function countFiles(dir) {
 }
 
 // packages/skill-summon/src/summon/payload-cache.ts
-import { createHash as createHash3, randomUUID as randomUUID2 } from "node:crypto";
+import { createHash as createHash5, randomUUID as randomUUID2 } from "node:crypto";
 import {
   cp as cp2,
   lstat as lstat4,
@@ -23761,7 +25736,7 @@ import {
   writeFile as writeFile2
 } from "node:fs/promises";
 import { tmpdir as tmpdir3 } from "node:os";
-import path5 from "node:path";
+import path6 from "node:path";
 var DEFAULT_CACHE_MAX_MB = 16;
 var CACHE_DIR_NAME = "skill-summon-payload-cache-v1";
 var METADATA_FILE = "metadata.json";
@@ -23778,18 +25753,18 @@ var PayloadCache = class {
         `Payload cache size must be non-negative, got: ${this.maxBytes}`
       );
     }
-    this.#entriesRoot = path5.join(this.root, "entries");
+    this.#entriesRoot = path6.join(this.root, "entries");
   }
   async lookup(identity) {
     await this.prune();
     const entryRoot = this.#entryRoot(identity);
-    const payload = path5.join(entryRoot, PAYLOAD_DIR);
+    const payload = path6.join(entryRoot, PAYLOAD_DIR);
     try {
       const metadata = JSON.parse(
-        await readFile5(path5.join(entryRoot, METADATA_FILE), "utf8")
+        await readFile5(path6.join(entryRoot, METADATA_FILE), "utf8")
       );
       if (metadata.key !== cacheKey(identity)) return void 0;
-      if (!(await stat3(path5.join(payload, "SKILL.md"))).isFile())
+      if (!(await stat3(path6.join(payload, "SKILL.md"))).isFile())
         return void 0;
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
@@ -23805,23 +25780,23 @@ var PayloadCache = class {
     if (payloadBytes > this.maxBytes || this.maxBytes === 0) return false;
     await mkdir3(this.#entriesRoot, { recursive: true });
     const key = cacheKey(identity);
-    const entryRoot = path5.join(this.#entriesRoot, key);
+    const entryRoot = path6.join(this.#entriesRoot, key);
     if (await pathExists2(entryRoot)) {
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
       await this.prune();
       return true;
     }
-    const temporaryRoot = path5.join(
+    const temporaryRoot = path6.join(
       this.#entriesRoot,
       `.tmp-${process.pid}-${randomUUID2()}`
     );
     try {
-      const payload = path5.join(temporaryRoot, PAYLOAD_DIR);
+      const payload = path6.join(temporaryRoot, PAYLOAD_DIR);
       await mkdir3(temporaryRoot, { recursive: true });
       await cp2(sourceDir, payload, {
         recursive: true,
-        filter: (source) => path5.basename(source) !== ".git"
+        filter: (source) => path6.basename(source) !== ".git"
       });
       const metadata = {
         ...identity,
@@ -23830,7 +25805,7 @@ var PayloadCache = class {
         bytes: payloadBytes
       };
       await writeFile2(
-        path5.join(temporaryRoot, METADATA_FILE),
+        path6.join(temporaryRoot, METADATA_FILE),
         JSON.stringify(metadata, null, 2),
         "utf8"
       );
@@ -23855,7 +25830,7 @@ var PayloadCache = class {
     const retained = [];
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const entryRoot = path5.join(this.#entriesRoot, entry.name);
+      const entryRoot = path6.join(this.#entriesRoot, entry.name);
       if (entry.name.startsWith(".tmp-")) {
         const pid = Number(/^\.tmp-(\d+)-/u.exec(entry.name)?.[1]);
         if (!isProcessLive2(pid)) {
@@ -23879,11 +25854,11 @@ var PayloadCache = class {
     }
   }
   #entryRoot(identity) {
-    return path5.join(this.#entriesRoot, cacheKey(identity));
+    return path6.join(this.#entriesRoot, cacheKey(identity));
   }
 };
 function payloadCacheRoot() {
-  return process.env.SKILL_SUMMON_CACHE_DIR ?? path5.join(tmpdir3(), CACHE_DIR_NAME);
+  return process.env.SKILL_SUMMON_CACHE_DIR ?? path6.join(tmpdir3(), CACHE_DIR_NAME);
 }
 function payloadCacheMaxBytes() {
   const configured = process.env.SKILL_SUMMON_CACHE_MAX_MB;
@@ -23897,7 +25872,7 @@ function payloadCacheMaxBytes() {
   return Math.floor(megabytes * 1024 ** 2);
 }
 function cacheKey(identity) {
-  return createHash3("sha256").update(
+  return createHash5("sha256").update(
     JSON.stringify([identity.repoUrl, identity.commit, identity.subpath])
   ).digest("hex");
 }
@@ -23906,7 +25881,7 @@ async function directorySize2(root) {
   if (!target.isDirectory()) return target.size;
   let bytes = 0;
   for (const entry of await readdir4(root)) {
-    bytes += await directorySize2(path5.join(root, entry));
+    bytes += await directorySize2(path6.join(root, entry));
   }
   return bytes;
 }
@@ -23930,10 +25905,10 @@ async function pathExists2(target) {
 
 // packages/skill-summon/src/summon/log.ts
 import { appendFile } from "node:fs/promises";
-import path6 from "node:path";
+import path7 from "node:path";
 var SUMMON_LOG_FILE = "summon-log.jsonl";
 function summonLogPath(session) {
-  return path6.join(session.root, SUMMON_LOG_FILE);
+  return path7.join(session.root, SUMMON_LOG_FILE);
 }
 async function appendSummonLog(session, outcome) {
   const chosen = [
@@ -23996,6 +25971,50 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   const ranking = disclose(resolved, decision);
   const registry2 = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
+  const publication = await loadArborPublication();
+  const identity = await loadArborIdentityContext();
+  const linkById = new Map(
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github ?? null])
+  );
+  const canonicalIdentity = resolved.origin === "committed" && resolved.index.sourceWorkflow?.startsWith("gaia-skill-tree/") && resolved.index.sourceRevision !== void 0 && identity.context?.corpusSource === resolved.source && identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree" ? identity.context : null;
+  const knownContentSha256 = /* @__PURE__ */ Object.create(null);
+  for (const [skillId, sourceUrl] of linkById) {
+    const pin = resolveArborIdentity(canonicalIdentity, {
+      skillId,
+      sourceUrl,
+      corpusRevision: resolved.index.sourceRevision ?? null
+    });
+    if (pin.pinned) knownContentSha256[skillId] = pin.contentSha256;
+  }
+  const arbor = summonArborDisclosure(
+    publication,
+    resolved,
+    identity,
+    Object.keys(knownContentSha256).length
+  );
+  const arborFor = (skillId, delivery = "not-materialized") => {
+    const resolution = resolveArborIdentity(canonicalIdentity, {
+      skillId,
+      sourceUrl: linkById.get(skillId),
+      corpusRevision: arbor.corpus.revision
+    });
+    return consumeArbor(publication, {
+      skillId,
+      contentSha256: resolution.pinned ? resolution.contentSha256 : null,
+      canonicalSource: arbor.corpus.canonical,
+      ...resolution.pinned ? {} : { identityNote: describeArborIdentityMiss(resolution.miss) },
+      delivery
+    }, { knownContentSha256 });
+  };
+  const before = [...session.skills];
+  const compositionFor = (additions) => sessionComposition(
+    publication,
+    resolved.source,
+    linkById,
+    before,
+    (id) => arborFor(id, "delivered-unverified"),
+    additions
+  );
   if (decision.noMatch) {
     const outcome2 = {
       query: trimmedQuery,
@@ -24006,10 +26025,12 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
       noMatch: decision.noMatch,
       filtered: decision.filtered,
       margin: 0,
+      composition: compositionFor([]),
       skipped: [],
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24029,16 +26050,23 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
         description: hit.doc.description,
         ...hit.doc.level ? { level: hit.doc.level } : {},
         ...hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {},
+        ...hit.doc.installability ? { installability: hit.doc.installability } : {},
         source: resolved.source,
-        retrieval: disclosures.get(hit.doc.id)
+        retrieval: disclosures.get(hit.doc.id),
+        arbor: arborFor(hit.doc.id)
       })),
       noMatch: null,
       filtered: decision.filtered,
       margin: decision.margin,
+      composition: compositionFor(decision.admitted.slice(0, limit).map((hit) => ({
+        role: "proposed",
+        report: arborFor(hit.doc.id)
+      }))),
       skipped: [],
       suites: [],
       sessionRoot: session.root,
       ranking,
+      arbor,
       cards: [],
       totalSeconds: elapsedSeconds(runStartedAt)
     };
@@ -24051,7 +26079,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     registry: registry2,
     payloadCache: new PayloadCache(),
     ranking,
-    disclosures
+    disclosures,
+    arborFor
   };
   const summoned = [];
   const skipped = [];
@@ -24085,6 +26114,11 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     suites,
     sessionRoot: session.root,
     ranking,
+    arbor,
+    composition: compositionFor(summoned.map((skill) => ({
+      role: "materialized",
+      report: skill.arbor ?? arborFor(skill.id, "delivered-unverified")
+    }))),
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt)
   };
@@ -24094,17 +26128,49 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
 function disclose(resolved, decision) {
   const { index } = resolved;
   const floorNote = decision.floor === null ? "no calibrated relevance floor in this index \u2014 summon cannot yet decline on relevance" : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
+  const installabilityNote = resolved.installability?.status === "applied" ? `Tree installability projection applied from ${resolved.installability.projectionIndexPath ?? "an unspecified path"}; only exact verified negatives can withhold.` : resolved.installability?.status === "unavailable" ? `Optional Tree installability projection unavailable; materializability is unknown and summon continued offline (${resolved.installability.warning ?? "source error"}).` : resolved.installability?.status === "not-applicable" ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative." : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied.`,
+    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied. ` + installabilityNote,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
     indexOrigin: resolved.origin,
-    source: resolved.source
+    source: resolved.source,
+    ...resolved.installability ? { installability: resolved.installability } : {}
+  };
+}
+function summonArborDisclosure(publication, resolved, identity, pinnedSkills) {
+  const base = describeArborPublication(publication);
+  const workflow = resolved.index.sourceWorkflow;
+  const canonical2 = resolved.origin === "committed" && typeof workflow === "string" && workflow.startsWith("gaia-skill-tree/");
+  const revision = resolved.index.sourceRevision ?? null;
+  const publicationCommit = publication.provenance?.commit ?? null;
+  const sameUpstreamRevision = revision === null || publicationCommit === null || publicationCommit === "unknown" ? null : revision === publicationCommit;
+  let note = base.note;
+  if (!canonical2) {
+    note += " These candidates are outside the canonical corpus that projection describes, so no Arbor record can apply to them.";
+  } else if (sameUpstreamRevision === false) {
+    note += ` The retrieval corpus (${revision}) and the Arbor publication (${publicationCommit}) are pinned to different upstream revisions; a shared id across the two is not evidence of shared content.`;
+  }
+  const identityMatches = identity.context !== null && revision !== null && identity.context.commit === revision;
+  if (canonical2 && !identityMatches) {
+    note += identity.context === null ? " No canonical identity context is available, so no candidate's content pin could be proven." : " The canonical identity context is pinned at a different Tree revision than this corpus, so no content pin was used.";
+  }
+  return {
+    ...base,
+    note,
+    corpus: { source: resolved.source, revision, canonical: canonical2, sameUpstreamRevision },
+    identity: {
+      commit: identity.context?.commit ?? null,
+      matchesCorpusRevision: identityMatches,
+      pinnedSkills,
+      sha256: identity.sha256,
+      problem: identity.problem
+    }
   };
 }
 function disclosureById(decision, query) {
@@ -24139,6 +26205,7 @@ function toNamedSkill(doc) {
     links: { ...doc.links },
     ...doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {},
     evidence: [],
+    ...doc.installability ? { installability: doc.installability } : {},
     ...doc.trust.trustNumber === void 0 ? {} : { trustMagnitude: doc.trust.trustNumber },
     ...doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {},
     ...doc.registryOnly ? { installable: false } : {}
@@ -24155,7 +26222,7 @@ async function installSkill(ref, ctx, visited, viaSuite) {
       ok: false,
       installed: [],
       suites: [],
-      reason: errorMessage5(error2)
+      reason: errorMessage6(error2)
     };
   }
   if (!resolved) {
@@ -24278,7 +26345,7 @@ async function installSingle(skill, ctx, viaSuite) {
     };
   }
   const { repoUrl, branch, subpath } = parseGithubUrl(githubUrl);
-  const resident = [...ctx.session.skills].reverse().find((record2) => record2.id === skill.id && record2.sourceUrl === githubUrl);
+  const resident = [...ctx.session.skills].reverse().find((record3) => record3.id === skill.id && record3.sourceUrl === githubUrl);
   if (resident && await isResidentPayload(ctx.session, resident.path)) {
     const base = {
       ...installedTrust(skill),
@@ -24286,6 +26353,7 @@ async function installSingle(skill, ctx, viaSuite) {
       name: skill.name,
       contributor: skill.contributor,
       ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.installability ? { installability: skill.installability } : {},
       ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
@@ -24300,6 +26368,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24319,7 +26388,7 @@ async function installSingle(skill, ctx, viaSuite) {
       ok: false,
       installed: [],
       suites: [],
-      reason: `Could not resolve ${repoUrl}: ${errorMessage5(error2)}`
+      reason: `Could not resolve ${repoUrl}: ${errorMessage6(error2)}`
     };
   }
   const requestedIdentity = { repoUrl, commit: resolvedCommit, subpath };
@@ -24337,7 +26406,7 @@ async function installSingle(skill, ctx, viaSuite) {
         /\.git$/,
         ""
       );
-      const cacheDir = path7.join(ctx.session.cacheRoot, cacheOwner, repoName);
+      const cacheDir = path8.join(ctx.session.cacheRoot, cacheOwner, repoName);
       let cloneOutcome;
       try {
         await assertConfinedPath(ctx.session.root, cacheDir, "Cache path");
@@ -24348,11 +26417,11 @@ async function installSingle(skill, ctx, viaSuite) {
           ok: false,
           installed: [],
           suites: [],
-          reason: `Could not clone ${repoUrl}: ${errorMessage5(error2)}`
+          reason: `Could not clone ${repoUrl}: ${errorMessage6(error2)}`
         };
       }
       try {
-        const candidatePath = path7.resolve(cloneOutcome.path, subpath);
+        const candidatePath = path8.resolve(cloneOutcome.path, subpath);
         await assertConfinedPath(cloneOutcome.path, candidatePath, "Skill source path");
         sourceSkillPath = candidatePath;
       } catch (error2) {
@@ -24360,7 +26429,7 @@ async function installSingle(skill, ctx, viaSuite) {
           ok: false,
           installed: [],
           suites: [],
-          reason: `Unsafe skill subpath '${subpath}' in ${repoUrl}: ${errorMessage5(error2)}`
+          reason: `Unsafe skill subpath '${subpath}' in ${repoUrl}: ${errorMessage6(error2)}`
         };
       }
       retainedIdentity = { repoUrl, commit: cloneOutcome.commit, subpath };
@@ -24384,7 +26453,7 @@ async function installSingle(skill, ctx, viaSuite) {
         reason: `links.github for '${skill.id}' points at a file, not a skill directory (${sourceSkillPath}).`
       };
     }
-    if (!await pathExists3(path7.join(sourceSkillPath, "SKILL.md"))) {
+    if (!await pathExists3(path8.join(sourceSkillPath, "SKILL.md"))) {
       return {
         ok: false,
         installed: [],
@@ -24394,7 +26463,7 @@ async function installSingle(skill, ctx, viaSuite) {
     }
     const cloneSeconds = elapsedSeconds(sourceStartedAt);
     const safeId = skill.id.replaceAll("/", "__");
-    const destDir = path7.join(ctx.session.skillsRoot, safeId);
+    const destDir = path8.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
       await assertConfinedPath(ctx.session.root, destDir, "Materialization path");
@@ -24404,7 +26473,7 @@ async function installSingle(skill, ctx, viaSuite) {
         ok: false,
         installed: [],
         suites: [],
-        reason: `Could not materialize ${sourceSkillPath}: ${errorMessage5(error2)}`
+        reason: `Could not materialize ${sourceSkillPath}: ${errorMessage6(error2)}`
       };
     }
     if (cacheState === "cold") {
@@ -24416,6 +26485,7 @@ async function installSingle(skill, ctx, viaSuite) {
       name: skill.name,
       contributor: skill.contributor,
       ...skill.invocation ? { invocation: skill.invocation } : {},
+      ...skill.installability ? { installability: skill.installability } : {},
       ...skill.origin ? { origin: skill.origin } : {},
       sourceUrl: githubUrl,
       repoUrl,
@@ -24430,6 +26500,7 @@ async function installSingle(skill, ctx, viaSuite) {
       inspectUrl: inspectUrl(githubUrl, repoUrl),
       source: ctx.ranking.source,
       ...ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {},
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt)
@@ -24455,12 +26526,12 @@ function installedTrust(skill) {
   };
 }
 async function isResidentPayload(session, payloadPath) {
-  const relative = path7.relative(
-    path7.resolve(session.skillsRoot),
-    path7.resolve(payloadPath)
+  const relative2 = path8.relative(
+    path8.resolve(session.skillsRoot),
+    path8.resolve(payloadPath)
   );
-  if (relative.startsWith("..") || path7.isAbsolute(relative)) return false;
-  return pathExists3(path7.join(payloadPath, "SKILL.md"));
+  if (relative2.startsWith("..") || path8.isAbsolute(relative2)) return false;
+  return pathExists3(path8.join(payloadPath, "SKILL.md"));
 }
 async function pathExists3(target) {
   try {
@@ -24470,16 +26541,16 @@ async function pathExists3(target) {
     return false;
   }
 }
-function errorMessage5(error2) {
+function errorMessage6(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
 
 // packages/skill-summon/src/mcp/skills.ts
-import { constants } from "node:fs";
-import { createHash as createHash4 } from "node:crypto";
-import { mkdtemp as mkdtemp3, lstat as lstat5, open, rm as rm5 } from "node:fs/promises";
+import { constants as constants2 } from "node:fs";
+import { createHash as createHash6 } from "node:crypto";
+import { mkdtemp as mkdtemp3, lstat as lstat5, open as open2, rm as rm5 } from "node:fs/promises";
 import { tmpdir as tmpdir4 } from "node:os";
-import path8 from "node:path";
+import path9 from "node:path";
 var SKILLS_EXTENSION_ID = "io.modelcontextprotocol/skills";
 var SKILL_RESOURCE_TEMPLATE = "skill://{+resourcePath}";
 var SKILL_MD = "SKILL.md";
@@ -24617,7 +26688,7 @@ function verifyResourceContent(uri, content, manifest) {
   if (bytes.byteLength > MAX_RESOURCE_BYTES) {
     throw new Error(`Skill resource exceeds ${MAX_RESOURCE_BYTES} bytes: ${uri}`);
   }
-  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash4("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
+  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash6("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
     throw new Error(`Skill resource failed manifest verification: ${uri}`);
   }
 }
@@ -24697,8 +26768,8 @@ function uriFromSegments(segments) {
   if (segments.length < 2 || segments.some((segment) => !SAFE_SEGMENT.test(segment))) {
     throw new Error("Cannot create an MCP skill URI from unsafe path segments.");
   }
-  const [authority, ...pathSegments] = segments;
-  return `skill://${authority.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+  const [authority2, ...pathSegments] = segments;
+  return `skill://${authority2.toLocaleLowerCase("en-US")}/${pathSegments.map((segment) => encodeURIComponent(segment)).join("/")}`;
 }
 function validateManifest(skillUriValue, resources) {
   if (resources === "dynamic") return;
@@ -24737,19 +26808,19 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
   }
   const sourceSubpath = safeRelativePath(parsed.subpath, "skill source", true);
   const resourceSubpath = safeRelativePath(relativePath, "resource");
-  const root = await mkdtemp3(path8.join(tempRoot, "skill-summon-resource-"));
-  const repoPath = path8.join(root, "repo");
+  const root = await mkdtemp3(path9.join(tempRoot, "skill-summon-resource-"));
+  const repoPath = path9.join(root, "repo");
   try {
     const commit = await resolveRemoteCommit(parsed.repoUrl, parsed.branch);
     const checkout = await ensureCachedRepo(repoPath, parsed.repoUrl, commit);
-    const skillRoot = path8.resolve(checkout.path, sourceSubpath);
+    const skillRoot = path9.resolve(checkout.path, sourceSubpath);
     assertInside(checkout.path, skillRoot);
     await assertNoSymlinkPath(checkout.path, sourceSubpath);
-    const filePath = path8.resolve(skillRoot, resourceSubpath);
+    const filePath = path9.resolve(skillRoot, resourceSubpath);
     assertInside(skillRoot, filePath);
     await assertNoSymlinkPath(skillRoot, resourceSubpath);
-    const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
-    const handle = await open(filePath, flags);
+    const flags = constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0);
+    const handle = await open2(filePath, flags);
     try {
       const fileStat = await handle.stat();
       if (!fileStat.isFile()) {
@@ -24775,24 +26846,24 @@ function safeRelativePath(value, label, allowEmpty = false) {
   )) {
     throw new Error(`Unsafe ${label} path.`);
   }
-  return segments.join(path8.sep);
+  return segments.join(path9.sep);
 }
 function assertInside(root, target) {
-  const relative = path8.relative(path8.resolve(root), path8.resolve(target));
-  if (relative.startsWith("..") || path8.isAbsolute(relative)) {
+  const relative2 = path9.relative(path9.resolve(root), path9.resolve(target));
+  if (relative2.startsWith("..") || path9.isAbsolute(relative2)) {
     throw new Error("Skill resource path escapes its source root.");
   }
 }
-async function assertNoSymlinkPath(root, relative) {
-  const segments = relative ? relative.split(path8.sep) : [];
-  let current = path8.resolve(root);
+async function assertNoSymlinkPath(root, relative2) {
+  const segments = relative2 ? relative2.split(path9.sep) : [];
+  let current = path9.resolve(root);
   const rootStat = await lstat5(current);
   if (rootStat.isSymbolicLink()) throw new Error("Refusing symlinked skill resource root.");
   for (const segment of segments) {
-    current = path8.join(current, segment);
+    current = path9.join(current, segment);
     const entry = await lstat5(current);
     if (entry.isSymbolicLink()) {
-      throw new Error(`Refusing symlinked skill resource path: ${relative}.`);
+      throw new Error(`Refusing symlinked skill resource path: ${relative2}.`);
     }
   }
 }
@@ -24807,7 +26878,7 @@ function mimeTypeFor(relativePath) {
   if (relativePath === SKILL_MD || relativePath.toLocaleLowerCase("en-US").endsWith(".md")) {
     return "text/markdown";
   }
-  const extension = path8.extname(relativePath).toLocaleLowerCase("en-US");
+  const extension = path9.extname(relativePath).toLocaleLowerCase("en-US");
   return {
     ".json": "application/json",
     ".txt": "text/plain",
@@ -24867,7 +26938,58 @@ var summonOutputSchema = external_exports.object({
     indexAgeDays: external_exports.number().nullable(),
     stale: external_exports.boolean(),
     indexOrigin: external_exports.enum(["committed", "fetched"]),
-    source: external_exports.string()
+    source: external_exports.string(),
+    installability: external_exports.object({
+      status: external_exports.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
+      projectionIndexPath: external_exports.string().optional(),
+      sourceUrl: external_exports.string().optional(),
+      warning: external_exports.string().optional()
+    }).optional()
+  }),
+  // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
+  // the wire, not only on the printed card, so a controller reading
+  // `structuredContent` sees the same unknowns a human does. The lens reports
+  // are kept as `unknown` here for the same reason the rest of this schema is:
+  // the authored shape lives in `skill-zero`, and restating it in zod would give
+  // the wire a second, drifting copy of the contract.
+  arbor: external_exports.object({
+    publicationState: external_exports.enum(["loaded", "unavailable", "unreadable"]),
+    provenance: external_exports.unknown().nullable(),
+    contracts: external_exports.record(external_exports.string(), external_exports.string()),
+    subjectsPublished: external_exports.number(),
+    edgesPublished: external_exports.number(),
+    edgeCoverage: external_exports.unknown().nullable(),
+    problems: external_exports.array(external_exports.object({ where: external_exports.string(), detail: external_exports.string() })),
+    note: external_exports.string(),
+    corpus: external_exports.object({
+      source: external_exports.string(),
+      revision: external_exports.string().nullable(),
+      canonical: external_exports.boolean(),
+      sameUpstreamRevision: external_exports.boolean().nullable()
+    }),
+    identity: external_exports.object({
+      commit: external_exports.string().nullable(),
+      matchesCorpusRevision: external_exports.boolean(),
+      pinnedSkills: external_exports.number(),
+      sha256: external_exports.string().nullable(),
+      problem: external_exports.string().nullable()
+    })
+  }),
+  composition: external_exports.object({
+    mode: external_exports.literal("relevance-only"),
+    selectionChanged: external_exports.literal(false),
+    conditionsEvaluated: external_exports.literal(false),
+    deliveryVerified: external_exports.literal(false),
+    publication: external_exports.object({
+      state: external_exports.enum(["loaded", "unavailable", "unreadable"]),
+      subjectsPublished: external_exports.number(),
+      edgesPublished: external_exports.number(),
+      matchedEdges: external_exports.number(),
+      problems: external_exports.array(external_exports.object({ where: external_exports.string(), detail: external_exports.string() }))
+    }),
+    members: external_exports.array(external_exports.unknown()),
+    interactions: external_exports.array(external_exports.unknown()),
+    note: external_exports.string()
   }),
   cards: external_exports.array(external_exports.string()),
   totalSeconds: external_exports.number()
@@ -24933,7 +27055,9 @@ function createSkillSummonMcpServer({
           uri: entry.uri,
           frontmatter: entry.frontmatter,
           resources: entry.resources
-        }
+        },
+        ttlMs: SKILL_LIST_TTL_MS,
+        cacheScope: "private"
       };
     });
     server.server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
@@ -25178,8 +27302,7 @@ function toolError(error2) {
 
 // packages/skill-summon/src/bin/skill-summon-mcp.ts
 async function main() {
-  const { source, sourceUrl } = resolveSkillSource();
-  const service = new GaiaService(source, { sourceUrl });
+  const service = createConfiguredService();
   const server = createSkillSummonMcpServer({ service });
   const transport = new StdioServerTransport();
   const shutdown = async () => {

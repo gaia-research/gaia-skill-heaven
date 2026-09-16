@@ -61,8 +61,8 @@ const summonAnnotations = {
 
 /**
  * SPEC §5.2 — every result carries `structuredContent` conforming to this,
- * plus the human-readable card in `content`. This is what lets the Ultra
- * controller read a margin without parsing prose.
+ * plus human-readable content. Retrieval margins remain diagnostics, never
+ * behavioral events or authority for an Ultra transition.
  */
 const summonOutputSchema = z.object({
   query: z.string(),
@@ -85,6 +85,59 @@ const summonOutputSchema = z.object({
     stale: z.boolean(),
     indexOrigin: z.enum(["committed", "fetched"]),
     source: z.string(),
+    installability: z
+      .object({
+        status: z.enum(["not-configured", "applied", "not-applicable", "unavailable"]),
+        projectionIndexPath: z.string().optional(),
+        sourceUrl: z.string().optional(),
+        warning: z.string().optional(),
+      })
+      .optional(),
+  }),
+  // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
+  // the wire, not only on the printed card, so a controller reading
+  // `structuredContent` sees the same unknowns a human does. The lens reports
+  // are kept as `unknown` here for the same reason the rest of this schema is:
+  // the authored shape lives in `skill-zero`, and restating it in zod would give
+  // the wire a second, drifting copy of the contract.
+  arbor: z.object({
+    publicationState: z.enum(["loaded", "unavailable", "unreadable"]),
+    provenance: z.unknown().nullable(),
+    contracts: z.record(z.string(), z.string()),
+    subjectsPublished: z.number(),
+    edgesPublished: z.number(),
+    edgeCoverage: z.unknown().nullable(),
+    problems: z.array(z.object({ where: z.string(), detail: z.string() })),
+    note: z.string(),
+    corpus: z.object({
+      source: z.string(),
+      revision: z.string().nullable(),
+      canonical: z.boolean(),
+      sameUpstreamRevision: z.boolean().nullable(),
+    }),
+    identity: z.object({
+      commit: z.string().nullable(),
+      matchesCorpusRevision: z.boolean(),
+      pinnedSkills: z.number(),
+      sha256: z.string().nullable(),
+      problem: z.string().nullable(),
+    }),
+  }),
+  composition: z.object({
+    mode: z.literal("relevance-only"),
+    selectionChanged: z.literal(false),
+    conditionsEvaluated: z.literal(false),
+    deliveryVerified: z.literal(false),
+    publication: z.object({
+      state: z.enum(["loaded", "unavailable", "unreadable"]),
+      subjectsPublished: z.number(),
+      edgesPublished: z.number(),
+      matchedEdges: z.number(),
+      problems: z.array(z.object({ where: z.string(), detail: z.string() })),
+    }),
+    members: z.array(z.unknown()),
+    interactions: z.array(z.unknown()),
+    note: z.string(),
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),
@@ -171,6 +224,8 @@ export function createSkillSummonMcpServer({
           frontmatter: entry.frontmatter,
           resources: entry.resources,
         },
+        ttlMs: SKILL_LIST_TTL_MS,
+        cacheScope: "private",
       };
     });
 

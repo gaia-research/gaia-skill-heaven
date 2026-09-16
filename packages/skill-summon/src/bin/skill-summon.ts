@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { resolveSkillSource } from "../data/configured-source.js";
+import { arborCompositionLines, arborPublicationLines, arborSubjectLines } from "skill-zero";
+
+import { createConfiguredService } from "../configured-service.js";
 import type { TrustFields } from "../domain/types.js";
-import { GaiaService } from "../service.js";
 import {
   findSession,
   listSessions,
@@ -22,6 +23,10 @@ const USAGE = `Usage:
   skill-summon path [--json]
   skill-summon close [--json]
   skill-summon gc [--dry-run] [--json]
+
+Optional evidence (off by default):
+  SKILL_SUMMON_INSTALLABILITY=<local-json-path|file-url|http(s)-url>
+  Explicit HTTP(S) opts into one projection fetch per summon. Failures stay unknown.
 `;
 
 class UsageError extends Error {
@@ -72,7 +77,7 @@ async function runSummon(args: ParsedArgs): Promise<void> {
   if (!args.query) {
     throw new UsageError(`summon requires a query.\n\n${USAGE}`);
   }
-  const service = createService();
+  const service = createConfiguredService();
   const { session, created } = await resolveSession();
   noteIfCreated(created, session.root);
 
@@ -83,15 +88,28 @@ async function runSummon(args: ParsedArgs): Promise<void> {
     ...(args.preview ? { preview: true } : {}),
   });
 
+  if (!args.json) {
+    process.stdout.write(`${outcome.ranking.disclosure}\n`);
+    process.stdout.write(`${arborCompositionLines(outcome.composition).join("\n")}\n`);
+  }
   if (args.json) {
     writeJson(outcome);
   } else if (args.card) {
+    // SPEC INV-13: the publication-level half of the disclosure — which
+    // behavioral projection was available at all, and pinned to what.
+    process.stdout.write(`${arborPublicationLines(outcome.arbor, outcome.arbor.identity).join("\n")}\n\n`);
     process.stdout.write(`${outcome.cards.join("\n\n")}\n`);
   } else {
+    process.stdout.write(`${arborPublicationLines(outcome.arbor, outcome.arbor.identity).join("\n")}\n`);
     for (const preview of outcome.previewed) {
       process.stdout.write(
         `  preview   ${preview.id}  score ${preview.retrieval.score.toFixed(2)} · margin ${preview.retrieval.margin.toFixed(2)} · ${preview.retrieval.matchKind}\n`,
       );
+      // A preview installs nothing, so its card is never printed — the lens
+      // disclosure has to ride the preview line itself or it is lost.
+      for (const line of arborSubjectLines(preview.arbor)) {
+        process.stdout.write(`  ${line.trimStart()}\n`);
+      }
     }
     for (const result of outcome.summoned) {
       printSkillLine("summoned", result.id, mergedTrust(result), result.path, {
@@ -134,6 +152,11 @@ async function runSummon(args: ParsedArgs): Promise<void> {
       process.stderr.write(`  withheld ${withheld.id}: ${withheld.why}\n`);
     }
     process.stderr.write(`  ${outcome.noMatch.suggestion}\n`);
+    // A refusal discloses its lenses too: declining on relevance says nothing
+    // about behavior, and the surface must not let that read as a judgement.
+    for (const line of arborPublicationLines(outcome.arbor, outcome.arbor.identity)) {
+      process.stderr.write(`${line}\n`);
+    }
     process.exitCode = 1;
     return;
   }
@@ -255,11 +278,6 @@ async function runGc(args: ParsedArgs): Promise<void> {
   process.stdout.write(
     `  protected ${outcome.liveProtected.length} live session(s); ${action} ${outcome.candidates.length}, ${formatBytes(outcome.reclaimedBytes)}\n`,
   );
-}
-
-function createService(): GaiaService {
-  const { source, sourceUrl } = resolveSkillSource();
-  return new GaiaService(source, { sourceUrl });
 }
 
 function noteIfCreated(created: boolean, root: string): void {

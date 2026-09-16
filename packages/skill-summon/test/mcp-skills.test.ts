@@ -152,9 +152,42 @@ describe("SEP-2640 MCP Skills extension surface", () => {
     ) as Record<string, unknown>;
     expect(got).toMatchObject({
       resultType: "complete",
+      ttlMs: 0,
+      cacheScope: "private",
       skill: { uri: skillUri, frontmatter: { name: "health" } },
     });
   });
+
+  it.each(["2025-11-25", "2026-07-28"])(
+    "honestly negotiates the pinned SDK protocol when %s is requested",
+    async (protocolVersion) => {
+      const service = new GaiaService(new InMemoryGaiaRegistrySource(documents));
+      const server = createSkillSummonMcpServer({ service });
+      const [transport, serverTransport] = InMemoryTransport.createLinkedPair();
+      closers.push(() => transport.close(), () => server.close());
+      // Raw JSON-RPC: an SDK client must not silently choose the request version.
+      const response = new Promise<unknown>((resolve) => {
+        transport.onmessage = resolve;
+      });
+      await server.connect(serverTransport);
+      await transport.start();
+      await transport.send({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion,
+          capabilities: {},
+          clientInfo: { name: "raw-protocol-probe", version: "1.0.0" },
+        },
+      });
+      await expect(response).resolves.toMatchObject({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { protocolVersion: "2025-11-25" },
+      });
+    },
+  );
 
   it("paginates skills/list with an opaque cursor", async () => {
     const manySkills = Array.from({ length: 65 }, (_, index) => ({

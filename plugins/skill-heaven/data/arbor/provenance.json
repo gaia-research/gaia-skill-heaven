@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-09-13",
+  "commit": "fb6a79700062b7addab3d9e05450316050d96e0b",
+  "files": {
+    "edges.json": "a06889d4e8f93b4cf2c3295a2890944b4d8762b8647f5f9ffe37e5145ce3937d",
+    "runtime/index.json": "cd1971e710c80620193eeb2cb963690b8b6f5d3315253e4ec506b4cdd4c84417"
+  },
+  "note": "Consumer-side cache of the canonical Arbor publication, copied byte-for-byte from the pinned upstream revision above. This file is OUR provenance record, not an Arbor contract: Arbor's contracts live upstream and are never authored here (SPEC INV-7). Refreshing this cache is an explicit, reviewed step; a summon never fetches it.",
+  "path": "docs/graph/arbor",
+  "schema": "skill-heaven.arbor-publication-cache/v1",
+  "upstream": "https://github.com/gaia-research/gaia-skill-tree"
+}

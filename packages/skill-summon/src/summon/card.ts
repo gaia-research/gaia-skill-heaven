@@ -1,3 +1,5 @@
+import { arborSubjectLines } from "skill-zero";
+
 import { displayTrustFields } from "../trust.js";
 import type { RankingDisclosure } from "./summon.js";
 import type { InstalledSkill } from "./session.js";
@@ -48,6 +50,17 @@ export function renderSummonCard(
       "  Name mismatch: this is NOT the skill your query named — it is the best relevance match.",
     );
   }
+  if (skill.installability) {
+    if (skill.installability.applicability === "verified") {
+      lines.push(
+        `  Installability: ${skill.installability.state} · ${skill.installability.reason}`,
+      );
+    } else {
+      lines.push(
+        `  Installability: unknown · upstream evidence applicability is unverified (${skill.installability.applicabilityReason})`,
+      );
+    }
+  }
 
   lines.push(
     `  Source: ${skill.source ?? ranking.source}`,
@@ -68,6 +81,12 @@ export function renderSummonCard(
       );
     }
   }
+
+  // SPEC INV-13: the surface that made the decision says which behavioral
+  // lenses it had. Printed for every skill, including when the answer is that
+  // none could be consulted — an unknown rendered as a blank line is exactly
+  // the misreport this rule exists to prevent.
+  if (skill.arbor) lines.push(...arborSubjectLines(skill.arbor));
 
   lines.push(
     `  Index: built ${ranking.indexGeneratedAt}${indexAgeNote(ranking)}`,

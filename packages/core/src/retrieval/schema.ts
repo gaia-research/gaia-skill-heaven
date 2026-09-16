@@ -6,6 +6,9 @@
 // fetches refresh it into the session root; they are never on the critical
 // path of a summon (SPEC §2.2, INTENT §3).
 
+import { assertInstallabilityAssessment } from "./installability.js";
+import type { InstallabilityAssessment } from "./installability.js";
+
 export const SKILL_INDEX_SCHEMA = "gaia.skill-index/v2" as const;
 
 /** `generatedAt` older than this adds one card line. It never blocks a summon. */
@@ -63,8 +66,9 @@ export type IndexedSkill = {
   links: { github?: string | undefined };
   invocation: "any" | "model" | "human";
   /**
-   * `links.github` resolves to a SKILL.md, so a payload can be materialized.
-   * NOT the same question as "can summon deliver this" — see `suiteComponents`.
+   * Legacy index hint derived from the source projection. Production summon
+   * decisions use `installability` when present; this field is retained for
+   * index/baseline compatibility and is not upstream evidence.
    */
   installable: boolean;
   /**
@@ -75,6 +79,8 @@ export type IndexedSkill = {
   suiteComponents: string[];
   /** Registry-only guard: `false` means this skill must refuse to install. */
   registryOnly: boolean;
+  /** Optional consumer assessment of upstream gaia.installability/v1 evidence. */
+  installability?: InstallabilityAssessment | undefined;
   /**
    * False when the tree has not bucketed this skill under a generic node yet.
    * Such skills were invisible to summon entirely — the runtime read `buckets`
@@ -91,7 +97,12 @@ export type IndexStats = {
   docs: number;
   /** Indexed skills the upstream projection has not bucketed under a generic node. */
   awaitingClassification: number;
-  /** Documents summon cannot deliver: no installable link AND no suite components. */
+  /**
+   * Documents withheld by the index's reachability view. Build artifacts use
+   * the legacy link-shape count; runtime installability decoration recomputes
+   * this field from verified evidence so unknown candidates are not counted as
+   * unreachable.
+   */
   unreachable: number;
   missingTags: number;
   /**
@@ -222,6 +233,9 @@ export function assertSkillIndex(value: unknown): asserts value is SkillIndex {
     requiredBoolean(doc, "registryOnly", `Indexed skill ${id}`);
     const classified = requiredBoolean(doc, "classified", `Indexed skill ${id}`);
     if (!classified) awaitingClassification++;
+    if (doc.installability !== undefined) {
+      assertInstallabilityAssessment(doc.installability, `Indexed skill ${id}.installability`);
+    }
     optionalString(doc, "level", `Indexed skill ${id}`);
 
     const trust = asRecord(doc.trust, `Indexed skill ${id}.trust`);
