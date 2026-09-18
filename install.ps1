@@ -50,6 +50,26 @@ function Fail-Installation {
   exit 1
 }
 
+function Restore-PreviousInstall {
+  # Puts $BackupPath back at $TargetPath. Handles the case where $TargetPath
+  # is partially deleted (e.g. locked files remain), which would cause
+  # Move-Item to nest $BackupPath inside $TargetPath instead of replacing it.
+  param([string]$TargetPath, [string]$BackupPath)
+  if (-not (Test-Path $BackupPath)) { return }
+  if (Test-Path $TargetPath) {
+    Remove-Item -Recurse -Force $TargetPath -ErrorAction SilentlyContinue
+    if (Test-Path $TargetPath) {
+      # Some files couldn't be deleted (e.g. locked by antivirus or still open).
+      # Rename the broken remnants aside so we can restore the backup cleanly.
+      $parent = Split-Path -Parent $TargetPath
+      $broken = Split-Path -Leaf $TargetPath
+      $broken = "$broken.broken-$([guid]::NewGuid().ToString('N'))"
+      Move-Item -Path $TargetPath -Destination (Join-Path $parent $broken) -ErrorAction SilentlyContinue
+    }
+  }
+  Move-Item -Path $BackupPath -Destination $TargetPath -ErrorAction SilentlyContinue
+}
+
 function Show-Usage {
   @"
 Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
@@ -355,10 +375,7 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
     Pop-Location
   }
   if ($npmExitCode -ne 0) {
-    Remove-Item -Recurse -Force $INSTALL_HOME -ErrorAction SilentlyContinue
-    if (Test-Path $OLD) {
-      Move-Item -Path $OLD -Destination $INSTALL_HOME
-    }
+    Restore-PreviousInstall -TargetPath $INSTALL_HOME -BackupPath $OLD
     Fail-Installation "launcher dependency installation failed; the previous installation (if any) was restored."
   }
 
@@ -465,7 +482,6 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
     # $OLD is only still here if we never reached the confirmed-good cleanup
     # after npm ci (e.g. interrupted mid install) - restore the last-known-good
     # install rather than deleting the only backup of it.
-    Remove-Item -Recurse -Force $INSTALL_HOME -ErrorAction SilentlyContinue
-    Move-Item -Path $OLD -Destination $INSTALL_HOME -ErrorAction SilentlyContinue
+    Restore-PreviousInstall -TargetPath $INSTALL_HOME -BackupPath $OLD
   }
 }
