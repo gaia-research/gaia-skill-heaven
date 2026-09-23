@@ -6,7 +6,7 @@
  * (wireframe register: numbered sections, hairlines at 0 radius, dashed
  * annotation strips, one looping terminal with a 46ms impact frame) and
  * carries the current product truth: one mechanic (`summon`), four
- * surfaces, one discrete ladder, five real doors.
+ * surfaces, one discrete ladder, all supported doors.
  *
  * Every product string is read from `../product`. Nothing here is invented:
  * no pricing, no logos, no testimonials, no counts.

@@ -3,7 +3,7 @@
  * monochrome path or as a supplied local asset. Nothing here is redrawn,
  * traced or approximated; source and licence sit with each entry. Shared between the
  * landing document's door tiles (`surfaces/Landing.tsx`) and the Skill-Zero
- * CTA's compatibility row (`variations/VariationHeroA.tsx`) so the same five
+ * CTA's compatibility row (`variations/VariationHeroA.tsx`) so the same
  * marks never drift into two copies.
  *
  * Hermes uses the owner's supplied transparent raster mark. Grok uses the

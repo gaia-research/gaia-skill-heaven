@@ -526,6 +526,9 @@
 .lp-door--grok {
   --door-accent: #d9b25c;
 }
+.lp-door--agy {
+  --door-accent: #4285f4;
+}
 
 .lp-door:hover {
   border-color: var(--door-accent, var(--sh-cyan));
