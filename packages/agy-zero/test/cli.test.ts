@@ -97,8 +97,8 @@ describe("run --print", () => {
     expect(parsed.execSupport).toBe("exec");
   });
 
-  it("prints floor plan with --disable-slash-commands", () => {
-    const res = captureStdout(() => run(["--print", "--posture", "floor"]));
+  it("prints floor plan with --disable-slash-commands in print mode", () => {
+    const res = captureStdout(() => run(["--print", "--posture", "floor", "-p", "test"]));
     expect(res.code).toBe(0);
     const parsed = JSON.parse(res.out);
     expect(parsed.posture).toBe("floor");

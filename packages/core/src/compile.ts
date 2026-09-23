@@ -766,9 +766,12 @@ function compileAgy(
     );
 
     if (input.posture === "floor") {
-      argv.push("--disable-slash-commands", "--dangerously-skip-permissions");
+      if (input.prompt !== undefined) {
+        argv.push("--disable-slash-commands");
+      }
+      argv.push("--dangerously-skip-permissions");
       notes.push(
-        "agy floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while preserving OAuth credentials. --disable-slash-commands suppresses slash commands and skill expansion, --dangerously-skip-permissions allows non-interactive headless tool execution. Measured clean with 0 ambient skills.",
+        "agy floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while preserving OAuth credentials. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive headless tool execution. Hard filesystem scans verify 0 ambient skills.",
       );
     } else if (input.posture === "product-floor") {
       argv.push("--dangerously-skip-permissions");

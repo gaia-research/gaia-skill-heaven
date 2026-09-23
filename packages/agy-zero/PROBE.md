@@ -35,7 +35,37 @@ This enables authenticated headless and interactive executions under `$SESSION` 
 
 ---
 
-## 2. Empirical Probes
+## 2. Empirical Probes & Hard Signals
+
+### Hard Signal 1: Filesystem Discovery Verification
+`agy` scans `$HOME/.gemini/config/skills/`, `$HOME/.gemini/config/plugins/`, and `$HOME/.gemini/antigravity-cli/skills/`.
+- In native environment:
+  - `~/.gemini/config/plugins/` contains 3 active plugin trees with 9 bundled skills.
+  - `~/.gemini/config/skills/` contains symlinked `ego-browser`.
+- In `$SESSION` (clean room):
+  - No plugin directories exist in `$SESSION/.gemini/config/plugins/`.
+  - In floor and product-floor: `$SESSION/.gemini/config/skills` is completely empty (0 files).
+  - In curated: `$SESSION/.gemini/config/skills` contains strictly the readmitted skill directory.
+  - Hard enumeration check (`find $SESSION/.gemini -name "SKILL.md"`):
+    - Floor / Product-Floor: 0 SKILL.md files.
+    - Curated: Exactly 1 SKILL.md file (`canary-skill/SKILL.md`).
+
+### Hard Signal 2: Auth Isolation & Scoping
+`~/.gemini/settings.json` contains only:
+```json
+{
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ide": {
+    "hasSeenNudge": true,
+    "enabled": true
+  }
+}
+```
+It carries only the OAuth personal provider selection and IDE onboarding flag; it registers no ambient skills, plugins, or external endpoints. Credentials copied via `copyFileIfExists` provide pure token authentication without shared state mutation.
 
 ### Cell 1: Native Baseline
 ```bash
@@ -44,12 +74,12 @@ agy -p "List all available skills or slash commands you know." --model gemini-3.
 Result: Discovered 11 ambient skills (`a11y-debugging`, `agy-customizations`, `antigravity-guide`, `chrome-devtools`, `chrome-extensions`, `debug-optimize-lcp`, `ego-browser`, `google-antigravity-sdk`, `memory-leak-debugging`, `modern-web-guidance`, `troubleshooting`) and 8 slash commands.
 
 ### Cell 2: Benchmark Floor (`--posture floor`)
-Composition: `HOME=$SESSION`, auth files copied, `--disable-slash-commands --dangerously-skip-permissions`.
+Composition: `HOME=$SESSION`, auth files copied, `--disable-slash-commands --dangerously-skip-permissions` (in print mode).
 ```bash
 HOME=$SESSION agy -p "List all available skills or slash commands you know." \
   --disable-slash-commands --dangerously-skip-permissions --model gemini-3.8-flash-low
 ```
-Result: 0 ambient skills. Repeats agreed.
+Result: 0 ambient skills. Repeats agreed. Hard filesystem check confirmed 0 SKILL.md files in `$SESSION/.gemini/config/skills`.
 
 ### Cell 3: Product Floor (`--posture product-floor` / `--level zero`)
 Composition: `HOME=$SESSION`, auth files copied, `--dangerously-skip-permissions`.
@@ -57,7 +87,7 @@ Composition: `HOME=$SESSION`, auth files copied, `--dangerously-skip-permissions
 HOME=$SESSION agy -p "List all available skills or slash commands you know." \
   --dangerously-skip-permissions --model gemini-3.8-flash-low
 ```
-Result: 0 ambient skills discovered. Native slash commands (`/plan`, `/boost`, `/goal`, etc.) remain accessible as the door control surface. Repeats agreed.
+Result: 0 ambient skills discovered. Native slash commands (`/plan`, `/boost`, `/goal`, etc.) remain accessible as the door control surface. Repeats agreed. Hard filesystem check confirmed 0 SKILL.md files in `$SESSION/.gemini/config/skills`.
 
 ### Cell 4: Curated Readmission (`--level low --skill <path>`)
 A disposable canary skill was created in `$SESSION/.gemini/config/skills/canary-skill/SKILL.md`:
@@ -69,6 +99,8 @@ description: Use when testing canary skill loading
 # Canary Skill
 Whenever the user asks what skills exist or asks for the canary password, answer exactly CANARY_AGY_LOADED.
 ```
+
+Hard filesystem check (`find $SESSION/.gemini -name "SKILL.md"`): exactly 1 file found.
 
 Invocations:
 ```bash

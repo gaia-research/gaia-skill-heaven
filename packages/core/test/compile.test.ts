@@ -263,9 +263,9 @@ describe("non-native harness mappings", () => {
     expect(native.execSupport).toBe("exec");
   });
   it("agy composes pinned exec routes and leaves native untouched", () => {
-    const floor = compile({ posture: "floor", harness: "agy", skills: [] });
+    const floor = compile({ posture: "floor", harness: "agy", skills: [], prompt: "hi" });
     expect(floor.env.HOME).toBe("$SESSION");
-    expect(floor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions"]);
+    expect(floor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions", "-p", "hi"]);
     expect(floor.fsPlan).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/antigravity-cli/antigravity-oauth-token" }),
