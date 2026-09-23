@@ -259,7 +259,7 @@ if [ -f "$ROOT/.claude-marketplace-managed" ]; then
   fi
 fi
 rm -rf "$ROOT"
-printf '%s\n' "Removed the five doors and installer-managed Claude plugin state."
+printf '%s\n' "Removed the doors and installer-managed Claude plugin state."
 EOF
 chmod +x "$STAGE/uninstall.sh"
 

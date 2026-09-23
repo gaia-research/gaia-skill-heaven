@@ -178,6 +178,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
     writeFileSync(join(home, ".grok", "config.toml"), "# fixture grok config\n");
     mkdirSync(join(home, ".cursor"), { recursive: true });
     writeFileSync(join(home, ".cursor", "config.json"), "{}\n");
+    mkdirSync(join(home, ".gemini", "antigravity-cli"), { recursive: true });
+    writeFileSync(join(home, ".gemini", "antigravity-cli", "antigravity-oauth-token"), '{"token":"fixture"}\n');
+    writeFileSync(join(home, ".gemini", "settings.json"), '{"security":{"auth":{"selectedType":"oauth-personal"}}}\n');
 
     mkdirSync(doorDir, { recursive: true });
     writeFileSync(join(doorDir, ".claude-plugin.json"), '{"name":"door"}\n');
@@ -201,7 +204,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
           harness !== "claude" &&
           harness !== "pi" &&
           harness !== "codex" &&
-          harness !== "hermes"
+          harness !== "hermes" &&
+          harness !== "grok" &&
+          harness !== "agy"
         )
           continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];

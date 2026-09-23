@@ -16,7 +16,7 @@ agy-zero -p "hello"                       # headless prompt
 
 ## Postures
 
-- **`floor`** (`--posture floor`): The doorless benchmark floor. Suppresses slash commands, skills, and plugins.
+- **`floor`** (`--posture floor`): The doorless benchmark floor. Suppresses slash commands and skill expansion (in headless print mode), skills, and plugins.
 - **`product-floor`** (`--level zero`): The default doorful floor. Isolates ambient skills and plugins while leaving slash commands active.
 - **`curated`** (`--level low --skill <path>`): Verified clean room with named skills copied into the session profile.
 - **`native`** (`--level native`): Native Antigravity environment untouched.
