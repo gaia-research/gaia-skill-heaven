@@ -412,6 +412,7 @@ export const DOORS: Door[] = [
   { id: 'codex', pkg: 'codex-zero', harness: 'Codex', status: 'prototype', launch: 'codex-zero' },
   { id: 'hermes', pkg: 'hermes-zero', harness: 'Hermes', status: 'prototype', launch: 'hermes-zero' },
   { id: 'grok', pkg: 'grok-zero', harness: 'Grok', status: 'prototype', launch: 'grok-zero' },
+  { id: 'agy', pkg: 'agy-zero', harness: 'Antigravity', status: 'prototype', launch: 'agy-zero' },
 ];
 
 /* -------------------------------------------------------------------------
