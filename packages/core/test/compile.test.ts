@@ -262,6 +262,37 @@ describe("non-native harness mappings", () => {
     expect(native.fsPlan).toEqual([]);
     expect(native.execSupport).toBe("exec");
   });
+  it("agy composes pinned exec routes and leaves native untouched", () => {
+    const floor = compile({ posture: "floor", harness: "agy", skills: [] });
+    expect(floor.env.HOME).toBe("$SESSION");
+    expect(floor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions"]);
+    expect(floor.fsPlan).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/antigravity-cli/antigravity-oauth-token" }),
+        expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/settings.json" }),
+      ]),
+    );
+    expect(floor.execSupport).toBe("exec");
+
+    const product = compile({ posture: "product-floor", harness: "agy", skills: [] });
+    expect(product.env.HOME).toBe("$SESSION");
+    expect(product.argv).toEqual(["--dangerously-skip-permissions"]);
+    expect(product.execSupport).toBe("exec");
+
+    const curated = compile({ posture: "curated", harness: "agy", skills: [fakeSkill] });
+    expect(curated.fsPlan).toContainEqual({
+      kind: "copyDir",
+      from: "/skills/impeccable",
+      to: "$SESSION/.gemini/config/skills/impeccable",
+    });
+    expect(curated.execSupport).toBe("exec");
+
+    const native = compile({ posture: "native", harness: "agy", skills: [] });
+    expect(native.argv).toEqual([]);
+    expect(native.env).toEqual({});
+    expect(native.fsPlan).toEqual([]);
+    expect(native.execSupport).toBe("exec");
+  });
 });
 
 describe("posture/skill validation", () => {

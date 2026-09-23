@@ -231,7 +231,7 @@ try {
   }
   Remove-Item -Recurse -Force $EXTRACT_TEMP
 
-  $doors = @("claude", "pi", "codex", "hermes", "grok")
+  $doors = @("claude", "pi", "codex", "hermes", "grok", "agy")
   foreach ($door in $doors) {
     $doorFile = Join-Path $STAGE "source\packages\$door-zero\bin\$door-zero.mjs"
     if (-not (Test-Path $doorFile)) {
@@ -349,6 +349,7 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
       --workspace=codex-zero `
       --workspace=hermes-zero `
       --workspace=grok-zero `
+      --workspace=agy-zero `
       --include-workspace-root
     $npmExitCode = $LASTEXITCODE
   } finally {

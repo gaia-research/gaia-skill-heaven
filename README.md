@@ -21,7 +21,7 @@ Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or j
 | | You get | Best if |
 |---|---|---|
 | **1 · The Agent Plugin** | All five surfaces + the summon engine | Any harness — **start here** |
-| **2 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
+| **2 · The launchers** | `claude-zero`, `pi-zero`, and four more | You want to start harnesses clean from your shell |
 
 ---
 
@@ -84,7 +84,7 @@ irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 ```text
-claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
+claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero   agy-zero
 ```
 
 Run one instead of your usual harness command. The installer also registers the Agent Plugin above if your `claude` binary is already on `PATH`.
@@ -183,7 +183,7 @@ Nothing on the line refuses — every rung is reachable. Heaven's representative
 Launch any supported harness with a clean context:
 
 ```bash
-claude-zero          # or: codex-zero · pi-zero · hermes-zero · grok-zero
+claude-zero          # or: codex-zero · pi-zero · hermes-zero · grok-zero · agy-zero
 ```
 
 Pick how clean you want the *launch* to be with `--level`:
@@ -227,6 +227,7 @@ prove or stamp a claim or trigger a benchmark. [Telemetry contract and flags →
 | Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
 | Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |
 | Grok | ✅ `grok-zero` | ✅ plugin compatibility (1.0.5) |
+| Antigravity (agy) | ✅ `agy-zero` | ✅ clean room CLI launcher (1.2.9) |
 | Other conformant Agent Plugins clients | — | ◻️ load the same directory; not yet pinned here |
 
 ---

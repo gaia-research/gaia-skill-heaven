@@ -47,7 +47,7 @@ function assertSessionScopedWrite(op: FsOp, ctx: string): void {
   }
   // Belt and suspenders: no write target may literally name a shared root,
   // however it got there.
-  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor"];
+  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor", "~/.gemini"];
   const target = op.kind === "write" ? op.path : op.to;
   for (const bad of forbidden) {
     expect(target.includes(bad), `${ctx}: ${op.kind} target "${target}" references shared path "${bad}"`).toBe(false);
@@ -70,7 +70,8 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
       harness !== "pi" &&
       harness !== "codex" &&
       harness !== "hermes" &&
-      harness !== "grok"
+      harness !== "grok" &&
+      harness !== "agy"
     )
       return true;
     return false;

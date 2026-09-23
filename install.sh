@@ -190,7 +190,7 @@ say "[3/5] Extracting source archive..."
 tar -xzf "$ARCHIVE" -C "$STAGE/source" --strip-components=1 || fail "downloaded source could not be extracted; nothing was installed."
 rm -f "$ARCHIVE"
 
-for door in claude pi codex hermes grok; do
+for door in claude pi codex hermes grok agy; do
   [ -f "$STAGE/source/packages/$door-zero/bin/$door-zero.mjs" ] || fail "source archive is missing $door-zero; nothing was installed."
 done
 
@@ -204,11 +204,12 @@ say "[4/5] Installing launcher runtime dependencies ..."
     --workspace=codex-zero \
     --workspace=hermes-zero \
     --workspace=grok-zero \
+    --workspace=agy-zero \
     --include-workspace-root
 ) || fail "launcher dependency installation failed; nothing was installed."
 
 say "[5/5] Configuring Skill Zero doors and harness plugins..."
-for door in claude pi codex hermes grok; do
+for door in claude pi codex hermes grok agy; do
   ln -s "../source/packages/$door-zero/bin/$door-zero.mjs" "$STAGE/bin/$door-zero"
 done
 cat >"$STAGE/uninstall.sh" <<'EOF'
@@ -278,7 +279,7 @@ OLD=""
 USER_BIN_LINKS_FILE="$INSTALL_HOME/.user-bin-links"
 : > "$USER_BIN_LINKS_FILE"
 if mkdir -p "$USER_BIN" 2>/dev/null; then
-  for door in claude pi codex hermes grok; do
+  for door in claude pi codex hermes grok agy; do
     target="$USER_BIN/$door-zero"
     ln -sf "$BIN_DIR/$door-zero" "$target"
     printf '%s\n' "$target" >> "$USER_BIN_LINKS_FILE"
@@ -317,12 +318,12 @@ else
 fi
 
 say "Installed Skill Zero doors:"
-for door in claude pi codex hermes grok; do
+for door in claude pi codex hermes grok agy; do
   say "  $door-zero"
 done
 
 say "Harnesses detected (not installed by this script):"
-for harness in claude pi codex hermes grok; do
+for harness in claude pi codex hermes grok agy; do
   if command -v "$harness" >/dev/null 2>&1; then
     if "$harness" --version >/dev/null 2>&1; then
       say "  $harness: yes (functional)"

@@ -26,7 +26,7 @@ describe("one-command installer", () => {
   });
 
   it("installs every door and the bundled plugin's five commands without installing harnesses", () => {
-    for (const door of ["claude", "pi", "codex", "hermes", "grok"]) {
+    for (const door of ["claude", "pi", "codex", "hermes", "grok", "agy"]) {
       expect(installer).toContain(`$door-zero`);
     }
     for (const command of ["/summon", "/skill-zero", "/skill-heaven", "/skill-hell", "/skill-ultra"]) {
@@ -103,7 +103,7 @@ describe("windows PowerShell installers", () => {
     expect(ps1Installer).toContain("gaia-skill-heaven");
     expect(ps1Installer).toContain("npm ci");
     expect(ps1Installer).toContain("uninstall.ps1");
-    for (const door of ["claude", "pi", "codex", "hermes", "grok"]) {
+    for (const door of ["claude", "pi", "codex", "hermes", "grok", "agy"]) {
       expect(ps1Installer).toContain(door);
     }
     expect(ps1Installer).toContain("$door-zero");
