@@ -62,7 +62,7 @@ export const FLOOR_EVIDENCE = {
   productFloorVsNativePct: -28.9,
 } as const;
 
-export const HARNESSES = ["claude", "pi", "codex", "hermes", "cursor", "grok"] as const;
+export const HARNESSES = ["claude", "pi", "codex", "hermes", "cursor", "grok", "agy"] as const;
 export type Harness = (typeof HARNESSES)[number];
 
 export const MECHANISMS = ["plugin-dir", "config-dir"] as const;
@@ -242,11 +242,11 @@ export function compile(input: CompileInput): CompileResult {
   // preserves plugins/MCP for the doorful floor. Neither suppresses Hermes'
   // installed-skills index; compileHermes discloses that negative result and
   // remains recipe-only.
-  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok"];
+  const PRODUCT_FLOOR_VERIFIED_HARNESSES: readonly Harness[] = ["claude", "pi", "codex", "hermes", "grok", "agy"];
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), and grok (PROBE.md, 0.2.118) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), grok (PROBE.md, 0.2.118), and agy (PROBE.md, 1.2.9) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -272,6 +272,8 @@ export function compile(input: CompileInput): CompileResult {
       return compileCursor(input, base);
     case "grok":
       return compileGrok(input, base);
+    case "agy":
+      return compileAgy(input, base);
   }
 }
 
@@ -705,3 +707,104 @@ function compileGrok(
     execSupport: "exec",
   };
 }
+
+// Agy (Google Antigravity CLI) 1.2.9 — session-scoped HOME route with auth
+// isolation. agy discovers skills under $HOME/.gemini/config/skills and
+// $HOME/.gemini/antigravity-cli/skills. Pointing HOME at $SESSION creates a
+// clean room while preserving OAuth credentials copied from the user's
+// ~/.gemini profile. Verified empirically in packages/agy-zero/PROBE.md.
+function compileAgy(
+  input: CompileInput,
+  base: Omit<CompileResult, "command" | "argv" | "execSupport">,
+): CompileResult {
+  const env = { ...base.env };
+  const fsPlan = [...base.fsPlan];
+  const notes = [...base.notes];
+  const argv: string[] = [];
+
+  if (input.posture === "native") {
+    notes.push("agy native posture is untouched: no session HOME override, auth copy, or suppression flags.");
+  } else {
+    env.HOME = "$SESSION";
+    const home = input.homeDir ?? "$HOME";
+    fsPlan.push(
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/antigravity-cli/antigravity-oauth-token`,
+        to: "$SESSION/.gemini/antigravity-cli/antigravity-oauth-token",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/jetski-standalone-oauth-token`,
+        to: "$SESSION/.gemini/jetski-standalone-oauth-token",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/oauth_creds.json`,
+        to: "$SESSION/.gemini/oauth_creds.json",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/google_accounts.json`,
+        to: "$SESSION/.gemini/google_accounts.json",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/installation_id`,
+        to: "$SESSION/.gemini/installation_id",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/installation_id`,
+        to: "$SESSION/.gemini/antigravity-cli/installation_id",
+      },
+      {
+        kind: "copyFileIfExists",
+        from: `${home}/.gemini/settings.json`,
+        to: "$SESSION/.gemini/settings.json",
+      },
+    );
+
+    if (input.posture === "floor") {
+      if (input.prompt !== undefined) {
+        argv.push("--disable-slash-commands");
+      }
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while preserving OAuth credentials. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive headless tool execution. Hard filesystem scans verify 0 ambient skills.",
+      );
+    } else if (input.posture === "product-floor") {
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy product-floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates user skills and plugins while leaving native slash commands active as the door control surface. Measured clean with 0 ambient skills.",
+      );
+    } else if (input.posture === "curated") {
+      argv.push("--dangerously-skip-permissions");
+      for (const skill of input.skills) {
+        fsPlan.push({
+          kind: "copyDir",
+          from: skill.dir,
+          to: `$SESSION/.gemini/config/skills/${skill.id}`,
+        });
+      }
+      notes.push(
+        "agy curated clean room (WP14/M0, agy 1.2.9): session-scoped HOME receives auth files and copies of named skill directories under .gemini/config/skills. Verified live via canary skill returning CANARY_AGY_LOADED.",
+      );
+    }
+  }
+
+  if (input.model) argv.push("--model", input.model);
+  if (input.prompt !== undefined) argv.push("-p", input.prompt);
+  if (input.passthrough?.length) argv.push(...input.passthrough);
+
+  return {
+    ...base,
+    command: "agy",
+    argv,
+    env,
+    fsPlan,
+    notes,
+    execSupport: "exec",
+  };
+}
+

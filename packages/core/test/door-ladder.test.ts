@@ -4,6 +4,7 @@ import { parseArgs as parsePi, run as runPi } from "../../pi-zero/src/cli.js";
 import { parseArgs as parseCodex, run as runCodex } from "../../codex-zero/src/cli.js";
 import { parseArgs as parseHermes, run as runHermes } from "../../hermes-zero/src/cli.js";
 import { parseArgs as parseGrok, run as runGrok } from "../../grok-zero/src/cli.js";
+import { parseArgs as parseAgy, run as runAgy } from "../../agy-zero/src/cli.js";
 
 const doors = [
   ["claude-zero", parseClaude, runClaude],
@@ -11,6 +12,7 @@ const doors = [
   ["codex-zero", parseCodex, runCodex],
   ["hermes-zero", parseHermes, runHermes],
   ["grok-zero", parseGrok, runGrok],
+  ["agy-zero", parseAgy, runAgy],
 ] as const;
 
 function captureStdout(fn: () => number): { code: number; out: string } {

@@ -47,7 +47,7 @@ function assertSessionScopedWrite(op: FsOp, ctx: string): void {
   }
   // Belt and suspenders: no write target may literally name a shared root,
   // however it got there.
-  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor"];
+  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor", "~/.gemini"];
   const target = op.kind === "write" ? op.path : op.to;
   for (const bad of forbidden) {
     expect(target.includes(bad), `${ctx}: ${op.kind} target "${target}" references shared path "${bad}"`).toBe(false);
@@ -70,7 +70,8 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
       harness !== "pi" &&
       harness !== "codex" &&
       harness !== "hermes" &&
-      harness !== "grok"
+      harness !== "grok" &&
+      harness !== "agy"
     )
       return true;
     return false;
@@ -177,6 +178,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
     writeFileSync(join(home, ".grok", "config.toml"), "# fixture grok config\n");
     mkdirSync(join(home, ".cursor"), { recursive: true });
     writeFileSync(join(home, ".cursor", "config.json"), "{}\n");
+    mkdirSync(join(home, ".gemini", "antigravity-cli"), { recursive: true });
+    writeFileSync(join(home, ".gemini", "antigravity-cli", "antigravity-oauth-token"), '{"token":"fixture"}\n');
+    writeFileSync(join(home, ".gemini", "settings.json"), '{"security":{"auth":{"selectedType":"oauth-personal"}}}\n');
 
     mkdirSync(doorDir, { recursive: true });
     writeFileSync(join(doorDir, ".claude-plugin.json"), '{"name":"door"}\n');
@@ -200,7 +204,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
           harness !== "claude" &&
           harness !== "pi" &&
           harness !== "codex" &&
-          harness !== "hermes"
+          harness !== "hermes" &&
+          harness !== "grok" &&
+          harness !== "agy"
         )
           continue;
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];

@@ -157,7 +157,7 @@ function Uninstall-All {
   }
 
   Remove-Item -Recurse -Force $INSTALL_HOME
-  Say-Message "Removed the five doors and installer-managed Claude plugin state."
+  Say-Message "Removed the doors and installer-managed Claude plugin state."
   exit 0
 }
 
@@ -171,7 +171,7 @@ if ($Uninstall) {
 }
 
 Say-Message "SKILL HEAVEN - WORKING PROTOTYPE, actively tested for public use."
-Say-Message "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
+Say-Message "Installing Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 Say-Message "Harnesses are never installed; every door uses the user's own harness binary."
 
 Say-Message "[1/5] Checking prerequisites..."
@@ -231,7 +231,7 @@ try {
   }
   Remove-Item -Recurse -Force $EXTRACT_TEMP
 
-  $doors = @("claude", "pi", "codex", "hermes", "grok")
+  $doors = @("claude", "pi", "codex", "hermes", "grok", "agy")
   foreach ($door in $doors) {
     $doorFile = Join-Path $STAGE "source\packages\$door-zero\bin\$door-zero.mjs"
     if (-not (Test-Path $doorFile)) {
@@ -318,7 +318,7 @@ if (Test-Path $marketplaceManaged) {
 }
 
 Remove-Item -Recurse -Force $ROOT
-Write-Host "Removed the five doors and installer-managed Claude plugin state."
+Write-Host "Removed the doors and installer-managed Claude plugin state."
 '@
   Set-Content -Path (Join-Path $STAGE "uninstall.ps1") -Value $uninstallScript -Encoding UTF8
 
@@ -349,6 +349,7 @@ Write-Host "Removed the five doors and installer-managed Claude plugin state."
       --workspace=codex-zero `
       --workspace=hermes-zero `
       --workspace=grok-zero `
+      --workspace=agy-zero `
       --include-workspace-root
     $npmExitCode = $LASTEXITCODE
   } finally {
