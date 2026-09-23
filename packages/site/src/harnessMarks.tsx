@@ -3,7 +3,7 @@
  * monochrome path or as a supplied local asset. Nothing here is redrawn,
  * traced or approximated; source and licence sit with each entry. Shared between the
  * landing document's door tiles (`surfaces/Landing.tsx`) and the Skill-Zero
- * CTA's compatibility row (`variations/VariationHeroA.tsx`) so the same five
+ * CTA's compatibility row (`variations/VariationHeroA.tsx`) so the same
  * marks never drift into two copies.
  *
  * Hermes uses the owner's supplied transparent raster mark. Grok uses the
@@ -55,6 +55,17 @@ export const DOOR_MARKS: Record<string, DoorMark> = {
     kind: 'asset',
     src: grokMark,
     darkSrc: grokDarkMark,
+  },
+  /* agy / antigravity — official Google Antigravity mark, 24×24 viewBox, verbatim. */
+  agy: {
+    viewBox: '0 0 24 24',
+    evenOdd: true,
+    d: 'M21.751 22.607c1.34 1.005 3.35.335 1.508-1.508C17.73 15.74 18.904 1 12.037 1 5.17 1 6.342 15.74.815 21.1c-2.01 2.009.167 2.511 1.507 1.506 5.192-3.517 4.857-9.714 9.715-9.714 4.857 0 4.522 6.197 9.714 9.715z',
+  },
+  antigravity: {
+    viewBox: '0 0 24 24',
+    evenOdd: true,
+    d: 'M21.751 22.607c1.34 1.005 3.35.335 1.508-1.508C17.73 15.74 18.904 1 12.037 1 5.17 1 6.342 15.74.815 21.1c-2.01 2.009.167 2.511 1.507 1.506 5.192-3.517 4.857-9.714 9.715-9.714 4.857 0 4.522 6.197 9.714 9.715z',
   },
 }
 

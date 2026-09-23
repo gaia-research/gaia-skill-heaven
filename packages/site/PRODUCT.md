@@ -159,10 +159,10 @@ The public site is served from `packages/site`.
 - Per-harness delivery varies: Claude Code is the compatibility-tested
   marketplace client; other clients may load the same portable plugin
   directory through their own registration flow. The standalone
-  `pi-zero`, `codex-zero`, `hermes-zero`, and `grok-zero` launchers remain
+  `pi-zero`, `codex-zero`, `hermes-zero`, `grok-zero`, and `agy-zero` launchers remain
   prototypes, not a claim that those five examples define the support boundary.
 - **WORK IN PROGRESS · v0.** The plugin installs from this repository's own
-  portable package or Claude marketplace; the five launcher doors are
+  portable package or Claude marketplace; the standalone launcher doors are
   source-delivered through `install.sh`. Neither route is on npm. The site
   carries a standing WIP disclosure in the chrome and footer.
 
@@ -178,7 +178,7 @@ The public site is served from `packages/site`.
   `claude-zero@gaia-skill-heaven` id is retired (a `renames` entry in
   `marketplace.json` migrates existing installs).
 - Launcher door names end in `-zero`: `claude-zero`, `pi-zero`, `codex-zero`,
-  `hermes-zero`, `grok-zero`. The old `*-heaven` door names are retired.
+  `hermes-zero`, `grok-zero`, `agy-zero`. The old `*-heaven` door names are retired.
 - Persona/figure: **the line's own persona (public name reserved)** — internal
   working name `Lucy`, never hard-coded in shipped copy. Distinct from Milim,
   the Gaia Research lab mascot. Four states, and the state is carried by eyes,

@@ -6,7 +6,7 @@
  * (wireframe register: numbered sections, hairlines at 0 radius, dashed
  * annotation strips, one looping terminal with a 46ms impact frame) and
  * carries the current product truth: one mechanic (`summon`), four
- * surfaces, one discrete ladder, five real doors.
+ * surfaces, one discrete ladder, all supported doors.
  *
  * Every product string is read from `../product`. Nothing here is invented:
  * no pricing, no logos, no testimonials, no counts.
@@ -1119,7 +1119,7 @@ export default function Landing() {
                   content={
                     <>
                       <p>
-                        <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
+                        <b>Source-Built Launchers</b>: Installs all standalone <code>*-zero</code> binaries directly to your local PATH.
                       </p>
                       <p style={{ marginTop: 6 }}>
                         Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
@@ -1134,7 +1134,7 @@ export default function Landing() {
             </div>
 
             <p className="lp-install__prose">
-              Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
+              Installs the standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
             </p>
 
             <CommandBlock
