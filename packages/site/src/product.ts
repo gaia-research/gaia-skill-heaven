@@ -365,13 +365,13 @@ export const INSTALL = {
     note:
       'Tested Claude Code marketplace compatibility. This client-owned route remains available; it is not the harness-neutral Agent Plugin installer.',
   },
-  /** Optional — the five source-built launcher doors. */
+  /** Optional — the standalone source-built launcher doors. */
   sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
   shNote:
-    'Secondary path. Installs the five standalone *-zero launcher doors independently of the plugin. It never installs a harness; use it when you want to start a clean launcher from a shell.',
+    'Secondary path. Installs the standalone *-zero launcher doors independently of the plugin. It never installs a harness; use it when you want to start a clean launcher from a shell.',
   /** PowerShell equivalent of the launcher-only installer. */
   shPs1: 'irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex',
-  shPs1Note: 'Windows path. Installs the five standalone *-zero launcher doors via PowerShell.',
+  shPs1Note: 'Windows path. Installs the standalone *-zero launcher doors via PowerShell.',
   uninstall: '$HOME/.local/share/gaia-skill-heaven/uninstall.sh',
   uninstallPs1: '$env:LOCALAPPDATA\\gaia-skill-heaven\\uninstall.ps1',
 } as const;

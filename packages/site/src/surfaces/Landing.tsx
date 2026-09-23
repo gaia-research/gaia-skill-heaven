@@ -1119,7 +1119,7 @@ export default function Landing() {
                   content={
                     <>
                       <p>
-                        <b>Source-Built Launchers</b>: Installs all five standalone <code>*-zero</code> binaries directly to your local PATH.
+                        <b>Source-Built Launchers</b>: Installs all standalone <code>*-zero</code> binaries directly to your local PATH.
                       </p>
                       <p style={{ marginTop: 6 }}>
                         Uninstall is one script: <code>{platform === 'windows' ? INSTALL.uninstallPs1 : INSTALL.uninstall}</code>
@@ -1134,7 +1134,7 @@ export default function Landing() {
             </div>
 
             <p className="lp-install__prose">
-              Installs the five standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
+              Installs the standalone <code>*-zero</code> launcher doors. Never touches your harness configs or repository files.
             </p>
 
             <CommandBlock
