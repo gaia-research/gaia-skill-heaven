@@ -286,6 +286,7 @@ $HOME/.local/share/gaia-skill-heaven/uninstall.sh
 | What a real install looks like | [`docs/INSTALL-TRANSCRIPT.md`](docs/INSTALL-TRANSCRIPT.md) |
 | Vision · Mission | [VISION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md) · [MISSION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md) |
 | Hell / Heaven benchmark | [research.gaiaskilltree.com](https://research.gaiaskilltree.com/research/hh-benchmark) |
+| Lucy Alive · Rive character direction | [`docs/lucy/rive/LUCY_ALIVE.md`](docs/lucy/rive/LUCY_ALIVE.md) |
 
 ## Development
 
