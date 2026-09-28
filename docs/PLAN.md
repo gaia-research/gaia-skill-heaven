@@ -198,7 +198,7 @@ Two halves, and only the first can start now.
 | S3 | Every transition explains itself: signal, policy, from-posture, to-posture |
 | S4 | Holding position is a first-class outcome, and the common one |
 | S5 | Recover and reopen are real transitions, not absences |
-| S6 | Heaven and Hell state honestly that they currently differ by breadth of relevance results (SPEC §6.2). No surface presents stamp-gated routing as running |
+| S6 | Heaven and Hell differ by breadth, and that is disclosed as the current reading rather than dressed as behavior (SPEC §6.2). No surface presents stamp-gated routing as running. See [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md) |
 
 The deterministic controller work survives a corrected intent where it remains
 valid after semantic review. Its calibrated parameters are code-side and dated;
@@ -217,6 +217,15 @@ One path. On real evidence. Not coverage, and not every gap.
 If S-later cannot demonstrate one such path once A and G land, Heaven and Hell
 remain breadth directions and the plan says so plainly rather than dressing
 relevance up as behavior.
+
+**Status 2026-09-29 — open, criterion not yet evaluated.** The path exists and
+its gates are proven against a real governed record, which abstains honestly at
+`evidence-inconclusive`. That is not a demonstrated behavioral effect, so the
+criterion is not met and not claimed. Note also that the criterion was mis-stated
+before this date: it demanded a *single attributable behavioral delta*, which is
+the master behavioral score this program forbids. Corrected by the founder ruling
+in [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md); the corrected form asks
+for one disclosed band judgment with abstention, not for a scalar.
 
 ---
 
@@ -311,7 +320,7 @@ Per INTENT §15, six independent capabilities. Not one metric.
 | **A** | Reach works — the right capability, or an honest refusal, offline | R | — |
 | **B** | Arbor consumption is honest — no invented fields, unknown ≠ negative | A | consume nothing, disclose it |
 | **C** | Composition is behavior-aware on at least one path | S-later + G | relevance-only, disclosed |
-| **D** | Heaven and Hell mean behavior, not list length | S + G | breadth directions, disclosed |
+| **D** | Heaven and Hell mean behavior, not list length | S + G | breadth directions, disclosed. Ruled 2026-09-29: breadth IS the observable of the one entropy quantity, not a shortfall. See [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md) |
 | **E** | Ultra governs rather than guesses | S-now | hold position |
 | **F** | The evidence loop closes once, end to end | E | recorded as not yet closed |
 
