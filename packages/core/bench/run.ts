@@ -261,6 +261,8 @@ function scoreSystem(system: System) {
   perQuery.forEach((row, position) => {
     rankedByCase.set(`gold-${String(position + 1).padStart(3, "0")}`, row.returned);
   });
+  // A human-named alternative only scores if it is a real id in this corpus.
+  const corpusIds = new Set(index.docs.map((doc) => doc.id));
 
   return {
     system: system.id,
@@ -303,7 +305,7 @@ function scoreSystem(system: System) {
      * computed from the machine labels and are unchanged by their presence.
      * Only `adjudicated.reviewed` supports an absolute label-derived claim.
      */
-    adjudicated: scoreAdjudicated(adjudication, gold, rankedByCase),
+    adjudicated: scoreAdjudicated(adjudication, gold, rankedByCase, corpusIds),
     // Six gold entries name a target that no honest query can separate from a
     // sibling (README § Provenance). Reported both ways rather than quietly
     // dropped: excluding them is a judgement, and the reader gets to see it.
@@ -402,7 +404,7 @@ function printReport(): void {
       `\nadjudicated — absolute label-derived claims may only be stated over the ` +
         `${runs[0].adjudicated.reviewed.n} human-confirmed case(s). ` +
         `uncertain and unreviewed are counted, never scored.\n` +
-        ["system", "confirmed n", "MRR", "R@5", "+replacements n", "MRR", "R@5", "corr", "uns", "unrev"]
+        ["system", "confirmed n", "MRR", "R@5", "resolved n", "MRR", "R@5", "corr", "uns", "unrev", "prose"]
           .map(pad)
           .join(" "),
     );
@@ -420,6 +422,7 @@ function printReport(): void {
           String(a.corrected),
           String(a.uncertain),
           String(a.unreviewed),
+          String(a.namedAlternativeUnresolvable),
         ]
           .map(pad)
           .join(" "),

@@ -97,6 +97,8 @@ export type AdjudicationOverlay = {
   provenance: AdjudicationProvenance;
   /** state by `kind-index`, with `unreviewed` filled in for every absent case. */
   byCase: Map<string, AdjudicationRow | null>;
+  /** Size of the unanswerable set this overlay was bound to. */
+  unanswerableCount: number;
 };
 
 /**
@@ -123,38 +125,7 @@ export function loadAdjudication(
   }
 
   const rows = readJsonl<UnvalidatedRow>(join(adjudicationDir, provenance.overlay));
-  const byCase = new Map<string, AdjudicationRow | null>();
-  for (const unvalidated of rows) {
-    const row = unvalidated as AdjudicationRow;
-    const kind = unvalidated.kind;
-    const index = Number(unvalidated.index);
-    const pool: readonly { query: string; skillId?: string }[] =
-      kind === "gold" ? gold : unanswerable;
-    const entry = pool[index - 1];
-    if (!entry) {
-      throw new AdjudicationError(
-        `${unvalidated.caseId}: index ${index} is outside the committed ${kind} set of ${pool.length}`,
-      );
-    }
-    if (sha256(entry.query) !== unvalidated.querySha256) {
-      throw new AdjudicationError(
-        `${unvalidated.caseId}: query text no longer hashes to ${unvalidated.querySha256}; the historical set moved`,
-      );
-    }
-    if (kind === "gold" && entry.skillId !== unvalidated.labeledSkillId) {
-      throw new AdjudicationError(
-        `${unvalidated.caseId}: committed label ${entry.skillId} != adjudicated label ${unvalidated.labeledSkillId}`,
-      );
-    }
-    if (!WRITABLE_STATES.includes(unvalidated.state as AdjudicationRow["state"])) {
-      throw new AdjudicationError(
-        `${unvalidated.caseId}: ${JSON.stringify(unvalidated.state)} cannot be written into the overlay`,
-      );
-    }
-    // A human may reject a label without naming a replacement. Such a row is
-    // still an adjudication: it counts in `corrected` and scores nothing.
-    byCase.set(unvalidated.caseId, row);
-  }
+  const byCase = validateAdjudicationRows(rows, gold, unanswerable);
 
   for (const pool of [
     { kind: "gold" as const, rows: gold },
@@ -166,7 +137,7 @@ export function loadAdjudication(
     }
   }
 
-  return { rows: rows as AdjudicationRow[], provenance, byCase };
+  return { rows: rows as AdjudicationRow[], provenance, byCase, unanswerableCount: unanswerable.length };
 }
 
 export type AdjudicatedScores = {
@@ -176,9 +147,12 @@ export type AdjudicatedScores = {
    */
   reviewed: { n: number; mrr: number; recallAt5: number };
   /**
-   * Human-confirmed labels plus the replacements a human actually named for
-   * rejected ones. A `corrected` row with no `betterSkillId` contributes to
-   * the count and to no score — the overlay never invents a replacement.
+   * Every human-confirmed label, plus every replacement a human actually named
+   * that resolves to a real skill id in the committed corpus. A named
+   * alternative that is free prose ("pbakaus/impeccable or taste-skill") can
+   * never match a ranked id, so it is counted in
+   * `namedAlternativeUnresolvable` and kept out of the denominator rather than
+   * added as a guaranteed zero.
    */
   resolved: { n: number; mrr: number; recallAt5: number };
   /** Counted, never scored. */
@@ -186,15 +160,29 @@ export type AdjudicatedScores = {
   /** No human judgment exists. Never scored. */
   unreviewed: number;
   corrected: number;
+  /** A human named an alternative that is not a resolvable skill id. Never scored. */
+  namedAlternativeUnresolvable: number;
+  /**
+   * The same four-state partition over the unanswerable set, so both halves of
+   * the review are machine-checked rather than asserted in a JSON file. The
+   * refusal rate itself is unchanged: adjudication annotates the set, it does
+   * not re-label it.
+   */
+  unanswerable: { reviewed: number; corrected: number; uncertain: number; unreviewed: number };
 };
 
-const EMPTY: AdjudicatedScores = {
-  reviewed: { n: 0, mrr: 0, recallAt5: 0 },
-  resolved: { n: 0, mrr: 0, recallAt5: 0 },
-  uncertain: 0,
-  unreviewed: 0,
-  corrected: 0,
-};
+/** A fresh object every call. A module-level constant here would alias. */
+function emptyScores(): AdjudicatedScores {
+  return {
+    reviewed: { n: 0, mrr: 0, recallAt5: 0 },
+    resolved: { n: 0, mrr: 0, recallAt5: 0 },
+    uncertain: 0,
+    unreviewed: 0,
+    corrected: 0,
+    namedAlternativeUnresolvable: 0,
+    unanswerable: { reviewed: 0, corrected: 0, uncertain: 0, unreviewed: 0 },
+  };
+}
 
 /**
  * Score one system against the overlay.
@@ -202,52 +190,97 @@ const EMPTY: AdjudicatedScores = {
  * `rankedByCase` maps `caseId` to that system's top-10 ids for that query, so
  * this stays a pure measurement of rankings already produced — it never ranks,
  * filters, or re-orders anything.
+ *
+ * `corpusIds` is the committed corpus's id set. A `betterSkillId` outside it is
+ * prose, not an alternative, and is refused a denominator slot.
+ *
+ * **The state dispatch default-rejects.** Only an explicit `reviewed` row scores
+ * as human-confirmed. Any other value — including one this build does not
+ * recognise, or a row forged into the map by a caller that skipped the loader —
+ * is counted in its own bucket and never scores. The property this lane was
+ * pivoted to protect cannot depend on a fall-through.
  */
 export function scoreAdjudicated(
   overlay: AdjudicationOverlay,
   gold: readonly { query: string; skillId: string }[],
   rankedByCase: ReadonlyMap<string, string[]>,
+  corpusIds: ReadonlySet<string> = new Set(),
 ): AdjudicatedScores {
-  const result: AdjudicatedScores = { ...EMPTY };
+  const result = emptyScores();
   const reviewedRR: number[] = [];
   const reviewedHits: { ranked: string[]; correctId: string }[] = [];
   const resolvedRR: number[] = [];
   const resolvedHits: { ranked: string[]; correctId: string }[] = [];
 
+  const score = (ranked: readonly string[], correctId: string): number => {
+    const rank = ranked.indexOf(correctId) + 1;
+    return rank === 0 ? 0 : 1 / rank;
+  };
+
   for (let position = 0; position < gold.length; position += 1) {
     const caseId = `gold-${String(position + 1).padStart(3, "0")}`;
     const row = overlay.byCase.get(caseId) ?? null;
     const ranked = rankedByCase.get(caseId) ?? [];
+
     if (row === null) {
       result.unreviewed += 1;
       continue;
     }
+    // An alternative only earns a denominator slot if it is a real skill id.
+    // Naming one is a note; it is not a relabelling.
+    const resolvable = row.betterSkillId !== null && corpusIds.has(row.betterSkillId);
+    if (row.betterSkillId !== null && !resolvable) {
+      result.namedAlternativeUnresolvable += 1;
+    }
+
     if (row.state === "uncertain") {
       result.uncertain += 1;
       continue;
     }
     if (row.state === "corrected") {
       result.corrected += 1;
-      if (row.kind !== "gold" || !row.betterSkillId) continue;
-      const rank = ranked.indexOf(row.betterSkillId) + 1;
-      const rr = rank === 0 ? 0 : 1 / rank;
-      resolvedRR.push(rr);
-      resolvedHits.push({ ranked, correctId: row.betterSkillId });
+      // The rejected label is never a correct answer. Only the replacement the
+      // human named, and only if it resolves, scores here.
+      if (resolvable) {
+        const rr = score(ranked, row.betterSkillId as string);
+        resolvedRR.push(rr);
+        resolvedHits.push({ ranked: [...ranked], correctId: row.betterSkillId as string });
+      }
       continue;
     }
-    const rank = ranked.indexOf(gold[position].skillId) + 1;
-    const rr = rank === 0 ? 0 : 1 / rank;
+    if (row.state !== "reviewed") {
+      // Unreachable through loadAdjudication. Reachable if a caller forges a row
+      // past the loader, which is exactly why it is handled rather than assumed.
+      continue;
+    }
+    const rr = score(ranked, gold[position].skillId);
     reviewedRR.push(rr);
-    reviewedHits.push({ ranked, correctId: gold[position].skillId });
-    // `resolved` is `reviewed` PLUS the replacements a human actually named, so
-    // the confirmed label still scores here. A human who confirmed a label and
-    // also named an alternative did not retract the confirmation.
+    reviewedHits.push({ ranked: [...ranked], correctId: gold[position].skillId });
+    // `resolved` is `reviewed` PLUS the named replacements, so a confirmed label
+    // still scores here. A human who confirmed a label and also named an
+    // alternative did not retract the confirmation.
     resolvedRR.push(rr);
-    resolvedHits.push({ ranked, correctId: gold[position].skillId });
-    if (row.betterSkillId) {
-      const r2 = ranked.indexOf(row.betterSkillId) + 1;
-      resolvedRR.push(r2 === 0 ? 0 : 1 / r2);
-      resolvedHits.push({ ranked, correctId: row.betterSkillId });
+    resolvedHits.push({ ranked: [...ranked], correctId: gold[position].skillId });
+    if (resolvable) {
+      const rr2 = score(ranked, row.betterSkillId as string);
+      resolvedRR.push(rr2);
+      resolvedHits.push({ ranked: [...ranked], correctId: row.betterSkillId as string });
+    }
+  }
+
+  for (let position = 0; position < overlay.unanswerableCount; position += 1) {
+    const caseId = `unanswerable-${String(position + 1).padStart(3, "0")}`;
+    const row = overlay.byCase.get(caseId) ?? null;
+    if (row === null) {
+      result.unanswerable.unreviewed += 1;
+    } else if (row.state === "uncertain") {
+      result.unanswerable.uncertain += 1;
+    } else if (row.state === "corrected") {
+      result.unanswerable.corrected += 1;
+    } else if (row.state === "reviewed") {
+      result.unanswerable.reviewed += 1;
+    } else {
+      result.unanswerable.unreviewed += 1;
     }
   }
 
@@ -266,4 +299,64 @@ export function scoreAdjudicated(
 
 function round4(value: number): number {
   return Math.round(value * 10000) / 10000;
+}
+
+/**
+ * Validate overlay rows against the committed historical sets and return the
+ * case map.
+ *
+ * Exported so the rules are testable without writing to the repository: a test
+ * can hand it a forged row and see it refused, with no scratch copy on disk.
+ */
+export function validateAdjudicationRows(
+  rows: readonly UnvalidatedRow[],
+  gold: readonly { query: string; skillId: string }[],
+  unanswerable: readonly { query: string }[],
+): Map<string, AdjudicationRow | null> {
+  const byCase = new Map<string, AdjudicationRow | null>();
+  for (const unvalidated of rows) {
+    const row = unvalidated as AdjudicationRow;
+    const kind = unvalidated.kind;
+    const index = Number(unvalidated.index);
+    // The case id is DERIVED, never trusted. A row that says "gold-046" while
+    // carrying `kind: "unanswerable"` would otherwise be validated against the
+    // unanswerable pool (skipping the committed-label check) and then scored
+    // against a gold case no human ever reviewed.
+    const caseId = `${kind}-${String(index).padStart(3, "0")}`;
+    if (unvalidated.caseId !== caseId) {
+      throw new AdjudicationError(
+        `${unvalidated.caseId}: case id disagrees with its own kind+index (${caseId}); a row cannot be filed under an id it does not describe`,
+      );
+    }
+    if (byCase.has(caseId)) {
+      throw new AdjudicationError(`${caseId}: duplicate adjudication row; supersede explicitly`);
+    }
+    const pool: readonly { query: string; skillId?: string }[] =
+      kind === "gold" ? gold : unanswerable;
+    const entry = pool[index - 1];
+    if (!entry) {
+      throw new AdjudicationError(
+        `${caseId}: index ${index} is outside the committed ${kind} set of ${pool.length}`,
+      );
+    }
+    if (sha256(entry.query) !== unvalidated.querySha256) {
+      throw new AdjudicationError(
+        `${caseId}: query text no longer hashes to ${unvalidated.querySha256}; the historical set moved`,
+      );
+    }
+    if (kind === "gold" && entry.skillId !== unvalidated.labeledSkillId) {
+      throw new AdjudicationError(
+        `${caseId}: committed label ${entry.skillId} != adjudicated label ${unvalidated.labeledSkillId}`,
+      );
+    }
+    if (!WRITABLE_STATES.includes(unvalidated.state as AdjudicationRow["state"])) {
+      throw new AdjudicationError(
+        `${caseId}: ${JSON.stringify(unvalidated.state)} cannot be written into the overlay`,
+      );
+    }
+    // A human may reject a label without naming a replacement. Such a row is
+    // still an adjudication: it counts in `corrected` and scores nothing.
+    byCase.set(caseId, row);
+  }
+  return byCase;
 }

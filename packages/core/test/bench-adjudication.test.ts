@@ -7,6 +7,8 @@
 //
 // The third one is the one this lane was pivoted for, so it is tested hardest.
 
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +18,7 @@ import {
   AdjudicationError,
   loadAdjudication,
   scoreAdjudicated,
+  validateAdjudicationRows,
   type AdjudicationOverlay,
   type AdjudicationRow,
 } from "../bench/adjudication.js";
@@ -59,24 +62,49 @@ function overlayWith(
   return { ...base, rows, byCase };
 }
 
+function sha256(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+/** Re-run the loader's own validation over a row list, with no disk writes. */
+function revalidate(rows: AdjudicationRow[]): unknown {
+  return validateAdjudicationRows(rows as never[], gold, unanswerable);
+}
+
+function gitBlob(path: string): string {
+  return execFileSync("git", ["-C", join(here, "..", ".."), "rev-parse", `HEAD:${path}`], {
+    encoding: "utf8",
+  }).trim();
+}
+
 /** Rankings that put `hit` at `rank` (1-based) for `caseId`, nothing anywhere else. */
 function rankings(hits: Record<string, string>): Map<string, string[]> {
   return new Map(Object.entries(hits).map(([caseId, id]) => [caseId, [id]]));
 }
 
 /**
- * Every case that must appear in `resolved`: each confirmed label, plus every
- * replacement a human actually named, on a confirmed or a corrected row. A
- * corrected row contributes its replacement ONLY.
+ * A small stand-in corpus. Only these ids are real skill ids, so only these can
+ * earn a slot in a denominator; anything else a human wrote is prose.
+ */
+const CORPUS_IDS = new Set([
+  ...gold.map((entry) => entry.skillId),
+  "pbakaus/impeccable",
+  "obra/writing-plans",
+]);
+
+/**
+ * Every scoring event that must appear in `resolved`: each confirmed label, plus
+ * every replacement a human actually named that resolves in the corpus. A
+ * corrected row contributes its replacement ONLY — the rejected label is not a
+ * correct answer and must never be scored as one.
  */
 function expectedResolvedN(overlay: AdjudicationOverlay): number {
   return overlay.rows
     .filter((row) => row.kind === "gold")
     .reduce((total, row) => {
-      if (row.state === "reviewed") return total + (row.betterSkillId ? 2 : 1);
-      // A corrected row contributes its replacement ONLY — the rejected label
-      // is not a correct answer and must never be scored as one.
-      if (row.state === "corrected" && row.betterSkillId) return total + 1;
+      const resolvable = row.betterSkillId !== null && CORPUS_IDS.has(row.betterSkillId);
+      if (row.state === "reviewed") return total + (resolvable ? 2 : 1);
+      if (row.state === "corrected" && resolvable) return total + 1;
       return total;
     }, 0);
 }
@@ -127,15 +155,17 @@ describe("R3 adjudication overlay", () => {
       { ...overlay, rows: forged, byCase },
       gold,
       new Map<string, string[]>([["gold-001", [gold[0].skillId]]]),
+      CORPUS_IDS,
     );
-    // Even if such a row reached the scorer, it must not become a hit.
-    expect(scored.unreviewed).toBeGreaterThan(0);
-    expect(scored.reviewed.n).toBe(overlay.provenance.counts.gold.reviewed);
+    // The forged row is NOT treated as human-confirmed: the confirmed slice
+    // loses it, and it lands in no scoring bucket at all.
+    expect(scored.reviewed.n).toBe(overlay.provenance.counts.gold.reviewed - 1);
+    expect(scored.unreviewed).toBe(overlay.provenance.counts.gold.unreviewed);
   });
 
   it("counts every gold case exactly once across the four states", () => {
     const overlay = loadAdjudication(gold, unanswerable);
-    const scores = scoreAdjudicated(overlay, gold, new Map());
+    const scores = scoreAdjudicated(overlay, gold, new Map(), CORPUS_IDS);
     const total =
       scores.reviewed.n + scores.corrected + scores.uncertain + scores.unreviewed;
     expect(total).toBe(gold.length);
@@ -177,7 +207,7 @@ describe("R3 adjudication overlay", () => {
       `gold-${String(position + 1).padStart(3, "0")}`,
       entry.skillId,
     ])));
-    const scores = scoreAdjudicated(overlay, gold, withHits);
+    const scores = scoreAdjudicated(overlay, gold, withHits, CORPUS_IDS);
     // Every case ranked #1, so any leakage of unreviewed/uncertain rows into
     // the scored sets would move these numbers. They must reflect only the
     // human-confirmed subset.
@@ -197,6 +227,7 @@ describe("R3 adjudication overlay", () => {
       overlay,
       gold,
       rankings({ "gold-002": gold[1].skillId }),
+      CORPUS_IDS,
     );
     expect(scores.corrected).toBe(overlay.provenance.counts.gold.corrected + 1);
     // The rejected label leaves the confirmed set and no replacement is invented.
@@ -219,6 +250,7 @@ describe("R3 adjudication overlay", () => {
         `gold-${String(position + 1).padStart(3, "0")}`,
         entry.skillId,
       ]))),
+      CORPUS_IDS,
     );
     // Every label ranks #1. If the rejected one leaked in, resolved.n would be
     // countGold(reviewed) + countGold(corrected) instead of the replacement-only sum.
@@ -238,6 +270,7 @@ describe("R3 adjudication overlay", () => {
       overlay,
       gold,
       rankings({ "gold-002": "someone/better" }),
+      new Set([...CORPUS_IDS, "someone/better"]),
     );
     expect(scores.resolved.mrr).toBeGreaterThan(scores.reviewed.mrr);
   });
@@ -255,6 +288,7 @@ describe("R3 adjudication overlay", () => {
         `gold-${String(position + 1).padStart(3, "0")}`,
         entry.skillId,
       ]))),
+      CORPUS_IDS,
     );
     // Every confirmed label ranks #1, so confirmed MRR is 1. `resolved` is
     // confirmed PLUS the six named alternatives; four of those alternatives
@@ -273,5 +307,112 @@ describe("R3 adjudication overlay", () => {
     const overlay = loadAdjudication(gold, unanswerable);
     expect(overlay.provenance.pins.goldBlob).toMatch(/^[0-9a-f]{40}$/);
     expect(overlay.provenance.claimLimits.join(" ")).toMatch(/adjudicated subset/);
+  });
+
+  // ---- regression tests added after independent review (see PR discussion) ----
+
+  it("refuses a row whose caseId disagrees with its own kind+index", () => {
+    // A row filed as `gold-046` while carrying `kind: "unanswerable"` would be
+    // validated against the unanswerable pool (skipping the committed-label
+    // check) and then scored against a gold case no human ever reviewed.
+    const forged = {
+      caseId: "gold-046",
+      kind: "unanswerable" as const,
+      index: 8,
+      querySha256: sha256(unanswerable[7].query),
+      labeledSkillId: null,
+      state: "reviewed" as const,
+      verdict: "suitable" as const,
+      betterSkillId: null,
+      adjudicatedBy: "forged",
+      adjudicatedAt: "2026-01-01T00:00:00Z",
+      note: null,
+    };
+    const base = loadAdjudication(gold, unanswerable);
+    expect(() => revalidate([...base.rows, forged])).toThrow(/disagrees with its own kind\+index/);
+  });
+
+  it("refuses a duplicate adjudication for the same case", () => {
+    const base = loadAdjudication(gold, unanswerable);
+    const first = base.rows[0];
+    expect(() => revalidate([...base.rows, { ...first, verdict: "unsuitable" }])).toThrow(
+      /duplicate adjudication row/,
+    );
+  });
+
+  it("keeps a free-prose alternative out of every denominator", () => {
+    // "pbakaus/impeccable or taste-skill" is a note, not a skill id. Counting
+    // it as a scoring event would add a guaranteed zero to the mean.
+    const overlay = loadAdjudication(gold, unanswerable);
+    const prose = overlay.rows.filter(
+      (row) => row.betterSkillId !== null && !CORPUS_IDS.has(row.betterSkillId),
+    );
+    expect(prose.length).toBeGreaterThan(0);
+    const scores = scoreAdjudicated(overlay, gold, new Map(), CORPUS_IDS);
+    // prose.length counts gold+unanswerable rows; the score counts gold only.
+    expect(scores.namedAlternativeUnresolvable).toBe(
+      prose.filter((row) => row.kind === "gold").length,
+    );
+    expect(scores.resolved.n).toBe(expectedResolvedN(overlay));
+  });
+
+  it("partitions the unanswerable set into the same four states", () => {
+    const overlay = loadAdjudication(gold, unanswerable);
+    const scores = scoreAdjudicated(overlay, gold, new Map(), CORPUS_IDS);
+    const u = scores.unanswerable;
+    expect(u.reviewed + u.corrected + u.uncertain + u.unreviewed).toBe(unanswerable.length);
+    const counts = overlay.provenance.counts.unanswerable;
+    expect(u).toEqual({
+      reviewed: counts.reviewed,
+      corrected: counts.corrected,
+      uncertain: counts.uncertain,
+      unreviewed: counts.unreviewed,
+    });
+  });
+
+  it("pins the overlay to the exact historical blobs it was adjudicated against", () => {
+    const overlay = loadAdjudication(gold, unanswerable);
+    expect(overlay.provenance.pins.goldBlob).toBe(
+      gitBlob("packages/core/bench/gold.jsonl"),
+    );
+    expect(overlay.provenance.pins.unanswerableBlob).toBe(
+      gitBlob("packages/core/bench/unanswerable.jsonl"),
+    );
+  });
+
+  it("anchors the committed counts so a self-consistent rewrite is visible", () => {
+    // Cross-checking counts against the overlay's own rows only proves the two
+    // agree with each other. These constants are the external anchor: changing
+    // them is a visible diff, not a silent edit to a JSON file.
+    const overlay = loadAdjudication(gold, unanswerable);
+    expect(overlay.provenance.counts.gold).toEqual({
+      total: 100, reviewed: 30, corrected: 6, uncertain: 8, unreviewed: 56,
+    });
+    expect(overlay.provenance.counts.unanswerable).toEqual({
+      total: 20, reviewed: 6, corrected: 0, uncertain: 5, unreviewed: 9,
+    });
+    expect(overlay.rows).toHaveLength(55);
+  });
+
+  it("would catch a scorer that scored a non-`reviewed` state as confirmed", () => {
+    // Guards the default-reject dispatch: for a forged `unreviewed` row the
+    // confirmed slice must shrink. A fall-through implementation scores it and
+    // leaves the slice at full size, failing the assertion below.
+    const overlay = loadAdjudication(gold, unanswerable);
+    const forged = overlay.rows.map((row) =>
+      row.caseId === "gold-001" ? { ...row, state: "unreviewed" } : row,
+    ) as AdjudicationRow[];
+    const byCase = new Map<string, AdjudicationRow | null>(
+      forged.map((row) => [row.caseId, row]),
+    );
+    const allRankedFirst = new Map<string, string[]>(
+      gold.map((entry, position) => [
+        `gold-${String(position + 1).padStart(3, "0")}`,
+        [entry.skillId],
+      ]),
+    );
+    const scores = scoreAdjudicated({ ...overlay, rows: forged, byCase }, gold, allRankedFirst, CORPUS_IDS);
+    expect(scores.reviewed.n).toBe(29);
+    expect(scores.reviewed.mrr).toBe(1);
   });
 });

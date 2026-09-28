@@ -35,6 +35,23 @@ This directory is the smallest honest replacement for that finish gate:
 | `uncertain` | a human was unsure | **never** — counted, not scored |
 | `unreviewed` | no human judgment exists | **never** — counted, not scored |
 
+The scorer **default-rejects**: only an explicit `reviewed` row scores as
+human-confirmed. A state this build does not recognise, or a row forged past the
+loader, is counted in its own bucket and never scores. The property this lane was
+pivoted to protect cannot depend on a fall-through.
+
+## `resolved`, and why it is not just `reviewed`
+
+`resolved` is every human-confirmed label, plus every replacement a human named
+**that resolves to a real skill id in the committed corpus**. Seven of the
+named alternatives in the snapshot are free prose — `"pbakaus/impeccable or
+taste-skill"`, `"basically code-review or other review tools"` — which can never
+match a ranked id. Counting those as scoring events would add guaranteed zeros to
+the denominator, so they are counted as `namedAlternativeUnresolvable` and kept
+out of the mean entirely.
+
+On the committed data: `resolved.n` is 32, not 36.
+
 `unreviewed` is never written to disk. It is derived as the absence of a row,
 so the file can only ever grow toward coverage, never fake it.
 
@@ -44,6 +61,10 @@ so the file can only ever grow toward coverage, never fake it.
 |---|---:|---:|---:|---:|---:|
 | `gold.jsonl` | 100 | 30 | 6 | 8 | 56 |
 | `unanswerable.jsonl` | 20 | 6 | 0 | 5 | 9 |
+
+Both rows are recomputed from the overlay by `scoreAdjudicated` and asserted in
+the test suite, so the partition is machine-checked on both pools rather than
+merely recorded in a JSON file.
 
 Only the **30 human-confirmed gold cases** support an absolute label-derived
 claim, and that number is printed next to it every run. The 100-case set remains
@@ -58,6 +79,16 @@ the committed `skillId` to the adjudicated `labeledSkillId`. A mismatch means
 the historical set moved under the overlay, which makes the judgment about a
 case that no longer exists — so it **throws** rather than scoring against a
 shifted baseline.
+
+The `caseId` is **derived** from the row's own `kind` + `index`, not trusted from
+the file. A row that claimed `caseId: "gold-046"` while carrying
+`kind: "unanswerable"` would otherwise be validated against the unanswerable
+pool — skipping the committed-label check — and then scored against a gold case
+no human ever reviewed. Duplicate adjudications for one case are refused too.
+
+The `pins` in `provenance.json` are asserted against
+`git rev-parse HEAD:<path>` in the test suite, so they are a binding rather than
+decoration.
 
 `provenance.json` records the source snapshot's own sha256, the original
 worksheet URL, and the exact blob ids of `gold.jsonl` and `unanswerable.jsonl`
@@ -87,5 +118,14 @@ review snapshot. Nothing in the test suite or CI writes it.
 
 ```bash
 npx vitest run packages/core/test/bench-adjudication.test.ts
-npx tsx packages/core/bench/run.ts          # prints the adjudicated block
+```
+
+To see the numbers, run the benchmark. **It writes `packages/core/bench/results/`**,
+and those files are deliberately **not** part of this change: the committed
+results were produced against `gaia.skill-index/v1` while the shipped index is
+`v2`, so a rerun legitimately differs. That skew is pre-existing, tracked
+separately, and refreshing it is not this PR's business.
+
+```bash
+npx tsx packages/core/bench/run.ts          # prints the adjudicated block; writes results/
 ```
