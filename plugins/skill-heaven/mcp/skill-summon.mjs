@@ -14783,8 +14783,123 @@ function assertArborIdentityContext(value, label = "Arbor identity context") {
   }
 }
 
+// packages/core/src/arbor/band.ts
+var SUPPORT_GOVERNING = /* @__PURE__ */ new Set([
+  "benchmark-confirmed",
+  "benchmark-qualified",
+  "benchmark-revised"
+]);
+function judgeArborBand(publicationState, members, options = {}) {
+  const evidence = members.map((member) => readMember(member, options.matchesConditions));
+  const base = { members: evidence, relevanceUntouched: true };
+  if (publicationState !== "loaded") {
+    return abstain(
+      base,
+      publicationState === "unreadable" ? "publication-unreadable" : "publication-unavailable",
+      "No Arbor publication could be read, so no member carries governed evidence. The band is unchanged and breadth is untouched."
+    );
+  }
+  if (evidence.every((item) => item.governedCount === 0)) {
+    return abstain(
+      base,
+      "no-governed-claim",
+      "No member of this set carries a governed Arbor claim. A claim only counts once a separate interpretation has set its support; an expert declaration on its own is not evidence. The band is unchanged."
+    );
+  }
+  if (!options.matchesConditions) {
+    return abstain(
+      base,
+      "conditions-unverified",
+      `${evidence.filter((i) => i.governedCount > 0).length} member(s) carry a governed claim, but this caller supplied no conditions matcher. Arbor does not evaluate prose conditions and does not guess at them, so no claim is treated as applicable here. The band is unchanged.`
+    );
+  }
+  const matched = evidence.flatMap((item) => item.claims.filter((entry) => entry.matched && entry.governed).map((entry) => ({ ...entry, memberId: item.id, role: item.role })));
+  if (matched.length === 0) {
+    return abstain(
+      base,
+      "no-matching-claim",
+      "Governed claims exist in this set, but none states a condition that matches this task. Absence of a matching claim is not evidence against a skill. The band is unchanged."
+    );
+  }
+  const conclusive = matched.filter((entry) => SUPPORT_GOVERNING.has(entry.support));
+  if (conclusive.length === 0) {
+    const inconclusiveMatched = matched.filter((entry) => entry.support === "inconclusive");
+    return abstain(
+      base,
+      "evidence-inconclusive",
+      inconclusiveMatched.length > 0 ? "The matching governed evidence is inconclusive: the curator recorded that the benchmark did not settle the question. This is an honest, expected answer and is reported as such. It is not read as support, and the band is unchanged." : "No matched, governed claim carries conclusive support. The band is unchanged."
+    );
+  }
+  const direction = options.resolveDirection?.(conclusive) ?? null;
+  if (direction === null) {
+    return abstain(
+      base,
+      "direction-unavailable",
+      `${conclusive.length} member(s) carry matching, governed, conclusive Arbor evidence, but no direction could be read from it. Direction lives in the Hell-Heaven lens, whose payload contract is not published. Arbor does not infer a polarity it was not given. The band is unchanged.`
+    );
+  }
+  return {
+    ...base,
+    direction,
+    abstained: null,
+    disclosure: direction === "converge" ? "Matching governed evidence supports a lower-entropy, narrower composition. Breadth is reduced toward Heaven. Relevance ordering and scores are untouched." : "Matching governed evidence supports a higher-entropy, broader composition. Breadth is widened toward Hell. Relevance ordering and scores are untouched."
+  };
+}
+function readMember(member, matchesConditions) {
+  const report = member.report;
+  const source = report.join === "content-pinned" ? report.claims : [];
+  const claims = source.map((claim) => {
+    const governed2 = claim.interpretationSource !== null;
+    return {
+      claimId: claim.id,
+      facet: claim.facet,
+      support: claim.support,
+      // Only a governed claim can be matched: an expert declaration has no
+      // benchmark behind it, so matching one would launder a declaration into
+      // governed evidence.
+      matched: governed2 && safeMatch(matchesConditions, claim),
+      governed: governed2,
+      declarationSource: claim.declarationSource,
+      interpretationSource: claim.interpretationSource
+    };
+  });
+  const governed = claims.filter((entry) => entry.governed);
+  const support = [...new Set(governed.map((entry) => entry.support))].sort();
+  const state = governed.length === 0 ? "evidence-absent" : governed.every((entry) => entry.support === "inconclusive") ? "evidence-inconclusive" : "evidence-governed";
+  return {
+    id: report.skillId,
+    role: member.role,
+    join: report.join,
+    state,
+    claimCount: claims.length,
+    governedCount: governed.length,
+    support,
+    matched: governed.some((entry) => entry.matched),
+    claims
+  };
+}
+function safeMatch(matchesConditions, claim) {
+  if (!matchesConditions) return false;
+  try {
+    return matchesConditions(claim) === true;
+  } catch {
+    return false;
+  }
+}
+function abstain(base, reason, disclosure) {
+  return { ...base, direction: null, abstained: reason, disclosure };
+}
+function conditionMatcher(signals) {
+  const required2 = signals.map((signal) => signal.trim().toLowerCase()).filter((s) => s.length > 0);
+  if (required2.length === 0) return () => false;
+  return (claim) => {
+    const text = claim.conditions.toLowerCase();
+    return required2.every((signal) => text.includes(signal));
+  };
+}
+
 // packages/core/src/arbor/composition.ts
-function inspectArborComposition(publication, members) {
+function inspectArborComposition(publication, members, bandOptions = {}) {
   const byId = /* @__PURE__ */ new Map();
   for (const member of members) {
     const group = byId.get(member.report.skillId) ?? [];
@@ -14825,6 +14940,7 @@ function inspectArborComposition(publication, members) {
     publication: compositionPublication,
     members: members.map(({ role, report }) => ({ id: report.skillId, role, join: report.join })),
     interactions,
+    band: judgeArborBand(publication.state, members, bandOptions),
     note
   };
 }
@@ -25655,7 +25771,7 @@ function renderSummonCard(skill, ranking) {
 }
 
 // packages/skill-summon/src/summon/composition.ts
-function sessionComposition(publication, source, links, before, reportFor, additions) {
+function sessionComposition(publication, source, links, before, reportFor, additions, bandOptions = {}) {
   const members = before.map((record3) => {
     const current = reportFor(record3.id);
     const sameSource2 = record3.source === source && record3.sourceUrl === links.get(record3.id);
@@ -25669,7 +25785,7 @@ function sessionComposition(publication, source, links, before, reportFor, addit
     });
     return { role: "session-record", report };
   });
-  return inspectArborComposition(publication, [...members, ...additions]);
+  return inspectArborComposition(publication, [...members, ...additions], bandOptions);
 }
 
 // packages/skill-summon/src/summon/materialize.ts
@@ -25947,7 +26063,7 @@ async function appendSummonLog(session, outcome) {
 
 // packages/skill-summon/src/summon/summon.ts
 var DEFAULT_LIMIT2 = 1;
-async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface = "hell", source, preview = false }) {
+async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface = "hell", source, preview = false, taskSignals }) {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
   if (trimmedQuery.length === 0) {
@@ -26007,13 +26123,15 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     }, { knownContentSha256 });
   };
   const before = [...session.skills];
+  const bandOptions = taskSignals ? { matchesConditions: conditionMatcher(taskSignals) } : {};
   const compositionFor = (additions) => sessionComposition(
     publication,
     resolved.source,
     linkById,
     before,
     (id) => arborFor(id, "delivered-unverified"),
-    additions
+    additions,
+    bandOptions
   );
   if (decision.noMatch) {
     const outcome2 = {
@@ -26989,6 +27107,26 @@ var summonOutputSchema = external_exports.object({
     }),
     members: external_exports.array(external_exports.unknown()),
     interactions: external_exports.array(external_exports.unknown()),
+    // The Heaven/Hell band judgment. `direction` is null unless accepted,
+    // content-pinned, governed, condition-matched evidence licensed it, and
+    // `abstained` names the gate that stopped it otherwise. It moves breadth
+    // only; it never reorders, rescores, or filters the admitted set, which is
+    // why `selectionChanged` above stays a hard `false`.
+    band: external_exports.object({
+      direction: external_exports.enum(["converge", "explore"]).nullable(),
+      abstained: external_exports.enum([
+        "publication-unavailable",
+        "publication-unreadable",
+        "no-governed-claim",
+        "no-matching-claim",
+        "conditions-unverified",
+        "evidence-inconclusive",
+        "direction-unavailable"
+      ]).nullable(),
+      members: external_exports.array(external_exports.unknown()),
+      relevanceUntouched: external_exports.literal(true),
+      disclosure: external_exports.string()
+    }),
     note: external_exports.string()
   }),
   cards: external_exports.array(external_exports.string()),

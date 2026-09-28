@@ -107,14 +107,18 @@ describe("the band abstains unless every gate is passed", () => {
 describe("the band moves only when every gate is passed", () => {
   it("produces a direction from matched, governed, conclusive evidence", () => {
     const { members } = withClaims([governedClaim()]);
-    const seen: string[] = [];
+    const seen: { member: string; claim: string }[] = [];
     const result = judgeArborBand("loaded", members, {
       matchesConditions: matchThese,
-      resolveDirection: (ev) => { seen.push(...ev.map((e) => e.id)); return "converge"; },
+      resolveDirection: (evidence) => {
+        // The resolver receives CLAIMS, not members: there is no aggregate here
+        // for one claim's match to lend to another claim's support.
+        seen.push(...evidence.map((e) => ({ member: e.memberId, claim: e.claimId })));
+        return "converge";
+      },
     });
     expect(result).toMatchObject({ direction: "converge", abstained: null });
-    // Only MATCHED, governed, conclusive members are offered to the resolver.
-    expect(seen).toEqual([SUBJECT.id]);
+    expect(seen).toEqual([{ member: SUBJECT.id, claim: "claim.governed" }]);
   });
 
   it("still abstains when the resolver declines to return a direction", () => {
@@ -143,6 +147,70 @@ describe("the band never touches relevance", () => {
     // Only the band differs.
     expect(judged.band.direction).toBe("explore");
     expect(plain.band.direction).toBeNull();
+  });
+});
+
+describe("claim-scoping: matching and conclusiveness must come from the same claim", () => {
+  // Review finding. `readMember` used to collapse all governed claims on a
+  // member into one `matched` boolean and one aggregate `support[]`, so a
+  // matched-but-inconclusive claim could lend its match to an unrelated
+  // confirmed claim on the same skill. That defeats the whole point of the
+  // inconclusive guard, so it is pinned here with the exact shape.
+  const laundering = (): ReturnType<typeof withClaims> =>
+    withClaims([
+      governedClaim({
+        id: "claim.matched-inconclusive",
+        conditions: CONDITIONS,
+        support: "inconclusive",
+      }),
+      governedClaim({
+        id: "claim.unmatched-confirmed",
+        conditions: "deploy a rollback to production after a failed migration",
+        support: "benchmark-confirmed",
+      }),
+    ]);
+
+  it("does not let an unmatched confirmed claim license the band", () => {
+    const { members } = laundering();
+    const result = judgeArborBand("loaded", members, {
+      matchesConditions: matchThese,
+      resolveDirection: (): BandDirection => "explore",
+    });
+    expect(result.direction).toBeNull();
+    expect(result.abstained).toBe("evidence-inconclusive");
+  });
+
+  it("keeps the per-claim facts separable so the crossing is visible", () => {
+    const { members } = laundering();
+    const result = judgeArborBand("loaded", members, { matchesConditions: matchThese });
+    const claims = result.members[0]!.claims;
+    expect(claims).toEqual([
+      expect.objectContaining({ claimId: "claim.matched-inconclusive", matched: true, support: "inconclusive" }),
+      expect.objectContaining({ claimId: "claim.unmatched-confirmed", matched: false, support: "benchmark-confirmed" }),
+    ]);
+  });
+
+  it("still licenses when the SAME claim is both matched and confirmed", () => {
+    // The fix must not overcorrect into "never license": one claim carrying
+    // both facts is exactly the legitimate case.
+    const { members } = withClaims([governedClaim()]);
+    expect(judgeArborBand("loaded", members, {
+      matchesConditions: matchThese, resolveDirection: (): BandDirection => "converge",
+    })).toMatchObject({ direction: "converge", abstained: null });
+  });
+
+  it("never matches an expert-declared claim, even when its conditions match", () => {
+    // A declaration has no benchmark behind it. Matching one would launder a
+    // declaration into governed evidence through the condition gate.
+    const { members } = withClaims([
+      claim({ id: "claim.declared", conditions: CONDITIONS, support: "expert-declared", interpretationSource: null }),
+      governedClaim({ id: "claim.unmatched", conditions: "something else entirely", support: "benchmark-confirmed" }),
+    ]);
+    const result = judgeArborBand("loaded", members, {
+      matchesConditions: matchThese, resolveDirection: (): BandDirection => "explore",
+    });
+    expect(result.direction).toBeNull();
+    expect(result.members[0]!.claims[0]).toMatchObject({ governed: false, matched: false });
   });
 });
 

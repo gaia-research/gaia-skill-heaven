@@ -1,4 +1,4 @@
-import type { ArborClaim, ProjectedSupport } from "./contract.js";
+import type { ArborClaim, ArborFacet, ProjectedSupport } from "./contract.js";
 import type { ArborSubjectReport } from "./consume.js";
 import type { CompositionMember, CompositionRole } from "./composition.js";
 
@@ -85,7 +85,41 @@ export const EVIDENCE_STATE = [
 ] as const;
 export type EvidenceState = (typeof EVIDENCE_STATE)[number];
 
-/** Per-member evidence, all of it read straight off published records. */
+/**
+ * ONE CLAIM, with the facts kept attached to it.
+ *
+ * This type exists because of a real laundering path found in review. Matching
+ * and conclusiveness MUST be carried on the same claim. If they are collapsed
+ * into per-member aggregates — a member-level `matched` flag from one claim and
+ * a member-level `support` list from another — then a matched-but-inconclusive
+ * claim can lend its match to an unrelated confirmed claim on the same skill and
+ * license a direction. `inconclusive can never license a direction` is only true
+ * while every fact below stays pinned to the claim that supplied it.
+ */
+export type BandClaimEvidence = {
+  claimId: string;
+  facet: ArborFacet;
+  /** Governing support, verbatim. Never mapped to a direction. */
+  support: ProjectedSupport;
+  /** True only when the caller-supplied matcher accepted THIS claim's conditions. */
+  matched: boolean;
+  /** True when a separate governed interpretation set this support. */
+  governed: boolean;
+  declarationSource: string;
+  interpretationSource: string | null;
+};
+
+/**
+ * A matched, governed, conclusive claim — the ONLY thing a direction resolver
+ * may ever be handed. Resolvers cannot see members, aggregates, or unmatched
+ * claims, so there is no aggregate for a bad fact to travel through.
+ */
+export type ConclusiveEvidence = BandClaimEvidence & {
+  memberId: string;
+  role: CompositionRole;
+};
+
+/** Per-member evidence for the human surface. Aggregates, disclosed as such. */
 export type BandMemberEvidence = {
   id: string;
   role: CompositionRole;
@@ -96,8 +130,10 @@ export type BandMemberEvidence = {
   governedCount: number;
   /** Distinct governed support values, verbatim. Never mapped to a direction. */
   support: ProjectedSupport[];
-  /** True only when the caller-supplied matcher accepted a stated condition. */
+  /** True when ANY governed claim on this member matched. Display only. */
   matched: boolean;
+  /** Per-claim facts, claim-scoped. This is what the gates actually read. */
+  claims: BandClaimEvidence[];
 };
 
 export type ArborBandJudgment = {
@@ -128,17 +164,20 @@ export type ArborBandOptions = {
   /**
    * Resolves the direction the governed evidence licenses.
    *
+   * Receives ONLY claims that are individually matched, governed, AND
+   * conclusive. There is no member-level aggregate in this signature on
+   * purpose: an aggregate loses which claim supplied which fact, and that is
+   * exactly how an unmatched confirmed claim gets laundered through a matched
+   * inconclusive one.
+   *
    * Direction lives in the Hell-Heaven lens, which projects
    * `unavailable-unsupported-payload` today: the payload contract is
    * research-owned and unpublished, so this consumer has no legal way to parse
    * a polarity, stamp, or magnitude out of it. Until the publisher ships that
    * payload, nothing supplies this, and the band abstains with
    * `direction-unavailable`.
-   *
-   * It is a parameter rather than a hardcoded null so the seam is testable now
-   * and the HH publisher can fill it without reshaping this file.
    */
-  resolveDirection?: ((members: readonly BandMemberEvidence[]) => BandDirection | null) | undefined;
+  resolveDirection?: ((evidence: readonly ConclusiveEvidence[]) => BandDirection | null) | undefined;
 };
 
 const SUPPORT_GOVERNING: ReadonlySet<ProjectedSupport> = new Set([
@@ -186,7 +225,8 @@ export function judgeArborBand(
     );
   }
 
-  const matched = evidence.filter((item) => item.matched && item.governedCount > 0);
+  const matched = evidence.flatMap((item) =>
+    item.claims.filter((entry) => entry.matched && entry.governed).map((entry) => ({ ...entry, memberId: item.id, role: item.role })));
   if (matched.length === 0) {
     return abstain(
       base,
@@ -195,12 +235,19 @@ export function judgeArborBand(
     );
   }
 
-  const conclusive = matched.filter((item) => item.support.some((s) => SUPPORT_GOVERNING.has(s)));
+  // Claim-scoped on purpose. A claim licenses a direction only when the SAME
+  // claim both matched the task and carries conclusive governed support. The
+  // cross-product of "matched by one claim" and "confirmed by another" is
+  // exactly the laundering path review caught, so it is never formed.
+  const conclusive = matched.filter((entry) => SUPPORT_GOVERNING.has(entry.support));
   if (conclusive.length === 0) {
+    const inconclusiveMatched = matched.filter((entry) => entry.support === "inconclusive");
     return abstain(
       base,
       "evidence-inconclusive",
-      "The matching governed evidence is inconclusive: the curator recorded that the benchmark did not settle the question. This is an honest, expected answer and is reported as such. It is not read as support, and the band is unchanged.",
+      inconclusiveMatched.length > 0
+        ? "The matching governed evidence is inconclusive: the curator recorded that the benchmark did not settle the question. This is an honest, expected answer and is reported as such. It is not read as support, and the band is unchanged."
+        : "No matched, governed claim carries conclusive support. The band is unchanged.",
     );
   }
 
@@ -231,24 +278,28 @@ function readMember(
   const report = member.report;
   // Only a canonical, content-pinned join carries published claims. An
   // unpinned or version-mismatched member contributes absence, not a guess.
-  const claims = report.join === "content-pinned" ? report.claims : [];
-  const governed = claims.filter((claim) => claim.interpretationSource !== null);
-  const support = [...new Set(governed.map((claim) => claim.support))].sort();
-  const matched = matchesConditions
-    ? governed.some((claim) => {
-        try {
-          return matchesConditions(claim) === true;
-        } catch {
-          // A throwing predicate is an unverifiable one. Treating it as a match
-          // would be the single easiest way for this file to overreach.
-          return false;
-        }
-      })
-    : false;
+  const source = report.join === "content-pinned" ? report.claims : [];
+  const claims: BandClaimEvidence[] = source.map((claim) => {
+    const governed = claim.interpretationSource !== null;
+    return {
+      claimId: claim.id,
+      facet: claim.facet,
+      support: claim.support,
+      // Only a governed claim can be matched: an expert declaration has no
+      // benchmark behind it, so matching one would launder a declaration into
+      // governed evidence.
+      matched: governed && safeMatch(matchesConditions, claim),
+      governed,
+      declarationSource: claim.declarationSource,
+      interpretationSource: claim.interpretationSource,
+    };
+  });
+  const governed = claims.filter((entry) => entry.governed);
+  const support = [...new Set(governed.map((entry) => entry.support))].sort();
   const state: EvidenceState =
     governed.length === 0
       ? "evidence-absent"
-      : governed.every((claim) => claim.support === "inconclusive")
+      : governed.every((entry) => entry.support === "inconclusive")
         ? "evidence-inconclusive"
         : "evidence-governed";
   return {
@@ -259,8 +310,26 @@ function readMember(
     claimCount: claims.length,
     governedCount: governed.length,
     support,
-    matched,
+    matched: governed.some((entry) => entry.matched),
+    claims,
   };
+}
+
+/**
+ * Runs a caller-supplied predicate without letting it throw its way into a
+ * match. A predicate that blows up is an unverifiable one, and treating it as a
+ * match would be the single easiest way for this file to overreach.
+ */
+function safeMatch(
+  matchesConditions: ((claim: ArborClaim) => boolean) | undefined,
+  claim: ArborClaim,
+): boolean {
+  if (!matchesConditions) return false;
+  try {
+    return matchesConditions(claim) === true;
+  } catch {
+    return false;
+  }
 }
 
 function abstain(
