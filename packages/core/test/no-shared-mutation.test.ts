@@ -108,6 +108,20 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
     }
   }
 
+  it("agy curated under the opt-in isolateHome route still writes only inside the session dir", () => {
+    // agy curated refuses without `isolateHome` (it would otherwise have to write into the
+    // user's real ~/.gemini/config/skills — P3). The opt-in route is where agy's fsPlan
+    // ops actually live, so it must not fall out of the KC5 sweep: compile it explicitly
+    // and hold it to the same session-scoped-write bar as every other harness.
+    const skills = [resolveSkill(join(import.meta.dirname, "fixtures", "impeccable-skill"))];
+    const r = compile({ posture: "curated", harness: "agy", skills, homeDir: "/fixture/home", isolateHome: true });
+    expect(r.env.HOME).toBe("$SESSION");
+    expect(r.fsPlan.length).toBeGreaterThan(0);
+    for (const op of r.fsPlan) {
+      assertSessionScopedWrite(op, "posture=curated harness=agy isolateHome=true");
+    }
+  });
+
   it("sanity: the sweep actually compiled a nonzero number of combos and inspected a nonzero number of ops", () => {
     // combosCompiled/combosThrown/opsChecked are populated by the `it` blocks
     // above, which vitest runs before this one (declaration order within a
@@ -213,7 +227,7 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
         )
           continue;
         if (posture === "curated" && harness === "agy") {
-          continue;
+          continue; // only reachable with isolateHome: true, swept explicitly above
         }
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {

@@ -126,6 +126,20 @@ export function run(argv: string[]): number {
     return 2;
   }
 
+  // Without --isolate-home the door runs under the real HOME: the vanilla login
+  // and the macOS login keychain stay reachable, which is the whole point. The
+  // cost is that agy 1.2.13 exposes no skills-off switch (probed: two runs with
+  // `--disable-slash-commands` still saw the ambient set), so ~/.gemini skills
+  // and plugins ARE still loaded. Say that out loud rather than let the door
+  // claim a clean room it did not build.
+  if (!args.isolateHome && posture !== "native") {
+    process.stderr.write(
+      "agy-zero: no --isolate-home: your vanilla login and macOS keychain are kept, " +
+        "but ambient ~/.gemini skills are NOT suppressed on agy 1.2.13. " +
+        "Pass --isolate-home for a clean room.\n",
+    );
+  }
+
   if (args.print) {
     let plan;
     try {

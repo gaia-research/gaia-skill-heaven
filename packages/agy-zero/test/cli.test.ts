@@ -162,6 +162,24 @@ describe("run --print", () => {
       expect(res.err).toContain("warning: --isolate-home makes macOS login keychain unreachable");
     }
   });
+
+  it("says out loud that ambient skills are NOT suppressed without --isolate-home", () => {
+    // The door kept the vanilla login by giving up the clean room. A silent door
+    // that only looks clean is the failure mode this line exists to prevent.
+    const res = captureStderr(() => run(["--print"]));
+    expect(res.err).toContain("no --isolate-home");
+    expect(res.err).toContain("NOT suppressed");
+  });
+
+  it("stays quiet about skills at the native rung", () => {
+    const res = captureStderr(() => run(["--print", "--level", "native"]));
+    expect(res.err).not.toContain("NOT suppressed");
+  });
+
+  it("does not warn about skills when --isolate-home builds the clean room", () => {
+    const res = captureStderr(() => run(["--print", "--isolate-home"]));
+    expect(res.err).not.toContain("NOT suppressed");
+  });
 });
 
 

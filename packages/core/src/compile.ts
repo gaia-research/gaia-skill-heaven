@@ -190,6 +190,7 @@ export interface CompileInput {
   // product-floor only: the caller's own door plugin dir, mounted with
   // --plugin-dir. Caller-supplied on purpose — core does not know, and must not
   // assume, which package the door ships in (the package topology is
+  // deliberately open; V5-4). Omit it and product-floor still compiles: the
   // route permits a door, mounting one is the door package's business.
   doorPluginDir?: string;
   // agy only: opt in to session-scoped HOME and auth copying (default false).
@@ -847,5 +848,3 @@ function compileAgy(
     execSupport: "exec",
   };
 }
-
-
