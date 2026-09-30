@@ -738,6 +738,23 @@ Conceptually:
 
 This is especially important to Skill Hell, where "explore" must eventually mean more than returning a longer list.
 
+> **Superseded in part — 2026-09-29, founder ruling.** See
+> [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md). The sentence above is
+> retained because it records the earlier intent, and it is now read as a
+> statement about the *destination* rather than a bar on the *current* state.
+> Heaven and Hell are two directions along one quantity, skill entropy
+> (`compile.ts`); breadth is the observable in which that quantity manifests, so
+> a longer list at the Hell end is not a degraded stand-in for exploration — it
+> is the honest current reading of it. The behavioral meaning of each rung is
+> empirical and learned by use. A single ladder from off to max is a product
+> decision for human legibility, not a reduction of a hidden multidimensional
+> truth, and no number may be introduced behind it.
+>
+> The one rule this ruling adds: **inconclusive is embraced at the interpretation
+> layer and stays binding at the consumption layer.** A curator may say "I don't
+> know"; a runtime may never read "I don't know" as "yes." See §13 note below and
+> `packages/core/src/arbor/band.ts`.
+
 At early stages, absence of sufficient Arbor evidence must degrade gracefully to relevance-only behavior.
 
 The fallback must be disclosed.

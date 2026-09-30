@@ -300,6 +300,20 @@ export {
   type CompositionInteraction,
 } from "./arbor/composition.js";
 export {
+  judgeArborBand,
+  arborBandLines,
+  conditionMatcher,
+  BAND_DIRECTION,
+  BAND_ABSTAIN,
+  EVIDENCE_STATE,
+  type ArborBandJudgment,
+  type ArborBandOptions,
+  type BandDirection,
+  type BandAbstain,
+  type BandMemberEvidence,
+  type EvidenceState,
+} from "./arbor/band.js";
+export {
   arborPublicationLines,
   arborSubjectLines,
   claimLine,
