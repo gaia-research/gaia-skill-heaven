@@ -18,6 +18,7 @@ interface CliArgs {
   skills: string[];
   model?: string;
   prompt?: string;
+  isolateHome: boolean;
   agyArgs: string[];
 }
 
@@ -29,6 +30,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let level: string | undefined;
   let model: string | undefined;
   let prompt: string | undefined;
+  let isolateHome = false;
   const skills: string[] = [];
   const agyArgs: string[] = [];
 
@@ -39,6 +41,7 @@ export function parseArgs(argv: string[]): CliArgs {
       break;
     } else if (arg === "--help" || arg === "-h") help = true;
     else if (arg === "--print") print = true;
+    else if (arg === "--isolate-home") isolateHome = true;
     else if (arg === "--posture") {
       posture = argv[++index] ?? "";
       postureProvided = true;
@@ -56,7 +59,7 @@ export function parseArgs(argv: string[]): CliArgs {
     }
   }
 
-  return { help, print, posture, postureProvided, level, skills, model, prompt, agyArgs };
+  return { help, print, posture, postureProvided, level, skills, model, prompt, isolateHome, agyArgs };
 }
 
 function helpText(): string {
@@ -67,7 +70,10 @@ function helpText(): string {
     `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
     "                     ultra is the crown rung, armed live with /skill-ultra",
     "  --level native     Explicitly keep the user's native setup",
-    "  --skill <path>     Skill for low/curated (repeatable)",
+    "  --skill <path>     Skill for low/curated (repeatable; requires --isolate-home)",
+    "  --isolate-home     Isolate HOME to a session directory. On macOS, this makes the",
+    "                     login keychain unreachable, falling back to file tokens and a",
+    "                     distinct session account.",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
     "  --model <model>    Select an Antigravity model",
     "  -p, --prompt <msg> Run non-interactively with prompt",
@@ -83,6 +89,12 @@ export function run(argv: string[]): number {
   if (args.help) {
     process.stdout.write(helpText());
     return 0;
+  }
+
+  if (args.isolateHome && process.platform === "darwin") {
+    process.stderr.write(
+      "agy-zero: warning: --isolate-home makes macOS login keychain unreachable; agy will fall back to file tokens and run as a distinct account.\n",
+    );
   }
 
   let posture = args.posture;
@@ -124,6 +136,7 @@ export function run(argv: string[]): number {
         prompt: args.prompt,
         sessionDir: "$SESSION",
         agyArgs: args.agyArgs,
+        isolateHome: args.isolateHome,
       });
     } catch (error) {
       process.stderr.write(`agy-zero: ${(error as Error).message}\n`);
@@ -160,6 +173,7 @@ export function run(argv: string[]): number {
         prompt: args.prompt,
         sessionDir,
         agyArgs: args.agyArgs,
+        isolateHome: args.isolateHome,
       });
       materialize(live.fsPlan, sessionDir);
     } catch (error) {
