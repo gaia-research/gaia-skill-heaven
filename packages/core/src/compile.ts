@@ -190,9 +190,12 @@ export interface CompileInput {
   // product-floor only: the caller's own door plugin dir, mounted with
   // --plugin-dir. Caller-supplied on purpose — core does not know, and must not
   // assume, which package the door ships in (the package topology is
-  // deliberately open; V5-4). Omit it and product-floor still compiles: the
   // route permits a door, mounting one is the door package's business.
   doorPluginDir?: string;
+  // agy only: opt in to session-scoped HOME and auth copying (default false).
+  // When false, agy runs under the real HOME so the macOS login keychain and
+  // vanilla credentials work without popping auth prompts or creating second accounts.
+  isolateHome?: boolean;
 }
 
 export interface CompileResult {
@@ -246,7 +249,7 @@ export function compile(input: CompileInput): CompileResult {
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), grok (PROBE.md, 0.2.118), and agy (PROBE.md, 1.2.9) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), grok (PROBE.md, 0.2.118), and agy (PROBE.md, 1.2.13) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -708,11 +711,25 @@ function compileGrok(
   };
 }
 
-// Agy (Google Antigravity CLI) 1.2.9 — session-scoped HOME route with auth
-// isolation. agy discovers skills under $HOME/.gemini/config/skills and
-// $HOME/.gemini/antigravity-cli/skills. Pointing HOME at $SESSION creates a
-// clean room while preserving OAuth credentials copied from the user's
-// ~/.gemini profile. Verified empirically in packages/agy-zero/PROBE.md.
+// Agy (Google Antigravity CLI) 1.2.13 — real HOME default route with opt-in
+// session-scoped HOME isolation (`isolateHome: true`).
+//
+// Invariant: agy-zero must never redirect HOME unless explicitly opted in.
+// Redirecting HOME causes macOS `security` to drop the user's login keychain,
+// making keyring credentials unreachable and causing repeated keychain dialogs
+// and fallback re-authentication ("second agy account").
+//
+// When isolateHome is false (default):
+// - No env.HOME override, no auth copying, no settings copying.
+// - Launcher runs against the user's real profile, preserving vanilla credentials and keychain.
+// - floor: --dangerously-skip-permissions + --disable-slash-commands (in print mode).
+// - product-floor: --dangerously-skip-permissions.
+// - curated: requires isolateHome: true (curated without isolation would mutate shared ~/.gemini, forbidden by P3).
+//
+// When isolateHome is true:
+// - env.HOME = "$SESSION" and copies auth files into the session directory.
+// - Used for explicit isolation / second account runs.
+// Verified empirically in packages/agy-zero/PROBE.md.
 function compileAgy(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -722,9 +739,11 @@ function compileAgy(
   const notes = [...base.notes];
   const argv: string[] = [];
 
+  const isolateHome = input.isolateHome ?? false;
+
   if (input.posture === "native") {
     notes.push("agy native posture is untouched: no session HOME override, auth copy, or suppression flags.");
-  } else {
+  } else if (isolateHome) {
     env.HOME = "$SESSION";
     const home = input.homeDir ?? "$HOME";
     fsPlan.push(
@@ -771,12 +790,12 @@ function compileAgy(
       }
       argv.push("--dangerously-skip-permissions");
       notes.push(
-        "agy floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while preserving OAuth credentials. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive headless tool execution. Hard filesystem scans verify 0 ambient skills.",
+        "agy floor route with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while copying OAuth credentials. Note: on macOS this drops login keychain access.",
       );
     } else if (input.posture === "product-floor") {
       argv.push("--dangerously-skip-permissions");
       notes.push(
-        "agy product-floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates user skills and plugins while leaving native slash commands active as the door control surface. Measured clean with 0 ambient skills.",
+        "agy product-floor route with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME isolates user skills and plugins while leaving native slash commands active. Note: on macOS this drops login keychain access.",
       );
     } else if (input.posture === "curated") {
       argv.push("--dangerously-skip-permissions");
@@ -788,7 +807,28 @@ function compileAgy(
         });
       }
       notes.push(
-        "agy curated clean room (WP14/M0, agy 1.2.9): session-scoped HOME receives auth files and copies of named skill directories under .gemini/config/skills. Verified live via canary skill returning CANARY_AGY_LOADED.",
+        "agy curated clean room with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME receives auth files and copies of named skill directories under .gemini/config/skills. Verified live via canary skill returning CANARY_AGY_LOADED.",
+      );
+    }
+  } else {
+    // isolateHome: false (vanilla login invariant: never redirect HOME by default)
+    // Runs against the user's real HOME directory so existing credentials and macOS login keychain work seamlessly.
+    if (input.posture === "floor") {
+      if (input.prompt !== undefined) {
+        argv.push("--disable-slash-commands");
+      }
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy floor route (WP14/M0, agy 1.2.13): real HOME preserves vanilla credentials and macOS login keychain without repeated auth dialogs. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive execution.",
+      );
+    } else if (input.posture === "product-floor") {
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy product-floor route (WP14/M0, agy 1.2.13): real HOME preserves vanilla credentials and macOS login keychain without repeated auth dialogs. --dangerously-skip-permissions allows execution with native slash commands active as door surface.",
+      );
+    } else if (input.posture === "curated") {
+      throw new Error(
+        "agy curated posture requires --isolate-home (writing into real ~/.gemini is forbidden by P3). Pass --isolate-home to accept the keychain trade-off, or launch at a Heaven rung that does not need a scoped profile.",
       );
     }
   }
@@ -807,4 +847,5 @@ function compileAgy(
     execSupport: "exec",
   };
 }
+
 
