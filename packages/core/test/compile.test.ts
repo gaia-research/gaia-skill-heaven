@@ -262,31 +262,46 @@ describe("non-native harness mappings", () => {
     expect(native.fsPlan).toEqual([]);
     expect(native.execSupport).toBe("exec");
   });
-  it("agy composes pinned exec routes and leaves native untouched", () => {
+  it("agy composes pinned exec routes with real HOME by default and opt-in isolateHome", () => {
+    // Default (isolateHome: false)
     const floor = compile({ posture: "floor", harness: "agy", skills: [], prompt: "hi" });
-    expect(floor.env.HOME).toBe("$SESSION");
+    expect(floor.env.HOME).toBeUndefined();
     expect(floor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions", "-p", "hi"]);
-    expect(floor.fsPlan).toEqual(
+    expect(floor.fsPlan).toEqual([]);
+    expect(floor.execSupport).toBe("exec");
+
+    const product = compile({ posture: "product-floor", harness: "agy", skills: [] });
+    expect(product.env.HOME).toBeUndefined();
+    expect(product.argv).toEqual(["--dangerously-skip-permissions"]);
+    expect(product.fsPlan).toEqual([]);
+    expect(product.execSupport).toBe("exec");
+
+    // Curated without isolateHome throws clear error
+    expect(() => compile({ posture: "curated", harness: "agy", skills: [fakeSkill] })).toThrow(
+      /agy curated posture requires --isolate-home/,
+    );
+
+    // Opt-in isolateHome: true
+    const isolatedFloor = compile({ posture: "floor", harness: "agy", skills: [], prompt: "hi", isolateHome: true });
+    expect(isolatedFloor.env.HOME).toBe("$SESSION");
+    expect(isolatedFloor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions", "-p", "hi"]);
+    expect(isolatedFloor.fsPlan).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/antigravity-cli/antigravity-oauth-token" }),
         expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/settings.json" }),
       ]),
     );
-    expect(floor.execSupport).toBe("exec");
 
-    const product = compile({ posture: "product-floor", harness: "agy", skills: [] });
-    expect(product.env.HOME).toBe("$SESSION");
-    expect(product.argv).toEqual(["--dangerously-skip-permissions"]);
-    expect(product.execSupport).toBe("exec");
-
-    const curated = compile({ posture: "curated", harness: "agy", skills: [fakeSkill] });
-    expect(curated.fsPlan).toContainEqual({
+    const isolatedCurated = compile({ posture: "curated", harness: "agy", skills: [fakeSkill], isolateHome: true });
+    expect(isolatedCurated.env.HOME).toBe("$SESSION");
+    expect(isolatedCurated.fsPlan).toContainEqual({
       kind: "copyDir",
       from: "/skills/impeccable",
       to: "$SESSION/.gemini/config/skills/impeccable",
     });
-    expect(curated.execSupport).toBe("exec");
+    expect(isolatedCurated.execSupport).toBe("exec");
 
+    // Native is untouched
     const native = compile({ posture: "native", harness: "agy", skills: [] });
     expect(native.argv).toEqual([]);
     expect(native.env).toEqual({});

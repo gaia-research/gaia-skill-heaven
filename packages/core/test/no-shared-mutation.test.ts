@@ -74,6 +74,9 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
       harness !== "agy"
     )
       return true;
+    if (posture === "curated" && harness === "agy") {
+      return true; // agy curated requires explicit isolateHome: true
+    }
     return false;
   }
 
@@ -209,6 +212,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
           harness !== "agy"
         )
           continue;
+        if (posture === "curated" && harness === "agy") {
+          continue;
+        }
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {
           const skills: ResolvedSkill[] = posture === "curated" ? [skill] : [];

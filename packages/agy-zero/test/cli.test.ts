@@ -52,13 +52,15 @@ describe("parseArgs", () => {
       skills: [],
       model: undefined,
       prompt: undefined,
+      isolateHome: false,
       agyArgs: [],
     });
   });
 
-  it("captures --print, --posture, --level, --model, -p", () => {
+  it("captures --print, --isolate-home, --posture, --level, --model, -p", () => {
     const a = parseArgs([
       "--print",
+      "--isolate-home",
       "--posture",
       "floor",
       "--level",
@@ -71,6 +73,7 @@ describe("parseArgs", () => {
       "--verbose",
     ]);
     expect(a.print).toBe(true);
+    expect(a.isolateHome).toBe(true);
     expect(a.posture).toBe("floor");
     expect(a.postureProvided).toBe(true);
     expect(a.level).toBe("zero");
@@ -86,15 +89,23 @@ describe("parseArgs", () => {
 });
 
 describe("run --print", () => {
-  it("prints product-floor plan by default with exit 0", () => {
+  it("prints product-floor plan by default with exit 0 (real HOME)", () => {
     const res = captureStdout(() => run(["--print"]));
     expect(res.code).toBe(0);
     const parsed = JSON.parse(res.out);
     expect(parsed.posture).toBe("product-floor");
     expect(parsed.command).toBe("agy");
     expect(parsed.argv).toContain("--dangerously-skip-permissions");
-    expect(parsed.env.HOME).toBe("$SESSION");
+    expect(parsed.env.HOME).toBeUndefined();
     expect(parsed.execSupport).toBe("exec");
+  });
+
+  it("prints product-floor plan with --isolate-home ($SESSION HOME)", () => {
+    const res = captureStdout(() => run(["--print", "--isolate-home"]));
+    expect(res.code).toBe(0);
+    const parsed = JSON.parse(res.out);
+    expect(parsed.posture).toBe("product-floor");
+    expect(parsed.env.HOME).toBe("$SESSION");
   });
 
   it("prints floor plan with --disable-slash-commands in print mode", () => {
@@ -104,14 +115,22 @@ describe("run --print", () => {
     expect(parsed.posture).toBe("floor");
     expect(parsed.argv).toContain("--disable-slash-commands");
     expect(parsed.argv).toContain("--dangerously-skip-permissions");
+    expect(parsed.env.HOME).toBeUndefined();
   });
 
-  it("prints curated plan with copied skill", () => {
-    const res = captureStdout(() => run(["--print", "--level", "low", "--skill", FIXTURE]));
+  it("rejects curated plan without --isolate-home with exit 2", () => {
+    const errRes = captureStderr(() => run(["--print", "--level", "low", "--skill", FIXTURE]));
+    expect(errRes.code).toBe(2);
+    expect(errRes.err).toContain("agy curated posture requires --isolate-home");
+  });
+
+  it("prints curated plan with --isolate-home and copied skill", () => {
+    const res = captureStdout(() => run(["--print", "--level", "low", "--skill", FIXTURE, "--isolate-home"]));
     expect(res.code).toBe(0);
     const parsed = JSON.parse(res.out);
     expect(parsed.posture).toBe("curated");
     expect(parsed.skillCount).toBe(1);
+    expect(parsed.env.HOME).toBe("$SESSION");
     expect(parsed.fsPlan.some((op: any) => op.kind === "copyDir" && op.to.includes("impeccable"))).toBe(true);
   });
 
@@ -136,4 +155,13 @@ describe("run --print", () => {
     expect(errRes.err).toContain("live summon rung, not a boot posture");
     expect(errRes.err).toContain("/skill-hell high");
   });
+
+  it("warns on darwin when --isolate-home is passed", () => {
+    if (process.platform === "darwin") {
+      const res = captureStderr(() => run(["--print", "--isolate-home"]));
+      expect(res.err).toContain("warning: --isolate-home makes macOS login keychain unreachable");
+    }
+  });
 });
+
+
