@@ -22,7 +22,9 @@ import type { CompositionMember, CompositionRole } from "./composition.js";
 // downstream of it should start: compile.ts carries that ruling in full.
 //
 // THE ONE EFFECT. `direction` may move how much of the admitted set is
-// materialized — the breadth cap — and nothing else. The ORDER of the admitted
+// materialized — the breadth cap — and nothing else. TODAY IT MOVES NOTHING: no
+// runtime consumer reads `band.direction`, and no legal resolver exists until
+// the HH payload is published, so the judgment is reported, never applied. The ORDER of the admitted
 // set is relevance's, is produced upstream, and is never reordered, rescored,
 // filtered, or re-ranked here. A caller that finds `selectionChanged: true` on a
 // relevance field has misread this file; the only field this file moves is
@@ -165,7 +167,9 @@ export type ArborBandOptions = {
    * Resolves the direction the governed evidence licenses.
    *
    * Receives ONLY claims that are individually matched, governed, AND
-   * conclusive. There is no member-level aggregate in this signature on
+   * conclusive. The same claim can appear more than once when one skill is
+   * both a session record and a proposed member, so `evidence.length` is not a
+   * count of anything and must never be read as one. There is no member-level aggregate in this signature on
    * purpose: an aggregate loses which claim supplied which fact, and that is
    * exactly how an unmatched confirmed claim gets laundered through a matched
    * inconclusive one.

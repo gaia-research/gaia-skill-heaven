@@ -14784,6 +14784,7 @@ function assertArborIdentityContext(value, label = "Arbor identity context") {
 }
 
 // packages/core/src/arbor/band.ts
+var BAND_DIRECTION = ["converge", "explore"];
 var SUPPORT_GOVERNING = /* @__PURE__ */ new Set([
   "benchmark-confirmed",
   "benchmark-qualified",
@@ -14830,7 +14831,7 @@ function judgeArborBand(publicationState, members, options = {}) {
       inconclusiveMatched.length > 0 ? "The matching governed evidence is inconclusive: the curator recorded that the benchmark did not settle the question. This is an honest, expected answer and is reported as such. It is not read as support, and the band is unchanged." : "No matched, governed claim carries conclusive support. The band is unchanged."
     );
   }
-  const direction = options.resolveDirection?.(conclusive) ?? null;
+  const direction = readDirection(options.resolveDirection, conclusive);
   if (direction === null) {
     return abstain(
       base,
@@ -14842,8 +14843,18 @@ function judgeArborBand(publicationState, members, options = {}) {
     ...base,
     direction,
     abstained: null,
-    disclosure: direction === "converge" ? "Matching governed evidence supports a lower-entropy, narrower composition. Breadth is reduced toward Heaven. Relevance ordering and scores are untouched." : "Matching governed evidence supports a higher-entropy, broader composition. Breadth is widened toward Hell. Relevance ordering and scores are untouched."
+    disclosure: direction === "converge" ? "Matching governed evidence licenses the converging, lower-entropy direction (toward Heaven). It may narrow breadth only; relevance ordering and scores are untouched." : "Matching governed evidence licenses the exploring, higher-entropy direction (toward Hell). It may widen breadth only; relevance ordering and scores are untouched."
   };
+}
+function readDirection(resolveDirection, conclusive) {
+  if (!resolveDirection) return null;
+  let value;
+  try {
+    value = resolveDirection(conclusive);
+  } catch {
+    return null;
+  }
+  return BAND_DIRECTION.includes(value) ? value : null;
 }
 function readMember(member, matchesConditions) {
   const report = member.report;

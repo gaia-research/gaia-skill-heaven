@@ -75,7 +75,10 @@ observable in which the one quantity manifests.**
 
 3. **S-later's unit changes from "score" to "band judgment."** Not a number to
    shift. A disclosed direction — converge or explore — with abstention, from
-   accepted evidence.
+   accepted evidence. Today the judgment is **reported, not applied**: no
+   runtime consumer reads `band.direction`, and no legal resolver exists until
+   the HH payload is published, so the band moves nothing yet — breadth
+   included. Breadth stays the relevance-ranked breadth SPEC §6.2 describes.
 
 ## The one guardrail, narrowly drawn
 
