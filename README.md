@@ -6,6 +6,14 @@
 
 Summon exactly the skills a task needs — one session, nothing installed. Or start the harness clean and add nothing at all.
 
+### Why AI Agents & Developers Choose Skill Heaven
+
+- **Eliminate Context Bloat:** Cut ambient tools and prompt clutter so coding agents start lean and stay within context budgets.
+- **Preserve Prompt Cache & Save Tokens:** Prevent unnecessary tool schemas from busting prompt caches and causing cold-cache wakeup latency.
+- **Ephemeral On-Demand Skills:** Summon specialized `SKILL.md` expert capabilities into context for a single session—zero permanent global installs.
+- **Multi-Harness Compatibility:** One standardized Agent Plugin for Claude Code, OpenAI Codex, Pi, Hermes, Grok, and Antigravity.
+- **Tunable Skill Entropy:** Seamlessly shift between minimal clean floor (`/skill-zero`), targeted gap convergence (`/skill-heaven`), wide exploratory discovery (`/skill-hell`), and autonomous adaptive routing (`/skill-ultra`).
+
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
 [![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
