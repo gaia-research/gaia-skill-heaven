@@ -72,7 +72,11 @@ export class AdjudicationError extends Error {}
  * still a file someone can edit, so `state` arrives as a plain string and is
  * checked rather than trusted.
  */
-type UnvalidatedRow = Omit<AdjudicationRow, "state"> & { state: string };
+type UnvalidatedRow = Omit<AdjudicationRow, "state" | "kind" | "index"> & {
+  state: string;
+  kind: unknown;
+  index: unknown;
+};
 
 function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
@@ -350,9 +354,15 @@ export function validateAdjudicationRows(
 ): Map<string, AdjudicationRow | null> {
   const byCase = new Map<string, AdjudicationRow | null>();
   for (const unvalidated of rows) {
+    if (unvalidated.kind !== "gold" && unvalidated.kind !== "unanswerable") {
+      throw new AdjudicationError(`kind must be exactly gold or unanswerable`);
+    }
+    if (typeof unvalidated.index !== "number" || !Number.isSafeInteger(unvalidated.index) || unvalidated.index <= 0) {
+      throw new AdjudicationError(`index must be a positive safe integer JSON number`);
+    }
     const row = unvalidated as AdjudicationRow;
     const kind = unvalidated.kind;
-    const index = Number(unvalidated.index);
+    const index = unvalidated.index;
     // The case id is DERIVED, never trusted. A row that says "gold-046" while
     // carrying `kind: "unanswerable"` would otherwise be validated against the
     // unanswerable pool (skipping the committed-label check) and then scored
@@ -384,10 +394,27 @@ export function validateAdjudicationRows(
         `${caseId}: committed label ${entry.skillId} != adjudicated label ${unvalidated.labeledSkillId}`,
       );
     }
+    if (kind === "unanswerable" && unvalidated.labeledSkillId !== null) {
+      throw new AdjudicationError(`${caseId}: unanswerable rows must have labeledSkillId null`);
+    }
     if (!WRITABLE_STATES.includes(unvalidated.state as AdjudicationRow["state"])) {
       throw new AdjudicationError(
         `${caseId}: ${JSON.stringify(unvalidated.state)} cannot be written into the overlay`,
       );
+    }
+    const verdictState: Record<string, AdjudicationRow["state"]> = {
+      suitable: "reviewed",
+      unsuitable: "corrected",
+      ambiguous: "uncertain",
+    };
+    if (!Object.hasOwn(verdictState, unvalidated.verdict)) {
+      throw new AdjudicationError(`${caseId}: verdict must be suitable, unsuitable, or ambiguous`);
+    }
+    if (verdictState[unvalidated.verdict] !== unvalidated.state) {
+      throw new AdjudicationError(`${caseId}: verdict does not agree with state`);
+    }
+    if (typeof unvalidated.adjudicatedBy !== "string" || unvalidated.adjudicatedBy.length === 0) {
+      throw new AdjudicationError(`${caseId}: adjudicatedBy must be a non-empty string`);
     }
     // A human may reject a label without naming a replacement. Such a row is
     // still an adjudication: it counts in `corrected` and scores nothing.

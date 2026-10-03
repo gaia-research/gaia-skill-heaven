@@ -348,6 +348,33 @@ describe("R3 adjudication overlay", () => {
     );
   });
 
+  it("rejects invalid kinds", () => {
+    const row = { ...loadAdjudication(gold, unanswerable).rows[0], kind: "other" };
+    expect(() => revalidate([row as never])).toThrow(/kind must be exactly/);
+  });
+
+  it("rejects non-number and non-positive indices", () => {
+    const base = loadAdjudication(gold, unanswerable).rows[0];
+    expect(() => revalidate([{ ...base, index: "1" } as never])).toThrow(/positive safe integer/);
+    expect(() => revalidate([{ ...base, index: 0 } as never])).toThrow(/positive safe integer/);
+  });
+
+  it("rejects verdicts that are unknown or disagree with state", () => {
+    const base = loadAdjudication(gold, unanswerable).rows[0];
+    expect(() => revalidate([{ ...base, verdict: "ambiguous" } as never])).toThrow(/does not agree/);
+    expect(() => revalidate([{ ...base, verdict: "other" } as never])).toThrow(/verdict must be/);
+  });
+
+  it("rejects a labeled skill on an unanswerable row", () => {
+    const base = loadAdjudication(gold, unanswerable).rows.find((row) => row.kind === "unanswerable")!;
+    expect(() => revalidate([{ ...base, labeledSkillId: "wrong/id" }])).toThrow(/labeledSkillId null/);
+  });
+
+  it("rejects an empty adjudicator", () => {
+    const base = loadAdjudication(gold, unanswerable).rows[0];
+    expect(() => revalidate([{ ...base, adjudicatedBy: "" }])).toThrow(/non-empty string/);
+  });
+
   it("keeps a free-prose alternative out of every denominator", () => {
     // "pbakaus/impeccable or taste-skill" is a note, not a skill id. Counting
     // it as a scoring event would add a guaranteed zero to the mean.
