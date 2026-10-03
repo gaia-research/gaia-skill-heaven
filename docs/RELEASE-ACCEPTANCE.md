@@ -54,12 +54,12 @@ look lost when Claude simply declined it, so the live phase defaults to `--model
   floor adds that one server; its dose is not re-priced, and no surface may present the old
   figure as the current floor's.
 
-## Receipt — 2026-10-04, GitHub `main` @ `e0f2e98`
+## Receipt — 2026-10-04, GitHub `main` @ `fdfd94e` (final, after the release PRs merged)
 
 | | |
 | --- | --- |
 | Result | **76 / 76 checks passed** |
-| Installed commit | `e0f2e986eafca00ac69fd9df023ba12db6ad9d95` (GitHub `main`) |
+| Installed commit | `fdfd94e408850146d6bf9a38a3fb39a6407d70c8` (GitHub `main`) |
 | Claude Code | 2.1.288 (pinned) |
 | Plugin | `skill-heaven` 0.1.2 · MCP bundle sha256 `2a58fbd7…` |
 | Live model | `claude-sonnet-5-5` |
@@ -70,6 +70,8 @@ Not re-run in this pass: Codex 0.146.0, Grok 1.0.5, Hermes 0.20.0, Pi 0.84.2 and
 Antigravity — they stay pinned at their earlier probes
 ([`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md)). No claim here depends on
 them.
+
+An earlier run of the same script on `e0f2e98` (before the site/copy PR #178 merged) also passed 76/76; this one is the receipt of record because it covers the merged release.
 
 ### Checks
 

@@ -181,7 +181,7 @@ export const NOT_CLAIMED: readonly NotClaimed[] = [
  *  `node scripts/release-acceptance.mjs`; do not edit by hand. */
 export const RECEIPT = {
   /** GitHub `main` at the time of the run — the commit that was installed. */
-  commit: 'e0f2e986eafca00ac69fd9df023ba12db6ad9d95',
+  commit: 'fdfd94e408850146d6bf9a38a3fb39a6407d70c8',
   date: '2026-10-04',
   claude: '2.1.288',
   node: 'v22.23.1',
