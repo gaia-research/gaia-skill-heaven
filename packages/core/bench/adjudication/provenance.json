@@ -15,7 +15,7 @@
     "sha256": "b55c2e23062baabb2c8ce939a5c53026f07df4173b9ed0ae015ffbf3809d7dae",
     "path": "source/locked-2026-09-17.json",
     "origin": "https://claude.ai/artifact/4gm6gdxqvB92Ww9Ewu43sk (db reviews/*)",
-    "note": "The owner's review worksheet artifact is no longer reachable at its origin URL. The marks survive only in this on-disk snapshot, which is preserved verbatim. It is committed here so the human review is no longer a single unrecoverable local file."
+    "note": "The owner's review worksheet artifact is no longer reachable at its origin URL. The marks survive in the committed snapshot at source/locked-2026-09-17.json, which is preserved verbatim, so the human review is no longer a single unrecoverable local file."
   },
   "verdictMeaning": {
     "gold": {

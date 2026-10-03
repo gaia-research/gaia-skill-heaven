@@ -95,10 +95,10 @@ worksheet URL, and the exact blob ids of `gold.jsonl` and `unanswerable.jsonl`
 at review time.
 
 > The owner's review worksheet was a hosted artifact that is no longer
-> reachable at its original URL. The marks survived only in a local on-disk
-> snapshot, which would have made the entire human review of this benchmark a
-> single unrecoverable local file. It is committed here, with its digest, so
-> that cannot happen again.
+> reachable at its original URL. The marks survived in the committed snapshot
+> at `source/locked-2026-09-17.json`, preserved verbatim with its digest, so
+> the entire human review of this benchmark is no longer a single unrecoverable
+> local file.
 
 ## What this overlay deliberately does not do
 
