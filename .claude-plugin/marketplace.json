@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "gaia-skill-heaven",
-  "description": "The Claude Code plugin marketplace for gaia-skill-heaven. It ships one plugin — skill-heaven — the Claude Code door to the one ladder, one line.",
+  "description": "Official Claude Code plugin marketplace for Skill Heaven: dynamic agent skill management, on-demand ephemeral capability summoning, clean-context session launching, and prompt-cache optimization to eliminate context bloat and token waste.",
   "owner": {
     "name": "Gaia Research"
   },
@@ -9,7 +9,7 @@
     {
       "name": "skill-heaven",
       "source": "./plugins/skill-heaven",
-      "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. One mechanic — /summon, one skill into context for one session, nothing installed — on one line: zero · low · med · high · xhigh · max · ultra, whose four surfaces are contiguous bands read from the current rung. /skill-zero is the floor, /skill-heaven converges, /skill-hell explores, and /skill-ultra is the crown rung whose controller picks direction and depth per gap. Nothing on the line refuses. No rung carries a count and no summon is capped — what each rung reaches for is being worked out in use while the benchmark is built. Interfaces may change. The zero-default launcher and standing-dose statusline live in the claude-zero package, run from a source checkout — not part of this marketplace install."
+      "description": "Working prototype of Skill Heaven for Claude Code, actively tested for public use. Dynamic skill manager and clean-context controller for coding agents. Eliminates context bloat, preserves prompt cache, and cuts token overhead by summoning specialized SKILL.md agent capabilities on-demand for a single session without permanent installation. Supports zero-default clean launches (/skill-zero) to cut ambient tools, focused gap convergence (/skill-heaven), exploratory multi-expert capability (/skill-hell), autonomous adaptive entropy routing (/skill-ultra), and one-shot ephemeral skill summoning (/summon) from remote git repositories or gaiaskilltree.com."
     }
   ],
   "renames": {

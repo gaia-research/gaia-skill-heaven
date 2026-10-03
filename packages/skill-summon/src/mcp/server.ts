@@ -137,6 +137,26 @@ const summonOutputSchema = z.object({
     }),
     members: z.array(z.unknown()),
     interactions: z.array(z.unknown()),
+    // The Heaven/Hell band judgment. `direction` is null unless accepted,
+    // content-pinned, governed, condition-matched evidence licensed it, and
+    // `abstained` names the gate that stopped it otherwise. It moves breadth
+    // only; it never reorders, rescores, or filters the admitted set, which is
+    // why `selectionChanged` above stays a hard `false`.
+    band: z.object({
+      direction: z.enum(["converge", "explore"]).nullable(),
+      abstained: z.enum([
+        "publication-unavailable",
+        "publication-unreadable",
+        "no-governed-claim",
+        "no-matching-claim",
+        "conditions-unverified",
+        "evidence-inconclusive",
+        "direction-unavailable",
+      ]).nullable(),
+      members: z.array(z.unknown()),
+      relevanceUntouched: z.literal(true),
+      disclosure: z.string(),
+    }),
     note: z.string(),
   }),
   cards: z.array(z.string()),
