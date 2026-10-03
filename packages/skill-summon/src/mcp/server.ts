@@ -334,7 +334,7 @@ export function createSkillSummonMcpServer({
     {
       title: "Summon a skill",
       description:
-        "Materialize the best-matching skill from the configured Skill Tree or flat GitHub fleet. The agent supplies the capability query and optional surface: Heaven admits human-led/unspecified skills; Hell admits model-led/unspecified skills and is the safe default; explicit manual summon passes any. These are routing filters, not authorization — whether to call, and what to do with what comes back, is decided per use under the caller's request and existing permissions. Source commits and subpaths are validated, payloads are commit-addressed, and real agent configuration is never modified.",
+        "Materialize the best-matching skill from the configured Skill Tree or flat GitHub fleet. The agent supplies the capability query and optional surface: Heaven admits human-led and unspecified skills, Hell admits model-led and unspecified skills, and `any` admits both lanes; Hell is the default when surface is omitted, and `any` is what an explicit /summon request passes. These are lane filters, not authorization — whether to call, and what to do with what comes back, is decided per use under the caller's request and existing permissions. Source commits and subpaths are validated, payloads are commit-addressed, and real agent configuration is never modified.",
       inputSchema: z.object({
         query: z
           .string()

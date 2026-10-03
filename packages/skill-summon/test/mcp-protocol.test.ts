@@ -140,9 +140,13 @@ describe("skill-summon MCP protocol", () => {
 
     const [tool] = (await client.listTools()).tools;
     const description = tool.description ?? "";
-    expect(description).toContain("routing filters, not authorization");
+    expect(description).toContain("lane filters, not authorization");
     expect(description).toContain("decided per use under the caller's request");
-    expect(description.toLowerCase()).not.toContain("may be reached automatically");
+    // The omitted-surface default stays stated factually, without recommending
+    // one lane or implying that an explicit request bypasses classification.
+    expect(description).toContain("Hell is the default when surface is omitted");
+    expect(description).toContain("`any` admits both lanes");
+    expect(description).not.toMatch(/safe default|bypass|may be reached automatically/i);
   });
 
   it("ranks and attempts an install, reporting a registry-only skip without touching the network", async () => {
