@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { compile, floorOf, DEFAULT_CLAUDE_MECHANISM, FLOOR_EVIDENCE, POSTURES } from "../src/compile.js";
+import { resolve } from "node:path";
+import {
+  compile,
+  floorOf,
+  DEFAULT_CLAUDE_MECHANISM,
+  DOOR_MCP_BUNDLE_RELATIVE,
+  DOOR_MCP_CONFIG_PATH,
+  DOOR_MCP_SERVER_NAME,
+  FLOOR_EVIDENCE,
+  POSTURES,
+} from "../src/compile.js";
 import { parseArgs } from "../src/cli.js";
 import { assembleRecord } from "../src/record.js";
 import { validateRecord } from "../src/vendor/ledger-record.js";
@@ -79,6 +89,294 @@ describe("claude mappings", () => {
     expect(r.argv.join(" ")).toContain("--model haiku");
     expect(r.argv.join(" ")).toContain("--effort low");
     expect(r.argv.join(" ")).toContain("-p Q --output-format json");
+  });
+});
+
+// Issue #143: the door's OWN bundled summon server. `--strict-mcp-config` is
+// an ALLOWLIST, so it suppresses plugin-declared MCP exactly as thoroughly as
+// ambient MCP — measured on claude 2.1.288 the pre-fix product-floor route
+// yielded `mcp_servers: []` and no summon tool at all
+// (packages/claude-zero/PROBE.md). The door therefore hands core a RESOLVED
+// one-server declaration and core routes it through the SAME strict allowlist.
+describe("door MCP admission (#143)", () => {
+  const doorMcpConfig = {
+    mcpServers: {
+      "skill-summon": {
+        type: "stdio" as const,
+        command: "node",
+        args: ["/opt/door/mcp/skill-summon.mjs"],
+        env: { SKILL_SOURCE: "https://gaiaskilltree.com" },
+      },
+    },
+  };
+  const withDoor = (extra: Record<string, unknown> = {}) =>
+    compile({ posture: "product-floor", harness: "claude", skills: [], doorPluginDir: "/opt/door", ...extra });
+
+  it("keeps strict MCP + the empty setting-sources allowlist and points the ONE --mcp-config at the session file", () => {
+    const r = withDoor({ doorMcpConfig });
+    // Isolation is unchanged. Only the allowlist CONTENT changed.
+    expect(r.argv).toContain("--strict-mcp-config");
+    expect(r.argv).toContain("--setting-sources");
+    expect(r.argv[r.argv.indexOf("--setting-sources") + 1]).toBe("");
+    expect(r.argv).not.toContain("--disable-slash-commands");
+    // exactly one --mcp-config, and it names the session-local file
+    expect(r.argv.filter((a) => a === "--mcp-config")).toHaveLength(1);
+    expect(r.argv[r.argv.indexOf("--mcp-config") + 1]).toBe(DOOR_MCP_CONFIG_PATH);
+    expect(r.argv).not.toContain('{"mcpServers":{}}');
+    // the door is still mounted
+    expect(r.argv.slice(-2)).toEqual(["--plugin-dir", "/opt/door"]);
+    expect(r.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+  });
+
+  it("writes ONE session-local config containing only skill-summon, on node, with the supplied absolute argv and a concrete source", () => {
+    const r = withDoor({ doorMcpConfig });
+    expect(r.fsPlan).toHaveLength(1);
+    const op = r.fsPlan[0];
+    expect(op).toMatchObject({ kind: "write", path: DOOR_MCP_CONFIG_PATH });
+    if (op.kind !== "write") throw new Error("expected a write op");
+    const parsed = JSON.parse(op.contents) as typeof doorMcpConfig;
+    expect(Object.keys(parsed.mcpServers)).toEqual([DOOR_MCP_SERVER_NAME]);
+    const server = parsed.mcpServers[DOOR_MCP_SERVER_NAME];
+    expect(server.type).toBe("stdio");
+    expect(server.command).toBe("node");
+    expect(server.args).toEqual(["/opt/door/mcp/skill-summon.mjs"]);
+    expect(server.env).toEqual({ SKILL_SOURCE: "https://gaiaskilltree.com" });
+    // Nothing in the file can need session substitution — only its PATH does.
+    expect(op.contents).not.toContain("$SESSION");
+    expect(op.contents).not.toMatch(/\$\{/);
+  });
+
+  it("discloses the admission, and never presents F7's historical token numbers as pricing for it", () => {
+    const notes = withDoor({ doorMcpConfig }).notes.join(" ");
+    expect(notes).toContain(DOOR_MCP_SERVER_NAME);
+    expect(notes).toMatch(/ALLOWLIST/i);
+    expect(notes).toMatch(/HISTORICAL|does not price the MCP-enabled route/i);
+    // The F7 arithmetic is still carried as history — it is not deleted, and it
+    // is still labelled with the version/date it was measured on.
+    expect(notes).toContain(FLOOR_EVIDENCE.harness.version);
+    expect(notes).toContain(FLOOR_EVIDENCE.probedAt);
+  });
+
+  it("without a declaration keeps the exact pre-#143 route and says the summon server is NOT admitted", () => {
+    const r = compile({ posture: "product-floor", harness: "claude", skills: [], doorPluginDir: "/opt/door" });
+    expect(r.argv).toEqual([
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "",
+      "--plugin-dir",
+      "/opt/door",
+    ]);
+    expect(r.fsPlan).toEqual([]);
+    const notes = r.notes.join(" ");
+    expect(notes).toMatch(/no server was admitted/i);
+    expect(notes).toContain(DOOR_MCP_SERVER_NAME);
+  });
+
+  it("rejects malformed, extra-server, and unresolved-placeholder declarations instead of falling back to zero servers", () => {
+    const bad: Array<[string, unknown, RegExp]> = [
+      ["no servers", { mcpServers: {} }, /exactly one server/],
+      [
+        "an extra server",
+        {
+          mcpServers: {
+            "skill-summon": doorMcpConfig.mcpServers["skill-summon"],
+            "ambient-thing": { type: "stdio", command: "node", args: ["/tmp/other.mjs"] },
+          },
+        },
+        /exactly one server/,
+      ],
+      ["a renamed server", { mcpServers: { summon: doorMcpConfig.mcpServers["skill-summon"] } }, /exactly one server/],
+      [
+        "an unresolved placeholder in argv",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
+            },
+          },
+        },
+        /unresolved/,
+      ],
+      [
+        "an unresolved placeholder in env",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "${user_config.skill_url}" },
+            },
+          },
+        },
+        /unresolved/,
+      ],
+      [
+        "a relative bundle path",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["mcp/skill-summon.mjs"] },
+          },
+        },
+        /ABSOLUTE/,
+      ],
+      [
+        "npx instead of node",
+        { mcpServers: { "skill-summon": { type: "stdio", command: "npx", args: ["/opt/door/mcp/skill-summon.mjs"] } } },
+        /plain node/,
+      ],
+      [
+        "a non-stdio server",
+        { mcpServers: { "skill-summon": { type: "http", command: "node", args: ["/opt/door/mcp/skill-summon.mjs"] } } },
+        /stdio/,
+      ],
+      [
+        "a non-string env value",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: 42 },
+            },
+          },
+        },
+        /must be a string/,
+      ],
+      [
+        "an env key that would change how node itself starts",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "https://gaiaskilltree.com", NODE_OPTIONS: "--require /tmp/evil.js" },
+            },
+          },
+        },
+        /may carry only SKILL_SOURCE/,
+      ],
+      [
+        "extra argv passed to the admitted bundle",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs", "--stdio"],
+            },
+          },
+        },
+        /exactly one entry/,
+      ],
+      [
+        "some OTHER absolute program admitted under the door's name",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["/tmp/somebody-elses.mjs"] },
+          },
+        },
+        /must admit the mounted door plugin's own bundle/,
+      ],
+      [
+        "the right bundle at a path OUTSIDE the mounted door",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["/elsewhere/mcp/skill-summon.mjs"] },
+          },
+        },
+        /must admit the mounted door plugin's own bundle/,
+      ],
+      ["a missing mcpServers map", {}, /mcpServers map/],
+    ];
+    for (const [label, config, message] of bad) {
+      expect(() => withDoor({ doorMcpConfig: config }), label).toThrow(message);
+    }
+  });
+
+  it("admits the door server on claude product-floor ONLY — never on another harness, posture, or without the mount", () => {
+    const otherHarnesses = ["pi", "codex", "hermes", "grok", "agy"] as const;
+    for (const harness of otherHarnesses) {
+      expect(
+        () =>
+          compile({
+            posture: "product-floor",
+            harness,
+            skills: [],
+            doorPluginDir: "/opt/door",
+            doorMcpConfig,
+          }),
+        harness,
+      ).toThrow(/only valid with harness claude/);
+    }
+    // cursor is refused too, and with the SPECIFIC reason: the admission route
+    // itself is claude's, so it is refused before the unprobed-cell check.
+    expect(() =>
+      compile({ posture: "product-floor", harness: "cursor", skills: [], doorMcpConfig }),
+    ).toThrow(/only valid with harness claude/);
+
+    for (const posture of ["floor", "native"] as const) {
+      expect(() =>
+        compile({ posture, harness: "claude", skills: [], doorMcpConfig }),
+        posture,
+      ).toThrow(/only valid with --posture product-floor/);
+    }
+    expect(() =>
+      compile({ posture: "curated", harness: "claude", skills: [fakeSkill], doorMcpConfig }),
+    ).toThrow(/only valid with --posture product-floor/);
+    // A mounted-less admission would split the door's control surface in half.
+    expect(() =>
+      compile({ posture: "product-floor", harness: "claude", skills: [], doorMcpConfig }),
+    ).toThrow(/requires doorPluginDir/);
+  });
+
+  it("accepts the mounted door's own bundle whatever spelling of the mount it was given", () => {
+    // A trailing separator or a `.` segment is the same mount, not a different one.
+    for (const mount of ["/opt/door", "/opt/door/", "/opt/./door"]) {
+      expect(
+        withDoor({
+          doorPluginDir: mount,
+          doorMcpConfig: {
+            mcpServers: {
+              "skill-summon": {
+                type: "stdio",
+                command: "node",
+                args: [resolve(mount, DOOR_MCP_BUNDLE_RELATIVE)],
+              },
+            },
+          },
+        }).fsPlan,
+      ).toHaveLength(1);
+    }
+  });
+
+  it("leaves the frozen benchmark floor, curated, and native byte-identical (the admission is product-floor only)", () => {
+    const bench = compile({ posture: "floor", harness: "claude", skills: [] });
+    expect(bench.argv).toEqual([
+      "--disable-slash-commands",
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
+    ]);
+    expect(bench.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+    expect(bench.fsPlan).toEqual([]);
+
+    const curated = compile({ posture: "curated", harness: "claude", skills: [fakeSkill] });
+    expect(curated.argv).toContain('{"mcpServers":{}}');
+    expect(curated.fsPlan).toHaveLength(2); // plugin manifest + one copied skill
+
+    const native = compile({ posture: "native", harness: "claude", skills: [] });
+    expect(native.argv).toEqual([]);
+    expect(native.fsPlan).toEqual([]);
+    expect(native.env).toEqual({});
   });
 });
 

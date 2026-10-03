@@ -1,8 +1,11 @@
 // claude-zero CLI. Launches claude at a composed posture with the
 // standing-dose statusline wired via a session-scoped --settings file. Every
 // write lands in a fresh temp dir (P3: zero shared-config mutation) — including
-// the materialized curated set. `--print` shows the plan without spawning claude
-// (and without needing claude installed).
+// the materialized curated set and the session-scoped door-mcp.json core's
+// fsPlan writes when the door's own summon MCP server is admitted (#143), which
+// `materialize()` lays down before the spawn and the finally-block teardown
+// removes on success AND failure. `--print` shows the plan without spawning
+// claude (and without needing claude installed).
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -109,6 +112,13 @@ function helpText(): string {
     "  --print            Print the composed plan without launching",
     "  -h, --help         Show this help",
     "",
+    "Environment:",
+    "  SKILL_SOURCE       One absolute http(s) summon source URL for this launch",
+    "                     (a Skill Tree website root — the default — or a GitHub",
+    "                     repository). Precedence: this override, then the mounted",
+    "                     door plugin's own userConfig.skill_url.default. No other",
+    "                     preference file is read.",
+    "",
   ].join("\n");
 }
 
@@ -196,6 +206,7 @@ export function run(argv: string[]): number {
         sessionDir: "$SESSION",
         statuslineBin: statuslineBinPath(),
         doorPluginDir: doorPluginDir(),
+        skillSource: process.env.SKILL_SOURCE,
         claudeArgs: args.claudeArgs,
       });
     } catch (e) {
@@ -240,6 +251,7 @@ export function run(argv: string[]): number {
         sessionDir,
         statuslineBin: statuslineBinPath(),
         doorPluginDir: doorPluginDir(),
+        skillSource: process.env.SKILL_SOURCE,
         claudeArgs: args.claudeArgs,
       });
       materialize(live.fsPlan, sessionDir);

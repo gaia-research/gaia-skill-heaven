@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
+      let _sch = resolve3.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve2(root, ref) {
+    function resolve3(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3649,7 +3649,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve2(baseURI, relativeURI, options) {
+    function resolve3(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
       const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
@@ -3933,7 +3933,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve: resolve2,
+      resolve: resolve3,
       resolveComponent,
       equal,
       serialize,
@@ -13032,12 +13032,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve2) => {
+    return new Promise((resolve3) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve2();
+        resolve3();
       } else {
-        this._stdout.once("drain", resolve2);
+        this._stdout.once("drain", resolve3);
       }
     });
   }
@@ -13045,6 +13045,10 @@ var StdioServerTransport = class {
 
 // packages/skill-summon/src/configured-service.ts
 import { fileURLToPath as fileURLToPath3 } from "node:url";
+
+// packages/core/src/compile.ts
+import { isAbsolute, join, resolve } from "node:path";
+var DOOR_MCP_BUNDLE_RELATIVE = join("mcp", "skill-summon.mjs");
 
 // packages/core/src/steering.ts
 var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
@@ -14510,15 +14514,15 @@ function describeArborPublication(publication) {
   };
 }
 function consumeArbor(publication, candidate, options = {}) {
-  const join4 = resolveJoin(publication, candidate);
-  const matchedSubject = join4 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
+  const join5 = resolveJoin(publication, candidate);
+  const matchedSubject = join5 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
   const runtime = matchedSubject ? publication.runtimes.get(subjectKey(matchedSubject)) : void 0;
   const lenses = {};
   for (const lens of ARBOR_LENSES) {
     const payloadUnreadable = lens === "claims" && runtime?.lenses.claims.status === "present" && runtime.lenses.claims.profile === null;
     lenses[lens] = reportLens(
       lens,
-      join4,
+      join5,
       runtime?.lenses[lens],
       candidate.identityNote,
       payloadUnreadable
@@ -14554,7 +14558,7 @@ function consumeArbor(publication, candidate, options = {}) {
     skillId: candidate.skillId,
     contentSha256: candidate.contentSha256,
     canonicalSource: candidate.canonicalSource,
-    join: join4,
+    join: join5,
     matchedSubject,
     lenses,
     lensesConsulted,
@@ -14566,7 +14570,7 @@ function consumeArbor(publication, candidate, options = {}) {
     deliveryContext: candidate.delivery ?? "not-materialized",
     problems,
     note: subjectNote(
-      join4,
+      join5,
       lensesConsulted,
       lensesAbsent,
       lensesUnknown,
@@ -14591,14 +14595,14 @@ function resolveJoin(publication, candidate) {
     subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
   ) ? "content-pinned" : "identity-unproven";
 }
-function reportLens(lens, join4, upstream, identityNote, payloadUnreadable = false) {
-  if (join4 !== "content-pinned" || upstream === void 0) {
+function reportLens(lens, join5, upstream, identityNote, payloadUnreadable = false) {
+  if (join5 !== "content-pinned" || upstream === void 0) {
     return {
       lens,
       availability: "unknown",
       upstreamStatus: null,
       sourceDigest: null,
-      reason: identityNote && join4 === "identity-unproven" ? `${joinReason(join4)} \u2014 ${identityNote}` : joinReason(join4)
+      reason: identityNote && join5 === "identity-unproven" ? `${joinReason(join5)} \u2014 ${identityNote}` : joinReason(join5)
     };
   }
   if (upstream.status === "present") {
@@ -14648,8 +14652,8 @@ function absentReason(status) {
       return "no record was consulted";
   }
 }
-function joinReason(join4) {
-  switch (join4) {
+function joinReason(join5) {
+  switch (join5) {
     case "publication-unavailable":
       return "no readable Arbor publication is available to this runtime";
     case "source-not-canonical":
@@ -14664,14 +14668,14 @@ function joinReason(join4) {
       return "";
   }
 }
-function subjectNote(join4, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+function subjectNote(join5, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
   const parts = [
     `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
     `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
     `unknown: ${unknown2.length > 0 ? unknown2.join(", ") : "none"}`
   ];
-  let note = `${parts.join(" \xB7 ")}. ${joinNote(join4)}`;
-  if (join4 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  let note = `${parts.join(" \xB7 ")}. ${joinNote(join5)}`;
+  if (join5 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }
@@ -14683,8 +14687,8 @@ function subjectNote(join4, consulted, absent2, unknown2, claimCount, edgeCount,
   }
   return note;
 }
-function joinNote(join4) {
-  switch (join4) {
+function joinNote(join5) {
+  switch (join5) {
     case "content-pinned":
       return "Subject identity proven by id and exact content pin.";
     case "identity-unproven":
@@ -15005,7 +15009,7 @@ function short(digest) {
 
 // packages/skill-summon/src/data/skill-index-source.ts
 import { readFile as readFile3 } from "node:fs/promises";
-import { dirname as dirname2, join } from "node:path";
+import { dirname as dirname2, join as join2 } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // packages/skill-summon/src/domain/types.ts
@@ -20145,7 +20149,7 @@ function isGithubRepository(value) {
 }
 
 // packages/skill-summon/src/data/skill-index-source.ts
-var INDEX_RELATIVE_PATH = join("plugins", "skill-heaven", "data", "skill-index.json");
+var INDEX_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "skill-index.json");
 var committed;
 function loadCommittedIndex() {
   committed ??= readCommittedIndex();
@@ -20182,10 +20186,10 @@ function candidatePaths() {
   const configured = process.env.SKILL_INDEX_PATH?.trim();
   const here = dirname2(fileURLToPath(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join(here, "..", "data", "skill-index.json"));
+  paths.push(join2(here, "..", "data", "skill-index.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join(directory, INDEX_RELATIVE_PATH));
+    paths.push(join2(directory, INDEX_RELATIVE_PATH));
     const parent = dirname2(directory);
     if (parent === directory) break;
     directory = parent;
@@ -20675,16 +20679,16 @@ function isInstallable(skill) {
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
 import { createHash as createHash2 } from "node:crypto";
-import { dirname as dirname3, join as join2 } from "node:path";
+import { dirname as dirname3, join as join3 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 
 // packages/skill-summon/src/data/confined-file.ts
 import { constants } from "node:fs";
 import { open } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve as resolve2 } from "node:path";
 async function readConfinedFile(root, target) {
-  const confinedRoot = darwinAlias(resolve(root));
-  const absolute = darwinAlias(resolve(target));
+  const confinedRoot = darwinAlias(resolve2(root));
+  const absolute = darwinAlias(resolve2(target));
   await assertConfinedPath(confinedRoot, absolute, "Optional evidence file");
   const handles = [];
   try {
@@ -20726,7 +20730,7 @@ function darwinAlias(value) {
 }
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
-var IDENTITY_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "arbor-identity.json");
+var IDENTITY_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "arbor-identity.json");
 var cached2;
 function loadArborIdentityContext() {
   cached2 ??= readIdentityFromDisk();
@@ -20766,10 +20770,10 @@ function candidatePaths2() {
   const configured = process.env.ARBOR_IDENTITY_PATH?.trim();
   const here = dirname3(fileURLToPath2(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join2(here, "..", "data", "arbor-identity.json"));
+  paths.push(join3(here, "..", "data", "arbor-identity.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join2(directory, IDENTITY_RELATIVE_PATH));
+    paths.push(join3(directory, IDENTITY_RELATIVE_PATH));
     const parent = dirname3(directory);
     if (parent === directory) break;
     directory = parent;
@@ -23197,7 +23201,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+        await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -23214,7 +23218,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve3, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -23292,7 +23296,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve2(parseResult.data);
+            resolve3(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -23553,12 +23557,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve3, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve2, interval);
+      const timeoutId = setTimeout(resolve3, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -24880,7 +24884,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+      await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -25478,11 +25482,11 @@ import path8 from "node:path";
 
 // packages/skill-summon/src/data/arbor-source.ts
 import { createHash as createHash3 } from "node:crypto";
-import { dirname as dirname4, join as join3, isAbsolute, relative, sep } from "node:path";
+import { dirname as dirname4, join as join4, isAbsolute as isAbsolute2, relative, sep } from "node:path";
 import { fileURLToPath as fileURLToPath4 } from "node:url";
-var ARBOR_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "arbor");
+var ARBOR_RELATIVE_PATH = join4("plugins", "skill-heaven", "data", "arbor");
 var EDGE_INDEX_FILE = "edges.json";
-var RUNTIME_INDEX_FILE = join3("runtime", "index.json");
+var RUNTIME_INDEX_FILE = join4("runtime", "index.json");
 var PROVENANCE_FILE = "provenance.json";
 var cached3;
 function loadArborPublication() {
@@ -25514,7 +25518,7 @@ async function readArborPublicationDir(root) {
   try {
     assertArborRuntimeIndex(runtimeIndexFile.value);
     for (const subject of runtimeIndexFile.value.subjects) {
-      const relativePath = join3("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
+      const relativePath = join4("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
       expected.add(relativePath);
       const document = await readConfinedJson(root, relativePath, problems);
       if (document === void 0) {
@@ -25557,10 +25561,10 @@ function candidatePaths3() {
   const configured = process.env.ARBOR_PUBLICATION_PATH?.trim();
   const here = dirname4(fileURLToPath4(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join3(here, "..", "data", "arbor"));
+  paths.push(join4(here, "..", "data", "arbor"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join3(directory, ARBOR_RELATIVE_PATH));
+    paths.push(join4(directory, ARBOR_RELATIVE_PATH));
     const parent = dirname4(directory);
     if (parent === directory) break;
     directory = parent;
@@ -25568,7 +25572,7 @@ function candidatePaths3() {
   return paths;
 }
 async function readConfinedJson(root, relativePath, problems) {
-  const target = join3(root, relativePath);
+  const target = join4(root, relativePath);
   try {
     const bytes = await readConfinedFile(root, target);
     const digest = createHash3("sha256").update(bytes).digest("hex");
@@ -25665,8 +25669,8 @@ async function verifyProvenance(root, expected, digests, problems) {
   };
 }
 function normalizeRelative(value) {
-  if (value.length === 0 || isAbsolute(value)) return null;
-  const normalized = relative(".", join3(".", value));
+  if (value.length === 0 || isAbsolute2(value)) return null;
+  const normalized = relative(".", join4(".", value));
   if (normalized.length === 0) return null;
   if (normalized === ".." || normalized.startsWith(`..${sep}`)) return null;
   return normalized;
