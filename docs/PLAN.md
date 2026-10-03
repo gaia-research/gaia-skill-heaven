@@ -198,7 +198,7 @@ Two halves, and only the first can start now.
 | S3 | Every transition explains itself: signal, policy, from-posture, to-posture |
 | S4 | Holding position is a first-class outcome, and the common one |
 | S5 | Recover and reopen are real transitions, not absences |
-| S6 | Heaven and Hell differ by breadth, and that is disclosed as the current reading rather than dressed as behavior (SPEC §6.2). No surface presents stamp-gated routing as running. See [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md) |
+| S6 | Heaven and Hell differ by breadth of relevance-ranked results, and that is disclosed as the current reading rather than dressed as behavior (SPEC §6.2, unchanged). No surface presents stamp-gated routing as running. See [`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md) |
 
 The deterministic controller work survives a corrected intent where it remains
 valid after semantic review. Its calibrated parameters are code-side and dated;

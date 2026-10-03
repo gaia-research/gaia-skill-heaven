@@ -128,6 +128,28 @@ describe("the band moves only when every gate is passed", () => {
     });
     expect(result).toMatchObject({ direction: null, abstained: "direction-unavailable" });
   });
+
+  it("treats a resolver value off the ladder as no direction", () => {
+    const { members } = withClaims([governedClaim()]);
+    for (const value of ["sideways", "", "EXPLORE", 1, {}, undefined]) {
+      const result = judgeArborBand("loaded", members, {
+        matchesConditions: matchThese,
+        resolveDirection: () => value as unknown as BandDirection,
+      });
+      expect(result).toMatchObject({ direction: null, abstained: "direction-unavailable" });
+    }
+  });
+
+  it("treats a throwing resolver as no direction, never as an escape from the gate", () => {
+    const { members } = withClaims([governedClaim()]);
+    const result = judgeArborBand("loaded", members, {
+      matchesConditions: matchThese,
+      resolveDirection: () => {
+        throw new Error("payload unreadable");
+      },
+    });
+    expect(result).toMatchObject({ direction: null, abstained: "direction-unavailable" });
+  });
 });
 
 describe("the band never touches relevance", () => {

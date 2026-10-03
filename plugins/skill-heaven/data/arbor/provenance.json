@@ -1,9 +1,10 @@
 {
-  "capturedAt": "2026-09-13",
-  "commit": "fb6a79700062b7addab3d9e05450316050d96e0b",
+  "capturedAt": "2026-10-03",
+  "commit": "28ac065b83cddd13161466157344f1c40ff4635b",
   "files": {
     "edges.json": "a06889d4e8f93b4cf2c3295a2890944b4d8762b8647f5f9ffe37e5145ce3937d",
-    "runtime/index.json": "cd1971e710c80620193eeb2cb963690b8b6f5d3315253e4ec506b4cdd4c84417"
+    "runtime/index.json": "48681b169644f371fd60878b8504c13639a29ebda6ab551ec8552d3bd79cbdf8",
+    "runtime/obra/receiving-code-review/4c59202e1d414d1b1c274e6b350032e538c9b05807125a5bfd383b134fc8250a.json": "4ab92447da22ee7b17a970aea417dd30c965da79a82c765f23c8a9c5711452c8"
   },
   "note": "Consumer-side cache of the canonical Arbor publication, copied byte-for-byte from the pinned upstream revision above. This file is OUR provenance record, not an Arbor contract: Arbor's contracts live upstream and are never authored here (SPEC INV-7). Refreshing this cache is an explicit, reviewed step; a summon never fetches it.",
   "path": "docs/graph/arbor",

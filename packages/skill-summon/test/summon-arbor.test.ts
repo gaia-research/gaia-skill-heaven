@@ -3,9 +3,10 @@
 // An exported-but-uncalled validator would satisfy nothing: the lane's exit is a
 // real consumption path with real disclosure on the surfaces a caller actually
 // reads. So these tests drive `summon()` itself and the MCP tool wire, against
-// the committed publication cache — which at the pinned upstream revision is
-// genuinely empty. Where a positive path needs records to exist, the test says
-// SYNTHETIC in its name and writes its own publication directory.
+// the committed publication cache — which at the pinned upstream revision holds
+// one governed single-skill subject and no interaction edges (it was empty until
+// 2026-10-03). Where a path needs records that do not exist upstream, the test
+// says SYNTHETIC in its name and writes its own publication directory.
 
 import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
@@ -264,8 +265,9 @@ describe("the committed Arbor publication", () => {
     expect(publication.state).toBe("loaded");
     expect(publication.provenance?.upstream).toMatch(/gaia-skill-tree/u);
     expect(publication.provenance?.commit).toMatch(/^[a-f0-9]{40}$/u);
-    // REAL current state, not a fixture: upstream publishes an empty projection.
-    expect(publication.subjects).toEqual([]);
+    // REAL current state, not a fixture: upstream publishes one governed,
+    // single-skill subject and no interaction edges.
+    expect(publication.subjects.map((subject) => subject.id)).toEqual(["obra/receiving-code-review"]);
     expect(publication.edgeIndex?.edges).toEqual([]);
     expect(publication.problems).toEqual([]);
   });
@@ -309,12 +311,12 @@ describe("summon discloses its behavioral lenses", () => {
       surface: "any",
     });
     expect(outcome.arbor.publicationState).toBe("loaded");
-    expect(outcome.arbor.subjectsPublished).toBe(0);
+    expect(outcome.arbor.subjectsPublished).toBe(1);
     expect(outcome.composition).toMatchObject({
       mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
       deliveryVerified: false,
       publication: {
-        state: "loaded", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0, problems: [],
+        state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
       },
       interactions: [],
     });
@@ -324,7 +326,7 @@ describe("summon discloses its behavioral lenses", () => {
       absenceMeaning: "not-evaluated",
     });
     expect(outcome.arbor.corpus.canonical).toBe(true);
-    expect(outcome.arbor.note).toMatch(/EMPTY/u);
+    expect(outcome.arbor.note).toMatch(/1 published subject\(s\), 0 interaction edge\(s\)\. Absence of a record means not-evaluated/u);
     expect(outcome.previewed.length).toBeGreaterThan(0);
     for (const preview of outcome.previewed) {
       // Nothing is published, so the honest answer for every candidate is that
@@ -343,7 +345,7 @@ describe("summon discloses its behavioral lenses", () => {
     });
     expect(outcome.noMatch).not.toBeNull();
     expect(outcome.arbor.publicationState).toBe("loaded");
-    expect(outcome.arbor.note).toMatch(/nothing here is evidence about any skill/u);
+    expect(outcome.arbor.note).toMatch(/Absence of a record means not-evaluated/u);
   });
 
   it("reports candidates from a non-canonical source as outside the corpus", async () => {
@@ -666,6 +668,9 @@ describe("Arbor never touches relevance", () => {
     // Arbor may not move either, and a refusal is exactly where a behavioral
     // signal would be most tempting to read as a reason (SPEC INV-3, §3.4).
     for (const query of ["pytest patterns", "review a pull request"]) {
+      // An explicitly EMPTY publication is the baseline, so this comparison
+      // does not depend on what upstream happens to have published.
+      await useSyntheticPublication([]);
       const before = await summon(committedService(), await session(), {
         query,
         limit: 5,
@@ -800,7 +805,7 @@ describe("the public wire", () => {
       expect(structured.composition).toMatchObject({
         mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
         publication: {
-          state: "loaded", subjectsPublished: 0, edgesPublished: 0, matchedEdges: 0, problems: [],
+          state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
         },
       });
     } finally {
@@ -1010,5 +1015,79 @@ describe("the cached publication is checked against its own receipt", () => {
     const lines = arborPublicationLines(outcome.arbor, outcome.arbor.identity).join("\n");
     expect(lines).toMatch(/byte consistency only, not an authenticated upstream attestation/u);
     expect(lines).not.toMatch(/signed|signature|attested by|verified by upstream/iu);
+  });
+});
+
+// THE CLOSED LOOP (gaia-research#208, E5), on the production path.
+//
+// Not synthetic. The shipped cache carries the first governed Arbor record
+// (gaia-skill-tree #2036): obra/receiving-code-review, support `inconclusive`,
+// set by the human-curated interpretation c8d6b2cb. Before that record the
+// runtime knew nothing about this skill (`no-published-subject`). Now it knows
+// the evidence is governed and inconclusive, and abstains for that reason.
+// Nothing about relevance or breadth moves.
+describe("the real governed record reaches the runtime (Lane E)", () => {
+  const SKILL = "obra/receiving-code-review";
+  const INTERPRETATION = "c8d6b2cb0a8c33b36e498eb22b5770851dc98e4f2297a7ef729908bf11f4c80e";
+  const QUERY = "receiving code review";
+  const SIGNALS = ["adjudicate a plausible code-review suggestion", "state-specific nullability"];
+
+  it("joins the candidate to the governed, inconclusive claim", async () => {
+    const outcome = await summon(committedService(), await session(), {
+      query: QUERY, preview: true, surface: "any",
+    });
+    const candidate = outcome.previewed.find((preview) => preview.id === SKILL);
+    expect(candidate, `${SKILL} must be previewed for "${QUERY}"`).toBeTruthy();
+    expect(candidate!.arbor.join).toBe("content-pinned");
+    expect(candidate!.arbor.claims).toHaveLength(1);
+    expect(candidate!.arbor.claims[0]).toMatchObject({
+      support: "inconclusive", interpretationSource: INTERPRETATION,
+    });
+  });
+
+  it("discloses the evidence as inconclusive and abstains when the caller declared no task", async () => {
+    const outcome = await summon(committedService(), await session(), {
+      query: QUERY, preview: true, surface: "any",
+    });
+    const band = outcome.composition.band;
+    expect(band.direction).toBeNull();
+    expect(band.abstained).toBe("conditions-unverified");
+    expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
+      state: "evidence-inconclusive", governedCount: 1, support: ["inconclusive"], matched: false,
+    });
+  });
+
+  it("abstains BECAUSE the evidence is inconclusive when the task matches the claim", async () => {
+    const outcome = await summon(committedService(), await session(), {
+      query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
+    });
+    const band = outcome.composition.band;
+    expect(band).toMatchObject({ direction: null, abstained: "evidence-inconclusive", relevanceUntouched: true });
+    expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
+      state: "evidence-inconclusive", matched: true,
+    });
+  });
+
+  it("changes knowledge, not relevance: the ranked result is identical with or without the record", async () => {
+    // Everything a caller could rank, order or act on, with the Arbor
+    // disclosure removed (same shape as the relevance-isolation suite above).
+    const shape = (outcome: Awaited<ReturnType<typeof summon>>) => ({
+      margin: outcome.margin,
+      noMatch: outcome.noMatch,
+      filtered: outcome.filtered,
+      skipped: outcome.skipped,
+      ranking: { ...outcome.ranking, indexAgeDays: null },
+      previewed: outcome.previewed.map(({ arbor: _arbor, ...rest }) => rest),
+    });
+    const withRecord = await summon(committedService(), await session(), {
+      query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
+    });
+    await useSyntheticPublication([]);
+    const withoutRecord = await summon(committedService(), await session(), {
+      query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
+    });
+    expect(shape(withRecord)).toEqual(shape(withoutRecord));
+    expect(withoutRecord.composition.band.abstained).toBe("no-governed-claim");
+    expect(withRecord.composition.band.abstained).toBe("evidence-inconclusive");
   });
 });

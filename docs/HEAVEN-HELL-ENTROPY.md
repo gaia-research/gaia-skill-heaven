@@ -75,7 +75,10 @@ observable in which the one quantity manifests.**
 
 3. **S-later's unit changes from "score" to "band judgment."** Not a number to
    shift. A disclosed direction — converge or explore — with abstention, from
-   accepted evidence.
+   accepted evidence. Today the judgment is **reported, not applied**: no
+   runtime consumer reads `band.direction`, and no legal resolver exists until
+   the HH payload is published, so the band moves nothing yet — breadth
+   included. Breadth stays the relevance-ranked breadth SPEC §6.2 describes.
 
 ## The one guardrail, narrowly drawn
 
@@ -93,13 +96,17 @@ strictness. It has to be the record.
 This is why `evidence-inconclusive` is a first-class state in
 `packages/core/src/arbor/band.ts` and is **pinned by test to be incapable of
 producing a direction**, even when a `resolveDirection` is supplied that would
-return one. Tested twice: on synthetic fixtures, and on the real published
-record from `gaia-skill-tree` PR #2028.
+return one. Tested on synthetic fixtures, and on the real published record —
+read from the byte-for-byte Arbor cache the plugin ships, so it runs in CI
+(`arbor-band-real-record.test.ts`, and on the production `summon()` path in
+`summon-arbor.test.ts`).
 
 ## What the real record does
 
-The one governed record in the Tree today
-(`obra/receiving-code-review`, interpretation `93578bb7`):
+The first governed record in the Tree (`gaia-skill-tree` #2036, superseding
+#2028; `obra/receiving-code-review`, interpretation `c8d6b2cb`, issued under the
+project owner as human curator — #2028's agent-authored draft `93578bb7` was
+never published):
 
 - content-pinned join: yes
 - governed: yes — `interpretationSource` is non-null

@@ -21,12 +21,15 @@ import type { CompositionMember, CompositionRole } from "./composition.js";
 // here computes a number, a weight, a threshold, or a magnitude, and nothing
 // downstream of it should start: compile.ts carries that ruling in full.
 //
-// THE ONE EFFECT. `direction` may move how much of the admitted set is
-// materialized — the breadth cap — and nothing else. The ORDER of the admitted
-// set is relevance's, is produced upstream, and is never reordered, rescored,
-// filtered, or re-ranked here. A caller that finds `selectionChanged: true` on a
-// relevance field has misread this file; the only field this file moves is
-// breadth.
+// THE ONE PERMITTED EFFECT. A licensed `direction` may one day move how much of
+// the admitted set is materialized — the breadth cap — and nothing else.
+// TODAY IT MOVES NOTHING: no runtime consumer reads `band.direction`, and no
+// legal resolver exists until the HH payload is published, so the judgment is
+// reported, never applied. The ORDER of the admitted set is relevance's, is
+// produced upstream, and is never reordered, rescored, filtered, or re-ranked
+// here. A caller that finds `selectionChanged: true` on a relevance field has
+// misread this file; breadth is the only field it may ever move, and it moves
+// none today.
 //
 // ABSTENTION IS THE DEFAULT. Every path that cannot be justified from an
 // accepted, content-pinned, governed, condition-matched record abstains, and
@@ -165,7 +168,9 @@ export type ArborBandOptions = {
    * Resolves the direction the governed evidence licenses.
    *
    * Receives ONLY claims that are individually matched, governed, AND
-   * conclusive. There is no member-level aggregate in this signature on
+   * conclusive. The same claim can appear more than once when one skill is
+   * both a session record and a proposed member, so `evidence.length` is not a
+   * count of anything and must never be read as one. There is no member-level aggregate in this signature on
    * purpose: an aggregate loses which claim supplied which fact, and that is
    * exactly how an unmatched confirmed claim gets laundered through a matched
    * inconclusive one.
@@ -251,7 +256,7 @@ export function judgeArborBand(
     );
   }
 
-  const direction = options.resolveDirection?.(conclusive) ?? null;
+  const direction = readDirection(options.resolveDirection, conclusive);
   if (direction === null) {
     return abstain(
       base,
@@ -266,9 +271,31 @@ export function judgeArborBand(
     abstained: null,
     disclosure:
       direction === "converge"
-        ? "Matching governed evidence supports a lower-entropy, narrower composition. Breadth is reduced toward Heaven. Relevance ordering and scores are untouched."
-        : "Matching governed evidence supports a higher-entropy, broader composition. Breadth is widened toward Hell. Relevance ordering and scores are untouched.",
+        ? "Matching governed evidence licenses the converging, lower-entropy direction (toward Heaven). It may narrow breadth only; relevance ordering and scores are untouched."
+        : "Matching governed evidence licenses the exploring, higher-entropy direction (toward Hell). It may widen breadth only; relevance ordering and scores are untouched.",
   };
+}
+
+/**
+ * Runs the injected direction resolver and accepts only a value on the ladder.
+ *
+ * The resolver is a seam for a publisher that does not exist yet, so its output
+ * is treated as untrusted input: a throw, `undefined`, or any value outside
+ * `BAND_DIRECTION` is "no direction", never a direction. Letting an arbitrary
+ * string through would publish a band the MCP schema and every surface reject.
+ */
+function readDirection(
+  resolveDirection: ArborBandOptions["resolveDirection"],
+  conclusive: readonly ConclusiveEvidence[],
+): BandDirection | null {
+  if (!resolveDirection) return null;
+  let value: unknown;
+  try {
+    value = resolveDirection(conclusive);
+  } catch {
+    return null;
+  }
+  return (BAND_DIRECTION as readonly unknown[]).includes(value) ? (value as BandDirection) : null;
 }
 
 function readMember(

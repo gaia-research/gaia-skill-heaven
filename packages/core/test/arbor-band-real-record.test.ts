@@ -1,5 +1,8 @@
-// This suite runs against the ACTUAL published Arbor projection committed in
-// gaia-skill-tree PR #2028 — the first governed record in the Tree. It is not a
+// This suite runs against the ACTUAL published Arbor projection — the first
+// governed record in the Tree (gaia-skill-tree #2036, which superseded #2028 so
+// the interpretation could be issued under a human curator). By default it reads
+// the byte-for-byte cache the plugin ships (plugins/skill-heaven/data/arbor),
+// which is the exact artifact the runtime consumes, so it runs in CI. It is not a
 // fixture. If upstream changes that record, this suite is expected to fail and
 // to be updated deliberately, because what it asserts is what the real published
 // evidence currently does to a composition.
@@ -18,21 +21,21 @@ import { inspectArborComposition, type CompositionMember } from "../src/arbor/co
 import { readArborPublication } from "../src/arbor/publication.js";
 import type { BandDirection } from "../src/arbor/band.js";
 
-// Point GAIA_SKILL_TREE at a gaia-skill-tree checkout that has PR #2028 merged
-// or fetched. The suite skips cleanly when it is absent, so CI is never red for
-// a missing sibling clone — but locally it runs against the real artifact.
-const TREE = process.env.GAIA_SKILL_TREE ??
-  join(dirname(fileURLToPath(import.meta.url)), "../../../../gaia-skill-tree");
-const HAVE_TREE = existsSync(join(TREE, "docs/graph/arbor/runtime/index.json"));
+// GAIA_SKILL_TREE may point at a gaia-skill-tree checkout to test upstream
+// directly; otherwise the shipped consumer cache is the source.
+const TREE_ARBOR = process.env.GAIA_SKILL_TREE
+  ? join(process.env.GAIA_SKILL_TREE, "docs/graph/arbor")
+  : join(dirname(fileURLToPath(import.meta.url)), "../../../plugins/skill-heaven/data/arbor");
+const HAVE_TREE = existsSync(join(TREE_ARBOR, "runtime/index.json"));
 const SKILL = "obra/receiving-code-review";
 // The content pin is READ from the published index rather than hardcoded, so
 // this suite tracks upstream automatically instead of going stale behind a
 // typo. Nothing else about the record is assumed.
-const INTERPRETATION = "93578bb7e7e32608942e7bc58ab8bb47e2b1be4748c27f0a46108637e88a2782";
+const INTERPRETATION = "c8d6b2cb0a8c33b36e498eb22b5770851dc98e4f2297a7ef729908bf11f4c80e";
 
 function realPin(): string {
   const index = JSON.parse(
-    readFileSync(join(TREE, "docs/graph/arbor/runtime/index.json"), "utf8"),
+    readFileSync(join(TREE_ARBOR, "runtime/index.json"), "utf8"),
   ) as { subjects: { id: string; contentSha256: string }[] };
   const subject = index.subjects.find((s) => s.id === SKILL);
   expect(subject, `${SKILL} must be published in the Tree index`).toBeTruthy();
@@ -42,16 +45,16 @@ function realPin(): string {
 function realPublication() {
   const PIN = realPin();
   const index = JSON.parse(
-    readFileSync(join(TREE, "docs/graph/arbor/runtime/index.json"), "utf8"),
+    readFileSync(join(TREE_ARBOR, "runtime/index.json"), "utf8"),
   ) as { subjects: { id: string; contentSha256: string }[] };
   expect(index.subjects.map((s) => s.id)).toContain(SKILL);
   const runtime = JSON.parse(
-    readFileSync(join(TREE, "docs/graph/arbor/runtime/obra/receiving-code-review", `${PIN}.json`), "utf8"),
+    readFileSync(join(TREE_ARBOR, "runtime/obra/receiving-code-review", `${PIN}.json`), "utf8"),
   );
   return readArborPublication({
     provenance: null,
     runtimeIndex: index,
-    edgeIndex: JSON.parse(readFileSync(join(TREE, "docs/graph/arbor/edges.json"), "utf8")),
+    edgeIndex: JSON.parse(readFileSync(join(TREE_ARBOR, "edges.json"), "utf8")),
     runtimes: [{
       path: `runtime/${SKILL}/${PIN}.json`,
       document: runtime,
@@ -68,7 +71,7 @@ function realMember(publication: ReturnType<typeof realPublication>): Compositio
   };
 }
 
-describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree PR #2028)", () => {
+describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree #2036)", () => {
   it("is a content-pinned join carrying one governed claim", () => {
     const publication = realPublication();
     const member = realMember(publication);
