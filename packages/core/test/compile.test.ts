@@ -771,3 +771,74 @@ describe("record assembly discipline", () => {
     expect(r.tokens.perTurn).toBeNull();
   });
 });
+
+// Issue #144: permission handling is deliberately NOT core's job on claude.
+//
+// The defect the door fixed was door-side: `--setting-sources ''` (KC4's clean
+// room) evicts the user's settings, and with them `permissions.defaultMode` —
+// including a configured `dangerouslySkipPermissions`. The fix lives in
+// packages/claude-zero/src/permissions.ts, because only the DOOR knows whether
+// a posture evicts ambient settings.
+//
+// These assertions pin the boundary so it cannot erode:
+//   - core composes no permission mode and no permission flag for claude,
+//   - the eviction flags stay EXACTLY as KC4 left them,
+//   - and the benchmark floor stays byte-frozen (it is a measurement arm; a
+//     permission mode in it would change what is being measured).
+//
+// Scoped to harness `claude` on purpose: other harnesses' product floors have
+// their own probed permission compositions (agy product-floor, for one, carries
+// `--dangerously-skip-permissions` deliberately). Those are per-harness probed
+// cells and are not evidence about the claude door's inheritance path.
+describe("the compiler stays permission-neutral on claude (#144)", () => {
+  const PERMISSION_TOKENS = [
+    "--permission-mode",
+    "--dangerously-skip-permissions",
+    "--allow-dangerously-skip-permissions",
+  ];
+
+  it("composes no permission flag or mode for any claude posture", () => {
+    for (const posture of POSTURES) {
+      const r = compile({ posture, harness: "claude", skills: posture === "curated" ? [fakeSkill] : [] });
+      for (const token of PERMISSION_TOKENS) {
+        expect(r.argv, `${posture} must not compose ${token}`).not.toContain(token);
+      }
+      expect(r.argv.join(" "), posture).not.toMatch(/permission-mode|skip-permissions/);
+      for (const key of Object.keys(r.env)) {
+        expect(key, `${posture} env must carry no permission key`).not.toMatch(/PERMISSION/i);
+      }
+    }
+  });
+
+  it("keeps the KC4 empty setting-sources allowlist on both evicting postures", () => {
+    for (const posture of ["product-floor", "curated"] as const) {
+      const r = compile({ posture, harness: "claude", skills: posture === "curated" ? [fakeSkill] : [] });
+      const idx = r.argv.indexOf("--setting-sources");
+      expect(idx, posture).toBeGreaterThanOrEqual(0);
+      expect(r.argv[idx + 1], posture).toBe("");
+      // The isolation that makes door-side permission inheritance necessary in
+      // the first place. Relaxing this would silently fix #144 the wrong way
+      // (by re-admitting every ambient setting source).
+      expect(r.argv, posture).not.toContain("project");
+    }
+  });
+
+  it("leaves the benchmark floor's argv/env/fsPlan byte-frozen — a mode would change the arm", () => {
+    const r = compile({ posture: "floor", harness: "claude", skills: [] });
+    expect(r.argv).toEqual([
+      "--disable-slash-commands",
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
+    ]);
+    expect(r.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+    expect(r.fsPlan).toEqual([]);
+  });
+
+  it("keeps native literally empty (P3) — the door must not need a native inheritance path", () => {
+    const r = compile({ posture: "native", harness: "claude", skills: [] });
+    expect(r).toMatchObject({ argv: [], env: {}, fsPlan: [] });
+  });
+});

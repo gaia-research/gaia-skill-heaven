@@ -39,6 +39,55 @@ claude-zero --print                          # inspect; do not spawn
 claude-zero -- --model sonnet                # pass through after --
 ```
 
+### Permission handling (#144)
+
+`--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, and
+`--permission-mode <mode>` are **claude's** flags. claude-zero forwards them
+verbatim, directly or after `--`, and consumes a mode value atomically — so
+`--permission-mode` with no value (or an option in its place) is a clear argument
+error (exit 2) rather than a swallowed mode.
+
+```bash
+claude-zero --permission-mode acceptEdits
+claude-zero -- --dangerously-skip-permissions
+```
+
+**Why inheritance exists.** The clean room (`--setting-sources ''`) is an empty
+allowlist, so it evicts *every* ambient settings source — including the permission
+mode you configured. The issue behind #144 is that this silently returned the
+session to claude's own default. Where a posture evicts settings (`product-floor`,
+`curated`), the door now carries **one** thing back: a default permission mode,
+re-applied as `permissions.defaultMode` in the session settings file. Nothing else
+is imported — no `allow`/`deny` rules, hooks, plugins, MCP servers, `env`,
+credentials, or additional directories, and no pre-acknowledged bypass.
+
+**Precedence.**
+
+1. An explicit permission flag on the command line always wins, including a
+   **safer** mode (`--permission-mode manual`) over an inherited bypass.
+2. Otherwise a mode configured in your user settings is inherited:
+   `permissions.defaultMode` (canonical), plus `permissionMode` and boolean
+   `dangerouslySkipPermissions` as documented launcher compatibility inputs —
+   these last two are *not* claimed to be claude settings keys.
+3. Otherwise nothing is injected and claude keeps its own default. The door never
+   invents a mode.
+4. `--allow-dangerously-skip-permissions` alone only makes bypass **available**; it
+   is not a request to enter bypass mode and never suppresses inheritance.
+
+`--posture native` reads nothing and injects nothing: claude's own settings
+precedence is left exactly as it is (P3).
+
+**Caveats, stated rather than worked around.** A configured bypass is a *request*:
+managed/organization policy, an IDE-owned session, or claude's own interactive
+bypass acknowledgment can still decline it, and claude-zero suppresses none of
+them (it never sets `skipDangerousModePermissionPrompt`). A settings path that
+exists but cannot be read or interpreted — malformed JSON, an unsupported mode, two
+configured modes that disagree, a config path that is not a directory — is a
+**launch error**, not a silent fallback into a different permission mode. An explicit `--permission-mode` is the way past it. The
+settings lookup honours `CLAUDE_CONFIG_DIR` when set, otherwise `~/.claude`, and is
+read-only either way. Behaviour is version-pinned: modes and precedence were probed
+on claude 2.1.288 (see [`PROBE.md`](PROBE.md)) and must be re-verified on upgrade.
+
 The ladder is the primary interface. See
 [Core and Quirks](../../docs/CORE-AND-QUIRKS.md#1-the-ladder) for the single
 canonical rung description and policy status. `--posture` remains supported for
@@ -47,7 +96,9 @@ refused by this door because slash commands do not exist there (F6).
 
 Every write is session-scoped: the launcher materializes core's plan, profile
 manifest, and statusline settings in a disposable temp directory. It never
-edits `~/.claude`, project skills, or source skill directories (P3).
+edits `~/.claude`, project skills, or source skill directories (P3). The one user
+file it *reads* is the Claude settings file, and only for a default permission mode
+(see [Permission handling](#permission-handling-144)).
 
 ## The summon MCP server: admitted, not ambient (#143)
 
@@ -162,6 +213,9 @@ invocation doses remain separate.
   and metadata, evaluated per use.
 - `floor`: benchmark-only, doorless posture.
 - `native`: `med`; `--level native` remains a compatibility spelling.
+- Permission handling is the door's, not core's: the compiler composes no
+  permission mode and no permission flag, and a permission choice changes
+  permission handling only — never skill selection or the dose accounting.
 
 Evidence for the pinned compositions remains in core compiler notes and the
 probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md),

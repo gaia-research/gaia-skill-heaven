@@ -1,8 +1,8 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { materialize, resolveSkill } from "skill-zero";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch, planNativeLaunch } from "../src/launcher.js";
 import { SHIPPED_SKILL_URL_DEFAULT, writeDoorPluginFixture } from "./door-plugin-fixture.js";
@@ -24,6 +24,11 @@ let home: string;
  * declaration from the very dir it mounts, so a made-up path no longer stands. */
 let doorDir: string;
 let spacedDoorDir: string;
+// Issue #144: every planLaunch() in this file must resolve permission intent
+// against a THROWAWAY config root, never the developer's real ~/.claude — which
+// may carry a permission mode of its own and would silently change what these
+// plans contain.
+let configDir: string;
 
 beforeAll(() => {
   sessionDir = mkdtempSync(join(tmpdir(), "ch-launch-"));
@@ -31,10 +36,12 @@ beforeAll(() => {
   const fixtures = mkdtempSync(join(tmpdir(), "ch-door-"));
   doorDir = writeDoorPluginFixture(join(fixtures, "door"));
   spacedDoorDir = writeDoorPluginFixture(join(fixtures, "door with spaces"));
+  configDir = mkdtempSync(join(tmpdir(), "ch-config-")); // no settings.json → nothing inherited
 });
 afterAll(() => {
   rmSync(sessionDir, { recursive: true, force: true });
   rmSync(home, { recursive: true, force: true });
+  rmSync(configDir, { recursive: true, force: true });
 });
 
 describe("assertLevelAllowed", () => {
@@ -69,7 +76,7 @@ describe("assertLevelAllowed", () => {
 });
 
 describe("planNativeLaunch", () => {
-  const plan = () => planNativeLaunch({ home, projectDir: home, sessionDir, statuslineBin: "/abs/statusline.mjs" });
+  const plan = () => planNativeLaunch({ home, projectDir: home, sessionDir, configDir, statuslineBin: "/abs/statusline.mjs" });
 
   it("is native posture, launcher-locked, with a census-derived standing dose", () => {
     const p = plan();
@@ -98,7 +105,7 @@ describe("planNativeLaunch", () => {
   });
 
   it("passes through extra claude args after our flags", () => {
-    const p = planNativeLaunch({ home, projectDir: home, sessionDir, statuslineBin: "/abs/s.mjs", claudeArgs: ["-p", "hi"] });
+    const p = planNativeLaunch({ home, projectDir: home, sessionDir, configDir, statuslineBin: "/abs/s.mjs", claudeArgs: ["-p", "hi"] });
     expect(p.argv).toEqual(["--settings", join(sessionDir, "settings.json"), "-p", "hi"]);
   });
 
@@ -113,6 +120,7 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
       posture: "curated",
       skillPaths: [FIXTURE],
       sessionDir,
+      configDir,
       statuslineBin: "/abs/statusline.mjs",
       ...opts,
     });
@@ -179,6 +187,7 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
         posture: "curated",
         skillPaths: [FIXTURE],
         sessionDir: session,
+        configDir,
         statuslineBin: "/abs/statusline.mjs",
       });
       materialize(p.fsPlan, session);
@@ -214,6 +223,7 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
         posture: "product-floor",
         skillPaths: [FIXTURE],
         sessionDir,
+        configDir,
         statuslineBin: "/abs/s.mjs",
       }),
     ).toThrow(/only valid with --posture curated/);
@@ -238,6 +248,7 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     planLaunch({
       posture: "product-floor",
       sessionDir,
+      configDir,
       statuslineBin: "/abs/statusline.mjs",
       doorPluginDir: doorDir,
       ...opts,
@@ -395,5 +406,230 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
   // the note here would be a false claim, the opposite defect.
   it("carries no curated door-absence note — this posture keeps the door", () => {
     expect(plan().notes.join(" ")).not.toContain(CURATED_DOOR_ABSENCE_NOTE);
+  });
+});
+
+// Issue #144 at the plan level: explicit permission flags must reach EVERY
+// posture unchanged, and a configured mode must survive the clean room — with
+// nothing else from the user's settings riding along.
+describe("planLaunch — permission handling (#144)", () => {
+  let permConfigDir: string;
+
+  beforeEach(() => {
+    permConfigDir = mkdtempSync(join(tmpdir(), "ch-perm-cfg-"));
+  });
+  afterEach(() => {
+    rmSync(permConfigDir, { recursive: true, force: true });
+  });
+
+  const configure = (settings: unknown): void => {
+    writeFileSync(join(permConfigDir, "settings.json"), JSON.stringify(settings, null, 2));
+  };
+
+  const at = (posture: "native" | "product-floor" | "curated", opts: Record<string, unknown> = {}) =>
+    planLaunch({
+      posture,
+      sessionDir,
+      configDir: permConfigDir,
+      statuslineBin: "/abs/statusline.mjs",
+      ...(posture === "curated" ? { skillPaths: [FIXTURE] } : {}),
+      ...(posture === "product-floor" ? { doorPluginDir: doorDir } : {}),
+      ...opts,
+    });
+
+  it("explicit permission flags pass through every posture, with nothing synthesized", () => {
+    for (const posture of ["native", "product-floor", "curated"] as const) {
+      const tail = ["--dangerously-skip-permissions", "--permission-mode", "manual", "-p", "hi"];
+      const p = at(posture, { claudeArgs: tail });
+      // The tail is the tail: same elements, same order, at the end.
+      expect(p.argv.slice(-tail.length), posture).toEqual(tail);
+      // No door-side synthesis anywhere before it.
+      expect(p.argv.filter((a) => a === "--permission-mode")).toHaveLength(1);
+      expect(p.argv.filter((a) => a === "--dangerously-skip-permissions")).toHaveLength(1);
+      expect(p.settings).not.toHaveProperty("permissions");
+    }
+  });
+
+  it("a configured mode reaches the session settings for both evicting postures", () => {
+    for (const posture of ["product-floor", "curated"] as const) {
+      configure({ permissions: { defaultMode: "acceptEdits" } });
+      const p = at(posture);
+      expect(p.settings, posture).toEqual({
+        statusLine: { type: "command", command: "/abs/statusline.mjs" },
+        permissions: { defaultMode: "acceptEdits" },
+      });
+      // …and NOT on argv: one channel, one truth (probe cell D).
+      expect(p.argv, posture).not.toContain("--permission-mode");
+      expect(p.permissionDisclosure, posture).toContain("acceptEdits");
+    }
+  });
+
+  it("the issue's compatibility boolean becomes the real bypass flag, before the untouched tail", () => {
+    configure({ dangerouslySkipPermissions: true });
+    const p = at("product-floor", { claudeArgs: ["-p", "hi"] });
+    const idx = p.argv.indexOf("--dangerously-skip-permissions");
+    expect(idx).toBeGreaterThan(p.argv.indexOf("--settings"));
+    expect(p.argv.slice(idx + 1)).toEqual(["-p", "hi"]);
+    expect(p.settings).not.toHaveProperty("permissions");
+  });
+
+  it("a configured mode is inherited at EVERY posture except native, which evicts nothing", () => {
+    configure({ permissions: { defaultMode: "plan" } });
+    expect(at("native").settings).not.toHaveProperty("permissions");
+    expect(at("native").notes.join(" ")).toContain("claude untouched");
+    expect(at("product-floor").settings).toMatchObject({ permissions: { defaultMode: "plan" } });
+    expect(at("curated").settings).toMatchObject({ permissions: { defaultMode: "plan" } });
+  });
+
+  it("copies nothing else — no sibling permissions keys, hooks, plugins, MCP, env, or dirs", () => {
+    configure({
+      permissions: {
+        defaultMode: "acceptEdits",
+        allow: ["Bash(curl:*)"],
+        deny: ["Read(/etc)"],
+        additionalDirectories: ["/Users/someone/elsewhere"],
+      },
+      hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ type: "command", command: "curl evil.example" }] }] },
+      enabledPlugins: { "ambient@marketplace": true },
+      extraKnownMarketplaces: { evil: { source: "https://evil.example" } },
+      env: { ANTHROPIC_API_KEY: "sk-not-real" },
+      mcpServers: { ambient: { command: "ambient-server" } },
+      statusLine: { type: "command", command: "/usr/local/bin/ambient-statusline" },
+      model: "some-ambient-model",
+    });
+    const p = at("product-floor");
+    expect(p.settings).toEqual({
+      statusLine: { type: "command", command: "/abs/statusline.mjs" },
+      permissions: { defaultMode: "acceptEdits" },
+    });
+    const serialized = JSON.stringify(p);
+    for (const forbidden of ["curl evil.example", "evil.example", "sk-not-real", "ambient-server", "/Users/someone/elsewhere", "some-ambient-model"]) {
+      expect(serialized, forbidden).not.toContain(forbidden);
+    }
+    // Plan env is additions only, and adds nothing permission-shaped.
+    expect(Object.keys(p.env).sort()).toEqual(["CLAUDE_CODE_DISABLE_BUNDLED_SKILLS", "CLAUDE_ZERO_PROFILE"]);
+  });
+
+  it("an explicit SAFER mode beats an inherited bypass, and explicit bypass beats an inherited mode", () => {
+    configure({ dangerouslySkipPermissions: true });
+    const safer = at("product-floor", { claudeArgs: ["--permission-mode", "manual"] });
+    expect(safer.settings).not.toHaveProperty("permissions");
+    expect(safer.argv).not.toContain("--dangerously-skip-permissions");
+    expect(safer.permissionDisclosure).toBeUndefined();
+
+    rmSync(join(permConfigDir, "settings.json"), { force: true });
+    configure({ permissions: { defaultMode: "manual" } });
+    const bypass = at("product-floor", { claudeArgs: ["--dangerously-skip-permissions"] });
+    expect(bypass.settings).not.toHaveProperty("permissions");
+    expect(bypass.argv.filter((a) => a === "--dangerously-skip-permissions")).toHaveLength(1);
+  });
+
+  it("an explicit flag skips the read entirely — a broken settings file cannot block it", () => {
+    writeFileSync(join(permConfigDir, "settings.json"), "{ not json at all");
+    expect(() => at("product-floor")).toThrow(/not valid JSON/);
+    const p = at("product-floor", { claudeArgs: ["--permission-mode", "plan"] });
+    expect(p.argv).toContain("plan");
+  });
+
+  it("unconfigured means nothing is injected — no auto/default mode appears out of nowhere", () => {
+    const p = at("product-floor");
+    expect(p.settings).toEqual({ statusLine: { type: "command", command: "/abs/statusline.mjs" } });
+    expect(p.argv.join(" ")).not.toMatch(/permission/);
+    expect(p.permissionDisclosure).toBeUndefined();
+  });
+
+  it("leaves the user's settings file byte-identical and every write session-local", () => {
+    const settingsPath = join(permConfigDir, "settings.json");
+    configure({ permissions: { defaultMode: "bypassPermissions" }, hooks: { x: 1 } });
+    const before = readFileSync(settingsPath, "utf-8");
+    const beforeStat = statSync(settingsPath);
+
+    const session = mkdtempSync(join(tmpdir(), "ch-perm-materialize-"));
+    try {
+      const p = planLaunch({
+        posture: "product-floor",
+        sessionDir: session,
+        configDir: permConfigDir,
+        statuslineBin: "/abs/statusline.mjs",
+        doorPluginDir: doorDir,
+      });
+      materialize(p.fsPlan, session);
+      writeFileSync(p.settingsPath, `${JSON.stringify(p.settings, null, 2)}\n`);
+
+      // The user's file was read, never written (P3).
+      expect(readFileSync(settingsPath, "utf-8")).toBe(before);
+      expect(statSync(settingsPath).mtimeMs).toBe(beforeStat.mtimeMs);
+      // Everything the launch writes lives inside the session dir.
+      expect(p.settingsPath.startsWith(session)).toBe(true);
+      expect(p.manifestPath.startsWith(session)).toBe(true);
+      for (const op of p.fsPlan) {
+        const to = op.kind === "write" ? op.path : op.to;
+        expect(to.startsWith(session)).toBe(true);
+      }
+      // The materialized session settings carry exactly the inherited mode.
+      expect(JSON.parse(readFileSync(p.settingsPath, "utf-8"))).toEqual({
+        statusLine: { type: "command", command: "/abs/statusline.mjs" },
+        permissions: { defaultMode: "bypassPermissions" },
+      });
+    } finally {
+      rmSync(session, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps the eviction flags, the door mount, and the MCP isolation intact alongside inheritance", () => {
+    configure({ permissions: { defaultMode: "acceptEdits" } });
+    const p = at("product-floor");
+    const settingSourcesIdx = p.argv.indexOf("--setting-sources");
+    expect(settingSourcesIdx).toBeGreaterThanOrEqual(0);
+    expect(p.argv[settingSourcesIdx + 1]).toBe("");
+    expect(p.argv).toContain("--strict-mcp-config");
+    // #143 + #144 together: ambient MCP stays suppressed by --strict-mcp-config,
+    // and the ONLY server admitted is the door's own bundled summon server,
+    // through a single session-local config file — never the user's settings.
+    expect(p.argv.filter((a) => a === "--mcp-config")).toHaveLength(1);
+    expect(p.argv[p.argv.indexOf("--mcp-config") + 1]).toBe(join(sessionDir, "door-mcp.json"));
+    expect(p.argv).not.toContain('{"mcpServers":{}}');
+    const doorWrite = p.fsPlan.find((op) => op.kind === "write" && op.path === join(sessionDir, "door-mcp.json"));
+    const doorServers = JSON.parse((doorWrite as { contents: string }).contents).mcpServers;
+    expect(Object.keys(doorServers)).toEqual(["skill-summon"]);
+    // The inherited mode rides the session settings file, never the MCP config.
+    expect(p.settings).toMatchObject({ permissions: { defaultMode: "acceptEdits" } });
+    expect(JSON.stringify(doorServers)).not.toMatch(/permission|acceptEdits/i);
+    expect(p.argv).toContain("--plugin-dir");
+    expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
+    // The only filesystem write is the session-local door MCP declaration.
+    expect(p.fsPlan.map((op) => (op.kind === "write" ? op.path : op.to))).toEqual([join(sessionDir, "door-mcp.json")]);
+    // Skill selection is unaffected by the permission choice: still zero.
+    expect(p.manifest.skillCount).toBe(0);
+    expect(p.manifest.standingTokens).toBe(0);
+  });
+
+  it("reads the settings file only when one exists, and prefers the explicit config root", () => {
+    const homeCfg = mkdtempSync(join(tmpdir(), "ch-perm-home-"));
+    try {
+      mkdirSync(join(homeCfg, ".claude"), { recursive: true });
+      writeFileSync(join(homeCfg, ".claude", "settings.json"), JSON.stringify({ permissions: { defaultMode: "plan" } }));
+      const fromHome = planLaunch({
+        posture: "product-floor",
+        sessionDir,
+        home: homeCfg,
+        statuslineBin: "/abs/s.mjs",
+        doorPluginDir: doorDir,
+      });
+      expect(fromHome.settings).toMatchObject({ permissions: { defaultMode: "plan" } });
+      // An explicit config root wins over the home default.
+      configure({ permissions: { defaultMode: "manual" } });
+      const fromRoot = planLaunch({
+        posture: "product-floor",
+        sessionDir,
+        home: homeCfg,
+        configDir: permConfigDir,
+        statuslineBin: "/abs/s.mjs",
+        doorPluginDir: doorDir,
+      });
+      expect(fromRoot.settings).toMatchObject({ permissions: { defaultMode: "manual" } });
+    } finally {
+      rmSync(homeCfg, { recursive: true, force: true });
+    }
   });
 });
