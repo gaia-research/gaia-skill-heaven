@@ -368,7 +368,15 @@ function githubResourceSource(skill: NamedSkill) {
   }
   if (parsedUrl.search || parsedUrl.hash) return undefined;
 
-  const parsed = parseGithubUrl(sourceUrl);
+  // parseGithubUrl throws on a source it will not resolve (for example a subpath
+  // that climbs out of the repository). An unprovable source is OMITTED from the
+  // resource surface — it must never turn into an error for every other entry.
+  let parsed: ReturnType<typeof parseGithubUrl>;
+  try {
+    parsed = parseGithubUrl(sourceUrl);
+  } catch {
+    return undefined;
+  }
   if (
     !GITHUB_REPOSITORY.test(parsed.repoUrl) ||
     (parsed.branch !== null &&

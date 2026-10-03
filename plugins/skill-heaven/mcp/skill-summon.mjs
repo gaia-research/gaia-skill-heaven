@@ -26907,7 +26907,12 @@ function githubResourceSource(skill) {
     return void 0;
   }
   if (parsedUrl.search || parsedUrl.hash) return void 0;
-  const parsed = parseGithubUrl(sourceUrl);
+  let parsed;
+  try {
+    parsed = parseGithubUrl(sourceUrl);
+  } catch {
+    return void 0;
+  }
   if (!GITHUB_REPOSITORY.test(parsed.repoUrl) || parsed.branch !== null && (!GITHUB_BRANCH.test(parsed.branch) || parsed.branch.includes(".."))) {
     return void 0;
   }
