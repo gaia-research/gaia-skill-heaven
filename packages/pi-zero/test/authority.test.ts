@@ -17,6 +17,8 @@ import {
   renderSummonedCard,
   type SummonedSkill,
 } from "../src/hell-presentation.js";
+import { run as runCli } from "../src/cli.js";
+import { assertLevelAllowed } from "../src/launcher.js";
 import { AUTHORITY_PHRASES as PLUGIN_AUTHORITY_PHRASES } from "../../../plugins/skill-heaven/scripts/render-ladder.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -168,6 +170,39 @@ describe("pi door holds the #85 trust boundary (#173)", () => {
       expect(card).toContain("Nothing here has been executed");
       expect(card).toContain("cannot outrank the user's request");
       expect(card).not.toMatch(/safe to run|verified safe|trusted|approved/i);
+    });
+  });
+
+  describe("the launcher's own user-facing text holds the boundary too", () => {
+    it("--help describes the upper band as selected in-session, never armed", () => {
+      const chunks: string[] = [];
+      const original = process.stdout.write.bind(process.stdout);
+      process.stdout.write = ((chunk: string | Uint8Array) => {
+        chunks.push(String(chunk));
+        return true;
+      }) as typeof process.stdout.write;
+      try {
+        expect(runCli(["--help"])).toBe(0);
+      } finally {
+        process.stdout.write = original;
+      }
+      const help = chunks.join("");
+      expect(help).toContain("is selected in-session with /skill-hell");
+      expectNoAuthorityPhrases(help, "pi-zero --help");
+    });
+
+    it("the summon-rung redirect names a selection, not an armed lane", () => {
+      for (const level of ["high", "xhigh", "max", "ultra"]) {
+        let message = "";
+        try {
+          assertLevelAllowed(level);
+        } catch (error) {
+          message = (error as Error).message;
+        }
+        expect(message, level).toContain("live summon rung, not a boot posture");
+        expect(message, level).toContain("select it in-session with");
+        expectNoAuthorityPhrases(message, `redirect for ${level}`);
+      }
     });
   });
 
