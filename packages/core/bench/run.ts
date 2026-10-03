@@ -73,11 +73,13 @@ type System = {
 };
 
 const index = loadIndex();
-const gold = readJsonl<GoldEntry>(join(here, "gold.jsonl"));
-const unanswerable = readJsonl<UnanswerableEntry>(join(here, "unanswerable.jsonl"));
+const goldBytes = readFileSync(join(here, "gold.jsonl"));
+const unanswerableBytes = readFileSync(join(here, "unanswerable.jsonl"));
+const gold = readJsonl<GoldEntry>(goldBytes);
+const unanswerable = readJsonl<UnanswerableEntry>(unanswerableBytes);
 // The R3 overlay binds to the committed sets and throws if either has moved under
 // it. It adds metrics; it never changes a label, a score, or a policy.
-const adjudication = loadAdjudication(gold, unanswerable);
+const adjudication = loadAdjudication(gold, unanswerable, { goldBytes, unanswerableBytes });
 const bm25f = new Bm25fRanker(index);
 
 // The same index with `retrieval.expansions` stripped, so PLAN 1.7's kill
@@ -455,8 +457,9 @@ function loadIndex(): SkillIndex {
   return raw;
 }
 
-function readJsonl<T>(path: string): T[] {
-  return readFileSync(path, "utf8")
+function readJsonl<T>(bytes: Uint8Array): T[] {
+  return Buffer.from(bytes)
+    .toString("utf8")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("//"))

@@ -16,7 +16,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   AdjudicationError,
-  loadAdjudication,
+  assertAdjudicationArtifacts,
+  loadAdjudication as loadAdjudicationFromFiles,
   scoreAdjudicated,
   validateAdjudicationRows,
   type AdjudicationOverlay,
@@ -36,8 +37,15 @@ const readJsonl = <T,>(path: string): T[] =>
     .filter((line) => line.length > 0 && !line.startsWith("//"))
     .map((line) => JSON.parse(line) as T);
 
+const goldBytes = readFileSync(join(benchDir, "gold.jsonl"));
+const unanswerableBytes = readFileSync(join(benchDir, "unanswerable.jsonl"));
 const gold = readJsonl<Gold>(join(benchDir, "gold.jsonl"));
 const unanswerable = readJsonl<Unanswerable>(join(benchDir, "unanswerable.jsonl"));
+
+const loadAdjudication = (
+  g: Gold[] = gold,
+  u: Unanswerable[] = unanswerable,
+) => loadAdjudicationFromFiles(g, u, { goldBytes, unanswerableBytes });
 
 function overlayWith(
   mutate: (rows: AdjudicationRow[]) => AdjudicationRow[],
@@ -378,6 +386,45 @@ describe("R3 adjudication overlay", () => {
     expect(overlay.provenance.pins.unanswerableBlob).toBe(
       gitBlob("packages/core/bench/unanswerable.jsonl"),
     );
+  });
+
+  it("derives every overlay row exactly from the locked review snapshot", () => {
+    const snapshot = JSON.parse(readFileSync(
+      join(benchDir, "adjudication", "source", "locked-2026-09-17.json"),
+      "utf8",
+    )) as { reviews: Record<string, { at: string; betterSkill: string; kind: string; labeledSkill?: string; note: string; verdict: string }> };
+    const overlay = loadAdjudication(gold, unanswerable);
+    const byCase = new Map(overlay.rows.map((row) => [row.caseId, row]));
+    const state = { suitable: "reviewed", unsuitable: "corrected", ambiguous: "uncertain" } as const;
+    for (const [key, review] of Object.entries(snapshot.reviews)) {
+      const kind = key.startsWith("g") ? "gold" : "unanswerable";
+      const caseId = `${kind}-${key.slice(1)}`;
+      expect(byCase.get(caseId)).toMatchObject({
+        caseId,
+        kind,
+        index: Number(key.slice(1)),
+        state: state[review.verdict as keyof typeof state],
+        verdict: review.verdict,
+        betterSkillId: review.betterSkill === "" ? null : review.betterSkill,
+        note: review.note === "" ? null : review.note,
+        adjudicatedAt: review.at,
+        labeledSkillId: kind === "unanswerable" ? null : review.labeledSkill,
+      });
+    }
+  });
+
+  it("rejects tampered historical, overlay, or snapshot bytes and accepts untouched bytes", () => {
+    const provenance = JSON.parse(readFileSync(join(benchDir, "adjudication", "provenance.json"), "utf8"));
+    const overlayBytes = readFileSync(join(benchDir, "adjudication", "adjudication.v1.jsonl"));
+    const snapshotBytes = readFileSync(join(benchDir, "adjudication", "source", "locked-2026-09-17.json"));
+    const untouched = { goldBytes, unanswerableBytes, overlayBytes, snapshotBytes };
+    expect(() => assertAdjudicationArtifacts(provenance, untouched)).not.toThrow();
+    const tamperedGold = Buffer.from(goldBytes); tamperedGold[0] ^= 1;
+    expect(() => assertAdjudicationArtifacts(provenance, { ...untouched, goldBytes: tamperedGold })).toThrow(/gold/);
+    const tamperedOverlay = Buffer.from(overlayBytes); tamperedOverlay[0] ^= 1;
+    expect(() => assertAdjudicationArtifacts(provenance, { ...untouched, overlayBytes: tamperedOverlay })).toThrow(/overlay/);
+    const tamperedSnapshot = Buffer.from(snapshotBytes); tamperedSnapshot[0] ^= 1;
+    expect(() => assertAdjudicationArtifacts(provenance, { ...untouched, snapshotBytes: tamperedSnapshot })).toThrow(/snapshot/);
   });
 
   it("anchors the committed counts so a self-consistent rewrite is visible", () => {

@@ -4,6 +4,7 @@
   "createdAt": "2026-09-29T04:35:00Z",
   "pins": {
     "goldBlob": "497b204b5725eace27ab3397cde0061bba048c1d",
+    "overlaySha256": "1bd9bee36e8d88d3c657d65d9b42cc6d677b509455292855c8083591f44afc69",
     "unanswerableBlob": "9313f6cf984b3ccc32a60e68b9a829976109e07a",
     "heavenRev": "b5bfafb2782a11d6deeb2b89896ad42df82c0dae"
   },

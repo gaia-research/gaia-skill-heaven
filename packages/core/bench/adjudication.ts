@@ -53,9 +53,9 @@ export type AdjudicationProvenance = {
   schema: string;
   overlay: string;
   createdAt: string;
-  pins: { goldBlob: string; unanswerableBlob: string; heavenRev: string };
+  pins: { goldBlob: string; unanswerableBlob: string; overlaySha256: string; heavenRev: string };
   historicalLabelsModified: false;
-  sourceSnapshot: { schema: string; lockedAt: string; sha256: string; origin: string; note: string };
+  sourceSnapshot: { schema: string; lockedAt: string; sha256: string; path: string; origin: string; note: string };
   verdictMeaning: Record<string, Record<string, string>>;
   stateMapping: Record<AdjudicationState, string>;
   counts: {
@@ -74,16 +74,47 @@ export class AdjudicationError extends Error {}
  */
 type UnvalidatedRow = Omit<AdjudicationRow, "state"> & { state: string };
 
-function sha256(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
+function sha256(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
-function readJsonl<T>(path: string): T[] {
-  return readFileSync(path, "utf8")
+function gitBlobSha1(bytes: Uint8Array): string {
+  const header = Buffer.from(`blob ${bytes.byteLength}\0`, "utf8");
+  return createHash("sha1").update(Buffer.concat([header, Buffer.from(bytes)])).digest("hex");
+}
+
+function readJsonl<T>(bytes: Uint8Array): T[] {
+  return Buffer.from(bytes)
+    .toString("utf8")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("//"))
     .map((line) => JSON.parse(line) as T);
+}
+
+export type AdjudicationArtifactBytes = {
+  goldBytes: Uint8Array;
+  unanswerableBytes: Uint8Array;
+  overlayBytes: Uint8Array;
+  snapshotBytes: Uint8Array;
+};
+
+export function assertAdjudicationArtifacts(
+  provenance: AdjudicationProvenance,
+  bytes: AdjudicationArtifactBytes,
+): void {
+  if (gitBlobSha1(bytes.goldBytes) !== provenance.pins.goldBlob) {
+    throw new AdjudicationError("gold.jsonl bytes do not match the pinned git blob");
+  }
+  if (gitBlobSha1(bytes.unanswerableBytes) !== provenance.pins.unanswerableBlob) {
+    throw new AdjudicationError("unanswerable.jsonl bytes do not match the pinned git blob");
+  }
+  if (sha256(bytes.overlayBytes) !== provenance.pins.overlaySha256) {
+    throw new AdjudicationError("adjudication overlay bytes do not match the pinned SHA-256");
+  }
+  if (sha256(bytes.snapshotBytes) !== provenance.sourceSnapshot.sha256) {
+    throw new AdjudicationError("review snapshot bytes do not match the pinned SHA-256");
+  }
 }
 
 const WRITABLE_STATES: readonly AdjudicationRow["state"][] = [
@@ -113,6 +144,7 @@ export type AdjudicationOverlay = {
 export function loadAdjudication(
   gold: readonly { query: string; skillId: string }[],
   unanswerable: readonly { query: string }[],
+  historicalBytes: Pick<AdjudicationArtifactBytes, "goldBytes" | "unanswerableBytes">,
 ): AdjudicationOverlay {
   const provenance = JSON.parse(
     readFileSync(join(adjudicationDir, "provenance.json"), "utf8"),
@@ -124,7 +156,10 @@ export function loadAdjudication(
     throw new AdjudicationError("overlay claims the historical labels were modified; they never are");
   }
 
-  const rows = readJsonl<UnvalidatedRow>(join(adjudicationDir, provenance.overlay));
+  const overlayBytes = readFileSync(join(adjudicationDir, provenance.overlay));
+  const snapshotBytes = readFileSync(join(adjudicationDir, provenance.sourceSnapshot.path));
+  assertAdjudicationArtifacts(provenance, { ...historicalBytes, overlayBytes, snapshotBytes });
+  const rows = readJsonl<UnvalidatedRow>(overlayBytes);
   const byCase = validateAdjudicationRows(rows, gold, unanswerable);
 
   for (const pool of [
@@ -339,7 +374,7 @@ export function validateAdjudicationRows(
         `${caseId}: index ${index} is outside the committed ${kind} set of ${pool.length}`,
       );
     }
-    if (sha256(entry.query) !== unvalidated.querySha256) {
+    if (sha256(Buffer.from(entry.query, "utf8")) !== unvalidated.querySha256) {
       throw new AdjudicationError(
         `${caseId}: query text no longer hashes to ${unvalidated.querySha256}; the historical set moved`,
       );
