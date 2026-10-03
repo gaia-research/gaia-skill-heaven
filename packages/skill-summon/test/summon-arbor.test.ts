@@ -3,9 +3,10 @@
 // An exported-but-uncalled validator would satisfy nothing: the lane's exit is a
 // real consumption path with real disclosure on the surfaces a caller actually
 // reads. So these tests drive `summon()` itself and the MCP tool wire, against
-// the committed publication cache — which at the pinned upstream revision is
-// genuinely empty. Where a positive path needs records to exist, the test says
-// SYNTHETIC in its name and writes its own publication directory.
+// the committed publication cache — which at the pinned upstream revision holds
+// one governed single-skill subject and no interaction edges (it was empty until
+// 2026-10-03). Where a path needs records that do not exist upstream, the test
+// says SYNTHETIC in its name and writes its own publication directory.
 
 import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";

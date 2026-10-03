@@ -21,14 +21,15 @@ import type { CompositionMember, CompositionRole } from "./composition.js";
 // here computes a number, a weight, a threshold, or a magnitude, and nothing
 // downstream of it should start: compile.ts carries that ruling in full.
 //
-// THE ONE EFFECT. `direction` may move how much of the admitted set is
-// materialized — the breadth cap — and nothing else. TODAY IT MOVES NOTHING: no
-// runtime consumer reads `band.direction`, and no legal resolver exists until
-// the HH payload is published, so the judgment is reported, never applied. The ORDER of the admitted
-// set is relevance's, is produced upstream, and is never reordered, rescored,
-// filtered, or re-ranked here. A caller that finds `selectionChanged: true` on a
-// relevance field has misread this file; the only field this file moves is
-// breadth.
+// THE ONE PERMITTED EFFECT. A licensed `direction` may one day move how much of
+// the admitted set is materialized — the breadth cap — and nothing else.
+// TODAY IT MOVES NOTHING: no runtime consumer reads `band.direction`, and no
+// legal resolver exists until the HH payload is published, so the judgment is
+// reported, never applied. The ORDER of the admitted set is relevance's, is
+// produced upstream, and is never reordered, rescored, filtered, or re-ranked
+// here. A caller that finds `selectionChanged: true` on a relevance field has
+// misread this file; breadth is the only field it may ever move, and it moves
+// none today.
 //
 // ABSTENTION IS THE DEFAULT. Every path that cannot be justified from an
 // accepted, content-pinned, governed, condition-matched record abstains, and
