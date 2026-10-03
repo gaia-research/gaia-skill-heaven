@@ -210,7 +210,10 @@ export interface DoorMcpConfig {
   mcpServers: Record<string, DoorMcpServer>;
 }
 
-const UNRESOLVED_PLACEHOLDER = /\$\{[^}]*\}/;
+function hasUnresolvedPlaceholder(value: string): boolean {
+  const start = value.indexOf("${");
+  return start !== -1 && value.indexOf("}", start + 2) !== -1;
+}
 
 export interface CompileInput {
   posture: Posture;
@@ -280,7 +283,7 @@ export function doseSummary(skills: ResolvedSkill[]): DoseSummary {
  * the raw placeholder as its argv). Core rejects it here rather than shipping a
  * route that silently loses the door. */
 function rejectUnresolved(field: string, value: string): void {
-  if (UNRESOLVED_PLACEHOLDER.test(value)) {
+  if (hasUnresolvedPlaceholder(value)) {
     throw new Error(
       `doorMcpConfig: ${field} still contains an unresolved \${…} placeholder (${JSON.stringify(value)}). ` +
         "Claude does not interpolate plugin placeholders in an explicit --mcp-config file, so the door " +
