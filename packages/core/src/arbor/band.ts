@@ -251,7 +251,7 @@ export function judgeArborBand(
     );
   }
 
-  const direction = options.resolveDirection?.(conclusive) ?? null;
+  const direction = readDirection(options.resolveDirection, conclusive);
   if (direction === null) {
     return abstain(
       base,
@@ -266,9 +266,31 @@ export function judgeArborBand(
     abstained: null,
     disclosure:
       direction === "converge"
-        ? "Matching governed evidence supports a lower-entropy, narrower composition. Breadth is reduced toward Heaven. Relevance ordering and scores are untouched."
-        : "Matching governed evidence supports a higher-entropy, broader composition. Breadth is widened toward Hell. Relevance ordering and scores are untouched.",
+        ? "Matching governed evidence licenses the converging, lower-entropy direction (toward Heaven). It may narrow breadth only; relevance ordering and scores are untouched."
+        : "Matching governed evidence licenses the exploring, higher-entropy direction (toward Hell). It may widen breadth only; relevance ordering and scores are untouched.",
   };
+}
+
+/**
+ * Runs the injected direction resolver and accepts only a value on the ladder.
+ *
+ * The resolver is a seam for a publisher that does not exist yet, so its output
+ * is treated as untrusted input: a throw, `undefined`, or any value outside
+ * `BAND_DIRECTION` is "no direction", never a direction. Letting an arbitrary
+ * string through would publish a band the MCP schema and every surface reject.
+ */
+function readDirection(
+  resolveDirection: ArborBandOptions["resolveDirection"],
+  conclusive: readonly ConclusiveEvidence[],
+): BandDirection | null {
+  if (!resolveDirection) return null;
+  let value: unknown;
+  try {
+    value = resolveDirection(conclusive);
+  } catch {
+    return null;
+  }
+  return (BAND_DIRECTION as readonly unknown[]).includes(value) ? (value as BandDirection) : null;
 }
 
 function readMember(
