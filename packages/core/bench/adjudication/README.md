@@ -42,15 +42,19 @@ pivoted to protect cannot depend on a fall-through.
 
 ## `resolved`, and why it is not just `reviewed`
 
-`resolved` is every human-confirmed label, plus every replacement a human named
-**that resolves to a real skill id in the committed corpus**. Seven of the
-named alternatives in the snapshot are free prose — `"pbakaus/impeccable or
-taste-skill"`, `"basically code-review or other review tools"` — which can never
-match a ranked id. Counting those as scoring events would add guaranteed zeros to
-the denominator, so they are counted as `namedAlternativeUnresolvable` and kept
-out of the mean entirely.
+`resolved` has **one entry per case**: every `reviewed` case (scored on its
+best-ranked human-acceptable answer, the confirmed label or a named alternative
+that resolves), plus every `corrected` case whose human-named replacement
+**resolves to a real skill id in the measured corpus**. Seven named
+alternatives in the snapshot do not resolve, most of them free prose
+(`"pbakaus/impeccable or taste-skill"`, `"basically code-review or other review
+tools"`). They are counted as `namedAlternativeUnresolvable` and kept out of the
+mean, rather than added as guaranteed zeros.
 
-On the committed data: `resolved.n` is 32, not 36.
+On the committed data `resolved.n` is **30**: the 30 reviewed cases. None of the
+6 corrected cases names a replacement that resolves in the measured corpus
+(four name nothing, one names prose, one names `garrytan/founder-mode`, which is
+not in it).
 
 `unreviewed` is never written to disk. It is derived as the absence of a row,
 so the file can only ever grow toward coverage, never fake it.

@@ -319,9 +319,10 @@ describe("R3 adjudication overlay", () => {
     expect(scores.resolved.mrr).toBe(1);
   });
 
-  it("never lets the overlay change a historical number", () => {
-    // The historical sets on disk are byte-identical to what the runner read
-    // before the overlay existed; this asserts they still are, structurally.
+  it("loads against the full historical sets and carries its claim limits", () => {
+    // Byte-level protection of the historical sets is the blob-pin check
+    // (assertAdjudicationArtifacts, tested above); this only asserts the overlay
+    // binds to the full 100/20 sets and states its claim limits.
     expect(gold).toHaveLength(100);
     expect(unanswerable).toHaveLength(20);
     const overlay = loadAdjudication(gold, unanswerable);
