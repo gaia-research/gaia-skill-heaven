@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HEAVEN_LEVELS, HELL_LEVELS, SUMMON_ONLY_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-zero";
 import { CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
+import { CLI_PERMISSION_MODES } from "./permissions.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
@@ -52,6 +53,21 @@ interface CliArgs {
   claudeArgs: string[];
 }
 
+/**
+ * A bad ARGUMENT (exit 2), distinct from a refused posture or a failed plan.
+ *
+ * Issue #144: `--permission-mode` used to fall through the generic
+ * unknown-argument branch, so `--permission-mode` with nothing after it quietly
+ * vanished and `--permission-mode --print` swallowed the wrapper's own `--print`
+ * as a MODE. Those are silent loss and a corrupted mode value respectively. The
+ * mode VALUE is now consumed atomically and a missing/empty/option-shaped value
+ * throws here — before any session dir exists and before anything spawns.
+ */
+export class CliArgumentError extends Error {}
+
+const isPermissionFlag = (a: string): boolean =>
+  a === "--dangerously-skip-permissions" || a === "--allow-dangerously-skip-permissions";
+
 export function parseArgs(argv: string[]): CliArgs {
   let help = false;
   let print = false;
@@ -74,6 +90,32 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--skill") {
       const p = argv[++i];
       if (p !== undefined) skills.push(p);
+    }
+    // Issue #144 — PERMISSION FLAGS ARE CLAUDE'S, so they are forwarded, not
+    // interpreted. Named branches exist so a value-taking option is consumed as
+    // a unit instead of falling through to the unknown-argument branch. The
+    // MODE VALUE is not validated here: claude owns its mode enum (and may add
+    // modes), so the door only insists the value is actually present.
+    else if (isPermissionFlag(a)) {
+      claudeArgs.push(a);
+    } else if (a === "--permission-mode") {
+      const mode = argv[++i];
+      if (mode === undefined || mode === "" || mode.startsWith("-")) {
+        throw new CliArgumentError(
+          `--permission-mode needs a mode value. Got ${mode === undefined ? "nothing" : `"${mode}"`}. ` +
+            `Supported (claude 2.1.288): ${CLI_PERMISSION_MODES.join(", ")}.`,
+        );
+      }
+      claudeArgs.push("--permission-mode", mode);
+    } else if (a.startsWith("--permission-mode=")) {
+      const mode = a.slice("--permission-mode=".length);
+      if (mode === "" || mode.startsWith("-")) {
+        throw new CliArgumentError(
+          `--permission-mode= needs a mode value. Got ${mode === "" ? "an empty value" : `"${mode}"`}. ` +
+            `Supported (claude 2.1.288): ${CLI_PERMISSION_MODES.join(", ")}.`,
+        );
+      }
+      claudeArgs.push("--permission-mode", mode);
     } else claudeArgs.push(a);
   }
   return { help, print, posture, postureProvided, level, skills, claudeArgs };
@@ -112,6 +154,19 @@ function helpText(): string {
     "  --print            Print the composed plan without launching",
     "  -h, --help         Show this help",
     "",
+    "Permission handling (#144): --dangerously-skip-permissions,",
+    "  --allow-dangerously-skip-permissions and --permission-mode <mode> are",
+    "  CLAUDE's flags and are forwarded verbatim, directly or after --:",
+    "    claude-zero --permission-mode acceptEdits",
+    "    claude-zero -- --dangerously-skip-permissions",
+    "  An explicit permission flag wins over the mode configured in your Claude",
+    "  settings. The clean room (--setting-sources '') would otherwise drop that",
+    `  configuration, so a configured defaultMode is carried through: modes`,
+    `  ${CLI_PERMISSION_MODES.join(", ")} (settings also accept \`default\`).`,
+    "  Nothing else is imported from your settings, and no bypass is ever",
+    "  granted on your behalf — claude's managed policy and its own bypass",
+    "  acknowledgment still apply.",
+    "",
     "Environment:",
     "  SKILL_SOURCE       One absolute http(s) summon source URL for this launch",
     "                     (a Skill Tree website root — the default — or a GitHub",
@@ -122,8 +177,27 @@ function helpText(): string {
   ].join("\n");
 }
 
-export function run(argv: string[]): number {
-  const args = parseArgs(argv);
+export interface RunOptions {
+  /** Issue #144: deterministic settings lookup for tests and for callers that
+   * run under a `CLAUDE_CONFIG_DIR`. Omitted means the ambient environment /
+   * `~/.claude`. Never causes a write to either. */
+  configDir?: string;
+  home?: string;
+}
+
+export function run(argv: string[], opts: RunOptions = {}): number {
+  let args;
+  try {
+    args = parseArgs(argv);
+  } catch (e) {
+    // Argument errors are reported and refused BEFORE a session dir exists and
+    // before anything can spawn, so a malformed flag never half-launches.
+    if (e instanceof CliArgumentError) {
+      process.stderr.write(`claude-zero: ${e.message}\n`);
+      return 2;
+    }
+    throw e;
+  }
 
   if (args.help) {
     process.stdout.write(helpText());
@@ -208,6 +282,10 @@ export function run(argv: string[]): number {
         doorPluginDir: doorPluginDir(),
         skillSource: process.env.SKILL_SOURCE,
         claudeArgs: args.claudeArgs,
+        // Same lookup as a live launch — --print must show the same argv,
+        // settings and disclosure the real launch would use.
+        configDir: opts.configDir ?? process.env.CLAUDE_CONFIG_DIR,
+        home: opts.home,
       });
     } catch (e) {
       process.stderr.write(`claude-zero: ${(e as Error).message}\n`);
@@ -227,6 +305,7 @@ export function run(argv: string[]): number {
           env: plan.env,
           fsPlan: plan.fsPlan,
           notes: plan.notes,
+          permissionDisclosure: plan.permissionDisclosure ?? null,
           manifest: plan.manifest,
           settings: plan.settings,
         },
@@ -253,6 +332,8 @@ export function run(argv: string[]): number {
         doorPluginDir: doorPluginDir(),
         skillSource: process.env.SKILL_SOURCE,
         claudeArgs: args.claudeArgs,
+        configDir: opts.configDir ?? process.env.CLAUDE_CONFIG_DIR,
+        home: opts.home,
       });
       materialize(live.fsPlan, sessionDir);
     } catch (e) {
@@ -269,6 +350,15 @@ export function run(argv: string[]): number {
     // gap being disclosed). --print readers already get this in `notes`.
     if (posture === "curated") {
       process.stderr.write(`${CURATED_DOOR_ABSENCE_NOTE}\n`);
+    }
+
+    // Issue #144: disclose an INHERITED permission policy here, on the CLI's own
+    // terminal, before claude exists. The clean room dropped this decision from
+    // the user's settings; the session is about to run under it, so the user is
+    // told which mode is in force and that an explicit flag would have won.
+    // One line, no settings content, no paths.
+    if (live.permissionDisclosure) {
+      process.stderr.write(`claude-zero: ${live.permissionDisclosure}\n`);
     }
 
     const r = spawnSync(live.command, live.argv, {

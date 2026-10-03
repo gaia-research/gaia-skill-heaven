@@ -476,6 +476,16 @@ function tailArgs(input: CompileInput, harness: "claude" | "pi"): string[] {
 }
 
 // Claude Code — M0-verified flags (matrix, empirical, v2.1.211/2.1.215).
+//
+// PERMISSION-NEUTRAL BY DELIBERATE DESIGN (issue #144). This compiler composes
+// no permission mode and no permission flag: `--setting-sources ''` below
+// evicts the user's settings entirely, and only the DOOR knows whether a given
+// posture evicts them — so packages/claude-zero/src/permissions.ts selectively
+// preserves a configured permission mode outside this compiler, against a
+// pinned probe. Adding an implicit mode or a default bypass here would make the
+// compiler silently override a user decision, which is the defect #144 reports.
+// Permission handling is also not skill selection: it must not change the
+// standing/invocation dose accounting or the skill set any arm measures.
 function compileClaude(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,

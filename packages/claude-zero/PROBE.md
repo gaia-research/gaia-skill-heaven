@@ -75,3 +75,91 @@ Findings:
   reporting is unchanged.
 - Source-precedence behaviour (`SKILL_SOURCE` override vs the plugin manifest
   default) is covered by unit tests in `test/mcp.test.ts`, not by a live probe.
+
+## P2 — Issue #144: configured permission policy at claude-zero launch
+
+**Harness:** `claude` **2.1.288** (macOS arm64). **Probed:** 2026-10-03.
+**Route probed:** the product-floor shape — `--setting-sources ''`,
+`--strict-mcp-config --mcp-config '{"mcpServers":{}}'`, `--print`, a session
+`--settings` file — i.e. exactly what claude-zero composes.
+
+### The question
+
+`--setting-sources ''` is an allowlist with an empty value, so it evicts every
+ambient setting source. Does that eviction also delete the user's *permission
+mode* (the thing issue #144 reports as "silently reverts to auto-mode"), and if
+so, which channel can carry that intent back without reopening the clean room?
+
+### Method
+
+Six cells. Each asked the agent to write one short file into the probe's temp
+directory; the **only** signal used was whether the file appeared on disk. A
+model's report about its own permission state is not evidence, so none was used.
+The synthetic ambient settings carried a `permissions.allow` rule and a `statusLine`
+alongside the permission key, so a leak of anything else would have been visible.
+
+| Cell | Composition (all with `--setting-sources ''`) | File written | Reads as |
+|---|---|---|---|
+| A | session `--settings` `{permissions:{defaultMode:"acceptEdits"}}` | **yes** | the settings channel carries a mode correctly under full isolation |
+| B | session `--settings` with **no** permission key | no | no key ⇒ claude's own default; the door must inject nothing |
+| C | A **plus** explicit `--permission-mode default` | no | an explicit CLI mode **beats** the settings mode |
+| D | session `--settings` `{defaultMode:"bypassPermissions"}`, no CLI flag | **yes** | **the fix's mechanism** — an inherited bypass is honored through that same channel |
+| E | explicit `--dangerously-skip-permissions`, no settings permission key | **yes** | the real bypass flag reaches claude and works |
+| F | `--allow-dangerously-skip-permissions` **alone** | no | capability enablement is not entering bypass mode |
+
+### String evidence from the same binary
+
+Supporting, not decisive; used to read the code's intent and to scope what this
+door is allowed to assume on this version.
+
+- `permissions.defaultMode` is the canonical key the harness itself reads and
+  writes (`set permissions.defaultMode=<mode> in <source>`).
+- An internal `permissionModeSuppliedOnInvocation` flag gates the settings-derived
+  mode, which is the mechanism behind cell C.
+- `"auto"` is *source-restricted*: a project/local `permissions.defaultMode` set to
+  `auto` is ignored, while other modes are honored. User-scope `auto` is honored —
+  which is why this door reads the **user** settings only, never project/local
+  permissions, as a way to grant bypass.
+- A settings bypass can be ignored by the host on its own terms — e.g. for an
+  IDE-owned session without the allow-bypass setting, and mode restrictions exist
+  for remote sessions. Those are **not** argv-drop defects and stay visible.
+- The `default` mode is accepted by the settings schema but is **not** one of the
+  six `--permission-mode` choices, so the door validates user-supplied *flag values*
+  against nothing (claude owns its enum) and inherited *settings modes* against the
+  probed settings set.
+
+### What the implementation does with this
+
+- Canonical `permissions.defaultMode` → re-applied as `permissions.defaultMode` in
+  the **session** settings file (cell D). No duplicate argv signal.
+- Compatibility `permissionMode` → same channel, disclosed as a launcher-side
+  alias, not claimed as claude schema.
+- Compatibility `dangerouslySkipPermissions: true` → the real
+  `--dangerously-skip-permissions` flag (cell E), disclosed as settings-derived.
+  `--allow-dangerously-skip-permissions` is never promoted to it (cell F).
+- Explicit permission flags win over inheritance, including a **safer** mode over an
+  inherited bypass (cell C), and skip the settings read entirely — so an
+  uninterpretable settings file cannot block a launch that already answered the
+  question.
+
+### Not proven here, and deliberately not worked around
+
+- **Managed/organization policy precedence.** This probe ran unmanaged. A managed
+  `bypassPermissions` restriction still wins in claude, and the door does not touch
+  it.
+- **The interactive bypass acknowledgment.** Cells ran under `--print`. In an
+  interactive session claude may still prompt to confirm bypass. The door never sets
+  `skipDangerousModePermissionPrompt` to skip that prompt — auto-acknowledging a
+  safeguard is not preserving a decision.
+- **Version pinning.** `--permission-mode` choices, the settings mode set, and the
+  `permissionModeSuppliedOnInvocation` gate are all properties of 2.1.288.
+  **Re-verify on every Claude Code upgrade.**
+- **Cost of the campaign** is deliberately not quoted: no canonical cost receipt
+  was taken for these six cells, and a self-reported figure would be worse than none.
+
+### Fixture hygiene
+
+Probe directory created under the OS temp dir and deleted after the campaign. The
+synthetic settings file never touched the operator's real `~/.claude`, and no test
+in this package reads it either — every case runs against a throwaway
+`CLAUDE_CONFIG_DIR`/`HOME` fixture.
