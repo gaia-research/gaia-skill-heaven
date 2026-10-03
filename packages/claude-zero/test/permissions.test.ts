@@ -9,7 +9,7 @@
 // user's own settings must survive claude-zero's clean room, and NOTHING else
 // from that file may.
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -372,5 +372,112 @@ describe("resolveLaunchPermissions", () => {
         claudeArgs: ["--permission-mode", "plan"],
       }).source,
     ).toBe("cli");
+  });
+});
+// Review findings on the first pass of this change (worker-luna-xhigh). Each
+// case below pins a specific hardening, because "it happened to work" is not
+// evidence for a path that can grant permission bypass.
+describe("hardening from review (#144)", () => {
+  it("ENOTDIR is a broken config path, NOT an absent one", () => {
+    // The reviewer's MAJOR: a config root (or ~/.claude) that is a REGULAR FILE
+    // yields ENOTDIR on read. Reading that as "not configured" is exactly the
+    // silent fallback this module exists to end: the session would launch in a
+    // different permission mode than the user configured, with nothing said.
+    const fileConfigDir = join(root, "config-is-a-file");
+    writeFileSync(fileConfigDir, "not a directory");
+    let message = "";
+    try {
+      readUserPermissionIntent({ configDir: fileConfigDir });
+    } catch (e) {
+      message = (e as Error).message;
+    }
+    expect(message).toContain("could not read your Claude settings.json (ENOTDIR)");
+    expect(message).toContain("not a directory");
+    expect(message).toContain("--permission-mode");
+    expect(message).not.toContain(fileConfigDir);
+
+    // Same for a home whose .claude is a file.
+    const fileHome = join(root, "home-file");
+    mkdirSync(fileHome, { recursive: true });
+    writeFileSync(join(fileHome, ".claude"), "not a directory");
+    expect(() => readUserPermissionIntent({ home: fileHome })).toThrow(/ENOTDIR/);
+
+    // …and an explicit flag still routes around a broken path entirely.
+    expect(
+      resolveLaunchPermissions({
+        posture: "product-floor",
+        configDir: fileConfigDir,
+        claudeArgs: ["--permission-mode", "plan"],
+      }).source,
+    ).toBe("cli");
+  });
+
+  it("reads only OWN properties: a polluted Object.prototype cannot invent a mode", () => {
+    // Prototype pollution elsewhere in the process must not be able to grant
+    // bypass in this one. JSON.parse puts `__proto__` in the file as an ordinary
+    // own key, so nothing legitimate is lost by refusing inherited values.
+    (Object.prototype as unknown as Record<string, unknown>).defaultMode = "bypassPermissions";
+    (Object.prototype as unknown as Record<string, unknown>).permissionMode = "bypassPermissions";
+    (Object.prototype as unknown as Record<string, unknown>).dangerouslySkipPermissions = true;
+    try {
+      writeSettings({ model: "opus" });
+      expect(readUserPermissionIntent({ configDir })).toEqual({ bypass: false });
+
+      const r = resolveLaunchPermissions({ posture: "product-floor", configDir, home });
+      expect(r.source).toBe("default");
+      expect(r.argv).toEqual([]);
+      expect(r.settingsMode).toBeUndefined();
+    } finally {
+      delete (Object.prototype as unknown as Record<string, unknown>).defaultMode;
+      delete (Object.prototype as unknown as Record<string, unknown>).permissionMode;
+      delete (Object.prototype as unknown as Record<string, unknown>).dangerouslySkipPermissions;
+    }
+  });
+
+  it("still reads the real own keys while the prototype carries the others", () => {
+    (Object.prototype as unknown as Record<string, unknown>).dangerouslySkipPermissions = true;
+    try {
+      writeSettings({ permissions: { defaultMode: "acceptEdits" } });
+      expect(readUserPermissionIntent({ configDir })).toEqual({
+        mode: "acceptEdits",
+        bypass: false,
+        modeKey: "permissions.defaultMode",
+      });
+    } finally {
+      delete (Object.prototype as unknown as Record<string, unknown>).dangerouslySkipPermissions;
+    }
+  });
+
+  it("--print is a BOOLEAN option, so a mode behind it is still seen", () => {
+    // `claude --help`: "--print, -p  Print response and exit". Had it been
+    // treated as value-taking, this real mode would have been swallowed and an
+    // inherited mode would have quietly overridden the user's flag.
+    expect(explicitPermissionSelection(["--print", "--permission-mode", "manual"]).mode).toBe("manual");
+    expect(explicitPermissionSelection(["--print", "--permission-mode", "plan"]).mode).toBe("plan");
+    expect(explicitPermissionSelection(["--print", "--dangerously-skip-permissions"]).bypass).toBe(true);
+    // -p DOES take the prompt, and that is the distinction that matters.
+    expect(explicitPermissionSelection(["--print", "-p", "hi"]).mode).toBeUndefined();
+  });
+
+  it("inherits through a symlinked config root rather than refusing it", () => {
+    // A symlinked config dir is an ordinary setup, not a broken one.
+    const realDir = join(root, "real-config");
+    mkdirSync(realDir, { recursive: true });
+    writeFileSync(join(realDir, "settings.json"), JSON.stringify({ permissions: { defaultMode: "plan" } }));
+    const linkDir = join(root, "linked-config");
+    symlinkSync(realDir, linkDir);
+    expect(readUserPermissionIntent({ configDir: linkDir }).mode).toBe("plan");
+  });
+
+  it("the delimiter does not suppress inheritance when no permission flag follows it", () => {
+    writeSettings({ permissions: { defaultMode: "manual" } });
+    const r = resolveLaunchPermissions({
+      posture: "product-floor",
+      configDir,
+      home,
+      claudeArgs: ["--", "--model", "haiku", "explain this"],
+    });
+    expect(r.source).toBe("user-settings");
+    expect(r.settingsMode).toBe("manual");
   });
 });

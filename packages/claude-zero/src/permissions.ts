@@ -147,6 +147,11 @@ const NO_INTENT_NOTE =
  * mistaken for one — the failure mode the issue's own prose invites (a prompt
  * string saying "--dangerously-skip-permissions" is not a flag).
  *
+ * `--print` is deliberately NOT here: `claude --help` documents it as a boolean
+ * (`--print, -p  Print response and exit`), and treating it as value-taking would
+ * swallow the token after it — so a real `--permission-mode` behind a `--print`
+ * would go unseen and an inherited mode would silently override the user.
+ *
  * LIMIT, stated rather than hidden: this is not a reimplementation of claude's
  * parser. An unlisted option that takes a value could still hide one. Unknown
  * options are treated as booleans on purpose — the alternative (guessing that
@@ -155,7 +160,6 @@ const NO_INTENT_NOTE =
  */
 const VALUE_TAKING_OPTIONS = new Set([
   "-p",
-  "--print",
   "--model",
   "--fallback-model",
   "--effort",
@@ -189,6 +193,21 @@ export interface PermissionLookupOptions {
 export function userSettingsPath(opts: PermissionLookupOptions = {}): string {
   if (opts.configDir) return join(opts.configDir, "settings.json");
   return join(opts.home ?? homedir(), ".claude", "settings.json");
+}
+
+/**
+ * Read an OWN property only.
+ *
+ * This is a security-sensitive read: an inherited mode can grant permission
+ * bypass. Ordinary property lookup would also see anything on
+ * `Object.prototype`, so a polluted prototype (from any other module sharing the
+ * process) could invent a configured permission mode that the user's file never
+ * contained. Own-property reads close that door, and `JSON.parse` puts
+ * `__proto__` in the file as an ordinary own key rather than as a prototype, so
+ * nothing legitimate is lost.
+ */
+function own(obj: object, key: string): unknown {
+  return Object.hasOwn(obj, key) ? (obj as Record<string, unknown>)[key] : undefined;
 }
 
 function invalid(message: string): Error {
@@ -230,13 +249,20 @@ export function readUserPermissionIntent(
     raw = readFileSync(settingsPath, "utf-8");
   } catch (e) {
     const err = e as NodeJS.ErrnoException;
+    // ENOENT and only ENOENT is "not configured". ENOTDIR is NOT: it means a
+    // component of the config path exists but is not a directory (a config root
+    // or ~/.claude that is a regular file), which is a broken configuration whose
+    // permission mode we cannot read. Treating that as "unset" is precisely the
+    // silent fallback this module exists to end.
     if (err.code === "ENOENT") return { bypass: false }; // not configured — normal
-    if (err.code === "ENOTDIR") return { bypass: false }; // no config root at all
-    // EISDIR/EACCES/EISDIR-style failures on a real file are NOT "unset".
     throw invalid(
       `could not read your Claude settings.json (${err.code ?? "read error"}). ` +
+        (err.code === "ENOTDIR"
+          ? `A configured Claude config path is not a directory, so its ` +
+            `permission mode cannot be read. `
+          : ``) +
         `claude-zero reads it only to carry your permission mode through the ` +
-        `clean room; it is not writing to it. Fix or remove the file, or pass an ` +
+        `clean room; it is not writing to it. Fix or remove the path, or pass an ` +
         `explicit --permission-mode.`,
     );
   }
@@ -264,7 +290,7 @@ export function readUserPermissionIntent(
 
   // Canonical: permissions.defaultMode. `permissions: null` is absence, not
   // corruption; any other non-object value is a malformed intent.
-  const permissions = settings.permissions;
+  const permissions = own(settings, "permissions");
   if (permissions !== undefined && permissions !== null) {
     if (typeof permissions !== "object" || Array.isArray(permissions)) {
       throw invalid(
@@ -274,15 +300,16 @@ export function readUserPermissionIntent(
       );
     }
     const perm = permissions as Record<string, unknown>;
-    if (perm.defaultMode !== undefined) {
-      intent.mode = readMode(perm.defaultMode, "permissions.defaultMode");
+    const defaultMode = own(perm, "defaultMode");
+    if (defaultMode !== undefined) {
+      intent.mode = readMode(defaultMode, "permissions.defaultMode");
       intent.modeKey = "permissions.defaultMode";
     }
   }
 
   // Compatibility inputs, issue-reported. These are NOT claimed to be claude
   // settings keys — they are launcher-side aliases for users who wrote them.
-  const compatMode = settings.permissionMode;
+  const compatMode = own(settings, "permissionMode");
   if (compatMode !== undefined) {
     const mode = readMode(compatMode, '"permissionMode"');
     if (intent.mode !== undefined && intent.mode !== mode) {
@@ -297,7 +324,7 @@ export function readUserPermissionIntent(
     intent.modeKey ??= "permissionMode";
   }
 
-  const compatBypass = settings.dangerouslySkipPermissions;
+  const compatBypass = own(settings, "dangerouslySkipPermissions");
   if (compatBypass !== undefined) {
     if (typeof compatBypass !== "boolean") {
       throw invalid(

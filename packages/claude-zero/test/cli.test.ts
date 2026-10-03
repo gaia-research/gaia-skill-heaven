@@ -466,6 +466,41 @@ describe("run — permission handling (#144)", () => {
     expect(JSON.parse(out).argv).toContain("plan");
   });
 
+  it("a config path that exists but cannot be read is exit 2, not a quiet default", () => {
+    // Review finding (worker-luna-xhigh): ENOTDIR — a CLAUDE_CONFIG_DIR (or
+    // ~/.claude) that is a regular FILE — used to read as "not configured",
+    // which is the silent fallback #144 is about.
+    const fileConfigDir = join(isolatedConfigDir, "..", `cz144-not-a-dir-${process.pid}`);
+    writeFileSync(fileConfigDir, "regular file, not a directory");
+    try {
+      const { code, err } = captureStderr(() => run(["--print"], { configDir: fileConfigDir }));
+      expect(code).toBe(2);
+      expect(err).toContain("could not read your Claude settings.json (ENOTDIR)");
+      expect(err).toContain("--permission-mode");
+      expect(err).not.toContain(fileConfigDir);
+      // An explicit permission flag answers the question, so the broken path is
+      // never read and the launch proceeds.
+      const { code: ok, out } = captureStdout(() =>
+        run(["--print", "--permission-mode", "plan"], { configDir: fileConfigDir }),
+      );
+      expect(ok).toBe(0);
+      expect(JSON.parse(out).argv).toContain("plan");
+    } finally {
+      rmSync(fileConfigDir, { force: true });
+    }
+  });
+
+  it("inherits the configured mode even when the tail is long and permission-free", () => {
+    configureUserSettings({ permissions: { defaultMode: "manual" } });
+    const { code, out } = captureStdout(() =>
+      run(["--print", "--", "--model", "haiku", "--add-dir", "/tmp", "explain this file"]),
+    );
+    expect(code).toBe(0);
+    const plan = JSON.parse(out);
+    expect(plan.settings).toMatchObject({ permissions: { defaultMode: "manual" } });
+    expect(plan.argv.slice(-5)).toEqual(["--model", "haiku", "--add-dir", "/tmp", "explain this file"]);
+  });
+
   it("help documents the permission options and the -- passthrough", () => {
     const { code, out } = captureStdout(() => run(["--help"]));
     expect(code).toBe(0);

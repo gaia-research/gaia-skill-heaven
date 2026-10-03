@@ -142,6 +142,21 @@ door is allowed to assume on this version.
   uninterpretable settings file cannot block a launch that already answered the
   question.
 
+### Review-hardened edges (no extra harness runs needed)
+
+Three fixes came out of an adversarial review of the implementation rather than
+out of new probe cells, and each is pinned by a test in `test/permissions.test.ts`:
+
+- A config path that exists but is not a directory (`ENOTDIR`) is a **broken**
+  configuration, not an absent one. Reading it as "unconfigured" would have
+  reproduced the original defect on a second code path.
+- Permission keys are read as **own** properties only, so a polluted
+  `Object.prototype` elsewhere in the process cannot invent a mode — and therefore
+  cannot invent a bypass.
+- `--print` is a boolean option (`claude --help`), so a real `--permission-mode`
+  behind it is still seen. Treating it as value-taking would have let an inherited
+  mode quietly override the user's own flag.
+
 ### Not proven here, and deliberately not worked around
 
 - **Managed/organization policy precedence.** This probe ran unmanaged. A managed

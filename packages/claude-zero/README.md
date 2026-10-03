@@ -80,10 +80,10 @@ precedence is left exactly as it is (P3).
 **Caveats, stated rather than worked around.** A configured bypass is a *request*:
 managed/organization policy, an IDE-owned session, or claude's own interactive
 bypass acknowledgment can still decline it, and claude-zero suppresses none of
-them (it never sets `skipDangerousModePermissionPrompt`). A settings file that
-exists but cannot be interpreted — malformed JSON, an unsupported mode, two
-configured modes that disagree — is a **launch error**, not a silent fallback into a
-different permission mode. An explicit `--permission-mode` is the way past it. The
+them (it never sets `skipDangerousModePermissionPrompt`). A settings path that
+exists but cannot be read or interpreted — malformed JSON, an unsupported mode, two
+configured modes that disagree, a config path that is not a directory — is a
+**launch error**, not a silent fallback into a different permission mode. An explicit `--permission-mode` is the way past it. The
 settings lookup honours `CLAUDE_CONFIG_DIR` when set, otherwise `~/.claude`, and is
 read-only either way. Behaviour is version-pinned: modes and precedence were probed
 on claude 2.1.288 (see [`PROBE.md`](PROBE.md)) and must be re-verified on upgrade.
