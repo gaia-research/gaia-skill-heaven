@@ -96,13 +96,17 @@ strictness. It has to be the record.
 This is why `evidence-inconclusive` is a first-class state in
 `packages/core/src/arbor/band.ts` and is **pinned by test to be incapable of
 producing a direction**, even when a `resolveDirection` is supplied that would
-return one. Tested twice: on synthetic fixtures, and on the real published
-record from `gaia-skill-tree` PR #2028.
+return one. Tested on synthetic fixtures, and on the real published record —
+read from the byte-for-byte Arbor cache the plugin ships, so it runs in CI
+(`arbor-band-real-record.test.ts`, and on the production `summon()` path in
+`summon-arbor.test.ts`).
 
 ## What the real record does
 
-The one governed record in the Tree today
-(`obra/receiving-code-review`, interpretation `93578bb7`):
+The first governed record in the Tree (`gaia-skill-tree` #2036, superseding
+#2028; `obra/receiving-code-review`, interpretation `c8d6b2cb`, issued under the
+project owner as human curator — #2028's agent-authored draft `93578bb7` was
+never published):
 
 - content-pinned join: yes
 - governed: yes — `interpretationSource` is non-null
