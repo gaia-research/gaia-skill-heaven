@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import {
   AdjudicationError,
   assertAdjudicationArtifacts,
+  assertUtcTimestamp,
   loadAdjudication as loadAdjudicationFromFiles,
   scoreAdjudicated,
   validateAdjudicationRows,
@@ -373,6 +374,13 @@ describe("R3 adjudication overlay", () => {
   it("rejects an empty adjudicator", () => {
     const base = loadAdjudication(gold, unanswerable).rows[0];
     expect(() => revalidate([{ ...base, adjudicatedBy: "" }])).toThrow(/non-empty string/);
+  });
+
+  it("accepts committed UTC timestamps and rejects offsets, invalid dates, and malformed values", () => {
+    expect(() => assertUtcTimestamp("committed", "2026-09-16T20:46:40.710Z")).not.toThrow();
+    expect(() => assertUtcTimestamp("offset", "2026-01-01T00:00:00+08:00")).toThrow();
+    expect(() => assertUtcTimestamp("invalid date", "2026-02-30T00:00:00Z")).toThrow();
+    expect(() => assertUtcTimestamp("malformed", "not-a-date")).toThrow();
   });
 
   it("keeps a free-prose alternative out of every denominator", () => {

@@ -67,6 +67,18 @@ export type AdjudicationProvenance = {
 
 export class AdjudicationError extends Error {}
 
+export function assertUtcTimestamp(label: string, value: unknown): asserts value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/.test(value)) {
+    throw new AdjudicationError(`${label} must be an ISO-8601 UTC timestamp`);
+  }
+  const date = new Date(value);
+  const fraction = value.match(/\.(\d{1,3})Z$/)?.[1] ?? "";
+  const normalized = value.replace(/(\.\d{1,3})?Z$/, `.${fraction.padEnd(3, "0")}Z`);
+  if (!Number.isFinite(date.getTime()) || date.toISOString() !== normalized) {
+    throw new AdjudicationError(`${label} is not a valid UTC timestamp`);
+  }
+}
+
 /**
  * The on-disk shape before validation. The overlay is committed data, but it is
  * still a file someone can edit, so `state` arrives as a plain string and is
@@ -159,6 +171,8 @@ export function loadAdjudication(
   if (provenance.historicalLabelsModified !== false) {
     throw new AdjudicationError("overlay claims the historical labels were modified; they never are");
   }
+  assertUtcTimestamp("provenance.createdAt", provenance.createdAt);
+  assertUtcTimestamp("sourceSnapshot.lockedAt", provenance.sourceSnapshot.lockedAt);
 
   const overlayBytes = readFileSync(join(adjudicationDir, provenance.overlay));
   const snapshotBytes = readFileSync(join(adjudicationDir, provenance.sourceSnapshot.path));
@@ -397,6 +411,7 @@ export function validateAdjudicationRows(
     if (kind === "unanswerable" && unvalidated.labeledSkillId !== null) {
       throw new AdjudicationError(`${caseId}: unanswerable rows must have labeledSkillId null`);
     }
+    assertUtcTimestamp(`${caseId}.adjudicatedAt`, unvalidated.adjudicatedAt);
     if (!WRITABLE_STATES.includes(unvalidated.state as AdjudicationRow["state"])) {
       throw new AdjudicationError(
         `${caseId}: ${JSON.stringify(unvalidated.state)} cannot be written into the overlay`,
