@@ -308,3 +308,7 @@ npm run launcher -- --level zero --print
 ```
 
 Node.js **22+**, TypeScript ESM. No runtime dependencies, and no harness binaries are installed as dependencies.
+
+## License
+
+[MIT](LICENSE) © 2026 Gaia Research.

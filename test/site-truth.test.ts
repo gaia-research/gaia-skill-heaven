@@ -138,5 +138,8 @@ describe("no stale pre-#169 authority language (#174)", () => {
 
   it("the licence on the page matches the only machine-readable declaration", () => {
     expect(SITE.licence).toBe(JSON.parse(read("plugins/skill-heaven/plugin.json")).license);
+    // …and a LICENSE file now backs it (the repo had none).
+    expect(read("LICENSE")).toMatch(/^MIT License/);
+    expect(JSON.parse(read("package.json")).license).toBe(SITE.licence);
   });
 });
