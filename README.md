@@ -202,7 +202,7 @@ Pick how clean you want the *launch* to be with `--level`:
 | `low` | Clean, then only the skills you name with `--skill` |
 | `med` · `native` | Your normal, untouched harness |
 
-The upper rungs (`high` · `xhigh` · `max` · `ultra`) aren't boot settings — you arm them live with `/skill-hell` or `/skill-ultra` once the session is running.
+The upper rungs (`high` · `xhigh` · `max` · `ultra`) aren't boot settings — you select them in-session with `/skill-hell` or `/skill-ultra` once the session is running.
 
 ```bash
 # start clean, then admit exactly one skill

@@ -26,7 +26,7 @@ export function assertLevelAllowed(level: string | undefined): void {
     const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
       `level "${level}" is a live summon rung, not a boot posture. ` +
-        `Launch agy-zero at zero|low|med, then arm it in-session with ${arm}.`,
+        `Launch agy-zero at zero|low|med, then select it in-session with ${arm}.`,
     );
   }
 }

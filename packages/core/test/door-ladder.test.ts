@@ -57,7 +57,7 @@ describe("ladder-first door contract", () => {
       expect(result.code).toBe(0);
       expect(result.out).toContain("--level <level>");
       expect(result.out).toContain("zero|low|med (default: zero)");
-      expect(result.out).toContain("Hell (high|xhigh|max) is armed live with /skill-hell");
+      expect(result.out).toContain("Hell (high|xhigh|max) is selected in-session with /skill-hell");
       expect(result.out).toContain("--level native");
 
       for (const level of ["med", "native"]) {
@@ -68,7 +68,7 @@ describe("ladder-first door contract", () => {
     });
 
     // N13: nothing on the line refuses. Every rung above the boot dial — ultra
-    // included — gets the SAME answer: it is armed live, here is the command.
+    // included — gets the SAME answer: it is selected in-session, here is the command.
     it(`${name} routes every summon rung live, ultra included, and never as a gate`, () => {
       for (const [level, arm] of [
         ["high", "/skill-hell high"],
