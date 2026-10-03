@@ -1068,9 +1068,15 @@ describe("the real governed record reaches the runtime (Lane E)", () => {
   });
 
   it("changes knowledge, not relevance: the ranked result is identical with or without the record", async () => {
+    // Everything a caller could rank, order or act on, with the Arbor
+    // disclosure removed (same shape as the relevance-isolation suite above).
     const shape = (outcome: Awaited<ReturnType<typeof summon>>) => ({
-      previewed: outcome.previewed.map(({ id, score }) => ({ id, score })),
+      margin: outcome.margin,
       noMatch: outcome.noMatch,
+      filtered: outcome.filtered,
+      skipped: outcome.skipped,
+      ranking: { ...outcome.ranking, indexAgeDays: null },
+      previewed: outcome.previewed.map(({ arbor: _arbor, ...rest }) => rest),
     });
     const withRecord = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
