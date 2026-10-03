@@ -6,7 +6,15 @@ evaluated. Written 2026-09-29. Sits with the S-later work in
 
 ## Status
 
-Accepted. Binding on S-later. #119 stays open.
+Accepted. Binding on S-later, and on Lane S only: it is not authority for any
+other lane's exit criterion.
+
+- 2026-09-29: #119 stays open.
+- 2026-10-03: #119 closed under this ruling. S-now is met; S-later's kill
+  criterion is applied as written: Heaven and Hell remain breadth directions and
+  the docs say so. Capability C of #116 ("composition is behavior-aware on at
+  least one path") is closed in its **degraded, disclosed** state, not delivered.
+  SPEC INV-10 stands, unmet.
 
 ## The mistake this records
 
@@ -130,9 +138,11 @@ reasons do not collapse into one another.
 - No behavioral delta attributable to the band.
 - No positive Lane E result. `pairedDiscordance = 0`, n=5, and inconclusive is
   what the preregistered rule selects.
-- S is not marked done. #119 stays open. The infrastructure is real and the gates
-  are proven against a real record; the record's answer is that the question is
-  unanswered.
+- S-later is not claimed as a behavioral result. (2026-09-29 wording: "S is not
+  marked done. #119 stays open.") #119 was closed on 2026-10-03 because its kill
+  criterion was applied, not because a behavior-aware composition was delivered.
+  The infrastructure is real and the gates are proven against the real record,
+  and that record's answer is that the question is unanswered.
 
 ## Revisions
 
