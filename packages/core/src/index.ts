@@ -4,6 +4,7 @@
 // engine internals.
 
 export {
+  assertDoorMcpConfig,
   compile,
   doseSummary,
   floorOf,
@@ -20,8 +21,14 @@ export {
   BAND_INFO,
   LADDER_WIP,
   HARNESSES,
+  DOOR_MCP_BUNDLE_RELATIVE,
+  DOOR_MCP_CONFIG_PATH,
+  DOOR_MCP_SERVER_NAME,
+  DOOR_MCP_SOURCE_ENV_KEY,
   type Band,
   type BandInfo,
+  type DoorMcpConfig,
+  type DoorMcpServer,
   type FloorKind,
   type Posture,
   type Harness,

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -142,15 +142,66 @@ describe("run", () => {
     expect(plan.argv.join(" ")).toContain("$SESSION");
   });
 
-  it("--print composes product-floor with the door mounted and an empty profile", () => {
+  it("--print composes product-floor with the door mounted, the summon server admitted, and an empty profile", () => {
     const { code, out } = captureStdout(() => run(["--print", "--posture", "product-floor"]));
     expect(code).toBe(0);
     const plan = JSON.parse(out);
     expect(plan.posture).toBe("product-floor");
     expect(plan.standingTokens).toBe(0);
+    expect(plan.skillCount).toBe(0);
     expect(plan.argv).not.toContain("--disable-slash-commands");
     expect(plan.argv.join(" ")).toMatch(/--plugin-dir \S*plugins[\\/]skill-heaven/);
-    expect(plan.fsPlan).toEqual([]);
+    // #143: the summon MCP server is admitted through a session-local file the
+    // real launch would materialize — and --print shows it WITHOUT writing it.
+    expect(plan.argv).toContain("--strict-mcp-config");
+    expect(plan.argv[plan.argv.indexOf("--mcp-config") + 1]).toBe("$SESSION/door-mcp.json");
+    expect(plan.fsPlan).toHaveLength(1);
+    expect(plan.fsPlan[0]).toMatchObject({ kind: "write", path: "$SESSION/door-mcp.json" });
+    const parsed = JSON.parse(plan.fsPlan[0].contents);
+    expect(Object.keys(parsed.mcpServers)).toEqual(["skill-summon"]);
+    expect(parsed.mcpServers["skill-summon"].command).toBe("node");
+    expect(parsed.mcpServers["skill-summon"].args[0]).toMatch(/skill-heaven[\\/]mcp[\\/]skill-summon\.mjs$/);
+    expect(parsed.mcpServers["skill-summon"].env.SKILL_SOURCE).toBe("https://gaiaskilltree.com");
+    // --print writes nothing: the plan still carries core's placeholder.
+    expect(plan.argv.join(" ")).toContain("$SESSION");
+    expect(existsSync(join(process.cwd(), "$SESSION"))).toBe(false);
+  });
+
+  // #143: SKILL_SOURCE is the launcher's explicit source override, and it must
+  // reach BOTH the dry-run plan and the real launch.
+  it("propagates SKILL_SOURCE into the admitted door MCP declaration, and restores the environment", () => {
+    const previous = process.env.SKILL_SOURCE;
+    try {
+      process.env.SKILL_SOURCE = "https://github.com/example/skills";
+      const { code, out } = captureStdout(() => run(["--print", "--posture", "product-floor"]));
+      expect(code).toBe(0);
+      const plan = JSON.parse(out);
+      expect(JSON.parse(plan.fsPlan[0].contents).mcpServers["skill-summon"].env).toEqual({
+        SKILL_SOURCE: "https://github.com/example/skills",
+      });
+      // and the plan says where the answer came from
+      expect(plan.notes.join(" ")).toContain("explicit SKILL_SOURCE override");
+
+      // The default (no override) path is the plugin manifest's own default, and
+      // the ambient environment of the developer running the tests must not leak
+      // into it — SKILL_SOURCE is isolated above and restored below.
+      delete process.env.SKILL_SOURCE;
+      const clean = JSON.parse(captureStdout(() => run(["--print", "--posture", "product-floor"])).out);
+      expect(JSON.parse(clean.fsPlan[0].contents).mcpServers["skill-summon"].env).toEqual({
+        SKILL_SOURCE: "https://gaiaskilltree.com",
+      });
+      expect(clean.notes.join(" ")).toContain("userConfig.skill_url.default");
+    } finally {
+      if (previous === undefined) delete process.env.SKILL_SOURCE;
+      else process.env.SKILL_SOURCE = previous;
+    }
+  });
+
+  it("documents SKILL_SOURCE and its precedence in --help", () => {
+    const { code, out } = captureStdout(() => run(["--help"]));
+    expect(code).toBe(0);
+    expect(out).toContain("SKILL_SOURCE");
+    expect(out).toMatch(/userConfig\.skill_url\.default/);
   });
 
   it("refuses a curated launch with no --skill instead of composing an empty set (exit 2)", () => {

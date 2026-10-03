@@ -9,15 +9,19 @@
 // `compile()` — the one place the empirically probed, version-pinned routes
 // live — and this module only:
 //   (a) resolves --skill paths into core's ResolvedSkill shape,
-//   (b) substitutes core's "$SESSION" placeholder with the real session dir,
-//   (c) appends the session `--settings` file so the statusline still wires up,
-//   (d) writes a manifest describing WHAT WAS ACTUALLY LAUNCHED.
+//   (b) resolves the DOOR's own bundled MCP declaration when a door plugin is
+//       mounted at product-floor (see ./mcp.ts and #143),
+//   (c) substitutes core's "$SESSION" placeholder with the real session dir,
+//   (d) appends the session `--settings` file so the statusline still wires up,
+//   (e) writes a manifest describing WHAT WAS ACTUALLY LAUNCHED.
 // Nothing here re-derives a route, invents a flag, or edits the compiled argv.
 // If a posture's composition is wrong, it is wrong in packages/core.
 
 import { join } from "node:path";
 import {
   compile,
+  DOOR_MCP_CONFIG_PATH,
+  DOOR_MCP_SERVER_NAME,
   SUMMON_ONLY_LEVELS,
   resolveSkill,
   type FsOp,
@@ -25,6 +29,7 @@ import {
   type ResolvedSkill,
 } from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
+import { resolveDoorMcpConfig } from "./mcp.js";
 import type { ProfileManifest } from "./statusline.js";
 
 // Ultra has no ratified product meaning. Hell rungs are live summon budgets,
@@ -89,6 +94,12 @@ export interface LaunchOptions {
    * Core takes this for product-floor only (it does not assume a package
    * topology); passing it anywhere else is a compile-time error upstream. */
   doorPluginDir?: string;
+  /** Explicit summon source URL for this launch (the CLI passes SKILL_SOURCE
+   * from the environment). Precedence: this override, then the plugin
+   * manifest's `userConfig.skill_url.default`. No ambient settings file and no
+   * installed-plugin preference file is ever read — the door resolves the
+   * source from the plugin dir it was given, or from what the caller passed. */
+  skillSource?: string;
   createdAt?: string;
   claudeArgs?: string[]; // passthrough to claude (after our flags)
 }
@@ -183,6 +194,24 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
   // Non-native: core composes it. Skill ids come from frontmatter `name`,
   // falling back to the directory name (core's resolveSkill).
   const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((p) => resolveSkill(p));
+
+  // #143: product-floor keeps slash commands under an ALLOWLISTED mcp route,
+  // and `--strict-mcp-config` suppresses plugin-declared MCP as thoroughly as
+  // ambient MCP — so the door's own bundled summon server has to be admitted
+  // explicitly or /summon resolves to a command whose tool does not exist.
+  //
+  // This resolution FAILING IS A LAUNCH ERROR on purpose: silently degrading to
+  // a doorless product floor is the exact defect #143 reports, and the fix must
+  // not be "carry on without the summon tool". Resolution reads only the plugin
+  // dir the caller supplied and performs no network request.
+  const doorMcpConfig =
+    posture === "product-floor" && opts.doorPluginDir
+      ? resolveDoorMcpConfig({
+          pluginDir: opts.doorPluginDir,
+          ...(opts.skillSource !== undefined ? { skillSource: opts.skillSource } : {}),
+        })
+      : undefined;
+
   const compiled = compile({
     posture,
     harness: "claude",
@@ -195,6 +224,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     ...(posture === "product-floor" && opts.doorPluginDir
       ? { doorPluginDir: opts.doorPluginDir }
       : {}),
+    ...(doorMcpConfig ? { doorMcpConfig } : {}),
   });
 
   const env: Record<string, string> = { CLAUDE_ZERO_PROFILE: manifestPath };
@@ -263,7 +293,23 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     // KC6: the curated door-absence disclosure travels with the plan itself
     // (surfaced by --print's JSON and printed to stderr by a real launch in
     // cli.ts), same as every other compose-time note core hands back.
-    notes: [...compiled.notes, ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : [])],
+    notes: [
+      ...compiled.notes,
+      ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : []),
+      // #143: say WHICH source the admitted summon server will use, and where
+      // that answer came from. The precedence is explicit override (SKILL_SOURCE
+      // / the caller) first, then the mounted plugin's own manifest default —
+      // nothing else is consulted, and no ambient plugin preference file is read.
+      ...(doorMcpConfig
+        ? [
+            `the door's bundled "${DOOR_MCP_SERVER_NAME}" MCP server is admitted explicitly through a ` +
+              `session-local ${DOOR_MCP_CONFIG_PATH.replace("$SESSION", opts.sessionDir)} while ` +
+              `--strict-mcp-config stays on, so ambient user/project MCP servers remain suppressed. Summon ` +
+              `source resolved to ${JSON.stringify(doorMcpConfig.mcpServers[DOOR_MCP_SERVER_NAME]?.env?.SKILL_SOURCE)} ` +
+              `from ${opts.skillSource !== undefined ? "the explicit SKILL_SOURCE override" : "the mounted plugin's userConfig.skill_url.default"}.`,
+          ]
+        : []),
+    ],
   };
 }
 

@@ -49,6 +49,39 @@ Every write is session-scoped: the launcher materializes core's plan, profile
 manifest, and statusline settings in a disposable temp directory. It never
 edits `~/.claude`, project skills, or source skill directories (P3).
 
+## The summon MCP server: admitted, not ambient (#143)
+
+`product-floor` keeps `--strict-mcp-config`, and that flag is an ALLOWLIST: it
+suppresses plugin-declared MCP as thoroughly as ambient MCP. Measured on Claude
+Code 2.1.288, the pre-fix door route started **no** server — `/summon` resolved
+as a command whose tool did not exist. The fix does not relax isolation; it
+admits the door's **own** server explicitly:
+
+- the door resolves the plugin's bundled `skill-summon` declaration into one
+  literal stdio server — an absolute bundle path and a concrete source, with no
+  `${…}` placeholder left for Claude (it does not interpolate placeholders in an
+  external `--mcp-config` file);
+- core writes that single-server config to `$SESSION/door-mcp.json` and points
+  the one existing `--mcp-config` at it, **with `--strict-mcp-config` still on**;
+- result: exactly one MCP server (`skill-summon`) and exactly one
+  `mcp__skill-summon__summon` tool, while ambient user/project MCP servers stay
+  suppressed. See [`PROBE.md`](PROBE.md) for the pinned-version receipt.
+
+Source precedence is explicit and narrow: the `SKILL_SOURCE` environment
+override first, then the mounted plugin's own
+`userConfig.skill_url.default`. No other preference file — installed-plugin
+config, ambient settings, project config — is ever read.
+
+The admission is a hard failure, not a silent downgrade: if the mounted plugin
+cannot produce a valid one-server declaration, the launch stops with a specific
+error rather than opening a product floor whose `/summon` cannot work. A core
+direct caller that mounts commands without supplying a declaration still gets an
+honest disclosure that no server was admitted.
+
+An admitted MCP server is a control surface, not a skill: the profile manifest's
+`skillCount` and standing dose stay zero at `zero`, and standing vs invocation
+doses are still reported separately.
+
 ## `/skill-zero`: the boot-time half
 
 `/skill-zero` shows only `zero · low · med`; `med` is native and unlocked.
@@ -131,4 +164,5 @@ invocation doses remain separate.
 - `native`: `med`; `--level native` remains a compatibility spelling.
 
 Evidence for the pinned compositions remains in core compiler notes and the
-probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md).
+probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md),
+plus this door's own [`PROBE.md`](PROBE.md).

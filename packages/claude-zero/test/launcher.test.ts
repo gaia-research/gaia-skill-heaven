@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { materialize, resolveSkill } from "skill-zero";
 import { assertLevelAllowed, CURATED_DOOR_ABSENCE_NOTE, planLaunch, planNativeLaunch } from "../src/launcher.js";
+import { SHIPPED_SKILL_URL_DEFAULT, writeDoorPluginFixture } from "./door-plugin-fixture.js";
 
 /** A real skill dir with real bytes — core's own compile fixture. */
 const FIXTURE = join(
@@ -19,10 +20,17 @@ const FIXTURE = join(
 
 let sessionDir: string;
 let home: string;
+/** A real (minimal) door plugin on disk — #143 reads the door's own bundled MCP
+ * declaration from the very dir it mounts, so a made-up path no longer stands. */
+let doorDir: string;
+let spacedDoorDir: string;
 
 beforeAll(() => {
   sessionDir = mkdtempSync(join(tmpdir(), "ch-launch-"));
   home = mkdtempSync(join(tmpdir(), "ch-home-")); // no ~/.claude/skills → standing 0
+  const fixtures = mkdtempSync(join(tmpdir(), "ch-door-"));
+  doorDir = writeDoorPluginFixture(join(fixtures, "door"));
+  spacedDoorDir = writeDoorPluginFixture(join(fixtures, "door with spaces"));
 });
 afterAll(() => {
   rmSync(sessionDir, { recursive: true, force: true });
@@ -226,13 +234,23 @@ describe("planLaunch(curated) — the door calling core's compiler", () => {
 });
 
 describe("planLaunch(product-floor) — the doorful floor", () => {
-  const plan = () =>
+  const plan = (opts: Record<string, unknown> = {}) =>
     planLaunch({
       posture: "product-floor",
       sessionDir,
       statuslineBin: "/abs/statusline.mjs",
-      doorPluginDir: "/abs/door-plugin",
+      doorPluginDir: doorDir,
+      ...opts,
     });
+
+  /** The door-mcp.json write core composes, parsed. */
+  const doorMcp = (p: ReturnType<typeof plan>) => {
+    const op = p.fsPlan.find((f) => f.kind === "write" && f.path.endsWith("door-mcp.json"));
+    if (!op || op.kind !== "write") throw new Error("no door-mcp.json write in the plan");
+    return JSON.parse(op.contents) as {
+      mcpServers: Record<string, { type: string; command: string; args: string[]; env?: Record<string, string> }>;
+    };
+  };
 
   it("keeps slash commands AND mounts the door, or the surviving door is theoretical", () => {
     // F7's whole point: product-floor keeps --disable-slash-commands absent, so
@@ -245,9 +263,117 @@ describe("planLaunch(product-floor) — the doorful floor", () => {
     expect(settingSourcesIdx).toBeGreaterThanOrEqual(0);
     expect(p.argv[settingSourcesIdx + 1]).toBe("");
     expect(p.argv).toContain("--plugin-dir");
-    expect(p.argv).toContain("/abs/door-plugin");
+    expect(p.argv).toContain(doorDir);
     expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
-    expect(p.fsPlan).toEqual([]); // nothing to summon: the clean room admits no skills
+  });
+
+  // Issue #143: the summon server has to be ADMITTED, explicitly, or /summon
+  // resolves to a command whose tool does not exist under --strict-mcp-config.
+  it("admits the door's OWN bundled summon server through the strict allowlist (#143)", () => {
+    const p = plan();
+    expect(p.argv).toContain("--strict-mcp-config");
+    // exactly one --mcp-config, pointing at the session-local file
+    expect(p.argv.filter((a) => a === "--mcp-config")).toHaveLength(1);
+    expect(p.argv[p.argv.indexOf("--mcp-config") + 1]).toBe(join(sessionDir, "door-mcp.json"));
+    // the ambient inline empty config is GONE from argv…
+    expect(p.argv).not.toContain('{"mcpServers":{}}');
+    // …and the admitted set is exactly the door's own server, on plain node,
+    // with the absolute bundle path and a concrete (interpolation-free) source.
+    const config = doorMcp(p);
+    expect(Object.keys(config.mcpServers)).toEqual(["skill-summon"]);
+    expect(config.mcpServers["skill-summon"]).toEqual({
+      type: "stdio",
+      command: "node",
+      args: [join(doorDir, "mcp", "skill-summon.mjs")],
+      env: { SKILL_SOURCE: SHIPPED_SKILL_URL_DEFAULT },
+    });
+    expect(p.notes.join(" ")).toContain("skill-summon");
+  });
+
+  it("takes the summon source from an explicit override ahead of the plugin manifest default", () => {
+    const config = doorMcp(plan({ skillSource: "https://github.com/example/skills" }));
+    expect(config.mcpServers["skill-summon"].env).toEqual({
+      SKILL_SOURCE: "https://github.com/example/skills",
+    });
+    // and with none, the mounted plugin's own default is what is used
+    expect(doorMcp(plan()).mcpServers["skill-summon"].env).toEqual({ SKILL_SOURCE: SHIPPED_SKILL_URL_DEFAULT });
+  });
+
+  it("keeps a door path containing spaces as one argv element", () => {
+    const p = plan({ doorPluginDir: spacedDoorDir });
+    expect(doorMcp(p).mcpServers["skill-summon"].args).toEqual([
+      join(spacedDoorDir, "mcp", "skill-summon.mjs"),
+    ]);
+  });
+
+  // A silently doorless product floor IS the #143 defect, so resolution failure
+  // stops the launch instead of quietly dropping the summon server.
+  it("refuses to launch a mounted door whose summon declaration is missing or malformed", () => {
+    const broken = mkdtempSync(join(tmpdir(), "ch-broken-door-"));
+    try {
+      const noMcp = writeDoorPluginFixture(join(broken, "no-mcp"), { omitMcpJson: true });
+      expect(() => plan({ doorPluginDir: noMcp })).toThrow(/\.mcp\.json/);
+      const noBundle = writeDoorPluginFixture(join(broken, "no-bundle"), { omitBundle: true });
+      expect(() => plan({ doorPluginDir: noBundle })).toThrow(/summon server bundle/);
+      const twoServers = writeDoorPluginFixture(join(broken, "two"), {
+        mcpJson: {
+          mcpServers: {
+            "skill-summon": {
+              command: "node",
+              args: ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "${user_config.skill_url}" },
+            },
+            "somebody-elses": { command: "node", args: ["/tmp/other.mjs"] },
+          },
+        },
+      });
+      expect(() => plan({ doorPluginDir: twoServers })).toThrow(/exactly one server/);
+      expect(() => plan({ doorPluginDir: join(broken, "absent") })).toThrow(/not a directory/);
+    } finally {
+      rmSync(broken, { recursive: true, force: true });
+    }
+  });
+
+  it("materializes the MCP config inside the session and leaves the door plugin byte-identical (P3)", () => {
+    const session = mkdtempSync(join(tmpdir(), "ch-door-mcp-materialize-"));
+    const manifestBefore = readFileSync(join(doorDir, ".mcp.json"), "utf-8");
+    const pluginJsonBefore = readFileSync(join(doorDir, ".claude-plugin", "plugin.json"), "utf-8");
+    try {
+      const p = planLaunch({
+        posture: "product-floor",
+        sessionDir: session,
+        statuslineBin: "/abs/statusline.mjs",
+        doorPluginDir: doorDir,
+      });
+      expect(p.fsPlan).toHaveLength(1);
+      materialize(p.fsPlan, session);
+
+      // the real bytes claude will read, parsed as claude will parse them
+      const written = join(session, "door-mcp.json");
+      expect(existsSync(written)).toBe(true);
+      const parsed = JSON.parse(readFileSync(written, "utf-8")) as { mcpServers: Record<string, { args: string[] }> };
+      expect(Object.keys(parsed.mcpServers)).toEqual(["skill-summon"]);
+      expect(parsed.mcpServers["skill-summon"].args[0]).toBe(join(doorDir, "mcp", "skill-summon.mjs"));
+
+      // every planned path is inside the session dir — no exceptions
+      for (const op of p.fsPlan) {
+        const to = op.kind === "write" ? op.path : op.to;
+        expect(to.startsWith(session), `${to} escapes the session dir`).toBe(true);
+      }
+      // the door plugin is READ, never written
+      expect(readFileSync(join(doorDir, ".mcp.json"), "utf-8")).toBe(manifestBefore);
+      expect(readFileSync(join(doorDir, ".claude-plugin", "plugin.json"), "utf-8")).toBe(pluginJsonBefore);
+    } finally {
+      rmSync(session, { recursive: true, force: true });
+    }
+  });
+
+  // An MCP control surface is NOT a summoned skill: admitting the summon server
+  // must not inflate the profile's selected-skill accounting (two-number doses).
+  it("still reports an empty profile — an admitted MCP server is not a skill", () => {
+    const p = plan();
+    expect(p.fsPlan).toHaveLength(1); // the MCP config write, NOT a skill copy
+    expect(p.fsPlan.some((op) => op.kind !== "write")).toBe(false);
   });
 
   it("reports an empty profile honestly rather than echoing native's census", () => {
