@@ -45,6 +45,7 @@ export interface LaunchOptions {
   /** Pass "$SESSION" for dry-run output. Curated fsPlan writes only below it. */
   sessionDir: string;
   agyArgs?: string[];
+  isolateHome?: boolean;
 }
 
 export interface LaunchPlan {
@@ -69,6 +70,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     posture,
     harness: "agy",
     skills,
+    isolateHome: opts.isolateHome,
     ...(opts.model ? { model: opts.model } : {}),
     ...(opts.prompt !== undefined ? { prompt: opts.prompt } : {}),
     ...(opts.agyArgs?.length ? { passthrough: opts.agyArgs } : {}),
