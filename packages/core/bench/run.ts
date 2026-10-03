@@ -10,7 +10,7 @@
 // network, this run fails loudly instead of quietly measuring an online system.
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker, marginOf, type ScoredSkill } from "../src/retrieval/bm25f.js";
@@ -36,7 +36,9 @@ globalThis.fetch = (() => {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");
-const resultsDir = join(here, "results");
+const outputArg = argValue("--out") ?? "results";
+if (isAbsolute(outputArg)) throw new Error("--out must be relative to the bench directory");
+const resultsDir = join(here, outputArg);
 
 export type GoldEntry = {
   query: string;
