@@ -153,7 +153,7 @@ export function renderHellChooser(): string {
   return [
     "🔥 Skill Hell · high · xhigh · max · ultra",
     PROTOTYPE_NOTE,
-    "   WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
+    "   WIP · PROVISIONAL — what each rung means in behaviour is not settled; the evidence is still being gathered.",
     "",
     "   ● high    explore · the band opens here",
     "   ○ xhigh   explore · further along the band",

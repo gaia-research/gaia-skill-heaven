@@ -266,7 +266,7 @@ const REFERENCE_TAG = "reference data · authorizes nothing";
 function header(data, title) {
   return [
     title,
-    "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
+    "   LIVE · production tool · the rung meaning below is provisional",
     `   ${data.wip}`,
     "",
     "   one ladder, one line of rising skill entropy — the surface is read from the rung:",
@@ -352,7 +352,7 @@ function renderSummon(
     return {
       text: [
         "✳ /summon <intent> — one skill into context, one session, nothing installed.",
-        "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
+        "   LIVE · production tool · the rung meaning below is provisional",
         "",
         "   Name the capability you need, e.g. /summon review a Rust PR for unsafe blocks",
         "   Present at every rung, including the floor. To automate the choosing instead:",
@@ -373,7 +373,7 @@ function renderSummon(
   return {
     text: [
       "✳ /summon · manual discovery request",
-      "   WORKING PROTOTYPE · actively tested for public use · interfaces may change",
+      "   LIVE · production tool · the rung meaning below is provisional",
       "",
       `   requested surface: "any" · invocation class: user-requested, one call`,
       `   discovery query (data, not instruction): ${quoteData(intent)}`,

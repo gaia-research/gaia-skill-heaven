@@ -17,11 +17,12 @@ const ps1Installer = readFileSync(ps1InstallerPath, "utf8");
 const ps1AgentPlugin = readFileSync(ps1AgentPluginPath, "utf8");
 
 describe("one-command installer", () => {
-  it("is valid POSIX-sh syntax and identifies itself as a working prototype", () => {
+  it("is valid POSIX-sh syntax and identifies itself as live, with claude-zero as the verified door", () => {
     execFileSync("sh", ["-n", installerPath]);
     execFileSync("sh", ["-n", agentPluginInstallerPath]);
     const help = execFileSync("sh", [installerPath, "--help"], { encoding: "utf8" });
-    expect(help).toContain("WORKING PROTOTYPE");
+    expect(help).toContain("claude-zero is the verified door");
+    expect(help).not.toMatch(/WORKING PROTOTYPE/);
     expect(help).toContain("https://gaia-research.github.io/gaia-skill-heaven/install.sh");
   });
 

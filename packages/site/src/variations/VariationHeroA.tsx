@@ -266,6 +266,14 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
       {/* The hero lands on the ladder, so "skip" only means something while
           the optional five-act story is running (issue #47). */}
+      <Link
+        to="/live"
+        className="vha-skip vha-live"
+        style={{ color: v.fg, borderColor: v.hair2, background: `${v.bg}b3`, backdropFilter: 'blur(6px)' }}
+      >
+        <span className="vha-live__dot" aria-hidden="true" />
+        Live · what shipped
+      </Link>
       {atLadder ? (
         <Link
           to="/landing"

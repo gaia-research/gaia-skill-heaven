@@ -55,7 +55,7 @@ function Show-Usage {
 Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
        .\install.ps1 -Uninstall
 
-Installs the WORKING PROTOTYPE's five Skill Zero launcher doors and the Claude
+Installs the five Skill Zero launcher doors (claude-zero is the verified door; the others are launcher prototypes) and the Claude
 plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
 user's own claude binary is on PATH. The plugin bundles its own summon engine -
 no external package is installed. No harness is installed. Set SKILL_HEAVEN_HOME
@@ -105,7 +105,7 @@ function Uninstall-All {
     exit 0
   }
 
-  Say-Message "Skill Heaven working prototype - uninstalling everything from $INSTALL_HOME"
+  Say-Message "Skill Heaven - uninstalling everything from $INSTALL_HOME"
 
   if (Test-Path $USER_BIN_LINKS) {
     try {
@@ -170,7 +170,7 @@ if ($Uninstall) {
   Uninstall-All
 }
 
-Say-Message "SKILL HEAVEN - WORKING PROTOTYPE, actively tested for public use."
+Say-Message "SKILL HEAVEN - LIVE. claude-zero is the verified door; the other launchers are prototypes."
 Say-Message "Installing Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 Say-Message "Harnesses are never installed; every door uses the user's own harness binary."
 
@@ -270,7 +270,7 @@ function Test-ClaudeWorking {
   }
 }
 
-Write-Host "Skill Heaven working prototype - uninstalling everything from $ROOT"
+Write-Host "Skill Heaven - uninstalling everything from $ROOT"
 $userBinLinksFile = Join-Path $ROOT ".user-bin-links"
 if (Test-Path $userBinLinksFile) {
   try {

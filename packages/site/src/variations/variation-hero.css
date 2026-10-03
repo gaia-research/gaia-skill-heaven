@@ -1469,3 +1469,25 @@ a.vha-cta-mini:hover,
   opacity: 0;
   pointer-events: none;
 }
+
+/* Production status link (#174) — mirrors "Go to Site →" on the opposite corner. */
+.vha-live {
+  right: auto;
+  left: 8vw;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.vha-live__dot {
+  width: 7px;
+  height: 7px;
+  background: #71ccae;
+  flex: none;
+}
+@media (max-width: 640px) {
+  .vha-live {
+    left: 16px;
+    padding: 8px 11px;
+  }
+}

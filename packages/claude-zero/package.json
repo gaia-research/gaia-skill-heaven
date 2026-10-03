@@ -1,7 +1,7 @@
 {
   "name": "claude-zero",
   "version": "0.1.0",
-  "description": "claude-zero \u2014 the Claude Code door to Skill Zero: off-default ladder launcher, /skill-zero posture chooser, live /skill-hell, and standing-dose statusline. Built on skill-zero core. WORKING PROTOTYPE, actively tested for public use.",
+  "description": "claude-zero \u2014 the Claude Code door to Skill Zero: off-default ladder launcher, /skill-zero posture chooser, live /skill-hell, and standing-dose statusline. Built on skill-zero core. Live; verified from a clean install on Claude Code 2.1.288.",
   "type": "module",
   "bin": {
     "claude-zero": "./bin/claude-zero.mjs",

@@ -33,7 +33,7 @@ usage() {
 Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
        $0 --uninstall
 
-Installs the WORKING PROTOTYPE's five Skill Zero launcher doors and the Claude
+Installs the five Skill Zero launcher doors (claude-zero is the verified door; the others are launcher prototypes) and the Claude
 plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
 user's own claude binary is on PATH. The plugin bundles its own summon engine —
 no external package is installed. No harness is installed. Set SKILL_HEAVEN_HOME
@@ -76,7 +76,7 @@ uninstall_all() {
     exit 0
   fi
 
-  say "Skill Heaven working prototype — uninstalling everything from $INSTALL_HOME"
+  say "Skill Heaven — uninstalling everything from $INSTALL_HOME"
 
   if [ -f "$USER_BIN_LINKS" ]; then
     while IFS= read -r link_path || [ -n "$link_path" ]; do
@@ -136,7 +136,7 @@ case ${1:-} in
     ;;
 esac
 
-say "SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use."
+say "SKILL HEAVEN — LIVE. claude-zero is the verified door; the other launchers are prototypes."
 say "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
 say "Harnesses are never installed; every door uses the user's own harness binary."
 
@@ -223,7 +223,7 @@ claude_is_working() {
   command -v claude >/dev/null 2>&1 && claude --version >/dev/null 2>&1
 }
 
-printf '%s\n' "Skill Heaven working prototype — uninstalling everything from $ROOT"
+printf '%s\n' "Skill Heaven — uninstalling everything from $ROOT"
 if [ -f "$ROOT/.user-bin-links" ]; then
   while IFS= read -r link_path || [ -n "$link_path" ]; do
     [ -n "$link_path" ] || continue

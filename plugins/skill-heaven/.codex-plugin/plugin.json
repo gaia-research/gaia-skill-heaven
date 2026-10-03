@@ -1,7 +1,7 @@
 {
   "name": "skill-heaven",
   "version": "0.1.2",
-  "description": "Dynamic skill manager and clean-context controller for OpenAI Codex and coding agents. Eliminates context bloat and token overhead by summoning specialized SKILL.md agent capabilities ephemerally on-demand for one session without permanent installation.",
+  "description": "Skill Heaven is live. Summon one skill into a session with nothing installed, for OpenAI Codex and other coding agents: manual /summon, a clean-room floor (/skill-zero), converge and explore bands (/skill-heaven, /skill-hell) and the crown rung (/skill-ultra). Output is reference data, never standing authority; rung meaning is still provisional.",
   "author": {
     "name": "Gaia Research"
   },
@@ -12,7 +12,6 @@
     "skills",
     "context",
     "context-bloat",
-    "token-saver",
     "on-demand",
     "ephemeral-skills",
     "dynamic-skills",
