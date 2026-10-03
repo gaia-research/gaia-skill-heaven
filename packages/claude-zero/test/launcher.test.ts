@@ -433,7 +433,7 @@ describe("planLaunch — permission handling (#144)", () => {
       configDir: permConfigDir,
       statuslineBin: "/abs/statusline.mjs",
       ...(posture === "curated" ? { skillPaths: [FIXTURE] } : {}),
-      ...(posture === "product-floor" ? { doorPluginDir: "/abs/door-plugin" } : {}),
+      ...(posture === "product-floor" ? { doorPluginDir: doorDir } : {}),
       ...opts,
     });
 
@@ -551,7 +551,7 @@ describe("planLaunch — permission handling (#144)", () => {
         sessionDir: session,
         configDir: permConfigDir,
         statuslineBin: "/abs/statusline.mjs",
-        doorPluginDir: "/abs/door-plugin",
+        doorPluginDir: doorDir,
       });
       materialize(p.fsPlan, session);
       writeFileSync(p.settingsPath, `${JSON.stringify(p.settings, null, 2)}\n`);
@@ -583,10 +583,22 @@ describe("planLaunch — permission handling (#144)", () => {
     expect(settingSourcesIdx).toBeGreaterThanOrEqual(0);
     expect(p.argv[settingSourcesIdx + 1]).toBe("");
     expect(p.argv).toContain("--strict-mcp-config");
-    expect(p.argv).toContain('{"mcpServers":{}}');
+    // #143 + #144 together: ambient MCP stays suppressed by --strict-mcp-config,
+    // and the ONLY server admitted is the door's own bundled summon server,
+    // through a single session-local config file — never the user's settings.
+    expect(p.argv.filter((a) => a === "--mcp-config")).toHaveLength(1);
+    expect(p.argv[p.argv.indexOf("--mcp-config") + 1]).toBe(join(sessionDir, "door-mcp.json"));
+    expect(p.argv).not.toContain('{"mcpServers":{}}');
+    const doorWrite = p.fsPlan.find((op) => op.kind === "write" && op.path === join(sessionDir, "door-mcp.json"));
+    const doorServers = JSON.parse((doorWrite as { contents: string }).contents).mcpServers;
+    expect(Object.keys(doorServers)).toEqual(["skill-summon"]);
+    // The inherited mode rides the session settings file, never the MCP config.
+    expect(p.settings).toMatchObject({ permissions: { defaultMode: "acceptEdits" } });
+    expect(JSON.stringify(doorServers)).not.toMatch(/permission|acceptEdits/i);
     expect(p.argv).toContain("--plugin-dir");
     expect(p.env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS).toBe("1");
-    expect(p.fsPlan).toEqual([]);
+    // The only filesystem write is the session-local door MCP declaration.
+    expect(p.fsPlan.map((op) => (op.kind === "write" ? op.path : op.to))).toEqual([join(sessionDir, "door-mcp.json")]);
     // Skill selection is unaffected by the permission choice: still zero.
     expect(p.manifest.skillCount).toBe(0);
     expect(p.manifest.standingTokens).toBe(0);
@@ -602,7 +614,7 @@ describe("planLaunch — permission handling (#144)", () => {
         sessionDir,
         home: homeCfg,
         statuslineBin: "/abs/s.mjs",
-        doorPluginDir: "/abs/door-plugin",
+        doorPluginDir: doorDir,
       });
       expect(fromHome.settings).toMatchObject({ permissions: { defaultMode: "plan" } });
       // An explicit config root wins over the home default.
@@ -613,7 +625,7 @@ describe("planLaunch — permission handling (#144)", () => {
         home: homeCfg,
         configDir: permConfigDir,
         statuslineBin: "/abs/s.mjs",
-        doorPluginDir: "/abs/door-plugin",
+        doorPluginDir: doorDir,
       });
       expect(fromRoot.settings).toMatchObject({ permissions: { defaultMode: "manual" } });
     } finally {
