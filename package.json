@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "gaia-skill-heaven monorepo — the Skill Zero launcher engine (packages/core, npm skill-zero) + per-harness doors (claude-zero, pi-zero, …), all under the Skill Heaven umbrella runtime brand. Doubles as the Claude Code plugin marketplace (.claude-plugin/marketplace.json).",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "workspaces": [
     "packages/*"
