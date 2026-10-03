@@ -12,6 +12,14 @@ npx tsx packages/core/bench/run.ts --calibrate  # + sweep the absolute floor
 npx tsx packages/core/bench/run.ts --system bm25f
 ```
 
+## Historical vs current measurements
+
+`results/*` (top level) is the 2026-09-04 measurement against
+`gaia.skill-index/v1` (326 docs) and is preserved unedited as historical
+evidence. `results/runs/2026-10-03/` is a measurement of the index the runtime
+ships today: `gaia.skill-index/v2` (354 docs), as recorded in its new ledger.
+The two measurements must not be compared as if the corpus were the same.
+
 Offline by contract. `run.ts` replaces `globalThis.fetch` with a throw before
 it does anything else, so **G3 ("summon works with the network down") is
 asserted by the harness rather than promised in a README.** A ranker that
@@ -26,6 +34,8 @@ The HH Index is a separate behavioral-evidence artifact; the internal
 | Path | What it is |
 |---|---|
 | `gold.jsonl` | 100 capability-gap queries, each labelled with one correct skill id |
+| `adjudication/adjudication.v1.jsonl` | Human adjudication of a subset of `gold.jsonl` / `unanswerable.jsonl`, keyed by case id. **Read-only, never feeds retrieval** |
+| `adjudication/provenance.json` | The overlay's pins, verdict vocabulary, counts and claim limits |
 | `unanswerable.jsonl` | 20 plausible gaps nothing in the corpus covers — these calibrate `FLOOR` and gate G2 |
 | `corpus/named-projection.json` | The committed corpus snapshot everything reads. A controlled refresh uses `scripts/snapshot-corpus.ts --source-file ... --source-revision ...`; the default URL path is the only networked step |
 | `run.ts` | The runner: MRR, recall@5, refusal rates, paired bootstrap, floor sweep |
@@ -75,10 +85,23 @@ it, and one thing was not:
 - **Genuinely indistinguishable targets are flagged, not fudged.** Six entries
   carry `"ambiguous": true` with the sibling skill they collide with. The
   runner reports MRR with and without them.
-- **Not done: independent human review of all 100 labels.** Until that happens,
-  treat the absolute MRR as approximate and the *delta between systems* — which
-  is what G1 actually gates on, and which is measured on identical queries — as
-  the load-bearing number.
+- **Partially human-reviewed — see [`adjudication/`](adjudication/README.md).**
+  A human has adjudicated **55 of 120** cases (44 gold, 11 unanswerable). That
+  judgment lives in a separately versioned overlay keyed by case id and bound
+  to the exact gold/unanswerable blobs it was made against. The historical set
+  above is unchanged and stays unchanged.
+
+  Four states: `reviewed` (30 gold) · `corrected` (6 gold) · `uncertain`
+  (8 gold) · `unreviewed` (56 gold). **Only the 30 human-confirmed cases
+  support an absolute label-derived claim**, and the runner prints that number
+  next to every adjudicated score. `uncertain` and `unreviewed` are counted and
+  never scored — a human who said "unsure" is not coerced into a correct skill,
+  a wrong skill, or a miss.
+
+  The 100-case set remains valid for **paired same-input deltas between
+  systems**, which is what G1 gates on, with the machine-label provenance
+  disclosed alongside the number. It is not ground truth, and this file no
+  longer implies that it might become ground truth.
 
 ## Levels covered
 
