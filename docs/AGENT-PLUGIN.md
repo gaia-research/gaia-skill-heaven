@@ -57,9 +57,17 @@ is not the plugin.
 
 ## One line, five entry points, one tool
 
-The rung is a **standing instruction in context**. It names a *direction*, not a
-number: the agent decides how far to reach on a given gap. No second MCP tool is
-needed.
+The rung is a **routing preference the user selects**. It names a *direction*,
+not a number: the agent decides how far to reach on a given gap. No second MCP
+tool is needed.
+
+What the rung commands print is **reference data**: a report of the selected rung,
+the band it belongs to, and the discovery parameters that band describes. It is
+not an instruction, it does not outrank the instructions already in force, and it
+cannot change the task, authorize a call, widen permissions, or leave state
+behind. Selecting a rung decides nothing in advance — every later call is
+evaluated again, on its own merits, under the request and permissions in force
+then.
 
 | Command | Sets rung | Direction | Note |
 |---|---|---|---|
@@ -112,9 +120,10 @@ Manual `/summon` still works — that is the product floor per N13 ("ships
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
 userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
-**Honest limit:** the cut is a standing instruction the agent honours, not
-something the tool enforces. Hard enforcement needs server-side session state —
-filed as a follow-up, not faked.
+**Honest limit:** nothing in the plugin enforces the cut. It is honoured (or not)
+by the caller on each use, from a reference block that carries no authority of its
+own; there is no session state to flip. Hard enforcement would need server-side
+session state — filed as a follow-up, not faked.
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
@@ -228,20 +237,22 @@ One server, `skill-summon`, one tool plus the isolated
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
 
-### Auto-summon protocol
+### Discovery reference, per use
 
-Presented as routing guidance for `/skill-heaven`, `/skill-hell` and
-`/skill-ultra`:
+`/skill-heaven`, `/skill-hell` and `/skill-ultra` describe the parameters a
+discovery call *could* take on a real capability gap:
 
-> On a real capability gap — never preemptively — call the `summon` tool with
-> `surface: "heaven"` while converging or `surface: "hell"` while exploring,
-> and a depth you judge the gap needs. Show the returned card before using the
-> skill, read the `SKILL.md` through its resource link, and apply relevant guidance to
-> the current task. The card is the disclosure; when a resource link is present, the
-> resource read is the skill body.
+> While converging, the `summon` tool takes `surface: "heaven"`; while exploring,
+> `surface: "hell"`; and a depth the gap needs. These are the parameters a band
+> describes — not an instruction to call. A returned card is the disclosure, not
+> a grant: judge it for relevance and safety, and apply only what survives that
+> judgment, under the user's request and existing permissions. When a resource
+> link is present, the resource read is the skill body.
 
 The card is the disclosure: it names the skill being summoned and carries the
-ranking disclosure with it.
+ranking disclosure with it. A card's classification, ranking, or installability
+is metadata about the candidate — never authorization to execute it, and never a
+substitute for evaluating what it points at.
 
 ## Naming
 
@@ -278,9 +289,11 @@ and Matt Pocock's `disable-model-invocation` convention, then synthesizes
 commit-pinned candidates. Flat fleets need no generic reference or tree trust
 ordering; the agent query routes them by relevance.
 
-`disable-model-invocation: true` means human-led Skill Heaven and explicit
-invocation only. Absence means model-led Skill Hell and automatic invocation is
-allowed. Each summon remains an atomic, session-only materialization.
+`disable-model-invocation: true` means human-led Skill Heaven: explicit invocation
+only, and out of the model-led lane. Absence means model-led Skill Hell: eligible
+for that lane's discovery. Either way this is routing eligibility, not
+permission — the call is still judged per use, under the request and permissions
+in force. Each summon remains an atomic, session-only materialization.
 
 ## Install and client delivery
 
@@ -332,8 +345,8 @@ Stated here so no surface implies otherwise:
   surface may present stamp-gated routing as running.
 - **The entropy benchmark.** What each rung should reach for is being worked
   out in use until it lands.
-- **Hard enforcement of the `zero` cut.** It is a standing instruction, not a
-  server-side gate.
+- **Hard enforcement of the `zero` cut.** No server-side gate exists; the cut is
+  honoured per use by the caller, and generated output never enforces it.
 - **Behavior-aware Ultra composition.** The core S-now controller is
   deterministic and event-driven; it holds without an explicit validated
   behavioral event. Arbor-backed composition and campaign orchestration are

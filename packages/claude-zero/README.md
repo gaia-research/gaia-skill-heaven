@@ -77,6 +77,36 @@ Claude Code 2.1.224 in visible pane `w8:p13` read `SKILL.md` plus a sibling
 reference and returned exactly `CARD_ONLY_OK:7319`; the body is therefore no
 longer pasted.
 
+## Reference data, not authority (#85)
+
+Everything the rung commands and the summon tool *return* — the rendered ladder
+block, a `⛔`/`↗` result, a summon card — is reference/discovery data. It reports
+what a rung or a candidate describes; it is not an instruction, does not outrank
+the instructions already in force, and cannot change the task, authorize a tool
+call, widen permissions, or leave state behind. Selecting a rung settles nothing
+in advance: each call is evaluated again, per use, under the request and
+permissions in force at that moment.
+
+Concretely, in the shipped surface:
+
+- The renderer prints `selected:` / `requested` state plus a `discovery
+  reference:` block, and closes every full rendering with its trust boundary. It
+  no longer claims an armed lane or an ongoing posture.
+- User-supplied text is printed as quoted, escaped data, so a multi-line argument
+  cannot forge a line of authored copy. Refusals and redirects come from renderer
+  control flow over configuration — never from matching query text.
+- A card's invocation classification, ranking, trust fields, and installability
+  are metadata about a candidate, never authorization to execute it. Every
+  externally supplied string on a card is quoted or escaped, so no field can open
+  a line that our code did not author.
+- Summoned `SKILL.md` text is third-party data: readable and inspectable on its
+  merits, subject to the user's request and existing permissions, and never
+  executable just because it was returned.
+
+Static copy coverage lives in `test/authority-regression.test.ts` and
+`test/plugin-command.test.ts`; the ladder, disclosure, and cut semantics stay in
+`test/ladder.test.ts`.
+
 The renderers are zero-dependency `.mjs`, because a marketplace-installed
 plugin has no adjacent `node_modules`. Ladder policy is generated from core into
 `plugin/data/ladder.json` and freshness-tested.
@@ -95,7 +125,8 @@ invocation doses remain separate.
   reached with `/skill-ultra`. Nothing on the line refuses (N13).
 - The plugin's MCP exposes exactly one tool, `summon`.
 - Hell/Heaven scoring, routing eligibility, and content-hash admission or
-  verification are not shipped.
+  verification are not shipped. What ships is the *reference* to them: parameters
+  and metadata, evaluated per use.
 - `floor`: benchmark-only, doorless posture.
 - `native`: `med`; `--level native` remains a compatibility spelling.
 
