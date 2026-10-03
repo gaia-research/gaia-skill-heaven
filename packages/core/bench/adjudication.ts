@@ -200,8 +200,8 @@ export type AdjudicatedScores = {
    */
   reviewed: { n: number; mrr: number; recallAt5: number };
   /**
-   * Every human-confirmed label, plus every replacement a human actually named
-   * that resolves to a real skill id in the committed corpus. A named
+   * One entry per case; a case whose human-acceptable answers include a
+   * resolvable alternative scores its best-ranked acceptable answer. A named
    * alternative that is free prose ("pbakaus/impeccable or taste-skill") can
    * never match a ranked id, so it is counted in
    * `namedAlternativeUnresolvable` and kept out of the denominator rather than
@@ -309,16 +309,17 @@ export function scoreAdjudicated(
     const rr = score(ranked, gold[position].skillId);
     reviewedRR.push(rr);
     reviewedHits.push({ ranked: [...ranked], correctId: gold[position].skillId });
-    // `resolved` is `reviewed` PLUS the named replacements, so a confirmed label
-    // still scores here. A human who confirmed a label and also named an
-    // alternative did not retract the confirmation.
-    resolvedRR.push(rr);
-    resolvedHits.push({ ranked: [...ranked], correctId: gold[position].skillId });
+    let resolvedRank = rr;
+    let resolvedId = gold[position].skillId;
     if (resolvable) {
-      const rr2 = score(ranked, row.betterSkillId as string);
-      resolvedRR.push(rr2);
-      resolvedHits.push({ ranked: [...ranked], correctId: row.betterSkillId as string });
+      const alternativeRank = score(ranked, row.betterSkillId as string);
+      if (alternativeRank > resolvedRank) {
+        resolvedRank = alternativeRank;
+        resolvedId = row.betterSkillId as string;
+      }
     }
+    resolvedRR.push(resolvedRank);
+    resolvedHits.push({ ranked: [...ranked], correctId: resolvedId });
   }
 
   for (let position = 0; position < overlay.unanswerableCount; position += 1) {

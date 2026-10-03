@@ -112,7 +112,7 @@ function expectedResolvedN(overlay: AdjudicationOverlay): number {
     .filter((row) => row.kind === "gold")
     .reduce((total, row) => {
       const resolvable = row.betterSkillId !== null && CORPUS_IDS.has(row.betterSkillId);
-      if (row.state === "reviewed") return total + (resolvable ? 2 : 1);
+      if (row.state === "reviewed") return total + 1;
       if (row.state === "corrected" && resolvable) return total + 1;
       return total;
     }, 0);
@@ -284,6 +284,19 @@ describe("R3 adjudication overlay", () => {
     expect(scores.resolved.mrr).toBeGreaterThan(scores.reviewed.mrr);
   });
 
+  it("uses one resolved denominator slot for a reviewed case with a resolvable alternative", () => {
+    const overlay = overlayWith((rows) => rows.map((row) =>
+      row.caseId === "gold-024" ? row : { ...row, state: "uncertain" },
+    ));
+    const scores = scoreAdjudicated(
+      overlay,
+      gold,
+      rankings({ "gold-024": "pbakaus/impeccable" }),
+      CORPUS_IDS,
+    );
+    expect(scores.resolved.n).toBe(1);
+  });
+
   it("carries a human-confirmed label into `resolved` even when no alternative was named", () => {
     const overlay = overlayWith((rows) =>
       rows.map((row) =>
@@ -299,13 +312,11 @@ describe("R3 adjudication overlay", () => {
       ]))),
       CORPUS_IDS,
     );
-    // Every confirmed label ranks #1, so confirmed MRR is 1. `resolved` is
-    // confirmed PLUS the six named alternatives; four of those alternatives
-    // are not in the index and score 0, which is why resolved MRR drops below
-    // confirmed MRR rather than rising.
+    // Every confirmed label ranks #1. Resolved uses one best-answer slot per
+    // case, so prose alternatives do not add zero-weighted denominator entries.
     expect(scores.reviewed.mrr).toBe(1);
     expect(scores.resolved.n).toBe(expectedResolvedN(overlay));
-    expect(scores.resolved.mrr).toBeLessThan(scores.reviewed.mrr);
+    expect(scores.resolved.mrr).toBe(1);
   });
 
   it("never lets the overlay change a historical number", () => {
