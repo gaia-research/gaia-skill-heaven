@@ -181,14 +181,15 @@ describe("committed Arbor publication cache", () => {
     expect(() => assertArborEdgeIndex(edges)).not.toThrow();
   });
 
-  it("records the CURRENT real state of the canonical publication: empty", () => {
+  it("records the CURRENT real state of the canonical publication: one governed subject, no edges", () => {
     // This is a statement of fact about upstream at the pinned revision, not a
-    // fixture convenience. If it ever fails, upstream published something and
-    // this consumer's disclosures should be re-read against real records
-    // instead of only synthetic ones.
+    // fixture convenience. Until 2026-10-03 the projection was empty; the first
+    // governed record (gaia-skill-tree #2036) published one single-skill
+    // subject. If this fails again, upstream published something else and this
+    // consumer's disclosures should be re-read against the real records.
     const runtimeIndex = JSON.parse(readFileSync(join(cacheRoot, "runtime", "index.json"), "utf8"));
     const edges = JSON.parse(readFileSync(join(cacheRoot, "edges.json"), "utf8"));
-    expect(runtimeIndex.subjects).toEqual([]);
+    expect(runtimeIndex.subjects.map((s: { id: string }) => s.id)).toEqual(["obra/receiving-code-review"]);
     expect(edges.edges).toEqual([]);
     expect(edges.coverage).toEqual({ pairsEvaluated: 0, absenceMeaning: "not-evaluated" });
   });
