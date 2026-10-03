@@ -1,6 +1,6 @@
 # claude-zero
 
-> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+> **LIVE — verified from a clean install on Claude Code 2.1.288** ([`docs/RELEASE-ACCEPTANCE.md`](../../docs/RELEASE-ACCEPTANCE.md)). What each rung means in behaviour is still provisional.
 
 The Claude Code door to Skill Zero under the Skill Heaven umbrella. `/skill-hell`
 (and the other four in-session commands) are supplied by the `skill-heaven`
@@ -140,7 +140,7 @@ Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-zero`
 command and explicitly says it changed nothing.
 
-## `/skill-hell`: usable additive prototype
+## `/skill-hell`: the explore band
 
 The plugin moved out of this package: it is `plugins/skill-heaven` at the repo
 root now, and it ships all five surfaces (`/summon`, `/skill-zero`,

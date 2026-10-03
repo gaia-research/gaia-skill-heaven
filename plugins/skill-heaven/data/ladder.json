@@ -1,7 +1,7 @@
 {
   "schema": "skill-heaven/ladder@2",
   "source": "skill-zero RUNG_BANDS + BAND_INFO + POSTURES, claude-zero LAUNCHABLE_POSTURES",
-  "wip": "WIP · PROVISIONAL — what each rung means is being worked out against the benchmark.",
+  "wip": "WIP · PROVISIONAL — what each rung means in behaviour, and where each band opens, is not settled; the evidence is still being gathered.",
   "rungs": [
     {
       "id": "zero",

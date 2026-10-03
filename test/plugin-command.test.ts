@@ -256,12 +256,26 @@ describe("door manifests", () => {
   );
   const entry = marketplace.plugins.find((p: { name: string }) => p.name === "skill-heaven");
 
-  it("labels both public manifests as an actively tested working prototype", () => {
+  it("labels both public manifests as live, with the research still provisional (#174)", () => {
     for (const description of [pluginJson.description, entry.description]) {
-      expect(description).toMatch(/working prototype/i);
-      expect(description).toMatch(/actively tested for public use/i);
+      expect(description).toMatch(/\blive\b/i);
+      expect(description).not.toMatch(/working prototype/i);
       expect(description).not.toMatch(/no commands wired yet/i);
       expect(description).toContain("/skill-zero");
+      // Status of the TOOL is live; the research claim stays honest.
+      expect(description).toMatch(/provisional/i);
+    }
+  });
+
+  it("makes no claim the product has not measured or does not perform (#174)", () => {
+    // These were marketing claims with no receipt behind them: a prompt-cache effect, "eliminates"
+    // bloat, "autonomous" routing. The measured figure is historical and lives on the site, with its scope.
+    for (const description of [pluginJson.description, entry.description]) {
+      expect(description).not.toMatch(/prompt[- ]cache|eliminat|autonomous|token waste|token overhead/i);
+      expect(description).toMatch(/reference data/i);
+    }
+    for (const keyword of pluginJson.keywords ?? []) {
+      expect(keyword).not.toMatch(/token-saver|prompt-cache/);
     }
   });
 

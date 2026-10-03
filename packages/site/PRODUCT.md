@@ -60,10 +60,9 @@ live in a disposable session dir. Doses are always reported as two numbers
 (standing, paid every session; invocation, paid on invoke), never averaged.
 
 The thesis is the **entropy curve** — how quality and cost move together as
-skill entropy rises — not a single token-savings headline. **The benchmark that
-would plot it is not built**, so the curve is a concept the instrument is being
-built to test, never a result. Real measured figures are cited as evidence,
-never as the claim.
+skill entropy rises — not a single token-savings headline. **No curve has been
+plotted**, so it is a concept the instrument is being built to test, never a
+result. Real measured figures are cited as evidence, never as the claim.
 
 ## Operating Context
 
@@ -136,9 +135,13 @@ The public site is served from `packages/site`.
   (owner ruling, 2026-08-19). `RUNG_SLOTS` no longer exists in `packages/core`.
   How far a rung reaches on a given gap is the agent's call, worked out in use
   while the benchmark is built. No surface may render a per-rung number.
-- **Where each band opens is PROVISIONAL (WIP).** `/skill-heaven` opens at
-  `low`; `/skill-hell` opens at `high`. Those are working defaults, not
-  findings; every surface that renders the line carries the WIP mark.
+- **Two statuses, never conflated.** The *tool* is **LIVE** (production; a fresh
+  install was verified end to end — see `/live`). The *research* is
+  **PROVISIONAL** where the evidence says so: what a rung means in behaviour,
+  and where each band opens (`/skill-heaven` at `low`, `/skill-hell` at `high`),
+  are working defaults, not findings, and every surface that renders the line
+  says so. Do not delete a PROVISIONAL marker because the tool shipped; do not
+  add a WIP marker because the research is open.
 - **Nothing on the line refuses.** Hell is not gated, locked, or sealed at any
   rung, and neither is Ultra. N13 ratified all four surfaces — what is
   outstanding is implementation, not permission.
@@ -149,8 +152,18 @@ The public site is served from `packages/site`.
 - **Heaven/Hell stamps are not built.** Routing eligibility today falls back
   to relevance ranking; Skill Heaven will consume the stamps when they land. Do
   not present stamp-gated routing as running.
-- **The entropy benchmark is not built.** No curve has been plotted, no turn
-  located, and no rung shown to beat any other. Do not present it as a result.
+- **The entropy curve is not plotted.** What exists is a frozen, machine-authored
+  historical benchmark (valid for paired same-input deltas, not human ground
+  truth) and a human-adjudication overlay (30 reviewed · 6 corrected · 8
+  uncertain · 56 unreviewed; uncertain and unreviewed never score). No curve has
+  been plotted, no turn located, and no rung shown to beat any other. Do not
+  present it as a result.
+- **Composition is relevance-only.** SPEC INV-10 stands, unmet. The band judgment
+  is reported, not applied; the one governed Arbor record is **inconclusive**
+  (not positive evidence, not an endorsement). Never market behaviour-aware
+  composition as delivered, and never write "auto-summons" or "autonomous" as if a
+  command grants standing authority: commands, cards and MCP text are reference
+  data, and every call is judged per use under the user's request and permissions.
 - **One tool, one story.** The mechanic a reader needs is `/summon`. The wider
   `gaia_search` / `gaia_inspect` / `gaia_status` tool surface stays documented
   in `gaia-research` as WIP — it is not part of what this site presents.
@@ -161,10 +174,11 @@ The public site is served from `packages/site`.
   directory through their own registration flow. The standalone
   `pi-zero`, `codex-zero`, `hermes-zero`, `grok-zero`, and `agy-zero` launchers remain
   prototypes, not a claim that those five examples define the support boundary.
-- **WORK IN PROGRESS · v0.** The plugin installs from this repository's own
-  portable package or Claude marketplace; the standalone launcher doors are
-  source-delivered through `install.sh`. Neither route is on npm. The site
-  carries a standing WIP disclosure in the chrome and footer.
+- **LIVE.** The plugin installs from this repository's own portable package or
+  Claude marketplace; the standalone launcher doors are source-delivered through
+  `install.sh`. Neither route is on npm. The chrome and footer carry a `LIVE`
+  status that links to `/live`, which holds the receipt. The standalone
+  non-Claude launchers stay labelled prototypes.
 
 ## Brand Commitments
 
@@ -197,7 +211,13 @@ The public site is served from `packages/site`.
 
 - Real posture token figures (benchmark floor 19,661 tok; product floor
   20,176 tok; native 28,379 tok; −28.9% vs native; +515 tok door cost) are
-  measured benchmark results, not marketing estimates.
+  measured benchmark results, not marketing estimates — **historical**: Claude
+  Code 2.1.216, 2026-07-24, before the bundled summon MCP was admitted to the
+  product floor (#143). The shipped floor adds that one server and is not
+  re-priced.
+- The clean-install receipt (`docs/RELEASE-ACCEPTANCE.md`, reproduced by
+  `scripts/release-acceptance.mjs`): GitHub `main`, Claude Code 2.1.288, plugin
+  0.1.2. Cite it with its commit; it is a claim about the tool, not the research.
 - Real, working install and launch commands (see Operating Context). Verified
   2026-08-19: the plugin install path is the one settled in
   `docs/AGENT-PLUGIN.md`, and
@@ -216,13 +236,15 @@ The public site is served from `packages/site`.
 ## Product Principles
 
 1. **One mechanic.** Summon is the whole product; the surfaces only set how much
-   of it is automatic.
+   of the choosing is left to the agent, call by call.
 2. **Honest dosing.** Two numbers, always; a negative result is a first-class
    finding, never papered over.
 3. **Never mutate shared state.** The launcher composes and execs; the only
    writes are disposable.
 4. **Provisional numbers say so.** Any figure that has not cleared the benchmark
-   is marked WIP on the surface that shows it.
+   is marked PROVISIONAL on the surface that shows it — and a measurement that has
+   gone stale (the standing dose, taken before the summon MCP was admitted) says
+   so beside the number.
 5. **The doors are the product; the engine is the research instrument.**
 6. **Discrete rungs, never a fader — and never a count.** A rung is a direction
    and a position on skill entropy.

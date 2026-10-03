@@ -72,15 +72,14 @@ export function HeroInfo({
                 stress-testing a build. You stay in the loop.
               </p>
               <p className="vha-info-body" style={{ color: dim, marginTop: 6 }}>
-                <strong style={{ color: fg }}>High · explore.</strong> Hands the agent
-                the wheel — gstack pits rival roles against each other, a CSO hunting
-                security holes. Not lower quality: more autonomous, more surprising,
-                seen only once it ships.
+                <strong style={{ color: fg }}>High · explore.</strong> Reaches wider —
+                gstack pitting rival roles against each other, a CSO hunting security
+                holes. Not lower quality: more varied, more surprising, seen only
+                once it ships. Each call is still judged per use.
               </p>
               <EntropyCurve fg={fg} dim={dim} accent={accent} />
               <p className="vha-info-body" style={{ color: dim, opacity: 0.8 }}>
-                Sketch, not a result — the benchmark that would plot this curve is
-                not built yet.
+                Sketch, not a result — no curve has been plotted yet.
               </p>
               <a
                 className="vha-info-link"
@@ -99,11 +98,11 @@ export function HeroInfo({
               </p>
               <p className="vha-info-body" style={{ color: dim }}>
                 Summon a skill for one session — nothing installed, gone when you
-                leave. The ladder sets the agent&apos;s temperament:{' '}
+                leave. The ladder reads how wide the agent reaches for skills:{' '}
                 <strong style={{ color: fg }}>converge</strong> to shape a plan you
-                steer, or <strong style={{ color: fg }}>explore</strong> to hand it
-                autonomy and trust the surprise. One summon — you choose how much
-                control.
+                steer, or <strong style={{ color: fg }}>explore</strong> to let it
+                reach wider — every call judged per use, under your request and
+                permissions. One summon — you stay in control.
               </p>
             </>
           )}
@@ -162,12 +161,12 @@ export function HeroSummon({
               The Gaia Skill Tree
             </p>
             <p className="vha-info-body" style={{ color: dim }}>
-              Every summon is drawn from the Gaia Skill Tree — an evidence-backed
-              registry where a skill is <strong style={{ color: fg }}>proven to work</strong>,
-              then named to the human who authored it. Only skills that earn their
-              place get in: curated, ranked, attributed. Off-canon? Summon straight
-              from any GitHub repo — our MCP loads it for this session only, nothing
-              installed, gone when you leave.
+              Every summon is drawn from the Gaia Skill Tree — a curated registry where
+              each skill is <strong style={{ color: fg }}>attributed to the human who authored it</strong>{' '}
+              and carries whatever trust the Tree has published for it. Behavioural
+              evidence is still sparse, and the runtime says so rather than inventing
+              it. Off-canon? Summon straight from any GitHub repo — our MCP loads it
+              for this session only, nothing installed, gone when you leave.
             </p>
             <a
               className="vha-info-link"

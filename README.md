@@ -6,13 +6,17 @@
 
 Summon exactly the skills a task needs — one session, nothing installed. Or start the harness clean and add nothing at all.
 
-### Why AI Agents & Developers Choose Skill Heaven
+> **Status: live.** Skill Heaven is a production tool: it installs from `main`, and a fresh install was verified end to end on Claude Code 2.1.288 — see the [production update](https://gaia-research.github.io/gaia-skill-heaven/#/live) and [`docs/RELEASE-ACCEPTANCE.md`](docs/RELEASE-ACCEPTANCE.md). What each rung means *in behaviour* is still provisional (SPEC INV-10 stands, unmet; composition is relevance-only).
 
-- **Eliminate Context Bloat:** Cut ambient tools and prompt clutter so coding agents start lean and stay within context budgets.
-- **Preserve Prompt Cache & Save Tokens:** Prevent unnecessary tool schemas from busting prompt caches and causing cold-cache wakeup latency.
-- **Ephemeral On-Demand Skills:** Summon specialized `SKILL.md` expert capabilities into context for a single session—zero permanent global installs.
-- **Multi-Harness Compatibility:** One standardized Agent Plugin for Claude Code, OpenAI Codex, Pi, Hermes, Grok, and Antigravity.
-- **Tunable Skill Entropy:** Seamlessly shift between minimal clean floor (`/skill-zero`), targeted gap convergence (`/skill-heaven`), wide exploratory discovery (`/skill-hell`), and autonomous adaptive routing (`/skill-ultra`).
+### What you get
+
+- **A clean start.** `claude-zero` launches Claude Code with its skill catalogue cut to the nearest achievable zero and a strict MCP allowlist that admits exactly one server — the bundled `skill-summon`. Ambient MCP servers, project skills, project hooks and your own enabled plugins stay out. (Historical standing-dose measurement: −28.9% vs native on Claude Code 2.1.216, taken *before* the summon MCP was admitted; the shipped floor adds that one server and is not re-priced.)
+- **Ephemeral, on-demand skills.** `/summon` brings one `SKILL.md` into a single session. Nothing is installed.
+- **Honest retrieval.** Ranking is local and deterministic over an index that ships in the plugin; a query with no fit is an explicit refusal, not a forced match.
+- **Reference data, not authority.** Commands, cards and MCP text say what they are and cannot change the task, authorize a tool call or widen permissions.
+- **Your permission choices survive the clean room.** An explicit flag wins; a configured default mode is the one setting carried through.
+- **One portable Agent Plugin.** Verified from scratch on Claude Code 2.1.288; Codex, Pi, Hermes, Grok and Antigravity were probed at their pinned versions earlier (table below).
+- **One line, not a count.** `zero · low · med · high · xhigh · max · ultra` measures *skill entropy* — a rung names a direction, never a number of skills.
 
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
@@ -60,7 +64,7 @@ The clients pinned in the compatibility probe use these registration commands:
 | Hermes 0.20.0 | `hermes plugins install "file://$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --enable` |
 | Pi 0.84.2 | `pi install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --approve` |
 
-**Claude Code marketplace compatibility still works** on 2.1.237. Use the public marketplace directly — no local install is required:
+**The Claude Code marketplace install is verified** on 2.1.288 (fresh install, this release). Use the public marketplace directly — no local install is required:
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
@@ -156,7 +160,7 @@ One mechanic — **`/summon`**, one skill into context, one session, nothing ins
 
 **Heaven is human-led. Hell is model-led.** That is the distinction the whole product turns on. Heaven narrows onto the gap; Hell widens around it, putting more experts in context than you would have picked.
 
-> **Status.** The launchers and all five in-session commands ship and work today as actively tested prototypes. GitHub fleets now route invocation safety from `SKILL.md` metadata and route candidates by relevance. Benchmark-derived trust routing is still not built.
+> **Status.** The Claude Code door (`claude-zero`) and all five in-session commands are live and verified from a clean install; the other launchers are prototypes with narrower evidence. GitHub fleets route invocation safety from `SKILL.md` metadata and route candidates by relevance. Heaven/Hell stamps are not built, so routing is relevance-only; nothing here is stamp-gated.
 
 The S-now Ultra controller is deterministic and event-driven: host-runtime behavioral events drive explore/recover, while explicit operator controls manage lifecycle and reopening; absent or malformed events hold. [Controller contract and replay path →](docs/STEERING.md)
 
@@ -230,7 +234,7 @@ prove or stamp a claim or trigger a benchmark. [Telemetry contract and flags →
 
 | Harness | Launcher | In-session commands |
 |---|---|---|
-| Claude Code | ✅ `claude-zero` | ✅ marketplace compatibility (2.1.237) |
+| Claude Code | ✅ `claude-zero` (verified, 2.1.288) | ✅ marketplace install (verified from scratch, 2.1.288) |
 | Codex | ✅ `codex-zero` | ✅ plugin compatibility (0.146.0) |
 | Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
 | Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |

@@ -8,6 +8,7 @@ one visual system:
 | `/` | **The hero** — Hero A, the animated poster | poster; one screen, operable |
 | `/landing` | **The document** | scannable; numbered sections, ledger density |
 | `/instrument` | **The instrument** — the sampler | secondary; operate the line |
+| `/live` | **The production update** — what shipped, the clean-install receipt, what stays provisional | ledger; one column of proof per claim |
 
 The old `/hero-a` and `/hero-b` review routes are gone (`main.tsx` routes
 anything unknown back to `/`), but `styles/tokens.css` is still imported at the
@@ -234,8 +235,9 @@ Canon that is not negotiable:
 - **`slots`, `RUNG_SLOTS`, "budget", "cap", "how many skills", "per-gap budget"
   are banned vocabulary**, along with `slider`. The control is a ladder with
   discrete rungs, and a rung names a **direction** and a **position along its
-  band** — never a number. Where each band opens (`low`, `high`) is provisional
-  and every surface that renders the line carries the WIP mark.
+  band** — never a number. What a rung means in behaviour, and where each band
+  opens (`low`, `high`), is provisional: every surface that renders the line says
+  so. That is a **research** status, not a product status — see the next rule.
 - **Hell and Ultra are not gated, locked, sealed, or refused.** Nothing on the
   line refuses. Do not write copy that denies a sealing that was never on the
   table — the denial implies the thing.
@@ -252,7 +254,19 @@ Canon that is not negotiable:
   `28,379` · `−28.9%` · `+515 tok` are the real measured figures. The entropy
   curve and the Heaven/Hell stamps are **not built** — never rendered as
   results.
-- A standing `WIP · v0` disclosure sits in the chrome and the footer.
+- **Two statuses, never conflated.** Skill Heaven the *tool* is **LIVE** (a mint
+  `LIVE` chip in the chrome and footer, linking to `/live`). The *research* is
+  **PROVISIONAL** where the evidence says so (an amber `PROVISIONAL` chip on rung
+  meaning, band openings and anything gated on behavioural evidence). Do not
+  delete a PROVISIONAL marker because the tool shipped, and do not put a WIP
+  marker on something because the research is open. The ladder cards are LIVE;
+  the ladder's *meaning* is PROVISIONAL.
+- **The standing-dose bars are historical** and say so beside the numbers: they were
+  measured before the bundled summon MCP was admitted to the product floor, which
+  the shipped floor now includes and the figures do not price.
+- **The terminal on `/landing` is an illustration**, labelled as one. It must not
+  show a summon performing something the product does not do (no "autonomous",
+  no standing "auto-summon", no pull request the tool opens).
 
 ## Token collision — read before adding a surface
 

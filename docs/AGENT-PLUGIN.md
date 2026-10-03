@@ -320,7 +320,7 @@ over one installed artifact, not five repackaged plugins. Clients may cache a
 copy, so updating or deleting the local artifact does not update or unregister
 client-managed copies.
 
-Claude Code 2.1.237 still accepts the public marketplace flow:
+Claude Code 2.1.288 accepts the public marketplace flow (verified from a fresh install, [`docs/RELEASE-ACCEPTANCE.md`](RELEASE-ACCEPTANCE.md)):
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven

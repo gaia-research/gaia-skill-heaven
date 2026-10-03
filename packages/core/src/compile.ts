@@ -158,7 +158,7 @@ export const BAND_INFO: Record<Band, BandInfo> = {
 
 /** The mark every rendering of the line must carry. */
 export const LADDER_WIP =
-  "WIP \u00b7 PROVISIONAL \u2014 what each rung means is being worked out against the benchmark.";
+  "WIP \u00b7 PROVISIONAL \u2014 what each rung means in behaviour, and where each band opens, is not settled; the evidence is still being gathered.";
 
 /** Rungs that are armed live, in-session, and have no boot-posture mapping.
  * They do not refuse: `ultra` is ratified (N13). They are simply a different

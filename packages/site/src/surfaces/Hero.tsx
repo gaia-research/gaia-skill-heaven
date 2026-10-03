@@ -289,7 +289,7 @@ export default function Hero() {
           <div className="hx__gauge">
             <div className="hx__gauge-head">
               <span className="hx__gauge-title">Skill entropy</span>
-              <span className="sh-chip sh-chip--wip">WIP</span>
+              <span className="sh-chip sh-chip--wip">RUNG MEANING · PROVISIONAL</span>
             </div>
             <p className="hx__measure">{LADDER_MEASURE}</p>
 
