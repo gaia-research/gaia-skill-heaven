@@ -138,7 +138,9 @@ describe("the front doors send people to /start first (#47)", () => {
 
   it("adds Install to the landing nav", () => {
     const nav = landing.slice(landing.indexOf('<nav className="lp-nav"'), landing.indexOf("</nav>"));
-    expect(nav).toMatch(/href="#\/start">INSTALL/);
+    expect(nav).toMatch(/href="#\/start">\s*INSTALL/);
+    // one Install link, not two adjacent ones to the same place
+    expect(nav.match(/href="#\/start"/g)).toHaveLength(1);
   });
 
   it("links the hero's install panel to /start", () => {
@@ -147,6 +149,30 @@ describe("the front doors send people to /start first (#47)", () => {
     expect(hero).toContain("Choose your harness");
     // the install command stays
     expect(hero).toContain("PLATFORM_COMMANDS[platform].agentPlugin");
+  });
+
+  it("moves focus from the landing skip link and wraps the landing in <main>", () => {
+    expect(landing).toMatch(/Skip to install/);
+    expect(landing).toContain("skipToInstall");
+    expect(landing).toContain('<main id="main">');
+    expect(landing).toContain("</main>");
+  });
+
+  it("keeps controls at or above the 24px target size", () => {
+    const toggle = site("src/components/platform-toggle.css");
+    expect(toggle).toMatch(/\.sh-platform-toggle__btn \{[^}]*min-height: 24px/);
+    expect(site("src/variations/variation-hero.css")).toMatch(/\.vha-cta-termcopy \{[^}]*min-height: 26px/);
+  });
+
+  it("underlines the in-text install link in the landing fineprint", () => {
+    expect(site("src/surfaces/landing.css")).toMatch(/\.lp-fineprint a \{[^}]*text-decoration: underline/);
+  });
+
+  it("announces copies and moves focus after a button-driven path change on /start", () => {
+    const start = site("src/surfaces/Start.tsx");
+    expect(start).toMatch(/Copied: \$\{copiedLabel\}/);
+    expect(start).toContain("selectAndFocus");
+    expect(start).toMatch(/id="st-path" tabIndex=\{-1\}/);
   });
 
   it("routes /start", () => {
