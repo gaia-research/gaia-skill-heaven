@@ -95,7 +95,7 @@ materialized `SKILL.md`. The console observes both facts:
 
 | Stage | Observed by | Shown as |
 |---|---|---|
-| `previewed` | `/lens` preview call (`preview: true`, nothing on disk) | "3 candidates · nothing materialized" |
+| `previewed` | `/lens` preview call (`preview: true`; nothing materialized — the engine still logs the query in its own session directory) | "3 candidates · nothing materialized" |
 | `materialized` | summon result, `summoned[]` | "card returned · body not read" |
 | `in context` | a `Read` tool call whose path is that skill's materialized `SKILL.md` | "in context · body read by main agent" |
 | `unknown` | terminal/CLI projections, which cannot observe reads | "materialized · read not observed" |
@@ -254,7 +254,15 @@ on its own and never runs a retrieval on its own.
 - **Summon** never calls anything: it pre-fills `/summon <name>` into the
   composer. The person submits it. The UI is not an authority channel.
 - `/lens` calls the summon tool with `preview: true` from the plugin's own
-  `$.tool.call` — nothing materializes and nothing enters model context.
+  `$.tool.call` — nothing materializes. The command's own one-line result is a
+  transcript row the model reads, so it is a **fixed sentence** ("Lens preview
+  shown in the band. Nothing was summoned.") that never carries skill-supplied
+  text, tool error text or a deny reason; the detail lives only in the band and
+  pane. If a summon server ignores `preview` and materializes anyway, the band
+  shows the real summon and the console counts it — it never claims otherwise.
+- The summon tool is matched by its exact names
+  (`mcp__plugin_skill-heaven_skill-summon__summon`, `mcp__skill-summon__summon`),
+  never a suffix, so a look-alike server is neither observed nor sent a query.
 - "close call" is a **retrieval** fact (margin < .10), labelled as such; it is
   never a behavioural claim (K6, INV-U3).
 - The band hides after Dismiss, after the next prompt, and whenever the host
