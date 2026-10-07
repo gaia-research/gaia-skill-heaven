@@ -39,3 +39,6 @@ packages/site/preview/
 
 # impeccable skill local config
 .impeccable/
+
+# Claude Code engine-generated type declarations for the console mod
+plugins/skill-heaven-console/.claude-plugin/types/

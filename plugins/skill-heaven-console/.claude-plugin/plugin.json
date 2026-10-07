@@ -1,0 +1,23 @@
+{
+  "name": "skill-heaven-console",
+  "displayName": "Skill Heaven console (preview)",
+  "version": "0.1.0",
+  "description": "Optional PREVIEW console for Claude Code that observes Skill Heaven summons and never changes them: a status entry, a Lens band above the prompt, and a /heaven pane (Session, Scope, Flow, Trust). Early-access Mods API; desktop paint still needs a local probe.",
+  "author": {
+    "name": "Gaia Research"
+  },
+  "homepage": "https://gaia-research.github.io/gaia-skill-heaven/",
+  "repository": "https://github.com/gaia-research/gaia-skill-heaven",
+  "license": "MIT",
+  "keywords": ["skill-heaven", "console", "status", "preview", "summon"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "status": {
+      "type": "string",
+      "title": "Status entry",
+      "description": "How much of the Skill Heaven status entry to show beside your own status line. off removes the entry; compact shows the reading and skills in this session; full adds summons and the last arrival.",
+      "options": ["off", "compact", "full"],
+      "default": "compact"
+    }
+  }
+}
