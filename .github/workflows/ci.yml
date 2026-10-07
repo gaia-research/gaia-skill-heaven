@@ -53,6 +53,12 @@ jobs:
       - name: Validate the plugin manifest
         run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven
 
+      # The optional console is a Mods plugin (function hooks, early-access
+      # API). `plugin validate` reads its hooks module the way the engine will
+      # and reports anything the engine would refuse — still static, no session.
+      - name: Validate the console mod
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven-console
+
       # D6 cross-repo gate: a record emitted by core must pass gaia-research's
       # ledger validator (the validator never moves — it stays upstream, D6).
       - name: Checkout gaia-research (upstream ledger validator)
