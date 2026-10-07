@@ -31,6 +31,14 @@ jobs:
           npm run build:mcp
           git diff --exit-code -- plugins/skill-heaven/mcp/
 
+      # The console mod cannot import packages/status at run time (a mod has no
+      # Node and reads only its own folder), so it carries a committed bundle of
+      # the one status model. A diff means the model changed without a rebuild.
+      - name: Status model bundle is up to date
+        run: |
+          npm run build:status
+          git diff --exit-code -- plugins/skill-heaven-console/hooks/status-model.mjs
+
       # The committed skill index is the runtime's only read path (SPEC §2.2),
       # and it is a deterministic function of the committed corpus snapshot.
       # A diff here means someone edited the snapshot or the builder without
