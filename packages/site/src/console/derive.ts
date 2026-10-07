@@ -58,12 +58,13 @@ export function stageOf(event: SummonEvent): Stage {
 export type LensAction = 'summon' | 'inspect' | 'dismiss'
 
 /**
- * Summon appears only for a single strong preview candidate. Every other state
- * offers Inspect and Dismiss. (The model does not say whether a no-match came
- * from /lens or from /summon, so a no-match offers Inspect too.)
+ * Summon appears only for a single preview candidate. A /lens no-match has
+ * nothing to inspect, so it offers Dismiss alone. Every other state offers
+ * Inspect and Dismiss.
  */
 export function lensActions(event: SummonEvent): LensAction[] {
   if (event.kind === 'previewed' && event.skills.length === 1) return ['summon', 'inspect', 'dismiss']
+  if (event.kind === 'no-match' && event.preview) return ['dismiss']
   return ['inspect', 'dismiss']
 }
 
@@ -311,12 +312,14 @@ function scopeSource(event: SummonEvent | null): { see: string | null; reach: 'o
 export function scopeRows(status: SkillHeavenStatus, event: SummonEvent | null): ScopeRow[] {
   const { see } = scopeSource(event)
   const r = status.reading
+  // The boot reading survives a later rung selection (status.boot).
+  const b = r.kind === 'selected' || r.kind === 'unknown' ? status.boot ?? r : r
   const inherited =
-    r.kind === 'boot' && r.posture === 'product-floor'
+    b.kind === 'boot' && b.posture === 'product-floor'
       ? 'boot reading ZERO (claude-zero product floor)'
-      : r.kind === 'boot' && r.posture === 'curated'
+      : b.kind === 'boot' && b.posture === 'curated'
         ? 'boot reading CURATED (named skills readmitted at launch)'
-        : r.kind === 'boot' || r.kind === 'native'
+        : b.kind === 'boot' || b.kind === 'native'
           ? "boot reading NATIVE (your harness's own skills)"
           : null
   let selected: string | null

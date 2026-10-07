@@ -16,6 +16,7 @@ import {
   eventFromSummonResult,
   eventLines,
   markRead,
+  noticeLines,
   paintAnsi,
   readingFromProfileManifest,
   reduceStatus,
@@ -251,6 +252,35 @@ describe("events: state, event, evidence stay distinct (#137)", () => {
     const read = markRead(e, "/tmp/s/x/SKILL.md");
     expect(read.kind === "summoned" && read.skills[0]!.stage).toBe("in-context");
     expect(markRead(e, "/tmp/s/x/reference/a.md")).toBe(e);
+  });
+});
+
+describe("gaps closed after the /console review", () => {
+  it("a lens no-match says lens and nothing materialized; a summon no-match does not", () => {
+    expect(eventLines(EVENT_FIXTURES.previewNoMatch!.event).map(toPlain)).toEqual([
+      "FIXTURE ◇ lens  × no match",
+      "  0 admitted · nothing cleared the relevance floor · nothing materialized",
+    ]);
+    expect(toPlain(eventLines(EVENT_FIXTURES.noMatch!.event)[1]!)).not.toContain("nothing materialized");
+  });
+
+  it("notice lines for a lens in flight and a disconnected summon tool", () => {
+    expect(noticeLines({ kind: "looking", query: "design audit" }).map(toPlain)).toEqual([
+      "◇ lens  looking…",
+      "  design audit · nothing materialized",
+    ]);
+    expect(noticeLines({ kind: "not-connected" }).map(toPlain)[0]).toBe("◇ summon  ? not connected");
+  });
+
+  it("selecting a rung keeps what the session booted with", () => {
+    const booted = st({ reading: { kind: "boot", posture: "product-floor", source: "launcher-manifest" } });
+    const chosen = withReading(withReading(booted, { kind: "selected", rung: "high", source: "observed-command" }), {
+      kind: "selected",
+      rung: "low",
+      source: "observed-command",
+    });
+    expect(chosen.boot).toEqual(booted.reading);
+    expect(withReading(st({}), { kind: "selected", rung: "low", source: "observed-command" }).boot).toBeUndefined();
   });
 });
 

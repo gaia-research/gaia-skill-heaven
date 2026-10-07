@@ -219,9 +219,10 @@ function eventLinesInner(event: SummonEvent): Segment[][] {
     case "no-match": {
       const detail = event.considered === null ? "0 admitted" : `${event.considered} considered · 0 admitted`;
       const reason = event.reason ? ` · ${sanitizeDisplay(event.reason, 60)}` : "";
+      const tail = event.preview ? " · nothing materialized" : "";
       return [
-        [seg("◇", "umbrella"), seg(" summon  ", "dim"), seg("×", "ink"), seg(" no match", "ink")],
-        [seg("  ", "dim"), seg(detail + reason, "dim")],
+        [seg("◇", "umbrella"), seg(event.preview ? " lens  " : " summon  ", "dim"), seg("×", "ink"), seg(" no match", "ink")],
+        [seg("  ", "dim"), seg(detail + reason + tail, "dim")],
       ];
     }
     case "unavailable":
@@ -235,6 +236,22 @@ function eventLinesInner(event: SummonEvent): Segment[][] {
         [seg("  ", "dim"), seg(sanitizeDisplay(event.reason, 72), "dim")],
       ];
   }
+}
+
+/** Transient band lines that are not events: a `/lens` call in flight, and a
+ * session where the summon tool is not connected (CONTROL-PLANE §6). No
+ * spinner glyph — the instrument has no motion. */
+export function noticeLines(notice: { kind: "looking"; query: string } | { kind: "not-connected" }): Segment[][] {
+  if (notice.kind === "looking") {
+    return [
+      [seg("◇", "umbrella"), seg(" lens  ", "dim"), seg("looking…", "ink")],
+      [seg("  ", "dim"), seg(`${sanitizeDisplay(notice.query, 48)} · nothing materialized`, "dim")],
+    ];
+  }
+  return [
+    [seg("◇", "umbrella"), seg(" summon  ", "dim"), seg("?", "amber"), seg(" not connected", "ink")],
+    [seg("  ", "dim"), seg("the summon tool is not available in this session", "dim")],
+  ];
 }
 
 /* ------------------------------------------------------------------------- *
@@ -292,7 +309,9 @@ function describeEventInner(event: SummonEvent): string {
     case "previewed":
       return `Lens preview: ${event.skills.length} candidate${event.skills.length === 1 ? "" : "s"}; nothing materialized.`;
     case "no-match":
-      return "Summon found no match. Nothing was added to the session.";
+      return event.preview
+        ? "Lens preview found no match. Nothing was materialized."
+        : "Summon found no match. Nothing was added to the session.";
     case "unavailable":
       return `Summon unavailable: ${sanitizeDisplay(event.reason, 72)}.`;
     case "error":

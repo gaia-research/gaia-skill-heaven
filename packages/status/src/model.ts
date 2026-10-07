@@ -107,6 +107,8 @@ export type SummonEvent =
       kind: "no-match";
       direction: Direction;
       query: string;
+      /** True for a `/lens` preview: nothing was going to materialize anyway. */
+      preview: boolean;
       considered: number | null;
       reason: string | null;
       at: string | null;
@@ -172,6 +174,10 @@ export type HostIntegration = "APPEND" | "STACK" | "NATIVE SLOT" | "REPLACE-ONLY
 
 export interface SkillHeavenStatus {
   reading: EntropyReading;
+  /** The reading the session started with (launcher posture or native).
+   * Kept when a rung is later selected, so Scope can say what was inherited
+   * and what was chosen. Absent = not known. */
+  boot?: EntropyReading;
   /** Materialized skills in this session; `null` = unknown (never shown as 0). */
   skills: number | null;
   /** Summon calls recorded this session; `null` = unknown. */

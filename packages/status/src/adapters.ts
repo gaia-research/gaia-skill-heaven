@@ -68,12 +68,13 @@ export function selectionFromCommand(text: string): EntropyReading | null {
  * unavailable — no runtime reports controller state today. */
 export function withReading(status: SkillHeavenStatus, reading: EntropyReading): SkillHeavenStatus {
   const ultra = reading.kind === "selected" && reading.rung === "ultra";
+  const boot = status.boot ?? (status.reading.kind === "selected" || status.reading.kind === "unknown" ? undefined : status.reading);
   const controller: Controller = ultra
     ? status.controller.kind === "reported"
       ? status.controller
       : { kind: "unavailable" }
     : { kind: "not-selected" };
-  return { ...status, reading, controller };
+  return { ...status, reading, controller, ...(boot ? { boot } : {}) };
 }
 
 /* ------------------------------------------------------------------------- *
@@ -201,7 +202,7 @@ export function eventFromSummonResult(
   if (structured.noMatch !== null && structured.noMatch !== undefined) {
     const noMatch = isRec(structured.noMatch) ? structured.noMatch : {};
     const reason = typeof noMatch.reason === "string" ? NO_MATCH_REASON[noMatch.reason] ?? null : null;
-    return { kind: "no-match", direction, query, considered: null, reason, at, evidence: "reported", sourceHealth };
+    return { kind: "no-match", direction, query, preview: call.preview === true, considered: null, reason, at, evidence: "reported", sourceHealth };
   }
   const summoned = Array.isArray(structured.summoned) ? structured.summoned.filter(isRec) : [];
   const previewed = Array.isArray(structured.previewed) ? structured.previewed.filter(isRec) : [];

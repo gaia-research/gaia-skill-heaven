@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { eventLines, renderStatusSegments, toPlain } from '@gaia-skill-heaven/status'
+import { eventLines, noticeLines, renderStatusSegments, toPlain } from '@gaia-skill-heaven/status'
 import { Scroller } from './Pieces'
 import type { EventEntry, StatusEntry } from './types'
 
@@ -18,6 +18,7 @@ type Cell =
   | { kind: 'event'; key: string }
   | { kind: 'gap'; text: string }
   | { kind: 'route'; text: string; to: string }
+  | { kind: 'notice'; notice: Parameters<typeof noticeLines>[0] }
 
 const none: Cell = { kind: 'none' }
 const link = (text: string, href: string): Cell => ({ kind: 'link', text, href })
@@ -53,7 +54,7 @@ function rows(staleDays: number | null): Row[] {
       id: 'loading',
       state: 'loading (/lens in flight)',
       status: { kind: 'text', text: 'unchanged' },
-      lens: { kind: 'gap', text: 'The model has no in-flight state; nothing renders “looking…”.' },
+      lens: { kind: 'notice', notice: { kind: 'looking', query: 'design audit' } },
       session: none,
       scope: none,
       flow: none,
@@ -97,8 +98,8 @@ function rows(staleDays: number | null): Row[] {
       id: 'disconnected',
       state: 'disconnected (summon MCP not connected)',
       status: { kind: 'status', key: 'disconnected' },
-      lens: { kind: 'gap', text: 'summonTool is in the model; no renderer has a sentence for it.' },
-      session: { kind: 'gap', text: 'No banner state in the model.' },
+      lens: { kind: 'notice', notice: { kind: 'not-connected' } },
+      session: { kind: 'notice', notice: { kind: 'not-connected' } },
       scope: link('summon tool: not connected', '#scope-disconnected'),
       flow: none,
       trust: link('MCP: not connected', '#trust-states'),
@@ -219,6 +220,14 @@ export function MatrixSection({
           </a>
         )
       }
+      case 'notice':
+        return (
+          <span className="cx-mbox">
+            {noticeLines(cell.notice).map((line, i) => (
+              <Plain key={i}>{toPlain(line)}</Plain>
+            ))}
+          </span>
+        )
       case 'event': {
         const e = event(cell.key)
         if (!e) return null

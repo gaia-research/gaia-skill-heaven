@@ -169,13 +169,17 @@ Events (two lines, the second dim):
 ```
 ◇ summoned  impeccable            ‹ summoned  react-performance       › summoned  browser-security
   exact · .96 · Δ .41 · warm · 82ms · +1     ranked · .84 · Δ .29 · warm · +1     ranked · .78 · Δ .11 · cold · 1.31s · +1
-◇ summon  × no match              ◇ summon  ? source stale
-  18 considered · 0 admitted        index 41 days old · ranking still ran
+◇ summon  × no match                          › summoned  db-migrations
+  0 admitted · nothing cleared the relevance floor  ranked · .88 · Δ .27 · warm · 82ms · +1 · ? index stale
 ```
 
 `◇` explicit human summon (`surface: any`) · `‹` converge (`heaven`) · `›`
 explore (`hell`). A no-match never changes `skills N`, the reading, or the
-direction.
+direction. The engine does not report how many candidates it considered, so a
+no-match names its reason instead of a count. A `/lens` no-match reads
+`◇ lens  × no match · … · nothing materialized`. Two band states are not events
+and come from `noticeLines`: `◇ lens  looking…` while a `/lens` call is in
+flight, and `◇ summon  ? not connected` when the summon tool is absent.
 
 ## 4. Visual system — one set of tokens for site, desktop, terminal
 
@@ -237,7 +241,7 @@ on its own and never runs a retrieval on its own.
 | Situation | Band | Actions |
 |---|---|---|
 | idle | nothing | — |
-| `/lens <intent>` (preview) — no match | `◇ lens  × no match · 18 considered · nothing materialized` | Dismiss |
+| `/lens <intent>` (preview) — no match | `◇ lens  × no match · 0 admitted · <reason> · nothing materialized` | Dismiss |
 | `/lens` — one strong candidate | `◇ lens  impeccable · exact · nothing materialized` | Summon · Inspect · Dismiss |
 | `/lens` — several plausible | `◇ lens  3 candidates · top react-performance (Δ .04 — close call)` | Inspect · Dismiss |
 | explicit `/summon` result | `◇ summoned  impeccable · card returned · body not read` | Inspect · Dismiss |
@@ -354,7 +358,7 @@ It is the hand-off for builders and the review surface for owners.
 | State | Status entry | Lens | Session | Scope | Flow | Trust | `/start` |
 |---|---|---|---|---|---|---|---|
 | empty (fresh session) | `· 0 skills` | nothing | "Nothing summoned yet. Try `/summon <need>` or `/lens <need>`." | sources shown, active: none | main · no skills | normal | — |
-| loading (`/lens` in flight) | unchanged | `◇ lens  looking…` (no spinner animation) | — | — | — | — | — |
+| loading (`/lens` in flight) | unchanged | `◇ lens  looking…` (`noticeLines`; no spinner animation) | — | — | — | — | — |
 | no-match | unchanged | `× no match · N considered` | row, refusal reason | — | — | — | — |
 | stale source | unchanged | `? source stale` | flag on row | "index N days old" | — | — | — |
 | unavailable source | unchanged | `? source unavailable` | row with reason | "unreachable" | — | — | — |
@@ -362,7 +366,7 @@ It is the hand-off for builders and the review surface for owners.
 | partially supported harness | — | — | — | — | — | chip **Partial** | Antigravity path |
 | degraded (no agent ids, no read events) | unchanged | "read not observed" | inferred marks | — | "host did not report agent ids" | — | — |
 | error (tool errored) | unchanged | `! failed` | row with sanitized error | — | — | — | — |
-| offline | reading unaffected | `? offline` | — | "source unreachable" | — | — | copy still works offline |
+| offline | reading unaffected | `? unavailable` + the engine's reason (offline is one cause of unavailable) | — | "source unreachable" | — | — | copy still works offline |
 | Ultra selected | `◆ … [ULTRA]` | — | — | "selected ULTRA · controller unavailable" | — | — | — |
 | Ultra fixture | site only | — | — | — | — | — | — |
 

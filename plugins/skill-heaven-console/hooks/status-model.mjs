@@ -241,9 +241,10 @@ function eventLinesInner(event) {
     case "no-match": {
       const detail = event.considered === null ? "0 admitted" : `${event.considered} considered \xB7 0 admitted`;
       const reason = event.reason ? ` \xB7 ${sanitizeDisplay(event.reason, 60)}` : "";
+      const tail = event.preview ? " \xB7 nothing materialized" : "";
       return [
-        [seg("\u25C7", "umbrella"), seg(" summon  ", "dim"), seg("\xD7", "ink"), seg(" no match", "ink")],
-        [seg("  ", "dim"), seg(detail + reason, "dim")]
+        [seg("\u25C7", "umbrella"), seg(event.preview ? " lens  " : " summon  ", "dim"), seg("\xD7", "ink"), seg(" no match", "ink")],
+        [seg("  ", "dim"), seg(detail + reason + tail, "dim")]
       ];
     }
     case "unavailable":
@@ -257,6 +258,18 @@ function eventLinesInner(event) {
         [seg("  ", "dim"), seg(sanitizeDisplay(event.reason, 72), "dim")]
       ];
   }
+}
+function noticeLines(notice) {
+  if (notice.kind === "looking") {
+    return [
+      [seg("\u25C7", "umbrella"), seg(" lens  ", "dim"), seg("looking\u2026", "ink")],
+      [seg("  ", "dim"), seg(`${sanitizeDisplay(notice.query, 48)} \xB7 nothing materialized`, "dim")]
+    ];
+  }
+  return [
+    [seg("\u25C7", "umbrella"), seg(" summon  ", "dim"), seg("?", "amber"), seg(" not connected", "ink")],
+    [seg("  ", "dim"), seg("the summon tool is not available in this session", "dim")]
+  ];
 }
 function describeReading(reading) {
   switch (reading.kind) {
@@ -299,7 +312,7 @@ function describeEventInner(event) {
     case "previewed":
       return `Lens preview: ${event.skills.length} candidate${event.skills.length === 1 ? "" : "s"}; nothing materialized.`;
     case "no-match":
-      return "Summon found no match. Nothing was added to the session.";
+      return event.preview ? "Lens preview found no match. Nothing was materialized." : "Summon found no match. Nothing was added to the session.";
     case "unavailable":
       return `Summon unavailable: ${sanitizeDisplay(event.reason, 72)}.`;
     case "error":
@@ -363,8 +376,9 @@ function selectionFromCommand(text) {
 }
 function withReading(status, reading) {
   const ultra = reading.kind === "selected" && reading.rung === "ultra";
+  const boot = status.boot ?? (status.reading.kind === "selected" || status.reading.kind === "unknown" ? void 0 : status.reading);
   const controller = ultra ? status.controller.kind === "reported" ? status.controller : { kind: "unavailable" } : { kind: "not-selected" };
-  return { ...status, reading, controller };
+  return { ...status, reading, controller, ...boot ? { boot } : {} };
 }
 function skillsFromSessionManifest(manifest) {
   if (!isRec(manifest) || !Array.isArray(manifest.skills)) return { skills: null, last: null };
@@ -454,7 +468,7 @@ function eventFromSummonResult(structured, call = {}, failure) {
   if (structured.noMatch !== null && structured.noMatch !== void 0) {
     const noMatch = isRec(structured.noMatch) ? structured.noMatch : {};
     const reason = typeof noMatch.reason === "string" ? NO_MATCH_REASON[noMatch.reason] ?? null : null;
-    return { kind: "no-match", direction, query, considered: null, reason, at, evidence: "reported", sourceHealth };
+    return { kind: "no-match", direction, query, preview: call.preview === true, considered: null, reason, at, evidence: "reported", sourceHealth };
   }
   const summoned = Array.isArray(structured.summoned) ? structured.summoned.filter(isRec) : [];
   const previewed = Array.isArray(structured.previewed) ? structured.previewed.filter(isRec) : [];
@@ -761,6 +775,7 @@ export {
   harnessById,
   isRung,
   markRead,
+  noticeLines,
   paintAnsi,
   readingFromProfileManifest,
   readingRung,

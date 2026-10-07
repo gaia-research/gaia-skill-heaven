@@ -93,7 +93,7 @@ describe("/start renders the compat table (#47 · #161 · #147)", () => {
   });
 
   it("scopes its CSS under .st and registers the root in the token-collision block", () => {
-    expect(site("src/styles/system.css")).toMatch(/^\.hx, \.lp, \.st \{/m);
+    expect(site("src/styles/system.css")).toMatch(/^\.hx, \.lp(?:, \.[a-z]+)*, \.st(?:, \.[a-z]+)* \{/m);
     const css = site("src/surfaces/start.css").replace(/\/\*[\s\S]*?\*\//g, "");
     const selectors = css
       .split("{")

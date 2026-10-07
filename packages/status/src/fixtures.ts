@@ -48,7 +48,13 @@ export const STATUS_FIXTURES: Readonly<Record<string, { label: string; status: S
   },
   explore: {
     label: "Selected HIGH · 9 skills",
-    status: status({ reading: { kind: "selected", rung: "high", source: "observed-command" }, skills: 9, summons: 5, lastArrival: "browser-security" }),
+    status: status({
+      reading: { kind: "selected", rung: "high", source: "observed-command" },
+      boot: { kind: "boot", posture: "product-floor", source: "launcher-manifest" },
+      skills: 9,
+      summons: 5,
+      lastArrival: "browser-security",
+    }),
   },
   unknown: { label: "Nothing reports a reading", status: status({ reading: { kind: "unknown" }, skills: null, summons: null }) },
   disconnected: {
@@ -198,6 +204,10 @@ export const EVENT_FIXTURES: Readonly<Record<string, { label: string; event: Sum
   noMatch: {
     label: "No match",
     event: fx(eventFromSummonResult(RESULT({ query: "underwater basket weaving", noMatch: { reason: "below_floor", query: "x", topCandidates: [], filtered: [], suggestion: "" } }), { at: AT })),
+  },
+  previewNoMatch: {
+    label: "Lens preview · no match",
+    event: fx(eventFromSummonResult(RESULT({ query: "underwater basket weaving", noMatch: { reason: "below_floor", query: "x", topCandidates: [], filtered: [], suggestion: "" } }), { at: AT, preview: true })),
   },
   stale: {
     label: "Source stale (ranking still ran)",
