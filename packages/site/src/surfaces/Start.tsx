@@ -241,7 +241,7 @@ export default function Start() {
                   <span className="st-opt__name">{h.name}</span>
                   <Chip chip={h.chip} />
                   <span className="st-opt__ver">
-                    {h.probedVersion ? `probed on ${h.probedVersion}` : 'not probed'}
+                    {h.probedVersion ? `${h.chip === 'partial' ? 'static check on' : 'probed on'} ${h.probedVersion}` : 'not probed'}
                   </span>
                 </span>
               </label>
@@ -296,7 +296,7 @@ export default function Start() {
                   {harness.probedVersion && (
                     <>
                       {' '}
-                      Probed on {harness.name} <span className="st-mono">{harness.probedVersion}</span>.
+                      {harness.chip === 'partial' ? 'Checked statically on' : 'Probed on'} {harness.name} <span className="st-mono">{harness.probedVersion}</span>.
                     </>
                   )}
                 </p>
@@ -408,7 +408,9 @@ export default function Start() {
                 <div className="st-ledger__row">
                   <dt>Writes</dt>
                   <dd>
-                    {harness.needsInstaller ? (
+                    {nothingYet(harness) ? (
+                      <>Nothing. No step on this path writes anything until a registration command has been probed.</>
+                    ) : harness.needsInstaller ? (
                       <>
                         One directory, <code className="st-code">{AGENT_PLUGIN_INSTALL.root}</code>, holding
                         the plugin and a local marketplace. {harness.commands.length > 0 && (
@@ -429,7 +431,9 @@ export default function Start() {
                 <div className="st-ledger__row">
                   <dt>Leaves alone</dt>
                   <dd>
-                    {harness.needsInstaller
+                    {nothingYet(harness)
+                      ? 'Everything.'
+                      : harness.needsInstaller
                       ? `Your ${harness.name} configuration, your shell profile and your repository. The installer does not touch them.`
                       : `Your settings, your skills and your repository. The plugin is added; nothing of yours is edited.`}
                   </dd>
@@ -459,7 +463,11 @@ export default function Start() {
                         return (
                           <div key={r} className="st-remove">
                             <span className="st-remove__label">
-                              {isLocal ? 'Remove the local artifact' : `Unregister from ${harness.name}`}
+                              {isLocal
+                                ? nothingYet(harness)
+                                  ? 'Only if you already ran the installer'
+                                  : 'Remove the local artifact'
+                                : `Unregister from ${harness.name}`}
                             </span>
                             <Command
                               cmd={r}
@@ -597,6 +605,11 @@ export default function Start() {
  */
 function showInstaller(h: HarnessPath): boolean {
   return h.needsInstaller
+}
+
+/** A path with no accepted registration and no installer step changes nothing. */
+function nothingYet(h: HarnessPath): boolean {
+  return !h.needsInstaller && h.commands.length === 0
 }
 
 function NoHarness({ onPick }: { onPick: (id: string) => void }) {
