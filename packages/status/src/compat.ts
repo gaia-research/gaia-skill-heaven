@@ -37,7 +37,8 @@ export interface HarnessPath {
   /** One line: what the evidence is and where it lives. */
   evidence: string;
   evidenceHref: string | null;
-  /** Does this path need the terminal installer first? */
+  /** Should this path tell the user to run the terminal installer now? False
+   * where installing would only strand files (no accepted registration yet). */
   needsInstaller: boolean;
   /** Registration, in order. Run inside the harness when `inHarness`. */
   commands: readonly string[];
@@ -164,7 +165,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     evidence:
       "Static: `agy plugin validate` (1.3.1) loads the five skills and five commands but reports the MCP server as not found — /summon would have no tool. Needs a local probe.",
     evidenceHref: `${REPO}/docs/CONTROL-PLANE.md`,
-    needsInstaller: true,
+    needsInstaller: false,
     commands: [],
     inHarness: false,
     blocked:

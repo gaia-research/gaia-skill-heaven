@@ -596,9 +596,7 @@ export default function Start() {
  * harness — shows its `blocked` text alone; installing would strand the files.)
  */
 function showInstaller(h: HarnessPath): boolean {
-  if (!h.needsInstaller) return false
-  if (h.commands.length > 0) return true
-  return h.blocked !== null && h.blocked.includes(AGENT_PLUGIN_INSTALL.plugin)
+  return h.needsInstaller
 }
 
 function NoHarness({ onPick }: { onPick: (id: string) => void }) {

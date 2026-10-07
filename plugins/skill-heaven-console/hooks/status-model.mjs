@@ -683,7 +683,7 @@ var HARNESS_PATHS = [
     probedVersion: "1.3.1",
     evidence: "Static: `agy plugin validate` (1.3.1) loads the five skills and five commands but reports the MCP server as not found \u2014 /summon would have no tool. Needs a local probe.",
     evidenceHref: `${REPO}/docs/CONTROL-PLANE.md`,
-    needsInstaller: true,
+    needsInstaller: false,
     commands: [],
     inHarness: false,
     blocked: "No registration command is printed until a logged-in probe shows Antigravity loading the summon server. The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile.",
