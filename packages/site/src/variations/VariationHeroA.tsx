@@ -724,8 +724,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           {/* The portable Agent Plugin installer is primary. It prints the
               local plugin/marketplace paths; clients load the installed
               directory without this page pretending to rewrite an unknown
-              harness config. Claude's marketplace flow lives behind the
-              "Claude tested" tab on /landing, not stacked here too. */}
+              harness config. Claude's marketplace flow lives on /start (and /landing),
+              not stacked here too. */}
           <div className="vha-cta-term" style={{ borderColor: v.ctaLine }}>
             <div className="vha-cta-termhead" style={{ color: v.dim, borderColor: v.hair2 }}>
               <span>Install · Agent Plugins</span>
@@ -758,6 +758,16 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
               hidden on mobile — see .vha-cta-mini--btn in variation-hero.css)
               is the one action worth keeping here. */}
           <div className="vha-cta-row">
+            {/* The command above only puts files on disk; which command finishes
+                the install depends on the harness, so the primary next step is
+                the chooser. */}
+            <Link
+              to="/start"
+              className="vha-cta-door vha-cta-door--start"
+              style={{ color: v.bg, background: v.fg, borderColor: v.ctaLine }}
+            >
+              Choose your harness →
+            </Link>
             <button type="button" className="vha-cta-mini vha-cta-mini--btn" onClick={enterStory} style={{ color: v.dim }}>
               Intro
             </button>

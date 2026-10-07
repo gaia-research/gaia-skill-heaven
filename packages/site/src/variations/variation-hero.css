@@ -1254,6 +1254,11 @@ body.vh-hero-page {
 .vha-cta-link:hover {
   opacity: 0.72;
 }
+/* "Choose your harness" — the primary next step after the install line. */
+.vha-cta-door--start {
+  font-weight: 600;
+  min-height: 36px;
+}
 /* The copy-command control, demoted to secondary (Open the door is primary —
    see .vha-cta-cmd below): a slash command reads wrong in the door's all-caps
    treatment, so it keeps its own case and monospace weight. */
