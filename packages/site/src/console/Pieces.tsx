@@ -59,12 +59,26 @@ export function FixtureChip({ children = 'FIXTURE' }: { children?: ReactNode }) 
  * acts, and says why. The real console pre-fills the composer; a person
  * submits it. The UI is never an authority channel.
  */
-export function DemoButton({ children, describedBy }: { children: ReactNode; describedBy?: string }) {
+export function DemoButton({
+  children,
+  describedBy,
+  label,
+  focusable = true,
+}: {
+  children: ReactNode
+  describedBy?: string
+  /** A unique accessible name, e.g. "Inspect (demo) — <card>". */
+  label: string
+  /** Only the first demo button of a group is a tab stop; the rest are skipped. */
+  focusable?: boolean
+}) {
   return (
     <button
       type="button"
       className="cx-demo"
       aria-disabled="true"
+      aria-label={label}
+      tabIndex={focusable ? undefined : -1}
       aria-describedby={describedBy}
       title="prototype — this button does not act"
       onClick={(e) => e.preventDefault()}

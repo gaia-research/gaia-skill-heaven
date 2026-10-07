@@ -207,7 +207,7 @@ export default function Console() {
       <a className="cx-skip" href="#main">
         Skip to main content
       </a>
-      <div className="cx-banner" role="note" aria-label="Fixture notice">
+      <div className="cx-banner" role="region" aria-label="Fixture notice">
         <FixtureChip>{bannerLead}</FixtureChip>
         <p>{bannerRest.join(' — ')}</p>
       </div>

@@ -28,7 +28,7 @@ export function TokensSection() {
         <code>{GROUND_HEX}</code>. Colour never carries meaning alone: every state also has a glyph and a word.
       </p>
       <Scroller label="Instrument colour roles with hex, ANSI-256 code, meaning and computed contrast" className="cx-tablewrap">
-        <table className="cx-table">
+        <table className="cx-table cx-table--tokens">
           <caption className="sr-only">Instrument colour roles</caption>
           <thead>
             <tr>
@@ -65,9 +65,14 @@ export function TokensSection() {
                   </td>
                   <td>{MEANING[role]}</td>
                   <td>
-                    <span className="cx-ratio">{ratio.toFixed(2)}:1</span>{' '}
+                    <span className="cx-ratio">{ratio.toFixed(2)}:1</span>
+                    <span className="cx-dim"> on ground</span>{' '}
                     <span className={`cx-grade cx-grade--${grade}`}>
-                      {grade === 'text' ? 'AA text' : grade === 'large' ? 'large text and graphics only' : 'glyph only'}
+                      {grade === 'text'
+                        ? 'AA text'
+                        : grade === 'large'
+                          ? 'large text and graphics only'
+                          : "glyph only, always beside the word 'failed'"}
                     </span>
                   </td>
                 </tr>
@@ -78,7 +83,8 @@ export function TokensSection() {
       </Scroller>
       <p className="cx-fine cx-fine--block">
         <code>stop</code> is for a real failure or a policy stop, drawn as the <code>!</code> glyph beside the word
-        “failed”. It is never used for body text, and never for Hell. A further role, <code>arbor</code>, is reserved for
+        “failed”, and only on the ground colour — on the lighter pane panels the ratio is lower still. It is never used for
+        body text, and never for Hell. A further role, <code>arbor</code>, is reserved for
         canonical Arbor evidence that changed a composition decision. Nothing does that today, so no surface draws it and
         it has no swatch here.
       </p>
