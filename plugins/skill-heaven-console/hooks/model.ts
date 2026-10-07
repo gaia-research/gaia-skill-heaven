@@ -29,11 +29,18 @@ export const fromData = (data: ConsoleStateData): ConsoleState => data as unknow
 export const toData = (state: ConsoleState): ConsoleStateData => state as unknown as ConsoleStateData
 
 export const MAX_ENTRIES = 50
+/** Agents kept in Flow, newest last. */
+export const MAX_AGENTS = 100
+/** Skills stored per entry; the rest are counted in `omitted`. */
+export const MAX_SKILLS_PER_ENTRY = 20
 
 /** The summon tool, however the session spells it:
  * `mcp__plugin_skill-heaven_skill-summon__summon` (marketplace install) or
- * `mcp__skill-summon__summon` (launcher). */
-export const SUMMON_TOOL = /skill-summon__summon$/
+ * `mcp__skill-summon__summon` (launcher). Anchored at both ends: a server that
+ * merely ends in "skill-summon" (`mcp__evil-skill-summon__summon`) is not it.
+ * register.tsx spells the same pattern as a literal in its tool.call matcher;
+ * a repository test holds the two equal. */
+export const SUMMON_TOOL = /^mcp__(?:plugin_skill-heaven_)?skill-summon__summon$/
 export const MARKETPLACE_SUMMON_TOOL = 'mcp__plugin_skill-heaven_skill-summon__summon'
 export const LAUNCHER_SUMMON_TOOL = 'mcp__skill-summon__summon'
 
@@ -95,7 +102,34 @@ export function structuredOf(r: unknown): unknown {
       const parsed: unknown = JSON.parse(text)
       if (looksLikeSummon(parsed)) return parsed
     } catch {
-      // not JSON: keep looking
+      // not all JSON: the object may be followed by resource-link text
+    }
+    const embedded = firstJsonObject(text)
+    if (looksLikeSummon(embedded)) return embedded
+  }
+  return undefined
+}
+
+/** The first balanced `{ ... }` in `text` that parses as JSON. Strings are skipped
+ * over so a brace inside one does not unbalance the scan. */
+export function firstJsonObject(text: string): unknown {
+  for (let start = text.indexOf('{'); start !== -1; start = text.indexOf('{', start + 1)) {
+    let depth = 0
+    let inString = false
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i]
+      if (inString) {
+        if (ch === '\\') i++
+        else if (ch === '"') inString = false
+      } else if (ch === '"') inString = true
+      else if (ch === '{') depth++
+      else if (ch === '}' && --depth === 0) {
+        try {
+          return JSON.parse(text.slice(start, i + 1))
+        } catch {
+          break // not JSON from here; try the next opening brace
+        }
+      }
     }
   }
   return undefined
@@ -127,8 +161,8 @@ export function noteAgentId(state: ConsoleState, id: string): ConsoleState {
   // An Agent call that has not been given its id yet and is still open: leave it for finishAgentCall.
   const agents: ConsoleAgent[] = [
     ...state.agents,
-    { key: id, id, label: `agent ${shortId(id)}`, state: 'running' },
-  ]
+    { key: id, id, label: `agent ${shortId(id)}`, state: 'running' as const },
+  ].slice(-MAX_AGENTS)
   return { ...state, agentIdsSeen: true, agents }
 }
 
@@ -136,8 +170,13 @@ export function startAgentCall(state: ConsoleState, key: string, label: string, 
   if (state.agents.some((a) => a.key === key)) return state
   return {
     ...state,
-    agents: [...state.agents, { key, id: null, label, state: background ? 'started' : 'running' }],
+    agents: [...state.agents, { key, id: null, label, state: background ? ('started' as const) : ('running' as const) }].slice(-MAX_AGENTS),
   }
+}
+
+/** The Agent call was refused or failed: it started nothing, so it leaves no row. */
+export function dropAgentCall(state: ConsoleState, key: string): ConsoleState {
+  return state.agents.some((a) => a.key === key) ? { ...state, agents: state.agents.filter((a) => a.key !== key) } : state
 }
 
 /** The Agent call's `next` resolved. The result may carry the new agent's id. */
@@ -161,20 +200,42 @@ export function agentReturned(state: ConsoleState, agentId: string): ConsoleStat
  * Events
  * ------------------------------------------------------------------------- */
 
-/** Fold one observed summon-tool call into state. */
+/** Keep a bounded number of skills per entry; the rest are counted, not stored. */
+function bounded(event: SummonEvent): { event: SummonEvent; omitted: number } {
+  if ((event.kind === 'summoned' || event.kind === 'previewed') && event.skills.length > MAX_SKILLS_PER_ENTRY) {
+    return { event: { ...event, skills: event.skills.slice(0, MAX_SKILLS_PER_ENTRY) }, omitted: event.skills.length - MAX_SKILLS_PER_ENTRY }
+  }
+  return { event, omitted: 0 }
+}
+
+/**
+ * Fold one observed summon-tool call into state. `reached` is false when the
+ * call never got an answer from the tool (a /lens preview that was aborted or
+ * refused): that says nothing about whether the tool is connected.
+ */
 export function recordEvent(
   state: ConsoleState,
   event: SummonEvent,
   agent: string | null,
   via: ConsoleEntry['via'],
+  reached = true,
 ): ConsoleState {
   const id = state.seq + 1
-  const entry: ConsoleEntry = { id, event, agent, via, readBy: {} }
+  const kept = bounded(event)
+  const entry: ConsoleEntry = {
+    id,
+    event: kept.event,
+    omitted: kept.omitted,
+    agent,
+    via,
+    readBy: 'skills' in kept.event ? kept.event.skills.map(() => null) : [],
+  }
   const entries = [...state.entries, entry].slice(-MAX_ENTRIES)
   const withAgent = agent !== null ? noteAgentId(state, agent) : state
+  const status = reduceStatus(state.status, event)
   return {
     ...withAgent,
-    status: { ...reduceStatus(state.status, event), summonTool: 'connected' },
+    status: reached ? { ...status, summonTool: 'connected' } : status,
     entries,
     band: { kind: 'event', id },
     seq: id,
@@ -188,11 +249,11 @@ export function recordRead(state: ConsoleState, path: string, reader: string): C
     const next = markRead(entry.event, path)
     if (next === entry.event) return entry
     changed = true
-    const readBy = { ...entry.readBy }
+    const readBy = [...entry.readBy]
     if (next.kind === 'summoned' && entry.event.kind === 'summoned') {
       const before = entry.event.skills
       next.skills.forEach((skill, i) => {
-        if (skill.stage === 'in-context' && before[i]?.stage !== 'in-context') readBy[skill.id] = reader
+        if (skill.stage === 'in-context' && before[i]?.stage !== 'in-context') readBy[i] = reader
       })
     }
     return { ...entry, event: next, readBy }
@@ -229,7 +290,7 @@ export function stageText(entry: ConsoleEntry): StageText {
   const skills = event.skills
   const inContext = skills.filter((s) => s.stage === 'in-context')
   if (skills.length > 0 && inContext.length === skills.length) {
-    const readers = Array.from(new Set(inContext.map((s) => entry.readBy[s.id] ?? 'an agent')))
+    const readers = Array.from(new Set(skills.map((_, i) => entry.readBy[i] ?? 'an agent')))
     return { text: `in context · body read by ${readers.join(', ')}`, inferred: false }
   }
   if (inContext.length > 0) {

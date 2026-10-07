@@ -11,10 +11,9 @@
 // function declared at the top level of this file.
 
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, PluginOptions, Register } from 'claude-code'
+import type { EngineInterface, PluginOptions, Register, RenderSurface } from 'claude-code'
 
 import {
-  describeEvent,
   eventFromSummonResult,
   renderStatusSegments,
   sanitizeDisplay,
@@ -30,6 +29,7 @@ import {
   agentCallLabel,
   agentLabelFor,
   agentReturned,
+  dropAgentCall,
   finishAgentCall,
   fromData,
   initialState,
@@ -45,7 +45,11 @@ import type { ConsoleSection, ConsoleState } from './model.ts'
 import { renderBand, renderPane } from './views.tsx'
 import type { BandActions, PaneActions } from './views.tsx'
 
-const stateAtom = atom({ plugin: 'skill-heaven-console', key: 'state' } as const, toData(initialState()))
+// The shape tag: a reload whose code names another tag starts from a clean state
+// instead of reading a value an older layout wrote.
+const stateAtom = atom({ plugin: 'skill-heaven-console', key: 'state' } as const, toData(initialState()), {
+  shape: 'skill-heaven-console/state@2',
+})
 
 const SECTIONS: readonly ConsoleSection[] = ['session', 'scope', 'flow', 'trust']
 
@@ -80,19 +84,53 @@ async function openPane($: EngineInterface): Promise<void> {
   await $.ui.open({ id: PANE_ID, title: 'Skill Heaven' })
 }
 
-/** Ask the summon tool what it would summon, with `preview: true`. */
-async function previewSummon(
-  $: EngineInterface,
-  query: string,
-): Promise<{ event: SummonEvent } | { notConnected: true } | { denied: string }> {
-  const names: string[] = []
+/** Fire and forget, but never leave a rejection unhandled. */
+function later(work: Promise<unknown>): void {
+  work.catch(() => {})
+}
+
+/** Pre-fill the prompt without wiping a draft; say so when the box could not take it. */
+async function fillPrompt($: EngineInterface, text: string): Promise<void> {
   try {
-    for (const t of await $.tool.list()) if (SUMMON_TOOL.test(t.name)) names.push(t.name)
+    const filled = await $.prompt.fill({ text, mode: 'insert' })
+    if (!filled.isFilled) $.ui.toast(`Type this: ${text}`)
+  } catch {
+    $.ui.toast(`Type this: ${text}`)
+  }
+}
+
+async function copyText($: EngineInterface, text: string, surface: RenderSurface): Promise<void> {
+  try {
+    const copied = await $.ui.copy({ text, surface })
+    if (!copied.isCopied) $.ui.toast(`Copy this: ${text}`)
+  } catch {
+    $.ui.toast(`Copy this: ${text}`)
+  }
+}
+
+type Preview = { event: SummonEvent; reached: boolean } | { notConnected: true }
+
+/**
+ * Ask the summon tool what it would summon, with `preview: true`.
+ *
+ * A tool is absent only when it is not in the session's tool list. A call to a
+ * tool the list names that is rejected was aborted or failed: that is an error
+ * event, and says nothing about whether the tool is connected.
+ */
+async function previewSummon($: EngineInterface, query: string): Promise<Preview> {
+  const listed: string[] = []
+  try {
+    for (const t of await $.tool.list()) if (SUMMON_TOOL.test(t.name)) listed.push(t.name)
   } catch {
     // listing is a convenience; the two known spellings are tried next
   }
+  const names = [...listed]
   for (const known of [MARKETPLACE_SUMMON_TOOL, LAUNCHER_SUMMON_TOOL]) if (!names.includes(known)) names.push(known)
   const at = isoOf(await $.clock.now())
+  const failed = (text: string): Preview => ({
+    event: eventFromSummonResult(undefined, { at, agent: null, preview: true, query }, { isError: true, text }),
+    reached: false,
+  })
   for (const name of names) {
     let result
     try {
@@ -103,15 +141,28 @@ async function previewSummon(
         preview: true,
       })
     } catch {
-      continue // no tool by that name in this session
+      if (listed.includes(name)) return failed('preview aborted or failed')
+      continue // not in this session
     }
-    if (result.deny !== undefined) return { denied: result.deny }
+    if (result.deny !== undefined) return failed(`preview refused: ${result.deny}`)
     const failure = result.isError === true ? ({ isError: true, text: result.text ?? null } as const) : undefined
     return {
       event: eventFromSummonResult(failure ? undefined : structuredOf(result), { at, agent: null, preview: true, query }, failure),
+      reached: true,
     }
   }
   return { notConnected: true }
+}
+
+/** The one-line result of /lens. The model reads it, so it is fixed text: nothing a
+ * skill source, a tool error or a refusal supplied ever goes in it. The detail is in the band. */
+function lensResultText(event: SummonEvent): string {
+  if (event.kind === 'summoned' && event.delta > 0) {
+    return 'Lens: this summon tool ignored preview; a skill was materialized. See the band.'
+  }
+  if (event.kind === 'previewed') return 'Lens preview shown in the band. Nothing was summoned.'
+  if (event.kind === 'no-match') return 'Lens: no match. Nothing was summoned.'
+  return 'Lens: the preview failed; see the band.'
 }
 
 export const register: Register = (on, options) => {
@@ -160,38 +211,41 @@ export const register: Register = (on, options) => {
     const section = SECTIONS.find((s) => s === arg)
     if (section) await change($, mode, (s) => ({ ...s, section }))
     await openPane($)
-    return { text: 'Skill Heaven console opened. It observes this session; it changes nothing.' }
+    // The model reads this row: fixed text only.
+    return { text: 'Skill Heaven console opened.' }
   })
 
   on('command.run', { command: 'lens' }, async ($, e) => {
     const query = sanitizeDisplay(e.args, 200)
-    if (query === '') {
-      return { text: 'Usage: /lens <intent>. It ranks skills for the intent and shows what would be summoned. Nothing is materialized.' }
-    }
-    await change($, mode, (s) => ({ ...s, band: { kind: 'looking' } }))
+    if (query === '') return { text: 'Usage: /lens <intent>. Nothing was summoned.' }
+    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query } }))
     lensInFlight = true
-    let outcome: { event: SummonEvent } | { notConnected: true } | { denied: string }
     try {
-      outcome = await previewSummon($, query)
+      let outcome: Preview
+      try {
+        outcome = await previewSummon($, query)
+      } finally {
+        lensInFlight = false
+      }
+      if ('notConnected' in outcome) {
+        await change($, mode, (s) => ({
+          ...s,
+          band: { kind: 'not-connected' },
+          status: { ...s.status, summonTool: 'not-connected' },
+        }))
+        return { text: 'Lens: the summon tool is not connected.' }
+      }
+      const { event, reached } = outcome
+      await change($, mode, (s) => recordEvent(s, event, null, 'lens', reached))
+      return { text: lensResultText(event) }
     } finally {
-      lensInFlight = false
+      // however it ended, the in-flight band does not stay up
+      try {
+        await change($, mode, (s) => (s.band !== null && s.band.kind === 'looking' ? { ...s, band: null } : s))
+      } catch {
+        // nothing more to do
+      }
     }
-    if ('notConnected' in outcome) {
-      await change($, mode, (s) => ({
-        ...s,
-        band: { kind: 'notice', text: 'summon tool not connected' },
-        status: { ...s.status, summonTool: 'not-connected' },
-      }))
-      return { text: 'The summon tool is not connected, so there is nothing to preview. Nothing was materialized.' }
-    }
-    if ('denied' in outcome) {
-      const reason = sanitizeDisplay(outcome.denied, 120)
-      await change($, mode, (s) => ({ ...s, band: { kind: 'notice', text: `preview refused: ${reason}` } }))
-      return { text: `The preview was refused: ${reason}. Nothing was materialized.` }
-    }
-    const { event } = outcome
-    await change($, mode, (s) => recordEvent(s, event, null, 'lens'))
-    return { text: `${describeEvent(event)} Nothing was materialized.` }
   })
 
   /* ----------------------------------------------------------------------- *
@@ -220,13 +274,25 @@ export const register: Register = (on, options) => {
     } catch {
       // observing must never get in the way of the call
     }
-    const r = await next(e)
+    let r
+    try {
+      r = await next(e)
+    } catch (error) {
+      // aborted: the call started nothing
+      if (isAgentCall && key) later(change($, mode, (s) => dropAgentCall(s, key)))
+      throw error
+    }
     try {
       if (isAgentCall && key) {
-        const record = (r as { result?: unknown }).result
-        const rec = typeof record === 'object' && record !== null ? (record as Record<string, unknown>) : {}
-        const id = typeof rec.agentId === 'string' ? rec.agentId : typeof rec.agent_id === 'string' ? rec.agent_id : null
-        await change($, mode, (s) => finishAgentCall(s, key, id, background))
+        if (r.deny !== undefined || r.isError === true) {
+          // refused or failed: no agent was started, so no row is left
+          await change($, mode, (s) => dropAgentCall(s, key))
+        } else {
+          const record = (r as { result?: unknown }).result
+          const rec = typeof record === 'object' && record !== null ? (record as Record<string, unknown>) : {}
+          const id = typeof rec.agentId === 'string' ? rec.agentId : typeof rec.agent_id === 'string' ? rec.agent_id : null
+          await change($, mode, (s) => finishAgentCall(s, key, id, background))
+        }
       }
     } catch {
       // see above
@@ -235,7 +301,7 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e))
 
   // Summons: record what came back. The result is returned exactly as received.
-  on('tool.call', { tool: /skill-summon__summon$/ }, async ($, e, next) => {
+  on('tool.call', { tool: /^mcp__(?:plugin_skill-heaven_)?skill-summon__summon$/ }, async ($, e, next) => {
     const r = await next(e)
     try {
       const args = e as unknown as Record<string, unknown>
@@ -262,7 +328,10 @@ export const register: Register = (on, options) => {
   on('tool.call', { tool: 'Read' }, async ($, e, next) => {
     const r = await next(e)
     try {
-      if (r.deny === undefined && r.isError !== true && typeof e.file_path === 'string') {
+      const args = e as unknown as Record<string, unknown>
+      // a partial read (an offset or a limit) is not the body read
+      const isWhole = (args.offset === undefined || args.offset === null) && (args.limit === undefined || args.limit === null)
+      if (isWhole && r.deny === undefined && r.isError !== true && typeof e.file_path === 'string') {
         const path = e.file_path
         const current = await load($)
         const reader = agentLabelFor(current, typeof e.agentId === 'string' ? e.agentId : null)
@@ -314,13 +383,13 @@ export const register: Register = (on, options) => {
     if (state.band === null) return next(e)
     const actions: BandActions = {
       inspect: (id) => {
-        void change($, mode, (s) => ({ ...s, section: 'session', openEntry: id })).then(() => openPane($))
+        later(change($, mode, (s) => ({ ...s, section: 'session', openEntry: id })).then(() => openPane($)))
       },
       dismiss: () => {
-        void change($, mode, (s) => ({ ...s, band: null }))
+        later(change($, mode, (s) => ({ ...s, band: null })))
       },
       summon: (name) => {
-        void $.prompt.fill({ text: `/summon ${name}`, mode: 'replace' })
+        later(fillPrompt($, `/summon ${name}`))
       },
     }
     const tree = renderBand($.ui.resolve(e), state, actions, e.props.bodyColumns)
@@ -331,16 +400,16 @@ export const register: Register = (on, options) => {
     const state = await load($)
     const actions: PaneActions = {
       section: (section) => {
-        void change($, mode, (s) => ({ ...s, section }))
+        later(change($, mode, (s) => ({ ...s, section })))
       },
       toggle: (id) => {
-        void change($, mode, (s) => ({ ...s, openEntry: s.openEntry === id ? null : id }))
+        later(change($, mode, (s) => ({ ...s, openEntry: s.openEntry === id ? null : id })))
       },
       fill: (text) => {
-        void $.prompt.fill({ text, mode: 'replace' })
+        later(fillPrompt($, text))
       },
       copy: (text) => {
-        void $.ui.copy({ text, surface: e.surface })
+        later(copyText($, text, e.surface))
       },
     }
     return renderPane($.ui.resolve(e), state, actions, e.props.bodyColumns)

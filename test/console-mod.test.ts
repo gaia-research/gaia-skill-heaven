@@ -102,9 +102,26 @@ describe("hooks module", () => {
     expect(toolHooks).toHaveLength(3);
     for (const hook of toolHooks) {
       const body = hook.slice(0, hook.indexOf(".catch("));
-      expect(body).toMatch(/const r = await next\(e\)/);
+      expect(body).toMatch(/\br = await next\(e\)/);
       expect(body).toMatch(/return r\n\s*}\)$/);
     }
+  });
+
+  test("the summon tool is matched by the same anchored pattern everywhere", () => {
+    const model = text(join(HOOKS, "model.ts"));
+    const register = text(join(HOOKS, "register.tsx"));
+    const wanted = "^mcp__(?:plugin_skill-heaven_)?skill-summon__summon$";
+    expect(model).toContain(`SUMMON_TOOL = /${wanted}/`);
+    expect(register).toContain(`{ tool: /${wanted}/ }`);
+    const re = new RegExp(wanted);
+    expect(re.test("mcp__plugin_skill-heaven_skill-summon__summon")).toBe(true);
+    expect(re.test("mcp__skill-summon__summon")).toBe(true);
+    expect(re.test("mcp__evil-skill-summon__summon")).toBe(false);
+    expect(re.test("mcp__skill-summon__summon__x")).toBe(false);
+  });
+
+  test("a button never wipes a draft", () => {
+    expect(text(join(HOOKS, "register.tsx"))).not.toMatch(/mode:\s*'replace'/);
   });
 
   test("writes nothing: no filesystem, process, network, store or settings calls", () => {

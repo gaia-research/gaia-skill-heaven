@@ -17,7 +17,9 @@ import {
   eventLines,
   formatMs,
   formatScore,
+  noticeLines,
   readingRung,
+  readingToken,
   renderStatusSegments,
   sanitizeDisplay,
 } from './status-model.mjs'
@@ -80,28 +82,12 @@ export function renderBand(ui: UI, state: ConsoleState, actions: BandActions, co
   if (band === null) return null
   const width = Math.max(20, columns)
 
-  if (band.kind === 'looking') {
+  if (band.kind === 'looking' || band.kind === 'not-connected') {
+    const [first, second] = noticeLines(band.kind === 'looking' ? { kind: 'looking', query: band.query } : { kind: 'not-connected' })
     return (
       <Box flexDirection="column" width={width}>
-        {runs(ui, [
-          { text: '◇', role: 'umbrella' },
-          { text: ' lens  ', role: 'dim' },
-          { text: 'looking…', role: 'ink' },
-        ])}
-        <Button key="dismiss" label="Dismiss" role="dismiss" onPress={() => actions.dismiss()} />
-      </Box>
-    )
-  }
-
-  if (band.kind === 'notice') {
-    return (
-      <Box flexDirection="column" width={width}>
-        {runs(ui, [
-          { text: '◇', role: 'umbrella' },
-          { text: ' lens  ', role: 'dim' },
-          { text: '? ', role: 'amber' },
-          { text: sanitizeDisplay(band.text, 90), role: 'ink' },
-        ])}
+        {first ? runs(ui, first) : null}
+        {second ? runs(ui, second) : null}
         <Button key="dismiss" label="Dismiss" role="dismiss" onPress={() => actions.dismiss()} />
       </Box>
     )
@@ -218,10 +204,10 @@ function healthText(entry: ConsoleEntry): string | null {
   return h.kind === 'stale' ? `? stale${age} · ranking still ran` : `fresh${age}`
 }
 
-function skillFields(skill: SkillReceipt, entry: ConsoleEntry): Field[] {
+function skillFields(skill: SkillReceipt, index: number, entry: ConsoleEntry): Field[] {
   const stage: Field =
     skill.stage === 'in-context'
-      ? { name: 'what entered', value: `body read (in context) by ${entry.readBy[skill.id] ?? 'an agent'}`, evidence: 'observed' }
+      ? { name: 'what entered', value: `body read (in context) by ${entry.readBy[index] ?? 'an agent'}`, evidence: 'observed' }
       : skill.stage === 'materialized'
         ? { name: 'what entered', value: 'card returned · body not read', evidence: 'inferred' }
         : skill.stage === 'previewed'
@@ -285,7 +271,11 @@ function receiptFields(entry: ConsoleEntry, state: ConsoleState): Field[][] {
     }
     common.push({ name: 'source health', value: health, evidence: health ? 'reported' : 'unknown' }, agent)
     groups.push(common)
-    for (const skill of event.skills.slice(0, 3)) groups.push([{ name: 'skill', value: sanitizeDisplay(skill.name, 48), evidence: 'reported' }, ...skillFields(skill, entry)])
+    event.skills.slice(0, 3).forEach((skill, i) =>
+      groups.push([{ name: 'skill', value: sanitizeDisplay(skill.name, 48), evidence: 'reported' }, ...skillFields(skill, i, entry)]),
+    )
+    const unshown = event.skills.length - 3 + entry.omitted
+    if (unshown > 0) groups.push([{ name: 'more', value: `+${unshown} more not shown here`, evidence: 'observed' }])
     return groups
   }
   if (event.kind === 'no-match') {
@@ -396,6 +386,7 @@ function scopeSection(ui: UI, state: ConsoleState, actions: PaneActions): Render
   const { Box, Text, Button } = ui
   const { source, health, unavailable } = latestSource(state)
   const reading = state.status.reading
+  const boot = state.status.boot ?? (reading.kind === 'selected' ? ({ kind: 'native', source: 'no-launcher' } as const) : reading)
   const rung = reading.kind === 'selected' ? reading.rung : null
   const ultra = readingRung(reading) === 'ultra'
   const skills = state.status.skills
@@ -419,8 +410,11 @@ function scopeSection(ui: UI, state: ConsoleState, actions: PaneActions): Render
     },
     {
       name: 'inherited',
-      value: 'boot reading NATIVE — no launcher observed; this console cannot see how the session was started',
-      evidence: 'inferred',
+      value:
+        boot.kind === 'native' || boot.kind === 'unknown'
+          ? `boot reading ${readingToken(boot)} — no launcher observed; this console cannot see how the session was started`
+          : `boot reading ${readingToken(boot)} — set at launch`,
+      evidence: boot.kind === 'native' || boot.kind === 'unknown' ? 'inferred' : 'reported',
     },
     {
       name: 'selected',
@@ -540,6 +534,7 @@ function trustSection(ui: UI, state: ConsoleState): RenderElement {
       <Box flexDirection="column" marginLeft={2}>
         {row('reads', 'summon tool results · your /skill-* commands · Read/Agent tool calls (to observe, never to change)', 't3')}
         {row('writes', 'nothing to disk · session-only $.state', 't4')}
+        {row('command text', '/lens and /heaven print a one-line result that the model can read. It is fixed text and carries nothing a skill source supplied.', 't4b')}
         {row('network', "none of its own; /lens calls the bundled summon tool, which fetches the skill source", 't5')}
         {row('disable', '/plugin disable skill-heaven-console — the status entry, band and pane disappear; Skill Heaven is unchanged', 't6')}
       </Box>

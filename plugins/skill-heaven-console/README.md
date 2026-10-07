@@ -16,13 +16,12 @@ Skill Heaven works exactly the same without it.
 |---|---|
 | **Status entry** | `◇ entropy ‹‹ [NATIVE] ›› · 2 skills` beside your own status line. It is appended; your `statusLine` setting is never touched. |
 | **Lens band** | Empty by default. After a summon it shows the result in two lines and whether the skill body was read (`card returned · body not read` or `in context · body read by main agent`). `Inspect` opens the pane, `Dismiss` hides it. It also hides on your next prompt. |
-| **`/lens <intent>`** | Previews which skill would be summoned. Nothing is materialized and nothing enters model context. For a single candidate the band offers `Summon`, which only **fills your prompt** with `/summon <name>` — you press Enter. |
+| **`/lens <intent>`** | Previews which skill would be summoned, with `preview: true`. Nothing is materialized; the summon engine still logs the query in its own session directory. The preview and its detail appear in the band, not in the conversation. For a single candidate the band offers `Summon`, which only **fills your prompt** with `/summon <name>` — you press Enter. If a summon tool ignores `preview` and materializes a skill, the band shows that real summon and the count includes it. |
 | **`/heaven`** | A pane with four sections: **Session** (receipts, each field labelled observed, reported, inferred or unknown), **Scope** (what Skill Heaven can see, what is active, rung controls that pre-fill commands), **Flow** (agents the host reported and what each summoned) and **Trust** (what this plugin reads and writes). |
 
 Selecting a rung (`/skill-heaven low`, `/skill-hell high`, `/skill-ultra`, `/skill-zero`) changes the
 bracketed reading in the status entry. That reading is a preference you expressed and the console
-saw; Skill Heaven does not enforce it. `/skill-ultra` reads `[ULTRA]` with *controller unavailable*:
-the Ultra controller is provisioned, not built.
+saw; Skill Heaven does not enforce it. `/skill-ultra` reads `[ULTRA]`; the Ultra controller is provisioned, not built. The compact status entry shows only `[ULTRA]` and the skill count — *controller unavailable* is spelled out in `full` mode, in the Scope section and in the pane.
 
 ## Install
 
@@ -43,8 +42,9 @@ user-scope install, but the install command itself is typed in a terminal sessio
 
 - **Reads:** the results of the Skill Heaven summon tool, the `/skill-*` commands you submit, and
   `Read` and `Agent` tool calls — only to observe them.
-- **Writes:** nothing to disk and nothing to your settings. State lives in the session only and is gone when it ends.
+- **Writes:** nothing of its own to disk and nothing to your settings. State lives in the session only and is gone when it ends. (The summon engine keeps its own session directory, including for a `/lens` preview.)
 - **Network:** none of its own. `/lens` calls the bundled summon tool, which fetches the skill source.
+- **What the model can read:** the one-line result of `/lens` and `/heaven` is a row the model can see. It is fixed text and carries nothing a skill source, a tool error or a refusal supplied; all detail stays in the band and the pane.
 - **Never:** rewrites or refuses a tool call, submits a prompt, or edits `~/.claude`. Buttons pre-fill a
   command for you to submit. All text that came from a skill source or a model is sanitized before it is drawn.
 
@@ -70,7 +70,8 @@ The status entry, band and pane disappear. Skill Heaven is unchanged.
   server also sends.
 - Whether the host reports agent ids on every subagent tool call. Flow says so when it does not.
 - Whether `/lens` can reach the summon tool by the marketplace name
-  (`mcp__plugin_skill-heaven_skill-summon__summon`) or the launcher name (`mcp__skill-summon__summon`) in your install.
+  (`mcp__plugin_skill-heaven_skill-summon__summon`) or the launcher name (`mcp__skill-summon__summon`) in your install. Only those two exact names are treated as the summon tool; a tool is called absent only when the session's tool list does not name it.
+- Whether `$.tool.list()` names tools the host defers behind tool search.
 
 ## Develop
 
