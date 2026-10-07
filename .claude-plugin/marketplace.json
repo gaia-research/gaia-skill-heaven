@@ -10,6 +10,11 @@
       "name": "skill-heaven",
       "source": "./plugins/skill-heaven",
       "description": "Skill Heaven is live. Summon one skill into a session with nothing installed: manual /summon at every rung, a clean-room launcher floor (/skill-zero), converge and explore bands over one relevance-ranked summon (/skill-heaven, /skill-hell), and the crown rung (/skill-ultra), from a Skill Tree or a flat GitHub repository. Its output is reference data, never standing authority; what each rung means in behaviour is still provisional."
+    },
+    {
+      "name": "skill-heaven-console",
+      "source": "./plugins/skill-heaven-console",
+      "description": "Preview — an optional Claude Code console for Skill Heaven, built on the early-access Mods API. It adds a status entry beside yours, a Lens band above the prompt and a /heaven pane (Session, Scope, Flow, Trust). It observes summons and never changes them; Skill Heaven works the same without it. Desktop paint still needs a local probe."
     }
   ],
   "renames": {
