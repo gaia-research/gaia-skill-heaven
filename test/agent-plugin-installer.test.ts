@@ -83,6 +83,13 @@ describe("portable Agent Plugin installer", () => {
       readFileSync(join(installHome, "marketplace", ".claude-plugin", "marketplace.json"), "utf8"),
     ) as { plugins: Array<{ source: string }> };
     expect(marketplace.plugins[0]?.source).toBe("./plugins/skill-heaven");
+    // Every entry the local marketplace lists must exist in the artifact: the
+    // repository marketplace also lists the Claude-only console, which the
+    // portable artifact does not carry.
+    expect(marketplace.plugins).toHaveLength(1);
+    for (const entry of marketplace.plugins) {
+      expect(existsSync(join(installHome, "marketplace", entry.source)), entry.source).toBe(true);
+    }
 
     const printed = execFileSync("sh", [INSTALLER, "--print-path"], {
       encoding: "utf8",

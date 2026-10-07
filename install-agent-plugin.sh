@@ -149,7 +149,18 @@ done
 
 cp -R "$SOURCE_PLUGIN/." "$NEXT/marketplace/plugins/skill-heaven/"
 mkdir -p "$NEXT/marketplace/.claude-plugin"
-cp "$WORK/source/.claude-plugin/marketplace.json" "$NEXT/marketplace/.claude-plugin/marketplace.json"
+# The repository marketplace may list Claude-only plugins (the optional
+# console) that this portable artifact does not carry. List only what was
+# staged, so no client is pointed at an entry whose directory is missing.
+node -e '
+  const fs = require("node:fs");
+  const [from, to] = process.argv.slice(1);
+  const market = JSON.parse(fs.readFileSync(from, "utf8"));
+  market.plugins = (market.plugins || []).filter((p) => p && p.source === "./plugins/skill-heaven");
+  if (market.plugins.length !== 1) process.exit(3);
+  fs.writeFileSync(to, JSON.stringify(market, null, 2) + "\n");
+' "$WORK/source/.claude-plugin/marketplace.json" "$NEXT/marketplace/.claude-plugin/marketplace.json" \
+  || fail "could not write the local marketplace manifest. Nothing was installed."
 
 # Hermes currently accepts a Git source rather than an arbitrary local
 # directory. A tiny local repository keeps the installed package usable there.

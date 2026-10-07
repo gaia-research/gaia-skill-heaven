@@ -175,7 +175,15 @@ try {
   }
 
   Copy-Item -Recurse -Force (Join-Path $SOURCE_PLUGIN "*") (Join-Path $NEXT "marketplace\plugins\skill-heaven\")
-  Copy-Item -Force (Join-Path $WORK "source\.claude-plugin\marketplace.json") (Join-Path $NEXT "marketplace\.claude-plugin\marketplace.json")
+  # The repository marketplace may list Claude-only plugins (the optional
+  # console) that this portable artifact does not carry. List only what was
+  # staged, so no client is pointed at an entry whose directory is missing.
+  $market = Get-Content -Raw (Join-Path $WORK "source\.claude-plugin\marketplace.json") | ConvertFrom-Json
+  $market.plugins = @($market.plugins | Where-Object { $_.source -eq "./plugins/skill-heaven" })
+  if ($market.plugins.Count -ne 1) {
+    Fail-Installation "could not write the local marketplace manifest. Nothing was installed."
+  }
+  $market | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 (Join-Path $NEXT "marketplace\.claude-plugin\marketplace.json")
 
   # Hermes currently accepts a Git source rather than an arbitrary local
   # directory. A tiny local repository keeps the installed package usable there.
