@@ -28,7 +28,7 @@ export function SessionPanel({ events }: { events: readonly EventEntry[] }) {
         A timeline of this session’s summons, newest first. Each row expands to its receipt. Every field says how it is
         known; the status line shows state, the pulse shows an event, the receipt shows evidence.
       </p>
-      <div className="cx-tablewrap">
+      <Scroller label="Evidence classes: meaning and how each is shown" className="cx-tablewrap">
         <table className="cx-table cx-table--tight">
           <caption className="sr-only">Evidence classes</caption>
           <thead>
@@ -50,7 +50,7 @@ export function SessionPanel({ events }: { events: readonly EventEntry[] }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </Scroller>
       <p className="cx-fine cx-fine--block">
         Composition is always reported as relevance-only today. Nothing is Arbor-informed, so no Arbor colour is drawn
         anywhere on this page.
@@ -115,9 +115,8 @@ export function ScopePanel({ main, cases }: { main: ScopeCase; cases: readonly S
         <div className="cx-prefill-group" role="group" aria-label="Choose a rung (pre-fills a command)">
           <span className="cx-prefill-group__k">Choose a rung</span>
           <div className="cx-prefill-group__row">
-            {RUNGS.map((rung) => (
-              <DemoButton key={rung} describedBy="cx-prefill-note">
-                <span className="sr-only">Pre-fill </span>
+            {RUNGS.map((rung, i) => (
+              <DemoButton key={rung} describedBy="cx-prefill-note" focusable={i === 0} label={`Pre-fill ${commandForRung(rung)} (demo)`}>
                 <code>{commandForRung(rung)}</code>
               </DemoButton>
             ))}
@@ -126,11 +125,11 @@ export function ScopePanel({ main, cases }: { main: ScopeCase; cases: readonly S
         <div className="cx-prefill-group" role="group" aria-label="Cut and start clean">
           <span className="cx-prefill-group__k">Cut and start clean</span>
           <div className="cx-prefill-group__row">
-            <DemoButton describedBy="cx-prefill-note">
-              Cut <span aria-hidden="true">→</span> <code>/skill-zero</code>
+            <DemoButton describedBy="cx-prefill-note" focusable={false} label="Cut: /skill-zero (demo)">
+              Cut: <code>/skill-zero</code>
             </DemoButton>
-            <DemoButton describedBy="cx-prefill-note">
-              Start clean (copies) <span aria-hidden="true">→</span> <code>claude-zero --level zero</code>
+            <DemoButton describedBy="cx-prefill-note" focusable={false} label="Start clean (copies): claude-zero --level zero (demo)">
+              Start clean (copies): <code>claude-zero --level zero</code>
             </DemoButton>
           </div>
         </div>

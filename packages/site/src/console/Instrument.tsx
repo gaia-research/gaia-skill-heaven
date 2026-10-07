@@ -20,15 +20,15 @@ function Spec({ entry }: { entry: StatusEntry }) {
       <header className="cx-spec__head">
         <h3 id={`status-${key}-h`}>{label}</h3>
         <code className="cx-key">{key}</code>
-        <p className="cx-fine">
+        {/* The same sentence is already exposed to assistive tech by StatusLine; this copy is for sighted reviewers. */}
+        <p className="cx-fine" aria-hidden="true">
           <span className="cx-fine__k">Screen reader</span>
-          {/* The same sentence is already in the page for assistive tech (StatusLine); this copy is for sighted reviewers. */}
-          <span aria-hidden="true">{describeStatus(status)}</span>
+          <span>{describeStatus(status)}</span>
         </p>
       </header>
       <Scroller label={`${label}: the status line in each mode and at each width`} className="cx-spec__body">
         <div className="cx-lines">
-          <div className="cx-ln">
+          <div className="cx-ln" aria-hidden="true">
             <span className="cx-ln__k">compact</span>
             <Paint segments={renderStatusSegments(status, 'compact')} />
           </div>
@@ -36,7 +36,7 @@ function Spec({ entry }: { entry: StatusEntry }) {
             <span className="cx-ln__k">full</span>
             <StatusLine status={status} mode="full" />
           </div>
-          <div className="cx-ln cx-ln--muted">
+          <div className="cx-ln cx-ln--muted" aria-hidden="true">
             <span className="cx-ln__k">NO_COLOR</span>
             <code className="cx-plain" aria-hidden="true">
               {paintAnsi(full, 'none')}
@@ -46,7 +46,7 @@ function Spec({ entry }: { entry: StatusEntry }) {
             same status, full mode, at a width of N cells — the dashed edge marks that width
           </p>
           {WIDTHS.map((w) => (
-            <div className="cx-ln" key={w}>
+            <div className="cx-ln" key={w} aria-hidden="true">
               <span className="cx-ln__k">
                 <span className="sr-only">at </span>
                 {w}

@@ -22,9 +22,9 @@ function LensBand({ entry, id, note }: { entry: EventEntry; id: string; note?: s
         <h3 id={`${id}-h`}>{label}</h3>
         <code className="cx-key">{key}</code>
         {note && <p className="cx-fine">{note}</p>}
-        <p className="cx-fine">
+        <p className="cx-fine" aria-hidden="true">
           <span className="cx-fine__k">Screen reader</span>
-          <span aria-hidden="true">{describeEvent(event)}</span>
+          <span>{describeEvent(event)}</span>
         </p>
       </header>
       <div className="cx-spec__body">
@@ -44,8 +44,8 @@ function LensBand({ entry, id, note }: { entry: EventEntry; id: string; note?: s
             )}
           </div>
           <div className="cx-band__actions" role="group" aria-label="Lens actions (prototype)">
-            {actions.map((a) => (
-              <DemoButton key={a} describedBy={noteId}>
+            {actions.map((a, i) => (
+              <DemoButton key={a} describedBy={noteId} focusable={i === 0} label={`${ACTION_LABEL[a]} (demo) — ${label}`}>
                 {ACTION_LABEL[a]}
               </DemoButton>
             ))}
@@ -92,7 +92,7 @@ export function LensSection({ events, terminal }: { events: readonly EventEntry[
       </ul>
 
       <h3 className="cx-h3">Card versus context</h3>
-      <div className="cx-tablewrap">
+      <Scroller label="Card versus context: the four stages" className="cx-tablewrap">
         <table className="cx-table">
           <caption className="sr-only">The four stages a summoned skill can have reached</caption>
           <thead>
@@ -114,7 +114,7 @@ export function LensSection({ events, terminal }: { events: readonly EventEntry[
             ))}
           </tbody>
         </table>
-      </div>
+      </Scroller>
       <p className="cx-fine cx-fine--block">The terminal never claims a skill is “in context”; it says materialized.</p>
 
       <h3 className="cx-h3">Every band state</h3>

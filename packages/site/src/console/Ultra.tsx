@@ -39,9 +39,9 @@ function UltraSpec({ entry, id }: { entry: StatusEntry; id: string }) {
       <header className="cx-spec__head">
         <h3 id={`${id}-h`}>{label}</h3>
         <code className="cx-key">{key}</code>
-        <p className="cx-fine">
+        <p className="cx-fine" aria-hidden="true">
           <span className="cx-fine__k">Screen reader</span>
-          <span aria-hidden="true">{describeStatus(status)}</span>
+          <span>{describeStatus(status)}</span>
         </p>
       </header>
       <Scroller label={`${label}: status line${pulse ? ' and transition pulse' : ''}`} className="cx-spec__body">

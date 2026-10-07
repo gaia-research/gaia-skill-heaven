@@ -673,6 +673,8 @@
 }
 .cx-panel {
   padding: 8px clamp(14px, 3vw, 28px) 28px;
+  /* the ground colour, so the red stop glyph never sits on a lighter panel (it is 3.0:1 on ground) */
+  background: var(--cx-void);
 }
 .cx-panel > .cx-h3,
 .cx-main .cx-panel > h3 {
@@ -994,4 +996,15 @@
   .cx [id] {
     scroll-margin-top: 64px;
   }
+}
+
+/* Cross-reference links in the state matrix: a 24px minimum target. */
+.cx-table--matrix a:not(.cx-mbox) {
+  display: inline-block;
+  min-height: 24px;
+  line-height: 24px;
+}
+
+.cx-table--tokens td code {
+  white-space: nowrap;
 }
