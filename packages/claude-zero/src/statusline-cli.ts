@@ -49,9 +49,6 @@ function readFileOrReason(path: string, maxBytes?: number): FileRead {
   }
 }
 
-function countLines(text: string): number {
-  return text.split("\n").filter((line) => line.trim() !== "").length;
-}
 
 // Reads the summon engine's own files directly off disk — no subprocess, no
 // network (the statusline runs on every prompt render, so this must stay
@@ -63,8 +60,9 @@ function countLines(text: string): number {
 // has been materialized, so 0. Unset, or a session.json that is unreadable or
 // malformed, is unknown (`? skills`).
 //
-// Summons: the count of summon-log.jsonl lines (one per summon call recorded in
-// this session root). A missing log is 0 only when no skill was materialized
+// Summons: summon-log.jsonl entries that were real summon calls — a `preview`
+// materializes nothing and is not a summon (the model's reduceStatus agrees).
+// A line that does not parse makes the count unknown rather than wrong. A missing log is 0 only when no skill was materialized
 // either; otherwise, and when the log is unreadable or over the size cap, the
 // count is unknown.
 function loadSummonSession(root: string | undefined): SummonSessionFacts {
@@ -90,10 +88,25 @@ function loadSummonSession(root: string | undefined): SummonSessionFacts {
 
   const log = readFileOrReason(join(root, SUMMON_LOG_FILE), SUMMON_LOG_CAP_BYTES);
   let summons: number | null = null;
-  if (typeof log === "object") summons = countLines(log.text);
+  if (typeof log === "object") summons = countSummons(log.text);
   else if (log === "missing" && skills === 0) summons = 0;
 
   return { skills, summons, lastArrival };
+}
+
+function countSummons(text: string): number | null {
+  let count = 0;
+  for (const line of text.split("\n")) {
+    if (line.trim() === "") continue;
+    try {
+      const entry: unknown = JSON.parse(line);
+      if (!entry || typeof entry !== "object") return null;
+      if ((entry as { preview?: unknown }).preview !== true) count += 1;
+    } catch {
+      return null;
+    }
+  }
+  return count;
 }
 
 function readStdin(): string {

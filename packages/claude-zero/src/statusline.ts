@@ -22,6 +22,7 @@ import {
   renderStatusSegments,
   segmentsWidth,
   statusLevels,
+  toPlain,
   type ColorDepth,
   type Segment,
   type SkillHeavenStatus,
@@ -145,11 +146,21 @@ function doorSuffixTiers(manifest: ProfileManifest, input: StatuslineInput | nul
  * then standing); only when not even the richest level fits beside no door
  * facts does the instrument step down to a narrower level. */
 function composeSegments(status: SkillHeavenStatus, mode: StatusMode, tiers: Segment[][], columns: number | undefined): Segment[] {
-  const richest = statusLevels(status, mode)[0];
+  const levels = statusLevels(status, mode);
+  const richest = levels[0];
   if (!richest) return [];
   if (columns === undefined) return [...richest, ...tiers[0]!];
+  // The standing dose is the door's N8 "pain moment": it outlives the
+  // instrument's full-mode extras (summons, last arrival). So for each suffix
+  // tier (standing + ctx%, then standing alone) try every instrument level
+  // that still names skills; only then drop the suffix and let the model
+  // degrade, the reading last.
+  const withSkills = levels.filter((level) => / skills?\b|\? skills/.test(toPlain(level)));
   for (const tier of tiers) {
-    if (segmentsWidth(richest) + segmentsWidth(tier) <= columns) return [...richest, ...tier];
+    if (tier.length === 0) continue;
+    for (const level of withSkills) {
+      if (segmentsWidth(level) + segmentsWidth(tier) <= columns) return [...level, ...tier];
+    }
   }
   return renderStatusSegments(status, mode, columns);
 }

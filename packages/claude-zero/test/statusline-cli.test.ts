@@ -143,6 +143,15 @@ describe("statusline bin (IO path)", () => {
     expect(painted.stdout.replace(ANSI, "")).toBe(plain.stdout);
   });
 
+  it("previews are not summons; an unparseable log line makes the count unknown", () => {
+    const withPreview = summonRoot({ session: TWO_SKILLS, log: '{"query":"a"}\n{"query":"b","preview":true}\n{"query":"c"}\n' });
+    expect(run({ SKILL_HEAVEN_STATUS: "full", SKILL_SUMMON_SESSION: withPreview }).stdout).toContain("2 skills / 2 summons");
+    const broken = summonRoot({ session: TWO_SKILLS, log: '{"query":"a"}\nnot json\n' });
+    const out = run({ SKILL_HEAVEN_STATUS: "full", SKILL_SUMMON_SESSION: broken }).stdout;
+    expect(out).toContain("2 skills");
+    expect(out).not.toMatch(/summons/);
+  });
+
   it("a non-numeric COLUMNS is no budget: the full line is kept", () => {
     const { stdout } = run({ COLUMNS: "wide", SKILL_SUMMON_SESSION: null });
     expect(stdout).toContain("23% ctx");

@@ -168,6 +168,20 @@ describe("renderStatusline — width budget (COLUMNS)", () => {
   it("applies no budget when columns is absent", () => {
     expect(renderStatusline(...args())).toContain("31% ctx");
   });
+
+  it("full mode: the standing dose (N8) outlives summons and the last arrival", () => {
+    const full = [productFloor(), ctx(31), session({ skills: 2, summons: 3, lastArrival: "grill-me" })] as const;
+    expect(renderStatusline(...full, { mode: "full" })).toBe(
+      "◇ entropy ‹‹ [ZERO] ›› · 2 skills / 3 summons · +grill-me · 20.2k standing (excl. bundled doctor) · 31% ctx",
+    );
+    // Too narrow for the arrival but wide enough for standing + ctx beside the shorter instrument.
+    expect(renderStatusline(...full, { mode: "full", columns: 95 })).toBe(
+      "◇ entropy ‹‹ [ZERO] ›› · 2 skills / 3 summons · 20.2k standing (excl. bundled doctor) · 31% ctx",
+    );
+    expect(renderStatusline(...full, { mode: "full", columns: 83 })).toBe(
+      "◇ entropy ‹‹ [ZERO] ›› · 2 skills · 20.2k standing (excl. bundled doctor) · 31% ctx",
+    );
+  });
 });
 
 describe("renderStatusline — colour (CONTROL-PLANE §4, NO_COLOR)", () => {
