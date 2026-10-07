@@ -61,7 +61,10 @@ describe("portable Agent Plugin installer", () => {
     });
     const plugin = join(installHome, "marketplace", "plugins", "skill-heaven");
 
-    expect(output).toContain(`Plugin directory: ${plugin}`);
+    // The epilogue (see test/installer-epilogue.test.ts) names both real directories.
+    expect(output).toContain(`+ ${plugin}`);
+    expect(output).toContain(`+ ${join(installHome, "marketplace")}`);
+    expect(output).toContain("No harness was installed or reconfigured.");
     expect(existsSync(join(plugin, "plugin.json"))).toBe(true);
     expect(existsSync(join(plugin, "mcp.json"))).toBe(true);
     expect(existsSync(join(plugin, "skills", "summon", "SKILL.md"))).toBe(true);
