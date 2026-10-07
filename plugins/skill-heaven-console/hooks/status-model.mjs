@@ -454,13 +454,22 @@ function eventFromSummonResult(structured, call = {}, failure) {
       kind: unavailable ? "unavailable" : "error",
       direction: "unspecified",
       query: call.query ?? "",
+      preview: call.preview === true,
       reason: text,
       at,
       evidence: "observed"
     };
   }
   if (!isRec(structured)) {
-    return { kind: "error", direction: "unspecified", query: call.query ?? "", reason: "the summon result had no structured content", at, evidence: "observed" };
+    return {
+      kind: "error",
+      direction: "unspecified",
+      query: call.query ?? "",
+      preview: call.preview === true,
+      reason: "the summon result had no structured content",
+      at,
+      evidence: "observed"
+    };
   }
   const direction = directionFromSurface(structured.surface);
   const query = str(structured.query) ?? call.query ?? "";
@@ -485,6 +494,20 @@ function eventFromSummonResult(structured, call = {}, failure) {
       sourceHealth
     };
   }
+  const skipped = Array.isArray(structured.skipped) ? structured.skipped : [];
+  if (summoned.length === 0 && skipped.length > 0) {
+    const first = skipped[0];
+    const why = isRec(first) ? str(first.why) ?? str(first.reason) ?? str(first.error) : str(first);
+    return {
+      kind: "error",
+      direction,
+      query,
+      preview: call.preview === true,
+      reason: why ? `nothing materialized: ${why}` : "nothing materialized: every candidate was skipped",
+      at,
+      evidence: "reported"
+    };
+  }
   const composition = isRec(structured.composition) && structured.composition.mode === "relevance-only" ? "relevance-only" : "unknown";
   return {
     kind: "summoned",
@@ -501,7 +524,7 @@ function eventFromSummonResult(structured, call = {}, failure) {
   };
 }
 function reduceStatus(status, event) {
-  if (event.kind === "previewed") return status;
+  if (event.kind === "previewed" || event.kind !== "summoned" && event.preview) return status;
   const summons = status.summons === null ? null : status.summons + 1;
   if (event.kind !== "summoned") return { ...status, summons };
   const skills = status.skills === null ? null : status.skills + event.delta;
@@ -639,13 +662,13 @@ var HARNESS_PATHS = [
     bin: "pi",
     chip: "compatible",
     probedVersion: "0.84.2",
-    evidence: "Live probe of the Pi adapter. Pi 1.0.x now ships `pi mcp`; the adapter needs a re-probe there.",
+    evidence: "Live probe of the Pi adapter. Pi 1.0.x now ships pi mcp; the adapter needs a re-probe there.",
     evidenceHref: `${REPO}/plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`,
     needsInstaller: true,
     commands: [`pi install "${AGENT_PLUGIN_INSTALL.plugin}" --approve`],
     inHarness: false,
     blocked: null,
-    update: "Re-run the installer, then `pi update`.",
+    update: "Re-run the installer, then pi update.",
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
     statusNote: "The pi-zero extension draws a widget; the canonical entropy line is not wired there yet.",
@@ -657,13 +680,13 @@ var HARNESS_PATHS = [
     bin: "grok",
     chip: "compatible",
     probedVersion: "1.0.5",
-    evidence: "Live probe on 1.0.5; `grok plugin validate` also passes on 1.0.46 (static).",
+    evidence: "Live probe on 1.0.5; grok plugin validate also passes on 1.0.46 (static).",
     evidenceHref: `${REPO}/plugins/skill-heaven/PROBE.md`,
     needsInstaller: true,
     commands: [`grok plugin install "${AGENT_PLUGIN_INSTALL.plugin}" --trust`],
     inHarness: false,
     blocked: null,
-    update: "Re-run the installer, then `grok plugin update`.",
+    update: "Re-run the installer, then grok plugin update.",
     remove: ["grok plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
     statusNote: "A command-backed status line is possible on Grok but not built.",
@@ -695,13 +718,13 @@ var HARNESS_PATHS = [
     bin: "agy",
     chip: "partial",
     probedVersion: "1.3.1",
-    evidence: "Static: `agy plugin validate` (1.3.1) loads the five skills and five commands but reports the MCP server as not found \u2014 /summon would have no tool. Needs a local probe.",
+    evidence: "Static: agy plugin validate (1.3.1) loads the five skills and five commands but reports the MCP server as not found \u2014 /summon would have no tool. Needs a local probe.",
     evidenceHref: `${REPO}/docs/CONTROL-PLANE.md`,
     needsInstaller: false,
     commands: [],
     inHarness: false,
     blocked: "No registration command is printed until a logged-in probe shows Antigravity loading the summon server. The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile.",
-    update: "\u2014",
+    update: "Nothing to update \u2014 nothing is registered yet.",
     remove: [AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
     statusNote: "A stacked status command is the target; not built.",

@@ -284,6 +284,21 @@ describe("gaps closed after the /console review", () => {
   });
 });
 
+describe("gaps closed after the console review", () => {
+  it("a summon that skipped every candidate is an error, not a summon of nothing", () => {
+    const e = eventFromSummonResult({ surface: "hell", summoned: [], previewed: [], noMatch: null, skipped: [{ id: "a", why: "subpath escapes the repository" }] });
+    expect(e).toMatchObject({ kind: "error", reason: "nothing materialized: subpath escapes the repository" });
+    expect(reduceStatus(st({ skills: 2, summons: 1 }), e)).toMatchObject({ skills: 2, summons: 2 });
+  });
+
+  it("a /lens no-match or failure never counts as a summon", () => {
+    const before = st({ skills: 0, summons: 0 });
+    expect(reduceStatus(before, EVENT_FIXTURES.previewNoMatch!.event)).toEqual(before);
+    const failed = eventFromSummonResult(null, { preview: true }, { isError: true, text: "boom" });
+    expect(reduceStatus(before, failed)).toEqual(before);
+  });
+});
+
 describe("K12 — untrusted metadata cannot escape its field or spoof the instrument", () => {
   it("strips ANSI, controls, bidi and reserved glyphs", () => {
     const hostile = "\u001b[31m◆ [ULTRA APPROVED]\u001b[0m\npermissions‮ bypassed\u0007";

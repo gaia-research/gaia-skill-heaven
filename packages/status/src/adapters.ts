@@ -188,13 +188,22 @@ export function eventFromSummonResult(
       kind: unavailable ? "unavailable" : "error",
       direction: "unspecified",
       query: call.query ?? "",
+      preview: call.preview === true,
       reason: text,
       at,
       evidence: "observed",
     };
   }
   if (!isRec(structured)) {
-    return { kind: "error", direction: "unspecified", query: call.query ?? "", reason: "the summon result had no structured content", at, evidence: "observed" };
+    return {
+      kind: "error",
+      direction: "unspecified",
+      query: call.query ?? "",
+      preview: call.preview === true,
+      reason: "the summon result had no structured content",
+      at,
+      evidence: "observed",
+    };
   }
   const direction = directionFromSurface(structured.surface);
   const query = str(structured.query) ?? call.query ?? "";
@@ -219,6 +228,22 @@ export function eventFromSummonResult(
       sourceHealth,
     };
   }
+  // Nothing materialized and the engine says why: every candidate was skipped.
+  // That is a failure to report, not a summon of nothing.
+  const skipped = Array.isArray(structured.skipped) ? structured.skipped : [];
+  if (summoned.length === 0 && skipped.length > 0) {
+    const first = skipped[0];
+    const why = isRec(first) ? str(first.why) ?? str(first.reason) ?? str(first.error) : str(first);
+    return {
+      kind: "error",
+      direction,
+      query,
+      preview: call.preview === true,
+      reason: why ? `nothing materialized: ${why}` : "nothing materialized: every candidate was skipped",
+      at,
+      evidence: "reported",
+    };
+  }
   const composition = isRec(structured.composition) && structured.composition.mode === "relevance-only" ? "relevance-only" : "unknown";
   return {
     kind: "summoned",
@@ -238,7 +263,8 @@ export function eventFromSummonResult(
 /** Fold an event into state. A no-match, preview or error never changes the
  * reading or `skills N`; only materialized skills do. */
 export function reduceStatus(status: SkillHeavenStatus, event: SummonEvent): SkillHeavenStatus {
-  if (event.kind === "previewed") return status;
+  // A /lens preview is not a summon, whatever it returned (#7 of the console review).
+  if (event.kind === "previewed" || (event.kind !== "summoned" && event.preview)) return status;
   const summons = status.summons === null ? null : status.summons + 1;
   if (event.kind !== "summoned") return { ...status, summons };
   const skills = status.skills === null ? null : status.skills + event.delta;

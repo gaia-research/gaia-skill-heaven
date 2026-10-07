@@ -119,6 +119,8 @@ export type SummonEvent =
       kind: "unavailable" | "error";
       direction: Direction;
       query: string;
+      /** True when the failed call was a `/lens` preview. */
+      preview: boolean;
       reason: string;
       at: string | null;
       evidence: EvidenceClass;
