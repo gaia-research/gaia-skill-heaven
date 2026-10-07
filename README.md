@@ -15,18 +15,21 @@ Summon exactly the skills a task needs — one session, nothing installed. Or st
 - **Honest retrieval.** Ranking is local and deterministic over an index that ships in the plugin; a query with no fit is an explicit refusal, not a forced match.
 - **Reference data, not authority.** Commands, cards and MCP text say what they are and cannot change the task, authorize a tool call or widen permissions.
 - **Your permission choices survive the clean room.** An explicit flag wins; a configured default mode is the one setting carried through.
-- **One portable Agent Plugin.** Verified from scratch on Claude Code 2.1.288; Codex, Pi, Hermes, Grok and Antigravity were probed at their pinned versions earlier (table below).
+- **One portable Agent Plugin.** Verified from scratch on Claude Code 2.1.288; Codex, Pi, Hermes and Grok were probed at their pinned versions earlier. Antigravity is **partial**: its own validator loads the five commands but not the summon server (table below).
+- **A quiet instrument, not a dashboard.** `◇ entropy ‹‹ [ZERO] ›› · 0 skills` — where you are on the line and how many skills actually entered the session, the same in the terminal and the desktop ([design](docs/CONTROL-PLANE.md)).
 - **One line, not a count.** `zero · low · med · high · xhigh · max · ultra` measures *skill entropy* — a rung names a direction, never a number of skills.
 
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
 [![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
-Works with **Claude Code · Codex · Pi · Hermes · Grok**
+Works with **Claude Code · Codex · Pi · Hermes · Grok** · partial on **Antigravity**
 
 ---
 
 ## Install
+
+**Not sure which path?** [Pick your harness](https://gaia-research.github.io/gaia-skill-heaven/#/start) — it shows the exact commands for it, what changes on your machine, and how to update or remove it.
 
 Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or just the launchers.
 
@@ -72,6 +75,14 @@ The clients pinned in the compatibility probe use these registration commands:
 ```
 
 Run `/reload` in a Pi session that was already open; other clients pick up the plugin in a new session. Then `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available. There is no second engine or sibling repository.
+
+#### Optional — the console for Claude Code (preview)
+
+```text
+/plugin install skill-heaven-console@gaia-skill-heaven
+```
+
+Adds a status entry beside yours (it never replaces your statusLine), the **Lens** band — what a summon returned and whether the skill body actually entered context — and `/heaven`, a pane with the session's receipts, scope, agents and what you are trusting. It only *observes*: it never calls a tool on its own, never changes a summon, and writes nothing to disk. It is built on Claude Code 2.1.293's early-access Mods API and is labelled **preview** until a logged-in desktop session has been probed ([what it reads and writes](plugins/skill-heaven-console/README.md)).
 
 Some clients copy plugins into their own cache. Re-running the script updates the stable local artifact; run that client's update or reinstall command to refresh its cached copy.
 
@@ -239,7 +250,7 @@ prove or stamp a claim or trigger a benchmark. [Telemetry contract and flags →
 | Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
 | Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |
 | Grok | ✅ `grok-zero` | ✅ plugin compatibility (1.0.5) |
-| Antigravity (agy) | ✅ `agy-zero` | ✅ clean room CLI launcher (1.2.9) |
+| Antigravity (agy) | ✅ `agy-zero` (launcher probed on 1.2.13) | ◐ **partial** — `agy plugin validate` (1.3.1) loads the five commands but reports no MCP server, so `/summon` has no tool; needs a logged-in probe |
 | Other conformant Agent Plugins clients | — | ◻️ load the same directory; not yet pinned here |
 
 ---
