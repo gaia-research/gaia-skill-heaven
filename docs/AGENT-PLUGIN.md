@@ -349,7 +349,11 @@ results, `Read`s of materialized `SKILL.md` files, `/skill-*` command text and
 agent ids; it returns every observed result unchanged, writes nothing to disk,
 and its only tool call is `/lens`'s `preview: true` summon, which materializes
 nothing. Its copy of the status model is a committed bundle of `packages/status`
-(`npm run build:status`, CI-checked). **Not yet probed:** desktop paint in a
+(`npm run build:status`, CI-checked). Static evidence on Claude Code 2.1.293:
+`claude plugin validate plugins/skill-heaven-console` passes (it reads the module
+and reports only `$.state` writes — no filesystem, process, network, store or
+settings calls), and `claude plugin test` runs 23 engine tests over the
+terminal and desktop surfaces, all passing. **Not yet probed:** desktop paint in a
 logged-in session — it stays labelled preview until then. Design of record:
 [`docs/CONTROL-PLANE.md`](CONTROL-PLANE.md).
 
