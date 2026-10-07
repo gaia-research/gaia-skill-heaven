@@ -202,6 +202,18 @@ user + project skills and explicitly excludes bundled/plugin skills. Session
 scope explicitly discloses the bundled `doctor` residual. Standing and
 invocation doses remain separate.
 
+The statusline is a projection of the Skill Heaven status model: the entropy
+reading first, then the door's own standing dose and ctx%:
+
+```
+◇ entropy ‹‹ [ZERO] ›› · 0 skills · 20.2k standing (excl. bundled doctor) · 31% ctx
+```
+
+`SKILL_HEAVEN_STATUS=off|compact|full` chooses the line. `off` prints nothing
+(the standing dose and ctx% go with it); `full` adds summons and the last
+arrival. Plain text is used when `NO_COLOR` is set. When the terminal width
+(`COLUMNS`) is too narrow, ctx% is dropped first, then the standing dose.
+
 ## Boundaries
 
 - Heaven: `zero|low|med`, boot-time launcher choices.
