@@ -20,12 +20,18 @@ export type ConsoleEntryData = {
   agent: string | null
   /** How the console came to know: a tool call it watched, or its own /lens preview. */
   via: 'tool' | 'lens'
-  /** Skill id -> who read its materialized SKILL.md (a label, never a path). */
-  readBy: { [skillId: string]: string }
+  /** One slot per stored skill: who read its materialized SKILL.md (a label, never a path), or null. */
+  readBy: (string | null)[]
+  /** Skills the result named beyond the bounded number stored here. */
+  omitted: number
 }
 
 /** What the Lens band shows. null = nothing (the default). */
-export type ConsoleBand = { kind: 'event'; id: number } | { kind: 'looking' } | { kind: 'notice'; text: string } | null
+export type ConsoleBand =
+  | { kind: 'event'; id: number }
+  | { kind: 'looking'; query: string }
+  | { kind: 'not-connected' }
+  | null
 
 /** An agent the host reported (an `agentId` on a tool call, or an Agent call). */
 export type ConsoleAgent = {
@@ -60,6 +66,6 @@ export type ConsoleStateData = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'skill-heaven-console': { state: ConsoleStateData }
+    'skill-heaven-console': { state: Shaped<ConsoleStateData> }
   }
 }
