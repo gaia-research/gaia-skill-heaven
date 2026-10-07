@@ -218,7 +218,7 @@ describe("install-agent-plugin.sh onboarding epilogue", () => {
     expect(run.status).toBe(0);
     const out = epilogue(run.stdout);
     const found = section(out, "Harnesses found on PATH");
-    expect(found).toMatch(/agy\s+Antigravity - Partial \(probed 1\.3\.1\)/);
+    expect(found).toMatch(/agy\s+Antigravity - Partial \(static check on 1\.3\.1\)/);
     expect(found).toContain(
       "No registration command is printed until a logged-in probe shows Antigravity loading the summon server.",
     );
@@ -355,7 +355,11 @@ describe("installer epilogue vs packages/status/src/compat.ts (drift)", () => {
           expect(lines.length, `no line carries both "${h.name}" and "${chip}"`).toBeGreaterThan(0);
           if (h.probedVersion) {
             const expected =
-              h.chip === "verified" ? `${chip} (${h.probedVersion})` : `${chip} (probed ${h.probedVersion})`;
+              h.chip === "verified"
+                ? `${chip} (${h.probedVersion})`
+                : h.chip === "partial"
+                  ? `${chip} (static check on ${h.probedVersion})`
+                  : `${chip} (probed ${h.probedVersion})`;
             expect(
               lines.some((l) => l.includes(expected)),
               `expected "${expected}"`,

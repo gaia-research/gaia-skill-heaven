@@ -264,7 +264,7 @@ else
   missing hermes
 fi
 if have agy; then
-  found_head agy "Antigravity" "Partial (probed 1.3.1)"
+  found_head agy "Antigravity" "Partial (static check on 1.3.1)"
   say "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
   say "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
 else

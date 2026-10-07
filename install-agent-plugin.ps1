@@ -288,7 +288,7 @@ Write-Host "Client-managed plugin copies and registrations were not removed."
       Say-Message "             hermes plugins install `"file://$PLUGIN_DIR`" --enable"
     } else { $script:missing += "hermes" }
     if (Test-Harness "agy") {
-      Write-HarnessHead "agy" "Antigravity" "Partial (probed 1.3.1)"
+      Write-HarnessHead "agy" "Antigravity" "Partial (static check on 1.3.1)"
       Say-Message "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
       Say-Message "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
     } else { $script:missing += "agy" }
