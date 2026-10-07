@@ -978,6 +978,7 @@ export default function Landing() {
         </div>
         <div className="lp-nav__right">
           <div className="lp-nav__links">
+            <a href="#/start">INSTALL</a>
             <a href="#doors">DOORS</a>
             <a href="#run">TERMINAL</a>
             <a href="#session">SESSION-ONLY</a>
@@ -985,8 +986,8 @@ export default function Landing() {
             <a href="#house">ECOSYSTEM</a>
             <a href="#/live">PRODUCTION UPDATE</a>
           </div>
-          <a className="lp-nav__cta" href="#doors">
-            {DOORS[0].launch} <span aria-hidden="true">⏎</span>
+          <a className="lp-nav__cta" href="#/start">
+            INSTALL <span aria-hidden="true">→</span>
           </a>
         </div>
       </nav>
@@ -1091,10 +1092,72 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------------ 01 */}
       <section className="lp-section" id="doors">
-        <SectionHead n="01" title="SAME HARNESS, CLEAN START." />
+        <SectionHead n="01" title="INSTALL IN YOUR HARNESS." />
         <p className="lp-section__lede">
-          Pick your harness door. A door cuts the harness’s skill catalogue to its nearest achievable zero
-          at launch, keeps <code>/summon</code> available in the session, and leaves your repository
+          The plugin is what you install, inside a harness you already use. It puts <code>/summon</code> in
+          your session and never installs the harness itself. Each client owns its own registration, so the
+          exact steps depend on which one you run.
+        </p>
+
+        <div className="lp-start sh-panel">
+          <div className="lp-start__head">
+            <span className="sh-label">THE PLUGIN · PRIMARY ROUTE</span>
+            <a className="sh-cta lp-start__cta" href="#/start">
+              Choose your harness <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div className="lp-start__grid">
+            <div className="lp-start__col">
+              <div className="lp-install__head">
+                <span className="lp-start__title">Any Agent Plugins client</span>
+                <div className="lp-install__controls">
+                  <PlatformToggle platform={platform} onToggle={setPlatform} />
+                </div>
+              </div>
+              <CommandBlock
+                cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
+                sigil={PLATFORM_COMMANDS[platform].sigil}
+                tone="mint"
+                copied={copied === 'install-agent-plugin-primary'}
+                onCopy={() =>
+                  copy(
+                    platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND,
+                    'install-agent-plugin-primary',
+                  )
+                }
+                label="Agent Plugin installer command"
+              />
+              <p className="lp-install__note">
+                Puts the plugin on disk and registers nothing. Your harness’s own command finishes the install
+                — <a href="#/start">the exact one for each harness is on the install page</a>.
+              </p>
+            </div>
+            <div className="lp-start__col">
+              <div className="lp-install__head">
+                <span className="lp-start__title">Claude Code — inside Claude, no terminal</span>
+              </div>
+              <div className="lp-install__lines">
+                {CLAUDE_COMPATIBILITY.map((line, i) => (
+                  <CommandBlock
+                    key={line}
+                    cmd={line}
+                    sigil="›"
+                    tone={i === 0 ? 'violet' : 'mint'}
+                    copied={copied === `install-claude-primary-${i}`}
+                    onCopy={() => copy(line, `install-claude-primary-${i}`)}
+                    label={`Claude Code command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
+                  />
+                ))}
+              </div>
+              <p className="lp-install__note">{CLAUDE_COMPATIBILITY_NOTE}</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 className="lp-sub">Optional — the launcher (Skill Zero at boot)</h3>
+        <p className="lp-section__lede lp-section__lede--sub">
+          You do not need a launcher. A door starts the harness with its skill catalogue cut to its nearest
+          achievable zero, keeps <code>/summon</code> available in the session, and leaves your repository
           untouched. <code>claude-zero</code> is the door verified from a clean install; the others are
           launcher prototypes with narrower evidence.
         </p>
@@ -1131,7 +1194,7 @@ export default function Landing() {
           <div className="lp-install__panel">
             <div className="lp-install__head">
               <div className="lp-install__title-wrap">
-                <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
+                <span className="sh-label">LAUNCHERS · INSTALL</span>
                 <InfoTooltip
                   align="left"
                   label="Launcher installation details"
@@ -1176,7 +1239,7 @@ export default function Landing() {
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              STEP 02 · LAUNCH {picked.harness.toUpperCase()}
+              LAUNCHERS · LAUNCH {picked.harness.toUpperCase()}
             </div>
             <p className="lp-install__prose">{doorNote(picked)}</p>
             <CommandBlock
@@ -1190,7 +1253,7 @@ export default function Landing() {
           </div>
         </div>
         <p className="lp-fineprint">
-          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, see the <b>Agent Plugin</b> in the Demo section below.
+          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, use the <b>Agent Plugin</b> route at the top of this section — <a href="#/start">the install page</a> has the exact steps per harness.
         </p>
       </section>
 
