@@ -696,6 +696,11 @@
   line-height: 1.7;
   color: var(--sh-ink-dim);
 }
+.lp-fineprint a {
+  color: var(--sh-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .lp-fineprint code {
   color: var(--sh-ink);
 }
@@ -734,6 +739,17 @@
 .lp-start .lp-install__head {
   min-height: 32px;
   flex-wrap: wrap;
+}
+.lp-start .sh-platform-toggle {
+  min-height: 32px;
+}
+.lp-start .sh-platform-toggle__btn {
+  min-height: 32px;
+  font-size: 10.5px;
+  padding: 0 12px;
+}
+#doors:focus {
+  outline: none;
 }
 .lp-start .lp-install__note a {
   color: var(--sh-ink);

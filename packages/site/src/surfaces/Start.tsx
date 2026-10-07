@@ -113,7 +113,7 @@ function Command({
   sigil: string
   label: string
   copied: boolean
-  onCopy: (cmd: string) => void
+  onCopy: (cmd: string, label: string) => void
 }) {
   return (
     <div className="st-cmd">
@@ -121,7 +121,7 @@ function Command({
         {sigil}
       </span>
       <code className="st-cmd__code">{cmd}</code>
-      <button type="button" className="st-cmd__copy" onClick={() => onCopy(cmd)}>
+      <button type="button" className="st-cmd__copy" onClick={() => onCopy(cmd, label)}>
         {copied ? 'Copied' : 'Copy'}
         <span className="sr-only">{` ${label}`}</span>
       </button>
@@ -142,6 +142,8 @@ export default function Start() {
   const [params, setParams] = useSearchParams()
   const [platform, setPlatform] = useState<Platform>('posix')
   const [copiedCmd, setCopiedCmd] = useState('')
+  const [copiedLabel, setCopiedLabel] = useState('')
+  const [focusPath, setFocusPath] = useState(false)
   const timer = useRef<number | undefined>(undefined)
 
   const rawChoice = params.get('h')
@@ -151,12 +153,31 @@ export default function Start() {
 
   const select = useCallback(
     (value: string) => {
+      setCopiedLabel('')
       setParams({ h: value }, { replace: true })
     },
     [setParams],
   )
 
-  const copy = useCallback((cmd: string) => {
+  // A button that changes the path (not the radios, which keep their own
+  // focus) hands focus to the new path's heading so it is not dropped to body.
+  const selectAndFocus = useCallback(
+    (value: string) => {
+      select(value)
+      setFocusPath(true)
+    },
+    [select],
+  )
+
+  useEffect(() => {
+    if (!focusPath || !harness) return
+    const el = document.getElementById('st-path')
+    el?.focus()
+    el?.scrollIntoView({ block: 'start' })
+    setFocusPath(false)
+  }, [focusPath, harness])
+
+  const copy = useCallback((cmd: string, label: string) => {
     // Clipboard can be absent or refused (insecure context, permissions).
     // The command stays selectable on screen either way.
     try {
@@ -165,6 +186,7 @@ export default function Start() {
       /* selectable text is the fallback */
     }
     setCopiedCmd(cmd)
+    setCopiedLabel(label)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => setCopiedCmd(''), 1600)
   }, [])
@@ -262,7 +284,7 @@ export default function Start() {
             </label>
           </div>
           <p className="sr-only" role="status" aria-live="polite">
-            {announce}
+            {copiedLabel ? `Copied: ${copiedLabel}` : announce}
           </p>
         </section>
 
@@ -280,12 +302,12 @@ export default function Start() {
           </section>
         )}
 
-        {choice === NONE && <NoHarness onPick={select} />}
+        {choice === NONE && <NoHarness onPick={selectAndFocus} />}
 
         {harness && (
           <>
             <section className="st-sec" aria-labelledby="st-path">
-              <h2 className="st-h2" id="st-path">
+              <h2 className="st-h2" id="st-path" tabIndex={-1}>
                 Your path: {harness.name}
               </h2>
 

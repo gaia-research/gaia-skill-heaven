@@ -89,6 +89,8 @@
   letter-spacing: -0.005em;
   text-wrap: balance;
 }
+.st-h2:focus { outline: none; }
+.st-h2:focus-visible { outline: 2px solid var(--sh-violet); outline-offset: 4px; }
 .st-h3 {
   margin: 0;
   font-family: var(--sh-sans);
@@ -309,7 +311,7 @@
   min-width: 0;
 }
 .st-cmd__copy {
-  min-width: 72px;
+  min-width: 88px;
   padding: 0 14px;
   border: 0;
   border-left: 1px solid var(--st-line-strong);
@@ -430,7 +432,7 @@
   .st-step::before { position: static; margin-bottom: 8px; }
   .st-step--plain::before { content: none; }
   .st-head { padding-top: 32px; }
-  .st-cmd__copy { min-width: 64px; padding: 0 10px; }
+  .st-cmd__copy { min-width: 80px; padding: 0 10px; }
 }
 
 /* No decorative motion on this page; a Copied state is text, not an animation. */

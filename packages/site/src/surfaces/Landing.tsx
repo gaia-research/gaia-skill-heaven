@@ -958,11 +958,20 @@ export default function Landing() {
     [pickRung, rungIndex],
   )
 
+  // The skip link must move focus, not only scroll: focus the install section.
+  const skipToInstall = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const el = document.getElementById('doors')
+    el?.focus({ preventScroll: true })
+    el?.scrollIntoView({ block: 'start' })
+  }, [])
+
   return (
     <div className="lp" onClick={onLpAnchorClick}>
       {/* ---------------------------------------------------------------- nav */}
-      <a className="lp-skip" href="#doors">
-        Skip to the doors
+      <a className="lp-skip" href="#doors" onClick={skipToInstall}>
+        Skip to install
       </a>
       <nav className="lp-nav" aria-label="Primary">
         <div className="lp-nav__brand">
@@ -978,7 +987,6 @@ export default function Landing() {
         </div>
         <div className="lp-nav__right">
           <div className="lp-nav__links">
-            <a href="#/start">INSTALL</a>
             <a href="#doors">DOORS</a>
             <a href="#run">TERMINAL</a>
             <a href="#session">SESSION-ONLY</a>
@@ -992,6 +1000,7 @@ export default function Landing() {
         </div>
       </nav>
 
+      <main id="main">
       {/* ------------------------------------------------------------- arrival */}
       <header className="lp-head">
         <div className="lp-head__grid">
@@ -1091,7 +1100,7 @@ export default function Landing() {
       </header>
 
       {/* ------------------------------------------------------------------ 01 */}
-      <section className="lp-section" id="doors">
+      <section className="lp-section" id="doors" tabIndex={-1}>
         <SectionHead n="01" title="INSTALL IN YOUR HARNESS." />
         <p className="lp-section__lede">
           The plugin is what you install, inside a harness you already use. It puts <code>/summon</code> in
@@ -1985,6 +1994,8 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------- footer */}
+      </main>
+
       <footer className="lp-foot">
         <div className="lp-foot__cols">
           <div className="lp-foot__brand">

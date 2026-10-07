@@ -5,7 +5,7 @@
   border: 1px solid var(--sh-line-strong, currentColor);
   border-radius: 0;
   overflow: hidden;
-  height: 22px;
+  min-height: 24px;
   font-family: var(--sh-mono, 'JetBrains Mono', monospace);
   font-size: 9.5px;
   letter-spacing: 0.12em;
@@ -16,7 +16,8 @@
 
 .sh-platform-toggle__btn {
   padding: 0 8px;
-  height: 100%;
+  align-self: stretch;
+  min-height: 24px;
   border: none;
   background: transparent;
   color: var(--sh-ink-dim, inherit);
@@ -42,7 +43,7 @@
 @media (max-width: 640px) {
   .sh-platform-toggle {
     font-size: 8px;
-    height: 20px;
+    min-height: 24px;
   }
   .sh-platform-toggle__btn {
     padding: 0 5px;
