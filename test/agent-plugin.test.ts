@@ -99,6 +99,18 @@ describe("Agent Plugins 1.0.0 package", () => {
     });
   });
 
+  // Antigravity 1.3.1 reads plugin MCP servers only from `mcp_config.json`;
+  // without it `agy plugin validate` reports `mcpServers: skipped (not found)`
+  // and /skill-heaven:summon has no tool. It expands ${PLUGIN_ROOT} itself.
+  it("keeps Antigravity's MCP shim identical to the portable server", () => {
+    const agyMcp = json(join(PLUGIN, "mcp_config.json"));
+    expect(Object.keys(agyMcp)).toEqual(["mcpServers"]);
+    const servers = agyMcp.mcpServers as Record<string, Record<string, unknown>>;
+    expect(Object.keys(servers)).toEqual(["skill-summon"]);
+    const { type: _type, ...portable } = (mcp.mcpServers as Record<string, Record<string, unknown>>)["skill-summon"];
+    expect(servers["skill-summon"]).toEqual(portable);
+  });
+
   it("keeps Pi compatibility namespaced and pointed at the portable components", () => {
     const extensions = manifest.extensions as Record<string, Record<string, unknown>>;
     expect(extensions["dev.skill-heaven.pi"]).toEqual({

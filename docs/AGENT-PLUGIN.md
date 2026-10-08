@@ -38,6 +38,7 @@ plugins/skill-heaven/                    THE AGENT PLUGIN
 ├── package.json                         Pi package delivery metadata
 ├── .codex-plugin/plugin.json            Codex delivery metadata
 ├── .codex.mcp.json                      Codex plugin-root MCP launch shim
+├── mcp_config.json                      Antigravity MCP launch shim (agy reads only this name)
 ├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
 ├── .mcp.json                            retained Claude/Grok MCP compatibility
 ├── commands/*.md                        retained explicit command compatibility

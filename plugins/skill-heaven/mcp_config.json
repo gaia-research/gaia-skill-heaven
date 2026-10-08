@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "skill-summon": {
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/mcp/skill-summon.mjs"],
+      "env": {
+        "SKILL_SOURCE": "https://gaiaskilltree.com"
+      }
+    }
+  }
+}
