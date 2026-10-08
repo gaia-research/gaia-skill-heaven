@@ -6,6 +6,10 @@ export * from "./tokens.js";
 export * from "./render.js";
 export * from "./adapters.js";
 export * from "./compat.js";
+export * from "./console-host.js";
+export * from "./console-state.js";
+export * from "./console-view.js";
+export * from "./install-plan.js";
 // Fixtures are deliberately NOT re-exported: runtime projections import the
 // package root and therefore cannot reach design data. The site prototype and
 // tests import "./fixtures.js" explicitly.

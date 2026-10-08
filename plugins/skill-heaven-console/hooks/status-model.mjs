@@ -548,6 +548,79 @@ function markRead(event, readPath) {
   });
   return changed ? { ...event, skills } : event;
 }
+function eventsFromLedger(manifest, logLines) {
+  const records = /* @__PURE__ */ new Map();
+  if (isRec(manifest) && Array.isArray(manifest.skills)) {
+    for (const s of manifest.skills) if (isRec(s) && typeof s.id === "string") records.set(s.id, s);
+  }
+  const events = [];
+  for (const line of logLines) {
+    if (!isRec(line)) continue;
+    const at = str(line.at);
+    const query = str(line.query) ?? "";
+    const direction = directionFromSurface(line.surface);
+    const preview = line.preview === true;
+    const noMatch = str(line.noMatch);
+    const sourceHealth = { kind: "unknown" };
+    if (noMatch !== null) {
+      events.push({
+        kind: "no-match",
+        direction,
+        query,
+        preview,
+        considered: null,
+        reason: NO_MATCH_REASON[noMatch] ?? null,
+        at,
+        evidence: "reported",
+        sourceHealth
+      });
+      continue;
+    }
+    const chosen = Array.isArray(line.chosen) ? line.chosen.filter(isRec) : [];
+    if (preview) {
+      events.push({
+        kind: "previewed",
+        direction,
+        query,
+        skills: chosen.map(
+          (c) => receiptFrom(
+            { id: c.id, name: c.id, retrieval: { matchKind: c.matchKind, score: c.score, margin: c.margin } },
+            "previewed",
+            null
+          )
+        ),
+        delta: 0,
+        preview: true,
+        at,
+        evidence: "reported",
+        sourceHealth
+      });
+      continue;
+    }
+    const skills = chosen.map((c) => {
+      const record = typeof c.id === "string" ? records.get(c.id) : void 0;
+      return receiptFrom(
+        record ?? { id: c.id, name: c.id, retrieval: { matchKind: c.matchKind, score: c.score, margin: c.margin } },
+        "read-unobserved",
+        null
+      );
+    });
+    events.push({
+      kind: "summoned",
+      direction,
+      query,
+      skills,
+      delta: skills.length,
+      preview: false,
+      at,
+      evidence: "reported",
+      composition: "unknown",
+      arbor: "unknown",
+      sourceHealth
+    });
+  }
+  return events;
+}
 var STEERING_DECISIONS = {
   hold: "HOLD",
   explore: "EXPLORE",
@@ -614,6 +687,37 @@ var LAUNCHER_INSTALL = {
   windows: "irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex",
   uninstall: "$HOME/.local/share/gaia-skill-heaven/uninstall.sh"
 };
+var PROFILES = ["core", "full"];
+var PROFILE_PITCH = {
+  core: { name: "Core", line: "The Skill Heaven runtime. Summon and the entropy controls. No extra console UI." },
+  full: {
+    name: "Full",
+    line: "Core, plus the native Skill Heaven console for your harness \u2014 status, Lens, Session, Scope, Flow and Trust where the harness supports them."
+  }
+};
+var PENDING = (name) => ({
+  console: {
+    kind: "command-backed",
+    mechanism: `pending recon for ${name}`,
+    command: null,
+    commandPrefix: "",
+    surfaces: {
+      status: { level: "unsupported", via: "pending", note: "pending" },
+      lens: { level: "unsupported", via: "pending", note: "pending" },
+      session: { level: "unsupported", via: "pending", note: "pending" },
+      scope: { level: "unsupported", via: "pending", note: "pending" },
+      flow: { level: "unsupported", via: "pending", note: "pending" },
+      trust: { level: "unsupported", via: "pending", note: "pending" }
+    },
+    observes: { summon: "unavailable", read: "unavailable", agents: "unavailable", rung: "unavailable" },
+    summonTools: [],
+    trust: [],
+    probe: { version: null, summary: "pending", href: null }
+  },
+  core: { register: [], update: [], remove: [] },
+  consolePiece: null,
+  fullBlocked: "pending recon"
+});
 var REPO = "https://github.com/gaia-research/gaia-skill-heaven/blob/main";
 var HARNESS_PATHS = [
   {
@@ -637,10 +741,76 @@ var HARNESS_PATHS = [
     statusNote: "The optional console (preview) adds a status entry beside yours \u2014 it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
     launcher: "claude-zero",
     // 2.1.294 refuses a bare /summon: it resolves to the portable skill, which is user-invocable: false.
-    firstRun: "/skill-heaven:summon <what you need>"
+    firstRun: "/skill-heaven:summon <what you need>",
+    console: {
+      kind: "pane",
+      mechanism: "Claude Code's Mods API (function hooks, early access since 2.1.293): $.ui.status appends a status entry beside your own, an AbovePrompt band carries Lens, and /heaven opens a pane with Session, Scope, Flow and Trust.",
+      command: "/heaven",
+      commandPrefix: "skill-heaven:",
+      surfaces: {
+        status: { level: "native", via: "$.ui.status (APPEND \u2014 never touches statusLine)", note: "Probed live in the terminal on 2.1.294; desktop paint is not probed." },
+        lens: { level: "native", via: "AbovePrompt band + $.prompt.fill", note: "A button only pre-fills the prompt; you press Enter." },
+        session: { level: "native", via: "the /heaven pane", note: "Every field carries an evidence class." },
+        scope: { level: "native", via: "the /heaven pane", note: "Rung controls pre-fill commands; nothing runs until you submit." },
+        flow: { level: "native", via: "agentId on tool.call and turn.complete", note: "Only agents the host reported appear." },
+        trust: { level: "native", via: "the /heaven pane", note: "Lists what the console reads and writes; it does not rate it." }
+      },
+      observes: { summon: "observed", read: "observed", agents: "observed", rung: "observed" },
+      summonTools: ["mcp__plugin_skill-heaven_skill-summon__summon", "mcp__skill-summon__summon"],
+      trust: [
+        {
+          id: "skill-heaven",
+          profile: "core",
+          kind: "Claude Code plugin",
+          version: "0.1.2",
+          summary: "The runtime: five commands and one bundled MCP server (skill-summon).",
+          reads: ["the skill source you configure (network, by the summon tool)"],
+          writes: ["a disposable session directory under your temp dir"],
+          network: "the summon tool fetches the skill source",
+          disable: "claude plugin uninstall skill-heaven@gaia-skill-heaven"
+        },
+        {
+          id: "skill-heaven-console",
+          profile: "full",
+          kind: "Claude Code plugin (Mods, preview)",
+          version: "0.1.0",
+          summary: "The console: a status entry, the Lens band and the /heaven pane. Runs inside Claude Code as local code.",
+          notes: ["/lens and /heaven print a one-line result that the model can read. It is fixed text and carries nothing a skill source supplied."],
+          reads: ["summon tool results", "your /skill-* commands", "Read and Agent tool calls \u2014 to observe, never to change"],
+          writes: ["nothing to disk", "session-only $.state"],
+          network: "none of its own; /lens calls the bundled summon tool, which fetches the skill source",
+          disable: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven"
+        }
+      ],
+      probe: {
+        version: "2.1.294",
+        summary: "the console was probed live in the terminal on 2.1.294; desktop paint is not probed",
+        href: `${REPO}/plugins/skill-heaven-console/README.md`
+      }
+    },
+    core: {
+      register: [
+        { where: "harness", run: "/plugin marketplace add gaia-research/gaia-skill-heaven", shell: "claude plugin marketplace add gaia-research/gaia-skill-heaven", effect: "adds the gaia-skill-heaven marketplace to Claude Code's plugin registry" },
+        { where: "harness", run: "/plugin install skill-heaven@gaia-skill-heaven", shell: "claude plugin install skill-heaven@gaia-skill-heaven", effect: "installs the skill-heaven plugin (runtime only)" }
+      ],
+      update: [
+        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", effect: "refreshes the marketplace listing" },
+        { where: "shell", run: "claude plugin update skill-heaven@gaia-skill-heaven", effect: "updates the plugin to the listed version" }
+      ],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", effect: "removes the plugin" }]
+    },
+    consolePiece: {
+      register: [
+        { where: "harness", run: "/plugin install skill-heaven-console@gaia-skill-heaven", shell: "claude plugin install skill-heaven-console@gaia-skill-heaven", effect: "installs the console plugin beside skill-heaven" }
+      ],
+      update: [{ where: "shell", run: "claude plugin update skill-heaven-console@gaia-skill-heaven", effect: "updates the console plugin" }],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", effect: "removes only the console; skill-heaven is unchanged" }]
+    },
+    fullBlocked: null
   },
   {
     id: "codex",
+    ...PENDING("Codex"),
     name: "Codex",
     bin: "codex",
     chip: "compatible",
@@ -663,6 +833,7 @@ var HARNESS_PATHS = [
   },
   {
     id: "pi",
+    ...PENDING("Pi"),
     name: "Pi",
     bin: "pi",
     chip: "compatible",
@@ -682,6 +853,7 @@ var HARNESS_PATHS = [
   },
   {
     id: "grok",
+    ...PENDING("Grok"),
     name: "Grok",
     bin: "grok",
     chip: "compatible",
@@ -701,6 +873,7 @@ var HARNESS_PATHS = [
   },
   {
     id: "hermes",
+    ...PENDING("Hermes"),
     name: "Hermes",
     bin: "hermes",
     chip: "compatible",
@@ -722,6 +895,7 @@ var HARNESS_PATHS = [
   },
   {
     id: "agy",
+    ...PENDING("Antigravity"),
     name: "Antigravity",
     bin: "agy",
     chip: "compatible",
@@ -742,6 +916,7 @@ var HARNESS_PATHS = [
   },
   {
     id: "other",
+    ...PENDING("Another"),
     name: "Another Agent Plugins client",
     bin: null,
     chip: "unverified",
@@ -779,21 +954,753 @@ function harnessById(id) {
   if (!found) throw new Error(`unknown harness ${id}`);
   return found;
 }
+
+// packages/status/src/console-host.ts
+var CONSOLE_SURFACES = ["status", "lens", "session", "scope", "flow", "trust"];
+var SURFACE_LABEL = Object.freeze({
+  status: "Status",
+  lens: "Lens",
+  session: "Session",
+  scope: "Scope",
+  flow: "Flow",
+  trust: "Trust"
+});
+var SURFACE_QUESTION = Object.freeze({
+  status: "Where am I on the line, and how many skills entered this session?",
+  lens: "What would a summon return \u2014 and hand it to me to submit.",
+  session: "What happened, and what is the evidence for each step?",
+  scope: "What can Skill Heaven see, what is active, which rung did I pick?",
+  flow: "Which agents ran, and which skills did each summon?",
+  trust: "What is installed, what can it read and write, what is degraded here?"
+});
+
+// packages/status/src/console-state.ts
+var MAX_ENTRIES = 50;
+var MAX_AGENTS = 100;
+var MAX_SKILLS_PER_ENTRY = 20;
+function initialConsoleState() {
+  return {
+    status: {
+      ...emptyStatus(),
+      reading: { kind: "native", source: "no-launcher" },
+      skills: 0,
+      summons: 0,
+      summonTool: "unknown"
+    },
+    entries: [],
+    band: null,
+    agents: [],
+    agentIdsSeen: false,
+    selectedFrom: null,
+    hostVersion: null,
+    seq: 0
+  };
+}
+var isRec2 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var looksLikeSummon = (v) => isRec2(v) && ("summoned" in v || "previewed" in v || "noMatch" in v);
+function structuredOf(r) {
+  if (typeof r === "string") {
+    const parsed = parseJson(r);
+    if (looksLikeSummon(parsed)) return parsed;
+    const embedded = firstJsonObject(r);
+    return looksLikeSummon(embedded) ? embedded : void 0;
+  }
+  if (!isRec2(r)) return void 0;
+  if (looksLikeSummon(r)) return r;
+  const result = r.result;
+  if (isRec2(result)) {
+    if (looksLikeSummon(result.structuredContent)) return result.structuredContent;
+    if (looksLikeSummon(result)) return result;
+  }
+  if (looksLikeSummon(r.structuredContent)) return r.structuredContent;
+  const texts = [];
+  if (typeof r.text === "string") texts.push(r.text);
+  if (typeof result === "string" && result !== r.text) texts.push(result);
+  for (const holder of [result, r]) {
+    if (isRec2(holder) && Array.isArray(holder.content)) {
+      for (const block of holder.content) {
+        if (isRec2(block) && typeof block.text === "string") texts.push(block.text);
+      }
+    }
+  }
+  for (const text of texts) {
+    const parsed = parseJson(text);
+    if (looksLikeSummon(parsed)) return parsed;
+    const embedded = firstJsonObject(text);
+    if (looksLikeSummon(embedded)) return embedded;
+  }
+  return void 0;
+}
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return void 0;
+  }
+}
+function firstJsonObject(text) {
+  for (let start = text.indexOf("{"); start !== -1; start = text.indexOf("{", start + 1)) {
+    let depth = 0;
+    let inString = false;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (inString) {
+        if (ch === "\\") i++;
+        else if (ch === '"') inString = false;
+      } else if (ch === '"') inString = true;
+      else if (ch === "{") depth++;
+      else if (ch === "}" && --depth === 0) {
+        try {
+          return JSON.parse(text.slice(start, i + 1));
+        } catch {
+          break;
+        }
+      }
+    }
+  }
+  return void 0;
+}
+function isSummonTool(projection, name) {
+  return projection.summonTools.includes(name);
+}
+var shortId = (id) => sanitizeDisplay(id, 12);
+function agentLabelFor(state, id) {
+  if (id === null || id === void 0) return "main agent";
+  const row = state.agents.find((a) => a.id === id);
+  return row ? row.label : `agent ${shortId(id)}`;
+}
+function agentCallLabel(subagentType, description) {
+  const type = typeof subagentType === "string" && subagentType ? sanitizeDisplay(subagentType, 24) : "agent";
+  const desc = typeof description === "string" && description ? sanitizeDisplay(description, 48) : "";
+  return desc ? `${type}  "${desc}"` : type;
+}
+function noteAgentId(state, id) {
+  if (state.agents.some((a) => a.id === id)) return state.agentIdsSeen ? state : { ...state, agentIdsSeen: true };
+  const agents = [
+    ...state.agents,
+    { key: id, id, label: `agent ${shortId(id)}`, state: "running" }
+  ].slice(-MAX_AGENTS);
+  return { ...state, agentIdsSeen: true, agents };
+}
+function startAgentCall(state, key, label, background) {
+  if (state.agents.some((a) => a.key === key)) return state;
+  return {
+    ...state,
+    agents: [...state.agents, { key, id: null, label, state: background ? "started" : "running" }].slice(-MAX_AGENTS)
+  };
+}
+function dropAgentCall(state, key) {
+  return state.agents.some((a) => a.key === key) ? { ...state, agents: state.agents.filter((a) => a.key !== key) } : state;
+}
+function finishAgentCall(state, key, agentId, background) {
+  const agents = state.agents.filter((a) => agentId === null || a.key !== agentId || a.key === key).map(
+    (a) => a.key === key ? { ...a, id: agentId ?? a.id, state: background ? "started" : "returned" } : a
+  );
+  return { ...state, agents, agentIdsSeen: state.agentIdsSeen || agentId !== null };
+}
+function agentReturned(state, agentId) {
+  if (!state.agents.some((a) => a.id === agentId && a.state !== "returned")) return state;
+  return { ...state, agents: state.agents.map((a) => a.id === agentId ? { ...a, state: "returned" } : a) };
+}
+function bounded(event) {
+  if ((event.kind === "summoned" || event.kind === "previewed") && event.skills.length > MAX_SKILLS_PER_ENTRY) {
+    return { event: { ...event, skills: event.skills.slice(0, MAX_SKILLS_PER_ENTRY) }, omitted: event.skills.length - MAX_SKILLS_PER_ENTRY };
+  }
+  return { event, omitted: 0 };
+}
+function withReadObservability(event, readObservable) {
+  if (readObservable || event.kind !== "summoned") return event;
+  return {
+    ...event,
+    skills: event.skills.map((s) => s.stage === "materialized" ? { ...s, stage: "read-unobserved" } : s)
+  };
+}
+function recordEvent(state, event, agent, via, opts = {}) {
+  const reached = opts.reached ?? true;
+  const shaped = withReadObservability(event, opts.readObservable ?? true);
+  const id = state.seq + 1;
+  const kept = bounded(shaped);
+  const entry = {
+    id,
+    event: kept.event,
+    omitted: kept.omitted,
+    agent,
+    via,
+    readBy: "skills" in kept.event ? kept.event.skills.map(() => null) : []
+  };
+  const entries = [...state.entries, entry].slice(-MAX_ENTRIES);
+  const withAgent = agent !== null ? noteAgentId(state, agent) : state;
+  const status = reduceStatus(state.status, shaped);
+  return {
+    ...withAgent,
+    status: reached ? { ...status, summonTool: "connected" } : status,
+    entries,
+    band: { kind: "event", id },
+    seq: id
+  };
+}
+function recordRead(state, path, reader) {
+  let changed = false;
+  const entries = state.entries.map((entry) => {
+    const next = markRead(entry.event, path);
+    if (next === entry.event) return entry;
+    changed = true;
+    const readBy = [...entry.readBy];
+    if (next.kind === "summoned" && entry.event.kind === "summoned") {
+      const before = entry.event.skills;
+      next.skills.forEach((skill, i) => {
+        if (skill.stage === "in-context" && before[i]?.stage !== "in-context") readBy[i] = reader;
+      });
+    }
+    return { ...entry, event: next, readBy };
+  });
+  return changed ? { ...state, entries } : state;
+}
+function recordSelection(state, reading, typed) {
+  return { ...state, status: withReading(state.status, reading), selectedFrom: sanitizeDisplay(typed, 40) };
+}
+function entryById(state, id) {
+  return state.entries.find((e) => e.id === id);
+}
+function summonableName(skill) {
+  if (!skill) return null;
+  const name = sanitizeDisplay(skill.name, 64);
+  return /^[A-Za-z0-9][A-Za-z0-9._:/-]*(?: [A-Za-z0-9._:/-]+)*$/.test(name) ? name : null;
+}
+var SURFACE_COMMANDS = /* @__PURE__ */ new Set(["summon", "skill-zero", "skill-heaven", "skill-hell", "skill-ultra"]);
+function qualifyCommand(text, prefix = "skill-heaven:") {
+  const m = /^\/([a-z-]+)(\s.*)?$/.exec(text);
+  if (!m || !SURFACE_COMMANDS.has(m[1])) return text;
+  return `/${prefix}${m[1]}${m[2] ?? ""}`;
+}
+
+// packages/status/src/console-view.ts
+function evidenceWord(row) {
+  const known = row.value !== null && row.value !== "" && row.evidence !== "unknown";
+  if (row.evidence === "inferred") return "inferred";
+  if (row.evidence === "unknown" || !known) return "unknown";
+  return row.evidence;
+}
+function stageText(entry) {
+  const event = entry.event;
+  if (event.kind !== "summoned") return { text: "nothing materialized", inferred: false };
+  const skills = event.skills;
+  const inContext = skills.filter((s) => s.stage === "in-context");
+  if (skills.length > 0 && inContext.length === skills.length) {
+    const readers = Array.from(new Set(skills.map((_, i) => entry.readBy[i] ?? "an agent")));
+    return { text: `in context \xB7 body read by ${readers.join(", ")}`, inferred: false };
+  }
+  if (inContext.length > 0) {
+    return { text: `${inContext.length} of ${skills.length} in context \xB7 the rest: card returned \xB7 body not read`, inferred: false };
+  }
+  if (skills.length > 0 && skills.every((s) => s.stage === "read-unobserved")) {
+    return { text: "materialized \xB7 read not observed on this host", inferred: false };
+  }
+  return { text: "card returned \xB7 body not read", inferred: true };
+}
+function summonSuggestion(entry) {
+  const event = entry.event;
+  if (event.kind !== "previewed" || event.skills.length !== 1) return null;
+  return summonableName(event.skills[0]);
+}
+function lensView(state, projection) {
+  const band = state.band;
+  if (band === null) return null;
+  if (band.kind === "looking" || band.kind === "not-connected") {
+    return {
+      lines: noticeLines(band.kind === "looking" ? { kind: "looking", query: band.query } : { kind: "not-connected" }),
+      stage: null,
+      actions: ["dismiss"],
+      prefill: null,
+      entryId: null
+    };
+  }
+  const entry = entryById(state, band.id);
+  if (!entry) return null;
+  const event = entry.event;
+  const preview = event.kind === "previewed" || event.kind === "no-match" && event.preview;
+  const name = summonSuggestion(entry);
+  return {
+    lines: eventLines(event),
+    stage: preview ? null : stageText(entry),
+    actions: name !== null ? ["summon", "inspect", "dismiss"] : ["inspect", "dismiss"],
+    prefill: name !== null ? qualifyCommand(`/summon ${name}`, projection.commandPrefix) : null,
+    entryId: entry.id
+  };
+}
+var DIRECTION_WORD = {
+  manual: "any (explicit /summon)",
+  converge: "heaven (converge)",
+  explore: "hell (explore)",
+  unspecified: "unspecified"
+};
+var LANE_WORD = {
+  "human-led": "human-led (Skill Heaven lane)",
+  "model-led": "model-led (Skill Hell lane)",
+  unspecified: "unspecified (the source did not classify it)"
+};
+function healthText(event) {
+  if (!("sourceHealth" in event)) return null;
+  const h = event.sourceHealth;
+  if (h.kind === "unknown") return null;
+  const age = h.indexAgeDays === null ? "" : ` \xB7 index ${h.indexAgeDays} days old`;
+  return h.kind === "stale" ? `? stale${age} \xB7 ranking still ran` : `fresh${age}`;
+}
+function skillRows(skill, index, entry) {
+  const stage = skill.stage === "in-context" ? { label: "what entered", value: `body read (in context) by ${entry.readBy[index] ?? "an agent"}`, evidence: "observed" } : skill.stage === "materialized" ? { label: "what entered", value: "card returned \xB7 body not read", evidence: "inferred" } : skill.stage === "previewed" ? { label: "what entered", value: "previewed \xB7 nothing materialized", evidence: "reported" } : { label: "what entered", value: "materialized \xB7 read not observed", evidence: "unknown" };
+  const rank = [];
+  if (skill.matchKind !== "unknown") rank.push(skill.matchKind);
+  const score = formatScore(skill.score);
+  if (score) rank.push(score);
+  const margin = formatScore(skill.margin);
+  if (margin) rank.push(`\u0394 ${margin} (margin is a retrieval diagnostic)`);
+  const from = [];
+  if (skill.source) from.push(sanitizeDisplay(skill.source, 48));
+  if (skill.repoUrl) from.push(sanitizeDisplay(skill.repoUrl, 64) + (skill.ref ? `@${sanitizeDisplay(skill.ref, 24)}` : ""));
+  if (skill.subpath) from.push(sanitizeDisplay(skill.subpath, 48));
+  if (skill.sha256) from.push(`sha256 ${sanitizeDisplay(skill.sha256, 12)}\u2026`);
+  const cache = [];
+  if (skill.cache !== "unknown") cache.push(skill.cache);
+  const ms = formatMs(skill.ms);
+  if (ms) cache.push(ms);
+  const installability = skill.installability === "unknown" ? null : sanitizeDisplay(skill.installability, 40);
+  const lane = LANE_WORD[skill.lane] ?? null;
+  return [
+    stage,
+    { label: "ranking", value: rank.length ? rank.join(" \xB7 ") : null, evidence: rank.length ? "reported" : "unknown" },
+    { label: "from", value: from.length ? from.join(" \xB7 ") : null, evidence: from.length ? "reported" : "unknown" },
+    { label: "lane", value: lane, evidence: lane ? "reported" : "unknown" },
+    { label: "installability", value: installability, evidence: installability ? "reported" : "unknown" },
+    { label: "cache", value: cache.length ? cache.join(" \xB7 ") : null, evidence: cache.length ? "reported" : "unknown" },
+    { label: "on disk", value: skill.path ? sanitizeDisplay(skill.path, 96) : null, evidence: skill.path ? "reported" : "unknown" }
+  ];
+}
+function agentRow(state, entry) {
+  return {
+    label: "agent",
+    value: agentLabelFor(state, entry.agent),
+    evidence: entry.agent !== null ? "observed" : state.agentIdsSeen ? "observed" : "inferred"
+  };
+}
+function receiptGroups(entry, state) {
+  const event = entry.event;
+  const query = "query" in event && event.query ? `query "${sanitizeDisplay(event.query, 80)}" \xB7 surface ${DIRECTION_WORD[event.direction] ?? "unspecified"}` : null;
+  const health = healthText(event);
+  const agent = agentRow(state, entry);
+  if (event.kind === "summoned" || event.kind === "previewed") {
+    const common = [{ label: "why", value: query, evidence: query ? "reported" : "unknown" }];
+    if (event.kind === "summoned") {
+      const comp = event.composition === "relevance-only" ? `relevance-only \xB7 Arbor: ${event.arbor === "governed-record" ? "governed record" : event.arbor === "no-record" ? "no governed record" : event.arbor}` : null;
+      common.push({ label: "composition", value: comp, evidence: comp ? "reported" : "unknown" });
+    }
+    common.push({ label: "source health", value: health, evidence: health ? "reported" : "unknown" }, agent);
+    const groups = [common];
+    event.skills.slice(0, 3).forEach(
+      (skill, i) => groups.push([{ label: "skill", value: sanitizeDisplay(skill.name, 48), evidence: "reported" }, ...skillRows(skill, i, entry)])
+    );
+    const unshown = event.skills.length - 3 + entry.omitted;
+    if (unshown > 0) groups.push([{ label: "more", value: `+${unshown} more not shown here`, evidence: "observed" }]);
+    return groups;
+  }
+  if (event.kind === "no-match") {
+    return [
+      [
+        { label: "what entered", value: "nothing materialized", evidence: "reported" },
+        { label: "why", value: query, evidence: query ? "reported" : "unknown" },
+        {
+          label: "refusal",
+          value: (event.considered === null ? "0 admitted" : `${event.considered} considered \xB7 0 admitted`) + (event.reason ? ` \xB7 ${sanitizeDisplay(event.reason, 60)}` : ""),
+          evidence: "reported"
+        },
+        { label: "source health", value: health, evidence: health ? "reported" : "unknown" },
+        agent
+      ]
+    ];
+  }
+  return [
+    [
+      { label: "what entered", value: "nothing materialized", evidence: "reported" },
+      { label: "reason", value: sanitizeDisplay(event.reason, 120), evidence: "observed" },
+      agent
+    ]
+  ];
+}
+function timeLabel(at) {
+  if (!at) return "";
+  const d = new Date(at);
+  if (Number.isNaN(d.getTime())) return "";
+  const two = (n) => String(n).padStart(2, "0");
+  return `${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`;
+}
+var EVIDENCE_LEGEND = "Evidence: observed = this console saw it \xB7 reported = the summon engine said so \xB7 inferred = derived here \xB7 unknown = no source.";
+function sessionView(state, projection) {
+  const entries = [...state.entries].reverse().map((entry) => {
+    const meta = [
+      timeLabel(entry.event.at),
+      agentLabelFor(state, entry.agent),
+      entry.via === "lens" ? "/lens" : entry.via === "ledger" ? "engine ledger" : ""
+    ].filter(Boolean).join(" \xB7 ");
+    return { id: entry.id, lines: eventLines(entry.event), meta, groups: receiptGroups(entry, state), stage: stageText(entry) };
+  });
+  return {
+    notConnected: state.status.summonTool === "not-connected",
+    empty: entries.length === 0 ? `Nothing summoned yet. Try ${qualifyCommand("/summon", projection.commandPrefix)} <need>${projection.surfaces.lens.level === "unsupported" ? "" : ` or ${lensCommand(projection)} <need>`}.` : null,
+    entries,
+    legend: EVIDENCE_LEGEND
+  };
+}
+function lensCommand(projection) {
+  return projection.kind === "command-backed" ? `${projection.command ?? "/heaven"} lens` : "/lens";
+}
+var ULTRA_COPY = "Skill Ultra \xB7 provisioned. Controller unavailable \u2014 no controller is choosing direction or depth yet. Ultra is the rung you selected; each summon is still judged per use. The long-horizon controller is tracked in #126 and is not yet empirically validated.";
+function latestSource(state) {
+  const last = state.entries[state.entries.length - 1];
+  const unavailable = last?.event.kind === "unavailable";
+  for (let i = state.entries.length - 1; i >= 0; i--) {
+    const e = state.entries[i];
+    const event = e.event;
+    if ("skills" in event) {
+      const withSource = event.skills.find((s) => s.source);
+      if (withSource?.source) return { source: sanitizeDisplay(withSource.source, 56), health: healthText(event), unavailable };
+    }
+  }
+  return { source: null, health: last ? healthText(last.event) : null, unavailable };
+}
+function scopeView(state, harness) {
+  const projection = harness.console;
+  const sp = (c) => qualifyCommand(c, projection.commandPrefix);
+  const { source, health, unavailable } = latestSource(state);
+  const reading = state.status.reading;
+  const boot = state.status.boot ?? (reading.kind === "selected" ? { kind: "native", source: "no-launcher" } : reading);
+  const rung = reading.kind === "selected" ? reading.rung : null;
+  const ultra = readingRung(reading) === "ultra";
+  const skills = state.status.skills;
+  const rungObservable = projection.observes.rung !== "unavailable";
+  const rows = [
+    {
+      label: "can see",
+      value: unavailable ? `skill source ${source ?? ""} \xB7 unreachable`.replace("  ", " ") : source ? `skill source ${source}${health ? ` \xB7 ${health}` : ""}` : null,
+      evidence: source || unavailable ? "reported" : "unknown"
+    },
+    {
+      label: "active",
+      value: skills === null ? null : `${skills} ${skills === 1 ? "skill" : "skills"} materialized this session (temporary \u2014 gone when the session ends)`,
+      evidence: skills === null ? "unknown" : projection.observes.summon === "observed" ? "observed" : "reported"
+    },
+    {
+      label: "inherited",
+      value: boot.kind === "native" || boot.kind === "unknown" ? `boot reading ${readingToken(boot)} \u2014 no launcher observed; this console cannot see how the session was started` : `boot reading ${readingToken(boot)} \u2014 set at launch`,
+      evidence: boot.kind === "native" || boot.kind === "unknown" ? "inferred" : "reported"
+    },
+    {
+      label: "selected",
+      value: rung === null ? rungObservable ? "none \u2014 no rung selected in this session" : "unknown \u2014 this host does not let the console see which rung command you typed" : ultra ? "rung ULTRA \xB7 controller unavailable" : `rung ${rung.toUpperCase()} \u2014 observed from ${state.selectedFrom ?? "a rung command"} \xB7 not enforced`,
+      evidence: rung === null ? "unknown" : "observed"
+    },
+    { label: "allowed", value: "/summon by hand: yes \xB7 zero cut: temporary (default)", evidence: "reported" },
+    {
+      label: "keep small",
+      value: `${sp("/skill-zero")} cuts temporary skills${harness.launcher ? ` \xB7 ${harness.launcher} --level zero starts clean` : ""}`,
+      evidence: "reported"
+    }
+  ];
+  return {
+    rows,
+    note: rung !== null && !ultra ? `You selected ${rung.toUpperCase()}. Skill Heaven does not enforce a rung; each summon is still judged per use.` : null,
+    ultra: ultra ? ULTRA_COPY : null,
+    rungControls: [
+      { label: sp("/skill-heaven low"), kind: "prefill", text: "/skill-heaven low" },
+      { label: sp("/skill-hell high"), kind: "prefill", text: "/skill-hell high" },
+      { label: sp("/skill-ultra"), kind: "prefill", text: "/skill-ultra" }
+    ],
+    otherRungs: `Other rungs: ${sp("/skill-heaven med")} \xB7 ${sp("/skill-hell xhigh")} \xB7 ${sp("/skill-hell max")}`,
+    keepSmall: [
+      { label: sp("/skill-zero"), kind: "prefill", text: "/skill-zero" },
+      { label: sp("/skill-zero all"), kind: "prefill", text: "/skill-zero all" },
+      ...harness.launcher ? [{ label: `Copy: ${harness.launcher} --level zero`, kind: "copy", text: `${harness.launcher} --level zero` }] : []
+    ],
+    keepSmallNote: harness.launcher ? "Start clean is run in a terminal before a session: it is copied, not run." : null
+  };
+}
+function commandForRung(rung, projection) {
+  const base = {
+    zero: "/skill-zero",
+    low: "/skill-heaven low",
+    med: "/skill-heaven med",
+    high: "/skill-hell high",
+    xhigh: "/skill-hell xhigh",
+    max: "/skill-hell max",
+    ultra: "/skill-ultra"
+  };
+  return qualifyCommand(base[rung], projection.commandPrefix);
+}
+var FLOW_VISIBLE_LIMIT = 12;
+function agentLine(state, agent) {
+  const mine = state.entries.filter((e) => e.agent !== null && e.agent === agent.id && e.event.kind === "summoned");
+  const skills = mine.reduce((n, e) => n + (e.event.kind === "summoned" ? e.event.delta : 0), 0);
+  const word = agent.state === "started" ? "started in background" : agent.state;
+  return `${word} \xB7 ${mine.length === 0 ? "no skills" : `${mine.length} ${mine.length === 1 ? "summon" : "summons"}`}${skills > 0 && skills !== mine.length ? ` (${skills} skills)` : ""}`;
+}
+function flowView(state, projection) {
+  const mainSummons = state.entries.filter((e) => e.agent === null && e.event.kind === "summoned");
+  const mainInContext = mainSummons.reduce(
+    (n, e) => n + (e.event.kind === "summoned" ? e.event.skills.filter((s) => s.stage === "in-context").length : 0),
+    0
+  );
+  const shown = state.agents.slice(0, FLOW_VISIBLE_LIMIT);
+  const more = Math.max(0, state.agents.length - shown.length);
+  const readsKnown = projection.observes.read !== "unavailable";
+  const mainLine = `${mainSummons.length} ${mainSummons.length === 1 ? "summon" : "summons"} \xB7 ${readsKnown ? `${mainInContext} in context` : "reads not observed"}`;
+  const noAgents = projection.observes.agents === "unavailable";
+  return {
+    main: { summons: mainSummons.length, inContext: mainInContext, line: mainLine },
+    agents: shown.map((agent, i) => ({
+      label: sanitizeDisplay(agent.label, 64),
+      line: agentLine(state, agent),
+      last: i === shown.length - 1 && more <= 0
+    })),
+    more,
+    telemetryNote: noAgents ? "This host does not report agent ids to the console. Summons are attributed to main." : !state.agentIdsSeen ? "This host did not report agent ids. Summons are attributed to main." : null,
+    windowNote: state.entries.length >= 50 ? "Counts cover the last 50 events." : null,
+    footer: "Read-only. Only agents the host reported appear."
+  };
+}
+function trustView(state, harness) {
+  const projection = harness.console;
+  const mcp = state.status.summonTool;
+  const mcpText = mcp === "connected" ? "connected (a summon result was seen)" : mcp === "not-connected" ? "not connected" : "unknown until the first summon or /lens";
+  return {
+    components: projection.trust.map((c) => ({
+      id: c.id,
+      profile: c.profile,
+      kind: c.kind,
+      version: c.version,
+      summary: c.summary,
+      notes: c.notes ?? [],
+      rows: [
+        { label: "reads", value: c.reads.join(" \xB7 "), evidence: "reported" },
+        { label: "writes", value: c.writes.length ? c.writes.join(" \xB7 ") : "nothing", evidence: "reported" },
+        { label: "network", value: c.network, evidence: "reported" },
+        { label: "disable", value: c.disable, evidence: "reported" }
+      ]
+    })),
+    rows: [
+      { label: "summon tool", value: `MCP: ${mcpText}`, evidence: "reported" },
+      {
+        label: "harness",
+        value: `${harness.name} ${state.hostVersion ? sanitizeDisplay(state.hostVersion, 24) : "(version not reported)"} \xB7 ${CHIP_LABEL[harness.chip]} for the plugin at ${harness.probedVersion ?? "unknown"}`,
+        evidence: state.hostVersion ? "observed" : "unknown"
+      },
+      { label: "evidence", value: harness.evidence, evidence: "reported" },
+      { label: "console probe", value: projection.probe.summary, evidence: "reported" }
+    ],
+    hostLimits: CONSOLE_SURFACES.filter((s) => projection.surfaces[s].level !== "native").map((surface) => ({
+      surface,
+      level: projection.surfaces[surface].level,
+      via: projection.surfaces[surface].via,
+      note: projection.surfaces[surface].note
+    })),
+    footer: "This lists what the code can do. It does not rate it."
+  };
+}
+function buildConsoleView(state, harness) {
+  const projection = harness.console;
+  const segments = renderStatusSegments(state.status, "full");
+  return {
+    harness: { id: harness.id, name: harness.name, chip: harness.chip, probedVersion: harness.probedVersion },
+    projection,
+    status: { segments, plain: toPlain(segments), compact: toPlain(renderStatusSegments(state.status, "compact")) },
+    lens: lensView(state, projection),
+    session: sessionView(state, projection),
+    scope: scopeView(state, harness),
+    flow: flowView(state, projection),
+    trust: trustView(state, harness)
+  };
+}
+var SUPPORT_WORD = {
+  native: "native",
+  degraded: "degraded (native fallback)",
+  unsupported: "unsupported on this host"
+};
+function paint(segments, color) {
+  return color === "none" ? toPlain(segments) : paintAnsi(segments, color);
+}
+function rowLine(row, labelWidth = 16) {
+  const known = row.value !== null && row.value !== "" && row.evidence !== "unknown";
+  return `${row.label.padEnd(labelWidth)}${known ? row.value : "\u2014"}  ${evidenceWord(row)}`;
+}
+function wrap(text, width, indent) {
+  if (width <= 0 || text.length <= width) return `${indent}${text}`;
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    if (line && (indent + line + " " + w).length > width) {
+      lines.push(indent + line);
+      line = w;
+    } else {
+      line = line ? `${line} ${w}` : w;
+    }
+  }
+  if (line) lines.push(indent + line);
+  return lines.join("\n");
+}
+function header(view, surface) {
+  const support = view.projection.surfaces[surface];
+  return [`\u2500\u2500 ${SURFACE_LABEL[surface]} \xB7 ${SUPPORT_WORD[support.level]} \u2500\u2500`, ...support.level === "native" ? [] : [`   via ${support.via}. ${support.note}`]];
+}
+function renderConsoleText(view, opts = {}) {
+  const color = opts.color ?? "none";
+  const width = opts.width ?? 0;
+  const which = opts.surface ?? "all";
+  const want = (s) => which === "all" || which === s;
+  const out = [];
+  out.push(`Skill Heaven console \xB7 ${view.harness.name} \xB7 ${view.projection.kind === "command-backed" ? "command-backed" : view.projection.kind === "pane" ? "pane" : "extension UI"} \xB7 observes, never changes`);
+  out.push(paint(view.status.segments, color));
+  if (want("status")) {
+    out.push("", ...header(view, "status"), `   ${view.status.compact}`);
+  }
+  if (want("lens")) {
+    out.push("", ...header(view, "lens"));
+    if (view.lens === null) {
+      out.push("   (empty \u2014 Lens shows a result only after a summon or a preview)");
+    } else {
+      for (const l of view.lens.lines) out.push(`   ${paint(l, color)}`);
+      if (view.lens.stage) out.push(`   ${view.lens.stage.text}${view.lens.stage.inferred ? " (inferred)" : ""}`);
+      if (view.lens.prefill) out.push(`   To summon, type: ${view.lens.prefill}   (nothing is submitted for you)`);
+    }
+  }
+  if (want("session")) {
+    out.push("", ...header(view, "session"));
+    if (view.session.notConnected) out.push("   ? summon tool: not connected");
+    if (view.session.empty) out.push(`   ${view.session.empty}`);
+    for (const e of view.session.entries) {
+      const [l1, l2] = e.lines;
+      if (l1) out.push(`   ${paint(l1, color)}${e.meta ? `   ${e.meta}` : ""}`);
+      if (l2) out.push(`   ${paint(l2, color)}`);
+      for (const g of e.groups) {
+        for (const r of g) out.push(wrap(rowLine(r), width, "      "));
+        out.push("");
+      }
+    }
+    out.push(`   ${view.session.legend}`);
+  }
+  if (want("scope")) {
+    out.push("", ...header(view, "scope"));
+    for (const r of view.scope.rows) out.push(wrap(rowLine(r), width, "   "));
+    if (view.scope.note) out.push(`   ${view.scope.note}`);
+    if (view.scope.ultra) out.push(wrap(view.scope.ultra, width, "   "));
+    out.push("   Choose a rung \u2014 type one; nothing runs until you submit it:");
+    for (const c of view.scope.rungControls) out.push(`     ${c.label}`);
+    out.push(`   ${view.scope.otherRungs}`);
+    out.push("   Keep context small:");
+    for (const c of view.scope.keepSmall) out.push(`     ${c.label}`);
+    if (view.scope.keepSmallNote) out.push(`   ${view.scope.keepSmallNote}`);
+  }
+  if (want("flow")) {
+    out.push("", ...header(view, "flow"));
+    out.push(`   main   ${view.flow.main.line}`);
+    for (const a of view.flow.agents) out.push(`   ${a.last ? "\u2514\u2500" : "\u251C\u2500"} ${a.label}   ${a.line}`);
+    if (view.flow.more > 0) out.push(`   \u2514\u2500 +${view.flow.more} more`);
+    if (view.flow.telemetryNote) out.push(`   ${view.flow.telemetryNote}`);
+    if (view.flow.windowNote) out.push(`   ${view.flow.windowNote}`);
+    out.push(`   ${view.flow.footer}`);
+  }
+  if (want("trust")) {
+    out.push("", ...header(view, "trust"));
+    for (const c of view.trust.components) {
+      out.push(`   ${c.id} ${c.version} (${c.profile}) \xB7 ${c.kind} \xB7 ${c.summary}`);
+      for (const r of c.rows) out.push(wrap(rowLine(r), width, "     "));
+      for (const n of c.notes) out.push(wrap(n, width, "     "));
+    }
+    for (const r of view.trust.rows) out.push(wrap(rowLine(r), width, "   "));
+    if (view.trust.hostLimits.length > 0) {
+      out.push("   On this host:");
+      for (const l of view.trust.hostLimits) out.push(wrap(`${SURFACE_LABEL[l.surface]} \u2014 ${SUPPORT_WORD[l.level]}: ${l.note}`, width, "     "));
+    }
+    out.push(`   ${view.trust.footer}`);
+  }
+  return out.join("\n");
+}
+
+// packages/status/src/install-plan.ts
+var DEFAULT_PLAN_PATHS = {
+  pluginDir: AGENT_PLUGIN_INSTALL.plugin,
+  marketplaceDir: AGENT_PLUGIN_INSTALL.marketplace,
+  consoleDir: `${AGENT_PLUGIN_INSTALL.root}/marketplace/plugins/skill-heaven-console`
+};
+function renderRun(run, paths) {
+  return run.replaceAll("{{PLUGIN_DIR}}", paths.pluginDir).replaceAll("{{MARKETPLACE_DIR}}", paths.marketplaceDir).replaceAll("{{CONSOLE_DIR}}", paths.consoleDir);
+}
+function render(steps, piece, paths) {
+  return steps.map((s) => ({
+    ...s,
+    run: renderRun(s.run, paths),
+    ...s.shell === void 0 ? {} : { shell: renderRun(s.shell, paths) },
+    piece
+  }));
+}
+function pick(piece, op) {
+  return piece[op];
+}
+function planProfile(harness, profile, op, paths = DEFAULT_PLAN_PATHS) {
+  if (profile === "core") return { kind: "steps", steps: render(pick(harness.core, op), "core", paths) };
+  if (harness.consolePiece === null) {
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+  }
+  const core = render(pick(harness.core, op), "core", paths);
+  const consoleSteps = render(pick(harness.consolePiece, op), "console", paths);
+  return { kind: "steps", steps: op === "remove" ? [...consoleSteps, ...core] : [...core, ...consoleSteps] };
+}
+function planSwitch(harness, from, to, paths = DEFAULT_PLAN_PATHS) {
+  if (from === to) return { kind: "steps", steps: [] };
+  if (harness.consolePiece === null) {
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+  }
+  return {
+    kind: "steps",
+    steps: render(to === "full" ? harness.consolePiece.register : harness.consolePiece.remove, "console", paths)
+  };
+}
+function isRunnable(plan) {
+  return plan.kind === "steps";
+}
+function commandLines(plan) {
+  return plan.kind === "steps" ? plan.steps.map((s) => s.run) : [];
+}
 export {
   AGENT_PLUGIN_INSTALL,
   CHIP_LABEL,
   CHIP_MEANING,
   CLOSE_CALL_MARGIN,
+  CONSOLE_SURFACES,
   DEFAULT_FIELD_LIMIT,
+  DEFAULT_PLAN_PATHS,
+  EVIDENCE_LEGEND,
+  FLOW_VISIBLE_LIMIT,
   GROUND_HEX,
   HARNESS_PATHS,
   LAUNCHER_INSTALL,
+  MAX_AGENTS,
+  MAX_ENTRIES,
+  MAX_SKILLS_PER_ENTRY,
+  PROFILES,
+  PROFILE_PITCH,
   PROPOSED_CONTROLLER_SCHEMA,
   ROLE_COLORS,
   RUNGS,
   RUNG_BAND,
+  SURFACE_LABEL,
+  SURFACE_QUESTION,
+  ULTRA_COPY,
+  agentCallLabel,
+  agentLabelFor,
+  agentReturned,
   bandOf,
+  buildConsoleView,
   cellWidth,
+  commandForRung,
+  commandLines,
   controllerFromCampaignStatus,
   controllerFromSteeringEntry,
   controllerSegments,
@@ -801,27 +1708,59 @@ export {
   describeReading,
   describeStatus,
   directionFromSurface,
+  dropAgentCall,
   emptyStatus,
+  entryById,
   eventFromSummonResult,
   eventLines,
+  eventsFromLedger,
+  evidenceWord,
+  finishAgentCall,
+  firstJsonObject,
+  flowView,
   formatMs,
   formatScore,
   harnessById,
+  initialConsoleState,
   isRung,
+  isRunnable,
+  isSummonTool,
+  lensCommand,
+  lensView,
   markRead,
+  noteAgentId,
   noticeLines,
   paintAnsi,
+  planProfile,
+  planSwitch,
+  qualifyCommand,
   readingFromProfileManifest,
   readingRung,
   readingToken,
+  receiptGroups,
+  recordEvent,
+  recordRead,
+  recordSelection,
   reduceStatus,
+  renderConsoleText,
+  renderRun,
   renderStatusSegments,
   resolveColorDepth,
   sanitizeDisplay,
+  scopeView,
   segmentsWidth,
   selectionFromCommand,
+  sessionView,
   skillsFromSessionManifest,
+  stageText,
+  startAgentCall,
   statusLevels,
+  structuredOf,
+  summonSuggestion,
+  summonableName,
+  timeLabel,
   toPlain,
+  trustView,
+  withReadObservability,
   withReading
 };

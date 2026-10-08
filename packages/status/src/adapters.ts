@@ -294,6 +294,102 @@ export function markRead(event: SummonEvent, readPath: string): SummonEvent {
 }
 
 /* ------------------------------------------------------------------------- *
+ * Engine ledger — the host-agnostic "reported" source
+ * ------------------------------------------------------------------------- */
+
+/**
+ * The summon engine writes two files into its disposable session root
+ * (packages/skill-summon/src/summon/session.ts and log.ts):
+ *
+ * - `session.json`      — the manifest: every materialized skill with its full receipt;
+ * - `summon-log.jsonl`  — one line per call, previews and no-matches included.
+ *
+ * A host that gives the console no tool-result hook can still show the Session
+ * surface from them. Every event built here is `reported` — the engine said so —
+ * never `observed`, and a materialized skill's stage is `read-unobserved`
+ * because a ledger cannot show whether the body was read.
+ *
+ * Pure: the adapter that owns the I/O reads and parses the files and hands the
+ * values in. A line that does not parse as an object is skipped; nothing is
+ * invented to fill the gap.
+ */
+export function eventsFromLedger(manifest: unknown, logLines: readonly unknown[]): SummonEvent[] {
+  const records = new Map<string, Rec>();
+  if (isRec(manifest) && Array.isArray(manifest.skills)) {
+    for (const s of manifest.skills) if (isRec(s) && typeof s.id === "string") records.set(s.id, s);
+  }
+  const events: SummonEvent[] = [];
+  for (const line of logLines) {
+    if (!isRec(line)) continue;
+    const at = str(line.at);
+    const query = str(line.query) ?? "";
+    const direction = directionFromSurface(line.surface);
+    const preview = line.preview === true;
+    const noMatch = str(line.noMatch);
+    // The log carries when the index was generated but not whether the engine judged
+    // it stale, so source health stays unknown rather than being guessed.
+    const sourceHealth: SourceHealth = { kind: "unknown" };
+    if (noMatch !== null) {
+      events.push({
+        kind: "no-match",
+        direction,
+        query,
+        preview,
+        considered: null,
+        reason: NO_MATCH_REASON[noMatch] ?? null,
+        at,
+        evidence: "reported",
+        sourceHealth,
+      });
+      continue;
+    }
+    const chosen = Array.isArray(line.chosen) ? line.chosen.filter(isRec) : [];
+    if (preview) {
+      events.push({
+        kind: "previewed",
+        direction,
+        query,
+        skills: chosen.map((c) =>
+          receiptFrom(
+            { id: c.id, name: c.id, retrieval: { matchKind: c.matchKind, score: c.score, margin: c.margin } },
+            "previewed",
+            null,
+          ),
+        ),
+        delta: 0,
+        preview: true,
+        at,
+        evidence: "reported",
+        sourceHealth,
+      });
+      continue;
+    }
+    const skills = chosen.map((c) => {
+      const record = typeof c.id === "string" ? records.get(c.id) : undefined;
+      return receiptFrom(
+        record ?? { id: c.id, name: c.id, retrieval: { matchKind: c.matchKind, score: c.score, margin: c.margin } },
+        "read-unobserved",
+        null,
+      );
+    });
+    events.push({
+      kind: "summoned",
+      direction,
+      query,
+      skills,
+      delta: skills.length,
+      preview: false,
+      at,
+      evidence: "reported",
+      composition: "unknown",
+      arbor: "unknown",
+      sourceHealth,
+    });
+  }
+  return events;
+}
+
+/* ------------------------------------------------------------------------- *
  * Controller seams — where #126 binds. Nothing calls these from a runtime
  * session yet; they exist so real state replaces fixtures without a redesign.
  * ------------------------------------------------------------------------- */
