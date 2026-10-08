@@ -4,9 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { ledgerState, agyState, jsonLines, readBounded, MAX_BYTES, unknownState } from "../src/reader.js";
 import { harnessById, HARNESS_PATHS, buildConsoleView, renderConsoleText } from "../../status/src/index.js";
-import consolePi from "../../../plugins/skill-heaven-console-pi/extensions/console.mjs";
+import { build } from "esbuild";
+import { visibleWidth } from "@earendil-works/pi-tui";
+
+// Exercise the owned typed source, not a potentially stale integration bundle.
+// pi-tui stays host-provided in production; here its public exports are resolved
+// explicitly because this in-memory test module has no package directory.
+const built = await build({ entryPoints: [fileURLToPath(new URL("../extension/console.ts", import.meta.url))], bundle: true, write: false, format: "esm", platform: "node", external: ["@earendil-works/pi-tui"] });
+const code = built.outputFiles![0]!.text.replaceAll('"@earendil-works/pi-tui"', JSON.stringify(pathToFileURL(createRequire(import.meta.url).resolve("@earendil-works/pi-tui")).href));
+const { default: consolePi } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
 
 const dirs: string[] = [];
 const temp = () => { const path = mkdtempSync(join(tmpdir(), "console-test-")); dirs.push(path); return path; };
@@ -81,13 +90,34 @@ describe("bounded, exact-session readers", () => {
 
 function piFixture() {
   const handlers: Record<string, Function> = {}; const commands: Record<string, any> = {};
-  const ui = { setStatus: (...args: any[]) => statuses.push(args), setWidget: (...args: any[]) => widgets.push(args), notify: () => {}, setEditorText: (text: string) => drafts.push(text) };
-  const statuses: any[] = [], widgets: any[] = [], drafts: string[] = [];
+  const statuses: any[] = [], widgets: any[] = [], drafts: string[] = [], overlays: any[] = [], notices: string[] = [];
+  const tui = { terminal: { rows: 40, columns: 80 }, renders: 0, requestRender() { this.renders++; } };
+  const theme = { fg: (_role: string, text: string) => `\x1b[36m${text}\x1b[0m` };
+  const ui = {
+    setStatus: (...args: any[]) => statuses.push(args), setWidget: (...args: any[]) => widgets.push(args), notify: (text: string) => notices.push(text), setEditorText: (text: string) => drafts.push(text),
+    custom: (factory: Function, options: any) => new Promise<void>(resolve => {
+      const overlay: any = { options, disposed: false, completions: 0 };
+      overlay.component = factory(tui, theme, {}, () => { overlay.completions++; overlay.component.dispose(); overlay.disposed = true; resolve(); });
+      overlays.push(overlay);
+    }),
+  };
   let listener: Function | undefined;
   const api: any = { on: (name: string, cb: Function) => { handlers[name] = cb; }, registerCommand: (name: string, c: any) => { commands[name] = c; }, events: { emit: (channel: string, req: any) => listener?.(channel, req) } };
-  const ctx: any = { hasUI: true, cwd: "/synthetic", ui, sessionManager: { getBranch: () => [] } };
+  const ctx: any = { hasUI: true, mode: "tui", cwd: "/synthetic", ui, sessionManager: { getBranch: () => [] } };
   consolePi(api); handlers.session_start!(null, ctx);
-  return { handlers, commands, ctx, statuses, widgets, drafts, listen: (cb: Function) => { listener = cb; } };
+  return { handlers, commands, ctx, statuses, widgets, drafts, tui, theme, overlays, notices, listen: (cb: Function) => { listener = cb; } };
+}
+function widgetText(f: ReturnType<typeof piFixture>): string {
+  const value = f.widgets.at(-1)?.[1];
+  if (!value) return "";
+  return (typeof value === "function" ? value(f.tui, f.theme).render(f.tui.terminal.columns) : value).join("\n");
+}
+function openPane(f: ReturnType<typeof piFixture>, command: string) {
+  const pending = f.commands.heaven.handler(command, f.ctx);
+  const overlay = f.overlays.at(-1)!;
+  const render = () => overlay.component.render(f.tui.terminal.columns);
+  render();
+  return { pending, overlay, render, text: () => render().join("\n"), close: async () => { overlay.component.handleInput("\x1b"); await pending; } };
 }
 describe("separate Pi extension", () => {
   it("owns only its status key; drafts without any direct Core call and fills only explicitly", async () => {
@@ -95,7 +125,8 @@ describe("separate Pi extension", () => {
     f.listen(() => { requests++; throw new Error("Tool policy must not be bypassed"); });
     await f.commands.lens.handler("synthetic", f.ctx);
     expect(requests).toBe(0); expect(f.drafts).toEqual([]);
-    expect(f.widgets.at(-1)[1].join("\n")).toContain("not requested yet; no tool called");
+    expect(widgetText(f)).toContain("not requested yet; no tool called");
+    expect(widgetText(f)).not.toMatch(/"preview"|JSON arguments|approval path|Nothing materialized/);
     await f.commands.heaven.handler("fill", f.ctx);
     expect(f.drafts[0]).toContain('"preview":true');
     // Only a normal host tool result can turn the draft into a real preview.
@@ -113,15 +144,101 @@ describe("separate Pi extension", () => {
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
     f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
     f.handlers.tool_result({ toolName: "read", isError: true, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
-    await f.commands.heaven.handler("session", f.ctx);
-    expect(f.widgets.at(-1)[1].join("\n")).toContain("body not read");
+    const beforeRead = openPane(f, "inspect session");
+    beforeRead.overlay.component.handleInput("\x1b[F");
+    expect(beforeRead.text()).toContain("body not read"); await beforeRead.close();
     f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
-    await f.commands.heaven.handler("session", f.ctx);
-    expect(f.widgets.at(-1)[1].join("\n")).toContain("body read");
+    const afterRead = openPane(f, "inspect session");
+    afterRead.overlay.component.handleInput("\x1b[F");
+    expect(afterRead.text()).toContain("body read"); await afterRead.close();
   });
+  it.each([[40, 80], [40, 40], [18, 28], [10, 5], [8, 40]])("bounds physical rows and columns at %s×%s, including resize and wide text", async (rows, columns) => {
+    const f = piFixture(); f.tui.terminal.rows = rows; f.tui.terminal.columns = columns;
+    await f.commands.lens.handler("漢字 emoji 👩‍💻 " + "x".repeat(100), f.ctx);
+    expect(widgetText(f).split("\n").filter(Boolean).length).toBeLessThanOrEqual(2);
+    expect(widgetText(f)).not.toContain('"query"');
+    const pane = openPane(f, "inspect trust");
+    for (const [r, c] of [[rows, columns], [12, 7], [40, 80]]) {
+      f.tui.terminal.rows = r!; f.tui.terminal.columns = c!;
+      pane.overlay.component.handleInput("\x1b[F");
+      const output = pane.render();
+      expect(output.length).toBeLessThanOrEqual(Math.max(0, r! - 8));
+      for (const line of output) expect(visibleWidth(line)).toBeLessThanOrEqual(c!);
+    }
+    await pane.close();
+    expect(pane.overlay.disposed).toBe(true); expect(pane.render()).toEqual([]);
+  });
+  it("navigates six scoped sections, toggles inspection and pages only inspected content", async () => {
+    const f = piFixture(); const pane = openPane(f, "all");
+    const initial = pane.text();
+    expect(initial).toContain("1 Status");
+    pane.overlay.component.handleInput("\x1b[6~"); expect(pane.text()).toBe(initial);
+    pane.overlay.component.handleInput("\x1b[C"); expect(pane.text()).toContain("2 Lens");
+    pane.overlay.component.handleInput("\x1b[D"); expect(pane.text()).toContain("1 Status");
+    for (const [i, label] of ["Status", "Lens", "Session", "Scope", "Flow", "Trust"].entries()) {
+      pane.overlay.component.handleInput(String(i + 1)); expect(pane.text()).toContain(`${i + 1} ${label}`);
+    }
+    pane.overlay.component.handleInput("i");
+    expect(pane.text()).toContain("inspect");
+    const top = pane.text();
+    pane.overlay.component.handleInput("\x1b[6~"); expect(pane.text()).not.toBe(top);
+    pane.overlay.component.handleInput("\x1b[F"); expect(pane.text()).toContain("It does not rate it");
+    const end = pane.text(); pane.overlay.component.handleInput("\x1b[6~"); expect(pane.text()).toBe(end);
+    pane.overlay.component.handleInput("\x1b[5~"); expect(pane.text()).not.toBe(end);
+    pane.overlay.component.handleInput("\x1b[H"); expect(pane.text()).toBe(top);
+    pane.overlay.component.handleInput("\x1b[B"); expect(pane.text()).not.toBe(top);
+    pane.overlay.component.handleInput("i"); expect(pane.text()).toContain("summary");
+    pane.overlay.component.handleInput("q"); await pane.pending;
+    pane.overlay.component.handleInput("q"); expect(pane.overlay.completions).toBe(1);
+    expect(f.drafts).toEqual([]);
+  });
+  it("keeps defaults concise and hides JSON, fallback recipes and capability diagnostics until scoped inspection", async () => {
+    const f = piFixture();
+    await f.commands.lens.handler("synthetic", f.ctx);
+    for (const surface of ["status", "lens", "session", "scope", "flow", "trust"]) {
+      const pane = openPane(f, surface);
+      try {
+        // At 80 columns: at most 8 body rows + title/nav/help (3 rows).
+        expect(pane.render().length).toBeLessThanOrEqual(11);
+        expect(pane.text()).not.toMatch(/JSON arguments|"preview":true|Call the existing|\bvia |pi (?:install|remove)|configured skill source|Saved .*API\/layout/);
+      } finally { await pane.close(); }
+    }
+    const detail = openPane(f, "inspect lens");
+    detail.overlay.component.handleInput("\x1b[F");
+    expect(detail.text()).toContain('"preview":true');
+    await detail.close();
+    expect(f.drafts).toEqual([]);
+  });
+
+  it("cleans up only the owned pane/widget/status on dismiss, branch change and removal", async () => {
+    const f = piFixture();
+    await f.commands.lens.handler("synthetic", f.ctx);
+    let pane = openPane(f, "lens");
+    await f.commands.heaven.handler("dismiss", f.ctx); await pane.pending;
+    expect(pane.overlay.disposed).toBe(true); expect(widgetText(f)).toBe("");
+    pane = openPane(f, "trust"); f.handlers.session_tree(null, f.ctx); await pane.pending;
+    expect(pane.overlay.disposed).toBe(true);
+    pane = openPane(f, "session"); f.handlers.session_shutdown(null, f.ctx); await pane.pending;
+    expect(pane.overlay.disposed).toBe(true);
+    expect(f.widgets.at(-1)).toEqual(["skill-heaven-console", undefined]);
+    expect(f.statuses.at(-1)).toEqual(["skill-heaven-console", undefined]);
+    expect(f.drafts).toEqual([]);
+  });
+  it("does not open terminal overlays in RPC/no-UI mode or accept unscoped inspection", async () => {
+    const f = piFixture(); f.ctx.mode = "rpc";
+    await f.commands.heaven.handler("trust", f.ctx);
+    expect(f.overlays).toEqual([]); expect(f.notices.at(-1)).toContain("interactive terminal");
+    f.ctx.mode = "tui";
+    await f.commands.heaven.handler("inspect all", f.ctx);
+    expect(f.overlays).toEqual([]);
+    f.ctx.hasUI = false;
+    await f.commands.heaven.handler("trust", f.ctx); await f.commands.lens.handler("synthetic", f.ctx);
+    expect(f.overlays).toEqual([]); expect(f.drafts).toEqual([]);
+  });
+
   it("works without Core without calling anything and clears drafts on branch change", async () => {
     const f = piFixture(); await f.commands.lens.handler("synthetic", f.ctx);
-    expect(f.widgets.at(-1)[1].join("\n")).toContain("no tool called");
+    expect(widgetText(f)).toContain("no tool called");
     f.handlers.session_tree(null, f.ctx);
     await f.commands.heaven.handler("fill", f.ctx);
     expect(f.drafts).toEqual([]);
