@@ -18,8 +18,10 @@ Pi 1.1.0 native observations: active loaded summon schema has optional boolean
 preview; policy-hook denial blocked a preview; approved preview yielded one
 candidate and zero materializations; real materialization/body read followed.
 A 20-row terminal showed a six-row default pane and pageable inspected details;
-Escape/q restored the editor. Branch restoration, slices/truncation and exact
-namespaced rung matching have deterministic tests; remaining native cells are
+Escape/q restored the editor. Complete-read credit requires the pinned builtin's
+current public provenance; historical reads lack execution-time provenance and
+restore as unknown. Slices/truncation, shadowed tools and exact namespaced rung
+matching have deterministic tests; remaining native cells are
 tracked separately, never promoted from test snapshots.
 
 See [shared controls/evidence](../../packages/console/README.md) and

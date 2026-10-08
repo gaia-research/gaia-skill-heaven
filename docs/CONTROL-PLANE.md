@@ -235,7 +235,7 @@ Rules:
 | claude-zero launcher | its own session `statusLine` (door-owned session settings, nothing in `~/.claude`) | NATIVE SLOT | implemented, deterministic tests |
 | Pi | separate Full extension `ctx.ui.setStatus(key, text)` + explicitly opened `ctx.ui.custom` pane | **APPEND** · public SDK overlay | wired and live observed on 1.1.0; one compact line, bounded pane, Escape/q dismiss |
 | Codex, Hermes | no public status contribution API | UNSUPPORTED — receipts in transcript only | honest degraded |
-| Grok | explicit command-backed console report | no persistent contribution | implemented; saved lifecycle on 1.0.46; current 1.0.50 runtime blocked by signed-out account |
+| Grok | explicit command-backed console report | no persistent contribution | implemented; saved lifecycle on 1.0.46; current 1.0.50 authenticated model discovery observed; live report/preview pending |
 | Antigravity | explicit namespaced console skill report | no persistent contribution | implemented for 1.3.1; real HOME/keychain preserved; no stacked HUD claim |
 | Cursor | replaces native footer | REPLACE-ONLY, explicit opt-in | not built |
 

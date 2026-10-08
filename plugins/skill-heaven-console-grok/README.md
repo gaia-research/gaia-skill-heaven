@@ -8,10 +8,11 @@ in this conversation; without it, counts are unknown. No persistent HUD, private
 TUI patch, agent IDs or observed body-read claim is provided.
 
 Saved **1.0.46 (2765805b9442, stable)** package-management cells passed. Current
-installed **1.0.50 (c58f321264ba, stable)** reports **“You are not authenticated”**
-from `grok models`: live command expansion/preview/console acceptance remains
-blocked on a signed-in account. Exit0 from that models command is not a successful
-runtime cell. No login, account change or permission widening is automated.
+installed **1.0.50 (c58f321264ba, stable)** initially reported **“You are not
+authenticated”** despite exit0. After owner sign-in, native model discovery
+confirmed authentication and **grok-4.7** availability. Neither discovery nor
+exit0 establishes live command expansion/preview/console acceptance; those cells
+remain pending. No login, account change or permission widening is automated.
 
 The plugin uses the host's supported command surface, not a desktop pane. See
 [shared controls/evidence](../../packages/console/README.md). Full is Skill
