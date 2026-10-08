@@ -429,7 +429,8 @@ function receiptFrom(skill, stage, agent) {
 function sourceHealthOf(result) {
   const ranking = isRec(result.ranking) ? result.ranking : null;
   if (!ranking || typeof ranking.stale !== "boolean") return { kind: "unknown" };
-  const indexAgeDays = num(ranking.indexAgeDays);
+  const age = num(ranking.indexAgeDays);
+  const indexAgeDays = age === null ? null : Math.floor(age);
   return ranking.stale ? { kind: "stale", indexAgeDays } : { kind: "fresh", indexAgeDays };
 }
 function arborOf(result, summoned) {

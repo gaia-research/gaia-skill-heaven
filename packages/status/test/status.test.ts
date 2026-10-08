@@ -241,6 +241,11 @@ describe("events: state, event, evidence stay distinct (#137)", () => {
     expect(e.skills[0]).toMatchObject({ lane: "human-led", stage: "materialized", ms: 200 });
   });
 
+  it("reports the index age in whole days (the engine sends a fraction)", () => {
+    const e = eventFromSummonResult({ summoned: [], previewed: [], noMatch: null, ranking: { stale: true, indexAgeDays: 30.832282523148148 } });
+    expect(e.kind === "summoned" || e.kind === "previewed" || e.kind === "no-match" ? e.sourceHealth : null).toEqual({ kind: "stale", indexAgeDays: 30 });
+  });
+
   it("tool errors become error or unavailable, never a fabricated summon", () => {
     expect(eventFromSummonResult(null, {}, { isError: true, text: "fetch failed" }).kind).toBe("unavailable");
     expect(eventFromSummonResult(null, {}, { isError: true, text: "boom" }).kind).toBe("error");
