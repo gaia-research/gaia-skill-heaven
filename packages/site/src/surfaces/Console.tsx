@@ -258,8 +258,8 @@ export default function Console() {
                 <li key={surface}><strong>{surface}</strong> · {support.level} via {support.via} — {support.note}</li>
               ))}
             </ul>
-            <h3>Preview handoff · not submitted</h3>
-            <pre className="cx-native-readout"><code>{readout}</code></pre>
+            <h3>Shared six-surface readout · fixture only</h3>
+            <pre className="cx-native-readout" tabIndex={0} aria-label="Shared console fixture readout"><code>{readout}</code></pre>
             <p>Ultra controller: unavailable. This preview uses design fixtures only; no command is run and no live state is read.</p>
           </section>
           <nav aria-label="On this page" className="cx-index">
@@ -273,6 +273,7 @@ export default function Console() {
           </nav>
         </div>
 
+        <p className="cx-lede">The anatomy studies below illustrate the Claude pane design with synthetic data. They are not a promise that another harness exposes a pane or agent telemetry; the selected projection’s limits are listed above.</p>
         <InstrumentSection statuses={STATUSES} />
         <LensSection events={EVENTS} terminal={TERMINAL_EVENT} />
         <Pane />

@@ -1014,28 +1014,21 @@ export default function Landing() {
                 </span>
                 <span aria-hidden="true">→</span>
               </a>
-              <div className="lp-kicker">
-                <span>HELL · HEAVEN · INDEX</span>
-                <span className="lp-kicker__rule" aria-hidden="true" />
-                <span>THE LAUNCHER</span>
-                <span className="lp-reg" aria-hidden="true" />
-                <span className="lp-reg-dots" aria-hidden="true">
-                  <i />
-                  <i />
-                </span>
-              </div>
               <h1 className="lp-h1">
-                You are inside.
+                Summon with Core.
                 <br />
-                Now pick your door.
+                Inspect with Full.
               </h1>
               <p className="lp-lede">
-                <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
-                your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
-                session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
-                it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
-                ways.
+                Install the plugin in a harness you already use. <b>Core</b> gives you <code>{MECHANIC.floor}</code>
+                {' '}and the entropy controls, with no console. <b>Full</b> adds the independently removable
+                console your harness genuinely supports — a native pane where available, a truthful
+                readout where not. The launcher is separate and optional.
               </p>
+              <div className="lp-profile-cta">
+                <a className="sh-cta" href="#/start">Choose Core or Full <span aria-hidden="true">→</span></a>
+                <a href="#/console">Inspect the harness projections</a>
+              </div>
               <SlashReel />
             </div>
 
@@ -1587,7 +1580,7 @@ export default function Landing() {
               <span className="sh-chip sh-chip--dim">FROZEN</span>
             </div>
             <div className="lp-tree-wrap">
-              <pre className="lp-tree">{`my-project/
+              <pre className="lp-tree" tabIndex={0} aria-label="Example project folder layout">{`my-project/
 ├── .claude/
 │   └── skills/          # standing cost paid every turn
 │       ├── code-review/
