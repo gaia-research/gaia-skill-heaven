@@ -397,7 +397,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
       claude plugin install --scope user $PLUGIN_ID
       New-Item -ItemType File -Force -Path (Join-Path $INSTALL_HOME ".claude-plugin-managed") | Out-Null
     }
-    Say-Message "Claude plugin ready: /summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra."
+    Say-Message "Claude plugin ready: type /skill-heaven:summon <what you need> (also /skill-heaven:skill-zero, :skill-heaven, :skill-hell, :skill-ultra)."
   } elseif (Get-Command claude -ErrorAction SilentlyContinue) {
     Say-Message "Claude Code binary detected, but 'claude --version' failed."
     Say-Message "This typically indicates missing platform-native binaries or an unsupported architecture."
