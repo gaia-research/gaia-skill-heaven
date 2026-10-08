@@ -1,10 +1,18 @@
-# Grok Full console (preview)
+# Grok Skill Heaven Full console
 
-Separate plugin identity `skill-heaven-console`; `grok plugin install "<staged-console-dir>" --trust`
-and `grok plugin uninstall skill-heaven-console` address only Console. Explicit
-`/heaven` is a model-mediated canonical report, not a fake persistent HUD.
-History requires this conversation's exact Core sessionRoot. Lens only on explicit
-request with preview:true on the existing Core tool; handoff is printed, never sent.
-No MCP, hooks, private TUI patch or statusline rewrites.
-Saved 1.0.46 API/layout evidence is not a live Full receipt.
-See [adapter contract and remaining cells](../../packages/console/README.md).
+Separate command plugin; `/heaven` asks the model to run the committed shared
+report and return stdout verbatim (<=8 lines). Explicit `inspect` adds details.
+`/heaven lens <need>` is a model-mediated preview on the normal Core tool, never
+silent submission or a new server. Bind only an exact Core sessionRoot returned
+in this conversation; without it, counts are unknown. No persistent HUD, private
+TUI patch, agent IDs or observed body-read claim is provided.
+
+Saved **1.0.46 (2765805b9442, stable)** package-management cells passed. Current
+installed **1.0.50 (c58f321264ba, stable)** reports **“You are not authenticated”**
+from `grok models`: live command expansion/preview/console acceptance remains
+blocked on a signed-in account. Exit0 from that models command is not a successful
+runtime cell. No login, account change or permission widening is automated.
+
+The plugin uses the host's supported command surface, not a desktop pane. See
+[shared controls/evidence](../../packages/console/README.md). Full is Skill
+Heaven's installation profile, not the Gaia Ecosystem Desktop Mod.

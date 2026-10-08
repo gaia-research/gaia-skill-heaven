@@ -18,6 +18,21 @@ The `*-zero` launchers are a separate, optional axis. All four of these are vali
 **Core**, **Core + launcher**, **Full**, **Full + launcher**. A launcher is not an edition and not part of
 either profile.
 
+## Not the Gaia Ecosystem Desktop Mod
+
+Skill Heaven is one product compatible with agentic terminal harnesses. “CLI” is
+informal shorthand for its terminal experience, never a separate product name.
+Full adds Skill Heaven's supported terminal console/readout, **not** the separately
+released Gaia Ecosystem Desktop Mod. That optional Skill Tree + Skill Heaven
+integration is governed by HQ #286 / Heaven #161 / Tree #2046: Living Tree B first,
+then justified C enhancements. No Mod is silently installed or advertised as
+accepted by this profile. Future terminal-native adaptations are outside #196.
+
+Statusline visibility is independently configurable: `SKILL_HEAVEN_STATUS=off`
+for Pi; Claude's console `status: off` option. Its persistent contribution never
+exceeds one compact line, even under the legacy statusline `full` option.
+Command-backed consoles add no persistent statusline. Launchers remain optional.
+
 ## One source of truth
 
 Everything below is derived from one table, `HARNESS_PATHS` in `packages/status/src/compat.ts`:
@@ -45,12 +60,16 @@ does.
    Neither re-registers or removes Core.
 4. **No surprise Full.** With no `--profile` and no terminal to ask on, the profile is **Core**. A re-run
    without `--profile` keeps the profile the last run recorded.
-5. **Nothing is installed or edited silently.** The installers never install a harness binary and never
-   edit a harness's settings. They *print* each client's own registration commands; `--register` runs
-   exactly those commands, and only when you ask.
+5. **No silent host mutation.** Staging never installs a harness binary or edits
+   host settings. It prints each client's canonical registration commands;
+   explicit `--register` runs exactly those host-owned commands. The host records
+   only the selected packages; unrelated settings must be preserved.
 6. **Fail closed.** If a required Full piece cannot be registered safely, the install stops and says why.
-7. **The console observes; it never governs.** It cannot submit a prompt, call a tool on its own, widen a
-   permission or write shared state. A button pre-fills a command a person submits.
+7. **The console observes; it never governs.** It cannot submit a prompt,
+   independently retrieve, widen a permission or write shared runtime state.
+   Pi/Hermes Lens draft a handoff only. Claude's explicitly requested preview uses
+   the supported host tool path; other command-backed previews are model-mediated
+   through the normal Core tool. Buttons prefill; the person submits.
 
 ## Transitions
 

@@ -233,7 +233,7 @@ export default function Console() {
         <div className="cx-head">
           <h1>Console across harnesses</h1>
           <p className="cx-lede cx-lede--lead">
-            One shared model, six harness-specific projections. Choose a harness to inspect its actual support and see the same synthetic session rendered through the shared semantic view. This page never connects to your session.
+            Skill Heaven's Full installation profile adds the supported terminal console for your harness. Choose a harness to inspect its actual support and see the same synthetic session rendered through the shared model. This page never connects to your session; Full does not install the separately released Gaia Ecosystem Desktop Mod.
           </p>
           <section className="cx-host-showcase" aria-labelledby="cx-host-heading">
             <h2 id="cx-host-heading">Choose a harness</h2>
@@ -262,6 +262,7 @@ export default function Console() {
             <pre className="cx-native-readout" tabIndex={0} aria-label="Shared console fixture readout"><code>{readout}</code></pre>
             <p>Ultra controller: unavailable. This preview uses design fixtures only; no command is run and no live state is read.</p>
           </section>
+          <p className="cx-lede">Native runtime evidence: Pi 1.1.0 exposed an active summon tool with optional boolean preview. A real preview returned one candidate and materialized zero skills. Its console opened only on request in a 20-row terminal; paging and Escape/q dismissal restored the editor. The UI examples on this page remain fixtures, not that runtime capture.</p>
           <nav aria-label="On this page" className="cx-index">
             <ul>
               {INDEX.map(([id, label]) => (

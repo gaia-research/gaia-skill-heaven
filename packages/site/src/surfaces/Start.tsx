@@ -352,6 +352,7 @@ export default function Start() {
                     </label>
                   ))}
                 </div>
+                {profile === 'full' && <p className="st-caveat">{harness.console.mechanism} {harness.console.probe.summary}</p>}
               </section>
 
               <ol className="st-steps">
@@ -518,25 +519,36 @@ export default function Start() {
           <h3 className="st-h3 st-h3--spaced">Then set how widely it reaches</h3>
           <ul className="st-rungs">
             <li>
-              <code className="st-code st-code--cmd">/skill-zero</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-zero</code>
               <span>the floor — cut the skills you summoned</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-heaven [low|med]</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-heaven [low|med]</code>
               <span>converge — summon narrowly onto the gap in front of you</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-hell [high|xhigh|max]</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-hell [high|xhigh|max]</code>
               <span>explore — summon widely around the gap</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-ultra</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-ultra</code>
               <span>provisioned — the controller that would choose for you is not built yet</span>
             </li>
           </ul>
           <p className="st-caveat">
             <span className="sh-chip sh-chip--wip st-preview">Provisional</span> {LADDER_WIP}
           </p>
+        </section>
+
+        <section className="st-sec" aria-labelledby="st-desktop-mod">
+          <h2 className="st-h2" id="st-desktop-mod">Optional Gaia Ecosystem Desktop Mod</h2>
+          <p className="st-prose">
+            A separately released integration of Gaia Skill Tree and Skill Heaven. Living Tree B is
+            its first complete desktop release; richer cockpit C features follow only where justified.
+            Neither Core nor Full installs it. No Mod installation is offered here until its desktop
+            acceptance and release are complete.
+          </p>
+          <p className="st-prose"><a href="https://github.com/gaia-research/gaia-research/issues/286">Follow the Desktop Mod release</a>.</p>
         </section>
 
         {/* ------------------------------------------------- launcher */}

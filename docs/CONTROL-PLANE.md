@@ -1,6 +1,14 @@
 # The control plane — one status model, many projections
 
 **Status: design of record for the end-user pass (#161 · #162 · #163 · #164 · #165 · #166 · #137).**
+**#196 terminal release clarification (founder PR #293):** Skill Heaven is the
+product. Core/Full are its installation profiles for agentic harnesses; Full adds
+truthful terminal consoles, not the separately gated Gaia Ecosystem Desktop Mod.
+The optional integrated Mod (HQ #286 / #161 / Tree #2046) ships Living Tree B first,
+then justified C enhancements. It is not a dependency of this terminal release.
+The historical design and #187 receipts below remain evidence, not a B release
+claim. Current terminal controls and coverage are in `packages/console/README.md`.
+
 Implementation guidance, not ratification — decisions stay with
 `gaia-research/founder/RATIFICATION.md`; the product model it serves is N13
 (`docs/LADDER-FLOW.md`). Written 2026-10-07 against `main` @ `202f174`.
@@ -100,7 +108,9 @@ materialized `SKILL.md`. The console observes both facts:
 | `in context` | a `Read` tool call whose path is that skill's materialized `SKILL.md` | "in context · body read by main agent" |
 | `unknown` | terminal/CLI projections, which cannot observe reads | "materialized · read not observed" |
 
-The terminal never claims a skill is "in context"; it says *materialized*.
+Receipt-only terminal projections say *materialized*, never body-read. Native
+terminal observers (Claude and Pi) may show body-read only from successful complete
+read evidence; a card or explicit read slice is insufficient. None proves effective use.
 
 ### 2.4 The Ultra slot — provisioned, not built
 
@@ -223,13 +233,15 @@ Rules:
 |---|---|---|---|
 | Claude Code + console mod | `$.ui.status(text)` | **APPEND** — adds an entry; never touches `statusLine` settings | preview · terminal probed live on 2.1.294 (beside a user `statusLine`) · desktop paint not probed |
 | claude-zero launcher | its own session `statusLine` (door-owned session settings, nothing in `~/.claude`) | NATIVE SLOT | implemented, deterministic tests |
-| Pi | `ctx.ui.setStatus(key, text)` (plugin) · `pi-zero` widget | **APPEND** (setStatus) · NATIVE SLOT (widget) | setStatus carries the canonical line (probed 1.0.4, RPC hard signal); not wired into the plugin yet |
+| Pi | separate Full extension `ctx.ui.setStatus(key, text)` + explicitly opened `ctx.ui.custom` pane | **APPEND** · public SDK overlay | wired and live observed on 1.1.0; one compact line, bounded pane, Escape/q dismiss |
 | Codex, Hermes | no public status contribution API | UNSUPPORTED — receipts in transcript only | honest degraded |
-| Grok | command-backed status line | not built | later slice |
-| Antigravity | stacked status command | not built; the plugin itself is **compatible** on 1.3.1 | not built |
+| Grok | explicit command-backed console report | no persistent contribution | implemented; saved lifecycle on 1.0.46; current 1.0.50 runtime blocked by signed-out account |
+| Antigravity | explicit namespaced console skill report | no persistent contribution | implemented for 1.3.1; real HOME/keychain preserved; no stacked HUD claim |
 | Cursor | replaces native footer | REPLACE-ONLY, explicit opt-in | not built |
 
-Mode: `SKILL_HEAVEN_STATUS=off|compact|full` (console: a config row). `off`
+Mode: `SKILL_HEAVEN_STATUS=off|compact|full` (Claude console: a config row;
+Pi: environment). Persistent console contributions are always compact and at most
+one line; the legacy `full` value does not request expansion. `off`
 removes the entry; `/summon` still prints its own receipt because an explicit
 action must disclose what happened.
 
@@ -244,7 +256,7 @@ on its own and never runs a retrieval on its own.
 | `/lens <intent>` (preview) — no match | `◇ lens  × no match · 0 admitted · <reason> · nothing materialized` | Dismiss |
 | `/lens` — one strong candidate | `◇ lens  impeccable · exact · nothing materialized` | Summon · Inspect · Dismiss |
 | `/lens` — several plausible | `◇ lens  3 candidates · top react-performance (Δ .04 — close call)` | Inspect · Dismiss |
-| explicit `/summon` result | `◇ summoned  impeccable · card returned · body not read` | Inspect · Dismiss |
+| ordinary `/summon` result | no unrequested band; updates compact status and on-demand receipt state | inspect through `/heaven` |
 | Heaven-directed result | `‹ summoned  react-performance · …` | Inspect · Dismiss |
 | Hell-directed result | `› summoned  browser-security · …` | Inspect · Dismiss |
 | body read | `… · in context (main agent read SKILL.md)` | Inspect · Dismiss |
@@ -270,8 +282,11 @@ on its own and never runs a retrieval on its own.
 
 ### 5.3 Console pane — `/heaven` (#165 · #166 · #164)
 
-One pane, four sections, opened only by the person (command or button). Never
-opened unasked.
+Opened only by the person, never unasked. Claude has four inspector sections;
+Pi has all six shared surfaces in its public SDK overlay. Both default to concise
+summaries: explicit Inspect reveals detailed evidence/JSON/recipes; section changes
+return to summary. Close/Escape dismiss; Pi also supports q/Ctrl+C and paging.
+Command-backed hosts print the brief shared report, with details only on inspect.
 
 **Session (Receipt).** A timeline of this session's summon events, newest first.
 Each row expands to the receipt:
@@ -408,8 +423,8 @@ It is the hand-off for builders and the review surface for owners.
 | S6 installer epilogue | terminal | detected harnesses → next step; none detected → honest message; no mutation |
 
 **Waits:** persisted rung contract · repo loadouts · Ultra controller (#126) ·
-Arbor-informed composition · Grok/Agy/Cursor status adapters · wiring Pi's
-`setStatus` (feasible, §10) · desktop paint probe of the console (NEEDS DESKTOP
+Arbor-informed composition · Cursor opt-in status adapter · new persistent Grok/Agy
+status APIs if they become available · separate desktop Mod release acceptance (NEEDS DESKTOP
 PROBE: requires a user-scope install) · native Windows installer run (#94,
 NEEDS WINDOWS PROBE).
 

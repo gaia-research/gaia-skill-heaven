@@ -272,9 +272,9 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     name: "Pi",
     bin: "pi",
     chip: "compatible",
-    probedVersion: "1.0.4",
+    probedVersion: "1.1.0",
     evidence:
-      "Live probe on 1.0.4: pi install, five commands, summon materialized a skill, the four surfaces expanded. The adapter keeps its own summon tool rather than Pi's MCP runtime, which an MCP extension can replace.",
+      "Pi 1.1.0: native profile lifecycle, registered active summon schema with optional boolean preview, normal policy-hook denial, approved preview without materialization, materialization and body read observed. Five package-owned namespaced resources load without shadowing user skills. The adapter keeps its own summon tool rather than an optional MCP replacement extension.",
     evidenceHref: `${REPO}/plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`,
     needsInstaller: true,
     commands: [`pi install "${AGENT_PLUGIN_INSTALL.plugin}" --approve`],
@@ -284,7 +284,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
     statusNote:
-      "Full adds a separate extension with its own setStatus key (API probed on 1.0.4); the new adapter's live TUI paint remains unprobed. Core has no console.",
+      "Full requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>",
   },

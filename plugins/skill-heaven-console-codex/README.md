@@ -1,10 +1,17 @@
-# Codex Full console (preview)
+# Codex Skill Heaven Full console
 
-Separate plugin identity `skill-heaven-console`. Stage under the candidate local
-marketplace; `codex plugin add skill-heaven-console@gaia-skill-heaven` registers,
-`codex plugin remove skill-heaven-console@gaia-skill-heaven` removes only Console.
-No MCP or hooks. The explicit heaven skill is a model-mediated canonical Node report.
-History requires the exact Core sessionRoot supplied by this conversation, never latest.
-Lens only on explicit request, preview:true on the existing Core tool, printed handoff.
-Saved 0.161.0 API/layout evidence is not a live Full receipt.
-See [adapter contract and remaining cells](../../packages/console/README.md).
+Separate native plugin skill and committed shared Node report. `/heaven` is
+model-mediated: concise stdout (<=8 lines), details only on explicit inspect.
+Lens requests use Core's normal `preview:true` tool path and host approval, never
+a separate summon server or silent prompt. Use only the exact sessionRoot returned
+in this conversation; unbound counts are unknown and body reads are not observed.
+No persistent HUD, desktop pane or fabricated agent telemetry is claimed.
+
+Saved native **0.161.0** profile-management cells passed Core→Full→Core→remove.
+Current installed version is **0.162.0**; that version discovery does not promote
+historical runtime evidence. Live report/preview, cache refresh and isolation are
+separate acceptance cells. Headless execution can refuse MCP permission; do not
+bypass approvals to obtain a green cell.
+
+See [shared controls/evidence](../../packages/console/README.md). Full is Skill
+Heaven's terminal installation profile, not the Gaia Ecosystem Desktop Mod.
