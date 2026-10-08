@@ -37,8 +37,9 @@ try {
   }
   const surface = value("--surface") ?? "all";
   if (surface !== "all" && !CONSOLE_SURFACES.includes(surface as ConsoleSurface)) throw new Error("unknown surface");
-  if (!root && !transcript && !stdin) console.log("No exact session binding supplied. Counts are unknown, not zero. Supply the sessionRoot returned by your Core tool.");
-  console.log(renderConsoleText(buildConsoleView(state, harnessById(host)), { surface: surface as ConsoleSurface | "all" }));
+  const details = args.includes("--details");
+  if (details && !root && !transcript && !stdin) console.log("No exact session binding supplied. Counts are unknown, not zero. Supply the sessionRoot returned by your Core tool.");
+  console.log(renderConsoleText(buildConsoleView(state, harnessById(host)), { surface: surface as ConsoleSurface | "all", details }));
 } catch {
   // Never echo raw paths, prompts or parser errors into the host transcript.
   console.error("Skill Heaven console: session source unavailable or invalid; no session was guessed.");

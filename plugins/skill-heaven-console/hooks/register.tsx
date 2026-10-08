@@ -67,7 +67,7 @@ const isoOf = (ms: number): string => new Date(ms).toISOString()
 
 /** Re-set the status entry from state. `off` removes it; it never touches statusLine. */
 function paintStatus($: EngineInterface, mode: StatusMode, state: ConsoleState): void {
-  $.ui.status(mode === 'off' ? undefined : toPlain(renderStatusSegments(state.status, mode)))
+  $.ui.status(mode === 'off' ? undefined : toPlain(renderStatusSegments(state.status, 'compact')))
 }
 
 async function load($: EngineInterface): Promise<ConsoleState> {
@@ -82,7 +82,7 @@ async function change($: EngineInterface, mode: StatusMode, fn: (s: ConsoleState
 }
 
 async function openPane($: EngineInterface): Promise<void> {
-  await $.ui.open({ id: PANE_ID, title: 'Skill Heaven' })
+  await $.ui.open({ id: PANE_ID, title: 'Skill Heaven', focus: true, closeOnEscape: true, rows: 12 })
 }
 
 /** Fire and forget, but never leave a rejection unhandled. */
@@ -195,7 +195,7 @@ export const register: Register = (on, options) => {
    * ----------------------------------------------------------------------- */
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'heaven', description: 'Open the Skill Heaven console', argumentHint: '[session|scope|flow|trust]' })
+    await $.command.register({ name: 'heaven', description: 'Open the Skill Heaven console', argumentHint: '[inspect] [session|scope|flow|trust] | dismiss' })
     await $.command.register({
       name: 'lens',
       description: 'Preview which skill would be summoned — nothing is materialized',
@@ -229,9 +229,15 @@ export const register: Register = (on, options) => {
    * ----------------------------------------------------------------------- */
 
   on('command.run', { command: 'heaven' }, async ($, e) => {
-    const arg = e.args.trim().toLowerCase()
-    const section = SECTIONS.find((s) => s === arg)
-    if (section) await change($, mode, (s) => ({ ...s, section }))
+    const args = e.args.trim().toLowerCase().split(/\s+/)
+    if (args[0] === 'dismiss') {
+      await $.ui.close({ id: PANE_ID })
+      await change($, mode, (s) => ({ ...s, band: null, bandRequested: false }))
+      return { text: 'Skill Heaven console dismissed.' }
+    }
+    const inspectSection = args[0] === 'inspect'
+    const section = SECTIONS.find((s) => s === args[inspectSection ? 1 : 0])
+    await change($, mode, (s) => ({ ...s, section: section ?? s.section, inspectSection, openEntry: null }))
     await openPane($)
     // The model reads this row: fixed text only.
     return { text: 'Skill Heaven console opened.' }
@@ -240,7 +246,7 @@ export const register: Register = (on, options) => {
   on('command.run', { command: 'lens' }, async ($, e) => {
     const query = sanitizeDisplay(e.args, 200)
     if (query === '') return { text: 'Usage: /lens <intent>. Nothing was summoned.' }
-    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query } }))
+    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query }, bandRequested: true }))
     lensInFlight = true
     try {
       let outcome: Preview
@@ -405,13 +411,13 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
     const state = await load($)
-    if (state.band === null) return next(e)
+    if (state.band === null || !state.bandRequested) return next(e)
     const actions: BandActions = {
       inspect: (id) => {
-        later(change($, mode, (s) => ({ ...s, section: 'session', openEntry: id })).then(() => openPane($)))
+        later(change($, mode, (s) => ({ ...s, section: 'session', openEntry: id, inspectSection: true })).then(() => openPane($)))
       },
       dismiss: () => {
-        later(change($, mode, (s) => ({ ...s, band: null })))
+        later(change($, mode, (s) => ({ ...s, band: null, bandRequested: false })))
       },
       summon: (name) => {
         later(fillPrompt($, `/summon ${name}`))
@@ -424,8 +430,10 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: 'skill-heaven' }, async ($, e) => {
     const state = await load($)
     const actions: PaneActions = {
+      inspect: () => { later(change($, mode, (s) => ({ ...s, inspectSection: !s.inspectSection, openEntry: null }))) },
+      close: () => { later($.ui.close({ id: PANE_ID })) },
       section: (section) => {
-        later(change($, mode, (s) => ({ ...s, section })))
+        later(change($, mode, (s) => ({ ...s, section, inspectSection: false, openEntry: null })))
       },
       toggle: (id) => {
         later(change($, mode, (s) => ({ ...s, openEntry: s.openEntry === id ? null : id })))

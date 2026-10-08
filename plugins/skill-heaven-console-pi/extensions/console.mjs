@@ -1376,10 +1376,27 @@ function header(view, surface) {
   const support = view.projection.surfaces[surface];
   return [`\u2500\u2500 ${SURFACE_LABEL[surface]} \xB7 ${SUPPORT_WORD[support.level]} \u2500\u2500`, ...support.level === "native" ? [] : [`   via ${support.via}. ${support.note}`]];
 }
+function briefConsole(view, which) {
+  const firstLens = view.lens?.lines[0] ? sanitizeDisplay(toPlain(view.lens.lines[0]), 64) : "No preview yet";
+  const draft = view.lens?.entryId === null && view.lens.prefill !== null;
+  const selected = view.scope.rows.find((row) => row.label === "selected");
+  const rung = selected?.evidence === "observed" && selected.value ? sanitizeDisplay(selected.value.split(/ · | — /)[0], 40) : "rung not observed";
+  const summaries = {
+    status: view.status.compact,
+    lens: `Lens \xB7 ${draft ? "Preview draft ready \xB7 not submitted" : firstLens}`,
+    session: `Session \xB7 ${view.session.entries.length ? `${view.session.entries.length} recent receipts` : "no receipts available"}`,
+    scope: `Scope \xB7 ${rung} \xB7 Ultra unavailable`,
+    flow: `Flow \xB7 ${view.flow.telemetryNote ? "agent ids not observed" : `${view.flow.agents.length + view.flow.more} reported agents`}`,
+    trust: "Trust \xB7 read-only projection"
+  };
+  const surfaces = which === "all" ? CONSOLE_SURFACES : [which];
+  return [`Skill Heaven \xB7 ${view.harness.name}`, ...surfaces.map((surface) => summaries[surface]), `Inspect: ${view.projection.command} inspect <section>`].join("\n");
+}
 function renderConsoleText(view, opts = {}) {
   const color = opts.color ?? "none";
   const width = opts.width ?? 0;
   const which = opts.surface ?? "all";
+  if (!opts.details) return briefConsole(view, which);
   const want = (s) => which === "all" || which === s;
   const out = [];
   out.push(`Skill Heaven console \xB7 ${view.harness.name} \xB7 ${view.projection.kind === "command-backed" ? "command-backed" : view.projection.kind === "pane" ? "pane" : "extension UI"} \xB7 observes, never changes`);
@@ -1394,7 +1411,7 @@ function renderConsoleText(view, opts = {}) {
     } else {
       for (const l of view.lens.lines) out.push(`   ${paint(l, color)}`);
       if (view.lens.stage) out.push(`   ${view.lens.stage.text}${view.lens.stage.inferred ? " (inferred)" : ""}`);
-      if (view.lens.prefill) out.push(`   To summon, type: ${view.lens.prefill}   (nothing is submitted for you)`);
+      if (view.lens.prefill) out.push(`   ${view.lens.actions.includes("summon") ? "To summon, type" : "Preview handoff, type"}: ${view.lens.prefill}   (nothing is submitted for you)`);
     }
   }
   if (want("session")) {

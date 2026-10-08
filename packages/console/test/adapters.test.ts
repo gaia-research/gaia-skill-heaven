@@ -19,7 +19,8 @@ describe("bounded, exact-session readers", () => {
     const cli = fileURLToPath(new URL("../../../plugins/skill-heaven-console-codex/scripts/heaven.mjs", import.meta.url));
     const run = spawnSync(process.execPath, [cli, "--host", "codex"], { encoding: "utf8" });
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain("Counts are unknown, not zero");
+    expect(run.stdout).not.toContain("Supply the sessionRoot");
+    expect(run.stdout.trim().split("\n")).toHaveLength(8);
     expect(run.stdout).toContain("? skills");
     expect(run.stdout).not.toContain("pending recon");
   });
@@ -33,7 +34,7 @@ describe("bounded, exact-session readers", () => {
     expect(state.entries[0]!.via).toBe("ledger");
     expect(state.entries[0]!.event.kind === "summoned" && state.entries[0]!.event.skills[0]!.stage).toBe("read-unobserved");
     for (const id of ["codex", "hermes", "grok", "agy"] as const) {
-      const text = renderConsoleText(buildConsoleView(state, harnessById(id)));
+      const text = renderConsoleText(buildConsoleView(state, harnessById(id)), { details: true });
       for (const title of ["Status", "Lens", "Session", "Scope", "Flow", "Trust"]) expect(text).toContain(`── ${title}`);
       expect(text).toContain("read not observed");
     }

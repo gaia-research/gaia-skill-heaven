@@ -624,6 +624,8 @@ export interface TextOptions {
   /** One surface, or all of them. */
   surface?: ConsoleSurface | "all";
   color?: ColorDepth;
+  /** Verbose receipts, capability notes and raw handoffs require explicit inspection. */
+  details?: boolean;
   /** Wrap width for long values; 0 = no wrapping. */
   width?: number;
 }
@@ -665,11 +667,30 @@ function header(view: ConsoleView, surface: ConsoleSurface): string[] {
   return [`── ${SURFACE_LABEL[surface]} · ${SUPPORT_WORD[support.level]} ──`, ...(support.level === "native" ? [] : [`   via ${support.via}. ${support.note}`])];
 }
 
+/** Default is at most eight brief lines. Detail inspection is a separate, intentional action. */
+function briefConsole(view: ConsoleView, which: ConsoleSurface | "all"): string {
+  const firstLens = view.lens?.lines[0] ? sanitizeDisplay(toPlain(view.lens.lines[0]), 64) : "No preview yet";
+  const draft = view.lens?.entryId === null && view.lens.prefill !== null;
+  const selected = view.scope.rows.find(row => row.label === "selected");
+  const rung = selected?.evidence === "observed" && selected.value ? sanitizeDisplay(selected.value.split(/ · | — /)[0]!, 40) : "rung not observed";
+  const summaries: Record<ConsoleSurface, string> = {
+    status: view.status.compact,
+    lens: `Lens · ${draft ? "Preview draft ready · not submitted" : firstLens}`,
+    session: `Session · ${view.session.entries.length ? `${view.session.entries.length} recent receipts` : "no receipts available"}`,
+    scope: `Scope · ${rung} · Ultra unavailable`,
+    flow: `Flow · ${view.flow.telemetryNote ? "agent ids not observed" : `${view.flow.agents.length + view.flow.more} reported agents`}`,
+    trust: "Trust · read-only projection",
+  };
+  const surfaces = which === "all" ? CONSOLE_SURFACES : [which];
+  return [`Skill Heaven · ${view.harness.name}`, ...surfaces.map(surface => summaries[surface]), `Inspect: ${view.projection.command} inspect <section>`].join("\n");
+}
+
 /** The console as plain text — sanitized upstream, so safe to print. */
 export function renderConsoleText(view: ConsoleView, opts: TextOptions = {}): string {
   const color = opts.color ?? "none";
   const width = opts.width ?? 0;
   const which = opts.surface ?? "all";
+  if (!opts.details) return briefConsole(view, which);
   const want = (s: ConsoleSurface) => which === "all" || which === s;
   const out: string[] = [];
   out.push(`Skill Heaven console · ${view.harness.name} · ${view.projection.kind === "command-backed" ? "command-backed" : view.projection.kind === "pane" ? "pane" : "extension UI"} · observes, never changes`);
@@ -684,7 +705,7 @@ export function renderConsoleText(view: ConsoleView, opts: TextOptions = {}): st
     } else {
       for (const l of view.lens.lines) out.push(`   ${paint(l, color)}`);
       if (view.lens.stage) out.push(`   ${view.lens.stage.text}${view.lens.stage.inferred ? " (inferred)" : ""}`);
-      if (view.lens.prefill) out.push(`   To summon, type: ${view.lens.prefill}   (nothing is submitted for you)`);
+      if (view.lens.prefill) out.push(`   ${view.lens.actions.includes("summon") ? "To summon, type" : "Preview handoff, type"}: ${view.lens.prefill}   (nothing is submitted for you)`);
     }
   }
   if (want("session")) {

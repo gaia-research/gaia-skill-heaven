@@ -2,6 +2,7 @@
 description: Explicit read-only Skill Heaven console report (model-mediated).
 ---
 # Skill Heaven console (preview)
+Default output must be the concise bundled summary (at most eight lines). Never add raw JSON, lengthy capability notes, fallback recipes or diagnostic prose. Only an explicit `/heaven inspect [status|lens|session|scope|flow|trust]` request adds `--details` and the chosen `--surface` to the same report invocation. Never run `--details` as the default. Printed commands are never executed. The host owns dismissal and tool-trace presentation; do not install a persistent statusline.
 This command is model-mediated, not a native pane or persistent HUD.
 Run `node "${GROK_PLUGIN_ROOT}/scripts/heaven.mjs" --host grok` and print stdout verbatim. A person may supply `--session-root`; use only the exact Core sessionRoot returned by the summon tool in THIS conversation. Never look for a newest directory, scan unrelated session logs or infer a session from the working directory. Without a binding the report says unknown, not zero. No raw transcript export, shared config edits or hidden submission. Printed commands are suggestions only.
 

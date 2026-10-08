@@ -12,6 +12,8 @@ import type { Elements, RenderElement } from 'claude-code'
 
 import {
   ROLE_COLORS,
+  buildConsoleView,
+  renderConsoleText,
   flowView,
   harnessById,
   lensView,
@@ -38,6 +40,8 @@ export interface BandActions {
 }
 
 export interface PaneActions {
+  inspect: () => void
+  close: () => void
   section: (section: ConsoleSection) => void
   toggle: (id: number) => void
   /** Pre-fills a command into the prompt. The person submits it. */
@@ -78,15 +82,14 @@ function runs(ui: UI, segments: readonly Segment[], extra: StyleProps = {}): Ren
 export function renderBand(ui: UI, state: ConsoleState, actions: BandActions, columns: number): RenderElement | null {
   const { Box, Text, Button } = ui
   const view = lensView(state, CLAUDE.console)
-  if (view === null) return null
+  if (view === null || !state.bandRequested) return null
   const width = Math.max(20, columns)
-  const [first, second] = view.lines
+  const [first] = view.lines
 
   if (view.entryId === null) {
     return (
       <Box flexDirection="column" width={width}>
         {first ? runs(ui, first) : null}
-        {second ? runs(ui, second) : null}
         <Button key="dismiss" label="Dismiss" role="dismiss" onPress={() => actions.dismiss()} />
       </Box>
     )
@@ -98,7 +101,6 @@ export function renderBand(ui: UI, state: ConsoleState, actions: BandActions, co
   return (
     <Box flexDirection="column" width={width}>
       {first ? runs(ui, first) : null}
-      {second ? runs(ui, second) : null}
       {/* a preview's second line already says "nothing materialized" (seen twice live on 2.1.294) */}
       {view.stage === null ? null : (
         <Text key="stage" dimColor italic={view.stage.inferred}>
@@ -151,10 +153,15 @@ export function renderPane(ui: UI, state: ConsoleState, actions: PaneActions, co
           />
         ))}
       </Box>
-      {state.section === 'session' ? sessionSection(ui, state, actions) : null}
-      {state.section === 'scope' ? scopeSection(ui, state, actions) : null}
-      {state.section === 'flow' ? flowSection(ui, state) : null}
-      {state.section === 'trust' ? trustSection(ui, state) : null}
+      <Box flexDirection="row" gap={1}>
+        <Button key="inspect-section" label={state.inspectSection ? 'Back to summary' : 'Inspect section'} onPress={() => actions.inspect()} />
+        <Button key="close-pane" label="Close" role="dismiss" onPress={() => actions.close()} />
+      </Box>
+      {!state.inspectSection ? <Text>{renderConsoleText(buildConsoleView(state, CLAUDE), { surface: state.section }).split('\n').slice(1, -1).join('\n')}</Text> : null}
+      {state.inspectSection && state.section === 'session' ? sessionSection(ui, state, actions) : null}
+      {state.inspectSection && state.section === 'scope' ? scopeSection(ui, state, actions) : null}
+      {state.inspectSection && state.section === 'flow' ? flowSection(ui, state) : null}
+      {state.inspectSection && state.section === 'trust' ? trustSection(ui, state) : null}
     </Box>
   )
 }

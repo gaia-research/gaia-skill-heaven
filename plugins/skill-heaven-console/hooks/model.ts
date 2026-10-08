@@ -59,7 +59,7 @@ export const LAUNCHER_SUMMON_TOOL = 'mcp__skill-summon__summon'
 
 /** The console watches the whole session, so zero is honest at the start. */
 export function initialState(): ConsoleState {
-  return { ...initialConsoleState(), section: 'session', openEntry: null } as unknown as ConsoleState
+  return { ...initialConsoleState(), section: 'session', openEntry: null, inspectSection: false, bandRequested: false } as unknown as ConsoleState
 }
 
 /** Fold one observed summon-tool call into state. `reached` is false when the call

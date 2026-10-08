@@ -67,7 +67,7 @@ describe("the same status yields the same facts on every host", () => {
   it("a host that cannot observe reads never claims 'body not read'", () => {
     for (const h of HOSTS) {
       const view = buildConsoleView(consoleFixtures(h.console.observes).working!.state, h);
-      const text = renderConsoleText(view);
+      const text = renderConsoleText(view, { details: true });
       if (h.console.observes.read === "unavailable") {
         expect(text, h.id).not.toContain("body not read");
         expect(text, h.id).toContain("read not observed");
@@ -87,7 +87,7 @@ describe("hostile text is sanitized before any host can paint it", () => {
   for (const h of HOSTS) {
     it(`${h.id}: no ANSI, bidi or control characters survive into the text projection`, () => {
       const view = buildConsoleView(consoleFixtures(h.console.observes).hostile!.state, h);
-      const text = renderConsoleText(view);
+      const text = renderConsoleText(view, { details: true });
       // eslint-disable-next-line no-control-regex
       expect(text).not.toMatch(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/);
       // the skill's own words may stay, but it cannot draw the instrument's glyphs to impersonate a reading
@@ -102,7 +102,7 @@ describe("Ultra stays provisioned", () => {
     for (const h of HOSTS) {
       const state = consoleFixtures(h.console.observes).ultra!.state;
       const view = buildConsoleView(state, h);
-      const scope = renderConsoleText(view, { surface: "scope" });
+      const scope = renderConsoleText(view, { surface: "scope", details: true });
       const instrument = `${view.status.plain}\n${scope}`;
       expect(instrument).not.toMatch(/EXPLORE|RECOVER|REOPEN|CHECKPOINT|CONVERGENCE|HOLD|\bnow (LOW|MED|HIGH)|\d+\/\d+ /);
       expect(state.status.controller.kind).not.toBe("fixture");
@@ -181,7 +181,7 @@ describe("the engine ledger is a reported source, never an observed one", () => 
     for (const event of eventsFromLedger(manifest, log)) state = recordEvent(state, event, null, "ledger", { readObservable: false });
     expect(state.status.skills).toBe(1);
     const h = HARNESS_PATHS.find((x) => x.id === "claude") as HarnessPath;
-    const text = renderConsoleText(buildConsoleView(state, h));
+    const text = renderConsoleText(buildConsoleView(state, h), { details: true });
     expect(text).toContain("engine ledger");
     expect(text).not.toContain("body read");
   });

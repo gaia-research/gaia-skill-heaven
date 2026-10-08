@@ -55,6 +55,9 @@ export type ConsoleStateData = {
   /** True once the host reported any agent id this session. */
   agentIdsSeen: boolean
   section: ConsoleSection
+  /** UI only: opened intentionally, never by a tool observation. */
+  inspectSection?: boolean
+  bandRequested?: boolean
   /** The receipt row that is expanded in the Session section. */
   openEntry: number | null
   /** The rung command the person typed, sanitized, for the Scope section. */
