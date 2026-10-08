@@ -1110,6 +1110,11 @@ export default function Landing() {
 
         <div className="lp-start sh-panel">
           <div className="lp-start__head">
+            <span className="sh-label">TWO PLUGIN PROFILES</span>
+            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Full</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
+            <a className="sh-cta" href="#/console">Preview the six harness projections <span aria-hidden="true">→</span></a>
+          </div>
+          <div className="lp-start__head">
             <span className="sh-label">THE PLUGIN · PRIMARY ROUTE</span>
             <a className="sh-cta lp-start__cta" href="#/start">
               Choose your harness <span aria-hidden="true">→</span>

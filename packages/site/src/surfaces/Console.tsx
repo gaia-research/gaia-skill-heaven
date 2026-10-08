@@ -7,8 +7,8 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { flushSync } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { harnessById } from '@gaia-skill-heaven/status'
-import { EVENT_FIXTURES, FLOW_FIXTURE, STATUS_FIXTURES } from '@gaia-skill-heaven/status/fixtures'
+import { buildConsoleView, HARNESS_PATHS, harnessById, renderConsoleText } from '@gaia-skill-heaven/status'
+import { consoleFixtures, EVENT_FIXTURES, FLOW_FIXTURE, STATUS_FIXTURES } from '@gaia-skill-heaven/status/fixtures'
 import { INSTRUMENT_VARS } from '../instrument/StatusLine'
 import { DoorsSection } from '../console/Doors'
 import { InstrumentSection } from '../console/Instrument'
@@ -171,9 +171,15 @@ function Pane() {
 }
 
 export default function Console() {
+  const [harnessId, setHarnessId] = useState('claude')
+  const selectedHarness = HARNESS_PATHS.find((item) => item.id === harnessId) ?? HARNESS_PATHS[0]
+  const hostFixtures = consoleFixtures(selectedHarness.console.observes)
+  const example = hostFixtures.working?.state ?? Object.values(hostFixtures)[0]!.state
+  const semanticView = buildConsoleView(example, selectedHarness)
+  const readout = renderConsoleText(semanticView)
   useEffect(() => {
     const previous = document.title
-    document.title = 'Console prototype — Skill Heaven'
+    document.title = 'Console across harnesses — Skill Heaven'
     window.scrollTo(0, 0)
     return () => {
       document.title = previous
@@ -225,12 +231,37 @@ export default function Console() {
 
       <main id="main" className="cx-main" tabIndex={-1}>
         <div className="cx-head">
-          <h1>Console prototype</h1>
+          <h1>Console across harnesses</h1>
           <p className="cx-lede cx-lede--lead">
-            Every state of every projection of the one status model: the status entry, the Lens band, the console pane,
-            Ultra, and the door matrix. This is the hand-off page for builders and the review surface for owners. The
-            buttons here are demonstrations; in the product a button only pre-fills a command that a person submits.
+            One shared model, six harness-specific projections. Choose a harness to inspect its actual support and see the same synthetic session rendered through the shared semantic view. This page never connects to your session.
           </p>
+          <section className="cx-host-showcase" aria-labelledby="cx-host-heading">
+            <h2 id="cx-host-heading">Choose a harness</h2>
+            <div className="cx-host-picker" role="radiogroup" aria-label="Harness">
+              {HARNESS_PATHS.filter((item) => item.id !== 'other').map((item) => (
+                <button key={item.id} type="button" role="radio" aria-checked={harnessId === item.id} tabIndex={harnessId === item.id ? 0 : -1} onClick={() => setHarnessId(item.id)} onKeyDown={(event) => {
+                  if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) return
+                  event.preventDefault()
+                  const choices = Array.from(event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]') ?? [])
+                  const next = (choices.indexOf(event.currentTarget) + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length
+                  choices[next]?.focus()
+                  choices[next]?.click()
+                }}>
+                  {item.name}
+                </button>
+              ))}
+            </div>
+            <p><strong>{selectedHarness.name}</strong> · {selectedHarness.console.mechanism}</p>
+            <p>{selectedHarness.console.probe.summary}</p>
+            <ul className="cx-host-support" aria-label={`${selectedHarness.name} surface support`}>
+              {(Object.entries(semanticView.projection.surfaces) as [string, { level: string; via: string; note: string }][]).map(([surface, support]) => (
+                <li key={surface}><strong>{surface}</strong> · {support.level} via {support.via} — {support.note}</li>
+              ))}
+            </ul>
+            <h3>Preview handoff · not submitted</h3>
+            <pre className="cx-native-readout"><code>{readout}</code></pre>
+            <p>Ultra controller: unavailable. This preview uses design fixtures only; no command is run and no live state is read.</p>
+          </section>
           <nav aria-label="On this page" className="cx-index">
             <ul>
               {INDEX.map(([id, label]) => (

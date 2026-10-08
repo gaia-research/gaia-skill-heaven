@@ -6,6 +6,16 @@
    ROLE_COLORS via --shi-* (set inline on .cx); everything else is --cx-*.
    ========================================================================== */
 
+.cx-host-showcase { margin: 2.5rem 0; padding: 1.25rem 0; border-block: 1px solid var(--cx-rule); }
+.cx-host-picker { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
+.cx-host-picker button { color: var(--cx-ink); background: transparent; border: 1px solid var(--cx-rule); padding: .65rem .9rem; cursor: pointer; }
+.cx-host-picker button[aria-checked="true"] { border-color: var(--cx-ink); background: rgba(238,235,230,.1); }
+.cx-host-picker button:focus-visible { outline: 2px solid var(--cx-ink); outline-offset: 3px; }
+.cx-native-readout { max-height: 28rem; overflow: auto; padding: 1rem; border: 1px solid var(--cx-rule); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cx-host-support { padding-left: 1.25rem; line-height: 1.7; }
+.cx-host-support li { margin-block: .35rem; }
+@media (prefers-reduced-motion: reduce) { .cx * { scroll-behavior: auto !important; } }
+
 .cx {
   --cx-void: #1b1a1c;
   --cx-panel: #211f21;

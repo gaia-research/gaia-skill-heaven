@@ -18,6 +18,10 @@ import {
   CHIP_MEANING,
   HARNESS_PATHS,
   LAUNCHER_INSTALL,
+  PROFILE_PITCH,
+  planProfile,
+  planSwitch,
+  type ProfileId,
   type HarnessPath,
   type VerificationChip,
 } from '@gaia-skill-heaven/status'
@@ -144,12 +148,15 @@ export default function Start() {
   const [copiedCmd, setCopiedCmd] = useState('')
   const [copiedLabel, setCopiedLabel] = useState('')
   const [focusPath, setFocusPath] = useState(false)
+  const [profile, setProfile] = useState<ProfileId>('core')
   const timer = useRef<number | undefined>(undefined)
 
   const rawChoice = params.get('h')
   const choice =
     rawChoice === NONE || HARNESS_PATHS.some((h) => h.id === rawChoice) ? rawChoice : null
   const harness = HARNESS_PATHS.find((h) => h.id === choice) ?? null
+  const registrationPlan = harness ? planProfile(harness, profile, 'register') : null
+  const switchPlan = harness ? planSwitch(harness, profile, profile === 'core' ? 'full' : 'core') : null
 
   const select = useCallback(
     (value: string) => {
@@ -336,19 +343,29 @@ export default function Start() {
                 </p>
               </div>
 
+              <section className="st-profile" aria-labelledby="st-profile-heading">
+                <h3 className="st-h3" id="st-profile-heading">Choose your plugin profile</h3>
+                <div role="radiogroup" aria-labelledby="st-profile-heading" className="st-opts">
+                  {(['core', 'full'] as const).map((id) => (
+                    <label key={id} className="st-opt">
+                      <input type="radio" name="profile" value={id} checked={profile === id} onChange={() => setProfile(id)} />
+                      <span className="st-opt__body"><span className="st-opt__mark" aria-hidden="true" /><span className="st-opt__name">{PROFILE_PITCH[id].name}</span><span className="st-opt__ver">{PROFILE_PITCH[id].line}</span></span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+
               <ol className="st-steps">
                 {showInstaller(harness) && (
                   <li className="st-step">
                     <div className="st-step__head">
                       <h3 className="st-h3">
-                        {harness.commands.length > 0 ? 'Put the plugin on disk' : 'Put the portable package on disk'}
+                        Put the plugin on disk
                       </h3>
                       <PlatformToggle platform={platform} onToggle={setPlatform} />
                     </div>
                     <p className="st-prose">
-                      In a terminal. Needs Node 22+ and Git. It installs one plugin directory and a
-                      local marketplace, prints both paths, and registers nothing — {harness.name} keeps
-                      its own registration, which is the next step.
+                      In a terminal. Needs Node 22+ and Git. This stages the portable package and registers nothing. Complete the selected {PROFILE_PITCH[profile].name} registration below in {harness.name}; staging alone does not enable it.
                     </p>
                     <Command
                       cmd={installer}
@@ -360,61 +377,47 @@ export default function Start() {
                   </li>
                 )}
 
-                {harness.commands.length > 0 && (
+                {registrationPlan?.kind === 'steps' && registrationPlan.steps.length > 0 && (
                   <li className="st-step">
                     <h3 className="st-h3">
-                      {harness.inHarness ? `Type these inside ${harness.name}` : `Register it in ${harness.name}`}
+                      Register {PROFILE_PITCH[profile].name} in {harness.name}
                     </h3>
                     <p className="st-prose">
-                      {harness.inHarness
-                        ? `No terminal needed — these are ${harness.name} commands, typed at its prompt. Two lines, in order.`
-                        : `In a terminal, after the installer. ${harness.name} copies or caches the plugin the way it does for any plugin.`}
+                      These exact steps come from the canonical install plan. Run them where indicated, after staging. Full adds the independently removable console piece.
                     </p>
                     <div className="st-cmds">
-                      {harness.commands.map((c, i) => (
-                        <Command
-                          key={c}
-                          cmd={c}
-                          sigil={harness.inHarness ? '›' : sigil}
-                          label={`${harness.name} command, line ${i + 1} of ${harness.commands.length}`}
-                          copied={copiedCmd === c}
-                          onCopy={copy}
-                        />
+                      {registrationPlan.steps.map((step, i) => (
+                        <Command key={`${step.piece}-${step.run}-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`${harness.name} ${step.piece} registration step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />
                       ))}
                     </div>
                   </li>
                 )}
 
-                {harness.commands.length === 0 && harness.blocked && (
+                {(registrationPlan?.kind === 'blocked' || registrationPlan?.kind === 'steps' && registrationPlan.steps.length === 0) && (
                   <li className="st-step st-step--plain">
                     <div className="st-blocked" role="note">
-                      <h3 className="st-h3">No registration command yet</h3>
-                      <p className="st-blocked__text">{harness.blocked}</p>
+                      <h3 className="st-h3">{profile === 'full' ? 'Full is unavailable here' : 'No registration steps are available'}</h3>
+                      <p className="st-blocked__text">{registrationPlan?.kind === 'blocked' ? registrationPlan.reason : harness.blocked ?? 'No accepted registration steps are recorded for this profile.'}</p>
                     </div>
                   </li>
                 )}
 
-                {harness.id === 'claude' && (
-                  <li className="st-step st-step--optional">
-                    <div className="st-step__head">
-                      <h3 className="st-h3">Optional: the console</h3>
-                      <span className="sh-chip sh-chip--wip st-preview">Preview</span>
-                    </div>
-                    <p className="st-prose">
-                      Adds a status entry, the Lens band and the <span className="st-mono">/heaven</span>{' '}
-                      console. It observes; it never changes what Skill Heaven does. Skip it and nothing
-                      is missing.
-                    </p>
-                    <Command
-                      cmd="/plugin install skill-heaven-console@gaia-skill-heaven"
-                      sigil="›"
-                      label="the optional console install command"
-                      copied={copiedCmd === '/plugin install skill-heaven-console@gaia-skill-heaven'}
-                      onCopy={copy}
-                    />
-                  </li>
-                )}
               </ol>
+
+              {registrationPlan?.kind === 'steps' && (
+                <section className="st-profile-ops" aria-label="Profile maintenance commands">
+                  <h3 className="st-h3">Change or remove this profile</h3>
+                  <p className="st-prose">These are canonical plans for the selected harness. Core → Full adds only the console; Full → Core removes only that piece.</p>
+                  <h4 className="st-h3">Switch profile</h4>
+                  {switchPlan?.kind === 'steps' && switchPlan.steps.map((step, i) => <Command key={`switch-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`switch profile step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}
+                  {switchPlan?.kind === 'blocked' && <p className="st-prose">{switchPlan.reason}</p>}
+                  {(['update', 'remove'] as const).map((op) => {
+                    const plan = planProfile(harness, profile, op)
+                    if (plan.kind === 'blocked' || plan.steps.length === 0) return <p key={op} className="st-prose">{op === 'update' ? 'No update step is recorded.' : 'No removal step is recorded for this profile.'}</p>
+                    return <div key={op}><h4 className="st-h3">{op === 'update' ? 'Update' : 'Uninstall'}</h4>{plan.steps.map((step, i) => <Command key={`${op}-${step.piece}-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`${op} ${step.piece} step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}</div>
+                  })}
+                </section>
+              )}
 
               <p className="st-status-note">
                 <span className="st-label">Status line on {harness.name}</span>
