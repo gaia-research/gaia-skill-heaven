@@ -9,6 +9,7 @@
 
 import type { HostIntegration, VerificationChip } from "./model.js";
 import type { ConsoleProjection } from "./console-host.js";
+import { adapterPath } from "./compat-console.js";
 
 export const AGENT_PLUGIN_INSTALL = {
   posix: "curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh",
@@ -38,6 +39,10 @@ export type StepWhere = "harness" | "shell";
 export interface InstallStep {
   where: StepWhere;
   run: string;
+  /** Executor invokes this array directly (shell:false), substituting path tokens per argument. */
+  argv?: readonly string[];
+  /** Explicit input for a documented confirmation protocol; never infer a yes prompt. */
+  stdin?: string;
   /**
    * The same step as a shell command, when `run` is typed inside the harness
    * but the client also has a CLI for it (Claude's `/plugin install` is
@@ -214,27 +219,32 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     },
     core: {
       register: [
-        { where: "harness", run: "/plugin marketplace add gaia-research/gaia-skill-heaven", shell: "claude plugin marketplace add gaia-research/gaia-skill-heaven", effect: "adds the gaia-skill-heaven marketplace to Claude Code's plugin registry" },
-        { where: "harness", run: "/plugin install skill-heaven@gaia-skill-heaven", shell: "claude plugin install skill-heaven@gaia-skill-heaven", effect: "installs the skill-heaven plugin (runtime only)" },
+        { where: "shell", run: 'claude plugin marketplace add "{{MARKETPLACE_DIR}}"', argv: ["claude", "plugin", "marketplace", "add", "{{MARKETPLACE_DIR}}"], effect: "adds the reviewed staged local marketplace to Claude Code's plugin registry" },
+        { where: "harness", run: "/plugin install skill-heaven@gaia-skill-heaven", shell: "claude plugin install skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven@gaia-skill-heaven"], effect: "installs the skill-heaven plugin (runtime only)" },
       ],
       update: [
-        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", effect: "refreshes the marketplace listing" },
-        { where: "shell", run: "claude plugin update skill-heaven@gaia-skill-heaven", effect: "updates the plugin to the listed version" },
+        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", argv: ["claude", "plugin", "marketplace", "update", "gaia-skill-heaven"], effect: "refreshes the marketplace listing" },
+        { where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven@gaia-skill-heaven"], effect: "removes only the old cached runtime registration before reinstall" },
+        { where: "shell", run: "claude plugin install skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven@gaia-skill-heaven"], effect: "installs the staged candidate even when the version string is unchanged" },
       ],
-      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", effect: "removes the plugin" }],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven@gaia-skill-heaven"], effect: "removes the plugin" }],
     },
     consolePiece: {
       register: [
-        { where: "harness", run: "/plugin install skill-heaven-console@gaia-skill-heaven", shell: "claude plugin install skill-heaven-console@gaia-skill-heaven", effect: "installs the console plugin beside skill-heaven" },
+        { where: "harness", run: "/plugin install skill-heaven-console@gaia-skill-heaven", shell: "claude plugin install skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven-console@gaia-skill-heaven"], effect: "installs the console plugin beside skill-heaven" },
       ],
-      update: [{ where: "shell", run: "claude plugin update skill-heaven-console@gaia-skill-heaven", effect: "updates the console plugin" }],
-      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", effect: "removes only the console; skill-heaven is unchanged" }],
+      update: [
+        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", argv: ["claude", "plugin", "marketplace", "update", "gaia-skill-heaven"], effect: "refreshes the registered local marketplace" },
+        { where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven-console@gaia-skill-heaven"], effect: "removes only the old cached console before reinstall" },
+        { where: "shell", run: "claude plugin install skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven-console@gaia-skill-heaven"], effect: "installs the staged console even when its version string is unchanged" },
+      ],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven-console@gaia-skill-heaven"], effect: "removes only the console; skill-heaven is unchanged" }],
     },
     fullBlocked: null,
   },
   {
     id: "codex",
-    ...PENDING("Codex"),
+    ...adapterPath("codex"),
     name: "Codex",
     bin: "codex",
     chip: "compatible",
@@ -258,7 +268,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
   },
   {
     id: "pi",
-    ...PENDING("Pi"),
+    ...adapterPath("pi"),
     name: "Pi",
     bin: "pi",
     chip: "compatible",
@@ -274,13 +284,13 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
     statusNote:
-      "Pi's status API takes the canonical entropy line (probed on 1.0.4, appended under its own key); the plugin does not draw it yet. The pi-zero extension draws a widget.",
+      "Full adds a separate extension with its own setStatus key (API probed on 1.0.4); the new adapter's live TUI paint remains unprobed. Core has no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>",
   },
   {
     id: "grok",
-    ...PENDING("Grok"),
+    ...adapterPath("grok"),
     name: "Grok",
     bin: "grok",
     chip: "compatible",
@@ -295,13 +305,13 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then grok plugin update.",
     remove: ["grok plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "A command-backed status line is possible on Grok but not built.",
+    statusNote: "Full carries Status in an explicit command-backed report, not a persistent HUD.",
     launcher: "grok-zero",
     firstRun: "/summon <what you need>",
   },
   {
     id: "hermes",
-    ...PENDING("Hermes"),
+    ...adapterPath("hermes"),
     name: "Hermes",
     bin: "hermes",
     chip: "compatible",
@@ -323,7 +333,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
   },
   {
     id: "agy",
-    ...PENDING("Antigravity"),
+    ...adapterPath("agy"),
     name: "Antigravity",
     bin: "agy",
     chip: "compatible",
@@ -338,7 +348,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then agy plugin uninstall skill-heaven and install it again — Antigravity keeps its own copy.",
     remove: ["agy plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "A stacked status command is the target; not built.",
+    statusNote: "Full carries Status in an explicit skill report. No user statusLine is installed or rewritten.",
     launcher: "agy-zero",
     // Antigravity namespaces plugin skills: its / menu lists /skill-heaven:summon, and a bare /summon is not a command.
     firstRun: "/skill-heaven:summon <what you need>",

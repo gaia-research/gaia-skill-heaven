@@ -105,7 +105,7 @@ class SkillSummonClient {
   private startPromise: Promise<void> | undefined;
 
   async callSummon(
-    input: { query: string; limit?: number; surface?: "any" | "heaven" | "hell" },
+    input: { query: string; limit?: number; surface?: "any" | "heaven" | "hell"; preview?: boolean },
     signal?: AbortSignal,
   ): Promise<McpResult> {
     await this.start();
@@ -361,6 +361,17 @@ export default function skillHeavenPi(pi: ExtensionAPI): void {
       },
     });
   }
+
+  // Optional in-process callers can request ONLY a preview on this same Core client.
+  // This is a runtime transport capability, not console registration or UI logic.
+  pi.events.on("skill-heaven:preview-request/v1", (request: unknown) => {
+    if (!isObject(request) || typeof request.query !== "string" || !request.query.trim() ||
+        request.query.length > 4096 || typeof request.reply !== "function") return;
+    const reply = request.reply as (result: McpResult | null) => void;
+    if (typeof request.accept === "function") request.accept();
+    void client.callSummon({ query: request.query, surface: "any", preview: true })
+      .then(reply, () => reply(null));
+  });
 
   pi.on("session_shutdown", async () => {
     await client.stop();

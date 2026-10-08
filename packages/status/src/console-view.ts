@@ -16,14 +16,12 @@ import type {
   Direction,
   EvidenceClass,
   Rung,
-  SkillHeavenStatus,
   SkillReceipt,
   SummonEvent,
 } from "./model.js";
 import { readingRung } from "./model.js";
 import { sanitizeDisplay } from "./sanitize.js";
 import {
-  CLOSE_CALL_MARGIN,
   eventLines,
   formatMs,
   formatScore,
