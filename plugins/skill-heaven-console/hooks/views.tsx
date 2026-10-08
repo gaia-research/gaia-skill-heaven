@@ -24,8 +24,8 @@ import {
   sanitizeDisplay,
 } from './status-model.mjs'
 import type { EvidenceClass, Role, Segment, SkillReceipt } from './status-model.mjs'
-import { CONSOLE_VERSION, SKILL_HEAVEN_VERSION } from './meta.ts'
-import { agentLabelFor, entryById, stageText, summonSuggestion, timeLabel } from './model.ts'
+import { CONSOLE_PROBE, CONSOLE_VERSION, SKILL_HEAVEN_VERSION } from './meta.ts'
+import { agentLabelFor, entryById, qualifyCommand, stageText, summonSuggestion, timeLabel } from './model.ts'
 import type { ConsoleAgent, ConsoleEntry, ConsoleSection, ConsoleState } from './model.ts'
 
 /** The elements every surface that draws a band or a pane has in common. */
@@ -102,11 +102,14 @@ export function renderBand(ui: UI, state: ConsoleState, actions: BandActions, co
     <Box flexDirection="column" width={width}>
       {line1 ? runs(ui, line1) : null}
       {line2 ? runs(ui, line2) : null}
-      <Text dimColor italic={stage.inferred}>
-        {'  '}
-        {stage.text}
-        {stage.inferred ? ' (inferred)' : ''}
-      </Text>
+      {/* a preview's second line already says "nothing materialized" (seen twice live on 2.1.294) */}
+      {entry.event.kind === 'previewed' || (entry.event.kind === 'no-match' && entry.event.preview) ? null : (
+        <Text key="stage" dimColor italic={stage.inferred}>
+          {'  '}
+          {stage.text}
+          {stage.inferred ? ' (inferred)' : ''}
+        </Text>
+      )}
       <Box flexDirection="row" gap={1}>
         {name !== null ? <Button key="summon" label="Summon" variant="primary" onPress={() => actions.summon(name)} /> : null}
         <Button key="inspect" label="Inspect" onPress={() => actions.inspect(entry.id)} />
@@ -321,7 +324,7 @@ function sessionSection(ui: UI, state: ConsoleState, actions: PaneActions): Rend
       {rows.length === 0 ? (
         <Text>
           {'Nothing summoned yet. Try '}
-          <Text bold>{'/summon <need>'}</Text>
+          <Text bold>{`${qualifyCommand('/summon')} <need>`}</Text>
           {' or '}
           <Text bold>{'/lens <need>'}</Text>
           {'.'}
@@ -440,17 +443,17 @@ function scopeSection(ui: UI, state: ConsoleState, actions: PaneActions): Render
         <Text bold>Choose a rung</Text>
         <Text dimColor>These fill your prompt. You press Enter; nothing runs until you do.</Text>
         <Box flexDirection="row" gap={1} flexWrap="wrap">
-          <Button key="fill-heaven" label="/skill-heaven low" onPress={() => actions.fill('/skill-heaven low')} />
-          <Button key="fill-hell" label="/skill-hell high" onPress={() => actions.fill('/skill-hell high')} />
-          <Button key="fill-ultra" label="/skill-ultra" onPress={() => actions.fill('/skill-ultra')} />
+          <Button key="fill-heaven" label={qualifyCommand('/skill-heaven low')} onPress={() => actions.fill('/skill-heaven low')} />
+          <Button key="fill-hell" label={qualifyCommand('/skill-hell high')} onPress={() => actions.fill('/skill-hell high')} />
+          <Button key="fill-ultra" label={qualifyCommand('/skill-ultra')} onPress={() => actions.fill('/skill-ultra')} />
         </Box>
-        <Text dimColor>{'Other rungs: /skill-heaven med · /skill-hell xhigh · /skill-hell max'}</Text>
+        <Text dimColor>{`Other rungs: ${qualifyCommand('/skill-heaven med')} · ${qualifyCommand('/skill-hell xhigh')} · ${qualifyCommand('/skill-hell max')}`}</Text>
       </Box>
       <Box flexDirection="column">
         <Text bold>Keep context small</Text>
         <Box flexDirection="row" gap={1} flexWrap="wrap">
-          <Button key="fill-zero" label="/skill-zero" onPress={() => actions.fill('/skill-zero')} />
-          <Button key="fill-zero-all" label="/skill-zero all" onPress={() => actions.fill('/skill-zero all')} />
+          <Button key="fill-zero" label={qualifyCommand('/skill-zero')} onPress={() => actions.fill('/skill-zero')} />
+          <Button key="fill-zero-all" label={qualifyCommand('/skill-zero all')} onPress={() => actions.fill('/skill-zero all')} />
           <Button key="copy-clean" label="Copy: claude-zero --level zero" onPress={() => actions.copy('claude-zero --level zero')} />
         </Box>
         <Text dimColor>Start clean is run in a terminal before a session: it is copied, not run.</Text>
@@ -528,7 +531,7 @@ function trustSection(ui: UI, state: ConsoleState): RenderElement {
   return (
     <Box flexDirection="column" gap={1}>
       <Box flexDirection="column">
-        {row('skill-heaven', `${SKILL_HEAVEN_VERSION} · gaia-research/gaia-skill-heaven · bundles one MCP server (skill-summon)`, 't1')}
+        {row('skill-heaven', `built for ${SKILL_HEAVEN_VERSION} · gaia-research/gaia-skill-heaven · bundles one MCP server (skill-summon)`, 't1')}
         {row('console (preview)', `${CONSOLE_VERSION} · same repository · runs inside Claude Code as local code`, 't2')}
       </Box>
       <Box flexDirection="column" marginLeft={2}>
@@ -542,7 +545,7 @@ function trustSection(ui: UI, state: ConsoleState): RenderElement {
         {row('summon tool', `MCP: ${mcpText}`, 't7')}
         {row(
           'harness',
-          `Claude Code ${state.hostVersion ? sanitizeDisplay(state.hostVersion, 24) : '(version not reported)'} · ${CHIP_LABEL[claude.chip]} for the plugin at ${claude.probedVersion ?? 'unknown'}; the console needs a local probe`,
+          `Claude Code ${state.hostVersion ? sanitizeDisplay(state.hostVersion, 24) : '(version not reported)'} · ${CHIP_LABEL[claude.chip]} for the plugin at ${claude.probedVersion ?? 'unknown'}; ${CONSOLE_PROBE}`,
           't8',
         )}
         {row('evidence', claude.evidence, 't9')}

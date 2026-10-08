@@ -10,3 +10,6 @@ export const CONSOLE_VERSION = '0.1.0'
 
 /** The pane's id, the status values' plugin name. */
 export const PANE_ID = 'skill-heaven'
+
+/** What a logged-in probe established about this console (PR #187), for Trust. */
+export const CONSOLE_PROBE = 'the console was probed live in the terminal on 2.1.294; desktop paint is not probed'

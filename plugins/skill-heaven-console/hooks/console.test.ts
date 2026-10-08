@@ -66,7 +66,13 @@ function summonResult(overrides: Record<string, unknown> = {}) {
   }
 }
 
-const answer = (structured: unknown) => ({
+/** An MCP tool's result as Claude Code 2.1.294 hands it to a `tool.call` hook and
+ * to `$.tool.call` (observed live, PR #187): `result` is the server's JSON text
+ * block as a STRING, `text` the same; no `structuredContent` anywhere. */
+const answer = (structured: unknown) => ({ ref: 1, result: JSON.stringify(structured), text: JSON.stringify(structured) })
+
+/** The object form a host could pass instead; the console still reads it. */
+const answerObject = (structured: unknown) => ({
   result: { content: [{ type: 'text', text: JSON.stringify(structured) }], structuredContent: structured, isError: false },
   text: JSON.stringify(structured),
 })
@@ -93,6 +99,8 @@ interface WorldOptions {
   agent?: 'deny' | 'error'
   /** answer with the JSON text only, followed by this text, and no structuredContent */
   textTail?: string
+  /** answer in the object form carrying structuredContent */
+  objectForm?: boolean
   copyOk?: boolean
   fillOk?: boolean
   /** no clock: `$.clock.now` has no implementation, so it throws */
@@ -143,7 +151,7 @@ function world(on: On, reply: () => unknown, options: WorldOptions = {}) {
         const text = JSON.stringify(reply()) + options.textTail
         return { result: { content: [{ type: 'text', text }], isError: false }, text }
       }
-      return answer(reply())
+      return options.objectForm ? answerObject(reply()) : answer(reply())
     }
     if (e.tool === 'mcp__skill-summon__summon' && options.summon !== false) {
       calls.push(e as Record<string, unknown>)
@@ -321,9 +329,48 @@ describe('the Lens band', () => {
       const before = w.calls.length
       await band.press({ key: 'summon' })
       expect(w.calls).toHaveLength(before) // pre-fill only: the summon tool was not called
-      expect(w.fills[w.fills.length - 1]).toEqual({ text: '/summon impeccable', mode: 'insert' })
+      expect(w.fills[w.fills.length - 1]).toEqual({ text: '/skill-heaven:summon impeccable', mode: 'insert' })
       await band.unmount()
     }
+  })
+
+  test('a tree skill named with spaces still offers Summon; the preview says "nothing materialized" once', async ($, on) => {
+    // observed live on 2.1.294: tree names carry spaces, and the band printed the line twice
+    const preview = summonResult({ summoned: [], previewed: [skill('langgenius/frontend-code-review', { name: 'Frontend Code Review' })] })
+    const w = world(on, () => preview)
+    await $.session.start(START)
+    await $.command.run(lens('frontend code review'))
+    for (const surface of SURFACES) {
+      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
+      const drawn = JSON.stringify(await band.drawn())
+      expect(drawn.split('nothing materialized').length - 1).toBe(1)
+      await band.press({ key: 'summon' })
+      expect(w.fills[w.fills.length - 1]).toEqual({ text: '/skill-heaven:summon Frontend Code Review', mode: 'insert' })
+      await band.unmount()
+    }
+  })
+
+  test('a host that passes structuredContent as an object is still read', async ($, on) => {
+    const w = world(on, () => summonResult(), { objectForm: true })
+    await $.session.start(START)
+    await $.tool.call({ tool: SUMMON, query: 'audit cookie handling', surface: 'any' })
+    expect(w.last()).toContain('1 skill')
+    for (const surface of SURFACES) {
+      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
+      expect(await band.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined() // a real summon keeps its stage line
+      await band.unmount()
+    }
+  })
+
+  test('a subagent hand-back (origin peer) neither hides the band nor selects a rung', async ($, on) => {
+    const w = world(on, () => summonResult())
+    await $.session.start(START)
+    await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    await $.prompt.submit({ text: '/skill-hell high', wait: false, origin: { kind: 'peer' } } as never)
+    expect(w.last()).toContain('[NATIVE]')
+    const band = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'AbovePrompt', props: AT_REST })
+    expect(await band.find({ type: 'Text', text: /summoned/ })).toBeDefined()
+    await band.unmount()
   })
 
   test('/lens says so when the summon tool is not connected', async ($, on) => {
@@ -373,11 +420,12 @@ describe('the /heaven pane', () => {
       await pane.unmount()
     }
     const fills = w.fills.map((f) => f.text)
-    expect(fills).toContain('/skill-heaven low')
-    expect(fills).toContain('/skill-hell high')
-    expect(fills).toContain('/skill-ultra')
-    expect(fills).toContain('/skill-zero')
-    expect(fills).toContain('/skill-zero all')
+    // the spelling 2.1.294 accepts: a bare /skill-zero is refused by the host
+    expect(fills).toContain('/skill-heaven:skill-heaven low')
+    expect(fills).toContain('/skill-heaven:skill-hell high')
+    expect(fills).toContain('/skill-heaven:skill-ultra')
+    expect(fills).toContain('/skill-heaven:skill-zero')
+    expect(fills).toContain('/skill-heaven:skill-zero all')
     expect(w.copies).toContain('claude-zero --level zero')
     expect(w.calls).toHaveLength(0)
   })
@@ -689,7 +737,7 @@ describe('when a button cannot do its job', () => {
       await pane.press({ key: 'section-session' })
       await pane.unmount()
     }
-    expect(w.toasts).toContain('Type this: /skill-hell high')
+    expect(w.toasts).toContain('Type this: /skill-heaven:skill-hell high')
     expect(w.toasts).toContain('Copy this: claude-zero --level zero')
     expect(w.fills.every((f) => f.mode === 'insert')).toBe(true)
   })

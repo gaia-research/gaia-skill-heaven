@@ -77,10 +77,13 @@ const looksLikeSummon = (v: unknown): v is Rec =>
   isRec(v) && ('summoned' in v || 'previewed' in v || 'noMatch' in v)
 
 /**
- * The summon tool's `structuredContent`, wherever the host put it. The d.ts
- * says a `tool.call` result's `result` is the tool's record and does not say
- * its shape for an MCP tool, so this looks in the places it can be and falls
- * back to the JSON text block the summon server always sends beside it.
+ * The summon tool's `structuredContent`, wherever the host put it.
+ *
+ * Observed on Claude Code 2.1.294 (PR #187, a `tool.call` hook and the console's
+ * own `$.tool.call`): an MCP tool's result is `{ ref, result, text }` where
+ * `result` is a STRING — the server's JSON text block — and `text` is the same
+ * text; `structuredContent` appears nowhere. The object forms stay as
+ * fallbacks for a host that does pass it through.
  */
 export function structuredOf(r: unknown): unknown {
   if (!isRec(r)) return undefined
@@ -92,6 +95,7 @@ export function structuredOf(r: unknown): unknown {
   if (looksLikeSummon(r.structuredContent)) return r.structuredContent
   const texts: string[] = []
   if (typeof r.text === 'string') texts.push(r.text)
+  if (typeof result === 'string' && result !== r.text) texts.push(result)
   if (isRec(result) && Array.isArray(result.content)) {
     for (const block of result.content) {
       if (isRec(block) && typeof block.text === 'string') texts.push(block.text)
@@ -299,11 +303,31 @@ export function stageText(entry: ConsoleEntry): StageText {
   return { text: 'card returned · body not read', inferred: true }
 }
 
-/** A name that may be put in the prompt as `/summon <name>`: plain characters only. */
+/** A name that may be put in the prompt after the summon command: plain words
+ * only. Tree skills carry display names with spaces ("Frontend Code Review",
+ * observed live), which are safe and are what the engine matches exactly. */
 export function summonableName(skill: SkillReceipt | undefined): string | null {
   if (!skill) return null
   const name = sanitizeDisplay(skill.name, 64)
-  return /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/.test(name) ? name : null
+  return /^[A-Za-z0-9][A-Za-z0-9._:/-]*(?: [A-Za-z0-9._:/-]+)*$/.test(name) ? name : null
+}
+
+/** The five Skill Heaven surfaces a pre-fill may name. */
+const SURFACE_COMMANDS = new Set(['summon', 'skill-zero', 'skill-heaven', 'skill-hell', 'skill-ultra'])
+
+/**
+ * The spelling of a Skill Heaven command that this session accepts, for a
+ * pre-fill. Observed on Claude Code 2.1.294: a bare `/skill-zero` (or
+ * `/skill-hell high`) resolves to the plugin's portable skill, which is
+ * `user-invocable: false`, and the host refuses it ("can only be invoked by
+ * Claude"); the plugin-qualified `/skill-heaven:skill-zero`, the spelling the
+ * `/` menu shows, reaches the command. Always the one plugin's own name: a
+ * look-alike `other:summon` is never filled.
+ */
+export function qualifyCommand(text: string): string {
+  const m = /^\/([a-z-]+)(\s.*)?$/.exec(text)
+  if (!m || !SURFACE_COMMANDS.has(m[1]!)) return text
+  return `/skill-heaven:${m[1]!}${m[2] ?? ''}`
 }
 
 /** §5.2: Summon is offered for a /lens preview with exactly one candidate. */
