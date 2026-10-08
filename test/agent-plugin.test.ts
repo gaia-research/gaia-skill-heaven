@@ -59,6 +59,21 @@ describe("Agent Plugins 1.0.0 package", () => {
     expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\nuser-invocable: false\n---\n/);
   });
 
+  // Pi 1.0.4 parses frontmatter as strict YAML and silently drops a skill whose
+  // frontmatter does not parse: an unquoted `description: a: b` left
+  // /skill:skill-zero unregistered there while Claude's lenient reader loaded it.
+  it.each(SURFACES)("keeps strict-YAML frontmatter for %s (skill and command)", (surface) => {
+    for (const path of [join(PLUGIN, "skills", surface, "SKILL.md"), join(PLUGIN, "commands", `${surface}.md`)]) {
+      const frontmatter = readFileSync(path, "utf8").split("\n---\n")[0].replace(/^---\n/, "");
+      for (const line of frontmatter.split("\n")) {
+        const value = /^[\w-]+: (.*)$/.exec(line)?.[1];
+        if (value === undefined || /^"(?:[^"\\]|\\.)*"$|^'(?:[^']|'')*'$/.test(value)) continue;
+        // a plain scalar: no `: ` or ` #` inside, no indicator first, no trailing colon
+        expect(value, `${path}: ${line}`).not.toMatch(/: | #|:$|^[\[\]{}>|*&!%@`'"#,?-]/);
+      }
+    }
+  });
+
   // Claude discovers both skills/<x>/SKILL.md and commands/<x>.md and lists
   // each one as a separate `/skill-heaven:<x>` row. `user-invocable: false`
   // (with model invocation already off) drops the portable twin from Claude, so
@@ -82,6 +97,18 @@ describe("Agent Plugins 1.0.0 package", () => {
       args: ["./mcp/skill-summon.mjs"],
       cwd: ".",
     });
+  });
+
+  // Antigravity 1.3.1 reads plugin MCP servers only from `mcp_config.json`;
+  // without it `agy plugin validate` reports `mcpServers: skipped (not found)`
+  // and /skill-heaven:summon has no tool. It expands ${PLUGIN_ROOT} itself.
+  it("keeps Antigravity's MCP shim identical to the portable server", () => {
+    const agyMcp = json(join(PLUGIN, "mcp_config.json"));
+    expect(Object.keys(agyMcp)).toEqual(["mcpServers"]);
+    const servers = agyMcp.mcpServers as Record<string, Record<string, unknown>>;
+    expect(Object.keys(servers)).toEqual(["skill-summon"]);
+    const { type: _type, ...portable } = (mcp.mcpServers as Record<string, Record<string, unknown>>)["skill-summon"];
+    expect(servers["skill-summon"]).toEqual(portable);
   });
 
   it("keeps Pi compatibility namespaced and pointed at the portable components", () => {

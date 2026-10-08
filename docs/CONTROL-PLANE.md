@@ -221,12 +221,12 @@ Rules:
 
 | Door | Integration | Class | Status |
 |---|---|---|---|
-| Claude Code + console mod | `$.ui.status(text)` | **APPEND** — adds an entry; never touches `statusLine` settings | preview · needs local probe for desktop paint |
+| Claude Code + console mod | `$.ui.status(text)` | **APPEND** — adds an entry; never touches `statusLine` settings | preview · terminal probed live on 2.1.294 (beside a user `statusLine`) · desktop paint not probed |
 | claude-zero launcher | its own session `statusLine` (door-owned session settings, nothing in `~/.claude`) | NATIVE SLOT | implemented, deterministic tests |
-| Pi | `pi-zero` extension widget | NATIVE SLOT | existing widget; HUD line not wired (later slice) |
+| Pi | `ctx.ui.setStatus(key, text)` (plugin) · `pi-zero` widget | **APPEND** (setStatus) · NATIVE SLOT (widget) | setStatus carries the canonical line (probed 1.0.4, RPC hard signal); not wired into the plugin yet |
 | Codex, Hermes | no public status contribution API | UNSUPPORTED — receipts in transcript only | honest degraded |
 | Grok | command-backed status line | not built | later slice |
-| Antigravity | stacked status command | not built; plugin is **partial** (below) | blocked on probe |
+| Antigravity | stacked status command | not built; the plugin itself is **compatible** on 1.3.1 | not built |
 | Cursor | replaces native footer | REPLACE-ONLY, explicit opt-in | not built |
 
 Mode: `SKILL_HEAVEN_STATUS=off|compact|full` (console: a config row). `off`
@@ -251,7 +251,7 @@ on its own and never runs a retrieval on its own.
 | stale / unavailable source | `◇ summon  ? source stale · index 41 days old` | Inspect · Dismiss |
 | summon errored | `◇ summon  ! failed · <sanitized reason>` | Inspect · Dismiss |
 
-- **Summon** never calls anything: it pre-fills `/summon <name>` into the
+- **Summon** never calls anything: it pre-fills `/skill-heaven:summon <name>` into the
   composer. The person submits it. The UI is not an authority channel.
 - `/lens` calls the summon tool with `preview: true` from the plugin's own
   `$.tool.call` — nothing materializes. The command's own one-line result is a
@@ -303,7 +303,7 @@ keep small   /skill-zero cuts temporary skills · claude-zero --level zero start
 ```
 
 Controls are **pre-fills, never silent writes**: *Choose a rung* fills
-`/skill-heaven low` etc.; *Cut* fills `/skill-zero`; *Start clean* copies
+`/skill-heaven:skill-heaven low` etc.; *Cut* fills `/skill-heaven:skill-zero` (Claude Code 2.1.294 refuses the bare spellings, §10); *Start clean* copies
 `claude-zero --level zero`. Repo loadouts are **designed, not built** (§7).
 
 **Flow.** Agents and the skills they summoned, read-only.
@@ -378,16 +378,16 @@ It is the hand-off for builders and the review surface for owners.
 | Ultra selected | `◆ … [ULTRA]` | — | — | "selected ULTRA · controller unavailable" | — | — | — |
 | Ultra fixture | site only | — | — | — | — | — | — |
 
-## 7. Feasibility matrix (Claude Code 2.1.293 Mods, early access)
+## 7. Feasibility matrix (Claude Code 2.1.293 Mods, early access; runtime facts probed on 2.1.294, §10)
 
 | Behaviour | Mechanism | Class |
 |---|---|---|
-| status entry without touching settings | `$.ui.status` | Mod API now · needs local probe for desktop paint |
-| observe summon results | `on('tool.call')` matching `*skill-summon__summon`, `await next(e)` | Mod API now |
-| observe body read | `on('tool.call', {tool:'Read'})` path ∈ materialized paths | Mod API now |
-| observe rung selection | `on('prompt.submit')` text starts with `/skill-` | Mod API now |
-| agent attribution | `agentId` on `tool.call` input; Agent/Task calls | Mod API now · partial coverage expected |
-| preview retrieval outside model context | `$.tool.call({ tool, preview:true })` | Mod API + core (`preview` exists) · needs local probe |
+| status entry without touching settings | `$.ui.status` | **probed** (terminal, 2.1.294) · desktop paint not probed |
+| observe summon results | `on('tool.call')` matching the exact summon names, `await next(e)` | **probed** — `result` is the JSON text as a string; no `structuredContent` |
+| observe body read | `on('tool.call', {tool:'Read'})` path ∈ materialized paths | **probed** — materialized → in context |
+| observe rung selection | `on('prompt.submit')` text starts with `/skill-` or `/skill-heaven:skill-` | **probed** — raw typed text, after `command.run`; `peer` origin ignored |
+| agent attribution | `agentId` on `tool.call` input; Agent/Task calls | **probed** — subagent calls and `turn.complete` carry it; Agent result carries the same id |
+| preview retrieval outside model context | `$.tool.call({ tool, preview:true })` | **probed** — no count change; `$.tool.list()` names the deferred tool once MCP connected |
 | pre-fill a command | `$.prompt.fill` | Mod API now |
 | Lens band / console pane | `ui.render` AbovePrompt / Pane | Mod API now |
 | terminal status for the launcher | claude-zero `statusLine` command | built, deterministic |
@@ -408,9 +408,10 @@ It is the hand-off for builders and the review surface for owners.
 | S6 installer epilogue | terminal | detected harnesses → next step; none detected → honest message; no mutation |
 
 **Waits:** persisted rung contract · repo loadouts · Ultra controller (#126) ·
-Arbor-informed composition · Grok/Agy/Cursor status adapters · live desktop
-paint probe of the console (NEEDS LOCAL PROBE) · Pi 1.0.4 re-probe (Pi now
-ships `pi mcp`; the adapter's "no MCP runtime" premise needs re-checking).
+Arbor-informed composition · Grok/Agy/Cursor status adapters · wiring Pi's
+`setStatus` (feasible, §10) · desktop paint probe of the console (NEEDS DESKTOP
+PROBE: requires a user-scope install) · native Windows installer run (#94,
+NEEDS WINDOWS PROBE).
 
 ## 9. Non-goals
 
@@ -419,3 +420,28 @@ automatic retrieval on every prompt · a modal chooser · any write to
 `~/.claude`, settings, or the repo · the console as a requirement for
 correctness · fixture data in a runtime surface · an Ultra that looks
 finished.
+
+## 10. Runtime facts pinned by a logged-in probe (PR #187, 2026-10-08)
+
+Claude Code **2.1.294**, terminal, macOS. Only facts a hard signal showed; the evidence is in
+[`plugins/skill-heaven-console/README.md`](../plugins/skill-heaven-console/README.md) and
+[`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md).
+
+- An MCP tool's result on `tool.call` / `$.tool.call`: `{ ref, result, text }`, with `result` the
+  JSON text as a **string**. `structuredContent` is not passed through.
+- `$.tool.list()`: no MCP tools at `session.start`; once connected it names the deferred summon
+  tool.
+- `agentId` is present on subagent `tool.call`s and `turn.complete`, and the Agent tool's result
+  carries the same id.
+- For a typed slash command, `command.run` fires before `prompt.submit`, and `prompt.submit.text`
+  is the raw typed text. A subagent hand-back is a `prompt.submit` with `origin.kind: "peer"`.
+- A bare `/skill-zero` or `/skill-hell …` resolves to the plugin's portable skill
+  (`user-invocable: false`) and is refused. `/skill-heaven:<surface>` reaches the command. Every
+  pre-fill and every printed Claude command uses the qualified spelling.
+- The console wrote nothing to user settings or the plugin registry. Claude Code's own background
+  marketplace refresh did touch `known_marketplaces.json`.
+
+Pi **1.0.4**: the adapter stays (its own MCP route is not equivalent under an MCP replacement
+extension), and `ctx.ui.setStatus` carries the canonical line. Antigravity **1.3.1**: plugin MCP
+servers load only from `mcp_config.json`; with it, the plugin is compatible.
+

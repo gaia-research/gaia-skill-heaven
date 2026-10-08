@@ -38,6 +38,7 @@ plugins/skill-heaven/                    THE AGENT PLUGIN
 ├── package.json                         Pi package delivery metadata
 ├── .codex-plugin/plugin.json            Codex delivery metadata
 ├── .codex.mcp.json                      Codex plugin-root MCP launch shim
+├── mcp_config.json                      Antigravity MCP launch shim (agy reads only this name)
 ├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
 ├── .mcp.json                            retained Claude/Grok MCP compatibility
 ├── commands/*.md                        retained explicit command compatibility
@@ -327,10 +328,16 @@ Claude Code 2.1.288 accepts the public marketplace flow (verified from a fresh i
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-Pi 0.84.2 remains a namespaced adapter because it is not a native Agent Plugins
-client and deliberately has no built-in MCP runtime. The adapter maps portable
-skills and `mcp.json` into Pi's extension API; see its
+Pi remains a namespaced adapter because it is not a native Agent Plugins client.
+Pi 0.99+ has its own MCP runtime, but re-probed on 1.0.4 that route was not
+equivalent: under an MCP replacement extension the summon tool was no longer
+declared directly, and `--no-mcp` removes it. The adapter maps portable skills
+and `mcp.json` into Pi's extension API and works under any of them; see its
 [`PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+
+Antigravity reads plugin MCP servers only from `mcp_config.json`; the plugin
+ships one beside `mcp.json` (identical entry, held equal by a test). On
+Antigravity the surfaces are namespaced (`/skill-heaven:summon`).
 `install.sh` remains separate and installs the standalone `*-zero` launchers.
 
 `gaia-mcp` remains deprecated. Existing
@@ -352,30 +359,28 @@ nothing. Its copy of the status model is a committed bundle of `packages/status`
 (`npm run build:status`, CI-checked). Static evidence on Claude Code 2.1.293:
 `claude plugin validate plugins/skill-heaven-console` passes (it reads the module
 and reports only `$.state` writes — no filesystem, process, network, store or
-settings calls), and `claude plugin test` runs 23 engine tests over the
-terminal and desktop surfaces, all passing. **Not yet probed:** desktop paint in a
-logged-in session — it stays labelled preview until then. Design of record:
+settings calls), and `claude plugin test` runs 45 engine tests over the
+terminal and desktop surfaces, all passing. The terminal surface was probed live
+in a logged-in 2.1.294 session (PR #187), which fixed five defects the probe
+exposed. **Not yet probed:** desktop paint; the console stays labelled preview. Design of record:
 [`docs/CONTROL-PLANE.md`](CONTROL-PLANE.md).
 
-## Installed harness versions drifted from the pins (2026-10-07)
+## Installed harness versions drifted from the pins (2026-10-07) — resolved 2026-10-08
 
-Recorded so no pin is silently treated as current. On the cloud machine that
-wrote the control-plane pass, the installed versions were Claude Code 2.1.293
-(pin 2.1.288), Codex 0.161.0 (pin 0.146.0), Pi 1.0.4 (pin 0.84.2), Grok 1.0.46
-(pin 1.0.5), Hermes 0.21.5 (pin 0.20.0) and Antigravity 1.3.1 (launcher pin
-1.2.13). Only unauthenticated static checks ran on them:
+The cloud control-plane pass found the installed versions ahead of the pins and could only run
+static checks. PR #187 ran the logged-in cells locally (macOS, Herdr panes):
 
-| Client | Static check on the installed version | Result |
-|---|---|---|
-| Claude Code 2.1.293 | `claude plugin validate plugins/skill-heaven` | passed |
-| Grok 1.0.46 | `grok plugin validate plugins/skill-heaven` | manifest valid; skills, commands and MCP servers found |
-| Antigravity 1.3.1 | `agy plugin validate plugins/skill-heaven` | 5 skills and 5 commands processed; **`mcpServers: skipped (not found)`** |
-| Pi 1.0.4 | `pi --help` | now lists `pi mcp`; the adapter's "Pi has no MCP runtime" premise needs a re-probe |
+| Client | Version | Result | Evidence |
+|---|---|---|---|
+| Claude Code | 2.1.294 | plugin + console live in the terminal. A bare `/skill-zero` is refused; `/skill-heaven:<surface>` works | [`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md) |
+| Codex | 0.161.0 | plugin added, summon call completed | same |
+| Pi | 1.0.4 | adapter correct and kept; `skill-zero` frontmatter fixed | [`dev.skill-heaven.pi/PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md) |
+| Grok | 1.0.46 | install + details only (not signed in here) | [`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md) |
+| Hermes | 0.20.0 | installed, enabled, summon call completed | same |
+| Antigravity | 1.3.1 | **Partial → Compatible** after `mcp_config.json`: summon + four surfaces live, real HOME | [`packages/agy-zero/PROBE.md`](../packages/agy-zero/PROBE.md) |
 
-Antigravity is therefore **partial**: the commands would load, but the summon
-tool would not, so no registration command is printed for it anywhere. Every
-live claim above still rests on the pinned versions; the drifted versions need a
-logged-in probe (`NEEDS LOCAL PROBE`).
+Still open: the console's desktop paint (needs a user-scope install) and the native Windows
+installer run (#94).
 
 ## Not built
 

@@ -34,6 +34,7 @@ import {
   fromData,
   initialState,
   noteAgentId,
+  qualifyCommand,
   recordEvent,
   recordRead,
   recordSelection,
@@ -89,8 +90,10 @@ function later(work: Promise<unknown>): void {
   work.catch(() => {})
 }
 
-/** Pre-fill the prompt without wiping a draft; say so when the box could not take it. */
-async function fillPrompt($: EngineInterface, text: string): Promise<void> {
+/** Pre-fill the prompt without wiping a draft; say so when the box could not take it.
+ * Skill Heaven commands are filled in the spelling the session accepts. */
+async function fillPrompt($: EngineInterface, command: string): Promise<void> {
+  const text = qualifyCommand(command)
   try {
     const filled = await $.prompt.fill({ text, mode: 'insert' })
     if (!filled.isFilled) $.ui.toast(`Type this: ${text}`)
@@ -117,7 +120,26 @@ type Preview = { event: SummonEvent; reached: boolean } | { notConnected: true }
  * tool the list names that is rejected was aborted or failed: that is an error
  * event, and says nothing about whether the tool is connected.
  */
+/** MCP servers connect in the background after session.start: observed on
+ * 2.1.294, `$.tool.list()` names no MCP tool at session.start and a /lens typed in
+ * the first seconds found no summon tool. An absent tool is checked again, a few
+ * times, before the band says "not connected". */
+const CONNECT_CHECKS = 4
+const CONNECT_WAIT_MS = 1500
+
 async function previewSummon($: EngineInterface, query: string): Promise<Preview> {
+  for (let check = 1; ; check++) {
+    const outcome = await previewOnce($, query)
+    if (!('notConnected' in outcome) || check >= CONNECT_CHECKS) return outcome
+    try {
+      await $.clock.sleep(CONNECT_WAIT_MS)
+    } catch {
+      return outcome
+    }
+  }
+}
+
+async function previewOnce($: EngineInterface, query: string): Promise<Preview> {
   const listed: string[] = []
   try {
     for (const t of await $.tool.list()) if (SUMMON_TOOL.test(t.name)) listed.push(t.name)
@@ -360,6 +382,9 @@ export const register: Register = (on, options) => {
   // Rung selection: the person typed /skill-heaven, /skill-hell, /skill-ultra or
   // /skill-zero. The console reads it; the prompt goes on unchanged.
   on('prompt.submit', async ($, e, next) => {
+    // A subagent's hand-back arrives as a prompt too (origin `peer`, observed on
+    // 2.1.294): it is not the person's next prompt and selects no rung.
+    if ((e as { origin?: { kind?: string } }).origin?.kind === 'peer') return next(e)
     try {
       const reading = selectionFromCommand(e.text)
       await change($, mode, (s) => {

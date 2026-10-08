@@ -302,7 +302,7 @@ if claude_is_working; then
     claude plugin install --scope user "$PLUGIN_ID" || true
     touch "$PLUGIN_MANAGED"
   fi
-  say "Claude plugin ready: /summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra."
+  say "Claude plugin ready: type /skill-heaven:summon <what you need> (also /skill-heaven:skill-zero, :skill-heaven, :skill-hell, :skill-ultra)."
 elif command -v claude >/dev/null 2>&1; then
   say "Claude Code binary detected at $(command -v claude), but 'claude --version' failed."
   say "This typically indicates missing platform-native binaries (e.g. on Android/Termux or unsupported Linux architectures)."

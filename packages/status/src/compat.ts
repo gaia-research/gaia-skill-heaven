@@ -52,6 +52,8 @@ export interface HarnessPath {
   statusNote: string;
   /** Optional launcher door for a clean-start floor. */
   launcher: string | null;
+  /** The first summon, spelled the way a probe saw this client accept it. */
+  firstRun: string;
 }
 
 const REPO = "https://github.com/gaia-research/gaia-skill-heaven/blob/main";
@@ -76,16 +78,19 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     remove: ["claude plugin uninstall skill-heaven@gaia-skill-heaven"],
     statusIntegration: "APPEND",
     statusNote:
-      "The optional console (preview) adds a status entry beside yours — it never replaces your statusLine. Desktop paint needs a local probe.",
+      "The optional console (preview) adds a status entry beside yours — it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
     launcher: "claude-zero",
+    // 2.1.294 refuses a bare /summon: it resolves to the portable skill, which is user-invocable: false.
+    firstRun: "/skill-heaven:summon <what you need>",
   },
   {
     id: "codex",
     name: "Codex",
     bin: "codex",
     chip: "compatible",
-    probedVersion: "0.146.0",
-    evidence: "Live probe: plugin installed, five surfaces recognised, summon returned a card.",
+    probedVersion: "0.161.0",
+    evidence:
+      "Live smoke on 0.161.0: plugin added, codex mcp list resolves skill-summon, a summon call completed. Headless codex exec asks approval for MCP calls. Surfaces last probed on 0.146.0.",
     evidenceHref: `${REPO}/plugins/skill-heaven/PROBE.md`,
     needsInstaller: true,
     commands: [
@@ -99,14 +104,16 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     statusIntegration: "UNSUPPORTED",
     statusNote: "Codex has no public status contribution API. Summon receipts still print in the transcript.",
     launcher: "codex-zero",
+    firstRun: "/summon <what you need>",
   },
   {
     id: "pi",
     name: "Pi",
     bin: "pi",
     chip: "compatible",
-    probedVersion: "0.84.2",
-    evidence: "Live probe of the Pi adapter. Pi 1.0.x now ships pi mcp; the adapter needs a re-probe there.",
+    probedVersion: "1.0.4",
+    evidence:
+      "Live probe on 1.0.4: pi install, five commands, summon materialized a skill, the four surfaces expanded. The adapter keeps its own summon tool rather than Pi's MCP runtime, which an MCP extension can replace.",
     evidenceHref: `${REPO}/plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`,
     needsInstaller: true,
     commands: [`pi install "${AGENT_PLUGIN_INSTALL.plugin}" --approve`],
@@ -115,8 +122,10 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then pi update.",
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
-    statusNote: "The pi-zero extension draws a widget; the canonical entropy line is not wired there yet.",
+    statusNote:
+      "Pi's status API takes the canonical entropy line (probed on 1.0.4, appended under its own key); the plugin does not draw it yet. The pi-zero extension draws a widget.",
     launcher: "pi-zero",
+    firstRun: "/summon <what you need>",
   },
   {
     id: "grok",
@@ -124,7 +133,8 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     bin: "grok",
     chip: "compatible",
     probedVersion: "1.0.5",
-    evidence: "Live probe on 1.0.5; grok plugin validate also passes on 1.0.46 (static).",
+    evidence:
+      "Live probe on 1.0.5. On 1.0.46, grok plugin install and details find the skills, commands and MCP server (static: no signed-in session to run a summon).",
     evidenceHref: `${REPO}/plugins/skill-heaven/PROBE.md`,
     needsInstaller: true,
     commands: [`grok plugin install "${AGENT_PLUGIN_INSTALL.plugin}" --trust`],
@@ -135,6 +145,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     statusIntegration: "UNSUPPORTED",
     statusNote: "A command-backed status line is possible on Grok but not built.",
     launcher: "grok-zero",
+    firstRun: "/summon <what you need>",
   },
   {
     id: "hermes",
@@ -142,7 +153,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     bin: "hermes",
     chip: "compatible",
     probedVersion: "0.20.0",
-    evidence: "Live probe: plugin installed and enabled, summon loaded a skill.",
+    evidence: "Live probe, repeated on 0.20.0 (2026-10-08): plugin installed and enabled, a summon call completed.",
     evidenceHref: `${REPO}/plugins/skill-heaven/PROBE.md`,
     needsInstaller: true,
     commands: [`hermes plugins install "file://${AGENT_PLUGIN_INSTALL.plugin}" --enable`],
@@ -155,26 +166,28 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     statusIntegration: "UNSUPPORTED",
     statusNote: "Hermes has no stable public status contribution. Receipts print in the transcript.",
     launcher: "hermes-zero",
+    firstRun: "/summon <what you need>",
   },
   {
     id: "agy",
     name: "Antigravity",
     bin: "agy",
-    chip: "partial",
+    chip: "compatible",
     probedVersion: "1.3.1",
     evidence:
-      "Static: agy plugin validate (1.3.1) loads the five skills and five commands but reports the MCP server as not found — /summon would have no tool. Needs a local probe.",
-    evidenceHref: `${REPO}/docs/CONTROL-PLANE.md`,
-    needsInstaller: false,
-    commands: [],
+      "Live probe on 1.3.1 with your real HOME: agy plugin install loads the skills, commands and the summon server; /skill-heaven:summon and the four surfaces ran.",
+    evidenceHref: `${REPO}/packages/agy-zero/PROBE.md`,
+    needsInstaller: true,
+    commands: [`agy plugin install "${AGENT_PLUGIN_INSTALL.plugin}"`],
     inHarness: false,
-    blocked:
-      "No registration command is printed until a logged-in probe shows Antigravity loading the summon server. The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile.",
-    update: "Nothing to update — nothing is registered yet.",
-    remove: [AGENT_PLUGIN_INSTALL.uninstall],
+    blocked: null,
+    update: "Re-run the installer, then agy plugin uninstall skill-heaven and install it again — Antigravity keeps its own copy.",
+    remove: ["agy plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
     statusNote: "A stacked status command is the target; not built.",
     launcher: "agy-zero",
+    // Antigravity namespaces plugin skills: its / menu lists /skill-heaven:summon, and a bare /summon is not a command.
+    firstRun: "/skill-heaven:summon <what you need>",
   },
   {
     id: "other",
@@ -193,6 +206,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     statusIntegration: "UNSUPPORTED",
     statusNote: "Depends on your client.",
     launcher: null,
+    firstRun: "/summon <what you need>, or the spelling your client lists for the skill-heaven plugin",
   },
 ];
 

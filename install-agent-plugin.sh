@@ -250,14 +250,14 @@ else
   missing claude
 fi
 if have codex; then
-  found_head codex "Codex" "Compatible (probed 0.146.0)"
+  found_head codex "Codex" "Compatible (probed 0.161.0)"
   say "             codex plugin marketplace add \"$MARKETPLACE_DIR\""
   say "             codex plugin add skill-heaven@gaia-skill-heaven"
 else
   missing codex
 fi
 if have pi; then
-  found_head pi "Pi" "Compatible (probed 0.84.2)"
+  found_head pi "Pi" "Compatible (probed 1.0.4)"
   say "             pi install \"$PLUGIN_DIR\" --approve"
 else
   missing pi
@@ -275,9 +275,8 @@ else
   missing hermes
 fi
 if have agy; then
-  found_head agy "Antigravity" "Partial (static check on 1.3.1)"
-  say "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
-  say "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
+  found_head agy "Antigravity" "Compatible (probed 1.3.1)"
+  say "             agy plugin install \"$PLUGIN_DIR\""
 else
   missing agy
 fi
@@ -296,7 +295,7 @@ say "Another Agent Plugins client (Unverified)"
 say "  Point your client's own plugin install at $PLUGIN_DIR."
 say "  There is no universal registration command."
 say ""
-say "First run: inside your harness, type /summon <what you need>."
+say "First run: inside your harness, type /summon <what you need> (Claude Code and Antigravity: /skill-heaven:summon <what you need>)."
 say "Update:    re-run this installer (clients that cache plugins also need their own update)."
 say "Remove:    $INSTALL_HOME/uninstall.sh   (client registrations are removed in each client)"
 say "Choose your harness and read what each step does: $START_URL"

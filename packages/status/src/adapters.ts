@@ -140,7 +140,10 @@ function receiptFrom(skill: Rec, stage: SkillReceipt["stage"], agent: string | n
 function sourceHealthOf(result: Rec): SourceHealth {
   const ranking = isRec(result.ranking) ? result.ranking : null;
   if (!ranking || typeof ranking.stale !== "boolean") return { kind: "unknown" };
-  const indexAgeDays = num(ranking.indexAgeDays);
+  // The engine reports a fractional age (30.832…); every projection prints whole
+  // days elapsed (observed raw in the console's Scope on Claude Code 2.1.294).
+  const age = num(ranking.indexAgeDays);
+  const indexAgeDays = age === null ? null : Math.floor(age);
   return ranking.stale ? { kind: "stale", indexAgeDays } : { kind: "fresh", indexAgeDays };
 }
 

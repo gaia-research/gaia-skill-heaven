@@ -102,3 +102,74 @@ find ~/.gemini -name SKILL.md
 2. **Keychain Protection:** Real `HOME` execution prevents macOS login keychain disappearance, avoiding auth prompts and duplicate account creation.
 3. **Explicit Isolation (`--isolate-home`):** Clean-room isolation is available as an explicit opt-in for users requiring a distinct sandbox.
 4. **P3 Enforced:** Curated mode without `--isolate-home` fails fast with exit code 2, strictly prohibiting mutations to `~/.gemini`.
+
+---
+
+## 4. Agent Plugin route on 1.3.1 (PR #187, 2026-10-08)
+
+**Harness:** `agy` 1.3.1 (`agy --version` → `1.3.1`) · macOS 26.4.1 arm64 · model `gemini-3.8-flash-low`
+**HOME:** the real one in every live cell. The #160 invariant was never relaxed: no cell redirected
+`HOME`, so the login keychain and the vanilla account were in use throughout. Live cells ran in a
+visible Herdr pane.
+
+This is the **plugin** (`plugins/skill-heaven`), not the `agy-zero` launcher. The launcher's
+suppression findings above (1.2.13) were not re-probed.
+
+### Reproduced first: commands load, the summon server does not
+
+```
+$ agy plugin validate plugins/skill-heaven        # main @ 9e71939
+  ✔ skills      : 5 processed
+  ✔ commands    : 5 processed (converted to skills)
+  - mcpServers  : skipped (not found)
+```
+
+### Why
+
+agy 1.3.1's embedded plugin documentation (`strings` of the binary) gives the plugin layout:
+
+```
+plugins/<plugin_name>/
+  plugin.json       # Required: Manifest file
+  mcp_config.json   # Optional: MCP servers exposed by the plugin
+```
+
+and "MCP Servers defined in `plugins/<name>/mcp_config.json` are launched". It does not read the
+Agent Plugins `mcp.json` or Claude's `.mcp.json`. The same binary expands `${PLUGIN_ROOT}`,
+`${PLUGIN_DATA}`, `${extensionPath}` and `${workspacePath}`.
+
+### Repair
+
+`plugins/skill-heaven/mcp_config.json`: the portable `skill-summon` entry verbatim without `type`
+(a test holds the two equal). It is a client delivery shim like `.codex.mcp.json`, not another
+engine.
+
+```
+$ agy plugin validate plugins/skill-heaven
+  ✔ mcpServers  : 1 processed
+```
+
+### Live cells (hard signal: `--output-format stream-json` step events)
+
+| Cell | Route | Hard signal | Result |
+|---|---|---|---|
+| `/skill-heaven:summon frontend code review` | plugin in a temp workspace's `.agents/plugins/` (no install) | `call_mcp_tool` `ServerName: skill-heaven_skill-summon`, `ToolName: summon`, state `DONE`; then `view_file` of the materialized `skill-summon-session-*/…/SKILL.md` | pass |
+| `/skill-heaven:skill-zero`, `:skill-heaven low`, `:skill-hell high`, `:skill-ultra` | same | no tool calls; the reply carries each `SKILL.md`'s own reference text | pass (×4) |
+| install route | `agy plugin install <plugin dir>` → one `/skill-heaven:summon` from a neutral cwd → `agy plugin uninstall skill-heaven` | install lists `skills, commands, mcpServers`; `call_mcp_tool … DONE`; uninstall → `No imported plugins.` | pass |
+| TUI menu | interactive `agy`, typed `/sum`, `/skill` | the menu lists exactly one entry per surface, **namespaced**: `/skill-heaven:summon`, `/skill-heaven:skill-zero`, `:skill-heaven`, `:skill-hell`, `:skill-ultra` | — |
+
+**Negative, kept:** the bare spellings (`/summon …`, `/skill-zero`, `/skill-heaven low`, …) are
+not commands on agy 1.3.1. In print mode the model improvised: it searched `~` for files named
+`skill-zero`, or called summon with `query: "low"`. Only the namespaced spelling is printed for
+Antigravity.
+
+**Install side effects:** `agy plugin install` copies the plugin to
+`~/.gemini/config/plugins/skill-heaven`, and `uninstall` removes it. It also leaves
+`~/.gemini/config/import_manifest.json` (`{"imports": null}`) behind. That file did not exist
+before; the probe removed it, and a hash snapshot of `~/.gemini/config` matched the pre-probe state.
+The install mechanics were first exercised under a throwaway HOME (no login needed for
+`install`/`list`/`uninstall`), and only then with the real HOME.
+
+**Status change:** Antigravity moves from **Partial** to **Compatible (probed 1.3.1)**. The
+registration command printed is `agy plugin install "<plugin dir>"`, and the first summon is
+`/skill-heaven:summon <what you need>`. A status entry for Antigravity is still not built.
