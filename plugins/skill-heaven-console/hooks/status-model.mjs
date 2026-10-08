@@ -537,7 +537,8 @@ function markRead(event, readPath) {
   let changed = false;
   const skills = event.skills.map((s) => {
     if (!s.path || s.stage === "in-context") return s;
-    const root = s.path.replace(/\\/g, "/").replace(/\/+$/, "");
+    let root = s.path.replace(/\\/g, "/");
+    while (root.endsWith("/")) root = root.slice(0, -1);
     if (norm === `${root}/SKILL.md`) {
       changed = true;
       return { ...s, stage: "in-context" };
