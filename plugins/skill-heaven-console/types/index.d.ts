@@ -68,6 +68,11 @@ export type ConsoleStateData = {
 }
 
 declare module 'claude-code' {
+  // The optional launcher uses the same bundled server/schema under this
+  // second exact spelling. Generated marketplace tables know only the first.
+  interface McpToolInputs {
+    'mcp__skill-summon__summon': { query: string; limit?: number; surface?: 'any' | 'heaven' | 'hell'; source?: string; preview?: boolean }
+  }
   interface PluginState {
     'skill-heaven-console': { state: Shaped<ConsoleStateData> }
   }

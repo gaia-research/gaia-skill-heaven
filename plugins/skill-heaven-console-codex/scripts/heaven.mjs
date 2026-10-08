@@ -561,7 +561,7 @@ function adapterPath(id) {
   const pi = id === "pi";
   const hermes = id === "hermes";
   const agy = id === "agy";
-  const versions = { pi: "1.0.4", codex: "0.161.0", hermes: "0.20.0", grok: "1.0.46", agy: "1.3.1" };
+  const versions = { pi: "1.1.0", codex: "0.161.0", hermes: "0.20.0", grok: "1.0.46", agy: "1.3.1" };
   const register = (console3) => {
     const dir = console3 ? "{{CONSOLE_DIR}}" : "{{PLUGIN_DIR}}";
     const name = console3 ? "skill-heaven-console" : "skill-heaven";
@@ -597,10 +597,10 @@ function adapterPath(id) {
     return [...remove(console3), ...register(console3)];
   };
   const command = agy ? "/skill-heaven-console:heaven" : "/heaven";
-  const report = pi ? "ctx.ui.setWidget (own key, below editor)" : hermes ? "native register_command /heaven report" : "explicit console skill/command (model-mediated)";
+  const report = pi ? "ctx.ui.custom explicit pane (Pi 1.1+); compact owned status" : hermes ? "native register_command /heaven report" : "explicit console skill/command (model-mediated)";
   const console2 = {
     kind: pi ? "extension-ui" : "command-backed",
-    mechanism: pi ? "Separate Pi extension: own setStatus key and command-opened widget. /lens drafts a preview handoff; /heaven fill prefills only, a human submits through normal tool approval." : `${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
+    mechanism: pi ? "Separate Pi 1.1+ extension: one compact owned status line and explicit, bounded ctx.ui.custom pane; Escape/q dismiss. Diagnostics require inspect. /lens drafts a preview handoff; /heaven fill prefills only, a human submits through normal tool approval." : `${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
     command,
     commandPrefix: agy ? "skill-heaven:" : "",
     surfaces: {
@@ -615,9 +615,9 @@ function adapterPath(id) {
     summonTools: pi ? ["summon"] : agy ? ["skill-heaven_skill-summon/summon"] : id === "codex" ? ["mcp__skill-summon__summon"] : [],
     trust: [
       { id: "skill-heaven", profile: "core", kind: "harness runtime package", version: "0.1.2", summary: "Five entropy surfaces and the bundled summon engine.", reads: ["configured skill source"], writes: ["disposable engine session directory"], network: "Core fetches the configured skill source", disable: remove(false)[0].run },
-      { id: "skill-heaven-console", profile: "full", kind: pi ? "Pi extension package" : hermes ? "Hermes native Python plugin + Node painter" : "command/skill plugin + Node report", version: "0.1.0", summary: "Read-only projection of the shared console model; independently removable.", reads: pi ? ["exact Core summon results", "successful read events", "active session branch"] : hermes ? ["caller-supplied exact Core sessionRoot ledger"] : ["caller-supplied exact Core sessionRoot ledger", ...agy ? ["optional exact conversation transcript and confined result files"] : []], writes: [], network: pi || hermes ? "none; Lens only drafts a handoff, normal Core calls remain subject to host approval" : "none of its own; explicit model-mediated Lens requests use the existing Core tool", disable: remove(true)[0].run, notes: ["No hidden submission, automatic materialization, daemon, global configuration rewrite or independent summon server.", ...pi ? ["Restored branches cannot prove successful body reads or rung selection; those facts are not replayed."] : ["Without an exact binding, counts are unknown. Command/skill output may pass through the model."]] }
+      { id: "skill-heaven-console", profile: "full", kind: pi ? "Pi extension package" : hermes ? "Hermes native Python plugin + Node painter" : "command/skill plugin + Node report", version: "0.1.0", summary: "Read-only projection of the shared console model; independently removable.", reads: pi ? ["exact Core summon results", "successful read events", "active session branch"] : hermes ? ["caller-supplied exact Core sessionRoot ledger"] : ["caller-supplied exact Core sessionRoot ledger", ...agy ? ["optional exact conversation transcript and confined result files"] : []], writes: [], network: pi || hermes ? "none; Lens only drafts a handoff, normal Core calls remain subject to host approval" : "none of its own; explicit model-mediated Lens requests use the existing Core tool", disable: remove(true)[0].run, notes: ["No hidden submission, automatic materialization, daemon, global configuration rewrite or independent summon server.", ...pi ? ["Only paired successful whole-body reads are restored from the active branch's tool metadata; partial, missing or truncated reads cannot establish full context. Rung selection is not restored from guessed prompt text."] : ["Without an exact binding, counts are unknown. Command/skill output may pass through the model."]] }
     ],
-    probe: { version: versions[id], summary: `Saved ${versions[id]} API/layout evidence informed this adapter. Compiled artifact and synthetic conformance tests are NOT an empirical Full compatibility receipt; live install, Lens and console-only removal still need a probe.`, href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` }
+    probe: { version: versions[id], summary: pi ? "Pi 1.1.0 native status/pane, dismissal/paging, loaded preview schema, policy denial, preview without materialization and successful body read observed. Branch restoration/rung decoding additionally have deterministic tests; remaining acceptance is tracked separately." : `Saved ${versions[id]} API/layout evidence and native package-management lifecycle observed. Live report/preview, cache refresh and session isolation remain separate acceptance cells; compilation is not their proof.`, href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` }
   };
   return { console: console2, core: piece(register(false), update(false), remove(false)), consolePiece: piece(register(true), update(true), remove(true)), fullBlocked: null };
 }
@@ -1115,7 +1115,7 @@ function lensView(state, projection) {
   if (band.kind === "draft") {
     const args2 = JSON.stringify({ query: sanitizeDisplay(band.query, 4096), surface: "any", preview: true });
     return {
-      lines: [[{ text: "Preview draft \xB7 not requested yet; no tool called", role: "dim" }]],
+      lines: [[{ text: "Preview handoff ready \xB7 no result observed", role: "dim" }]],
       stage: { text: "Submit the handoff yourself through the normal host tool/approval path. Nothing materialized.", inferred: false },
       actions: ["dismiss"],
       prefill: `Call the existing Skill Heaven summon tool with these JSON arguments: ${args2}. Preview only; do not summon or read a skill body.`,
@@ -1460,7 +1460,7 @@ function briefConsole(view, which) {
   const rung = selected?.evidence === "observed" && selected.value ? sanitizeDisplay(selected.value.split(/ · | — /)[0], 40) : "rung not observed";
   const summaries = {
     status: view.status.compact,
-    lens: `Lens \xB7 ${draft ? "Preview draft ready \xB7 not submitted" : firstLens}`,
+    lens: `Lens \xB7 ${draft ? "Preview handoff ready \xB7 no result observed" : firstLens}`,
     session: `Session \xB7 ${view.session.entries.length ? `${view.session.entries.length} recent receipts` : "no receipts available"}`,
     scope: `Scope \xB7 ${rung} \xB7 Ultra unavailable`,
     flow: `Flow \xB7 ${view.flow.telemetryNote ? "agent ids not observed" : `${view.flow.agents.length + view.flow.more} reported agents`}`,

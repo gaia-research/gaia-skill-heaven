@@ -1,74 +1,97 @@
-# Portable Full adapters (bounded preview slice)
+# Full console adapters
 
-`packages/status/src/console-{state,host,view}.ts` remains the semantic source.
-This package adds only host observation/I/O and paints via `renderConsoleText`.
-No runtime dependencies, daemons, global config edits, independent MCP server,
-hidden prompt submission or automatic retrieval. Ultra remains unavailable.
+`packages/status/src/console-{state,host,view}.ts` is the shared semantic/evidence
+model. Adapters observe host events or explicitly bound engine receipts and paint
+that model; they do not implement another selection policy or summon server.
+Ultra remains provisioned with no working controller (#126).
 
-## Artifacts and carriers
+## Carriers and limits
 
-| Host | Separate artifact | Integration primitive |
+| Host/version exercised | Separate artifact | Strongest implemented carrier |
 |---|---|---|
-| Pi 1.0.4 | `plugins/skill-heaven-console-pi` | Pi package extension; owned `setStatus` key; `/heaven` command opens a below-editor widget; `/lens` uses Core's same-client event bridge; `/heaven fill` only fills the editor |
-| Codex 0.161.0 | `plugins/skill-heaven-console-codex` | Plugin skill; model-mediated explicit report/preview; exact caller-supplied Core sessionRoot ledger |
-| Hermes 0.20.0 | `plugins/skill-heaven-console-hermes` | Native Python `register_command`; stateless Node report; `/lens` dispatches the existing Core tool; exact explicit root for history |
-| Grok 1.0.46 | `plugins/skill-heaven-console-grok` | Native command file; model-mediated explicit report/preview; exact caller-supplied Core sessionRoot ledger |
-| Agy 1.3.1 | `plugins/skill-heaven-console-agy` | Namespaced plugin skill; model-mediated report/preview; explicit root or exact full conversation transcript |
+| Claude Code 2.1.294 | `plugins/skill-heaven-console` | Native mod SDK: one compact status contribution, explicit pane and Lens band |
+| Pi 1.1.0 | `plugins/skill-heaven-console-pi` | Owned compact status; official `ctx.ui.custom` overlay; explicit Lens handoff |
+| Codex 0.161.0 | `plugins/skill-heaven-console-codex` | Explicit plugin skill, model-mediated bundled report |
+| Hermes 0.20.0 | `plugins/skill-heaven-console-hermes` | Native Python command registration; stateless Node report; printed Lens handoff |
+| Grok 1.0.46 | `plugins/skill-heaven-console-grok` | Explicit command file, model-mediated bundled report |
+| Agy 1.3.1 | `plugins/skill-heaven-console-agy` | Namespaced plugin skill, model-mediated bundled report; real HOME preserved |
 
-Flow is unsupported until real host agent ids are implemented and validated.
-Ledger events are reported; reads remain unobserved. Pi promotes only successful
-`read` results. Restored Pi branches replay results, not guessed read arguments.
-Agy's optional decoder accepts only successful, unambiguously paired steps and
-confines large-result files to the exact conversation's steps directory (also
-through symlinks). Its decoder tests are synthetic, not a live TUI receipt.
-Readers never enumerate sessions. Unbound or unreadable input is unknown, not zero.
-Inputs are bounded to 8 MiB / 10,000 JSONL rows; the shared model keeps 50 entries.
-Oversized or malformed inputs fail closed. No prompts or raw transcripts are exported.
+The versions above are native package-management pins, not a claim that every
+runtime surface has passed. Pi's Full pane requires Pi 1.1+ / pi-tui 0.84.1+.
+Command-backed hosts have **no persistent HUD**. Their terminal/tool-trace layout
+and dismissal are host-owned; do not promise Pi's overlay on them. Flow is
+unsupported where real agent IDs cannot be observed. No agents are fabricated.
 
-## Integration required from owner
+## Concise first, inspect deliberately
 
-- Stage exactly one selected artifact as `marketplace/plugins/skill-heaven-console`.
-  Metadata identity remains `skill-heaven-console`, not the repository suffix.
-- Add `node scripts/build-console.mjs` before tests and `--check` as a CI drift gate.
-  Root scripts, existing status builder, installers and site were deliberately untouched.
-- Regenerate existing status/installer bundles from changed compat data at integration.
-- Execute `InstallStep.argv` with `shell:false`; expand tokens inside individual
-  arguments, never split/interpolate `run` or `shell`. Claude's canonical registration
-  uses the candidate's local marketplace in a shell command; legacy public commands
-  remain unchanged. No confirmation stdin is invented.
-- Hermes Full fails closed: its installer clones Git sources, so the staged directory
-  must first be a standalone Git source with plugin.yaml at Git root. Do not claim
-  the current plain staging layout satisfies this. Core has the same Git-source
-  requirement in its historical file:// recipe.
-- Agy uses real HOME. Removal steps use supported `disable`, which leaves the host's
-  cached copy; destructive uninstall remains a separate interactive action. No
-  `/statusline` setting is installed. Pi local packages need no global `pi update`.
+- Persistent contribution: **one compact line**. No automatic pane or Lens band
+  on ordinary summon/read events; another extension's footer/widgets are untouched.
+- Bundled text report: at most **eight lines** by default. `--details` is explicit.
+- Pi: `/heaven [section]` opens the bounded overlay. `1–6`, Tab/Shift-Tab or arrows
+  select Status, Lens, Session, Scope, Flow and Trust. `i` toggles inspection;
+  inspected details support Up/Down, PageUp/PageDown and Home/End. Escape, q or
+  Ctrl+C dismiss. At most terminal rows minus eight are used; summary body is at
+  most eight physical lines. Closing restores native editor focus.
+- Pi `/lens <need>` creates only a two-line handoff notice. `/heaven fill` is an
+  intentional prefill, not submission. `/heaven dismiss` clears the owned band.
+  Existing requested bands render fresh state without opening new widgets.
+- Claude: `/heaven` opens a concise pane; `Inspect section` or `/heaven inspect
+  <section>` reveals details. Section changes return to summaries. Close/Escape
+  dismiss it. Above-prompt Lens appears only after explicit `/lens`, not ordinary
+  Core calls. `status:full` does not expand the persistent contribution.
+- Hermes `/heaven inspect <section>` adds details; `/lens inspect <need>` prints
+  the handoff recipe. A plain `/lens` makes no Core call.
+- Codex/Grok/Agy command instructions require the brief bundled report by default;
+  an explicit `heaven inspect <section>` adds `--details`. Printed operations never
+  execute themselves. Host-owned model prose/tool traces remain a disclosed limit.
 
-## Verification and exact remaining runtime cells
+Pi's intrinsic **Core tool receipt** also has a concise native renderer; Ctrl+O
+shows its complete cards, arguments and structured receipt. The full content is
+still delivered to the model as reference data. This is not a Core console/HUD.
+Its actual registered schema declares optional boolean `preview`; `preview:true`
+was observed returning a candidate with zero materialized manifest entries.
 
-Deterministic tests cover all six canonical sections, exact ledger binding, unknown
-counts, preview/no-materialization state, failed vs successful reads, Pi owned keys,
-explicit editor fill, missing Core, stale completions, confined Agy result paths,
-file/row bounds, argv presence and candidate-local Claude registration.
-`agy plugin validate` establishes only layout (one skill, no MCP or hooks).
-These checks do **not** establish empirical Full compatibility.
+## Authority and evidence
 
-Still unverified on each pinned host: combined Core+Full fresh registration, live
-console output, explicit Lens on the same Core session, concurrent-session isolation,
-cache refresh after staging updates, and disabling/removing only Console while Core
-still summons. Additionally:
+Pi and Hermes Lens commands do **not** dispatch Core tools, publish a request
+bridge, retrieve files or submit a prompt. A human submits the handoff through the
+normal host tool path and its permission hooks. Native Pi denial-hook testing
+blocked a preview without calling Core; a subsequent normal preview succeeded.
 
-- Pi: real TUI/RPC widget paint, input/rung alias events, resume/tree reconstruction,
-  event bridge timeout and permission-extension behavior. The bridge is an in-process
-  preview-only transport, not a new model tool; other trusted extensions have the
-  same process permissions.
-- Codex/Grok: command/skill entry spelling, model obeying preview:true and reproducing
-  stdout, plugin-root resolution, approval prompts and local-marketplace cache refresh.
-- Hermes: standalone Git staging, runtime command registration, dispatch/tool namespace
-  hash identity and whether the command dispatch path honors user permission hooks.
-- Agy: real-HOME workspace-plugin execution, exact TUI transcript status spelling,
-  successful read pairing, permission prompts, namespaced command routing, cached-copy
-  reinstall and model-mediated Lens. No private environment conversation-id assumption.
+Report readers require an exact caller-supplied sessionRoot. Agy additionally
+accepts an exact conversation transcript, with unambiguous successful pairing and
+result-file confinement to that conversation. They never enumerate sessions,
+choose the newest directory, scan general transcripts or export prompts.
+Unbound counts are unknown, not zero. Torn JSONL fails closed. Input caps are
+8 MiB / 10,000 rows; the shared model keeps 50 recent receipts.
 
-Saved recon API/layout evidence informed the code; no recon campaign was rerun and
-no workers were delegated. Targeted validators and synthetic tests are the new evidence.
+Ledger facts are **reported**, not observed reads. Pi promotes successful complete
+`read` results only; failures, explicit slices and truncation do not establish
+whole-body context. Restoration replays only current-branch exact tool-call IDs
+and result metadata. Missing/bounded metadata is disclosed, not guessed.
+
+## Installation and verification
+
+The canonical profile helper stages exactly one selected console piece at
+`marketplace/plugins/skill-heaven-console`, independently of Core. It prepares
+clonable marketplace payloads and independent child Git roots, including Hermes.
+Stage-only is the default. Explicit `--register` runs canonical argv without shell
+interpolation; receipt checkpoints preserve recoverable sources on failure.
+Core/Full switches issue console lifecycle operations only. Selected-package
+removal is real uninstall/removal, not merely disabling a retained cache. Agy
+uninstall confirmation is the empirically accepted canonical stdin, not a guessed
+purge, and HOME/keychain behavior is unchanged.
+
+`build:status`, `build:console`, `build:profiles` and `build:pi-skills` regenerate
+committed artifacts. Drift checks, root/site/SDK typechecks and deterministic
+conformance are separate from native runtime acceptance.
+
+The saved native lifecycle pass observed Core → Full → Core → uninstall with exit
+0 in all 24 cells, with no Agy config snapshot differences. Exact exit results were
+recovered from the original session's saved tool output after scratch cleanup;
+the large reconnaissance campaign was not rerun. Native Pi now additionally has
+schema, permission-denial, positive preview, materialization/read, pane height,
+paging and dismissal observations. Remaining live report/permission/isolation/
+cache-refresh and UI cells must remain explicitly pending until observed. Windows
+is unverified (#94); synthetic tests and successful package management do not close
+that gap or prove complete six-host runtime acceptance.

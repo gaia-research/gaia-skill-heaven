@@ -7,6 +7,14 @@
 import type { On } from 'claude-code'
 import { describe, expect, mock, test } from 'claude-code/testing'
 
+// Test-only foreign spellings: they must never be treated as Core by the mod.
+declare module 'claude-code' {
+  interface McpToolInputs {
+    'mcp__evil-skill-summon__summon': { query: string }
+    'mcp__skill-summon__summon__x': { query: string }
+  }
+}
+
 const PLUGIN = 'skill-heaven-console'
 const SUMMON = 'mcp__plugin_skill-heaven_skill-summon__summon'
 const SURFACES = ['terminal', 'desktop'] as const

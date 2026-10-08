@@ -128,7 +128,7 @@ export function lensView(state: ConsoleCoreState, projection: ConsoleProjection)
   if (band.kind === "draft") {
     const args = JSON.stringify({ query: sanitizeDisplay(band.query, 4096), surface: "any", preview: true });
     return {
-      lines: [[{ text: "Preview draft · not requested yet; no tool called", role: "dim" }]],
+      lines: [[{ text: "Preview handoff ready · no result observed", role: "dim" }]],
       stage: { text: "Submit the handoff yourself through the normal host tool/approval path. Nothing materialized.", inferred: false },
       actions: ["dismiss"],
       prefill: `Call the existing Skill Heaven summon tool with these JSON arguments: ${args}. Preview only; do not summon or read a skill body.`,
@@ -675,7 +675,7 @@ function briefConsole(view: ConsoleView, which: ConsoleSurface | "all"): string 
   const rung = selected?.evidence === "observed" && selected.value ? sanitizeDisplay(selected.value.split(/ · | — /)[0]!, 40) : "rung not observed";
   const summaries: Record<ConsoleSurface, string> = {
     status: view.status.compact,
-    lens: `Lens · ${draft ? "Preview draft ready · not submitted" : firstLens}`,
+    lens: `Lens · ${draft ? "Preview handoff ready · no result observed" : firstLens}`,
     session: `Session · ${view.session.entries.length ? `${view.session.entries.length} recent receipts` : "no receipts available"}`,
     scope: `Scope · ${rung} · Ultra unavailable`,
     flow: `Flow · ${view.flow.telemetryNote ? "agent ids not observed" : `${view.flow.agents.length + view.flow.more} reported agents`}`,

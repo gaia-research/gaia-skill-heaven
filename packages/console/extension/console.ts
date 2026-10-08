@@ -9,6 +9,11 @@ import {
 
 const KEY = "skill-heaven-console";
 const projection = harnessById("pi");
+const completeRead = (input: Record<string, unknown>, details: unknown): boolean => {
+  if ((input.offset !== undefined && input.offset !== 1) || input.limit !== undefined) return false;
+  const d = details as { truncation?: { truncated?: boolean }; firstLineTooLong?: boolean } | undefined;
+  return d?.truncation?.truncated !== true && d?.firstLineTooLong !== true;
+};
 
 // Uses the public Pi 1.1 TUI ScrollView API; older Full support is unverified.
 // Presentation only: every fact/body comes from the shared ConsoleView painter.
@@ -90,14 +95,16 @@ export default function consolePi(pi: ExtensionAPI): void {
   const closePane = () => { pane?.close(); pane = undefined; };
   const band = (ctx: ExtensionContext) => {
     if (!ctx.hasUI || !bandRequested) return;
-    const view = buildConsoleView(state, projection);
-    if (!view.lens) { ctx.ui.setWidget(KEY, undefined); return; }
-    // Keep only one shared band notice, not stages, diagnostics or draft JSON.
-    const short = view.lens.lines.slice(0, 1).map(line => line.map(segment => segment.text).join(""));
-    short.push("/heaven inspect lens · /heaven fill: prefill only");
+    if (!buildConsoleView(state, projection).lens) { ctx.ui.setWidget(KEY, undefined); return; }
+    // An already-requested band renders current state, never a stale draft.
+    // Ordinary events still never register/open a widget or pane.
     ctx.ui.setWidget(KEY, (tui) => ({
       invalidate() {},
       render(width) {
+        const lens = buildConsoleView(state, projection).lens;
+        if (!lens) return [];
+        const short = lens.lines.slice(0, 1).map(line => line.map(segment => segment.text).join(""));
+        short.push("/heaven inspect lens · /heaven fill: prefill only");
         const columns = Math.max(1, Math.min(width, tui.terminal.columns));
         return short.map(line => truncateToWidth(line, columns)).slice(0, Math.min(2, Math.max(0, tui.terminal.rows - 8)));
       },
@@ -112,12 +119,27 @@ export default function consolePi(pi: ExtensionAPI): void {
     closePane(); bandRequested = false; state = initialConsoleState();
     // Replay bounded branch tool results, without copying prompts or writing new transcript entries.
     const branch = ctx.sessionManager.getBranch();
-    for (const entry of branch.slice(-1000)) {
+    const window = branch.slice(-1000);
+    // Match only exact tool-call metadata in this branch. Never retain prompt
+    // bodies or discover transcripts. Read results alone do not identify a path.
+    const calls = new Map<string, { name: string; path?: string; preview?: boolean; complete?: boolean }>();
+    for (const entry of window) {
+      if (entry.type !== "message" || entry.message.role !== "assistant") continue;
+      for (const item of entry.message.content) {
+        if (item.type !== "toolCall" || !["read", "summon"].includes(item.name)) continue;
+        calls.set(item.id, { name: item.name, path: typeof item.arguments.path === "string" ? item.arguments.path : undefined, preview: item.arguments.preview === true, complete: completeRead(item.arguments, undefined) });
+      }
+    }
+    const readsComplete = branch.length <= 1000 && !window.some(entry => entry.type === "message" && entry.message.role === "toolResult" && entry.message.toolName === "read" && !calls.get(entry.message.toolCallId)?.path);
+    for (const entry of window) {
       if (entry.type !== "message" || entry.message.role !== "toolResult") continue;
       const message = entry.message;
       if (message.toolName === "summon") {
         const structured = structuredOf(message.details);
-        if (structured) state = recordEvent(state, eventFromSummonResult(structured), null, "tool", { readObservable: false });
+        if (structured) state = recordEvent(state, eventFromSummonResult(structured, { preview: calls.get(message.toolCallId)?.preview }), null, "tool", { readObservable: readsComplete });
+      } else if (message.toolName === "read" && !message.isError) {
+        const call = calls.get(message.toolCallId);
+        if (call?.name === "read" && call.path && call.complete && completeRead({}, message.details)) state = recordRead(state, resolve(ctx.cwd, call.path), "main agent");
       }
     }
     if (branch.length > 1000) state.status = { ...state.status, skills: null, summons: null };
@@ -131,7 +153,7 @@ export default function consolePi(pi: ExtensionAPI): void {
     if (event.toolName === "summon") {
       const structured = structuredOf(event.details) ?? structuredOf({ content: event.content });
       state = recordEvent(state, eventFromSummonResult(structured, { preview: event.input.preview === true }, event.isError ? { isError: true, text: "Core summon failed" } : undefined), null, "tool");
-    } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string") {
+    } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string" && completeRead(event.input, event.details)) {
       state = recordRead(state, resolve(ctx.cwd, event.input.path), "main agent");
     }
     paint(ctx);

@@ -125,7 +125,7 @@ describe("separate Pi extension", () => {
     f.listen(() => { requests++; throw new Error("Tool policy must not be bypassed"); });
     await f.commands.lens.handler("synthetic", f.ctx);
     expect(requests).toBe(0); expect(f.drafts).toEqual([]);
-    expect(widgetText(f)).toContain("not requested yet; no tool called");
+    expect(widgetText(f)).toContain("no result observed");
     expect(widgetText(f)).not.toMatch(/"preview"|JSON arguments|approval path|Nothing materialized/);
     await f.commands.heaven.handler("fill", f.ctx);
     expect(f.drafts[0]).toContain('"preview":true');
@@ -135,6 +135,7 @@ describe("separate Pi extension", () => {
     expect(f.drafts.at(-1)).toBe("/summon Synthetic Skill");
     expect(f.statuses.every(args => args[0] === "skill-heaven-console")).toBe(true);
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
+    expect(widgetText(f)).not.toContain("no result observed");
     f.handlers.session_shutdown(null, f.ctx);
     expect(f.statuses.at(-1)).toEqual(["skill-heaven-console", undefined]);
   });
@@ -180,6 +181,8 @@ describe("separate Pi extension", () => {
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
     f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
     f.handlers.tool_result({ toolName: "read", isError: true, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
+    f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md", limit: 1 } }, f.ctx);
+    f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" }, details: { truncation: { truncated: true } } }, f.ctx);
     const beforeRead = openPane(f, "inspect session");
     beforeRead.overlay.component.handleInput("\x1b[F");
     expect(beforeRead.text()).toContain("body not read"); await beforeRead.close();
@@ -187,6 +190,18 @@ describe("separate Pi extension", () => {
     const afterRead = openPane(f, "inspect session");
     afterRead.overlay.component.handleInput("\x1b[F");
     expect(afterRead.text()).toContain("body read"); await afterRead.close();
+  });
+  it("restores only paired successful body reads from the active branch metadata", async () => {
+    const f = piFixture();
+    const call = (id: string, name: string, args: any) => ({ type: "message", message: { role: "assistant", content: [{ type: "toolCall", id, name, arguments: args }] } });
+    const returned = (id: string, name: string, details: any, isError = false) => ({ type: "message", message: { role: "toolResult", toolCallId: id, toolName: name, details, isError } });
+    f.ctx.sessionManager.getBranch = () => [call("s", "summon", { preview: false }), returned("s", "summon", result), call("r", "read", { path: "/synthetic/skill/SKILL.md" }), returned("r", "read", {})];
+    f.handlers.session_tree(null, f.ctx);
+    const pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).toContain("body read"); await pane.close();
+    f.ctx.sessionManager.getBranch = () => [];
+    f.handlers.session_tree(null, f.ctx);
+    expect(f.statuses.at(-1)[1]).toContain("0 skills");
   });
   it.each([[40, 80], [40, 40], [18, 28], [10, 5], [8, 40]])("bounds physical rows and columns at %s×%s, including resize and wide text", async (rows, columns) => {
     const f = piFixture(); f.tui.terminal.rows = rows; f.tui.terminal.columns = columns;
@@ -274,7 +289,7 @@ describe("separate Pi extension", () => {
 
   it("works without Core without calling anything and clears drafts on branch change", async () => {
     const f = piFixture(); await f.commands.lens.handler("synthetic", f.ctx);
-    expect(widgetText(f)).toContain("no tool called");
+    expect(widgetText(f)).toContain("no result observed");
     f.handlers.session_tree(null, f.ctx);
     await f.commands.heaven.handler("fill", f.ctx);
     expect(f.drafts).toEqual([]);

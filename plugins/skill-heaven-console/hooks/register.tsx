@@ -157,7 +157,7 @@ async function previewOnce($: EngineInterface, query: string): Promise<Preview> 
     let result
     try {
       result = await $.tool.call({
-        tool: name as `mcp__${string}__${string}`,
+        tool: name as typeof MARKETPLACE_SUMMON_TOOL | typeof LAUNCHER_SUMMON_TOOL,
         query,
         surface: 'any',
         preview: true,

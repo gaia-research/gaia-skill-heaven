@@ -21,7 +21,7 @@ describe("concise defaults across all six harnesses (#196 UX acceptance)", () =>
       const state = { ...initialConsoleState(), band: { kind: "draft" as const, query: "synthetic need" } };
       const view = buildConsoleView(state, host);
       const brief = renderConsoleText(view, { surface: "lens" });
-      expect(brief).toContain("not submitted");
+      expect(brief).toContain("no result observed");
       expect(brief).not.toContain("preview\":true");
       expect(brief).not.toContain("Call the existing");
       const detail = renderConsoleText(view, { surface: "lens", details: true });
