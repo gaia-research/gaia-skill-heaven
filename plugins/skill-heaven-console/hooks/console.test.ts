@@ -101,6 +101,8 @@ interface WorldOptions {
   textTail?: string
   /** answer in the object form carrying structuredContent */
   objectForm?: boolean
+  /** the summon tool is absent (unlisted, calls throw) for this many /lens checks, then connects */
+  connectAfter?: number
   copyOk?: boolean
   fillOk?: boolean
   /** no clock: `$.clock.now` has no implementation, so it throws */
@@ -118,7 +120,8 @@ function world(on: On, reply: () => unknown, options: WorldOptions = {}) {
   const toasts: string[] = []
   const evilCalls: string[] = []
   let agents = 0
-  if (options.clock !== false) mock.clock(on)
+  const clock = options.clock !== false ? mock.clock(on) : null
+  let absentChecks = 0
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('command.register', ($, e) => (names.push(e.name), { value: { command: e.name } }))
   on('session.version', () => ({ value: { version: '2.1.293' } }))
@@ -142,6 +145,10 @@ function world(on: On, reply: () => unknown, options: WorldOptions = {}) {
       evilCalls.push(e.tool)
       return answer(reply())
     }
+    if (e.tool === SUMMON && options.connectAfter !== undefined && absentChecks < options.connectAfter) {
+      absentChecks += 1
+      throw new Error('no such tool')
+    }
     if (e.tool === SUMMON && options.summon !== false) {
       calls.push(e as Record<string, unknown>)
       if (options.abort) throw new Error('aborted')
@@ -163,7 +170,7 @@ function world(on: On, reply: () => unknown, options: WorldOptions = {}) {
     }
     return next(e)
   })
-  return { statuses, reads, calls, fills, copies, names, submitted, toasts, evilCalls, last: () => statuses[statuses.length - 1] }
+  return { clock, statuses, reads, calls, fills, copies, names, submitted, toasts, evilCalls, last: () => statuses[statuses.length - 1] }
 }
 
 const lens = (args: string) =>
@@ -373,10 +380,22 @@ describe('the Lens band', () => {
     await band.unmount()
   })
 
-  test('/lens says so when the summon tool is not connected', async ($, on) => {
-    world(on, () => summonResult(), { summon: false })
+  test('/lens waits for an MCP server still connecting, then previews', async ($, on) => {
+    // observed on 2.1.294: no MCP tool is listed at session.start; servers connect after
+    const w = world(on, () => summonResult({ summoned: [], previewed: [skill('impeccable')] }), { connectAfter: 2 })
     await $.session.start(START)
-    const out = await $.command.run(lens('anything'))
+    const run = $.command.run(lens('make this page accessible'))
+    await w.clock!.advance(10_000)
+    expect((await run).text).toBe('Lens preview shown in the band. Nothing was summoned.')
+    expect(w.calls).toHaveLength(1)
+  })
+
+  test('/lens says so when the summon tool is not connected', async ($, on) => {
+    const w = world(on, () => summonResult(), { summon: false })
+    await $.session.start(START)
+    const run = $.command.run(lens('anything'))
+    await w.clock!.advance(10_000)
+    const out = await run
     expect(out.text).toContain('not connected')
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
@@ -570,9 +589,11 @@ describe('what the model reads', () => {
   })
 
   test('a missing summon tool says so in fixed text', async ($, on) => {
-    world(on, () => summonResult(), { summon: false })
+    const w = world(on, () => summonResult(), { summon: false })
     await $.session.start(START)
-    expect((await $.command.run(lens('x'))).text).toBe('Lens: the summon tool is not connected.')
+    const run = $.command.run(lens('x'))
+    await w.clock!.advance(10_000)
+    expect((await run).text).toBe('Lens: the summon tool is not connected.')
   })
 })
 
@@ -603,7 +624,9 @@ describe('which tool is the summon tool', () => {
     await $.tool.call({ tool: 'mcp__evil-skill-summon__summon', query: 'x', surface: 'any' })
     expect(w.last()).toContain('0 skills')
     w.evilCalls.length = 0
-    const out = await $.command.run(lens('x'))
+    const run = $.command.run(lens('x'))
+    await w.clock!.advance(10_000)
+    const out = await run
     expect(out.text).toBe('Lens: the summon tool is not connected.')
     expect(w.evilCalls).toHaveLength(0)
   })
