@@ -738,11 +738,12 @@ body.vh-hero-page {
 /* ─────────────────────────────────────────────────────────────────────────
    Upper-left explainer — whisper-quiet, dismissable, responsive to mobile.
    Acts 1–4: "What is this?" (the system). Act 5: "Skill entropy" + a sketch.
+   Positioned below the persistent top-left .vha-live bar to avoid overlap.
    ───────────────────────────────────────────────────────────────────────── */
 .vha-info {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
+  top: 58px;
+  left: 8vw;
   z-index: 40;
   pointer-events: auto;
   max-width: min(88vw, 340px);
@@ -826,8 +827,8 @@ body.vh-hero-page {
 }
 .vha-info-nub {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
+  top: 58px;
+  left: 8vw;
   z-index: 40;
   pointer-events: auto;
   width: 22px;
@@ -849,8 +850,8 @@ body.vh-hero-page {
 @media (max-width: 640px) {
   .vha-info,
   .vha-info-nub {
-    left: 14px;
-    top: 12px;
+    left: 16px;
+    top: 68px;
   }
   /* Mobile keeps the "About" word readable — there is no boxed "?" glyph left
      to fall back to (see .vha-info-q below), so hiding the label here would
@@ -1449,6 +1450,12 @@ a.vha-cta-mini:hover,
     z-index: -1;
     background: linear-gradient(to top, var(--vha-bg) 30%, var(--vha-bg-soft) 62%, var(--vha-bg-none) 100%);
     pointer-events: none;
+  }
+
+  /* Keep upper-right .vha-summon clear of the right flank CTA plate (.vha-cta--right) */
+  .vha-ctawrap--flank ~ .vha-summon,
+  .vha-summon {
+    right: calc(3.5vw + min(32vw, 458px) + 20px);
   }
 }
 
