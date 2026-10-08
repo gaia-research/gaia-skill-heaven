@@ -99,7 +99,9 @@ describe("/start renders the compat table (#47 · #161 · #147)", () => {
   });
 
   it("shows blocked profile plans honestly and sources steps from canonical plans", () => {
-    expect(start).toContain("planProfile(harness, profile, 'register')");
+    expect(start).toContain("planProfile(harness, profile, 'register', paths)");
+    expect(start).toContain("profileInstallerCommand(harness.id, profile, platform)");
+    expect(start).toContain("WINDOWS_PLAN_PATHS");
     expect(start).toContain("planSwitch(harness, profile");
     expect(start).toContain("registrationPlan?.kind === 'blocked'");
     expect(start).toContain("PROFILE_PITCH");
@@ -108,7 +110,7 @@ describe("/start renders the compat table (#47 · #161 · #147)", () => {
 
   it("covers what-changes, canonical profile update/remove, and the client-copy caveat", () => {
     expect(start).toMatch(/What changes on your machine/);
-    expect(start).toMatch(/planProfile\(harness, profile, op\)/);
+    expect(start).toMatch(/planProfile\(harness, profile, op, paths\)/);
     expect(start).toMatch(/planSwitch\(harness, profile/);
     expect(start).toMatch(/does not unregister/);
   });
@@ -205,7 +207,9 @@ describe("the front doors send people to /start first (#47)", () => {
 
   it("announces copies and moves focus after a button-driven path change on /start", () => {
     const start = site("src/surfaces/Start.tsx");
-    expect(start).toMatch(/Copied: \$\{copiedLabel\}/);
+    expect(start).toMatch(/await navigator\.clipboard\.writeText\(cmd\)/);
+    expect(start).toMatch(/setCopiedLabel\(`Copied: \$\{label\}`\)/);
+    expect(start).toContain("Copy unavailable. Select the command text");
     expect(start).toContain("selectAndFocus");
     expect(start).toMatch(/id="st-path" tabIndex=\{-1\}/);
   });

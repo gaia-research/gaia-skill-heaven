@@ -10,6 +10,7 @@
 import {
   AGENT_PLUGIN_INSTALL,
   type HarnessPath,
+  type HarnessId,
   type InstallStep,
   type PieceSteps,
   type ProfileId,
@@ -20,6 +21,21 @@ export interface PlanPaths {
   marketplaceDir: string;
   consoleDir: string;
 }
+
+/** Stage-only bootstrap; host registration remains explicit and separate. */
+export function profileInstallerCommand(harness: HarnessId, profile: ProfileId, platform: "posix" | "windows"): string {
+  if (platform === "windows") {
+    const url = AGENT_PLUGIN_INSTALL.windows.replace(/^irm\s+|\s*\|\s*iex$/g, "");
+    return `& ([scriptblock]::Create((Invoke-RestMethod '${url}'))) -Harness ${harness} -Profile ${profile}`;
+  }
+  return `${AGENT_PLUGIN_INSTALL.posix.replace(/\s*\|\s*sh$/, "")} | sh -s -- --harness ${harness} --profile ${profile}`;
+}
+
+export const WINDOWS_PLAN_PATHS: PlanPaths = {
+  pluginDir: "$env:LOCALAPPDATA/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven",
+  marketplaceDir: "$env:LOCALAPPDATA/gaia-skill-heaven-agent-plugin/marketplace",
+  consoleDir: "$env:LOCALAPPDATA/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven-console",
+};
 
 /** The paths the site prints: `$HOME`-relative, matching what the POSIX installer stages by default. */
 export const DEFAULT_PLAN_PATHS: PlanPaths = {

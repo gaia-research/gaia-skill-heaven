@@ -616,7 +616,7 @@ function adapterPath(id) {
     ],
     probe: { version: versions[id], summary: `Saved ${versions[id]} API/layout evidence informed this adapter. Compiled artifact and synthetic conformance tests are NOT an empirical Full compatibility receipt; live install, Lens and console-only removal still need a probe.`, href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` }
   };
-  return { console: console2, core: piece(register(false), update(false), remove(false)), consolePiece: hermes ? null : piece(register(true), update(true), remove(true)), fullBlocked: hermes ? "Hermes installs Git sources. The staged console directory must be packaged as an independent Git root before file:// registration; plain directory registration is not established." : null };
+  return { console: console2, core: piece(register(false), update(false), remove(false)), consolePiece: hermes ? null : piece(register(true), update(true), remove(true)), fullBlocked: null };
 }
 
 // packages/status/src/compat.ts

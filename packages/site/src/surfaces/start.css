@@ -111,6 +111,15 @@
   color: var(--st-dim);
 }
 
+/* ------------------------------------------------------ profile lifecycle */
+.st .st-profile { margin: 28px 0 8px; }
+.st .st-profile .st-opt__ver { font-family: var(--sh-sans); font-size: 14px; letter-spacing: normal; }
+.st .st-profile-ops { margin: 28px 0; padding: 20px 0; border-block: 1px solid var(--st-line); }
+.st .st-profile-ops summary { cursor: pointer; padding: 8px 0; }
+.st .st-profile-ops[open] summary { margin-bottom: 16px; }
+.st .st-profile-ops h4 { margin: 24px 0 10px; }
+.st .st-profile-ops .st-cmd { margin-block: 10px; }
+
 /* --------------------------------------------------- harness radio group */
 .st-opts {
   display: grid;
