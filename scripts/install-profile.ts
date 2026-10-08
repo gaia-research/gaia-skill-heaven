@@ -10,7 +10,12 @@ import { planProfile, planSwitch, renderRun, type PlanPaths, type RenderedStep }
 import { renderInstallEpilogue } from "../packages/status/src/install-epilogue.js";
 
 const MARKER = ".skill-heaven-agent-plugin-install";
-interface Receipt { schema: "skill-heaven/install@1"; profile: ProfileId; harness: HarnessId | null; registered: boolean; incomplete?: boolean; }
+type Operation = "register" | "update" | "switch" | "remove";
+interface Transaction {
+  operation: Operation; previousProfile: ProfileId | null; target: ProfileId;
+  steps: string[]; completed: string[]; staged: boolean; pending?: string;
+}
+interface Receipt { schema: "skill-heaven/install@1"; profile: ProfileId; harness: HarnessId | null; registered: boolean; incomplete?: boolean; transaction?: Transaction; }
 interface Options { home: string; source?: string; profile?: ProfileId; harness?: HarnessId; register: boolean; uninstall: boolean; quiet: boolean; printPath: boolean; }
 
 export function parseOptions(args: string[], env = process.env): Options {
@@ -44,7 +49,55 @@ function previousAt(home: string): Receipt | null {
   if (!existsSync(join(home, "profile.json"))) return null; // legacy runtime-only artifact
   const r = JSON.parse(readFileSync(join(home, "profile.json"), "utf8")) as Receipt;
   if (r.schema !== "skill-heaven/install@1" || !["core", "full"].includes(r.profile) || (r.harness !== null && !HARNESS_PATHS.some(h => h.id === r.harness)) || typeof r.registered !== "boolean") throw new Error("invalid installation receipt; refusing mutation");
+  if (r.incomplete !== undefined && typeof r.incomplete !== "boolean") throw new Error("invalid installation receipt; refusing mutation");
+  if (r.incomplete && !r.transaction) throw new Error("legacy incomplete receipt: host ownership is unknown; recover the original registration manually before changing this artifact");
+  if (r.transaction) {
+    const t = r.transaction;
+    if (!r.incomplete || !r.harness || !["register", "update", "switch", "remove"].includes(t.operation) || !["core", "full"].includes(t.target) || (t.previousProfile !== null && !["core", "full"].includes(t.previousProfile)) || typeof t.staged !== "boolean" || !Array.isArray(t.steps) || !Array.isArray(t.completed) || t.steps.some(s => typeof s !== "string") || t.completed.some(s => typeof s !== "string") || t.completed.length > t.steps.length || t.completed.some((s, i) => s !== t.steps[i]) ||
+      (t.operation === "register" && (r.registered || t.previousProfile !== null)) ||
+      (t.operation !== "register" && (!r.registered || t.previousProfile === null)) ||
+      (t.operation === "switch" && t.previousProfile === t.target) ||
+      (t.operation !== "switch" && t.previousProfile !== null && t.previousProfile !== t.target) ||
+      (r.profile !== (t.staged ? t.target : t.previousProfile)) ||
+      (!t.staged && !(t.operation === "switch" && t.target === "core"))) throw new Error("invalid transaction checkpoint; refusing mutation");
+    let steps: RenderedStep[];
+    try { steps = transactionSteps(r.harness, t, pathsFor(home)); }
+    catch { throw new Error("operation contract unavailable; keep the artifact and checkpoint, recover with the original installer contract before retrying"); }
+    if (JSON.stringify(t.steps) !== JSON.stringify(steps.map(stepIdentity))) throw new Error("operation contract changed; keep the artifact and checkpoint, recover with the original installer contract before retrying");
+    if (t.pending !== undefined) throw new Error("interrupted host step has an unknown outcome; keep sources and checkpoint, reconcile that canonical step with the host before retrying; automatic removal is unsafe");
+  }
   return r;
+}
+function saveReceipt(home: string, receipt: Receipt): void {
+  const file = join(home, "profile.json");
+  writeFileSync(file + ".next", JSON.stringify(receipt, null, 2) + "\n");
+  renameSync(file + ".next", file);
+}
+function stepIdentity(s: RenderedStep): string {
+  return JSON.stringify({ piece: s.piece, run: s.run, argv: s.argv, stdin: s.stdin ?? "" });
+}
+function transactionSteps(harness: HarnessId, t: Transaction, paths: PlanPaths): RenderedStep[] {
+  const h = HARNESS_PATHS.find(h => h.id === harness)!;
+  const plan = t.operation === "switch" ? planSwitch(h, t.previousProfile!, t.target, paths) : planProfile(h, t.target, t.operation, paths);
+  if (plan.kind === "blocked") throw new Error(plan.reason);
+  return plan.steps;
+}
+function checkpoint(home: string, receipt: Receipt): void {
+  const t = receipt.transaction!;
+  const steps = transactionSteps(receipt.harness!, t, pathsFor(home));
+  for (let i = t.completed.length; i < steps.length; i++) {
+    // A process interruption or failed post-success write cannot be mistaken
+    // for a known failure. Such an ambiguous step requires manual recovery.
+    t.pending = stepIdentity(steps[i]!); saveReceipt(home, receipt);
+    try { executeSteps([steps[i]!], pathsFor(home)); }
+    catch (e) { delete t.pending; saveReceipt(home, receipt); throw e; }
+    t.completed.push(t.pending); delete t.pending;
+    saveReceipt(home, receipt);
+  }
+}
+function finish(home: string, receipt: Receipt): void {
+  receipt.registered = true; receipt.incomplete = false; delete receipt.transaction;
+  saveReceipt(home, receipt);
 }
 function cleanGitEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -79,26 +132,39 @@ export function install(o: Options): void {
   const paths = pathsFor(o.home);
   if (o.printPath) { console.log(paths.pluginDir); return; }
   const previous = previousAt(o.home);
+  if (previous?.harness && o.harness && previous.harness !== o.harness && (previous.registered || previous.incomplete)) throw new Error("uninstall the registered harness before changing --harness");
+  if (previous?.transaction) {
+    const t = previous.transaction;
+    if (!o.register || o.uninstall !== (t.operation === "remove") || (o.profile && o.profile !== t.target)) throw new Error(`unfinished ${t.operation}: keep the artifact; retry --register${t.operation === "remove" ? " --uninstall" : ` --profile ${t.target}`} to resume the exact operation before requesting another operation; automatic partial-registration cleanup is unsafe`);
+    if (t.staged && t.operation !== "remove") {
+      checkpoint(o.home, previous); finish(o.home, previous);
+      console.log(`Resumed ${t.operation} for ${previous.harness}.`); return;
+    }
+  }
   if (o.uninstall) {
     if (!existsSync(o.home)) { console.log(`Skill Heaven Agent Plugin is not installed at ${o.home}`); return; }
     if ((previous?.registered || previous?.incomplete) && !o.register) throw new Error("registered installation: use --uninstall --register to remove installer-owned host registrations first");
     if (o.register && previous?.harness && (previous.registered || previous.incomplete)) {
       const h = HARNESS_PATHS.find(h => h.id === previous.harness)!;
-      const p = planProfile(h, previous.profile, "remove", paths); if (p.kind === "blocked") throw new Error(p.reason);
-      executeSteps(p.steps, paths);
+      if (!previous.transaction) {
+        const t: Transaction = { operation: "remove", previousProfile: previous.profile, target: previous.profile, steps: [], completed: [], staged: true };
+        t.steps = transactionSteps(h.id, t, paths).map(stepIdentity);
+        previous.transaction = t; previous.incomplete = true; saveReceipt(o.home, previous);
+      }
+      checkpoint(o.home, previous);
     }
     rmSync(o.home, { recursive: true });
     console.log(`Removed the local Skill Heaven Agent Plugin artifact from ${o.home}`);
     console.log(previous?.registered ? "Installer-managed host registrations were removed. Other client-managed copies are untouched." : "Client-managed plugin copies and registrations were not removed.");
     return;
   }
-  const profile = o.profile ?? previous?.profile ?? "core";
+  const profile = o.profile ?? previous?.transaction?.target ?? previous?.profile ?? "core";
   const harness = o.harness ?? previous?.harness ?? null;
   const h = harness === null ? null : HARNESS_PATHS.find(h => h.id === harness)!;
   if (profile === "full" && (!h || h.consolePiece === null)) throw new Error(h?.fullBlocked ?? "Full requires --harness claude|pi|codex|hermes|grok|agy");
   if (o.register && (!h || h.id === "other")) throw new Error("--register requires one known harness; an unknown client owns its own registration");
   if (previous?.harness && previous.harness !== harness && (previous.registered || previous.incomplete)) throw new Error("uninstall the registered harness before changing --harness");
-  if (previous?.profile === "full" && profile === "core" && (previous.registered || previous.incomplete) && !o.register) throw new Error("Full → Core requires --register to remove the installer-owned console registration");
+  if (previous?.registered && previous.profile !== profile && !o.register) throw new Error("registered profile switch requires --register to change only the installer-owned console registration");
   if (!o.source) throw new Error("install requires an extracted --source archive");
   const source = resolve(o.source);
   for (const file of ["plugin.json", "mcp.json", "skills/summon/SKILL.md", "mcp/skill-summon.mjs"]) required(join(source, "plugins", "skill-heaven", file));
@@ -120,25 +186,34 @@ export function install(o: Options): void {
     gitRepository(staged.pluginDir); if (profile === "full") gitRepository(staged.consoleDir);
     cpSync(join(source, "scripts", "install-profile.mjs"), join(next, "install-profile.mjs"));
     writeFileSync(join(next, MARKER), "skill-heaven/install@1\n"); uninstallScripts(next);
-    const receipt: Receipt = { schema: "skill-heaven/install@1", profile, harness, registered: previous?.registered ?? false };
-    // A registration failure leaves a truthful incomplete receipt and usable
-    // artifact for retry. Never delete new code a host may now reference.
-    receipt.incomplete = o.register || previous?.incomplete || false;
-    if (o.register && h && previous?.profile === "full" && profile === "core") {
-      // Remove against the still-present console artifact before replacing it.
-      const down = planSwitch(h, "full", "core", paths); if (down.kind === "blocked") throw new Error(down.reason);
-      executeSteps(down.steps, paths);
-    }
-    writeFileSync(join(next, "profile.json"), JSON.stringify(receipt, null, 2) + "\n");
-    if (existsSync(o.home)) renameSync(o.home, old);
-    try { renameSync(next, o.home); } catch (e) { if (existsSync(old)) renameSync(old, o.home); throw e; }
+    const receipt: Receipt = { schema: "skill-heaven/install@1", profile, harness, registered: previous?.registered ?? false, incomplete: false };
     if (o.register && h) {
-      // Re-registration refreshes cached artifacts. Core is updated, not
-      // removed, on a profile switch. The console is removed first on downgrade.
-      const plan = planProfile(h, profile, previous?.registered && previous.profile === profile ? "update" : "register", paths);
-      if (plan.kind === "blocked") throw new Error(plan.reason);
-      executeSteps(plan.steps, paths); receipt.registered = true; receipt.incomplete = false;
-      writeFileSync(join(o.home, "profile.json"), JSON.stringify(receipt, null, 2) + "\n");
+      const t: Transaction = previous?.transaction ?? {
+        operation: !previous?.registered ? "register" : previous.profile === profile ? "update" : "switch",
+        previousProfile: previous?.registered ? previous.profile : null, target: profile,
+        steps: [], completed: [], staged: true,
+      };
+      if (!previous?.transaction) t.steps = transactionSteps(h.id, t, paths).map(stepIdentity);
+      receipt.transaction = t; receipt.incomplete = true;
+      if (t.operation === "switch" && profile === "core") {
+        // Checkpoint removal while the console source/helper is still present.
+        // A failed stage/rename leaves this recoverable receipt at the old home.
+        t.staged = false; previous!.transaction = t; previous!.incomplete = true;
+        saveReceipt(o.home, previous!); checkpoint(o.home, previous!);
+      }
+      receipt.transaction = { ...t, staged: true };
+    }
+    saveReceipt(next, receipt);
+    if (existsSync(o.home)) renameSync(o.home, old);
+    try { renameSync(next, o.home); } catch (e) {
+      if (existsSync(old)) {
+        try { renameSync(old, o.home); }
+        catch { throw new Error(`could not restore the previous artifact; it is preserved at ${old}; restore it to ${o.home} before retrying`); }
+      }
+      throw e;
+    }
+    if (o.register && h) {
+      checkpoint(o.home, receipt); finish(o.home, receipt);
     }
     if (o.quiet) console.log(`${paths.pluginDir}\n${paths.marketplaceDir}`);
     else {
@@ -147,7 +222,10 @@ export function install(o: Options): void {
       if (o.register) console.log(`Registered ${profile} for ${h!.name} using its own plugin manager. Restart the harness (Pi: /reload).`);
       else console.log("Artifact staged only. Run the printed registration/removal commands; cached client copies do not refresh automatically.");
     }
-  } finally { rmSync(work, { recursive: true, force: true }); }
+  } finally {
+    // Never delete the only remaining source/helper when restoration failed.
+    if (!(existsSync(old) && !existsSync(o.home))) rmSync(work, { recursive: true, force: true });
+  }
 }
 function onPath(bin: string): boolean {
   const separator = process.platform === "win32" ? ";" : ":";

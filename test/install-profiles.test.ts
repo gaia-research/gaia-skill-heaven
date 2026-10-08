@@ -54,7 +54,7 @@ function makeSandbox(label: string, harnesses: readonly HarnessPath[], seedCore 
   // the failed-registration receipt path to be asserted deterministically.
   for (const executable of binaries) {
     if (executable.includes("/")) continue;
-    writeFileSync(join(bin, executable), `#!/usr/bin/env node\nconst fs=require('node:fs');\nconst row={exe:${JSON.stringify(executable)},argv:process.argv.slice(2)};\nfs.appendFileSync(process.env.HOST_ARGV_LOG,JSON.stringify(row)+'\\n');\nprocess.exit(process.env.FAIL_HOST==='${executable}'?73:0);\n`, { mode: 0o755 });
+    writeFileSync(join(bin, executable), `#!/usr/bin/env node\nconst fs=require('node:fs');\nconst row={exe:${JSON.stringify(executable)},argv:process.argv.slice(2)};\nfs.appendFileSync(process.env.HOST_ARGV_LOG,JSON.stringify(row)+'\\n');\nconst n=fs.readFileSync(process.env.HOST_ARGV_LOG,'utf8').trim().split('\\n').length;\nprocess.exit(process.env.FAIL_HOST==='${executable}'||Number(process.env.FAIL_STEP)===n?73:0);\n`, { mode: 0o755 });
   }
 
   const paths: PlanPaths = {
@@ -83,9 +83,9 @@ function makeSandbox(label: string, harnesses: readonly HarnessPath[], seedCore 
   return { status: core.status, stdout: core.stdout, stderr: core.stderr, home: installHome, log, marker, paths };
 }
 
-function call(result: RunResult, args: string[], failHost?: string) {
+function call(result: RunResult, args: string[], failHost?: string, extraEnv: Record<string, string> = {}) {
   const bin = dirname(result.log);
-  const env = { ...process.env, PATH: join(bin, "sealed PATH"), HOME: dirname(dirname(result.home)), HOST_ARGV_LOG: result.log, SKILL_HEAVEN_PLUGIN_HOME: result.home, ...(failHost ? { FAIL_HOST: failHost } : {}) };
+  const env = { ...process.env, PATH: join(bin, "sealed PATH"), HOME: dirname(dirname(result.home)), HOST_ARGV_LOG: result.log, SKILL_HEAVEN_PLUGIN_HOME: result.home, ...(failHost ? { FAIL_HOST: failHost } : {}), ...extraEnv };
   return spawnSync(process.execPath, [GENERATED_INSTALLER, "--source", REPO, "--home", result.home, ...args], { cwd: REPO, encoding: "utf8", env, timeout: 30_000 });
 }
 function receipt(home: string): { profile: string; harness: string | null; registered: boolean; incomplete?: boolean } {
@@ -110,8 +110,13 @@ function planned(harness: HarnessPath, profile: "core" | "full", op: "register" 
       .replaceAll("{{MARKETPLACE_DIR}}", paths.marketplaceDir))] };
   });
 }
-function countFor(observed: ReturnType<typeof lines>, expected: Array<{ exe: string; argv: string[] }>) {
-  return observed.filter((row) => expected.some((step) => step.exe === row.exe && JSON.stringify(step.argv) === JSON.stringify(row.argv))).length;
+function switched(h: HarnessPath, from: "core" | "full", to: "core" | "full", paths: PlanPaths) {
+  const p = planSwitch(h, from, to, paths);
+  if (p.kind === "blocked") throw new Error(p.reason);
+  return p.steps.map(s => {
+    const argv = s.argv!.map(v => v.replaceAll("{{PLUGIN_DIR}}", paths.pluginDir).replaceAll("{{CONSOLE_DIR}}", paths.consoleDir).replaceAll("{{MARKETPLACE_DIR}}", paths.marketplaceDir));
+    return { exe: argv[0]!, argv: argv.slice(1) };
+  });
 }
 
 const lifecycleHarnesses = HARNESS_PATHS.filter((h) => h.id !== "other");
@@ -130,13 +135,23 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const coreUpdate = planned(harness, "core", "update", result.paths);
     const repeatedCore = call(result, ["--profile", "core", "--harness", harness.id, "--register"]);
     expect(repeatedCore.status, repeatedCore.stderr).toBe(0);
-    for (const step of coreUpdate) expect(lines(result.log).slice(beforeCoreUpdate).some((row) => row.exe === step.exe && JSON.stringify(row.argv) === JSON.stringify(step.argv))).toBe(true);
+    expect(lines(result.log).slice(beforeCoreUpdate)).toEqual(coreUpdate);
     expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
 
     const fullPlan = planProfile(harness, "full", "register", result.paths);
-    if (fullPlan.kind === "blocked") throw new Error(`Full unexpectedly blocked for ${harness.id}: ${fullPlan.reason}`);
+    if (fullPlan.kind === "blocked") {
+      const before = lines(result.log).length;
+      expect(call(result, ["--profile", "full", "--register"]).status).not.toBe(0);
+      expect(lines(result.log)).toHaveLength(before);
+      expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
+      expect(call(result, ["--uninstall", "--register"]).status).toBe(0);
+      expect(lines(result.log).slice(before)).toEqual(planned(harness, "core", "remove", result.paths));
+      return;
+    }
+    const beforeUp = lines(result.log).length;
     const toFull = call(result, ["--profile", "full", "--harness", harness.id, "--register"]);
     expect(toFull.status, toFull.stderr).toBe(0);
+    expect(lines(result.log).slice(beforeUp)).toEqual(switched(harness, "core", "full", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
     expect(existsSync(result.paths.consoleDir)).toBe(true);
@@ -148,9 +163,11 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const fullUpdate = planned(harness, "full", "update", result.paths);
     const repeatedFull = call(result, ["--profile", "full", "--harness", harness.id, "--register"]);
     expect(repeatedFull.status, repeatedFull.stderr).toBe(0);
-    for (const step of fullUpdate) expect(lines(result.log).slice(beforeFullUpdate).some((row) => row.exe === step.exe && JSON.stringify(row.argv) === JSON.stringify(step.argv))).toBe(true);
+    expect(lines(result.log).slice(beforeFullUpdate)).toEqual(fullUpdate);
+    const beforeDown = lines(result.log).length;
     const toCore = call(result, ["--profile", "core", "--harness", harness.id, "--register"]);
     expect(toCore.status, toCore.stderr).toBe(0);
+    expect(lines(result.log).slice(beforeDown)).toEqual(switched(harness, "full", "core", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
     expect(existsSync(result.paths.consoleDir)).toBe(false);
@@ -166,12 +183,15 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(uninstall.status, uninstall.stderr).toBe(0);
     expect(existsSync(result.home)).toBe(false);
     const afterUninstall = lines(result.log).slice(beforeUninstall);
-    for (const step of removePlan) expect(afterUninstall.some((row) => row.exe === step.exe && JSON.stringify(row.argv) === JSON.stringify(step.argv))).toBe(true);
+    expect(afterUninstall).toEqual(removePlan);
   }, 120_000);
 
   it.each(lifecycleHarnesses.map((h) => [h.name, h] as const))("supports a fresh Full install on %s", (_name, harness) => {
     const result = makeSandbox(`fresh-full-${harness.id}`, [harness], false);
     const installed = call(result, ["--profile", "full", "--harness", harness.id, "--register"]);
+    if (harness.consolePiece === null) {
+      expect(installed.status).not.toBe(0); expect(existsSync(result.home)).toBe(false); expect(lines(result.log)).toEqual([]); return;
+    }
     expect(installed.status, installed.stderr).toBe(0);
     expect(receipt(result.home)).toMatchObject({ profile: "full", harness: harness.id, registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
@@ -189,6 +209,173 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(failed.status).not.toBe(0);
     expect(receipt(result.home)).toMatchObject({ registered: false, incomplete: true });
   }, 60_000);
+
+  it.each([1, 2])("checkpoints a registration failure at step %s and resumes only unfinished steps", (failStep) => {
+    const h = HARNESS_PATHS.find(h => h.id === "codex")!;
+    const r = makeSandbox(`checkpoint-register-${failStep}`, [h], false);
+    const expected = planned(h, "full", "register", r.paths);
+    const failed = call(r, ["--profile", "full", "--harness", h.id, "--register"], undefined, { FAIL_STEP: String(failStep) });
+    expect(failed.status).not.toBe(0);
+    expect(lines(r.log)).toEqual(expected.slice(0, failStep));
+    const saved = JSON.parse(readFileSync(join(r.home, "profile.json"), "utf8"));
+    expect(saved.transaction.operation).toBe("register");
+    expect(saved.transaction.previousProfile).toBe(null);
+    expect(saved.transaction.completed).toEqual(saved.transaction.steps.slice(0, failStep - 1));
+    const before = lines(r.log).length;
+    expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
+    expect(call(r, ["--profile", "core", "--register"]).status).not.toBe(0);
+    expect(call(r, ["--harness", "pi", "--register"]).status).not.toBe(0);
+    expect(lines(r.log)).toHaveLength(before);
+    expect(existsSync(r.paths.consoleDir)).toBe(true);
+    const retry = call(r, ["--register", "--source", join(root, "missing-source")]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(before)).toEqual(expected.slice(failStep - 1));
+    expect(receipt(r.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
+  });
+
+  it("resumes an incomplete update, not a registration plan", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "codex")!;
+    const r = makeSandbox("checkpoint-update", [h]);
+    const before = lines(r.log).length;
+    const expected = planned(h, "core", "update", r.paths);
+    expect(call(r, ["--register"], undefined, { FAIL_STEP: String(before + 2) }).status).not.toBe(0);
+    const n = lines(r.log).length;
+    expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
+    expect(lines(r.log)).toHaveLength(n);
+    const retry = call(r, ["--register"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(n)).toEqual(expected.slice(1));
+  });
+
+  it("checkpoints partial uninstall and keeps both sources until removal resolves", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("checkpoint-remove", [h], false);
+    expect(call(r, ["--profile", "full", "--harness", h.id, "--register"]).status).toBe(0);
+    const before = lines(r.log).length;
+    const expected = planned(h, "full", "remove", r.paths);
+    expect(call(r, ["--uninstall", "--register"], undefined, { FAIL_STEP: String(before + 2) }).status).not.toBe(0);
+    expect(lines(r.log).slice(before)).toEqual(expected);
+    expect(existsSync(r.paths.pluginDir)).toBe(true);
+    expect(existsSync(r.paths.consoleDir)).toBe(true);
+    expect(existsSync(join(r.home, "install-profile.mjs"))).toBe(true);
+    const t = JSON.parse(readFileSync(join(r.home, "profile.json"), "utf8")).transaction;
+    expect(t.completed).toEqual(t.steps.slice(0, 1));
+    const n = lines(r.log).length;
+    const retry = call(r, ["--uninstall", "--register"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(n)).toEqual(expected.slice(1));
+    expect(existsSync(r.home)).toBe(false);
+  });
+
+  it("does not remove host registrations on stage-only downgrade or uninstall", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("stage-only", [h], false);
+    expect(call(r, ["--profile", "full", "--harness", h.id]).status).toBe(0);
+    expect(call(r, ["--profile", "core", "--register"]).status).toBe(0);
+    expect(lines(r.log)).toEqual(planned(h, "core", "register", r.paths));
+    const downgrade = makeSandbox("stage-only-downgrade", [h], false);
+    expect(call(downgrade, ["--profile", "full", "--harness", h.id]).status).toBe(0);
+    expect(call(downgrade, ["--profile", "core"]).status).toBe(0);
+    expect(lines(downgrade.log)).toEqual([]);
+    const stage = makeSandbox("stage-only-uninstall", [h], false);
+    expect(call(stage, ["--profile", "full", "--harness", h.id]).status).toBe(0);
+    expect(call(stage, ["--uninstall", "--register"]).status).toBe(0);
+    expect(lines(stage.log)).toEqual([]);
+  });
+
+  it("preserves receipt defaults and upgrades a legacy marked Core artifact", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("legacy", [h], false);
+    expect(call(r, []).status).toBe(0);
+    rmSync(join(r.home, "profile.json"));
+    expect(call(r, ["--harness", h.id, "--register"]).status).toBe(0);
+    const before = lines(r.log).length;
+    expect(call(r, ["--register"]).status).toBe(0);
+    expect(receipt(r.home)).toMatchObject({ profile: "core", harness: h.id, registered: true });
+    expect(lines(r.log).slice(before)).toEqual(planned(h, "core", "update", r.paths));
+    expect(call(r, ["--harness", "codex", "--uninstall", "--register"]).status).not.toBe(0);
+  });
+
+  it("refuses drifted or malformed checkpoints without executing stored argv", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "codex")!;
+    const r = makeSandbox("contract-drift", [h], false);
+    expect(call(r, ["--harness", h.id, "--register"], undefined, { FAIL_STEP: "2" }).status).not.toBe(0);
+    const file = join(r.home, "profile.json");
+    const original = JSON.parse(readFileSync(file, "utf8"));
+    const before = lines(r.log).length;
+    for (const mutate of [
+      (r: typeof original) => { r.transaction.steps[1] = JSON.stringify({ argv: ["node", "--evil"] }); },
+      (r: typeof original) => { r.transaction.completed = ["not-canonical"]; },
+      (r: typeof original) => { delete r.transaction; },
+      (r: typeof original) => { r.transaction.pending = r.transaction.steps[1]; },
+    ]) {
+      const changed = structuredClone(original); mutate(changed); writeFileSync(file, JSON.stringify(changed));
+      const retry = call(r, ["--register"]);
+      expect(retry.status).not.toBe(0);
+      expect(lines(r.log)).toHaveLength(before);
+      expect(existsSync(r.paths.pluginDir)).toBe(true);
+    }
+  });
+
+  it.each(["stage", "rename"])("keeps old sources and recovery receipt safe after a downgrade %s failure", (fault) => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox(`downgrade-${fault}`, [h], false);
+    expect(call(r, ["--profile", "full", "--harness", h.id, "--register"]).status).toBe(0);
+    const before = lines(r.log).length;
+    // Inject filesystem failures in the child only; never add production fault knobs.
+    const preload = join(dirname(r.log), "fault.cjs");
+    writeFileSync(preload, `const fs=require('node:fs');
+const rename=fs.renameSync, copy=fs.cpSync;
+fs.renameSync=function(a,b,...args){if(process.env.TEST_FAULT==='rename'&&a.endsWith('/install')&&b===process.env.SKILL_HEAVEN_PLUGIN_HOME)throw new Error('synthetic rename failure');return rename(a,b,...args)};
+fs.cpSync=function(a,b,...args){if(process.env.TEST_FAULT==='stage'&&b.endsWith('/install-profile.mjs'))throw new Error('synthetic staging failure');return copy(a,b,...args)};
+require('node:module').syncBuiltinESMExports();`);
+    const failed = call(r, ["--profile", "core", "--register"], undefined, { NODE_OPTIONS: `--require ${JSON.stringify(preload)}`, TEST_FAULT: fault });
+    expect(failed.status).not.toBe(0);
+    expect(existsSync(r.paths.pluginDir)).toBe(true);
+    expect(existsSync(r.paths.consoleDir)).toBe(true);
+    expect(receipt(r.home).profile).toBe("full");
+    const expected = switched(h, "full", "core", r.paths);
+    expect(lines(r.log).slice(before)).toEqual(fault === "rename" ? expected : []);
+    if (fault === "rename") {
+      const t = JSON.parse(readFileSync(join(r.home, "profile.json"), "utf8")).transaction;
+      expect(t.staged).toBe(false); expect(t.completed).toEqual(t.steps);
+    }
+    const n = lines(r.log).length;
+    const retry = call(r, ["--profile", "core", "--register"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(n)).toEqual(fault === "rename" ? [] : expected);
+    expect(receipt(r.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
+    expect(existsSync(r.paths.consoleDir)).toBe(false);
+  });
+
+  it("resumes a failed Core → Full switch without touching Core", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("upgrade-host-failure", [h]);
+    const before = lines(r.log).length;
+    expect(call(r, ["--profile", "full", "--register"], "pi").status).not.toBe(0);
+    expect(lines(r.log).slice(before)).toEqual(switched(h, "core", "full", r.paths));
+    const t = JSON.parse(readFileSync(join(r.home, "profile.json"), "utf8")).transaction;
+    expect(t).toMatchObject({ operation: "switch", previousProfile: "core", target: "full", completed: [] });
+    const n = lines(r.log).length;
+    expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
+    const retry = call(r, ["--register"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(n)).toEqual(switched(h, "core", "full", r.paths));
+  });
+
+  it("retains the console and checkpoint after failed downgrade removal", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("downgrade-host-failure", [h], false);
+    expect(call(r, ["--profile", "full", "--harness", h.id, "--register"]).status).toBe(0);
+    expect(call(r, ["--profile", "core", "--register"], "pi").status).not.toBe(0);
+    expect(existsSync(r.paths.consoleDir)).toBe(true);
+    expect(receipt(r.home)).toMatchObject({ profile: "full", registered: true, incomplete: true });
+    const before = lines(r.log).length;
+    expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
+    const retry = call(r, ["--register"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(lines(r.log).slice(before)).toEqual(switched(h, "full", "core", r.paths));
+  });
 
   it("fails closed for an unknown harness without creating or changing an install", () => {
     const result = makeSandbox("unknown-harness", [], false);
