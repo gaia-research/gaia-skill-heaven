@@ -276,17 +276,17 @@ export function reduceStatus(status: SkillHeavenStatus, event: SummonEvent): Ski
 }
 
 /** Mark the skill whose materialized `SKILL.md` was read as in context. */
-export function markRead(event: SummonEvent, readPath: string): SummonEvent {
+export function markRead(event: SummonEvent, readPath: string, stage: "in-context" | "read-unobserved" = "in-context"): SummonEvent {
   if (event.kind !== "summoned") return event;
   const norm = readPath.replace(/\\/g, "/");
   let changed = false;
   const skills = event.skills.map((s) => {
-    if (!s.path || s.stage === "in-context") return s;
+    if (!s.path || s.stage === "in-context" || s.stage === stage) return s;
     let root = s.path.replace(/\\/g, "/");
     while (root.endsWith("/")) root = root.slice(0, -1);
     if (norm === `${root}/SKILL.md`) {
       changed = true;
-      return { ...s, stage: "in-context" as const };
+      return { ...s, stage };
     }
     return s;
   });

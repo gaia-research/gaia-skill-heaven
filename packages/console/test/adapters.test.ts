@@ -13,7 +13,10 @@ import { visibleWidth } from "@earendil-works/pi-tui";
 // Exercise the owned typed source, not a potentially stale integration bundle.
 // pi-tui stays host-provided in production; here its public exports are resolved
 // explicitly because this in-memory test module has no package directory.
-const built = await build({ entryPoints: [fileURLToPath(new URL("../extension/console.ts", import.meta.url))], bundle: true, write: false, format: "esm", platform: "node", external: ["@earendil-works/pi-tui"] });
+const built = await build({ entryPoints: [fileURLToPath(new URL("../extension/console.ts", import.meta.url))], bundle: true, write: false, format: "esm", platform: "node", external: ["@earendil-works/pi-tui"], plugins: [{ name: "pinned-host-version", setup(builder) {
+  builder.onResolve({ filter: /^@earendil-works\/pi-coding-agent$/ }, () => ({ path: "host-version", namespace: "test-pi" }));
+  builder.onLoad({ filter: /.*/, namespace: "test-pi" }, () => ({ contents: 'export const VERSION = "1.1.0";', loader: "js" }));
+} }] });
 const code = built.outputFiles![0]!.text.replaceAll('"@earendil-works/pi-tui"', JSON.stringify(pathToFileURL(createRequire(import.meta.url).resolve("@earendil-works/pi-tui")).href));
 const { default: consolePi } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
 
@@ -102,10 +105,10 @@ function piFixture() {
     }),
   };
   let listener: Function | undefined;
-  const api: any = { on: (name: string, cb: Function) => { handlers[name] = cb; }, registerCommand: (name: string, c: any) => { commands[name] = c; }, events: { emit: (channel: string, req: any) => listener?.(channel, req) } };
+  const api: any = { getAllTools: () => [], on: (name: string, cb: Function) => { handlers[name] = cb; }, registerCommand: (name: string, c: any) => { commands[name] = c; }, events: { emit: (channel: string, req: any) => listener?.(channel, req) } };
   const ctx: any = { hasUI: true, mode: "tui", cwd: "/synthetic", ui, sessionManager: { getBranch: () => [] } };
   consolePi(api); handlers.session_start!(null, ctx);
-  return { handlers, commands, ctx, statuses, widgets, drafts, tui, theme, overlays, notices, listen: (cb: Function) => { listener = cb; } };
+  return { api, handlers, commands, ctx, statuses, widgets, drafts, tui, theme, overlays, notices, listen: (cb: Function) => { listener = cb; } };
 }
 function widgetText(f: ReturnType<typeof piFixture>): string {
   const value = f.widgets.at(-1)?.[1];
@@ -185,23 +188,59 @@ describe("separate Pi extension", () => {
     f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" }, details: { truncation: { truncated: true } } }, f.ctx);
     const beforeRead = openPane(f, "inspect session");
     beforeRead.overlay.component.handleInput("\x1b[F");
-    expect(beforeRead.text()).toContain("body not read"); await beforeRead.close();
-    f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
+    expect(beforeRead.text()).toMatch(/what entered\s+—\s+unknown/); await beforeRead.close();
+    f.api.getAllTools = () => [{ name: "read", sourceInfo: { source: "builtin", path: "builtin:read" } }];
+    f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" }, content: [{ type: "text", text: "whole body" }], structuredContent: "whole body" }, f.ctx);
     const afterRead = openPane(f, "inspect session");
     afterRead.overlay.component.handleInput("\x1b[F");
     expect(afterRead.text()).toContain("body read"); await afterRead.close();
   });
-  it("restores only paired successful body reads from the active branch metadata", async () => {
+  it("restores paired reads as unknown when execution-time provenance is unavailable", async () => {
     const f = piFixture();
     const call = (id: string, name: string, args: any) => ({ type: "message", message: { role: "assistant", content: [{ type: "toolCall", id, name, arguments: args }] } });
     const returned = (id: string, name: string, details: any, isError = false) => ({ type: "message", message: { role: "toolResult", toolCallId: id, toolName: name, details, isError } });
-    f.ctx.sessionManager.getBranch = () => [call("s", "summon", { preview: false }), returned("s", "summon", result), call("r", "read", { path: "/synthetic/skill/SKILL.md" }), returned("r", "read", {})];
+    f.ctx.sessionManager.getBranch = () => [call("s", "summon", { preview: false }), returned("s", "summon", result), call("r", "read", { path: "/synthetic/skill/SKILL.md" }), returned("r", "read", { truncation: { truncated: false } })];
     f.handlers.session_tree(null, f.ctx);
     const pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
-    expect(pane.text()).toContain("body read"); await pane.close();
+    expect(pane.text()).toMatch(/what entered\s+—\s+unknown/);
+    expect(pane.text()).not.toContain("body read (in context)"); await pane.close();
     f.ctx.sessionManager.getBranch = () => [];
     f.handlers.session_tree(null, f.ctx);
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
+  });
+  it.each([undefined, null, {}, { truncation: {} }, { truncation: { truncated: false } }, { truncation: { truncated: true } }, { truncation: { truncated: false, firstLineExceedsLimit: true } }, { firstLineTooLong: true }])("fails closed for unknown/partial live and historical read metadata: %j", async details => {
+    const f = piFixture();
+    f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
+    f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" }, details, content: [{ type: "text", text: "a possibly bounded body" }], structuredContent: "a possibly bounded body" }, f.ctx);
+    let pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).not.toContain("body read (in context)");
+    expect(pane.text()).toMatch(/what entered\s+—\s+unknown/);
+    expect(pane.text()).not.toContain("body not read"); await pane.close();
+    f.ctx.sessionManager.getBranch = () => [
+      { type: "message", message: { role: "assistant", content: [{ type: "toolCall", id: "s", name: "summon", arguments: {} }, { type: "toolCall", id: "r", name: "read", arguments: { path: "/synthetic/skill/SKILL.md" } }] } },
+      { type: "message", message: { role: "toolResult", toolCallId: "s", toolName: "summon", details: result } },
+      { type: "message", message: { role: "toolResult", toolCallId: "r", toolName: "read", details, isError: false } },
+    ];
+    // Current builtin provenance cannot establish historical execution provenance.
+    f.api.getAllTools = () => [{ name: "read", sourceInfo: { source: "builtin", path: "builtin:read" } }];
+    f.handlers.session_tree(null, f.ctx);
+    pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).not.toContain("body read (in context)"); await pane.close();
+  });
+  it("accepts only a current pinned builtin's exact unbounded text result when it omits details", async () => {
+    const f = piFixture();
+    f.api.getAllTools = () => [{ name: "read", sourceInfo: { source: "builtin", path: "builtin:read" } }];
+    f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
+    const read = { toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" }, details: undefined, content: [{ type: "text", text: "synthetic whole body" }], structuredContent: "mismatching body" };
+    f.handlers.tool_result(read, f.ctx);
+    let pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).not.toContain("body read (in context)"); await pane.close();
+    f.handlers.tool_result({ ...read, structuredContent: "synthetic whole body" }, f.ctx);
+    pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).toContain("body read (in context)"); await pane.close();
+    f.handlers.tool_result({ ...read, details: { truncation: { truncated: true } } }, f.ctx);
+    pane = openPane(f, "inspect session"); pane.overlay.component.handleInput("\x1b[F");
+    expect(pane.text()).toContain("body read (in context)"); await pane.close();
   });
   it.each([[40, 80], [40, 40], [18, 28], [10, 5], [8, 40]])("bounds physical rows and columns at %s×%s, including resize and wide text", async (rows, columns) => {
     const f = piFixture(); f.tui.terminal.rows = rows; f.tui.terminal.columns = columns;

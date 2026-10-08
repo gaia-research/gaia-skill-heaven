@@ -92,7 +92,7 @@ export function stageText(entry: ConsoleEntry): StageText {
     return { text: `${inContext.length} of ${skills.length} in context · the rest: card returned · body not read`, inferred: false };
   }
   if (skills.length > 0 && skills.every((s) => s.stage === "read-unobserved")) {
-    return { text: "materialized · read not observed on this host", inferred: false };
+    return { text: "materialized · complete body read not observed", inferred: false };
   }
   return { text: "card returned · body not read", inferred: true };
 }
@@ -191,7 +191,7 @@ function skillRows(skill: SkillReceipt, index: number, entry: ConsoleEntry): Row
         ? { label: "what entered", value: "card returned · body not read", evidence: "inferred" }
         : skill.stage === "previewed"
           ? { label: "what entered", value: "previewed · nothing materialized", evidence: "reported" }
-          : { label: "what entered", value: "materialized · read not observed", evidence: "unknown" };
+          : { label: "what entered", value: "materialized · complete body read not observed", evidence: "unknown" };
   const rank: string[] = [];
   if (skill.matchKind !== "unknown") rank.push(skill.matchKind);
   const score = formatScore(skill.score);

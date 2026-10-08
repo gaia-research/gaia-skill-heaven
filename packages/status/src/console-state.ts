@@ -302,11 +302,12 @@ export function recordEvent<S extends ConsoleCoreState>(
   };
 }
 
-/** A Read of a path: any summoned skill whose materialized SKILL.md it is, is now in context. */
-export function recordRead<S extends ConsoleCoreState>(state: S, path: string, reader: string): S {
+/** Only a proven complete read establishes context. A successful read whose
+ * completeness is unknown records uncertainty, never erasing a prior full read. */
+export function recordRead<S extends ConsoleCoreState>(state: S, path: string, reader: string, complete = true): S {
   let changed = false;
   const entries = state.entries.map((entry) => {
-    const next = markRead(entry.event, path);
+    const next = markRead(entry.event, path, complete ? "in-context" : "read-unobserved");
     if (next === entry.event) return entry;
     changed = true;
     const readBy = [...entry.readBy];

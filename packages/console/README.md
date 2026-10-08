@@ -65,10 +65,17 @@ choose the newest directory, scan general transcripts or export prompts.
 Unbound counts are unknown, not zero. Torn JSONL fails closed. Input caps are
 8 MiB / 10,000 rows; the shared model keeps 50 recent receipts.
 
-Ledger facts are **reported**, not observed reads. Pi promotes successful complete
-`read` results only; failures, explicit slices and truncation do not establish
-whole-body context. Restoration replays only current-branch exact tool-call IDs
-and result metadata. Missing/bounded metadata is disclosed, not guessed.
+Ledger facts are **reported**, not observed reads. Pi credits complete bodies
+only on the **pinned 1.1.0 builtin `read`**: exact public current-tool provenance,
+unbounded input, a single text block matching structured output, and no truncation
+metadata. The native API deliberately omits details for this complete result;
+custom reads and positive-looking `truncation:false` metadata are not proof.
+Unknown successful reads show **complete body read not observed**, not “body not
+read.” Prior proven full reads survive a subsequent partial/unknown read.
+Restoration uses current-branch exact call/result IDs but saved results lack
+execution-time source provenance: their whole-body context is **unknown**, never
+validated using today's builtin. Other Pi versions keep the console but complete
+body-read credit is unverified until their native contract is probed.
 
 ## Installation and verification
 

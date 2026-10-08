@@ -462,17 +462,17 @@ function reduceStatus(status, event) {
   const last = event.skills[event.skills.length - 1];
   return { ...status, skills, summons, lastArrival: last ? last.name : status.lastArrival };
 }
-function markRead(event, readPath) {
+function markRead(event, readPath, stage = "in-context") {
   if (event.kind !== "summoned") return event;
   const norm = readPath.replace(/\\/g, "/");
   let changed = false;
   const skills = event.skills.map((s) => {
-    if (!s.path || s.stage === "in-context") return s;
+    if (!s.path || s.stage === "in-context" || s.stage === stage) return s;
     let root = s.path.replace(/\\/g, "/");
     while (root.endsWith("/")) root = root.slice(0, -1);
     if (norm === `${root}/SKILL.md`) {
       changed = true;
-      return { ...s, stage: "in-context" };
+      return { ...s, stage };
     }
     return s;
   });
@@ -1045,10 +1045,10 @@ function recordEvent(state, event, agent, via, opts = {}) {
     seq: id
   };
 }
-function recordRead(state, path, reader) {
+function recordRead(state, path, reader, complete = true) {
   let changed = false;
   const entries = state.entries.map((entry) => {
-    const next = markRead(entry.event, path);
+    const next = markRead(entry.event, path, complete ? "in-context" : "read-unobserved");
     if (next === entry.event) return entry;
     changed = true;
     const readBy = [...entry.readBy];
@@ -1100,7 +1100,7 @@ function stageText(entry) {
     return { text: `${inContext.length} of ${skills.length} in context \xB7 the rest: card returned \xB7 body not read`, inferred: false };
   }
   if (skills.length > 0 && skills.every((s) => s.stage === "read-unobserved")) {
-    return { text: "materialized \xB7 read not observed on this host", inferred: false };
+    return { text: "materialized \xB7 complete body read not observed", inferred: false };
   }
   return { text: "card returned \xB7 body not read", inferred: true };
 }
@@ -1163,7 +1163,7 @@ function healthText(event) {
   return h.kind === "stale" ? `? stale${age} \xB7 ranking still ran` : `fresh${age}`;
 }
 function skillRows(skill, index, entry) {
-  const stage = skill.stage === "in-context" ? { label: "what entered", value: `body read (in context) by ${entry.readBy[index] ?? "an agent"}`, evidence: "observed" } : skill.stage === "materialized" ? { label: "what entered", value: "card returned \xB7 body not read", evidence: "inferred" } : skill.stage === "previewed" ? { label: "what entered", value: "previewed \xB7 nothing materialized", evidence: "reported" } : { label: "what entered", value: "materialized \xB7 read not observed", evidence: "unknown" };
+  const stage = skill.stage === "in-context" ? { label: "what entered", value: `body read (in context) by ${entry.readBy[index] ?? "an agent"}`, evidence: "observed" } : skill.stage === "materialized" ? { label: "what entered", value: "card returned \xB7 body not read", evidence: "inferred" } : skill.stage === "previewed" ? { label: "what entered", value: "previewed \xB7 nothing materialized", evidence: "reported" } : { label: "what entered", value: "materialized \xB7 complete body read not observed", evidence: "unknown" };
   const rank = [];
   if (skill.matchKind !== "unknown") rank.push(skill.matchKind);
   const score = formatScore(skill.score);

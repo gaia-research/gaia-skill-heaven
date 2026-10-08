@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
+import { VERSION, type ExtensionAPI, type ExtensionContext, type Theme } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey, ScrollView, truncateToWidth, wrapTextWithAnsi, type Component, type TUI } from "@earendil-works/pi-tui";
 import {
   initialConsoleState, recordEvent, recordRead, recordSelection, structuredOf,
@@ -9,10 +9,15 @@ import {
 
 const KEY = "skill-heaven-console";
 const projection = harnessById("pi");
-const completeRead = (input: Record<string, unknown>, details: unknown): boolean => {
-  if ((input.offset !== undefined && input.offset !== 1) || input.limit !== undefined) return false;
-  const d = details as { truncation?: { truncated?: boolean }; firstLineTooLong?: boolean } | undefined;
-  return d?.truncation?.truncated !== true && d?.firstLineTooLong !== true;
+const wholeReadInput = (input: Record<string, unknown>): boolean =>
+  (input.offset === undefined || input.offset === 1) && input.limit === undefined;
+const completeRead = (input: Record<string, unknown>, details: unknown, pinnedBuiltin = false): boolean => {
+  if (!wholeReadInput(input)) return false;
+  // Unknown/custom metadata (even a claimed truncation:false) is not proof.
+  // Pi 1.1.0's builtin read omits details for complete text output; all native
+  // bound/oversize outputs carry details. Require current builtin provenance
+  // and exact public text output, never borrow it for historical results.
+  return pinnedBuiltin && details === undefined;
 };
 
 // Uses the public Pi 1.1 TUI ScrollView API; older Full support is unverified.
@@ -122,15 +127,21 @@ export default function consolePi(pi: ExtensionAPI): void {
     const window = branch.slice(-1000);
     // Match only exact tool-call metadata in this branch. Never retain prompt
     // bodies or discover transcripts. Read results alone do not identify a path.
-    const calls = new Map<string, { name: string; path?: string; preview?: boolean; complete?: boolean }>();
+    const calls = new Map<string, { name: string; path?: string; preview?: boolean }>();
     for (const entry of window) {
       if (entry.type !== "message" || entry.message.role !== "assistant") continue;
       for (const item of entry.message.content) {
         if (item.type !== "toolCall" || !["read", "summon"].includes(item.name)) continue;
-        calls.set(item.id, { name: item.name, path: typeof item.arguments.path === "string" ? item.arguments.path : undefined, preview: item.arguments.preview === true, complete: completeRead(item.arguments, undefined) });
+        calls.set(item.id, { name: item.name, path: typeof item.arguments.path === "string" ? item.arguments.path : undefined, preview: item.arguments.preview === true });
       }
     }
-    const readsComplete = branch.length <= 1000 && !window.some(entry => entry.type === "message" && entry.message.role === "toolResult" && entry.message.toolName === "read" && !calls.get(entry.message.toolCallId)?.path);
+    // Old results carry no execution-time builtin source/version provenance.
+    // Do not apply today's builtin exception to historical missing metadata.
+    const readsComplete = branch.length <= 1000 && !window.some(entry => {
+      if (entry.type !== "message" || entry.message.role !== "toolResult" || entry.message.toolName !== "read") return false;
+      const call = calls.get(entry.message.toolCallId);
+      return !call?.path || !entry.message.isError;
+    });
     for (const entry of window) {
       if (entry.type !== "message" || entry.message.role !== "toolResult") continue;
       const message = entry.message;
@@ -139,7 +150,7 @@ export default function consolePi(pi: ExtensionAPI): void {
         if (structured) state = recordEvent(state, eventFromSummonResult(structured, { preview: calls.get(message.toolCallId)?.preview }), null, "tool", { readObservable: readsComplete });
       } else if (message.toolName === "read" && !message.isError) {
         const call = calls.get(message.toolCallId);
-        if (call?.name === "read" && call.path && call.complete && completeRead({}, message.details)) state = recordRead(state, resolve(ctx.cwd, call.path), "main agent");
+        if (call?.name === "read" && call.path) state = recordRead(state, resolve(ctx.cwd, call.path), "main agent", false);
       }
     }
     if (branch.length > 1000) state.status = { ...state.status, skills: null, summons: null };
@@ -153,8 +164,11 @@ export default function consolePi(pi: ExtensionAPI): void {
     if (event.toolName === "summon") {
       const structured = structuredOf(event.details) ?? structuredOf({ content: event.content });
       state = recordEvent(state, eventFromSummonResult(structured, { preview: event.input.preview === true }, event.isError ? { isError: true, text: "Core summon failed" } : undefined), null, "tool");
-    } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string" && completeRead(event.input, event.details)) {
-      state = recordRead(state, resolve(ctx.cwd, event.input.path), "main agent");
+    } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string") {
+      const complete = completeRead(event.input, event.details,
+        VERSION === "1.1.0" && pi.getAllTools().some(tool => tool.name === "read" && tool.sourceInfo.source === "builtin" && tool.sourceInfo.path === "builtin:read") &&
+        event.content.length === 1 && event.content[0]?.type === "text" && typeof event.structuredContent === "string" && event.structuredContent === event.content[0].text);
+      state = recordRead(state, resolve(ctx.cwd, event.input.path), "main agent", complete);
     }
     paint(ctx);
   });
