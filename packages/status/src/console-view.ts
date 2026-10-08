@@ -89,7 +89,7 @@ export function stageText(entry: ConsoleEntry): StageText {
     return { text: `in context · body read by ${readers.join(", ")}`, inferred: false };
   }
   if (inContext.length > 0) {
-    return { text: `${inContext.length} of ${skills.length} in context · the rest: card returned · body not read`, inferred: false };
+    return { text: `${inContext.length} of ${skills.length} in context · complete body read not observed for the rest`, inferred: false };
   }
   if (skills.length > 0 && skills.every((s) => s.stage === "read-unobserved")) {
     return { text: "materialized · complete body read not observed", inferred: false };

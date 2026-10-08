@@ -124,6 +124,18 @@ describe("the console is never an authority channel", () => {
     }
   });
 
+  it("mixed complete/unknown reads never say the rest of the bodies were not read", () => {
+    const event = eventFromSummonResult({ query: "synthetic", surface: "any", summoned: [{ id: "one", name: "One", path: "/synthetic/one" }, { id: "two", name: "Two", path: "/synthetic/two" }], previewed: [], noMatch: null });
+    let state = recordEvent(initialConsoleState(), event, null, "tool");
+    state = recordRead(state, "/synthetic/one/SKILL.md", "main agent");
+    state = recordRead(state, "/synthetic/two/SKILL.md", "main agent", false);
+    const view = buildConsoleView(state, HARNESS_PATHS.find(h => h.id === "pi")!);
+    expect(view.lens?.stage?.text).toContain("1 of 2 in context");
+    expect(view.lens?.stage?.text).toContain("complete body read not observed for the rest");
+    expect(view.lens?.stage?.text).not.toContain("body not read");
+    expect(view.session.entries[0]!.groups[2]!.find(row => row.label === "what entered")?.evidence).toBe("unknown");
+  });
+
   it("recording a summon result, a read or a ledger line never throws and never widens anything", () => {
     const state = initialConsoleState();
     expect(() => recordRead(state, "/etc/passwd", "x")).not.toThrow();

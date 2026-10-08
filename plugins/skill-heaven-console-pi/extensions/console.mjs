@@ -1022,7 +1022,7 @@ function stageText(entry) {
     return { text: `in context \xB7 body read by ${readers.join(", ")}`, inferred: false };
   }
   if (inContext.length > 0) {
-    return { text: `${inContext.length} of ${skills.length} in context \xB7 the rest: card returned \xB7 body not read`, inferred: false };
+    return { text: `${inContext.length} of ${skills.length} in context \xB7 complete body read not observed for the rest`, inferred: false };
   }
   if (skills.length > 0 && skills.every((s) => s.stage === "read-unobserved")) {
     return { text: "materialized \xB7 complete body read not observed", inferred: false };
