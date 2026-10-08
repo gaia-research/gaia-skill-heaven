@@ -1198,6 +1198,7 @@ body.vh-hero-page {
   border: 1px solid currentColor;
   background: transparent;
   cursor: pointer;
+  min-height: 26px;
   padding: 3px 8px;
   font: inherit;
   letter-spacing: 0.14em;
@@ -1253,6 +1254,16 @@ body.vh-hero-page {
 .vha-cta-door:hover,
 .vha-cta-link:hover {
   opacity: 0.72;
+}
+/* "Choose your harness" — the primary next step after the install line. */
+.vha-cta-door--start {
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 36px;
+}
+.vha-cta-termhead .sh-platform-toggle,
+.vha-cta-termhead .sh-platform-toggle__btn {
+  min-height: 26px;
 }
 /* The copy-command control, demoted to secondary (Open the door is primary —
    see .vha-cta-cmd below): a slash command reads wrong in the door's all-caps

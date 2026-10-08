@@ -337,6 +337,46 @@ skills and `mcp.json` into Pi's extension API; see its
 `claude-zero@gaia-skill-heaven` marketplace installs migrate through the
 `renames` entry in `marketplace.json` (Claude Code ≥ 2.1.193).
 
+## Optional console for Claude Code (preview)
+
+`plugins/skill-heaven-console` is a second, optional plugin in the same
+marketplace, built on Claude Code 2.1.293's early-access Mods API (function
+hooks). It is a **projection**, not part of the portable package: the portable
+`skill-heaven` plugin is unchanged, and no other client sees the console. It
+adds a status entry beside the user's own (`$.ui.status` — it never touches
+`statusLine` settings), the Lens band, and the `/heaven` pane. It observes summon
+results, `Read`s of materialized `SKILL.md` files, `/skill-*` command text and
+agent ids; it returns every observed result unchanged, writes nothing to disk,
+and its only tool call is `/lens`'s `preview: true` summon, which materializes
+nothing. Its copy of the status model is a committed bundle of `packages/status`
+(`npm run build:status`, CI-checked). Static evidence on Claude Code 2.1.293:
+`claude plugin validate plugins/skill-heaven-console` passes (it reads the module
+and reports only `$.state` writes — no filesystem, process, network, store or
+settings calls), and `claude plugin test` runs 23 engine tests over the
+terminal and desktop surfaces, all passing. **Not yet probed:** desktop paint in a
+logged-in session — it stays labelled preview until then. Design of record:
+[`docs/CONTROL-PLANE.md`](CONTROL-PLANE.md).
+
+## Installed harness versions drifted from the pins (2026-10-07)
+
+Recorded so no pin is silently treated as current. On the cloud machine that
+wrote the control-plane pass, the installed versions were Claude Code 2.1.293
+(pin 2.1.288), Codex 0.161.0 (pin 0.146.0), Pi 1.0.4 (pin 0.84.2), Grok 1.0.46
+(pin 1.0.5), Hermes 0.21.5 (pin 0.20.0) and Antigravity 1.3.1 (launcher pin
+1.2.13). Only unauthenticated static checks ran on them:
+
+| Client | Static check on the installed version | Result |
+|---|---|---|
+| Claude Code 2.1.293 | `claude plugin validate plugins/skill-heaven` | passed |
+| Grok 1.0.46 | `grok plugin validate plugins/skill-heaven` | manifest valid; skills, commands and MCP servers found |
+| Antigravity 1.3.1 | `agy plugin validate plugins/skill-heaven` | 5 skills and 5 commands processed; **`mcpServers: skipped (not found)`** |
+| Pi 1.0.4 | `pi --help` | now lists `pi mcp`; the adapter's "Pi has no MCP runtime" premise needs a re-probe |
+
+Antigravity is therefore **partial**: the commands would load, but the summon
+tool would not, so no registration command is printed for it anywhere. Every
+live claim above still rests on the pinned versions; the drifted versions need a
+logged-in probe (`NEEDS LOCAL PROBE`).
+
 ## Not built
 
 Stated here so no surface implies otherwise:

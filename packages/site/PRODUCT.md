@@ -117,6 +117,24 @@ irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 Then launch a door (`claude-zero` is the flagship). The script never installs a
 harness.
 
+**The front door is harness-first.** `/start` asks which harness the visitor
+uses and prints only that harness's path: its verification chip (Verified ·
+Compatible · Partial · Unverified · Needs local probe), the exact commands the
+client accepted in a recorded probe, what changes on the machine, how to update
+and remove, and an honest state for "no harness yet". The data is one table,
+`HARNESS_PATHS` in `packages/status/src/compat.ts`; the installer's epilogue
+mirrors it and a test keeps them in step. Antigravity is **partial** (its own
+validator loads the commands but not the summon server) and gets no
+registration command until a logged-in probe passes.
+
+**Optional — the console for Claude Code (preview).** `skill-heaven-console`
+is a second, optional plugin in the same marketplace: a status entry that sits
+beside the user's own (`$.ui.status`, never their statusLine), the Lens band,
+and the `/heaven` pane (Session · Scope · Flow · Trust). It observes; it never
+acts. It is built on Claude Code 2.1.293's early-access Mods API and stays
+labelled preview until a logged-in desktop session is probed. Design of record:
+`docs/CONTROL-PLANE.md`.
+
 **`npx` is not an install path** and **`skill-heaven.dev` is deferred** — it has
 no DNS today, so no surface may print it. The site uses the host that actually
 serves: `gaia-research.github.io/gaia-skill-heaven`.
@@ -147,6 +165,11 @@ The public site is served from `packages/site`.
   outstanding is implementation, not permission.
 - **Skill Ultra is the crown rung.** It is the auto controller over the whole
   line — no slider, no sub-ladder of its own; it sits at the top as `ultra`.
+  **Its controller is provisioned, not built.** Every surface that shows Ultra
+  says "provisioned · controller unavailable" and never draws a controller
+  decision, an effective rung or campaign progress from anything but a reported
+  controller state — which no runtime emits yet (#126). Design states for the
+  future controller exist only as labelled FIXTURES on `/console`.
 - **Never mutate shared state:** compose + exec only; writes confined to a
   disposable mkdtemp session dir.
 - **Heaven/Hell stamps are not built.** Routing eligibility today falls back

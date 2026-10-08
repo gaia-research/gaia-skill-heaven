@@ -13,8 +13,10 @@ PLUGIN_DIR=$MARKETPLACE_DIR/plugins/skill-heaven
 SOURCE_REF=${SKILL_HEAVEN_REF:-main}
 SOURCE_ARCHIVE=${SKILL_HEAVEN_ARCHIVE_URL:-"https://codeload.github.com/gaia-research/gaia-skill-heaven/tar.gz/$SOURCE_REF"}
 
+QUIET=0
+
 say() {
-  printf '%s\n' "$*"
+  [ "$QUIET" -eq 1 ] || printf '%s\n' "$*"
 }
 
 fail() {
@@ -25,6 +27,8 @@ fail() {
 usage() {
   cat <<EOF
 Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh
+       curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh -s -- --quiet
+       $0 --quiet
        $0 --print-path
        $0 --uninstall
 
@@ -34,8 +38,27 @@ Installs the portable Agent Plugin package to:
 It does not install or silently reconfigure an agent harness. Agent Plugins
 clients load this directory; marketplace clients load $MARKETPLACE_DIR.
 Set SKILL_HEAVEN_PLUGIN_HOME to override the installation root.
+
+When it finishes it looks for the supported harnesses on your PATH (by name
+only; it never runs one and never reads or writes their configuration) and
+prints the exact next command for each one it finds.
+
+Options:
+  --quiet, -q   print only the plugin directory and the marketplace directory
+                (one per line, nothing else), for scripts
+  --print-path  print the plugin directory and exit
+  --uninstall   remove the local artifact (client registrations are removed in
+                each client)
+  --help, -h    show this help
 EOF
 }
+
+case ${1:-} in
+  --quiet|-q)
+    QUIET=1
+    shift
+    ;;
+esac
 
 case ${1:-} in
   --help|-h)
@@ -43,7 +66,7 @@ case ${1:-} in
     exit 0
     ;;
   --print-path)
-    say "$PLUGIN_DIR"
+    printf '%s\n' "$PLUGIN_DIR"
     exit 0
     ;;
   --uninstall)
@@ -126,7 +149,18 @@ done
 
 cp -R "$SOURCE_PLUGIN/." "$NEXT/marketplace/plugins/skill-heaven/"
 mkdir -p "$NEXT/marketplace/.claude-plugin"
-cp "$WORK/source/.claude-plugin/marketplace.json" "$NEXT/marketplace/.claude-plugin/marketplace.json"
+# The repository marketplace may list Claude-only plugins (the optional
+# console) that this portable artifact does not carry. List only what was
+# staged, so no client is pointed at an entry whose directory is missing.
+node -e '
+  const fs = require("node:fs");
+  const [from, to] = process.argv.slice(1);
+  const market = JSON.parse(fs.readFileSync(from, "utf8"));
+  market.plugins = (market.plugins || []).filter((p) => p && p.source === "./plugins/skill-heaven");
+  if (market.plugins.length !== 1) process.exit(3);
+  fs.writeFileSync(to, JSON.stringify(market, null, 2) + "\n");
+' "$WORK/source/.claude-plugin/marketplace.json" "$NEXT/marketplace/.claude-plugin/marketplace.json" \
+  || fail "could not write the local marketplace manifest. Nothing was installed."
 
 # Hermes currently accepts a Git source rather than an arbitrary local
 # directory. A tiny local repository keeps the installed package usable there.
@@ -173,13 +207,96 @@ fi
 BACKED_UP=0
 rm -rf "$OLD"
 
+# ---- Onboarding epilogue (docs/CONTROL-PLANE.md section 1 and 5.4) -----------
+# The facts below mirror packages/status/src/compat.ts (HARNESS_PATHS); a vitest
+# drift test fails if they diverge. Detection is `command -v` by name only: no
+# harness is ever executed, and no harness configuration is read or written.
+START_URL=https://gaia-research.github.io/gaia-skill-heaven/#/start
+
+if [ "$QUIET" -eq 1 ]; then
+  printf '%s\n' "$PLUGIN_DIR"
+  printf '%s\n' "$MARKETPLACE_DIR"
+  exit 0
+fi
+
+FOUND=0
+MISSING=
+have() {
+  command -v "$1" >/dev/null 2>&1
+}
+found_head() {
+  FOUND=$((FOUND + 1))
+  printf '  %-8s %s - %s\n' "$1" "$2" "$3"
+}
+missing() {
+  if [ -z "$MISSING" ]; then MISSING=$1; else MISSING="$MISSING, $1"; fi
+}
+
 say "Installed the portable Skill Heaven Agent Plugin."
-say "Plugin directory: $PLUGIN_DIR"
-say "Marketplace directory: $MARKETPLACE_DIR"
 say ""
-say "Point any standards-conformant Agent Plugins client at the plugin directory above; clients outside the pinned probe remain unverified."
-say "Client registration is explicit because the Agent Plugins specification does not define one universal install command."
-say "Re-run this installer to update the local artifact; clients that cache plugins still need their own update/reinstall command."
-say "Uninstall the local artifact with:"
-say "  $INSTALL_HOME/uninstall.sh"
-say "Client-managed plugin copies and registrations are not removed by that command."
+say "What changed on this machine"
+say "  + $PLUGIN_DIR  (the plugin, one directory)"
+say "  + $MARKETPLACE_DIR  (a local marketplace that lists it)"
+say "  No harness was installed or reconfigured."
+say ""
+say "Harnesses found on PATH"
+
+if have claude; then
+  found_head claude "Claude Code" "Verified (2.1.288)"
+  say "           Inside Claude Code, type:"
+  say "             /plugin marketplace add gaia-research/gaia-skill-heaven"
+  say "             /plugin install skill-heaven@gaia-skill-heaven"
+else
+  missing claude
+fi
+if have codex; then
+  found_head codex "Codex" "Compatible (probed 0.146.0)"
+  say "             codex plugin marketplace add \"$MARKETPLACE_DIR\""
+  say "             codex plugin add skill-heaven@gaia-skill-heaven"
+else
+  missing codex
+fi
+if have pi; then
+  found_head pi "Pi" "Compatible (probed 0.84.2)"
+  say "             pi install \"$PLUGIN_DIR\" --approve"
+else
+  missing pi
+fi
+if have grok; then
+  found_head grok "Grok" "Compatible (probed 1.0.5)"
+  say "             grok plugin install \"$PLUGIN_DIR\" --trust"
+else
+  missing grok
+fi
+if have hermes; then
+  found_head hermes "Hermes" "Compatible (probed 0.20.0)"
+  say "             hermes plugins install \"file://$PLUGIN_DIR\" --enable"
+else
+  missing hermes
+fi
+if have agy; then
+  found_head agy "Antigravity" "Partial (static check on 1.3.1)"
+  say "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
+  say "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
+else
+  missing agy
+fi
+
+if [ "$FOUND" -eq 0 ]; then
+  say "  (none found)"
+  say "  No supported harness was found on PATH. Skill Heaven runs inside a harness you already use; it never installs one."
+  say "  When you have one, run its command from $START_URL"
+fi
+if [ -n "$MISSING" ]; then
+  say ""
+  say "Not found: $MISSING"
+fi
+say ""
+say "Another Agent Plugins client (Unverified)"
+say "  Point your client's own plugin install at $PLUGIN_DIR."
+say "  There is no universal registration command."
+say ""
+say "First run: inside your harness, type /summon <what you need>."
+say "Update:    re-run this installer (clients that cache plugins also need their own update)."
+say "Remove:    $INSTALL_HOME/uninstall.sh   (client registrations are removed in each client)"
+say "Choose your harness and read what each step does: $START_URL"

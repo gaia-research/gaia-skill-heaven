@@ -61,7 +61,10 @@ describe("portable Agent Plugin installer", () => {
     });
     const plugin = join(installHome, "marketplace", "plugins", "skill-heaven");
 
-    expect(output).toContain(`Plugin directory: ${plugin}`);
+    // The epilogue (see test/installer-epilogue.test.ts) names both real directories.
+    expect(output).toContain(`+ ${plugin}`);
+    expect(output).toContain(`+ ${join(installHome, "marketplace")}`);
+    expect(output).toContain("No harness was installed or reconfigured.");
     expect(existsSync(join(plugin, "plugin.json"))).toBe(true);
     expect(existsSync(join(plugin, "mcp.json"))).toBe(true);
     expect(existsSync(join(plugin, "skills", "summon", "SKILL.md"))).toBe(true);
@@ -80,6 +83,13 @@ describe("portable Agent Plugin installer", () => {
       readFileSync(join(installHome, "marketplace", ".claude-plugin", "marketplace.json"), "utf8"),
     ) as { plugins: Array<{ source: string }> };
     expect(marketplace.plugins[0]?.source).toBe("./plugins/skill-heaven");
+    // Every entry the local marketplace lists must exist in the artifact: the
+    // repository marketplace also lists the Claude-only console, which the
+    // portable artifact does not carry.
+    expect(marketplace.plugins).toHaveLength(1);
+    for (const entry of marketplace.plugins) {
+      expect(existsSync(join(installHome, "marketplace", entry.source)), entry.source).toBe(true);
+    }
 
     const printed = execFileSync("sh", [INSTALLER, "--print-path"], {
       encoding: "utf8",

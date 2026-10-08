@@ -696,8 +696,83 @@
   line-height: 1.7;
   color: var(--sh-ink-dim);
 }
+.lp-fineprint a {
+  color: var(--sh-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .lp-fineprint code {
   color: var(--sh-ink);
+}
+
+/* §01 lead: the plugin route, primary. The launcher grid follows under .lp-sub. */
+.lp-start {
+  padding: 20px 22px 22px;
+  margin-bottom: 8px;
+}
+.lp-start__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+.lp-start__cta {
+  text-decoration: none;
+  min-height: 44px;
+}
+.lp-start__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.lp-start__col {
+  min-width: 0;
+}
+.lp-start__title {
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--sh-ink);
+}
+.lp-start .lp-install__head {
+  min-height: 32px;
+  flex-wrap: wrap;
+}
+.lp-start .sh-platform-toggle {
+  min-height: 32px;
+}
+.lp-start .sh-platform-toggle__btn {
+  min-height: 32px;
+  font-size: 10.5px;
+  padding: 0 12px;
+}
+#doors:focus {
+  outline: none;
+}
+.lp-start .lp-install__note a {
+  color: var(--sh-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lp-sub {
+  margin: 44px 0 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sh-line);
+  font-family: var(--sh-sans);
+  font-variation-settings: 'wdth' 106, 'wght' 700;
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--sh-ink);
+}
+.lp-section__lede--sub {
+  margin-bottom: 20px;
+}
+@media (max-width: 820px) {
+  .lp-start__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* the plugin route is two lines, each separately copyable */

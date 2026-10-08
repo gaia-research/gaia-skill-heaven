@@ -9,6 +9,8 @@ one visual system:
 | `/landing` | **The document** | scannable; numbered sections, ledger density |
 | `/instrument` | **The instrument** — the sampler | secondary; operate the line |
 | `/live` | **The production update** — what shipped, the clean-install receipt, what stays provisional | ledger; one column of proof per claim |
+| `/start` | **Install** — harness first, then that harness's exact path, what changes, update, remove | operate; one decision, then steps |
+| `/console` | **The prototype** — every status / Lens / receipt / Ultra state, rendered by the real model from FIXTURE data | specimen sheet; dense, labelled |
 
 The old `/hero-a` and `/hero-b` review routes are gone (`main.tsx` routes
 anything unknown back to `/`), but `styles/tokens.css` is still imported at the
@@ -267,6 +269,29 @@ Canon that is not negotiable:
 - **The terminal on `/landing` is an illustration**, labelled as one. It must not
   show a summon performing something the product does not do (no "autonomous",
   no standing "auto-summon", no pull request the tool opens).
+
+## The instrument — one palette across site, desktop and terminal
+
+The status line, the Lens band, receipts and the console are projections of
+one model (`packages/status`, design of record `docs/CONTROL-PLANE.md`). Their
+colours come from one table, `ROLE_COLORS` in `packages/status/src/tokens.ts`,
+painted on the web as `--shi-*` custom properties by
+`src/instrument/StatusLine.tsx`. The instrument uses the **document** hues:
+zero `#5fc2d6`, heaven `#6f96d8`, hell `#e094c8` (never red), ultra `#d9b25c`,
+Arbor `#55c878` (canonical Arbor evidence only — nothing draws it today),
+failure `#c81e1e` (one-glyph `!` only; it fails 4.5:1 as text), amber
+`#e0b45c` for FIXTURE / PREVIEW / PROVISIONAL.
+
+**Known drift, recorded rather than repainted:** `system.css` defines
+`--sh-zero: #8b8890` and `--sh-hell: #c89a3f`, which disagree with the document
+hues listed under "The world" above (`#5fc2d6`, `#e094c8`). The instrument does
+not read `--sh-*` for that reason. Reconciling the site tokens is a separate
+pass; do not "fix" it by pointing the instrument at `--sh-*`.
+
+Rules the instrument keeps everywhere: colour never carries meaning alone
+(`‹‹ ››` direction, `◇/◆` umbrella/Ultra, `×` refusal, `?` unknown, `!` error);
+the reading is the last thing a narrow layout drops; fixture data always wears
+its FIXTURE chip; a selected rung is shown as selected, never as enforced.
 
 ## Token collision — read before adding a surface
 

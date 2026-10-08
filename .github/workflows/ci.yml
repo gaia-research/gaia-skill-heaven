@@ -31,6 +31,14 @@ jobs:
           npm run build:mcp
           git diff --exit-code -- plugins/skill-heaven/mcp/
 
+      # The console mod cannot import packages/status at run time (a mod has no
+      # Node and reads only its own folder), so it carries a committed bundle of
+      # the one status model. A diff means the model changed without a rebuild.
+      - name: Status model bundle is up to date
+        run: |
+          npm run build:status
+          git diff --exit-code -- plugins/skill-heaven-console/hooks/status-model.mjs
+
       # The committed skill index is the runtime's only read path (SPEC §2.2),
       # and it is a deterministic function of the committed corpus snapshot.
       # A diff here means someone edited the snapshot or the builder without
@@ -44,6 +52,12 @@ jobs:
       # manifest check — it starts no session and needs no credentials.
       - name: Validate the plugin manifest
         run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven
+
+      # The optional console is a Mods plugin (function hooks, early-access
+      # API). `plugin validate` reads its hooks module the way the engine will
+      # and reports anything the engine would refuse — still static, no session.
+      - name: Validate the console mod
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven-console
 
       # D6 cross-repo gate: a record emitted by core must pass gaia-research's
       # ledger validator (the validator never moves — it stays upstream, D6).

@@ -1,0 +1,20 @@
+{
+  "name": "@gaia-skill-heaven/status",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The one Skill Heaven status model: state, event and evidence for every projection (terminal statusline, Claude Code console mod, site prototype). Pure, Node-free, no I/O, zero dependencies.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures": "./src/fixtures.ts",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run"
+  }
+}

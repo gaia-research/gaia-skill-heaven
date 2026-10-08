@@ -6,6 +6,7 @@
 param(
   [switch]$Uninstall,
   [switch]$PrintPath,
+  [switch]$Quiet,
   [switch]$Help
 )
 
@@ -31,7 +32,14 @@ $SOURCE_ARCHIVE = if ($env:SKILL_HEAVEN_ARCHIVE_URL) {
 
 function Say-Message {
   param([string]$Message)
-  Write-Host $Message
+  if (-not $Quiet) { Write-Host $Message }
+}
+
+# Detection is by name only: Get-Command never runs the harness, and no harness
+# configuration is read or written.
+function Test-Harness {
+  param([string]$Bin)
+  [bool](Get-Command $Bin -CommandType Application,ExternalScript -ErrorAction SilentlyContinue)
 }
 
 function Fail-Installation {
@@ -43,6 +51,7 @@ function Fail-Installation {
 function Show-Usage {
   @"
 Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.ps1 | iex
+       .\install-agent-plugin.ps1 -Quiet
        .\install-agent-plugin.ps1 -PrintPath
        .\install-agent-plugin.ps1 -Uninstall
 
@@ -52,6 +61,18 @@ Installs the portable Agent Plugin package to:
 It does not install or silently reconfigure an agent harness. Agent Plugins
 clients load this directory; marketplace clients load $MARKETPLACE_DIR.
 Set SKILL_HEAVEN_PLUGIN_HOME to override the installation root.
+
+When it finishes it looks for the supported harnesses on your PATH (by name
+only; it never runs one and never reads or writes their configuration) and
+prints the exact next command for each one it finds.
+
+Options:
+  -Quiet      print only the plugin directory and the marketplace directory
+              (one per line, nothing else), for scripts
+  -PrintPath  print the plugin directory and exit
+  -Uninstall  remove the local artifact (client registrations are removed in
+              each client)
+  -Help       show this help
 "@
 }
 
@@ -61,7 +82,7 @@ if ($Help) {
 }
 
 if ($PrintPath) {
-  Say-Message $PLUGIN_DIR
+  Write-Host $PLUGIN_DIR
   exit 0
 }
 
@@ -154,7 +175,15 @@ try {
   }
 
   Copy-Item -Recurse -Force (Join-Path $SOURCE_PLUGIN "*") (Join-Path $NEXT "marketplace\plugins\skill-heaven\")
-  Copy-Item -Force (Join-Path $WORK "source\.claude-plugin\marketplace.json") (Join-Path $NEXT "marketplace\.claude-plugin\marketplace.json")
+  # The repository marketplace may list Claude-only plugins (the optional
+  # console) that this portable artifact does not carry. List only what was
+  # staged, so no client is pointed at an entry whose directory is missing.
+  $market = Get-Content -Raw (Join-Path $WORK "source\.claude-plugin\marketplace.json") | ConvertFrom-Json
+  $market.plugins = @($market.plugins | Where-Object { $_.source -eq "./plugins/skill-heaven" })
+  if ($market.plugins.Count -ne 1) {
+    Fail-Installation "could not write the local marketplace manifest. Nothing was installed."
+  }
+  $market | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 (Join-Path $NEXT "marketplace\.claude-plugin\marketplace.json")
 
   # Hermes currently accepts a Git source rather than an arbitrary local
   # directory. A tiny local repository keeps the installed package usable there.
@@ -217,16 +246,80 @@ Write-Host "Client-managed plugin copies and registrations were not removed."
     Remove-Item -Recurse -Force $OLD -ErrorAction SilentlyContinue
   }
 
-  Say-Message "Installed the portable Skill Heaven Agent Plugin."
-  Say-Message "Plugin directory: $PLUGIN_DIR"
-  Say-Message "Marketplace directory: $MARKETPLACE_DIR"
-  Say-Message ""
-  Say-Message "Point any standards-conformant Agent Plugins client at the plugin directory above; clients outside the pinned probe remain unverified."
-  Say-Message "Client registration is explicit because the Agent Plugins specification does not define one universal install command."
-  Say-Message "Re-run this installer to update the local artifact; clients that cache plugins still need their own update/reinstall command."
-  Say-Message "Uninstall the local artifact with:"
-  Say-Message "  $INSTALL_HOME\uninstall.ps1"
-  Say-Message "Client-managed plugin copies and registrations are not removed by that command."
+  # ---- Onboarding epilogue (docs/CONTROL-PLANE.md section 1 and 5.4) ---------
+  # The facts below mirror packages/status/src/compat.ts (HARNESS_PATHS); a
+  # vitest drift test fails if they diverge.
+  $START_URL = "https://gaia-research.github.io/gaia-skill-heaven/#/start"
+
+  if ($Quiet) {
+    Write-Host $PLUGIN_DIR
+    Write-Host $MARKETPLACE_DIR
+  } else {
+    $script:found = 0
+    $script:missing = @()
+    function Write-HarnessHead {
+      param([string]$Bin, [string]$Name, [string]$Status)
+      $script:found++
+      Say-Message ("  {0,-8} {1} - {2}" -f $Bin, $Name, $Status)
+    }
+
+    Say-Message "Installed the portable Skill Heaven Agent Plugin."
+    Say-Message ""
+    Say-Message "What changed on this machine"
+    Say-Message "  + $PLUGIN_DIR  (the plugin, one directory)"
+    Say-Message "  + $MARKETPLACE_DIR  (a local marketplace that lists it)"
+    Say-Message "  No harness was installed or reconfigured."
+    Say-Message ""
+    Say-Message "Harnesses found on PATH"
+
+    if (Test-Harness "claude") {
+      Write-HarnessHead "claude" "Claude Code" "Verified (2.1.288)"
+      Say-Message "           Inside Claude Code, type:"
+      Say-Message "             /plugin marketplace add gaia-research/gaia-skill-heaven"
+      Say-Message "             /plugin install skill-heaven@gaia-skill-heaven"
+    } else { $script:missing += "claude" }
+    if (Test-Harness "codex") {
+      Write-HarnessHead "codex" "Codex" "Compatible (probed 0.146.0)"
+      Say-Message "             codex plugin marketplace add `"$MARKETPLACE_DIR`""
+      Say-Message "             codex plugin add skill-heaven@gaia-skill-heaven"
+    } else { $script:missing += "codex" }
+    if (Test-Harness "pi") {
+      Write-HarnessHead "pi" "Pi" "Compatible (probed 0.84.2)"
+      Say-Message "             pi install `"$PLUGIN_DIR`" --approve"
+    } else { $script:missing += "pi" }
+    if (Test-Harness "grok") {
+      Write-HarnessHead "grok" "Grok" "Compatible (probed 1.0.5)"
+      Say-Message "             grok plugin install `"$PLUGIN_DIR`" --trust"
+    } else { $script:missing += "grok" }
+    if (Test-Harness "hermes") {
+      Write-HarnessHead "hermes" "Hermes" "Compatible (probed 0.20.0)"
+      Say-Message "             hermes plugins install `"file://$PLUGIN_DIR`" --enable"
+    } else { $script:missing += "hermes" }
+    if (Test-Harness "agy") {
+      Write-HarnessHead "agy" "Antigravity" "Partial (static check on 1.3.1)"
+      Say-Message "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
+      Say-Message "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
+    } else { $script:missing += "agy" }
+
+    if ($script:found -eq 0) {
+      Say-Message "  (none found)"
+      Say-Message "  No supported harness was found on PATH. Skill Heaven runs inside a harness you already use; it never installs one."
+      Say-Message "  When you have one, run its command from $START_URL"
+    }
+    if ($script:missing.Count -gt 0) {
+      Say-Message ""
+      Say-Message ("Not found: " + ($script:missing -join ", "))
+    }
+    Say-Message ""
+    Say-Message "Another Agent Plugins client (Unverified)"
+    Say-Message "  Point your client's own plugin install at $PLUGIN_DIR."
+    Say-Message "  There is no universal registration command."
+    Say-Message ""
+    Say-Message "First run: inside your harness, type /summon <what you need>."
+    Say-Message "Update:    re-run this installer (clients that cache plugins also need their own update)."
+    Say-Message "Remove:    $INSTALL_HOME\uninstall.ps1   (client registrations are removed in each client)"
+    Say-Message "Choose your harness and read what each step does: $START_URL"
+  }
 
 } finally {
   if ($BACKED_UP -and (Test-Path $OLD)) {

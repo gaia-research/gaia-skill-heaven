@@ -29,7 +29,7 @@ describe("the tool is LIVE (#174)", () => {
 
   it("adds a dedicated production page and links it from the landing page and the hero", () => {
     expect(site("src/main.tsx")).toContain('path="/live"');
-    expect(site("src/main.tsx")).toMatch(/\(landing\|instrument\|live\)/);
+    expect(site("src/main.tsx")).toMatch(/\(landing\|instrument\|live(?:\|[a-z]+)*\)/);
     const landing = site("src/surfaces/Landing.tsx");
     expect(landing).toContain('href="#/live"');
     expect(landing).toContain("lp-live-banner");
