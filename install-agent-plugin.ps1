@@ -279,12 +279,12 @@ Write-Host "Client-managed plugin copies and registrations were not removed."
       Say-Message "             /plugin install skill-heaven@gaia-skill-heaven"
     } else { $script:missing += "claude" }
     if (Test-Harness "codex") {
-      Write-HarnessHead "codex" "Codex" "Compatible (probed 0.146.0)"
+      Write-HarnessHead "codex" "Codex" "Compatible (probed 0.161.0)"
       Say-Message "             codex plugin marketplace add `"$MARKETPLACE_DIR`""
       Say-Message "             codex plugin add skill-heaven@gaia-skill-heaven"
     } else { $script:missing += "codex" }
     if (Test-Harness "pi") {
-      Write-HarnessHead "pi" "Pi" "Compatible (probed 0.84.2)"
+      Write-HarnessHead "pi" "Pi" "Compatible (probed 1.0.4)"
       Say-Message "             pi install `"$PLUGIN_DIR`" --approve"
     } else { $script:missing += "pi" }
     if (Test-Harness "grok") {
@@ -296,9 +296,8 @@ Write-Host "Client-managed plugin copies and registrations were not removed."
       Say-Message "             hermes plugins install `"file://$PLUGIN_DIR`" --enable"
     } else { $script:missing += "hermes" }
     if (Test-Harness "agy") {
-      Write-HarnessHead "agy" "Antigravity" "Partial (static check on 1.3.1)"
-      Say-Message "           No registration command is printed until a logged-in probe shows Antigravity loading the summon server."
-      Say-Message "           The agy-zero launcher (probed on 1.2.13) gives a clean start meanwhile."
+      Write-HarnessHead "agy" "Antigravity" "Compatible (probed 1.3.1)"
+      Say-Message "             agy plugin install `"$PLUGIN_DIR`""
     } else { $script:missing += "agy" }
 
     if ($script:found -eq 0) {
@@ -315,7 +314,7 @@ Write-Host "Client-managed plugin copies and registrations were not removed."
     Say-Message "  Point your client's own plugin install at $PLUGIN_DIR."
     Say-Message "  There is no universal registration command."
     Say-Message ""
-    Say-Message "First run: inside your harness, type /summon <what you need>."
+    Say-Message "First run: inside your harness, type /summon <what you need> (Claude Code and Antigravity: /skill-heaven:summon <what you need>)."
     Say-Message "Update:    re-run this installer (clients that cache plugins also need their own update)."
     Say-Message "Remove:    $INSTALL_HOME\uninstall.ps1   (client registrations are removed in each client)"
     Say-Message "Choose your harness and read what each step does: $START_URL"

@@ -521,7 +521,16 @@ export default function Start() {
             First run
           </h2>
           <p className="st-prose st-prose--lead">
-            In any session, type <code className="st-code st-code--cmd">/summon &lt;what you need&gt;</code>.{' '}
+            {harness ? (
+              <>
+                In {harness.name}, type <code className="st-code st-code--cmd">{harness.firstRun}</code>.{' '}
+              </>
+            ) : (
+              <>
+                In any session, type <code className="st-code st-code--cmd">/summon &lt;what you need&gt;</code> — in Claude
+                Code and Antigravity, <code className="st-code st-code--cmd">/skill-heaven:summon &lt;what you need&gt;</code>.{' '}
+              </>
+            )}
             {MECHANIC.line}
           </p>
 

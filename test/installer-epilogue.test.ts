@@ -175,7 +175,7 @@ describe("install-agent-plugin.sh onboarding epilogue", () => {
     expect(found).toContain("Inside Claude Code, type:");
     expect(found).toContain("/plugin marketplace add gaia-research/gaia-skill-heaven");
     expect(found).toContain("/plugin install skill-heaven@gaia-skill-heaven");
-    expect(found).toMatch(/codex\s+Codex - Compatible \(probed 0\.146\.0\)/);
+    expect(found).toMatch(/codex\s+Codex - Compatible \(probed 0\.161\.0\)/);
     // The override location (with a space in it) is substituted, quoted.
     expect(run.marketplace).toContain(" ");
     expect(found).toContain(`codex plugin marketplace add "${run.marketplace}"`);
@@ -193,7 +193,7 @@ describe("install-agent-plugin.sh onboarding epilogue", () => {
     expect(changed).toContain(`+ ${run.plugin}`);
     expect(changed).toContain(`+ ${run.marketplace}`);
     expect(changed).toContain("No harness was installed or reconfigured.");
-    expect(out).toContain("First run: inside your harness, type /summon <what you need>.");
+    expect(out).toContain("First run: inside your harness, type /summon <what you need> (Claude Code and Antigravity: /skill-heaven:summon <what you need>).");
     expect(out).toContain("Update:    re-run this installer");
     expect(out).toContain(`Remove:    ${run.installHome}/uninstall.sh`);
     expect(out).toContain(`Choose your harness and read what each step does: ${START_URL}`);
@@ -208,21 +208,18 @@ describe("install-agent-plugin.sh onboarding epilogue", () => {
     expect(found).toContain(`pi install "${run.plugin}" --approve`);
     expect(found).toContain(`grok plugin install "${run.plugin}" --trust`);
     expect(found).toContain(`hermes plugins install "file://${run.plugin}" --enable`);
-    expect(found).toMatch(/pi\s+Pi - Compatible \(probed 0\.84\.2\)/);
+    expect(found).toMatch(/pi\s+Pi - Compatible \(probed 1\.0\.4\)/);
     expect(found).toMatch(/grok\s+Grok - Compatible \(probed 1\.0\.5\)/);
     expect(found).toMatch(/hermes\s+Hermes - Compatible \(probed 0\.20\.0\)/);
   }, 30_000);
 
-  it("reports a Partial harness honestly: no command, blocked text, never executed", () => {
+  it("prints Antigravity's probed registration command and never runs it", () => {
     const run = runInstaller({ harnesses: ["agy"] });
     expect(run.status).toBe(0);
     const out = epilogue(run.stdout);
     const found = section(out, "Harnesses found on PATH");
-    expect(found).toMatch(/agy\s+Antigravity - Partial \(static check on 1\.3\.1\)/);
-    expect(found).toContain(
-      "No registration command is printed until a logged-in probe shows Antigravity loading the summon server.",
-    );
-    expect(found).not.toMatch(/agy plugin/);
+    expect(found).toMatch(/agy\s+Antigravity - Compatible \(probed 1\.3\.1\)/);
+    expect(found).toContain(`agy plugin install "${run.plugin}"`);
     expect(section(out, "Not found:")).toBe("Not found: claude, codex, pi, grok, hermes");
     expect(run.executed).toEqual([]);
   }, 30_000);
@@ -416,7 +413,7 @@ describe("installer epilogue vs packages/status/src/compat.ts (drift)", () => {
       "(none found)",
       "No supported harness was found on PATH. Skill Heaven runs inside a harness you already use; it never installs one.",
       "Not found: ",
-      "First run: inside your harness, type /summon <what you need>.",
+      "First run: inside your harness, type /summon <what you need> (Claude Code and Antigravity: /skill-heaven:summon <what you need>).",
       "Update:    re-run this installer",
       "Remove:    ",
     ]) {
