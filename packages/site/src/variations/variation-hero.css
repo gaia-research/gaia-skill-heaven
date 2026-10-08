@@ -738,12 +738,13 @@ body.vh-hero-page {
 /* ─────────────────────────────────────────────────────────────────────────
    Upper-left explainer — whisper-quiet, dismissable, responsive to mobile.
    Acts 1–4: "What is this?" (the system). Act 5: "Skill entropy" + a sketch.
+   Positioned below the persistent top-left .vha-live bar to avoid overlap.
    ───────────────────────────────────────────────────────────────────────── */
 .vha-info {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
-  z-index: 40;
+  top: 58px;
+  left: 8vw;
+  z-index: 60;
   pointer-events: auto;
   max-width: min(88vw, 340px);
 }
@@ -826,9 +827,9 @@ body.vh-hero-page {
 }
 .vha-info-nub {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
-  z-index: 40;
+  top: 58px;
+  left: 8vw;
+  z-index: 60;
   pointer-events: auto;
   width: 22px;
   height: 22px;
@@ -849,8 +850,8 @@ body.vh-hero-page {
 @media (max-width: 640px) {
   .vha-info,
   .vha-info-nub {
-    left: 14px;
-    top: 12px;
+    left: 16px;
+    top: 68px;
   }
   /* Mobile keeps the "About" word readable — there is no boxed "?" glyph left
      to fall back to (see .vha-info-q below), so hiding the label here would
@@ -870,7 +871,7 @@ body.vh-hero-page {
   position: fixed;
   top: 58px;
   right: 8vw;
-  z-index: 40;
+  z-index: 60;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
