@@ -295,11 +295,11 @@ class SkillSummonClient {
 }
 
 const commandAliases = [
-  ["summon", "summon", "Summon one skill for this session"],
-  ["skill-zero", "skill-zero", "Zero cut reference: temporary skills cut, or `all` cuts every summon"],
-  ["skill-heaven", "skill-heaven", "Converge band reference: human-led discovery at low or med"],
-  ["skill-hell", "skill-hell", "Explore band reference: model-led discovery at high, xhigh, or max"],
-  ["skill-ultra", "skill-ultra", "Ultra crown rung reference: caller picks direction and depth"],
+  ["summon", "skill-heaven-runtime-summon", "Summon one skill for this session"],
+  ["skill-zero", "skill-heaven-runtime-skill-zero", "Zero cut reference: temporary skills cut, or `all` cuts every summon"],
+  ["skill-heaven", "skill-heaven-runtime-skill-heaven", "Converge band reference: human-led discovery at low or med"],
+  ["skill-hell", "skill-heaven-runtime-skill-hell", "Explore band reference: model-led discovery at high, xhigh, or max"],
+  ["skill-ultra", "skill-heaven-runtime-skill-ultra", "Ultra crown rung reference: caller picks direction and depth"],
 ] as const;
 
 export default function skillHeavenPi(pi: ExtensionAPI): void {

@@ -15,7 +15,7 @@
       "./dev.skill-heaven.pi/skill-heaven.ts"
     ],
     "skills": [
-      "./skills"
+      "./dev.skill-heaven.pi/skills"
     ]
   }
 }
