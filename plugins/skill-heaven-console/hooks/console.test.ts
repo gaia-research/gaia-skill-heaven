@@ -231,7 +231,7 @@ describe('status entry', () => {
     const w = world(on, () => summonResult())
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
-    expect(w.last()).toContain('1 summon')
+    expect(w.last()).toContain('1 skill')
   })
 })
 
@@ -247,7 +247,7 @@ describe('rung selection', () => {
     // compact keeps the reading and the count; the controller wording is for full mode, Scope and the pane
     expect(w.last()).not.toContain('controller unavailable')
     for (const surface of SURFACES) {
-      await $.command.run(heaven('scope'))
+      await $.command.run(heaven('inspect scope'))
       const ui = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       expect(await ui.find({ type: 'Text', text: /controller unavailable/ })).toBeDefined()
       expect(await ui.find({ type: 'Text', text: /provisioned/ })).toBeDefined()
@@ -272,10 +272,11 @@ describe('observing body reads', () => {
     expect(read.text).toBe('file contents')
     expect(w.reads).toHaveLength(1)
     for (const surface of SURFACES) {
-      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      // the band still shows the arrival; the stage says the body was read
-      expect(await band.find({ type: 'Text', text: /in context · body read by main agent/ })).toBeDefined()
-      await band.unmount()
+      await $.command.run(heaven('inspect session'))
+      const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
+      await pane.press({ key: 'toggle-1' })
+      expect(JSON.stringify(await pane.drawn())).toContain('body read (in context) by main agent')
+      await pane.unmount()
     }
   })
 
@@ -285,17 +286,20 @@ describe('observing body reads', () => {
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
     await $.tool.call({ tool: 'Read', file_path: '/tmp/elsewhere/SKILL.md' })
     for (const surface of SURFACES) {
-      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      expect(await band.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined()
-      await band.unmount()
+      await $.command.run(heaven('inspect session'))
+      const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
+      await pane.press({ key: 'toggle-1' })
+      expect(await pane.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined()
+      await pane.unmount()
     }
   })
 })
 
 describe('the Lens band', () => {
-  test('is empty by default', async ($, on) => {
+  test('is empty by default, including after an ordinary summon observation', async ($, on) => {
     world(on, () => summonResult())
     await $.session.start(START)
+    await $.tool.call({ tool: SUMMON, query: 'ordinary observation', surface: 'any' })
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
       expect(await band.findAll({ type: 'Button' })).toHaveLength(0)
@@ -307,7 +311,7 @@ describe('the Lens band', () => {
   test('shows the arrival with Inspect and Dismiss, hides on Dismiss, and yields to a survey', async ($, on) => {
     world(on, () => summonResult())
     await $.session.start(START)
-    await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    await $.command.run(lens('explicit inspection'))
     for (const surface of SURFACES) {
       const survey = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: { ...AT_REST, hasSurvey: true } })
       expect(await survey.findAll({ type: 'Button' })).toHaveLength(0)
@@ -315,7 +319,7 @@ describe('the Lens band', () => {
     }
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      expect(await band.find({ type: 'Text', text: /summoned/ })).toBeDefined()
+      expect(JSON.stringify(await band.drawn())).toContain('summoned')
       expect(await band.find({ key: 'inspect' })).toBeDefined()
       expect(await band.find({ key: 'dismiss' })).toBeDefined()
       expect(await band.find({ key: 'summon' })).toBeUndefined() // a summoned card has no Summon action
@@ -324,8 +328,8 @@ describe('the Lens band', () => {
       expect(await again.findAll({ type: 'Button' })).toHaveLength(0)
       await again.unmount()
       await band.unmount()
-      // bring it back for the next surface
-      await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+      // Request Lens again for the next surface; ordinary observations stay hidden.
+      await $.command.run(lens('explicit inspection'))
     }
   })
 
@@ -340,7 +344,8 @@ describe('the Lens band', () => {
     expect(w.last()).toContain('0 skills')
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      expect(await band.find({ type: 'Text', text: /nothing materialized/ })).toBeDefined()
+      expect(await band.find({ type: 'Text', text: /impeccable/ })).toBeDefined()
+      expect(await band.find({ key: 'inspect' })).toBeDefined()
       const before = w.calls.length
       await band.press({ key: 'summon' })
       expect(w.calls).toHaveLength(before) // pre-fill only: the summon tool was not called
@@ -358,7 +363,8 @@ describe('the Lens band', () => {
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
       const drawn = JSON.stringify(await band.drawn())
-      expect(drawn.split('nothing materialized').length - 1).toBe(1)
+      expect(drawn.toLowerCase()).not.toContain('nothing materialized')
+      expect(await band.find({ key: 'inspect' })).toBeDefined()
       await band.press({ key: 'summon' })
       expect(w.fills[w.fills.length - 1]).toEqual({ text: '/skill-heaven:summon Frontend Code Review', mode: 'insert' })
       await band.unmount()
@@ -370,6 +376,7 @@ describe('the Lens band', () => {
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'audit cookie handling', surface: 'any' })
     expect(w.last()).toContain('1 skill')
+    await $.command.run(lens('inspect received card'))
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
       expect(await band.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined() // a real summon keeps its stage line
@@ -381,6 +388,7 @@ describe('the Lens band', () => {
     const w = world(on, () => summonResult())
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    await $.command.run(lens('explicit inspection'))
     await $.prompt.submit({ text: '/skill-hell high', wait: false, origin: { kind: 'peer' } } as never)
     expect(w.last()).toContain('[NATIVE]')
     const band = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'AbovePrompt', props: AT_REST })
@@ -409,6 +417,7 @@ describe('the Lens band', () => {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
       expect(await band.find({ type: 'Text', text: /not connected/ })).toBeDefined()
       await band.unmount()
+      await $.command.run(heaven('inspect session'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       expect(await pane.find({ type: 'Text', text: /summon tool: not connected/ })).toBeDefined()
       await pane.unmount()
@@ -417,17 +426,45 @@ describe('the Lens band', () => {
 })
 
 describe('the /heaven pane', () => {
-  test('shows the empty-session copy and every section', async ($, on) => {
+  test('shows the empty-session summary first and explicit inspection for every section', async ($, on) => {
     world(on, () => summonResult())
     await $.session.start(START)
     for (const surface of SURFACES) {
+      await $.command.run(heaven())
+      const summary = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
+      expect(JSON.stringify(await summary.drawn())).toContain('Session · no receipts available')
+      expect(await summary.find({ type: 'Text', text: /Choose a rung/ })).toBeUndefined()
+      await summary.press({ key: 'section-scope' })
+      await summary.press({ key: 'inspect-section' })
+      expect(await summary.find({ type: 'Text', text: /keep small/ })).toBeDefined()
+      await summary.press({ key: 'section-flow' })
+      await summary.press({ key: 'inspect-section' })
+      expect(await summary.find({ type: 'Text', text: /This host did not report agent ids/ })).toBeDefined()
+      await summary.press({ key: 'section-trust' })
+      await summary.press({ key: 'inspect-section' })
+      expect(await summary.find({ type: 'Text', text: /writes/ })).toBeDefined()
+      await summary.press({ key: 'section-session' })
+      await summary.press({ key: 'inspect-section' })
+      await summary.press({ key: 'close-pane' })
+      await summary.unmount()
+    }
+  })
+
+  test('legacy section inspection is explicit', async ($, on) => {
+    world(on, () => summonResult())
+    await $.session.start(START)
+    for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect session'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       expect(await pane.find({ type: 'Text', text: /Nothing summoned yet/ })).toBeDefined()
       await pane.press({ key: 'section-scope' })
+      await pane.press({ key: 'inspect-section' })
       expect(await pane.find({ type: 'Text', text: /keep small/ })).toBeDefined()
       await pane.press({ key: 'section-flow' })
+      await pane.press({ key: 'inspect-section' })
       expect(await pane.find({ type: 'Text', text: /This host did not report agent ids/ })).toBeDefined()
       await pane.press({ key: 'section-trust' })
+      await pane.press({ key: 'inspect-section' })
       expect(await pane.find({ type: 'Text', text: /writes/ })).toBeDefined()
       expect(await pane.find({ type: 'Text', text: /nothing to disk/ })).toBeDefined()
       await pane.press({ key: 'section-session' })
@@ -439,8 +476,8 @@ describe('the /heaven pane', () => {
     const w = world(on, () => summonResult())
     await $.session.start(START)
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect scope'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
-      await pane.press({ key: 'section-scope' })
       for (const key of ['fill-heaven', 'fill-hell', 'fill-ultra', 'fill-zero', 'fill-zero-all', 'copy-clean']) {
         await pane.press({ key })
       }
@@ -462,6 +499,7 @@ describe('the /heaven pane', () => {
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'audit cookie handling', surface: 'any' })
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect session'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       expect(await pane.find({ type: 'Text', text: /browser-security/ })).toBeDefined()
       await pane.press({ key: 'toggle-1' })
@@ -481,8 +519,8 @@ describe('the /heaven pane', () => {
       await $.tool.call({ tool: 'Agent', description: `task number ${i}`, prompt: 'p', subagent_type: 'Explore' })
     }
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect flow'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
-      await pane.press({ key: 'section-flow' })
       expect(await pane.find({ type: 'Text', text: /\+2 more/ })).toBeDefined()
       expect(await pane.find({ type: 'Text', text: /This host did not report agent ids/ })).toBeUndefined()
       await pane.unmount()
@@ -496,8 +534,8 @@ describe('Flow without agent ids', () => {
     await $.session.start(START)
     await $.tool.call({ tool: 'Agent', description: 'map the auth module', prompt: 'p', subagent_type: 'Explore' })
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect flow'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
-      await pane.press({ key: 'section-flow' })
       expect(await pane.find({ type: 'Text', text: /This host did not report agent ids/ })).toBeDefined()
       expect(await pane.find({ type: 'Text', text: /map the auth module/ })).toBeDefined()
       await pane.unmount()
@@ -510,6 +548,7 @@ describe('untrusted text and failures', () => {
     const w = world(on, () => summonResult(), { fail: 'summon failed: boom' })
     await $.session.start(START)
     const result = await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    await $.command.run(lens('inspect failed result'))
     expect(result.isError).toBe(true)
     expect(result.text).toBe('summon failed: boom')
     expect(w.last()).toContain('0 skills')
@@ -539,6 +578,7 @@ describe('untrusted text and failures', () => {
     world(on, () => summonResult())
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    await $.command.run(lens('explicit inspection'))
     await $.prompt.submit({ text: 'carry on', wait: false, origin: { kind: 'composer' } })
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
@@ -552,6 +592,7 @@ describe('untrusted text and failures', () => {
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect session'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       // the open receipt is session state: it stays open across surfaces
       if ((await pane.find({ type: 'Text', text: /source health/ })) === undefined) await pane.press({ key: 'toggle-1' })
@@ -649,13 +690,12 @@ describe('/lens failures', () => {
     expect(w.last()).toContain('0 skills')
     for (const surface of SURFACES) {
       const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      expect(await band.find({ type: 'Text', text: /preview aborted or failed/ })).toBeDefined()
+      expect(await band.find({ type: 'Text', text: /failed/ })).toBeDefined()
       expect(await band.find({ type: 'Text', text: /not connected/ })).toBeUndefined()
       await band.unmount()
+      await $.command.run(heaven('inspect trust'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
-      await pane.press({ key: 'section-trust' })
-      expect(await pane.find({ type: 'Text', text: /unknown until the first summon/ })).toBeDefined()
-      await pane.press({ key: 'section-session' })
+      expect(await pane.find({ type: 'Text', text: /unknown until the first summon or \/lens/ })).toBeDefined()
       await pane.unmount()
     }
   })
@@ -691,15 +731,17 @@ describe('reading the result', () => {
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
     await $.tool.call({ tool: 'Read', file_path: '/tmp/skill-summon-session-1/browser-security/SKILL.md', limit: 10 })
-    for (const surface of SURFACES) {
-      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
-      expect(await band.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined()
-      await band.unmount()
-    }
+    await $.command.run(heaven('inspect session'))
+    const partial = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: 'skill-heaven', props: PANE })
+    await partial.press({ key: 'toggle-1' })
+    expect(await partial.find({ type: 'Text', text: /card returned · body not read/ })).toBeDefined()
+    await partial.unmount()
     await $.tool.call({ tool: 'Read', file_path: '/tmp/skill-summon-session-1/browser-security/SKILL.md' })
-    const band = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'AbovePrompt', props: AT_REST })
-    expect(await band.find({ type: 'Text', text: /in context · body read by main agent/ })).toBeDefined()
-    await band.unmount()
+    await $.command.run(heaven('inspect session'))
+    const complete = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: 'skill-heaven', props: PANE })
+    await complete.press({ key: 'toggle-1' })
+    expect(await complete.find({ type: 'Text', text: /body read \(in context\) by main agent/ })).toBeDefined()
+    await complete.unmount()
   })
 
   test('a skill whose id is __proto__ cannot corrupt the read bookkeeping', async ($, on) => {
@@ -707,9 +749,11 @@ describe('reading the result', () => {
     await $.session.start(START)
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
     await $.tool.call({ tool: 'Read', file_path: '/tmp/s/x/SKILL.md' })
-    const band = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'AbovePrompt', props: AT_REST })
-    expect(await band.find({ type: 'Text', text: /in context · body read by main agent/ })).toBeDefined()
-    await band.unmount()
+    await $.command.run(heaven('inspect session'))
+    const pane = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: 'skill-heaven', props: PANE })
+    await pane.press({ key: 'toggle-1' })
+    expect(await pane.find({ type: 'Text', text: /body read \(in context\) by main agent/ })).toBeDefined()
+    await pane.unmount()
   })
 
   test('only the first stored skills are kept, the count stays true', async ($, on) => {
@@ -719,6 +763,7 @@ describe('reading the result', () => {
     await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
     expect(w.last()).toContain('25 skills')
     for (const surface of SURFACES) {
+      await $.command.run(heaven('inspect session'))
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       if ((await pane.find({ type: 'Text', text: /more not shown here/ })) === undefined) await pane.press({ key: 'toggle-1' })
       expect(await pane.find({ type: 'Text', text: /\+22 more not shown here/ })).toBeDefined()
@@ -734,8 +779,8 @@ describe('agents', () => {
     for (let i = 0; i < 105; i++) {
       await $.tool.call({ tool: 'Agent', description: `task ${i}`, prompt: 'p', subagent_type: 'Explore' })
     }
+    await $.command.run(heaven('inspect flow'))
     const pane = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: 'skill-heaven', props: PANE })
-    await pane.press({ key: 'section-flow' })
     expect(await pane.find({ type: 'Text', text: /\+88 more/ })).toBeDefined()
     await pane.unmount()
   })
@@ -763,6 +808,7 @@ describe('when a button cannot do its job', () => {
     for (const surface of SURFACES) {
       const pane = await $.ui.mount({ plugin: PLUGIN, surface, component: 'Pane', requestId: 'skill-heaven', props: PANE })
       await pane.press({ key: 'section-scope' })
+      await pane.press({ key: 'inspect-section' })
       await pane.press({ key: 'fill-hell' })
       await pane.press({ key: 'copy-clean' })
       await pane.press({ key: 'section-session' })
