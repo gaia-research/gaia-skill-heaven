@@ -183,6 +183,9 @@ export function install(o: Options): void {
     if (market.plugins.length !== (profile === "full" ? 2 : 1)) throw new Error("could not write the local marketplace manifest");
     mkdirSync(join(next, "marketplace", ".claude-plugin"));
     writeFileSync(join(next, "marketplace", ".claude-plugin", "marketplace.json"), JSON.stringify(market, null, 2) + "\n");
+    // Commit the marketplace payload before nested repositories exist: local
+    // marketplace clones need real files, not gitlinks to standalone pieces.
+    gitRepository(staged.marketplaceDir);
     gitRepository(staged.pluginDir); if (profile === "full") gitRepository(staged.consoleDir);
     cpSync(join(source, "scripts", "install-profile.mjs"), join(next, "install-profile.mjs"));
     writeFileSync(join(next, MARKER), "skill-heaven/install@1\n"); uninstallScripts(next);

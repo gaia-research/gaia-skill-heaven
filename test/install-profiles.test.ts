@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -197,6 +197,42 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(existsSync(result.paths.pluginDir)).toBe(true);
     expect(existsSync(result.paths.consoleDir)).toBe(true);
   }, 120_000);
+
+  it("clones the Full marketplace with real payload files and independent child Git roots", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "pi")!;
+    const r = makeSandbox("marketplace-git-root", [h], false);
+    const staged = call(r, ["--profile", "full", "--harness", h.id]);
+    expect(staged.status, staged.stderr).toBe(0);
+    expect(lines(r.log)).toEqual([]);
+    const env = { ...process.env };
+    for (const key of Object.keys(env)) if (key.startsWith("GIT_")) delete env[key];
+    env.GIT_CONFIG_NOSYSTEM = "1";
+    env.GIT_CONFIG_GLOBAL = env.GIT_CONFIG_SYSTEM = process.platform === "win32" ? "NUL" : "/dev/null";
+    const git = (args: string[]) => {
+      const run = spawnSync(join(dirname(r.log), "sealed PATH", "git"), args, { env, encoding: "utf8", timeout: 30_000 });
+      expect(run.status, run.stderr).toBe(0);
+      return run.stdout;
+    };
+    const tree = git(["-C", r.paths.marketplaceDir, "ls-tree", "-r", "HEAD"]);
+    expect(tree).not.toMatch(/^160000 /m);
+    expect(tree).toContain("plugins/skill-heaven/plugin.json");
+    expect(tree).toContain("plugins/skill-heaven-console/extensions/console.mjs");
+    const clone = join(dirname(r.log), "marketplace clone 'quoted'");
+    git(["clone", "--quiet", "--no-local", r.paths.marketplaceDir, clone]);
+    for (const file of [".claude-plugin/marketplace.json", "plugins/skill-heaven/plugin.json", "plugins/skill-heaven/mcp/skill-summon.mjs", "plugins/skill-heaven-console/package.json", "plugins/skill-heaven-console/extensions/console.mjs"]) {
+      expect(readFileSync(join(clone, file))).toEqual(readFileSync(join(r.paths.marketplaceDir, file)));
+    }
+    expect(existsSync(join(clone, "plugins", "skill-heaven", ".git"))).toBe(false);
+    expect(existsSync(join(clone, "plugins", "skill-heaven-console", ".git"))).toBe(false);
+    // Nested sources remain clonable by file:// clients independently of the
+    // outer marketplace, without requiring submodule setup or network access.
+    for (const [label, source, payload] of [["core", r.paths.pluginDir, "plugin.json"], ["console", r.paths.consoleDir, "extensions/console.mjs"]]) {
+      expect(realpathSync(git(["-C", source!, "rev-parse", "--show-toplevel"]).trim())).toBe(realpathSync(source!));
+      const child = join(dirname(r.log), `${label} standalone clone`);
+      git(["clone", "--quiet", "--no-local", source!, child]);
+      expect(readFileSync(join(child, payload!))).toEqual(readFileSync(join(source!, payload!)));
+    }
+  });
 
   it("does not mark a failed host registration successful", () => {
     const harness = lifecycleHarnesses[0]!;

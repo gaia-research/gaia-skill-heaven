@@ -673,6 +673,7 @@ function install(o) {
     if (market.plugins.length !== (profile === "full" ? 2 : 1)) throw new Error("could not write the local marketplace manifest");
     mkdirSync(join(next, "marketplace", ".claude-plugin"));
     writeFileSync(join(next, "marketplace", ".claude-plugin", "marketplace.json"), JSON.stringify(market, null, 2) + "\n");
+    gitRepository(staged.marketplaceDir);
     gitRepository(staged.pluginDir);
     if (profile === "full") gitRepository(staged.consoleDir);
     cpSync(join(source, "scripts", "install-profile.mjs"), join(next, "install-profile.mjs"));
