@@ -37,13 +37,15 @@ function makeSandbox(label: string, harnesses: readonly HarnessPath[], seedCore 
 
   const binaries = new Set<string>();
   for (const harness of harnesses) {
-    const plan = planProfile(harness, "full", "register");
-    if (plan.kind === "steps") {
-      for (const step of plan.steps) {
-        const argv = (step as typeof step & { argv?: readonly string[] }).argv;
-        if (argv?.[0]) {
-          if (argv[0].includes("/")) throw new Error(`refusing real host executable in test sandbox: ${argv[0]}`);
-          binaries.add(argv[0]);
+    for (const profile of ["core", "full"] as const) {
+      const plan = planProfile(harness, profile, "register");
+      if (plan.kind === "steps") {
+        for (const step of plan.steps) {
+          const argv = (step as typeof step & { argv?: readonly string[] }).argv;
+          if (argv?.[0]) {
+            if (argv[0].includes("/")) throw new Error(`refusing real host executable in test sandbox: ${argv[0]}`);
+            binaries.add(argv[0]);
+          }
         }
       }
     }
