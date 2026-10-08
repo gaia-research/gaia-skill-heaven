@@ -1,6 +1,6 @@
 ---
 name: skill-zero
-description: Report the zero cut: temporary automatic skills are cut, and `all` cuts every skill summon.
+description: Report the zero cut — temporary automatic skills are cut, and `all` cuts every skill summon.
 disable-model-invocation: true
 user-invocable: false
 ---
