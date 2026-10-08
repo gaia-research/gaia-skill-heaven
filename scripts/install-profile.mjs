@@ -632,6 +632,11 @@ function install(o) {
       finish(o.home, previous);
       const h2 = HARNESS_PATHS.find((candidate) => candidate.id === previous.harness);
       const paths2 = pathsFor(o.home);
+      if (o.quiet) {
+        console.log(`${paths2.pluginDir}
+${paths2.marketplaceDir}`);
+        return;
+      }
       console.log(renderInstallEpilogue({
         profile: t.target,
         previous: t.previousProfile,

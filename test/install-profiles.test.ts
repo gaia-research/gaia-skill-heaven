@@ -293,6 +293,16 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(receipt(r.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
   });
 
+  it("keeps --quiet output when a registration checkpoint resumes", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "codex")!;
+    const r = makeSandbox("checkpoint-register-quiet", [h], false);
+    expect(call(r, ["--profile", "full", "--harness", h.id, "--register"], undefined, { FAIL_STEP: "1" }).status).not.toBe(0);
+    const retry = call(r, ["--register", "--quiet"]);
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(retry.stdout.trim().split("\n")).toEqual([r.paths.pluginDir, r.paths.marketplaceDir]);
+    expect(receipt(r.home)).toMatchObject({ profile: "full", harness: h.id, registered: true, incomplete: false });
+  });
+
   it("resumes an incomplete update, not a registration plan", () => {
     const h = HARNESS_PATHS.find(h => h.id === "codex")!;
     const r = makeSandbox("checkpoint-update", [h]);
