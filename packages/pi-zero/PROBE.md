@@ -105,3 +105,14 @@ pi --model openai-codex/gpt-5.6-luna:low --print --no-session --no-skills --mode
 
 No token number above is invented — every one is a directly observed
 `totalTokens` value from a real `--mode json` run, repeated at least once.
+
+---
+
+## Addendum — Pi 1.0.4 (PR #187, 2026-10-08)
+
+Not re-probed here: the launcher's token-count suppression cells above. `pi --help` on 1.0.4 still
+lists `--no-skills`, `--no-context-files`, `--no-prompt-templates` and `--no-extensions` (static).
+1.0.4 adds `--no-mcp`. The Skill Heaven **plugin** was re-probed live on 1.0.4: the adapter is
+still correct, Pi's new MCP runtime is not an equivalent route, `/skill-zero` needed a frontmatter
+fix, and Pi's status API can carry the canonical line. See
+[`plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`](../../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).

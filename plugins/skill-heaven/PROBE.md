@@ -112,3 +112,36 @@ stable plugin directory plus a local marketplace and prints both paths. Tested
 clients register that same artifact with their own command; other conformant
 clients have the directory contract but remain unverified here. The installer
 does not guess at or mutate an unknown harness's configuration.
+
+## Current-version cells (PR #187, 2026-10-08)
+
+macOS 26.4.1 arm64. Every harness invocation ran in a visible Herdr pane. Each client used an
+isolated home with its auth file copied in for the run and deleted afterwards. The plugin was the
+one `install-agent-plugin.sh` built from this branch (`SKILL_HEAVEN_REF=<full sha>`; a short SHA
+404s at codeload).
+
+| Client | Version | Route | Hard signal | Result |
+|---|---|---|---|---|
+| Codex | 0.161.0 | `codex plugin marketplace add` + `codex plugin add skill-heaven@gaia-skill-heaven`, `codex exec --json` | `codex mcp list --json` resolves `skill-summon` (`PLUGIN_ROOT`/`PLUGIN_DATA` expanded); `mcp_tool_call` `skill-summon/summon` `status: completed`, `error: null` | pass. Headless `exec` under the default approval policy refused the MCP call (`requires approval, but approval policy is set to never`); passed with approvals bypassed in a throwaway workspace |
+| Hermes | 0.20.0 (2026.8.3) | `hermes plugins install "file://…" --enable`, `hermes chat -q` (`openai-codex`/`gpt-5.6-luna`) | `agent.log`: `tool mcp__agent_plugin_skill_heaven_…_skill_summon__summon completed (1.27s)`; a new `skill-summon-session-*` root | pass. A cosmetic `Unknown toolsets: …__skill-summon` warning; `gpt-5.4` is not available to a ChatGPT-linked Codex account |
+| Grok | 1.0.46 | `grok plugin install <dir> --trust`, `grok plugin details` | installed `skill-heaven v0.1.2`, components `1 skill dir, 1 command dir, MCP servers` | static only: Grok is not signed in on this machine, so no summon ran |
+| Antigravity | 1.3.1 | see [`packages/agy-zero/PROBE.md`](../../packages/agy-zero/PROBE.md) §4 | `call_mcp_tool skill-heaven_skill-summon/summon DONE` | pass after the `mcp_config.json` shim |
+| Pi | 1.0.4 | see [`dev.skill-heaven.pi/PROBE.md`](dev.skill-heaven.pi/PROBE.md) | native `summon` tool, five surfaces | pass after the `skill-zero` frontmatter fix |
+
+### Claude Code 2.1.294: a bare surface is refused
+
+In a logged-in 2.1.294 session, with both the marketplace install (0.1.1) and `--plugin-dir` of
+this branch, typing a bare `/skill-zero` or `/skill-hell high` printed:
+
+```
+This skill can only be invoked by Claude, not directly by users. Ask Claude to use the "skill-zero" skill for you.
+```
+
+The bare name resolves to the portable skill, which is `user-invocable: false` (the #146 fix for
+the doubled `/` menu). The qualified `/skill-heaven:skill-hell high`, the spelling the `/` menu
+lists, reaches the command: the console then read `[HIGH]`. `/skill-heaven:summon …` summons. The
+release receipt at 2.1.288 checked `slash_commands` but never typed a bare name, so whether
+2.1.288 behaved the same is unknown. Dropping `user-invocable: false` would bring back the doubled
+menu, so the fix is in what Skill Heaven tells people to type: the console's pre-fills, `/start`,
+and both installers now use `/skill-heaven:<surface>` for Claude Code. Re-verify on every Claude
+Code upgrade.

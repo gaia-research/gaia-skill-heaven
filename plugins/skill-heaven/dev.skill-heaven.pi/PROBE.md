@@ -111,3 +111,60 @@ existed while Pi was running, then sent Pi `SIGTERM`; after graceful
 `session_shutdown`, the MCP child had exited and the whole root no longer
 existed. Failed startup also routes through the same awaited cleanup. The MCP
 bundle remains the only summon implementation.
+
+---
+
+# Re-probe on Pi 1.0.4 (PR #187, 2026-10-08)
+
+**Harness:** `pi` 1.0.4 · macOS 26.4.1 arm64 · Node 22 · model `openai-codex/gpt-5.6-luna:low`.
+Cells ran in a visible Herdr pane over `--mode rpc`, and every record was logged. Install cells used
+a throwaway `HOME` and `PI_CODING_AGENT_DIR` (auth copied in for the run, then deleted), so the
+user's Pi settings were never written.
+
+## The stale premise
+
+The finding above ("deliberately ships without MCP") is **no longer true**. Pi 0.99.0 added
+built-in MCP: `mcp.json` (user or trusted project), `pi mcp add|list|…`, and
+`pi.registerMcpServer(name, config)` for extensions. Pi still has no Agent Plugins loader. A package
+manifest can declare `extensions`, `skills`, `prompts` and `themes`, but not MCP servers, and the
+five `commands/*.md` use Claude-only `!` shell expansion, so Pi still needs the five command aliases.
+
+## Is the adapter still correct? Yes. Is a simpler route available? Not an equivalent one.
+
+| Cell | Route | Hard signal | Result |
+|---|---|---|---|
+| P1 | `pi install ./plugins/skill-heaven` (isolated), RPC `get_commands --offline` | `summon`, `skill-zero`, `skill-heaven`, `skill-hell`, `skill-ultra` with `source: extension` at the adapter path, plus `skill:*` at the plugin's own `skills/` | pass |
+| P3/P7 | same, live: `/summon frontend code review` + four surfaces | `tool_execution_start/end` for `summon` `isError: false`; the model `read` the materialized `skill-summon-session-*/…/SKILL.md`; each surface's user message is that surface's `<skill … location=".../plugins/skill-heaven/skills/<surface>/SKILL.md">` | pass |
+| P4 | prototype adapter: `pi.registerMcpServer("skill-summon", { …mcp.json, exposure: "direct" })`, built-in MCP, clean HOME | tool `mcp__skill_summon__summon` declared directly; call returned the JSON text; body read | pass |
+| P5 | the same prototype under this machine's real Pi config (`"extensions": ["-builtin:mcp"]` + `npm:pi-mcp-adapter` 5.1.0), loaded with `-e` only | `exposure: "direct"` **not honoured**: the model called the `mcp` proxy, got `configured but not connected`, connected, then called `skill-summon_summon` through the proxy | degraded |
+| P5′ | current adapter, same real config | one native `summon` call | pass |
+
+**Decision:** keep the adapter. Pi's own MCP route depends on which MCP runtime the user runs. Pi's
+docs name `pi-mcp-adapter` as a replacement that takes over `mcp.json` and registrations, and
+`--no-mcp` or `-builtin:mcp` without a replacement removes the tool entirely. The adapter's summon
+tool works the same under all of them. Only the stale "no MCP" wording changed. Every other line of
+the adapter stands.
+
+## Defect the re-probe found (fixed)
+
+`/skill-zero` reached the model as the literal text `/skill:skill-zero`, and Pi's command list had no
+`skill:skill-zero`. Pi 1.0.4 parses frontmatter as strict YAML and silently skipped the skill,
+whose description `Report the zero cut: temporary …` is not a valid plain scalar. Claude's lenient
+reader had loaded it. Fixed in `skills/skill-zero/SKILL.md`, with a regression test holding every
+surface's skill and command frontmatter to strict plain scalars. Re-run P7: all five surfaces pass.
+
+## Environment note (not a product defect)
+
+On this machine, `~/.agents/skills/{summon,skill-*}` are user-made symlinks into an older Claude
+marketplace clone. Pi discovers `~/.agents/skills` and they won the `skill:*` names over the
+plugin's own skills (cell P2, discarded). Every load-bearing cell above ran with a clean HOME.
+
+## Status API
+
+`ctx.ui.setStatus(key, text)` appends one entry per extension key. A probe extension that folded
+the summon tool's `details` through the committed status bundle (`eventFromSummonResult` →
+`reduceStatus` → `renderStatusSegments` → `toPlain`) emitted RPC `extension_ui_request
+setStatus` records: `◇ entropy ‹‹ [NATIVE] ›› · 0 skills / 0 summons`, then `… · 1 skill / 1 summon
+· +Frontend Code Review`. Pi can carry the canonical line without a second source of truth. It
+is **not wired** into the plugin yet: that needs the status bundle shipped inside the portable
+package.

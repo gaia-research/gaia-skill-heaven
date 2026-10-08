@@ -7,8 +7,9 @@ Skill Heaven works exactly the same without it.
 
 > **Status: preview.** It is built on Claude Code's early-access Mods API (function hooks, first
 > available in 2.1.293), which may change between releases. It has passed `claude plugin validate`
-> and the engine's own test kit on both the terminal and desktop surfaces. **How it paints in a
-> logged-in desktop session has not been probed yet** — treat the desktop look as unconfirmed.
+> and the engine's own test kit on both the terminal and desktop surfaces, and a **live probe in a
+> logged-in terminal session on 2.1.294** (below). **How it paints in the desktop app has not been
+> probed** — treat the desktop look as unconfirmed.
 
 ## What it adds
 
@@ -16,10 +17,10 @@ Skill Heaven works exactly the same without it.
 |---|---|
 | **Status entry** | `◇ entropy ‹‹ [NATIVE] ›› · 2 skills` beside your own status line. It is appended; your `statusLine` setting is never touched. |
 | **Lens band** | Empty by default. After a summon it shows the result in two lines and whether the skill body was read (`card returned · body not read` or `in context · body read by main agent`). `Inspect` opens the pane, `Dismiss` hides it. It also hides on your next prompt. |
-| **`/lens <intent>`** | Previews which skill would be summoned, with `preview: true`. Nothing is materialized; the summon engine still logs the query in its own session directory. The preview and its detail appear in the band, not in the conversation. For a single candidate the band offers `Summon`, which only **fills your prompt** with `/summon <name>` — you press Enter. If a summon tool ignores `preview` and materializes a skill, the band shows that real summon and the count includes it. |
+| **`/lens <intent>`** | Previews which skill would be summoned, with `preview: true`. Nothing is materialized; the summon engine still logs the query in its own session directory. The preview and its detail appear in the band, not in the conversation. For a single candidate the band offers `Summon`, which only **fills your prompt** with `/skill-heaven:summon <name>` — you press Enter. If a summon tool ignores `preview` and materializes a skill, the band shows that real summon and the count includes it. |
 | **`/heaven`** | A pane with four sections: **Session** (receipts, each field labelled observed, reported, inferred or unknown), **Scope** (what Skill Heaven can see, what is active, rung controls that pre-fill commands), **Flow** (agents the host reported and what each summoned) and **Trust** (what this plugin reads and writes). |
 
-Selecting a rung (`/skill-heaven low`, `/skill-hell high`, `/skill-ultra`, `/skill-zero`) changes the
+Selecting a rung (`/skill-heaven:skill-heaven low`, `/skill-heaven:skill-hell high`, `/skill-heaven:skill-ultra`, `/skill-heaven:skill-zero`) changes the
 bracketed reading in the status entry. That reading is a preference you expressed and the console
 saw; Skill Heaven does not enforce it. `/skill-ultra` reads `[ULTRA]`; the Ultra controller is provisioned, not built. The compact status entry shows only `[ULTRA]` and the skill count — *controller unavailable* is spelled out in `full` mode, in the Scope section and in the pane.
 
@@ -62,16 +63,44 @@ user-scope install, but the install command itself is typed in a terminal sessio
 
 The status entry, band and pane disappear. Skill Heaven is unchanged.
 
-## What is unconfirmed (needs a local probe)
+## What a live probe established (Claude Code 2.1.294, terminal)
 
-- How the status entry, band and pane paint in a logged-in desktop session.
-- Where the host puts an MCP tool's structured result on a `tool.call` result. The console reads
-  `structuredContent` where the declarations allow it and falls back to the JSON text block the summon
-  server also sends.
-- Whether the host reports agent ids on every subagent tool call. Flow says so when it does not.
-- Whether `/lens` can reach the summon tool by the marketplace name
-  (`mcp__plugin_skill-heaven_skill-summon__summon`) or the launcher name (`mcp__skill-summon__summon`) in your install. Only those two exact names are treated as the summon tool; a tool is called absent only when the session's tool list does not name it.
-- Whether `$.tool.list()` names tools the host defers behind tool search.
+PR #187, macOS, a logged-in session in a visible Herdr pane, both plugins loaded from the checkout
+with `--plugin-dir` and a session-only `--settings` that supplied a user `statusLine`:
+
+- **Status entry** renders under the prompt beside the user's own `statusLine`; neither replaces
+  the other. The host draws it as `⚠ skill-heaven-console: ◇ entropy ‹‹ [NATIVE] ›› · 0 skills`;
+  the `⚠ <plugin>:` prefix is the host's.
+- **`/lens`** shows the band and leaves the count at `0 skills`. **`/skill-heaven:summon`** takes it
+  to `1 skill`. A `Read` of the materialized `SKILL.md` moves the band from `card returned · body
+  not read` to `in context · body read by main agent`.
+- **Result shape:** an MCP tool's result reaches `tool.call` and `$.tool.call` as
+  `{ ref, result, text }`, with `result` the server's JSON text as a **string**.
+  `structuredContent` appears nowhere; the console reads the JSON text.
+- **`$.tool.list()`** names deferred MCP tools (the summon tool is behind ToolSearch and is
+  listed), but only once MCP has connected: at `session.start` it lists no MCP tool at all, so
+  `/lens` re-checks for a few seconds before saying "not connected".
+- **Agent ids** reach subagent calls: `tool.call` and `turn.complete` inside a subagent carry its
+  `agentId`, and the Agent tool's result carries the same id. Flow attributes the subagent's summons
+  to it.
+- **Ordering:** for a typed slash command, `command.run` fires **before** `prompt.submit`, and
+  `prompt.submit.text` is the raw typed text (`/skill-heaven:skill-hell high`), not the expanded
+  body. A subagent's hand-back arrives as `prompt.submit` with `origin.kind: "peer"`; the console
+  ignores it.
+- **Bare spellings are refused:** `/skill-zero` or `/skill-hell high` resolves to the plugin's
+  portable skill and the host says it "can only be invoked by Claude". Every console pre-fill uses
+  `/skill-heaven:<surface>`.
+- **Observe-only:** across the sessions, `~/.claude/settings.json`, `settings.local.json` and
+  `installed_plugins.json` were byte-identical. `claude plugin validate` resolves the console's calls
+  to `$.state`, `$.ui.*`, `$.prompt.fill`, `$.tool.list`/`call` (the `/lens` preview) and
+  `$.command.register`: no file system, settings or process calls.
+
+Still unconfirmed:
+
+- How the status entry, band and pane paint in the **desktop app**. Probing it here would have
+  meant a user-scope install, which writes the user's plugin registry, plus driving the desktop UI.
+- Whether the host reports agent ids for every kind of agent (workflows and engine forks carry
+  ids no list names).
 
 ## Develop
 

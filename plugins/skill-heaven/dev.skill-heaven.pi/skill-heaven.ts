@@ -1,10 +1,16 @@
-// Pi 0.84.2 compatibility adapter for the portable Agent Plugin.
+// Pi compatibility adapter for the portable Agent Plugin (0.84.2+, re-probed on
+// 1.0.4 in PR #187: ./PROBE.md).
 //
-// Pi does not natively load Agent Plugins or MCP servers. Its package loader
-// does understand package.json's `pi` manifest, so this thin adapter exposes
-// the plugin's portable skills as native Pi skills, maps their explicit
-// surfaces to slash commands, and bridges the portable stdio MCP declaration
-// to one native `summon` tool. The engine remains the bundled mcp/ artifact.
+// Pi does not load Agent Plugins. Its package loader does understand
+// package.json's `pi` manifest, so this thin adapter exposes the plugin's
+// portable skills as native Pi skills, maps their explicit surfaces to slash
+// commands, and bridges the portable stdio MCP declaration to one native
+// `summon` tool. The engine remains the bundled mcp/ artifact.
+//
+// Pi 0.99+ has its own MCP runtime (pi.registerMcpServer), but which runtime
+// answers depends on the user's setup: an MCP extension can replace it and
+// then ignores `exposure: "direct"`, and --no-mcp removes it. This tool works
+// the same under all of them, so the bridge stays.
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { randomUUID } from "node:crypto";

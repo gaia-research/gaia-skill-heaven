@@ -96,3 +96,19 @@ Document:
 7. whether a public compatibility/status label changed.
 
 The PR is done when the local-only unknowns from #185 are either converted into pinned evidence or explicitly retained as unsupported/unverified boundaries, and any defects exposed by those probes are repaired with regression coverage.
+
+## Outcome (2026-10-08)
+
+Every local-only unknown is now pinned evidence or an explicit boundary. The matrix is in PR #187's
+description; the per-harness evidence is in `plugins/skill-heaven/PROBE.md`,
+`plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`, `packages/agy-zero/PROBE.md` §4,
+`plugins/skill-heaven-console/README.md` and `docs/CONTROL-PLANE.md` §10.
+
+Remaining boundaries, each with its reason:
+
+- **Console desktop paint:** NEEDS DESKTOP PROBE. It needs a user-scope install, which writes
+  the user's plugin registry, plus the desktop UI.
+- **Grok 1.0.46 live summon:** not run. Grok is not signed in on this machine; install and
+  inventory are static evidence only.
+- **Windows (#94):** NEEDS WINDOWS PROBE. There is no native Windows runtime, and no `pwsh` on
+  this machine. #94 stays open.
