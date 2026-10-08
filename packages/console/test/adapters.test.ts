@@ -26,7 +26,7 @@ describe("bounded, exact-session readers", () => {
   it("reports only the explicit engine ledger and labels reads unknown", () => {
     const root = temp();
     writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
-    writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n{partial");
+    writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n");
     const state = ledgerState(root);
     expect(state.entries).toHaveLength(1);
     expect(state.status.skills).toBe(1);
@@ -38,12 +38,20 @@ describe("bounded, exact-session readers", () => {
       expect(text).toContain("read not observed");
     }
   });
-  it("bounds files and tolerates only a partial final line", () => {
-    expect(jsonLines('{"a":1}\n{')).toEqual([{ a: 1 }]);
+  it("bounds files and rejects incomplete final rows rather than silently undercounting", () => {
+    expect(() => jsonLines('{"a":1}\n{')).toThrow("incomplete source");
     expect(() => jsonLines('{bad}\n{}')).toThrow();
     const path = join(temp(), "large");
     writeFileSync(path, Buffer.alloc(MAX_BYTES + 1));
     expect(() => readBounded(path)).toThrow("bound");
+    const root = temp();
+    writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
+    writeFileSync(join(root, "summon-log.jsonl"), '{"chosen":[]}\n{partial');
+    expect(() => ledgerState(root)).toThrow("incomplete source");
+    const cli = fileURLToPath(new URL("../../../plugins/skill-heaven-console-codex/scripts/heaven.mjs", import.meta.url));
+    const run = spawnSync(process.execPath, [cli, "--host", "codex", "--session-root", root], { encoding: "utf8" });
+    expect(run.status).toBe(1);
+    expect(run.stdout).not.toContain("skills");
   });
   const transcript = (rows: unknown[]) => {
     const root = temp(); const logs = join(root, ".system_generated", "logs"); mkdirSync(logs, { recursive: true });
@@ -81,15 +89,18 @@ function piFixture() {
   return { handlers, commands, ctx, statuses, widgets, drafts, listen: (cb: Function) => { listener = cb; } };
 }
 describe("separate Pi extension", () => {
-  it("owns only its status key; previews on the Core bridge and pre-fills only on explicit fill", async () => {
+  it("owns only its status key; drafts without any direct Core call and fills only explicitly", async () => {
     const f = piFixture(); let requests = 0;
-    f.listen((channel: string, req: any) => {
-      expect(channel).toBe("skill-heaven:preview-request/v1"); requests++; req.accept(); req.reply({ structuredContent: { ...result, summoned: [], previewed: result.summoned } });
-    });
+    f.listen(() => { requests++; throw new Error("Tool policy must not be bypassed"); });
     await f.commands.lens.handler("synthetic", f.ctx);
-    expect(requests).toBe(1); expect(f.drafts).toEqual([]);
+    expect(requests).toBe(0); expect(f.drafts).toEqual([]);
+    expect(f.widgets.at(-1)[1].join("\n")).toContain("not requested yet; no tool called");
     await f.commands.heaven.handler("fill", f.ctx);
-    expect(f.drafts).toEqual(["/summon Synthetic Skill"]);
+    expect(f.drafts[0]).toContain('"preview":true');
+    // Only a normal host tool result can turn the draft into a real preview.
+    f.handlers.tool_result({ toolName: "summon", details: { ...result, summoned: [], previewed: result.summoned }, input: { preview: true } }, f.ctx);
+    await f.commands.heaven.handler("fill", f.ctx);
+    expect(f.drafts.at(-1)).toBe("/summon Synthetic Skill");
     expect(f.statuses.every(args => args[0] === "skill-heaven-console")).toBe(true);
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
     f.handlers.session_shutdown(null, f.ctx);
@@ -107,14 +118,12 @@ describe("separate Pi extension", () => {
     await f.commands.heaven.handler("session", f.ctx);
     expect(f.widgets.at(-1)[1].join("\n")).toContain("body read");
   });
-  it("fails closed without Core and ignores stale preview completion after branch change", async () => {
+  it("works without Core without calling anything and clears drafts on branch change", async () => {
     const f = piFixture(); await f.commands.lens.handler("synthetic", f.ctx);
-    expect(f.widgets.at(-1)[1].join("\n")).toContain("not connected");
-    let request: any;
-    f.listen((_channel: string, req: any) => { request = req; req.accept(); });
-    const pending = f.commands.lens.handler("synthetic", f.ctx);
+    expect(f.widgets.at(-1)[1].join("\n")).toContain("no tool called");
     f.handlers.session_tree(null, f.ctx);
-    request.reply({ structuredContent: result }); await pending;
+    await f.commands.heaven.handler("fill", f.ctx);
+    expect(f.drafts).toEqual([]);
     expect(f.statuses.at(-1)[1]).toContain("0 skills");
   });
 });
@@ -139,7 +148,13 @@ describe("install safety and independently removable artifacts", () => {
   });
   it("declares no new MCP authority or private TUI patch; generated artifacts stay independent", () => {
     const pi = readFileSync(new URL("../extension/console.ts", import.meta.url), "utf8");
-    for (const forbidden of ["sendUserMessage", "registerTool(", "spawn(", "registerMcpServer", "sendMessage("]) expect(pi).not.toContain(forbidden);
+    for (const forbidden of ["sendUserMessage", "registerTool(", "spawn(", "registerMcpServer", "sendMessage(", "pi.events.emit"]) expect(pi).not.toContain(forbidden);
+    const core = readFileSync(new URL("../../../plugins/skill-heaven/dev.skill-heaven.pi/skill-heaven.ts", import.meta.url), "utf8");
+    expect(core).not.toContain("skill-heaven:preview-request");
+    const hermes = readFileSync(new URL("../../../plugins/skill-heaven-console-hermes/__init__.py", import.meta.url), "utf8");
+    expect(hermes).not.toContain("ctx.dispatch_tool(");
+    expect(hermes).not.toContain("tools.registry");
+    expect(hermes).toContain('"--preview-draft", query');
     for (const id of ["pi", "codex", "hermes", "grok", "agy"]) {
       const rel = id === "pi" ? "extensions/console.mjs" : "scripts/heaven.mjs";
       const bundle = readFileSync(new URL(`../../../plugins/skill-heaven-console-${id}/${rel}`, import.meta.url), "utf8");

@@ -28,10 +28,10 @@ export function readBounded(path: string): string {
 export function jsonLines(text: string): unknown[] {
   const lines = text.split("\n");
   if (lines.length > MAX_ROWS) throw new Error("console input exceeds row bound");
-  return lines.flatMap((line, i) => {
+  return lines.flatMap((line) => {
     if (!line.trim()) return [];
     try { return [JSON.parse(line) as unknown]; }
-    catch { if (i === lines.length - 1) return []; throw new Error("invalid console JSONL"); }
+    catch { throw new Error("invalid console JSONL; incomplete source is not a complete receipt"); }
   });
 }
 export function unknownState(): ConsoleCoreState {

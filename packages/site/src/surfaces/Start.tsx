@@ -409,6 +409,9 @@ export default function Start() {
                   <summary className="st-h3">Change or remove this profile</summary>
                   <p className="st-prose">These are canonical plans for the selected harness. Core → Full adds only the console; Full → Core removes only that piece.</p>
                   <h4 className="st-h3">Switch to {profile === 'core' ? 'Full' : 'Core'}</h4>
+                  <p className="st-prose">If you originally installed with <code className="st-code">--register</code> / <code className="st-code">-Register</code>, use this receipt-managed switch. It performs only the console registration change and preserves Core.</p>
+                  <Command cmd={profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} sigil={sigil} label="switch the installer-managed profile" copied={copiedCmd === profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} onCopy={copy} />
+                  <h4 className="st-h3">Stage-only or manual registration</h4>
                   <p className="st-prose">{profile === 'core' ? 'Stage Full first, then add only its console registration.' : 'Remove only the console registration first, then stage Core to remove console files. Core stays registered.'}</p>
                   {profile === 'core' && <Command cmd={profileInstallerCommand(harness.id, 'full', platform)} sigil={sigil} label="stage Full before adding its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'full', platform)} onCopy={copy} />}
                   {switchPlan?.kind === 'steps' && switchPlan.steps.map((step, i) => <Command key={`switch-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`switch profile step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}

@@ -29,9 +29,13 @@ export function adapterPath(id: Exclude<HarnessId, "claude" | "other">): Pick<Ha
     const dir = console ? "{{CONSOLE_DIR}}" : "{{PLUGIN_DIR}}";
     if (pi) return [step(["pi", "remove", dir], `pi remove "${dir}"`, `removes only ${name}`)];
     if (id === "codex") return [step(["codex", "plugin", "remove", `${name}@gaia-skill-heaven`], `codex plugin remove ${name}@gaia-skill-heaven`, `removes only ${name}`)];
-    // Disable is independently reversible and needs no guessed/piped confirmation.
-    if (hermes) return [step(["hermes", "plugins", "disable", name], `hermes plugins disable ${name}`, `disables only ${name}; host retains its cached copy`)];
-    if (agy) return [step(["agy", "plugin", "disable", name], `agy plugin disable ${name}`, `disables only ${name}; uninstall is a separate interactive action`)];
+    if (hermes) return [
+      step(["hermes", "plugins", "disable", name], `hermes plugins disable ${name}`, `disables only ${name}; preserves the host-owned deny-list`),
+      step(["hermes", "plugins", "remove", name], `hermes plugins remove ${name}`, `removes only ${name}'s cached plugin directory`),
+    ];
+    // Real-HOME 1.3.1 removal was accepted in the bounded native cell. Explicit
+    // --register/--uninstall authorizes this selected package, not a guessed global purge.
+    if (agy) return [{ ...step(["agy", "plugin", "uninstall", name], `agy plugin uninstall ${name}`, `uninstalls only ${name}; real HOME preserved`), stdin: "y\n" }];
     return [step(["grok", "plugin", "uninstall", name], `grok plugin uninstall ${name}`, `removes only ${name}`)];
   };
   const update = (console: boolean): InstallStep[] => {
@@ -48,12 +52,12 @@ export function adapterPath(id: Exclude<HarnessId, "claude" | "other">): Pick<Ha
   const report = pi ? "ctx.ui.setWidget (own key, below editor)" : hermes ? "native register_command /heaven report" : "explicit console skill/command (model-mediated)";
   const console: ConsoleProjection = {
     kind: pi ? "extension-ui" : "command-backed",
-    mechanism: pi ? "Separate Pi extension: own setStatus key and command-opened widget. /lens uses Core's in-process preview bridge." : `${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
+    mechanism: pi ? "Separate Pi extension: own setStatus key and command-opened widget. /lens drafts a preview handoff; /heaven fill prefills only, a human submits through normal tool approval." : `${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
     command,
     commandPrefix: agy ? "skill-heaven:" : "",
     surfaces: {
       status: pi ? { level: "native", via: "ctx.ui.setStatus(skill-heaven-console)", note: "Appends an owned entry; does not replace the footer." } : degraded(report, "Report only, not a persistent status contribution."),
-      lens: degraded(pi ? "/lens + /heaven fill" : hermes ? "/lens + dispatch_tool on Core" : `${command} lens`, pi ? "Same Core server preview; explicit fill only, never submits." : hermes ? "Explicit preview:true on the existing Core tool; printed handoff." : "Explicit model-mediated preview:true on the existing Core tool; printed handoff, no automatic tool call."),
+      lens: degraded(pi ? "/lens + /heaven fill" : hermes ? "/lens (printed draft)" : `${command} lens`, pi || hermes ? "Draft only: no tool call, retrieval or materialization until a human submits the handoff through normal host tool approval. Observed preview results use the same shared model." : "Explicit model-mediated preview:true on the existing Core tool; printed handoff, no automatic tool call."),
       session: degraded(report, "Bounded receipt window. Exact session binding required; no newest-directory guess."),
       scope: degraded(report, "Printed controls, not enforcement. Ultra controller remains unavailable."),
       flow: { level: "unsupported", via: report, note: "No implemented, empirically pinned agent-id attribution. Summons attributed to main; no invented agents." },
@@ -63,9 +67,9 @@ export function adapterPath(id: Exclude<HarnessId, "claude" | "other">): Pick<Ha
     summonTools: pi ? ["summon"] : agy ? ["skill-heaven_skill-summon/summon"] : id === "codex" ? ["mcp__skill-summon__summon"] : [],
     trust: [
       { id: "skill-heaven", profile: "core", kind: "harness runtime package", version: "0.1.2", summary: "Five entropy surfaces and the bundled summon engine.", reads: ["configured skill source"], writes: ["disposable engine session directory"], network: "Core fetches the configured skill source", disable: remove(false)[0]!.run },
-      { id: "skill-heaven-console", profile: "full", kind: pi ? "Pi extension package" : hermes ? "Hermes native Python plugin + Node painter" : "command/skill plugin + Node report", version: "0.1.0", summary: "Read-only projection of the shared console model; independently removable.", reads: pi ? ["exact Core summon results", "successful read events", "active session branch"] : hermes ? ["caller-supplied exact Core sessionRoot ledger", "exact result of an explicit Lens command"] : ["caller-supplied exact Core sessionRoot ledger", ...(agy ? ["optional exact conversation transcript and confined result files"] : [])], writes: [], network: "none of its own; explicit Lens uses the existing Core tool", disable: remove(true)[0]!.run, notes: ["No hidden submission, automatic materialization, daemon, global configuration rewrite or independent summon server.", ...(pi ? ["Restored branches cannot prove successful body reads or rung selection; those facts are not replayed."] : ["Without an exact binding, counts are unknown. Command/skill output may pass through the model."])] },
+      { id: "skill-heaven-console", profile: "full", kind: pi ? "Pi extension package" : hermes ? "Hermes native Python plugin + Node painter" : "command/skill plugin + Node report", version: "0.1.0", summary: "Read-only projection of the shared console model; independently removable.", reads: pi ? ["exact Core summon results", "successful read events", "active session branch"] : hermes ? ["caller-supplied exact Core sessionRoot ledger"] : ["caller-supplied exact Core sessionRoot ledger", ...(agy ? ["optional exact conversation transcript and confined result files"] : [])], writes: [], network: pi || hermes ? "none; Lens only drafts a handoff, normal Core calls remain subject to host approval" : "none of its own; explicit model-mediated Lens requests use the existing Core tool", disable: remove(true)[0]!.run, notes: ["No hidden submission, automatic materialization, daemon, global configuration rewrite or independent summon server.", ...(pi ? ["Restored branches cannot prove successful body reads or rung selection; those facts are not replayed."] : ["Without an exact binding, counts are unknown. Command/skill output may pass through the model."])] },
     ],
     probe: { version: versions[id], summary: `Saved ${versions[id]} API/layout evidence informed this adapter. Compiled artifact and synthetic conformance tests are NOT an empirical Full compatibility receipt; live install, Lens and console-only removal still need a probe.`, href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` },
   };
-  return { console, core: piece(register(false), update(false), remove(false)), consolePiece: hermes ? null : piece(register(true), update(true), remove(true)), fullBlocked: null };
+  return { console, core: piece(register(false), update(false), remove(false)), consolePiece: piece(register(true), update(true), remove(true)), fullBlocked: null };
 }

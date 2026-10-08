@@ -10,15 +10,13 @@ const KEY = "skill-heaven-console";
 const projection = harnessById("pi");
 export default function consolePi(pi: ExtensionAPI): void {
   let state = initialConsoleState();
-  let generation = 0;
-  let busy = false;
   const paint = (ctx: ExtensionContext) => {
     if (!ctx.hasUI) return;
     ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" ? undefined : buildConsoleView(state, projection).status.compact);
   };
   // Reconstruct only the active branch; abandoned tree branches never enter this console.
   const rebuild = (ctx: ExtensionContext) => {
-    generation++; busy = false; state = initialConsoleState();
+    state = initialConsoleState();
     // Replay bounded branch tool results, without copying prompts or writing new transcript entries.
     const branch = ctx.sessionManager.getBranch();
     for (const entry of branch.slice(-1000)) {
@@ -70,29 +68,19 @@ export default function consolePi(pi: ExtensionAPI): void {
     },
   });
   pi.registerCommand("lens", {
-    description: "Explicit preview on the same Core server; nothing submitted",
+    description: "Draft a preview handoff; /heaven fill prefills, you submit it",
     handler: async (args, ctx) => {
       const query = args.trim();
-      if (!query || query.length > 4096 || busy || !ctx.hasUI) return;
-      busy = true;
-      const current = generation;
-      state = { ...state, band: { kind: "looking", query } }; show(ctx, "lens");
-      const result = await new Promise<unknown>((reply) => {
-        const timer = setTimeout(() => reply(null), 180_000);
-        let accepted = false;
-        pi.events.emit("skill-heaven:preview-request/v1", { query, accept: () => { accepted = true; }, reply: (value: unknown) => { clearTimeout(timer); reply(value); } });
-        if (!accepted) { clearTimeout(timer); reply(null); }
-      });
-      if (generation !== current) return; // stale completion from an old session/branch
-      busy = false;
-      if (result === null) state = { ...state, band: { kind: "not-connected" } };
-      else state = recordEvent(state, eventFromSummonResult(structuredOf(result), { query, preview: true }), null, "lens");
-      paint(ctx); show(ctx, "lens");
-      // A human explicitly runs /heaven fill to prefill a single candidate; no automatic editor overwrite.
+      if (!query || query.length > 4096 || !ctx.hasUI) return;
+      // There is no public API to run a model tool through ALL host/extension
+      // permission hooks from a command. Draft only: normal tool approval wins.
+      state = { ...state, band: { kind: "draft", query } };
+      show(ctx, "lens");
+      // No Core call, event bridge, editor overwrite, prompt or materialization.
+      // Human explicitly uses /heaven fill and presses Enter; tool_result observes it.
     },
   });
   pi.on("session_shutdown", (_e, ctx) => {
-    generation++; busy = false;
     if (ctx.hasUI) { ctx.ui.setStatus(KEY, undefined); ctx.ui.setWidget(KEY, undefined); }
   });
 }

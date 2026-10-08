@@ -125,6 +125,16 @@ export function summonSuggestion(entry: ConsoleEntry): string | null {
 export function lensView(state: ConsoleCoreState, projection: ConsoleProjection): LensView | null {
   const band = state.band;
   if (band === null) return null;
+  if (band.kind === "draft") {
+    const args = JSON.stringify({ query: sanitizeDisplay(band.query, 4096), surface: "any", preview: true });
+    return {
+      lines: [[{ text: "Preview draft · not requested yet; no tool called", role: "dim" }]],
+      stage: { text: "Submit the handoff yourself through the normal host tool/approval path. Nothing materialized.", inferred: false },
+      actions: ["dismiss"],
+      prefill: `Call the existing Skill Heaven summon tool with these JSON arguments: ${args}. Preview only; do not summon or read a skill body.`,
+      entryId: null,
+    };
+  }
   if (band.kind === "looking" || band.kind === "not-connected") {
     return {
       lines: noticeLines(band.kind === "looking" ? { kind: "looking", query: band.query } : { kind: "not-connected" }),

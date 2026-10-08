@@ -2,22 +2,19 @@
 buffer, database scan, injected context, permission decisions or shared writes.
 The Node painter is bundled from packages/status, not a second semantic model.
 """
-import json
-import re
 import shlex
 import subprocess
 from pathlib import Path
 
-_CORE = re.compile(r"^mcp__agent_plugin_skill_heaven_[0-9a-f]{8}__skill_summon__summon$")
 _SCRIPT = Path(__file__).parent / "scripts" / "heaven.mjs"
 _SECTIONS = {"all", "status", "lens", "session", "scope", "flow", "trust"}
 
 
-def _run(argv, frame=None):
+def _run(argv):
     try:
         out = subprocess.run(
             ["node", str(_SCRIPT), "--host", "hermes", *argv],
-            input=json.dumps(frame) if frame is not None else "",
+            input="",
             text=True, capture_output=True, timeout=15, check=False,
         )
         return out.stdout if out.returncode == 0 else "Skill Heaven console: session source unavailable; no session guessed."
@@ -44,19 +41,9 @@ def register(ctx):
         query = (raw_args or "").strip()
         if not query or len(query) > 4096:
             return "Usage: /lens <need> (preview only)"
-        from tools.registry import registry
-        # Exact Core namespace with the source hash Hermes assigns. Ambiguity fails closed.
-        names = [n for n in registry.get_all_tool_names() if _CORE.fullmatch(n)]
-        if len(names) != 1:
-            return "Skill Heaven Lens: Core tool unavailable or ambiguous; no tool called."
-        try:
-            result = ctx.dispatch_tool(names[0], {"query": query, "surface": "any", "preview": True})
-            if not isinstance(result, str) or len(result.encode("utf-8")) > 128 * 1024:
-                return "Skill Heaven Lens: preview result unavailable or exceeds bound."
-            # Only this command's exact result crosses the pipe. It is not the full
-            # session history, so complete:false leaves session counts unknown.
-            return _run(["--observations-stdin", "--surface", "lens"], {"rows": [{"result": result, "preview": True}], "complete": False})
-        except Exception:
-            return "Skill Heaven Lens: Core preview failed; nothing submitted."
+        # Public dispatch_tool reaches the registry, not the normal agent's
+        # pre-tool policy/approval path. A human submits this printed draft;
+        # ordinary host tool policy governs the call. No network or Core call.
+        return _run(["--preview-draft", query, "--surface", "lens"])
 
-    ctx.register_command("lens", handler=lens, description="Explicit preview on existing Core tool; printed handoff", args_hint="<need>")
+    ctx.register_command("lens", handler=lens, description="Preview draft only; submit the handoff yourself", args_hint="<need>")

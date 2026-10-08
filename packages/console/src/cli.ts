@@ -30,6 +30,11 @@ try {
     state = observedState(frame.rows);
     if (frame.complete !== true) state.status = { ...state.status, skills: null, summons: null };
   }
+  const draft = value("--preview-draft");
+  if (draft) {
+    if (draft.length > 4096) throw new Error("draft exceeds bound");
+    state = { ...state, band: { kind: "draft", query: draft } };
+  }
   const surface = value("--surface") ?? "all";
   if (surface !== "all" && !CONSOLE_SURFACES.includes(surface as ConsoleSurface)) throw new Error("unknown surface");
   if (!root && !transcript && !stdin) console.log("No exact session binding supplied. Counts are unknown, not zero. Supply the sessionRoot returned by your Core tool.");

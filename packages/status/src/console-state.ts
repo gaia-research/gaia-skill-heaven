@@ -32,6 +32,7 @@ export interface ConsoleEntry {
 export type ConsoleBand =
   | { kind: "event"; id: number }
   | { kind: "looking"; query: string }
+  | { kind: "draft"; query: string }
   | { kind: "not-connected" }
   | null;
 

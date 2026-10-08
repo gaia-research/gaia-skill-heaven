@@ -23,12 +23,12 @@ export interface PlanPaths {
 }
 
 /** Stage-only bootstrap; host registration remains explicit and separate. */
-export function profileInstallerCommand(harness: HarnessId, profile: ProfileId, platform: "posix" | "windows"): string {
+export function profileInstallerCommand(harness: HarnessId, profile: ProfileId, platform: "posix" | "windows", register = false): string {
   if (platform === "windows") {
     const url = AGENT_PLUGIN_INSTALL.windows.replace(/^irm\s+|\s*\|\s*iex$/g, "");
-    return `& ([scriptblock]::Create((Invoke-RestMethod '${url}'))) -Harness ${harness} -Profile ${profile}`;
+    return `& ([scriptblock]::Create((Invoke-RestMethod '${url}'))) -Harness ${harness} -Profile ${profile}${register ? ' -Register' : ''}`;
   }
-  return `${AGENT_PLUGIN_INSTALL.posix.replace(/\s*\|\s*sh$/, "")} | sh -s -- --harness ${harness} --profile ${profile}`;
+  return `${AGENT_PLUGIN_INSTALL.posix.replace(/\s*\|\s*sh$/, "")} | sh -s -- --harness ${harness} --profile ${profile}${register ? ' --register' : ''}`;
 }
 
 export const WINDOWS_PLAN_PATHS: PlanPaths = {
