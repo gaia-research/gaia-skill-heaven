@@ -10,6 +10,7 @@ import {
 const KEY = "skill-heaven-console";
 const projection = harnessById("pi");
 
+// Uses the public Pi 1.1 TUI ScrollView API; older Full support is unverified.
 // Presentation only: every fact/body comes from the shared ConsoleView painter.
 // ScrollView owns offset clamping; this custom component paints its viewport,
 // rather than relying on an overlay's maxHeight to discard unreachable lines.
@@ -84,10 +85,11 @@ export class ConsolePane implements Component {
 
 export default function consolePi(pi: ExtensionAPI): void {
   let state = initialConsoleState();
+  let bandRequested = false;
   let pane: ConsolePane | undefined;
   const closePane = () => { pane?.close(); pane = undefined; };
   const band = (ctx: ExtensionContext) => {
-    if (!ctx.hasUI) return;
+    if (!ctx.hasUI || !bandRequested) return;
     const view = buildConsoleView(state, projection);
     if (!view.lens) { ctx.ui.setWidget(KEY, undefined); return; }
     // Keep only one shared band notice, not stages, diagnostics or draft JSON.
@@ -104,11 +106,10 @@ export default function consolePi(pi: ExtensionAPI): void {
   const paint = (ctx: ExtensionContext) => {
     if (!ctx.hasUI) return;
     ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" ? undefined : buildConsoleView(state, projection).status.compact);
-    band(ctx); pane?.invalidate();
   };
   // Reconstruct only the active branch; abandoned tree branches never enter this console.
   const rebuild = (ctx: ExtensionContext) => {
-    closePane(); state = initialConsoleState();
+    closePane(); bandRequested = false; state = initialConsoleState();
     // Replay bounded branch tool results, without copying prompts or writing new transcript entries.
     const branch = ctx.sessionManager.getBranch();
     for (const entry of branch.slice(-1000)) {
@@ -136,8 +137,11 @@ export default function consolePi(pi: ExtensionAPI): void {
     paint(ctx);
   });
   pi.on("input", (event, ctx) => {
-    // Core aliases re-dispatch as /skill:<name>; do not retain unrelated input.
-    const typed = event.text.replace(/^\/skill:/, "/");
+    // Decode only our four namespaced rung resources, with an exact name
+    // boundary. Bare/global or lookalike skill resources remain user-owned.
+    const own = /^\/skill:skill-heaven-runtime-(skill-zero|skill-heaven|skill-hell|skill-ultra)(?=\s|$)/.exec(event.text);
+    if (!own && !/^\/(skill-zero|skill-heaven|skill-hell|skill-ultra)(?=\s|$)/.test(event.text)) return;
+    const typed = own ? `/${own[1]}${event.text.slice(own[0].length)}` : event.text;
     const reading = selectionFromCommand(typed);
     if (reading) { state = recordSelection(state, reading, typed); paint(ctx); }
   });
@@ -158,7 +162,7 @@ export default function consolePi(pi: ExtensionAPI): void {
     handler: async (args, ctx) => {
       if (!ctx.hasUI) return;
       const sub = args.trim() || "all";
-      if (sub === "dismiss") { closePane(); state = { ...state, band: null }; ctx.ui.setWidget(KEY, undefined); return; }
+      if (sub === "dismiss") { closePane(); bandRequested = false; state = { ...state, band: null }; ctx.ui.setWidget(KEY, undefined); return; }
       if (sub === "fill") {
         const draft = buildConsoleView(state, projection).lens?.prefill;
         if (draft) ctx.ui.setEditorText(draft); // never sends a message
@@ -177,6 +181,7 @@ export default function consolePi(pi: ExtensionAPI): void {
       if (!query || query.length > 4096 || !ctx.hasUI) return;
       // There is no public API to run a model tool through ALL host/extension
       // permission hooks from a command. Draft only: normal tool approval wins.
+      bandRequested = true;
       state = { ...state, band: { kind: "draft", query } };
       band(ctx);
       // No Core call, event bridge, editor overwrite, prompt or materialization.
@@ -184,7 +189,7 @@ export default function consolePi(pi: ExtensionAPI): void {
     },
   });
   pi.on("session_shutdown", (_e, ctx) => {
-    closePane();
+    closePane(); bandRequested = false;
     if (ctx.hasUI) { ctx.ui.setStatus(KEY, undefined); ctx.ui.setWidget(KEY, undefined); }
   });
 }

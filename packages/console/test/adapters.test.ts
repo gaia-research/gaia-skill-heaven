@@ -138,6 +138,42 @@ describe("separate Pi extension", () => {
     f.handlers.session_shutdown(null, f.ctx);
     expect(f.statuses.at(-1)).toEqual(["skill-heaven-console", undefined]);
   });
+  it("ordinary summon/read/rung updates paint only one compact status line and never open or update widgets/panes", async () => {
+    const f = piFixture(); f.widgets.splice(0);
+    const update = () => {
+      f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
+      f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
+      f.handlers.input({ text: "/skill:skill-heaven-runtime-skill-heaven low" }, f.ctx);
+    };
+    update();
+    expect(f.widgets).toEqual([]); expect(f.overlays).toEqual([]);
+    expect(f.statuses.at(-1)[1]).toContain("1 skill");
+    expect(f.statuses.every(args => typeof args[1] === "string" && !/[\r\n]/.test(args[1]))).toBe(true);
+    // Even an explicitly requested band is not repainted by ordinary events.
+    await f.commands.lens.handler("synthetic", f.ctx);
+    const count = f.widgets.length; update(); expect(f.widgets).toHaveLength(count);
+    await f.commands.heaven.handler("dismiss", f.ctx);
+    const dismissed = f.widgets.length; update(); expect(f.widgets).toHaveLength(dismissed);
+    f.handlers.session_tree(null, f.ctx);
+    const reset = f.widgets.length; update(); expect(f.widgets).toHaveLength(reset);
+    expect(f.overlays).toEqual([]); expect(f.drafts).toEqual([]);
+  });
+  it("decodes only the four exact own namespaced rung resources", () => {
+    const f = piFixture(); const widgets = f.widgets.length;
+    for (const [name, args, label] of [["skill-zero", "", "ZERO"], ["skill-heaven", " low", "LOW"], ["skill-hell", " high", "HIGH"], ["skill-ultra", "", "ULTRA"]]) {
+      f.handlers.input({ text: `/skill:skill-heaven-runtime-${name}${args}` }, f.ctx);
+      expect(f.statuses.at(-1)[1]).toContain(label);
+    }
+    const statuses = f.statuses.length;
+    for (const text of ["/skill:skill-heaven low", "/other:skill-heaven low", "/skill:other-skill-heaven low", "/skill:skill-heaven-runtime-skill-heavenevil low", "/skill:skill-heaven-runtime-skill-heaven:other low", "/skill:skill-heaven-runtime-summon synthetic"]) {
+      f.handlers.input({ text }, f.ctx);
+      expect(f.statuses).toHaveLength(statuses);
+    }
+    expect(f.widgets).toHaveLength(widgets); expect(f.overlays).toEqual([]);
+    f.handlers.input({ text: "/skill-heaven med" }, f.ctx);
+    expect(f.statuses.at(-1)[1]).toContain("MED");
+  });
+
   it("does not mark failed or proposed reads as in context; no lookalike summon", async () => {
     const f = piFixture();
     f.handlers.tool_result({ toolName: "evil_summon", details: result, input: {} }, f.ctx);
