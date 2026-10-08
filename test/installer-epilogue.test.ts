@@ -67,6 +67,19 @@ describe("canonical installer epilogue", () => {
     const bundle = readFileSync(join(REPO, "scripts/install-profile.mjs"), "utf8");
     for (const h of HARNESS_PATHS) expect(bundle).toContain(h.name);
   });
+  it("reports successful registration outcomes without re-offering completed commands", () => {
+    const h = HARNESS_PATHS.find(h => h.id === "claude")!;
+    const paths = { installHome: "/tmp/example", uninstall: "/tmp/example/uninstall.sh", pluginDir: "/tmp/example/core", consoleDir: "/tmp/example/console", marketplaceDir: "/tmp/example/marketplace" };
+    const plan = planProfile(h, "core", "register", paths);
+    if (plan.kind !== "steps") throw new Error("Core unexpectedly blocked");
+    const runs = plan.steps.map(step => step.run);
+    const out = renderInstallEpilogue({ profile: "core", previous: null, found: [h.id], ran: { [h.id]: runs.map(run => ({ run })) }, paths });
+    expect(out).toContain("--register completed:");
+    expect(out).not.toContain("No harness was installed or reconfigured.");
+    const completed = out.split("--register completed:")[1]!.split("\n\n")[0]!;
+    expect(completed.split("\n").map(line => line.trim().replace(/^ok\s+/, "")).filter(Boolean)).toEqual(runs);
+    expect(out).not.toContain("Inside Claude Code, type:");
+  });
   it("Full prints only the selected console and honest native limitations", () => {
     const h = HARNESS_PATHS.find(h => h.id === "claude")!;
     const paths = { installHome: "/tmp/example", uninstall: "/tmp/example/uninstall.sh", pluginDir: "/tmp/example/core", consoleDir: "/tmp/example/console", marketplaceDir: "/tmp/example/marketplace" };

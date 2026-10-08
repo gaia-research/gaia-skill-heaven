@@ -402,11 +402,18 @@ function stepLines(steps, pad) {
 function harnessBlock(h, input) {
   const { profile, previous, paths } = input;
   const out = [`  ${h.bin.padEnd(8)} ${h.name} - ${chipText(h)}`];
-  const core = planProfile(h, "core", "register", paths);
-  const coreSteps = core.kind === "steps" ? core.steps : [];
-  if (coreSteps[0]?.where === "harness") out.push(`${indent(11)}Inside ${h.name}, type:`);
-  out.push(...stepLines(coreSteps, 13));
-  if (profile === "full") {
+  const ran = input.ran?.[h.id];
+  if (ran !== void 0) {
+    out.push(`${indent(11)}--register completed:`);
+    if (ran.length === 0) out.push(`${indent(13)}(no host commands were required)`);
+    for (const r of ran) out.push(`${indent(13)}ok  ${r.run}`);
+  } else {
+    const core = planProfile(h, "core", "register", paths);
+    const coreSteps = core.kind === "steps" ? core.steps : [];
+    if (coreSteps[0]?.where === "harness") out.push(`${indent(11)}Inside ${h.name}, type:`);
+    out.push(...stepLines(coreSteps, 13));
+  }
+  if (ran === void 0 && profile === "full") {
     const full = planProfile(h, "full", "register", paths);
     if (full.kind === "blocked") {
       out.push(`${indent(11)}Full is not available on ${h.name}: ${full.reason}`);
@@ -417,17 +424,12 @@ function harnessBlock(h, input) {
       out.push(`${indent(11)}Then add the console (Full):`);
       out.push(...stepLines(consoleSteps, 13));
     }
-  } else if (previous === "full" && h.consolePiece) {
+  } else if (ran === void 0 && profile === "core" && previous === "full" && h.consolePiece) {
     const down = planSwitch(h, "full", "core", paths);
     if (down.kind === "steps" && down.steps.length > 0) {
       out.push(`${indent(11)}You asked for Core and had Full. Remove only the console:`);
       out.push(...stepLines(down.steps, 13));
     }
-  }
-  const ran = input.ran?.[h.id];
-  if (ran) {
-    out.push(`${indent(11)}--register ran:`);
-    for (const r of ran) out.push(`${indent(13)}${r.ok ? "ok  " : "FAIL"} ${r.run}${r.ok || !r.detail ? "" : ` \u2014 ${r.detail}`}`);
   }
   return out;
 }
@@ -445,7 +447,7 @@ function renderInstallEpilogue(input) {
   lines.push(`  + ${paths.pluginDir}  (the plugin, one directory)`);
   lines.push(`  + ${paths.marketplaceDir}  (a local marketplace that lists it)`);
   if (profile === "full") lines.push(`  + ${paths.consoleDir}  (the console pieces, Full only)`);
-  lines.push("  No harness was installed or reconfigured.");
+  if (!input.ran) lines.push("  No harness was installed or reconfigured.");
   lines.push("");
   lines.push("Harnesses found on PATH");
   for (const h of found) lines.push(...harnessBlock(h, input));
@@ -560,6 +562,12 @@ function checkpoint(home, receipt) {
     saveReceipt(home, receipt);
   }
 }
+function completedSteps(home, receipt) {
+  const transaction = receipt.transaction;
+  if (!transaction || !receipt.harness) return [];
+  const steps = transactionSteps(receipt.harness, transaction, pathsFor(home));
+  return transaction.completed.map((_, index) => ({ run: steps[index].run }));
+}
 function finish(home, receipt) {
   receipt.registered = true;
   receipt.incomplete = false;
@@ -620,8 +628,17 @@ function install(o) {
     if (!o.register || o.uninstall !== (t.operation === "remove") || o.profile && o.profile !== t.target) throw new Error(`unfinished ${t.operation}: keep the artifact; retry --register${t.operation === "remove" ? " --uninstall" : ` --profile ${t.target}`} to resume the exact operation before requesting another operation; automatic partial-registration cleanup is unsafe`);
     if (t.staged && t.operation !== "remove") {
       checkpoint(o.home, previous);
+      const ran2 = completedSteps(o.home, previous);
       finish(o.home, previous);
-      console.log(`Resumed ${t.operation} for ${previous.harness}.`);
+      const h2 = HARNESS_PATHS.find((candidate) => candidate.id === previous.harness);
+      const paths2 = pathsFor(o.home);
+      console.log(renderInstallEpilogue({
+        profile: t.target,
+        previous: t.previousProfile,
+        found: [h2.id],
+        ran: { [h2.id]: ran2 },
+        paths: { ...paths2, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") }
+      }));
       return;
     }
   }
@@ -663,6 +680,7 @@ function install(o) {
   mkdirSync(dirname(o.home), { recursive: true });
   const work = mkdtempSync(join(dirname(o.home), ".gaia-skill-heaven-agent-plugin."));
   const next = join(work, "install"), old = join(work, "old");
+  let ran;
   try {
     const staged = pathsFor(next);
     mkdirSync(join(next, "marketplace", "plugins"), { recursive: true });
@@ -717,13 +735,14 @@ function install(o) {
     }
     if (o.register && h) {
       checkpoint(o.home, receipt);
+      ran = completedSteps(o.home, receipt);
       finish(o.home, receipt);
     }
     if (o.quiet) console.log(`${paths.pluginDir}
 ${paths.marketplaceDir}`);
     else {
       const found = h?.bin ? [h.id] : HARNESS_PATHS.filter((x) => x.bin && onPath(x.bin)).map((x) => x.id);
-      console.log(renderInstallEpilogue({ profile, previous: previous?.profile ?? null, found, paths: { ...paths, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") } }));
+      console.log(renderInstallEpilogue({ profile, previous: previous?.profile ?? null, found, ...ran === void 0 ? {} : { ran: { [h.id]: ran } }, paths: { ...paths, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") } }));
       if (o.register) console.log(`Registered ${profile} for ${h.name} using its own plugin manager. Restart the harness (Pi: /reload).`);
       else console.log("Artifact staged only. Run the printed registration/removal commands; cached client copies do not refresh automatically.");
     }

@@ -15,7 +15,7 @@ let root: string;
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), "sh-profile-lifecycle-"));
 });
-afterAll(() => rmSync(root, { recursive: true, force: true }));
+afterAll(() => rmSync(root, { recursive: true, force: true }), 30_000);
 
 type RunResult = { status: number | null; stdout: string; stderr: string; home: string; log: string; marker: string; paths: PlanPaths };
 
@@ -91,6 +91,13 @@ function call(result: RunResult, args: string[], failHost?: string, extraEnv: Re
 function receipt(home: string): { profile: string; harness: string | null; registered: boolean; incomplete?: boolean } {
   return JSON.parse(readFileSync(join(home, "profile.json"), "utf8"));
 }
+function expectRegistered(output: string, steps: readonly { run: string }[]) {
+  expect(output).toContain("--register completed:");
+  expect(output).not.toContain("No harness was installed or reconfigured.");
+  const completed = output.split("--register completed:")[1]!.split("\n\n")[0]!;
+  const actualRuns = completed.split("\n").map(line => line.trim().replace(/^ok\s+/, "")).filter(Boolean);
+  expect(actualRuns).toEqual(steps.length > 0 ? steps.map(step => step.run) : ["(no host commands were required)"]);
+}
 function lines(log: string): Array<{ exe: string; argv: string[] }> {
   const raw = readFileSync(log, "utf8").trim();
   return raw ? raw.split("\n").map((line) => JSON.parse(line)) : [];
@@ -135,6 +142,9 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const coreUpdate = planned(harness, "core", "update", result.paths);
     const repeatedCore = call(result, ["--profile", "core", "--harness", harness.id, "--register"]);
     expect(repeatedCore.status, repeatedCore.stderr).toBe(0);
+    const coreUpdatePlan = planProfile(harness, "core", "update", result.paths);
+    if (coreUpdatePlan.kind !== "steps") throw new Error("Core update unexpectedly blocked");
+    expectRegistered(repeatedCore.stdout, coreUpdatePlan.steps);
     expect(lines(result.log).slice(beforeCoreUpdate)).toEqual(coreUpdate);
     expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
 
@@ -151,6 +161,10 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const beforeUp = lines(result.log).length;
     const toFull = call(result, ["--profile", "full", "--harness", harness.id, "--register"]);
     expect(toFull.status, toFull.stderr).toBe(0);
+    const upSteps = planSwitch(harness, "core", "full", result.paths);
+    if (upSteps.kind !== "steps") throw new Error("Core → Full unexpectedly blocked");
+    expectRegistered(toFull.stdout, upSteps.steps);
+    expect(toFull.stdout).not.toContain("Then add the console (Full):");
     expect(lines(result.log).slice(beforeUp)).toEqual(switched(harness, "core", "full", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
@@ -163,10 +177,17 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const fullUpdate = planned(harness, "full", "update", result.paths);
     const repeatedFull = call(result, ["--profile", "full", "--harness", harness.id, "--register"]);
     expect(repeatedFull.status, repeatedFull.stderr).toBe(0);
+    const fullUpdatePlan = planProfile(harness, "full", "update", result.paths);
+    if (fullUpdatePlan.kind !== "steps") throw new Error("Full update unexpectedly blocked");
+    expectRegistered(repeatedFull.stdout, fullUpdatePlan.steps);
     expect(lines(result.log).slice(beforeFullUpdate)).toEqual(fullUpdate);
     const beforeDown = lines(result.log).length;
     const toCore = call(result, ["--profile", "core", "--harness", harness.id, "--register"]);
     expect(toCore.status, toCore.stderr).toBe(0);
+    const downSteps = planSwitch(harness, "full", "core", result.paths);
+    if (downSteps.kind !== "steps") throw new Error("Full → Core unexpectedly blocked");
+    expectRegistered(toCore.stdout, downSteps.steps);
+    expect(toCore.stdout).not.toContain("You asked for Core and had Full");
     expect(lines(result.log).slice(beforeDown)).toEqual(switched(harness, "full", "core", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
@@ -265,6 +286,9 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(existsSync(r.paths.consoleDir)).toBe(true);
     const retry = call(r, ["--register", "--source", join(root, "missing-source")]);
     expect(retry.status, retry.stderr).toBe(0);
+    const canonical = planProfile(h, "full", "register", r.paths);
+    if (canonical.kind !== "steps") throw new Error("Full registration unexpectedly blocked");
+    expectRegistered(retry.stdout, canonical.steps);
     expect(lines(r.log).slice(before)).toEqual(expected.slice(failStep - 1));
     expect(receipt(r.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
   });
@@ -280,6 +304,9 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(lines(r.log)).toHaveLength(n);
     const retry = call(r, ["--register"]);
     expect(retry.status, retry.stderr).toBe(0);
+    const canonical = planProfile(h, "core", "update", r.paths);
+    if (canonical.kind !== "steps") throw new Error("Core update unexpectedly blocked");
+    expectRegistered(retry.stdout, canonical.steps);
     expect(lines(r.log).slice(n)).toEqual(expected.slice(1));
   });
 
@@ -311,7 +338,11 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     expect(lines(r.log)).toEqual(planned(h, "core", "register", r.paths));
     const downgrade = makeSandbox("stage-only-downgrade", [h], false);
     expect(call(downgrade, ["--profile", "full", "--harness", h.id]).status).toBe(0);
-    expect(call(downgrade, ["--profile", "core"]).status).toBe(0);
+    const stagedDowngrade = call(downgrade, ["--profile", "core"]);
+    expect(stagedDowngrade.status).toBe(0);
+    expect(stagedDowngrade.stdout).toContain("No harness was installed or reconfigured.");
+    expect(stagedDowngrade.stdout).toContain("You asked for Core and had Full. Remove only the console:");
+    expect(stagedDowngrade.stdout).not.toContain("--register completed:");
     expect(lines(downgrade.log)).toEqual([]);
     const stage = makeSandbox("stage-only-uninstall", [h], false);
     expect(call(stage, ["--profile", "full", "--harness", h.id]).status).toBe(0);
@@ -396,6 +427,9 @@ require('node:module').syncBuiltinESMExports();`);
     expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
     const retry = call(r, ["--register"]);
     expect(retry.status, retry.stderr).toBe(0);
+    const canonical = planSwitch(h, "core", "full", r.paths);
+    if (canonical.kind !== "steps") throw new Error("Core → Full unexpectedly blocked");
+    expectRegistered(retry.stdout, canonical.steps);
     expect(lines(r.log).slice(n)).toEqual(switched(h, "core", "full", r.paths));
   });
 
@@ -410,6 +444,9 @@ require('node:module').syncBuiltinESMExports();`);
     expect(call(r, ["--uninstall", "--register"]).status).not.toBe(0);
     const retry = call(r, ["--register"]);
     expect(retry.status, retry.stderr).toBe(0);
+    const canonical = planSwitch(h, "full", "core", r.paths);
+    if (canonical.kind !== "steps") throw new Error("Full → Core unexpectedly blocked");
+    expectRegistered(retry.stdout, canonical.steps);
     expect(lines(r.log).slice(before)).toEqual(switched(h, "full", "core", r.paths));
   });
 

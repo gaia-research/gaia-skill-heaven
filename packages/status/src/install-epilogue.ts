@@ -33,10 +33,8 @@ export function chipText(h: HarnessPath): string {
 
 /** Outcome of an explicit `--register` run for one step. */
 export interface RanStep {
+  /** A step from the canonical plan whose identity is in the completed checkpoint. */
   run: string;
-  ok: boolean;
-  /** One line of the client's own output or error; never a credential. */
-  detail: string;
 }
 
 export interface EpilogueInput {
@@ -46,7 +44,7 @@ export interface EpilogueInput {
   /** Harness ids found on PATH, in table order. */
   found: readonly HarnessId[];
   paths: PlanPaths & { installHome: string; uninstall: string };
-  /** `--register` results per harness, when it was used. */
+  /** Canonical `--register` steps that completed successfully, by harness. */
   ran?: Readonly<Partial<Record<HarnessId, readonly RanStep[]>>>;
   /** `harness` blocked on Full: the harnesses that could not take the console. */
   quiet?: boolean;
@@ -61,11 +59,18 @@ function stepLines(steps: readonly RenderedStep[], pad: number): string[] {
 function harnessBlock(h: HarnessPath, input: EpilogueInput): string[] {
   const { profile, previous, paths } = input;
   const out: string[] = [`  ${h.bin!.padEnd(8)} ${h.name} - ${chipText(h)}`];
-  const core = planProfile(h, "core", "register", paths);
-  const coreSteps = core.kind === "steps" ? core.steps : [];
-  if (coreSteps[0]?.where === "harness") out.push(`${indent(11)}Inside ${h.name}, type:`);
-  out.push(...stepLines(coreSteps, 13));
-  if (profile === "full") {
+  const ran = input.ran?.[h.id];
+  if (ran !== undefined) {
+    out.push(`${indent(11)}--register completed:`);
+    if (ran.length === 0) out.push(`${indent(13)}(no host commands were required)`);
+    for (const r of ran) out.push(`${indent(13)}ok  ${r.run}`);
+  } else {
+    const core = planProfile(h, "core", "register", paths);
+    const coreSteps = core.kind === "steps" ? core.steps : [];
+    if (coreSteps[0]?.where === "harness") out.push(`${indent(11)}Inside ${h.name}, type:`);
+    out.push(...stepLines(coreSteps, 13));
+  }
+  if (ran === undefined && profile === "full") {
     const full = planProfile(h, "full", "register", paths);
     if (full.kind === "blocked") {
       out.push(`${indent(11)}Full is not available on ${h.name}: ${full.reason}`);
@@ -76,17 +81,12 @@ function harnessBlock(h: HarnessPath, input: EpilogueInput): string[] {
       out.push(`${indent(11)}Then add the console (Full):`);
       out.push(...stepLines(consoleSteps, 13));
     }
-  } else if (previous === "full" && h.consolePiece) {
+  } else if (ran === undefined && profile === "core" && previous === "full" && h.consolePiece) {
     const down = planSwitch(h, "full", "core", paths);
     if (down.kind === "steps" && down.steps.length > 0) {
       out.push(`${indent(11)}You asked for Core and had Full. Remove only the console:`);
       out.push(...stepLines(down.steps, 13));
     }
-  }
-  const ran = input.ran?.[h.id];
-  if (ran) {
-    out.push(`${indent(11)}--register ran:`);
-    for (const r of ran) out.push(`${indent(13)}${r.ok ? "ok  " : "FAIL"} ${r.run}${r.ok || !r.detail ? "" : ` — ${r.detail}`}`);
   }
   return out;
 }
@@ -105,7 +105,7 @@ export function renderInstallEpilogue(input: EpilogueInput): string {
   lines.push(`  + ${paths.pluginDir}  (the plugin, one directory)`);
   lines.push(`  + ${paths.marketplaceDir}  (a local marketplace that lists it)`);
   if (profile === "full") lines.push(`  + ${paths.consoleDir}  (the console pieces, Full only)`);
-  lines.push("  No harness was installed or reconfigured.");
+  if (!input.ran) lines.push("  No harness was installed or reconfigured.");
   lines.push("");
   lines.push("Harnesses found on PATH");
   for (const h of found) lines.push(...harnessBlock(h, input));

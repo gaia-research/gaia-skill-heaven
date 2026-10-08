@@ -7,7 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HARNESS_PATHS, type HarnessId, type HarnessPath, type ProfileId } from "../packages/status/src/compat.js";
 import { planProfile, planSwitch, renderRun, type PlanPaths, type RenderedStep } from "../packages/status/src/install-plan.js";
-import { renderInstallEpilogue } from "../packages/status/src/install-epilogue.js";
+import { renderInstallEpilogue, type RanStep } from "../packages/status/src/install-epilogue.js";
 
 const MARKER = ".skill-heaven-agent-plugin-install";
 type Operation = "register" | "update" | "switch" | "remove";
@@ -95,6 +95,12 @@ function checkpoint(home: string, receipt: Receipt): void {
     saveReceipt(home, receipt);
   }
 }
+function completedSteps(home: string, receipt: Receipt): RanStep[] {
+  const transaction = receipt.transaction;
+  if (!transaction || !receipt.harness) return [];
+  const steps = transactionSteps(receipt.harness, transaction, pathsFor(home));
+  return transaction.completed.map((_, index) => ({ run: steps[index]!.run }));
+}
 function finish(home: string, receipt: Receipt): void {
   receipt.registered = true; receipt.incomplete = false; delete receipt.transaction;
   saveReceipt(home, receipt);
@@ -137,8 +143,19 @@ export function install(o: Options): void {
     const t = previous.transaction;
     if (!o.register || o.uninstall !== (t.operation === "remove") || (o.profile && o.profile !== t.target)) throw new Error(`unfinished ${t.operation}: keep the artifact; retry --register${t.operation === "remove" ? " --uninstall" : ` --profile ${t.target}`} to resume the exact operation before requesting another operation; automatic partial-registration cleanup is unsafe`);
     if (t.staged && t.operation !== "remove") {
-      checkpoint(o.home, previous); finish(o.home, previous);
-      console.log(`Resumed ${t.operation} for ${previous.harness}.`); return;
+      checkpoint(o.home, previous);
+      const ran = completedSteps(o.home, previous);
+      finish(o.home, previous);
+      const h = HARNESS_PATHS.find(candidate => candidate.id === previous.harness)!;
+      const paths = pathsFor(o.home);
+      console.log(renderInstallEpilogue({
+        profile: t.target,
+        previous: t.previousProfile,
+        found: [h.id],
+        ran: { [h.id]: ran },
+        paths: { ...paths, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") },
+      }));
+      return;
     }
   }
   if (o.uninstall) {
@@ -174,6 +191,7 @@ export function install(o: Options): void {
   mkdirSync(dirname(o.home), { recursive: true });
   const work = mkdtempSync(join(dirname(o.home), ".gaia-skill-heaven-agent-plugin."));
   const next = join(work, "install"), old = join(work, "old");
+  let ran: RanStep[] | undefined;
   try {
     const staged = pathsFor(next); mkdirSync(join(next, "marketplace", "plugins"), { recursive: true });
     cpSync(join(source, "plugins", "skill-heaven"), staged.pluginDir, { recursive: true });
@@ -216,12 +234,14 @@ export function install(o: Options): void {
       throw e;
     }
     if (o.register && h) {
-      checkpoint(o.home, receipt); finish(o.home, receipt);
+      checkpoint(o.home, receipt);
+      ran = completedSteps(o.home, receipt);
+      finish(o.home, receipt);
     }
     if (o.quiet) console.log(`${paths.pluginDir}\n${paths.marketplaceDir}`);
     else {
       const found = h?.bin ? [h.id] : HARNESS_PATHS.filter(x => x.bin && onPath(x.bin)).map(x => x.id);
-      console.log(renderInstallEpilogue({ profile, previous: previous?.profile ?? null, found, paths: { ...paths, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") } }));
+      console.log(renderInstallEpilogue({ profile, previous: previous?.profile ?? null, found, ...(ran === undefined ? {} : { ran: { [h!.id]: ran } }), paths: { ...paths, installHome: o.home, uninstall: join(o.home, process.platform === "win32" ? "uninstall.ps1" : "uninstall.sh") } }));
       if (o.register) console.log(`Registered ${profile} for ${h!.name} using its own plugin manager. Restart the harness (Pi: /reload).`);
       else console.log("Artifact staged only. Run the printed registration/removal commands; cached client copies do not refresh automatically.");
     }
