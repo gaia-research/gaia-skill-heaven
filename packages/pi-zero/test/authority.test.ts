@@ -226,7 +226,7 @@ describe("pi door holds the #85 trust boundary (#173)", () => {
 
     it("the Pi Agent Plugin adapter presents commands as reference and the tool as non-authoritative", () => {
       const adapter = read("plugins/skill-heaven/dev.skill-heaven.pi/skill-heaven.ts");
-      const descriptions = [...adapter.matchAll(/\["skill-[a-z]+", "skill-[a-z]+", "([^"]+)"\]/g)].map((m) => m[1]);
+      const descriptions = [...adapter.matchAll(/\["skill-[a-z]+", "skill-heaven-runtime-skill-[a-z]+", "([^"]+)"\]/g)].map((m) => m[1]);
       expect(descriptions).toHaveLength(4);
       for (const d of descriptions) {
         expect(d).toMatch(/reference/i);

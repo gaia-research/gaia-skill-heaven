@@ -39,6 +39,9 @@ jobs:
           npm run build:status
           git diff --exit-code -- plugins/skill-heaven-console/hooks/status-model.mjs
 
+      - name: Pi namespaced skill resources are up to date
+        run: npm run build:pi-skills -- --check
+
       - name: Portable console bundles are up to date
         run: npm run build:console -- --check
 
