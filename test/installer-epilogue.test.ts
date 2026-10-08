@@ -385,7 +385,7 @@ describe("installer epilogue vs packages/status/src/compat.ts (drift)", () => {
 
       it("the generic-client lines, uninstall path and /start URL match", () => {
         const other = HARNESS_PATHS.find((h) => h.id === "other")!;
-        expect(text).toContain(`${other.name.replace("Another Agent Plugins client", "Another Agent Plugins client")} (${CHIP_LABEL[other.chip]})`);
+        expect(text).toContain(`${other.name} (${CHIP_LABEL[other.chip]})`);
         expect(text).toContain(
           toScriptForm(`Point your client's own plugin install at ${AGENT_PLUGIN_INSTALL.plugin}.`),
         );
