@@ -8,11 +8,14 @@ implementation guidance, not a ratification — decision authority stays with
 
 ## Outcome
 
-A user installs **one** plugin — `skill-heaven` — and gets the summon MCP plus
-all five surfaces. No sibling repository, no `npx`, no external binary, no
-build step. `gaia-mcp` is deprecated. Portable clients discover the same skills
-and MCP declaration; client-only delivery shims stay namespaced or in legacy
-compatibility locations.
+A Core install provides the Skill Heaven runtime; Full adds the separately
+owned console carrier appropriate to the host. The six Full carriers are
+intentionally distinct, not one uniform HUD. No sibling repository, no `npx`,
+no external binary, no build step. `gaia-mcp` is deprecated. Portable clients
+discover the same skills and MCP declaration; client-only delivery shims stay
+namespaced or in legacy compatibility locations. See
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) for the canonical Core/Full
+contract.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
 `/skill-hell` summoned by shelling out to a `skill-hell` binary hunted for at
@@ -56,7 +59,7 @@ and hard signals are recorded in
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
 is not the plugin.
 
-## One line, five entry points, one tool
+## One line, five user-facing surfaces, one tool
 
 The rung is a **routing preference the user selects**. It names a *direction*,
 not a number: the agent decides how far to reach on a given gap. No second MCP
@@ -81,6 +84,26 @@ then.
 All four rung commands render **the same seven-rung line**, differing only in
 the rung they open on and which band is highlighted. Every rendering carries the
 `WIP · PROVISIONAL` mark.
+
+### Core and Full profile boundary
+
+Core registers the runtime and has no Full console registration. Full adds one
+separately owned console carrier; it does not imply six equivalent HUDs. The
+current profile contract and per-host delivery truth are in
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) and
+[`packages/console/README.md`](../packages/console/README.md).
+
+The Pi package owns five runtime skill resources, registered under the exact
+names `/skill:skill-heaven-runtime-summon`,
+`/skill:skill-heaven-runtime-skill-zero`, `/skill:skill-heaven-runtime-skill-heaven`,
+`/skill:skill-heaven-runtime-skill-hell`, and `/skill:skill-heaven-runtime-skill-ultra`.
+Pi's five user-facing command
+aliases are `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and
+`/skill-ultra`; these aliases are not the resource registration names.
+
+Ultra remains provisioned with its controller unavailable (#126). Native
+Windows runtime acceptance remains unverified (#94). The Gaia Ecosystem
+Desktop Mod is separately owned and is not installed by either profile.
 
 ### The rungs — no counts, no caps
 

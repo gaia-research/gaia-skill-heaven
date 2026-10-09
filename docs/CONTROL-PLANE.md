@@ -105,12 +105,16 @@ materialized `SKILL.md`. The console observes both facts:
 |---|---|---|
 | `previewed` | `/lens` preview call (`preview: true`; nothing materialized — the engine still logs the query in its own session directory) | "3 candidates · nothing materialized" |
 | `materialized` | summon result, `summoned[]` | "card returned · body not read" |
-| `in context` | a `Read` tool call whose path is that skill's materialized `SKILL.md` | "in context · body read by main agent" |
-| `unknown` | terminal/CLI projections, which cannot observe reads | "materialized · read not observed" |
+| `in context` | successful complete-read evidence for that exact materialized `SKILL.md`, with the observer's supported provenance contract | "in context · body read by main agent" |
+| `unknown` | no complete-read evidence establishes the body state | "materialized · complete body read not observed" |
 
-Receipt-only terminal projections say *materialized*, never body-read. Native
-terminal observers (Claude and Pi) may show body-read only from successful complete
-read evidence; a card or explicit read slice is insufficient. None proves effective use.
+A successful or partial read that does not prove completeness is **unknown**, not
+proof that no read occurred. Render unknown completeness as *complete body read
+not observed*, never *body not read*. Reserve *body not read* for a proven
+no-read state. Receipt-only hosts can report receipt facts but cannot observe
+whether the body was read. Native observers may credit a body read only from
+successful complete-read evidence; a card or explicit read slice is insufficient.
+None proves effective use.
 
 ### 2.4 The Ultra slot — provisioned, not built
 
@@ -456,7 +460,15 @@ Claude Code **2.1.294**, terminal, macOS. Only facts a hard signal showed; the e
 - The console wrote nothing to user settings or the plugin registry. Claude Code's own background
   marketplace refresh did touch `known_marketplaces.json`.
 
-Pi **1.0.4**: the adapter stays (its own MCP route is not equivalent under an MCP replacement
-extension), and `ctx.ui.setStatus` carries the canonical line. Antigravity **1.3.1**: plugin MCP
+Historical Pi **1.0.4**: the adapter stays (its own MCP route is not equivalent under an MCP replacement
+extension), and `ctx.ui.setStatus` carries the canonical line. This historical
+probe did not establish complete-read provenance; it must not be read as current
+Pi read-credit evidence. Current Pi **1.1.0** credits complete bodies only from
+the pinned builtin `read` contract: exact public current-tool provenance,
+unbounded input, a single text block matching structured output, and no
+truncation metadata. Successful or partial reads without that proof remain
+unknown; prior proven full reads survive a later partial/unknown read. Pi's paired
+historical results lack execution-time tool provenance and restore as unknown;
+receipt-only hosts cannot observe body reads. Antigravity **1.3.1**: plugin MCP
 servers load only from `mcp_config.json`; with it, the plugin is compatible.
 

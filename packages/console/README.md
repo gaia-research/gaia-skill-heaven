@@ -98,7 +98,13 @@ The saved native lifecycle pass observed Core → Full → Core → uninstall wi
 recovered from the original session's saved tool output after scratch cleanup;
 the large reconnaissance campaign was not rerun. Native Pi now additionally has
 schema, permission-denial, positive preview, materialization/read, pane height,
-paging and dismissal observations. Remaining live report/permission/isolation/
+paging and dismissal observations. Refreshed Pi 1.1.0 additionally verified the
+actual pinned builtin-read provenance/output contract, package-owned rung aliases,
+fresh-session reset and working Core after console removal. Current Codex 0.162.0
+and Grok 1.0.50 passed twelve selected package-lifecycle cells, including repeated
+same-profile update; this is not their Full runtime proof. The
+[acceptance checkpoint](../../docs/evidence/core-full-196/acceptance.md) keeps
+these proof classes and pending gates explicit. Remaining live report/permission/isolation/
 cache-refresh and UI cells must remain explicitly pending until observed. Windows
 is unverified (#94); synthetic tests and successful package management do not close
 that gap or prove complete six-host runtime acceptance.

@@ -21,8 +21,14 @@ A 20-row terminal showed a six-row default pane and pageable inspected details;
 Escape/q restored the editor. Complete-read credit requires the pinned builtin's
 current public provenance; historical reads lack execution-time provenance and
 restore as unknown. Slices/truncation, shadowed tools and exact namespaced rung
-matching have deterministic tests; remaining native cells are
-tracked separately, never promoted from test snapshots.
+matching have deterministic tests. A refreshed 1.1.0 native session credited the
+complete builtin result using those exact public checks; Zero/Heaven/Hell/Ultra
+aliases loaded the package-owned runtime resources. New-session counts reset,
+and after console-only removal Core still returned a preview candidate with no
+console extension or owned status present. Selected-package cleanup completed.
+Remaining native cells are tracked separately, never promoted from test snapshots.
+See the [acceptance checkpoint](../../docs/evidence/core-full-196/acceptance.md)
+for exact proof classes and still-pending browser/six-host runtime gates.
 
 See [shared controls/evidence](../../packages/console/README.md) and
 [Core adapter historical probe](../skill-heaven/dev.skill-heaven.pi/PROBE.md).
