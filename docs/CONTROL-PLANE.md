@@ -104,14 +104,15 @@ materialized `SKILL.md`. The console observes both facts:
 | Stage | Observed by | Shown as |
 |---|---|---|
 | `previewed` | `/lens` preview call (`preview: true`; nothing materialized — the engine still logs the query in its own session directory) | "3 candidates · nothing materialized" |
-| `materialized` | summon result, `summoned[]` | "card returned · body not read" |
+| `materialized` | summon result, `summoned[]`; no successful read observed in the supported observer's scope | "card returned · body not read" (inferred, not an absolute claim) |
 | `in context` | successful complete-read evidence for that exact materialized `SKILL.md`, with the observer's supported provenance contract | "in context · body read by main agent" |
 | `unknown` | no complete-read evidence establishes the body state | "materialized · complete body read not observed" |
 
 A successful or partial read that does not prove completeness is **unknown**, not
 proof that no read occurred. Render unknown completeness as *complete body read
-not observed*, never *body not read*. Reserve *body not read* for a proven
-no-read state. Receipt-only hosts can report receipt facts but cannot observe
+not observed*, never *body not read*. The *body not read* label is an explicitly
+inferred absence within the supported observer's scope, not an absolute claim
+about unobserved tools or a substitute for unknown completeness. Receipt-only hosts can report receipt facts but cannot observe
 whether the body was read. Native observers may credit a body read only from
 successful complete-read evidence; a card or explicit read slice is insufficient.
 None proves effective use.
