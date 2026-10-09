@@ -11,6 +11,17 @@
 
 import { eventFromSummonResult } from "./adapters.js";
 import type { Controller, FixtureMark, SkillHeavenStatus, SummonEvent } from "./model.js";
+import {
+  initialConsoleState,
+  recordEvent,
+  recordRead,
+  recordSelection,
+  startAgentCall,
+  finishAgentCall,
+  agentReturned,
+  type ConsoleCoreState,
+} from "./console-state.js";
+import type { ObservationMap } from "./console-host.js";
 
 const FIXTURE = Object.freeze({}) as FixtureMark;
 
@@ -245,3 +256,92 @@ export const FLOW_FIXTURE: readonly FlowAgentFixture[] = [
   { id: "tests", label: "general-purpose · write tests", parent: "main", state: "running", summons: 0 },
   { id: "tests-fixtures", label: "general-purpose · build fixtures", parent: "tests", state: "unknown", summons: 0 },
 ];
+
+/* ------------------------------------------------------------------------- *
+ * Console states — whole sessions, folded through the REAL reducers.
+ *
+ * Every console fixture is built by `recordEvent` / `recordRead` / … from the
+ * event fixtures above, never written by hand, so a projection shown on the
+ * site exercises the same code a host adapter runs. `host` is the host's
+ * observation map: a host that cannot observe reads gets `read-unobserved`
+ * stages, exactly as its adapter would produce.
+ * ------------------------------------------------------------------------- */
+
+export interface ConsoleFixture {
+  label: string;
+  state: ConsoleCoreState;
+}
+
+function fixtureStatus(base: ConsoleCoreState): ConsoleCoreState {
+  return { ...base, status: { ...base.status, fixture: FIXTURE } };
+}
+
+const sel = (state: ConsoleCoreState, command: string): ConsoleCoreState => {
+  const reading: SkillHeavenStatus["reading"] = /ultra/.test(command)
+    ? { kind: "selected", rung: "ultra", source: "observed-command" }
+    : /hell/.test(command)
+      ? { kind: "selected", rung: "high", source: "observed-command" }
+      : { kind: "selected", rung: "low", source: "observed-command" };
+  return recordSelection(state, reading, command);
+};
+
+function ev(name: string): SummonEvent {
+  const found = EVENT_FIXTURES[name];
+  if (!found) throw new Error(`missing event fixture ${name}`);
+  return found.event;
+}
+
+/** The named sessions the site's Full showcase paints on every host. */
+export function consoleFixtures(host: Pick<ObservationMap, "read" | "agents" | "rung">): Readonly<Record<string, ConsoleFixture>> {
+  const readable = host.read !== "unavailable";
+  const agentsKnown = host.agents !== "unavailable";
+  const rungKnown = host.rung !== "unavailable";
+  const opts = { readObservable: readable };
+
+  const fresh = fixtureStatus(initialConsoleState());
+
+  let working = fixtureStatus(initialConsoleState());
+  if (rungKnown) working = sel(working, "/skill-hell high");
+  working = recordEvent(working, ev("converge"), null, "tool", opts);
+  working = recordEvent(working, ev("manual"), null, "tool", opts);
+  if (readable) working = recordRead(working, "/tmp/skill-summon-session-fixture/impeccable/SKILL.md", "main agent");
+  if (agentsKnown) {
+    working = startAgentCall(working, "call-1", "Explore  \"map the auth module\"", false);
+    working = finishAgentCall(working, "call-1", "explore-auth", false);
+    working = recordEvent(working, ev("explore"), "explore-auth", "tool", opts);
+    working = agentReturned(working, "explore-auth");
+    working = startAgentCall(working, "call-2", "general-purpose  \"write tests\"", false);
+  } else {
+    working = recordEvent(working, ev("explore"), null, "tool", opts);
+  }
+
+  let lens = fixtureStatus(initialConsoleState());
+  lens = recordEvent(lens, ev("previewOne"), null, "lens", opts);
+
+  let lensMany = fixtureStatus(initialConsoleState());
+  lensMany = recordEvent(lensMany, ev("previewMany"), null, "lens", opts);
+
+  let refused = fixtureStatus(initialConsoleState());
+  refused = recordEvent(refused, ev("noMatch"), null, "tool", opts);
+  refused = recordEvent(refused, ev("unavailable"), null, "tool", { ...opts, reached: false });
+
+  let ultra = fixtureStatus(initialConsoleState());
+  ultra = recordEvent(ultra, ev("converge"), null, "tool", opts);
+  ultra = {
+    ...(rungKnown ? recordSelection(ultra, { kind: "selected", rung: "ultra", source: "observed-command" }, "/skill-ultra") : ultra),
+  };
+  ultra = { ...ultra, status: { ...ultra.status, controller: rungKnown ? { kind: "unavailable" } : ultra.status.controller } };
+
+  let hostile = fixtureStatus(initialConsoleState());
+  hostile = recordEvent(hostile, ev("hostile"), null, "tool", opts);
+
+  return {
+    fresh: { label: "Fresh session", state: fresh },
+    working: { label: "A working session — summons, a read, a subagent", state: working },
+    lensOne: { label: "Lens preview · one candidate", state: lens },
+    lensMany: { label: "Lens preview · several plausible", state: lensMany },
+    refused: { label: "Refusals — no match, source unavailable", state: refused },
+    ultra: { label: "Ultra selected — provisioned, controller unavailable", state: ultra },
+    hostile: { label: "Hostile metadata, sanitized", state: hostile },
+  };
+}

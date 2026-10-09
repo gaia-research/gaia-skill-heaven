@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { HARNESS_PATHS } from "../packages/status/src/index.js";
+import { HARNESS_PATHS, planProfile, planSwitch, PROFILE_PITCH } from "../packages/status/src/index.js";
 
 // /start is the install front door (docs/CONTROL-PLANE.md §1, §5.4). These are
 // static source checks in the style of site-truth.test.ts: the page must render
@@ -17,6 +17,48 @@ const code = (rel: string) =>
   site(rel)
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "");
+
+describe("profile plans stay canonical", () => {
+  it("Core excludes the console and Full includes only contract-defined console steps", () => {
+    for (const harness of HARNESS_PATHS) {
+      const core = planProfile(harness, "core", "register");
+      expect(core.kind).toBe("steps");
+      if (core.kind === "steps") expect(core.steps.every((step) => step.piece === "core")).toBe(true);
+      const full = planProfile(harness, "full", "register");
+      if (harness.consolePiece === null) {
+        expect(full).toMatchObject({ kind: "blocked" });
+      } else if (full.kind === "steps") {
+        expect(full.steps.some((step) => step.piece === "console")).toBe(true);
+      }
+      expect(PROFILE_PITCH.core.name).toBe("Core");
+      expect(PROFILE_PITCH.full.name).toBe("Core + Console");
+    }
+  });
+
+  it("keeps Agy installable while disclosing provisional Console runtime", () => {
+    const agy = HARNESS_PATHS.find((h) => h.id === "agy")!;
+    expect(planProfile(agy, "full", "register").kind).toBe("steps");
+    expect(agy.fullBlocked).toBeNull();
+    expect(agy.console.probe.summary).toContain("PROVISIONAL");
+    expect(agy.console.probe.summary).toContain("registration succeeded");
+    expect(agy.console.probe.summary).toContain("sessionRoot binding remain unverified (#206)");
+    expect(agy.console.mechanism).toContain("Provisional Console runtime");
+    expect(agy.statusNote).toContain("provisional");
+    expect(site("src/surfaces/Start.tsx")).toContain("harness.console.probe.summary");
+    expect(site("src/surfaces/Console.tsx")).toContain("selectedHarness.console.probe.summary");
+    const acceptance = readFileSync(join(REPO, "docs/evidence/core-full-196/acceptance.md"), "utf8");
+    expect(acceptance).toContain("5 accepted / 1 provisional");
+    expect(acceptance).toContain("not a sixth acceptance pass");
+    expect(acceptance).toContain("issues/206");
+  });
+
+  it("switching profiles only touches the console piece", () => {
+    for (const harness of HARNESS_PATHS.filter((item) => item.consolePiece !== null)) {
+      const plan = planSwitch(harness, "core", "full");
+      if (plan.kind === "steps") expect(plan.steps.every((step) => step.piece === "console")).toBe(true);
+    }
+  });
+});
 
 describe("/start renders the compat table (#47 · #161 · #147)", () => {
   const start = site("src/surfaces/Start.tsx");
@@ -73,15 +115,20 @@ describe("/start renders the compat table (#47 · #161 · #147)", () => {
     expect(start).toMatch(/PROVISIONAL|Provisional/);
   });
 
-  it("shows a blocked row's text instead of a command", () => {
-    expect(start).toMatch(/harness\.blocked/);
-    expect(start).toMatch(/No registration command yet/);
+  it("shows blocked profile plans honestly and sources steps from canonical plans", () => {
+    expect(start).toContain("planProfile(harness, profile, 'register', paths)");
+    expect(start).toContain("profileInstallerCommand(harness.id, profile, platform)");
+    expect(start).toContain("WINDOWS_PLAN_PATHS");
+    expect(start).toContain("planSwitch(harness, profile");
+    expect(start).toContain("registrationPlan?.kind === 'blocked'");
+    expect(start).toContain("PROFILE_PITCH");
+    expect(start).toContain("staging alone does not enable it");
   });
 
-  it("covers what-changes, update and remove, and the client-copy caveat", () => {
+  it("covers what-changes, canonical profile update/remove, and the client-copy caveat", () => {
     expect(start).toMatch(/What changes on your machine/);
-    expect(start).toMatch(/harness\.update/);
-    expect(start).toMatch(/harness\.remove/);
+    expect(start).toMatch(/planProfile\(harness, profile, op, paths\)/);
+    expect(start).toMatch(/planSwitch\(harness, profile/);
     expect(start).toMatch(/does not unregister/);
   });
 
@@ -131,6 +178,13 @@ describe("the front doors send people to /start first (#47)", () => {
     expect(section.indexOf("CLAUDE_COMPATIBILITY.map")).toBeLessThan(optional);
   });
 
+  it("makes Core and Full legible on the landing page and links the showcase", () => {
+    expect(landing).toContain("TWO PLUGIN PROFILES");
+    expect(landing).toContain("Core</b> is the runtime");
+    expect(landing).toContain("Core + Console</b> adds the independently removable");
+    expect(landing).toContain("#/console");
+  });
+
   it("keeps the existing anchors and §03", () => {
     for (const id of ["doors", "run", "session", "directions", "house"]) expect(landing).toContain(`id="${id}"`);
     expect(landing).toContain("STANDING DOSE · MEASURED (HISTORICAL)");
@@ -164,13 +218,28 @@ describe("the front doors send people to /start first (#47)", () => {
     expect(site("src/variations/variation-hero.css")).toMatch(/\.vha-cta-termcopy \{[^}]*min-height: 26px/);
   });
 
+  it("preserves readable reel ink while collapsing and labels focusable readouts with a valid role", () => {
+    const css = site("src/surfaces/landing.css");
+    const row = css.match(/\.lp-reel__row \{([^}]*)\}/)?.[1];
+    const cut = css.match(/\.lp-reel__row\.is-cut \{([^}]*)\}/)?.[1];
+    expect(row).toBeDefined();
+    expect(cut).toBeDefined();
+    expect(row).not.toMatch(/opacity\s+[\d.]+s/);
+    expect(cut).not.toMatch(/opacity\s*:/);
+    expect(cut).toContain("max-height: 0");
+    expect(landing).toContain('<pre className="lp-tree" role="region"');
+    expect(site("src/surfaces/Console.tsx")).toContain('<pre className="cx-native-readout" role="region"');
+  });
+
   it("underlines the in-text install link in the landing fineprint", () => {
     expect(site("src/surfaces/landing.css")).toMatch(/\.lp-fineprint a \{[^}]*text-decoration: underline/);
   });
 
   it("announces copies and moves focus after a button-driven path change on /start", () => {
     const start = site("src/surfaces/Start.tsx");
-    expect(start).toMatch(/Copied: \$\{copiedLabel\}/);
+    expect(start).toMatch(/await navigator\.clipboard\.writeText\(cmd\)/);
+    expect(start).toMatch(/setCopiedLabel\(`Copied: \$\{label\}`\)/);
+    expect(start).toContain("Copy unavailable. Select the command text");
     expect(start).toContain("selectAndFocus");
     expect(start).toMatch(/id="st-path" tabIndex=\{-1\}/);
   });

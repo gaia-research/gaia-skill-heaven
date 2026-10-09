@@ -18,6 +18,13 @@ import {
   CHIP_MEANING,
   HARNESS_PATHS,
   LAUNCHER_INSTALL,
+  PROFILE_PITCH,
+  planProfile,
+  planSwitch,
+  profileInstallerCommand,
+  WINDOWS_PLAN_PATHS,
+  DEFAULT_PLAN_PATHS,
+  type ProfileId,
   type HarnessPath,
   type VerificationChip,
 } from '@gaia-skill-heaven/status'
@@ -129,11 +136,6 @@ function Command({
   )
 }
 
-/** A line is a command (render as code) when it starts with the harness's own binary. */
-function looksLikeCommand(line: string, h: HarnessPath): boolean {
-  return h.bin !== null && line.startsWith(`${h.bin} `)
-}
-
 /* -------------------------------------------------------------------------
    the page
    ------------------------------------------------------------------------- */
@@ -144,12 +146,16 @@ export default function Start() {
   const [copiedCmd, setCopiedCmd] = useState('')
   const [copiedLabel, setCopiedLabel] = useState('')
   const [focusPath, setFocusPath] = useState(false)
+  const [profile, setProfile] = useState<ProfileId>('core')
   const timer = useRef<number | undefined>(undefined)
 
   const rawChoice = params.get('h')
   const choice =
     rawChoice === NONE || HARNESS_PATHS.some((h) => h.id === rawChoice) ? rawChoice : null
   const harness = HARNESS_PATHS.find((h) => h.id === choice) ?? null
+  const paths = platform === 'windows' ? WINDOWS_PLAN_PATHS : DEFAULT_PLAN_PATHS
+  const registrationPlan = harness ? planProfile(harness, profile, 'register', paths) : null
+  const switchPlan = harness ? planSwitch(harness, profile, profile === 'core' ? 'full' : 'core', paths) : null
 
   const select = useCallback(
     (value: string) => {
@@ -177,18 +183,18 @@ export default function Start() {
     setFocusPath(false)
   }, [focusPath, harness])
 
-  const copy = useCallback((cmd: string, label: string) => {
-    // Clipboard can be absent or refused (insecure context, permissions).
-    // The command stays selectable on screen either way.
+  const copy = useCallback(async (cmd: string, label: string) => {
     try {
-      void navigator.clipboard?.writeText(cmd).catch(() => {})
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable')
+      await navigator.clipboard.writeText(cmd)
+      setCopiedCmd(cmd)
+      setCopiedLabel(`Copied: ${label}`)
+      window.clearTimeout(timer.current)
+      timer.current = window.setTimeout(() => setCopiedCmd(''), 1600)
     } catch {
-      /* selectable text is the fallback */
+      setCopiedCmd('')
+      setCopiedLabel('Copy unavailable. Select the command text to copy it manually.')
     }
-    setCopiedCmd(cmd)
-    setCopiedLabel(label)
-    window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => setCopiedCmd(''), 1600)
   }, [])
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
@@ -201,7 +207,7 @@ export default function Start() {
     }
   }, [])
 
-  const installer = platform === 'windows' ? AGENT_PLUGIN_INSTALL.windows : AGENT_PLUGIN_INSTALL.posix
+  const installer = harness ? profileInstallerCommand(harness.id, profile, platform) : platform === 'windows' ? AGENT_PLUGIN_INSTALL.windows : AGENT_PLUGIN_INSTALL.posix
   const launcherInstall = platform === 'windows' ? LAUNCHER_INSTALL.windows : LAUNCHER_INSTALL.posix
   const sigil = SIGIL[platform]
 
@@ -284,7 +290,7 @@ export default function Start() {
             </label>
           </div>
           <p className="sr-only" role="status" aria-live="polite">
-            {copiedLabel ? `Copied: ${copiedLabel}` : announce}
+            {copiedLabel || announce}
           </p>
         </section>
 
@@ -336,19 +342,30 @@ export default function Start() {
                 </p>
               </div>
 
+              <section className="st-profile" aria-labelledby="st-profile-heading">
+                <h3 className="st-h3" id="st-profile-heading">Choose your plugin profile</h3>
+                <div role="radiogroup" aria-labelledby="st-profile-heading" className="st-opts">
+                  {(['core', 'full'] as const).map((id) => (
+                    <label key={id} className="st-opt">
+                      <input type="radio" name="profile" value={id} checked={profile === id} onChange={() => setProfile(id)} />
+                      <span className="st-opt__body"><span className="st-opt__mark" aria-hidden="true" /><span className="st-opt__name">{PROFILE_PITCH[id].name}</span><span className="st-opt__ver">{PROFILE_PITCH[id].line}</span></span>
+                    </label>
+                  ))}
+                </div>
+                {profile === 'full' && <p className="st-caveat">{harness.console.mechanism} {harness.console.probe.summary}</p>}
+              </section>
+
               <ol className="st-steps">
                 {showInstaller(harness) && (
                   <li className="st-step">
                     <div className="st-step__head">
                       <h3 className="st-h3">
-                        {harness.commands.length > 0 ? 'Put the plugin on disk' : 'Put the portable package on disk'}
+                        Put the plugin on disk
                       </h3>
                       <PlatformToggle platform={platform} onToggle={setPlatform} />
                     </div>
                     <p className="st-prose">
-                      In a terminal. Needs Node 22+ and Git. It installs one plugin directory and a
-                      local marketplace, prints both paths, and registers nothing — {harness.name} keeps
-                      its own registration, which is the next step.
+                      In a terminal. Needs Node 22+ and Git. This stages the portable package and registers nothing. Complete the selected {PROFILE_PITCH[profile].name} registration below in {harness.name}; staging alone does not enable it.
                     </p>
                     <Command
                       cmd={installer}
@@ -357,68 +374,61 @@ export default function Start() {
                       copied={copiedCmd === installer}
                       onCopy={copy}
                     />
+                    {platform === 'windows' && <p className="st-caveat">PowerShell packaging is provided; native Windows runtime compatibility remains unverified (#94). A macOS probe does not validate this path.</p>}
                   </li>
                 )}
 
-                {harness.commands.length > 0 && (
+                {registrationPlan?.kind === 'steps' && registrationPlan.steps.length > 0 && (
                   <li className="st-step">
                     <h3 className="st-h3">
-                      {harness.inHarness ? `Type these inside ${harness.name}` : `Register it in ${harness.name}`}
+                      Register {PROFILE_PITCH[profile].name} in {harness.name}
                     </h3>
                     <p className="st-prose">
-                      {harness.inHarness
-                        ? `No terminal needed — these are ${harness.name} commands, typed at its prompt. Two lines, in order.`
-                        : `In a terminal, after the installer. ${harness.name} copies or caches the plugin the way it does for any plugin.`}
+                      These exact steps come from the canonical install plan. Run them where indicated, after staging. Core + Console adds the independently removable console piece.
                     </p>
                     <div className="st-cmds">
-                      {harness.commands.map((c, i) => (
-                        <Command
-                          key={c}
-                          cmd={c}
-                          sigil={harness.inHarness ? '›' : sigil}
-                          label={`${harness.name} command, line ${i + 1} of ${harness.commands.length}`}
-                          copied={copiedCmd === c}
-                          onCopy={copy}
-                        />
+                      {registrationPlan.steps.map((step, i) => (
+                        <Command key={`${step.piece}-${step.run}-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`${harness.name} ${step.piece} registration step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />
                       ))}
                     </div>
                   </li>
                 )}
 
-                {harness.commands.length === 0 && harness.blocked && (
+                {(registrationPlan?.kind === 'blocked' || registrationPlan?.kind === 'steps' && registrationPlan.steps.length === 0) && (
                   <li className="st-step st-step--plain">
                     <div className="st-blocked" role="note">
-                      <h3 className="st-h3">No registration command yet</h3>
-                      <p className="st-blocked__text">{harness.blocked}</p>
+                      <h3 className="st-h3">{profile === 'full' ? 'Core + Console is unavailable here' : 'No registration steps are available'}</h3>
+                      <p className="st-blocked__text">{registrationPlan?.kind === 'blocked' ? registrationPlan.reason : harness.blocked ?? 'No accepted registration steps are recorded for this profile.'}</p>
                     </div>
                   </li>
                 )}
 
-                {harness.id === 'claude' && (
-                  <li className="st-step st-step--optional">
-                    <div className="st-step__head">
-                      <h3 className="st-h3">Optional: the console</h3>
-                      <span className="sh-chip sh-chip--wip st-preview">Preview</span>
-                    </div>
-                    <p className="st-prose">
-                      Adds a status entry, the Lens band and the <span className="st-mono">/heaven</span>{' '}
-                      console. It observes; it never changes what Skill Heaven does. Skip it and nothing
-                      is missing.
-                    </p>
-                    <Command
-                      cmd="/plugin install skill-heaven-console@gaia-skill-heaven"
-                      sigil="›"
-                      label="the optional console install command"
-                      copied={copiedCmd === '/plugin install skill-heaven-console@gaia-skill-heaven'}
-                      onCopy={copy}
-                    />
-                  </li>
-                )}
               </ol>
+
+              {registrationPlan?.kind === 'steps' && (
+                <details className="st-profile-ops">
+                  <summary className="st-h3">Change or remove this profile</summary>
+                  <p className="st-prose">These are canonical plans for the selected harness. Core → Core + Console adds only the console; Core + Console → Core removes only that piece.</p>
+                  <h4 className="st-h3">Switch to {profile === 'core' ? 'Core + Console' : 'Core'}</h4>
+                  <p className="st-prose">If you originally installed with <code className="st-code">--register</code> / <code className="st-code">-Register</code>, use this receipt-managed switch. It performs only the console registration change and preserves Core.</p>
+                  <Command cmd={profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} sigil={sigil} label="switch the installer-managed profile" copied={copiedCmd === profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} onCopy={copy} />
+                  <h4 className="st-h3">Stage-only or manual registration</h4>
+                  <p className="st-prose">{profile === 'core' ? 'Stage Core + Console first, then add only its console registration.' : 'Remove only the console registration first, then stage Core to remove console files. Core stays registered.'}</p>
+                  {profile === 'core' && <Command cmd={profileInstallerCommand(harness.id, 'full', platform)} sigil={sigil} label="stage Core + Console before adding its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'full', platform)} onCopy={copy} />}
+                  {switchPlan?.kind === 'steps' && switchPlan.steps.map((step, i) => <Command key={`switch-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`switch profile step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}
+                  {switchPlan?.kind === 'blocked' && <p className="st-prose">{switchPlan.reason}</p>}
+                  {profile === 'full' && <Command cmd={profileInstallerCommand(harness.id, 'core', platform)} sigil={sigil} label="stage Core after removing its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'core', platform)} onCopy={copy} />}
+                  {(['update', 'remove'] as const).map((op) => {
+                    const plan = planProfile(harness, profile, op, paths)
+                    if (plan.kind === 'blocked' || plan.steps.length === 0) return <p key={op} className="st-prose">{op === 'update' ? 'No update step is recorded.' : 'No removal step is recorded for this profile.'}</p>
+                    return <div key={op}><h4 className="st-h3">{op === 'update' ? 'Update' : 'Uninstall'}</h4>{plan.steps.map((step, i) => <Command key={`${op}-${step.piece}-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`${op} ${step.piece} step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}</div>
+                  })}
+                </details>
+              )}
 
               <p className="st-status-note">
                 <span className="st-label">Status line on {harness.name}</span>
-                <span>{harness.statusNote}</span>
+                <span>{profile === 'core' ? 'Core installs no console or status registration.' : harness.console.mechanism}</span>
               </p>
             </section>
 
@@ -432,9 +442,9 @@ export default function Start() {
                   <dd>
                     {nothingYet(harness) ? (
                       <>Nothing. No step on this path writes anything until a registration command has been probed.</>
-                    ) : harness.needsInstaller ? (
+                    ) : showInstaller(harness) ? (
                       <>
-                        One directory, <code className="st-code">{AGENT_PLUGIN_INSTALL.root}</code>, holding
+                        One directory, <code className="st-code">{paths.marketplaceDir.replace(/\/marketplace$/, '')}</code>, holding
                         the plugin and a local marketplace. {harness.commands.length > 0 && (
                           <>
                             Then {harness.name}’s own registration copies or caches the plugin, the way{' '}
@@ -455,60 +465,18 @@ export default function Start() {
                   <dd>
                     {nothingYet(harness)
                       ? 'Everything.'
-                      : harness.needsInstaller
-                      ? `Your ${harness.name} configuration, your shell profile and your repository. The installer does not touch them.`
+                      : showInstaller(harness)
+                      ? `Your ${harness.name} settings, shell profile and repository stay yours. Staging edits none of them. Registration adds only the selected packages through host-owned commands.`
                       : `Your settings, your skills and your repository. The plugin is added; nothing of yours is edited.`}
                   </dd>
                 </div>
                 <div className="st-ledger__row">
-                  <dt>Update</dt>
-                  <dd>
-                    {looksLikeCommand(harness.update, harness) ? (
-                      <Command
-                        cmd={harness.update}
-                        sigil={sigil}
-                        label={`${harness.name} update command`}
-                        copied={copiedCmd === harness.update}
-                        onCopy={copy}
-                      />
-                    ) : (
-                      harness.update
-                    )}
-                  </dd>
+                  <dt>Maintain</dt>
+                  <dd>Rerun the selected profile installer to refresh staged files, then use the canonical update steps above to refresh host caches. Restart the session to load changed extensions.</dd>
                 </div>
                 <div className="st-ledger__row">
                   <dt>Remove</dt>
-                  <dd>
-                    <div className="st-cmds">
-                      {harness.remove.map((r) => {
-                        const isLocal = r === AGENT_PLUGIN_INSTALL.uninstall
-                        return (
-                          <div key={r} className="st-remove">
-                            <span className="st-remove__label">
-                              {isLocal
-                                ? nothingYet(harness)
-                                  ? 'Only if you already ran the installer'
-                                  : 'Remove the local artifact'
-                                : `Unregister from ${harness.name}`}
-                            </span>
-                            <Command
-                              cmd={r}
-                              sigil={sigil}
-                              label={isLocal ? 'the local uninstall script' : `${harness.name} remove command`}
-                              copied={copiedCmd === r}
-                              onCopy={copy}
-                            />
-                          </div>
-                        )
-                      })}
-                    </div>
-                    {harness.needsInstaller && (
-                      <p className="st-caveat">
-                        Removing the local artifact does not unregister copies {harness.name} already holds.
-                        {harness.remove.length > 1 ? ' Unregister first, then remove the artifact.' : ''}
-                      </p>
-                    )}
-                  </dd>
+                  <dd>The local uninstall script follows its receipt: installer-managed registrations are removed first. A stage-only receipt does not unregister manually installed client copies; use the selected profile’s removal steps above before deleting the local artifact. Host-retained disabled caches are disclosed by the plan.</dd>
                 </div>
               </dl>
             </section>
@@ -551,25 +519,36 @@ export default function Start() {
           <h3 className="st-h3 st-h3--spaced">Then set how widely it reaches</h3>
           <ul className="st-rungs">
             <li>
-              <code className="st-code st-code--cmd">/skill-zero</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-zero</code>
               <span>the floor — cut the skills you summoned</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-heaven [low|med]</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-heaven [low|med]</code>
               <span>converge — summon narrowly onto the gap in front of you</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-hell [high|xhigh|max]</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-hell [high|xhigh|max]</code>
               <span>explore — summon widely around the gap</span>
             </li>
             <li>
-              <code className="st-code st-code--cmd">/skill-ultra</code>
+              <code className="st-code st-code--cmd">/{harness?.console.commandPrefix ?? ''}skill-ultra</code>
               <span>provisioned — the controller that would choose for you is not built yet</span>
             </li>
           </ul>
           <p className="st-caveat">
             <span className="sh-chip sh-chip--wip st-preview">Provisional</span> {LADDER_WIP}
           </p>
+        </section>
+
+        <section className="st-sec" aria-labelledby="st-desktop-mod">
+          <h2 className="st-h2" id="st-desktop-mod">Optional Gaia Ecosystem Desktop Mod</h2>
+          <p className="st-prose">
+            A separately owned integration of Gaia Skill Tree and Skill Heaven, with its own
+            desktop acceptance and release gates.
+            Neither Core nor Core + Console installs it. No Mod installation is offered here until its desktop
+            acceptance and release are complete.
+          </p>
+          <p className="st-prose"><a href="https://github.com/gaia-research/gaia-research/issues/286">Follow the Desktop Mod release</a>.</p>
         </section>
 
         {/* ------------------------------------------------- launcher */}
@@ -635,7 +614,7 @@ export default function Start() {
  * harness — shows its `blocked` text alone; installing would strand the files.)
  */
 function showInstaller(h: HarnessPath): boolean {
-  return h.needsInstaller
+  return h.bin !== null || h.needsInstaller
 }
 
 /** A path with no accepted registration and no installer step changes nothing. */
@@ -663,7 +642,7 @@ function NoHarness({ onPick }: { onPick: (id: string) => void }) {
         <>
           <p className="st-prose">
             If you are choosing one to start with, {claude.name} is the verified path — a fresh install
-            checked end to end, with no terminal step.
+            checked end to end. The profile installer stages the local package before registration.
           </p>
           <button type="button" className="sh-cta st-btn" onClick={() => onPick(claude.id)}>
             Show the {claude.name} path <span aria-hidden="true">→</span>

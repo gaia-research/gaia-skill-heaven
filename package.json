@@ -16,7 +16,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "launcher": "npm -w skill-zero run launcher --",
     "build:mcp": "node scripts/build-mcp.mjs",
-    "build:status": "node scripts/build-status.mjs"
+    "build:status": "node scripts/build-status.mjs",
+    "build:profiles": "node scripts/build-profiles.mjs",
+    "build:console": "node scripts/build-console.mjs",
+    "build:pi-skills": "node scripts/build-pi-skills.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

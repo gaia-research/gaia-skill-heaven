@@ -39,6 +39,17 @@ jobs:
           npm run build:status
           git diff --exit-code -- plugins/skill-heaven-console/hooks/status-model.mjs
 
+      - name: Pi namespaced skill resources are up to date
+        run: npm run build:pi-skills -- --check
+
+      - name: Portable console bundles are up to date
+        run: npm run build:console -- --check
+
+      - name: Installer profile contract bundle is up to date
+        run: |
+          npm run build:profiles
+          git diff --exit-code -- scripts/install-profile.mjs
+
       # The committed skill index is the runtime's only read path (SPEC §2.2),
       # and it is a deterministic function of the committed corpus snapshot.
       # A diff here means someone edited the snapshot or the builder without

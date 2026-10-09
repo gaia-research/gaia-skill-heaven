@@ -16,13 +16,13 @@ Skill Heaven works exactly the same without it.
 | Surface | What you see |
 |---|---|
 | **Status entry** | `◇ entropy ‹‹ [NATIVE] ›› · 2 skills` beside your own status line. It is appended; your `statusLine` setting is never touched. |
-| **Lens band** | Empty by default. After a summon it shows the result in two lines and whether the skill body was read (`card returned · body not read` or `in context · body read by main agent`). `Inspect` opens the pane, `Dismiss` hides it. It also hides on your next prompt. |
+| **Lens band** | Empty by default. Only an explicit `/lens` opens it. Ordinary summon/read observations update compact status and receipt state, never open an unsolicited band. The requested band shows one short notice plus deliberate controls; Dismiss clears intent. |
 | **`/lens <intent>`** | Previews which skill would be summoned, with `preview: true`. Nothing is materialized; the summon engine still logs the query in its own session directory. The preview and its detail appear in the band, not in the conversation. For a single candidate the band offers `Summon`, which only **fills your prompt** with `/skill-heaven:summon <name>` — you press Enter. If a summon tool ignores `preview` and materializes a skill, the band shows that real summon and the count includes it. |
-| **`/heaven`** | A pane with four sections: **Session** (receipts, each field labelled observed, reported, inferred or unknown), **Scope** (what Skill Heaven can see, what is active, rung controls that pre-fill commands), **Flow** (agents the host reported and what each summoned) and **Trust** (what this plugin reads and writes). |
+| **`/heaven`** | A concise pane with Session, Scope, Flow and Trust. `Inspect section` or `/heaven inspect <section>` deliberately reveals evidence/diagnostics/controls. Section changes return to summary. Close/Escape or `/heaven dismiss` closes it; opening requests 12 rows through the supported host API. |
 
 Selecting a rung (`/skill-heaven:skill-heaven low`, `/skill-heaven:skill-hell high`, `/skill-heaven:skill-ultra`, `/skill-heaven:skill-zero`) changes the
 bracketed reading in the status entry. That reading is a preference you expressed and the console
-saw; Skill Heaven does not enforce it. `/skill-ultra` reads `[ULTRA]`; the Ultra controller is provisioned, not built. The compact status entry shows only `[ULTRA]` and the skill count — *controller unavailable* is spelled out in `full` mode, in the Scope section and in the pane.
+saw; Skill Heaven does not enforce it. `/skill-ultra` reads `[ULTRA]`; the Ultra controller is provisioned, not built. The compact status entry shows only `[ULTRA]` and the skill count — *controller unavailable* is disclosed in inspected Scope and shared summaries, never an invented working controller.
 
 ## Install
 
@@ -52,7 +52,12 @@ user-scope install, but the install command itself is typed in a terminal sessio
 ## Options
 
 `status` (Settings, or `pluginConfigs` in `settings.json`): `off`, `compact` (default) or `full`.
-`off` removes the status entry; the band and pane stay available.
+`off` removes the status entry; the band and pane stay available. The persistent
+contribution is always **one compact line maximum**, including when the legacy
+`full` statusline option is selected; details belong in the deliberately opened pane.
+
+Core + Console is a Skill Heaven terminal installation profile. It does not install or claim
+the optional cross-product Gaia Ecosystem Desktop Mod / Living Tree B.
 
 ## Disable or remove
 

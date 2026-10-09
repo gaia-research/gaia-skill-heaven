@@ -55,6 +55,9 @@ export type ConsoleStateData = {
   /** True once the host reported any agent id this session. */
   agentIdsSeen: boolean
   section: ConsoleSection
+  /** UI only: opened intentionally, never by a tool observation. */
+  inspectSection?: boolean
+  bandRequested?: boolean
   /** The receipt row that is expanded in the Session section. */
   openEntry: number | null
   /** The rung command the person typed, sanitized, for the Scope section. */
@@ -65,6 +68,11 @@ export type ConsoleStateData = {
 }
 
 declare module 'claude-code' {
+  // The optional launcher uses the same bundled server/schema under this
+  // second exact spelling. Generated marketplace tables know only the first.
+  interface McpToolInputs {
+    'mcp__skill-summon__summon': { query: string; limit?: number; surface?: 'any' | 'heaven' | 'hell'; source?: string; preview?: boolean }
+  }
   interface PluginState {
     'skill-heaven-console': { state: Shaped<ConsoleStateData> }
   }

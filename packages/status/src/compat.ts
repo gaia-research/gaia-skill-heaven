@@ -8,6 +8,8 @@
 // where no accepted command exists, `commands` is empty and `blocked` says why.
 
 import type { HostIntegration, VerificationChip } from "./model.js";
+import type { ConsoleProjection } from "./console-host.js";
+import { adapterPath } from "./compat-console.js";
 
 export const AGENT_PLUGIN_INSTALL = {
   posix: "curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install-agent-plugin.sh | sh",
@@ -23,6 +25,53 @@ export const LAUNCHER_INSTALL = {
   windows: "irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex",
   uninstall: "$HOME/.local/share/gaia-skill-heaven/uninstall.sh",
 } as const;
+
+/** Where an install step is typed: inside the harness, or in a shell. */
+export type StepWhere = "harness" | "shell";
+
+/**
+ * One registration step, in the harness's own terms. `run` may carry the
+ * tokens `{{PLUGIN_DIR}}`, `{{MARKETPLACE_DIR}}` and `{{CONSOLE_DIR}}`; a
+ * consumer substitutes the real staged paths (the installers) or the default
+ * `$HOME/...` ones (the site). Nothing here is ever a command the client was
+ * not seen to accept (PRODUCT.md principle 7).
+ */
+export interface InstallStep {
+  where: StepWhere;
+  run: string;
+  /** Executor invokes this array directly (shell:false), substituting path tokens per argument. */
+  argv?: readonly string[];
+  /** Explicit input for a documented confirmation protocol; never infer a yes prompt. */
+  stdin?: string;
+  /**
+   * The same step as a shell command, when `run` is typed inside the harness
+   * but the client also has a CLI for it (Claude's `/plugin install` is
+   * `claude plugin install`). The installers' explicit `--register` executes
+   * this form; the site prints `run`. Absent = `run` is already a shell command.
+   */
+  shell?: string;
+  /** What this step changes, one line. */
+  effect: string;
+}
+
+/** Register, update and unregister ONE piece (the runtime, or the console). */
+export interface PieceSteps {
+  register: readonly InstallStep[];
+  update: readonly InstallStep[];
+  remove: readonly InstallStep[];
+}
+
+/** The two install profiles (#191). Core = runtime only. Full = Core + the native console. */
+export type ProfileId = "core" | "full";
+export const PROFILES: readonly ProfileId[] = ["core", "full"];
+
+export const PROFILE_PITCH: Readonly<Record<ProfileId, { name: string; line: string }>> = {
+  core: { name: "Core", line: "The Skill Heaven runtime. Summon and the entropy controls. No extra console UI." },
+  full: {
+    name: "Core + Console",
+    line: "Core plus the supported Skill Heaven console — compact statusline, receipts and intentionally opened terminal views where the harness supports them.",
+  },
+};
 
 export type HarnessId = "claude" | "codex" | "pi" | "grok" | "hermes" | "agy" | "other";
 
@@ -54,7 +103,46 @@ export interface HarnessPath {
   launcher: string | null;
   /** The first summon, spelled the way a probe saw this client accept it. */
   firstRun: string;
+  /** What Full adds on this harness: the console projection (#191). */
+  console: ConsoleProjection;
+  /**
+   * The runtime piece (Core). `commands` / `update` / `remove` above are the
+   * rendered, default-path form of this piece.
+   */
+  core: PieceSteps;
+  /**
+   * The console piece (Full = Core + this). `null` means Full cannot be
+   * registered safely on this harness; the installer then fails closed and
+   * says `fullBlocked` rather than falling back to Core and calling it Full.
+   */
+  consolePiece: PieceSteps | null;
+  fullBlocked: string | null;
 }
+
+// TEMPORARY (removed once the per-harness recon lands): keeps the table typed while entries are authored.
+const PENDING = (name: string): Pick<HarnessPath, "console" | "core" | "consolePiece" | "fullBlocked"> => ({
+  console: {
+    kind: "command-backed",
+    mechanism: `pending recon for ${name}`,
+    command: null,
+    commandPrefix: "",
+    surfaces: {
+      status: { level: "unsupported", via: "pending", note: "pending" },
+      lens: { level: "unsupported", via: "pending", note: "pending" },
+      session: { level: "unsupported", via: "pending", note: "pending" },
+      scope: { level: "unsupported", via: "pending", note: "pending" },
+      flow: { level: "unsupported", via: "pending", note: "pending" },
+      trust: { level: "unsupported", via: "pending", note: "pending" },
+    },
+    observes: { summon: "unavailable", read: "unavailable", agents: "unavailable", rung: "unavailable" },
+    summonTools: [],
+    trust: [],
+    probe: { version: null, summary: "pending", href: null },
+  },
+  core: { register: [], update: [], remove: [] },
+  consolePiece: null,
+  fullBlocked: "pending recon",
+});
 
 const REPO = "https://github.com/gaia-research/gaia-skill-heaven/blob/main";
 
@@ -82,9 +170,81 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     launcher: "claude-zero",
     // 2.1.294 refuses a bare /summon: it resolves to the portable skill, which is user-invocable: false.
     firstRun: "/skill-heaven:summon <what you need>",
+    console: {
+      kind: "pane",
+      mechanism:
+        "Claude Code's Mods API (function hooks, early access since 2.1.293): $.ui.status appends a status entry beside your own, an AbovePrompt band carries Lens, and /heaven opens a pane with Session, Scope, Flow and Trust.",
+      command: "/heaven",
+      commandPrefix: "skill-heaven:",
+      surfaces: {
+        status: { level: "native", via: "$.ui.status (APPEND — never touches statusLine)", note: "Probed live in the terminal on 2.1.294; desktop paint is not probed." },
+        lens: { level: "native", via: "AbovePrompt band + $.prompt.fill", note: "A button only pre-fills the prompt; you press Enter." },
+        session: { level: "native", via: "the /heaven pane", note: "Every field carries an evidence class." },
+        scope: { level: "native", via: "the /heaven pane", note: "Rung controls pre-fill commands; nothing runs until you submit." },
+        flow: { level: "native", via: "agentId on tool.call and turn.complete", note: "Only agents the host reported appear." },
+        trust: { level: "native", via: "the /heaven pane", note: "Lists what the console reads and writes; it does not rate it." },
+      },
+      observes: { summon: "observed", read: "observed", agents: "observed", rung: "observed" },
+      summonTools: ["mcp__plugin_skill-heaven_skill-summon__summon", "mcp__skill-summon__summon"],
+      trust: [
+        {
+          id: "skill-heaven",
+          profile: "core",
+          kind: "Claude Code plugin",
+          version: "0.1.2",
+          summary: "The runtime: five commands and one bundled MCP server (skill-summon).",
+          reads: ["the skill source you configure (network, by the summon tool)"],
+          writes: ["a disposable session directory under your temp dir"],
+          network: "the summon tool fetches the skill source",
+          disable: "claude plugin uninstall skill-heaven@gaia-skill-heaven",
+        },
+        {
+          id: "skill-heaven-console",
+          profile: "full",
+          kind: "Claude Code plugin (Mods, preview)",
+          version: "0.1.0",
+          summary: "The console: a status entry, the Lens band and the /heaven pane. Runs inside Claude Code as local code.",
+          notes: ["/lens and /heaven print a one-line result that the model can read. It is fixed text and carries nothing a skill source supplied."],
+          reads: ["summon tool results", "your /skill-* commands", "Read and Agent tool calls — to observe, never to change"],
+          writes: ["nothing to disk", "session-only $.state"],
+          network: "none of its own; /lens calls the bundled summon tool, which fetches the skill source",
+          disable: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven",
+        },
+      ],
+      probe: {
+        version: "2.1.294",
+        summary: "the console was probed live in the terminal on 2.1.294; desktop paint is not probed",
+        href: `${REPO}/plugins/skill-heaven-console/README.md`,
+      },
+    },
+    core: {
+      register: [
+        { where: "shell", run: 'claude plugin marketplace add "{{MARKETPLACE_DIR}}"', argv: ["claude", "plugin", "marketplace", "add", "{{MARKETPLACE_DIR}}"], effect: "adds the reviewed staged local marketplace to Claude Code's plugin registry" },
+        { where: "harness", run: "/plugin install skill-heaven@gaia-skill-heaven", shell: "claude plugin install skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven@gaia-skill-heaven"], effect: "installs the skill-heaven plugin (runtime only)" },
+      ],
+      update: [
+        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", argv: ["claude", "plugin", "marketplace", "update", "gaia-skill-heaven"], effect: "refreshes the marketplace listing" },
+        { where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven@gaia-skill-heaven"], effect: "removes only the old cached runtime registration before reinstall" },
+        { where: "shell", run: "claude plugin install skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven@gaia-skill-heaven"], effect: "installs the staged candidate even when the version string is unchanged" },
+      ],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven@gaia-skill-heaven"], effect: "removes the plugin" }],
+    },
+    consolePiece: {
+      register: [
+        { where: "harness", run: "/plugin install skill-heaven-console@gaia-skill-heaven", shell: "claude plugin install skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven-console@gaia-skill-heaven"], effect: "installs the console plugin beside skill-heaven" },
+      ],
+      update: [
+        { where: "shell", run: "claude plugin marketplace update gaia-skill-heaven", argv: ["claude", "plugin", "marketplace", "update", "gaia-skill-heaven"], effect: "refreshes the registered local marketplace" },
+        { where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven-console@gaia-skill-heaven"], effect: "removes only the old cached console before reinstall" },
+        { where: "shell", run: "claude plugin install skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "install", "skill-heaven-console@gaia-skill-heaven"], effect: "installs the staged console even when its version string is unchanged" },
+      ],
+      remove: [{ where: "shell", run: "claude plugin uninstall skill-heaven-console@gaia-skill-heaven", argv: ["claude", "plugin", "uninstall", "skill-heaven-console@gaia-skill-heaven"], effect: "removes only the console; skill-heaven is unchanged" }],
+    },
+    fullBlocked: null,
   },
   {
     id: "codex",
+    ...adapterPath("codex"),
     name: "Codex",
     bin: "codex",
     chip: "compatible",
@@ -108,12 +268,13 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
   },
   {
     id: "pi",
+    ...adapterPath("pi"),
     name: "Pi",
     bin: "pi",
     chip: "compatible",
-    probedVersion: "1.0.4",
+    probedVersion: "1.1.0",
     evidence:
-      "Live probe on 1.0.4: pi install, five commands, summon materialized a skill, the four surfaces expanded. The adapter keeps its own summon tool rather than Pi's MCP runtime, which an MCP extension can replace.",
+      "Pi 1.1.0: native profile lifecycle, registered active summon schema with optional boolean preview, normal policy-hook denial, approved preview without materialization, materialization and body read observed. Five package-owned namespaced resources load without shadowing user skills. The adapter keeps its own summon tool rather than an optional MCP replacement extension.",
     evidenceHref: `${REPO}/plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md`,
     needsInstaller: true,
     commands: [`pi install "${AGENT_PLUGIN_INSTALL.plugin}" --approve`],
@@ -123,12 +284,13 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
     statusNote:
-      "Pi's status API takes the canonical entropy line (probed on 1.0.4, appended under its own key); the plugin does not draw it yet. The pi-zero extension draws a widget.",
+      "Core + Console requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>",
   },
   {
     id: "grok",
+    ...adapterPath("grok"),
     name: "Grok",
     bin: "grok",
     chip: "compatible",
@@ -143,12 +305,13 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then grok plugin update.",
     remove: ["grok plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "A command-backed status line is possible on Grok but not built.",
+    statusNote: "Core + Console carries Status in an explicit command-backed report, not a persistent HUD.",
     launcher: "grok-zero",
     firstRun: "/summon <what you need>",
   },
   {
     id: "hermes",
+    ...adapterPath("hermes"),
     name: "Hermes",
     bin: "hermes",
     chip: "compatible",
@@ -170,6 +333,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
   },
   {
     id: "agy",
+    ...adapterPath("agy"),
     name: "Antigravity",
     bin: "agy",
     chip: "compatible",
@@ -184,13 +348,14 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then agy plugin uninstall skill-heaven and install it again — Antigravity keeps its own copy.",
     remove: ["agy plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "A stacked status command is the target; not built.",
+    statusNote: "Console runtime is provisional: installed-carrier invocation and native Core preview/session binding are unverified (#206). Registration succeeded; no user statusLine is installed or rewritten.",
     launcher: "agy-zero",
     // Antigravity namespaces plugin skills: its / menu lists /skill-heaven:summon, and a bare /summon is not a command.
     firstRun: "/skill-heaven:summon <what you need>",
   },
   {
     id: "other",
+    ...PENDING("Another"),
     name: "Another Agent Plugins client",
     bin: null,
     chip: "unverified",

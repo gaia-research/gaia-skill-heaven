@@ -113,9 +113,9 @@ describe("windows PowerShell installers", () => {
   it("install-agent-plugin.ps1 exists and contains expected structure", () => {
     expect(ps1AgentPlugin).toContain("[CmdletBinding()]");
     expect(ps1AgentPlugin).toContain("gaia-skill-heaven-agent-plugin");
-    expect(ps1AgentPlugin).toContain("plugin.json");
+    expect(ps1AgentPlugin).toContain("install-profile.mjs");
     expect(ps1AgentPlugin).toContain("git");
-    expect(ps1AgentPlugin).toContain("uninstall.ps1");
+    expect(ps1AgentPlugin).toContain("--uninstall");
   });
 
   it("never references the deprecated external MCP package", () => {

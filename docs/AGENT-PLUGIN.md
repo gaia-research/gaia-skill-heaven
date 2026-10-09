@@ -8,11 +8,23 @@ implementation guidance, not a ratification — decision authority stays with
 
 ## Outcome
 
-A user installs **one** plugin — `skill-heaven` — and gets the summon MCP plus
-all five surfaces. No sibling repository, no `npx`, no external binary, no
-build step. `gaia-mcp` is deprecated. Portable clients discover the same skills
-and MCP declaration; client-only delivery shims stay namespaced or in legacy
-compatibility locations.
+**PR #196 founder-approved boundary: 5 accepted / 1 provisional.** Claude Code,
+Pi, Codex, Hermes and Grok have runtime acceptance. Agy remains installable with
+provisional/unverified Console runtime: Core/Full registration and installed
+assets are confirmed, but installed-carrier invocation, native Core preview and
+session binding are not accepted ([#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206)).
+Registration is not runtime acceptance. Console means compact statusline,
+receipts and intentionally opened terminal views within the one Skill Heaven
+product. Internal `core` / `full` identifiers remain unchanged.
+
+A Core install provides the Skill Heaven runtime; Core + Console adds the separately
+owned console carrier appropriate to the host. The six Core + Console carriers are
+intentionally distinct, not one uniform HUD. No sibling repository, no `npx`,
+no external binary, no build step. `gaia-mcp` is deprecated. Portable clients
+discover the same skills and MCP declaration; client-only delivery shims stay
+namespaced or in legacy compatibility locations. See
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) for the canonical Core/Core + Console
+contract.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
 `/skill-hell` summoned by shelling out to a `skill-hell` binary hunted for at
@@ -56,7 +68,7 @@ and hard signals are recorded in
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
 is not the plugin.
 
-## One line, five entry points, one tool
+## One line, five user-facing surfaces, one tool
 
 The rung is a **routing preference the user selects**. It names a *direction*,
 not a number: the agent decides how far to reach on a given gap. No second MCP
@@ -81,6 +93,26 @@ then.
 All four rung commands render **the same seven-rung line**, differing only in
 the rung they open on and which band is highlighted. Every rendering carries the
 `WIP · PROVISIONAL` mark.
+
+### Core and Core + Console profile boundary
+
+Core registers the runtime and has no Core + Console console registration. Core + Console adds one
+separately owned console carrier; it does not imply six equivalent HUDs. The
+current profile contract and per-host delivery truth are in
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) and
+[`packages/console/README.md`](../packages/console/README.md).
+
+The Pi package owns five runtime skill resources, registered under the exact
+names `/skill:skill-heaven-runtime-summon`,
+`/skill:skill-heaven-runtime-skill-zero`, `/skill:skill-heaven-runtime-skill-heaven`,
+`/skill:skill-heaven-runtime-skill-hell`, and `/skill:skill-heaven-runtime-skill-ultra`.
+Pi's five user-facing command
+aliases are `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and
+`/skill-ultra`; these aliases are not the resource registration names.
+
+Ultra remains provisioned with its controller unavailable (#126). Native
+Windows runtime acceptance remains unverified (#94). The Gaia Ecosystem
+Desktop Mod is separately owned and is not installed by either profile.
 
 ### The rungs — no counts, no caps
 
@@ -257,7 +289,7 @@ substitute for evaluating what it points at.
 
 ## Naming
 
-Full rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
+Core + Console rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
 `SKILL_SUMMON_TTL_HOURS`, `SKILL_SUMMON_CACHE_DIR`, `SKILL_SUMMON_CACHE_MAX_MB`;
 session dirs `/tmp/skill-summon-*`; payload cache
 `skill-summon-payload-cache-v1`; source env `SKILL_SOURCE`. The old paired

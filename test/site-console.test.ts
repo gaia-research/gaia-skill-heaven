@@ -2,7 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ROLE_COLORS } from "../packages/status/src/index.js";
+import { buildConsoleView, HARNESS_PATHS, renderConsoleText, ROLE_COLORS } from "../packages/status/src/index.js";
+import { consoleFixtures } from "../packages/status/src/fixtures.js";
 import { contrastRatio, gradeContrast } from "../packages/site/src/console/contrast.js";
 import { buildFlowTree, degradeFlow, syntheticFanOut, FLOW_VISIBLE_LIMIT } from "../packages/site/src/console/derive.js";
 
@@ -27,6 +28,19 @@ describe("/console is a labelled fixture prototype", () => {
   const consoleParts = walk(join(SITE_SRC, "console"))
     .filter((p) => p.endsWith(".tsx") || p.endsWith(".ts"))
     .map((p) => readFileSync(p, "utf8"));
+
+  it("selects harness capability dynamically and renders the shared fixture semantic view", () => {
+    expect(consoleSrc).toContain("HARNESS_PATHS.filter((item) => item.id !== 'other')");
+    expect(consoleSrc).toContain("buildConsoleView(example, selectedHarness)");
+    expect(consoleSrc).toContain("renderConsoleText(semanticView)");
+    expect(consoleSrc).toContain("semanticView.projection.surfaces");
+    for (const harness of HARNESS_PATHS.filter((item) => item.id !== "other")) {
+      const fixture = consoleFixtures(harness.console.observes).working!;
+      const view = buildConsoleView(fixture.state, harness);
+      expect(view.harness.id).toBe(harness.id);
+      expect(renderConsoleText(view)).toContain(harness.name);
+    }
+  });
 
   it("imports fixtures only from the status package's fixtures entry", () => {
     const imports = [...consoleSrc.matchAll(/from\s+['"]([^'"]*fixtures[^'"]*)['"]/g)].map((m) => m[1]);
