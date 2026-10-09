@@ -1580,7 +1580,7 @@ export default function Landing() {
               <span className="sh-chip sh-chip--dim">FROZEN</span>
             </div>
             <div className="lp-tree-wrap">
-              <pre className="lp-tree" tabIndex={0} aria-label="Example project folder layout">{`my-project/
+              <pre className="lp-tree" role="region" tabIndex={0} aria-label="Example project folder layout">{`my-project/
 ├── .claude/
 │   └── skills/          # standing cost paid every turn
 │       ├── code-review/

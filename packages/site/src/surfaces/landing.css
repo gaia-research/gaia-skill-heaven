@@ -3305,7 +3305,9 @@
   overflow: hidden;
   font-size: 12.5px;
   color: var(--sh-ink);
-  transition: max-height 0.3s ease 0.15s, opacity 0.28s ease 0.14s,
+  /* Collapse clips the text; opacity fading would make still-visible labels
+     fail contrast mid-transition. Keep their ink readable until clipped. */
+  transition: max-height 0.3s ease 0.15s,
     transform 0.28s ease 0.14s, color 0.16s ease;
 }
 /* the strike line that draws across before the row collapses */
@@ -3323,7 +3325,6 @@
 }
 .lp-reel__row.is-cut {
   max-height: 0;
-  opacity: 0;
   transform: translateX(8px);
   color: var(--sh-ink-dim);
 }

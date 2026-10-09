@@ -259,7 +259,7 @@ export default function Console() {
               ))}
             </ul>
             <h3>Shared six-surface readout · fixture only</h3>
-            <pre className="cx-native-readout" tabIndex={0} aria-label="Shared console fixture readout"><code>{readout}</code></pre>
+            <pre className="cx-native-readout" role="region" tabIndex={0} aria-label="Shared console fixture readout"><code>{readout}</code></pre>
             <p>Ultra controller: unavailable. This preview uses design fixtures only; no command is run and no live state is read.</p>
           </section>
           <p className="cx-lede">Native runtime evidence: Pi 1.1.0 exposed an active summon tool with optional boolean preview. A real preview returned one candidate and materialized zero skills. Its console opened only on request in a 20-row terminal; paging and Escape/q dismissal restored the editor. The UI examples on this page remain fixtures, not that runtime capture.</p>

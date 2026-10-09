@@ -201,6 +201,19 @@ describe("the front doors send people to /start first (#47)", () => {
     expect(site("src/variations/variation-hero.css")).toMatch(/\.vha-cta-termcopy \{[^}]*min-height: 26px/);
   });
 
+  it("preserves readable reel ink while collapsing and labels focusable readouts with a valid role", () => {
+    const css = site("src/surfaces/landing.css");
+    const row = css.match(/\.lp-reel__row \{([^}]*)\}/)?.[1];
+    const cut = css.match(/\.lp-reel__row\.is-cut \{([^}]*)\}/)?.[1];
+    expect(row).toBeDefined();
+    expect(cut).toBeDefined();
+    expect(row).not.toMatch(/opacity\s+[\d.]+s/);
+    expect(cut).not.toMatch(/opacity\s*:/);
+    expect(cut).toContain("max-height: 0");
+    expect(landing).toContain('<pre className="lp-tree" role="region"');
+    expect(site("src/surfaces/Console.tsx")).toContain('<pre className="cx-native-readout" role="region"');
+  });
+
   it("underlines the in-text install link in the landing fineprint", () => {
     expect(site("src/surfaces/landing.css")).toMatch(/\.lp-fineprint a \{[^}]*text-decoration: underline/);
   });

@@ -9,10 +9,13 @@ profile installs it.
 
 | Class | Observed result | What it does not prove |
 |---|---|---|
-| Complete deterministic suite | 1,470 tests / 86 files passed after review remedies | Native host runtime, live paint or browser acceptance |
+| Complete deterministic suite | 1,471 tests / 86 files passed after browser fixes; the first concurrent run timed out and is not counted | Native host runtime, live paint or browser acceptance |
 | Claude public SDK runner | 46 tests, zero failures, propagated exit 0 | The runner mocks the SDK; not live terminal paint |
 | Type / manifest / generated checks | Root, current public Pi source and Claude SDK typechecks; both Claude manifests/hooks validated; MCP, status, console, profile and Pi-resource generation verified | Host execution or permission behavior |
-| Website production build | Passed with About/hero fixes from merged #198 / `2d69d07` included | Current browser responsiveness or accessibility |
+| Website production build | Passed with About/hero fixes from merged #198 / `2d69d07`, collapse contrast and labeled-region fixes included | A build alone is not browser acceptance |
+| Current browser confirmation | 15 rebuilt-source route/width cells: no page overflow or definite tagged axe violations; six host fixture selectors, twelve install choices, keyboard focus, copy feedback and desktop/mobile About stacking observed | Contrast incomplete/manual-review findings remain; not complete WCAG certification |
+| Current Claude terminal / preview | 2.1.295 manual-mode status, summary/inspection/dismissal, ordinary per-call refusal, separate approved preview, both receipts painted | No current Claude body-read/effective-use or desktop paint claim |
+| Current Hermes command runtime | vgit.8ac5c74 Full registration/removal exit0; actual bounded unknown-count report, Trust inspection, deliberate Lens draft inspection, new-session reset | No current bound Core preview/materialization: default Nous Portal authentication was unavailable |
 | Historical native package lifecycle | Core → Full → Core → remove: 24 exit-0 cells, six hosts; Agy configuration snapshot unchanged | Complete six-host runtime acceptance |
 | Current Codex / Grok package lifecycle | 12 exit-0 cells: Core, Full, same-profile update, repeated update, console-only downgrade, remove | Core survival requires its own runtime check; plugin-manager exit 0 is not that check |
 | Current Pi native runtime | Loaded optional boolean preview schema, ordinary hook denial, approved exact-name preview with one candidate/zero materializations, materialization plus complete builtin read | Retrieval/materialization/read do not prove effective use or successful frontend QA |
@@ -28,12 +31,12 @@ exact-name positive case followed without changing retrieval policy.
 
 | Host | Pin | Acceptance scope |
 |---|---|---|
-| Claude Code | 2.1.294 | Historical lifecycle; current SDK validation and mocked runner; final live paint pending |
+| Claude Code | 2.1.295 live continuation; SDK pin2.1.294 | Actual terminal and permission-gated preview observed; public SDK mocks remain separate |
 | Pi | 1.1.0, public pi-tui 0.84.1 minimum | Current native runtime and terminal observations above; restoration/custom metadata conformance separate |
 | Codex | 0.162.0 | Current package lifecycle above; historical Core smoke at 0.161.0 is not promoted to this version's Full runtime |
-| Hermes | 0.20.0 (2026.8.3) | Historical native lifecycle/Core smoke; remaining Full runtime/receipt binding pending |
+| Hermes | vgit.8ac5c74 (2026.9.24); historical0.20.0 | Current native command report/draft/reset observed; bound Core runtime still pending |
 | Grok | 1.0.50 (c58f321264ba, stable) | Current package lifecycle; owner-authorized authenticated model discovery; remaining live report/preview pending |
-| Antigravity/Agy | 1.3.1 | Historical real-HOME lifecycle/Core observations; remaining Full runtime/receipt binding pending; no HOME/keychain replacement |
+| Antigravity/Agy | 1.3.2 discovered; historical1.3.1 | Public model identifiers only; Full runtime/receipt binding pending; no HOME/keychain replacement |
 
 Pi complete-read credit is deliberately pinned to the current 1.1.0 builtin
 contract. Positive-looking custom metadata is not proof. Paired historical results
@@ -41,19 +44,28 @@ lack execution-time tool provenance and remain unknown. An uncertain later read
 does not erase prior complete-read evidence. Mixed summaries do not label
 unknown bodies unread.
 
-## Frontend gate — not passed
+## Frontend confirmation — bounded pass
 
-Initial browser inspection covered `/start`, `/console` and `/landing` at
-360, 390, 768, 1024 and 1440 CSS pixels: document widths matched viewports;
-start/console had no tested WCAG-tag violations. Landing exposed three contrast
-defects subsequently corrected. Incomplete axe checks are not blanket WCAG
-compliance.
+The user explicitly reauthorized the same ego space13/pagep1. Current rebuilt
+JavaScript was reloaded for `/start?h=pi` (Full), `/console` and `/landing` at
+360,390,768,1024,1440 actual CSS pixels. All15 cells had no page overflow and
+zero definite axe4.10.3 WCAG A/AA +2.1 A/AA tagged violations. An animated
+landing-row opacity transition exposed1.76:1 contrast during collapse; it now
+clips height instead, retaining ink. Focusable labeled readouts have valid
+region roles; the earlier aria-prohibited-attr incomplete finding disappeared.
 
-The final confirmation was **not completed**. Earlier CDP screenshot/input calls
-timed out. The resumed dedicated ego space then reported user control and an
-ended agent assignment. The worker stopped rather than reclaiming it or opening
-another browser/space. Current-source contrast, keyboard/focus/clipboard and
-About/hero visual confirmation remain gated on explicit browser control.
+Native radio ArrowDown moved selection and visible focus Pi→Grok. Installer
+copy announced success without reading clipboard contents. All twelve host/profile
+install choices and six explicitly fixture-labeled console host selectors were
+exercised. About was below LIVE at desktop/mobile y58/y68; opened panel was
+readable and hit-tested above the ladder at z-index60. Viewport screenshots were
+inspected. Eight timed reel samples retained cut-row opacity1 where sampled.
+
+Color-contrast incomplete/manual-review checks remain: Start3 per width,
+Console71–356, Landing91–99. This is **not WCAG certification**, every animation
+frame, exhaustive keyboard coverage or every clipboard failure path. Earlier
+CDP transport/control failures and stale-dist intermediate runs are superseded
+by the final rebuilt-source matrix, not counted as passes.
 
 ## Release review and remaining gate
 
@@ -64,7 +76,15 @@ run is not counted as a clean test pass. The owner's subsequent complete suite
 passed. The stale read-state documentation finding was corrected; Pi resource
 names were independently checked against the package's canonical aliases.
 
-Do not mark PR #196 release-ready or merge while browser confirmation and the
-remaining native Full runtime cells above are pending. #94 (Windows), #126
+A separate OpenAI Luna High review found no material browser-fix source defect;
+the bounded site test passed26 assertions. The final complete suite passed after
+a concurrent-run test/worker timeout. Current Codex native inference succeeded
+but selected a nonexistent shell `heaven` command (exit127) rather than visibly
+invoking its plugin skill; no Core call followed. That is a failed acceptance
+attempt, not an auth/quota error or proof that the plugin is absent. A bounded
+load review recommends explicit native skill/MCP discovery before retrying.
+
+Do not mark PR #196 release-ready or merge while the remaining native Full
+runtime/binding cells above are pending. #94 (Windows), #126
 (Ultra controller) and the broader #137 scope stay open; package-management or
 synthetic evidence does not close them.
