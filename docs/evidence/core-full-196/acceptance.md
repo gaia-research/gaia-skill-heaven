@@ -1,15 +1,50 @@
-# Core / Full console acceptance — PR #196
+# Core / Core + Console acceptance — PR #196
 
-This is a checkpoint, **not release-complete acceptance**. Skill Heaven is one
-product. Core is its portable runtime; Full adds a separately removable terminal
-console carrier. The Gaia Ecosystem Desktop Mod is separately owned and neither
-profile installs it.
+## Founder-approved revised release boundary: 5 accepted / 1 provisional
 
-**Owner handoff (2026-10-09):** work is paused for owner review; no further
-acceptance campaign, worker or watcher is running. See the
-[full current-state receipt](handoff-2026-10-09.md), including retained normal
-Full installations, newly earned Codex/Hermes/Grok observations and unresolved
-Agy installed-carrier acceptance. PR #196 remains open/draft, not merged.
+The founder approved **5+1 for PR #196 only**, superseding its previous six-host
+release gate. This is a revised release boundary, **not a sixth acceptance pass**.
+No additional native campaign was run. Existing verified implementation evidence
+(1,471 tests / 86 files, root/adapter checks and website build) is retained;
+documentation head `8918b86` also passed CI and CodeQL.
+
+Skill Heaven remains one product compatible with agentic terminal harnesses.
+**Core / Core + Console** are outward installation choices; internal `core`/`full`
+identifiers remain unchanged. Console includes compact statusline, receipts and
+intentionally opened terminal views. Neither choice installs the separately owned
+Gaia Ecosystem Desktop Mod; Living Tree A/B/C are internal milestone language.
+
+| Harness | Runtime acceptance | Boundary |
+|---|---|---|
+| Claude Code | **Accepted** | Existing pinned native terminal/preview evidence below |
+| Pi | **Accepted** | Existing native runtime, bounded views and Core survival evidence below |
+| Codex | **Accepted** | Installed carrier, actual Core preview and bound report observed |
+| Hermes | **Accepted** | Native command, actual Core preview and exact bound report observed |
+| Grok | **Accepted** | Actual native report, Core preview and bound report observed |
+| Antigravity/Agy | **Provisional / unverified** | Core/Full registration succeeded and installed assets exist; installed-carrier invocation, native Core preview and session binding are not accepted |
+
+Agy acceptance debt survives in [#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206).
+Registration is management proof, not native Console invocation. All six normal
+`full` installations remain intact; do not uninstall or modify normal HOME as
+cleanup. The [historical owner handoff](handoff-2026-10-09.md) retains the prior
+pause and negative results; this founder ruling supersedes its six-host merge gate.
+
+## Closure verification — terminology and support labels only
+
+The closure changes public copy, evidence and Agy support disclosures, with
+canonical bundles regenerated from shared sources. Registration argv, internal
+profile identifiers, permissions and lifecycle behavior are unchanged. No new
+functionality or native acceptance campaign was introduced.
+
+- `git diff --check`: passed.
+- Targeted site/truth/support-label, installer lifecycle/epilogue, shared console
+  and adapter checks: **173 tests / 8 files passed**, exit 0. Installer simulations
+  use disposable fixtures; the six normal HOME installations were not touched.
+- Root typecheck, website production build and generated Console parity: passed.
+- Existing complete implementation suite: **1,471 tests / 86 files** retained;
+  no full-suite rerun was commissioned locally for these small changes.
+- GitHub CI and CodeQL on the final closure head are required before merge;
+  their terminal verdict is recorded in the PR closure receipt, not predeclared here.
 
 ## Proof classes
 
@@ -76,7 +111,7 @@ frame, exhaustive keyboard coverage or every clipboard failure path. Earlier
 CDP transport/control failures and stale-dist intermediate runs are superseded
 by the final rebuilt-source matrix, not counted as passes.
 
-## Release review and remaining gate
+## Release review and deferred Agy acceptance
 
 Independent review found no material source defect in the bounded installer
 registration epilogue or Pi provenance/uncertainty remedies. Its targeted test
@@ -104,7 +139,8 @@ At the owner's request Full is now registered and retained in all six normal
 harness configurations (manager exit0 each). This is management proof, not six
 new runtime passes. Do not uninstall as cleanup. No watcher was started.
 
-Do not mark PR #196 release-ready or merge while the remaining native Full
-runtime/binding cells above are pending; the owner is taking the next reviews. #94 (Windows), #126
-(Ultra controller) and the broader #137 scope stay open; package-management or
-synthetic evidence does not close them.
+The founder-approved **5 accepted / 1 provisional** boundary permits PR #196
+release closure once its relevant checks and required CI/CodeQL pass. It does not
+waive or claim Agy runtime acceptance: #206 must remain open. #94 (Windows), #126
+(Ultra controller), broader #137 and Desktop Mod issues also stay open.
+Package-management or synthetic evidence does not close those independent gates.

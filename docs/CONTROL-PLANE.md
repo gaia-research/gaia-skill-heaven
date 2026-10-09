@@ -2,7 +2,8 @@
 
 **Status: design of record for the end-user pass (#161 · #162 · #163 · #164 · #165 · #166 · #137).**
 **#196 terminal release clarification (founder PR #293):** Skill Heaven is the
-product. Core/Full are its installation profiles for agentic harnesses; Full adds
+product. Core / Core + Console are its outward installation choices (internal
+`core`/`full` unchanged); Console adds
 truthful terminal consoles, not the separately gated Gaia Ecosystem Desktop Mod.
 The optional integrated Mod (HQ #286 / #161 / Tree #2046) ships Living Tree B first,
 then justified C enhancements. It is not a dependency of this terminal release.
@@ -240,8 +241,8 @@ Rules:
 | claude-zero launcher | its own session `statusLine` (door-owned session settings, nothing in `~/.claude`) | NATIVE SLOT | implemented, deterministic tests |
 | Pi | separate Full extension `ctx.ui.setStatus(key, text)` + explicitly opened `ctx.ui.custom` pane | **APPEND** · public SDK overlay | wired and live observed on 1.1.0; one compact line, bounded pane, Escape/q dismiss |
 | Codex, Hermes | no public status contribution API | UNSUPPORTED — receipts in transcript only | honest degraded |
-| Grok | explicit command-backed console report | no persistent contribution | implemented; saved lifecycle on 1.0.46; current 1.0.50 authenticated model discovery observed; live report/preview pending |
-| Antigravity | explicit namespaced console skill report | no persistent contribution | implemented for 1.3.1; real HOME/keychain preserved; no stacked HUD claim |
+| Grok | explicit command-backed console report | no persistent contribution | accepted runtime on 1.0.50: actual report, Core preview and bound report observed; no persistent HUD |
+| Antigravity | explicit namespaced console skill report | no persistent contribution | provisional/unverified runtime on 1.3.2; registration and installed assets confirmed, installed-carrier invocation/preview/binding pending (#206); real HOME/keychain preserved; no stacked HUD claim |
 | Cursor | replaces native footer | REPLACE-ONLY, explicit opt-in | not built |
 
 Mode: `SKILL_HEAVEN_STATUS=off|compact|full` (Claude console: a config row;

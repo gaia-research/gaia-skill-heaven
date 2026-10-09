@@ -59,6 +59,7 @@ function stepLines(steps: readonly RenderedStep[], pad: number): string[] {
 function harnessBlock(h: HarnessPath, input: EpilogueInput): string[] {
   const { profile, previous, paths } = input;
   const out: string[] = [`  ${h.bin!.padEnd(8)} ${h.name} - ${chipText(h)}`];
+  if (profile === "full" && h.id === "agy") out.push(`${indent(11)}${h.console.probe.summary}`);
   const ran = input.ran?.[h.id];
   if (ran !== undefined) {
     out.push(`${indent(11)}--register completed:`);
@@ -73,18 +74,18 @@ function harnessBlock(h: HarnessPath, input: EpilogueInput): string[] {
   if (ran === undefined && profile === "full") {
     const full = planProfile(h, "full", "register", paths);
     if (full.kind === "blocked") {
-      out.push(`${indent(11)}Full is not available on ${h.name}: ${full.reason}`);
+      out.push(`${indent(11)}Core + Console is not available on ${h.name}: ${full.reason}`);
       out.push(`${indent(11)}Core above still works; no console was added.`);
     } else {
       const piece = previous === "core" ? planSwitch(h, "core", "full", paths) : null;
       const consoleSteps = (piece && piece.kind === "steps" ? piece.steps : full.steps.filter((s) => s.piece === "console")) as readonly RenderedStep[];
-      out.push(`${indent(11)}Then add the console (Full):`);
+      out.push(`${indent(11)}Then add the console (Core + Console):`);
       out.push(...stepLines(consoleSteps, 13));
     }
   } else if (ran === undefined && profile === "core" && previous === "full" && h.consolePiece) {
     const down = planSwitch(h, "full", "core", paths);
     if (down.kind === "steps" && down.steps.length > 0) {
-      out.push(`${indent(11)}You asked for Core and had Full. Remove only the console:`);
+      out.push(`${indent(11)}You asked for Core and had Core + Console. Remove only the console:`);
       out.push(...stepLines(down.steps, 13));
     }
   }
@@ -104,7 +105,7 @@ export function renderInstallEpilogue(input: EpilogueInput): string {
   lines.push("What changed on this machine");
   lines.push(`  + ${paths.pluginDir}  (the plugin, one directory)`);
   lines.push(`  + ${paths.marketplaceDir}  (a local marketplace that lists it)`);
-  if (profile === "full") lines.push(`  + ${paths.consoleDir}  (the console pieces, Full only)`);
+  if (profile === "full") lines.push(`  + ${paths.consoleDir}  (the console pieces, Core + Console only)`);
   if (!input.ran) lines.push("  No harness was installed or reconfigured.");
   lines.push("");
   lines.push("Harnesses found on PATH");

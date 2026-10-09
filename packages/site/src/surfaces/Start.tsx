@@ -384,7 +384,7 @@ export default function Start() {
                       Register {PROFILE_PITCH[profile].name} in {harness.name}
                     </h3>
                     <p className="st-prose">
-                      These exact steps come from the canonical install plan. Run them where indicated, after staging. Full adds the independently removable console piece.
+                      These exact steps come from the canonical install plan. Run them where indicated, after staging. Core + Console adds the independently removable console piece.
                     </p>
                     <div className="st-cmds">
                       {registrationPlan.steps.map((step, i) => (
@@ -397,7 +397,7 @@ export default function Start() {
                 {(registrationPlan?.kind === 'blocked' || registrationPlan?.kind === 'steps' && registrationPlan.steps.length === 0) && (
                   <li className="st-step st-step--plain">
                     <div className="st-blocked" role="note">
-                      <h3 className="st-h3">{profile === 'full' ? 'Full is unavailable here' : 'No registration steps are available'}</h3>
+                      <h3 className="st-h3">{profile === 'full' ? 'Core + Console is unavailable here' : 'No registration steps are available'}</h3>
                       <p className="st-blocked__text">{registrationPlan?.kind === 'blocked' ? registrationPlan.reason : harness.blocked ?? 'No accepted registration steps are recorded for this profile.'}</p>
                     </div>
                   </li>
@@ -408,13 +408,13 @@ export default function Start() {
               {registrationPlan?.kind === 'steps' && (
                 <details className="st-profile-ops">
                   <summary className="st-h3">Change or remove this profile</summary>
-                  <p className="st-prose">These are canonical plans for the selected harness. Core → Full adds only the console; Full → Core removes only that piece.</p>
-                  <h4 className="st-h3">Switch to {profile === 'core' ? 'Full' : 'Core'}</h4>
+                  <p className="st-prose">These are canonical plans for the selected harness. Core → Core + Console adds only the console; Core + Console → Core removes only that piece.</p>
+                  <h4 className="st-h3">Switch to {profile === 'core' ? 'Core + Console' : 'Core'}</h4>
                   <p className="st-prose">If you originally installed with <code className="st-code">--register</code> / <code className="st-code">-Register</code>, use this receipt-managed switch. It performs only the console registration change and preserves Core.</p>
                   <Command cmd={profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} sigil={sigil} label="switch the installer-managed profile" copied={copiedCmd === profileInstallerCommand(harness.id, profile === 'core' ? 'full' : 'core', platform, true)} onCopy={copy} />
                   <h4 className="st-h3">Stage-only or manual registration</h4>
-                  <p className="st-prose">{profile === 'core' ? 'Stage Full first, then add only its console registration.' : 'Remove only the console registration first, then stage Core to remove console files. Core stays registered.'}</p>
-                  {profile === 'core' && <Command cmd={profileInstallerCommand(harness.id, 'full', platform)} sigil={sigil} label="stage Full before adding its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'full', platform)} onCopy={copy} />}
+                  <p className="st-prose">{profile === 'core' ? 'Stage Core + Console first, then add only its console registration.' : 'Remove only the console registration first, then stage Core to remove console files. Core stays registered.'}</p>
+                  {profile === 'core' && <Command cmd={profileInstallerCommand(harness.id, 'full', platform)} sigil={sigil} label="stage Core + Console before adding its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'full', platform)} onCopy={copy} />}
                   {switchPlan?.kind === 'steps' && switchPlan.steps.map((step, i) => <Command key={`switch-${i}`} cmd={step.run} sigil={step.where === 'harness' ? '›' : sigil} label={`switch profile step ${i + 1}`} copied={copiedCmd === step.run} onCopy={copy} />)}
                   {switchPlan?.kind === 'blocked' && <p className="st-prose">{switchPlan.reason}</p>}
                   {profile === 'full' && <Command cmd={profileInstallerCommand(harness.id, 'core', platform)} sigil={sigil} label="stage Core after removing its console" copied={copiedCmd === profileInstallerCommand(harness.id, 'core', platform)} onCopy={copy} />}
@@ -543,9 +543,9 @@ export default function Start() {
         <section className="st-sec" aria-labelledby="st-desktop-mod">
           <h2 className="st-h2" id="st-desktop-mod">Optional Gaia Ecosystem Desktop Mod</h2>
           <p className="st-prose">
-            A separately released integration of Gaia Skill Tree and Skill Heaven. Living Tree B is
-            its first complete desktop release; richer cockpit C features follow only where justified.
-            Neither Core nor Full installs it. No Mod installation is offered here until its desktop
+            A separately owned integration of Gaia Skill Tree and Skill Heaven, with its own
+            desktop acceptance and release gates.
+            Neither Core nor Core + Console installs it. No Mod installation is offered here until its desktop
             acceptance and release are complete.
           </p>
           <p className="st-prose"><a href="https://github.com/gaia-research/gaia-research/issues/286">Follow the Desktop Mod release</a>.</p>

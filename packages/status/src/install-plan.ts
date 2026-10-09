@@ -85,7 +85,7 @@ function pick(piece: PieceSteps, op: PlanOp): readonly InstallStep[] {
 export function planProfile(harness: HarnessPath, profile: ProfileId, op: PlanOp, paths: PlanPaths = DEFAULT_PLAN_PATHS): Plan {
   if (profile === "core") return { kind: "steps", steps: render(pick(harness.core, op), "core", paths) };
   if (harness.consolePiece === null) {
-    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Core + Console is not available on ${harness.name}.` };
   }
   const core = render(pick(harness.core, op), "core", paths);
   const consoleSteps = render(pick(harness.consolePiece, op), "console", paths);
@@ -100,7 +100,7 @@ export function planProfile(harness: HarnessPath, profile: ProfileId, op: PlanOp
 export function planSwitch(harness: HarnessPath, from: ProfileId, to: ProfileId, paths: PlanPaths = DEFAULT_PLAN_PATHS): Plan {
   if (from === to) return { kind: "steps", steps: [] };
   if (harness.consolePiece === null) {
-    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Core + Console is not available on ${harness.name}.` };
   }
   return {
     kind: "steps",

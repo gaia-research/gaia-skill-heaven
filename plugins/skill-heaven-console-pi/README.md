@@ -1,6 +1,6 @@
-# Pi Skill Heaven Full console
+# Pi Skill Heaven Console
 
-Separate, removable Full piece; Core does not register it. Requires **Pi 1.1+**
+Separate, removable Core + Console piece; Core does not register it. Requires **Pi 1.1+**
 and **pi-tui 0.84.1+**, not the old 1.0.4 API-only pin.
 
 One compact owned `setStatus` contribution; `SKILL_HEAVEN_STATUS=off` removes it.

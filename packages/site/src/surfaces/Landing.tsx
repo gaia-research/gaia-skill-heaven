@@ -1017,16 +1017,16 @@ export default function Landing() {
               <h1 className="lp-h1">
                 Summon with Core.
                 <br />
-                Inspect with Full.
+                Inspect with Console.
               </h1>
               <p className="lp-lede">
                 Install the plugin in a harness you already use. <b>Core</b> gives you <code>{MECHANIC.floor}</code>
-                {' '}and the entropy controls, with no console. <b>Full</b> adds the independently removable
+                {' '}and the entropy controls, with no console. <b>Core + Console</b> adds the independently removable
                 console your harness genuinely supports — a native pane where available, a truthful
                 readout where not. The launcher is separate and optional.
               </p>
               <div className="lp-profile-cta">
-                <a className="sh-cta" href="#/start">Choose Core or Full <span aria-hidden="true">→</span></a>
+                <a className="sh-cta" href="#/start">Choose Core or add Console <span aria-hidden="true">→</span></a>
                 <a href="#/console">Inspect the harness projections</a>
               </div>
               <SlashReel />
@@ -1104,7 +1104,7 @@ export default function Landing() {
         <div className="lp-start sh-panel">
           <div className="lp-start__head">
             <span className="sh-label">TWO PLUGIN PROFILES</span>
-            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Full</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
+            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
             <a className="sh-cta" href="#/console">Preview the six harness projections <span aria-hidden="true">→</span></a>
           </div>
           <div className="lp-start__head">

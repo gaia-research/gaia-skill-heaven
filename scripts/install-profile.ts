@@ -182,7 +182,7 @@ export function install(o: Options): void {
   const profile = o.profile ?? previous?.transaction?.target ?? previous?.profile ?? "core";
   const harness = o.harness ?? previous?.harness ?? null;
   const h = harness === null ? null : HARNESS_PATHS.find(h => h.id === harness)!;
-  if (profile === "full" && (!h || h.consolePiece === null)) throw new Error(h?.fullBlocked ?? "Full requires --harness claude|pi|codex|hermes|grok|agy");
+  if (profile === "full" && (!h || h.consolePiece === null)) throw new Error(h?.fullBlocked ?? "Core + Console requires --harness claude|pi|codex|hermes|grok|agy");
   if (o.register && (!h || h.id === "other")) throw new Error("--register requires one known harness; an unknown client owns its own registration");
   if (previous?.harness && previous.harness !== harness && (previous.registered || previous.incomplete)) throw new Error("uninstall the registered harness before changing --harness");
   if (previous?.registered && previous.profile !== profile && !o.register) throw new Error("registered profile switch requires --register to change only the installer-owned console registration");

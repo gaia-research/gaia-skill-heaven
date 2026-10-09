@@ -721,7 +721,7 @@ function adapterPath(id) {
   const report = pi ? "ctx.ui.custom explicit pane (Pi 1.1+); compact owned status" : hermes ? "native register_command /heaven report" : "explicit console skill/command (model-mediated)";
   const console = {
     kind: pi ? "extension-ui" : "command-backed",
-    mechanism: pi ? "Separate Pi 1.1+ extension: one compact owned status line and explicit, bounded ctx.ui.custom pane; Escape/q dismiss. Diagnostics require inspect. /lens drafts a preview handoff; /heaven fill prefills only, a human submits through normal tool approval." : `${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
+    mechanism: pi ? "Separate Pi 1.1+ extension: one compact owned status line and explicit, bounded ctx.ui.custom pane; Escape/q dismiss. Diagnostics require inspect. /lens drafts a preview handoff; /heaven fill prefills only, a human submits through normal tool approval." : `${agy ? "Provisional Console runtime: installed-carrier invocation and native Core preview/session binding are unverified (#206). " : ""}${report}; one canonical renderConsoleText report, no fake HUD or status configuration rewrite.`,
     command,
     commandPrefix: agy ? "skill-heaven:" : "",
     surfaces: {
@@ -738,7 +738,7 @@ function adapterPath(id) {
       { id: "skill-heaven", profile: "core", kind: "harness runtime package", version: "0.1.2", summary: "Five entropy surfaces and the bundled summon engine.", reads: ["configured skill source"], writes: ["disposable engine session directory"], network: "Core fetches the configured skill source", disable: remove(false)[0].run },
       { id: "skill-heaven-console", profile: "full", kind: pi ? "Pi extension package" : hermes ? "Hermes native Python plugin + Node painter" : "command/skill plugin + Node report", version: "0.1.0", summary: "Read-only projection of the shared console model; independently removable.", reads: pi ? ["exact Core summon results", "successful read events", "active session branch"] : hermes ? ["caller-supplied exact Core sessionRoot ledger"] : ["caller-supplied exact Core sessionRoot ledger", ...agy ? ["optional exact conversation transcript and confined result files"] : []], writes: [], network: pi || hermes ? "none; Lens only drafts a handoff, normal Core calls remain subject to host approval" : "none of its own; explicit model-mediated Lens requests use the existing Core tool", disable: remove(true)[0].run, notes: ["No hidden submission, automatic materialization, daemon, global configuration rewrite or independent summon server.", ...pi ? ["Active-branch paired historical reads lack execution-time tool provenance and restore as unknown; current complete-read credit requires the pinned builtin contract. Partial, missing or truncated reads cannot establish full context. Rung selection is not restored from guessed prompt text."] : ["Without an exact binding, counts are unknown. Command/skill output may pass through the model."]] }
     ],
-    probe: { version: versions[id], summary: pi ? "Pi 1.1.0 native status/pane, dismissal/paging, loaded preview schema, policy denial, preview without materialization and successful body read observed. Branch restoration/rung decoding additionally have deterministic tests; remaining acceptance is tracked separately." : `Saved ${versions[id]} API/layout evidence and native package-management lifecycle observed. Live report/preview, cache refresh and session isolation remain separate acceptance cells; compilation is not their proof.`, href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` }
+    probe: { version: agy ? "1.3.2" : id === "codex" ? "0.162.0" : hermes ? "vgit.8ac5c74 (2026.9.24)" : id === "grok" ? "1.0.50" : versions[id], summary: agy ? "PROVISIONAL \u2014 Agy 1.3.2 Core/Full registration succeeded and installed Console assets exist; installed-carrier invocation, native Core preview and exact sessionRoot binding remain unverified (#206). Repository-report execution is not installed-carrier acceptance. Five other hosts are runtime accepted under the founder-approved 5+1 boundary." : pi ? "Pi 1.1.0 native status/pane, dismissal/paging, loaded preview schema, policy denial, preview without materialization and successful body read observed. Branch restoration/rung decoding additionally have deterministic tests; remaining acceptance is tracked separately." : id === "codex" ? "Accepted \u2014 Codex 0.162.0 installed console skill/report, once-approved Core preview and populated bound report observed; gpt-6-luna medium. No body-read/use or native HUD claim." : hermes ? "Accepted \u2014 Hermes vgit.8ac5c74 native command report, Core preview and exact sessionRoot binding/inspection observed with openai-codex / gpt-6-luna minimal; fresh reset stayed unknown. No read/use or HUD claim." : "Accepted \u2014 Grok 1.0.50 actual report, Core preview and bound report observed on grok-4.7 under default permissions. Limited-time free access and model-mediated reflow, not a permanent free tier or native HUD/read/use claim.", href: `${ROOT}/plugins/skill-heaven-console-${id}/README.md` }
   };
   return { console, core: piece(register(false), update(false), remove(false)), consolePiece: piece(register(true), update(true), remove(true)), fullBlocked: null };
 }
@@ -761,8 +761,8 @@ var PROFILES = ["core", "full"];
 var PROFILE_PITCH = {
   core: { name: "Core", line: "The Skill Heaven runtime. Summon and the entropy controls. No extra console UI." },
   full: {
-    name: "Full",
-    line: "Core, plus the native Skill Heaven console for your harness \u2014 status, Lens, Session, Scope, Flow and Trust where the harness supports them."
+    name: "Core + Console",
+    line: "Core plus the supported Skill Heaven console \u2014 compact statusline, receipts and intentionally opened terminal views where the harness supports them."
   }
 };
 var PENDING = (name) => ({
@@ -922,7 +922,7 @@ var HARNESS_PATHS = [
     update: "Re-run the installer, then pi update.",
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
-    statusNote: "Full requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
+    statusNote: "Core + Console requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>"
   },
@@ -942,7 +942,7 @@ var HARNESS_PATHS = [
     update: "Re-run the installer, then grok plugin update.",
     remove: ["grok plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "Full carries Status in an explicit command-backed report, not a persistent HUD.",
+    statusNote: "Core + Console carries Status in an explicit command-backed report, not a persistent HUD.",
     launcher: "grok-zero",
     firstRun: "/summon <what you need>"
   },
@@ -984,7 +984,7 @@ var HARNESS_PATHS = [
     update: "Re-run the installer, then agy plugin uninstall skill-heaven and install it again \u2014 Antigravity keeps its own copy.",
     remove: ["agy plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "Full carries Status in an explicit skill report. No user statusLine is installed or rewritten.",
+    statusNote: "Console runtime is provisional: installed-carrier invocation and native Core preview/session binding are unverified (#206). Registration succeeded; no user statusLine is installed or rewritten.",
     launcher: "agy-zero",
     // Antigravity namespaces plugin skills: its / menu lists /skill-heaven:summon, and a bare /summon is not a command.
     firstRun: "/skill-heaven:summon <what you need>"
@@ -1760,7 +1760,7 @@ function pick(piece2, op) {
 function planProfile(harness, profile, op, paths = DEFAULT_PLAN_PATHS) {
   if (profile === "core") return { kind: "steps", steps: render(pick(harness.core, op), "core", paths) };
   if (harness.consolePiece === null) {
-    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Core + Console is not available on ${harness.name}.` };
   }
   const core = render(pick(harness.core, op), "core", paths);
   const consoleSteps = render(pick(harness.consolePiece, op), "console", paths);
@@ -1769,7 +1769,7 @@ function planProfile(harness, profile, op, paths = DEFAULT_PLAN_PATHS) {
 function planSwitch(harness, from, to, paths = DEFAULT_PLAN_PATHS) {
   if (from === to) return { kind: "steps", steps: [] };
   if (harness.consolePiece === null) {
-    return { kind: "blocked", reason: harness.fullBlocked ?? `Full is not available on ${harness.name}.` };
+    return { kind: "blocked", reason: harness.fullBlocked ?? `Core + Console is not available on ${harness.name}.` };
   }
   return {
     kind: "steps",

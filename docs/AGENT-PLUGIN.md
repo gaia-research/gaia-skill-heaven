@@ -8,13 +8,22 @@ implementation guidance, not a ratification — decision authority stays with
 
 ## Outcome
 
-A Core install provides the Skill Heaven runtime; Full adds the separately
-owned console carrier appropriate to the host. The six Full carriers are
+**PR #196 founder-approved boundary: 5 accepted / 1 provisional.** Claude Code,
+Pi, Codex, Hermes and Grok have runtime acceptance. Agy remains installable with
+provisional/unverified Console runtime: Core/Full registration and installed
+assets are confirmed, but installed-carrier invocation, native Core preview and
+session binding are not accepted ([#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206)).
+Registration is not runtime acceptance. Console means compact statusline,
+receipts and intentionally opened terminal views within the one Skill Heaven
+product. Internal `core` / `full` identifiers remain unchanged.
+
+A Core install provides the Skill Heaven runtime; Core + Console adds the separately
+owned console carrier appropriate to the host. The six Core + Console carriers are
 intentionally distinct, not one uniform HUD. No sibling repository, no `npx`,
 no external binary, no build step. `gaia-mcp` is deprecated. Portable clients
 discover the same skills and MCP declaration; client-only delivery shims stay
 namespaced or in legacy compatibility locations. See
-[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) for the canonical Core/Full
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) for the canonical Core/Core + Console
 contract.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
@@ -85,9 +94,9 @@ All four rung commands render **the same seven-rung line**, differing only in
 the rung they open on and which band is highlighted. Every rendering carries the
 `WIP · PROVISIONAL` mark.
 
-### Core and Full profile boundary
+### Core and Core + Console profile boundary
 
-Core registers the runtime and has no Full console registration. Full adds one
+Core registers the runtime and has no Core + Console console registration. Core + Console adds one
 separately owned console carrier; it does not imply six equivalent HUDs. The
 current profile contract and per-host delivery truth are in
 [`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) and
@@ -280,7 +289,7 @@ substitute for evaluating what it points at.
 
 ## Naming
 
-Full rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
+Core + Console rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
 `SKILL_SUMMON_TTL_HOURS`, `SKILL_SUMMON_CACHE_DIR`, `SKILL_SUMMON_CACHE_MAX_MB`;
 session dirs `/tmp/skill-summon-*`; payload cache
 `skill-summon-payload-cache-v1`; source env `SKILL_SOURCE`. The old paired

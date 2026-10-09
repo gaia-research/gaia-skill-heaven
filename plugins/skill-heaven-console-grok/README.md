@@ -1,4 +1,4 @@
-# Grok Skill Heaven Full console
+# Grok Skill Heaven Console
 
 Separate command plugin; `/heaven` asks the model to run the committed shared
 report and return stdout verbatim (<=8 lines). Explicit `inspect` adds details.
@@ -15,5 +15,5 @@ exit0 establishes live command expansion/preview/console acceptance; those cells
 remain pending. No login, account change or permission widening is automated.
 
 The plugin uses the host's supported command surface, not a desktop pane. See
-[shared controls/evidence](../../packages/console/README.md). Full is Skill
+[shared controls/evidence](../../packages/console/README.md). Core + Console is Skill
 Heaven's installation profile, not the Gaia Ecosystem Desktop Mod.

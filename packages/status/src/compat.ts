@@ -68,8 +68,8 @@ export const PROFILES: readonly ProfileId[] = ["core", "full"];
 export const PROFILE_PITCH: Readonly<Record<ProfileId, { name: string; line: string }>> = {
   core: { name: "Core", line: "The Skill Heaven runtime. Summon and the entropy controls. No extra console UI." },
   full: {
-    name: "Full",
-    line: "Core, plus the native Skill Heaven console for your harness — status, Lens, Session, Scope, Flow and Trust where the harness supports them.",
+    name: "Core + Console",
+    line: "Core plus the supported Skill Heaven console — compact statusline, receipts and intentionally opened terminal views where the harness supports them.",
   },
 };
 
@@ -284,7 +284,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
     statusNote:
-      "Full requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
+      "Core + Console requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>",
   },
@@ -305,7 +305,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then grok plugin update.",
     remove: ["grok plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "Full carries Status in an explicit command-backed report, not a persistent HUD.",
+    statusNote: "Core + Console carries Status in an explicit command-backed report, not a persistent HUD.",
     launcher: "grok-zero",
     firstRun: "/summon <what you need>",
   },
@@ -348,7 +348,7 @@ export const HARNESS_PATHS: readonly HarnessPath[] = [
     update: "Re-run the installer, then agy plugin uninstall skill-heaven and install it again — Antigravity keeps its own copy.",
     remove: ["agy plugin uninstall skill-heaven", AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "UNSUPPORTED",
-    statusNote: "Full carries Status in an explicit skill report. No user statusLine is installed or rewritten.",
+    statusNote: "Console runtime is provisional: installed-carrier invocation and native Core preview/session binding are unverified (#206). Registration succeeded; no user statusLine is installed or rewritten.",
     launcher: "agy-zero",
     // Antigravity namespaces plugin skills: its / menu lists /skill-heaven:summon, and a bare /summon is not a command.
     firstRun: "/skill-heaven:summon <what you need>",

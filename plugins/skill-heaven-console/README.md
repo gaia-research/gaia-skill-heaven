@@ -56,7 +56,7 @@ user-scope install, but the install command itself is typed in a terminal sessio
 contribution is always **one compact line maximum**, including when the legacy
 `full` statusline option is selected; details belong in the deliberately opened pane.
 
-Full is a Skill Heaven terminal installation profile. It does not install or claim
+Core + Console is a Skill Heaven terminal installation profile. It does not install or claim
 the optional cross-product Gaia Ecosystem Desktop Mod / Living Tree B.
 
 ## Disable or remove

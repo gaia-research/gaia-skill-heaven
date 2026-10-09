@@ -233,7 +233,7 @@ export default function Console() {
         <div className="cx-head">
           <h1>Console across harnesses</h1>
           <p className="cx-lede cx-lede--lead">
-            Skill Heaven's Full installation profile adds the supported terminal console for your harness. Choose a harness to inspect its actual support and see the same synthetic session rendered through the shared model. This page never connects to your session; Full does not install the separately released Gaia Ecosystem Desktop Mod.
+            Skill Heaven's Core + Console installation profile adds the supported terminal console for your harness. Choose a harness to inspect its actual support and see the same synthetic session rendered through the shared model. This page never connects to your session; Core + Console does not install the separately released Gaia Ecosystem Desktop Mod.
           </p>
           <section className="cx-host-showcase" aria-labelledby="cx-host-heading">
             <h2 id="cx-host-heading">Choose a harness</h2>

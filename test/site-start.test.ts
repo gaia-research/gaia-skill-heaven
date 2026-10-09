@@ -31,8 +31,25 @@ describe("profile plans stay canonical", () => {
         expect(full.steps.some((step) => step.piece === "console")).toBe(true);
       }
       expect(PROFILE_PITCH.core.name).toBe("Core");
-      expect(PROFILE_PITCH.full.name).toBe("Full");
+      expect(PROFILE_PITCH.full.name).toBe("Core + Console");
     }
+  });
+
+  it("keeps Agy installable while disclosing provisional Console runtime", () => {
+    const agy = HARNESS_PATHS.find((h) => h.id === "agy")!;
+    expect(planProfile(agy, "full", "register").kind).toBe("steps");
+    expect(agy.fullBlocked).toBeNull();
+    expect(agy.console.probe.summary).toContain("PROVISIONAL");
+    expect(agy.console.probe.summary).toContain("registration succeeded");
+    expect(agy.console.probe.summary).toContain("sessionRoot binding remain unverified (#206)");
+    expect(agy.console.mechanism).toContain("Provisional Console runtime");
+    expect(agy.statusNote).toContain("provisional");
+    expect(site("src/surfaces/Start.tsx")).toContain("harness.console.probe.summary");
+    expect(site("src/surfaces/Console.tsx")).toContain("selectedHarness.console.probe.summary");
+    const acceptance = readFileSync(join(REPO, "docs/evidence/core-full-196/acceptance.md"), "utf8");
+    expect(acceptance).toContain("5 accepted / 1 provisional");
+    expect(acceptance).toContain("not a sixth acceptance pass");
+    expect(acceptance).toContain("issues/206");
   });
 
   it("switching profiles only touches the console piece", () => {
@@ -164,7 +181,7 @@ describe("the front doors send people to /start first (#47)", () => {
   it("makes Core and Full legible on the landing page and links the showcase", () => {
     expect(landing).toContain("TWO PLUGIN PROFILES");
     expect(landing).toContain("Core</b> is the runtime");
-    expect(landing).toContain("Full</b> adds the independently removable");
+    expect(landing).toContain("Core + Console</b> adds the independently removable");
     expect(landing).toContain("#/console");
   });
 

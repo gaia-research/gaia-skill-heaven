@@ -164,7 +164,7 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const upSteps = planSwitch(harness, "core", "full", result.paths);
     if (upSteps.kind !== "steps") throw new Error("Core → Full unexpectedly blocked");
     expectRegistered(toFull.stdout, upSteps.steps);
-    expect(toFull.stdout).not.toContain("Then add the console (Full):");
+    expect(toFull.stdout).not.toContain("Then add the console (Core + Console):");
     expect(lines(result.log).slice(beforeUp)).toEqual(switched(harness, "core", "full", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "full", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
@@ -187,7 +187,7 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const downSteps = planSwitch(harness, "full", "core", result.paths);
     if (downSteps.kind !== "steps") throw new Error("Full → Core unexpectedly blocked");
     expectRegistered(toCore.stdout, downSteps.steps);
-    expect(toCore.stdout).not.toContain("You asked for Core and had Full");
+    expect(toCore.stdout).not.toContain("You asked for Core and had Core + Console");
     expect(lines(result.log).slice(beforeDown)).toEqual(switched(harness, "full", "core", result.paths));
     expect(receipt(result.home)).toMatchObject({ profile: "core", registered: true, incomplete: false });
     expect(existsSync(result.paths.pluginDir)).toBe(true);
@@ -351,7 +351,7 @@ describe("generated installer Core/Full lifecycle conformance", () => {
     const stagedDowngrade = call(downgrade, ["--profile", "core"]);
     expect(stagedDowngrade.status).toBe(0);
     expect(stagedDowngrade.stdout).toContain("No harness was installed or reconfigured.");
-    expect(stagedDowngrade.stdout).toContain("You asked for Core and had Full. Remove only the console:");
+    expect(stagedDowngrade.stdout).toContain("You asked for Core and had Core + Console. Remove only the console:");
     expect(stagedDowngrade.stdout).not.toContain("--register completed:");
     expect(lines(downgrade.log)).toEqual([]);
     const stage = makeSandbox("stage-only-uninstall", [h], false);

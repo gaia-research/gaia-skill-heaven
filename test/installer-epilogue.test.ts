@@ -84,6 +84,6 @@ describe("canonical installer epilogue", () => {
     const h = HARNESS_PATHS.find(h => h.id === "claude")!;
     const paths = { installHome: "/tmp/example", uninstall: "/tmp/example/uninstall.sh", pluginDir: "/tmp/example/core", consoleDir: "/tmp/example/console", marketplaceDir: "/tmp/example/marketplace" };
     const out = renderInstallEpilogue({ profile: "full", previous: null, found: [h.id], paths });
-    expect(out).toContain("Profile: Full"); expect(out).toContain("skill-heaven-console@gaia-skill-heaven"); expect(out).toContain("Then add the console");
+    expect(out).toContain("Profile: Core + Console"); expect(out).toContain("skill-heaven-console@gaia-skill-heaven"); expect(out).toContain("Then add the console");
   });
 });

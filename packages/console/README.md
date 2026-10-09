@@ -1,4 +1,13 @@
-# Full console adapters
+# Skill Heaven Console adapters
+
+**PR #196 release boundary: 5 accepted / 1 provisional (founder-approved).**
+Claude Code, Pi, Codex, Hermes and Grok earned runtime acceptance; Antigravity/Agy
+remains provisionally supported and installable. Its Core/Full registration and
+installed assets are confirmed, but installed-carrier invocation, native Core
+preview and session binding are unverified ([#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206)).
+This revised boundary is not a sixth acceptance pass. Console includes compact
+statusline, receipts and intentionally opened terminal views; it is part of the
+one Skill Heaven product, not a separate CLI or Desktop Mod.
 
 `packages/status/src/console-{state,host,view}.ts` is the shared semantic/evidence
 model. Adapters observe host events or explicitly bound engine receipts and paint
@@ -17,7 +26,7 @@ Ultra remains provisioned with no working controller (#126).
 | Agy 1.3.1 | `plugins/skill-heaven-console-agy` | Namespaced plugin skill, model-mediated bundled report; real HOME preserved |
 
 The versions above are native package-management pins, not a claim that every
-runtime surface has passed. Pi's Full pane requires Pi 1.1+ / pi-tui 0.84.1+.
+runtime surface has passed. Pi's Core + Console pane requires Pi 1.1+ / pi-tui 0.84.1+.
 Command-backed hosts have **no persistent HUD**. Their terminal/tool-trace layout
 and dismissal are host-owned; do not promise Pi's overlay on them. Flow is
 unsupported where real agent IDs cannot be observed. No agents are fabricated.
@@ -84,7 +93,7 @@ The canonical profile helper stages exactly one selected console piece at
 clonable marketplace payloads and independent child Git roots, including Hermes.
 Stage-only is the default. Explicit `--register` runs canonical argv without shell
 interpolation; receipt checkpoints preserve recoverable sources on failure.
-Core/Full switches issue console lifecycle operations only. Selected-package
+Core/Core + Console switches issue console lifecycle operations only. Selected-package
 removal is real uninstall/removal, not merely disabling a retained cache. Agy
 uninstall confirmation is the empirically accepted canonical stdin, not a guessed
 purge, and HOME/keychain behavior is unchanged.
@@ -93,7 +102,7 @@ purge, and HOME/keychain behavior is unchanged.
 committed artifacts. Drift checks, root/site/SDK typechecks and deterministic
 conformance are separate from native runtime acceptance.
 
-The saved native lifecycle pass observed Core → Full → Core → uninstall with exit
+The saved native lifecycle pass observed Core → Core + Console → Core → uninstall with exit
 0 in all 24 cells, with no Agy config snapshot differences. Exact exit results were
 recovered from the original session's saved tool output after scratch cleanup;
 the large reconnaissance campaign was not rerun. Native Pi now additionally has
@@ -102,7 +111,7 @@ paging and dismissal observations. Refreshed Pi 1.1.0 additionally verified the
 actual pinned builtin-read provenance/output contract, package-owned rung aliases,
 fresh-session reset and working Core after console removal. Current Codex 0.162.0
 and Grok 1.0.50 passed twelve selected package-lifecycle cells, including repeated
-same-profile update; this is not their Full runtime proof. The
+same-profile update; this is not their Core + Console runtime proof. The
 [acceptance checkpoint](../../docs/evidence/core-full-196/acceptance.md) keeps
 these proof classes and pending gates explicit. Remaining live report/permission/isolation/
 cache-refresh and UI cells must remain explicitly pending until observed. Windows
