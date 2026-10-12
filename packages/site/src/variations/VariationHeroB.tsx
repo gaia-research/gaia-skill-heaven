@@ -148,17 +148,13 @@ export function VariationHeroB({ assetSet }: VariationHeroProps) {
         <div className="vhb-flash__wedge" style={{ background: v.flashInk, opacity: v.flashWedge }} />
       </div>
 
-      <div aria-hidden="true" className="vhb-od" style={{ background: v.odSheet, opacity: v.odOp }}>
-        <div className="vhb-od__wedge" style={{ background: v.odWedge }} />
-      </div>
-
       <div
         aria-hidden="true"
         className="vhb-scan"
         style={{
           // See VariationHeroA: a full-viewport mix-blend-mode layer costs a
           // blend group every frame even at opacity 0. Only paint it while a
-          // glitch/overdrive pulse is actually running.
+          // glitch pulse is actually running.
           display: v.oScan ? 'block' : 'none',
           opacity: v.oScan,
           background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)`,

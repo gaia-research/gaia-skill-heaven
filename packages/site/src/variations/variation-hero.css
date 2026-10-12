@@ -548,9 +548,7 @@ body.vh-hero-page {
 }
 
 .vha-flash,
-.vhb-flash,
-.vha-od,
-.vhb-od {
+.vhb-flash {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -564,16 +562,6 @@ body.vh-hero-page {
   height: 12%;
   transform: rotate(-28deg);
 }
-.vha-od__wedge,
-.vhb-od__wedge {
-  position: absolute;
-  left: -20%;
-  right: -20%;
-  top: 36%;
-  height: 20%;
-  transform: rotate(-28deg);
-}
-
 .vha-scan,
 .vhb-scan {
   position: absolute;
@@ -1423,7 +1411,11 @@ a.vha-cta-mini:hover,
      radius, no border — the poster's own language, and the only thing that
      keeps an install line readable with 160px of type running under it. */
   .vha-ctawrap--flank .vha-cta {
-    background: var(--vha-bg);
+    /* Feathered rather than cut: the plate dissolves into the room's light
+       (#200) instead of punching a hard rectangle through it. Still ~90% band
+       ground under the text, so every line keeps its contrast. */
+    background: var(--vha-bg-plate, var(--vha-bg));
+    box-shadow: 0 0 36px 22px var(--vha-bg-plate, var(--vha-bg));
     padding-block: 16px;
   }
 
