@@ -8,6 +8,9 @@ import { HarnessMark } from '../harnessMarks'
 import { PlatformToggle } from '../components/PlatformToggle'
 import { LucyTunerHUD } from './hero/LucyTunerHUD'
 import { WingsTunerHUD } from './hero/WingsTunerHUD'
+import { LucyAtmosphere } from '../lucy-scene/atmosphere/LucyAtmosphere'
+import { LucyLive } from '../lucy-scene/LucyLive'
+import { useSceneLifecycle } from '../lucy-scene/useSceneLifecycle'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -70,6 +73,17 @@ function isTunerRequested(): boolean {
   return false
 }
 
+// Review switches for the Lucy Scene (#205): `?atmo=off` shows Lucy without
+// the atmosphere, `?lucy=off` shows the atmosphere without Lucy (figure, wings
+// and katana). Read once; they are review aids, not product state.
+function sceneReviewFlag(name: 'atmo' | 'lucy'): boolean {
+  if (typeof window === 'undefined') return false
+  const fromSearch = new URLSearchParams(window.location.search).get(name)
+  const hashQuery = window.location.hash.split('?')[1] ?? ''
+  const fromHash = new URLSearchParams(hashQuery).get(name)
+  return fromSearch === 'off' || fromHash === 'off'
+}
+
 function isWingsTunerRequested(): boolean {
   if (typeof window === 'undefined') return false
   const params = new URLSearchParams(window.location.search)
@@ -87,6 +101,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const navigate = useNavigate()
   const [showTuner, setShowTuner] = useState(isTunerRequested)
   const [showWingsTuner, setShowWingsTuner] = useState(isWingsTunerRequested)
+  const [atmosphereOff] = useState(() => sceneReviewFlag('atmo'))
+  const [lucyOff] = useState(() => sceneReviewFlag('lucy'))
+  // One lifecycle signal for everything in the scene (atmosphere now, the
+  // Rive character later): `data-scene-running` on the hero root.
+  useSceneLifecycle(rootRef)
 
   // Hotkey toggle: Ctrl+Shift+L toggles Lucy tuner, Ctrl+Shift+W toggles Wings tuner
   useEffect(() => {
@@ -259,11 +278,15 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         ['--vha-bg' as string]: v.bg,
         ['--vha-bg-soft' as string]: `${v.bg}cc`,
         ['--vha-bg-none' as string]: `${v.bg}00`,
+        ['--vha-bg-plate' as string]: `${v.bg}e6`,
       }}
     >
       {/* Opaque scene ground — guarantees the band colour paints behind the
          (often transparent) character masters, in every browser and capture. */}
       <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: v.bg, pointerEvents: 'none' }} />
+      {/* The room around Lucy (#200). Driven by the same product state as the
+          figure, never by the figure. */}
+      {!atmosphereOff && <LucyAtmosphere state={v.scene} />}
       {/* The hero lands on the ladder, so "skip" only means something while
           the optional five-act story is running (issue #47). */}
       <Link
@@ -351,6 +374,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         }}
       />
 
+      <LucyLive state={v.scene} hidden={lucyOff}>
       {v.scene !== 'zero' && (
         <>
           <img
@@ -473,6 +497,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           )
         })}
       </div>
+      </LucyLive>
 
       <div className="vh-slash-arc vha-slash-arc" aria-hidden="true" style={{ opacity: v.oCut }}>
         <img src={assets.slashArc} alt="" draggable={false} />
@@ -607,17 +632,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         <div className="vha-flash__wedge" style={{ background: v.flashInk, opacity: v.flashWedge }} />
       </div>
 
-      <div aria-hidden="true" className="vha-od" style={{ background: v.odSheet, opacity: v.odOp }}>
-        <div className="vha-od__wedge" style={{ background: v.odWedge }} />
-      </div>
-
       <div
         aria-hidden="true"
         className="vha-scan"
         style={{
           // mix-blend-mode on a full-viewport layer forces the whole hero into a
           // blend group every frame, even at opacity 0. The scanlines only exist
-          // during a glitch/overdrive pulse, so keep the layer out of the paint
+          // during a band-change glitch, so keep the layer out of the paint
           // tree the rest of the time — this is most of Hero A's idle paint cost
           // over Hero B's, and it is what let the rung transitions starve.
           display: v.oScan ? 'block' : 'none',

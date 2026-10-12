@@ -66,7 +66,6 @@ type EngineState = {
   flash: 0 | 1 | 2
   stop: number
   glitch: 0 | 1 | 2
-  od: 0 | 1 | 2
 }
 
 // Hero palette — the single source of truth for every colour the hero draws,
@@ -141,7 +140,7 @@ function computeVals(
   mobile: boolean,
   viewport: 'desktop' | 'tablet' | 'mobile' = 'desktop',
 ) {
-  const { act, flash, stop, glitch, od } = state
+  const { act, flash, stop, glitch } = state
   const lane = LADDER[stop].lane
   const atLadder = act === N - 1
   // Below act 5 the act owns the palette (heaven build → hell reveal); at act 5
@@ -250,12 +249,9 @@ function computeVals(
     mHeavenB: act === N - 1 ? (Number(mag(0, camZ)) * 0.62).toFixed(4) : mag(0, camZ),
     heavenYB: act === N - 1 ? -11 : pick([0, -1, -2, 0, 0]),
     oUltra: act === N - 1 && lane === 'u' ? 1 : 0,
-    glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : od === 1 ? -7 : od === 2 ? 5 : 0,
-    glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : od === 1 ? -1.6 : od === 2 ? 1.1 : 0,
-    oScan: glitch ? 0.5 : od ? 0.34 : 0,
-    odSheet: od === 1 ? HERO.gold : od === 2 ? HERO.inkPanel : 'transparent',
-    odWedge: od === 1 ? HERO.inkPanel : HERO.gold,
-    odOp: od ? (od === 1 ? 0.88 : 1) : 0,
+    glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : 0,
+    glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : 0,
+    oScan: glitch ? 0.5 : 0,
     oSplit: pick([0, 0, 1, 0, 0]),
     splitX: pick([0, 0, 34, 90, 90]),
     oHell: act === 3 || (act === N - 1 && hell) ? 1 : 0,
@@ -380,7 +376,6 @@ export function useHeroEngine(variant: 'a' | 'b') {
   // Default open at Skill Heaven LOW (issue: Skill Heaven Low default open)
   const [stop, setStop] = useState(1)
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
-  const [od, setOd] = useState<0 | 1 | 2>(0)
   const [mobile, setMobile] = useState(isMobileViewport)
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>(getViewportCategory)
 
@@ -695,30 +690,12 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [go, handlePinchZoom, registerInput])
 
-  // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
-  // a small glitch shear on the wordmark, looping while Ultra stays selected.
-  useEffect(() => {
-    const on = act === N - 1 && LADDER[stop].lane === 'u'
-    if (!on || prefersReducedMotion()) {
-      setOd(0)
-      return undefined
-    }
-    let t1: ReturnType<typeof setTimeout>
-    let t2: ReturnType<typeof setTimeout>
-    const interval = setInterval(() => {
-      setOd(1)
-      t1 = setTimeout(() => setOd(2), 58)
-      t2 = setTimeout(() => setOd(0), 124)
-    }, 1300)
-    return () => {
-      clearInterval(interval)
-      clearTimeout(t1)
-      clearTimeout(t2)
-      setOd(0)
-    }
-  }, [act, stop])
+  // Ultra's ongoing energy used to be a periodic full-screen gold/ink double
+  // flash every 1.3s ("overdrive"). Retired with the Lucy Atmosphere (#202):
+  // Ultra's room now carries its own slow gold sweep and interference, and
+  // only a band change earns an impact frame.
 
-  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile, viewport)
+  const v = computeVals({ act, flash, stop, glitch }, variant, mobile, viewport)
 
   const dots = Array.from({ length: N }, (_, i) => ({
     aria: 'Act ' + (i + 1),
