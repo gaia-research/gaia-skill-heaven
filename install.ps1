@@ -69,6 +69,7 @@ function Test-ClaudeWorking {
     return $false
   }
   try {
+    $ErrorActionPreference = 'Continue'
     $null = claude --version 2>$null
     return ($LASTEXITCODE -eq 0)
   } catch {
@@ -79,10 +80,11 @@ function Test-ClaudeWorking {
 function Plugin-Is-Installed {
   if (-not (Test-ClaudeWorking)) { return $false }
   try {
+    $ErrorActionPreference = 'Continue'
     $pluginJson = claude plugin list --json 2>$null
     if (-not $pluginJson) { return $false }
-    $plugins = $pluginJson | ConvertFrom-Json
-    return ($plugins | Where-Object { $_.id -eq $PLUGIN_ID }).Count -gt 0
+    $plugins = @(($pluginJson -join "`n") | ConvertFrom-Json)
+    return @($plugins | Where-Object { $_ -and $_.id -eq $PLUGIN_ID }).Count -gt 0
   } catch {
     return $false
   }
@@ -91,9 +93,10 @@ function Plugin-Is-Installed {
 function Marketplace-Is-Configured {
   if (-not (Test-ClaudeWorking)) { return $false }
   try {
+    $ErrorActionPreference = 'Continue'
     $marketplaces = claude plugin marketplace list 2>$null
     if (-not $marketplaces) { return $false }
-    return ($marketplaces -match [regex]::Escape($MARKETPLACE))
+    return (($marketplaces -join "`n") -match [regex]::Escape($MARKETPLACE))
   } catch {
     return $false
   }
@@ -120,9 +123,11 @@ function Uninstall-All {
 
   if (Test-Path $PATH_MANAGED) {
     try {
+      $recordedBin = (Get-Content $PATH_MANAGED -ErrorAction SilentlyContinue | Select-Object -First 1)
+      if ($recordedBin) { $recordedBin = $recordedBin.Trim() }
       $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
       if ($userPath) {
-        $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $BIN_DIR }) -join ';'
+        $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $BIN_DIR -and $_ -ne $recordedBin }) -join ';'
         [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
       }
     } catch {}
@@ -187,17 +192,21 @@ if ($missing.Count -gt 0) {
 
 $NODE_MAJOR = 0
 try {
+  $ErrorActionPreference = 'Continue'
   $nodeVerRaw = (node --version 2>$null) -replace '^v', ''
+  $ErrorActionPreference = 'Stop'
   $nodeVerParts = $nodeVerRaw -split '\.'
   if ($nodeVerParts[0] -match '^\d+$') {
     $NODE_MAJOR = [int]$nodeVerParts[0]
   }
 } catch {
+  $ErrorActionPreference = 'Stop'
   $NODE_MAJOR = 0
 }
 
 if ($NODE_MAJOR -lt 22) {
-  $currentVersion = try { node --version 2>$null } catch { "an unreadable Node install" }
+  $currentVersion = try { $ErrorActionPreference = 'Continue'; node --version 2>$null } catch { "an unreadable Node install" }
+  $ErrorActionPreference = 'Stop'
   Fail-Installation "Node 22+ is required; found $currentVersion. Install Node 22+ from https://nodejs.org/ and run this command again. Nothing was installed."
 }
 
@@ -216,18 +225,25 @@ try {
 
   $ARCHIVE = Join-Path $STAGE "source.zip"
   Say-Message "[2/5] Fetching Skill Heaven source ($SOURCE_REF) ..."
-  Invoke-WebRequest -Uri $SOURCE_ARCHIVE -OutFile $ARCHIVE -UseBasicParsing
+  $archiveUri = $null
+  if (Test-Path -LiteralPath $SOURCE_ARCHIVE) {
+    Copy-Item -LiteralPath $SOURCE_ARCHIVE -Destination $ARCHIVE -Force
+  } elseif ([System.Uri]::TryCreate($SOURCE_ARCHIVE, [System.UriKind]::Absolute, [ref]$archiveUri) -and $archiveUri.IsFile) {
+    Copy-Item -LiteralPath $archiveUri.LocalPath -Destination $ARCHIVE -Force
+  } else {
+    Invoke-WebRequest -Uri $SOURCE_ARCHIVE -OutFile $ARCHIVE -UseBasicParsing
+  }
 
   Say-Message "[3/5] Extracting source archive..."
   $EXTRACT_TEMP = Join-Path $STAGE "extract_temp"
   Expand-Archive -Path $ARCHIVE -DestinationPath $EXTRACT_TEMP -Force
   Remove-Item -Force $ARCHIVE
 
-  $extractedDirs = Get-ChildItem -Path $EXTRACT_TEMP -Directory
+  $extractedDirs = @(Get-ChildItem -LiteralPath $EXTRACT_TEMP -Directory -Force)
   if ($extractedDirs.Count -eq 1) {
-    Get-ChildItem -Path $extractedDirs[0].FullName | Move-Item -Destination (Join-Path $STAGE "source")
+    Get-ChildItem -LiteralPath $extractedDirs[0].FullName -Force | Move-Item -Destination (Join-Path $STAGE "source")
   } else {
-    Get-ChildItem -Path $EXTRACT_TEMP | Move-Item -Destination (Join-Path $STAGE "source")
+    Get-ChildItem -LiteralPath $EXTRACT_TEMP -Force | Move-Item -Destination (Join-Path $STAGE "source")
   }
   Remove-Item -Recurse -Force $EXTRACT_TEMP
 
@@ -263,6 +279,7 @@ function Test-ClaudeWorking {
     return $false
   }
   try {
+    $ErrorActionPreference = 'Continue'
     $null = claude --version 2>$null
     return ($LASTEXITCODE -eq 0)
   } catch {
@@ -285,10 +302,12 @@ if (Test-Path $userBinLinksFile) {
 $pathManagedFile = Join-Path $ROOT ".path-managed"
 if (Test-Path $pathManagedFile) {
   try {
+    $recordedBin = (Get-Content $pathManagedFile -ErrorAction SilentlyContinue | Select-Object -First 1)
+    if ($recordedBin) { $recordedBin = $recordedBin.Trim() }
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($userPath) {
       $binDir = Join-Path $ROOT "bin"
-      $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $binDir }) -join ';'
+      $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $binDir -and $_ -ne $recordedBin }) -join ';'
       [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
     }
   } catch {}
@@ -421,13 +440,17 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
   foreach ($harness in $doors) {
     if (Get-Command $harness -ErrorAction SilentlyContinue) {
       try {
+        $ErrorActionPreference = 'Continue'
         $null = & $harness --version 2>$null
-        if ($LASTEXITCODE -eq 0) {
+        $harnessExit = $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
+        if ($harnessExit -eq 0) {
           Say-Message "  ${harness}: yes (functional)"
         } else {
           Say-Message "  ${harness}: binary present, but failed execution (--version failed)"
         }
       } catch {
+        $ErrorActionPreference = 'Stop'
         Say-Message "  ${harness}: binary present, but failed execution"
       }
     } else {
@@ -446,7 +469,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
         $newUserPath = if ($userPath) { "$BIN_DIR;$userPath" } else { $BIN_DIR }
         [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
         $env:Path = "$BIN_DIR;$env:Path"
-        New-Item -ItemType File -Force -Path (Join-Path $INSTALL_HOME ".path-managed") | Out-Null
+        Set-Content -Path (Join-Path $INSTALL_HOME ".path-managed") -Value $BIN_DIR -Encoding UTF8
         Say-Message "Added $BIN_DIR to User PATH."
       }
     } catch {
@@ -457,6 +480,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
   Say-Message "Uninstall everything this command added with:"
   Say-Message "  $INSTALL_HOME\uninstall.ps1"
   Say-Message "Install complete. Re-run the same one-liner to update idempotently."
+  $global:LASTEXITCODE = 0
 
 } finally {
   if (Test-Path $STAGE) {

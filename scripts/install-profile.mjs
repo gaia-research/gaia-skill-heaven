@@ -575,25 +575,50 @@ function finish(home, receipt) {
   delete receipt.transaction;
   saveReceipt(home, receipt);
 }
-function cleanGitEnv() {
+function cleanGitEnv(emptyConfig) {
   const env = { ...process.env };
   for (const key of Object.keys(env)) if (key.startsWith("GIT_")) delete env[key];
-  return { ...env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_SYSTEM: process.platform === "win32" ? "NUL" : "/dev/null", GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null" };
+  return { ...env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_SYSTEM: emptyConfig, GIT_CONFIG_GLOBAL: emptyConfig };
 }
-function gitRepository(path) {
-  const env = cleanGitEnv();
-  const nullDev = process.platform === "win32" ? "NUL" : "/dev/null";
+function gitRepository(path, emptyConfig, emptyHooks) {
+  const env = cleanGitEnv(emptyConfig);
   for (const args of [["init", "-q"], ["add", "--all"], ["-c", "commit.gpgsign=false", "-c", "user.name=Skill Heaven installer", "-c", "user.email=installer@skill-heaven.invalid", "commit", "--no-gpg-sign", "-qm", "Install Skill Heaven Agent Plugin"]]) {
-    const r = spawnSync("git", ["-c", `core.hooksPath=${nullDev}`, ...args], { cwd: path, env, encoding: "utf8" });
+    const r = spawnSync("git", ["-c", "core.longpaths=true", "-c", `core.hooksPath=${emptyHooks}`, ...args], { cwd: path, env, encoding: "utf8" });
     if (r.status !== 0) throw new Error("could not prepare the complete local plugin repository");
   }
+}
+function spawnHostStep(bin, args, input) {
+  if (process.platform === "win32") {
+    for (const dir of (process.env.PATH ?? "").split(";")) {
+      if (!dir) continue;
+      if (existsSync(join(dir, bin)) || existsSync(join(dir, `${bin}.exe`))) break;
+      const cmdPath = join(dir, `${bin}.cmd`);
+      if (existsSync(cmdPath)) {
+        const env = { ...process.env, __SH_CMD: cmdPath, __SH_ARGC: String(args.length) };
+        args.forEach((arg, idx) => {
+          env[`__SH_ARG_${idx}`] = arg;
+        });
+        return spawnSync(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "$a = @(for ($i = 0; $i -lt [int]$env:__SH_ARGC; $i++) { [Environment]::GetEnvironmentVariable('__SH_ARG_' + $i) }); & $env:__SH_CMD @a; exit $LASTEXITCODE"
+          ],
+          { env, stdio: ["pipe", "inherit", "inherit"], input, shell: false }
+        );
+      }
+    }
+  }
+  return spawnSync(bin, args, { stdio: ["pipe", "inherit", "inherit"], input, shell: false });
 }
 function executeSteps(steps, paths) {
   for (const s of steps) {
     const data = s;
     if (!data.argv?.length) throw new Error(`no safe argv registration for ${s.run}`);
     const argv = data.argv.map((v) => renderRun(v, paths));
-    const result = spawnSync(argv[0], argv.slice(1), { stdio: ["pipe", "inherit", "inherit"], input: data.stdin ?? "", shell: false });
+    const result = spawnHostStep(argv[0], argv.slice(1), data.stdin ?? "");
     if (result.status !== 0 || result.error) throw new Error(`host registration failed: ${argv[0]} (exit ${result.status ?? "unknown"}); keep the artifact and retry, do not assume the host cache refreshed`);
   }
 }
@@ -665,7 +690,7 @@ ${paths2.marketplaceDir}`);
       }
       checkpoint(o.home, previous);
     }
-    rmSync(o.home, { recursive: true });
+    rmSync(o.home, { recursive: true, force: true });
     console.log(`Removed the local Skill Heaven Agent Plugin artifact from ${o.home}`);
     console.log(previous?.registered ? "Installer-managed host registrations were removed. Other client-managed copies are untouched." : "Client-managed plugin copies and registrations were not removed.");
     return;
@@ -697,9 +722,13 @@ ${paths2.marketplaceDir}`);
     if (market.plugins.length !== (profile === "full" ? 2 : 1)) throw new Error("could not write the local marketplace manifest");
     mkdirSync(join(next, "marketplace", ".claude-plugin"));
     writeFileSync(join(next, "marketplace", ".claude-plugin", "marketplace.json"), JSON.stringify(market, null, 2) + "\n");
-    gitRepository(staged.marketplaceDir);
-    gitRepository(staged.pluginDir);
-    if (profile === "full") gitRepository(staged.consoleDir);
+    const emptyConfig = join(work, "empty.gitconfig");
+    writeFileSync(emptyConfig, "");
+    const emptyHooks = join(work, "empty-hooks");
+    mkdirSync(emptyHooks, { recursive: true });
+    gitRepository(staged.marketplaceDir, emptyConfig, emptyHooks);
+    gitRepository(staged.pluginDir, emptyConfig, emptyHooks);
+    if (profile === "full") gitRepository(staged.consoleDir, emptyConfig, emptyHooks);
     cpSync(join(source, "scripts", "install-profile.mjs"), join(next, "install-profile.mjs"));
     writeFileSync(join(next, MARKER), "skill-heaven/install@1\n");
     uninstallScripts(next);
@@ -760,7 +789,7 @@ function onPath(bin) {
   const separator = process.platform === "win32" ? ";" : ":";
   return (process.env.PATH ?? "").split(separator).some((dir) => [bin, ...process.platform === "win32" ? [bin + ".exe", bin + ".cmd"] : []].some((name) => existsSync(join(dir, name))));
 }
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     install(parseOptions(process.argv.slice(2)));
   } catch (e) {
