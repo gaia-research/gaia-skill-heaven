@@ -588,12 +588,38 @@ function gitRepository(path) {
     if (r.status !== 0) throw new Error("could not prepare the complete local plugin repository");
   }
 }
+function spawnHostStep(bin, args, input) {
+  if (process.platform === "win32") {
+    for (const dir of (process.env.PATH ?? "").split(";")) {
+      if (!dir) continue;
+      if (existsSync(join(dir, bin)) || existsSync(join(dir, `${bin}.exe`))) break;
+      const cmdPath = join(dir, `${bin}.cmd`);
+      if (existsSync(cmdPath)) {
+        const env = { ...process.env, __SH_CMD: cmdPath, __SH_ARGC: String(args.length) };
+        args.forEach((arg, idx) => {
+          env[`__SH_ARG_${idx}`] = arg;
+        });
+        return spawnSync(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "$a = @(for ($i = 0; $i -lt [int]$env:__SH_ARGC; $i++) { [Environment]::GetEnvironmentVariable('__SH_ARG_' + $i) }); & $env:__SH_CMD @a; exit $LASTEXITCODE"
+          ],
+          { env, stdio: ["pipe", "inherit", "inherit"], input, shell: false }
+        );
+      }
+    }
+  }
+  return spawnSync(bin, args, { stdio: ["pipe", "inherit", "inherit"], input, shell: false });
+}
 function executeSteps(steps, paths) {
   for (const s of steps) {
     const data = s;
     if (!data.argv?.length) throw new Error(`no safe argv registration for ${s.run}`);
     const argv = data.argv.map((v) => renderRun(v, paths));
-    const result = spawnSync(argv[0], argv.slice(1), { stdio: ["pipe", "inherit", "inherit"], input: data.stdin ?? "", shell: false });
+    const result = spawnHostStep(argv[0], argv.slice(1), data.stdin ?? "");
     if (result.status !== 0 || result.error) throw new Error(`host registration failed: ${argv[0]} (exit ${result.status ?? "unknown"}); keep the artifact and retry, do not assume the host cache refreshed`);
   }
 }
@@ -665,7 +691,7 @@ ${paths2.marketplaceDir}`);
       }
       checkpoint(o.home, previous);
     }
-    rmSync(o.home, { recursive: true });
+    rmSync(o.home, { recursive: true, force: true });
     console.log(`Removed the local Skill Heaven Agent Plugin artifact from ${o.home}`);
     console.log(previous?.registered ? "Installer-managed host registrations were removed. Other client-managed copies are untouched." : "Client-managed plugin copies and registrations were not removed.");
     return;
@@ -760,7 +786,7 @@ function onPath(bin) {
   const separator = process.platform === "win32" ? ";" : ":";
   return (process.env.PATH ?? "").split(separator).some((dir) => [bin, ...process.platform === "win32" ? [bin + ".exe", bin + ".cmd"] : []].some((name) => existsSync(join(dir, name))));
 }
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     install(parseOptions(process.argv.slice(2)));
   } catch (e) {

@@ -156,5 +156,17 @@ describe("windows PowerShell installers", () => {
     expect(ps1Installer).toContain("Linked door launchers to $USER_BIN");
     expect(ps1Installer).toContain("Get-Content $userBinLinksFile");
   });
+
+  it("keeps both PowerShell installers pure 7-bit ASCII without BOM and uses node --version (#94, #148)", () => {
+    for (const [name, content] of [
+      ["install.ps1", ps1Installer],
+      ["install-agent-plugin.ps1", ps1AgentPlugin],
+    ] as const) {
+      expect(content.charCodeAt(0), `${name} must not start with UTF-8 BOM (breaks irm | iex)`).not.toBe(0xfeff);
+      expect(content, `${name} must stay 7-bit ASCII for Windows PowerShell 5.1 local parsing`).toMatch(/^[\x00-\x7f]*$/);
+      expect(content, `${name} must not use quote-sensitive node -p version probe`).not.toContain('process.versions.node.split(".")');
+      expect(content, `${name} must parse node --version`).toContain("node --version");
+    }
+  });
 });
 

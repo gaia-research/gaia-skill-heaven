@@ -83,3 +83,15 @@ jobs:
           npx tsx packages/core/scripts/emit-sample-record.ts > rec.jsonl
           cat rec.jsonl
           npx tsx .gaia-research/scripts/hell-heaven-bench/ledger.ts validate --file rec.jsonl
+
+  windows-installers:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate install.ps1 and install-agent-plugin.ps1 on Windows PowerShell 5.1 and PowerShell 7+ (#94)
+        run: npx vitest run packages/core/test/install.test.ts test/windows-installer.test.ts
