@@ -40,7 +40,7 @@ is the narrative around them.
 | Gate | Requirement | Result |
 |---|---|---|
 | **G1** | Δ MRR CI excludes zero | **PASS** — `+0.3433, 95% CI [+0.2593, +0.4313], n = 100` |
-| **G2** | ≥90% of 20 unanswerable queries return `noMatch` | **FAIL at the committed floor** — `floor.json` records 75% rejection while admitting 90.82% of gold; the 95% result is historical partial-coverage data |
+| **G2** | ≥90% of 20 unanswerable queries return `noMatch` | **FAIL at the committed floor** — `floor.json` records 70% score-distribution rejection (80% whole `bm25f-decide` refusal rate) while admitting 90.82% of gold; the 95% result is historical partial-coverage data |
 | **G3** | Gold set runs green with egress blocked | **PASS**, asserted by the harness rather than promised |
 
 ## The systems
@@ -64,14 +64,15 @@ The three refusal percentages in older notes are not interchangeable:
 |---|---|---|---|
 | Historical partial-expansion index (`88a6ac6`, 2026-09-04 00:38 UTC) | `gaia.skill-index/v1`, 274 docs, 101 expanded; `floor.json` at that commit | floor `27.5559`, answerable `90.82%`, unanswerable rejected `95%` | Historical calibration; superseded when the remaining expansions landed |
 | Historical full bucketed index (`fd663a4`, 2026-09-04 00:43 UTC) | `gaia.skill-index/v1`, 274 docs, 273 expanded; `floor.json` at that commit | floor `26.9789`, answerable `90.82%`, unanswerable rejected `75%` | Negative G2 result preserved; not tuned away |
-| Inherited historical Reach artifact (pre-R4) | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills; `packages/core/bench/corpus/floor.json` | recorded floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Historical/inherited calibration only; the R4 artifact has **354 docs, 354 expansions, and 48 awaiting classifications**. The preserved floor was not revalidated on the refreshed corpus. |
+| Inherited historical Reach artifact (pre-R4 / R4) | `gaia.skill-index/v2`, 326 docs, 324 expanded including 51 of 52 awaiting skills (preserved through R4's 354-doc `v8.4.1` snapshot) | recorded floor `27.8563`, answerable `90.82%`, unanswerable rejected `75%`, `meetsG2: false` | Historical calibration preserved in R4 without revalidation against the 354-document corpus |
 | Benchmark ledger run (`packages/core/bench/results/ledger.json`, 2026-09-04 00:56 UTC) | Historical v1 ledger over 326 docs/324 expanded | `bm25f-decide.refusalRate = 85%`; its floor sweep's hypothetical 95% point admits only 79% of gold | The 85% value is the whole decide-layer `noMatch` rate, not `floor.json`'s score-distribution rejection; the 95% point is not the shipped floor |
+| Controlled refresh (#216, Tree `v8.29.1`, 2026-10-30) | `gaia.skill-index/v2`, 400 docs, 400 expanded (352 bucketed + 48 awaiting); `packages/core/bench/corpus/floor.json` and `packages/core/bench/results/runs/2026-10-30/ledger.json` | recalibrated floor `27.9867`, answerable `90.82%`, score-distribution unanswerable rejected `70%` (`bm25f-decide.refusalRate = 80%`), separation `93.16%`, `meetsG2: false` | Recalibrated under the fixed policy (`>= 90%` gold admitted); hypothetical G2-clearing floor `33.0075` rejects `90%` of unanswerable but admits only `77%` of gold |
 
-The inherited floor record reports a historical G2 failure. R4 preserved
-`floor.json` byte-for-byte but did **not** revalidate that floor against the
-354-document refreshed corpus, so no fresh G2 result is claimed. The 95% and
-85% figures remain useful historical measurements only; none is collapsed into
-a current refreshed-corpus calibration outcome.
+Each stage records a G2 failure under the fixed admission policy (`>= 90%` of
+answerable gold admitted). The #216 refresh recalibrated `floor.json` (`27.9867`)
+against the 400-document `v8.29.1` corpus and recorded the G2 outcome (`70%`
+score-distribution rejection, `80%` whole decide-layer refusal, `meetsG2: false`)
+without weakening the acceptance threshold.
 
 ---
 
@@ -369,20 +370,97 @@ index**. **HH Index** refers only to measured behavioral evidence; the internal
 `gaia.skill-index/v2` schema and `skill-index.json` path remain compatibility
 names.
 
+## #216 — controlled refresh to Tree `v8.29.1`, floor recalibration, and freshness monitor
+
+Issue #216 reported that the `v8.4.1` index (`abf41d304f35fa27bbd8e32be5f6d7d880d6b232`,
+354 docs) had drifted against Tree `v8.26.10` (`b0f6d9e502369aea2ebebe13eed8d961675094bd`,
+2026-10-24, 398 unique named skills: 350 bucketed + 48 awaiting classification),
+with **51 missing** upstream skills and **7 removed** index entries. At the
+latest valid upstream release, Tree `v8.29.1`
+(`dc07528884a759dbd3668d4a0007469265ab396f`, 2026-10-30), two additional bucketed
+skills (`nvidia/accelerated-computing-cudf` and `wheresryan22/anatomy`) landed,
+bringing the canonical named projection to **400 documents** (**352 bucketed /
+48 awaiting-classification**, `docs/graph/named/index.json` digest
+`sha256:6e6d6513428c6f7654e2098712cd4939c2a4cc7c5c3ccfb3394b984a75b55b10`).
+
+Against the prior 354-document `v8.4.1` snapshot, the capability-descriptive
+diff at `v8.29.1` is exact: **53 added, 7 removed, 5 changed, 342 unchanged**:
+
+- The **7 removed** entries (`gooseworks/notte-browser`,
+  `gsd-build/{discuss-phase,execute-phase,plan-phase,ship,verify-work}`, and
+  `yonatangross/orchestkit-rag`) were slug-normalized upstream into
+  `gooseworks/browser-automation-notte`,
+  `gsd-build/gsd-{discuss-phase,execute-phase,plan-phase,ship,verify-work}`, and
+  `yonatangross/rag-retrieval` with identical descriptions, titles, tags, and
+  buckets.
+- The **5 changed** common records (`mbtiongson1/gaia-{triage,bot-curate,curate,integrity,meta-audit}`)
+  touched `description` wording only (`"Gaia registry"` → `"registry"` / `"Gaia skill tree"`).
+- **342** existing expansion records were preserved byte-for-byte; **53** missing
+  and **5** fingerprint-invalidated records were generated/restamped from
+  canonical capability metadata; **7** orphaned records were removed. The
+  refreshed index is `gaia.skill-index/v2` (`skill-index-builder/0.1.0`) with
+  **400/400 expanded** (`2,835` total expansions, zero stale expansions, zero
+  orphans), and `plugins/skill-heaven/data/arbor-identity.json` plus
+  `plugins/skill-heaven/data/arbor/provenance.json` are aligned to the same
+  upstream commit (`dc07528884a759dbd3668d4a0007469265ab396f`, 400/400 content
+  pins resolved).
+
+The relevance floor was recalibrated via `calibrate-floor.ts` under the unchanged
+policy (`highest threshold admitting >= 0.9 of the gold set`):
+
+- **Recalibrated floor:** `27.9867` (was `27.8563`)
+- **Gold answerable admitted:** `90.82%` (`0.9082`)
+- **Unanswerable score-distribution rejected:** `70.00%` (`0.70`, `meetsG2: false`;
+  whole `bm25f-decide` refusal rate is `80.00%` / `0.80`)
+- **Pairwise score separation:** `93.16%` (`0.9316`)
+- **Floor sweep G2 trade point:** `33.0075` rejects `90%` of unanswerable queries
+  but admits only `77%` of answerable gold, so the negative G2 finding is
+  preserved rather than hidden behind a weakened admission policy.
+
+Measured benchmark outcome on the 400-document `v8.29.1` index
+(`packages/core/bench/results/runs/2026-10-30/ledger.json`):
+
+    system              MRR   MRR@reachable   R@5   refuse(neg)  false-refuse  reviewed MRR (n=30)
+    baseline-shipped  0.0332     0.0495      0.04      0.00          0.00            0.0056
+    baseline-raw      0.0445     0.0469      0.04      0.00          0.00            0.0056
+    bm25f             0.5779     0.6083      0.72      0.00          0.02            0.5506
+    bm25f-no-expansion 0.1951    0.2054      0.28      0.00          0.02            0.1900
+    bm25f-decide      0.4432     0.5683      0.55      0.80          0.16            0.4661
+
+    bm25f vs baseline-shipped         +0.5448  95% CI [+0.4608, +0.6251]  n=100 (G1 met)
+    bm25f-decide vs baseline-shipped  +0.4101  95% CI [+0.3240, +0.4965]  n=100 (G1 met)
+    bm25f vs bm25f-no-expansion       +0.3828  95% CI [+0.3013, +0.4644]  n=100 (G1 met)
+
+Note on `reachableTargets`: three machine-authored labels in the frozen
+`gold.jsonl` set (`gsd-build/{discuss-phase,plan-phase,verify-work}`) reference
+pre-normalization slug IDs (`reachableTargets` moves 98 → 95 on unfiltered
+systems, while `bm25f-decide` stays at 78 reachable targets and rises from
+`0.4603` → `0.4661` MRR on the 30 human-confirmed `reviewed` cases). Per the R3
+overlay contract, `gold.jsonl` is never rewritten in place.
+
+A read-only weekly freshness monitor (`.github/workflows/retrieval-freshness.yml`
+and `packages/core/scripts/check-index-freshness.ts`) compares the committed
+index against the latest released Tree projection and idempotently opens or
+updates a single tracking issue when index age exceeds `STALE_AFTER_DAYS` (30)
+or upstream skills drift, without auto-committing or publishing index changes.
+
 ## Reproducing any of it
 
 ```bash
-# Controlled R4 refresh: generate the pinned Tree projection in an isolated
+# Controlled refresh (#216): generate the pinned Tree projection in an isolated
 # checkout/archive, then pass its bytes and immutable revision to this repo.
 npx tsx packages/core/scripts/snapshot-corpus.ts \
   --source-file /path/to/named-generated.json \
-  --source-revision abf41d304f35fa27bbd8e32be5f6d7d880d6b232 \
-  --source-version v8.4.1 \
+  --source-revision dc07528884a759dbd3668d4a0007469265ab396f \
+  --source-version v8.29.1 \
   --source-workflow 'gaia-skill-tree/scripts/generateNamedIndex.py -> docs/graph/named/index.json'
 npx tsx packages/core/scripts/filter-expansions.ts --in packages/core/bench/corpus/expansions.raw.jsonl --rank-cutoff none
 npx tsx packages/core/scripts/build-skill-index.ts
 npx tsx packages/core/scripts/calibrate-floor.ts && npx tsx packages/core/scripts/build-skill-index.ts
-npx tsx packages/core/bench/run.ts --calibrate
+npx tsx packages/core/scripts/build-arbor-identity.ts --tree /path/to/gaia-skill-tree
+npm run build:mcp
+npx tsx packages/core/bench/run.ts --calibrate --out results/runs/2026-10-30
+npx tsx packages/core/scripts/check-index-freshness.ts --upstream-file /path/to/named-generated.json --upstream-version v8.29.1 --upstream-revision dc07528884a759dbd3668d4a0007469265ab396f
 ```
 
 ---
