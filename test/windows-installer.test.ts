@@ -5,7 +5,7 @@
 // disposable temp root, local HTTP server, and mock harness binaries — never
 // mutating real user configuration or contacting production endpoints.
 
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -15,6 +15,8 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,6 +33,56 @@ type PowerShellEngine = {
   bin: string;
 };
 
+type ProcResult = {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+};
+
+/**
+ * Asynchronous process runner so the Vitest worker event loop (and both its
+ * birpc `onTaskUpdate` heartbeat and the local HTTP fixture server) stays
+ * responsive during multi-second PowerShell and `npm ci` runs.
+ */
+function runProcess(
+  command: string,
+  args: readonly string[],
+  options: { env?: NodeJS.ProcessEnv; cwd?: string; timeout?: number } = {},
+): Promise<ProcResult> {
+  return new Promise((resolveProc, rejectProc) => {
+    const child = spawn(command, args, {
+      env: options.env ?? process.env,
+      cwd: options.cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    const outChunks: Buffer[] = [];
+    const errChunks: Buffer[] = [];
+    child.stdout?.on("data", (chunk: Buffer) => outChunks.push(chunk));
+    child.stderr?.on("data", (chunk: Buffer) => errChunks.push(chunk));
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (options.timeout && options.timeout > 0) {
+      timer = setTimeout(() => {
+        child.kill();
+      }, options.timeout);
+    }
+
+    child.on("error", (err) => {
+      if (timer) clearTimeout(timer);
+      rejectProc(err);
+    });
+    child.on("close", (code) => {
+      if (timer) clearTimeout(timer);
+      resolveProc({
+        status: code,
+        stdout: Buffer.concat(outChunks).toString("utf8"),
+        stderr: Buffer.concat(errChunks).toString("utf8"),
+      });
+    });
+  });
+}
+
 function detectEngines(): PowerShellEngine[] {
   if (!IS_WINDOWS) return [];
   const candidates: PowerShellEngine[] = [
@@ -38,10 +90,11 @@ function detectEngines(): PowerShellEngine[] {
     { id: "pwsh", label: "PowerShell 7+ (pwsh.exe)", bin: "pwsh.exe" },
   ];
   return candidates.filter((engine) => {
-    const probe = spawnSync(engine.bin, ["-NoProfile", "-NonInteractive", "-Command", "$PSVersionTable.PSVersion.Major"], {
-      encoding: "utf8",
-      timeout: 15_000,
-    });
+    const probe = spawnSync(
+      engine.bin,
+      ["-NoProfile", "-NonInteractive", "-Command", "$PSVersionTable.PSVersion.Major"],
+      { encoding: "utf8", timeout: 15_000 },
+    );
     return probe.status === 0;
   });
 }
@@ -51,7 +104,7 @@ const ENGINES = detectEngines();
 describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () => {
   let root: string;
   let archiveZip: string;
-  let serverProc: ChildProcess;
+  let server: Server;
   let baseUrl: string;
 
   beforeAll(async () => {
@@ -94,7 +147,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
     }
 
     archiveZip = join(root, "source.zip");
-    const zipRun = spawnSync(
+    const zipRun = await runProcess(
       "pwsh.exe",
       [
         "-NoProfile",
@@ -104,68 +157,46 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       ],
       {
         env: { ...process.env, __SH_STAGE: stageTree, __SH_ZIP: archiveZip },
-        encoding: "utf8",
         timeout: 60_000,
       },
     );
     expect(zipRun.status, zipRun.stderr).toBe(0);
     expect(existsSync(archiveZip)).toBe(true);
 
-    // Run the HTTP fixture server in an independent child process so synchronous
-    // spawnSync calls in the test runner never block the HTTP event loop.
-    const serverScript = join(root, "fixture-server.cjs");
-    writeFileSync(
-      serverScript,
-      [
-        "const http = require('node:http');",
-        "const fs = require('node:fs');",
-        `const installPs1 = fs.readFileSync(${JSON.stringify(INSTALL_PS1)});`,
-        `const installPluginPs1 = fs.readFileSync(${JSON.stringify(INSTALL_PLUGIN_PS1)});`,
-        `const archiveBytes = fs.readFileSync(${JSON.stringify(archiveZip)});`,
-        "const srv = http.createServer((req, res) => {",
-        "  if (req.url === '/install.ps1') {",
-        "    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });",
-        "    res.end(installPs1);",
-        "    return;",
-        "  }",
-        "  if (req.url === '/install-agent-plugin.ps1') {",
-        "    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });",
-        "    res.end(installPluginPs1);",
-        "    return;",
-        "  }",
-        "  if (req.url === '/source.zip') {",
-        "    res.writeHead(200, { 'content-type': 'application/zip' });",
-        "    res.end(archiveBytes);",
-        "    return;",
-        "  }",
-        "  res.writeHead(404); res.end('not found');",
-        "});",
-        "srv.listen(0, '127.0.0.1', () => {",
-        "  process.stdout.write('PORT=' + srv.address().port + '\\n');",
-        "});",
-      ].join("\n"),
-    );
+    const installPs1Bytes = readFileSync(INSTALL_PS1);
+    const installPluginPs1Bytes = readFileSync(INSTALL_PLUGIN_PS1);
+    const archiveBytes = readFileSync(archiveZip);
 
-    baseUrl = await new Promise<string>((resolveUrl, rejectUrl) => {
-      serverProc = spawn(process.execPath, [serverScript], {
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-      let buf = "";
-      serverProc.stdout?.on("data", (chunk: Buffer) => {
-        buf += chunk.toString("utf8");
-        const m = buf.match(/PORT=(\d+)/);
-        if (m) resolveUrl(`http://127.0.0.1:${m[1]}`);
-      });
-      serverProc.on("error", rejectUrl);
-      serverProc.on("exit", (code) => {
-        if (!buf.includes("PORT=")) rejectUrl(new Error(`fixture server exited early (${code})`));
-      });
+    server = createServer((req, res) => {
+      if (req.url === "/install.ps1") {
+        res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
+        res.end(installPs1Bytes);
+        return;
+      }
+      if (req.url === "/install-agent-plugin.ps1") {
+        res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
+        res.end(installPluginPs1Bytes);
+        return;
+      }
+      if (req.url === "/source.zip") {
+        res.writeHead(200, { "content-type": "application/zip" });
+        res.end(archiveBytes);
+        return;
+      }
+      res.writeHead(404);
+      res.end("not found");
     });
+
+    await new Promise<void>((resolveListen) => {
+      server.listen(0, "127.0.0.1", () => resolveListen());
+    });
+    const addr = server.address() as AddressInfo;
+    baseUrl = `http://127.0.0.1:${addr.port}`;
   }, 120_000);
 
   afterAll(async () => {
-    if (serverProc && !serverProc.killed) {
-      serverProc.kill();
+    if (server) {
+      await new Promise<void>((resolveClose) => server.close(() => resolveClose()));
     }
     if (root) {
       rmSync(root, { recursive: true, force: true });
@@ -282,7 +313,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
     );
   }
 
-  function compileMockClaudeExe(mockBin: string): string {
+  async function compileMockClaudeExe(mockBin: string): Promise<string> {
     const jsHelper = join(mockBin, "mock-claude.cjs");
     if (!existsSync(jsHelper)) writeMockClaudeCmd(mockBin, "working");
     const csFile = join(mockBin, "MockClaude.cs");
@@ -318,12 +349,10 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
     ];
     const csc = cscCandidates.find((candidate) => existsSync(candidate));
     expect(csc, "csc.exe must exist on windows-latest").toBeDefined();
-    const compile = spawnSync(csc!, ["/nologo", `/out:${exeFile}`, csFile], {
-      encoding: "utf8",
+    const compile = await runProcess(csc!, ["/nologo", `/out:${exeFile}`, csFile], {
       timeout: 30_000,
     });
     expect(compile.status, compile.stderr || compile.stdout).toBe(0);
-    // Remove claude.cmd so claude.exe is the sole claude binary in mockBin
     rmSync(join(mockBin, "claude.cmd"), { force: true });
     return exeFile;
   }
@@ -338,9 +367,9 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
   });
 
   describe.each(ENGINES)("[$id] $label", (engine) => {
-    it("1. Piped execution (irm | iex) stages install-agent-plugin.ps1 without relying on $PSScriptRoot", () => {
+    it("1. Piped execution (irm | iex) stages install-agent-plugin.ps1 without relying on $PSScriptRoot", async () => {
       const sb = makeSandbox(`irm-plugin-${engine.id}`);
-      const run = spawnSync(
+      const run = await runProcess(
         engine.bin,
         [
           "-NoProfile",
@@ -350,7 +379,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
           "-Command",
           `irm '${baseUrl}/install-agent-plugin.ps1' | iex`,
         ],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+        { env: sb.baseEnv, timeout: 60_000 },
       );
       expect(run.status, run.stderr || run.stdout).toBe(0);
 
@@ -366,40 +395,36 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(existsSync(join(sb.pluginHome, "uninstall.ps1"))).toBe(true);
     }, 90_000);
 
-    it("2. Direct execution & switch parameters (-Help, -PrintPath, -Quiet, -Profile, -Uninstall) and file:// archive work", () => {
+    it("2. Direct execution & switch parameters (-Help, -PrintPath, -Quiet, -Profile, -Uninstall) and file:// archive work", async () => {
       const sb = makeSandbox(`params-plugin-${engine.id}`);
       const expectedPluginDir = join(sb.pluginHome, "marketplace", "plugins", "skill-heaven");
       const expectedMarketplaceDir = join(sb.pluginHome, "marketplace");
 
-      // -Help: no download, no directory created
-      const help = spawnSync(
+      const help = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1, "-Help"],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 30_000 },
+        { env: sb.baseEnv, timeout: 30_000 },
       );
       expect(help.status, help.stderr).toBe(0);
       expect(help.stdout).toContain("Skill Heaven Agent Plugin - Core / Full");
       expect(help.stdout).toContain("Registered Full -> Core requires -Register.");
       expect(existsSync(sb.pluginHome)).toBe(false);
 
-      // -PrintPath: prints exact plugin path and exits without staging
-      const printPath = spawnSync(
+      const printPath = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1, "-PrintPath"],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 30_000 },
+        { env: sb.baseEnv, timeout: 30_000 },
       );
       expect(printPath.status, printPath.stderr).toBe(0);
       expect(printPath.stdout.trim()).toBe(expectedPluginDir);
       expect(existsSync(sb.pluginHome)).toBe(false);
 
-      // -Quiet with a file:// SKILL_HEAVEN_ARCHIVE_URL (tests file:// handling in both PS 5.1 and PS 7)
       const fileUrl = new URL(`file:///${archiveZip.replace(/\\/g, "/")}`).href;
-      const quiet = spawnSync(
+      const quiet = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1, "-Quiet"],
         {
           env: { ...sb.baseEnv, SKILL_HEAVEN_ARCHIVE_URL: fileUrl },
-          encoding: "utf8",
           timeout: 60_000,
         },
       );
@@ -407,8 +432,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(quiet.stdout.trim().split(/\r?\n/)).toEqual([expectedPluginDir, expectedMarketplaceDir]);
       expect(existsSync(join(expectedPluginDir, "plugin.json"))).toBe(true);
 
-      // -Profile full -Harness claude (stage-only) stages both skill-heaven and skill-heaven-console
-      const fullStage = spawnSync(
+      const fullStage = await runProcess(
         engine.bin,
         [
           "-NoProfile",
@@ -422,39 +446,36 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
           "-Harness",
           "claude",
         ],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+        { env: sb.baseEnv, timeout: 60_000 },
       );
       expect(fullStage.status, fullStage.stderr || fullStage.stdout).toBe(0);
       expect(existsSync(join(sb.pluginHome, "marketplace", "plugins", "skill-heaven-console", "hooks", "status-model.mjs"))).toBe(true);
 
-      // Refuses to remove an unverified directory on -Uninstall
       const unverified = join(sb.dir, "unverified-dir");
       mkdirSync(unverified, { recursive: true });
       writeFileSync(join(unverified, "keep.txt"), "keep");
-      const refused = spawnSync(
+      const refused = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1, "-Uninstall"],
         {
           env: { ...sb.baseEnv, SKILL_HEAVEN_PLUGIN_HOME: unverified },
-          encoding: "utf8",
           timeout: 30_000,
         },
       );
       expect(refused.status).not.toBe(0);
       expect(existsSync(join(unverified, "keep.txt"))).toBe(true);
 
-      // -Uninstall removes the verified installation
-      const uninstall = spawnSync(
+      const uninstall = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1, "-Uninstall"],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 30_000 },
+        { env: sb.baseEnv, timeout: 30_000 },
       );
       expect(uninstall.status, uninstall.stderr || uninstall.stdout).toBe(0);
       expect(uninstall.stdout).toContain("Removed the local Skill Heaven Agent Plugin artifact");
       expect(existsSync(sb.pluginHome)).toBe(false);
     }, 120_000);
 
-    it("3. Hermes local Git repository initialization & hostile global gitconfig isolation on Windows", () => {
+    it("3. Hermes local Git repository initialization & hostile global gitconfig isolation on Windows", async () => {
       const sb = makeSandbox(`hermes-git-${engine.id}`);
       const hooksDir = join(sb.dir, "hostile-hooks");
       mkdirSync(hooksDir, { recursive: true });
@@ -465,7 +486,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
         `[commit]\n\tgpgsign = true\n[core]\n\thooksPath = ${hooksDir.replace(/\\/g, "/")}\n`,
       );
 
-      const run = spawnSync(
+      const run = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1],
         {
@@ -474,7 +495,6 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
             GIT_CONFIG_GLOBAL: hostileGitConfig,
             GIT_DIR: join(sb.dir, "wrong-git-dir"),
           },
-          encoding: "utf8",
           timeout: 60_000,
         },
       );
@@ -495,58 +515,55 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
         }
       }
 
-      const workTree = spawnSync("git", ["-C", pluginDir, "rev-parse", "--is-inside-work-tree"], {
+      const workTree = await runProcess("git", ["-C", pluginDir, "rev-parse", "--is-inside-work-tree"], {
         env: cleanGitEnv,
-        encoding: "utf8",
       });
       expect(workTree.status, workTree.stderr).toBe(0);
       expect(workTree.stdout.trim()).toBe("true");
 
-      const author = spawnSync("git", ["-C", pluginDir, "log", "-1", "--format=%an <%ae>"], {
+      const author = await runProcess("git", ["-C", pluginDir, "log", "-1", "--format=%an <%ae>"], {
         env: cleanGitEnv,
-        encoding: "utf8",
       });
       expect(author.status, author.stderr).toBe(0);
       expect(author.stdout.trim()).toBe("Skill Heaven installer <installer@skill-heaven.invalid>");
 
-      const tracked = spawnSync(
+      const tracked = await runProcess(
         "git",
         ["-C", pluginDir, "ls-files", "--error-unmatch", "plugin.json", "mcp.json", "skills/summon/SKILL.md", "mcp/skill-summon.mjs"],
-        { env: cleanGitEnv, encoding: "utf8" },
+        { env: cleanGitEnv },
       );
       expect(tracked.status, tracked.stderr).toBe(0);
 
       const hermesClone = join(sb.dir, "hermes-clone");
-      const cloneRun = spawnSync("git", ["-c", "core.longpaths=true", "clone", "--quiet", "--no-local", pluginDir, hermesClone], {
-        env: cleanGitEnv,
-        encoding: "utf8",
-      });
+      const cloneRun = await runProcess(
+        "git",
+        ["-c", "core.longpaths=true", "clone", "--quiet", "--no-local", pluginDir, hermesClone],
+        { env: cleanGitEnv },
+      );
       expect(cloneRun.status, cloneRun.stderr).toBe(0);
       expect(existsSync(join(hermesClone, "plugin.json"))).toBe(true);
       expect(existsSync(join(hermesClone, "mcp", "skill-summon.mjs"))).toBe(true);
     }, 90_000);
 
-    it("4. Claude Code integration in install-agent-plugin.ps1 works for both claude.cmd and claude.exe (-Register and -Uninstall -Register)", () => {
+    it("4. Claude Code integration in install-agent-plugin.ps1 works for both claude.cmd and claude.exe (-Register and -Uninstall -Register)", async () => {
       for (const binaryKind of ["cmd", "exe"] as const) {
         const sb = makeSandbox(`plugin-claude-${binaryKind}-${engine.id}`);
         if (binaryKind === "cmd") {
           writeMockClaudeCmd(sb.mockBin, "working");
         } else {
-          compileMockClaudeExe(sb.mockBin);
+          await compileMockClaudeExe(sb.mockBin);
         }
 
-        // Stage-only detects claude on PATH without executing it
-        const stageOnly = spawnSync(
+        const stageOnly = await runProcess(
           engine.bin,
           ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PLUGIN_PS1],
-          { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+          { env: sb.baseEnv, timeout: 60_000 },
         );
         expect(stageOnly.status, stageOnly.stderr || stageOnly.stdout).toBe(0);
         expect(stageOnly.stdout).toContain("Claude Code");
         expect(readClaudeLog(sb.claudeLog)).toEqual([]);
 
-        // Explicit -Register executes canonical marketplace add + plugin install
-        const reg = spawnSync(
+        const reg = await runProcess(
           engine.bin,
           [
             "-NoProfile",
@@ -561,7 +578,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
             "claude",
             "-Register",
           ],
-          { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+          { env: sb.baseEnv, timeout: 60_000 },
         );
         expect(reg.status, reg.stderr || reg.stdout).toBe(0);
         const marketplaceDir = join(sb.pluginHome, "marketplace");
@@ -570,12 +587,11 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
           { argv: ["plugin", "install", "skill-heaven@gaia-skill-heaven"] },
         ]);
 
-        // Generated uninstall.ps1 removes host registration and deletes pluginHome
         const uninstallPs1 = join(sb.pluginHome, "uninstall.ps1");
-        const unreg = spawnSync(
+        const unreg = await runProcess(
           engine.bin,
           ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", uninstallPs1],
-          { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+          { env: sb.baseEnv, timeout: 60_000 },
         );
         expect(unreg.status, unreg.stderr || unreg.stdout).toBe(0);
         expect(existsSync(sb.pluginHome)).toBe(false);
@@ -585,12 +601,11 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       }
     }, 180_000);
 
-    it("5. install.ps1 piped execution (irm | iex), claude.cmd auto-registration, idempotent update, door .cmd execution, and uninstall", () => {
+    it("5. install.ps1 piped execution (irm | iex), claude.cmd auto-registration, idempotent update, door .cmd execution, and uninstall", async () => {
       const sb = makeSandbox(`doors-full-${engine.id}`);
       writeMockClaudeCmd(sb.mockBin, "working");
 
-      // First install via piped irm | iex
-      const first = spawnSync(
+      const first = await runProcess(
         engine.bin,
         [
           "-NoProfile",
@@ -600,7 +615,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
           "-Command",
           `irm '${baseUrl}/install.ps1' | iex`,
         ],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 120_000 },
+        { env: sb.baseEnv, timeout: 120_000 },
       );
       expect(first.status, first.stderr || first.stdout).toBe(0);
       expect(first.stdout).toContain("[1/5] Checking prerequisites...");
@@ -616,13 +631,11 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(existsSync(join(sb.installHome, ".claude-marketplace-managed"))).toBe(true);
       expect(existsSync(join(sb.installHome, ".claude-plugin-managed"))).toBe(true);
 
-      // Execute generated claude-zero.cmd from $USER_BIN (whose target path has spaces and an apostrophe)
-      const doorPrint = spawnSync(
+      const doorPrint = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-Command", "& $env:__SH_DOOR --print"],
         {
           env: { ...sb.baseEnv, __SH_DOOR: join(sb.userBin, "claude-zero.cmd") },
-          encoding: "utf8",
           timeout: 30_000,
         },
       );
@@ -635,12 +648,11 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(firstCalls).toContain("plugin marketplace add https://github.com/gaia-research/gaia-skill-heaven.git");
       expect(firstCalls).toContain("plugin install --scope user skill-heaven@gaia-skill-heaven");
 
-      // Second install (idempotent update): must call marketplace update + plugin update
       writeFileSync(sb.claudeLog, "");
-      const second = spawnSync(
+      const second = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PS1],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 120_000 },
+        { env: sb.baseEnv, timeout: 120_000 },
       );
       expect(second.status, second.stderr || second.stdout).toBe(0);
       const secondCalls = readClaudeLog(sb.claudeLog).map((entry) => entry.argv.join(" "));
@@ -648,21 +660,19 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(secondCalls).toContain("plugin update skill-heaven@gaia-skill-heaven");
       expect(secondCalls).not.toContain("plugin install --scope user skill-heaven@gaia-skill-heaven");
 
-      // -Help on install.ps1
-      const help = spawnSync(
+      const help = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PS1, "-Help"],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 30_000 },
+        { env: sb.baseEnv, timeout: 30_000 },
       );
       expect(help.status, help.stderr).toBe(0);
       expect(help.stdout).toContain("Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex");
 
-      // -Uninstall cleans up doors, user-bin links, and managed Claude plugin/marketplace
       writeFileSync(sb.claudeLog, "");
-      const uninstall = spawnSync(
+      const uninstall = await runProcess(
         engine.bin,
         ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", INSTALL_PS1, "-Uninstall"],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 60_000 },
+        { env: sb.baseEnv, timeout: 60_000 },
       );
       expect(uninstall.status, uninstall.stderr || uninstall.stdout).toBe(0);
       expect(existsSync(sb.installHome)).toBe(false);
@@ -674,19 +684,17 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(uninstallCalls).toContain("plugin marketplace remove gaia-skill-heaven");
     }, 240_000);
 
-    it("6. install.ps1 handles broken claude binary (--version failure with stderr) and User PATH addition/removal cleanly", () => {
+    it("6. install.ps1 handles broken claude binary (--version failure with stderr) and User PATH addition/removal cleanly", async () => {
       const sb = makeSandbox(`doors-broken-claude-${engine.id}`);
       writeMockClaudeCmd(sb.mockBin, "broken");
 
-      // Omit userBin and binDir from PATH so the .path-managed User PATH branch is exercised;
-      // save and restore User Path around the test so runner state is never mutated.
       const envWithoutUserBin: NodeJS.ProcessEnv = {
         ...sb.baseEnv,
         Path: `${sb.mockBin};${process.env.Path ?? process.env.PATH ?? ""}`,
         PATH: `${sb.mockBin};${process.env.Path ?? process.env.PATH ?? ""}`,
       };
 
-      const run = spawnSync(
+      const run = await runProcess(
         engine.bin,
         [
           "-NoProfile",
@@ -709,7 +717,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
             "}",
           ].join("\n"),
         ],
-        { env: envWithoutUserBin, encoding: "utf8", timeout: 120_000 },
+        { env: envWithoutUserBin, timeout: 120_000 },
       );
       expect(run.status, run.stderr || run.stdout).toBe(0);
       expect(run.stdout).toContain("Claude Code binary detected, but 'claude --version' failed.");
