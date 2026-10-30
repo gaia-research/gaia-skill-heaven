@@ -188,11 +188,18 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
     writeFileSync(claudeLog, "");
     writeFileSync(claudeState, JSON.stringify({ marketplace: false, plugin: false }));
 
+    const npmCache =
+      process.env.NPM_CONFIG_CACHE ??
+      process.env.npm_config_cache ??
+      (process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, "npm-cache") : join(root, "npm-cache"));
+
     const baseEnv: NodeJS.ProcessEnv = {
       ...process.env,
       HOME: userProfile,
       USERPROFILE: userProfile,
       LOCALAPPDATA: localAppData,
+      NPM_CONFIG_CACHE: npmCache,
+      npm_config_cache: npmCache,
       SKILL_HEAVEN_HOME: installHome,
       SKILL_HEAVEN_PLUGIN_HOME: pluginHome,
       SKILL_HEAVEN_ARCHIVE_URL: `${baseUrl}/source.zip`,
@@ -289,7 +296,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
         "using System.Text;",
         "class Program {",
         "  static string Quote(string a) {",
-        "    return \"\\\"\" + a.Replace(\"\\\\\", \"\\\\\\\\\").Replace(\"\\\"\", \"\\\\\\\"\") + \"\\\"\";",
+        "    return \"\\\"\" + a.Replace(\"\\\"\", \"\\\\\\\"\") + \"\\\"\";",
         "  }",
         "  static int Main(string[] args) {",
         `    string node = ${JSON.stringify(process.execPath)};`,

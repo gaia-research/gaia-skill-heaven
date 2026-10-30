@@ -123,9 +123,11 @@ function Uninstall-All {
 
   if (Test-Path $PATH_MANAGED) {
     try {
+      $recordedBin = (Get-Content $PATH_MANAGED -ErrorAction SilentlyContinue | Select-Object -First 1)
+      if ($recordedBin) { $recordedBin = $recordedBin.Trim() }
       $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
       if ($userPath) {
-        $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $BIN_DIR }) -join ';'
+        $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $BIN_DIR -and $_ -ne $recordedBin }) -join ';'
         [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
       }
     } catch {}
@@ -300,10 +302,12 @@ if (Test-Path $userBinLinksFile) {
 $pathManagedFile = Join-Path $ROOT ".path-managed"
 if (Test-Path $pathManagedFile) {
   try {
+    $recordedBin = (Get-Content $pathManagedFile -ErrorAction SilentlyContinue | Select-Object -First 1)
+    if ($recordedBin) { $recordedBin = $recordedBin.Trim() }
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($userPath) {
       $binDir = Join-Path $ROOT "bin"
-      $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $binDir }) -join ';'
+      $remaining = ($userPath -split ';' | Where-Object { $_ -and $_ -ne $binDir -and $_ -ne $recordedBin }) -join ';'
       [Environment]::SetEnvironmentVariable("Path", $remaining, "User")
     }
   } catch {}
@@ -465,7 +469,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
         $newUserPath = if ($userPath) { "$BIN_DIR;$userPath" } else { $BIN_DIR }
         [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
         $env:Path = "$BIN_DIR;$env:Path"
-        New-Item -ItemType File -Force -Path (Join-Path $INSTALL_HOME ".path-managed") | Out-Null
+        Set-Content -Path (Join-Path $INSTALL_HOME ".path-managed") -Value $BIN_DIR -Encoding UTF8
         Say-Message "Added $BIN_DIR to User PATH."
       }
     } catch {
