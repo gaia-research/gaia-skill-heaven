@@ -113,7 +113,7 @@ function cleanGitEnv(emptyConfig: string): NodeJS.ProcessEnv {
 function gitRepository(path: string, emptyConfig: string, emptyHooks: string): void {
   const env = cleanGitEnv(emptyConfig);
   for (const args of [["init", "-q"], ["add", "--all"], ["-c", "commit.gpgsign=false", "-c", "user.name=Skill Heaven installer", "-c", "user.email=installer@skill-heaven.invalid", "commit", "--no-gpg-sign", "-qm", "Install Skill Heaven Agent Plugin"]]) {
-    const r = spawnSync("git", ["-c", `core.hooksPath=${emptyHooks}`, ...args], { cwd: path, env, encoding: "utf8" });
+    const r = spawnSync("git", ["-c", "core.longpaths=true", "-c", `core.hooksPath=${emptyHooks}`, ...args], { cwd: path, env, encoding: "utf8" });
     if (r.status !== 0) throw new Error("could not prepare the complete local plugin repository");
   }
 }

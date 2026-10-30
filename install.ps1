@@ -476,6 +476,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
   Say-Message "Uninstall everything this command added with:"
   Say-Message "  $INSTALL_HOME\uninstall.ps1"
   Say-Message "Install complete. Re-run the same one-liner to update idempotently."
+  $global:LASTEXITCODE = 0
 
 } finally {
   if (Test-Path $STAGE) {

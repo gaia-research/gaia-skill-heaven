@@ -510,7 +510,7 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(tracked.status, tracked.stderr).toBe(0);
 
       const hermesClone = join(sb.dir, "hermes-clone");
-      const cloneRun = spawnSync("git", ["clone", "--quiet", "--no-local", pluginDir, hermesClone], {
+      const cloneRun = spawnSync("git", ["-c", "core.longpaths=true", "clone", "--quiet", "--no-local", pluginDir, hermesClone], {
         env: cleanGitEnv,
         encoding: "utf8",
       });
@@ -611,9 +611,13 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
 
       // Execute generated claude-zero.cmd from $USER_BIN (whose target path has spaces and an apostrophe)
       const doorPrint = spawnSync(
-        "cmd.exe",
-        ["/d", "/s", "/c", `"${join(sb.userBin, "claude-zero.cmd")}" --print`],
-        { env: sb.baseEnv, encoding: "utf8", timeout: 30_000 },
+        engine.bin,
+        ["-NoProfile", "-NonInteractive", "-Command", "& $env:__SH_DOOR --print"],
+        {
+          env: { ...sb.baseEnv, __SH_DOOR: join(sb.userBin, "claude-zero.cmd") },
+          encoding: "utf8",
+          timeout: 30_000,
+        },
       );
       expect(doorPrint.status, doorPrint.stderr || doorPrint.stdout).toBe(0);
       const parsedPlan = JSON.parse(doorPrint.stdout) as { posture: string; command: string };

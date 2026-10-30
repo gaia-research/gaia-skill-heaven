@@ -2,8 +2,8 @@
 # helper as POSIX; no duplicated host registration/compatibility table.
 [CmdletBinding()]
 param(
-  [ValidateSet('core','full')][string]$Profile,
-  [ValidateSet('claude','pi','codex','hermes','grok','agy','other')][string]$Harness,
+  [Alias('Profile')][string]$InstallProfile,
+  [string]$Harness,
   [switch]$Register,
   [switch]$Uninstall,
   [switch]$PrintPath,
@@ -11,6 +11,12 @@ param(
   [switch]$Help
 )
 $ErrorActionPreference = 'Stop'
+if ($InstallProfile -and ($InstallProfile -notin @('core','full'))) {
+  throw "Profile must be 'core' or 'full' (got '$InstallProfile'). Nothing was installed."
+}
+if ($Harness -and ($Harness -notin @('claude','pi','codex','hermes','grok','agy','other'))) {
+  throw "Harness must be one of claude, pi, codex, hermes, grok, agy, other (got '$Harness'). Nothing was installed."
+}
 $defaultHome = if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'gaia-skill-heaven-agent-plugin' } else { Join-Path $HOME '.local/share/gaia-skill-heaven-agent-plugin' }
 $installHome = if ($env:SKILL_HEAVEN_PLUGIN_HOME) { $env:SKILL_HEAVEN_PLUGIN_HOME } else { $defaultHome }
 if ($Help) {
@@ -24,7 +30,7 @@ if ($Help) {
 }
 if ($PrintPath) { Write-Output ([IO.Path]::Combine($installHome, 'marketplace', 'plugins', 'skill-heaven')); return }
 $arguments = @('--home', $installHome)
-if ($Profile) { $arguments += @('--profile', $Profile) }
+if ($InstallProfile) { $arguments += @('--profile', $InstallProfile) }
 if ($Harness) { $arguments += @('--harness', $Harness) }
 if ($Register) { $arguments += '--register' }
 if ($Quiet) { $arguments += '--quiet' }
