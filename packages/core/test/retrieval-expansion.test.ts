@@ -26,7 +26,7 @@ describe("the expansion surface", () => {
     const all = allProjectionSkills(snapshot);
     const awaiting = snapshot.awaitingClassification ?? [];
 
-    expect(all).toHaveLength(354);
+    expect(all).toHaveLength(400);
     expect(awaiting).toHaveLength(48);
     expect(awaiting.filter((skill) => expansions[skill.id]?.expansions.length > 0)).toHaveLength(48);
     expect(index.docs.filter((doc) => !doc.classified)).toHaveLength(48);
