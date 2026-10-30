@@ -5,7 +5,7 @@
 // disposable temp root, local HTTP server, and mock harness binaries — never
 // mutating real user configuration or contacting production endpoints.
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -15,8 +15,6 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { createServer, type Server } from "node:http";
-import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,7 +51,7 @@ const ENGINES = detectEngines();
 describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () => {
   let root: string;
   let archiveZip: string;
-  let server: Server;
+  let serverProc: ChildProcess;
   let baseUrl: string;
 
   beforeAll(async () => {
@@ -113,36 +111,61 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
     expect(zipRun.status, zipRun.stderr).toBe(0);
     expect(existsSync(archiveZip)).toBe(true);
 
-    server = createServer((req, res) => {
-      if (req.url === "/install.ps1") {
-        res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-        res.end(readFileSync(INSTALL_PS1));
-        return;
-      }
-      if (req.url === "/install-agent-plugin.ps1") {
-        res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-        res.end(readFileSync(INSTALL_PLUGIN_PS1));
-        return;
-      }
-      if (req.url === "/source.zip") {
-        res.writeHead(200, { "content-type": "application/zip" });
-        res.end(readFileSync(archiveZip));
-        return;
-      }
-      res.writeHead(404);
-      res.end("not found");
-    });
+    // Run the HTTP fixture server in an independent child process so synchronous
+    // spawnSync calls in the test runner never block the HTTP event loop.
+    const serverScript = join(root, "fixture-server.cjs");
+    writeFileSync(
+      serverScript,
+      [
+        "const http = require('node:http');",
+        "const fs = require('node:fs');",
+        `const installPs1 = fs.readFileSync(${JSON.stringify(INSTALL_PS1)});`,
+        `const installPluginPs1 = fs.readFileSync(${JSON.stringify(INSTALL_PLUGIN_PS1)});`,
+        `const archiveBytes = fs.readFileSync(${JSON.stringify(archiveZip)});`,
+        "const srv = http.createServer((req, res) => {",
+        "  if (req.url === '/install.ps1') {",
+        "    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });",
+        "    res.end(installPs1);",
+        "    return;",
+        "  }",
+        "  if (req.url === '/install-agent-plugin.ps1') {",
+        "    res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });",
+        "    res.end(installPluginPs1);",
+        "    return;",
+        "  }",
+        "  if (req.url === '/source.zip') {",
+        "    res.writeHead(200, { 'content-type': 'application/zip' });",
+        "    res.end(archiveBytes);",
+        "    return;",
+        "  }",
+        "  res.writeHead(404); res.end('not found');",
+        "});",
+        "srv.listen(0, '127.0.0.1', () => {",
+        "  process.stdout.write('PORT=' + srv.address().port + '\\n');",
+        "});",
+      ].join("\n"),
+    );
 
-    await new Promise<void>((resolveListen) => {
-      server.listen(0, "127.0.0.1", () => resolveListen());
+    baseUrl = await new Promise<string>((resolveUrl, rejectUrl) => {
+      serverProc = spawn(process.execPath, [serverScript], {
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let buf = "";
+      serverProc.stdout?.on("data", (chunk: Buffer) => {
+        buf += chunk.toString("utf8");
+        const m = buf.match(/PORT=(\d+)/);
+        if (m) resolveUrl(`http://127.0.0.1:${m[1]}`);
+      });
+      serverProc.on("error", rejectUrl);
+      serverProc.on("exit", (code) => {
+        if (!buf.includes("PORT=")) rejectUrl(new Error(`fixture server exited early (${code})`));
+      });
     });
-    const addr = server.address() as AddressInfo;
-    baseUrl = `http://127.0.0.1:${addr.port}`;
   }, 120_000);
 
   afterAll(async () => {
-    if (server) {
-      await new Promise<void>((resolveClose) => server.close(() => resolveClose()));
+    if (serverProc && !serverProc.killed) {
+      serverProc.kill();
     }
     if (root) {
       rmSync(root, { recursive: true, force: true });
@@ -451,11 +474,13 @@ describe.skipIf(!IS_WINDOWS)("native Windows PowerShell installers (#94)", () =>
       expect(run.status, run.stderr || run.stdout).toBe(0);
 
       const pluginDir = join(sb.pluginHome, "marketplace", "plugins", "skill-heaven");
+      const emptyGitConfig = join(sb.dir, "empty.gitconfig");
+      writeFileSync(emptyGitConfig, "");
       const cleanGitEnv: NodeJS.ProcessEnv = {
         ...process.env,
         GIT_CONFIG_NOSYSTEM: "1",
-        GIT_CONFIG_GLOBAL: "NUL",
-        GIT_CONFIG_SYSTEM: "NUL",
+        GIT_CONFIG_GLOBAL: emptyGitConfig,
+        GIT_CONFIG_SYSTEM: emptyGitConfig,
       };
       for (const k of Object.keys(cleanGitEnv)) {
         if (k.startsWith("GIT_") && !["GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM"].includes(k)) {

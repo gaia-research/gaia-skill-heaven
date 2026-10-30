@@ -105,15 +105,15 @@ function finish(home: string, receipt: Receipt): void {
   receipt.registered = true; receipt.incomplete = false; delete receipt.transaction;
   saveReceipt(home, receipt);
 }
-function cleanGitEnv(): NodeJS.ProcessEnv {
+function cleanGitEnv(emptyConfig: string): NodeJS.ProcessEnv {
   const env = { ...process.env };
   for (const key of Object.keys(env)) if (key.startsWith("GIT_")) delete env[key];
-  return { ...env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_SYSTEM: process.platform === "win32" ? "NUL" : "/dev/null", GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null" };
+  return { ...env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_SYSTEM: emptyConfig, GIT_CONFIG_GLOBAL: emptyConfig };
 }
-function gitRepository(path: string): void {
-  const env = cleanGitEnv(); const nullDev = process.platform === "win32" ? "NUL" : "/dev/null";
+function gitRepository(path: string, emptyConfig: string, emptyHooks: string): void {
+  const env = cleanGitEnv(emptyConfig);
   for (const args of [["init", "-q"], ["add", "--all"], ["-c", "commit.gpgsign=false", "-c", "user.name=Skill Heaven installer", "-c", "user.email=installer@skill-heaven.invalid", "commit", "--no-gpg-sign", "-qm", "Install Skill Heaven Agent Plugin"]]) {
-    const r = spawnSync("git", ["-c", `core.hooksPath=${nullDev}`, ...args], { cwd: path, env, encoding: "utf8" });
+    const r = spawnSync("git", ["-c", `core.hooksPath=${emptyHooks}`, ...args], { cwd: path, env, encoding: "utf8" });
     if (r.status !== 0) throw new Error("could not prepare the complete local plugin repository");
   }
 }
@@ -231,8 +231,10 @@ export function install(o: Options): void {
     writeFileSync(join(next, "marketplace", ".claude-plugin", "marketplace.json"), JSON.stringify(market, null, 2) + "\n");
     // Commit the marketplace payload before nested repositories exist: local
     // marketplace clones need real files, not gitlinks to standalone pieces.
-    gitRepository(staged.marketplaceDir);
-    gitRepository(staged.pluginDir); if (profile === "full") gitRepository(staged.consoleDir);
+    const emptyConfig = join(work, "empty.gitconfig"); writeFileSync(emptyConfig, "");
+    const emptyHooks = join(work, "empty-hooks"); mkdirSync(emptyHooks, { recursive: true });
+    gitRepository(staged.marketplaceDir, emptyConfig, emptyHooks);
+    gitRepository(staged.pluginDir, emptyConfig, emptyHooks); if (profile === "full") gitRepository(staged.consoleDir, emptyConfig, emptyHooks);
     cpSync(join(source, "scripts", "install-profile.mjs"), join(next, "install-profile.mjs"));
     writeFileSync(join(next, MARKER), "skill-heaven/install@1\n"); uninstallScripts(next);
     const receipt: Receipt = { schema: "skill-heaven/install@1", profile, harness, registered: previous?.registered ?? false, incomplete: false };
