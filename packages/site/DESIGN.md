@@ -127,6 +127,55 @@ rewrites and glitches into existence on every switch. A persistent
 the seventh, crown rung — the word reads **SKILL ULTRA**, gold with a red
 edge, never "Skill Hell Ultra".
 
+### The room — Lucy Atmosphere (#200)
+
+The hero's band ground is no longer a flat fill: a browser-side atmosphere
+(`src/lucy-scene/atmosphere/`) paints the room around the figure, driven by the
+same `v.scene` that picks the figure and never by the figure itself. Lucy (today
+the static v5 masters, later the Rive rig) owns everything attached to her; the
+room owns light, distant glass, depth and its own transition. Contract and
+evidence: `docs/lucy/atmosphere/README.md`.
+
+- **Zero** — barely there: a bone bloom that breathes on a 12s clock, a soft
+  column, a horizon hairline with a breath of Zero cyan. No shards (canon).
+- **Heaven** — a prismatic **corona**: the spectrum as a ring of split light
+  orbiting behind her head, never a fill. Light falls (slow shafts) while the
+  distant glass rises, all planes at one shared angle: order, not symmetry.
+- **Hell** — Heaven's corona printed twice in the inverted prism (rust, umber,
+  olive) out of register and counter-spun; registration slips; the glass torn
+  into two groups on opposing vectors with a late rust ghost. No flames, no
+  smoke, no red applied by hand: its red is inverted cyan.
+- **Ultra** — she lights the room: a gold bloom that flares past rest on
+  arrival, a sparse crown of luminous glass fanned behind her head, fine gold
+  interference rings, and one slow sweep with a red leading edge.
+
+Rules: transform and opacity over static paint; no animated filter, backdrop
+or blend mode; the atmosphere is always behind the figure; nothing in it is
+interactive. The periodic Ultra "overdrive" full-screen flash is retired, so
+only a band change earns an impact frame. The flank CTA plates are feathered
+(`box-shadow` in the band ground at 90%) so they dissolve into the room
+instead of cutting rectangles through its light.
+
+### The entrance — the loading screen (Gateway)
+
+Before the hero, while the live figure downloads, a full-screen entrance holds
+the page (`src/lucy-scene/entrance/`). It is the hero's own halo: a 1.5px bone
+ring whose arc closes **by bytes**, its leading edge carrying the spectrum as
+four adjacent split-light stripes (never a gradient fill). Four ticks on the
+ring are the four worlds (west zero, north heaven, east hell, south ultra) and
+each lights in its document hue when that state becomes switchable. Inside the
+ring the diamond eye outline breathes on Zero's 12s clock; the wordmark waits
+under the rim in the hero's own Anton + Kalam treatment; the status line is
+mono at 11px, and every number on it is a real byte count. The exit is the
+impact frame (46ms, `steps(3)`, ≤8px shear, hard invert) and a cut. Nothing
+fades.
+
+Rules: the Skip plate (`SKIP · ENTER NOW → still figure`) is on screen from
+the first frame and is the first tab stop; it opens the page with the v5
+masters and no second figure ever shows. The copy never names the character.
+On a warm cache the entrance never paints. Owner's pick from the three-concept
+campaign of 2026-11-04 (`docs/evidence/loader-campaign/`, untracked).
+
 ## The instrument (`/instrument`) — the sampler
 
 **Thesis: a surface you operate, not one you watch.** Kept as a secondary

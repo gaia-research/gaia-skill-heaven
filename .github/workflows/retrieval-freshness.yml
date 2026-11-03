@@ -1,0 +1,39 @@
+name: Retrieval Index Freshness
+
+on:
+  schedule:
+    # Weekly read-only freshness check (Mondays at 06:00 UTC)
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+# Read-only repository contents; issues:write only to open or update the single
+# canonical tracking issue when index age exceeds STALE_AFTER_DAYS or upstream
+# skill drift is detected (#216). Never commits or publishes index updates.
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: retrieval-freshness
+  cancel-in-progress: false
+
+jobs:
+  check-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Evaluate retrieval index freshness and reconcile tracking issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx tsx packages/core/scripts/check-index-freshness.ts \
+            --reconcile-issue \
+            --apply-issue \
+            --repo "${{ github.repository }}"
+      - name: Verify repository remains unmodified (read-only guarantee)
+        run: git diff --exit-code

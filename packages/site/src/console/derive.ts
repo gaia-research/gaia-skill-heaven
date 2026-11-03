@@ -68,11 +68,13 @@ export function lensActions(event: SummonEvent): LensAction[] {
   return ['inspect', 'dismiss']
 }
 
-/** What Summon would pre-fill. A human submits it; the UI never does. */
+/** What Summon would pre-fill. A human submits it; the UI never does. The console
+ * fills the plugin-qualified spelling: Claude Code 2.1.294 refuses a bare
+ * `/summon` that resolves to the portable skill (PR #187). */
 export function summonPrefill(event: SummonEvent): string | null {
   if (event.kind !== 'previewed' || event.skills.length !== 1) return null
   const name = sanitizeDisplay(event.skills[0]!.name, 40)
-  return name ? `/summon ${name}` : null
+  return name ? `/skill-heaven:summon ${name}` : null
 }
 
 /* ------------------------------------------------------------------ receipt (§5.3 Session) */
@@ -279,13 +281,13 @@ export interface ScopeRow {
 }
 
 const RUNG_COMMAND: Readonly<Record<Rung, string>> = {
-  zero: '/skill-zero',
-  low: '/skill-heaven low',
-  med: '/skill-heaven med',
-  high: '/skill-hell high',
-  xhigh: '/skill-hell xhigh',
-  max: '/skill-hell max',
-  ultra: '/skill-ultra',
+  zero: '/skill-heaven:skill-zero',
+  low: '/skill-heaven:skill-heaven low',
+  med: '/skill-heaven:skill-heaven med',
+  high: '/skill-heaven:skill-hell high',
+  xhigh: '/skill-heaven:skill-hell xhigh',
+  max: '/skill-heaven:skill-hell max',
+  ultra: '/skill-heaven:skill-ultra',
 }
 
 export function commandForRung(rung: Rung): string {

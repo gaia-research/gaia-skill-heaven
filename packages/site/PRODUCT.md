@@ -86,8 +86,11 @@ client can load that directory. Agent Plugins standardizes the package, not one
 universal client-registration command, so the client owns its own registration,
 enablement, update, and cache behavior. The installer does not silently mutate
 any harness configuration. Other clients may load the same installed directory;
-the five pinned harness examples are compatibility evidence, not the support
-boundary.
+the six pinned harness examples are compatibility evidence, not the support
+boundary. Skill Heaven is one product; Core / Core + Console are installation profiles, not
+separate brands or a separately marketed CLI product. Core + Console does not install the
+optional, separately owned Gaia Ecosystem Desktop Mod, which has
+its own release acceptance and explicit consent.
 
 **Claude Code compatibility — tested marketplace flow.** Claude Code also
 accepts these two lines inside the harness, with no terminal:
@@ -117,23 +120,27 @@ irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 Then launch a door (`claude-zero` is the flagship). The script never installs a
 harness.
 
-**The front door is harness-first.** `/start` asks which harness the visitor
-uses and prints only that harness's path: its verification chip (Verified ·
+**The front door is harness-first, then profile-aware.** `/start` asks which harness the visitor uses, then offers two plugin profiles: Core (runtime only) and Core + Console (Core plus the independently removable console piece). Registration, update, profile-switch and removal commands come from the canonical `planProfile` / `planSwitch` plans; a blocked Core + Console profile stays blocked rather than silently degrading to Core. Staging the portable package alone registers nothing, and `/start` says so. The optional standalone launcher remains a separate route, not a third plugin profile. `/console` demonstrates the six shared semantic surfaces against harness-specific capability rows using fixtures only; it never reads a live session. It prints command-backed hosts as intentional terminal readouts, not as broken panes, and states Ultra controller unavailability. Generated report copies remain inside independently clonable packages; their source and compilation are shared, not separately maintained.
+
+`/start` prints only that harness's path: its verification chip (Verified ·
 Compatible · Partial · Unverified · Needs local probe), the exact commands the
 client accepted in a recorded probe, what changes on the machine, how to update
 and remove, and an honest state for "no harness yet". The data is one table,
 `HARNESS_PATHS` in `packages/status/src/compat.ts`; the installer's epilogue
-mirrors it and a test keeps them in step. Antigravity is **partial** (its own
-validator loads the commands but not the summon server) and gets no
-registration command until a logged-in probe passes.
+mirrors it and a test keeps them in step. Antigravity's Core plugin is **compatible on 1.3.1**: the accepted
+`mcp_config.json` shim loads the summon server, and the namespaced surfaces were
+live-observed with real HOME. Its Console runtime is **provisional/unverified** under PR #196's founder-approved
+**5 accepted / 1 provisional** release boundary: registration and installed assets
+are confirmed, but installed-carrier invocation, native Core preview and session
+binding are not accepted ([#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206)).
+Claude Code, Pi, Codex, Hermes and Grok are runtime accepted. This is not a sixth
+acceptance pass; package registration is not native Console invocation.
 
-**Optional — the console for Claude Code (preview).** `skill-heaven-console`
-is a second, optional plugin in the same marketplace: a status entry that sits
-beside the user's own (`$.ui.status`, never their statusLine), the Lens band,
-and the `/heaven` pane (Session · Scope · Flow · Trust). It observes; it never
-acts. It is built on Claude Code 2.1.293's early-access Mods API and stays
-labelled preview until a logged-in desktop session is probed. Design of record:
-`docs/CONTROL-PLANE.md`.
+**Optional — the console is the Core + Console profile's independent piece.** Its native
+projection differs by harness and is sourced from `HARNESS_PATHS.console`; Core + Console
+is unavailable where the contract says it is blocked. The site does not promise
+identical UI across clients. `/console` is an explicitly fixture-only showcase,
+not a live connection. Design of record: `docs/CONTROL-PLANE.md`.
 
 **`npx` is not an install path** and **`skill-heaven.dev` is deferred** — it has
 no DNS today, so no surface may print it. The site uses the host that actually

@@ -1,0 +1,8 @@
+{
+  "name": "skill-heaven-console",
+  "version": "0.1.0",
+  "type": "module",
+  "keywords": ["pi-package"],
+  "pi": { "extensions": ["./extensions/console.mjs"] },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": ">=1.1.0", "@earendil-works/pi-tui": ">=0.84.1" }
+}
