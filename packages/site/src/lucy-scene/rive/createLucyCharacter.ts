@@ -27,6 +27,7 @@ import riveWasmUrl from '@rive-app/webgl2/rive.wasm?url'
 import type { LucyCharacter } from '../LucyLive'
 import type { SceneState } from '../scene'
 import { LUCY_LIVE } from './lucyLiveManifest'
+import { createPredecoded, createPredecoder, type Predecoded } from './predecoded'
 
 RuntimeLoader.setWasmUrl(riveWasmUrl)
 
@@ -133,6 +134,8 @@ export function createLucyCharacter(
   const assets = new Map<string, ImageAsset>()      // referenced images, by name, once the file has loaded
   const buffers = new Map<string, Uint8Array>()     // sidecar bytes that arrived before the file loaded
   const bound = new Set<string>()                   // sidecars decoded and handed to the rig
+  const bitmaps = new Map<string, Promise<ImageBitmap | null>>() // off-thread decodes, started as bytes land
+  const predecoder = createPredecoder()
   const need = { core: new Map<SceneState, Set<string>>(), all: new Map<SceneState, Set<string>>() }
   for (const s of plan) {
     if (!need.all.has(s.state)) { need.all.set(s.state, new Set()); need.core.set(s.state, new Set()) }
@@ -163,6 +166,7 @@ export function createLucyCharacter(
 
   // ── decode queue: one image at a time, yielding to the frame when over budget
   const decodeQueue: Sidecar[] = []
+  let predecoded: Predecoded | null = null
   let draining = false
   const drain = async () => {
     if (draining) return
@@ -173,8 +177,20 @@ export function createLucyCharacter(
       const asset = assets.get(s.name), buf = buffers.get(s.name)
       if (!asset || !buf) continue
       try {
+        const before = predecoded?.mark()
         const image = await decodeImage(buf)
         if (destroyed) { image.unref(); break }
+        // The runtime would decode these pixels synchronously on the first
+        // frame that draws this state; hand it the worker's copy instead when
+        // it lands (predecoded.ts). Binding never waits for it.
+        const key = predecoded && before ? predecoded.track(before) : null
+        const pixels = bitmaps.get(s.name)
+        bitmaps.delete(s.name)
+        void pixels?.then((b) => {
+          if (!b) return
+          if (!destroyed && predecoded && key !== null) predecoded.supply(key, b)
+          else b.close()
+        })
         asset.setRenderImage(image)
         image.unref()
         buffers.delete(s.name)
@@ -202,7 +218,12 @@ export function createLucyCharacter(
       const key = `sidecar:${s.name}`
       const already = counted.get(key) ?? 0
       fetchWithProgress(s.url, abort.signal, loaded ? 'high' : 'low', (n) => { if (already === 0) addBytes(key, n); report() })
-        .then((buf) => { buffers.set(s.name, buf); tryBind(s) })
+        .then((buf) => {
+          if (destroyed) return
+          buffers.set(s.name, buf)
+          if (!bitmaps.has(s.name)) bitmaps.set(s.name, predecoder.decode(buf))
+          tryBind(s)
+        })
         .catch((e) => { if (!destroyed && !abort.signal.aborted) opts.onError(e) })
         .finally(() => { active--; pump() })
     }
@@ -240,6 +261,11 @@ export function createLucyCharacter(
         loaded = true
         r.resizeDrawingSurfaceToCanvas(Math.min(MAX_DPR, window.devicePixelRatio || 1))
         applyState()
+        RuntimeLoader.getInstance((rt) => {
+          if (!destroyed && !predecoded) predecoded = createPredecoded(rt, canvas)
+        })
+        // this runtime build keeps its images elsewhere: stop decoding for nothing
+        if (!predecoded) predecoder.destroy()
         // anything that landed before the file parsed binds now
         for (const s of plan) tryBind(s)
         // two frames so the first real draw has landed before the poster lets go
@@ -291,6 +317,11 @@ export function createLucyCharacter(
     destroy() {
       destroyed = true
       abort.abort()
+      predecoder.destroy()
+      for (const p of bitmaps.values()) void p.then((b) => b?.close())
+      bitmaps.clear()
+      predecoded?.destroy()
+      predecoded = null
       r?.cleanup()
       r = null
     },
