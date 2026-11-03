@@ -158,7 +158,7 @@ export function VariationHeroB({ assetSet }: VariationHeroProps) {
         style={{
           // See VariationHeroA: a full-viewport mix-blend-mode layer costs a
           // blend group every frame even at opacity 0. Only paint it while a
-          // glitch/overdrive pulse is actually running.
+          // glitch pulse is actually running.
           display: v.oScan ? 'block' : 'none',
           opacity: v.oScan,
           background: `repeating-linear-gradient(to bottom,${v.fg} 0 2px,transparent 2px 7px)`,

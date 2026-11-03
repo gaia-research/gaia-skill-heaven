@@ -75,9 +75,9 @@ says to preserve it. This lane finishes it and then stops growing.
 
 ### Carried forward
 
-The improved offline index (326 skills including 52 unclassified Named Skills) ·
+The improved offline index (400 skills in the `v8.29.1` refresh, including 48 unclassified Named Skills; 326 in the initial extraction) ·
 build-time expansion · BM25F ranker with exact-name fast path · explicit refusal
-and `noMatch` below the calibrated floor (current artifact FLOOR = 27.8563;
+and `noMatch` below the calibrated floor (current artifact FLOOR = 27.9867;
 historical stages are reconciled in `EVIDENCE.md`) · reproducible evaluation ·
 offline-by-construction · freshness and coverage tooling · the negative findings
 (dense retrieval dropped, round-trip filter rejected, coverage split demotion) ·
@@ -99,7 +99,7 @@ Arbor data or a new skill catalogue.
 | R1 | Consume an upstream installability determination instead of URL-shape heuristics | SPEC §3.5, Q5. Largest single miss class in the current evaluation |
 | R2 | Replace the coverage-sensitive absolute admission floor with a scale-free criterion | SPEC Q6. The present floor moves when corpus coverage moves, which makes its calibration perishable |
 | R3 | Human review of the gold labels | SPEC Q7. Until then, only the *delta between systems* is load-bearing |
-| R4 | Rebuild against current Tree corpus (pinned v8.4.1) | Controlled update from Tree revision `abf41d304f35fa27bbd8e32be5f6d7d880d6b232`; source workflow, digest, and builder provenance are committed with the snapshot. |
+| R4 | Rebuild against current Tree corpus (pinned v8.29.1; initially v8.4.1) | Controlled update from Tree revision `dc07528884a759dbd3668d4a0007469265ab396f` (succeeding `v8.4.1` `abf41d304f35fa27bbd8e32be5f6d7d880d6b232`); source workflow, digest, builder provenance, recalibrated floor (`27.9867`), and weekly read-only freshness monitor (`.github/workflows/retrieval-freshness.yml`) are committed. |
 | R5 | Name the retrieval artifact | **Resolved:** public name is **retrieval index**; HH Index remains measured behavioral evidence. Internal `gaia.skill-index/v2` / `skill-index.json` compatibility names stay. |
 
 ### Kill criterion

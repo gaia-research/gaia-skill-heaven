@@ -1,0 +1,6 @@
+{
+  "name": "skill-heaven-console",
+  "displayName": "Skill Heaven Console (preview)",
+  "version": "0.1.0",
+  "description": "Read-only Skill Heaven console; exact conversation binding required"
+}

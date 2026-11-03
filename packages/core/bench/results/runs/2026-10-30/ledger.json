@@ -1,0 +1,2208 @@
+{
+  "schema": "gaia.bench-ledger/v1",
+  "ranAt": "2026-10-30T16:13:49.511Z",
+  "index": {
+    "schema": "gaia.skill-index/v2",
+    "generatedAt": "2026-10-30T16:08:17.792Z",
+    "sourceDigest": "sha256:6e6d6513428c6f7654e2098712cd4939c2a4cc7c5c3ccfb3394b984a75b55b10",
+    "builder": {
+      "version": "skill-index-builder/0.1.0",
+      "expansion": "generated"
+    },
+    "docs": 400,
+    "expandedDocs": 400,
+    "expansionCoverage": 1
+  },
+  "builderVersion": "skill-index-builder/0.1.0",
+  "goldSet": {
+    "queries": 100,
+    "ambiguous": 6
+  },
+  "unanswerableSet": {
+    "queries": 20
+  },
+  "adjudication": {
+    "provenance": {
+      "schema": "gaia.skill-heaven-bench-adjudication-provenance/v1",
+      "overlay": "adjudication.v1.jsonl",
+      "createdAt": "2026-09-29T04:35:00Z",
+      "pins": {
+        "goldBlob": "497b204b5725eace27ab3397cde0061bba048c1d",
+        "overlaySha256": "1bd9bee36e8d88d3c657d65d9b42cc6d677b509455292855c8083591f44afc69",
+        "unanswerableBlob": "9313f6cf984b3ccc32a60e68b9a829976109e07a",
+        "heavenRev": "b5bfafb2782a11d6deeb2b89896ad42df82c0dae"
+      },
+      "historicalLabelsModified": false,
+      "sourceSnapshot": {
+        "schema": "gaia.skill-heaven-r3-label-review-snapshot/v1",
+        "lockedAt": "2026-09-17T00:00:00Z",
+        "sha256": "b55c2e23062baabb2c8ce939a5c53026f07df4173b9ed0ae015ffbf3809d7dae",
+        "path": "source/locked-2026-09-17.json",
+        "origin": "https://claude.ai/artifact/4gm6gdxqvB92Ww9Ewu43sk (db reviews/*)",
+        "note": "The owner's review worksheet artifact is no longer reachable at its origin URL. The marks survive in the committed snapshot at source/locked-2026-09-17.json, which is preserved verbatim, so the human review is no longer a single unrecoverable local file."
+      },
+      "verdictMeaning": {
+        "gold": {
+          "ambiguous": "unsure / partly",
+          "suitable": "labeled skill meets the need",
+          "unsuitable": "does not"
+        },
+        "unanswerable": {
+          "ambiguous": "unsure",
+          "suitable": "label correct: nothing in the corpus fits",
+          "unsuitable": "label wrong: a skill fits"
+        }
+      },
+      "stateMapping": {
+        "reviewed": "human confirmed the machine label: for gold, the labelled skill meets the need; for unanswerable, nothing in the corpus fits",
+        "corrected": "human rejected the machine label. betterSkillId may name an alternative, but is not always given",
+        "uncertain": "human was unsure. NEVER counted as correct and NEVER counted as a miss. Excluded from every absolute label-derived metric.",
+        "unreviewed": "no human adjudication exists. Derived as the absence of a row; never written into the overlay."
+      },
+      "counts": {
+        "gold": {
+          "total": 100,
+          "reviewed": 30,
+          "corrected": 6,
+          "uncertain": 8,
+          "unreviewed": 56
+        },
+        "unanswerable": {
+          "total": 20,
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "claimLimits": [
+        "Absolute label-derived metrics may only be stated over the adjudicated subset. The 100-label historical set is machine-authored and is retained as evidence, not as ground truth.",
+        "The full 100-label set remains valid for paired same-input deltas between systems, with the machine-label provenance disclosed alongside the number.",
+        "This overlay contains no threshold, no floor, and no admission policy. Nothing in retrieval reads it."
+      ]
+    },
+    "claimLimits": [
+      "Absolute label-derived metrics may only be stated over the adjudicated subset. The 100-label historical set is machine-authored and is retained as evidence, not as ground truth.",
+      "The full 100-label set remains valid for paired same-input deltas between systems, with the machine-label provenance disclosed alongside the number.",
+      "This overlay contains no threshold, no floor, and no admission policy. Nothing in retrieval reads it."
+    ]
+  },
+  "systems": [
+    {
+      "system": "baseline-shipped",
+      "label": "scoreMatch as shipped (installable + MIN_RELEVANCE + BAND)",
+      "reachableTargets": 67,
+      "mrrOnReachable": 0.0495,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 95,
+          "mrr": 0.0349
+        },
+        "unexpandedTargets": {
+          "n": 5,
+          "mrr": 0
+        }
+      },
+      "mrr": 0.0332,
+      "adjudicated": {
+        "reviewed": {
+          "n": 30,
+          "mrr": 0.0056,
+          "recallAt5": 0
+        },
+        "resolved": {
+          "n": 30,
+          "mrr": 0.0056,
+          "recallAt5": 0
+        },
+        "uncertain": 8,
+        "unreviewed": 56,
+        "corrected": 6,
+        "namedAlternativeUnresolvable": 7,
+        "unanswerable": {
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "mrrExcludingAmbiguous": 0.0326,
+      "recallAt5": 0.04,
+      "refusalRate": 0,
+      "falseRefusalRate": 0,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 98.5,
+          "topId": "gooseworks/browser-automation-notte"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 148.5,
+          "topId": "addy-osmani/observability-and-instrumentation"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 86,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 82,
+          "topId": "yonatangross/rag-retrieval"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 84.5,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 77.5,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 64,
+          "topId": "addy-osmani/observability-and-instrumentation"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54,
+          "topId": "garrytan/design-consultation"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 108.5,
+          "topId": "mattpocock/grill-with-docs"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 39,
+          "topId": "aplaceforallmystuff/log-to-daily"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54.5,
+          "topId": "mattpocock/write-a-skill"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 44.5,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 55.5,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 93.5,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 63.5,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 140,
+          "topId": "garrytan/plan-eng-review"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 86,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 113,
+          "topId": "addy-osmani/api-and-interface-design"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 50.5,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 132,
+          "topId": "addy-osmani/deprecation-and-migration"
+        }
+      ]
+    },
+    {
+      "system": "baseline-raw",
+      "label": "scoreMatch, ungated — ordering ability alone",
+      "reachableTargets": 95,
+      "mrrOnReachable": 0.0469,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 95,
+          "mrr": 0.0469
+        },
+        "unexpandedTargets": {
+          "n": 5,
+          "mrr": 0
+        }
+      },
+      "mrr": 0.0445,
+      "adjudicated": {
+        "reviewed": {
+          "n": 30,
+          "mrr": 0.0056,
+          "recallAt5": 0
+        },
+        "resolved": {
+          "n": 30,
+          "mrr": 0.0056,
+          "recallAt5": 0
+        },
+        "uncertain": 8,
+        "unreviewed": 56,
+        "corrected": 6,
+        "namedAlternativeUnresolvable": 7,
+        "unanswerable": {
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "mrrExcludingAmbiguous": 0.045,
+      "recallAt5": 0.04,
+      "refusalRate": 0,
+      "falseRefusalRate": 0,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 98.5,
+          "topId": "gooseworks/browser-automation-notte"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 148.5,
+          "topId": "addy-osmani/observability-and-instrumentation"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 86,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 82,
+          "topId": "yonatangross/rag-retrieval"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 84.5,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 77.5,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 68,
+          "topId": "nousresearch/feed-monitoring"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 56.5,
+          "topId": "gsd-build/get-shit-done"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 108.5,
+          "topId": "mattpocock/grill-with-docs"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 39,
+          "topId": "aplaceforallmystuff/log-to-daily"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54.5,
+          "topId": "mattpocock/write-a-skill"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 44.5,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 55.5,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 93.5,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 63.5,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 140,
+          "topId": "garrytan/plan-eng-review"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 106,
+          "topId": "ruvnet/v3-memory-unification"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 113,
+          "topId": "addy-osmani/api-and-interface-design"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 50.5,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 132,
+          "topId": "addy-osmani/deprecation-and-migration"
+        }
+      ]
+    },
+    {
+      "system": "bm25f",
+      "label": "BM25F over the committed index + exact-name fast path (no floor)",
+      "reachableTargets": 95,
+      "mrrOnReachable": 0.6083,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 95,
+          "mrr": 0.6083
+        },
+        "unexpandedTargets": {
+          "n": 5,
+          "mrr": 0
+        }
+      },
+      "mrr": 0.5779,
+      "adjudicated": {
+        "reviewed": {
+          "n": 30,
+          "mrr": 0.5506,
+          "recallAt5": 0.6333
+        },
+        "resolved": {
+          "n": 30,
+          "mrr": 0.5506,
+          "recallAt5": 0.6333
+        },
+        "uncertain": 8,
+        "unreviewed": 56,
+        "corrected": 6,
+        "namedAlternativeUnresolvable": 7,
+        "unanswerable": {
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "mrrExcludingAmbiguous": 0.5882,
+      "recallAt5": 0.72,
+      "refusalRate": 0,
+      "falseRefusalRate": 0.02,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 36.101394812306516,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 24.977166633059042,
+          "topId": "obra/systematic-debugging"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 18.5777879342285,
+          "topId": "mksglu/context-mode"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 22.831283292452078,
+          "topId": "addy-osmani/code-review-and-quality"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 11.935968572113206,
+          "topId": "intelligentcode-ai/devops-engineer"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 13.193687283785625,
+          "topId": "bradautomates/watch"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 32.9586371919689,
+          "topId": "ruvnet/v3-performance-optimization"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 29.168160926470765,
+          "topId": "remotion-dev/remotion-saas"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 24.11408432672383,
+          "topId": "huggingface/hf-cli"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 30.0312005494621,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 21.134813929272898,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 14.834515177025413,
+          "topId": "garrytan/retro"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 22.565556999665002,
+          "topId": "garrytan/plan-devex-review"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 19.15761472080703,
+          "topId": "garrytan/scrape"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 16.55820899025947,
+          "topId": "favorchurch/speak-like-favor"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 39.052126935471236,
+          "topId": "mattpocock/wayfinder"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 21.879955344365076,
+          "topId": "ruvnet/v3-performance-optimization"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 23.40678335705548,
+          "topId": "mbtiongson1/gaia-meta-audit"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 31.537873991016248,
+          "topId": "intelligentcode-ai/user-tester"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 19.161921437131042,
+          "topId": "google-deepmind/uv"
+        }
+      ]
+    },
+    {
+      "system": "bm25f-no-expansion",
+      "label": "BM25F over the same index with expansions stripped",
+      "reachableTargets": 95,
+      "mrrOnReachable": 0.2054,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 95,
+          "mrr": 0.2054
+        },
+        "unexpandedTargets": {
+          "n": 5,
+          "mrr": 0
+        }
+      },
+      "mrr": 0.1951,
+      "adjudicated": {
+        "reviewed": {
+          "n": 30,
+          "mrr": 0.19,
+          "recallAt5": 0.3
+        },
+        "resolved": {
+          "n": 30,
+          "mrr": 0.19,
+          "recallAt5": 0.3
+        },
+        "uncertain": 8,
+        "unreviewed": 56,
+        "corrected": 6,
+        "namedAlternativeUnresolvable": 7,
+        "unanswerable": {
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "mrrExcludingAmbiguous": 0.1825,
+      "recallAt5": 0.28,
+      "refusalRate": 0,
+      "falseRefusalRate": 0.02,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 23.73828841820298,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 14.587903447753876,
+          "topId": "obra/systematic-debugging"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 17.283090637357834,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 23.64317382977326,
+          "topId": "dietrichgebert/ponytail"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 13.509060125801417,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 15.208409211276063,
+          "topId": "heygen-com/hyperframes-audio"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 17.030088199748654,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 10.237245229385561,
+          "topId": "google-deepmind/alphagenome-single-variant-analysis"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 16.51945654986242,
+          "topId": "k-dense-ai/transformers"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 22.738998817899947,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 10.885447106015194,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 11.347153450407935,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 15.220499622154104,
+          "topId": "citrolabs/ego-browser"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 19.453859382543484,
+          "topId": "leonxlnx/imagegen-frontend-mobile"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 15.163255766997825,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 27.81654858078313,
+          "topId": "heygen-com/pr-to-video"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 17.708844589329928,
+          "topId": "addy-osmani/observability-and-instrumentation"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 13.132071263815652,
+          "topId": "heygen-com/remotion-to-hyperframes"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 14.637351179533955,
+          "topId": "addy-osmani/constraint-driven-development"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 26.17334165232205,
+          "topId": "google-deepmind/uv"
+        }
+      ]
+    },
+    {
+      "system": "bm25f-decide",
+      "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
+      "reachableTargets": 78,
+      "mrrOnReachable": 0.5683,
+      "coverageSplit": {
+        "expandedTargets": {
+          "n": 95,
+          "mrr": 0.4666
+        },
+        "unexpandedTargets": {
+          "n": 5,
+          "mrr": 0
+        }
+      },
+      "mrr": 0.4432,
+      "adjudicated": {
+        "reviewed": {
+          "n": 30,
+          "mrr": 0.4661,
+          "recallAt5": 0.5667
+        },
+        "resolved": {
+          "n": 30,
+          "mrr": 0.4661,
+          "recallAt5": 0.5667
+        },
+        "uncertain": 8,
+        "unreviewed": 56,
+        "corrected": 6,
+        "namedAlternativeUnresolvable": 7,
+        "unanswerable": {
+          "reviewed": 6,
+          "corrected": 0,
+          "uncertain": 5,
+          "unreviewed": 9
+        }
+      },
+      "mrrExcludingAmbiguous": 0.4556,
+      "recallAt5": 0.55,
+      "refusalRate": 0.8,
+      "falseRefusalRate": 0.16,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 36.101394812306516,
+          "topId": "addy-osmani/deprecation-and-migration"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 30.0312005494621,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 39.052126935471236,
+          "topId": "mattpocock/wayfinder"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 31.537873991016248,
+          "topId": "intelligentcode-ai/user-tester"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "system": "baseline-raw",
+      "against": "baseline-shipped",
+      "delta": 0.011361156537281134,
+      "ciLow": -0.003993313162082826,
+      "ciHigh": 0.0344368895706557,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": false
+    },
+    {
+      "system": "bm25f",
+      "against": "baseline-shipped",
+      "delta": 0.5447530772134556,
+      "ciLow": 0.46084984063327505,
+      "ciHigh": 0.6250579379937793,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f-no-expansion",
+      "against": "baseline-shipped",
+      "delta": 0.16197228838803684,
+      "ciLow": 0.10192486013345213,
+      "ciHigh": 0.2258083371312127,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f-decide",
+      "against": "baseline-shipped",
+      "delta": 0.41008440598454193,
+      "ciLow": 0.323995302789123,
+      "ciHigh": 0.4964733390430168,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f",
+      "against": "bm25f-no-expansion",
+      "delta": 0.38278078882541866,
+      "ciLow": 0.30126875067875064,
+      "ciHigh": 0.46439110683230295,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    }
+  ],
+  "floorSweep": {
+    "exactBypass": 0,
+    "answerableTopScores": [
+      51.3107,
+      55.3972,
+      39.5184,
+      30.3954,
+      27.1844,
+      42.5314,
+      44.9144,
+      45.4981,
+      44.0189,
+      57.2504,
+      34.2632,
+      32.8443,
+      58.997,
+      45.8992,
+      38.6687,
+      31.0926,
+      50.3166,
+      41.2518,
+      59.2681,
+      25.5699,
+      70.8494,
+      39.4425,
+      50.7391,
+      37.2547,
+      64.609,
+      55.6758,
+      56.1307,
+      53.8159,
+      35.5545,
+      43.025,
+      68.5291,
+      43.6843,
+      35.7231,
+      27.3926,
+      48.8051,
+      51.5001,
+      33.0011,
+      42.6962,
+      47.9241,
+      31.1834,
+      50.1536,
+      57.1921,
+      55.0672,
+      27.0113,
+      40.752,
+      77.6236,
+      19.8671,
+      21.7696,
+      31.9978,
+      27.8503,
+      55.9666,
+      64.3159,
+      47.8042,
+      69.5388,
+      0,
+      41.5414,
+      41.997,
+      31.8635,
+      39.9901,
+      0,
+      29.1149,
+      44.2233,
+      43.4152,
+      49.8542,
+      39.2806,
+      45.9743,
+      61.1309,
+      92.9789,
+      42.6552,
+      54.4974,
+      46.7934,
+      39.4427,
+      64.0583,
+      49.9636,
+      54.1356,
+      49.1816,
+      30.2648,
+      42.7663,
+      52.1592,
+      21.6038,
+      30.9432,
+      34.4064,
+      34.0832,
+      42.4659,
+      54.0345,
+      40.9669,
+      56.9047,
+      55.5592,
+      75.562,
+      28,
+      40.2396,
+      61.325,
+      46.3881,
+      42.7157,
+      41.7815,
+      58.2561,
+      39.0984,
+      63.3401,
+      28.0936,
+      25.0511
+    ],
+    "unanswerableTopScores": [
+      36.1014,
+      24.9772,
+      18.5778,
+      22.8313,
+      11.936,
+      13.1937,
+      32.9586,
+      29.1682,
+      24.1141,
+      30.0312,
+      21.1348,
+      14.8345,
+      22.5656,
+      19.1576,
+      16.5582,
+      39.0521,
+      21.88,
+      23.4068,
+      31.5379,
+      19.1619
+    ],
+    "points": [
+      {
+        "floor": 0,
+        "answerableAdmitted": 1,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 0.4649,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 0.9298,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 1.3947,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 1.8596,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 2.3245,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 2.7894,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 3.2543,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 3.7192,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 4.1841,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 4.6489,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 5.1138,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 5.5787,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 6.0436,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 6.5085,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 6.9734,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 7.4383,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 7.9032,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 8.3681,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 8.833,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 9.2979,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 9.7628,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 10.2277,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 10.6926,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 11.1575,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 11.6224,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0
+      },
+      {
+        "floor": 12.0873,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 12.5522,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 13.0171,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.05
+      },
+      {
+        "floor": 13.4819,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 13.9468,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 14.4117,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.1
+      },
+      {
+        "floor": 14.8766,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 15.3415,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 15.8064,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 16.2713,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.15
+      },
+      {
+        "floor": 16.7362,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.2
+      },
+      {
+        "floor": 17.2011,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.2
+      },
+      {
+        "floor": 17.666,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.2
+      },
+      {
+        "floor": 18.1309,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.2
+      },
+      {
+        "floor": 18.5958,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.25
+      },
+      {
+        "floor": 19.0607,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.25
+      },
+      {
+        "floor": 19.5256,
+        "answerableAdmitted": 0.98,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 19.9905,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 20.4554,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 20.9203,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.35
+      },
+      {
+        "floor": 21.3852,
+        "answerableAdmitted": 0.97,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 21.8501,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.4
+      },
+      {
+        "floor": 22.3149,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.45
+      },
+      {
+        "floor": 22.7798,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.5
+      },
+      {
+        "floor": 23.2447,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.55
+      },
+      {
+        "floor": 23.7096,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.6
+      },
+      {
+        "floor": 24.1745,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.65
+      },
+      {
+        "floor": 24.6394,
+        "answerableAdmitted": 0.95,
+        "unanswerableRejected": 0.65
+      },
+      {
+        "floor": 25.1043,
+        "answerableAdmitted": 0.94,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 25.5692,
+        "answerableAdmitted": 0.94,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 26.0341,
+        "answerableAdmitted": 0.93,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 26.499,
+        "answerableAdmitted": 0.93,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 26.9639,
+        "answerableAdmitted": 0.93,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 27.4288,
+        "answerableAdmitted": 0.9,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 27.8937,
+        "answerableAdmitted": 0.89,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 28.3586,
+        "answerableAdmitted": 0.87,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 28.8235,
+        "answerableAdmitted": 0.87,
+        "unanswerableRejected": 0.7
+      },
+      {
+        "floor": 29.2884,
+        "answerableAdmitted": 0.86,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 29.7533,
+        "answerableAdmitted": 0.86,
+        "unanswerableRejected": 0.75
+      },
+      {
+        "floor": 30.2182,
+        "answerableAdmitted": 0.86,
+        "unanswerableRejected": 0.8
+      },
+      {
+        "floor": 30.6831,
+        "answerableAdmitted": 0.84,
+        "unanswerableRejected": 0.8
+      },
+      {
+        "floor": 31.1479,
+        "answerableAdmitted": 0.82,
+        "unanswerableRejected": 0.8
+      },
+      {
+        "floor": 31.6128,
+        "answerableAdmitted": 0.81,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 32.0777,
+        "answerableAdmitted": 0.79,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 32.5426,
+        "answerableAdmitted": 0.79,
+        "unanswerableRejected": 0.85
+      },
+      {
+        "floor": 33.0075,
+        "answerableAdmitted": 0.77,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 33.4724,
+        "answerableAdmitted": 0.77,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 33.9373,
+        "answerableAdmitted": 0.77,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 34.4022,
+        "answerableAdmitted": 0.75,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 34.8671,
+        "answerableAdmitted": 0.74,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 35.332,
+        "answerableAdmitted": 0.74,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 35.7969,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.9
+      },
+      {
+        "floor": 36.2618,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 36.7267,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 37.1916,
+        "answerableAdmitted": 0.72,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 37.6565,
+        "answerableAdmitted": 0.71,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 38.1214,
+        "answerableAdmitted": 0.71,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 38.5863,
+        "answerableAdmitted": 0.71,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 39.0512,
+        "answerableAdmitted": 0.7,
+        "unanswerableRejected": 0.95
+      },
+      {
+        "floor": 39.5161,
+        "answerableAdmitted": 0.66,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 39.9809,
+        "answerableAdmitted": 0.65,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 40.4458,
+        "answerableAdmitted": 0.63,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 40.9107,
+        "answerableAdmitted": 0.62,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 41.3756,
+        "answerableAdmitted": 0.6,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 41.8405,
+        "answerableAdmitted": 0.58,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 42.3054,
+        "answerableAdmitted": 0.57,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 42.7703,
+        "answerableAdmitted": 0.51,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 43.2352,
+        "answerableAdmitted": 0.5,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 43.7001,
+        "answerableAdmitted": 0.48,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 44.165,
+        "answerableAdmitted": 0.47,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 44.6299,
+        "answerableAdmitted": 0.46,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 45.0948,
+        "answerableAdmitted": 0.45,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 45.5597,
+        "answerableAdmitted": 0.44,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.0246,
+        "answerableAdmitted": 0.42,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.4895,
+        "answerableAdmitted": 0.41,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 46.9544,
+        "answerableAdmitted": 0.4,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 47.4193,
+        "answerableAdmitted": 0.4,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 47.8842,
+        "answerableAdmitted": 0.39,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 48.3491,
+        "answerableAdmitted": 0.38,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 48.8139,
+        "answerableAdmitted": 0.37,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 49.2788,
+        "answerableAdmitted": 0.36,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 49.7437,
+        "answerableAdmitted": 0.36,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 50.2086,
+        "answerableAdmitted": 0.33,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 50.6735,
+        "answerableAdmitted": 0.32,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.1384,
+        "answerableAdmitted": 0.31,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 51.6033,
+        "answerableAdmitted": 0.29,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.0682,
+        "answerableAdmitted": 0.29,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.5331,
+        "answerableAdmitted": 0.28,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 52.998,
+        "answerableAdmitted": 0.28,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 53.4629,
+        "answerableAdmitted": 0.28,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 53.9278,
+        "answerableAdmitted": 0.27,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 54.3927,
+        "answerableAdmitted": 0.25,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 54.8576,
+        "answerableAdmitted": 0.24,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.3225,
+        "answerableAdmitted": 0.23,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 55.7874,
+        "answerableAdmitted": 0.2,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 56.2523,
+        "answerableAdmitted": 0.18,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 56.7172,
+        "answerableAdmitted": 0.18,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.1821,
+        "answerableAdmitted": 0.17,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 57.6469,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 58.1118,
+        "answerableAdmitted": 0.15,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 58.5767,
+        "answerableAdmitted": 0.14,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.0416,
+        "answerableAdmitted": 0.13,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.5065,
+        "answerableAdmitted": 0.12,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 59.9714,
+        "answerableAdmitted": 0.12,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 60.4363,
+        "answerableAdmitted": 0.12,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 60.9012,
+        "answerableAdmitted": 0.12,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.3661,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 61.831,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 62.2959,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 62.7608,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 63.2257,
+        "answerableAdmitted": 0.1,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 63.6906,
+        "answerableAdmitted": 0.09,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 64.1555,
+        "answerableAdmitted": 0.08,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 64.6204,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.0853,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 65.5502,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.0151,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.4799,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 66.9448,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.4097,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 67.8746,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 68.3395,
+        "answerableAdmitted": 0.06,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 68.8044,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 69.2693,
+        "answerableAdmitted": 0.05,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 69.7342,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 70.1991,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 70.664,
+        "answerableAdmitted": 0.04,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 71.1289,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 71.5938,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.0587,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.5236,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 72.9885,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.4534,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 73.9183,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 74.3832,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 74.8481,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 75.3129,
+        "answerableAdmitted": 0.03,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 75.7778,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 76.2427,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 76.7076,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 77.1725,
+        "answerableAdmitted": 0.02,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 77.6374,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.1023,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 78.5672,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.0321,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.497,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 79.9619,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 80.4268,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 80.8917,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 81.3566,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 81.8215,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 82.2864,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 82.7513,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 83.2162,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 83.6811,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 84.1459,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 84.6108,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 85.0757,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 85.5406,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 86.0055,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 86.4704,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 86.9353,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 87.4002,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 87.8651,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 88.33,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 88.7949,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 89.2598,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 89.7247,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 90.1896,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 90.6545,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 91.1194,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 91.5843,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 92.0492,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 92.5141,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      },
+      {
+        "floor": 92.9789,
+        "answerableAdmitted": 0.01,
+        "unanswerableRejected": 1
+      }
+    ],
+    "recommended": {
+      "floor": 33.0075,
+      "answerableAdmitted": 0.77,
+      "unanswerableRejected": 0.9
+    }
+  }
+}

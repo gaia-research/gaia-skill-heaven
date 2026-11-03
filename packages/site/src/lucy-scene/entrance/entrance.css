@@ -1,0 +1,205 @@
+/* The entrance · Gateway. Tokens are the site's own (system.css / DESIGN.md).
+   Transform and opacity only while it runs; the one filter is the 46 ms
+   impact frame, which is the hero's own mechanic. */
+.sh-entrance {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--sh-void, #1b1a1c);
+  color: var(--sh-ink, #eeebe6);
+  --sh-entrance-ring-top: 41%;
+  --sh-entrance-ring: min(58vh, 78vw);
+}
+.sh-entrance__bloom {
+  position: absolute;
+  left: 50%;
+  top: var(--sh-entrance-ring-top);
+  width: min(120vh, 140vw);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgba(238, 235, 230, 0.07) 0, rgba(238, 235, 230, 0.025) 32%, transparent 62%);
+  animation: sh-entrance-breathe 12s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sh-entrance-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+.sh-entrance__ring {
+  position: absolute;
+  left: 50%;
+  top: var(--sh-entrance-ring-top);
+  width: var(--sh-entrance-ring);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sh-entrance.is-ready .sh-entrance__ring { transform: scale(1.04); }
+.sh-entrance__ring svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.sh-entrance__base { stroke: var(--sh-ink, #eeebe6); stroke-opacity: 0.2; stroke-width: 1.5; fill: none; transition: stroke-opacity 240ms linear; }
+.sh-entrance.is-ready .sh-entrance__base { stroke-opacity: 0.55; }
+.sh-entrance__arc { stroke: var(--sh-ink, #eeebe6); stroke-width: 1.5; fill: none; stroke-linecap: butt; transition: stroke-dashoffset 120ms linear; }
+.sh-entrance__tip { fill: none; stroke-width: 2.5; stroke-linecap: butt; transition: stroke-dashoffset 120ms linear; }
+.sh-entrance__diamond {
+  fill: none;
+  stroke: var(--sh-ink, #eeebe6);
+  stroke-opacity: 0.34;
+  stroke-width: 1.5;
+  transform-origin: 50% 50%;
+  animation: sh-entrance-dbreathe 12s ease-in-out infinite;
+}
+@keyframes sh-entrance-dbreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+.sh-entrance__diamond-x { stroke: var(--sh-ink, #eeebe6); stroke-opacity: 0.14; stroke-width: 1; fill: none; }
+.sh-entrance__tick { fill: none; stroke: var(--sh-ink, #eeebe6); stroke-opacity: 0.25; stroke-width: 2; transition: stroke 200ms linear, stroke-opacity 200ms linear; }
+.sh-entrance__tick.is-lit { stroke-opacity: 1; }
+.sh-entrance__tick.is-lit[data-band='zero'] { stroke: var(--sh-cyan, #5fc2d6); }
+.sh-entrance__tick.is-lit[data-band='heaven'] { stroke: var(--sh-blue, #6f96d8); }
+.sh-entrance__tick.is-lit[data-band='hell'] { stroke: var(--sh-rose, #e094c8); }
+.sh-entrance__tick.is-lit[data-band='ultra'] { stroke: var(--sh-ultra, #d9b25c); }
+.sh-entrance__ticklabel {
+  font: 500 9px var(--sh-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  fill: var(--sh-ink-dim, #9a9691);
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+.sh-entrance__tick.is-lit + .sh-entrance__ticklabel { opacity: 1; }
+
+/* the wordmark, as the hero sets it: Anton with the marker "Skill" laid over */
+.sh-entrance__word {
+  position: absolute;
+  left: 50%;
+  bottom: 6vh;
+  translate: -50% 0;
+  margin: 0;
+  white-space: nowrap;
+  font: 400 clamp(72px, 11vw, 136px) / 1 var(--sh-display, 'Anton', 'Arial Narrow', sans-serif);
+  font-synthesis-weight: none;
+  letter-spacing: -0.01em;
+  color: var(--sh-ink, #eeebe6);
+  text-shadow: 0 2px 24px rgba(27, 26, 28, 0.9);
+  transition: opacity 200ms linear;
+}
+.sh-entrance__skill {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  translate: -50% -50%;
+  font: 700 0.3em 'Kalam', 'Archivo', cursive;
+  letter-spacing: 0.005em;
+  rotate: -3deg;
+  color: var(--sh-void, #1b1a1c);
+  -webkit-text-stroke: 1px var(--sh-ink, #eeebe6);
+  paint-order: stroke;
+  text-shadow: none;
+  opacity: 0.95;
+}
+.sh-entrance[data-phase='failed'] .sh-entrance__word { opacity: 0.25; }
+.sh-entrance[data-phase='failed'] .sh-entrance__diamond,
+.sh-entrance[data-phase='failed'] .sh-entrance__diamond-x,
+.sh-entrance[data-phase='failed'] .sh-entrance__tip { opacity: 0; }
+.sh-entrance[data-phase='failed'] .sh-entrance__arc { stroke-opacity: 0.35; }
+
+.sh-entrance__status { position: absolute; left: 48px; bottom: 30px; display: grid; gap: 6px; }
+.sh-entrance__line {
+  font: 500 11px / 1.6 var(--sh-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sh-ink-dim, #9a9691);
+}
+.sh-entrance__line b { color: var(--sh-ink, #eeebe6); font-weight: 500; }
+.sh-entrance__num { color: var(--sh-ink, #eeebe6); font-variant-numeric: tabular-nums; }
+
+.sh-entrance__reg { position: absolute; width: 14px; height: 14px; opacity: 0.45; }
+.sh-entrance__reg::before, .sh-entrance__reg::after { content: ''; position: absolute; background: var(--sh-ink, #eeebe6); }
+.sh-entrance__reg::before { left: 50%; top: 0; width: 1px; height: 100%; }
+.sh-entrance__reg::after { top: 50%; left: 0; height: 1px; width: 100%; }
+.sh-entrance__reg--tl { left: 22px; top: 22px; }
+.sh-entrance__reg--bl { left: 22px; bottom: 22px; }
+.sh-entrance__reg--br { right: 22px; bottom: 22px; }
+
+/* Skip — the hero's own .vha-skip plate register */
+.sh-entrance__skip {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border: 1px solid var(--sh-line-strong, rgba(238, 235, 230, 0.2));
+  border-radius: 0;
+  font: 500 11px / 1 var(--sh-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sh-ink, #eeebe6);
+  background: rgba(27, 26, 28, 0.7);
+  cursor: pointer;
+  transition: border-color 160ms linear, background 160ms linear;
+}
+.sh-entrance__skip:hover { border-color: var(--sh-ink, #eeebe6); background: rgba(27, 26, 28, 0.92); }
+.sh-entrance__skip small { font: 400 10px / 1 var(--sh-mono, 'JetBrains Mono', ui-monospace, monospace); letter-spacing: 0.14em; color: var(--sh-ink-dim, #9a9691); text-transform: none; }
+.sh-entrance button:focus-visible { outline: 2px solid var(--sh-cyan, #5fc2d6); outline-offset: 3px; }
+
+/* failure: the message sits inside the ring; no modal */
+.sh-entrance__fail {
+  position: absolute;
+  left: 50%;
+  top: var(--sh-entrance-ring-top);
+  translate: -50% -50%;
+  width: min(80vw, 380px);
+  z-index: 2;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+}
+.sh-entrance__fail p { margin: 0; font: 400 14px / 1.5 var(--sh-ui, 'Archivo', system-ui, sans-serif); color: var(--sh-ink, #eeebe6); max-width: 36ch; }
+.sh-entrance__row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.sh-entrance__btn {
+  padding: 12px 18px;
+  border: 1px solid var(--sh-line-strong, rgba(238, 235, 230, 0.2));
+  border-radius: 0;
+  background: none;
+  color: var(--sh-ink, #eeebe6);
+  font: 500 11px / 1 var(--sh-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sh-entrance__btn:hover { border-color: var(--sh-ink, #eeebe6); }
+.sh-entrance__btn--primary { background: var(--sh-ink, #eeebe6); color: var(--sh-void, #1b1a1c); border-color: var(--sh-ink, #eeebe6); }
+
+/* the house impact frame: 46 ms, steps(3), shear + translate ≤ 8 px, hard invert */
+.sh-entrance.is-impact { animation: sh-entrance-impact 46ms steps(3, end) both; }
+@keyframes sh-entrance-impact {
+  0% { transform: translate(0, 0) skewX(0); filter: invert(0); }
+  34% { transform: translate(8px, -3px) skewX(-6deg); filter: invert(1); }
+  67% { transform: translate(-6px, 2px) skewX(4deg); filter: invert(1); }
+  100% { transform: translate(0, 0) skewX(0); filter: invert(0); }
+}
+
+@media (max-width: 640px) {
+  .sh-entrance { --sh-entrance-ring-top: 38%; --sh-entrance-ring: min(74vw, 46vh); }
+  .sh-entrance__word { bottom: 15vh; font-size: clamp(64px, 19vw, 84px); }
+  .sh-entrance__status { left: 16px; right: 16px; bottom: 44px; }
+  .sh-entrance__reg--tl { left: 14px; top: 14px; }
+  .sh-entrance__reg--bl { left: 14px; bottom: 14px; }
+  .sh-entrance__reg--br { right: 14px; bottom: 14px; }
+  .sh-entrance__skip { top: 14px; right: 14px; padding: 12px 14px; }
+  .sh-entrance__skip small { display: none; }
+  .sh-entrance__fail { width: min(84vw, 320px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-entrance__bloom, .sh-entrance__diamond { animation: none; }
+  .sh-entrance.is-impact { animation: none; }
+}
