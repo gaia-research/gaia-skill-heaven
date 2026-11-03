@@ -51,7 +51,7 @@ describe("GaiaService status", () => {
         "progression-paths",
       ],
       compatibility: {
-        mcpSdk: "@modelcontextprotocol/sdk@1.29.0",
+        mcpSdk: "@modelcontextprotocol/sdk@1.32.0",
         gaiaPublicData: ["gaia-public-v1"],
         gaiaCli: "none",
         node: ">=22.14.0",

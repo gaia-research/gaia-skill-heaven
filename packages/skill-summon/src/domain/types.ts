@@ -159,7 +159,7 @@ export type ResultMetadata = {
 };
 
 export type CompatibilityInfo = {
-  mcpSdk: "@modelcontextprotocol/sdk@1.29.0";
+  mcpSdk: "@modelcontextprotocol/sdk@1.32.0";
   mcpProtocolVersions: string[];
   gaiaPublicData: [typeof TREE_CONTRACT_VERSION];
   gaiaCli: "none";

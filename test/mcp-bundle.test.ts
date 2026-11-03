@@ -128,7 +128,7 @@ describe("plugins/skill-heaven/mcp/skill-summon.mjs — the committed bundle", (
   });
 
   it("ships hardened URI-template marker handling", () => {
-    // SDK 1.29.0 is pinned for this lane. The build boundary hardens its two
+    // SDK 1.32.0 is pinned for this lane. The build boundary hardens its two
     // uncontrolled-marker removals without editing node_modules or the output
     // by hand; this regression keeps the committed artifact honest.
     expect(bundle).not.toMatch(/name\.replace\(["']\*["'],\s*["']["']\)/);

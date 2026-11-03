@@ -62,11 +62,13 @@ returned `2025-11-25`.
 
 This is an SDK-only negotiation result, not a full product compatibility
 pass. **Upgrading to 1.30.0 alone cannot close the protocol-base gate**, so
-no product upgrade was made. The product remains pinned to 1.29.0.
+no product upgrade was made at that time (the product was then pinned to 1.29.0; see the 1.32.0 note below).
+
+**1.32.0 note (2026-11-03).** The product moved to 1.32.0 for the security advisories fixed in 1.30–1.32 (HTTP transport/OAuth redirect, body-size and session-binding fixes — none are reachable on this stdio-only server). `SUPPORTED_PROTOCOL_VERSIONS` is unchanged (`2025-11-25` … `2024-10-07`), `2026-07-28` is still not negotiated, and the `shared/uriTemplate.js` module is byte-identical to 1.29.0, so the build-boundary hardening applies unchanged. The base-protocol gate remains open.
 
 ## Supported surface
 
-The package is pinned to `@modelcontextprotocol/sdk@1.29.0`. That SDK does not
+The package is pinned to `@modelcontextprotocol/sdk@1.32.0`. That SDK does not
 ship typed SEP-2640 methods or the newer cache-result fields, so this lane uses
 its underlying `Server` request-handler API and emits the extension fields as
 wire-level JSON. Its RFC 6570 helper also uses an unsafe single-marker
