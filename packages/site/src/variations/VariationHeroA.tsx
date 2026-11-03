@@ -10,6 +10,8 @@ import { LucyTunerHUD } from './hero/LucyTunerHUD'
 import { WingsTunerHUD } from './hero/WingsTunerHUD'
 import { LucyAtmosphere } from '../lucy-scene/atmosphere/LucyAtmosphere'
 import { LucyLive } from '../lucy-scene/LucyLive'
+import { LucyRiveFigure } from '../lucy-scene/rive/LucyRiveFigure'
+import type { SceneState } from '../lucy-scene/scene'
 import { useSceneLifecycle } from '../lucy-scene/useSceneLifecycle'
 import './variation-hero.css'
 
@@ -84,6 +86,14 @@ function sceneReviewFlag(name: 'atmo' | 'lucy'): boolean {
   return fromSearch === 'off' || fromHash === 'off'
 }
 
+/** `?lucy=static` keeps the approved static masters (review / comparison). */
+function lucyStaticRequested(): boolean {
+  if (typeof window === 'undefined') return false
+  const fromSearch = new URLSearchParams(window.location.search).get('lucy')
+  const fromHash = new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('lucy')
+  return fromSearch === 'static' || fromHash === 'static'
+}
+
 function isWingsTunerRequested(): boolean {
   if (typeof window === 'undefined') return false
   const params = new URLSearchParams(window.location.search)
@@ -103,6 +113,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const [showWingsTuner, setShowWingsTuner] = useState(isWingsTunerRequested)
   const [atmosphereOff] = useState(() => sceneReviewFlag('atmo'))
   const [lucyOff] = useState(() => sceneReviewFlag('lucy'))
+  const [lucyStatic] = useState(() => lucyStaticRequested())
+  // which state the live Rive canvas is showing; that state's master poster lets go
+  const [riveShowing, setRiveShowing] = useState<SceneState | null>(null)
   // One lifecycle signal for everything in the scene (atmosphere now, the
   // Rive character later): `data-scene-running` on the hero root.
   useSceneLifecycle(rootRef)
@@ -138,6 +151,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   }, [])
   const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
+  // The Rive rig is built from the v5 masters, so only the v5 set goes live.
+  const riveOn = set === 'v5' && !lucyStatic
   const assets = HERO_ASSET_SETS[set][v.lucyState]
 
   const onSelectScene = useCallback(
@@ -456,12 +471,27 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
                 transformOrigin: v.figOrigin,
                 mixBlendMode: v.lucyBlend,
                 transition: `var(--lucy-drag-transition, var(--lucy-zoom-transition, transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))),filter 0ms,opacity calc(600ms * var(--vh-t)) linear`,
-                opacity: isCurrent ? v.oLucy : 0,
+                opacity: isCurrent && riveShowing !== state ? v.oLucy : 0,
                 filter: isCurrent ? v.lucyFilter : 'none',
               }}
             />
           )
         })}
+        {riveOn && (
+          <LucyRiveFigure
+            state={v.lucyState}
+            onShowing={setRiveShowing}
+            figureStyle={{
+              transform: `scale(calc(${(Number(v.mLucy) * v.figZoom).toFixed(3)} * var(--lucy-user-zoom, 1)))`,
+              transformOrigin: v.figOrigin,
+              mixBlendMode: v.lucyBlend,
+              transition:
+                'var(--lucy-drag-transition, var(--lucy-zoom-transition, transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))),filter 0ms,opacity calc(600ms * var(--vh-t)) linear',
+              opacity: v.oLucy,
+              filter: v.lucyFilter,
+            }}
+          />
+        )}
       </div>
 
       <div
