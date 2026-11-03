@@ -1,0 +1,38 @@
+/* The instrument's web paint. Roles map 1:1 to ROLE_COLORS (packages/status). */
+.shi-line,
+.shi-pulse {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--shi-ink);
+}
+.shi-pulse { display: inline-flex; flex-direction: column; }
+.shi-pulse__line { display: block; }
+.shi-r--umbrella { color: var(--shi-umbrella); }
+.shi-r--ultra { color: var(--shi-ultra); }
+.shi-r--zero { color: var(--shi-zero); }
+.shi-r--heaven { color: var(--shi-heaven); }
+.shi-r--hell { color: var(--shi-hell); }
+.shi-r--ink { color: var(--shi-ink); }
+.shi-r--dim { color: var(--shi-dim); }
+.shi-r--arbor { color: var(--shi-arbor); }
+.shi-r--stop { color: var(--shi-stop); font-weight: 700; }
+.shi-r--amber {
+  color: var(--shi-amber);
+  border: 1px solid currentColor;
+  padding: 0 0.35em;
+  letter-spacing: 0.12em;
+  font-size: 0.85em;
+}
+.shi-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -41,9 +41,13 @@ benchmark's job is the **entropy curve**: quality and cost as skill entropy
 rises, expected to rise then turn since Skill Hell routes summons through gaia
 mcp as a **mixture-of-agents for skills** (D5) — not a token-savings headline
 (N13). **Heaven/Hell stamps are not built**; routing falls back to relevance
-ranking, and no surface may present stamp-gated routing as running. Public
-domain: [`skill-heaven.dev`](https://skill-heaven.dev), served from
-`packages/site` (N9/N11).
+ranking, and no surface may present stamp-gated routing as running. The public
+site is served from `packages/site` at
+[`gaia-research.github.io/gaia-skill-heaven`](https://gaia-research.github.io/gaia-skill-heaven/)
+(N9/N11). **`skill-heaven.dev` is deferred** — it has no DNS (NXDOMAIN,
+re-checked 2026-10-07), so no surface, manifest `homepage`, or doc may link it.
+It survives only as an *identifier* (the `dev.skill-heaven.*` reverse-DNS
+namespace and the telemetry schema `$id`), which needs no resolution.
 
 ## Layout
 

@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { compile, floorOf, DEFAULT_CLAUDE_MECHANISM, FLOOR_EVIDENCE, POSTURES } from "../src/compile.js";
+import { resolve } from "node:path";
+import {
+  compile,
+  floorOf,
+  DEFAULT_CLAUDE_MECHANISM,
+  DOOR_MCP_BUNDLE_RELATIVE,
+  DOOR_MCP_CONFIG_PATH,
+  DOOR_MCP_SERVER_NAME,
+  FLOOR_EVIDENCE,
+  POSTURES,
+} from "../src/compile.js";
 import { parseArgs } from "../src/cli.js";
 import { assembleRecord } from "../src/record.js";
 import { validateRecord } from "../src/vendor/ledger-record.js";
@@ -79,6 +89,294 @@ describe("claude mappings", () => {
     expect(r.argv.join(" ")).toContain("--model haiku");
     expect(r.argv.join(" ")).toContain("--effort low");
     expect(r.argv.join(" ")).toContain("-p Q --output-format json");
+  });
+});
+
+// Issue #143: the door's OWN bundled summon server. `--strict-mcp-config` is
+// an ALLOWLIST, so it suppresses plugin-declared MCP exactly as thoroughly as
+// ambient MCP — measured on claude 2.1.288 the pre-fix product-floor route
+// yielded `mcp_servers: []` and no summon tool at all
+// (packages/claude-zero/PROBE.md). The door therefore hands core a RESOLVED
+// one-server declaration and core routes it through the SAME strict allowlist.
+describe("door MCP admission (#143)", () => {
+  const doorMcpConfig = {
+    mcpServers: {
+      "skill-summon": {
+        type: "stdio" as const,
+        command: "node",
+        args: ["/opt/door/mcp/skill-summon.mjs"],
+        env: { SKILL_SOURCE: "https://gaiaskilltree.com" },
+      },
+    },
+  };
+  const withDoor = (extra: Record<string, unknown> = {}) =>
+    compile({ posture: "product-floor", harness: "claude", skills: [], doorPluginDir: "/opt/door", ...extra });
+
+  it("keeps strict MCP + the empty setting-sources allowlist and points the ONE --mcp-config at the session file", () => {
+    const r = withDoor({ doorMcpConfig });
+    // Isolation is unchanged. Only the allowlist CONTENT changed.
+    expect(r.argv).toContain("--strict-mcp-config");
+    expect(r.argv).toContain("--setting-sources");
+    expect(r.argv[r.argv.indexOf("--setting-sources") + 1]).toBe("");
+    expect(r.argv).not.toContain("--disable-slash-commands");
+    // exactly one --mcp-config, and it names the session-local file
+    expect(r.argv.filter((a) => a === "--mcp-config")).toHaveLength(1);
+    expect(r.argv[r.argv.indexOf("--mcp-config") + 1]).toBe(DOOR_MCP_CONFIG_PATH);
+    expect(r.argv).not.toContain('{"mcpServers":{}}');
+    // the door is still mounted
+    expect(r.argv.slice(-2)).toEqual(["--plugin-dir", "/opt/door"]);
+    expect(r.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+  });
+
+  it("writes ONE session-local config containing only skill-summon, on node, with the supplied absolute argv and a concrete source", () => {
+    const r = withDoor({ doorMcpConfig });
+    expect(r.fsPlan).toHaveLength(1);
+    const op = r.fsPlan[0];
+    expect(op).toMatchObject({ kind: "write", path: DOOR_MCP_CONFIG_PATH });
+    if (op.kind !== "write") throw new Error("expected a write op");
+    const parsed = JSON.parse(op.contents) as typeof doorMcpConfig;
+    expect(Object.keys(parsed.mcpServers)).toEqual([DOOR_MCP_SERVER_NAME]);
+    const server = parsed.mcpServers[DOOR_MCP_SERVER_NAME];
+    expect(server.type).toBe("stdio");
+    expect(server.command).toBe("node");
+    expect(server.args).toEqual(["/opt/door/mcp/skill-summon.mjs"]);
+    expect(server.env).toEqual({ SKILL_SOURCE: "https://gaiaskilltree.com" });
+    // Nothing in the file can need session substitution — only its PATH does.
+    expect(op.contents).not.toContain("$SESSION");
+    expect(op.contents).not.toMatch(/\$\{/);
+  });
+
+  it("discloses the admission, and never presents F7's historical token numbers as pricing for it", () => {
+    const notes = withDoor({ doorMcpConfig }).notes.join(" ");
+    expect(notes).toContain(DOOR_MCP_SERVER_NAME);
+    expect(notes).toMatch(/ALLOWLIST/i);
+    expect(notes).toMatch(/HISTORICAL|does not price the MCP-enabled route/i);
+    // The F7 arithmetic is still carried as history — it is not deleted, and it
+    // is still labelled with the version/date it was measured on.
+    expect(notes).toContain(FLOOR_EVIDENCE.harness.version);
+    expect(notes).toContain(FLOOR_EVIDENCE.probedAt);
+  });
+
+  it("without a declaration keeps the exact pre-#143 route and says the summon server is NOT admitted", () => {
+    const r = compile({ posture: "product-floor", harness: "claude", skills: [], doorPluginDir: "/opt/door" });
+    expect(r.argv).toEqual([
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "",
+      "--plugin-dir",
+      "/opt/door",
+    ]);
+    expect(r.fsPlan).toEqual([]);
+    const notes = r.notes.join(" ");
+    expect(notes).toMatch(/no server was admitted/i);
+    expect(notes).toContain(DOOR_MCP_SERVER_NAME);
+  });
+
+  it("rejects malformed, extra-server, and unresolved-placeholder declarations instead of falling back to zero servers", () => {
+    const bad: Array<[string, unknown, RegExp]> = [
+      ["no servers", { mcpServers: {} }, /exactly one server/],
+      [
+        "an extra server",
+        {
+          mcpServers: {
+            "skill-summon": doorMcpConfig.mcpServers["skill-summon"],
+            "ambient-thing": { type: "stdio", command: "node", args: ["/tmp/other.mjs"] },
+          },
+        },
+        /exactly one server/,
+      ],
+      ["a renamed server", { mcpServers: { summon: doorMcpConfig.mcpServers["skill-summon"] } }, /exactly one server/],
+      [
+        "an unresolved placeholder in argv",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
+            },
+          },
+        },
+        /unresolved/,
+      ],
+      [
+        "an unresolved placeholder in env",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "${user_config.skill_url}" },
+            },
+          },
+        },
+        /unresolved/,
+      ],
+      [
+        "a relative bundle path",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["mcp/skill-summon.mjs"] },
+          },
+        },
+        /ABSOLUTE/,
+      ],
+      [
+        "npx instead of node",
+        { mcpServers: { "skill-summon": { type: "stdio", command: "npx", args: ["/opt/door/mcp/skill-summon.mjs"] } } },
+        /plain node/,
+      ],
+      [
+        "a non-stdio server",
+        { mcpServers: { "skill-summon": { type: "http", command: "node", args: ["/opt/door/mcp/skill-summon.mjs"] } } },
+        /stdio/,
+      ],
+      [
+        "a non-string env value",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: 42 },
+            },
+          },
+        },
+        /must be a string/,
+      ],
+      [
+        "an env key that would change how node itself starts",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "https://gaiaskilltree.com", NODE_OPTIONS: "--require /tmp/evil.js" },
+            },
+          },
+        },
+        /may carry only SKILL_SOURCE/,
+      ],
+      [
+        "extra argv passed to the admitted bundle",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs", "--stdio"],
+            },
+          },
+        },
+        /exactly one entry/,
+      ],
+      [
+        "some OTHER absolute program admitted under the door's name",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["/tmp/somebody-elses.mjs"] },
+          },
+        },
+        /must admit the mounted door plugin's own bundle/,
+      ],
+      [
+        "the right bundle at a path OUTSIDE the mounted door",
+        {
+          mcpServers: {
+            "skill-summon": { type: "stdio", command: "node", args: ["/elsewhere/mcp/skill-summon.mjs"] },
+          },
+        },
+        /must admit the mounted door plugin's own bundle/,
+      ],
+      ["a missing mcpServers map", {}, /mcpServers map/],
+    ];
+    for (const [label, config, message] of bad) {
+      expect(() => withDoor({ doorMcpConfig: config }), label).toThrow(message);
+    }
+  });
+
+  it("admits the door server on claude product-floor ONLY — never on another harness, posture, or without the mount", () => {
+    const otherHarnesses = ["pi", "codex", "hermes", "grok", "agy"] as const;
+    for (const harness of otherHarnesses) {
+      expect(
+        () =>
+          compile({
+            posture: "product-floor",
+            harness,
+            skills: [],
+            doorPluginDir: "/opt/door",
+            doorMcpConfig,
+          }),
+        harness,
+      ).toThrow(/only valid with harness claude/);
+    }
+    // cursor is refused too, and with the SPECIFIC reason: the admission route
+    // itself is claude's, so it is refused before the unprobed-cell check.
+    expect(() =>
+      compile({ posture: "product-floor", harness: "cursor", skills: [], doorMcpConfig }),
+    ).toThrow(/only valid with harness claude/);
+
+    for (const posture of ["floor", "native"] as const) {
+      expect(() =>
+        compile({ posture, harness: "claude", skills: [], doorMcpConfig }),
+        posture,
+      ).toThrow(/only valid with --posture product-floor/);
+    }
+    expect(() =>
+      compile({ posture: "curated", harness: "claude", skills: [fakeSkill], doorMcpConfig }),
+    ).toThrow(/only valid with --posture product-floor/);
+    // A mounted-less admission would split the door's control surface in half.
+    expect(() =>
+      compile({ posture: "product-floor", harness: "claude", skills: [], doorMcpConfig }),
+    ).toThrow(/requires doorPluginDir/);
+  });
+
+  it("accepts the mounted door's own bundle whatever spelling of the mount it was given", () => {
+    // A trailing separator or a `.` segment is the same mount, not a different one.
+    for (const mount of ["/opt/door", "/opt/door/", "/opt/./door"]) {
+      expect(
+        withDoor({
+          doorPluginDir: mount,
+          doorMcpConfig: {
+            mcpServers: {
+              "skill-summon": {
+                type: "stdio",
+                command: "node",
+                args: [resolve(mount, DOOR_MCP_BUNDLE_RELATIVE)],
+              },
+            },
+          },
+        }).fsPlan,
+      ).toHaveLength(1);
+    }
+  });
+
+  it("leaves the frozen benchmark floor, curated, and native byte-identical (the admission is product-floor only)", () => {
+    const bench = compile({ posture: "floor", harness: "claude", skills: [] });
+    expect(bench.argv).toEqual([
+      "--disable-slash-commands",
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
+    ]);
+    expect(bench.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+    expect(bench.fsPlan).toEqual([]);
+
+    const curated = compile({ posture: "curated", harness: "claude", skills: [fakeSkill] });
+    expect(curated.argv).toContain('{"mcpServers":{}}');
+    expect(curated.fsPlan).toHaveLength(2); // plugin manifest + one copied skill
+
+    const native = compile({ posture: "native", harness: "claude", skills: [] });
+    expect(native.argv).toEqual([]);
+    expect(native.fsPlan).toEqual([]);
+    expect(native.env).toEqual({});
   });
 });
 
@@ -262,31 +560,46 @@ describe("non-native harness mappings", () => {
     expect(native.fsPlan).toEqual([]);
     expect(native.execSupport).toBe("exec");
   });
-  it("agy composes pinned exec routes and leaves native untouched", () => {
+  it("agy composes pinned exec routes with real HOME by default and opt-in isolateHome", () => {
+    // Default (isolateHome: false)
     const floor = compile({ posture: "floor", harness: "agy", skills: [], prompt: "hi" });
-    expect(floor.env.HOME).toBe("$SESSION");
+    expect(floor.env.HOME).toBeUndefined();
     expect(floor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions", "-p", "hi"]);
-    expect(floor.fsPlan).toEqual(
+    expect(floor.fsPlan).toEqual([]);
+    expect(floor.execSupport).toBe("exec");
+
+    const product = compile({ posture: "product-floor", harness: "agy", skills: [] });
+    expect(product.env.HOME).toBeUndefined();
+    expect(product.argv).toEqual(["--dangerously-skip-permissions"]);
+    expect(product.fsPlan).toEqual([]);
+    expect(product.execSupport).toBe("exec");
+
+    // Curated without isolateHome throws clear error
+    expect(() => compile({ posture: "curated", harness: "agy", skills: [fakeSkill] })).toThrow(
+      /agy curated posture requires --isolate-home/,
+    );
+
+    // Opt-in isolateHome: true
+    const isolatedFloor = compile({ posture: "floor", harness: "agy", skills: [], prompt: "hi", isolateHome: true });
+    expect(isolatedFloor.env.HOME).toBe("$SESSION");
+    expect(isolatedFloor.argv).toEqual(["--disable-slash-commands", "--dangerously-skip-permissions", "-p", "hi"]);
+    expect(isolatedFloor.fsPlan).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/antigravity-cli/antigravity-oauth-token" }),
         expect.objectContaining({ kind: "copyFileIfExists", to: "$SESSION/.gemini/settings.json" }),
       ]),
     );
-    expect(floor.execSupport).toBe("exec");
 
-    const product = compile({ posture: "product-floor", harness: "agy", skills: [] });
-    expect(product.env.HOME).toBe("$SESSION");
-    expect(product.argv).toEqual(["--dangerously-skip-permissions"]);
-    expect(product.execSupport).toBe("exec");
-
-    const curated = compile({ posture: "curated", harness: "agy", skills: [fakeSkill] });
-    expect(curated.fsPlan).toContainEqual({
+    const isolatedCurated = compile({ posture: "curated", harness: "agy", skills: [fakeSkill], isolateHome: true });
+    expect(isolatedCurated.env.HOME).toBe("$SESSION");
+    expect(isolatedCurated.fsPlan).toContainEqual({
       kind: "copyDir",
       from: "/skills/impeccable",
       to: "$SESSION/.gemini/config/skills/impeccable",
     });
-    expect(curated.execSupport).toBe("exec");
+    expect(isolatedCurated.execSupport).toBe("exec");
 
+    // Native is untouched
     const native = compile({ posture: "native", harness: "agy", skills: [] });
     expect(native.argv).toEqual([]);
     expect(native.env).toEqual({});
@@ -456,5 +769,76 @@ describe("record assembly discipline", () => {
       skills: [fakeSkill],
     });
     expect(r.tokens.perTurn).toBeNull();
+  });
+});
+
+// Issue #144: permission handling is deliberately NOT core's job on claude.
+//
+// The defect the door fixed was door-side: `--setting-sources ''` (KC4's clean
+// room) evicts the user's settings, and with them `permissions.defaultMode` —
+// including a configured `dangerouslySkipPermissions`. The fix lives in
+// packages/claude-zero/src/permissions.ts, because only the DOOR knows whether
+// a posture evicts ambient settings.
+//
+// These assertions pin the boundary so it cannot erode:
+//   - core composes no permission mode and no permission flag for claude,
+//   - the eviction flags stay EXACTLY as KC4 left them,
+//   - and the benchmark floor stays byte-frozen (it is a measurement arm; a
+//     permission mode in it would change what is being measured).
+//
+// Scoped to harness `claude` on purpose: other harnesses' product floors have
+// their own probed permission compositions (agy product-floor, for one, carries
+// `--dangerously-skip-permissions` deliberately). Those are per-harness probed
+// cells and are not evidence about the claude door's inheritance path.
+describe("the compiler stays permission-neutral on claude (#144)", () => {
+  const PERMISSION_TOKENS = [
+    "--permission-mode",
+    "--dangerously-skip-permissions",
+    "--allow-dangerously-skip-permissions",
+  ];
+
+  it("composes no permission flag or mode for any claude posture", () => {
+    for (const posture of POSTURES) {
+      const r = compile({ posture, harness: "claude", skills: posture === "curated" ? [fakeSkill] : [] });
+      for (const token of PERMISSION_TOKENS) {
+        expect(r.argv, `${posture} must not compose ${token}`).not.toContain(token);
+      }
+      expect(r.argv.join(" "), posture).not.toMatch(/permission-mode|skip-permissions/);
+      for (const key of Object.keys(r.env)) {
+        expect(key, `${posture} env must carry no permission key`).not.toMatch(/PERMISSION/i);
+      }
+    }
+  });
+
+  it("keeps the KC4 empty setting-sources allowlist on both evicting postures", () => {
+    for (const posture of ["product-floor", "curated"] as const) {
+      const r = compile({ posture, harness: "claude", skills: posture === "curated" ? [fakeSkill] : [] });
+      const idx = r.argv.indexOf("--setting-sources");
+      expect(idx, posture).toBeGreaterThanOrEqual(0);
+      expect(r.argv[idx + 1], posture).toBe("");
+      // The isolation that makes door-side permission inheritance necessary in
+      // the first place. Relaxing this would silently fix #144 the wrong way
+      // (by re-admitting every ambient setting source).
+      expect(r.argv, posture).not.toContain("project");
+    }
+  });
+
+  it("leaves the benchmark floor's argv/env/fsPlan byte-frozen — a mode would change the arm", () => {
+    const r = compile({ posture: "floor", harness: "claude", skills: [] });
+    expect(r.argv).toEqual([
+      "--disable-slash-commands",
+      "--strict-mcp-config",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--setting-sources",
+      "project",
+    ]);
+    expect(r.env).toEqual({ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS: "1" });
+    expect(r.fsPlan).toEqual([]);
+  });
+
+  it("keeps native literally empty (P3) — the door must not need a native inheritance path", () => {
+    const r = compile({ posture: "native", harness: "claude", skills: [] });
+    expect(r).toMatchObject({ argv: [], env: {}, fsPlan: [] });
   });
 });

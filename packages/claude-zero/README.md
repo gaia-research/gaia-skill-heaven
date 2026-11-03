@@ -1,6 +1,6 @@
 # claude-zero
 
-> **WORKING PROTOTYPE — actively tested for public use.** Interfaces, flags, and command surfaces may change.
+> **LIVE — verified from a clean install on Claude Code 2.1.288** ([`docs/RELEASE-ACCEPTANCE.md`](../../docs/RELEASE-ACCEPTANCE.md)). What each rung means in behaviour is still provisional.
 
 The Claude Code door to Skill Zero under the Skill Heaven umbrella. `/skill-hell`
 (and the other four in-session commands) are supplied by the `skill-heaven`
@@ -39,6 +39,55 @@ claude-zero --print                          # inspect; do not spawn
 claude-zero -- --model sonnet                # pass through after --
 ```
 
+### Permission handling (#144)
+
+`--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, and
+`--permission-mode <mode>` are **claude's** flags. claude-zero forwards them
+verbatim, directly or after `--`, and consumes a mode value atomically — so
+`--permission-mode` with no value (or an option in its place) is a clear argument
+error (exit 2) rather than a swallowed mode.
+
+```bash
+claude-zero --permission-mode acceptEdits
+claude-zero -- --dangerously-skip-permissions
+```
+
+**Why inheritance exists.** The clean room (`--setting-sources ''`) is an empty
+allowlist, so it evicts *every* ambient settings source — including the permission
+mode you configured. The issue behind #144 is that this silently returned the
+session to claude's own default. Where a posture evicts settings (`product-floor`,
+`curated`), the door now carries **one** thing back: a default permission mode,
+re-applied as `permissions.defaultMode` in the session settings file. Nothing else
+is imported — no `allow`/`deny` rules, hooks, plugins, MCP servers, `env`,
+credentials, or additional directories, and no pre-acknowledged bypass.
+
+**Precedence.**
+
+1. An explicit permission flag on the command line always wins, including a
+   **safer** mode (`--permission-mode manual`) over an inherited bypass.
+2. Otherwise a mode configured in your user settings is inherited:
+   `permissions.defaultMode` (canonical), plus `permissionMode` and boolean
+   `dangerouslySkipPermissions` as documented launcher compatibility inputs —
+   these last two are *not* claimed to be claude settings keys.
+3. Otherwise nothing is injected and claude keeps its own default. The door never
+   invents a mode.
+4. `--allow-dangerously-skip-permissions` alone only makes bypass **available**; it
+   is not a request to enter bypass mode and never suppresses inheritance.
+
+`--posture native` reads nothing and injects nothing: claude's own settings
+precedence is left exactly as it is (P3).
+
+**Caveats, stated rather than worked around.** A configured bypass is a *request*:
+managed/organization policy, an IDE-owned session, or claude's own interactive
+bypass acknowledgment can still decline it, and claude-zero suppresses none of
+them (it never sets `skipDangerousModePermissionPrompt`). A settings path that
+exists but cannot be read or interpreted — malformed JSON, an unsupported mode, two
+configured modes that disagree, a config path that is not a directory — is a
+**launch error**, not a silent fallback into a different permission mode. An explicit `--permission-mode` is the way past it. The
+settings lookup honours `CLAUDE_CONFIG_DIR` when set, otherwise `~/.claude`, and is
+read-only either way. Behaviour is version-pinned: modes and precedence were probed
+on claude 2.1.288 (see [`PROBE.md`](PROBE.md)) and must be re-verified on upgrade.
+
 The ladder is the primary interface. See
 [Core and Quirks](../../docs/CORE-AND-QUIRKS.md#1-the-ladder) for the single
 canonical rung description and policy status. `--posture` remains supported for
@@ -47,7 +96,42 @@ refused by this door because slash commands do not exist there (F6).
 
 Every write is session-scoped: the launcher materializes core's plan, profile
 manifest, and statusline settings in a disposable temp directory. It never
-edits `~/.claude`, project skills, or source skill directories (P3).
+edits `~/.claude`, project skills, or source skill directories (P3). The one user
+file it *reads* is the Claude settings file, and only for a default permission mode
+(see [Permission handling](#permission-handling-144)).
+
+## The summon MCP server: admitted, not ambient (#143)
+
+`product-floor` keeps `--strict-mcp-config`, and that flag is an ALLOWLIST: it
+suppresses plugin-declared MCP as thoroughly as ambient MCP. Measured on Claude
+Code 2.1.288, the pre-fix door route started **no** server — `/summon` resolved
+as a command whose tool did not exist. The fix does not relax isolation; it
+admits the door's **own** server explicitly:
+
+- the door resolves the plugin's bundled `skill-summon` declaration into one
+  literal stdio server — an absolute bundle path and a concrete source, with no
+  `${…}` placeholder left for Claude (it does not interpolate placeholders in an
+  external `--mcp-config` file);
+- core writes that single-server config to `$SESSION/door-mcp.json` and points
+  the one existing `--mcp-config` at it, **with `--strict-mcp-config` still on**;
+- result: exactly one MCP server (`skill-summon`) and exactly one
+  `mcp__skill-summon__summon` tool, while ambient user/project MCP servers stay
+  suppressed. See [`PROBE.md`](PROBE.md) for the pinned-version receipt.
+
+Source precedence is explicit and narrow: the `SKILL_SOURCE` environment
+override first, then the mounted plugin's own
+`userConfig.skill_url.default`. No other preference file — installed-plugin
+config, ambient settings, project config — is ever read.
+
+The admission is a hard failure, not a silent downgrade: if the mounted plugin
+cannot produce a valid one-server declaration, the launch stops with a specific
+error rather than opening a product floor whose `/summon` cannot work. A core
+direct caller that mounts commands without supplying a declaration still gets an
+honest disclosure that no server was admitted.
+
+An admitted MCP server is a control surface, not a skill: the profile manifest's
+`skillCount` and standing dose stay zero at `zero`, and standing vs invocation
+doses are still reported separately.
 
 ## `/skill-zero`: the boot-time half
 
@@ -56,7 +140,7 @@ Downward choices remain visibly locked by D12 and include exact relaunch
 commands. Without a launcher manifest it gives the exact `claude-zero`
 command and explicitly says it changed nothing.
 
-## `/skill-hell`: usable additive prototype
+## `/skill-hell`: the explore band
 
 The plugin moved out of this package: it is `plugins/skill-heaven` at the repo
 root now, and it ships all five surfaces (`/summon`, `/skill-zero`,
@@ -77,6 +161,36 @@ Claude Code 2.1.224 in visible pane `w8:p13` read `SKILL.md` plus a sibling
 reference and returned exactly `CARD_ONLY_OK:7319`; the body is therefore no
 longer pasted.
 
+## Reference data, not authority (#85)
+
+Everything the rung commands and the summon tool *return* — the rendered ladder
+block, a `⛔`/`↗` result, a summon card — is reference/discovery data. It reports
+what a rung or a candidate describes; it is not an instruction, does not outrank
+the instructions already in force, and cannot change the task, authorize a tool
+call, widen permissions, or leave state behind. Selecting a rung settles nothing
+in advance: each call is evaluated again, per use, under the request and
+permissions in force at that moment.
+
+Concretely, in the shipped surface:
+
+- The renderer prints `selected:` / `requested` state plus a `discovery
+  reference:` block, and closes every full rendering with its trust boundary. It
+  no longer claims an armed lane or an ongoing posture.
+- User-supplied text is printed as quoted, escaped data, so a multi-line argument
+  cannot forge a line of authored copy. Refusals and redirects come from renderer
+  control flow over configuration — never from matching query text.
+- A card's invocation classification, ranking, trust fields, and installability
+  are metadata about a candidate, never authorization to execute it. Every
+  externally supplied string on a card is quoted or escaped, so no field can open
+  a line that our code did not author.
+- Summoned `SKILL.md` text is third-party data: readable and inspectable on its
+  merits, subject to the user's request and existing permissions, and never
+  executable just because it was returned.
+
+Static copy coverage lives in `test/authority-regression.test.ts` and
+`test/plugin-command.test.ts`; the ladder, disclosure, and cut semantics stay in
+`test/ladder.test.ts`.
+
 The renderers are zero-dependency `.mjs`, because a marketplace-installed
 plugin has no adjacent `node_modules`. Ladder policy is generated from core into
 `plugin/data/ladder.json` and freshness-tested.
@@ -88,6 +202,18 @@ user + project skills and explicitly excludes bundled/plugin skills. Session
 scope explicitly discloses the bundled `doctor` residual. Standing and
 invocation doses remain separate.
 
+The statusline is a projection of the Skill Heaven status model: the entropy
+reading first, then the door's own standing dose and ctx%:
+
+```
+◇ entropy ‹‹ [ZERO] ›› · 0 skills · 20.2k standing (excl. bundled doctor) · 31% ctx
+```
+
+`SKILL_HEAVEN_STATUS=off|compact|full` chooses the line. `off` prints nothing
+(the standing dose and ctx% go with it); `full` adds summons and the last
+arrival. Plain text is used when `NO_COLOR` is set. When the terminal width
+(`COLUMNS`) is too narrow, ctx% is dropped first, then the standing dose.
+
 ## Boundaries
 
 - Heaven: `zero|low|med`, boot-time launcher choices.
@@ -95,9 +221,14 @@ invocation doses remain separate.
   reached with `/skill-ultra`. Nothing on the line refuses (N13).
 - The plugin's MCP exposes exactly one tool, `summon`.
 - Hell/Heaven scoring, routing eligibility, and content-hash admission or
-  verification are not shipped.
+  verification are not shipped. What ships is the *reference* to them: parameters
+  and metadata, evaluated per use.
 - `floor`: benchmark-only, doorless posture.
 - `native`: `med`; `--level native` remains a compatibility spelling.
+- Permission handling is the door's, not core's: the compiler composes no
+  permission mode and no permission flag, and a permission choice changes
+  permission handling only — never skill selection or the dose accounting.
 
 Evidence for the pinned compositions remains in core compiler notes and the
-probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md).
+probe material referenced from [Core and Quirks](../../docs/CORE-AND-QUIRKS.md),
+plus this door's own [`PROBE.md`](PROBE.md).

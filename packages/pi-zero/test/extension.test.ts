@@ -30,10 +30,10 @@ describe("pi Skill Hell presentation", () => {
       cacheState: "warm",
       trustFields: { source: "probe", stars: 9 },
     });
-    expect(card).toContain("summoned · Card probe");
-    expect(card).toContain("source: probe");
+    expect(card).toContain('summoned · "Card probe"');
+    expect(card).toContain('source: "probe"');
     expect(card).toContain("stars: 9");
-    expect(card).toContain("install: 0.01s · warm");
+    expect(card).toContain('install: 0.01s · "warm"');
     expect(card).toContain("files: 2");
     expect(card).toContain("inspect: file://");
     expect(card).not.toMatch(/(^|\s)TM(\s|$)|n\/a|SKILL\.md body/im);

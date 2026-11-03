@@ -410,6 +410,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const touchYRef = useRef<number | null>(null)
   const touchTsRef = useRef(0)
   const glitchIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const glitchRafRef = useRef(0)
   const flashT1Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const flashT2Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -565,20 +566,33 @@ export function useHeroEngine(variant: 'a' | 'b') {
       setStop(i)
       if (!bandChanged || actRef.current !== N - 1 || prefersReducedMotion()) return
       clearInterval(glitchIntervalRef.current)
-      let n = 0
-      setGlitch(1)
-      setFlash(1)
-      glitchIntervalRef.current = setInterval(() => {
-        n += 1
-        if (n > 6) {
-          clearInterval(glitchIntervalRef.current)
-          setGlitch(0)
-          setFlash(0)
-          return
-        }
-        setGlitch(n % 2 ? 2 : 1)
-        setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
-      }, 46)
+      cancelAnimationFrame(glitchRafRef.current)
+      // The pulse begins two frames after the click, once the switch itself
+      // (the band's DOM and the figure's first frame in the new state) has
+      // been committed and painted, so a slow first frame of a state can never
+      // hold a half-painted glitch frame (scanlines + wedge over the old
+      // state). It is then 7 steps of 46ms read off the wall clock rather than
+      // counted per tick, so a late tick lands on the right step (or the end)
+      // instead of the next one.
+      const begin = () => {
+        const t0 = performance.now()
+        setGlitch(1)
+        setFlash(1)
+        glitchIntervalRef.current = setInterval(() => {
+          const n = Math.floor((performance.now() - t0) / 46)
+          if (n > 6) {
+            clearInterval(glitchIntervalRef.current)
+            setGlitch(0)
+            setFlash(0)
+            return
+          }
+          setGlitch(n % 2 ? 2 : 1)
+          setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
+        }, 46)
+      }
+      glitchRafRef.current = requestAnimationFrame(() => {
+        glitchRafRef.current = requestAnimationFrame(begin)
+      })
     },
     [setScale],
   )
@@ -692,11 +706,14 @@ export function useHeroEngine(variant: 'a' | 'b') {
       clearTimeout(flashT2Ref.current)
       clearTimeout(pinchTimerRef.current)
       clearInterval(glitchIntervalRef.current)
+      cancelAnimationFrame(glitchRafRef.current)
     }
   }, [go, handlePinchZoom, registerInput])
 
   // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
   // a small glitch shear on the wordmark, looping while Ultra stays selected.
+  // It sits on top of Ultra's room (the atmosphere's slow sweep and
+  // interference keep running beneath it); the impact frames are back.
   useEffect(() => {
     const on = act === N - 1 && LADDER[stop].lane === 'u'
     if (!on || prefersReducedMotion()) {

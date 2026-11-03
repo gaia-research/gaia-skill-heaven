@@ -4,7 +4,7 @@
 // four-surfaces model), so other harnesses are expected to install or pick up
 // that plugin rather than each re-implementing their own summon path. Until
 // pi-heaven ships: the `/skill-hell` command below can still render the
-// chooser and arm a rung, but it can no longer summon a skill by intent — the
+// chooser and report a selected rung, but it can no longer summon a skill by intent — the
 // external `gaia-mcp` engine it used to shell out to is deprecated and this
 // extension has not been rewired to the in-repo summon engine
 // (`packages/skill-summon`). See the honest-degrade notice in the handler.
@@ -14,9 +14,10 @@ import { join } from "node:path";
 import {
   type HellLevel,
   type SummonedSkill,
-  renderArmed,
   renderHellChooser,
+  renderRungReference,
   renderSummonedCard,
+  quoteData,
   HELL_RUNGS,
 } from "../src/hell-presentation.js";
 import type {
@@ -82,7 +83,8 @@ const SUMMON_BY_INTENT_UNAVAILABLE =
   "skill-hell: summon-by-intent is not wired in pi-zero. It used to shell out to " +
   "the deprecated external gaia-mcp package; this extension has not been rewired " +
   "to the in-repo summon engine and will be superseded by pi-heaven, built on the " +
-  "plugins/skill-heaven Agent Plugin. Arm a rung (high|xhigh|max) here, or use " +
+  "plugins/skill-heaven Agent Plugin. Name a rung (high|xhigh|max) here to see its " +
+  "discovery reference, or use " +
   "/summon in a harness that already has the Skill Heaven plugin installed.";
 
 function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number, error?: string): string {
@@ -92,7 +94,7 @@ function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number
       "   Skill Zero postures are boot-time decisions and this session was not launched by pi-zero.",
       "   Start one with: → pi-zero --level low --skill <path>",
       "   This command did not change the running session.",
-      ...(error ? [`   manifest error: ${error}`] : []),
+      ...(error ? [`   manifest error: ${quoteData(error)}`] : []),
     ].join("\n");
   }
 
@@ -111,8 +113,6 @@ function renderPosture(manifest: LaunchManifest | null, loadedSkillCount: number
 }
 
 export default function piZeroExtension(pi: ExtensionAPI) {
-  let armedLevel: HellLevel = "high";
-
   pi.registerEntryRenderer<{ content: string; widgetLines?: string[] }>(outputEntry, (entry, _options, theme) => {
     return new Text(theme.fg("customMessageText", entry.data?.content ?? ""), 1, 1);
   });
@@ -152,7 +152,7 @@ export default function piZeroExtension(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("skill-hell", {
-    description: "Show the Skill Hell chooser, or arm a rung (high|xhigh|max)",
+    description: "Show the Skill Hell chooser, or a rung's discovery reference (high|xhigh|max)",
     handler: async (args: string, ctx: ExtensionCommandContext) => {
       const input = args.trim();
       if (!input) {
@@ -172,8 +172,9 @@ export default function piZeroExtension(pi: ExtensionAPI) {
         return;
       }
       if ((HELL_RUNGS as readonly string[]).includes(input)) {
-        armedLevel = input as HellLevel;
-        const rendered = renderArmed(armedLevel);
+        // Reference data only. No variable records the selection: this door
+        // keeps no routing state, and the rendering says so.
+        const rendered = renderRungReference(input as HellLevel);
         pi.appendEntry(outputEntry, { content: rendered, widgetLines: rendered.split("\n") });
         ctx.ui.setWidget(outputEntry, rendered.split("\n"));
         return;
@@ -188,5 +189,5 @@ export default function piZeroExtension(pi: ExtensionAPI) {
   });
 }
 
-export { renderArmed, renderHellChooser, renderSummonedCard, HELL_RUNGS };
+export { renderHellChooser, renderRungReference, renderSummonedCard, HELL_RUNGS };
 export type { HellLevel, SummonedSkill };

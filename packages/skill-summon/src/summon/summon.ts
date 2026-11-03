@@ -11,6 +11,7 @@ import {
   isStale,
   normalize,
   resolveArborIdentity,
+  conditionMatcher,
   type ArborCompositionReport,
   type ArborDeliveryContext,
   type CompositionMember,
@@ -57,6 +58,18 @@ export type SummonOptions = {
   query: string;
   limit?: number | undefined;
   surface?: SummonSurface | undefined;
+  /**
+   * Declares what the CURRENT task is, as exact phrases, so the Heaven/Hell band
+   * judgment can decide whether a governed Arbor claim's stated conditions apply
+   * here. Omit it and the band abstains with `conditions-unverified`: Arbor
+   * carries conditions verbatim and never evaluates prose, so a claim cannot be
+   * treated as applicable without the caller saying so.
+   *
+   * This is a declaration by the caller, not a query. It is not used for
+   * retrieval, admission, or ranking, and it never affects which candidates are
+   * considered relevant.
+   */
+  taskSignals?: readonly string[] | undefined;
   /** Override the configured Skill URL for this call. Unresolvable is an error, never a fallback. */
   source?: string | undefined;
   /** Rank and disclose without materialising anything to disk (SPEC §5.1). */
@@ -213,7 +226,7 @@ type InstallOutcome = {
 export async function summon(
   service: GaiaService,
   session: SummonSession,
-  { query, limit = DEFAULT_LIMIT, surface = "hell", source, preview = false }: SummonOptions,
+  { query, limit = DEFAULT_LIMIT, surface = "hell", source, preview = false, taskSignals }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -305,9 +318,16 @@ export async function summon(
   };
 
   const before = [...session.skills];
+  // The band judgment is the only place accepted Arbor evidence may change
+  // composition, and it moves breadth only. Relevance decided `decision.admitted`
+  // above; nothing below reorders, rescores, or filters it.
+  const bandOptions = taskSignals
+    ? { matchesConditions: conditionMatcher(taskSignals) }
+    : {};
   const compositionFor = (additions: readonly CompositionMember[]) => sessionComposition(
     publication, resolved.source, linkById, before,
     (id) => arborFor(id, "delivered-unverified"), additions,
+    bandOptions,
   );
 
   if (decision.noMatch) {

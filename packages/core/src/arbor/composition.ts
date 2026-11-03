@@ -1,3 +1,9 @@
+import {
+  arborBandLines,
+  judgeArborBand,
+  type ArborBandJudgment,
+  type ArborBandOptions,
+} from "./band.js";
 import type { ArborEdge, ArborSubjectRef } from "./contract.js";
 import type { ArborSubjectReport } from "./consume.js";
 import type { ArborProblem, ArborPublication } from "./publication.js";
@@ -28,12 +34,25 @@ export type ArborCompositionPublication = {
 
 export type ArborCompositionReport = {
   mode: "relevance-only";
+  /**
+   * Always false, and the type pins it. Arbor never reorders, rescores,
+   * filters, or re-ranks the admitted set. What Arbor MAY move is breadth —
+   * how much of that already-decided set is materialized — and that is carried
+   * by `band`, never by this field.
+   */
   selectionChanged: false;
   conditionsEvaluated: false;
   deliveryVerified: false;
   publication: ArborCompositionPublication;
   members: { id: string; role: CompositionRole; join: ArborSubjectReport["join"] }[];
   interactions: CompositionInteraction[];
+  /**
+   * The Heaven/Hell band judgment. The single place accepted Arbor evidence is
+   * allowed to change composition, and the single place it may abstain. Today it
+   * abstains with a disclosed reason, because the HH direction payload is not
+   * published; that is a structural fact about the evidence, not a placeholder.
+   */
+  band: ArborBandJudgment;
   note: string;
 };
 
@@ -45,6 +64,7 @@ export type ArborCompositionReport = {
 export function inspectArborComposition(
   publication: ArborPublication,
   members: readonly CompositionMember[],
+  bandOptions: ArborBandOptions = {},
 ): ArborCompositionReport {
   const byId = new Map<string, CompositionMember[]>();
   for (const member of members) {
@@ -89,12 +109,14 @@ export function inspectArborComposition(
     conditionsEvaluated: false, deliveryVerified: false,
     publication: compositionPublication,
     members: members.map(({ role, report }) => ({ id: report.skillId, role, join: report.join })),
-    interactions, note,
+    interactions,
+    band: judgeArborBand(publication.state, members, bandOptions),
+    note,
   };
 }
 
 export function arborCompositionLines(report: ArborCompositionReport): string[] {
-  const lines = [`Composition: ${report.note}`];
+  const lines = [`Composition: ${report.note}`, ...arborBandLines(report.band)];
   for (const item of report.interactions) {
     lines.push(`  ${item.edge.pair.from.id} → ${item.edge.pair.to.id}: ${item.edge.relation} (${item.edge.support}; ${item.applicability})`);
     lines.push(`    conditions (not evaluated): ${item.edge.conditions}`);

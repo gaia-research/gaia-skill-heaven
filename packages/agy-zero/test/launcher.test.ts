@@ -39,8 +39,18 @@ describe("assertLevelAllowed", () => {
 });
 
 describe("planLaunch", () => {
-  it("plans product-floor launch with session-scoped HOME and auth copying", () => {
+  it("plans product-floor launch with real HOME by default", () => {
     const plan = planLaunch({ sessionDir: "/tmp/sess-test" });
+    expect(plan.posture).toBe("product-floor");
+    expect(plan.command).toBe("agy");
+    expect(plan.env.HOME).toBeUndefined();
+    expect(plan.argv).toEqual(["--dangerously-skip-permissions"]);
+    expect(plan.execSupport).toBe("exec");
+    expect(plan.fsPlan).toEqual([]);
+  });
+
+  it("plans product-floor launch with isolateHome when opted in", () => {
+    const plan = planLaunch({ sessionDir: "/tmp/sess-test", isolateHome: true });
     expect(plan.posture).toBe("product-floor");
     expect(plan.command).toBe("agy");
     expect(plan.env.HOME).toBe("/tmp/sess-test");
@@ -49,14 +59,26 @@ describe("planLaunch", () => {
     expect(plan.fsPlan.some((op) => op.kind === "copyFileIfExists" && op.to.includes("oauth"))).toBe(true);
   });
 
-  it("plans curated launch with copied skill directory", () => {
+  it("guards curated launch without isolateHome", () => {
+    expect(() =>
+      planLaunch({
+        posture: "curated",
+        skillPaths: [FIXTURE],
+        sessionDir: "/tmp/sess-test",
+      }),
+    ).toThrow(/agy curated posture requires --isolate-home/);
+  });
+
+  it("plans curated launch with isolateHome and copied skill directory", () => {
     const plan = planLaunch({
       posture: "curated",
       skillPaths: [FIXTURE],
       sessionDir: "/tmp/sess-test",
+      isolateHome: true,
     });
     expect(plan.posture).toBe("curated");
     expect(plan.skillCount).toBe(1);
+    expect(plan.env.HOME).toBe("/tmp/sess-test");
     expect(plan.fsPlan.some((op) => op.kind === "copyDir" && op.to.includes(".gemini/config/skills/impeccable"))).toBe(true);
   });
 

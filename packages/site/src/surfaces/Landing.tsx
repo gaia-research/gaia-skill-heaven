@@ -50,6 +50,7 @@ import './landing.css'
 import { SlashReel } from './SlashReel'
 import { HarnessMark } from '../harnessMarks'
 import { PlatformToggle } from '../components/PlatformToggle'
+import { RELEASE } from '../release'
 
 /* -- the commission: real art, no placeholder slots left except the logo -- */
 import lucyZero from '../assets/lucy/v5/delivery/lucy-zero.webp'
@@ -185,7 +186,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     verb: 'Ruminating…',
     title: (
       <>
-        <span className="cc-cyan">Skill Heaven (converge)</span> auto-summoned pbakaus/impeccable…
+        <span className="cc-cyan">Skill Heaven (converge)</span> summoned pbakaus/impeccable…
       </>
     ),
     lines: [
@@ -214,7 +215,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     verb: 'Deliberating…',
     title: (
       <>
-        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to refine direction…
+        <span className="cc-cyan">Skill Heaven</span> summoned mattpocock/grill-me to refine direction…
       </>
     ),
     lines: [
@@ -248,7 +249,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     lines: [
       '· Wrote src/components/LandingHero.tsx (Editorial-warm layout, Anton display)',
       '· Wrote src/components/ClaudeTerminal.tsx (interactive TUI, sticky tail scroll)',
-      '· 0 diffs outside disposable session · standing dose: 20,176 tok',
+      '· 0 diffs outside disposable session · measured floor: 20,176 tok (historical)',
     ],
     readyTiming: '520ms',
   },
@@ -259,7 +260,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     verb: 'Prestidigitating…',
     title: (
       <>
-        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous multi-agent swarm…
+        <span className="cc-amber">Skill Hell (explore)</span> explored wider — more skills summoned…
       </>
     ),
     lines: [
@@ -292,7 +293,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
       </div>,
       <div className="lp-cc-block lp-cc-block--hell" key="cso-verify">
         <div className="lp-cc-subhead">
-          <span className="cc-amber">◈ [garrytan/cso]</span> Autonomous verification & Pull Request:
+          <span className="cc-amber">◈ [garrytan/cso]</span> Verification & pull request:
         </div>
         <div className="lp-cc-dim">&nbsp;&nbsp;· Security audit PASS: 0 CVEs remaining · all exploit vectors neutralized</div>
         <div className="lp-cc-dim">&nbsp;&nbsp;· Regression tests: 38/38 unit & security tests green (GREEN)</div>
@@ -330,7 +331,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
           <span className="cc-gold">♛ [ultra controller]</span> Dynamic Entropy Planner:
         </div>
         <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 1 [UI Architecture & Data Density] → Dialing <b className="cc-cyan">HEAVEN (Converge · Human-in-the-Loop)</b></div>
-        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Stream Hardening & Load Test] → Dialing <b className="cc-amber">HELL (Explore · Autonomous Swarm)</b></div>
+        <div className="lp-cc-dim">&nbsp;&nbsp;· Gap 2 [Stream Hardening & Load Test] → Dialing <b className="cc-amber">HELL (Explore)</b></div>
       </div>,
       <div className="lp-cc-block lp-cc-block--heaven" key="ultra-gap1">
         <div className="lp-cc-subhead">
@@ -350,7 +351,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     palette: 'natural',
     title: (
       <>
-        <span className="cc-cyan">Skill Heaven</span> auto-summoned mattpocock/grill-me to lock architecture…
+        <span className="cc-cyan">Skill Heaven</span> summoned mattpocock/grill-me to lock architecture…
       </>
     ),
     lines: [
@@ -386,7 +387,7 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     automated: true,
     title: (
       <>
-        <span className="cc-amber">Skill Hell (explore)</span> spawned autonomous 3-agent swarm…
+        <span className="cc-amber">Skill Hell (explore)</span> explored wider — more skills summoned…
       </>
     ),
     lines: [
@@ -467,12 +468,12 @@ const CLAUDE_TURNS: ClaudeTurn[] = [
     palette: 'natural',
     title: (
       <>
-        <span className="cc-cyan">Skill Zero</span> automatic skill summons paused
+        <span className="cc-cyan">Skill Zero</span> temporary automatic skills cut
       </>
     ),
     lines: [
-      '· automatic skill summons: PAUSED · 0 skills auto-borrowed',
-      `· standing dose: ${fmt(DOSES.productFloor)} tok (product floor)`,
+      '· requested cut: temporary automatic skills · 0 skills summoned',
+      `· measured product floor: ${fmt(DOSES.productFloor)} tok (historical measurement)`,
       '· base model active · manual /summon available on demand',
     ],
     readyTiming: '240ms',
@@ -957,11 +958,20 @@ export default function Landing() {
     [pickRung, rungIndex],
   )
 
+  // The skip link must move focus, not only scroll: focus the install section.
+  const skipToInstall = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const el = document.getElementById('doors')
+    el?.focus({ preventScroll: true })
+    el?.scrollIntoView({ block: 'start' })
+  }, [])
+
   return (
     <div className="lp" onClick={onLpAnchorClick}>
       {/* ---------------------------------------------------------------- nav */}
-      <a className="lp-skip" href="#doors">
-        Skip to the doors
+      <a className="lp-skip" href="#doors" onClick={skipToInstall}>
+        Skip to install
       </a>
       <nav className="lp-nav" aria-label="Primary">
         <div className="lp-nav__brand">
@@ -970,7 +980,10 @@ export default function Landing() {
           </a>
           <img className="lp-nav__logo" src={brandLogo} alt="" aria-hidden="true" />
           <span className="lp-nav__name">{SITE.repoName}</span>
-          <span className="lp-nav__wip">{SITE.version}</span>
+          <a className="lp-nav__wip lp-nav__live" href="#/live" aria-label="Skill Heaven is live — read the production update">
+            <span className="lp-live-dot" aria-hidden="true" />
+            {SITE.version}
+          </a>
         </div>
         <div className="lp-nav__right">
           <div className="lp-nav__links">
@@ -979,47 +992,50 @@ export default function Landing() {
             <a href="#session">SESSION-ONLY</a>
             <a href="#directions">CONVERGE / EXPLORE</a>
             <a href="#house">ECOSYSTEM</a>
+            <a href="#/live">PRODUCTION UPDATE</a>
           </div>
-          <a className="lp-nav__cta" href="#doors">
-            {DOORS[0].launch} <span aria-hidden="true">⏎</span>
+          <a className="lp-nav__cta" href="#/start">
+            INSTALL <span aria-hidden="true">→</span>
           </a>
         </div>
       </nav>
 
+      <main id="main">
       {/* ------------------------------------------------------------- arrival */}
       <header className="lp-head">
         <div className="lp-head__grid">
           <div className="lp-head__main">
             <div className="lp-head__lede">
-              <div className="lp-kicker">
-                <span>HELL · HEAVEN · INDEX</span>
-                <span className="lp-kicker__rule" aria-hidden="true" />
-                <span>THE LAUNCHER</span>
-                <span className="lp-reg" aria-hidden="true" />
-                <span className="lp-reg-dots" aria-hidden="true">
-                  <i />
-                  <i />
+              <a className="lp-live-banner" href="#/live">
+                <span className="lp-live-dot" aria-hidden="true" />
+                <span>
+                  <b>{SITE.status}</b> · v{RELEASE.pluginVersion} — Skill Heaven is in production. Read what
+                  shipped, the clean-install receipt, and what stays provisional
                 </span>
-              </div>
+                <span aria-hidden="true">→</span>
+              </a>
               <h1 className="lp-h1">
-                You are inside.
+                Summon with Core.
                 <br />
-                Now pick your door.
+                Inspect with Console.
               </h1>
               <p className="lp-lede">
-                <b>Skill Zero</b> composes a lean skill surface at launch — it builds flags and execs
-                your harness. Nothing installed, nothing mutated, nothing left behind. From inside the
-                session, <code>{MECHANIC.floor}</code> borrows a skill for exactly as long as you need
-                it, and <b>Skill Heaven</b> and <b>Skill Hell</b> are that same summon pointed two
-                ways.
+                Install the plugin in a harness you already use. <b>Core</b> gives you <code>{MECHANIC.floor}</code>
+                {' '}and the entropy controls, with no console. <b>Core + Console</b> adds the independently removable
+                console your harness genuinely supports — a native pane where available, a truthful
+                readout where not. The launcher is separate and optional.
               </p>
+              <div className="lp-profile-cta">
+                <a className="sh-cta" href="#/start">Choose Core or add Console <span aria-hidden="true">→</span></a>
+                <a href="#/console">Inspect the harness projections</a>
+              </div>
               <SlashReel />
             </div>
 
             <div className="lp-dose sh-panel">
               <div className="lp-dose__head">
                 <div className="lp-dose__title-wrap">
-                  <span className="sh-label">STANDING DOSE · MEASURED</span>
+                  <span className="sh-label">STANDING DOSE · MEASURED (HISTORICAL)</span>
                   <InfoTooltip
                     align="left"
                     label="How standing dose is measured"
@@ -1030,6 +1046,9 @@ export default function Landing() {
                         </p>
                         <p style={{ marginTop: 6 }}>
                           {DOSES.note}
+                        </p>
+                        <p style={{ marginTop: 6 }}>
+                          <b>Scope</b>: {DOSES.scope}
                         </p>
                       </>
                     }
@@ -1053,6 +1072,7 @@ export default function Landing() {
                   strong
                 />
               </div>
+              <p className="lp-dose__scope">{DOSES.scope}</p>
             </div>
           </div>
 
@@ -1073,11 +1093,80 @@ export default function Landing() {
       </header>
 
       {/* ------------------------------------------------------------------ 01 */}
-      <section className="lp-section" id="doors">
-        <SectionHead n="01" title="SAME HARNESS, ZERO BLOAT." />
+      <section className="lp-section" id="doors" tabIndex={-1}>
+        <SectionHead n="01" title="INSTALL IN YOUR HARNESS." />
         <p className="lp-section__lede">
-          Pick your harness door. Every door launches with zero unneeded standing dose, mounts{' '}
-          <code>/summon</code> natively into your session, and leaves your repository byte-identical.
+          The plugin is what you install, inside a harness you already use. It puts <code>/summon</code> in
+          your session and never installs the harness itself. Each client owns its own registration, so the
+          exact steps depend on which one you run.
+        </p>
+
+        <div className="lp-start sh-panel">
+          <div className="lp-start__head">
+            <span className="sh-label">TWO PLUGIN PROFILES</span>
+            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
+            <a className="sh-cta" href="#/console">Preview the six harness projections <span aria-hidden="true">→</span></a>
+          </div>
+          <div className="lp-start__head">
+            <span className="sh-label">THE PLUGIN · PRIMARY ROUTE</span>
+            <a className="sh-cta lp-start__cta" href="#/start">
+              Choose your harness <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div className="lp-start__grid">
+            <div className="lp-start__col">
+              <div className="lp-install__head">
+                <span className="lp-start__title">Any Agent Plugins client</span>
+                <div className="lp-install__controls">
+                  <PlatformToggle platform={platform} onToggle={setPlatform} />
+                </div>
+              </div>
+              <CommandBlock
+                cmd={platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND}
+                sigil={PLATFORM_COMMANDS[platform].sigil}
+                tone="mint"
+                copied={copied === 'install-agent-plugin-primary'}
+                onCopy={() =>
+                  copy(
+                    platform === 'windows' ? INSTALL.agentPluginPs1.command : AGENT_PLUGIN_COMMAND,
+                    'install-agent-plugin-primary',
+                  )
+                }
+                label="Agent Plugin installer command"
+              />
+              <p className="lp-install__note">
+                Puts the plugin on disk and registers nothing. Your harness’s own command finishes the install
+                — <a href="#/start">the exact one for each harness is on the install page</a>.
+              </p>
+            </div>
+            <div className="lp-start__col">
+              <div className="lp-install__head">
+                <span className="lp-start__title">Claude Code — inside Claude, no terminal</span>
+              </div>
+              <div className="lp-install__lines">
+                {CLAUDE_COMPATIBILITY.map((line, i) => (
+                  <CommandBlock
+                    key={line}
+                    cmd={line}
+                    sigil="›"
+                    tone={i === 0 ? 'violet' : 'mint'}
+                    copied={copied === `install-claude-primary-${i}`}
+                    onCopy={() => copy(line, `install-claude-primary-${i}`)}
+                    label={`Claude Code command, line ${i + 1} of ${CLAUDE_COMPATIBILITY.length}`}
+                  />
+                ))}
+              </div>
+              <p className="lp-install__note">{CLAUDE_COMPATIBILITY_NOTE}</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 className="lp-sub">Optional — the launcher (Skill Zero at boot)</h3>
+        <p className="lp-section__lede lp-section__lede--sub">
+          You do not need a launcher. A door starts the harness with its skill catalogue cut to its nearest
+          achievable zero, keeps <code>/summon</code> available in the session, and leaves your repository
+          untouched. <code>claude-zero</code> is the door verified from a clean install; the others are
+          launcher prototypes with narrower evidence.
         </p>
 
         <div className="lp-doors">
@@ -1112,7 +1201,7 @@ export default function Landing() {
           <div className="lp-install__panel">
             <div className="lp-install__head">
               <div className="lp-install__title-wrap">
-                <span className="sh-label">STEP 01 · INSTALL LAUNCHERS</span>
+                <span className="sh-label">LAUNCHERS · INSTALL</span>
                 <InfoTooltip
                   align="left"
                   label="Launcher installation details"
@@ -1157,7 +1246,7 @@ export default function Landing() {
 
           <div className="lp-install__panel lp-install__panel--launch sh-panel">
             <div className="sh-label">
-              STEP 02 · LAUNCH {picked.harness.toUpperCase()}
+              LAUNCHERS · LAUNCH {picked.harness.toUpperCase()}
             </div>
             <p className="lp-install__prose">{doorNote(picked)}</p>
             <CommandBlock
@@ -1171,7 +1260,7 @@ export default function Landing() {
           </div>
         </div>
         <p className="lp-fineprint">
-          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, see the <b>Agent Plugin</b> in the Demo section below.
+          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, use the <b>Agent Plugin</b> route at the top of this section — <a href="#/start">the install page</a> has the exact steps per harness.
         </p>
       </section>
 
@@ -1316,16 +1405,19 @@ export default function Landing() {
           <div className="lp-sampler-actions">
             <InfoTooltip
               variant="badge"
-              badgeText="PROTOTYPE NOTICE"
+              badgeText="ILLUSTRATIVE SESSION"
               align="right"
-              label="Prototype & simulation notice"
+              label="Illustrative session notice"
               content={
                 <>
                   <p>
-                    <b>Active Research Prototype</b> — The Hell/Heaven benchmark is under construction and not yet measured; consider the working product as such.
+                    <b>This terminal is a staged illustration</b>, not a recording. The skills, token
+                    counts, findings and pull requests shown are scripted to explain the mechanics.
                   </p>
                   <p style={{ marginTop: 6 }}>
-                    For demo purposes, this terminal simulates and reenacts the live product mechanics and dual-track orchestration.
+                    The measured figures are the labelled dose bars and the receipts on the{' '}
+                    <a href="#/live">production page</a>. What the rungs mean in behaviour is still{' '}
+                    <b>provisional</b>.
                   </p>
                 </>
               }
@@ -1340,7 +1432,7 @@ export default function Landing() {
         <div
           className={`lp-cc-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
           role="img"
-          aria-label="Simulated Claude Code terminal session: /summon borrows a skill for this session, /skill-heaven arms converge, and /skill-hell arms explore."
+          aria-label="Illustrative Claude Code terminal session: /summon borrows a skill for this session, /skill-heaven reports the converge band, and /skill-hell reports the explore band."
         >
           {/* Header Block: authentic Claude ASCII mark + metadata */}
           <div className="lp-cc-header">
@@ -1488,7 +1580,7 @@ export default function Landing() {
               <span className="sh-chip sh-chip--dim">FROZEN</span>
             </div>
             <div className="lp-tree-wrap">
-              <pre className="lp-tree">{`my-project/
+              <pre className="lp-tree" role="region" tabIndex={0} aria-label="Example project folder layout">{`my-project/
 ├── .claude/
 │   └── skills/          # standing cost paid every turn
 │       ├── code-review/
@@ -1627,7 +1719,7 @@ export default function Landing() {
                   <h3 className="lp-zero-card__cmd">/skill-zero</h3>
                   <span className="sh-chip sh-chip--live">THE FLOOR</span>
                 </div>
-                <div className="lp-zero-card__role">THE LAUNCHER · ZERO BLOAT</div>
+                <div className="lp-zero-card__role">THE LAUNCHER · ZERO SKILLS</div>
               </div>
             </div>
             <p className="lp-zero-card__blurb">
@@ -1694,7 +1786,7 @@ export default function Landing() {
                       <div className="lp-dir-card__role">{s.role}</div>
                     </div>
                   </div>
-                  <span className="sh-chip sh-chip--wip">WIP</span>
+                  <span className="sh-chip sh-chip--live">LIVE</span>
                 </div>
 
                 <p className="lp-dir-card__blurb">{s.blurb}</p>
@@ -1752,7 +1844,7 @@ export default function Landing() {
               <span className="sh-label">THE LADDER · SKILL ENTROPY SCALE</span>
               <InfoTooltip
                 variant="badge"
-                badgeText="WIP · PROVISIONAL"
+                badgeText="RUNG MEANING · PROVISIONAL"
                 align="left"
                 label="Entropy Ladder details"
                 content={
@@ -1820,7 +1912,7 @@ export default function Landing() {
           </div>
 
           <p className="lp-ladder__wipnote">
-            <span className="sh-chip sh-chip--wip">BENCHMARK CALIBRATION</span>
+            <span className="sh-chip sh-chip--wip">PROVISIONAL</span>
             <span>{LADDER_WIP}</span>
           </p>
         </div>
@@ -1839,7 +1931,7 @@ export default function Landing() {
       <section className="lp-section" id="house">
         <SectionHead n="05" title="ONE HOUSE, THREE ROOMS" />
         <p className="lp-section__lede">
-          Research proves it, the registry records it, the launcher runs it. Each room keeps its own
+          Research measures it, the registry records it, the launcher runs it. Each room keeps its own
           colour.
         </p>
         <div className="lp-rooms">
@@ -1900,6 +1992,8 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------- footer */}
+      </main>
+
       <footer className="lp-foot">
         <div className="lp-foot__cols">
           <div className="lp-foot__brand">
@@ -1919,6 +2013,7 @@ export default function Landing() {
               ['Watch it run', '#run'],
               ['Session-only skills', '#session'],
               ['Converge or explore', '#directions'],
+              ['Production update', '#/live'],
             ]}
           />
           <FootCol title="SURFACES" links={SURFACES.map((s) => [s.command, '#directions'])} />
@@ -1951,7 +2046,7 @@ export default function Landing() {
 
         <div className="lp-foot__bar">
           <span>
-            {SITE.version.toUpperCase()} · INSTALLED AS A CLAUDE CODE PLUGIN · NOT ON NPM
+            {SITE.version.toUpperCase()} · V{RELEASE.pluginVersion} · PORTABLE AGENT PLUGIN · TESTED ON CLAUDE CODE {INSTALL.claudeMarketplace.testedVersion} · NOT ON NPM
           </span>
           <span className="lp-foot__licence">
             <span className="lp-foot__dot" aria-hidden="true" />

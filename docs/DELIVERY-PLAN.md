@@ -1,6 +1,6 @@
 # Delivery + Install Plan
 
-> **WORKING PROTOTYPE — actively tested for public use, not a finished product.**
+> **Historical plan.** Skill Heaven is now live — the Claude Code path was verified from a clean install ([`RELEASE-ACCEPTANCE.md`](RELEASE-ACCEPTANCE.md)); the non-Claude launchers remain prototypes. Originally written as: *working prototype, not a finished product.*
 > Interfaces, flags, postures, and command surfaces may change.
 
 Status: five source-built launcher commands and one portable `skill-heaven`

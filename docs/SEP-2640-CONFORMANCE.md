@@ -128,3 +128,19 @@ executed and never written to the user's agent configuration.
 The URI/resource-link shape is a selective carry of the useful resource work in
 `5b45be1`; that commit was not cherry-picked wholesale, and its older index
 surface and unrelated semantics are intentionally not carried forward.
+
+## Test map
+
+Every claim above is pinned by a dedicated test; none rests on the
+representative URI rejection alone.
+
+| Claim | Test |
+| --- | --- |
+| `resultType` / `ttlMs: 0` / `cacheScope: "private"` on `skills/list`, `skills/get`, `resources/read` | `mcp-skills.test.ts` |
+| the same fields on `resources/list` and `resources/templates/list` | `sep-2640-boundaries.test.ts` › cacheable-result fields |
+| remote reads accept only the GitHub route; unprovable sources are omitted, never an error for other entries; clone into a disposable dir that is removed; commit resolved before clone | `sep-2640-boundaries.test.ts` › remote-confinement boundary |
+| symlinked file / directory component / source subpath / escaping link refused; directories and missing files refused | `sep-2640-boundaries.test.ts` › symlink and non-regular-file refusal |
+| 16 MiB bound (file, injected reader text and blob, manifest total) and the 512-entry manifest cap | `sep-2640-boundaries.test.ts` › 16 MiB bound |
+| discovery performs no fetch, clone or body read; scripts and instruction-shaped text are served as inert data; agent configuration untouched | `sep-2640-boundaries.test.ts` › no-fetch / no-execution boundary |
+| no directory reads, no `skill://index.json`, dynamic skills neither enumerated nor preloaded, unsupported metadata omitted | `sep-2640-boundaries.test.ts` › intentional omissions; flat-scalar frontmatter subset in `fleet-source.test.ts` |
+| base protocol `2026-07-28` is **not** negotiated by the pinned SDK | `mcp-skills.test.ts` and `sep-2640-boundaries.test.ts` (both fail on purpose if an SDK upgrade changes the result) |

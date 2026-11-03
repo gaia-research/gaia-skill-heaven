@@ -10,7 +10,7 @@
 // network, this run fails loudly instead of quietly measuring an online system.
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Bm25fRanker, marginOf, type ScoredSkill } from "../src/retrieval/bm25f.js";
@@ -26,6 +26,7 @@ import {
 } from "../src/retrieval/metrics.js";
 import { assertSkillIndex, type IndexedSkill, type SkillIndex } from "../src/retrieval/schema.js";
 import { INDEX_BUILDER_VERSION } from "../src/retrieval/version.js";
+import { loadAdjudication, scoreAdjudicated } from "./adjudication.js";
 
 globalThis.fetch = (() => {
   throw new Error(
@@ -35,7 +36,9 @@ globalThis.fetch = (() => {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");
-const resultsDir = join(here, "results");
+const outputArg = argValue("--out") ?? "results";
+if (isAbsolute(outputArg)) throw new Error("--out must be relative to the bench directory");
+const resultsDir = join(here, outputArg);
 
 export type GoldEntry = {
   query: string;
@@ -72,8 +75,13 @@ type System = {
 };
 
 const index = loadIndex();
-const gold = readJsonl<GoldEntry>(join(here, "gold.jsonl"));
-const unanswerable = readJsonl<UnanswerableEntry>(join(here, "unanswerable.jsonl"));
+const goldBytes = readFileSync(join(here, "gold.jsonl"));
+const unanswerableBytes = readFileSync(join(here, "unanswerable.jsonl"));
+const gold = readJsonl<GoldEntry>(goldBytes);
+const unanswerable = readJsonl<UnanswerableEntry>(unanswerableBytes);
+// The R3 overlay binds to the committed sets and throws if either has moved under
+// it. It adds metrics; it never changes a label, a score, or a policy.
+const adjudication = loadAdjudication(gold, unanswerable, { goldBytes, unanswerableBytes });
 const bm25f = new Bm25fRanker(index);
 
 // The same index with `retrieval.expansions` stripped, so PLAN 1.7's kill
@@ -195,6 +203,15 @@ const ledger = {
   builderVersion: INDEX_BUILDER_VERSION,
   goldSet: { queries: gold.length, ambiguous: gold.filter((entry) => entry.ambiguous).length },
   unanswerableSet: { queries: unanswerable.length },
+  /**
+   * Human adjudication, reported beside the machine labels rather than merged
+   * into them. `reviewed` is the only subset an absolute label-derived claim may
+   * be stated over; `uncertain` and `unreviewed` are counted, never scored.
+   */
+  adjudication: {
+    provenance: adjudication.provenance,
+    claimLimits: adjudication.provenance.claimLimits,
+  },
   systems: runs.map(({ perQuery: _perQuery, ...summary }) => summary),
   comparisons,
   floorSweep: argFlag("--calibrate") ? sweepFloor() : undefined,
@@ -242,6 +259,15 @@ function scoreSystem(system: System) {
     return doc !== undefined && system.reachable(doc);
   });
 
+  // Adjudication is scored off the SAME rankings this run already produced. It
+  // never re-ranks, never filters, and never feeds the floor.
+  const rankedByCase = new Map<string, string[]>();
+  perQuery.forEach((row, position) => {
+    rankedByCase.set(`gold-${String(position + 1).padStart(3, "0")}`, row.returned);
+  });
+  // A human-named alternative only scores if it is a real id in this corpus.
+  const corpusIds = new Set(index.docs.map((doc) => doc.id));
+
   return {
     system: system.id,
     label: system.label,
@@ -278,6 +304,12 @@ function scoreSystem(system: System) {
       },
     },
     mrr: round4(mean(perQuery.map((row) => row.reciprocalRank))),
+    /**
+     * Human-adjudicated slices. Strictly additive: the numbers above are
+     * computed from the machine labels and are unchanged by their presence.
+     * Only `adjudicated.reviewed` supports an absolute label-derived claim.
+     */
+    adjudicated: scoreAdjudicated(adjudication, gold, rankedByCase, corpusIds),
     // Six gold entries name a target that no honest query can separate from a
     // sibling (README § Provenance). Reported both ways rather than quietly
     // dropped: excluding them is a judgement, and the reader gets to see it.
@@ -371,6 +403,36 @@ function printReport(): void {
         .join(" "),
     );
   }
+  if (runs[0]?.adjudicated) {
+    console.log(
+      `\nadjudicated — absolute label-derived claims may only be stated over the ` +
+        `${runs[0].adjudicated.reviewed.n} human-confirmed case(s). ` +
+        `uncertain and unreviewed are counted, never scored.\n` +
+        ["system", "confirmed n", "MRR", "R@5", "resolved n", "MRR", "R@5", "corr", "uns", "unrev", "prose"]
+          .map(pad)
+          .join(" "),
+    );
+    for (const run of runs) {
+      const a = run.adjudicated;
+      console.log(
+        [
+          run.system,
+          String(a.reviewed.n),
+          a.reviewed.mrr.toFixed(4),
+          a.reviewed.recallAt5.toFixed(4),
+          String(a.resolved.n),
+          a.resolved.mrr.toFixed(4),
+          a.resolved.recallAt5.toFixed(4),
+          String(a.corrected),
+          String(a.uncertain),
+          String(a.unreviewed),
+          String(a.namedAlternativeUnresolvable),
+        ]
+          .map(pad)
+          .join(" "),
+      );
+    }
+  }
   for (const comparison of comparisons) {
     console.log(
       `\nΔ MRR (${comparison.system} vs ${comparison.against}) = ${signed(comparison.delta)}, ` +
@@ -397,8 +459,9 @@ function loadIndex(): SkillIndex {
   return raw;
 }
 
-function readJsonl<T>(path: string): T[] {
-  return readFileSync(path, "utf8")
+function readJsonl<T>(bytes: Uint8Array): T[] {
+  return Buffer.from(bytes)
+    .toString("utf8")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("//"))

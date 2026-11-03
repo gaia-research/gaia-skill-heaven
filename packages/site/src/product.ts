@@ -11,6 +11,15 @@
  * direction and a position along its band; it never names a count. No rung
  * carries a number and no summon is capped.
  *
+ * TWO STATUSES, NEVER CONFLATED. Skill Heaven the TOOL is LIVE: it installs from
+ * main, a fresh install was verified end to end (see `release.ts`), and the
+ * surfaces below are real. What stays PROVISIONAL is the research claim about
+ * rungs — what each rung means in behaviour, and where each band opens — plus
+ * everything gated on behavioural evidence that does not exist yet (SPEC INV-10
+ * stands, unmet; composition is relevance-only; Arbor evidence is reported, not
+ * applied). Do not delete a PROVISIONAL marker because the tool shipped, and do
+ * not add a WIP marker to something because the research is open.
+ *
  * Every figure here is either a real measured benchmark result or explicitly
  * flagged provisional. Nothing is invented: no testimonials, no logos, no user
  * counts, no pricing. No command appears here that the tool would reject.
@@ -22,11 +31,15 @@
 export const SITE = {
   name: 'Skill Heaven',
   repoName: 'Gaia Skill Heaven',
-  version: 'WIP · v0',
+  /** The tool's production status. NOT a claim about the research (see above). */
+  status: 'LIVE',
+  /** Chrome/footer label. The plugin version is read from `release.ts`. */
+  version: 'LIVE',
   tagline: 'Stop installing skills. Start summoning them.',
   repoUrl: 'https://github.com/gaia-research/gaia-skill-heaven',
   issuesUrl: 'https://github.com/gaia-research/gaia-skill-heaven/issues',
-  licence: 'Apache-2.0',
+  /** The only machine-readable declaration is the plugin manifest (MIT); the repository carries no LICENSE file. */
+  licence: 'MIT',
 } as const;
 
 /* -------------------------------------------------------------------------
@@ -59,11 +72,10 @@ export interface Surface {
   defaultRung: RungId | null;
   hue: string;
   /**
-   * The per-skill HH Index stamp this band reads, for the two bands that read
-   * one. `heaven-native` and `hell-safe` are the two halves of the same
-   * question — does a skill hold up when few are in context, and does it stay
-   * safe when many are — and they are being measured NOW, in the open, at
-   * `HOUSES[0].href`.
+   * The per-skill HH Index stamp this band is DESIGNED to read, for the two
+   * bands that would read one. `heaven-native` and `hell-safe` are the two
+   * halves of the same question — does a skill hold up when few are in context,
+   * and does it stay safe when many are. The research lives at `HOUSES[0].href`.
    *
    * They are not shipped routing. Stamps are not built, so eligibility today
    * falls back to relevance ranking, and no surface may render stamp-gated
@@ -78,7 +90,7 @@ export interface Surface {
  * named — they describe an index being measured, not a router that is running.
  */
 export const STAMP_ROUTING_NOTE =
-  'Both stamps are being benchmarked in the open. Until the index lands, routing ranks on relevance.';
+  'The stamps are not built. Until they exist, routing ranks on relevance alone — nothing here is stamp-gated.';
 
 export const SURFACES: Surface[] = [
   {
@@ -99,7 +111,7 @@ export const SURFACES: Surface[] = [
     command: '/skill-heaven',
     role: 'converge',
     blurb:
-      'Auto-summons narrowly. Fewer skills, chosen tightly against the gap in front of you.',
+      'Converge: summon narrowly, one gap at a time. Fewer skills, chosen tightly against the gap in front of you — each call judged per use.',
     ladder: 'converge',
     defaultRung: 'low',
     hue: 'var(--sh-heaven)',
@@ -114,7 +126,7 @@ export const SURFACES: Surface[] = [
     command: '/skill-hell',
     role: 'explore',
     blurb:
-      'Auto-summons widely. More experts in context — better, until it is not.',
+      'Explore: summon widely around the gap. More experts in context — better, until it is not. Each call is still judged per use.',
     ladder: 'explore',
     defaultRung: 'high',
     hue: 'var(--sh-hell)',
@@ -129,7 +141,7 @@ export const SURFACES: Surface[] = [
     command: '/skill-ultra',
     role: 'the controller',
     blurb:
-      'Picks the direction and the position for you, gap by gap. No ladder of its own — nothing to set.',
+      'Picks the direction and the position gap by gap, under your request and permissions. No ladder of its own — nothing to set.',
     ladder: null,
     defaultRung: null,
     hue: 'var(--sh-ultra)',
@@ -149,9 +161,9 @@ export const surfaceById = (id: SurfaceId): Surface =>
    is capped. How far a rung reaches on a given gap is the agent's call,
    worked out in use while the benchmark is built.
 
-   ⚠ PROVISIONAL. Where each band opens — Heaven at `low`, Hell at `high` —
-   is a working default, not a finding. Every surface that renders the line
-   carries the WIP mark.
+   ⚠ PROVISIONAL (the research, not the tool). What a rung means in behaviour,
+   and where each band opens — Heaven at `low`, Hell at `high` — are working
+   defaults, not findings. Every surface that renders the line says so.
    ------------------------------------------------------------------------- */
 
 export type RungId = 'zero' | 'low' | 'med' | 'high' | 'xhigh' | 'max' | 'ultra';
@@ -261,7 +273,7 @@ export const LADDER_MEASURE =
   'How much skill variety and volume enters a session.';
 
 export const LADDER_WIP =
-  'No rung carries a count and no summon is capped: how far one reaches on a given gap is the agent’s call. Where each band opens stays provisional until the benchmark lands.';
+  'No rung carries a count and no summon is capped: how far one reaches on a given gap is the agent’s call. What a rung means in behaviour — and where each band opens — is provisional: the evidence is still being gathered.';
 
 /* -------------------------------------------------------------------------
    Install & launch — real, working commands only.
@@ -357,13 +369,13 @@ export const INSTALL = {
     'Primary path. Installs one portable Agent Plugin and a local marketplace, then prints both directories. Point any Agent Plugins client at the printed plugin directory and use that client’s own registration command.',
   /** Tested Claude Code compatibility — a client route, not the universal install. */
   claudeMarketplace: {
-    testedVersion: '2.1.237',
+    testedVersion: '2.1.288',
     commands: [
       '/plugin marketplace add gaia-research/gaia-skill-heaven',
       '/plugin install skill-heaven@gaia-skill-heaven',
     ] as const,
     note:
-      'Tested Claude Code marketplace compatibility. This client-owned route remains available; it is not the harness-neutral Agent Plugin installer.',
+      'Tested on Claude Code 2.1.288 from a clean install (see the production page). This client-owned route is available; it is not the harness-neutral Agent Plugin installer.',
   },
   /** Optional — the standalone source-built launcher doors. */
   sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
@@ -426,6 +438,14 @@ export const DOSES = {
   deltaVsNative: '−28.9%',
   doorCost: 515,
   note: 'Two numbers, never averaged — the floor you can prove, and the floor you actually ship.',
+  /**
+   * These are HISTORICAL measurements: Claude Code 2.1.216, 2026-07-24, taken
+   * before the bundled summon MCP server was admitted to the product floor
+   * (#143). The shipped floor now carries exactly one MCP server whose tool
+   * schema is not priced here. Say so wherever the numbers appear.
+   */
+  scope:
+    'Measured on Claude Code 2.1.216 (2026-07-24), before the bundled summon MCP server was admitted to the product floor. The shipped floor now adds that one server; its dose is not re-priced here.',
 } as const;
 
 /* -------------------------------------------------------------------------

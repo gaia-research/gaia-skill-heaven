@@ -1,6 +1,6 @@
 import {
   consumeArbor, inspectArborComposition,
-  type ArborPublication, type ArborSubjectReport, type CompositionMember,
+  type ArborPublication, type ArborSubjectReport, type ArborBandOptions, type CompositionMember,
 } from "skill-zero";
 import type { MaterializedSkillRecord } from "./session.js";
 
@@ -12,6 +12,7 @@ export function sessionComposition(
   before: readonly MaterializedSkillRecord[],
   reportFor: (id: string) => ArborSubjectReport,
   additions: readonly CompositionMember[],
+  bandOptions: ArborBandOptions = {},
 ) {
   const members: CompositionMember[] = before.map((record) => {
     const current = reportFor(record.id);
@@ -28,5 +29,5 @@ export function sessionComposition(
     });
     return { role: "session-record", report };
   });
-  return inspectArborComposition(publication, [...members, ...additions]);
+  return inspectArborComposition(publication, [...members, ...additions], bandOptions);
 }

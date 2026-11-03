@@ -239,7 +239,7 @@ button { font-family: inherit; }
    the legacy routes keep their own values. Remove this block when tokens.css
    is retired with those routes.
    -------------------------------------------------------------------------- */
-.hx, .lp {
+.hx, .lp, .st, .cx {
   --sh-void: #1b1a1c;
   --sh-ink: #eeebe6;
   --sh-line: rgba(238, 235, 230, 0.11);

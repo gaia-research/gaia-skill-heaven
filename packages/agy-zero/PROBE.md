@@ -1,9 +1,8 @@
-# PROBE — Antigravity CLI (`agy`) 1.2.9 skill suppression (WP14 / M0)
+# PROBE — Antigravity CLI (`agy`) 1.2.13 skill suppression and keychain-safe launch (WP14 / M0)
 
-**Harness:** `agy` 1.2.9 (`agy --version` → `1.2.9`)
-**Date:** 2026-09-24
+**Harness:** `agy` 1.2.13 (`agy --version` → `1.2.13`)
+**Date:** 2026-09-24 (initial 1.2.9 probe); updated 2026-09-30 (1.2.13 keychain-safe invariant verification)
 **OS:** Darwin arm64 (macOS)
-**Visible evidence pane:** `w7:p4N` (workspace `w7`, tab `w7:tJ`)
 **Model used for every probe:** `gemini-3.8-flash-low` (held constant across all arms)
 
 ---
@@ -16,107 +15,161 @@ Google Antigravity CLI (`agy`) discovers custom skills from:
 3. `$HOME/.gemini/antigravity-cli/skills/<skill-name>/SKILL.md`
 4. Built-in bundled skills under `$HOME/.gemini/antigravity-cli/builtin/skills/`
 
-Because `agy` evaluates `$HOME/.gemini` for user configurations and plugins (Class 3 in `harness-door-pattern`), redirecting `HOME` to a disposable session directory (`$SESSION`) isolates all user-level skills and plugins completely without touching shared user state (P3 compliance).
+### The Keychain Defect & Root Cause
 
-### The Auth Trap & Resolution
-A bare `$SESSION` directory lacks OAuth credentials, causing `agy` to output:
-```
-Authentication required. Please visit the URL to log in: ...
-```
-To preserve seamless authentication without mutating shared state, the launch plan copies existing user credentials via `copyFileIfExists`:
-- `~/.gemini/antigravity-cli/antigravity-oauth-token`
-- `~/.gemini/jetski-standalone-oauth-token`
-- `~/.gemini/oauth_creds.json`
-- `~/.gemini/google_accounts.json`
-- `~/.gemini/installation_id`
-- `~/.gemini/settings.json`
+Running `agy-zero` with `HOME=$SESSION` redirects `$HOME` to a temporary directory. On macOS Darwin, `security list-keychains` evaluates `$HOME/Library/Keychains/login.keychain-db`.
+When `HOME` is redirected:
+- `security list-keychains` drops `login.keychain-db` from the search list, listing only `/Library/Keychains/System.keychain`.
+- Keyring queries (`github.com/zalando/go_keyring/v0`) fail with "The specified item could not be found in the keychain."
+- `agy` logs `Failed to load token from keyring, falling back to file: %v` and attempts interactive re-authentication.
+- Every run with a fresh `mkdtemp` directory prompts the user again with keychain authorization dialogs and generates a distinct session account ("second agy account").
 
-This enables authenticated headless and interactive executions under `$SESSION` with zero shared state mutation.
+### Invariant & Architecture Resolution
+
+**agy-zero must never redirect HOME unless the operator explicitly opts in.**
+- **Default route (`isolateHome: false`):** runs against the user's real `HOME`. No `env.HOME` override, no auth copying. Existing vanilla credentials and the macOS login keychain remain completely intact.
+- **Opt-in route (`--isolate-home` / `isolateHome: true`):** directs `HOME` to `$SESSION` with auth file copying. On Darwin, a warning is emitted noting that the login keychain is unreachable and execution runs as a distinct account.
+- **Curated (`--level low`):** Writing into the user's real `~/.gemini/config/skills` is forbidden by P3 (never mutate shared state). Therefore, curated without `--isolate-home` is rejected with exit code 2, instructing the operator to either pass `--isolate-home` (accepting the keychain trade-off) or use an in-session summon rung.
 
 ---
 
 ## 2. Empirical Probes & Hard Signals
 
-### Hard Signal 1: Filesystem Discovery Verification
-`agy` scans `$HOME/.gemini/config/skills/`, `$HOME/.gemini/config/plugins/`, and `$HOME/.gemini/antigravity-cli/skills/`.
-- In native environment:
-  - `~/.gemini/config/plugins/` contains 3 active plugin trees with 9 bundled skills.
-  - `~/.gemini/config/skills/` contains symlinked `ego-browser`.
-- In `$SESSION` (clean room):
-  - No plugin directories exist in `$SESSION/.gemini/config/plugins/`.
-  - In floor and product-floor: `$SESSION/.gemini/config/skills` is completely empty (0 files).
-  - In curated: `$SESSION/.gemini/config/skills` contains strictly the readmitted skill directory.
-  - Hard enumeration check (`find $SESSION/.gemini -name "SKILL.md"`):
-    - Floor / Product-Floor: 0 SKILL.md files.
-    - Curated: Exactly 1 SKILL.md file (`canary-skill/SKILL.md`).
-
-### Hard Signal 2: Auth Isolation & Scoping
-`~/.gemini/settings.json` contains only:
-```json
-{
-  "security": {
-    "auth": {
-      "selectedType": "oauth-personal"
-    }
-  },
-  "ide": {
-    "hasSeenNudge": true,
-    "enabled": true
-  }
-}
-```
-It carries only the OAuth personal provider selection and IDE onboarding flag; it registers no ambient skills, plugins, or external endpoints. Credentials copied via `copyFileIfExists` provide pure token authentication without shared state mutation.
-
-### Cell 1: Native Baseline
+### Probe 1: Version Verification
 ```bash
-agy -p "List all available skills or slash commands you know." --model gemini-3.8-flash-low
+agy --version
 ```
-Result: Discovered 11 ambient skills (`a11y-debugging`, `agy-customizations`, `antigravity-guide`, `chrome-devtools`, `chrome-extensions`, `debug-optimize-lcp`, `ego-browser`, `google-antigravity-sdk`, `memory-leak-debugging`, `modern-web-guidance`, `troubleshooting`) and 8 slash commands.
+- Exit: 0
+- Output: `1.2.13`
 
-### Cell 2: Benchmark Floor (`--posture floor`)
-Composition: `HOME=$SESSION`, auth files copied, `--disable-slash-commands --dangerously-skip-permissions` (in print mode).
+### Probe 2: Flag Inspection
 ```bash
-HOME=$SESSION agy -p "List all available skills or slash commands you know." \
+agy --help
+```
+- Exit: 0
+- Findings: Confirmed `--disable-slash-commands` and `--dangerously-skip-permissions` remain present. No new skill-directory redirection flags were added. Subcommands `agent`, `agents`, `changelog`, `help`, `install`, `mcp`, `mic-serve`, `models`, `plugin`, `plugins`, `remote-control`, `update` inspected.
+
+### Probe 3: Keychain Mechanism (macOS Darwin)
+```bash
+security list-keychains
+HOME=/tmp/agy-probe-fake security list-keychains
+```
+- Under real HOME:
+  ```
+  "/Users/marcotiongson/Library/Keychains/login.keychain-db"
+  "/Library/Keychains/System.keychain"
+  ```
+- Under fake HOME (`/tmp/agy-probe-fake`):
+  ```
+  "/Library/Keychains/System.keychain"
+  ```
+- Verification: Verifies that redirecting `HOME` evicts the user's login keychain from the search list.
+
+### Probe 4: Flag-Based Suppression under Real HOME
+```bash
+agy -p "List every skill and slash command you can see. Answer with counts only." \
   --disable-slash-commands --dangerously-skip-permissions --model gemini-3.8-flash-low
 ```
-Result: 0 ambient skills. Repeats agreed. Hard filesystem check confirmed 0 SKILL.md files in `$SESSION/.gemini/config/skills`.
+- Run 1 (Exit 0): `- **Skills:** 16`, `- **Slash commands:** 8`
+- Run 2 (Exit 0): `- **Skills:** 16`, `- **Slash commands:** 8`
+- Finding: In `agy` 1.2.13, `--disable-slash-commands` disables slash command expansion in print mode, but does not suppress ambient filesystem skills under real `HOME`.
 
-### Cell 3: Product Floor (`--posture product-floor` / `--level zero`)
-Composition: `HOME=$SESSION`, auth files copied, `--dangerously-skip-permissions`.
+### Probe 5: Ambient Skills Control under Real HOME
 ```bash
-HOME=$SESSION agy -p "List all available skills or slash commands you know." \
+agy -p "List every skill and slash command you can see. Answer with counts only." \
   --dangerously-skip-permissions --model gemini-3.8-flash-low
 ```
-Result: 0 ambient skills discovered. Native slash commands (`/plan`, `/boost`, `/goal`, etc.) remain accessible as the door control surface. Repeats agreed. Hard filesystem check confirmed 0 SKILL.md files in `$SESSION/.gemini/config/skills`.
+- Exit: 0
+- Output: `- **Skills:** 16`, `- **Slash commands:** 8`, `- **Total:** 24`
 
-### Cell 4: Curated Readmission (`--level low --skill <path>`)
-A disposable canary skill was created in `$SESSION/.gemini/config/skills/canary-skill/SKILL.md`:
-```markdown
----
-name: canary-skill
-description: Use when testing canary skill loading
----
-# Canary Skill
-Whenever the user asks what skills exist or asks for the canary password, answer exactly CANARY_AGY_LOADED.
-```
-
-Hard filesystem check (`find $SESSION/.gemini -name "SKILL.md"`): exactly 1 file found.
-
-Invocations:
+### Probe 6: Filesystem Discovery Root Enumeration
 ```bash
-HOME=$SESSION agy -p "What skills do you have? If you have a canary skill, state its exact password." \
-  --dangerously-skip-permissions --model gemini-3.8-flash-low
+find ~/.gemini -name SKILL.md
 ```
-- Run 1: `CANARY_AGY_LOADED`
-- Run 2: `CANARY_AGY_LOADED`
+- Exit: 0
+- Total count: 157 `SKILL.md` files located across `~/.gemini/antigravity`, `~/.gemini/antigravity-cli`, `~/.gemini/antigravity-ide`, `~/.gemini/config`, and `~/.gemini/skills`.
 
-Repeats agreed 100%. The curated clean room admits exactly the materialized skill and nothing else.
+### Probe 7: Config and Skills Directory Override Inspection
+- Checked `agy --help`, `agy plugin --help`, `agy mcp --help`.
+- Grepped strings of the 180MB `agy` binary: `strings -a "$(which agy)" | grep -iE "CONFIG_DIR|SKILLS_DIR|HOME"`.
+- Findings: Found no environment variable or CLI flag that overrides the skills directory without redirecting `HOME`. `HOME` redirection is the sole mechanism available in `agy` for filesystem skill scoping.
 
 ---
 
-## 3. Findings & Recommendation
+## 3. Findings & Implementation
 
-1. `agy` 1.2.9 supports session-scoped clean room execution via `HOME=$SESSION` with credential inheritance.
-2. Ambient skills and plugins are fully suppressed.
-3. Curated readmission functions deterministically through `$SESSION/.gemini/config/skills/<id>`.
-4. Live execution support: `execSupport: "exec"`.
+1. **Vanilla Login Invariant Preserved:** The default `agy-zero` launch plan maintains the real `HOME` and does not mutate shared state.
+2. **Keychain Protection:** Real `HOME` execution prevents macOS login keychain disappearance, avoiding auth prompts and duplicate account creation.
+3. **Explicit Isolation (`--isolate-home`):** Clean-room isolation is available as an explicit opt-in for users requiring a distinct sandbox.
+4. **P3 Enforced:** Curated mode without `--isolate-home` fails fast with exit code 2, strictly prohibiting mutations to `~/.gemini`.
+
+---
+
+## 4. Agent Plugin route on 1.3.1 (PR #187, 2026-10-08)
+
+**Harness:** `agy` 1.3.1 (`agy --version` → `1.3.1`) · macOS 26.4.1 arm64 · model `gemini-3.8-flash-low`
+**HOME:** the real one in every live cell. The #160 invariant was never relaxed: no cell redirected
+`HOME`, so the login keychain and the vanilla account were in use throughout. Live cells ran in a
+visible Herdr pane.
+
+This is the **plugin** (`plugins/skill-heaven`), not the `agy-zero` launcher. The launcher's
+suppression findings above (1.2.13) were not re-probed.
+
+### Reproduced first: commands load, the summon server does not
+
+```
+$ agy plugin validate plugins/skill-heaven        # main @ 9e71939
+  ✔ skills      : 5 processed
+  ✔ commands    : 5 processed (converted to skills)
+  - mcpServers  : skipped (not found)
+```
+
+### Why
+
+agy 1.3.1's embedded plugin documentation (`strings` of the binary) gives the plugin layout:
+
+```
+plugins/<plugin_name>/
+  plugin.json       # Required: Manifest file
+  mcp_config.json   # Optional: MCP servers exposed by the plugin
+```
+
+and "MCP Servers defined in `plugins/<name>/mcp_config.json` are launched". It does not read the
+Agent Plugins `mcp.json` or Claude's `.mcp.json`. The same binary expands `${PLUGIN_ROOT}`,
+`${PLUGIN_DATA}`, `${extensionPath}` and `${workspacePath}`.
+
+### Repair
+
+`plugins/skill-heaven/mcp_config.json`: the portable `skill-summon` entry verbatim without `type`
+(a test holds the two equal). It is a client delivery shim like `.codex.mcp.json`, not another
+engine.
+
+```
+$ agy plugin validate plugins/skill-heaven
+  ✔ mcpServers  : 1 processed
+```
+
+### Live cells (hard signal: `--output-format stream-json` step events)
+
+| Cell | Route | Hard signal | Result |
+|---|---|---|---|
+| `/skill-heaven:summon frontend code review` | plugin in a temp workspace's `.agents/plugins/` (no install) | `call_mcp_tool` `ServerName: skill-heaven_skill-summon`, `ToolName: summon`, state `DONE`; then `view_file` of the materialized `skill-summon-session-*/…/SKILL.md` | pass |
+| `/skill-heaven:skill-zero`, `:skill-heaven low`, `:skill-hell high`, `:skill-ultra` | same | no tool calls; the reply carries each `SKILL.md`'s own reference text | pass (×4) |
+| install route | `agy plugin install <plugin dir>` → one `/skill-heaven:summon` from a neutral cwd → `agy plugin uninstall skill-heaven` | install lists `skills, commands, mcpServers`; `call_mcp_tool … DONE`; uninstall → `No imported plugins.` | pass |
+| TUI menu | interactive `agy`, typed `/sum`, `/skill` | the menu lists exactly one entry per surface, **namespaced**: `/skill-heaven:summon`, `/skill-heaven:skill-zero`, `:skill-heaven`, `:skill-hell`, `:skill-ultra` | — |
+
+**Negative, kept:** the bare spellings (`/summon …`, `/skill-zero`, `/skill-heaven low`, …) are
+not commands on agy 1.3.1. In print mode the model improvised: it searched `~` for files named
+`skill-zero`, or called summon with `query: "low"`. Only the namespaced spelling is printed for
+Antigravity.
+
+**Install side effects:** `agy plugin install` copies the plugin to
+`~/.gemini/config/plugins/skill-heaven`, and `uninstall` removes it. It also leaves
+`~/.gemini/config/import_manifest.json` (`{"imports": null}`) behind. That file did not exist
+before; the probe removed it, and a hash snapshot of `~/.gemini/config` matched the pre-probe state.
+The install mechanics were first exercised under a throwaway HOME (no login needed for
+`install`/`list`/`uninstall`), and only then with the real HOME.
+
+**Status change:** Antigravity moves from **Partial** to **Compatible (probed 1.3.1)**. The
+registration command printed is `agy plugin install "<plugin dir>"`, and the first summon is
+`/skill-heaven:summon <what you need>`. A status entry for Antigravity is still not built.

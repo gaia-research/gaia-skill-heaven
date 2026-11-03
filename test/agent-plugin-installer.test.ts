@@ -31,6 +31,7 @@ describe("portable Agent Plugin installer", () => {
     mkdirSync(archiveRoot, { recursive: true });
     cpSync(join(REPO, "plugins"), join(archiveRoot, "plugins"), { recursive: true });
     cpSync(join(REPO, ".claude-plugin"), join(archiveRoot, ".claude-plugin"), { recursive: true });
+    cpSync(join(REPO, "scripts"), join(archiveRoot, "scripts"), { recursive: true });
     const archive = join(root, "source.tar.gz");
     execFileSync("tar", ["-czf", archive, "-C", join(root, "archive"), "gaia-skill-heaven-probe"]);
 
@@ -61,7 +62,10 @@ describe("portable Agent Plugin installer", () => {
     });
     const plugin = join(installHome, "marketplace", "plugins", "skill-heaven");
 
-    expect(output).toContain(`Plugin directory: ${plugin}`);
+    // The epilogue (see test/installer-epilogue.test.ts) names both real directories.
+    expect(output).toContain(`+ ${plugin}`);
+    expect(output).toContain(`+ ${join(installHome, "marketplace")}`);
+    expect(output).toContain("No harness was installed or reconfigured.");
     expect(existsSync(join(plugin, "plugin.json"))).toBe(true);
     expect(existsSync(join(plugin, "mcp.json"))).toBe(true);
     expect(existsSync(join(plugin, "skills", "summon", "SKILL.md"))).toBe(true);
@@ -80,6 +84,13 @@ describe("portable Agent Plugin installer", () => {
       readFileSync(join(installHome, "marketplace", ".claude-plugin", "marketplace.json"), "utf8"),
     ) as { plugins: Array<{ source: string }> };
     expect(marketplace.plugins[0]?.source).toBe("./plugins/skill-heaven");
+    // Every entry the local marketplace lists must exist in the artifact: the
+    // repository marketplace also lists the Claude-only console, which the
+    // portable artifact does not carry.
+    expect(marketplace.plugins).toHaveLength(1);
+    for (const entry of marketplace.plugins) {
+      expect(existsSync(join(installHome, "marketplace", entry.source)), entry.source).toBe(true);
+    }
 
     const printed = execFileSync("sh", [INSTALLER, "--print-path"], {
       encoding: "utf8",
@@ -96,13 +107,11 @@ describe("portable Agent Plugin installer", () => {
     writeFileSync(preserve, "previous install");
     const fakeBin = join(root, "fake-bin");
     mkdirSync(fakeBin);
-    const realMv = execFileSync("sh", ["-c", "command -v mv"], { encoding: "utf8" }).trim();
-    const fakeMv = join(fakeBin, "mv");
-    writeFileSync(
-      fakeMv,
-      `#!/bin/sh\ncase $1 in */install) exit 73 ;; esac\nexec '${realMv}' "$@"\n`,
-    );
-    chmodSync(fakeMv, 0o755);
+    // Node now activates with renameSync. A staging Git failure must leave the
+    // prior installation intact, rather than relying on an obsolete mv shim.
+    const fakeGit = join(fakeBin, "git");
+    writeFileSync(fakeGit, "#!/bin/sh\nexit 73\n");
+    chmodSync(fakeGit, 0o755);
     expect(() =>
       execFileSync("sh", [INSTALLER], {
         env: { ...installEnv, PATH: `${fakeBin}:${process.env.PATH ?? ""}` },

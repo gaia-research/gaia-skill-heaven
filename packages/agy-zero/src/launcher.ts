@@ -26,7 +26,7 @@ export function assertLevelAllowed(level: string | undefined): void {
     const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
       `level "${level}" is a live summon rung, not a boot posture. ` +
-        `Launch agy-zero at zero|low|med, then arm it in-session with ${arm}.`,
+        `Launch agy-zero at zero|low|med, then select it in-session with ${arm}.`,
     );
   }
 }
@@ -45,6 +45,7 @@ export interface LaunchOptions {
   /** Pass "$SESSION" for dry-run output. Curated fsPlan writes only below it. */
   sessionDir: string;
   agyArgs?: string[];
+  isolateHome?: boolean;
 }
 
 export interface LaunchPlan {
@@ -69,6 +70,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     posture,
     harness: "agy",
     skills,
+    isolateHome: opts.isolateHome,
     ...(opts.model ? { model: opts.model } : {}),
     ...(opts.prompt !== undefined ? { prompt: opts.prompt } : {}),
     ...(opts.agyArgs?.length ? { passthrough: opts.agyArgs } : {}),

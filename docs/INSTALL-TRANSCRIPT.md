@@ -34,7 +34,7 @@ precondition hermes-zero: absent
 precondition grok-zero: absent
 precondition skill-hell: absent
 $ curl -fsSL https://raw.githubusercontent.com/gaia-research/gaia-skill-heaven/feat/one-command-install/install.sh | sh
-SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use.
+SKILL HEAVEN — LIVE. claude-zero is the verified door; the other launchers are prototypes.
 Installing all five doors, the Claude plugin, and the skill-hell summon engine.
 Harnesses are never installed; every door uses the user's own harness binary.
 Fetching Skill Heaven source (main) ...
@@ -105,7 +105,7 @@ skill-hell: reuse it across commands with: export SKILL_HELL_SESSION=/var/folder
   Inspect: https://github.com/garrytan/gstack/blob/main/review/SKILL.md
 
 $ curl -fsSL https://raw.githubusercontent.com/gaia-research/gaia-skill-heaven/feat/one-command-install/install.sh | sh
-SKILL HEAVEN — WORKING PROTOTYPE, actively tested for public use.
+SKILL HEAVEN — LIVE. claude-zero is the verified door; the other launchers are prototypes.
 Installing all five doors, the Claude plugin, and the skill-hell summon engine.
 Harnesses are never installed; every door uses the user's own harness binary.
 Fetching Skill Heaven source (main) ...
@@ -132,7 +132,7 @@ PATH already includes /private/tmp/gaia-skill-heaven-wp18-final/.local/share/gai
 Install complete. Re-run the same one-liner to update idempotently.
 
 $ "$HOME/.local/share/gaia-skill-heaven/uninstall.sh"
-Skill Heaven working prototype — uninstalling everything from /private/tmp/gaia-skill-heaven-wp18-final/.local/share/gaia-skill-heaven
+Skill Heaven — uninstalling everything from /private/tmp/gaia-skill-heaven-wp18-final/.local/share/gaia-skill-heaven
 Removing Claude plugin claude-zero@gaia-skill-heaven ...
 ✔ Successfully uninstalled plugin: claude-zero (scope: user)
 Removing Claude marketplace gaia-skill-heaven ...

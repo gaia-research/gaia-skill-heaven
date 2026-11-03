@@ -4,6 +4,7 @@
 // after mkdtemp. It composes flags and execs; it never stashes, restores, or
 // mutates shared state (P3).
 
+import { isAbsolute, join, resolve } from "node:path";
 import type { ResolvedSkill } from "./skills.js";
 
 // THE FLOOR SPLIT (founder ruling V5-5, 2026-07-28).
@@ -157,7 +158,7 @@ export const BAND_INFO: Record<Band, BandInfo> = {
 
 /** The mark every rendering of the line must carry. */
 export const LADDER_WIP =
-  "WIP \u00b7 PROVISIONAL \u2014 what each rung means is being worked out against the benchmark.";
+  "WIP \u00b7 PROVISIONAL \u2014 what each rung means in behaviour, and where each band opens, is not settled; the evidence is still being gathered.";
 
 /** Rungs that are armed live, in-session, and have no boot-posture mapping.
  * They do not refuse: `ultra` is ratified (N13). They are simply a different
@@ -174,6 +175,44 @@ export interface DoseSummary {
   skills: Array<{ id: string; standingTokens: number; invocationTokens: number }>;
   standingTotal: number;
   invocationTotal: number;
+}
+
+/** The one MCP server the door is allowed to admit: the summon engine bundled
+ * inside the plugin. `--strict-mcp-config` is an ALLOWLIST, so a name here is a
+ * grant, not a description — it is deliberately a single constant and the
+ * compiler rejects anything else. */
+export const DOOR_MCP_SERVER_NAME = "skill-summon";
+
+/** Where the admitted door declaration is written inside the session dir. The
+ * contents are fully resolved (absolute bundle path, concrete source), so the
+ * file never needs session substitution — only its path does. */
+export const DOOR_MCP_CONFIG_PATH = "$SESSION/door-mcp.json";
+
+/** Where the door's own bundle lives INSIDE the plugin dir it mounts. Checked
+ * against the mount so an admitted entry can only ever be that program. */
+export const DOOR_MCP_BUNDLE_RELATIVE = join("mcp", "skill-summon.mjs");
+
+/** The one env key the door's server carries. */
+export const DOOR_MCP_SOURCE_ENV_KEY = "SKILL_SOURCE";
+
+/** A RESOLVED stdio MCP server declaration. "Resolved" is the whole contract:
+ * every value is a literal — no `${...}` interpolation survives, because
+ * Claude does NOT interpolate a plugin manifest supplied through an explicit
+ * `--mcp-config` file (probe, 2.1.288 — see packages/claude-zero/PROBE.md). */
+export interface DoorMcpServer {
+  type: "stdio";
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
+export interface DoorMcpConfig {
+  mcpServers: Record<string, DoorMcpServer>;
+}
+
+function hasUnresolvedPlaceholder(value: string): boolean {
+  const start = value.indexOf("${");
+  return start !== -1 && value.indexOf("}", start + 2) !== -1;
 }
 
 export interface CompileInput {
@@ -193,6 +232,25 @@ export interface CompileInput {
   // deliberately open; V5-4). Omit it and product-floor still compiles: the
   // route permits a door, mounting one is the door package's business.
   doorPluginDir?: string;
+  // product-floor on claude only: the door's OWN bundled summon MCP server,
+  // already resolved by the door package into one explicit stdio declaration.
+  //
+  // WHY THIS IS AN INPUT AND NOT A DISCOVERY. Under `--strict-mcp-config` a
+  // plugin's own `.mcp.json` is not started at all (measured, 2.1.288:
+  // `mcp_servers: []` on the door route) — which is exactly right for the
+  // product floor (ambient servers must stay suppressed) and exactly wrong for
+  // the one server the door itself ships. So the door hands core a fully
+  // resolved declaration and core routes it: strict mode stays on, ambient
+  // servers stay out, and the door's own `skill-summon` is admitted.
+  //
+  // Core validates the shape and owns the ROUTE. It never reads a plugin
+  // manifest, never discovers the repository topology, and never imports
+  // skill-summon: resolving the declaration is the door package's job.
+  doorMcpConfig?: DoorMcpConfig;
+  // agy only: opt in to session-scoped HOME and auth copying (default false).
+  // When false, agy runs under the real HOME so the macOS login keychain and
+  // vanilla credentials work without popping auth prompts or creating second accounts.
+  isolateHome?: boolean;
 }
 
 export interface CompileResult {
@@ -220,6 +278,108 @@ export function doseSummary(skills: ResolvedSkill[]): DoseSummary {
   };
 }
 
+/** A `${...}` placeholder Claude will not expand in an explicit `--mcp-config`
+ * file (measured, claude 2.1.288: the server starts and immediately FAILS with
+ * the raw placeholder as its argv). Core rejects it here rather than shipping a
+ * route that silently loses the door. */
+function rejectUnresolved(field: string, value: string): void {
+  if (hasUnresolvedPlaceholder(value)) {
+    throw new Error(
+      `doorMcpConfig: ${field} still contains an unresolved \${…} placeholder (${JSON.stringify(value)}). ` +
+        "Claude does not interpolate plugin placeholders in an explicit --mcp-config file, so the door " +
+        "must resolve the bundle path and the skill source to literal values first.",
+    );
+  }
+}
+
+/**
+ * The door's MCP admission is a GRANT, so it is validated as one: exactly the
+ * one known server, a stdio/node shape, literal argv/env, and — when the mount
+ * is known — the bundle that actually ships inside it. A malformed declaration
+ * throws rather than degrading to "no servers": a silently doorless product
+ * floor is the exact failure this composition exists to fix (#143).
+ *
+ * `doorPluginDir` is the dir the caller mounts with `--plugin-dir`. Supplying it
+ * is what lets core enforce the strongest part of the contract: the admitted
+ * argv must BE the mounted door's own `mcp/skill-summon.mjs`, not merely some
+ * absolute path. Core cannot read the manifest to check that (zero I/O, and no
+ * topology knowledge), so it checks the shape instead and the DOOR resolves the
+ * declaration — the two together are the contract.
+ */
+export function assertDoorMcpConfig(config: DoorMcpConfig, doorPluginDir?: string): void {
+  const servers = (config as { mcpServers?: unknown } | null)?.mcpServers;
+  if (!servers || typeof servers !== "object" || Array.isArray(servers)) {
+    throw new Error("doorMcpConfig must be an object with a mcpServers map");
+  }
+  const names = Object.keys(servers as Record<string, unknown>);
+  if (names.length !== 1 || names[0] !== DOOR_MCP_SERVER_NAME) {
+    throw new Error(
+      `doorMcpConfig must admit exactly one server, "${DOOR_MCP_SERVER_NAME}" ` +
+        `(got ${names.length === 0 ? "none" : names.join(", ")}). --strict-mcp-config is an allowlist: ` +
+        "anything else here would either break the door or admit a server the product floor exists to keep out.",
+    );
+  }
+  const server = (servers as Record<string, DoorMcpServer>)[DOOR_MCP_SERVER_NAME];
+  if (!server || typeof server !== "object") throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME} is not an object`);
+  if (server.type !== "stdio") {
+    throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME} must be declared as a stdio server (got ${JSON.stringify(server.type)})`);
+  }
+  if (server.command !== "node") {
+    throw new Error(
+      `doorMcpConfig: ${DOOR_MCP_SERVER_NAME} must run on plain node — no npx, no external binary ` +
+        `(got ${JSON.stringify(server.command)})`,
+    );
+  }
+  if (!Array.isArray(server.args) || server.args.length === 0 || server.args.some((a) => typeof a !== "string")) {
+    throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.args must be a non-empty array of strings`);
+  }
+  for (const arg of server.args) {
+    rejectUnresolved(`${DOOR_MCP_SERVER_NAME}.args`, arg);
+  }
+  if (!isAbsolute(server.args[0])) {
+    throw new Error(
+      `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.args[0] must be an ABSOLUTE path to the bundled server ` +
+        `(got ${JSON.stringify(server.args[0])}) — the door resolves ${"${CLAUDE_PLUGIN_ROOT}"} itself`,
+    );
+  }
+  // ONE argv element. The admitted entry is a grant to start this bundle, not to
+  // pass it flags; a trailing `--some-flag` would be an unreviewed second input.
+  if (server.args.length !== 1) {
+    throw new Error(
+      `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.args must be exactly one entry — the bundle path ` +
+        `(got ${server.args.length} entries)`,
+    );
+  }
+  if (doorPluginDir !== undefined) {
+    const expectedBundle = resolve(doorPluginDir, DOOR_MCP_BUNDLE_RELATIVE);
+    if (resolve(server.args[0]) !== expectedBundle) {
+      throw new Error(
+        `doorMcpConfig: ${DOOR_MCP_SERVER_NAME} must admit the mounted door plugin's own bundle ` +
+          `(${JSON.stringify(expectedBundle)}), got ${JSON.stringify(server.args[0])}. The door ships ` +
+          "one summon server; admitting a different program under its name would not be the door.",
+      );
+    }
+  }
+  if (server.env !== undefined) {
+    if (typeof server.env !== "object" || Array.isArray(server.env)) {
+      throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env must be a map of string values`);
+    }
+    for (const [key, value] of Object.entries(server.env)) {
+      // An env entry on an admitted stdio server changes how `node` ITSELF
+      // starts (NODE_OPTIONS, PATH, LD_*), so the allowlist stays minimal.
+      if (key !== DOOR_MCP_SOURCE_ENV_KEY) {
+        throw new Error(
+          `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env may carry only ${DOOR_MCP_SOURCE_ENV_KEY} (got ${key})`,
+        );
+      }
+      if (typeof value !== "string") {
+        throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env.${key} must be a string (got ${typeof value})`);
+      }
+      rejectUnresolved(`${DOOR_MCP_SERVER_NAME}.env.${key}`, value);
+    }
+  }
+}
+
 export function compile(input: CompileInput): CompileResult {
   const { posture, harness, skills } = input;
 
@@ -235,6 +395,27 @@ export function compile(input: CompileInput): CompileResult {
         "the benchmark floor is doorless by ruling (V5-5/B2) and curated mounts its own set",
     );
   }
+  if (input.doorMcpConfig) {
+    if (input.harness !== "claude") {
+      throw new Error(
+        `doorMcpConfig is only valid with harness claude (got harness ${input.harness}) — the admission route ` +
+          "is claude's --strict-mcp-config allowlist; core has not probed any other harness's equivalent (M0 discipline)",
+      );
+    }
+    if (posture !== "product-floor") {
+      throw new Error(
+        `doorMcpConfig is only valid with --posture product-floor (got posture ${posture}) — the benchmark floor ` +
+          "is doorless by ruling (V5-5/B2) and curated mounts its own set",
+      );
+    }
+    if (!input.doorPluginDir) {
+      throw new Error(
+        "doorMcpConfig requires doorPluginDir — the admitted server ships INSIDE the mounted door plugin, so " +
+          "admitting its MCP without mounting the plugin would split the door's control surface in half",
+      );
+    }
+    assertDoorMcpConfig(input.doorMcpConfig, input.doorPluginDir);
+  }
   // M0 discipline: the doorful floor exists as a measured cell on claude (F7,
   // 2.1.216) and, as of WP2 (PROBE.md, pi 0.83.0, probed 2026-08-07), pi. No
   // Hermes 0.20.0 also has a probed best-effort distinction: --safe-mode is
@@ -246,7 +427,7 @@ export function compile(input: CompileInput): CompileResult {
   if (posture === "product-floor" && !PRODUCT_FLOOR_VERIFIED_HARNESSES.includes(harness)) {
     throw new Error(
       `--posture product-floor has no verified cell for harness ${harness} — only claude (F7, 2.1.216), ` +
-        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), grok (PROBE.md, 0.2.118), and agy (PROBE.md, 1.2.9) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
+        "pi (PROBE.md, 0.83.0), codex (PROBE.md, 0.146.0), hermes (PROBE.md, 0.20.0), grok (PROBE.md, 0.2.118), and agy (PROBE.md, 1.2.13) were probed. This is a harness-capability gap, not a policy hold: nobody has verified whether this composes here at all, so there is nothing to " +
         "withhold or grant a key to. Refusing to guess (M0 discipline); use --posture floor, or add the row " +
         "to the harness capability matrix first.",
     );
@@ -295,6 +476,16 @@ function tailArgs(input: CompileInput, harness: "claude" | "pi"): string[] {
 }
 
 // Claude Code — M0-verified flags (matrix, empirical, v2.1.211/2.1.215).
+//
+// PERMISSION-NEUTRAL BY DELIBERATE DESIGN (issue #144). This compiler composes
+// no permission mode and no permission flag: `--setting-sources ''` below
+// evicts the user's settings entirely, and only the DOOR knows whether a given
+// posture evicts them — so packages/claude-zero/src/permissions.ts selectively
+// preserves a configured permission mode outside this compiler, against a
+// pinned probe. Adding an implicit mode or a default bypass here would make the
+// compiler silently override a user decision, which is the defect #144 reports.
+// Permission handling is also not skill selection: it must not change the
+// standing/invocation dose accounting or the skill set any arm measures.
 function compileClaude(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -327,17 +518,44 @@ function compileClaude(
     // exists. Priced at +515 tok (20,176 vs T9b's 19,661), still -28.9% off
     // native's 28,379. This is a SEPARATE ARM from the benchmark floor (B1) —
     // the two are never averaged, and this one is never the placebo.
+    //
+    // ISSUE #143 — the door's OWN summon server. `--strict-mcp-config` is an
+    // ALLOWLIST, so it suppresses plugin-declared MCP as thoroughly as it
+    // suppresses ambient ones: measured on claude 2.1.288, this exact argv
+    // yields `mcp_servers: []` and no `mcp__skill-summon__summon` in the tool
+    // inventory (packages/claude-zero/PROBE.md). That is the correct default
+    // for isolation and the wrong one for the door's own control surface, so
+    // the door hands core a RESOLVED one-server declaration and core swaps the
+    // inline empty config for a session-local file containing exactly it.
+    // Measured on the same pin with the file substituted: exactly ONE
+    // `skill-summon` server, status connected, tool present once, ambient
+    // project `.mcp.json` server absent, plugin slash commands intact.
+    const doorMcp = input.doorMcpConfig;
     argv = [
       "--strict-mcp-config",
       "--mcp-config",
-      '{"mcpServers":{}}',
+      doorMcp ? DOOR_MCP_CONFIG_PATH : '{"mcpServers":{}}',
       "--setting-sources",
       "",
     ];
     env.CLAUDE_CODE_DISABLE_BUNDLED_SKILLS = "1";
+    if (doorMcp) {
+      // Contents are literal — an absolute bundle path and a concrete source —
+      // so only the PATH needs the "$SESSION" substitution, not the bytes.
+      fsPlan.push({
+        kind: "write",
+        path: DOOR_MCP_CONFIG_PATH,
+        contents: `${JSON.stringify(doorMcp, null, 2)}\n`,
+      });
+    }
     if (input.doorPluginDir) argv.push("--plugin-dir", input.doorPluginDir);
     notes.push(
       `product-floor (F7 route, P8 scope fix) = the DOORFUL floor: retaining the minimum control surface and using --setting-sources '' so project scope is not admitted. F7's locked evidence prices the door at +${FLOOR_EVIDENCE.doorTokens} tok (${FLOOR_EVIDENCE.productFloorTokens} vs the benchmark floor's ${FLOOR_EVIDENCE.benchmarkFloorTokens}), still ${FLOOR_EVIDENCE.productFloorVsNativePct}% off native's ${FLOOR_EVIDENCE.nativeTokens} — ${FLOOR_EVIDENCE.harness.name} ${FLOOR_EVIDENCE.harness.version}, probed ${FLOOR_EVIDENCE.probedAt}. Measured and named separately from the benchmark floor and priced as its own arm (B1): never average the two. Keeping slash commands live also leaves the built-in CLI commands present, so this posture is NOT a valid placebo — the placebo-of-record stays the doorless floor (B2). Same undocumented, version-pinned env knob as T9b — re-verify on CLI upgrades.`,
+    );
+    notes.push(
+      doorMcp
+        ? `--strict-mcp-config is an ALLOWLIST, so it suppresses plugin-declared MCP exactly as thoroughly as ambient MCP (measured: ${FLOOR_EVIDENCE.harness.name} 2.1.288, this route alone gave mcp_servers: [] and no mcp__${DOOR_MCP_SERVER_NAME}__summon tool). The door therefore resolves its own bundled server to ONE literal stdio declaration and points the same strict allowlist at ${DOOR_MCP_CONFIG_PATH}; ambient user/project MCP stays suppressed, and exactly one server starts. F7's token arithmetic above is HISTORICAL and was measured WITHOUT this server admitted — it does not price the MCP-enabled route, and no priced dose is claimed for it (#143).`
+        : `--strict-mcp-config is an ALLOWLIST and no server was admitted: --mcp-config carries the empty inline set, so ambient user/project MCP AND any plugin-declared MCP stay suppressed. That includes the door's own bundled "${DOOR_MCP_SERVER_NAME}" server, which therefore does NOT start here (#143) — /summon can resolve as a command while its tool is absent. This route is door-optional by contract; mounting and admitting the door is the door package's call.`,
     );
     if (!input.doorPluginDir) {
       notes.push(
@@ -708,11 +926,25 @@ function compileGrok(
   };
 }
 
-// Agy (Google Antigravity CLI) 1.2.9 — session-scoped HOME route with auth
-// isolation. agy discovers skills under $HOME/.gemini/config/skills and
-// $HOME/.gemini/antigravity-cli/skills. Pointing HOME at $SESSION creates a
-// clean room while preserving OAuth credentials copied from the user's
-// ~/.gemini profile. Verified empirically in packages/agy-zero/PROBE.md.
+// Agy (Google Antigravity CLI) 1.2.13 — real HOME default route with opt-in
+// session-scoped HOME isolation (`isolateHome: true`).
+//
+// Invariant: agy-zero must never redirect HOME unless explicitly opted in.
+// Redirecting HOME causes macOS `security` to drop the user's login keychain,
+// making keyring credentials unreachable and causing repeated keychain dialogs
+// and fallback re-authentication ("second agy account").
+//
+// When isolateHome is false (default):
+// - No env.HOME override, no auth copying, no settings copying.
+// - Launcher runs against the user's real profile, preserving vanilla credentials and keychain.
+// - floor: --dangerously-skip-permissions + --disable-slash-commands (in print mode).
+// - product-floor: --dangerously-skip-permissions.
+// - curated: requires isolateHome: true (curated without isolation would mutate shared ~/.gemini, forbidden by P3).
+//
+// When isolateHome is true:
+// - env.HOME = "$SESSION" and copies auth files into the session directory.
+// - Used for explicit isolation / second account runs.
+// Verified empirically in packages/agy-zero/PROBE.md.
 function compileAgy(
   input: CompileInput,
   base: Omit<CompileResult, "command" | "argv" | "execSupport">,
@@ -722,9 +954,11 @@ function compileAgy(
   const notes = [...base.notes];
   const argv: string[] = [];
 
+  const isolateHome = input.isolateHome ?? false;
+
   if (input.posture === "native") {
     notes.push("agy native posture is untouched: no session HOME override, auth copy, or suppression flags.");
-  } else {
+  } else if (isolateHome) {
     env.HOME = "$SESSION";
     const home = input.homeDir ?? "$HOME";
     fsPlan.push(
@@ -771,12 +1005,12 @@ function compileAgy(
       }
       argv.push("--dangerously-skip-permissions");
       notes.push(
-        "agy floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while preserving OAuth credentials. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive headless tool execution. Hard filesystem scans verify 0 ambient skills.",
+        "agy floor route with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME isolates .gemini/config and .gemini/antigravity-cli while copying OAuth credentials. Note: on macOS this drops login keychain access.",
       );
     } else if (input.posture === "product-floor") {
       argv.push("--dangerously-skip-permissions");
       notes.push(
-        "agy product-floor route (WP14/M0, agy 1.2.9): session-scoped HOME isolates user skills and plugins while leaving native slash commands active as the door control surface. Measured clean with 0 ambient skills.",
+        "agy product-floor route with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME isolates user skills and plugins while leaving native slash commands active. Note: on macOS this drops login keychain access.",
       );
     } else if (input.posture === "curated") {
       argv.push("--dangerously-skip-permissions");
@@ -788,7 +1022,28 @@ function compileAgy(
         });
       }
       notes.push(
-        "agy curated clean room (WP14/M0, agy 1.2.9): session-scoped HOME receives auth files and copies of named skill directories under .gemini/config/skills. Verified live via canary skill returning CANARY_AGY_LOADED.",
+        "agy curated clean room with isolateHome (WP14/M0, agy 1.2.13): session-scoped HOME receives auth files and copies of named skill directories under .gemini/config/skills. Verified live via canary skill returning CANARY_AGY_LOADED.",
+      );
+    }
+  } else {
+    // isolateHome: false (vanilla login invariant: never redirect HOME by default)
+    // Runs against the user's real HOME directory so existing credentials and macOS login keychain work seamlessly.
+    if (input.posture === "floor") {
+      if (input.prompt !== undefined) {
+        argv.push("--disable-slash-commands");
+      }
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy floor route (WP14/M0, agy 1.2.13): real HOME preserves vanilla credentials and macOS login keychain without repeated auth dialogs. --disable-slash-commands suppresses slash commands and skill expansion in print mode, --dangerously-skip-permissions allows non-interactive execution.",
+      );
+    } else if (input.posture === "product-floor") {
+      argv.push("--dangerously-skip-permissions");
+      notes.push(
+        "agy product-floor route (WP14/M0, agy 1.2.13): real HOME preserves vanilla credentials and macOS login keychain without repeated auth dialogs. --dangerously-skip-permissions allows execution with native slash commands active as door surface.",
+      );
+    } else if (input.posture === "curated") {
+      throw new Error(
+        "agy curated posture requires --isolate-home (writing into real ~/.gemini is forbidden by P3). Pass --isolate-home to accept the keychain trade-off, or launch at a Heaven rung that does not need a scoped profile.",
       );
     }
   }
@@ -807,4 +1062,3 @@ function compileAgy(
     execSupport: "exec",
   };
 }
-

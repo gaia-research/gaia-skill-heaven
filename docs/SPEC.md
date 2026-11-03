@@ -375,6 +375,18 @@ understands Arbor can reason about which things should operate together
 This is the bar the surfaces are held to. Until it is met, a surface must say
 which behavior it is actually delivering — see §8.
 
+> **Status — 2026-10-03: INV-10 stands, and it is not met.** Under the
+> 2026-09-29 founder ruling ([`HEAVEN-HELL-ENTROPY.md`](HEAVEN-HELL-ENTROPY.md))
+> it is read as the *destination*, not a bar on the current state. Heaven and
+> Hell are two directions on one entropy ladder, and breadth of relevance-ranked
+> results is the honest current reading (§6.2). The one evidence path that may
+> ever move composition, the band judgment (`packages/core/src/arbor/band.ts`),
+> exists. It is reported, not applied, and today it abstains, because the only
+> governed record is `inconclusive` and no HH direction payload is published.
+> Composition therefore remains relevance-only, and that is disclosed.
+> gaia-skill-heaven#116 closed this capability in its specified degraded state;
+> it was not delivered. No positive evidence was manufactured to meet this bar.
+
 ### 6.2 What is honest today
 
 Heaven and Hell currently differ by breadth of relevance-ranked results. Per

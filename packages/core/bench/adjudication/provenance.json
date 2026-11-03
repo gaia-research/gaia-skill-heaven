@@ -1,0 +1,59 @@
+{
+  "schema": "gaia.skill-heaven-bench-adjudication-provenance/v1",
+  "overlay": "adjudication.v1.jsonl",
+  "createdAt": "2026-09-29T04:35:00Z",
+  "pins": {
+    "goldBlob": "497b204b5725eace27ab3397cde0061bba048c1d",
+    "overlaySha256": "1bd9bee36e8d88d3c657d65d9b42cc6d677b509455292855c8083591f44afc69",
+    "unanswerableBlob": "9313f6cf984b3ccc32a60e68b9a829976109e07a",
+    "heavenRev": "b5bfafb2782a11d6deeb2b89896ad42df82c0dae"
+  },
+  "historicalLabelsModified": false,
+  "sourceSnapshot": {
+    "schema": "gaia.skill-heaven-r3-label-review-snapshot/v1",
+    "lockedAt": "2026-09-17T00:00:00Z",
+    "sha256": "b55c2e23062baabb2c8ce939a5c53026f07df4173b9ed0ae015ffbf3809d7dae",
+    "path": "source/locked-2026-09-17.json",
+    "origin": "https://claude.ai/artifact/4gm6gdxqvB92Ww9Ewu43sk (db reviews/*)",
+    "note": "The owner's review worksheet artifact is no longer reachable at its origin URL. The marks survive in the committed snapshot at source/locked-2026-09-17.json, which is preserved verbatim, so the human review is no longer a single unrecoverable local file."
+  },
+  "verdictMeaning": {
+    "gold": {
+      "ambiguous": "unsure / partly",
+      "suitable": "labeled skill meets the need",
+      "unsuitable": "does not"
+    },
+    "unanswerable": {
+      "ambiguous": "unsure",
+      "suitable": "label correct: nothing in the corpus fits",
+      "unsuitable": "label wrong: a skill fits"
+    }
+  },
+  "stateMapping": {
+    "reviewed": "human confirmed the machine label: for gold, the labelled skill meets the need; for unanswerable, nothing in the corpus fits",
+    "corrected": "human rejected the machine label. betterSkillId may name an alternative, but is not always given",
+    "uncertain": "human was unsure. NEVER counted as correct and NEVER counted as a miss. Excluded from every absolute label-derived metric.",
+    "unreviewed": "no human adjudication exists. Derived as the absence of a row; never written into the overlay."
+  },
+  "counts": {
+    "gold": {
+      "total": 100,
+      "reviewed": 30,
+      "corrected": 6,
+      "uncertain": 8,
+      "unreviewed": 56
+    },
+    "unanswerable": {
+      "total": 20,
+      "reviewed": 6,
+      "corrected": 0,
+      "uncertain": 5,
+      "unreviewed": 9
+    }
+  },
+  "claimLimits": [
+    "Absolute label-derived metrics may only be stated over the adjudicated subset. The 100-label historical set is machine-authored and is retained as evidence, not as ground truth.",
+    "The full 100-label set remains valid for paired same-input deltas between systems, with the machine-label provenance disclosed alongside the number.",
+    "This overlay contains no threshold, no floor, and no admission policy. Nothing in retrieval reads it."
+  ]
+}

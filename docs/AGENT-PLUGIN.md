@@ -8,11 +8,23 @@ implementation guidance, not a ratification — decision authority stays with
 
 ## Outcome
 
-A user installs **one** plugin — `skill-heaven` — and gets the summon MCP plus
-all five surfaces. No sibling repository, no `npx`, no external binary, no
-build step. `gaia-mcp` is deprecated. Portable clients discover the same skills
-and MCP declaration; client-only delivery shims stay namespaced or in legacy
-compatibility locations.
+**PR #196 founder-approved boundary: 5 accepted / 1 provisional.** Claude Code,
+Pi, Codex, Hermes and Grok have runtime acceptance. Agy remains installable with
+provisional/unverified Console runtime: Core/Full registration and installed
+assets are confirmed, but installed-carrier invocation, native Core preview and
+session binding are not accepted ([#206](https://github.com/gaia-research/gaia-skill-heaven/issues/206)).
+Registration is not runtime acceptance. Console means compact statusline,
+receipts and intentionally opened terminal views within the one Skill Heaven
+product. Internal `core` / `full` identifiers remain unchanged.
+
+A Core install provides the Skill Heaven runtime; Core + Console adds the separately
+owned console carrier appropriate to the host. The six Core + Console carriers are
+intentionally distinct, not one uniform HUD. No sibling repository, no `npx`,
+no external binary, no build step. `gaia-mcp` is deprecated. Portable clients
+discover the same skills and MCP declaration; client-only delivery shims stay
+namespaced or in legacy compatibility locations. See
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) for the canonical Core/Core + Console
+contract.
 
 Before: the marketplace shipped `claude-zero` with two commands, and
 `/skill-hell` summoned by shelling out to a `skill-hell` binary hunted for at
@@ -38,6 +50,7 @@ plugins/skill-heaven/                    THE AGENT PLUGIN
 ├── package.json                         Pi package delivery metadata
 ├── .codex-plugin/plugin.json            Codex delivery metadata
 ├── .codex.mcp.json                      Codex plugin-root MCP launch shim
+├── mcp_config.json                      Antigravity MCP launch shim (agy reads only this name)
 ├── .claude-plugin/plugin.json           retained Claude marketplace compatibility
 ├── .mcp.json                            retained Claude/Grok MCP compatibility
 ├── commands/*.md                        retained explicit command compatibility
@@ -55,11 +68,19 @@ and hard signals are recorded in
 `packages/claude-zero` keeps its launcher, statusline and `claude-zero` bin. It
 is not the plugin.
 
-## One line, five entry points, one tool
+## One line, five user-facing surfaces, one tool
 
-The rung is a **standing instruction in context**. It names a *direction*, not a
-number: the agent decides how far to reach on a given gap. No second MCP tool is
-needed.
+The rung is a **routing preference the user selects**. It names a *direction*,
+not a number: the agent decides how far to reach on a given gap. No second MCP
+tool is needed.
+
+What the rung commands print is **reference data**: a report of the selected rung,
+the band it belongs to, and the discovery parameters that band describes. It is
+not an instruction, it does not outrank the instructions already in force, and it
+cannot change the task, authorize a call, widen permissions, or leave state
+behind. Selecting a rung decides nothing in advance — every later call is
+evaluated again, on its own merits, under the request and permissions in force
+then.
 
 | Command | Sets rung | Direction | Note |
 |---|---|---|---|
@@ -72,6 +93,26 @@ needed.
 All four rung commands render **the same seven-rung line**, differing only in
 the rung they open on and which band is highlighted. Every rendering carries the
 `WIP · PROVISIONAL` mark.
+
+### Core and Core + Console profile boundary
+
+Core registers the runtime and has no Core + Console console registration. Core + Console adds one
+separately owned console carrier; it does not imply six equivalent HUDs. The
+current profile contract and per-host delivery truth are in
+[`INSTALL-PROFILES.md`](INSTALL-PROFILES.md) and
+[`packages/console/README.md`](../packages/console/README.md).
+
+The Pi package owns five runtime skill resources, registered under the exact
+names `/skill:skill-heaven-runtime-summon`,
+`/skill:skill-heaven-runtime-skill-zero`, `/skill:skill-heaven-runtime-skill-heaven`,
+`/skill:skill-heaven-runtime-skill-hell`, and `/skill:skill-heaven-runtime-skill-ultra`.
+Pi's five user-facing command
+aliases are `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and
+`/skill-ultra`; these aliases are not the resource registration names.
+
+Ultra remains provisioned with its controller unavailable (#126). Native
+Windows runtime acceptance remains unverified (#94). The Gaia Ecosystem
+Desktop Mod is separately owned and is not installed by either profile.
 
 ### The rungs — no counts, no caps
 
@@ -112,9 +153,10 @@ Manual `/summon` still works — that is the product floor per N13 ("ships
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
 userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
-**Honest limit:** the cut is a standing instruction the agent honours, not
-something the tool enforces. Hard enforcement needs server-side session state —
-filed as a follow-up, not faked.
+**Honest limit:** nothing in the plugin enforces the cut. It is honoured (or not)
+by the caller on each use, from a reference block that carries no authority of its
+own; there is no session state to flip. Hard enforcement would need server-side
+session state — filed as a follow-up, not faked.
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
@@ -228,24 +270,26 @@ One server, `skill-summon`, one tool plus the isolated
 `gaia_search`, `gaia_inspect` and `gaia_status` are **not ported**. Whether
 dropping them degrades summon quality is a benchmark question, filed upstream.
 
-### Auto-summon protocol
+### Discovery reference, per use
 
-Presented as routing guidance for `/skill-heaven`, `/skill-hell` and
-`/skill-ultra`:
+`/skill-heaven`, `/skill-hell` and `/skill-ultra` describe the parameters a
+discovery call *could* take on a real capability gap:
 
-> On a real capability gap — never preemptively — call the `summon` tool with
-> `surface: "heaven"` while converging or `surface: "hell"` while exploring,
-> and a depth you judge the gap needs. Show the returned card before using the
-> skill, read the `SKILL.md` through its resource link, and apply relevant guidance to
-> the current task. The card is the disclosure; when a resource link is present, the
-> resource read is the skill body.
+> While converging, the `summon` tool takes `surface: "heaven"`; while exploring,
+> `surface: "hell"`; and a depth the gap needs. These are the parameters a band
+> describes — not an instruction to call. A returned card is the disclosure, not
+> a grant: judge it for relevance and safety, and apply only what survives that
+> judgment, under the user's request and existing permissions. When a resource
+> link is present, the resource read is the skill body.
 
 The card is the disclosure: it names the skill being summoned and carries the
-ranking disclosure with it.
+ranking disclosure with it. A card's classification, ranking, or installability
+is metadata about the candidate — never authorization to execute it, and never a
+substitute for evaluating what it points at.
 
 ## Naming
 
-Full rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
+Core + Console rebrand. Server `skill-summon`, env `SKILL_SUMMON_SESSION`,
 `SKILL_SUMMON_TTL_HOURS`, `SKILL_SUMMON_CACHE_DIR`, `SKILL_SUMMON_CACHE_MAX_MB`;
 session dirs `/tmp/skill-summon-*`; payload cache
 `skill-summon-payload-cache-v1`; source env `SKILL_SOURCE`. The old paired
@@ -278,9 +322,11 @@ and Matt Pocock's `disable-model-invocation` convention, then synthesizes
 commit-pinned candidates. Flat fleets need no generic reference or tree trust
 ordering; the agent query routes them by relevance.
 
-`disable-model-invocation: true` means human-led Skill Heaven and explicit
-invocation only. Absence means model-led Skill Hell and automatic invocation is
-allowed. Each summon remains an atomic, session-only materialization.
+`disable-model-invocation: true` means human-led Skill Heaven: explicit invocation
+only, and out of the model-led lane. Absence means model-led Skill Hell: eligible
+for that lane's discovery. Either way this is routing eligibility, not
+permission — the call is still judged per use, under the request and permissions
+in force. Each summon remains an atomic, session-only materialization.
 
 ## Install and client delivery
 
@@ -307,22 +353,66 @@ over one installed artifact, not five repackaged plugins. Clients may cache a
 copy, so updating or deleting the local artifact does not update or unregister
 client-managed copies.
 
-Claude Code 2.1.237 still accepts the public marketplace flow:
+Claude Code 2.1.288 accepts the public marketplace flow (verified from a fresh install, [`docs/RELEASE-ACCEPTANCE.md`](RELEASE-ACCEPTANCE.md)):
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
 /plugin install skill-heaven@gaia-skill-heaven
 ```
 
-Pi 0.84.2 remains a namespaced adapter because it is not a native Agent Plugins
-client and deliberately has no built-in MCP runtime. The adapter maps portable
-skills and `mcp.json` into Pi's extension API; see its
+Pi remains a namespaced adapter because it is not a native Agent Plugins client.
+Pi 0.99+ has its own MCP runtime, but re-probed on 1.0.4 that route was not
+equivalent: under an MCP replacement extension the summon tool was no longer
+declared directly, and `--no-mcp` removes it. The adapter maps portable skills
+and `mcp.json` into Pi's extension API and works under any of them; see its
 [`PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
+
+Antigravity reads plugin MCP servers only from `mcp_config.json`; the plugin
+ships one beside `mcp.json` (identical entry, held equal by a test). On
+Antigravity the surfaces are namespaced (`/skill-heaven:summon`).
 `install.sh` remains separate and installs the standalone `*-zero` launchers.
 
 `gaia-mcp` remains deprecated. Existing
 `claude-zero@gaia-skill-heaven` marketplace installs migrate through the
 `renames` entry in `marketplace.json` (Claude Code ≥ 2.1.193).
+
+## Optional console for Claude Code (preview)
+
+`plugins/skill-heaven-console` is a second, optional plugin in the same
+marketplace, built on Claude Code 2.1.293's early-access Mods API (function
+hooks). It is a **projection**, not part of the portable package: the portable
+`skill-heaven` plugin is unchanged, and no other client sees the console. It
+adds a status entry beside the user's own (`$.ui.status` — it never touches
+`statusLine` settings), the Lens band, and the `/heaven` pane. It observes summon
+results, `Read`s of materialized `SKILL.md` files, `/skill-*` command text and
+agent ids; it returns every observed result unchanged, writes nothing to disk,
+and its only tool call is `/lens`'s `preview: true` summon, which materializes
+nothing. Its copy of the status model is a committed bundle of `packages/status`
+(`npm run build:status`, CI-checked). Static evidence on Claude Code 2.1.293:
+`claude plugin validate plugins/skill-heaven-console` passes (it reads the module
+and reports only `$.state` writes — no filesystem, process, network, store or
+settings calls), and `claude plugin test` runs 45 engine tests over the
+terminal and desktop surfaces, all passing. The terminal surface was probed live
+in a logged-in 2.1.294 session (PR #187), which fixed five defects the probe
+exposed. **Not yet probed:** desktop paint; the console stays labelled preview. Design of record:
+[`docs/CONTROL-PLANE.md`](CONTROL-PLANE.md).
+
+## Installed harness versions drifted from the pins (2026-10-07) — resolved 2026-10-08
+
+The cloud control-plane pass found the installed versions ahead of the pins and could only run
+static checks. PR #187 ran the logged-in cells locally (macOS, Herdr panes):
+
+| Client | Version | Result | Evidence |
+|---|---|---|---|
+| Claude Code | 2.1.294 | plugin + console live in the terminal. A bare `/skill-zero` is refused; `/skill-heaven:<surface>` works | [`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md) |
+| Codex | 0.161.0 | plugin added, summon call completed | same |
+| Pi | 1.0.4 | adapter correct and kept; `skill-zero` frontmatter fixed | [`dev.skill-heaven.pi/PROBE.md`](../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md) |
+| Grok | 1.0.46 | install + details only (not signed in here) | [`plugins/skill-heaven/PROBE.md`](../plugins/skill-heaven/PROBE.md) |
+| Hermes | 0.20.0 | installed, enabled, summon call completed | same |
+| Antigravity | 1.3.1 | **Partial → Compatible** after `mcp_config.json`: summon + four surfaces live, real HOME | [`packages/agy-zero/PROBE.md`](../packages/agy-zero/PROBE.md) |
+
+Still open: the console's desktop paint (needs a user-scope install) and the native Windows
+installer run (#94).
 
 ## Not built
 
@@ -332,8 +422,8 @@ Stated here so no surface implies otherwise:
   surface may present stamp-gated routing as running.
 - **The entropy benchmark.** What each rung should reach for is being worked
   out in use until it lands.
-- **Hard enforcement of the `zero` cut.** It is a standing instruction, not a
-  server-side gate.
+- **Hard enforcement of the `zero` cut.** No server-side gate exists; the cut is
+  honoured per use by the caller, and generated output never enforces it.
 - **Behavior-aware Ultra composition.** The core S-now controller is
   deterministic and event-driven; it holds without an explicit validated
   behavioral event. Arbor-backed composition and campaign orchestration are

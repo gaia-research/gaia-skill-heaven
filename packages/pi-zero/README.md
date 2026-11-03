@@ -11,7 +11,7 @@ The pi door to Skill Zero under the Skill Heaven umbrella: a boot-time launcher 
 > summon engine. See [`docs/AGENT-PLUGIN.md`](../../docs/AGENT-PLUGIN.md) and the
 > pinned [`Pi probe`](../../plugins/skill-heaven/dev.skill-heaven.pi/PROBE.md).
 > This package remains the boot-time posture launcher; its older extension can
-> render/arm rungs but cannot summon by intent (see below).
+> render rung references but cannot summon by intent (see below).
 
 ## Launch
 
@@ -51,8 +51,9 @@ hunted for across `$SKILL_HELL_BIN`, `$PATH`, `$GAIA_MCP_HOME`, and
 extension has not been rewired to the in-repo summon engine
 (`packages/skill-summon`), and `/skill-hell <intent>` now reports that gap
 honestly instead of pretending a summon ran. The chooser (bare `/skill-hell`)
-and rung-arming (`/skill-hell high|xhigh|max`) still work, since neither
-needs an engine. See the header comment in
+and the rung reference (`/skill-hell high|xhigh|max`, which reports a selection
+and its discovery parameters as reference data) still work, since neither needs
+an engine. Neither stores routing state or claims a lane stays on. See the header comment in
 [`extension/pi-zero.ts`](extension/pi-zero.ts).
 
 Arrivals are cards, not pasted bodies — this contract is unchanged from
@@ -73,7 +74,7 @@ also be inspected directly in pi's package manifest at
 `packages/pi-zero/extension/pi-zero.ts`. The npm-ready package is not yet
 published, and it never bundles the pi harness. Without a launcher manifest, `/skill-zero`
 points to the launcher without claiming a change; `/skill-hell`'s chooser and
-rung-arming remain available because neither depends on posture handoff or an
+rung reference remain available because neither depends on posture handoff or an
 engine.
 
 See [EXTENSION.md](EXTENSION.md) for the pi 0.83.0 API findings and #31 design
