@@ -14,11 +14,13 @@ import './lucyRive.css'
 //    anchor) therefore applies unchanged. The canvas is registered onto that
 //    box from the manifest: each state's master rectangle inside the combined
 //    root artboard.
-//  · Owner: the static masters show only when reduced motion is explicitly
-//    on (the hero then never mounts this). While Lucy is live no master shows:
-//    not under the canvas, not during transitions, not while a state loads.
-//    A switch to a state whose images are still arriving keeps the current
-//    state on screen until they land. On a Rive failure Lucy hides.
+//  · Owner: one Lucy per session, never both. The hero shows the static
+//    masters only under reduced motion, or for the rest of the session once
+//    this reports `onFailed` (no WebGL2, download or runtime failure). It then
+//    unmounts this component. While Lucy is live no master shows: not under the
+//    canvas, not during transitions, not while a state loads. A switch to a
+//    state whose images are still arriving keeps the current state on screen
+//    until they land.
 //  · While the file loads, a quiet loading veil holds her place.
 //  · Pauses through `data-scene-running` on the scene root (useSceneLifecycle);
 //    it runs no observers of its own for visibility.
@@ -28,6 +30,20 @@ export interface LucyRiveFigureProps {
   state: SceneState
   /** The same style the hero puts on the current master <img>. */
   figureStyle: CSSProperties
+  /** Rive cannot run in this session: the hero switches to the static masters for good. */
+  onFailed(): void
+}
+
+/** WebGL2 preflight: without it the session goes straight to the masters. */
+export function canRenderRive(): boolean {
+  if (typeof document === 'undefined') return false
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2')
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    return !!gl
+  } catch {
+    return false
+  }
 }
 
 type Phase = 'loading' | 'live' | 'failed'
@@ -36,12 +52,12 @@ export function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-export function LucyRiveFigure({ state, figureStyle }: LucyRiveFigureProps) {
+export function LucyRiveFigure({ state, figureStyle, onFailed }: LucyRiveFigureProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const charRef = useRef<LucyRiveCharacter | null>(null)
   const stateRef = useRef(state)
-  const [phase, setPhase] = useState<Phase>('loading')
+  const [phase, setPhase] = useState<Phase>(() => (canRenderRive() ? 'loading' : 'failed'))
   const [showing, setShowing] = useState<SceneState | null>(null)
   stateRef.current = state
 
@@ -62,13 +78,13 @@ export function LucyRiveFigure({ state, figureStyle }: LucyRiveFigureProps) {
             setShowing(stateRef.current)
           },
           onError: (e) => {
-            console.warn('[LucyLive] Rive failed; Lucy hidden:', e)
+            console.warn('[LucyLive] Rive failed; static masters for this session:', e)
             if (!cancelled) setPhase('failed')
           },
         })
       })
       .catch((e) => {
-        console.warn('[LucyLive] runtime failed to load:', e)
+        console.warn('[LucyLive] runtime failed to load; static masters for this session:', e)
         if (!cancelled) setPhase('failed')
       })
     return () => {
@@ -101,6 +117,10 @@ export function LucyRiveFigure({ state, figureStyle }: LucyRiveFigureProps) {
       stale = true
     }
   }, [state, phase])
+
+  useEffect(() => {
+    if (phase === 'failed') onFailed()
+  }, [phase, onFailed])
 
   // pause offscreen / hidden tab: read the scene root's lifecycle attribute
   useEffect(() => {

@@ -113,8 +113,12 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const [atmosphereOff] = useState(() => sceneReviewFlag('atmo'))
   const [lucyOff] = useState(() => sceneReviewFlag('lucy'))
   const [lucyStatic] = useState(() => lucyStaticRequested())
-  // owner: the static masters show only when reduced motion is explicitly on
+  // owner: one Lucy per session, never both: the live rig, or the static
+  // masters under reduced motion / when Rive cannot run here (no WebGL2, failed
+  // download, runtime error). Once it fails, the session stays on the masters.
   const [reducedMotion] = useState(() => prefersReducedMotion())
+  const [riveFailed, setRiveFailed] = useState(false)
+  const onRiveFailed = useCallback(() => setRiveFailed(true), [])
   // One lifecycle signal for everything in the scene (atmosphere now, the
   // Rive character later): `data-scene-running` on the hero root.
   useSceneLifecycle(rootRef)
@@ -153,7 +157,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // The Rive rig is built from the v5 masters, so only the v5 set goes live.
   // When it is live the masters never show (they only hold the figure's layout):
   // no poster under the canvas, during transitions, or while a state loads.
-  const riveOn = set === 'v5' && !lucyStatic && !reducedMotion
+  const riveOn = set === 'v5' && !lucyStatic && !reducedMotion && !riveFailed
   const assets = HERO_ASSET_SETS[set][v.lucyState]
 
   const onSelectScene = useCallback(
@@ -481,6 +485,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         {riveOn && (
           <LucyRiveFigure
             state={v.lucyState}
+            onFailed={onRiveFailed}
             figureStyle={{
               transform: `scale(calc(${(Number(v.mLucy) * v.figZoom).toFixed(3)} * var(--lucy-user-zoom, 1)))`,
               transformOrigin: v.figOrigin,
