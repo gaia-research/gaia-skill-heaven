@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { SCENE_RUNNING_ATTR, type SceneState } from '../scene'
-import type { LucyRiveCharacter } from './createLucyCharacter'
+import type { LucyLoadProgress, LucyRiveCharacter } from './createLucyCharacter'
 import { LUCY_LIVE } from './lucyLiveManifest'
 import './lucyRive.css'
 
@@ -15,13 +15,14 @@ import './lucyRive.css'
 //    box from the manifest: each state's master rectangle inside the combined
 //    root artboard.
 //  · Owner: one Lucy per session, never both. The hero shows the static
-//    masters only under reduced motion, or for the rest of the session once
-//    this reports `onFailed` (no WebGL2, download or runtime failure). It then
-//    unmounts this component. While Lucy is live no master shows: not under the
-//    canvas, not during transitions, not while a state loads. A switch to a
-//    state whose images are still arriving keeps the current state on screen
-//    until they land.
-//  · While the file loads, a quiet loading veil holds her place.
+//    masters only under reduced motion, after Skip on the entrance, or for the
+//    rest of the session once this reports `onFailed` (no WebGL2, download or
+//    runtime failure). It then unmounts this component. While Lucy is live no
+//    master shows: not under the canvas, not during transitions, not while a
+//    state loads. A switch to a state whose images are still arriving keeps
+//    the current state on screen until they land.
+//  · Progress (bytes, stage, per-state readiness) is reported upward so the
+//    entrance can show it; the small veil here only serves `?entrance=off`.
 //  · Pauses through `data-scene-running` on the scene root (useSceneLifecycle);
 //    it runs no observers of its own for visibility.
 // ─────────────────────────────────────────────────────────────────────────
@@ -32,6 +33,10 @@ export interface LucyRiveFigureProps {
   figureStyle: CSSProperties
   /** Rive cannot run in this session: the hero switches to the static masters for good. */
   onFailed(): void
+  /** Byte and readiness progress, for the entrance. */
+  onProgress?(p: LucyLoadProgress): void
+  /** Show the small in-figure veil while loading (only when no entrance covers the page). */
+  veil?: boolean
 }
 
 /** WebGL2 preflight: without it the session goes straight to the masters. */
@@ -52,14 +57,16 @@ export function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-export function LucyRiveFigure({ state, figureStyle, onFailed }: LucyRiveFigureProps) {
+export function LucyRiveFigure({ state, figureStyle, onFailed, onProgress, veil }: LucyRiveFigureProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const charRef = useRef<LucyRiveCharacter | null>(null)
   const stateRef = useRef(state)
+  const progressRef = useRef(onProgress)
   const [phase, setPhase] = useState<Phase>(() => (canRenderRive() ? 'loading' : 'failed'))
   const [showing, setShowing] = useState<SceneState | null>(null)
   stateRef.current = state
+  progressRef.current = onProgress
 
   // mount the character once (lazy import keeps the runtime out of first paint)
   useEffect(() => {
@@ -81,6 +88,9 @@ export function LucyRiveFigure({ state, figureStyle, onFailed }: LucyRiveFigureP
             console.warn('[LucyLive] Rive failed; static masters for this session:', e)
             if (!cancelled) setPhase('failed')
           },
+          onProgress: (p) => {
+            if (!cancelled) progressRef.current?.(p)
+          },
         })
       })
       .catch((e) => {
@@ -95,8 +105,8 @@ export function LucyRiveFigure({ state, figureStyle, onFailed }: LucyRiveFigureP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // a product state change: switch now if that state is in the file, else
-  // keep the current state on screen until its images arrive, then switch
+  // a product state change: switch now if that state is switchable, else
+  // keep the current state on screen until its core images arrive, then switch
   useEffect(() => {
     const ch = charRef.current
     if (phase !== 'live' || !ch) return undefined
@@ -164,10 +174,10 @@ export function LucyRiveFigure({ state, figureStyle, onFailed }: LucyRiveFigureP
       style={{ ...figureStyle, position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
     >
       <canvas ref={canvasRef} style={canvasStyle} aria-hidden="true" />
-      {phase === 'loading' && (
+      {phase === 'loading' && veil && (
         <div className="lucy-rive__loading" role="status" aria-live="polite">
           <span className="lucy-rive__bar" />
-          <span className="lucy-rive__label">Summoning Lucy</span>
+          <span className="lucy-rive__label">Preparing the figure</span>
         </div>
       )}
     </div>
