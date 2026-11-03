@@ -66,6 +66,7 @@ type EngineState = {
   flash: 0 | 1 | 2
   stop: number
   glitch: 0 | 1 | 2
+  od: 0 | 1 | 2
 }
 
 // Hero palette — the single source of truth for every colour the hero draws,
@@ -140,7 +141,7 @@ function computeVals(
   mobile: boolean,
   viewport: 'desktop' | 'tablet' | 'mobile' = 'desktop',
 ) {
-  const { act, flash, stop, glitch } = state
+  const { act, flash, stop, glitch, od } = state
   const lane = LADDER[stop].lane
   const atLadder = act === N - 1
   // Below act 5 the act owns the palette (heaven build → hell reveal); at act 5
@@ -249,9 +250,12 @@ function computeVals(
     mHeavenB: act === N - 1 ? (Number(mag(0, camZ)) * 0.62).toFixed(4) : mag(0, camZ),
     heavenYB: act === N - 1 ? -11 : pick([0, -1, -2, 0, 0]),
     oUltra: act === N - 1 && lane === 'u' ? 1 : 0,
-    glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : 0,
-    glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : 0,
-    oScan: glitch ? 0.5 : 0,
+    glitchX: glitch === 1 ? -11 : glitch === 2 ? 8 : od === 1 ? -7 : od === 2 ? 5 : 0,
+    glitchSkew: glitch === 1 ? -2.4 : glitch === 2 ? 1.6 : od === 1 ? -1.6 : od === 2 ? 1.1 : 0,
+    oScan: glitch ? 0.5 : od ? 0.34 : 0,
+    odSheet: od === 1 ? HERO.gold : od === 2 ? HERO.inkPanel : 'transparent',
+    odWedge: od === 1 ? HERO.inkPanel : HERO.gold,
+    odOp: od ? (od === 1 ? 0.88 : 1) : 0,
     oSplit: pick([0, 0, 1, 0, 0]),
     splitX: pick([0, 0, 34, 90, 90]),
     oHell: act === 3 || (act === N - 1 && hell) ? 1 : 0,
@@ -376,6 +380,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
   // Default open at Skill Heaven LOW (issue: Skill Heaven Low default open)
   const [stop, setStop] = useState(1)
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
+  const [od, setOd] = useState<0 | 1 | 2>(0)
   const [mobile, setMobile] = useState(isMobileViewport)
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>(getViewportCategory)
 
@@ -405,6 +410,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const touchYRef = useRef<number | null>(null)
   const touchTsRef = useRef(0)
   const glitchIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const glitchRafRef = useRef(0)
   const flashT1Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const flashT2Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -560,20 +566,33 @@ export function useHeroEngine(variant: 'a' | 'b') {
       setStop(i)
       if (!bandChanged || actRef.current !== N - 1 || prefersReducedMotion()) return
       clearInterval(glitchIntervalRef.current)
-      let n = 0
-      setGlitch(1)
-      setFlash(1)
-      glitchIntervalRef.current = setInterval(() => {
-        n += 1
-        if (n > 6) {
-          clearInterval(glitchIntervalRef.current)
-          setGlitch(0)
-          setFlash(0)
-          return
-        }
-        setGlitch(n % 2 ? 2 : 1)
-        setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
-      }, 46)
+      cancelAnimationFrame(glitchRafRef.current)
+      // The pulse begins two frames after the click, once the switch itself
+      // (the band's DOM and the figure's first frame in the new state) has
+      // been committed and painted, so a slow first frame of a state can never
+      // hold a half-painted glitch frame (scanlines + wedge over the old
+      // state). It is then 7 steps of 46ms read off the wall clock rather than
+      // counted per tick, so a late tick lands on the right step (or the end)
+      // instead of the next one.
+      const begin = () => {
+        const t0 = performance.now()
+        setGlitch(1)
+        setFlash(1)
+        glitchIntervalRef.current = setInterval(() => {
+          const n = Math.floor((performance.now() - t0) / 46)
+          if (n > 6) {
+            clearInterval(glitchIntervalRef.current)
+            setGlitch(0)
+            setFlash(0)
+            return
+          }
+          setGlitch(n % 2 ? 2 : 1)
+          setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
+        }, 46)
+      }
+      glitchRafRef.current = requestAnimationFrame(() => {
+        glitchRafRef.current = requestAnimationFrame(begin)
+      })
     },
     [setScale],
   )
@@ -687,15 +706,36 @@ export function useHeroEngine(variant: 'a' | 'b') {
       clearTimeout(flashT2Ref.current)
       clearTimeout(pinchTimerRef.current)
       clearInterval(glitchIntervalRef.current)
+      cancelAnimationFrame(glitchRafRef.current)
     }
   }, [go, handlePinchZoom, registerInput])
 
-  // Ultra's ongoing energy used to be a periodic full-screen gold/ink double
-  // flash every 1.3s ("overdrive"). Retired with the Lucy Atmosphere (#202):
-  // Ultra's room now carries its own slow gold sweep and interference, and
-  // only a band change earns an impact frame.
+  // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
+  // a small glitch shear on the wordmark, looping while Ultra stays selected.
+  // It sits on top of Ultra's room (the atmosphere's slow sweep and
+  // interference keep running beneath it); the impact frames are back.
+  useEffect(() => {
+    const on = act === N - 1 && LADDER[stop].lane === 'u'
+    if (!on || prefersReducedMotion()) {
+      setOd(0)
+      return undefined
+    }
+    let t1: ReturnType<typeof setTimeout>
+    let t2: ReturnType<typeof setTimeout>
+    const interval = setInterval(() => {
+      setOd(1)
+      t1 = setTimeout(() => setOd(2), 58)
+      t2 = setTimeout(() => setOd(0), 124)
+    }, 1300)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(t1)
+      clearTimeout(t2)
+      setOd(0)
+    }
+  }, [act, stop])
 
-  const v = computeVals({ act, flash, stop, glitch }, variant, mobile, viewport)
+  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile, viewport)
 
   const dots = Array.from({ length: N }, (_, i) => ({
     aria: 'Act ' + (i + 1),
