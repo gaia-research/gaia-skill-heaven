@@ -479,7 +479,7 @@ export class GaiaService {
         named: snapshot.source.namedUrl,
       },
       compatibility: {
-        mcpSdk: "@modelcontextprotocol/sdk@1.29.0",
+        mcpSdk: "@modelcontextprotocol/sdk@1.32.0",
         mcpProtocolVersions: [...SUPPORTED_PROTOCOL_VERSIONS],
         gaiaPublicData: [TREE_CONTRACT_VERSION],
         gaiaCli: "none",

@@ -30,7 +30,7 @@ const sdkUriTemplate = join(
   "node_modules/@modelcontextprotocol/sdk/dist/esm/shared/uriTemplate.js",
 );
 
-// SDK 1.29.0's RFC 6570 helper removes the exploded-variable marker with
+// SDK 1.32.0's RFC 6570 helper removes the exploded-variable marker with
 // String#replace, which CodeQL correctly rejects for uncontrolled template
 // input. Patch only that pinned module at the bundle boundary. This does not
 // mutate node_modules and fails closed if the pinned source changes, so an SDK
@@ -69,9 +69,9 @@ const sdkVersion = JSON.parse(
     "utf8",
   ),
 ).version;
-if (sdkVersion !== "1.29.0") {
+if (sdkVersion !== "1.32.0") {
   throw new Error(
-    `The SDK UriTemplate hardening is pinned to @modelcontextprotocol/sdk 1.29.0; found ${sdkVersion}. Review and update the build boundary first.`,
+    `The SDK UriTemplate hardening is pinned to @modelcontextprotocol/sdk 1.32.0; found ${sdkVersion}. Review and update the build boundary first.`,
   );
 }
 
