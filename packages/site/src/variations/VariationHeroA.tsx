@@ -10,8 +10,7 @@ import { LucyTunerHUD } from './hero/LucyTunerHUD'
 import { WingsTunerHUD } from './hero/WingsTunerHUD'
 import { LucyAtmosphere } from '../lucy-scene/atmosphere/LucyAtmosphere'
 import { LucyLive } from '../lucy-scene/LucyLive'
-import { LucyRiveFigure } from '../lucy-scene/rive/LucyRiveFigure'
-import type { SceneState } from '../lucy-scene/scene'
+import { LucyRiveFigure, prefersReducedMotion } from '../lucy-scene/rive/LucyRiveFigure'
 import { useSceneLifecycle } from '../lucy-scene/useSceneLifecycle'
 import './variation-hero.css'
 
@@ -114,8 +113,8 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const [atmosphereOff] = useState(() => sceneReviewFlag('atmo'))
   const [lucyOff] = useState(() => sceneReviewFlag('lucy'))
   const [lucyStatic] = useState(() => lucyStaticRequested())
-  // which state the live Rive canvas is showing; that state's master poster lets go
-  const [riveShowing, setRiveShowing] = useState<SceneState | null>(null)
+  // owner: the static masters show only when reduced motion is explicitly on
+  const [reducedMotion] = useState(() => prefersReducedMotion())
   // One lifecycle signal for everything in the scene (atmosphere now, the
   // Rive character later): `data-scene-running` on the hero root.
   useSceneLifecycle(rootRef)
@@ -152,7 +151,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const atLadder = act === actCount - 1
   const set = normalizeLucyAssetSet(assetSet)
   // The Rive rig is built from the v5 masters, so only the v5 set goes live.
-  const riveOn = set === 'v5' && !lucyStatic
+  // When it is live the masters never show (they only hold the figure's layout):
+  // no poster under the canvas, during transitions, or while a state loads.
+  const riveOn = set === 'v5' && !lucyStatic && !reducedMotion
   const assets = HERO_ASSET_SETS[set][v.lucyState]
 
   const onSelectScene = useCallback(
@@ -471,7 +472,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
                 transformOrigin: v.figOrigin,
                 mixBlendMode: v.lucyBlend,
                 transition: `var(--lucy-drag-transition, var(--lucy-zoom-transition, transform calc(900ms * var(--vh-t)) cubic-bezier(.16,1,.3,1))),filter 0ms,opacity calc(600ms * var(--vh-t)) linear`,
-                opacity: isCurrent && riveShowing !== state ? v.oLucy : 0,
+                opacity: isCurrent && !riveOn ? v.oLucy : 0,
                 filter: isCurrent ? v.lucyFilter : 'none',
               }}
             />
@@ -480,7 +481,6 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         {riveOn && (
           <LucyRiveFigure
             state={v.lucyState}
-            onShowing={setRiveShowing}
             figureStyle={{
               transform: `scale(calc(${(Number(v.mLucy) * v.figZoom).toFixed(3)} * var(--lucy-user-zoom, 1)))`,
               transformOrigin: v.figOrigin,

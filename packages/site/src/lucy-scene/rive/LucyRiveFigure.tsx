@@ -14,10 +14,12 @@ import './lucyRive.css'
 //    anchor) therefore applies unchanged. The canvas is registered onto that
 //    box from the manifest: each state's master rectangle inside the combined
 //    root artboard.
-//  · The master stays the poster: no-JS, reduced motion, WebGL failure, and
-//    while a lazy state's images are still arriving. `onShowing` tells the
-//    hero which state the canvas is showing, so it can let that poster go.
-//  · While the file loads, a quiet loading veil sits over the poster.
+//  · Owner: the static masters show only when reduced motion is explicitly
+//    on (the hero then never mounts this). While Lucy is live no master shows:
+//    not under the canvas, not during transitions, not while a state loads.
+//    A switch to a state whose images are still arriving keeps the current
+//    state on screen until they land. On a Rive failure Lucy hides.
+//  · While the file loads, a quiet loading veil holds her place.
 //  · Pauses through `data-scene-running` on the scene root (useSceneLifecycle);
 //    it runs no observers of its own for visibility.
 // ─────────────────────────────────────────────────────────────────────────
@@ -26,28 +28,26 @@ export interface LucyRiveFigureProps {
   state: SceneState
   /** The same style the hero puts on the current master <img>. */
   figureStyle: CSSProperties
-  /** Which state the canvas is showing (null: show the poster). */
-  onShowing(state: SceneState | null): void
 }
 
-type Phase = 'loading' | 'live' | 'poster'
+type Phase = 'loading' | 'live' | 'failed'
 
 export function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigureProps) {
+export function LucyRiveFigure({ state, figureStyle }: LucyRiveFigureProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const charRef = useRef<LucyRiveCharacter | null>(null)
   const stateRef = useRef(state)
-  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? 'poster' : 'loading'))
+  const [phase, setPhase] = useState<Phase>('loading')
   const [showing, setShowing] = useState<SceneState | null>(null)
   stateRef.current = state
 
   // mount the character once (lazy import keeps the runtime out of first paint)
   useEffect(() => {
-    if (phase === 'poster') return undefined
+    if (phase === 'failed') return undefined
     const canvas = canvasRef.current
     if (!canvas) return undefined
     let cancelled = false
@@ -62,14 +62,14 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
             setShowing(stateRef.current)
           },
           onError: (e) => {
-            console.warn('[LucyLive] staying on the static master:', e)
-            if (!cancelled) setPhase('poster')
+            console.warn('[LucyLive] Rive failed; Lucy hidden:', e)
+            if (!cancelled) setPhase('failed')
           },
         })
       })
       .catch((e) => {
         console.warn('[LucyLive] runtime failed to load:', e)
-        if (!cancelled) setPhase('poster')
+        if (!cancelled) setPhase('failed')
       })
     return () => {
       cancelled = true
@@ -80,7 +80,7 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
   }, [])
 
   // a product state change: switch now if that state is in the file, else
-  // show its poster until its images arrive, then switch
+  // keep the current state on screen until its images arrive, then switch
   useEffect(() => {
     const ch = charRef.current
     if (phase !== 'live' || !ch) return undefined
@@ -89,7 +89,6 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
       setShowing(state)
       return undefined
     }
-    setShowing(null)
     let stale = false
     ch.ready(state)
       .then(() => {
@@ -97,15 +96,11 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
         ch.state(state)
         setShowing(state)
       })
-      .catch(() => setPhase('poster'))
+      .catch(() => setPhase('failed'))
     return () => {
       stale = true
     }
   }, [state, phase])
-
-  useEffect(() => {
-    onShowing(phase === 'live' ? showing : null)
-  }, [phase, showing, onShowing])
 
   // pause offscreen / hidden tab: read the scene root's lifecycle attribute
   useEffect(() => {
@@ -127,10 +122,10 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
     return () => ro.disconnect()
   }, [])
 
-  if (phase === 'poster') return null
+  if (phase === 'failed') return null
 
-  // register the combined root artboard onto the current master's box
-  const rect = LUCY_LIVE.states[state]
+  // register the combined root artboard onto the box of the state on screen
+  const rect = LUCY_LIVE.states[showing ?? state]
   const { w: RW, h: RH } = LUCY_LIVE.root
   const canvasStyle: CSSProperties = {
     position: 'absolute',
@@ -138,7 +133,7 @@ export function LucyRiveFigure({ state, figureStyle, onShowing }: LucyRiveFigure
     top: `${(-rect.y / rect.h) * 100}%`,
     width: `${(RW / rect.w) * 100}%`,
     height: `${(RH / rect.h) * 100}%`,
-    opacity: phase === 'live' && showing === state ? 1 : 0,
+    opacity: phase === 'live' ? 1 : 0,
     transition: 'opacity 320ms linear',
   }
 
