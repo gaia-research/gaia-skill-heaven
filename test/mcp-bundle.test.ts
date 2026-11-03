@@ -75,6 +75,27 @@ describe("plugin.json — userConfig", () => {
   });
 });
 
+describe("plugins/skill-heaven/mcp.json — the cross-harness manifest", () => {
+  const generic = JSON.parse(readFileSync(join(PLUGIN, "mcp.json"), "utf-8"));
+
+  // Two manifests, two harness vocabularies, ONE source default. `.mcp.json`
+  // interpolates ${user_config.skill_url} (claude); the generic
+  // agent-plugins `mcp.json` carries a literal and ${PLUGIN_ROOT}. They must not
+  // drift apart, or one harness silently summons from a different tree (#143).
+  it("declares the same single server, on node, at its own bundle", () => {
+    expect(Object.keys(generic.mcpServers)).toEqual(["skill-summon"]);
+    expect(generic.mcpServers["skill-summon"].type).toBe("stdio");
+    expect(generic.mcpServers["skill-summon"].command).toBe("node");
+    expect(generic.mcpServers["skill-summon"].args).toEqual(["${PLUGIN_ROOT}/mcp/skill-summon.mjs"]);
+  });
+
+  it("agrees with the public default, the same value plugin.json's userConfig falls back to", () => {
+    expect(generic.mcpServers["skill-summon"].env).toEqual({ SKILL_SOURCE: DEFAULT_SKILL_SOURCE });
+    const pluginJson = JSON.parse(readFileSync(join(PLUGIN, ".claude-plugin", "plugin.json"), "utf-8"));
+    expect(pluginJson.userConfig.skill_url.default).toBe(generic.mcpServers["skill-summon"].env.SKILL_SOURCE);
+  });
+});
+
 describe("plugins/skill-heaven/mcp/skill-summon.mjs — the committed bundle", () => {
   const bundlePath = join(PLUGIN, "mcp", "skill-summon.mjs");
   const bundle = existsSync(bundlePath) ? readFileSync(bundlePath, "utf-8") : "";
@@ -104,6 +125,14 @@ describe("plugins/skill-heaven/mcp/skill-summon.mjs — the committed bundle", (
     const bareRequire = /\brequire\(\s*["'][a-zA-Z@][^"']*["']/;
     const match = stripped.match(bareRequire);
     expect(match, `found what looks like a live require() of a bare package: ${match?.[0]}`).toBeNull();
+  });
+
+  it("ships hardened URI-template marker handling", () => {
+    // SDK 1.29.0 is pinned for this lane. The build boundary hardens its two
+    // uncontrolled-marker removals without editing node_modules or the output
+    // by hand; this regression keeps the committed artifact honest.
+    expect(bundle).not.toMatch(/name\.replace\(["']\*["'],\s*["']["']\)/);
+    expect(bundle).toMatch(/name\.replaceAll\(["']\*["'],\s*["']["']\)/);
   });
 
   it("has no relative import reaching outside the bundle (e.g. back into packages/)", () => {

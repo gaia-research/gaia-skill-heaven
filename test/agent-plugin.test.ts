@@ -1,7 +1,10 @@
-import { existsSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { buildPiSkills } from "../scripts/build-pi-skills.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PLUGIN = join(REPO, "plugins", "skill-heaven");
@@ -56,7 +59,32 @@ describe("Agent Plugins 1.0.0 package", () => {
     expect(existsSync(path)).toBe(true);
     const source = readFileSync(path, "utf8");
     expect(source).toMatch(new RegExp(`^---\\nname: ${surface}\\n`));
-    expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\n---\n/);
+    expect(source).toMatch(/\ndescription: .+\ndisable-model-invocation: true\nuser-invocable: false\n---\n/);
+  });
+
+  // Pi 1.0.4 parses frontmatter as strict YAML and silently drops a skill whose
+  // frontmatter does not parse: an unquoted `description: a: b` left
+  // /skill:skill-zero unregistered there while Claude's lenient reader loaded it.
+  it.each(SURFACES)("keeps strict-YAML frontmatter for %s (skill and command)", (surface) => {
+    for (const path of [join(PLUGIN, "skills", surface, "SKILL.md"), join(PLUGIN, "commands", `${surface}.md`)]) {
+      const frontmatter = readFileSync(path, "utf8").split("\n---\n")[0].replace(/^---\n/, "");
+      for (const line of frontmatter.split("\n")) {
+        const value = /^[\w-]+: (.*)$/.exec(line)?.[1];
+        if (value === undefined || /^"(?:[^"\\]|\\.)*"$|^'(?:[^']|'')*'$/.test(value)) continue;
+        // a plain scalar: no `: ` or ` #` inside, no indicator first, no trailing colon
+        expect(value, `${path}: ${line}`).not.toMatch(/: | #|:$|^[\[\]{}>|*&!%@`'"#,?-]/);
+      }
+    }
+  });
+
+  // Claude discovers both skills/<x>/SKILL.md and commands/<x>.md and lists
+  // each one as a separate `/skill-heaven:<x>` row. `user-invocable: false`
+  // (with model invocation already off) drops the portable twin from Claude, so
+  // the command is the only entry. Codex and Pi ignore the key.
+  it.each(SURFACES)("keeps exactly one Claude slash entry for %s", (surface) => {
+    expect(existsSync(join(PLUGIN, "commands", `${surface}.md`))).toBe(true);
+    const source = readFileSync(join(PLUGIN, "skills", surface, "SKILL.md"), "utf8");
+    expect(source).toMatch(/\nuser-invocable: false\n/);
   });
 
   it("keeps Codex compatibility thin and rooted in the same bundled server", () => {
@@ -74,6 +102,18 @@ describe("Agent Plugins 1.0.0 package", () => {
     });
   });
 
+  // Antigravity 1.3.1 reads plugin MCP servers only from `mcp_config.json`;
+  // without it `agy plugin validate` reports `mcpServers: skipped (not found)`
+  // and /skill-heaven:summon has no tool. It expands ${PLUGIN_ROOT} itself.
+  it("keeps Antigravity's MCP shim identical to the portable server", () => {
+    const agyMcp = json(join(PLUGIN, "mcp_config.json"));
+    expect(Object.keys(agyMcp)).toEqual(["mcpServers"]);
+    const servers = agyMcp.mcpServers as Record<string, Record<string, unknown>>;
+    expect(Object.keys(servers)).toEqual(["skill-summon"]);
+    const { type: _type, ...portable } = (mcp.mcpServers as Record<string, Record<string, unknown>>)["skill-summon"];
+    expect(servers["skill-summon"]).toEqual(portable);
+  });
+
   it("keeps Pi compatibility namespaced and pointed at the portable components", () => {
     const extensions = manifest.extensions as Record<string, Record<string, unknown>>;
     expect(extensions["dev.skill-heaven.pi"]).toEqual({
@@ -85,11 +125,63 @@ describe("Agent Plugins 1.0.0 package", () => {
     const packageJson = json(join(PLUGIN, "package.json"));
     const pi = packageJson.pi as Record<string, string[]>;
     expect(pi.extensions).toEqual(["./dev.skill-heaven.pi/skill-heaven.ts"]);
-    expect(pi.skills).toEqual(["./skills"]);
+    expect(pi.skills).toEqual(["./dev.skill-heaven.pi/skills"]);
+    expect(Object.keys(pi).sort()).toEqual(["extensions", "skills"]);
 
     const adapter = readFileSync(join(PLUGIN, "dev.skill-heaven.pi", "skill-heaven.ts"), "utf8");
     expect(adapter).toContain('name: "summon"');
     expect(adapter).toContain('join(PLUGIN_ROOT, "mcp.json")');
-    for (const surface of SURFACES) expect(adapter).toContain(`["${surface}", "${surface}"`);
+    const aliases = adapter.match(/const commandAliases = \[([\s\S]*?)\] as const;/)![1];
+    const targets = [...aliases.matchAll(/\["([^"]+)", "([^"]+)"/g)].map(match => [match[1], match[2]]);
+    expect(targets).toEqual(SURFACES.map(surface => [surface, `skill-heaven-runtime-${surface}`]));
+    expect(adapter).toContain('pi.sendUserMessage(`/skill:${skill}${suffix}`, { expandPromptTemplates: true })');
+    expect(adapter).not.toContain('/skill:summon');
+    expect(adapter).not.toMatch(/setStatus|setWidget|registerCommand\("(?:heaven|lens)"/);
+    const consolePackage = json(join(REPO, "plugins", "skill-heaven-console-pi", "package.json"));
+    expect((consolePackage.pi as Record<string, unknown>).extensions).toEqual(["./extensions/console.mjs"]);
+  });
+
+  it.each(SURFACES)("ships a generated Pi-only metadata name with byte-identical semantics for %s", (surface) => {
+    const canonical = readFileSync(join(PLUGIN, "skills", surface, "SKILL.md"), "utf8");
+    const copy = readFileSync(join(PLUGIN, "dev.skill-heaven.pi", "skills", surface, "SKILL.md"), "utf8");
+    expect(copy).toBe(canonical.replace(`---\nname: ${surface}\n`, `---\nname: skill-heaven-runtime-${surface}\n`));
+    expect(copy.split("\n---\n").slice(1).join("\n---\n")).toBe(canonical.split("\n---\n").slice(1).join("\n---\n"));
+    expect(copy).toContain("\ndisable-model-invocation: true\nuser-invocable: false\n");
+    expect(readdirSync(join(PLUGIN, "dev.skill-heaven.pi", "skills", surface))).toEqual(["SKILL.md"]);
+  });
+
+  it("checks the committed Pi resources via the public builder without native clients", () => {
+    expect(readdirSync(join(PLUGIN, "dev.skill-heaven.pi", "skills")).sort()).toEqual([...SURFACES].sort());
+    const run = spawnSync(process.execPath, [join(REPO, "scripts", "build-pi-skills.mjs"), "--check"], { cwd: tmpdir(), encoding: "utf8" });
+    expect(run.status, run.stderr).toBe(0);
+  });
+
+  it("rebuilds deterministic Pi resources and fails closed on missing, stale or extra output", () => {
+    const root = mkdtempSync(join(tmpdir(), "sh-pi-generated-skills-"));
+    try {
+      cpSync(join(PLUGIN, "skills"), join(root, "skills"), { recursive: true });
+      const canonical = join(root, "skills", "summon", "SKILL.md");
+      const original = readFileSync(canonical, "utf8");
+      const generated = join(root, "dev.skill-heaven.pi", "skills", "summon", "SKILL.md");
+      expect(() => buildPiSkills({ pluginRoot: root, check: true })).toThrow(/drift/);
+      buildPiSkills({ pluginRoot: root });
+      buildPiSkills({ pluginRoot: root, check: true });
+      const first = readFileSync(generated, "utf8");
+      buildPiSkills({ pluginRoot: root });
+      expect(readFileSync(generated, "utf8")).toBe(first);
+      writeFileSync(generated, first + "\nmanual drift\n");
+      expect(() => buildPiSkills({ pluginRoot: root, check: true })).toThrow(/drift/);
+      expect(readFileSync(generated, "utf8")).toContain("manual drift"); // --check never repairs
+      buildPiSkills({ pluginRoot: root });
+      mkdirSync(join(root, "dev.skill-heaven.pi", "skills", "unowned-extra"));
+      expect(() => buildPiSkills({ pluginRoot: root, check: true })).toThrow(/drift/);
+      buildPiSkills({ pluginRoot: root });
+      writeFileSync(canonical, original + "\ncanonical update\n");
+      expect(() => buildPiSkills({ pluginRoot: root, check: true })).toThrow(/drift/);
+      buildPiSkills({ pluginRoot: root });
+      expect(readFileSync(generated, "utf8")).toContain("canonical update");
+      buildPiSkills({ pluginRoot: root, check: true });
+      expect(readFileSync(canonical, "utf8")).toBe(original + "\ncanonical update\n");
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });

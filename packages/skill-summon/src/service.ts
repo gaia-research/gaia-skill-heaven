@@ -1,8 +1,22 @@
+import {
+  normalize,
+  scoreMatch,
+  withUnknownInstallability,
+} from "skill-zero";
 import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
 
 import type { GaiaRegistrySource } from "./data/source.js";
 import {
+  indexFromSnapshot,
+  loadCommittedIndex,
+  resolveIndex,
+  sameSource,
+  type ResolvedIndex,
+} from "./data/skill-index-source.js";
+import type { GaiaInstallabilityAdapter } from "./data/installability.js";
+import {
   TREE_CONTRACT_VERSION,
+  flattenNamedSkills,
   type GaiaRegistrySnapshot,
   type InspectResult,
   type NamedSkill,
@@ -23,6 +37,19 @@ export type GaiaServiceOptions = {
   now?: () => Date;
   maxDataAgeMs?: number;
   serverVersion?: string;
+  /**
+   * The source this service was configured for. Supplied by the caller that
+   * resolved it, so `skillIndex()` can answer from the committed index without
+   * a network round trip. Omitted (tests, in-memory sources) means "load and
+   * build from whatever this source returns".
+   */
+  sourceUrl?: string | undefined;
+  /**
+   * Optional Tree installability projection. Never fetched unless supplied.
+   * The shared CLI/MCP factory leaves this undefined unless the operator sets
+   * SKILL_SUMMON_INSTALLABILITY. Programmatic hosts may explicitly inject it.
+   */
+  installabilityAdapter?: Pick<GaiaInstallabilityAdapter, "apply"> | undefined;
 };
 
 type ScoredResult = SearchResultItem & { score: number };
@@ -32,12 +59,92 @@ export class GaiaService {
   readonly #now: () => Date;
   readonly #maxDataAgeMs: number;
   readonly #serverVersion: string;
+  readonly #sourceUrl: string | undefined;
+  readonly #installabilityAdapter:
+    | Pick<GaiaInstallabilityAdapter, "apply">
+    | undefined;
 
   constructor(source: GaiaRegistrySource, options: GaiaServiceOptions = {}) {
     this.#source = source;
     this.#now = options.now ?? (() => new Date());
     this.#maxDataAgeMs = options.maxDataAgeMs ?? DEFAULT_MAX_DATA_AGE_MS;
     this.#serverVersion = options.serverVersion ?? VERSION;
+    this.#sourceUrl = options.sourceUrl;
+    this.#installabilityAdapter = options.installabilityAdapter;
+  }
+
+  /**
+   * The index summon ranks against (SPEC §2.2, PLAN 1.2).
+   *
+   * With no override and a configured source the committed index was built
+   * from, this returns that index and touches no network at all — the point of
+   * the whole exercise. An explicit `override` names a different tree or fleet
+   * and IS resolved over the network; failing to resolve it is an error, never
+   * a quiet fallback to the configured source (SPEC §5.1).
+   */
+  async skillIndex(override?: string | undefined): Promise<ResolvedIndex> {
+    if (override !== undefined) {
+      return this.#decorateInstallability(await resolveIndex({ source: override }));
+    }
+
+    if (this.#sourceUrl !== undefined) {
+      const committed = await loadCommittedIndex();
+      if (sameSource(this.#sourceUrl, committed.source)) {
+        return this.#decorateInstallability({
+          index: committed,
+          source: committed.source,
+          origin: "committed",
+          sourceKind: "tree",
+        });
+      }
+    }
+
+    const snapshot = await this.#source.load();
+    const sourceUrl =
+      this.#sourceUrl ?? snapshot.source.rootUrl ?? snapshot.source.namedUrl;
+    return this.#decorateInstallability({
+      index: indexFromSnapshot(snapshot, sourceUrl),
+      source: sourceUrl,
+      origin: "fetched",
+      sourceKind: snapshot.source.kind,
+    });
+  }
+
+  async #decorateInstallability(resolved: ResolvedIndex): Promise<ResolvedIndex> {
+    // The URL heuristic remains only as a compatibility field on old indexes.
+    // Every production summon decision gets an explicit unknown assessment
+    // first, so absent or unverified Tree evidence cannot become unreachable.
+    const unknown = withUnknownInstallability(resolved.index);
+    if (this.#installabilityAdapter === undefined) {
+      return {
+        ...resolved,
+        index: unknown,
+        installability: { status: "not-configured" },
+      };
+    }
+
+    try {
+      const applied = await this.#installabilityAdapter.apply(unknown, {
+        source: resolved.source,
+        sourceKind: resolved.sourceKind ?? "unknown",
+      });
+      return {
+        ...resolved,
+        index: applied.index,
+        installability: applied.status,
+      };
+    } catch (error) {
+      // Optional evidence is never allowed to destroy a successful offline
+      // summon, preview, or no-match. The safe degraded output is unknown.
+      return {
+        ...resolved,
+        index: unknown,
+        installability: {
+          status: "unavailable",
+          warning: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
   }
 
   async search(input: SearchInput): Promise<SearchResult> {
@@ -302,7 +409,7 @@ export class GaiaService {
   }
 
   #metadata(snapshot: GaiaRegistrySnapshot): ResultMetadata {
-    const sourceKind = snapshot.source.kind ?? "tree";
+    const sourceKind = snapshot.source.kind ?? "unknown";
     const generatedTimes = [
       Date.parse(snapshot.generic.generatedAt),
       Date.parse(snapshot.named.generatedAt),
@@ -328,6 +435,10 @@ export class GaiaService {
     if (sourceKind === "fleet") {
       warnings.push(
         "Collection-only GitHub fleet: the agent query routes flat SKILL.md entries by relevance; no generic map or tree trust ordering is active.",
+      );
+    } else if (sourceKind === "unknown") {
+      warnings.push(
+        "Source kind is unknown; Tree-scoped installability evidence is not applied.",
       );
     } else if (!upstreamDeclaresContractVersion) {
       warnings.push(
@@ -381,7 +492,7 @@ export class GaiaService {
 }
 
 function flattenNamed(snapshot: GaiaRegistrySnapshot): NamedSkill[] {
-  return Object.values(snapshot.named.buckets).flat();
+  return flattenNamedSkills(snapshot.named);
 }
 
 function toNamedSummary(skill: NamedSkill): NamedSkillSummary {
@@ -407,20 +518,32 @@ function toNamedSummary(skill: NamedSkill): NamedSkillSummary {
   };
 }
 
-function normalize(value: string): string {
-  return value
-    .toLocaleLowerCase("en-US")
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 export function starCount(level: string | undefined): number {
   if (!level) return -1;
   const match = /^(\d)★/.exec(level);
   return match?.[1] === undefined ? -1 : Number(match[1]);
 }
 
+/**
+ * Whether summon can deliver this skill at all. A suite root carries no
+ * `links.github` of its own — its components do (gaia-skill-tree CONTRIBUTING
+ * §12) — so gating candidates on `isInstallable` alone dropped all 20 suites
+ * in the corpus from every result, silently. Payload-level installability is
+ * still `isInstallable`; this is the ranking gate.
+ */
+export function isSummonable(skill: NamedSkill): boolean {
+  // The registry-only guard is an explicit registry refusal, not a URL-shape
+  // inference. Once scoped upstream evidence is present, unknown remains
+  // summonable; only a verified not-materializable result withholds.
+  if (skill.installable === false) return false;
+  if (skill.installability !== undefined) {
+    return skill.installability.applicability !== "verified" ||
+      skill.installability.state !== "not-materializable";
+  }
+  return isInstallable(skill) || (skill.suiteComponents?.length ?? 0) > 0;
+}
+
+/** Legacy link-shape helper used by the compatibility search/baseline surface. */
 export function isInstallable(skill: NamedSkill): boolean {
   if (skill.links.installable === false) return false;
   return (
@@ -431,24 +554,8 @@ export function isInstallable(skill: NamedSkill): boolean {
   );
 }
 
-export function scoreMatch(
-  query: string,
-  weightedFields: ReadonlyArray<readonly [value: string, weight: number]>,
-): number {
-  const normalizedQuery = normalize(query);
-  const tokens = [...new Set(normalizedQuery.split(" ").filter(Boolean))];
-  let score = 0;
-
-  for (const [rawValue, weight] of weightedFields) {
-    const value = normalize(rawValue);
-    if (!value) continue;
-    if (value === normalizedQuery) score += weight * 10;
-    else if (value.includes(normalizedQuery)) score += weight * 5;
-    for (const token of tokens) {
-      if (value.split(" ").includes(token)) score += weight;
-      else if (value.includes(token)) score += weight / 2;
-    }
-  }
-
-  return score;
-}
+// `normalize` and `scoreMatch` live in `skill-zero` so the benchmark scores the
+// SAME function the product runs (packages/core/src/retrieval/lexical.ts). A
+// second copy here would drift, and the baseline number would stop meaning
+// anything. Re-exported because callers across this package import them here.
+export { normalize, scoreMatch };

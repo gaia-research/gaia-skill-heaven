@@ -1,0 +1,27 @@
+{
+  "schema": "gaia.installability/v1",
+  "indexPath": "docs/graph/named/index.json",
+  "observations": [],
+  "skills": {
+    "garrytan/health": {
+      "state": "unknown",
+      "reason": "not-observed",
+      "observationDigest": null,
+      "observedAt": null,
+      "currentSourceRoute": {
+        "url": "https://github.com/garrytan/gstack/blob/main/health/SKILL.md",
+        "owner": "garrytan",
+        "repo": "gstack",
+        "ref": "main",
+        "subpath": "health",
+        "entrypoint": "health/SKILL.md",
+        "installSubpath": "health"
+      },
+      "currentSkillContentSha256": "1fddae6041f1b6dd9a75b88957f2a3a93e7c1897060a13f7832994b0bdc15c6e",
+      "observedSourceRoute": null,
+      "observedSkillContentSha256": null,
+      "resolvedRevision": null,
+      "deliveredContentSha256": null
+    }
+  }
+}

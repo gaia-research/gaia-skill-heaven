@@ -1,0 +1,532 @@
+{
+  "counts": {
+    "gold": {
+      "ambiguous": 8,
+      "reviewed": 44,
+      "suitable": 30,
+      "unsuitable": 6
+    },
+    "unanswerable": {
+      "ambiguous": 5,
+      "reviewed": 11,
+      "suitable": 6
+    }
+  },
+  "lockedAt": "2026-09-17T00:00:00Z",
+  "pins": {
+    "goldBlob": "497b204b5725eace27ab3397cde0061bba048c1d",
+    "heavenRev": "b5bfafb2782a11d6deeb2b89896ad42df82c0dae",
+    "unanswerableBlob": "9313f6cf984b3ccc32a60e68b9a829976109e07a"
+  },
+  "reviews": {
+    "g001": {
+      "at": "2026-09-16T20:46:40.710Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "0xdarkmatter/pytest-patterns",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g002": {
+      "at": "2026-09-16T20:46:54.220Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "Manavarya09/design-extract",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g003": {
+      "at": "2026-09-16T20:47:12.254Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/agent-skills",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g004": {
+      "at": "2026-09-16T20:47:23.319Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/code-review-and-quality",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g005": {
+      "at": "2026-09-16T20:47:43.869Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/code-simplification",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g006": {
+      "at": "2026-09-16T20:47:50.303Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/performance-optimization",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g007": {
+      "at": "2026-09-16T20:48:01.969Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/planning-and-task-breakdown",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g008": {
+      "at": "2026-09-16T20:48:21.452Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "addy-osmani/spec-driven-development",
+      "note": "",
+      "verdict": "ambiguous"
+    },
+    "g009": {
+      "at": "2026-09-16T20:48:30.201Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "anthropics/brand-guidelines",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g010": {
+      "at": "2026-09-16T20:48:45.702Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "bradautomates/watch",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g011": {
+      "at": "2026-09-16T20:49:53.650Z",
+      "betterSkill": "simply playwright? ego-browser?",
+      "dbVersion": 3,
+      "kind": "gold",
+      "labeledSkill": "browser-use/browser-harness",
+      "note": "This might need additional installation.",
+      "verdict": "ambiguous"
+    },
+    "g012": {
+      "at": "2026-09-16T20:51:54.926Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "dietrichgebert/ponytail",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g013": {
+      "at": "2026-09-16T20:52:53.038Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "disler/agent-fusion",
+      "note": "Check if this skill needs installation in a harness or needs to be in a specific harness--otherwise yes its good to go",
+      "verdict": "ambiguous"
+    },
+    "g014": {
+      "at": "2026-09-16T20:53:28.448Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "favorchurch/count-checkin-by-church",
+      "note": "this is for a specific internal tool.",
+      "verdict": "unsuitable"
+    },
+    "g015": {
+      "at": "2026-09-16T20:53:56.280Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "favorchurch/triage-conference",
+      "note": "this is specifically for a one-time event. Not generalized.",
+      "verdict": "unsuitable"
+    },
+    "g016": {
+      "at": "2026-09-16T20:54:40.711Z",
+      "betterSkill": "",
+      "dbVersion": 3,
+      "kind": "gold",
+      "labeledSkill": "firecrawl/firecrawl-build-onboarding",
+      "note": "This is for onboarding firecrawl build credentials, not any other API key.",
+      "verdict": "unsuitable"
+    },
+    "g017": {
+      "at": "2026-09-16T20:55:16.928Z",
+      "betterSkill": "",
+      "dbVersion": 4,
+      "kind": "gold",
+      "labeledSkill": "firecrawl/firecrawl-build-scrape",
+      "note": "yes but requires firecrawl cli or api",
+      "verdict": "ambiguous"
+    },
+    "g018": {
+      "at": "2026-09-16T20:56:06.712Z",
+      "betterSkill": "",
+      "dbVersion": 4,
+      "kind": "gold",
+      "labeledSkill": "firecrawl/firecrawl-skills",
+      "note": "Yes but dependent on installing firecrawl CLI. If a child skill installs it, then it meets the need but might need to ask permissions.",
+      "verdict": "ambiguous"
+    },
+    "g019": {
+      "at": "2026-09-16T20:56:13.924Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "gaia-research/ci-churn",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g020": {
+      "at": "2026-09-16T20:56:21.008Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/benchmark",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g021": {
+      "at": "2026-09-16T20:56:34.241Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/canary",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g022": {
+      "at": "2026-09-16T20:56:41.056Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/careful",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g023": {
+      "at": "2026-09-16T20:57:13.456Z",
+      "betterSkill": "context-mode",
+      "dbVersion": 4,
+      "kind": "gold",
+      "labeledSkill": "garrytan/context-restore",
+      "note": "Might need dependence on something.",
+      "verdict": "ambiguous"
+    },
+    "g024": {
+      "at": "2026-09-16T20:57:26.373Z",
+      "betterSkill": "pbakaus/impeccable",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "garrytan/design-consultation",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g025": {
+      "at": "2026-09-16T20:58:02.354Z",
+      "betterSkill": "pbakaus/impeccable or taste-skill",
+      "dbVersion": 3,
+      "kind": "gold",
+      "labeledSkill": "garrytan/design-shotgun",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g026": {
+      "at": "2026-09-16T20:58:11.337Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/freeze",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g027": {
+      "at": "2026-09-16T20:58:25.102Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/garrytan",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g028": {
+      "at": "2026-09-16T20:58:37.670Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/gstack",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g029": {
+      "at": "2026-09-16T20:58:54.201Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/investigate",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g030": {
+      "at": "2026-09-16T20:59:03.551Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/landing-report",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g031": {
+      "at": "2026-09-16T21:00:49.820Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/office-hours",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g032": {
+      "at": "2026-09-16T21:01:05.518Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/plan-ceo-review",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g033": {
+      "at": "2026-09-16T21:01:20.231Z",
+      "betterSkill": "founder-mode",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "garrytan/plan-devex-review",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g034": {
+      "at": "2026-09-16T21:02:10.895Z",
+      "betterSkill": "obra/writing-plans",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "garrytan/plan-tune",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g036": {
+      "at": "2026-09-16T21:09:31.167Z",
+      "betterSkill": "basically code-review or other review tools",
+      "dbVersion": 5,
+      "kind": "gold",
+      "labeledSkill": "garrytan/review",
+      "note": "",
+      "verdict": "unsuitable"
+    },
+    "g037": {
+      "at": "2026-09-16T21:15:52.275Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "garrytan/setup-deploy",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g038": {
+      "at": "2026-09-16T21:16:16.462Z",
+      "betterSkill": "pr?",
+      "dbVersion": 3,
+      "kind": "gold",
+      "labeledSkill": "garrytan/ship",
+      "note": "",
+      "verdict": "ambiguous"
+    },
+    "g039": {
+      "at": "2026-09-16T21:16:23.923Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "gsd-build/discuss-phase",
+      "note": "",
+      "verdict": "unsuitable"
+    },
+    "g040": {
+      "at": "2026-09-16T21:16:32.328Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "gsd-build/get-shit-done",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g041": {
+      "at": "2026-09-16T21:24:38.032Z",
+      "betterSkill": "garrytan/founder-mode",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "gsd-build/plan-phase",
+      "note": "",
+      "verdict": "unsuitable"
+    },
+    "g042": {
+      "at": "2026-09-16T21:24:51.906Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "gsd-build/verify-work",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g043": {
+      "at": "2026-09-16T21:25:13.643Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "gold",
+      "labeledSkill": "huggingface/huggingface-datasets",
+      "note": "Possibly this is only for ai model training",
+      "verdict": "ambiguous"
+    },
+    "g044": {
+      "at": "2026-09-16T21:25:23.505Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "huggingface/semantic-cache",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "g045": {
+      "at": "2026-09-16T21:25:36.172Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "gold",
+      "labeledSkill": "intelligentcode-ai/devops-engineer",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u008": {
+      "at": "2026-09-16T21:15:29.506Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "unanswerable",
+      "labeledSkill": "intelligentcode-ai/security-engineer",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u009": {
+      "at": "2026-09-16T21:15:25.808Z",
+      "betterSkill": "fine-tuning",
+      "dbVersion": 5,
+      "kind": "unanswerable",
+      "labeledSkill": "huggingface/huggingface-llm-trainer",
+      "note": "",
+      "verdict": "ambiguous"
+    },
+    "u010": {
+      "at": "2026-09-16T21:14:41.875Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "unanswerable",
+      "labeledSkill": "favorchurch/financial-assistance",
+      "note": "favorchurch skills are more of internal--not so sure this is helpful here. Also I'm setting 1 star skills as not installable--this is definitely 1star.",
+      "verdict": "ambiguous"
+    },
+    "u011": {
+      "at": "2026-09-16T21:13:59.443Z",
+      "betterSkill": "mattpocock/improve-codebase-architecture",
+      "dbVersion": 3,
+      "kind": "unanswerable",
+      "labeledSkill": "laravel/upgrade-laravel-v13",
+      "note": "This skill is highly dependent on laravel. Don't use it",
+      "verdict": "ambiguous"
+    },
+    "u012": {
+      "at": "2026-09-16T21:12:36.475Z",
+      "betterSkill": "",
+      "dbVersion": 5,
+      "kind": "unanswerable",
+      "labeledSkill": "ruvnet/stream-chain",
+      "note": "",
+      "verdict": "ambiguous"
+    },
+    "u013": {
+      "at": "2026-09-16T21:12:08.974Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "unanswerable",
+      "labeledSkill": "garrytan/office-hours",
+      "note": "",
+      "verdict": "ambiguous"
+    },
+    "u014": {
+      "at": "2026-09-16T21:11:58.008Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "unanswerable",
+      "labeledSkill": "obra/systematic-debugging",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u015": {
+      "at": "2026-09-16T21:11:51.241Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "unanswerable",
+      "labeledSkill": "mattpocock/prototype",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u016": {
+      "at": "2026-09-16T21:11:43.476Z",
+      "betterSkill": "mattpocock/wayfinder",
+      "dbVersion": 3,
+      "kind": "unanswerable",
+      "labeledSkill": "mattpocock/to-tickets",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u017": {
+      "at": "2026-09-16T21:10:43.959Z",
+      "betterSkill": "",
+      "dbVersion": 1,
+      "kind": "unanswerable",
+      "labeledSkill": "intelligentcode-ai/devops-engineer",
+      "note": "",
+      "verdict": "suitable"
+    },
+    "u018": {
+      "at": "2026-09-16T21:09:53.693Z",
+      "betterSkill": "",
+      "dbVersion": 2,
+      "kind": "unanswerable",
+      "labeledSkill": "ayghri/i-have-adhd",
+      "note": "",
+      "verdict": "suitable"
+    }
+  },
+  "schema": "gaia.skill-heaven-r3-label-review-snapshot/v1",
+  "source": "https://claude.ai/artifact/4gm6gdxqvB92Ww9Ewu43sk (db reviews/*)",
+  "verdictMeaning": {
+    "gold": {
+      "ambiguous": "unsure / partly",
+      "suitable": "labeled skill meets the need",
+      "unsuitable": "does not"
+    },
+    "unanswerable": {
+      "ambiguous": "unsure",
+      "suitable": "label correct: nothing in the corpus fits",
+      "unsuitable": "label wrong: a skill fits"
+    }
+  }
+}

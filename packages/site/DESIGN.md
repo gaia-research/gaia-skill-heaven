@@ -8,6 +8,9 @@ one visual system:
 | `/` | **The hero** — Hero A, the animated poster | poster; one screen, operable |
 | `/landing` | **The document** | scannable; numbered sections, ledger density |
 | `/instrument` | **The instrument** — the sampler | secondary; operate the line |
+| `/live` | **The production update** — what shipped, the clean-install receipt, what stays provisional | ledger; one column of proof per claim |
+| `/start` | **Install** — harness first, then that harness's exact path, what changes, update, remove | operate; one decision, then steps |
+| `/console` | **The prototype** — every status / Lens / receipt / Ultra state, rendered by the real model from FIXTURE data | specimen sheet; dense, labelled |
 
 The old `/hero-a` and `/hero-b` review routes are gone (`main.tsx` routes
 anything unknown back to `/`), but `styles/tokens.css` is still imported at the
@@ -124,6 +127,55 @@ rewrites and glitches into existence on every switch. A persistent
 the seventh, crown rung — the word reads **SKILL ULTRA**, gold with a red
 edge, never "Skill Hell Ultra".
 
+### The room — Lucy Atmosphere (#200)
+
+The hero's band ground is no longer a flat fill: a browser-side atmosphere
+(`src/lucy-scene/atmosphere/`) paints the room around the figure, driven by the
+same `v.scene` that picks the figure and never by the figure itself. Lucy (today
+the static v5 masters, later the Rive rig) owns everything attached to her; the
+room owns light, distant glass, depth and its own transition. Contract and
+evidence: `docs/lucy/atmosphere/README.md`.
+
+- **Zero** — barely there: a bone bloom that breathes on a 12s clock, a soft
+  column, a horizon hairline with a breath of Zero cyan. No shards (canon).
+- **Heaven** — a prismatic **corona**: the spectrum as a ring of split light
+  orbiting behind her head, never a fill. Light falls (slow shafts) while the
+  distant glass rises, all planes at one shared angle: order, not symmetry.
+- **Hell** — Heaven's corona printed twice in the inverted prism (rust, umber,
+  olive) out of register and counter-spun; registration slips; the glass torn
+  into two groups on opposing vectors with a late rust ghost. No flames, no
+  smoke, no red applied by hand: its red is inverted cyan.
+- **Ultra** — she lights the room: a gold bloom that flares past rest on
+  arrival, a sparse crown of luminous glass fanned behind her head, fine gold
+  interference rings, and one slow sweep with a red leading edge.
+
+Rules: transform and opacity over static paint; no animated filter, backdrop
+or blend mode; the atmosphere is always behind the figure; nothing in it is
+interactive. The periodic Ultra "overdrive" full-screen flash is retired, so
+only a band change earns an impact frame. The flank CTA plates are feathered
+(`box-shadow` in the band ground at 90%) so they dissolve into the room
+instead of cutting rectangles through its light.
+
+### The entrance — the loading screen (Gateway)
+
+Before the hero, while the live figure downloads, a full-screen entrance holds
+the page (`src/lucy-scene/entrance/`). It is the hero's own halo: a 1.5px bone
+ring whose arc closes **by bytes**, its leading edge carrying the spectrum as
+four adjacent split-light stripes (never a gradient fill). Four ticks on the
+ring are the four worlds (west zero, north heaven, east hell, south ultra) and
+each lights in its document hue when that state becomes switchable. Inside the
+ring the diamond eye outline breathes on Zero's 12s clock; the wordmark waits
+under the rim in the hero's own Anton + Kalam treatment; the status line is
+mono at 11px, and every number on it is a real byte count. The exit is the
+impact frame (46ms, `steps(3)`, ≤8px shear, hard invert) and a cut. Nothing
+fades.
+
+Rules: the Skip plate (`SKIP · ENTER NOW → still figure`) is on screen from
+the first frame and is the first tab stop; it opens the page with the v5
+masters and no second figure ever shows. The copy never names the character.
+On a warm cache the entrance never paints. Owner's pick from the three-concept
+campaign of 2026-11-04 (`docs/evidence/loader-campaign/`, untracked).
+
 ## The instrument (`/instrument`) — the sampler
 
 **Thesis: a surface you operate, not one you watch.** Kept as a secondary
@@ -234,8 +286,9 @@ Canon that is not negotiable:
 - **`slots`, `RUNG_SLOTS`, "budget", "cap", "how many skills", "per-gap budget"
   are banned vocabulary**, along with `slider`. The control is a ladder with
   discrete rungs, and a rung names a **direction** and a **position along its
-  band** — never a number. Where each band opens (`low`, `high`) is provisional
-  and every surface that renders the line carries the WIP mark.
+  band** — never a number. What a rung means in behaviour, and where each band
+  opens (`low`, `high`), is provisional: every surface that renders the line says
+  so. That is a **research** status, not a product status — see the next rule.
 - **Hell and Ultra are not gated, locked, sealed, or refused.** Nothing on the
   line refuses. Do not write copy that denies a sealing that was never on the
   table — the denial implies the thing.
@@ -252,7 +305,42 @@ Canon that is not negotiable:
   `28,379` · `−28.9%` · `+515 tok` are the real measured figures. The entropy
   curve and the Heaven/Hell stamps are **not built** — never rendered as
   results.
-- A standing `WIP · v0` disclosure sits in the chrome and the footer.
+- **Two statuses, never conflated.** Skill Heaven the *tool* is **LIVE** (a mint
+  `LIVE` chip in the chrome and footer, linking to `/live`). The *research* is
+  **PROVISIONAL** where the evidence says so (an amber `PROVISIONAL` chip on rung
+  meaning, band openings and anything gated on behavioural evidence). Do not
+  delete a PROVISIONAL marker because the tool shipped, and do not put a WIP
+  marker on something because the research is open. The ladder cards are LIVE;
+  the ladder's *meaning* is PROVISIONAL.
+- **The standing-dose bars are historical** and say so beside the numbers: they were
+  measured before the bundled summon MCP was admitted to the product floor, which
+  the shipped floor now includes and the figures do not price.
+- **The terminal on `/landing` is an illustration**, labelled as one. It must not
+  show a summon performing something the product does not do (no "autonomous",
+  no standing "auto-summon", no pull request the tool opens).
+
+## The instrument — one palette across site, desktop and terminal
+
+The status line, the Lens band, receipts and the console are projections of
+one model (`packages/status`, design of record `docs/CONTROL-PLANE.md`). Their
+colours come from one table, `ROLE_COLORS` in `packages/status/src/tokens.ts`,
+painted on the web as `--shi-*` custom properties by
+`src/instrument/StatusLine.tsx`. The instrument uses the **document** hues:
+zero `#5fc2d6`, heaven `#6f96d8`, hell `#e094c8` (never red), ultra `#d9b25c`,
+Arbor `#55c878` (canonical Arbor evidence only — nothing draws it today),
+failure `#c81e1e` (one-glyph `!` only; it fails 4.5:1 as text), amber
+`#e0b45c` for FIXTURE / PREVIEW / PROVISIONAL.
+
+**Known drift, recorded rather than repainted:** `system.css` defines
+`--sh-zero: #8b8890` and `--sh-hell: #c89a3f`, which disagree with the document
+hues listed under "The world" above (`#5fc2d6`, `#e094c8`). The instrument does
+not read `--sh-*` for that reason. Reconciling the site tokens is a separate
+pass; do not "fix" it by pointing the instrument at `--sh-*`.
+
+Rules the instrument keeps everywhere: colour never carries meaning alone
+(`‹‹ ››` direction, `◇/◆` umbrella/Ultra, `×` refusal, `?` unknown, `!` error);
+the reading is the last thing a narrow layout drops; fixture data always wears
+its FIXTURE chip; a selected rung is shown as selected, never as enforced.
 
 ## Token collision — read before adding a surface
 

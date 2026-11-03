@@ -47,7 +47,7 @@ function assertSessionScopedWrite(op: FsOp, ctx: string): void {
   }
   // Belt and suspenders: no write target may literally name a shared root,
   // however it got there.
-  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor"];
+  const forbidden = ["$HOME", "~/.claude", "~/.codex", "~/.pi", "~/.grok", "~/.cursor", "~/.gemini"];
   const target = op.kind === "write" ? op.path : op.to;
   for (const bad of forbidden) {
     expect(target.includes(bad), `${ctx}: ${op.kind} target "${target}" references shared path "${bad}"`).toBe(false);
@@ -70,9 +70,13 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
       harness !== "pi" &&
       harness !== "codex" &&
       harness !== "hermes" &&
-      harness !== "grok"
+      harness !== "grok" &&
+      harness !== "agy"
     )
       return true;
+    if (posture === "curated" && harness === "agy") {
+      return true; // agy curated requires explicit isolateHome: true
+    }
     return false;
   }
 
@@ -103,6 +107,20 @@ describe("KC5 static: every fsPlan op across every posture x harness x mechanism
       }
     }
   }
+
+  it("agy curated under the opt-in isolateHome route still writes only inside the session dir", () => {
+    // agy curated refuses without `isolateHome` (it would otherwise have to write into the
+    // user's real ~/.gemini/config/skills — P3). The opt-in route is where agy's fsPlan
+    // ops actually live, so it must not fall out of the KC5 sweep: compile it explicitly
+    // and hold it to the same session-scoped-write bar as every other harness.
+    const skills = [resolveSkill(join(import.meta.dirname, "fixtures", "impeccable-skill"))];
+    const r = compile({ posture: "curated", harness: "agy", skills, homeDir: "/fixture/home", isolateHome: true });
+    expect(r.env.HOME).toBe("$SESSION");
+    expect(r.fsPlan.length).toBeGreaterThan(0);
+    for (const op of r.fsPlan) {
+      assertSessionScopedWrite(op, "posture=curated harness=agy isolateHome=true");
+    }
+  });
 
   it("sanity: the sweep actually compiled a nonzero number of combos and inspected a nonzero number of ops", () => {
     // combosCompiled/combosThrown/opsChecked are populated by the `it` blocks
@@ -177,6 +195,9 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
     writeFileSync(join(home, ".grok", "config.toml"), "# fixture grok config\n");
     mkdirSync(join(home, ".cursor"), { recursive: true });
     writeFileSync(join(home, ".cursor", "config.json"), "{}\n");
+    mkdirSync(join(home, ".gemini", "antigravity-cli"), { recursive: true });
+    writeFileSync(join(home, ".gemini", "antigravity-cli", "antigravity-oauth-token"), '{"token":"fixture"}\n');
+    writeFileSync(join(home, ".gemini", "settings.json"), '{"security":{"auth":{"selectedType":"oauth-personal"}}}\n');
 
     mkdirSync(doorDir, { recursive: true });
     writeFileSync(join(doorDir, ".claude-plugin.json"), '{"name":"door"}\n');
@@ -200,9 +221,14 @@ describe("KC5 dynamic: before/after fixture diff across every posture and every 
           harness !== "claude" &&
           harness !== "pi" &&
           harness !== "codex" &&
-          harness !== "hermes"
+          harness !== "hermes" &&
+          harness !== "grok" &&
+          harness !== "agy"
         )
           continue;
+        if (posture === "curated" && harness === "agy") {
+          continue; // only reachable with isolateHome: true, swept explicitly above
+        }
         const mechanisms = harness === "claude" && posture === "curated" ? MECHANISMS : [undefined];
         for (const mechanism of mechanisms) {
           const skills: ResolvedSkill[] = posture === "curated" ? [skill] : [];

@@ -108,6 +108,15 @@ describe("run", () => {
     expect(plan.argv).toContain("--no-skills");
     expect(plan.argv).toContain("--no-context-files");
     expect(plan.argv).toContain("--no-prompt-templates");
+    expect(plan.argv).not.toContain("--model");
+  });
+
+  it("passes --model through to argv when explicitly supplied", () => {
+    const { code, out } = captureStdout(() => run(["--print", "--model", "custom/model"]));
+    expect(code).toBe(0);
+    const plan = JSON.parse(out);
+    expect(plan.argv).toContain("--model");
+    expect(plan.argv).toContain("custom/model");
   });
 
   it("routes a summon rung to the command that arms it, ultra included", () => {

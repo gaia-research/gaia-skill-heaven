@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,11 +34,44 @@ jobs:
           npm run build:mcp
           git diff --exit-code -- plugins/skill-heaven/mcp/
 
+      # The console mod cannot import packages/status at run time (a mod has no
+      # Node and reads only its own folder), so it carries a committed bundle of
+      # the one status model. A diff means the model changed without a rebuild.
+      - name: Status model bundle is up to date
+        run: |
+          npm run build:status
+          git diff --exit-code -- plugins/skill-heaven-console/hooks/status-model.mjs
+
+      - name: Pi namespaced skill resources are up to date
+        run: npm run build:pi-skills -- --check
+
+      - name: Portable console bundles are up to date
+        run: npm run build:console -- --check
+
+      - name: Installer profile contract bundle is up to date
+        run: |
+          npm run build:profiles
+          git diff --exit-code -- scripts/install-profile.mjs
+
+      # The committed skill index is the runtime's only read path (SPEC §2.2),
+      # and it is a deterministic function of the committed corpus snapshot.
+      # A diff here means someone edited the snapshot or the builder without
+      # rebuilding — which would ship a plugin whose index does not match the
+      # corpus it claims to index.
+      - name: Skill index is up to date
+        run: npx tsx packages/core/scripts/build-skill-index.ts --check
+
       # The plugin is the shipped artifact: validate its manifest with the real
       # Claude Code CLI, not just our own tests. `plugin validate` is a static
       # manifest check — it starts no session and needs no credentials.
       - name: Validate the plugin manifest
         run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven
+
+      # The optional console is a Mods plugin (function hooks, early-access
+      # API). `plugin validate` reads its hooks module the way the engine will
+      # and reports anything the engine would refuse — still static, no session.
+      - name: Validate the console mod
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate ./plugins/skill-heaven-console
 
       # D6 cross-repo gate: a record emitted by core must pass gaia-research's
       # ledger validator (the validator never moves — it stays upstream, D6).
@@ -50,3 +86,15 @@ jobs:
           npx tsx packages/core/scripts/emit-sample-record.ts > rec.jsonl
           cat rec.jsonl
           npx tsx .gaia-research/scripts/hell-heaven-bench/ledger.ts validate --file rec.jsonl
+
+  windows-installers:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate install.ps1 and install-agent-plugin.ps1 on Windows PowerShell 5.1 and PowerShell 7+ (#94)
+        run: npx vitest run packages/core/test/install.test.ts test/windows-installer.test.ts

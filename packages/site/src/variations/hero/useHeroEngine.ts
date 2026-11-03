@@ -54,6 +54,13 @@ function isMobileViewport() {
     : false
 }
 
+function getViewportCategory(): 'desktop' | 'tablet' | 'mobile' {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'desktop'
+  if (window.matchMedia('(max-width: 640px)').matches) return 'mobile'
+  if (window.matchMedia('(max-width: 1024px)').matches) return 'tablet'
+  return 'desktop'
+}
+
 type EngineState = {
   act: number
   flash: 0 | 1 | 2
@@ -98,10 +105,42 @@ const HERO = {
 // stack, which is the opposite of what "mobile viewport" pass needed.
 const MOBILE_FIG_SCALE = 0.62
 
+// Per-band figure framing presets, FACE-ANCHORED.
+export const FIG_CONFIG = {
+  zero: { zoom: 1.00, x: 0.60, y: 3.68, origin: '47% 30%' },
+  heaven: { zoom: 1.59, x: -3.25, y: -1.63, origin: '49% 27%' },
+  hell: { zoom: 1.68, x: 2.66, y: -0.25, origin: '47% 30%' },
+  ultra: { zoom: 1.40, x: 3.55, y: 2.00, origin: '45% 24%' },
+} as const
+
+// Per-band wing framing presets across responsive viewports.
+export const WING_CONFIG = {
+  heaven: { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+  hell:   { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+  ultra:  { scale: 0.95, x: 8.2, y: 30.0, rot: 0.0 },
+} as const
+
+export const WING_CONFIG_TABLET = {
+  heaven: { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+  hell:   { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+  ultra:  { scale: 0.80, x: -6.3, y: 23.9, rot: 0.0 },
+} as const
+
+export const WING_CONFIG_MOBILE = {
+  heaven: { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+  hell:   { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+  ultra:  { scale: 1.66, x: -5.0, y: 45.2, rot: 0.0 },
+} as const
+
 // Pure translation of state -> every derived style value. Nothing here
 // mutates state; `variant` only steers the two style knobs (cut angle, CTA
 // alignment) that differ between the Reredos and Guillotine layouts.
-function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
+function computeVals(
+  state: EngineState,
+  variant: 'a' | 'b',
+  mobile: boolean,
+  viewport: 'desktop' | 'tablet' | 'mobile' = 'desktop',
+) {
   const { act, flash, stop, glitch, od } = state
   const lane = LADDER[stop].lane
   const atLadder = act === N - 1
@@ -175,13 +214,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
   // face on the GOLDEN-RATIO line (~37vh from top) — face-first, never covered.
   // Because origin is the face, face-y ≈ 8 + originY%*92 + lucyY + y, i.e. y
   // moves the face 1:1 in vh. PROVISIONAL, verified against screenshots.
-  const FIG = {
-    zero: { zoom: 1.5, x: 1.8, y: 6, origin: '47% 30%' },
-    heaven: { zoom: 2.5, x: 0.6, y: 12, origin: '49% 27%' },
-    hell: { zoom: 2.5, x: 3.3, y: 12, origin: '47% 30%' },
-    ultra: { zoom: 2.1, x: 4.9, y: 15, origin: '45% 24%' },
-  } as const
-  const fig = FIG[scene]
+  const fig = FIG_CONFIG[scene]
 
   const pick = <T,>(arr: T[]) => arr[act]
 
@@ -194,6 +227,7 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
     scene,
     wordFill,
     wordStroke,
+    figBase: FIG_CONFIG[scene],
     figZoom: mobile ? fig.zoom * MOBILE_FIG_SCALE : fig.zoom,
     figX: fig.x,
     figY: fig.y,
@@ -235,6 +269,22 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
     // present through the intro and at the ladder for heaven/hell/ultra; Zero
     // carries none (canon).
     oWing: atLadder ? (scene === 'zero' ? 0 : 0.55) : [0.5, 0.4, 0.28, 0.14, 0][act],
+    wingScale:
+      scene === 'zero'
+        ? 1.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].scale,
+    wingX:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].x,
+    wingY:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].y,
+    wingRot:
+      scene === 'zero'
+        ? 0.0
+        : (viewport === 'mobile' ? WING_CONFIG_MOBILE : viewport === 'tablet' ? WING_CONFIG_TABLET : WING_CONFIG)[scene].rot,
     haloRot: pick([0, -3, -7, -12, -12]),
     lucyY: pick([0, -1.5, -3, 0, 0]),
     lucyXB: pick([0, -1, -2, 1, 6]),
@@ -247,9 +297,9 @@ function computeVals(state: EngineState, variant: 'a' | 'b', mobile: boolean) {
           : 'none',
     // The ladder's own act (index 4) reads a hair under full opacity on
     // desktop — barely visible there, but on mobile, where she's the main
-    // event behind the wordmark, the alpha read as a bug. Full opacity on
-    // mobile at the ladder; desktop keeps the original.
-    oLucy: mobile && atLadder ? 1 : pick([1, 1, 1, 1, 0.88]),
+    // Full opacity at all acts and on desktop — the 0.88 cap was causing the
+    // wordmark to bleed through hair and torso edges, killing perceived sharpness.
+    oLucy: 1,
 
     // At the ladder, the blade is otherwise parked off-scene (oBlade reads 0
     // at act===N-1 by the Act 1-4 table below) — so a band switch used to cut
@@ -327,19 +377,27 @@ export function useHeroEngine(variant: 'a' | 'b') {
   // 1–4 are the optional narrative, entered deliberately from the ladder.
   const [act, setAct] = useState(N - 1)
   const [flash, setFlash] = useState<0 | 1 | 2>(0)
-  // …and it opens at ZERO, the product floor, even though Skill Heaven is the
-  // umbrella name (issue #47).
-  const [stop, setStop] = useState(0)
+  // Default open at Skill Heaven LOW (issue: Skill Heaven Low default open)
+  const [stop, setStop] = useState(1)
   const [glitch, setGlitch] = useState<0 | 1 | 2>(0)
   const [od, setOd] = useState<0 | 1 | 2>(0)
   const [mobile, setMobile] = useState(isMobileViewport)
+  const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>(getViewportCategory)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined
-    const mq = window.matchMedia('(max-width: 640px)')
-    const onChange = () => setMobile(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
+    const mqMobile = window.matchMedia('(max-width: 640px)')
+    const mqTablet = window.matchMedia('(max-width: 1024px)')
+    const onChange = () => {
+      setMobile(mqMobile.matches)
+      setViewport(getViewportCategory())
+    }
+    mqMobile.addEventListener?.('change', onChange)
+    mqTablet.addEventListener?.('change', onChange)
+    return () => {
+      mqMobile.removeEventListener?.('change', onChange)
+      mqTablet.removeEventListener?.('change', onChange)
+    }
   }, [])
 
   const actRef = useRef(act)
@@ -352,8 +410,50 @@ export function useHeroEngine(variant: 'a' | 'b') {
   const touchYRef = useRef<number | null>(null)
   const touchTsRef = useRef(0)
   const glitchIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const glitchRafRef = useRef(0)
   const flashT1Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const flashT2Ref = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const userZoomRef = useRef(1)
+  const pinchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const resetZoom = useCallback(() => {
+    userZoomRef.current = 1
+    if (rootRef.current) {
+      rootRef.current.style.setProperty('--lucy-user-zoom', '1')
+      rootRef.current.style.removeProperty('--lucy-zoom-transition')
+      rootRef.current.style.removeProperty('--lucy-offset-x')
+      rootRef.current.style.removeProperty('--lucy-offset-y')
+    }
+    window.dispatchEvent(new CustomEvent('lucy-user-zoom-change', { detail: { zoom: 1 } }))
+  }, [])
+
+  const handlePinchZoom = useCallback((deltaY: number) => {
+    // Zoom sensitivity tuned for desktop trackpad pinch gestures (Chrome, Safari, Firefox).
+    // Clamped per-event delta prevents abrupt spikes.
+    const clampedDelta = Math.max(-60, Math.min(60, deltaY))
+    const factor = Math.exp(-clampedDelta * 0.008)
+    const nextZoom = Math.min(4.0, Math.max(0.3, userZoomRef.current * factor))
+    userZoomRef.current = nextZoom
+
+    if (rootRef.current) {
+      rootRef.current.style.setProperty('--lucy-user-zoom', nextZoom.toFixed(4))
+      rootRef.current.style.setProperty(
+        '--lucy-zoom-transition',
+        'transform 50ms cubic-bezier(.16,1,.3,1)',
+      )
+    }
+
+    window.dispatchEvent(new CustomEvent('lucy-user-zoom-change', { detail: { zoom: nextZoom } }))
+
+    if (pinchTimerRef.current != null) {
+      clearTimeout(pinchTimerRef.current)
+    }
+    pinchTimerRef.current = setTimeout(() => {
+      rootRef.current?.style.removeProperty('--lucy-zoom-transition')
+      pinchTimerRef.current = undefined
+    }, 180)
+  }, [])
 
   // Fast scrolling should breeze through the choreography instead of forcing
   // every act transition to play at full cinematic length. `--vh-t` is a time
@@ -466,20 +566,33 @@ export function useHeroEngine(variant: 'a' | 'b') {
       setStop(i)
       if (!bandChanged || actRef.current !== N - 1 || prefersReducedMotion()) return
       clearInterval(glitchIntervalRef.current)
-      let n = 0
-      setGlitch(1)
-      setFlash(1)
-      glitchIntervalRef.current = setInterval(() => {
-        n += 1
-        if (n > 6) {
-          clearInterval(glitchIntervalRef.current)
-          setGlitch(0)
-          setFlash(0)
-          return
-        }
-        setGlitch(n % 2 ? 2 : 1)
-        setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
-      }, 46)
+      cancelAnimationFrame(glitchRafRef.current)
+      // The pulse begins two frames after the click, once the switch itself
+      // (the band's DOM and the figure's first frame in the new state) has
+      // been committed and painted, so a slow first frame of a state can never
+      // hold a half-painted glitch frame (scanlines + wedge over the old
+      // state). It is then 7 steps of 46ms read off the wall clock rather than
+      // counted per tick, so a late tick lands on the right step (or the end)
+      // instead of the next one.
+      const begin = () => {
+        const t0 = performance.now()
+        setGlitch(1)
+        setFlash(1)
+        glitchIntervalRef.current = setInterval(() => {
+          const n = Math.floor((performance.now() - t0) / 46)
+          if (n > 6) {
+            clearInterval(glitchIntervalRef.current)
+            setGlitch(0)
+            setFlash(0)
+            return
+          }
+          setGlitch(n % 2 ? 2 : 1)
+          setFlash(n < 3 ? (n % 2 ? 2 : 1) : 0)
+        }, 46)
+      }
+      glitchRafRef.current = requestAnimationFrame(() => {
+        glitchRafRef.current = requestAnimationFrame(begin)
+      })
     },
     [setScale],
   )
@@ -487,6 +600,14 @@ export function useHeroEngine(variant: 'a' | 'b') {
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
+
+      // Trackpad pinch-to-zoom: desktop browsers synthesize wheel with ctrlKey=true.
+      // Explicitly for trackpad pinch gestures, not touchscreen interactions.
+      if (e.ctrlKey) {
+        handlePinchZoom(e.deltaY)
+        return
+      }
+
       const now = Date.now()
       // A new gesture after a pause starts cinematic — don't let a stale EWMA
       // from a prior fast scroll bleed into it.
@@ -523,6 +644,11 @@ export function useHeroEngine(variant: 'a' | 'b') {
       }
     }
     const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        // Multi-touch on touchscreens is intentionally ignored for Lucy zoom and act swipes
+        touchYRef.current = null
+        return
+      }
       touchYRef.current = e.touches[0].clientY
       touchTsRef.current = Date.now()
     }
@@ -539,23 +665,55 @@ export function useHeroEngine(variant: 'a' | 'b') {
       touchYRef.current = null
     }
 
+    // Prevent Safari desktop full-page zoom on trackpad pinch gestures, leaving touchscreens unaffected
+    const onGesture = (e: Event) => {
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(pointer: fine)').matches &&
+        (navigator.maxTouchPoints === 0 || !('ontouchstart' in window))
+      ) {
+        e.preventDefault()
+      }
+    }
+
+    const onSetZoom = (e: Event) => {
+      const custom = e as CustomEvent<{ zoom: number }>
+      if (typeof custom.detail?.zoom === 'number') {
+        userZoomRef.current = custom.detail.zoom
+        rootRef.current?.style.setProperty('--lucy-user-zoom', custom.detail.zoom.toFixed(4))
+      }
+    }
+
     window.addEventListener('wheel', onWheel, { passive: false })
     window.addEventListener('keydown', onKey)
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('gesturestart', onGesture, { passive: false })
+    window.addEventListener('gesturechange', onGesture, { passive: false })
+    window.addEventListener('gestureend', onGesture, { passive: false })
+    window.addEventListener('lucy-set-zoom', onSetZoom)
     return () => {
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('gesturestart', onGesture)
+      window.removeEventListener('gesturechange', onGesture)
+      window.removeEventListener('gestureend', onGesture)
+      window.removeEventListener('lucy-set-zoom', onSetZoom)
       clearTimeout(flashT1Ref.current)
       clearTimeout(flashT2Ref.current)
+      clearTimeout(pinchTimerRef.current)
       clearInterval(glitchIntervalRef.current)
+      cancelAnimationFrame(glitchRafRef.current)
     }
-  }, [go, registerInput])
+  }, [go, handlePinchZoom, registerInput])
 
   // Ultra's overdrive: a periodic double-flash (gold sheet → ink sheet) with
   // a small glitch shear on the wordmark, looping while Ultra stays selected.
+  // It sits on top of Ultra's room (the atmosphere's slow sweep and
+  // interference keep running beneath it); the impact frames are back.
   useEffect(() => {
     const on = act === N - 1 && LADDER[stop].lane === 'u'
     if (!on || prefersReducedMotion()) {
@@ -577,7 +735,7 @@ export function useHeroEngine(variant: 'a' | 'b') {
     }
   }, [act, stop])
 
-  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile)
+  const v = computeVals({ act, flash, stop, glitch, od }, variant, mobile, viewport)
 
   const dots = Array.from({ length: N }, (_, i) => ({
     aria: 'Act ' + (i + 1),
@@ -616,13 +774,14 @@ export function useHeroEngine(variant: 'a' | 'b') {
   // deprecated-by-default five-act narrative; `enterLadder` returns to the one
   // line, which is where the hero lands (issue #47).
   const enterStory = useCallback(() => {
+    resetZoom()
     setScale(1)
     go(0)
-  }, [go, setScale])
+  }, [go, resetZoom, setScale])
   const enterLadder = useCallback(() => {
     setScale(1)
     go(N - 1)
   }, [go, setScale])
 
-  return { v, act, actCount: N, dots, rungs, rootRef, enterStory, enterLadder }
+  return { v, act, actCount: N, dots, rungs, rootRef, enterStory, enterLadder, resetZoom }
 }

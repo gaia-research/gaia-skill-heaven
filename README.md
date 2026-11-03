@@ -6,22 +6,37 @@
 
 Summon exactly the skills a task needs — one session, nothing installed. Or start the harness clean and add nothing at all.
 
+> **Status: live.** Skill Heaven is a production tool: it installs from `main`, and a fresh install was verified end to end on Claude Code 2.1.288 — see the [production update](https://gaia-research.github.io/gaia-skill-heaven/#/live) and [`docs/RELEASE-ACCEPTANCE.md`](docs/RELEASE-ACCEPTANCE.md). What each rung means *in behaviour* is still provisional (SPEC INV-10 stands, unmet; composition is relevance-only).
+
+### What you get
+
+- **A clean start.** `claude-zero` launches Claude Code with its skill catalogue cut to the nearest achievable zero and a strict MCP allowlist that admits exactly one server — the bundled `skill-summon`. Ambient MCP servers, project skills, project hooks and your own enabled plugins stay out. (Historical standing-dose measurement: −28.9% vs native on Claude Code 2.1.216, taken *before* the summon MCP was admitted; the shipped floor adds that one server and is not re-priced.)
+- **Ephemeral, on-demand skills.** `/summon` brings one `SKILL.md` into a single session. Nothing is installed.
+- **Honest retrieval.** Ranking is local and deterministic over an index that ships in the plugin; a query with no fit is an explicit refusal, not a forced match.
+- **Reference data, not authority.** Commands, cards and MCP text say what they are and cannot change the task, authorize a tool call or widen permissions.
+- **Your permission choices survive the clean room.** An explicit flag wins; a configured default mode is the one setting carried through.
+- **One portable Agent Plugin.** Verified from scratch on Claude Code 2.1.288; Codex, Pi, Hermes and Grok were probed at their pinned versions earlier. Antigravity is **partial**: its own validator loads the five commands but not the summon server (table below).
+- **A quiet instrument, not a dashboard.** `◇ entropy ‹‹ [ZERO] ›› · 0 skills` — where you are on the line and how many skills actually entered the session, the same in the terminal and the desktop ([design](docs/CONTROL-PLANE.md)).
+- **One line, not a count.** `zero · low · med · high · xhigh · max · ultra` measures *skill entropy* — a rung names a direction, never a number of skills.
+
 [![Skill Tree](https://img.shields.io/badge/Skill_Tree-gaiaskilltree.com-f59e0b)](https://gaiaskilltree.com/)
 [![Research](https://img.shields.io/badge/Research-research.gaiaskilltree.com-ec4899)](https://research.gaiaskilltree.com/)
 [![Skill Heaven Preview](https://img.shields.io/badge/Skill_Heaven-gaia--research.github.io%2Fgaia--skill--heaven-a58ae0)](https://gaia-research.github.io/gaia-skill-heaven/)
 
-Works with **Claude Code · Codex · Pi · Hermes · Grok**
+Works with **Claude Code · Codex · Pi · Hermes · Grok** · partial on **Antigravity**
 
 ---
 
 ## Install
+
+**Not sure which path?** [Pick your harness](https://gaia-research.github.io/gaia-skill-heaven/#/start) — it shows the exact commands for it, what changes on your machine, and how to update or remove it.
 
 Requires **Node.js 22+ and Git**. Two ways in — install the Agent Plugin, or just the launchers.
 
 | | You get | Best if |
 |---|---|---|
 | **1 · The Agent Plugin** | All five surfaces + the summon engine | Any harness — **start here** |
-| **2 · The launchers** | `claude-zero`, `pi-zero`, and three more | You want to start harnesses clean from your shell |
+| **2 · The launchers** | `claude-zero`, `pi-zero`, and four more | You want to start harnesses clean from your shell |
 
 ---
 
@@ -52,7 +67,7 @@ The clients pinned in the compatibility probe use these registration commands:
 | Hermes 0.20.0 | `hermes plugins install "file://$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --enable` |
 | Pi 0.84.2 | `pi install "$HOME/.local/share/gaia-skill-heaven-agent-plugin/marketplace/plugins/skill-heaven" --approve` |
 
-**Claude Code marketplace compatibility still works** on 2.1.237. Use the public marketplace directly — no local install is required:
+**The Claude Code marketplace install is verified** on 2.1.288 (fresh install, this release). Use the public marketplace directly — no local install is required:
 
 ```text
 /plugin marketplace add gaia-research/gaia-skill-heaven
@@ -60,6 +75,14 @@ The clients pinned in the compatibility probe use these registration commands:
 ```
 
 Run `/reload` in a Pi session that was already open; other clients pick up the plugin in a new session. Then `/summon`, `/skill-zero`, `/skill-heaven`, `/skill-hell`, and `/skill-ultra` are available. There is no second engine or sibling repository.
+
+#### Optional — the console for Claude Code (preview)
+
+```text
+/plugin install skill-heaven-console@gaia-skill-heaven
+```
+
+Adds a status entry beside yours (it never replaces your statusLine), the **Lens** band — what a summon returned and whether the skill body actually entered context — and `/heaven`, a pane with the session's receipts, scope, agents and what you are trusting. It only *observes*: it never calls a tool on its own, never changes a summon, and writes nothing to disk. It is built on Claude Code 2.1.293's early-access Mods API and is labelled **preview** until a logged-in desktop session has been probed ([what it reads and writes](plugins/skill-heaven-console/README.md)).
 
 Some clients copy plugins into their own cache. Re-running the script updates the stable local artifact; run that client's update or reinstall command to refresh its cached copy.
 
@@ -84,16 +107,16 @@ irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
 ```
 
 ```text
-claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero
+claude-zero   codex-zero   pi-zero   hermes-zero   grok-zero   agy-zero
 ```
 
 Run one instead of your usual harness command. The installer also registers the Agent Plugin above if your `claude` binary is already on `PATH`.
 
-It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin` (or `%LOCALAPPDATA%\gaia-skill-heaven\bin` on Windows); add it to your `PATH` if your shell doesn't pick it up:
+It does **not** install the harnesses themselves. Binaries land in `$HOME/.local/share/gaia-skill-heaven/bin` (or `%LOCALAPPDATA%\gaia-skill-heaven\bin` on Windows) and are automatically linked into `$HOME/.local/bin` (or added to User PATH on Windows). If your shell does not yet include `~/.local/bin` in `PATH`, add it:
 
 **macOS / Linux (POSIX):**
 ```bash
-export PATH="$HOME/.local/share/gaia-skill-heaven/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 **Windows (PowerShell):**
@@ -148,7 +171,9 @@ One mechanic — **`/summon`**, one skill into context, one session, nothing ins
 
 **Heaven is human-led. Hell is model-led.** That is the distinction the whole product turns on. Heaven narrows onto the gap; Hell widens around it, putting more experts in context than you would have picked.
 
-> **Status.** The launchers and all five in-session commands ship and work today as actively tested prototypes. GitHub fleets now route invocation safety from `SKILL.md` metadata and route candidates by relevance. Benchmark-derived trust routing is still not built.
+> **Status.** The Claude Code door (`claude-zero`) and all five in-session commands are live and verified from a clean install; the other launchers are prototypes with narrower evidence. GitHub fleets route invocation safety from `SKILL.md` metadata and route candidates by relevance. Heaven/Hell stamps are not built, so routing is relevance-only; nothing here is stamp-gated.
+
+The S-now Ultra controller is deterministic and event-driven: host-runtime behavioral events drive explore/recover, while explicit operator controls manage lifecycle and reopening; absent or malformed events hold. [Controller contract and replay path →](docs/STEERING.md)
 
 ---
 
@@ -181,7 +206,7 @@ Nothing on the line refuses — every rung is reachable. Heaven's representative
 Launch any supported harness with a clean context:
 
 ```bash
-claude-zero          # or: codex-zero · pi-zero · hermes-zero · grok-zero
+claude-zero          # or: codex-zero · pi-zero · hermes-zero · grok-zero · agy-zero
 ```
 
 Pick how clean you want the *launch* to be with `--level`:
@@ -192,7 +217,7 @@ Pick how clean you want the *launch* to be with `--level`:
 | `low` | Clean, then only the skills you name with `--skill` |
 | `med` · `native` | Your normal, untouched harness |
 
-The upper rungs (`high` · `xhigh` · `max` · `ultra`) aren't boot settings — you arm them live with `/skill-hell` or `/skill-ultra` once the session is running.
+The upper rungs (`high` · `xhigh` · `max` · `ultra`) aren't boot settings — you select them in-session with `/skill-hell` or `/skill-ultra` once the session is running.
 
 ```bash
 # start clean, then admit exactly one skill
@@ -220,11 +245,12 @@ prove or stamp a claim or trigger a benchmark. [Telemetry contract and flags →
 
 | Harness | Launcher | In-session commands |
 |---|---|---|
-| Claude Code | ✅ `claude-zero` | ✅ marketplace compatibility (2.1.237) |
+| Claude Code | ✅ `claude-zero` (verified, 2.1.288) | ✅ marketplace install (verified from scratch, 2.1.288) |
 | Codex | ✅ `codex-zero` | ✅ plugin compatibility (0.146.0) |
 | Pi | ✅ `pi-zero` | ✅ Agent Plugin adapter (0.84.2) |
 | Hermes | ✅ `hermes-zero` | ✅ Agent Plugins v1 (0.20.0) |
 | Grok | ✅ `grok-zero` | ✅ plugin compatibility (1.0.5) |
+| Antigravity (agy) | ✅ `agy-zero` (launcher probed on 1.2.13) | ◐ **partial** — `agy plugin validate` (1.3.1) loads the five commands but reports no MCP server, so `/summon` has no tool; needs a logged-in probe |
 | Other conformant Agent Plugins clients | — | ◻️ load the same directory; not yet pinned here |
 
 ---
@@ -283,6 +309,7 @@ $HOME/.local/share/gaia-skill-heaven/uninstall.sh
 | What a real install looks like | [`docs/INSTALL-TRANSCRIPT.md`](docs/INSTALL-TRANSCRIPT.md) |
 | Vision · Mission | [VISION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/VISION.md) · [MISSION](https://github.com/gaia-research/gaia-research/blob/main/docs/skill-heaven/MISSION.md) |
 | Hell / Heaven benchmark | [research.gaiaskilltree.com](https://research.gaiaskilltree.com/research/hh-benchmark) |
+| Lucy Alive · Rive character direction | [`docs/lucy/rive/LUCY_ALIVE.md`](docs/lucy/rive/LUCY_ALIVE.md) |
 
 ## Development
 
@@ -293,3 +320,7 @@ npm run launcher -- --level zero --print
 ```
 
 Node.js **22+**, TypeScript ESM. No runtime dependencies, and no harness binaries are installed as dependencies.
+
+## License
+
+[MIT](LICENSE) © 2026 Gaia Research.

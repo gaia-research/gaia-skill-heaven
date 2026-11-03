@@ -1,0 +1,841 @@
+{
+  "schema": "gaia.bench-ledger/v1",
+  "ranAt": "2026-09-03T16:59:35.655Z",
+  "index": {
+    "schema": "gaia.skill-index/v1",
+    "generatedAt": "2026-09-03T16:50:52.285Z",
+    "sourceDigest": "sha256:38dabbe90d85776d7b4f821bd0c8b070d2c5d5636ba0cf33de7ec31e94eb7268",
+    "builder": {
+      "version": "skill-index-builder/0.1.0",
+      "expansion": "none"
+    },
+    "docs": 274
+  },
+  "builderVersion": "skill-index-builder/0.1.0",
+  "goldSet": {
+    "queries": 100,
+    "ambiguous": 6
+  },
+  "unanswerableSet": {
+    "queries": 20
+  },
+  "systems": [
+    {
+      "system": "baseline-shipped",
+      "label": "scoreMatch as shipped (installable + MIN_RELEVANCE + BAND)",
+      "reachableTargets": 67,
+      "mrrOnReachable": 0.0585,
+      "mrr": 0.0392,
+      "mrrExcludingAmbiguous": 0.0386,
+      "recallAt5": 0.06,
+      "refusalRate": 0,
+      "falseRefusalRate": 0,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 86.5,
+          "topId": "anthropic/skill-creator"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 126,
+          "topId": "mattpocock/ubiquitous-language"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 86,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 66,
+          "topId": "huggingface/huggingface-datasets"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 84.5,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 77.5,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 61.5,
+          "topId": "mattpocock/ubiquitous-language"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54,
+          "topId": "garrytan/design-consultation"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 108.5,
+          "topId": "mattpocock/grill-with-docs"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 39,
+          "topId": "aplaceforallmystuff/log-to-daily"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54.5,
+          "topId": "mattpocock/write-a-skill"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 43,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 55.5,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 93.5,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 63.5,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 140,
+          "topId": "garrytan/plan-eng-review"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 81,
+          "topId": "mattpocock/writing-for-agents"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 98.5,
+          "topId": "addy-osmani/planning-and-task-breakdown"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 50.5,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 112,
+          "topId": "garrytan/land-and-deploy"
+        }
+      ]
+    },
+    {
+      "system": "baseline-raw",
+      "label": "scoreMatch, ungated — ordering ability alone",
+      "reachableTargets": 100,
+      "mrrOnReachable": 0.0501,
+      "mrr": 0.0501,
+      "mrrExcludingAmbiguous": 0.0504,
+      "recallAt5": 0.06,
+      "refusalRate": 0,
+      "falseRefusalRate": 0,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 86.5,
+          "topId": "anthropic/skill-creator"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 126,
+          "topId": "mattpocock/ubiquitous-language"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 86,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 66,
+          "topId": "huggingface/huggingface-datasets"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 84.5,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 77.5,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 68,
+          "topId": "nousresearch/feed-monitoring"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 56.5,
+          "topId": "gsd-build/get-shit-done"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 108.5,
+          "topId": "mattpocock/grill-with-docs"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 39,
+          "topId": "aplaceforallmystuff/log-to-daily"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 54.5,
+          "topId": "mattpocock/write-a-skill"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 43,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 55.5,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 93.5,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 63.5,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 140,
+          "topId": "garrytan/plan-eng-review"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 106,
+          "topId": "ruvnet/v3-memory-unification"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 98.5,
+          "topId": "addy-osmani/planning-and-task-breakdown"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 50.5,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 112,
+          "topId": "garrytan/land-and-deploy"
+        }
+      ]
+    },
+    {
+      "system": "bm25f",
+      "label": "BM25F over the committed index + exact-name fast path (no floor)",
+      "reachableTargets": 100,
+      "mrrOnReachable": 0.28,
+      "mrr": 0.28,
+      "mrrExcludingAmbiguous": 0.2653,
+      "recallAt5": 0.38,
+      "refusalRate": 0,
+      "falseRefusalRate": 0.02,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.498510822559307,
+          "topId": "garrytan/design-html"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 14.094122876769381,
+          "topId": "obra/systematic-debugging"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 16.00197538727381,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 23.716758048807577,
+          "topId": "dietrichgebert/ponytail"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 12.892451481127509,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 15.195398401414073,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 18.672317135050786,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 12.545503202582799,
+          "topId": "gsd-build/get-shit-done"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.372721122603785,
+          "topId": "k-dense-ai/transformers"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 21.412905233349804,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 10.18794273733639,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 10.642983819984892,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 11.101413471900493,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 13.401739883917482,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 14.250174698813263,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 24.958376154487887,
+          "topId": "mattpocock/wayfinder"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 16.259473984501156,
+          "topId": "mattpocock/to-questionnaire"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 12.86833083040865,
+          "topId": "ruvnet/flow-nexus-platform"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 13.739424336375503,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.117013087769632,
+          "topId": "mattpocock/wait-what"
+        }
+      ]
+    },
+    {
+      "system": "bm25f-no-expansion",
+      "label": "BM25F over the same index with expansions stripped",
+      "reachableTargets": 100,
+      "mrrOnReachable": 0.28,
+      "mrr": 0.28,
+      "mrrExcludingAmbiguous": 0.2653,
+      "recallAt5": 0.38,
+      "refusalRate": 0,
+      "falseRefusalRate": 0.02,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.498510822559307,
+          "topId": "garrytan/design-html"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": false,
+          "topScore": 14.094122876769381,
+          "topId": "obra/systematic-debugging"
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 16.00197538727381,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 23.716758048807577,
+          "topId": "dietrichgebert/ponytail"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 12.892451481127509,
+          "topId": "mbtiongson1/gaia-draft-curate"
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 15.195398401414073,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 18.672317135050786,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": false,
+          "topScore": 12.545503202582799,
+          "topId": "gsd-build/get-shit-done"
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.372721122603785,
+          "topId": "k-dense-ai/transformers"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 21.412905233349804,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": false,
+          "topScore": 10.18794273733639,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 10.642983819984892,
+          "topId": "santifer/career-ops"
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": false,
+          "topScore": 11.101413471900493,
+          "topId": "mattpocock/zoom-out"
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 13.401739883917482,
+          "topId": "garrytan/qa-only"
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 14.250174698813263,
+          "topId": "mattpocock/grill-me"
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 24.958376154487887,
+          "topId": "mattpocock/wayfinder"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 16.259473984501156,
+          "topId": "mattpocock/to-questionnaire"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 12.86833083040865,
+          "topId": "ruvnet/flow-nexus-platform"
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": false,
+          "topScore": 13.739424336375503,
+          "topId": "garrytan/land-and-deploy"
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.117013087769632,
+          "topId": "mattpocock/wait-what"
+        }
+      ]
+    },
+    {
+      "system": "bm25f-decide",
+      "label": "BM25F + the L2 decide layer: surface filter, calibrated floor, band",
+      "reachableTargets": 78,
+      "mrrOnReachable": 0.2796,
+      "mrr": 0.2181,
+      "mrrExcludingAmbiguous": 0.2107,
+      "recallAt5": 0.28,
+      "refusalRate": 0.6,
+      "falseRefusalRate": 0.14,
+      "refusals": [
+        {
+          "query": "I need a zero-downtime way to add a new column to a 40-million row production table",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.498510822559307,
+          "topId": "garrytan/design-html"
+        },
+        {
+          "query": "a secret got committed three months ago and I need it rotated everywhere it's used before someone finds it in history",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "build a browser extension that autofills expense reports from email receipts",
+          "distance": "far",
+          "refused": false,
+          "topScore": 16.00197538727381,
+          "topId": "garrytan/open-gstack-browser"
+        },
+        {
+          "query": "check whether the answers our retrieval pipeline gives actually match a set of known-correct responses",
+          "distance": "near",
+          "refused": false,
+          "topScore": 23.716758048807577,
+          "topId": "dietrichgebert/ponytail"
+        },
+        {
+          "query": "draft the Terraform for a three-region VPC with private subnets and peering",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "even out the volume and strip the hiss from a two-hour interview recording",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "figure out the carbon footprint of our GPU training runs and where to cut it",
+          "distance": "far",
+          "refused": false,
+          "topScore": 18.672317135050786,
+          "topId": "mattpocock/to-spec"
+        },
+        {
+          "query": "get single sign-on working for enterprise customers against their Okta tenant",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "get the model I just fine-tuned serving live traffic with autoscaling behind a load balancer",
+          "distance": "near",
+          "refused": false,
+          "topScore": 15.372721122603785,
+          "topId": "k-dense-ai/transformers"
+        },
+        {
+          "query": "match up incoming payment webhooks against our internal records to catch anything double-billed",
+          "distance": "mid",
+          "refused": false,
+          "topScore": 21.412905233349804,
+          "topId": "favorchurch/triage-conference"
+        },
+        {
+          "query": "move a decades-old COBOL batch job onto something maintainable",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "our nightly data dedup job silently stopped running last week and nobody noticed",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "sketch out a points-based loyalty program our users would actually want",
+          "distance": "far",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "the app freezes for a couple seconds only on older Android phones right after opening",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "the jump in our platformer feels floaty, help me dial in the arc",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "this PR is way too big to review in one sitting, I want it broken into a stack of small reviewable commits",
+          "distance": "near",
+          "refused": false,
+          "topScore": 24.958376154487887,
+          "topId": "mattpocock/wayfinder"
+        },
+        {
+          "query": "this pod keeps getting killed for using too much memory and I can't tell why",
+          "distance": "near",
+          "refused": false,
+          "topScore": 16.259473984501156,
+          "topId": "mattpocock/to-questionnaire"
+        },
+        {
+          "query": "translate the app's interface into a dozen languages and catch spots where plural forms break",
+          "distance": "mid",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "we need to know how the checkout API holds up under 5000 concurrent users before Black Friday",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        },
+        {
+          "query": "we're still on an ancient Python 2 codebase and need a path off it",
+          "distance": "near",
+          "refused": true,
+          "topScore": 0,
+          "topId": null
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "system": "baseline-raw",
+      "against": "baseline-shipped",
+      "delta": 0.010840857974581793,
+      "ciLow": -0.005944114326248678,
+      "ciHigh": 0.03445711638788979,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": false
+    },
+    {
+      "system": "bm25f",
+      "against": "baseline-shipped",
+      "delta": 0.2407860541783981,
+      "ciLow": 0.17383496973988385,
+      "ciHigh": 0.3112174419375176,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f-no-expansion",
+      "against": "baseline-shipped",
+      "delta": 0.2407860541783981,
+      "ciLow": 0.17383496973988385,
+      "ciHigh": 0.3112174419375176,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f-decide",
+      "against": "baseline-shipped",
+      "delta": 0.17887316241604173,
+      "ciLow": 0.1137832211296248,
+      "ciHigh": 0.24821550162841466,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": true
+    },
+    {
+      "system": "bm25f",
+      "against": "bm25f-no-expansion",
+      "delta": 0,
+      "ciLow": 0,
+      "ciHigh": 0,
+      "resamples": 10000,
+      "seed": 20260903,
+      "excludesZero": false
+    }
+  ]
+}

@@ -1,7 +1,11 @@
-// The statusline segment — the ambient posture + standing-dose readout that
-// creates the "pain moment" (N8: the user reaches for this when it hurts).
-// Pure render, unit-tested; all IO lives in
-// statusline-cli.ts so this stays deterministic.
+// The statusline segment (docs/CONTROL-PLANE.md §2, §3, §5.1). The instrument —
+// the entropy reading, `skills N`, `summons N` — is a projection of the one
+// status model in @gaia-skill-heaven/status. This file owns only the door's own
+// facts, appended after the instrument: the standing-dose readout (the N8 "pain
+// moment") and Claude Code's live ctx%.
+//
+// Pure: no IO, deterministic. statusline-cli.ts reads the profile manifest,
+// the summon session and the statusline stdin JSON, and hands the values here.
 //
 // TWO NUMBERS, TWO SCOPES (matrix gate (b), B1). `standing` is the skills-only
 // STANDING dose, census-derived from the launched profile (baked into the
@@ -12,6 +16,18 @@
 // dose. No statusline-input field isolates the standing number (GB-3), which is
 // exactly why standing must come from the census, not from stdin.
 
+import {
+  paintAnsi,
+  readingFromProfileManifest,
+  renderStatusSegments,
+  segmentsWidth,
+  statusLevels,
+  toPlain,
+  type ColorDepth,
+  type Segment,
+  type SkillHeavenStatus,
+  type StatusMode,
+} from "@gaia-skill-heaven/status";
 import type { Posture } from "skill-zero";
 
 export interface ProfileManifest {
@@ -44,6 +60,26 @@ export interface StatuslineInput {
     total_input_tokens?: number;
     context_window_size?: number;
   };
+}
+
+/** The summon session facts the instrument shows (§2.2). `null` is unknown and
+ * renders as unknown (`? skills`), never as 0. */
+export interface SummonSessionFacts {
+  /** skills materialized in this session */
+  skills: number | null;
+  /** summon calls recorded this session (full mode only) */
+  summons: number | null;
+  /** the most recent materialized skill's name */
+  lastArrival: string | null;
+}
+
+export interface StatuslineOptions {
+  /** SKILL_HEAVEN_STATUS. Default `compact`. `off` renders nothing at all. */
+  mode?: StatusMode;
+  /** Terminal width in cells, when known. Absent = no budget. */
+  columns?: number;
+  /** Paint depth. Default `none` (plain text, every word and glyph present). */
+  colorDepth?: ColorDepth;
 }
 
 /** 14200 → "14.2k"; 57 → "57"; sub-1k stays exact (standing doses run small). */
@@ -93,19 +129,63 @@ function standingPhrase(manifest: ProfileManifest): string {
   return `${formatTokens(manifest.standingTokens)}${floor} standing${scopeCaveat(manifest.scope)}`;
 }
 
+const SEP: Segment = { text: " · ", role: "dim" };
+
+/** The door's own facts, richest first. Under width pressure they are dropped
+ * in this order — ctx% first, then standing — and only then does the
+ * instrument itself degrade (the reading is the last thing to go). */
+function doorSuffixTiers(manifest: ProfileManifest, input: StatuslineInput | null | undefined): Segment[][] {
+  const standing: Segment[] = [SEP, { text: standingPhrase(manifest), role: "dim" }];
+  const pct = input?.context_window?.used_percentage;
+  const ctx: Segment[] = typeof pct === "number" && Number.isFinite(pct) ? [SEP, { text: `${Math.round(pct)}% ctx`, role: "dim" }] : [];
+  return [[...standing, ...ctx], standing, []];
+}
+
+/** The richest instrument level, then the door facts that fit beside it. With
+ * no budget everything is shown. Otherwise door facts are dropped first (ctx,
+ * then standing); only when not even the richest level fits beside no door
+ * facts does the instrument step down to a narrower level. */
+function composeSegments(status: SkillHeavenStatus, mode: StatusMode, tiers: Segment[][], columns: number | undefined): Segment[] {
+  const levels = statusLevels(status, mode);
+  const richest = levels[0];
+  if (!richest) return [];
+  if (columns === undefined) return [...richest, ...tiers[0]!];
+  // The standing dose is the door's N8 "pain moment": it outlives the
+  // instrument's full-mode extras (summons, last arrival). So for each suffix
+  // tier (standing + ctx%, then standing alone) try every instrument level
+  // that still names skills; only then drop the suffix and let the model
+  // degrade, the reading last.
+  const withSkills = levels.filter((level) => / skills?\b|\? skills/.test(toPlain(level)));
+  for (const tier of tiers) {
+    if (tier.length === 0) continue;
+    for (const level of withSkills) {
+      if (segmentsWidth(level) + segmentsWidth(tier) <= columns) return [...level, ...tier];
+    }
+  }
+  return renderStatusSegments(status, mode, columns);
+}
+
+/** The one statusline line: the instrument (§3 grammar) followed by the door's
+ * facts. Pure — the CLI supplies the manifest, session facts and stdin JSON. */
 export function renderStatusline(
   manifest: ProfileManifest,
   input?: StatuslineInput | null,
-  hellManifest?: HellSessionManifest | null,
+  session?: SummonSessionFacts | null,
+  options: StatuslineOptions = {},
 ): string {
-  const parts = [`⚡ ${manifest.posture} · ${standingPhrase(manifest)}`];
-  const pct = input?.context_window?.used_percentage;
-  if (typeof pct === "number" && Number.isFinite(pct)) {
-    parts.push(`${Math.round(pct)}% ctx`);
-  }
-  const hellSegment = renderHellSegment(hellManifest ?? null);
-  if (hellSegment) parts.push(hellSegment);
-  return parts.join(" · ");
+  const mode = options.mode ?? "compact";
+  if (mode === "off") return "";
+  const status: SkillHeavenStatus = {
+    reading: readingFromProfileManifest(manifest),
+    skills: session?.skills ?? null,
+    summons: session?.summons ?? null,
+    lastArrival: session?.lastArrival ?? null,
+    controller: { kind: "not-selected" },
+    summonTool: "unknown",
+  };
+  const columns = options.columns !== undefined && options.columns > 0 ? options.columns : undefined;
+  const segments = composeSegments(status, mode, doorSuffixTiers(manifest, input), columns);
+  return paintAnsi(segments, options.colorDepth ?? "none");
 }
 
 export function parseStatuslineInput(raw: string): StatuslineInput | null {
@@ -136,23 +216,6 @@ export function isHellSessionManifest(value: unknown): value is HellSessionManif
   if (!value || typeof value !== "object") return false;
   const m = value as Record<string, unknown>;
   return Array.isArray(m.skills) && m.skills.every((s) => s && typeof s === "object" && typeof (s as { id?: unknown }).id === "string");
-}
-
-/** "mattpocock/grill-me" -> "grill-me". Falls back to the whole id if there is
- * no "/" (never throws on an unexpected id shape). */
-function hellSlug(skillId: string): string {
-  const slug = skillId.split("/").pop();
-  return slug || skillId;
-}
-
-/** The compact "hell: <skill>[ +N]" segment (minimal by founder request: no
- * colours, no bars, no token counts — just which skill). Empty string when
- * nothing has been summoned this session, so callers can omit the joiner. */
-export function renderHellSegment(manifest: HellSessionManifest | null): string {
-  if (!manifest || manifest.skills.length === 0) return "";
-  const [first, ...rest] = manifest.skills;
-  const extra = rest.length > 0 ? ` +${rest.length}` : "";
-  return `hell: ${hellSlug(first.id)}${extra}`;
 }
 
 const MANIFEST_KEYS: Array<keyof ProfileManifest> = ["schema", "posture", "standingTokens", "skillCount", "scope", "launcherLocked"];

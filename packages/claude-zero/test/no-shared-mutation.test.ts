@@ -40,6 +40,7 @@ import { materialize } from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "../src/census.js";
 import { LAUNCHABLE_POSTURES } from "../src/cli.js";
 import { planLaunch, planNativeLaunch } from "../src/launcher.js";
+import { writeDoorPluginFixture } from "./door-plugin-fixture.js";
 
 function sha(text: string): string {
   return createHash("sha256").update(text).digest("hex");
@@ -202,12 +203,14 @@ describe("KC5 (claude-zero door): before/after fixture diff for the curated & pr
     writeFileSync(join(home, ".pi", "config.toml"), "# fixture pi config\n");
     mkdirSync(join(home, ".grok"), { recursive: true });
     mkdirSync(join(home, ".cursor"), { recursive: true });
-    // A separate "door" dir (stands in for claude-zero's own bundled plugin
-    // dir, cli.ts's doorPluginDir()) — product-floor takes this as a caller
-    // path only (argv passthrough), never an fsPlan target; included in the
-    // diff to prove that holds.
-    mkdirSync(doorDir, { recursive: true });
-    writeFileSync(join(doorDir, ".claude-plugin.json"), '{"name":"door"}\n');
+    // A separate "door" dir (stands in for claude-zero's own bundled plugin dir,
+    // cli.ts's doorPluginDir()). Since #143 it is a REAL minimal plugin, not an
+    // empty dir: product-floor resolves the door's bundled summon MCP
+    // declaration out of exactly this tree, so the fixture has to carry the
+    // three files that contract reads. It is still only ever READ — product-floor
+    // takes the dir as a --plugin-dir argument, never as an fsPlan target — and
+    // the before/after diff below is what proves that.
+    doorDir = writeDoorPluginFixture(join(fixtureRoot, "door"));
   });
 
   afterAll(() => {
@@ -285,7 +288,7 @@ describe("KC5 (claude-zero door): before/after fixture diff for the curated & pr
     }
   });
 
-  it("product-floor: the real-launch write sequence writes only manifest+settings (no fsPlan ops), and leaves home/project/door byte-identical", () => {
+  it("product-floor: the real-launch write sequence writes only the session-local door-mcp.json (plus manifest+settings), and leaves home/project/door byte-identical", () => {
     const before = { home: snapshotTree(home), project: snapshotTree(project), door: snapshotTree(doorDir) };
     const sessionDir = mkdtempSync(join(tmpdir(), "kc5-door-productfloor-session-"));
     try {
@@ -297,13 +300,23 @@ describe("KC5 (claude-zero door): before/after fixture diff for the curated & pr
         statuslineBin: "/fixture/statusline.mjs",
         doorPluginDir: doorDir,
       });
-      expect(plan.fsPlan).toEqual([]); // product-floor never writes fsPlan ops at all
+      // #143: product-floor DOES write now — the door's own bundled summon MCP
+      // declaration, session-local, never into the plugin it was read from.
+      expect(plan.fsPlan).toHaveLength(1);
+      expect(plan.fsPlan[0]).toMatchObject({ kind: "write", path: join(sessionDir, "door-mcp.json") });
       materialize(plan.fsPlan, sessionDir);
       writeFileSync(plan.manifestPath, `${JSON.stringify(plan.manifest, null, 2)}\n`);
       writeFileSync(plan.settingsPath, `${JSON.stringify(plan.settings, null, 2)}\n`);
 
       const written = snapshotTree(sessionDir);
-      expect(Object.keys(written).sort()).toEqual(["profile.json", "settings.json"]);
+      expect(Object.keys(written).sort()).toEqual(["door-mcp.json", "profile.json", "settings.json"]);
+      // The admitted server points at the READ-ONLY fixture plugin, inside the
+      // session, and the plugin itself is untouched.
+      const mcp = JSON.parse(readFileSync(join(sessionDir, "door-mcp.json"), "utf-8")) as {
+        mcpServers: Record<string, { args: string[] }>;
+      };
+      expect(Object.keys(mcp.mcpServers)).toEqual(["skill-summon"]);
+      expect(mcp.mcpServers["skill-summon"].args[0]).toBe(join(doorDir, "mcp", "skill-summon.mjs"));
 
       const after = { home: snapshotTree(home), project: snapshotTree(project), door: snapshotTree(doorDir) };
       expect(after).toEqual(before);

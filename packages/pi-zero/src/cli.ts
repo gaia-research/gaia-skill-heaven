@@ -12,10 +12,6 @@ import { fileURLToPath } from "node:url";
 import { HEAVEN_LEVELS, HELL_LEVELS, SUMMON_ONLY_LEVELS, materialize, POSTURES, type Posture } from "skill-zero";
 import { planLaunch, resolveLevelAlias } from "./launcher.js";
 
-// Guinea-pig model for this prototype (WP2 dispatch brief) — cheap and
-// consistent, verified working against pi 0.83.0 (PROBE.md). Only applied
-// when the caller does not pass --model.
-const DEFAULT_MODEL = "openai-codex/gpt-5.6-luna:low";
 const PROFILE_ENV = "PI_ZERO_PROFILE";
 const PROFILE_FILE = "pi-zero-profile.json";
 const BUNDLED_EXTENSION = join(dirname(fileURLToPath(import.meta.url)), "..", "extension", "pi-zero.ts");
@@ -109,8 +105,8 @@ function helpText(): string {
     "Usage: pi-zero [--level <level>] [options] [-- <pi args...>]",
     "",
     `  --level <level>    Heaven rung: ${HEAVEN_LEVELS.join("|")} (default: zero)`,
-    `                     Hell (${HELL_LEVELS.join("|")}) is armed live with /skill-hell`,
-    "                     ultra is the crown rung, armed live with /skill-ultra",
+    `                     Hell (${HELL_LEVELS.join("|")}) is selected in-session with /skill-hell`,
+    "                     ultra is the crown rung, selected in-session with /skill-ultra",
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
@@ -172,7 +168,7 @@ export function run(argv: string[]): number {
     return 2;
   }
 
-  const model = args.model ?? DEFAULT_MODEL;
+  const model = args.model;
 
   if (args.print) {
     // Dry run: show the plan without touching disk — no temp dir to leak. The

@@ -9,15 +9,28 @@
 // `compile()` — the one place the empirically probed, version-pinned routes
 // live — and this module only:
 //   (a) resolves --skill paths into core's ResolvedSkill shape,
-//   (b) substitutes core's "$SESSION" placeholder with the real session dir,
-//   (c) appends the session `--settings` file so the statusline still wires up,
-//   (d) writes a manifest describing WHAT WAS ACTUALLY LAUNCHED.
+//   (b) resolves the DOOR's own bundled MCP declaration when a door plugin is
+//       mounted at product-floor (see ./mcp.ts and #143),
+//   (c) substitutes core's "$SESSION" placeholder with the real session dir,
+//   (d) appends the session `--settings` file so the statusline still wires up,
+//   (e) writes a manifest describing WHAT WAS ACTUALLY LAUNCHED.
+// One door-side exception exists, added by issue #144: the non-native postures
+// evict the user's settings entirely (`--setting-sources ''`), which silently
+// deleted their permission mode — including a configured
+// `dangerouslySkipPermissions`. This module therefore re-applies exactly ONE
+// thing from that settings file, a default permission mode, through the probed
+// `permissions.defaultMode` channel. It is permission INTENT only: no allow/deny
+// rules, hooks, plugins, MCP servers, env, credentials, or additional
+// directories, and no auto-acknowledged bypass. `permissions.ts` owns that
+// contract; core stays permission-neutral.
 // Nothing here re-derives a route, invents a flag, or edits the compiled argv.
 // If a posture's composition is wrong, it is wrong in packages/core.
 
 import { join } from "node:path";
 import {
   compile,
+  DOOR_MCP_CONFIG_PATH,
+  DOOR_MCP_SERVER_NAME,
   SUMMON_ONLY_LEVELS,
   resolveSkill,
   type FsOp,
@@ -25,6 +38,8 @@ import {
   type ResolvedSkill,
 } from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
+import { resolveDoorMcpConfig } from "./mcp.js";
+import { resolveLaunchPermissions, type ResolvedPermissions } from "./permissions.js";
 import type { ProfileManifest } from "./statusline.js";
 
 // Ultra has no ratified product meaning. Hell rungs are live summon budgets,
@@ -89,6 +104,16 @@ export interface LaunchOptions {
    * Core takes this for product-floor only (it does not assume a package
    * topology); passing it anywhere else is a compile-time error upstream. */
   doorPluginDir?: string;
+  /** Explicit summon source URL for this launch (the CLI passes SKILL_SOURCE
+   * from the environment). Precedence: this override, then the plugin
+   * manifest's `userConfig.skill_url.default`. No ambient settings file and no
+   * installed-plugin preference file is ever read — the door resolves the
+   * source from the plugin dir it was given, or from what the caller passed. */
+  skillSource?: string;
+  /** Issue #144: `CLAUDE_CONFIG_DIR` when the caller runs under one, else
+   * omitted and `<home>/.claude/settings.json` is read. The ONLY user file this
+   * door reads (read-only, P3), and only for a default permission mode. */
+  configDir?: string;
   createdAt?: string;
   claudeArgs?: string[]; // passthrough to claude (after our flags)
 }
@@ -107,6 +132,10 @@ export interface LaunchPlan {
   fsPlan: FsOp[];
   /** core's compile notes, carried verbatim so the evidence travels with the plan. */
   notes: string[];
+  /** Issue #144: one line describing any permission intent carried out of the
+   * user's own settings, for the terminal BEFORE claude spawns (cli.ts). Absent
+   * when nothing was inherited. Never contains settings content or paths. */
+  permissionDisclosure?: string;
 }
 
 /** A summon-line rung is not a boot posture. This is a redirect, not a gate. */
@@ -115,7 +144,7 @@ export function assertLevelAllowed(level: string | undefined): void {
     const arm = level === "ultra" ? "/skill-ultra" : `/skill-hell ${level}`;
     throw new Error(
       `level "${level}" is a live summon rung, not a boot posture. ` +
-        `Launch claude-zero at zero|low|med, then arm it in-session with ${arm}.`,
+        `Launch claude-zero at zero|low|med, then select it in-session with ${arm}.`,
     );
   }
 }
@@ -135,14 +164,37 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
   const manifestPath = join(opts.sessionDir, "profile.json");
   const settingsPath = join(opts.sessionDir, "settings.json");
 
-  // Session-scoped settings: ONLY the statusline command. Loaded via
-  // `--settings <file>`, so ~/.claude is never mutated (P3). `--settings` is an
-  // explicit-provision channel, separate from `--setting-sources` (which selects
-  // among user/project/local) — so it survives the eviction flags core composes
-  // for the non-native postures.
-  const settings = {
+  // Issue #144: permissions, resolved BEFORE the settings object is built, because
+  // an inherited mode lands in that object. Deliberately narrow — see
+  // permissions.ts for the probed contract and the three things this never
+  // does (no allow/deny rules, no skipDangerousModePermissionPrompt, no
+  // managed-policy override).
+  //
+  // `native` short-circuits inside the resolver without reading any user file:
+  // native is claude untouched (P3), and claude's own settings precedence is
+  // exactly right there.
+  const permissions: ResolvedPermissions = resolveLaunchPermissions({
+    posture,
+    claudeArgs: opts.claudeArgs ?? [],
+    ...(opts.configDir !== undefined ? { configDir: opts.configDir } : {}),
+    ...(opts.home !== undefined ? { home: opts.home } : {}),
+  });
+
+  // Session-scoped settings: the statusline command, and — only when a mode was
+  // inherited — `permissions.defaultMode`. Loaded via `--settings <file>`, so
+  // ~/.claude is never mutated (P3). `--settings` is an explicit-provision
+  // channel, separate from `--setting-sources` (which selects among
+  // user/project/local) — so it survives the eviction flags core composes for
+  // the non-native postures. Probed on 2.1.288: a defaultMode delivered this
+  // way is honored under the full `--setting-sources ''` isolation (cells A/D),
+  // and an explicit `--permission-mode` on the command line still overrides it
+  // (cell C).
+  const settings: Record<string, unknown> = {
     statusLine: { type: "command", command: opts.statuslineBin },
   };
+  if (permissions.settingsMode) {
+    settings.permissions = { defaultMode: permissions.settingsMode };
+  }
 
   if (posture === "native") {
     // Mirrors core's `--skill is only valid with --posture curated` guard, which
@@ -173,16 +225,35 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       settings,
       command: "claude",
       // No eviction / suppression flags — native is claude untouched (P1).
-      argv: ["--settings", settingsPath, ...(opts.claudeArgs ?? [])],
+      argv: ["--settings", settingsPath, ...permissions.argv, ...(opts.claudeArgs ?? [])],
       env: { CLAUDE_ZERO_PROFILE: manifestPath },
       fsPlan: [],
-      notes: [],
+      notes: [...permissions.notes],
+      ...(permissions.disclosure ? { permissionDisclosure: permissions.disclosure } : {}),
     };
   }
 
   // Non-native: core composes it. Skill ids come from frontmatter `name`,
   // falling back to the directory name (core's resolveSkill).
   const skills: ResolvedSkill[] = (opts.skillPaths ?? []).map((p) => resolveSkill(p));
+
+  // #143: product-floor keeps slash commands under an ALLOWLISTED mcp route,
+  // and `--strict-mcp-config` suppresses plugin-declared MCP as thoroughly as
+  // ambient MCP — so the door's own bundled summon server has to be admitted
+  // explicitly or /summon resolves to a command whose tool does not exist.
+  //
+  // This resolution FAILING IS A LAUNCH ERROR on purpose: silently degrading to
+  // a doorless product floor is the exact defect #143 reports, and the fix must
+  // not be "carry on without the summon tool". Resolution reads only the plugin
+  // dir the caller supplied and performs no network request.
+  const doorMcpConfig =
+    posture === "product-floor" && opts.doorPluginDir
+      ? resolveDoorMcpConfig({
+          pluginDir: opts.doorPluginDir,
+          ...(opts.skillSource !== undefined ? { skillSource: opts.skillSource } : {}),
+        })
+      : undefined;
+
   const compiled = compile({
     posture,
     harness: "claude",
@@ -195,6 +266,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     ...(posture === "product-floor" && opts.doorPluginDir
       ? { doorPluginDir: opts.doorPluginDir }
       : {}),
+    ...(doorMcpConfig ? { doorMcpConfig } : {}),
   });
 
   const env: Record<string, string> = { CLAUDE_ZERO_PROFILE: manifestPath };
@@ -252,6 +324,12 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       ...compiled.argv.map((a) => substSession(a, opts.sessionDir)),
       "--settings",
       settingsPath,
+      // A settings-derived BYPASS flag goes here: after our own flags, before
+      // the caller's untouched tail, so nothing the user passed is rebuilt,
+      // deduped, or reordered. An inherited MODE does not appear here at all —
+      // it rides the session settings file (probed cell D), which keeps a
+      // single source of truth instead of two channels saying the same thing.
+      ...permissions.argv,
       ...(opts.claudeArgs ?? []),
     ],
     env,
@@ -263,7 +341,25 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     // KC6: the curated door-absence disclosure travels with the plan itself
     // (surfaced by --print's JSON and printed to stderr by a real launch in
     // cli.ts), same as every other compose-time note core hands back.
-    notes: [...compiled.notes, ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : [])],
+    notes: [
+      ...compiled.notes,
+      ...permissions.notes,
+      ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : []),
+      // #143: say WHICH source the admitted summon server will use, and where
+      // that answer came from. The precedence is explicit override (SKILL_SOURCE
+      // / the caller) first, then the mounted plugin's own manifest default —
+      // nothing else is consulted, and no ambient plugin preference file is read.
+      ...(doorMcpConfig
+        ? [
+            `the door's bundled "${DOOR_MCP_SERVER_NAME}" MCP server is admitted explicitly through a ` +
+              `session-local ${DOOR_MCP_CONFIG_PATH.replace("$SESSION", opts.sessionDir)} while ` +
+              `--strict-mcp-config stays on, so ambient user/project MCP servers remain suppressed. Summon ` +
+              `source resolved to ${JSON.stringify(doorMcpConfig.mcpServers[DOOR_MCP_SERVER_NAME]?.env?.SKILL_SOURCE)} ` +
+              `from ${opts.skillSource !== undefined ? "the explicit SKILL_SOURCE override" : "the mounted plugin's userConfig.skill_url.default"}.`,
+          ]
+        : []),
+    ],
+    ...(permissions.disclosure ? { permissionDisclosure: permissions.disclosure } : {}),
   };
 }
 

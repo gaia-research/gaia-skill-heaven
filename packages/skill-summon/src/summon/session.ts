@@ -1,17 +1,22 @@
 import { randomUUID } from "node:crypto";
+import { realpathSync } from "node:fs";
 import {
   lstat,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import type { ArborSubjectReport } from "skill-zero";
+
 import type { SkillInvocation, TrustFields } from "../domain/types.js";
+import type { InstallabilityAssessment } from "skill-zero";
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
 // cache directory (payload-cache.ts CACHE_DIR_NAME) also lives directly under
@@ -21,6 +26,18 @@ import type { SkillInvocation, TrustFields } from "../domain/types.js";
 const SESSION_DIR_PREFIX = "skill-summon-session-";
 const MANIFEST_FILE = "session.json";
 const DEFAULT_SESSION_TTL_HOURS = 4;
+
+/** What the ranker knew about this skill when it chose it (SPEC §5.2). */
+export type RetrievalDisclosure = {
+  score: number;
+  /** `(top − next) / top` across the admitted set. */
+  margin: number;
+  matchKind: "exact" | "ranked";
+  /** False when the tree has not bucketed this skill under a generic node. */
+  classified: boolean;
+  /** False means the summoned skill is not the one the query named — the card must say so. */
+  nameMatchesQuery: boolean;
+};
 
 export type InstalledSkill = {
   id: string;
@@ -32,6 +49,8 @@ export type InstalledSkill = {
   trustMagnitude?: number | undefined;
   stars?: number | undefined;
   trust?: TrustFields | undefined;
+  /** Tree installability evidence, with unknown applicability kept explicit. */
+  installability?: InstallabilityAssessment | undefined;
   sourceUrl: string;
   repoUrl: string;
   branch: string | null;
@@ -45,6 +64,16 @@ export type InstalledSkill = {
   cache: "cold" | "warm";
   cacheSource: "remote" | "payload" | "session";
   inspectUrl: string;
+  /** Where this skill came from — `source` can now vary per call (SPEC §5.4). */
+  source?: string | undefined;
+  /** Retrieval disclosure, carried onto the card and into `structuredContent`. */
+  retrieval?: RetrievalDisclosure | undefined;
+  /**
+   * Arbor disclosure (SPEC INV-13, issue #118 A3/A4). Present on every summoned
+   * skill, including — especially — when no lens could be consulted: absence of
+   * behavioral evidence is stated, never left as an empty field.
+   */
+  arbor?: ArborSubjectReport | undefined;
   card: string;
   cloneSeconds: number;
   materializeSeconds: number;
@@ -128,6 +157,7 @@ export class SummonSession {
   }
 
   static async createAt(root: string, id: string): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root);
     const manifest: SessionManifest = {
       id,
       createdAt: new Date().toISOString(),
@@ -140,6 +170,7 @@ export class SummonSession {
   }
 
   static async loadAt(root: string): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root);
     const manifestPath = path.join(root, MANIFEST_FILE);
     let raw: string;
     try {
@@ -172,8 +203,12 @@ export class SummonSession {
   }
 
   async ensureRoots(): Promise<void> {
-    await mkdir(this.cacheRoot, { recursive: true });
-    await mkdir(this.skillsRoot, { recursive: true });
+    // The environment can name an existing directory, and both cache and
+    // skills are recursive write targets. Validate the physical root before
+    // creating either child so a symlink cannot redirect writes outside it.
+    await assertDisposableSessionRoot(this.root);
+    await ensureConfinedDirectory(this.root, this.cacheRoot);
+    await ensureConfinedDirectory(this.root, this.skillsRoot);
   }
 
   /** Record a skill (or suite component) already materialized on disk into the session manifest. */
@@ -226,8 +261,114 @@ export function isDisposableSessionRoot(
   tempRoot: string = tmpdir(),
 ): boolean {
   const resolved = path.resolve(root);
-  if (path.dirname(resolved) !== path.resolve(tempRoot)) return false;
-  return path.basename(resolved).startsWith(SESSION_DIR_PREFIX);
+  const name = path.basename(resolved);
+  if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
+  if (path.dirname(resolved) === path.resolve(tempRoot)) return true;
+
+  // macOS commonly exposes /tmp as an alias of /private/tmp. Keep the cheap
+  // synchronous predicate useful for callers that only have a path, while the
+  // async validator below checks the actual root and all physical boundaries.
+  try {
+    return realpathSync(path.dirname(resolved)) === realpathSync(tempRoot);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate an env-supplied session root before any session file is read or
+ * written. Lexical prefix checks are insufficient: the named root itself, or
+ * an ancestor reached through a platform alias, may be a symlink.
+ */
+export async function assertDisposableSessionRoot(
+  root: string,
+  tempRoot: string = tmpdir(),
+): Promise<void> {
+  if (!isDisposableSessionRoot(root, tempRoot)) {
+    throw new Error(
+      `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`,
+    );
+  }
+
+  let rootStat;
+  try {
+    rootStat = await lstat(root);
+  } catch (error) {
+    throw new Error(`Session root ${root} is not an existing directory: ${errorMessage(error)}`);
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
+  }
+
+  const [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
+  if (
+    path.dirname(rootReal) !== tempReal ||
+    !path.basename(rootReal).startsWith(SESSION_DIR_PREFIX)
+  ) {
+    throw new Error(
+      `Session root ${root} resolves outside the disposable temp-root namespace.`,
+    );
+  }
+}
+
+/** Validate an existing or not-yet-created path stays physically below root. */
+export async function assertConfinedPath(
+  root: string,
+  target: string,
+  label = "Path",
+): Promise<void> {
+  const rootResolved = path.resolve(root);
+  const targetResolved = path.resolve(target);
+  if (!isWithin(rootResolved, targetResolved)) {
+    throw new Error(`${label} escapes session root: ${target}`);
+  }
+
+  const rootReal = await realpath(rootResolved);
+  let current = targetResolved;
+  while (true) {
+    let currentStat;
+    try {
+      currentStat = await lstat(current);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw error;
+      if (current === rootResolved) throw error;
+      current = path.dirname(current);
+      continue;
+    }
+    if (currentStat.isSymbolicLink()) {
+      throw new Error(`${label} traverses a symlink: ${current}`);
+    }
+    if (current !== targetResolved && !currentStat.isDirectory()) {
+      throw new Error(`${label} traverses a non-directory path: ${current}`);
+    }
+    const currentReal = await realpath(current);
+    if (!isWithin(rootReal, currentReal)) {
+      throw new Error(`${label} resolves outside session root: ${target}`);
+    }
+    if (current === rootResolved) return;
+    current = path.dirname(current);
+  }
+}
+
+function isWithin(parent: string, child: string): boolean {
+  const relative = path.relative(parent, child);
+  return relative === "" ||
+    (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+async function ensureConfinedDirectory(root: string, target: string): Promise<void> {
+  await assertConfinedPath(root, target, "Session directory");
+  try {
+    const targetStat = await lstat(target);
+    if (targetStat.isSymbolicLink() || !targetStat.isDirectory()) {
+      throw new Error(`Session directory ${target} must be a real directory.`);
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    await mkdir(target);
+  }
+  await assertConfinedPath(root, target, "Session directory");
 }
 
 /**
@@ -351,7 +492,7 @@ export async function reapSessions(
   for (const entry of entries) {
     if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
       continue;
-    const sessionRoot = path.join(root, entry.name);
+      const sessionRoot = path.join(root, entry.name);
     if (excluded.has(path.resolve(sessionRoot))) continue;
     scanned++;
 
@@ -361,7 +502,13 @@ export async function reapSessions(
       continue;
     }
 
-    const sessionStat = await lstat(sessionRoot);
+    let sessionStat;
+    try {
+      sessionStat = await lstat(sessionRoot);
+    } catch (error) {
+      if (isConcurrentRemoval(error)) continue;
+      throw error;
+    }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     const startedAt = Number.isFinite(createdAt)
       ? createdAt
@@ -369,7 +516,13 @@ export async function reapSessions(
     const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
     if (ageHours < ttlHours) continue;
 
-    const bytes = await directorySize(sessionRoot);
+    let bytes = 0;
+    try {
+      bytes = await directorySize(sessionRoot);
+    } catch (error) {
+      if (isConcurrentRemoval(error)) continue;
+      throw error;
+    }
     candidates.push({ root: sessionRoot, ageHours, bytes });
     if (!dryRun) await rm(sessionRoot, { recursive: true, force: true });
   }
@@ -428,6 +581,11 @@ async function directorySize(root: string): Promise<number> {
     bytes += await directorySize(path.join(root, entry));
   }
   return bytes;
+}
+
+export function isConcurrentRemoval(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException)?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
 }
 
 function errorMessage(error: unknown): string {

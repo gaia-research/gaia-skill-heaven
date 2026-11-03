@@ -14,6 +14,16 @@ import {
   type AvailableTokenUsage,
 } from "./telemetry.js";
 import type { Arm } from "./vendor/ledger-record.js";
+import {
+  DEFAULT_STEERING_POLICY,
+  createOperatorEvent,
+  initialSteeringState,
+  parseOperatorCommand,
+  parseSteeringPolicy,
+  parseSteeringState,
+  stepSteering,
+  verifySteeringRecord,
+} from "./steering.js";
 
 interface CliArgs {
   posture: Posture;
@@ -38,6 +48,10 @@ interface CliArgs {
     churnCount?: number;
   };
   telemetryValidate?: string;
+  steeringEvent?: string;
+  steeringState?: string;
+  steeringPolicy?: string;
+  steeringVerify?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -69,6 +83,11 @@ export function parseArgs(argv: string[]): CliArgs {
   let telemetryRecoveryObserved: boolean | undefined;
   let telemetryChurnCount: number | undefined;
   let telemetryValidate: string | undefined;
+  let steeringEvent: string | undefined;
+  let steeringState: string | undefined;
+  let steeringPolicy: string | undefined;
+  let steeringVerify: string | undefined;
+  const suppliedFlags = new Set<string>();
 
   const need = (flag: string, i: number): string => {
     const v = argv[i];
@@ -78,6 +97,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
+    suppliedFlags.add(a);
     if (a === "--") { passthrough.push(...argv.slice(i + 1)); break; }
     else if (a === "--posture") {
       const raw = need(a, ++i);
@@ -128,7 +148,26 @@ export function parseArgs(argv: string[]): CliArgs {
       telemetryRecoveryObserved = value === "observed";
     } else if (a === "--telemetry-churn-count") telemetryChurnCount = Number(need(a, ++i));
     else if (a === "--telemetry-validate") telemetryValidate = need(a, ++i);
+    else if (a === "--steering-event" || a === "--steer-event") steeringEvent = need(a, ++i);
+    else if (a === "--steering-state") steeringState = need(a, ++i);
+    else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
+    else if (a === "--steering-verify") steeringVerify = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
+  }
+
+  const steeringRequested = steeringEvent !== undefined || steeringState !== undefined || steeringPolicy !== undefined || steeringVerify !== undefined;
+  if (steeringRequested) {
+    const steeringFlags = new Set(["--steering-event", "--steer-event", "--steering-state", "--steering-policy", "--steering-verify"]);
+    const unrelated = [...suppliedFlags].filter((flag) => !steeringFlags.has(flag));
+    if (unrelated.length > 0) {
+      throw new Error("steering flags are standalone; do not combine them with launch, record, or telemetry flags");
+    }
+    if (steeringVerify !== undefined && (steeringEvent !== undefined || steeringState !== undefined || steeringPolicy !== undefined)) {
+      throw new Error("--steering-verify cannot be combined with steering event, state, or policy flags");
+    }
+    if (steeringVerify === undefined && steeringEvent === undefined) {
+      throw new Error("--steering-state and --steering-policy require --steering-event");
+    }
   }
 
   // Heaven levels select boot postures. The upper band — high · xhigh · max ·
@@ -217,11 +256,44 @@ export function parseArgs(argv: string[]): CliArgs {
       },
     }),
     ...(telemetryValidate === undefined ? {} : { telemetryValidate }),
+    ...(steeringEvent === undefined ? {} : { steeringEvent }),
+    ...(steeringState === undefined ? {} : { steeringState }),
+    ...(steeringPolicy === undefined ? {} : { steeringPolicy }),
+    ...(steeringVerify === undefined ? {} : { steeringVerify }),
   };
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
+  if (args.steeringVerify !== undefined) {
+    const verification = verifySteeringRecord(JSON.parse(readFileSync(args.steeringVerify, "utf8")) as unknown);
+    if (!verification.valid) throw new Error(`invalid steering record: ${verification.error}`);
+    console.log(JSON.stringify({
+      valid: true,
+      schema: verification.record.schema,
+      initial: verification.record.initial,
+      final: verification.record.final,
+      traceLength: verification.record.trace.length,
+    }, null, 2));
+    return 0;
+  }
+  if (args.steeringEvent !== undefined) {
+    const command = parseOperatorCommand(JSON.parse(args.steeringEvent) as unknown);
+    if (command === null) {
+      throw new Error("--steering-event accepts only an explicit operator control; runtime behavioral events are host-adapter-only");
+    }
+    const state = args.steeringState === undefined
+      ? initialSteeringState()
+      : parseSteeringState(JSON.parse(args.steeringState) as unknown);
+    if (state === null) throw new Error("--steering-state must be JSON with rung and search from the steering state contract");
+    const policy = args.steeringPolicy === undefined
+      ? DEFAULT_STEERING_POLICY
+      : parseSteeringPolicy(JSON.parse(args.steeringPolicy) as unknown);
+    if (policy === null) throw new Error("--steering-policy must be JSON with version, floor, and ceiling from the steering policy contract");
+    const event = createOperatorEvent(command.type, command.eventId);
+    console.log(JSON.stringify(stepSteering(state, event, policy), null, 2));
+    return 0;
+  }
   if (args.telemetryValidate) {
     const value: unknown = JSON.parse(readFileSync(args.telemetryValidate, "utf8"));
     validateRuntimeObservation(value);

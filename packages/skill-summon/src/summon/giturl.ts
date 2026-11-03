@@ -44,7 +44,8 @@ export function parseGithubUrl(url: string): ParsedGithubUrl {
       string,
       string,
     ];
-    const subpath = filePath.endsWith(".md") ? dirname(filePath) : filePath;
+    const decodedPath = decodeGithubPath(filePath);
+    const subpath = decodedPath.endsWith(".md") ? dirname(decodedPath) : decodedPath;
     return {
       repoUrl: `https://github.com/${owner}/${repo}.git`,
       branch,
@@ -64,7 +65,7 @@ export function parseGithubUrl(url: string): ParsedGithubUrl {
     return {
       repoUrl: `https://github.com/${owner}/${repo}.git`,
       branch,
-      subpath: rest.replace(/^\/+/, ""),
+      subpath: decodeGithubPath(rest.replace(/^\/+/, "")),
     };
   }
 
@@ -84,4 +85,33 @@ export function parseGithubUrl(url: string): ParsedGithubUrl {
 function dirname(filePath: string): string {
   const index = filePath.lastIndexOf("/");
   return index === -1 ? "" : filePath.slice(0, index);
+}
+
+/** Decode URL paths before confinement checks, then reject traversal at parse time. */
+function decodeGithubPath(value: string): string {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch (error) {
+    throw new Error(`GitHub URL contains an invalid encoded path: ${errorMessage(error)}`);
+  }
+  if (decoded.includes("\0") || decoded.startsWith("/") || decoded.startsWith("\\")) {
+    throw new Error(`GitHub URL contains an absolute subpath: ${value}`);
+  }
+
+  let depth = 0;
+  for (const segment of decoded.split(/[\\/]/u)) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      if (depth === 0) throw new Error(`GitHub URL subpath escapes the repository: ${value}`);
+      depth--;
+    } else {
+      depth++;
+    }
+  }
+  return decoded;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

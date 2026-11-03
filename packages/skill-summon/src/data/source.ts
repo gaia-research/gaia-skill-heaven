@@ -89,7 +89,10 @@ export class HttpGaiaRegistrySource implements GaiaRegistrySource {
       );
     }
     const genericIds = new Set(generic.data.skills.map((skill) => skill.id));
-    const namedSkills = Object.values(named.data.buckets).flat();
+    const namedSkills = [
+      ...Object.values(named.data.buckets).flat(),
+      ...(named.data.awaitingClassification ?? []),
+    ];
     if (namedSkills.length === 0) {
       throw new GaiaDataError(
         `Named Gaia projection at ${this.#namedUrl} contains no Named Skills. Restore/regenerate the projection, then retry.`,
@@ -120,6 +123,14 @@ export class HttpGaiaRegistrySource implements GaiaRegistrySource {
             skills.map((skill) => ({ ...skill, origin: "tree" as const })),
           ]),
         ),
+        ...(named.data.awaitingClassification
+          ? {
+              awaitingClassification: named.data.awaitingClassification.map((skill) => ({
+                ...skill,
+                origin: "tree" as const,
+              })),
+            }
+          : {}),
       },
       source: {
         kind: "tree",

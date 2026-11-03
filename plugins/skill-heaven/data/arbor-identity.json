@@ -1,0 +1,2016 @@
+{
+  "schema": "skill-heaven.arbor-identity-context/v1",
+  "upstream": "https://github.com/gaia-research/gaia-skill-tree",
+  "commit": "dc07528884a759dbd3668d4a0007469265ab396f",
+  "corpusSource": "https://gaiaskilltree.com",
+  "derivation": "docs/graph/installability/index.json currentSkillContentSha256, cross-checked against sha256(registry/named/<id>.md)",
+  "routeSource": "docs/graph/named/index.json links.github at this revision",
+  "capturedAt": "2026-10-30",
+  "counts": {
+    "indexed": 400,
+    "resolved": 400,
+    "unresolved": 0
+  },
+  "skills": {
+    "0xdarkmatter/pytest-patterns": {
+      "contentSha256": "9622a51cf015957da882f634d4c708f2d4859a4824fef1f37c7b8aa2bd299fa6",
+      "sourceUrl": "https://github.com/aiskillstore/marketplace/blob/main/skills/0xdarkmatter/python-pytest-patterns/SKILL.md",
+      "canonicalPath": "registry/named/0xdarkmatter/pytest-patterns.md"
+    },
+    "Manavarya09/design-extract": {
+      "contentSha256": "6668a662ac7aa97d3a26048ca71d0c6d06bde6779da1abf2c636c4fd81a752ea",
+      "sourceUrl": "https://github.com/Manavarya09/design-extract",
+      "canonicalPath": "registry/named/Manavarya09/design-extract.md"
+    },
+    "addy-osmani/agent-skills": {
+      "contentSha256": "2d3712febe03d5a0ac6c00338dc05bf3210e326161c2fea513096fb50e13f5ff",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/README.md",
+      "canonicalPath": "registry/named/addy-osmani/agent-skills.md"
+    },
+    "addy-osmani/api-and-interface-design": {
+      "contentSha256": "906e3232aa57c1d77c7e378430a5a94987c1cf6a88379e2c811f6b7b7f3496b4",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/api-and-interface-design/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/api-and-interface-design.md"
+    },
+    "addy-osmani/browser-testing-with-devtools": {
+      "contentSha256": "3aa129d3e3606de02db3ab87b187b2003dc4967084250c70894bfead77647d20",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/browser-testing-with-devtools/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/browser-testing-with-devtools.md"
+    },
+    "addy-osmani/ci-cd-and-automation": {
+      "contentSha256": "c5abaabfee045de5bd8992b9ff2cfe9b2ddb2a699b04417865693e2d7facff4e",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/ci-cd-and-automation/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/ci-cd-and-automation.md"
+    },
+    "addy-osmani/code-review-and-quality": {
+      "contentSha256": "b60603a9ed4ec6669efc1c3a203149547d26e4682f7bf2a8206cb1eae07909e1",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/code-review-and-quality/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/code-review-and-quality.md"
+    },
+    "addy-osmani/code-simplification": {
+      "contentSha256": "54f38a5e3434efe050d34708af1d5f41d87666ce67ef850e83a33a2b4d336feb",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/code-simplification/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/code-simplification.md"
+    },
+    "addy-osmani/constraint-driven-development": {
+      "contentSha256": "e19ed806aef190081fc95e5bc34b22897281dad0302d218e363549d967ecb2aa",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/constraint-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/constraint-driven-development.md"
+    },
+    "addy-osmani/context-engineering": {
+      "contentSha256": "f63fd6f8d10c8000624d7d870709e9639e57dd78c13de73a0533338f388faedb",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/context-engineering/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/context-engineering.md"
+    },
+    "addy-osmani/deprecation-and-migration": {
+      "contentSha256": "b46c5376a60a036a37f39a67006435e4093d8153140b7407126a0110c6da0321",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/deprecation-and-migration/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/deprecation-and-migration.md"
+    },
+    "addy-osmani/documentation-and-adrs": {
+      "contentSha256": "3cdc9b1b105e382665d481ba9da84089fbb9ab28d33a65e8ff2d98ac9eee7664",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/documentation-and-adrs/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/documentation-and-adrs.md"
+    },
+    "addy-osmani/doubt-driven-development": {
+      "contentSha256": "51367656dc5150a80f5cec6af7ec8d3ffe1b8947bd7b54ed520d323032528215",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/doubt-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/doubt-driven-development.md"
+    },
+    "addy-osmani/frontend-ui-engineering": {
+      "contentSha256": "ee60dc52176f919f522833369e12f75e7d3611535be0b323d0eea61face5420c",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/frontend-ui-engineering/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/frontend-ui-engineering.md"
+    },
+    "addy-osmani/incremental-implementation": {
+      "contentSha256": "fe053a95e55a56c781e6344aaa24c4558f8e337e9acc68d31ff93d0b955c39fa",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/incremental-implementation/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/incremental-implementation.md"
+    },
+    "addy-osmani/observability-and-instrumentation": {
+      "contentSha256": "6cba02c87334fb31032f38f59039f65a9809b526d36088061a5e79e920adb62f",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/observability-and-instrumentation/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/observability-and-instrumentation.md"
+    },
+    "addy-osmani/performance-optimization": {
+      "contentSha256": "9739e2726882b0e03e5cc4b97b5dcf2cdee4af8bbda0b81fc55035bfc38fe326",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/performance-optimization/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/performance-optimization.md"
+    },
+    "addy-osmani/planning-and-task-breakdown": {
+      "contentSha256": "b24b34a1965328f6da9c326bc810cda81015134a1cd00179817eae47cdd15b59",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/planning-and-task-breakdown/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/planning-and-task-breakdown.md"
+    },
+    "addy-osmani/security-and-hardening": {
+      "contentSha256": "188903b8ff5ef06140dfc1f4b94eca5b7b6a26d89697c7b97b0519cf7a0db461",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/security-and-hardening/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/security-and-hardening.md"
+    },
+    "addy-osmani/shipping-and-launch": {
+      "contentSha256": "9a6efcbf10e3f98899ac2c35184eca95c32f33ec539985db16952f62d235ecde",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/shipping-and-launch/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/shipping-and-launch.md"
+    },
+    "addy-osmani/source-driven-development": {
+      "contentSha256": "198a60f539f3748d42f8adbfef5c9841e7d0a8b28e7ab8a83beb855caa0a7221",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/source-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/source-driven-development.md"
+    },
+    "addy-osmani/spec-driven-development": {
+      "contentSha256": "41d57ac2036fd0e1c480d84013cf0da2fca1cb00857028f967cc6165a862e583",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/spec-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/spec-driven-development.md"
+    },
+    "addy-osmani/test-driven-development": {
+      "contentSha256": "f877d26f3fd92fd8d86735749878ba711405b3d834b21cfc41a4155e4dc6739b",
+      "sourceUrl": "https://github.com/addyosmani/agent-skills/blob/main/skills/test-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/addy-osmani/test-driven-development.md"
+    },
+    "anthropic/pptx": {
+      "contentSha256": "642f3c03a1676b82e07259248ca0fbdd06b888c128663d3a5e2743aefa1f4374",
+      "sourceUrl": "https://github.com/anthropics/skills/blob/main/skills/pptx/SKILL.md",
+      "canonicalPath": "registry/named/anthropic/pptx.md"
+    },
+    "anthropic/skill-creator": {
+      "contentSha256": "cf1ad9d2229c2fc349f6585350db22ce75ad7df24c769b997f2d513b53b293d9",
+      "sourceUrl": "https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md",
+      "canonicalPath": "registry/named/anthropic/skill-creator.md"
+    },
+    "anthropics/brand-guidelines": {
+      "contentSha256": "665c8fbee50f21f1bda73dfd79d8a152f4c011c38676a598f71dc76e884d8dbf",
+      "sourceUrl": "https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md",
+      "canonicalPath": "registry/named/anthropics/brand-guidelines.md"
+    },
+    "anthropics/canvas-design": {
+      "contentSha256": "3d9d0e81d025b185feb10d406c93421a133bd24b201817dbdf56e6f0e65d51e1",
+      "sourceUrl": "https://github.com/anthropics/skills/blob/main/skills/canvas-design/SKILL.md",
+      "canonicalPath": "registry/named/anthropics/canvas-design.md"
+    },
+    "aplaceforallmystuff/log-to-daily": {
+      "contentSha256": "a4efce008224d8a4197da2ba9ea75e4bacfa8082bf39acb0ccce78811dfa5c77",
+      "sourceUrl": "https://github.com/aplaceforallmystuff/daily-patterns-pack/blob/main/skills/log-to-daily/SKILL.md",
+      "canonicalPath": "registry/named/aplaceforallmystuff/log-to-daily.md"
+    },
+    "ayghri/i-have-adhd": {
+      "contentSha256": "ef8f7b7ab12c77cf65c474997102c7267743128da18ae0be23049943938f7096",
+      "sourceUrl": "https://github.com/ayghri/i-have-adhd/blob/main/skills/i-have-adhd/SKILL.md",
+      "canonicalPath": "registry/named/ayghri/i-have-adhd.md"
+    },
+    "balukosuri/autoresearch-universal": {
+      "contentSha256": "28b822d8088c3f3c7e293a3390b9f99637ea6201968f7e5308f80abf88875e5b",
+      "sourceUrl": "https://github.com/balukosuri/Andrej-Karpathy-s-Autoresearch-As-a-Universal-Skill/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/balukosuri/autoresearch-universal.md"
+    },
+    "bradautomates/watch": {
+      "contentSha256": "2cbb88bee508579b475784142f8420b432db109e4fd86e3608b5a258c99e4441",
+      "sourceUrl": "https://github.com/bradautomates/claude-video/blob/main/skills/watch/SKILL.md",
+      "canonicalPath": "registry/named/bradautomates/watch.md"
+    },
+    "browser-use/browser-harness": {
+      "contentSha256": "f99075520459134f0e4521ff95232475d3a30db7ce7090b07a206cd916495468",
+      "sourceUrl": "https://github.com/browser-use/browser-harness/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/browser-use/browser-harness.md"
+    },
+    "browserbase/browse": {
+      "contentSha256": "2747219ec3156b86869debf08421158d5ee13814ce0f82b4d90d7bfbe89dad0f",
+      "sourceUrl": "https://github.com/browserbase/stagehand/blob/main/packages/cli/skills/browse/SKILL.md",
+      "canonicalPath": "registry/named/browserbase/browse.md"
+    },
+    "caioribeiroclw-pixel/evidence-attestation": {
+      "contentSha256": "b59455cde72ec812eede78e2dd54ed5ddf152c3cbb67a1aab2efc68a263ad6f3",
+      "sourceUrl": "https://github.com/caioribeiroclw-pixel/pluribus/blob/main/skills/evidence-attestation/SKILL.md",
+      "canonicalPath": "registry/named/caioribeiroclw-pixel/evidence-attestation.md"
+    },
+    "citrolabs/ego-browser": {
+      "contentSha256": "8147c6fc9cfcc256bde8e897b99350d8b4fa6133ce3ea2bbd82778831ee987b2",
+      "sourceUrl": "https://github.com/citrolabs/ego-lite/blob/5ca3c36cba2240b8df2e22ba32127747029039d5/skills/ego-browser/SKILL.md",
+      "canonicalPath": "registry/named/citrolabs/ego-browser.md"
+    },
+    "dietrichgebert/ponytail": {
+      "contentSha256": "bdf6576ec611d71e7ed79b24c0060438d6380a7e11c3417b297cc7405345d7fd",
+      "sourceUrl": "https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md",
+      "canonicalPath": "registry/named/dietrichgebert/ponytail.md"
+    },
+    "disler/agent-fusion": {
+      "contentSha256": "4ecf7cdda6709e2113744901aea641ad371a0dee38a95163b55cd1cefdaa5d3f",
+      "sourceUrl": "https://github.com/disler/fusion-harness/blob/main/README.md",
+      "canonicalPath": "registry/named/disler/agent-fusion.md"
+    },
+    "disler/auto-review": {
+      "contentSha256": "4c3df0cc69906f55a0469c50fc751e2862a5b109eef33ddfce1d2a7dd4e3987d",
+      "sourceUrl": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_VALIDATOR.md",
+      "canonicalPath": "registry/named/disler/auto-review.md"
+    },
+    "disler/opinion": {
+      "contentSha256": "1406a171d1a9182636118c1ae80814f4746f8bf1100e0b766a0ba415963e8397",
+      "sourceUrl": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_OPINION.md",
+      "canonicalPath": "registry/named/disler/opinion.md"
+    },
+    "disler/plan-synthesis": {
+      "contentSha256": "3f618d4ed39edf290133b9f4cb01a4f1a8d64c76dc66cdb5a15841cfd7c7c754",
+      "sourceUrl": "https://github.com/disler/fusion-harness/blob/main/extensions/fusion-harness/prompts/USER_PROMPT_FUSION_MERGE.md",
+      "canonicalPath": "registry/named/disler/plan-synthesis.md"
+    },
+    "favorchurch/attendees": {
+      "contentSha256": "e9f5e701962dac7fa50486ba2abe09e9342ecc4414cc5c3c62d66470c7f42f87",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/attendees/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/attendees.md"
+    },
+    "favorchurch/count-checkin-by-church": {
+      "contentSha256": "c68b79ef7288091afb96de3dd86b6138e99bd03f677700ad7e04735393df05f9",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/count-checkin-by-church/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/count-checkin-by-church.md"
+    },
+    "favorchurch/export-attendees": {
+      "contentSha256": "0fb057b163c34af37bc9440254a929615158beedecb4e34a15cdd4e3c36a646f",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/export-attendees/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/export-attendees.md"
+    },
+    "favorchurch/financial-assistance": {
+      "contentSha256": "aa4649bc584cc711e6cabfba4506cd001a1ed1a7db4fc4207b5fbfe8df2a9c85",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/financial-assistance/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/financial-assistance.md"
+    },
+    "favorchurch/resend-conference-emails-carefully-with-smtp": {
+      "contentSha256": "5700a9797bee9ba43c2829027aeb70decccd99424820e85c721c2530176d9b37",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/resend-conference-emails-carefully-with-smtp/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/resend-conference-emails-carefully-with-smtp.md"
+    },
+    "favorchurch/speak-like-favor": {
+      "contentSha256": "4b87ba3c376dd126c8d3eae5f5d3636448e1b9f2e84f87bfad6f01e5df90e5a5",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/speak-like-favor/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/speak-like-favor.md"
+    },
+    "favorchurch/ticket-transfer": {
+      "contentSha256": "676c6eb7cd933b4310e35d4566fcbdcc5e83b79e415c54092c0bbb99c7f5903d",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/ticket-transfer/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/ticket-transfer.md"
+    },
+    "favorchurch/triage-conference": {
+      "contentSha256": "f717038181deb01a20143c67a871892db5c0041208e896c7b6fb02fa09a2a484",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/triage-conference/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/triage-conference.md"
+    },
+    "favorchurch/update-unique-churches": {
+      "contentSha256": "28380514302eba504778508f575bc56516302a12c1159ab1cde716e7d14483d1",
+      "sourceUrl": "https://github.com/favorchurch/favor-skills/blob/main/CONFERENCE-2026/update-unique-churches/SKILL.md",
+      "canonicalPath": "registry/named/favorchurch/update-unique-churches.md"
+    },
+    "firecrawl/firecrawl-build-interact": {
+      "contentSha256": "e3d84e4bb17905bf11ca0d15840d04f5c360bed4b653c4abdf3fb8b712158119",
+      "sourceUrl": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-interact/SKILL.md",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-build-interact.md"
+    },
+    "firecrawl/firecrawl-build-onboarding": {
+      "contentSha256": "ae62bf6cce501c6e6f3fe1cccc1e20dda1ed3ad584f672123b760304c03acc10",
+      "sourceUrl": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-onboarding/SKILL.md",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-build-onboarding.md"
+    },
+    "firecrawl/firecrawl-build-scrape": {
+      "contentSha256": "9aba42826942d311067cf90404e5092222bbee21bca0493e4ce79b07061123e2",
+      "sourceUrl": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-scrape/SKILL.md",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-build-scrape.md"
+    },
+    "firecrawl/firecrawl-build-search": {
+      "contentSha256": "aa113288a04861124bd45c375eed1c165d4392574e841b52aa615f15e394b489",
+      "sourceUrl": "https://github.com/firecrawl/skills/blob/main/skills/build/firecrawl-build-search/SKILL.md",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-build-search.md"
+    },
+    "firecrawl/firecrawl-research-index": {
+      "contentSha256": "1da2b73e35156e4e8ce85c7aec626ae2de79082fc503bfbb2e6d7e76472dd988",
+      "sourceUrl": "https://github.com/firecrawl/skills/blob/main/skills/core/firecrawl-research-index/SKILL.md",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-research-index.md"
+    },
+    "firecrawl/firecrawl-skills": {
+      "contentSha256": "eaf549eeabaad3520354e2116d5ba1556aad384490bf1e7c345f6d5dd65b1a46",
+      "sourceUrl": "https://github.com/firecrawl/firecrawl",
+      "canonicalPath": "registry/named/firecrawl/firecrawl-skills.md"
+    },
+    "gaia-research/ci-churn": {
+      "contentSha256": "7c24cb35f10cef4ca3518d280bf1b3c02c4b66127be025880c542f5b5fa52392",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/ci-churn/SKILL.md",
+      "canonicalPath": "registry/named/gaia-research/ci-churn.md"
+    },
+    "gaia-research/cost": {
+      "contentSha256": "187fac9db1231d6a9255d8410fea34c5b71074b04b2e7b4abdcb675bf034cacb",
+      "sourceUrl": "https://github.com/gaia-research/skill-cost/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/gaia-research/cost.md"
+    },
+    "gaia-research/fuse": {
+      "contentSha256": "4ed7d62d31fc704e7d13510d0c78e9bad1a156a381fec7a39f05e2d8cfafdd90",
+      "sourceUrl": "https://github.com/gaia-research/skill-fuse/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/gaia-research/fuse.md"
+    },
+    "gaiabot/gaia-triage": {
+      "contentSha256": "81f6312190d3e35fdb73acd6343eafc20b0bb328f0d80917d858d549faf682c9",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-triage/SKILL.md",
+      "canonicalPath": "registry/named/gaiabot/gaia-triage.md"
+    },
+    "gaiabot/repo-docs-before-pr": {
+      "contentSha256": "6be9968fb44c8f1a2f80ece7f7233fa88bad68c426dd5f473a241fd20e9e4500",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/gaiabot/repo-docs-before-pr.md"
+    },
+    "garrytan/academic-verify": {
+      "contentSha256": "e1f79182800990d974c64f67b6cfaddd06ed07d826a5e83817b7fa29b5c1e62a",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/academic-verify/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/academic-verify.md"
+    },
+    "garrytan/archive-crawler": {
+      "contentSha256": "723b06b5b5bd35b96736d0e4de4b2c446d4bdd8b9fdb563562df5fbcf897d3d1",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/archive-crawler/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/archive-crawler.md"
+    },
+    "garrytan/benchmark": {
+      "contentSha256": "b2ba8cacbb7edf515353d83e9be8b2311ec905d7e9a922fd197361d33762adb7",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/benchmark/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/benchmark.md"
+    },
+    "garrytan/benchmark-models": {
+      "contentSha256": "73d79a3071f0e7db5ab00e9cef3bee05e00af7f36ad210552f3319cee5a48304",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/benchmark-models/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/benchmark-models.md"
+    },
+    "garrytan/blog-ingest": {
+      "contentSha256": "674397f45c797bcb2003ef63e495f86d2da030f0e3bf0f07a10d979ec0d9fc0c",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/blog-ingest/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/blog-ingest.md"
+    },
+    "garrytan/book-mirror": {
+      "contentSha256": "cecc30d4a47872bee693e28f4df5ce006f99e4217925ab84497ed1c2f4ec2e62",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/book-mirror/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/book-mirror.md"
+    },
+    "garrytan/brain-ops": {
+      "contentSha256": "b95f206bc0a56ed3f62c496cb22d2b735c58b257a593a5add06fae8b55560cd9",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/brain-ops/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/brain-ops.md"
+    },
+    "garrytan/browse": {
+      "contentSha256": "f97c6b15e1ae37373abf9f6646cf2e67cacca378d19ae0b041660341df05a6b8",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/browse/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/browse.md"
+    },
+    "garrytan/bulk-ingestion": {
+      "contentSha256": "39e6d6414e160efb36df9bedf621ce7ff427fdba35af66bdcc4a24f1a1475209",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/bulk-ingestion/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/bulk-ingestion.md"
+    },
+    "garrytan/canary": {
+      "contentSha256": "ffa626fd514f6dc5481ea7437401e49dad0e8f4186821bea1eef7db7179de1a3",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/canary/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/canary.md"
+    },
+    "garrytan/capture": {
+      "contentSha256": "f9dd34b416b8adc1874062b9e8ba1f26ff3b29b72074b105ddc88c03decb6249",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/capture/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/capture.md"
+    },
+    "garrytan/careful": {
+      "contentSha256": "3f338042745eb5b652fb334e7fef2cded5add21a27ced959558461e139d4fe6b",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/careful/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/careful.md"
+    },
+    "garrytan/citation-graph-ingest": {
+      "contentSha256": "d83577d07f39a1e26ef8ee88a08a35aa19ad010c35d6d202688d3e710114d535",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/citation-graph-ingest/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/citation-graph-ingest.md"
+    },
+    "garrytan/codex": {
+      "contentSha256": "9e7b7934568005b39b6b1c027c21bd7981873d12d2e371417c04cef49846ba3c",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/codex/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/codex.md"
+    },
+    "garrytan/concept-synthesis": {
+      "contentSha256": "9d2249e85f82db5a71dbd9338054470c109d39f0a472ca4ae80ffad202d19920",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/concept-synthesis/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/concept-synthesis.md"
+    },
+    "garrytan/context-audit": {
+      "contentSha256": "43dbb9279a471b7fe5f19ef1e4f17d12d3018907d7c2b24ab1d4b72e7f795463",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/context-audit/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/context-audit.md"
+    },
+    "garrytan/context-restore": {
+      "contentSha256": "a835b396e4a87f861a3a3a1c6794655fca175203f8425077173463045c3e508f",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/context-restore/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/context-restore.md"
+    },
+    "garrytan/context-save": {
+      "contentSha256": "a20c8177280f40a843a32eeaa7bdbf7ca0d2ca0dacacbf6e34d2b63e689c9635",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/context-save/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/context-save.md"
+    },
+    "garrytan/conversation-archive": {
+      "contentSha256": "4a9d78ab3ea6bebb9b95bc7a387526869da968371b2e83c3b5dc9846e52340f7",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/conversation-archive/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/conversation-archive.md"
+    },
+    "garrytan/cso": {
+      "contentSha256": "af08349eebe3dfaddd25506b02569a244b26ba862d832e0223859c4d5a233bd7",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/cso/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/cso.md"
+    },
+    "garrytan/data-research": {
+      "contentSha256": "c6fdf115b44d32507b64683272a9f9247fbfbf4e7ed211ebe404cdbc7c75c74c",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/data-research/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/data-research.md"
+    },
+    "garrytan/design-consultation": {
+      "contentSha256": "7558050e6ace4ad9e43bad51423e022539dcda28cff897b8bc1ae169508afd4a",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/design-consultation/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/design-consultation.md"
+    },
+    "garrytan/design-html": {
+      "contentSha256": "22c6d20f5872c24c7f57967231439bb976044553de48a87ff8566a73e6a36f49",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/design-html/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/design-html.md"
+    },
+    "garrytan/design-review": {
+      "contentSha256": "937c48ad4b5589712e9aa720fba74670468b65afee1d0de6fbf4e9b31f47dfa0",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/design-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/design-review.md"
+    },
+    "garrytan/design-shotgun": {
+      "contentSha256": "aad51b1ea025aaf6179d13230a32bdac1aac88655100cea68df1334574adb6e2",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/design-shotgun/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/design-shotgun.md"
+    },
+    "garrytan/devex-review": {
+      "contentSha256": "1b6ca4294fec855fd73f8d4c5db4c1946a98ba01900d814eeaa28ecb7cfef7c4",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/devex-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/devex-review.md"
+    },
+    "garrytan/document-generate": {
+      "contentSha256": "fcad06e53178cf80163f1f5d03ca59f55767f32a5f0d4aad746b20aa9c67269d",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/document-generate/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/document-generate.md"
+    },
+    "garrytan/document-release": {
+      "contentSha256": "71af20320eff927625cfe9e6a774bc479fa545256f3c059a67a77a87000b05ff",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/document-release/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/document-release.md"
+    },
+    "garrytan/draft-in-voice": {
+      "contentSha256": "28b0c66c31dcfebaff2474fa997a71f861cc296321734520a406b03e461b6178",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/draft-in-voice/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/draft-in-voice.md"
+    },
+    "garrytan/fact-check": {
+      "contentSha256": "8bf70b52396c5bb37eb61f86077ed0d4645105b72eb1021a814ea85dd5b47770",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/fact-check/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/fact-check.md"
+    },
+    "garrytan/freeze": {
+      "contentSha256": "1eb9392db8836494b5c42cb43e75eac861d05a7087aebd41556a722feb0324ca",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/freeze/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/freeze.md"
+    },
+    "garrytan/functional-area-resolver": {
+      "contentSha256": "6c1edd2b366d934b23296942565c16fc11e419686715b00ef896e04ae8df4537",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/functional-area-resolver/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/functional-area-resolver.md"
+    },
+    "garrytan/garrytan": {
+      "contentSha256": "22e9fb5215bd7c1a532dd29d3b10c35c5c0b1a6a8c46f1ea136f982b587c5f81",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/autoplan/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/garrytan.md"
+    },
+    "garrytan/gbrain": {
+      "contentSha256": "f0a93d9d8e45ac5ebe7e890b63eea2a65eec849271763441b5e7db47dc20dacf",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/README.md",
+      "canonicalPath": "registry/named/garrytan/gbrain.md"
+    },
+    "garrytan/gstack": {
+      "contentSha256": "ee3a401376d2110b3bf510af58ff1627ab0f40ad25bff189e8287b8541d14ff5",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/gstack.md"
+    },
+    "garrytan/gstack-upgrade": {
+      "contentSha256": "2d966a9b14f237b4a2e53c4cfd61e0f44b93a81d8460486fde0960894260aef6",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/gstack-upgrade/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/gstack-upgrade.md"
+    },
+    "garrytan/guard": {
+      "contentSha256": "924f2484f03bf1c2d53f3dcc2ab8b3f8f82ab8b837ab47dbb65509edef45351c",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/guard/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/guard.md"
+    },
+    "garrytan/health": {
+      "contentSha256": "1fddae6041f1b6dd9a75b88957f2a3a93e7c1897060a13f7832994b0bdc15c6e",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/health/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/health.md"
+    },
+    "garrytan/idea-lineage": {
+      "contentSha256": "cab7e10388ab025f7358a898ec71f844737e70bc4502c7ae503b1bc22d84b312",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/idea-lineage/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/idea-lineage.md"
+    },
+    "garrytan/investigate": {
+      "contentSha256": "9257015eec78d013d4073ab6dd69dec4718264737d24bf1b99d47daa60522231",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/investigate/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/investigate.md"
+    },
+    "garrytan/land-and-deploy": {
+      "contentSha256": "6f4cfe2b5e3c251795d8b3ebe6ccdf04b7a66fe2079ecdf6732523be6b93ba52",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/land-and-deploy/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/land-and-deploy.md"
+    },
+    "garrytan/landing-report": {
+      "contentSha256": "511e8fab1e9a25a1ed31e96504b5db0d3ba98de12d9d1a363a5068d39ee3cc4d",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/landing-report/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/landing-report.md"
+    },
+    "garrytan/learn": {
+      "contentSha256": "4aa964680f85708e68755d0e913f780afaca48ac8356cafe66e6fcdca67a0025",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/learn/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/learn.md"
+    },
+    "garrytan/make-pdf": {
+      "contentSha256": "b337deca79afc5097e7b6ceda9be2a7196c4ec24da5581fe7d4c037af7eef32a",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/make-pdf/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/make-pdf.md"
+    },
+    "garrytan/measure-before-you-fix": {
+      "contentSha256": "bcbc2eb42b6db703382502c49fafaa044398c129d2dad5bd883492ee5f4bccf8",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/measure-before-you-fix/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/measure-before-you-fix.md"
+    },
+    "garrytan/meeting-ingestion": {
+      "contentSha256": "1043f0cecee6ded86503c0fe6d4bf9a636e1b391dd3c5883c14cbee3fe831a64",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/meeting-ingestion/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/meeting-ingestion.md"
+    },
+    "garrytan/minion-orchestrator": {
+      "contentSha256": "4b901b40e44367ad336a7293aadad599dee75273eb31daff39d4fd1fb608419e",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/minion-orchestrator/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/minion-orchestrator.md"
+    },
+    "garrytan/office-hours": {
+      "contentSha256": "4ee596ede59899bc2042cbc1df1b56378304a9a209dc0145cfdd0be5871f3cd3",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/office-hours/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/office-hours.md"
+    },
+    "garrytan/open-gstack-browser": {
+      "contentSha256": "a58bb7bdb3cb66f3754524fda96f7cc37f959ced8f42fd9964aa92b37fac753f",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/open-gstack-browser/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/open-gstack-browser.md"
+    },
+    "garrytan/pair-agent": {
+      "contentSha256": "7c4813ea2f8a9707b93a71e0e4471b844b222f5b774db79cb840d7722de9e858",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/pair-agent/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/pair-agent.md"
+    },
+    "garrytan/plan-ceo-review": {
+      "contentSha256": "5baf3f5e3f047b3ef534fcb09d758d71b42dcd30b904708ccc19a58ce7ac3fc1",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/plan-ceo-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/plan-ceo-review.md"
+    },
+    "garrytan/plan-design-review": {
+      "contentSha256": "79c0084691b7308b9fe1db0a420463d61477d6ed7ccca9b591c8c94d6a8885ba",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/plan-design-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/plan-design-review.md"
+    },
+    "garrytan/plan-devex-review": {
+      "contentSha256": "848bef6b117c6eb5d428b3ca48566451bd0a9a8d9bc7133c3e3c589b19025c66",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/plan-devex-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/plan-devex-review.md"
+    },
+    "garrytan/plan-eng-review": {
+      "contentSha256": "eda5ad0e56acd4c199889c11cc44ec88442554c405b8c063fd532fda71161940",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/plan-eng-review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/plan-eng-review.md"
+    },
+    "garrytan/plan-tune": {
+      "contentSha256": "b09b214532842a0279548aa214e5827d1749be685834680b0c4afb2ff30c8cae",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/plan-tune/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/plan-tune.md"
+    },
+    "garrytan/qa": {
+      "contentSha256": "8d97ebfb5a8371152f06885cca24e3ac0d3ad5cbb739a13ddb02e7ba27e90ee4",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/qa/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/qa.md"
+    },
+    "garrytan/qa-only": {
+      "contentSha256": "266f1bbb6ce9f0036e0af82e91b94b50ad6200d42d81d4b8ef078bc1ebf7f26f",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/qa-only/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/qa-only.md"
+    },
+    "garrytan/remote-mcp": {
+      "contentSha256": "50e83ec68a8ffda28e10e2670f4cb2bad245b7a318c4c7d61c5e2b76bfbef071",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/remote-mcp/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/remote-mcp.md"
+    },
+    "garrytan/research-compendium": {
+      "contentSha256": "2c6a4fb6275b355dc6f4140fe2d08add01cf1054073835e7711f94d1dbca31b1",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/research-compendium/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/research-compendium.md"
+    },
+    "garrytan/retro": {
+      "contentSha256": "8cef0b58055ae33929e6e105e080147a7006ddc99fbd2a9596a105ccc1c83fc7",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/retro/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/retro.md"
+    },
+    "garrytan/review": {
+      "contentSha256": "3061af18a4b9a56985d93eb170a04feced2ff7962703d366a870ace0ac56256a",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/review/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/review.md"
+    },
+    "garrytan/scrape": {
+      "contentSha256": "4be5a54ce686cd6e11ac1195f1a85fef273c533df332e5c88bba8decfa8fc83b",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/scrape/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/scrape.md"
+    },
+    "garrytan/setup-browser-cookies": {
+      "contentSha256": "02caa052b576cee8a8506ce9b9ec7fbdeb50a378e8c80dec86fd05a16a4c6261",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/setup-browser-cookies/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/setup-browser-cookies.md"
+    },
+    "garrytan/setup-deploy": {
+      "contentSha256": "efbf4f4cbeb64618d02ec6cbb5cbb05bf9b9fb5e657241140a81d2174a8b46fd",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/setup-deploy/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/setup-deploy.md"
+    },
+    "garrytan/setup-gbrain": {
+      "contentSha256": "f8599f51051a67792aa9ccffc7ac4cce17841e2aee36d10cb29f6f8418076f8c",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/setup-gbrain/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/setup-gbrain.md"
+    },
+    "garrytan/ship": {
+      "contentSha256": "08868bb6702c22f5fe8c7bbf0af6c8f6b9eaeda9c2f3508692269838ef3edf3a",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/ship/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/ship.md"
+    },
+    "garrytan/signal-detector": {
+      "contentSha256": "22a15eb54303392b61dc026a60ed01091d69e1ecffe35f604fbc53f929e25b57",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/signal-detector/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/signal-detector.md"
+    },
+    "garrytan/skill-autobench": {
+      "contentSha256": "31e65f64292baf54065a7ea549789005428416da7de8f7f9ff8b82af8b176a88",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/skills/skill-autobench/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/skill-autobench.md"
+    },
+    "garrytan/skill-optimizer": {
+      "contentSha256": "0946c43162a895a135d0e179a8b1b296b258014ad7e07591b8fd483b382fe7a9",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/skill-optimizer/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/skill-optimizer.md"
+    },
+    "garrytan/skillify": {
+      "contentSha256": "64327bdd4d61d35904a0ada2afda3d520d517a07e08bee7b43f0d0392a9ea78e",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/skillify/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/skillify.md"
+    },
+    "garrytan/strategic-reading": {
+      "contentSha256": "13706216ca778c5b169ed966becfbe79cde55ac26ba9355a01cf95aef1ed07a7",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/strategic-reading/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/strategic-reading.md"
+    },
+    "garrytan/sync-gbrain": {
+      "contentSha256": "5f8fd4108d5bd2b604bd5c9ae8bee37c11dd0310ab479c299fbcb97b63cea40a",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/sync-gbrain/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/sync-gbrain.md"
+    },
+    "garrytan/two-tier-extraction": {
+      "contentSha256": "5d80fd0228c781115a629b136ad37f80cc6af3755dc00d91dbff69d2b753be89",
+      "sourceUrl": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/two-tier-extraction/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/two-tier-extraction.md"
+    },
+    "garrytan/unfreeze": {
+      "contentSha256": "99bf26dd44b0a3eecc11aaabf6c8f0d178e26c4d70487930a5793d3fd39b11a3",
+      "sourceUrl": "https://github.com/garrytan/gstack/blob/main/unfreeze/SKILL.md",
+      "canonicalPath": "registry/named/garrytan/unfreeze.md"
+    },
+    "glincker/readme-generator": {
+      "contentSha256": "89953c8a8e7859728d2e28cd8da2fde54ec2d64dba6b167f437894399fafb552",
+      "sourceUrl": "https://github.com/GLINCKER/claude-code-marketplace/blob/main/skills/documentation/readme-generator/SKILL.md",
+      "canonicalPath": "registry/named/glincker/readme-generator.md"
+    },
+    "google-deepmind/alphafold-database-fetch-and-analyze": {
+      "contentSha256": "50fb75e876f25996ec162c378ab9ba4f9af477fd0c744385bb41df93859a80fb",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/alphafold_database_fetch_and_analyze/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/alphafold-database-fetch-and-analyze.md"
+    },
+    "google-deepmind/alphagenome-single-variant-analysis": {
+      "contentSha256": "867500302d57b4a1677e77d788293936861682d1ec6f4e1592fc42c2a67c5432",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/alphagenome_single_variant_analysis/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/alphagenome-single-variant-analysis.md"
+    },
+    "google-deepmind/chembl-database": {
+      "contentSha256": "893c8b2a91735826d542eb18a6eb54075ea852be89b62294dd12f005ac3cbcd1",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/chembl_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/chembl-database.md"
+    },
+    "google-deepmind/clinical-trials-database": {
+      "contentSha256": "f061ca39685db7e8b631d96bd8d6262b47261fed4a984484d4a76e8c965acc57",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/clinical_trials_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/clinical-trials-database.md"
+    },
+    "google-deepmind/clinvar-database": {
+      "contentSha256": "2e2d670f301a4bfddda7165b4ff08c269f677157556b6323c343911f3e89b336",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/clinvar_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/clinvar-database.md"
+    },
+    "google-deepmind/dbsnp-database": {
+      "contentSha256": "80b7897255125102491b50cdb99f4b51ae4aeadc8c741c127dded53db2c8f897",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/dbsnp_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/dbsnp-database.md"
+    },
+    "google-deepmind/embl-ebi-ols": {
+      "contentSha256": "aba78009bf9c290114ed43f434d84122e46c4519e08deca6c1f40b25f778c338",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/embl_ebi_ols/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/embl-ebi-ols.md"
+    },
+    "google-deepmind/encode-ccres-database": {
+      "contentSha256": "62b5c77339736085a5fa41a7538dca951f61f549a47d1197719f47266b39e66d",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/encode_ccres_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/encode-ccres-database.md"
+    },
+    "google-deepmind/ensembl-database": {
+      "contentSha256": "66014f25c5d94c04d9813c9d61c56ff495596a504949e5479b4fa73cde67fff6",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/ensembl_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/ensembl-database.md"
+    },
+    "google-deepmind/foldseek-structural-search": {
+      "contentSha256": "69f232b2913a93518b335fe8bcea633f39816a9e1b3dcb139465239e87f47b6f",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/foldseek_structural_search/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/foldseek-structural-search.md"
+    },
+    "google-deepmind/gnomad-database": {
+      "contentSha256": "4bbcdb724513ec70e7739217e81d5fe84c53a16d655cfc6bbe84d0a1a384ed02",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/gnomad_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/gnomad-database.md"
+    },
+    "google-deepmind/gtex-database": {
+      "contentSha256": "a259e9288d24857d163da4be7a7dd7a4d039ecb08737911cc5ab3ffea2cdd08b",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/gtex_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/gtex-database.md"
+    },
+    "google-deepmind/human-protein-atlas-database": {
+      "contentSha256": "76949d67406aa0713b9a50e8b51405fdb4a1fa5632bd8fa5e53985dcb7bc4391",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/human_protein_atlas_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/human-protein-atlas-database.md"
+    },
+    "google-deepmind/interpro-database": {
+      "contentSha256": "a6b6138c054accd8aa2dd40cfb1c7439fa108b93d9df0340afee453b5a4467df",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/interpro_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/interpro-database.md"
+    },
+    "google-deepmind/jaspar-database": {
+      "contentSha256": "16f8b353b030d1e496f2fc8a23875117ad700d792d7f0effbd2b4822ddac0af6",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/jaspar_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/jaspar-database.md"
+    },
+    "google-deepmind/literature-search-arxiv": {
+      "contentSha256": "18f1b90d85d0472bebcfd7c30724facf16988f849573893cc9c6d3b9d1ad4487",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_arxiv/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/literature-search-arxiv.md"
+    },
+    "google-deepmind/literature-search-biorxiv": {
+      "contentSha256": "38875e43f84a157f94d820e641d4ee5c7178e10b9d151e7915bc28c45a0993b9",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_biorxiv/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/literature-search-biorxiv.md"
+    },
+    "google-deepmind/literature-search-europepmc": {
+      "contentSha256": "d4e4a500bb80cd10dfdb1a3b10917d2436248c8ebf76947737b1e162cd770b2f",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_europepmc/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/literature-search-europepmc.md"
+    },
+    "google-deepmind/literature-search-openalex": {
+      "contentSha256": "43ba6d0e25d1b8ab10bdd758b46fd885b7aabcd92a9685ca9dae6d219783ced4",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/literature_search_openalex/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/literature-search-openalex.md"
+    },
+    "google-deepmind/ncbi-sequence-fetch": {
+      "contentSha256": "97efa7c4a0fda948fd83c56d9db1ac951861b337be4cb80f150aabeb9eb7f130",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/ncbi_sequence_fetch/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/ncbi-sequence-fetch.md"
+    },
+    "google-deepmind/openfda-database": {
+      "contentSha256": "b05ad6bbd84b8ae3d84401117787ad702cf9cae4a22add8ece7728e482b430f5",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/openfda_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/openfda-database.md"
+    },
+    "google-deepmind/opentargets-database": {
+      "contentSha256": "81616c107d4d39fc6a456f8a8a71da98ced3cd738072610d1c22ba7248339dfb",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/opentargets_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/opentargets-database.md"
+    },
+    "google-deepmind/pdb-database": {
+      "contentSha256": "11030d8d978c8d532c97a528740363e81c65080a86ef67376c5dc828254624b2",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/pdb_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/pdb-database.md"
+    },
+    "google-deepmind/protein-sequence-msa": {
+      "contentSha256": "82028e4a7dec2cc3ce28d9c89e4903f4897aa2c95e83630d2b85735672973235",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/protein_sequence_msa/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/protein-sequence-msa.md"
+    },
+    "google-deepmind/protein-sequence-similarity-search": {
+      "contentSha256": "9bced08a205876bff306d6946a4bc6fbb2ea80ca3079ed24822c47b8c788ec37",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/protein_sequence_similarity_search/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/protein-sequence-similarity-search.md"
+    },
+    "google-deepmind/pubchem-database": {
+      "contentSha256": "ea1f15c18609ecef5e065227f4f0ab063100926efdcec699fe84e1c1027bc679",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/pubchem_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/pubchem-database.md"
+    },
+    "google-deepmind/pubmed-database": {
+      "contentSha256": "83332609721b751483bd42bda0f0e32c94c7292f413745e86cd7aaceeba22cef",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/pubmed_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/pubmed-database.md"
+    },
+    "google-deepmind/pymol": {
+      "contentSha256": "853fdab585516322d33fa35050dbb7c5d68f339ad2f40b27bb8074927ac57ed2",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/pymol/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/pymol.md"
+    },
+    "google-deepmind/quickgo-database": {
+      "contentSha256": "50e107f71ed369bef18b3899f887bea8a5e2d9d7b6d656526890011d4d6a7bae",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/quickgo_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/quickgo-database.md"
+    },
+    "google-deepmind/reactome-database": {
+      "contentSha256": "6e4933b212213d9fd8b6115aa4c7b097d54dc090200b1ace74a677c7f19826f6",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/reactome_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/reactome-database.md"
+    },
+    "google-deepmind/string-database": {
+      "contentSha256": "970adadadc24de52166b49760053b63cf548f467998fc39ca3a233341848beee",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/string_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/string-database.md"
+    },
+    "google-deepmind/ucsc-conservation-and-tfbs": {
+      "contentSha256": "5fd49cdad061f3730a1107dbb5840bfeb4385bf163c03f0c578889ff604ecad5",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/ucsc_conservation_and_tfbs/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/ucsc-conservation-and-tfbs.md"
+    },
+    "google-deepmind/unibind-database": {
+      "contentSha256": "938a089203cfa3fd3899ee82c02bff84b260dd760b88f450f55d149bbec0f150",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/unibind_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/unibind-database.md"
+    },
+    "google-deepmind/uniprot-database": {
+      "contentSha256": "20e7af6622614f72677bec9ba5fc69b5bd2e557b30cdba4a715997bf0708afb8",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/uniprot_database/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/uniprot-database.md"
+    },
+    "google-deepmind/uv": {
+      "contentSha256": "d6e3d3e88887c45d6b0d6c040df7897d5a363bd7d701fac54c0e8e3f60bbfe95",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/uv/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/uv.md"
+    },
+    "google-deepmind/workflow-skill-creator": {
+      "contentSha256": "078e6fe32cfcf51596b48b35b715e9b2686539b6255e274fce3b9e331a19a6c5",
+      "sourceUrl": "https://github.com/google-deepmind/science-skills/blob/main/skills/workflow_skill_creator/SKILL.md",
+      "canonicalPath": "registry/named/google-deepmind/workflow-skill-creator.md"
+    },
+    "gooseworks/browser-automation-notte": {
+      "contentSha256": "6b6f4bd094e3df317ceed77332d98bb24579dd665afe0568f9d77bf82a5c952d",
+      "sourceUrl": "https://github.com/gooseworks-ai/goose-skills/blob/main/skills/research-tools/capabilities/browser-automation-notte/SKILL.md",
+      "canonicalPath": "registry/named/gooseworks/browser-automation-notte.md"
+    },
+    "gsd-build/get-shit-done": {
+      "contentSha256": "cdfc675a0c5ef0e9f5a58fe5a8297b0cb99126c89fba31ed8fa862a50b235bc7",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/gsd-build/get-shit-done.md"
+    },
+    "gsd-build/gsd-discuss-phase": {
+      "contentSha256": "85d7aa3e4a71847a0449deb5a9efa3f19b35f0dd110b765cfc1c7157ffb70d4e",
+      "sourceUrl": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-discuss-phase/SKILL.md",
+      "canonicalPath": "registry/named/gsd-build/gsd-discuss-phase.md"
+    },
+    "gsd-build/gsd-execute-phase": {
+      "contentSha256": "297fc002b971bfe8ebc376ffdec9c4be17cf3f9449a0b3d9b5c8d5aeb779c7d5",
+      "sourceUrl": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-execute-phase/SKILL.md",
+      "canonicalPath": "registry/named/gsd-build/gsd-execute-phase.md"
+    },
+    "gsd-build/gsd-plan-phase": {
+      "contentSha256": "28d3063fb779f311ed75c492a496d7452e7fcaaee7442b59b31be906607dbf27",
+      "sourceUrl": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-plan-phase/SKILL.md",
+      "canonicalPath": "registry/named/gsd-build/gsd-plan-phase.md"
+    },
+    "gsd-build/gsd-ship": {
+      "contentSha256": "b946107e3d9ab3aa26c2968c2ac020ddabead4176c28b67039f71626c3ec1f43",
+      "sourceUrl": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-ship/SKILL.md",
+      "canonicalPath": "registry/named/gsd-build/gsd-ship.md"
+    },
+    "gsd-build/gsd-verify-work": {
+      "contentSha256": "f82cfeeaecf0f71dc0fe1d64893bd39c70e965462a8ecb2db956f0f0e7b614d9",
+      "sourceUrl": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-verify-work/SKILL.md",
+      "canonicalPath": "registry/named/gsd-build/gsd-verify-work.md"
+    },
+    "heygen-com/embedded-captions": {
+      "contentSha256": "2b17e365f448c2cb4ff14b9253bfe920c658732eaacd893112c347e96d2f1ec1",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/embedded-captions/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/embedded-captions.md"
+    },
+    "heygen-com/faceless-explainer": {
+      "contentSha256": "8d86daacbab7945a40481a6e2589e8e741e2159fe491e7dd473027e43ff6eb21",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/faceless-explainer/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/faceless-explainer.md"
+    },
+    "heygen-com/figma": {
+      "contentSha256": "929d2241e65bd99c1d8cb1759baaf611368afebf80c91f214410362879fcc7e5",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/figma/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/figma.md"
+    },
+    "heygen-com/general-video": {
+      "contentSha256": "6287556f8940290bdb50aa57296498e54bb88484cf42b2d971133b4cce60f7de",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/v0.8.60/skills/general-video/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/general-video.md"
+    },
+    "heygen-com/hyperframes": {
+      "contentSha256": "616a847c453e3f3c4754b710cbf7434719603aa2bad6dffb1d23673effe2ee4e",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes.md"
+    },
+    "heygen-com/hyperframes-animation": {
+      "contentSha256": "99d8600b5fc62b5f15e1f35fab6c9231a38c6ce6160ed728201f22ddec75c83c",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-animation/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-animation.md"
+    },
+    "heygen-com/hyperframes-audio": {
+      "contentSha256": "56b2bcb3757e4639e50944ae625246f6eee758cd6e311cb002b53d25af4c98e7",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-audio/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-audio.md"
+    },
+    "heygen-com/hyperframes-cli": {
+      "contentSha256": "c7f9d8770d98ae25020e87beac7cf026a3160486ba166fb09c88e63cfdaa4b4c",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-cli/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-cli.md"
+    },
+    "heygen-com/hyperframes-core": {
+      "contentSha256": "6b742756103470dc52cdd7d2eb216a2f1e1e35d3fa9509aa20df69ac405c6d00",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-core/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-core.md"
+    },
+    "heygen-com/hyperframes-creative": {
+      "contentSha256": "0449efde16184b21893206b6ba2bb93747d66b18421c35124dc97d69051406ab",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-creative/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-creative.md"
+    },
+    "heygen-com/hyperframes-keyframes": {
+      "contentSha256": "798ee7420cd33a29aebeee3015c3d772e827ddec45427ef3c36c640709b45d03",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-keyframes/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-keyframes.md"
+    },
+    "heygen-com/hyperframes-registry": {
+      "contentSha256": "6d353029cfb66b63c72a4a7c988b12fa9891ce8d2dfe02ccf8264d1cf36c27ed",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/hyperframes-registry/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/hyperframes-registry.md"
+    },
+    "heygen-com/media-use": {
+      "contentSha256": "3e7531d53b22700a72c300a69a1b5c3210aaf4a0789eadeec2b28cae27671a43",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/media-use/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/media-use.md"
+    },
+    "heygen-com/motion-graphics": {
+      "contentSha256": "133832e2a20f11a959d590cc8307007507599273d0b666436da93c1c2effd678",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/motion-graphics/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/motion-graphics.md"
+    },
+    "heygen-com/music-to-video": {
+      "contentSha256": "19197db64b9e7e067eb615e5500760250ea69e38ff4ba2a41df0378e73218543",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/music-to-video/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/music-to-video.md"
+    },
+    "heygen-com/pr-to-video": {
+      "contentSha256": "621c3fc44a864d7b9fc8ba401cb7f195db6e294a62b4b3fdd59db1749af44df8",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/pr-to-video/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/pr-to-video.md"
+    },
+    "heygen-com/product-launch-video": {
+      "contentSha256": "9a7b6f4a5741cc3b616b0b16d366e9f8c50c687aad43f2b03576f0b4e7c1dc7a",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/product-launch-video/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/product-launch-video.md"
+    },
+    "heygen-com/remotion-to-hyperframes": {
+      "contentSha256": "f9c772ab38ecbf0da6c5a3e820644bfbe87c0fa0553095706ae09416bcc42c5f",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/remotion-to-hyperframes/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/remotion-to-hyperframes.md"
+    },
+    "heygen-com/slideshow": {
+      "contentSha256": "09e47a82bd2d34e4d5702c8882f49ae09992436cf5d0835d8243db3cb434acc6",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/slideshow/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/slideshow.md"
+    },
+    "heygen-com/talking-head-recut": {
+      "contentSha256": "0d118fe79c0a890845b17f17dbb9f36f2e82b2630527e1ae5072857efb94f4e3",
+      "sourceUrl": "https://github.com/heygen-com/hyperframes/blob/7a2a6917367e6dd7ce22f4c321c4a852dcf58dfd/skills/talking-head-recut/SKILL.md",
+      "canonicalPath": "registry/named/heygen-com/talking-head-recut.md"
+    },
+    "hikari9/auto-office": {
+      "contentSha256": "bb6a0657ca6970cedc1b8967d423ce19e1e8dddf2646f4d174f23980c48cf8ea",
+      "sourceUrl": "https://github.com/Hikari9/auto-office/blob/da6aa9a93dbab98c03d2fbb3593f994acf85d7a7/SKILL.md",
+      "canonicalPath": "registry/named/hikari9/auto-office.md"
+    },
+    "hikari9/office-submit": {
+      "contentSha256": "200ff9b9a680a78345cb895fb137ab0e4020093e0d8dc4132c924268f57c16ae",
+      "sourceUrl": "https://github.com/Hikari9/auto-office/blob/da6aa9a93dbab98c03d2fbb3593f994acf85d7a7/skills/office-submit/SKILL.md",
+      "canonicalPath": "registry/named/hikari9/office-submit.md"
+    },
+    "huggingface/hf-cli": {
+      "contentSha256": "6d807393f5b8e7aa5645ecdd3b300049cb84407207c91b521cfdc905415c1050",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/hf-cli.md"
+    },
+    "huggingface/huggingface-datasets": {
+      "contentSha256": "485d90d43633ea28d029184d30913f389867f9b22d10d29eee0b837cc94a8834",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/huggingface-datasets/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/huggingface-datasets.md"
+    },
+    "huggingface/huggingface-llm-trainer": {
+      "contentSha256": "2049574b22c767a5f6e88cd7a669c6843cbcaf239deff3437b3a3b617d28ec7a",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/huggingface-llm-trainer/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/huggingface-llm-trainer.md"
+    },
+    "huggingface/huggingface-papers": {
+      "contentSha256": "d11eaed4004f030b5641161127ec1db08b49f7d7e2e472d2719b3adbc093b4b3",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/huggingface-papers/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/huggingface-papers.md"
+    },
+    "huggingface/huggingface-vision-trainer": {
+      "contentSha256": "b78e1f6c6752f00d116466d4d61671f2129a312d04b8c0915f0acc1d408348a8",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/huggingface-vision-trainer/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/huggingface-vision-trainer.md"
+    },
+    "huggingface/transformers-js": {
+      "contentSha256": "cac54d88eb572d7716a4dd8bcd1e44a7f64e7711ad6122516cb97011eff7ffcc",
+      "sourceUrl": "https://github.com/huggingface/skills/blob/main/skills/transformers-js/SKILL.md",
+      "canonicalPath": "registry/named/huggingface/transformers-js.md"
+    },
+    "intelligentcode-ai/database-engineer": {
+      "contentSha256": "bad6345ce163e280ca6a73c1ec6e5b860e42dc1014f3e5eba207bc4907b0e6ad",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/database-engineer/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/database-engineer.md"
+    },
+    "intelligentcode-ai/devops-engineer": {
+      "contentSha256": "7fb794e6aeeca32ac55a67891dd4749decb46158fd65521eb7c117e226fb195f",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/devops-engineer/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/devops-engineer.md"
+    },
+    "intelligentcode-ai/mcp-client": {
+      "contentSha256": "b782ea915de2fdabba22889a553a45666d793cf1ef54dcfd14ad8398583b451a",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/mcp-client/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/mcp-client.md"
+    },
+    "intelligentcode-ai/parallel-execution": {
+      "contentSha256": "070d22560c991dece4f668826e890b937c63151befde9e316161ca51d05e8804",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/parallel-execution/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/parallel-execution.md"
+    },
+    "intelligentcode-ai/release": {
+      "contentSha256": "890fc881208285045e29a5e51515c283027c357a3db29379b3e574ab16150abf",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/release/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/release.md"
+    },
+    "intelligentcode-ai/requirements-engineer": {
+      "contentSha256": "a386ae070890893510ac8f6645dc031ee32e9182c3a99c228e7c117413121531",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/requirements-engineer/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/requirements-engineer.md"
+    },
+    "intelligentcode-ai/security-engineer": {
+      "contentSha256": "dbefc0a23d67a9f0697ed5cdb248696dff5e6c7867b6192255df6f868f4f268a",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/security-engineer/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/security-engineer.md"
+    },
+    "intelligentcode-ai/user-tester": {
+      "contentSha256": "a727bc245d500ee0cdce25986bb835fab8669cf9775e9a4913916792876d9ac7",
+      "sourceUrl": "https://github.com/intelligentcode-ai/skills/blob/main/skills/user-tester/SKILL.md",
+      "canonicalPath": "registry/named/intelligentcode-ai/user-tester.md"
+    },
+    "juliusbrussee/caveman": {
+      "contentSha256": "b3d5c6e2fcfd872d531452a3ccc3611f85374f0f781d4aefa5e4cf1fbf5fcfbf",
+      "sourceUrl": "https://github.com/JuliusBrussee/caveman/blob/main/skills/caveman/SKILL.md",
+      "canonicalPath": "registry/named/juliusbrussee/caveman.md"
+    },
+    "k-dense-ai/deepchem": {
+      "contentSha256": "ce77b3db9cd9b101cc9ae19ed8eda781e8f83be5ffa71d88586f2d591297e1d4",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/deepchem/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/deepchem.md"
+    },
+    "k-dense-ai/pymc": {
+      "contentSha256": "893d7f3f2b7987895245a3ad204ab41f96e32ddcd4b07ab0ffefa77478f02af2",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/pymc/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/pymc.md"
+    },
+    "k-dense-ai/pytorch-lightning": {
+      "contentSha256": "0bc69ac5a398553391df00ab62b11c5371f9f6b2f647ef88be25607aaf1cdfa9",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/pytorch-lightning/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/pytorch-lightning.md"
+    },
+    "k-dense-ai/qiskit": {
+      "contentSha256": "21c0a3e4133992d2a5c84781dbc62f5b08ebae9ae8bfd12860e040b9a89fe264",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/qiskit/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/qiskit.md"
+    },
+    "k-dense-ai/rdkit": {
+      "contentSha256": "0bce448324c1770ed66908e3fe04610d00dd1b03d19a3ac4b9fa8d1a2cf09fb6",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/rdkit/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/rdkit.md"
+    },
+    "k-dense-ai/scanpy": {
+      "contentSha256": "b9a9173a25fea7f900eb1c32b56b7160df3b19d1a826990b91bbc1c5f2af6369",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/scanpy/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/scanpy.md"
+    },
+    "k-dense-ai/scvi-tools": {
+      "contentSha256": "a3b4b20ff93c6663149f9316c255d9bf521e36d28dd2181e64cc9602e9154f7f",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/scvi-tools/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/scvi-tools.md"
+    },
+    "k-dense-ai/stable-baselines3": {
+      "contentSha256": "5645b07b3737b719e84d3981d057cdafcecdb037aa889ed371f098c7b077af66",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/stable-baselines3/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/stable-baselines3.md"
+    },
+    "k-dense-ai/torch-geometric": {
+      "contentSha256": "751adc18239a58b4a50e6ca777c821b12105016f3932ba6c1b9d924abd0e1b59",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/torch-geometric/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/torch-geometric.md"
+    },
+    "k-dense-ai/transformers": {
+      "contentSha256": "4fba767d14a9bb70d4d7fe64c70552fbf7b137a9730aafe691319f8bab976420",
+      "sourceUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/skills/transformers/SKILL.md",
+      "canonicalPath": "registry/named/k-dense-ai/transformers.md"
+    },
+    "langgenius/backend-code-review": {
+      "contentSha256": "9e19d4cc45f719478fd32b54869a900a036fb90cd1f9513e08174a4a2662edf5",
+      "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/backend-code-review/SKILL.md",
+      "canonicalPath": "registry/named/langgenius/backend-code-review.md"
+    },
+    "langgenius/component-refactoring": {
+      "contentSha256": "06a5d61a2f31c39273d7ed5ee01e5f3b7ce67537efe376bb66672d45a95488aa",
+      "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/how-to-write-component/SKILL.md",
+      "canonicalPath": "registry/named/langgenius/component-refactoring.md"
+    },
+    "langgenius/e2e-cucumber-playwright": {
+      "contentSha256": "7707affc5f78d1b328b4ff2bdd667a896705defb201c63c97640be15a9963cfd",
+      "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/e2e-cucumber-playwright/SKILL.md",
+      "canonicalPath": "registry/named/langgenius/e2e-cucumber-playwright.md"
+    },
+    "langgenius/frontend-code-review": {
+      "contentSha256": "51e78bcee27451a98f1a461f24b1964281b9aafeb7d436c0969b85d95a8d5ef9",
+      "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/frontend-code-review/SKILL.md",
+      "canonicalPath": "registry/named/langgenius/frontend-code-review.md"
+    },
+    "langgenius/frontend-testing": {
+      "contentSha256": "41c2469421254cb4f73ae74c649b84b11bc6a8f1ae552dd97ba0b384ef0481d9",
+      "sourceUrl": "https://github.com/langgenius/dify/blob/main/.agents/skills/frontend-testing/SKILL.md",
+      "canonicalPath": "registry/named/langgenius/frontend-testing.md"
+    },
+    "laravel/upgrade-laravel-v13": {
+      "contentSha256": "1bf8ed70d7c5d88b70c77a4ac53c524880fde1ca7598524e95e7cc87cd4a9501",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/laravel/upgrade-laravel-v13.md"
+    },
+    "latent-spaces/brag": {
+      "contentSha256": "167a511d95d8cd520732e6c205bfaf3cc50bcb95040d0ec7d5e2e904c86e641e",
+      "sourceUrl": "https://github.com/latent-spaces/brag/blob/c893c5ed52aed84e3e2ee56787de869fccdae6b0/skills/brag/SKILL.md",
+      "canonicalPath": "registry/named/latent-spaces/brag.md"
+    },
+    "leonxlnx/brandkit": {
+      "contentSha256": "9657760b8806f8848e3c06b49d418cb8a119d0b2d9fe97d0015e15d0ebec66b2",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/brandkit/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/brandkit.md"
+    },
+    "leonxlnx/brutalist-skill": {
+      "contentSha256": "8e62167f28ea003ae1fc4d7aeab94fba3dbeef4a19b5b5eed7b898452e79fb03",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/brutalist-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/brutalist-skill.md"
+    },
+    "leonxlnx/gpt-tasteskill": {
+      "contentSha256": "4936fd08ebe9a88712734802606c2b73d7a12d7a6b0ed3c856ca94a01f6f1318",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/gpt-tasteskill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/gpt-tasteskill.md"
+    },
+    "leonxlnx/image-to-code-skill": {
+      "contentSha256": "d00e1c69599a291d7571356f320ef78bb2dfb90ae0ce794dc01e832d07356eae",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/image-to-code-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/image-to-code-skill.md"
+    },
+    "leonxlnx/imagegen-frontend-mobile": {
+      "contentSha256": "8f237668c810fb7e30ce775c9338af144a6ed071193b8828d4574214111a1d94",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/imagegen-frontend-mobile/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/imagegen-frontend-mobile.md"
+    },
+    "leonxlnx/imagegen-frontend-web": {
+      "contentSha256": "17405bb4e422b5cded865814c10ee7468b43ef154027cec62eb1f124942bbf8a",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/imagegen-frontend-web/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/imagegen-frontend-web.md"
+    },
+    "leonxlnx/minimalist-skill": {
+      "contentSha256": "d62e33706829b29223150aa0764dc69417d472b26969e4d436539e46ffd2e7da",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/minimalist-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/minimalist-skill.md"
+    },
+    "leonxlnx/output-skill": {
+      "contentSha256": "4d8bd3a75b259d8c70ccdb2cf585b17d713bfe6e9a5ef342022512f00b06a57b",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/output-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/output-skill.md"
+    },
+    "leonxlnx/redesign-skill": {
+      "contentSha256": "57473ede6200de79fee238e6c2a5b67e5b4a08620a39216c2266ba078ed0405e",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/redesign-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/redesign-skill.md"
+    },
+    "leonxlnx/soft-skill": {
+      "contentSha256": "381e7b7ead851f020132d17cb35f5153859e7380ff7b170b1fb2b5b3ac323fe4",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/soft-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/soft-skill.md"
+    },
+    "leonxlnx/stitch-skill": {
+      "contentSha256": "459cf4b7729d5fa6ab88732648d65862a84226f7ba6573bc941f13ba74536b6c",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/stitch-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/stitch-skill.md"
+    },
+    "leonxlnx/taste-skill": {
+      "contentSha256": "f9b7863bfc271a8c73c47b02a73120213f8c67dd431d1feafc4dc7bfe00244c4",
+      "sourceUrl": "https://github.com/leonxlnx/taste-skill/blob/main/skills/taste-skill/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/taste-skill.md"
+    },
+    "leonxlnx/unlazy": {
+      "contentSha256": "adda253590f96f5507643275784aa1864895f06256d87e8437d88bc2e36d1279",
+      "sourceUrl": "https://github.com/leonxlnx/unlazy/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/leonxlnx/unlazy.md"
+    },
+    "martin-stepanoski/nielsen-heuristics-audit": {
+      "contentSha256": "ae6dd065d849070ccaffea3d604ac7a49cf154891520d8bf51889ea72d655e66",
+      "sourceUrl": "https://github.com/mastepanoski/claude-skills/blob/main/skills/nielsen-heuristics-audit/SKILL.md",
+      "canonicalPath": "registry/named/martin-stepanoski/nielsen-heuristics-audit.md"
+    },
+    "mattpocock/ask-matt": {
+      "contentSha256": "2382c92d9219034b4e8e7b3847a12bd60cac0d0788efcfee30a299db963a852b",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/ask-matt/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/ask-matt.md"
+    },
+    "mattpocock/code-review": {
+      "contentSha256": "249b3081ad589bc51ede47b2b1fbf935966ccf12cd188f99ba243777f5ea2b9b",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/code-review/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/code-review.md"
+    },
+    "mattpocock/codebase-design": {
+      "contentSha256": "e5e82baa66354cd535d6162b058a7a3d3445a92e371d737e7f56752370eda02e",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/codebase-design.md"
+    },
+    "mattpocock/diagnose": {
+      "contentSha256": "3b546e1863cbe646b7309519398798582072b5de56a8ee766ebc34a44f0238f9",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/diagnose.md"
+    },
+    "mattpocock/diagnosing-bugs": {
+      "contentSha256": "df77b1351da3886ab547a226d8d0b33a00842bca1e541b805b4e0169e7453972",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnosing-bugs/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/diagnosing-bugs.md"
+    },
+    "mattpocock/domain-modeling": {
+      "contentSha256": "7eddca5d56c10a2541ae9051e2af14ab8393c06968ae12993bf56db15e9b95ca",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/domain-modeling/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/domain-modeling.md"
+    },
+    "mattpocock/edit-article": {
+      "contentSha256": "6b03770b98d687632bf85d8b08326c7c2ec24c249206da52295cb3fa71768039",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/personal/edit-article/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/edit-article.md"
+    },
+    "mattpocock/engineering": {
+      "contentSha256": "9fa1ec37a8b445e29767588585a39e1141f2f33c457c6cad95eaa7e4d838eaec",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/engineering.md"
+    },
+    "mattpocock/git-guardrails-claude-code": {
+      "contentSha256": "df1c82b3c540de85d9d8fcd79dd4047692878f7036a7fbbe8a4d2f2b7cedd4ba",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/git-guardrails-claude-code/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/git-guardrails-claude-code.md"
+    },
+    "mattpocock/grill-me": {
+      "contentSha256": "e063fb0a994f10801cc2548799ff46863f108ee9d7175aeca1927be25592b113",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/grill-me.md"
+    },
+    "mattpocock/grill-with-docs": {
+      "contentSha256": "f4c8c87b11fb9a43fbaff771aa4c75984a076ee441b4fee8990586c382ea4823",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/grill-with-docs.md"
+    },
+    "mattpocock/grilling": {
+      "contentSha256": "8d8a891fb9effd773c71484ef01699dd452bfab66c6b9fc24b918649c4339ee7",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/grilling.md"
+    },
+    "mattpocock/handoff": {
+      "contentSha256": "26a68ac719cc1ba3d7d8d4d5fd48f8c738a33309046414f15951c7c999cf2972",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff",
+      "canonicalPath": "registry/named/mattpocock/handoff.md"
+    },
+    "mattpocock/implement": {
+      "contentSha256": "74b2febd776d1ac45a7201fed275addd5faade0d6e87d29b2ea678de5fa09695",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/implement/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/implement.md"
+    },
+    "mattpocock/improve-codebase-architecture": {
+      "contentSha256": "1b388ec43525faea863e7752ecf03f21627ed00b13e66d44ff1cbc33708eab4d",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/improve-codebase-architecture.md"
+    },
+    "mattpocock/migrate-to-shoehorn": {
+      "contentSha256": "fa07e550a0179f7b359f11a02a8b9857bfcb95300751b11fda1907177cc736c8",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/migrate-to-shoehorn/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/migrate-to-shoehorn.md"
+    },
+    "mattpocock/misc": {
+      "contentSha256": "e070c854eb4493c292599255d7de2e1d446c082339fa72d85320e2bf4c310a3e",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/misc.md"
+    },
+    "mattpocock/obsidian-vault": {
+      "contentSha256": "79f181567ad95393956453c584fb27adc88bfea5cecf24c2c0da6fcfe80fdaba",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/personal/obsidian-vault",
+      "canonicalPath": "registry/named/mattpocock/obsidian-vault.md"
+    },
+    "mattpocock/personal": {
+      "contentSha256": "bf41012324a0d0718107670ccb720e7f1317221d65da23f97018bb637cba4e7d",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/personal.md"
+    },
+    "mattpocock/productivity": {
+      "contentSha256": "18e91d0ab6b4c10ac381545e2f3c6b6580fa8eaa7de5834d9787ef1606ea45a8",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/mattpocock/productivity.md"
+    },
+    "mattpocock/prototype": {
+      "contentSha256": "58060b96863326192751b09933e23e816dfdd24d147c52fe92ea450410f305a3",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/prototype",
+      "canonicalPath": "registry/named/mattpocock/prototype.md"
+    },
+    "mattpocock/research": {
+      "contentSha256": "d3c0d0453cf6c3732fd5ff9855c34d3ad9ef460a3c42bc7dece7fb6adb9d94d5",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/research/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/research.md"
+    },
+    "mattpocock/resolving-merge-conflicts": {
+      "contentSha256": "0262249f7cc4d25e458e733e39883bd84016b03895336fbfda60f1f2f03339b2",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/resolving-merge-conflicts.md"
+    },
+    "mattpocock/scaffold-exercises": {
+      "contentSha256": "3c0545e4c236870fbf241ec6ff687c2c6de0ac4f51a97e8310b025055ab23860",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/scaffold-exercises/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/scaffold-exercises.md"
+    },
+    "mattpocock/setup-matt-pocock-skills": {
+      "contentSha256": "dd6f630caea77010a6e932c4da095ab159aedcb01cd5e29b39654e1943461082",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills",
+      "canonicalPath": "registry/named/mattpocock/setup-matt-pocock-skills.md"
+    },
+    "mattpocock/setup-pre-commit": {
+      "contentSha256": "8e4e976ce08174b45db8ecdd245ad4c45f164147ce776ddc78bcad3f2570587b",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/misc/setup-pre-commit/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/setup-pre-commit.md"
+    },
+    "mattpocock/skills": {
+      "contentSha256": "b7e5f3863da79ee436991a634bacba5135ab803da64bc9d079dbee55c690b4b2",
+      "sourceUrl": "https://github.com/mattpocock/skills",
+      "canonicalPath": "registry/named/mattpocock/skills.md"
+    },
+    "mattpocock/tdd": {
+      "contentSha256": "93e3858da7346a5368035ca1efb3b4a92a91e41760826c091f7faff7032fbc31",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/tdd.md"
+    },
+    "mattpocock/teach": {
+      "contentSha256": "e37fa55be125dbf8e7508f85cfa4bc5bd4dc14fcd76cec90f39359f4a2a61406",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/teach/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/teach.md"
+    },
+    "mattpocock/to-questionnaire": {
+      "contentSha256": "b9edf41e7c0cd132073391ee95e7a3660647af9aa2c7634a1a7e9aad81907fc1",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/to-questionnaire/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/to-questionnaire.md"
+    },
+    "mattpocock/to-spec": {
+      "contentSha256": "5d9458a91d7c92b1c053bc5df219c80045a098a877b2232b047305e14df64074",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/to-spec/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/to-spec.md"
+    },
+    "mattpocock/to-tickets": {
+      "contentSha256": "9240d49d164405e6a538645e040c8011bee216fd85ba54404ce0e7b94166653a",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/to-tickets/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/to-tickets.md"
+    },
+    "mattpocock/triage": {
+      "contentSha256": "8a69e96c4d22bf478d74ae8e4de1be35d09896880d2ee1ad9952eabc7280450a",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/triage/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/triage.md"
+    },
+    "mattpocock/ubiquitous-language": {
+      "contentSha256": "8d6c531567d064f31111614aed5a1c7af92502b9670ee311900c146be68d6943",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/deprecated/ubiquitous-language/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/ubiquitous-language.md"
+    },
+    "mattpocock/wait-what": {
+      "contentSha256": "dd30c4840f2b450d012a369b6bedee894a0f04c8b1e50d6170df66fce9926bbb",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/wait-what/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/wait-what.md"
+    },
+    "mattpocock/wayfinder": {
+      "contentSha256": "eb07fcf50aea873ffa809407798eedb586193f7636950d27a457bfc61b7fa7f8",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/wayfinder.md"
+    },
+    "mattpocock/wizard": {
+      "contentSha256": "7a5e0005a49308b4e20a278fdc03b25bcb2f89c9b9c8c51873ffb87d3434b374",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/wizard/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/wizard.md"
+    },
+    "mattpocock/write-a-skill": {
+      "contentSha256": "e11d8c1450a978a3c9d07d1429af13073adda25ad644ad0d43385b8972f3c9ef",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/write-a-skill/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/write-a-skill.md"
+    },
+    "mattpocock/writing-for-agents": {
+      "contentSha256": "4e554ab28dc539d1524262fc3a697c3fb079fa3418c8c72a456dbd8121008b92",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/productivity/writing-for-agents/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/writing-for-agents.md"
+    },
+    "mattpocock/zoom-out": {
+      "contentSha256": "ef82d29e186698d3c11459ca31dbca8c867529dab911e051cf17c20899443ed8",
+      "sourceUrl": "https://github.com/mattpocock/skills/blob/main/skills/engineering/zoom-out/SKILL.md",
+      "canonicalPath": "registry/named/mattpocock/zoom-out.md"
+    },
+    "mbtiongson1/gaia-audit": {
+      "contentSha256": "f43db82afff0fda759d24809cbd146c0d2b7413e050c7b8cacbb3e0db948bb53",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-audit/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-audit.md"
+    },
+    "mbtiongson1/gaia-bot-curate": {
+      "contentSha256": "744dae73b09293bb0a286897c392ceb1f86a2f6f2a1bb42ef6406a34f84f4e01",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-bot-curate/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-bot-curate.md"
+    },
+    "mbtiongson1/gaia-curate": {
+      "contentSha256": "80581aebef233c2435c5d12587bc30ef20476e56c5d88468864791c6accc4120",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-curate/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-curate.md"
+    },
+    "mbtiongson1/gaia-curation-review": {
+      "contentSha256": "621af83b8ef31425e5eda496bca451a25aeae8ada5eae8383cbe7442325ca391",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-curation-review/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-curation-review.md"
+    },
+    "mbtiongson1/gaia-docs-sync": {
+      "contentSha256": "9cd6ffc3d2c291b265797771a30488ec1005492642d2a497e836e798543e63ae",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-docs-sync/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-docs-sync.md"
+    },
+    "mbtiongson1/gaia-draft-curate": {
+      "contentSha256": "9b05fb57265cb021fbad393609da7826a9a926d958e2ec879475a63bd0d54184",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-draft-curate/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-draft-curate.md"
+    },
+    "mbtiongson1/gaia-integrity": {
+      "contentSha256": "afb6a1adb995bd9034fc9f0d05f8cb2d290a135f5b50c9d6463297c46d2702cf",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-integrity/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-integrity.md"
+    },
+    "mbtiongson1/gaia-meta-audit": {
+      "contentSha256": "9b503c9bada88ab53f2526070151c83f439a43266a10f4ac7b536cd926b3bfc4",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-meta-audit/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-meta-audit.md"
+    },
+    "mbtiongson1/gaia-preview": {
+      "contentSha256": "12c4fcd98751f321a9993c721c7a5a511f19d03a4b85c520a17e0eec48bb66f6",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-preview/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-preview.md"
+    },
+    "mbtiongson1/gaia-triage": {
+      "contentSha256": "80d1d5722419c551b463bbcceff643579086d586948ac50b51c20cb3231f13db",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-triage/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-triage.md"
+    },
+    "mbtiongson1/gaia-wiki-sync": {
+      "contentSha256": "22d6eb0d5f6f42e6c15443ebf4ebfedf730eefeb7e3428abfcd15d22f153e0c4",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/gaia-wiki-sync/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/gaia-wiki-sync.md"
+    },
+    "mbtiongson1/graphify-triage": {
+      "contentSha256": "0d04e91fce8566ad5b8c45615a81328409e30357a2da538c18d63cb3e958bfe1",
+      "sourceUrl": "https://github.com/gaia-research/gaia-skill-tree/blob/main/.agents/skills/graphify-triage/SKILL.md",
+      "canonicalPath": "registry/named/mbtiongson1/graphify-triage.md"
+    },
+    "mksglu/context-mode": {
+      "contentSha256": "c2b8c58be90a12cbd6c3fd78b6dffd53820d2973aba7fd7f1bf02b4914a2f32f",
+      "sourceUrl": "https://github.com/mksglu/context-mode/blob/6b8bf61f83abed6c3faf4e7c3ba02c162fadfedf/skills/context-mode/SKILL.md",
+      "canonicalPath": "registry/named/mksglu/context-mode.md"
+    },
+    "mvanhorn/last30days": {
+      "contentSha256": "635f59661dd7a743080a9a9d57677f7f2e75f18f47f9eb6f02f8a0f4f0c72432",
+      "sourceUrl": "https://github.com/mvanhorn/last30days-skill/blob/main/skills/last30days/SKILL.md",
+      "canonicalPath": "registry/named/mvanhorn/last30days.md"
+    },
+    "nateherkai/scroll-craft": {
+      "contentSha256": "d71bdf6fe902752b3c32ad7a4cc977931f3aec2e8b08f7948e7da346b9909071",
+      "sourceUrl": "https://github.com/nateherkai/scroll-craft/blob/0b816225945e45380397d6a0487efa3c98916858/plugins/nateherk-design/skills/scroll-craft/SKILL.md",
+      "canonicalPath": "registry/named/nateherkai/scroll-craft.md"
+    },
+    "nextlevelbuilder/ui-ux-pro-max": {
+      "contentSha256": "c706d419c557587a621dd6a3f600a926741f4fd5207c2f7eaaf6c43731f73548",
+      "sourceUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/ui-ux-pro-max/SKILL.md",
+      "canonicalPath": "registry/named/nextlevelbuilder/ui-ux-pro-max.md"
+    },
+    "nexu-io/open-design": {
+      "contentSha256": "f92f547488a8046c59e0935c743b94b61e52bd76da9024c5da10107ee414ff71",
+      "sourceUrl": "https://github.com/nexu-io/open-design",
+      "canonicalPath": "registry/named/nexu-io/open-design.md"
+    },
+    "nousresearch/feed-monitoring": {
+      "contentSha256": "7bda75c25effb129a7ea7c8b55a4741710cda2d6196289a866b4ceb11480bf01",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/nousresearch/feed-monitoring.md"
+    },
+    "nvidia/accelerated-computing-cudf": {
+      "contentSha256": "f776bcbbdd3878815e88add2de153e0fec348ea4514281cb252acb9351d7d302",
+      "sourceUrl": "https://github.com/NVIDIA/skills/blob/main/skills/accelerated-computing-cudf/SKILL.md",
+      "canonicalPath": "registry/named/nvidia/accelerated-computing-cudf.md"
+    },
+    "obra/brainstorming": {
+      "contentSha256": "4b88547826efb8a6e989119a49267a85107bdd349d0de77ed71aa679923932b9",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md",
+      "canonicalPath": "registry/named/obra/brainstorming.md"
+    },
+    "obra/dispatching-parallel-agents": {
+      "contentSha256": "437201de7c9a0f74e8295d457011274b9d26fe921a31557514e7d6db55555bc1",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/dispatching-parallel-agents/SKILL.md",
+      "canonicalPath": "registry/named/obra/dispatching-parallel-agents.md"
+    },
+    "obra/executing-plans": {
+      "contentSha256": "17b6dbb5903798fd3cc06871b95e4c7ce16763dcc5182b8da5114845b9469b7a",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/executing-plans/SKILL.md",
+      "canonicalPath": "registry/named/obra/executing-plans.md"
+    },
+    "obra/finishing-a-development-branch": {
+      "contentSha256": "131db10b1d59e971e432f21ea591b191a249eacf4943592b097ffc8f5926533c",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md",
+      "canonicalPath": "registry/named/obra/finishing-a-development-branch.md"
+    },
+    "obra/receiving-code-review": {
+      "contentSha256": "4c59202e1d414d1b1c274e6b350032e538c9b05807125a5bfd383b134fc8250a",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/receiving-code-review/SKILL.md",
+      "canonicalPath": "registry/named/obra/receiving-code-review.md"
+    },
+    "obra/requesting-code-review": {
+      "contentSha256": "b5b06640409ae606877c4f677632faa745343b8c7a76f1537de58400279ab397",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/requesting-code-review/SKILL.md",
+      "canonicalPath": "registry/named/obra/requesting-code-review.md"
+    },
+    "obra/subagent-driven-development": {
+      "contentSha256": "1de89db6429470eefe80ab16c65e7742ad96b1155ba4d3aef38715293baacf2e",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/subagent-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/obra/subagent-driven-development.md"
+    },
+    "obra/superpowers": {
+      "contentSha256": "137b3c0a7a322bb3a47e069e14f674bf5eb1969ffc1ef6ded667c9d9c26a64c9",
+      "sourceUrl": "https://github.com/obra/superpowers",
+      "canonicalPath": "registry/named/obra/superpowers.md"
+    },
+    "obra/systematic-debugging": {
+      "contentSha256": "cab03ead911bc4726d2f8249d84ab377e0256015e84bcfa53e686999526a70d9",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/systematic-debugging/SKILL.md",
+      "canonicalPath": "registry/named/obra/systematic-debugging.md"
+    },
+    "obra/test-driven-development": {
+      "contentSha256": "2ff11720c745789bf2eed4ee707100af4c5b543a055716ef375c43d0c1a86cd8",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/v6.4.1/skills/test-driven-development/SKILL.md",
+      "canonicalPath": "registry/named/obra/test-driven-development.md"
+    },
+    "obra/using-git-worktrees": {
+      "contentSha256": "32fd01430149e078415349f761124ab4ed2d857fcb6bc1bc675e5ecc00b185e3",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/using-git-worktrees/SKILL.md",
+      "canonicalPath": "registry/named/obra/using-git-worktrees.md"
+    },
+    "obra/verification-before-completion": {
+      "contentSha256": "c5a7509a90d254f630fde69d1a1dbf05e3c238bcd113b5257e642094a6d27326",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/verification-before-completion/SKILL.md",
+      "canonicalPath": "registry/named/obra/verification-before-completion.md"
+    },
+    "obra/writing-plans": {
+      "contentSha256": "5bc14056ff66b931caf802ce1683318f300930a81c891ab03dff8ab2b96e7fa3",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md",
+      "canonicalPath": "registry/named/obra/writing-plans.md"
+    },
+    "obra/writing-skills": {
+      "contentSha256": "e98278423bf20c611fe0519d9dd28c5b93bcddf00e0686dbd9bab4d224f29254",
+      "sourceUrl": "https://github.com/obra/superpowers/blob/v6.4.1/skills/writing-skills/SKILL.md",
+      "canonicalPath": "registry/named/obra/writing-skills.md"
+    },
+    "oso95/scroll-world": {
+      "contentSha256": "e519d471197e15bcdc3b3cbfb13729c57a2f6587af8b829124d6aef1d54c0f3e",
+      "sourceUrl": "https://github.com/oso95/scroll-world/blob/main/skills/scroll-world/SKILL.md",
+      "canonicalPath": "registry/named/oso95/scroll-world.md"
+    },
+    "panniantong/agent-reach": {
+      "contentSha256": "04e323409617ec10d8d780314caaee35235dbf8dc9e9c3cfd7b377e17b8bf045",
+      "sourceUrl": "https://github.com/Panniantong/Agent-Reach/blob/main/agent_reach/skill/SKILL.md",
+      "canonicalPath": "registry/named/panniantong/agent-reach.md"
+    },
+    "pbakaus/impeccable": {
+      "contentSha256": "21dea0b1b2a6da9e474bb60ac843537181d37b4e3526064220aa38f434142724",
+      "sourceUrl": "https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md",
+      "canonicalPath": "registry/named/pbakaus/impeccable.md"
+    },
+    "pexp13/sentiment-analysis": {
+      "contentSha256": "b27b81c324726243e7dbb945a7b4af714f48e9ee4cbc26340efa15e566751ad6",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/pexp13/sentiment-analysis.md"
+    },
+    "remotion-dev/remotion-best-practices": {
+      "contentSha256": "6a9de9b6c07506ec3750a8c8390ae0de7bd2b57bb06243c683eaa44a683d0d58",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-best-practices.md"
+    },
+    "remotion-dev/remotion-captions": {
+      "contentSha256": "491e23274ac5297e1297cd3a9f2bd830e44aa2347aa361a67b6e9191162b739b",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-captions.md"
+    },
+    "remotion-dev/remotion-create": {
+      "contentSha256": "e25d1462c416b1371119c71a1788221e26a5d3bc749a8362fa7722d2dd09831e",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-create.md"
+    },
+    "remotion-dev/remotion-docs": {
+      "contentSha256": "84e734ac05f109f267b4a4adb708e05a35c7f99114338ac04a4335f7fa48a25c",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-docs.md"
+    },
+    "remotion-dev/remotion-interactivity": {
+      "contentSha256": "5cda0410a46b7b8834d7c8ed11cf0aed3a57c9f85d441f5f35087b1cdbee0603",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-interactivity.md"
+    },
+    "remotion-dev/remotion-maps": {
+      "contentSha256": "32cbb6e25baf72c1368e7eabd73c065b615e4011efef7f38b8ddef73d434ad91",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-maps.md"
+    },
+    "remotion-dev/remotion-markup": {
+      "contentSha256": "9a770494eea6db01c6336f713cb2df1f0640af0cf83b7cbee800268b15506db3",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-markup.md"
+    },
+    "remotion-dev/remotion-multimedia": {
+      "contentSha256": "1d0f8c463a4b63a2bef298275bb77f50827bda45705e741610e77a52aa6fff7c",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-multimedia.md"
+    },
+    "remotion-dev/remotion-render": {
+      "contentSha256": "4791b5c15bbb3822ed40216e3a2f106249a475bd0528b8a12d019dd2e998d991",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-render.md"
+    },
+    "remotion-dev/remotion-saas": {
+      "contentSha256": "bfb8bb0608f957b04defb5b2db7be6225848804f6e65d94bd36ed1937f657d0b",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-saas.md"
+    },
+    "remotion-dev/remotion-studio": {
+      "contentSha256": "5c57fe8a963d7313e18a48bda128f1a96d879d3ca759d395074fa7f57eb6a351",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-studio.md"
+    },
+    "remotion-dev/remotion-upgrade": {
+      "contentSha256": "9e202aabfe6e4e08def69bd2d3178f016e5ca074aecf5919a9a6f806c6a1f0b2",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/remotion-dev/remotion-upgrade.md"
+    },
+    "rico-favor/implement-with-discernment": {
+      "contentSha256": "ca3ced2ace9e49213b06eb44a3c01e9164ec381ea954e14a5a0e1f23a84b6763",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/rico-favor/implement-with-discernment.md"
+    },
+    "ruvnet/agentdb": {
+      "contentSha256": "4265f4fa4d5033eeae6717317e1e531fdecc9a476f495a37ecdf0d3b8ca659ab",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb.md"
+    },
+    "ruvnet/agentdb-advanced": {
+      "contentSha256": "6305baba4249713c1183f18a5cdb5f8eaedec3482d6017d2345a946d74ea2540",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb-advanced.md"
+    },
+    "ruvnet/agentdb-learning": {
+      "contentSha256": "8dd61191f549b983b65be41d42d9e78f9b1ca5e22ff863411e0121b7454c825f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb-learning.md"
+    },
+    "ruvnet/agentdb-memory-patterns": {
+      "contentSha256": "b8e50ac5513b96dade95ee5572561b6c45910d0ce695800e6cafd221dcdab171",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb-memory-patterns.md"
+    },
+    "ruvnet/agentdb-optimization": {
+      "contentSha256": "5f470851fc8b06d1d9faa74323c175c440abafdd2e9895e276d29ccbb3239720",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb-optimization.md"
+    },
+    "ruvnet/agentdb-vector-search": {
+      "contentSha256": "be0d3318bbd4c5b4e5474fc4a8c209ad3d8fd69405770db8cb7f0e04c0427e7f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentdb-vector-search.md"
+    },
+    "ruvnet/agentic-jujutsu": {
+      "contentSha256": "5da048e3dfc35672e286faeb2b90ec9e6edcf8ee0e82ab2f095ff54596cd5140",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/agentic-jujutsu.md"
+    },
+    "ruvnet/browser": {
+      "contentSha256": "d5566dd07080f9a962b9cf16473e33102505612444a033afb697c80ef77557cc",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/browser.md"
+    },
+    "ruvnet/dual-collect": {
+      "contentSha256": "3585d317aa322816705e07362425c04f1de72faeb55a7d24e6b36de380a23be5",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/dual-collect.md"
+    },
+    "ruvnet/dual-coordinate": {
+      "contentSha256": "1c3832337ef022ded394db883b44a30ca05765a35050143cf58d8cf4121ce525",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/dual-coordinate.md"
+    },
+    "ruvnet/dual-mode": {
+      "contentSha256": "6355e166386448f5ea44cdc018cf3a246df3a946ce202179e0bdce7b22f81762",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/dual-mode.md"
+    },
+    "ruvnet/dual-spawn": {
+      "contentSha256": "facc55e22a75c155cdc45daf3cc98b7de92ba6abc81cf0f23c5259e81449dda2",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/dual-spawn.md"
+    },
+    "ruvnet/flow-nexus": {
+      "contentSha256": "315f241cf8a290f432b482d12056ff2d964e6412b68a9d8c3ac0d0ee5eb49a47",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/flow-nexus.md"
+    },
+    "ruvnet/flow-nexus-neural": {
+      "contentSha256": "da7af28f18b20ce0d521f8ef198688fac0dd6ace4611ba4df86a2fde81eccf2c",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/flow-nexus-neural.md"
+    },
+    "ruvnet/flow-nexus-platform": {
+      "contentSha256": "09346bd9085b0af07ac545377e03d0d95ad8e70ca69bc058a7381df9338ff6c9",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/flow-nexus-platform.md"
+    },
+    "ruvnet/flow-nexus-swarm": {
+      "contentSha256": "0c45f4257c2c9f8d04ed3e0e4286a4a87df927a60b2bf81ea826604bd2c5cf9a",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/flow-nexus-swarm.md"
+    },
+    "ruvnet/github-code-review": {
+      "contentSha256": "b6b939b3e9269c988a65aa1495e6d1bec15e134bbc1c1a15398d65b837dac953",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-code-review.md"
+    },
+    "ruvnet/github-multi-repo": {
+      "contentSha256": "e8abae74203d178165eacf4f135e43298f8908b508cff6a4a146a57fe6feafe8",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-multi-repo.md"
+    },
+    "ruvnet/github-project-management": {
+      "contentSha256": "e92ea0ae50a3874075b249869c52719bf5d5aeb3fe902f9133ed4cb7c1099c4f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-project-management.md"
+    },
+    "ruvnet/github-release-management": {
+      "contentSha256": "c6368acf697245ab45f328cdbadeaed431aedd356ff7069c5dfd3e3c523d160c",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-release-management.md"
+    },
+    "ruvnet/github-suite": {
+      "contentSha256": "d1d994a7252ed1cb6a4684a13d653b21d82da80a957dabcd16de2a16ac593139",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-suite.md"
+    },
+    "ruvnet/github-workflow-automation": {
+      "contentSha256": "275c2768eb3a393421cf25037ca285328d532410d6f6419196d07ebfbe85a1c3",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/github-workflow-automation.md"
+    },
+    "ruvnet/hive-mind": {
+      "contentSha256": "0b1320de188861c2b00eb4ed74c2e69613244642044fc459502091ddf4ec667f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo/blob/main/.agents/skills/hive-mind/SKILL.md",
+      "canonicalPath": "registry/named/ruvnet/hive-mind.md"
+    },
+    "ruvnet/hooks-automation": {
+      "contentSha256": "906a3a356793a233ee564adc654de105fd79f60a86da2ac0b3f5e433deed20bb",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/hooks-automation.md"
+    },
+    "ruvnet/pair-programming": {
+      "contentSha256": "c9613e96d398e28005f40f1f2a912400d5212438e67d4e33278dd2d045993f81",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/pair-programming.md"
+    },
+    "ruvnet/performance-analysis": {
+      "contentSha256": "0bca0856bd1cebbb8cac8028dfae6aa8670932dbb1c9c3fba77fb3b4faf2f1fb",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/performance-analysis.md"
+    },
+    "ruvnet/reasoningbank": {
+      "contentSha256": "efaec723f90e870c686ed9e87bd3499991b9409a4bbfb99cd014b8b1f170622a",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/reasoningbank.md"
+    },
+    "ruvnet/reasoningbank-agentdb": {
+      "contentSha256": "0f5041510fcf06d8b6417ae7a89fa97fe74e559e78a8347fc1df3af9e49f4d0a",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/reasoningbank-agentdb.md"
+    },
+    "ruvnet/reasoningbank-intelligence": {
+      "contentSha256": "97e0be8554729165245dfbe6d04d6243203a02feca06698e6e7ac103901fc51a",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/reasoningbank-intelligence.md"
+    },
+    "ruvnet/ruflo": {
+      "contentSha256": "a4d2893b0b7f78c3f34b4b70db7c02f591975433a368a845393951b3e5d330d7",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/ruflo.md"
+    },
+    "ruvnet/ruflo-v3": {
+      "contentSha256": "e1ada8b0d7729fec6864790db051bdd1f86067545e460bd3e7c70efc8d07bda3",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/ruflo-v3.md"
+    },
+    "ruvnet/skill-builder": {
+      "contentSha256": "693d44f6c779a736c756f477ab888ee909c1a6241f3ab861e7fbbbc5eccce071",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/skill-builder.md"
+    },
+    "ruvnet/sparc-methodology": {
+      "contentSha256": "79cdda8171c61913d9caf9b26a2b5300668b7665a707d993b64b937d7abf067e",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/sparc-methodology.md"
+    },
+    "ruvnet/stream-chain": {
+      "contentSha256": "4f09bf1764e2e1133cb3ae747677a4701d36fbb2c598c415217680f0cb10d1e7",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/stream-chain.md"
+    },
+    "ruvnet/swarm-advanced": {
+      "contentSha256": "8863dcfc506b1303a3cabc894063fb515006d0df6b1666b3277fd0b19590b6fe",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/swarm-advanced.md"
+    },
+    "ruvnet/swarm-orchestration": {
+      "contentSha256": "d2952acd28b7b3b581ca806b471162fbe5352a51e9b267d83d3fe911fb0d4f2b",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/swarm-orchestration.md"
+    },
+    "ruvnet/v3-cli-modernization": {
+      "contentSha256": "d0f43fd5a98c9841174977fe042e0beb189d79c39dc430d11a4611ded4db6441",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-cli-modernization.md"
+    },
+    "ruvnet/v3-core-implementation": {
+      "contentSha256": "2ec43d3fd349118d7ed2bf099fdf3b3a15912b45f49dac166304cc885d97057f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-core-implementation.md"
+    },
+    "ruvnet/v3-ddd-architecture": {
+      "contentSha256": "f78a250b272a3095e250cab673215c97e73ab7b9939e79b541b3127a4c0f654d",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-ddd-architecture.md"
+    },
+    "ruvnet/v3-integration-deep": {
+      "contentSha256": "9a5980d80a612e72dfcf6a40b57d4efd616713afcf4210b5dee30d9aacbad3de",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-integration-deep.md"
+    },
+    "ruvnet/v3-mcp-optimization": {
+      "contentSha256": "b3ce87da01ddbd01e009b17ed71869d3ad7a07c04b4a002ba0753240d4912552",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-mcp-optimization.md"
+    },
+    "ruvnet/v3-memory-unification": {
+      "contentSha256": "f4f65e9da40a40efddb88afd5f98583cb114e7b8e91bc7170c6e88918d5d49eb",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-memory-unification.md"
+    },
+    "ruvnet/v3-performance-optimization": {
+      "contentSha256": "e03954eef3055f161c6f96365dddb83f413891f04badf20bd7bcfc68a7e87e88",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-performance-optimization.md"
+    },
+    "ruvnet/v3-security-overhaul": {
+      "contentSha256": "3372c3b98e41da349fe7bc41000378412ed5fd6570c01cb9b54033c77f26983c",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-security-overhaul.md"
+    },
+    "ruvnet/v3-swarm-coordination": {
+      "contentSha256": "203c3eabad5cefd7ab459aaa978d0cc1398752f3ca77a5036cd2aa2825a80109",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/v3-swarm-coordination.md"
+    },
+    "ruvnet/verification-quality": {
+      "contentSha256": "0ffbc2d4b4545302fa1d55dee6a6dbc0d1fdbb0aa07307edefb71ed247f9f70f",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/verification-quality.md"
+    },
+    "ruvnet/worker-benchmarks": {
+      "contentSha256": "3e06251616f7ed5ac190f59ad9dedaa1b992f20c27e0abbd6115fda10c406e68",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/worker-benchmarks.md"
+    },
+    "ruvnet/worker-integration": {
+      "contentSha256": "a20451b3e9a4be0260628e30ed35f016b10fab470831790ef232c0221b3282bc",
+      "sourceUrl": "https://github.com/ruvnet/ruflo",
+      "canonicalPath": "registry/named/ruvnet/worker-integration.md"
+    },
+    "safishamsi/graphify": {
+      "contentSha256": "fca936e921ac37d235f19198f7c2ab5213a158f70f2e72c31ef2440acf68f404",
+      "sourceUrl": "https://github.com/Graphify-Labs/graphify/blob/v8/graphify/__init__.py",
+      "canonicalPath": "registry/named/safishamsi/graphify.md"
+    },
+    "santifer/career-ops": {
+      "contentSha256": "94d7ee9ab0952890d45f479b168ea5c31a9ef6cb436129a2cd1f940755ece0f3",
+      "sourceUrl": "https://github.com/santifer/career-ops/blob/main/.agents/skills/career-ops/SKILL.md",
+      "canonicalPath": "registry/named/santifer/career-ops.md"
+    },
+    "sickn33/ai-dev-jobs-mcp": {
+      "contentSha256": "1fdb44012f444b4e24112135146c7c350c2546ddd8e6cb03d09a309923d69f3b",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/ai-dev-jobs-mcp.md"
+    },
+    "sickn33/mcp-builder": {
+      "contentSha256": "4007fb7074a434ce79f5f3db4423a6e89646c2a61eee887685130cf6f32eb739",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/mcp-builder.md"
+    },
+    "sickn33/n8n-mcp-tools-expert": {
+      "contentSha256": "379c27ef9903854fc635d84bcb1128d5e6860f7c3e37fb6b1d3ccec558b74954",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/sickn33/n8n-mcp-tools-expert.md"
+    },
+    "spring-ai/readme-generate": {
+      "contentSha256": "fcb44964f58c7ff84f3840eb7d494f9feb3d7da64d6814409ba6df92670f289b",
+      "sourceUrl": "https://github.com/spring-ai-alibaba/examples/blob/main/.claude/skills/readme-generate/SKILL.md",
+      "canonicalPath": "registry/named/spring-ai/readme-generate.md"
+    },
+    "supabase/supabase": {
+      "contentSha256": "3bc20e4a770b1f24fd03e9c785726dc3e688f8e57034dc7c2eed4084fc8ae1e0",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/supabase/supabase.md"
+    },
+    "supabase/supabase-postgres-best-practices": {
+      "contentSha256": "afd5d209115bea26c072a8e58c87a85084bdf2660bcedfb9a4e4a265ea08a10c",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/supabase/supabase-postgres-best-practices.md"
+    },
+    "trailhq/graft": {
+      "contentSha256": "3109c1b8a350cab9df3f039ac55f87406f18ae66ad56c79a6818e61c137f9438",
+      "sourceUrl": "https://github.com/trailhq/Graft/blob/main/.claude/skills/graft/SKILL.md",
+      "canonicalPath": "registry/named/trailhq/graft.md"
+    },
+    "upsonic/unittest-generator": {
+      "contentSha256": "67eb5b0d7e75a6c6aad667a4e145d9754d97ffe36b079b2cae1c8db4ce062c35",
+      "sourceUrl": null,
+      "canonicalPath": "registry/named/upsonic/unittest-generator.md"
+    },
+    "vercel-labs/vercel-react-best-practices": {
+      "contentSha256": "150c572a033fc2ffb1e14e2c098c8f2d3d819ee6846cbff683ceb2892c06cc85",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills/blob/main/skills/react-best-practices/SKILL.md",
+      "canonicalPath": "registry/named/vercel-labs/vercel-react-best-practices.md"
+    },
+    "vercel/find-skills": {
+      "contentSha256": "ea878c0daef63a5426206c4c3eaef74fa89ee485772a777329382f500646ebd6",
+      "sourceUrl": "https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md",
+      "canonicalPath": "registry/named/vercel/find-skills.md"
+    },
+    "wheresryan22/anatomy": {
+      "contentSha256": "6f2e0e62a985e51e885c528a3df810453f78a447400a648ae646d5eb5149bac8",
+      "sourceUrl": "https://github.com/wheresryan22/anatomy/blob/main/SKILL.md",
+      "canonicalPath": "registry/named/wheresryan22/anatomy.md"
+    },
+    "xquik-dev/hermes-tweet": {
+      "contentSha256": "9e33f4acf3a3ac9004ba6465067dc323bb7c5698d2c8858991f17c0531db9b1b",
+      "sourceUrl": "https://github.com/Xquik-dev/hermes-tweet/blob/master/skills/hermes-tweet/SKILL.md",
+      "canonicalPath": "registry/named/xquik-dev/hermes-tweet.md"
+    },
+    "yonatangross/rag-retrieval": {
+      "contentSha256": "8d9647c2081d54d8e942f777be672e99f2308fd208d9f889cfb8e97f45bb9179",
+      "sourceUrl": "https://github.com/yonatangross/orchestkit/blob/main/plugins/ork/skills/rag-retrieval/SKILL.md",
+      "canonicalPath": "registry/named/yonatangross/rag-retrieval.md"
+    },
+    "yylo-dev/ledger-tasks-yylo": {
+      "contentSha256": "9d5d4313916775b287ad5d09642ee2e62e01b55ef6e05fe1c953974d14a0cd4e",
+      "sourceUrl": "https://github.com/yylo-dev/yylo-skills/blob/main/skills/ledger-tasks-yylo/SKILL.md",
+      "canonicalPath": "registry/named/yylo-dev/ledger-tasks-yylo.md"
+    }
+  }
+}

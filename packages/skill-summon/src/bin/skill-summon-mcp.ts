@@ -2,13 +2,11 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import { resolveSkillSource } from "../data/configured-source.js";
+import { createConfiguredService } from "../configured-service.js";
 import { createSkillSummonMcpServer } from "../mcp/server.js";
-import { GaiaService } from "../service.js";
 
 async function main(): Promise<void> {
-  const { source } = resolveSkillSource();
-  const service = new GaiaService(source);
+  const service = createConfiguredService();
   const server = createSkillSummonMcpServer({ service });
   const transport = new StdioServerTransport();
 

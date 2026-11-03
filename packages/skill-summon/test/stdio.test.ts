@@ -134,11 +134,14 @@ describe("skill-summon-mcp stdio executable", () => {
     });
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({
+      // A registry-only skill can never install, so it is WITHHELD with a
+      // reason (SPEC §4.2) rather than attempted and skipped. The caller can
+      // see why a plausible skill did not appear.
       summoned: [],
-      skipped: [
+      filtered: [
         {
           id: "example/health",
-          reason: expect.stringContaining("registry-only"),
+          why: expect.stringContaining("registry-only"),
         },
       ],
     });

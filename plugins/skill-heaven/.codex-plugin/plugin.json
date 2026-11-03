@@ -1,17 +1,23 @@
 {
   "name": "skill-heaven",
-  "version": "0.1.0",
-  "description": "Working prototype of Skill Heaven. One mechanic—summon one skill into context for one session, without installing it—across the zero, heaven, hell, and ultra surfaces.",
+  "version": "0.1.2",
+  "description": "Skill Heaven is live. Summon one skill into a session with nothing installed, for OpenAI Codex and other coding agents: manual /summon, a clean-room floor (/skill-zero), converge and explore bands (/skill-heaven, /skill-hell) and the crown rung (/skill-ultra). Output is reference data, never standing authority; rung meaning is still provisional.",
   "author": {
     "name": "Gaia Research"
   },
-  "homepage": "https://skill-heaven.dev",
+  "homepage": "https://gaia-research.github.io/gaia-skill-heaven/",
   "repository": "https://github.com/gaia-research/gaia-skill-heaven",
   "license": "MIT",
   "keywords": [
     "skills",
     "context",
+    "context-bloat",
+    "on-demand",
+    "ephemeral-skills",
+    "dynamic-skills",
+    "agent-skills",
     "summon",
+    "clean-launch",
     "skill-heaven",
     "skill-hell",
     "gaia"

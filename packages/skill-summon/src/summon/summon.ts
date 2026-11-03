@@ -1,11 +1,39 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
+import {
+  Bm25fRanker,
+  consumeArbor,
+  decide,
+  describeArborIdentityMiss,
+  describeArborPublication,
+  indexAgeDays,
+  isStale,
+  normalize,
+  resolveArborIdentity,
+  conditionMatcher,
+  type ArborCompositionReport,
+  type ArborDeliveryContext,
+  type CompositionMember,
+  type ArborDisclosure,
+  type ArborIdentityContext,
+  type ArborPublication,
+  type ArborSubjectReport,
+  type Decision,
+  type IndexedSkill,
+  type InstallabilityAssessment,
+  type SkillIndex,
+} from "skill-zero";
+
 import type { NamedSkill } from "../domain/types.js";
+import { loadArborIdentityContext } from "../data/arbor-identity-source.js";
+import { loadArborPublication } from "../data/arbor-source.js";
+import type { ResolvedIndex } from "../data/skill-index-source.js";
 import { starCount } from "../service.js";
 import type { GaiaService } from "../service.js";
 import { trustFields } from "../trust.js";
 import { inspectUrl, renderSummonCard } from "./card.js";
+import { sessionComposition } from "./composition.js";
 import {
   discardCachedRepo,
   ensureCachedRepo,
@@ -14,14 +42,11 @@ import {
 import { parseGithubUrl } from "./giturl.js";
 import { materializeSkillDir } from "./materialize.js";
 import { PayloadCache } from "./payload-cache.js";
-import {
-  rankCandidatesWithDetails,
-  type RankingSummary,
-  type SummonSurface,
-} from "./rank.js";
+import { type RankingSummary, type SummonSurface } from "./rank.js";
+import { appendSummonLog } from "./log.js";
 import { elapsedSeconds, startTiming } from "./timing.js";
-import { reapSessions } from "./session.js";
-import type { InstalledSkill, SummonSession } from "./session.js";
+import { assertConfinedPath, reapSessions } from "./session.js";
+import type { InstalledSkill, RetrievalDisclosure, SummonSession } from "./session.js";
 
 const DEFAULT_LIMIT = 1;
 // There is NO upper cap. How many skills a gap warrants is the agent's call —
@@ -33,6 +58,94 @@ export type SummonOptions = {
   query: string;
   limit?: number | undefined;
   surface?: SummonSurface | undefined;
+  /**
+   * Declares what the CURRENT task is, as exact phrases, so the Heaven/Hell band
+   * judgment can decide whether a governed Arbor claim's stated conditions apply
+   * here. Omit it and the band abstains with `conditions-unverified`: Arbor
+   * carries conditions verbatim and never evaluates prose, so a claim cannot be
+   * treated as applicable without the caller saying so.
+   *
+   * This is a declaration by the caller, not a query. It is not used for
+   * retrieval, admission, or ranking, and it never affects which candidates are
+   * considered relevant.
+   */
+  taskSignals?: readonly string[] | undefined;
+  /** Override the configured Skill URL for this call. Unresolvable is an error, never a fallback. */
+  source?: string | undefined;
+  /** Rank and disclose without materialising anything to disk (SPEC §5.1). */
+  preview?: boolean | undefined;
+};
+
+/** One ranked candidate, disclosed without being installed (SPEC §5.1 `preview`). */
+export type PreviewedSkill = {
+  id: string;
+  name: string;
+  title?: string | undefined;
+  description: string;
+  level?: string | undefined;
+  sourceUrl?: string | undefined;
+  source: string;
+  installability?: InstallabilityAssessment | undefined;
+  retrieval: RetrievalDisclosure;
+  /** Which Arbor lenses were consulted for this candidate, and which were not. */
+  arbor: ArborSubjectReport;
+};
+
+/**
+ * The summon-level Arbor disclosure (SPEC INV-13, issue #118 A3/A4).
+ *
+ * `corpus` is this layer's own honesty note, not an Arbor field: the retrieval
+ * index and the Arbor publication are pinned to upstream revisions
+ * INDEPENDENTLY, and a reader has to be told when they disagree before drawing
+ * any conclusion from an id that appears in both.
+ */
+export type SummonArborDisclosure = ArborDisclosure & {
+  corpus: {
+    /** The source the ranked candidates came from. */
+    source: string;
+    /** The upstream revision the retrieval index was built from, when published. */
+    revision: string | null;
+    /** True only when the corpus is the canonical Gaia tree projection. */
+    canonical: boolean;
+    /**
+     * Whether the corpus and the Arbor publication pin the SAME upstream
+     * revision. `null` when either side does not publish one.
+     */
+    sameUpstreamRevision: boolean | null;
+  };
+  /**
+   * The canonical identity context this summon could prove candidates against.
+   * Separate from the publication on purpose: one answers "which subject is
+   * this candidate", the other "what has been published about that subject".
+   */
+  identity: {
+    /** Present only when a usable context was loaded. */
+    commit: string | null;
+    /** True when the context is pinned at the corpus's own revision. */
+    matchesCorpusRevision: boolean;
+    /** How many ids the context pins at that revision. */
+    pinnedSkills: number;
+    /** sha256 of the exact context bytes consulted. */
+    sha256: string | null;
+    /** Set when a context was found but could not be used. */
+    problem: string | null;
+  };
+};
+
+/** Retrieval disclosure attached to every result (SPEC §5.2 `ranking`). */
+export type RankingDisclosure = RankingSummary & {
+  indexGeneratedAt: string;
+  indexAgeDays: number | null;
+  stale: boolean;
+  /** "committed" needed no network to rank; "fetched" reached the named source. */
+  indexOrigin: "committed" | "fetched";
+  source: string;
+  installability?: {
+    status: "not-configured" | "applied" | "not-applicable" | "unavailable";
+    projectionIndexPath?: string | undefined;
+    sourceUrl?: string | undefined;
+    warning?: string | undefined;
+  } | undefined;
 };
 
 export type SkippedCandidate = {
@@ -54,11 +167,29 @@ export type SuiteAttempt = {
 export type SummonOutcome = {
   query: string;
   surface: SummonSurface;
+  source: string;
   summoned: InstalledSkill[];
+  /** Populated only for `preview: true`. Nothing was written to disk. */
+  previewed: PreviewedSkill[];
+  /** Non-null when summon declined. It never returns the best of a bad set (#104). */
+  noMatch: Decision["noMatch"];
+  /** Every candidate withheld, with the current scoped reason. */
+  filtered: Decision["filtered"];
+  /** `(top − next) / top` — a retrieval diagnostic, never behavioral transition authority. */
+  margin: number;
   skipped: SkippedCandidate[];
   suites: SuiteAttempt[];
   sessionRoot: string;
-  ranking: RankingSummary;
+  ranking: RankingDisclosure;
+  /**
+   * Which behavioral lenses informed this outcome and which were absent
+   * (SPEC INV-13). Always present, including on a refusal: "we consulted
+   * nothing" is the answer disclosure asks for, and it is not the same answer
+   * as saying nothing at all.
+   */
+  arbor: SummonArborDisclosure;
+  /** Ordered records concerning this session/proposed set; no runtime assurance. */
+  composition: ArborCompositionReport;
   cards: string[];
   /** Wall-clock time for this whole invocation, seconds with ms precision. */
   totalSeconds: number;
@@ -68,7 +199,10 @@ type InstallContext = {
   session: SummonSession;
   registry: readonly NamedSkill[];
   payloadCache: PayloadCache;
-  ranking: RankingSummary;
+  ranking: RankingDisclosure;
+  disclosures: Map<string, RetrievalDisclosure>;
+  /** Arbor disclosure for one candidate id. Never affects what is installed. */
+  arborFor: (skillId: string, delivery?: ArborDeliveryContext) => ArborSubjectReport;
 };
 
 type InstallOutcome = {
@@ -92,7 +226,7 @@ type InstallOutcome = {
 export async function summon(
   service: GaiaService,
   session: SummonSession,
-  { query, limit = DEFAULT_LIMIT, surface = "hell" }: SummonOptions,
+  { query, limit = DEFAULT_LIMIT, surface = "hell", source, preview = false, taskSignals }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -105,17 +239,168 @@ export async function summon(
     );
   }
 
+  // The session root exists before anything else so that a `noMatch` and a
+  // `preview` are logged too — the Ultra controller needs the gaps that
+  // returned nothing at least as much as the ones that returned a skill.
   await reapSessions({ excludeRoots: [session.root] });
-  const registry = await service.namedSkills();
-  const ranked = rankCandidatesWithDetails(registry, trimmedQuery, surface);
-  const candidates = ranked.candidates;
   await session.ensureRoots();
+
+  // Offline-first: the committed index is the read path (SPEC §2.2). Only an
+  // explicit `source` we hold no index for reaches the network, and it fails
+  // loudly rather than falling back to the configured source.
+  const resolved = await service.skillIndex(source);
+  const decision = decide({
+    index: resolved.index,
+    query: trimmedQuery,
+    ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
+    surface,
+    source: resolved.source,
+  });
+  const ranking = disclose(resolved, decision);
+  const registry = resolved.index.docs.map(toNamedSkill);
+  const disclosures = disclosureById(decision, trimmedQuery);
+
+  // Arbor is consumed AFTER the decision is made, from a committed local cache,
+  // and it feeds nothing back into scoring or ordering: `decision.admitted` is
+  // already fixed above and is never re-sorted, filtered or re-scored below
+  // (SPEC INV-3, §4.2 "Arbor as a retrieval feature"). Reading it cannot fail
+  // the summon — a missing or malformed publication degrades to a disclosed
+  // unknown (SPEC INV-8).
+  const publication = await loadArborPublication();
+  const identity = await loadArborIdentityContext();
+  // Keep an indexed candidate with no route distinct from an id absent from
+  // the index: explicit null is the only value that can match an identity
+  // entry recording a canonical source absence.
+  const linkById = new Map<string, string | null>(
+    resolved.index.docs.map((doc) => [doc.id, doc.links.github ?? null]),
+  );
+  const canonicalIdentity = resolved.origin === "committed" &&
+    resolved.index.sourceWorkflow?.startsWith("gaia-skill-tree/") &&
+    resolved.index.sourceRevision !== undefined &&
+    identity.context?.corpusSource === resolved.source &&
+    identity.context.upstream === "https://github.com/gaia-research/gaia-skill-tree"
+    ? identity.context : null;
+  const knownContentSha256: Record<string, string> = Object.create(null);
+  for (const [skillId, sourceUrl] of linkById) {
+    const pin = resolveArborIdentity(canonicalIdentity, {
+      skillId, sourceUrl, corpusRevision: resolved.index.sourceRevision ?? null,
+    });
+    if (pin.pinned) knownContentSha256[skillId] = pin.contentSha256;
+  }
+  const arbor = summonArborDisclosure(
+    publication,
+    resolved,
+    identity,
+    Object.keys(knownContentSha256).length,
+  );
+  const arborFor = (
+    skillId: string,
+    delivery: ArborDeliveryContext = "not-materialized",
+  ): ArborSubjectReport => {
+    // The canonical content pin comes from the identity context, and ONLY when
+    // it was pinned at the same Tree revision this corpus was built from. A hash
+    // borrowed across revisions — including from a newer Arbor publication —
+    // would describe other bytes, so a miss stays honestly unknown.
+    const resolution = resolveArborIdentity(canonicalIdentity, {
+      skillId,
+      sourceUrl: linkById.get(skillId),
+      corpusRevision: arbor.corpus.revision,
+    });
+    return consumeArbor(publication, {
+      skillId,
+      contentSha256: resolution.pinned ? resolution.contentSha256 : null,
+      canonicalSource: arbor.corpus.canonical,
+      ...(resolution.pinned
+        ? {}
+        : { identityNote: describeArborIdentityMiss(resolution.miss) }),
+      delivery,
+    }, { knownContentSha256 });
+  };
+
+  const before = [...session.skills];
+  // The band judgment is the only place accepted Arbor evidence may change
+  // composition, and it moves breadth only. Relevance decided `decision.admitted`
+  // above; nothing below reorders, rescores, or filters it.
+  const bandOptions = taskSignals
+    ? { matchesConditions: conditionMatcher(taskSignals) }
+    : {};
+  const compositionFor = (additions: readonly CompositionMember[]) => sessionComposition(
+    publication, resolved.source, linkById, before,
+    (id) => arborFor(id, "delivered-unverified"), additions,
+    bandOptions,
+  );
+
+  if (decision.noMatch) {
+    const outcome: SummonOutcome = {
+      query: trimmedQuery,
+      surface,
+      source: resolved.source,
+      summoned: [],
+      previewed: [],
+      noMatch: decision.noMatch,
+      filtered: decision.filtered,
+      margin: 0,
+      composition: compositionFor([]),
+      skipped: [],
+      suites: [],
+      sessionRoot: session.root,
+      ranking,
+      arbor,
+      cards: [],
+      totalSeconds: elapsedSeconds(runStartedAt),
+    };
+    await appendSummonLog(session, outcome);
+    return outcome;
+  }
+
+  if (preview) {
+    // Rank and disclose, no disk write. A flag rather than a second tool,
+    // because agent tool-selection accuracy degrades as the surface grows
+    // (SPEC §5.1).
+    const outcome: SummonOutcome = {
+      query: trimmedQuery,
+      surface,
+      source: resolved.source,
+      summoned: [],
+      previewed: decision.admitted.slice(0, limit).map((hit) => ({
+        id: hit.doc.id,
+        name: hit.doc.name,
+        ...(hit.doc.title ? { title: hit.doc.title } : {}),
+        description: hit.doc.description,
+        ...(hit.doc.level ? { level: hit.doc.level } : {}),
+        ...(hit.doc.links.github ? { sourceUrl: hit.doc.links.github } : {}),
+        ...(hit.doc.installability ? { installability: hit.doc.installability } : {}),
+        source: resolved.source,
+        retrieval: disclosures.get(hit.doc.id) as RetrievalDisclosure,
+        arbor: arborFor(hit.doc.id),
+      })),
+      noMatch: null,
+      filtered: decision.filtered,
+      margin: decision.margin,
+      composition: compositionFor(decision.admitted.slice(0, limit).map((hit) => ({
+        role: "proposed", report: arborFor(hit.doc.id),
+      }))),
+      skipped: [],
+      suites: [],
+      sessionRoot: session.root,
+      ranking,
+      arbor,
+      cards: [],
+      totalSeconds: elapsedSeconds(runStartedAt),
+    };
+    await appendSummonLog(session, outcome);
+    return outcome;
+  }
+
+  const candidates = decision.admitted.map((hit) => hit.doc);
 
   const ctx: InstallContext = {
     session,
     registry,
     payloadCache: new PayloadCache(),
-    ranking: ranked.ranking,
+    ranking,
+    disclosures,
+    arborFor,
   };
   const summoned: InstalledSkill[] = [];
   const skipped: SkippedCandidate[] = [];
@@ -140,16 +425,171 @@ export async function summon(
     }
   }
 
-  return {
+  const outcome: SummonOutcome = {
     query: trimmedQuery,
     surface,
+    source: resolved.source,
     summoned,
+    previewed: [],
+    noMatch: null,
+    filtered: decision.filtered,
+    margin: decision.margin,
     skipped,
     suites,
     sessionRoot: session.root,
-    ranking: ranked.ranking,
+    ranking,
+    arbor,
+    composition: compositionFor(summoned.map((skill) => ({
+      role: "materialized", report: skill.arbor ?? arborFor(skill.id, "delivered-unverified"),
+    }))),
     cards: summoned.map((skill) => skill.card),
     totalSeconds: elapsedSeconds(runStartedAt),
+  };
+  await appendSummonLog(session, outcome);
+  return outcome;
+}
+
+function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosure {
+  const { index } = resolved;
+  const floorNote =
+    decision.floor === null
+      ? "no calibrated relevance floor in this index — summon cannot yet decline on relevance"
+      : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
+  const installabilityNote =
+    resolved.installability?.status === "applied"
+      ? `Tree installability projection applied from ${resolved.installability.projectionIndexPath ?? "an unspecified path"}; only exact verified negatives can withhold.`
+      : resolved.installability?.status === "unavailable"
+        ? `Optional Tree installability projection unavailable; materializability is unknown and summon continued offline (${resolved.installability.warning ?? "source error"}).`
+        : resolved.installability?.status === "not-applicable"
+          ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative."
+          : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
+  return {
+    // Heaven/Hell stamps are not built. Routing is relevance only, and this
+    // string is the surface that has to keep saying so.
+    mode: "relevance-only",
+    trustFields: [],
+    disclosure:
+      `Ranked by BM25F over the committed retrieval index; ${floorNote}. ` +
+      "The tree publishes no behavioural stamps, so no trust ordering is applied. " +
+      installabilityNote,
+    indexGeneratedAt: index.generatedAt,
+    indexAgeDays: indexAgeDays(index),
+    stale: isStale(index),
+    indexOrigin: resolved.origin,
+    source: resolved.source,
+    ...(resolved.installability ? { installability: resolved.installability } : {}),
+  };
+}
+
+/**
+ * The summon-level Arbor disclosure.
+ *
+ * Canonicality is decided on a signal the index actually publishes: the
+ * committed index records the upstream generator that produced its source
+ * projection (`gaia-skill-tree/scripts/…`). An index built at runtime from a
+ * flat GitHub fleet or an explicitly overridden source records none, so its
+ * candidates are correctly reported as outside the corpus the canonical Arbor
+ * projection describes — an id that collides there proves nothing.
+ */
+function summonArborDisclosure(
+  publication: ArborPublication,
+  resolved: ResolvedIndex,
+  identity: { context: ArborIdentityContext | null; problem: string | null; sha256: string | null },
+  pinnedSkills: number,
+): SummonArborDisclosure {
+  const base = describeArborPublication(publication);
+  const workflow = resolved.index.sourceWorkflow;
+  const canonical =
+    resolved.origin === "committed" &&
+    typeof workflow === "string" &&
+    workflow.startsWith("gaia-skill-tree/");
+  const revision = resolved.index.sourceRevision ?? null;
+  const publicationCommit = publication.provenance?.commit ?? null;
+  const sameUpstreamRevision =
+    revision === null || publicationCommit === null || publicationCommit === "unknown"
+      ? null
+      : revision === publicationCommit;
+
+  let note = base.note;
+  if (!canonical) {
+    note +=
+      " These candidates are outside the canonical corpus that projection describes, so no Arbor record can apply to them.";
+  } else if (sameUpstreamRevision === false) {
+    note +=
+      ` The retrieval corpus (${revision}) and the Arbor publication (${publicationCommit}) are pinned to different upstream revisions;` +
+      " a shared id across the two is not evidence of shared content.";
+  }
+
+  const identityMatches =
+    identity.context !== null && revision !== null && identity.context.commit === revision;
+  if (canonical && !identityMatches) {
+    note +=
+      identity.context === null
+        ? " No canonical identity context is available, so no candidate's content pin could be proven."
+        : " The canonical identity context is pinned at a different Tree revision than this corpus, so no content pin was used.";
+  }
+
+  return {
+    ...base,
+    note,
+    corpus: { source: resolved.source, revision, canonical, sameUpstreamRevision },
+    identity: {
+      commit: identity.context?.commit ?? null,
+      matchesCorpusRevision: identityMatches,
+      pinnedSkills,
+      sha256: identity.sha256,
+      problem: identity.problem,
+    },
+  };
+}
+
+/**
+ * `nameMatchesQuery` is false when the summoned skill is not the one the query
+ * named. #104 is exactly this case going unremarked, so it is computed once
+ * here and printed on the card.
+ */
+function disclosureById(decision: Decision, query: string): Map<string, RetrievalDisclosure> {
+  const normalizedQuery = normalize(query);
+  return new Map(
+    decision.admitted.map((hit) => [
+      hit.doc.id,
+      {
+        score: Math.round(hit.score * 10_000) / 10_000,
+        margin: decision.margin,
+        matchKind: hit.matchKind,
+        classified: hit.doc.classified,
+        nameMatchesQuery:
+          normalize(hit.doc.name) === normalizedQuery ||
+          normalize(hit.doc.id) === normalizedQuery ||
+          normalize(hit.doc.catalogRef ?? "") === normalizedQuery ||
+          normalizedQuery.includes(normalize(hit.doc.name)),
+      },
+    ]),
+  );
+}
+
+/** The index carries everything install needs; nothing else has to be fetched. */
+function toNamedSkill(doc: IndexedSkill): NamedSkill {
+  return {
+    id: doc.id,
+    name: doc.name,
+    ...(doc.title ? { title: doc.title } : {}),
+    contributor: doc.contributor,
+    ...(doc.genericSkillRef ? { genericSkillRef: doc.genericSkillRef } : {}),
+    ...(doc.catalogRef ? { catalogRef: doc.catalogRef } : {}),
+    ...(doc.invocation === "any" ? {} : { invocation: doc.invocation }),
+    origin: "tree",
+    status: "named",
+    ...(doc.level ? { level: doc.level } : {}),
+    description: doc.description,
+    tags: doc.tags,
+    links: { ...doc.links },
+    ...(doc.suiteComponents.length > 0 ? { suiteComponents: doc.suiteComponents } : {}),
+    evidence: [],
+    ...(doc.installability ? { installability: doc.installability } : {}),
+    ...(doc.trust.trustNumber === undefined ? {} : { trustMagnitude: doc.trust.trustNumber }),
+    ...(doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {}),
+    ...(doc.registryOnly ? { installable: false } : {}),
   };
 }
 
@@ -373,6 +813,7 @@ async function installSingle(
       name: skill.name,
       contributor: skill.contributor,
       ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.installability ? { installability: skill.installability } : {}),
       ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
@@ -385,6 +826,9 @@ async function installSingle(
       cache: "warm",
       cacheSource: "session",
       inspectUrl: inspectUrl(githubUrl, repoUrl),
+      source: ctx.ranking.source,
+      ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds: 0,
       materializeSeconds: 0,
       totalSeconds: elapsedSeconds(skillStartedAt),
@@ -426,9 +870,10 @@ async function installSingle(
         "",
       );
       const cacheDir = path.join(ctx.session.cacheRoot, cacheOwner, repoName);
-      transientClone = cacheDir;
       let cloneOutcome;
       try {
+        await assertConfinedPath(ctx.session.root, cacheDir, "Cache path");
+        transientClone = cacheDir;
         cloneOutcome = await ensureCachedRepo(cacheDir, repoUrl, branch);
       } catch (error) {
         return {
@@ -438,7 +883,18 @@ async function installSingle(
           reason: `Could not clone ${repoUrl}: ${errorMessage(error)}`,
         };
       }
-      sourceSkillPath = path.join(cloneOutcome.path, subpath);
+      try {
+        const candidatePath = path.resolve(cloneOutcome.path, subpath);
+        await assertConfinedPath(cloneOutcome.path, candidatePath, "Skill source path");
+        sourceSkillPath = candidatePath;
+      } catch (error) {
+        return {
+          ok: false,
+          installed: [],
+          suites: [],
+          reason: `Unsafe skill subpath '${subpath}' in ${repoUrl}: ${errorMessage(error)}`,
+        };
+      }
       retainedIdentity = { repoUrl, commit: cloneOutcome.commit, subpath };
     }
 
@@ -475,6 +931,7 @@ async function installSingle(
     const destDir = path.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
+      await assertConfinedPath(ctx.session.root, destDir, "Materialization path");
       materializeOutcome = await materializeSkillDir(sourceSkillPath, destDir);
     } catch (error) {
       return {
@@ -497,6 +954,7 @@ async function installSingle(
       name: skill.name,
       contributor: skill.contributor,
       ...(skill.invocation ? { invocation: skill.invocation } : {}),
+      ...(skill.installability ? { installability: skill.installability } : {}),
       ...(skill.origin ? { origin: skill.origin } : {}),
       sourceUrl: githubUrl,
       repoUrl,
@@ -509,6 +967,9 @@ async function installSingle(
       cache: cacheState,
       cacheSource,
       inspectUrl: inspectUrl(githubUrl, repoUrl),
+      source: ctx.ranking.source,
+      ...(ctx.disclosures.get(skill.id) ? { retrieval: ctx.disclosures.get(skill.id) } : {}),
+      arbor: ctx.arborFor(skill.id, "delivered-unverified"),
       cloneSeconds,
       materializeSeconds: materializeOutcome.materializeSeconds,
       totalSeconds: elapsedSeconds(skillStartedAt),

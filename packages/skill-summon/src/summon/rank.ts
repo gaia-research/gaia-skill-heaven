@@ -1,5 +1,5 @@
 import type { NamedSkill } from "../domain/types.js";
-import { isInstallable, scoreMatch } from "../service.js";
+import { isSummonable, scoreMatch } from "../service.js";
 import { trustFields, trustScore } from "../trust.js";
 
 /**
@@ -46,7 +46,7 @@ export function rankCandidatesWithDetails(
   const fleet = candidates.some((skill) => skill.origin === "fleet");
   const scored = candidates
     .filter((skill) => allowedOnSurface(skill, surface))
-    .filter(isInstallable)
+    .filter(isSummonable)
     .map((skill) => ({ skill, relevance: relevanceScore(skill, query) }))
     .filter(({ relevance }) => relevance >= MIN_RELEVANCE);
 
@@ -118,7 +118,12 @@ function allowedOnSurface(skill: NamedSkill, surface: SummonSurface): boolean {
   return true;
 }
 
-function relevanceScore(skill: NamedSkill, query: string): number {
+/**
+ * Exported for `test/index-parity.test.ts`, which pins these weights to
+ * `skill-zero`'s `baselineRelevance`. The benchmark's baseline number is only
+ * the product's number while the two agree.
+ */
+export function relevanceScore(skill: NamedSkill, query: string): number {
   return scoreMatch(query, [
     [skill.name, 12],
     [skill.id, 10],

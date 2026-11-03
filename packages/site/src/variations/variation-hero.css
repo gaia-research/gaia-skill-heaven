@@ -116,6 +116,16 @@ body.vh-hero-page {
   -webkit-user-drag: none;
 }
 
+/* Force highest-quality resampling on Chrome/Firefox when the compositor
+   scales the figure up. high-quality tells the browser to resample from the
+   source bitmap rather than the GPU-rasterized layer texture.
+   Safari uses high-quality bilinear by default so no override is needed there;
+   -webkit-optimize-contrast would wrongly enable nearest-neighbor (pixel art
+   mode) and must NOT be set. */
+.vha-lucy {
+  image-rendering: high-quality;
+}
+
 .vha-wing {
   bottom: 0;
   height: 100%;
@@ -401,23 +411,41 @@ body.vh-hero-page {
   bottom: 7vh;
   translate: -50% 0;
   width: min(90vw, 660px);
-  z-index: 6;
+  z-index: 50;
   text-align: center;
   padding-top: 26px;
   /* Legibility scrim so the ladder + commands read over the busy figure. */
   background: linear-gradient(to top, var(--vha-bg) 4%, var(--vha-bg-soft) 52%, var(--vha-bg-none) 100%);
 }
 
+.vha-ladderband {
+  position: relative;
+  z-index: 52;
+  pointer-events: auto;
+}
+
 .vha-chiprow {
+  position: relative;
+  z-index: 53;
+  pointer-events: auto;
   display: flex;
   gap: 4px;
   margin-bottom: 9px;
 }
 .vha-rungrow {
+  position: relative;
+  z-index: 53;
+  pointer-events: auto;
   display: flex;
   gap: 4px;
   align-items: flex-end;
   margin-bottom: 12px;
+}
+.vha-rung-btn {
+  position: relative;
+  z-index: 54;
+  pointer-events: auto;
+  cursor: pointer;
 }
 .vha-stopnote {
   font-size: 11px;
@@ -545,7 +573,6 @@ body.vh-hero-page {
   height: 20%;
   transform: rotate(-28deg);
 }
-
 .vha-scan,
 .vhb-scan {
   position: absolute;
@@ -710,12 +737,13 @@ body.vh-hero-page {
 /* ─────────────────────────────────────────────────────────────────────────
    Upper-left explainer — whisper-quiet, dismissable, responsive to mobile.
    Acts 1–4: "What is this?" (the system). Act 5: "Skill entropy" + a sketch.
+   Positioned below the persistent top-left .vha-live bar to avoid overlap.
    ───────────────────────────────────────────────────────────────────────── */
 .vha-info {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
-  z-index: 40;
+  top: 58px;
+  left: 8vw;
+  z-index: 60;
   pointer-events: auto;
   max-width: min(88vw, 340px);
 }
@@ -798,9 +826,9 @@ body.vh-hero-page {
 }
 .vha-info-nub {
   position: absolute;
-  top: clamp(14px, 2.6vh, 26px);
-  left: clamp(16px, 8vw, 120px);
-  z-index: 40;
+  top: 58px;
+  left: 8vw;
+  z-index: 60;
   pointer-events: auto;
   width: 22px;
   height: 22px;
@@ -821,8 +849,8 @@ body.vh-hero-page {
 @media (max-width: 640px) {
   .vha-info,
   .vha-info-nub {
-    left: 14px;
-    top: 12px;
+    left: 16px;
+    top: 68px;
   }
   /* Mobile keeps the "About" word readable — there is no boxed "?" glyph left
      to fall back to (see .vha-info-q below), so hiding the label here would
@@ -842,7 +870,7 @@ body.vh-hero-page {
   position: fixed;
   top: 58px;
   right: 8vw;
-  z-index: 40;
+  z-index: 60;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1170,6 +1198,7 @@ body.vh-hero-page {
   border: 1px solid currentColor;
   background: transparent;
   cursor: pointer;
+  min-height: 26px;
   padding: 3px 8px;
   font: inherit;
   letter-spacing: 0.14em;
@@ -1225,6 +1254,16 @@ body.vh-hero-page {
 .vha-cta-door:hover,
 .vha-cta-link:hover {
   opacity: 0.72;
+}
+/* "Choose your harness" — the primary next step after the install line. */
+.vha-cta-door--start {
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 36px;
+}
+.vha-cta-termhead .sh-platform-toggle,
+.vha-cta-termhead .sh-platform-toggle__btn {
+  min-height: 26px;
 }
 /* The copy-command control, demoted to secondary (Open the door is primary —
    see .vha-cta-cmd below): a slash command reads wrong in the door's all-caps
@@ -1326,10 +1365,8 @@ a.vha-cta-mini:hover,
     padding-top: 0;
     background: none;
     text-align: left;
-    /* Above the wordmark's layer. The two do not overlap in this composition,
-       but the ordering is what makes the scrim, the type and the interface read
-       in that order back to front. */
-    z-index: 8;
+    /* Above the wordmark's layer and dragger. Sits on top of the figure dragger. */
+    z-index: 50;
   }
 
   /* The two plates flank her HEAD, in the upper band where the frame's outer
@@ -1385,7 +1422,11 @@ a.vha-cta-mini:hover,
      radius, no border — the poster's own language, and the only thing that
      keeps an install line readable with 160px of type running under it. */
   .vha-ctawrap--flank .vha-cta {
-    background: var(--vha-bg);
+    /* Feathered rather than cut: the plate dissolves into the room's light
+       (#200) instead of punching a hard rectangle through it. Still ~90% band
+       ground under the text, so every line keeps its contrast. */
+    background: var(--vha-bg-plate, var(--vha-bg));
+    box-shadow: 0 0 36px 22px var(--vha-bg-plate, var(--vha-bg));
     padding-block: 16px;
   }
 
@@ -1442,4 +1483,26 @@ a.vha-cta-mini:hover,
   transform: translateY(24vh);
   opacity: 0;
   pointer-events: none;
+}
+
+/* Production status link (#174) — mirrors "Go to Site →" on the opposite corner. */
+.vha-live {
+  right: auto;
+  left: 8vw;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.vha-live__dot {
+  width: 7px;
+  height: 7px;
+  background: #71ccae;
+  flex: none;
+}
+@media (max-width: 640px) {
+  .vha-live {
+    left: 16px;
+    padding: 8px 11px;
+  }
 }

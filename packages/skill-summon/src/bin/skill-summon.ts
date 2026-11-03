@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { resolveSkillSource } from "../data/configured-source.js";
+import { arborCompositionLines, arborPublicationLines, arborSubjectLines } from "skill-zero";
+
+import { createConfiguredService } from "../configured-service.js";
 import type { TrustFields } from "../domain/types.js";
-import { GaiaService } from "../service.js";
 import {
   findSession,
   listSessions,
@@ -15,13 +16,17 @@ import { displayTrustFields } from "../trust.js";
 const LABEL_WIDTH = 8;
 
 const USAGE = `Usage:
-  skill-summon summon "<intent>" [--count N] [--card | --json]
+  skill-summon summon "<intent>" [--count N] [--source <url|owner/repo>] [--preview] [--card | --json]
   skill-summon list [--json]
   skill-summon sessions [--json]
   skill-summon attach <session-id|name|root> [--json]
   skill-summon path [--json]
   skill-summon close [--json]
   skill-summon gc [--dry-run] [--json]
+
+Optional evidence (off by default):
+  SKILL_SUMMON_INSTALLABILITY=<local-json-path|file-url|http(s)-url>
+  Explicit HTTP(S) opts into one projection fetch per summon. Failures stay unknown.
 `;
 
 class UsageError extends Error {
@@ -35,6 +40,8 @@ type ParsedArgs = {
   json: boolean;
   card: boolean;
   dryRun: boolean;
+  source: string | undefined;
+  preview: boolean;
 };
 
 async function main(): Promise<void> {
@@ -70,20 +77,40 @@ async function runSummon(args: ParsedArgs): Promise<void> {
   if (!args.query) {
     throw new UsageError(`summon requires a query.\n\n${USAGE}`);
   }
-  const service = createService();
+  const service = createConfiguredService();
   const { session, created } = await resolveSession();
   noteIfCreated(created, session.root);
 
   const outcome = await summon(service, session, {
     query: args.query,
     limit: args.limit,
+    ...(args.source === undefined ? {} : { source: args.source }),
+    ...(args.preview ? { preview: true } : {}),
   });
 
+  if (!args.json) {
+    process.stdout.write(`${outcome.ranking.disclosure}\n`);
+    process.stdout.write(`${arborCompositionLines(outcome.composition).join("\n")}\n`);
+  }
   if (args.json) {
     writeJson(outcome);
   } else if (args.card) {
+    // SPEC INV-13: the publication-level half of the disclosure — which
+    // behavioral projection was available at all, and pinned to what.
+    process.stdout.write(`${arborPublicationLines(outcome.arbor, outcome.arbor.identity).join("\n")}\n\n`);
     process.stdout.write(`${outcome.cards.join("\n\n")}\n`);
   } else {
+    process.stdout.write(`${arborPublicationLines(outcome.arbor, outcome.arbor.identity).join("\n")}\n`);
+    for (const preview of outcome.previewed) {
+      process.stdout.write(
+        `  preview   ${preview.id}  score ${preview.retrieval.score.toFixed(2)} · margin ${preview.retrieval.margin.toFixed(2)} · ${preview.retrieval.matchKind}\n`,
+      );
+      // A preview installs nothing, so its card is never printed — the lens
+      // disclosure has to ride the preview line itself or it is lost.
+      for (const line of arborSubjectLines(preview.arbor)) {
+        process.stdout.write(`  ${line.trimStart()}\n`);
+      }
+    }
     for (const result of outcome.summoned) {
       printSkillLine("summoned", result.id, mergedTrust(result), result.path, {
         totalSeconds: result.totalSeconds,
@@ -108,7 +135,33 @@ async function runSummon(args: ParsedArgs): Promise<void> {
     process.stdout.write(`  total     ${outcome.totalSeconds.toFixed(3)}s\n`);
   }
 
-  if (outcome.summoned.length === 0) {
+  if (outcome.noMatch) {
+    // Declining is a result, not a failure to explain away. Print what was
+    // close, and what was withheld and why (SPEC §4.2).
+    process.stderr.write(
+      `skill-summon: no match for "${outcome.query}" in ${outcome.source} (${outcome.noMatch.reason}).\n`,
+    );
+    for (const candidate of outcome.noMatch.topCandidates) {
+      process.stderr.write(
+        `  closest ${candidate.id}  score ${candidate.score.toFixed(2)}` +
+          (candidate.floor === null ? "" : ` (floor ${candidate.floor.toFixed(2)})`) +
+          "\n",
+      );
+    }
+    for (const withheld of outcome.noMatch.filtered.slice(0, 5)) {
+      process.stderr.write(`  withheld ${withheld.id}: ${withheld.why}\n`);
+    }
+    process.stderr.write(`  ${outcome.noMatch.suggestion}\n`);
+    // A refusal discloses its lenses too: declining on relevance says nothing
+    // about behavior, and the surface must not let that read as a judgement.
+    for (const line of arborPublicationLines(outcome.arbor, outcome.arbor.identity)) {
+      process.stderr.write(`${line}\n`);
+    }
+    process.exitCode = 1;
+    return;
+  }
+
+  if (outcome.summoned.length === 0 && outcome.previewed.length === 0) {
     process.stderr.write(
       `skill-summon: no skill could be summoned for "${outcome.query}".\n`,
     );
@@ -227,10 +280,6 @@ async function runGc(args: ParsedArgs): Promise<void> {
   );
 }
 
-function createService(): GaiaService {
-  return new GaiaService(resolveSkillSource().source);
-}
-
 function noteIfCreated(created: boolean, root: string): void {
   if (!created) return;
   process.stderr.write(
@@ -298,6 +347,8 @@ function parseArgs(argv: string[]): ParsedArgs {
   let json = false;
   let card = false;
   let dryRun = false;
+  let source: string | undefined;
+  let preview = false;
   const positionals: string[] = [];
 
   for (let i = 0; i < rest.length; i++) {
@@ -332,6 +383,21 @@ function parseArgs(argv: string[]): ParsedArgs {
       limit = parseCount(arg.slice("--limit=".length));
       continue;
     }
+    if (arg === "--source") {
+      const value = rest[i + 1];
+      if (value === undefined) throw new UsageError("--source requires a value.");
+      source = value;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--source=")) {
+      source = arg.slice("--source=".length);
+      continue;
+    }
+    if (arg === "--preview") {
+      preview = true;
+      continue;
+    }
     if (arg.startsWith("-")) {
       throw new UsageError(`Unknown flag: ${arg}\n\n${USAGE}`);
     }
@@ -347,11 +413,17 @@ function parseArgs(argv: string[]): ParsedArgs {
   if (limit !== undefined && command !== "summon") {
     throw new UsageError("--count is only valid with summon.");
   }
+  if (source !== undefined && command !== "summon") {
+    throw new UsageError("--source is only valid with summon.");
+  }
+  if (preview && command !== "summon") {
+    throw new UsageError("--preview is only valid with summon.");
+  }
   if (card && json) {
     throw new UsageError("--card and --json cannot be used together.");
   }
 
-  return { command, query: positionals[0], limit, json, card, dryRun };
+  return { command, query: positionals[0], limit, json, card, dryRun, source, preview };
 }
 
 function parseCount(value: string): number {

@@ -9,6 +9,7 @@ row.
   [dashboard-icons](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grok.svg).
 - `grok-dark.svg` — owner-supplied dark-background Grok mark, from
   [dashboard-icons](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grok-dark.svg).
+- `antigravity.svg` — official Google Antigravity mark from theSVG (MIT licence, https://thesvg.org/icon/google-antigravity, 24×24 viewBox).
 
 SHA-256 checksums of the copied files:
 
@@ -16,4 +17,5 @@ SHA-256 checksums of the copied files:
 5c45d3f276c82e3ed7318d9bac320dc1645c95428dd7a036e80aef84b0e555a3  hermes.webp
 f44f4ea37fa04ffbaa39eb87e004a5b5be0e82b849a9dd77d23cd003c899e342  grok.svg
 80567fefe8f0a38be1b178af4734b9dc18047ced81e4f81e720dee7db84ec443  grok-dark.svg
+8f3a5fcc175c5e2c971e775e5739ee510ef0156ad3147b799a866aef4313b2d9  antigravity.svg
 ```

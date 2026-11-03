@@ -1,3 +1,5 @@
+import type { InstallabilityAssessment } from "skill-zero";
+
 export const TREE_CONTRACT_VERSION = "gaia-public-v1" as const;
 
 export type GaiaEvidence = {
@@ -54,6 +56,8 @@ export type NamedSkill = {
   status: string;
   level?: string | undefined;
   description: string;
+  /** Source-provided SKILL.md frontmatter, when the projection preserves it. */
+  frontmatter?: Record<string, unknown> | undefined;
   catalogRef?: string | undefined;
   tags: string[];
   links: Record<string, unknown>;
@@ -66,6 +70,8 @@ export type NamedSkill = {
   updatedAt?: string | undefined;
   /** Registry-only guard: `false` means this skill must refuse to install. */
   installable?: boolean | undefined;
+  /** Consumer-side Tree installability evidence, never used for ranking. */
+  installability?: InstallabilityAssessment | undefined;
   /** Skill ids/catalogRefs/bare-names installed recursively as a suite. */
   suiteComponents?: string[] | undefined;
 };
@@ -83,6 +89,7 @@ export type NamedRegistryDocument = {
   schemaVersion?: string | undefined;
   generatedAt: string;
   buckets: Record<string, NamedSkill[]>;
+  awaitingClassification?: NamedSkill[] | undefined;
 };
 
 export type GaiaRegistryDocuments = {
@@ -90,8 +97,34 @@ export type GaiaRegistryDocuments = {
   named: NamedRegistryDocument;
 };
 
+/** Flatten both named projection surfaces without duplicating a skill id. */
+export function flattenNamedSkills(document: NamedRegistryDocument): NamedSkill[] {
+  const byId = new Map<string, NamedSkill>();
+  for (const skill of [
+    ...Object.values(document.buckets).flat(),
+    ...(document.awaitingClassification ?? []),
+  ]) {
+    const previous = byId.get(skill.id);
+    if (!previous) {
+      byId.set(skill.id, skill);
+      continue;
+    }
+    const suiteComponents = [
+      ...(previous.suiteComponents ?? []),
+      ...(skill.suiteComponents ?? []),
+    ];
+    byId.set(skill.id, {
+      ...previous,
+      ...(suiteComponents.length > 0
+        ? { suiteComponents: [...new Set(suiteComponents)] }
+        : {}),
+    });
+  }
+  return [...byId.values()];
+}
+
 export type RegistrySourceInfo = {
-  kind?: "tree" | "fleet" | undefined;
+  kind?: "tree" | "fleet" | "unknown" | undefined;
   rootUrl?: string | undefined;
   genericUrl: string;
   namedUrl: string;
@@ -107,7 +140,7 @@ export type GaiaRegistrySnapshot = GaiaRegistryDocuments & {
 export type ResultMetadata = {
   serverVersion: string;
   mode: "registry";
-  sourceKind: "tree" | "fleet";
+  sourceKind: "tree" | "fleet" | "unknown";
   routingMode: "generic-map+collection" | "collection-only";
   contractVersion: typeof TREE_CONTRACT_VERSION;
   supportedContractVersions: [typeof TREE_CONTRACT_VERSION];
