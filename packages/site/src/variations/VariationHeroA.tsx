@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { HERO_ASSET_SETS, normalizeLucyAssetSet, preloadLucyAssets } from './hero/heroAssets'
+import { HERO_ASSET_SETS, HEAVEN_POSTER_READY, normalizeLucyAssetSet, preloadLucyAssets } from './hero/heroAssets'
 import { useHeroEngine } from './hero/useHeroEngine'
 import { HeroInfo, HeroSummon } from './hero/HeroInfo'
 import { DOORS, PLATFORM_COMMANDS, type Platform } from '../product'
@@ -11,6 +11,9 @@ import { WingsTunerHUD } from './hero/WingsTunerHUD'
 import { LucyAtmosphere } from '../lucy-scene/atmosphere/LucyAtmosphere'
 import { LucyLive } from '../lucy-scene/LucyLive'
 import { LucyRiveFigure, prefersReducedMotion } from '../lucy-scene/rive/LucyRiveFigure'
+import type { LucyLoadProgress } from '../lucy-scene/rive/createLucyCharacter'
+import { Entrance } from '../lucy-scene/entrance/Entrance'
+import { useEntrance } from '../lucy-scene/entrance/useEntrance'
 import { useSceneLifecycle } from '../lucy-scene/useSceneLifecycle'
 import './variation-hero.css'
 
@@ -77,7 +80,7 @@ function isTunerRequested(): boolean {
 // Review switches for the Lucy Scene (#205): `?atmo=off` shows Lucy without
 // the atmosphere, `?lucy=off` shows the atmosphere without Lucy (figure, wings
 // and katana). Read once; they are review aids, not product state.
-function sceneReviewFlag(name: 'atmo' | 'lucy'): boolean {
+function sceneReviewFlag(name: 'atmo' | 'lucy' | 'entrance'): boolean {
   if (typeof window === 'undefined') return false
   const fromSearch = new URLSearchParams(window.location.search).get(name)
   const hashQuery = window.location.hash.split('?')[1] ?? ''
@@ -119,9 +122,36 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   const [reducedMotion] = useState(() => prefersReducedMotion())
   const [riveFailed, setRiveFailed] = useState(false)
   const onRiveFailed = useCallback(() => setRiveFailed(true), [])
-  // One lifecycle signal for everything in the scene (atmosphere now, the
-  // Rive character later): `data-scene-running` on the hero root.
-  useSceneLifecycle(rootRef)
+  // Skip on the entrance (owner, 2026-11-04): straight to the WebP masters,
+  // no session flag. It takes the same path as a Rive failure, so the canvas
+  // is gone before the masters show — never two figures on one page.
+  const [lucyStill, setLucyStill] = useState(false)
+  // `?entrance=off` keeps the small in-figure veil for review.
+  const [entranceOff] = useState(() => sceneReviewFlag('entrance'))
+  // Retry after a failure remounts the figure.
+  const [riveKey, setRiveKey] = useState(0)
+  // Byte and readiness progress from the figure, throttled to ~10 Hz so a
+  // 15 MB download does not re-render the hero per chunk.
+  const [lucyProgress, setLucyProgress] = useState<LucyLoadProgress | null>(null)
+  const progressPending = useRef<LucyLoadProgress | null>(null)
+  const progressTimer = useRef(0)
+  const onLucyProgress = useCallback((p: LucyLoadProgress) => {
+    progressPending.current = p
+    if (progressTimer.current) return
+    progressTimer.current = window.setTimeout(() => {
+      progressTimer.current = 0
+      if (progressPending.current) setLucyProgress(progressPending.current)
+    }, 100)
+  }, [])
+  useEffect(() => () => window.clearTimeout(progressTimer.current), [])
+  const [posterReady, setPosterReady] = useState(false)
+  useEffect(() => {
+    let on = true
+    void HEAVEN_POSTER_READY.then(() => on && setPosterReady(true))
+    return () => {
+      on = false
+    }
+  }, [])
 
   // Hotkey toggle: Ctrl+Shift+L toggles Lucy tuner, Ctrl+Shift+W toggles Wings tuner
   useEffect(() => {
@@ -157,8 +187,45 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // The Rive rig is built from the v5 masters, so only the v5 set goes live.
   // When it is live the masters never show (they only hold the figure's layout):
   // no poster under the canvas, during transitions, or while a state loads.
-  const riveOn = set === 'v5' && !lucyStatic && !reducedMotion && !riveFailed
+  const riveOn = set === 'v5' && !lucyStatic && !reducedMotion && !riveFailed && !lucyStill
   const assets = HERO_ASSET_SETS[set][v.lucyState]
+
+  // The entrance: the loading screen in front of the hero while the live
+  // figure arrives (Gateway, owner's pick 2026-11-04). It reads the figure's
+  // progress and cuts when READY; Skip hands the session to the masters.
+  const [entered, setEntered] = useState(false)
+  const onEntranceCut = useCallback((kind: 'live' | 'static') => {
+    if (kind === 'static') setLucyStill(true)
+    setEntered(true)
+  }, [])
+  const entrance = useEntrance({
+    enabled: riveOn && !entranceOff,
+    progress: lucyProgress,
+    failed: riveFailed,
+    posterReady,
+    onCut: onEntranceCut,
+  })
+  const retryRive = useCallback(() => {
+    setRiveFailed(false)
+    setLucyProgress(null)
+    setRiveKey((k) => k + 1)
+  }, [])
+  // One lifecycle signal for everything in the scene: `data-scene-running`
+  // on the hero root, held false while the entrance covers it.
+  useSceneLifecycle(rootRef, entrance.visible)
+  // While the entrance is up the hero is neither reachable nor announced.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return undefined
+    if (entrance.visible) {
+      root.setAttribute('inert', '')
+      root.setAttribute('aria-hidden', 'true')
+    } else {
+      root.removeAttribute('inert')
+      root.removeAttribute('aria-hidden')
+    }
+    return undefined
+  }, [entrance.visible, rootRef])
 
   const onSelectScene = useCallback(
     (targetScene: 'zero' | 'heaven' | 'hell' | 'ultra') => {
@@ -255,16 +322,19 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     window.addEventListener('click', reveal, { once: true })
     return () => window.removeEventListener('click', reveal)
   }, [])
-  // Preload and pre-decode all character and weapon assets into memory/GPU cache
+  // Preload and pre-decode the character and weapon assets into memory/GPU
+  // cache. In the live path only the Heaven master comes first (Skip needs
+  // it); the rest would compete with the figure file and Ultra's sidecars, so
+  // they follow once the entrance has cut.
   useEffect(() => {
-    preloadLucyAssets(set)
+    void preloadLucyAssets(set, riveOn && !entered ? ['heaven'] : ['zero', 'heaven', 'hell', 'ultra'])
     const wings = [wingLeft, wingRight]
     wings.forEach((src) => {
       const img = new Image()
       img.src = src
       img.decode?.().catch(() => {})
     })
-  }, [set])
+  }, [set, riveOn, entered])
 
   // Per-scene accent for the quiet explainers (no red).
   const accent =
@@ -280,6 +350,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   }, [])
 
   return (
+    <>
     <div
       ref={rootRef}
       className={`vha${bare ? ' vha--bare' : ''}${focus ? ' vha--focus' : ''}`}
@@ -484,8 +555,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         })}
         {riveOn && (
           <LucyRiveFigure
+            key={riveKey}
             state={v.lucyState}
             onFailed={onRiveFailed}
+            onProgress={onLucyProgress}
+            veil={entranceOff}
             figureStyle={{
               transform: `scale(calc(${(Number(v.mLucy) * v.figZoom).toFixed(3)} * var(--lucy-user-zoom, 1)))`,
               transformOrigin: v.figOrigin,
@@ -851,5 +925,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
         />
       )}
     </div>
+    {entrance.visible && <Entrance entrance={entrance} progress={lucyProgress} onRetry={retryRive} />}
+    </>
   )
 }
