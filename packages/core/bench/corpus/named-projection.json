@@ -2,13 +2,13 @@
   "snapshot": {
     "url": "https://gaiaskilltree.com/graph/named/index.json",
     "source": "https://gaiaskilltree.com",
-    "digest": "sha256:16215ffe5bccdab6b9e14d3c02e4ff2f0fb3b73776cabe1ac23d500fd9ec5bb8",
-    "capturedAt": "2026-09-07T11:51:19.675Z",
-    "sourceRevision": "abf41d304f35fa27bbd8e32be5f6d7d880d6b232",
-    "sourceVersion": "v8.4.1",
+    "digest": "sha256:6e6d6513428c6f7654e2098712cd4939c2a4cc7c5c3ccfb3394b984a75b55b10",
+    "capturedAt": "2026-10-30T16:08:17.792Z",
+    "sourceRevision": "dc07528884a759dbd3668d4a0007469265ab396f",
+    "sourceVersion": "v8.29.1",
     "sourceWorkflow": "gaia-skill-tree/scripts/generateNamedIndex.py -> docs/graph/named/index.json"
   },
-  "generatedAt": "2026-09-07",
+  "generatedAt": "2026-10-30",
   "buckets": {
     "adaptive-pattern-learning": [
       {
@@ -59,7 +59,39 @@
         }
       }
     ],
+    "adversarial-review": [
+      {
+        "id": "addy-osmani/doubt-driven-development",
+        "name": "doubt-driven-development",
+        "title": "doubt-driven-development",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "adversarial-review",
+        "description": "Subjects every non-trivial decision to a fresh-context adversarial review before it stands. Use when you want every assumption cross-examined before proceeding, when stress-testing a plan for hidden failure modes, when correctness matters more than speed, when working in unfamiliar code, when stakes are high (production auth, security-sensitive logic, a high-stakes migration, irreversible operations), or any time a confident output would be cheaper to verify now than to debug later.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/doubt-driven-development/SKILL.md"
+        }
+      }
+    ],
     "agent-environment-setup": [
+      {
+        "id": "addy-osmani/context-engineering",
+        "name": "context-engineering",
+        "title": "context-engineering",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "agent-environment-setup",
+        "description": "Optimizes agent context setup. Use when starting a new session, when agent output quality degrades, when switching between tasks, or when you need to configure rules files and context for a project.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/context-engineering/SKILL.md"
+        }
+      },
       {
         "id": "firecrawl/firecrawl-build-onboarding",
         "name": "Firecrawl Onboarding",
@@ -103,7 +135,7 @@
         "genericSkillRef": "agent-fusion",
         "description": "Orchestrate multiple specialized AI models as a fused agentic team: form opinions, merge parallel plans, and auto-validate outputs to achieve frontier performance at reduced cost.",
         "tags": [],
-        "level": "1★",
+        "level": "2★",
         "status": "named",
         "overallTrustGrade": "C",
         "trustMagnitude": 37.54,
@@ -222,12 +254,12 @@
         "genericSkillRef": "agent-reach",
         "description": "Gives an AI agent internet access by routing web requests across 16+ platforms with MCP support and harness-agnostic integration.",
         "tags": [],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 53.86,
         "links": {
-          "github": "https://github.com/Panniantong/Agent-Reach/blob/main/SKILL.md"
+          "github": "https://github.com/Panniantong/Agent-Reach/blob/main/agent_reach/skill/SKILL.md"
         }
       }
     ],
@@ -391,6 +423,27 @@
         }
       }
     ],
+    "autonomous-engineering-platform": [
+      {
+        "id": "hikari9/auto-office",
+        "name": "Auto Office",
+        "title": "Auto Office",
+        "contributor": "hikari9",
+        "genericSkillRef": "autonomous-engineering-platform",
+        "description": "Adaptive office engineering runtime for the complete lifecycle from intent through planning, routed execution, independent review, verification, and closeout, driven through one `office` CLI. Use when explicitly invoked as /auto-office or when the user directly asks to run an Auto Office lifecycle. Routes each role by harness, model, and effort under pinned policy, trust and capability floors, and live quota; the runtime owns state, receipts, evidence, and review mechanics. Preserves human merge-to-main unless the user chose merge or end-to-end at intake, no-self-approval, private evidence, and version-pinned runs.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "B",
+        "trustMagnitude": 88.97,
+        "suiteComponents": [
+          "hikari9/office-submit"
+        ],
+        "links": {
+          "github": "https://github.com/Hikari9/auto-office/blob/da6aa9a93dbab98c03d2fbb3593f994acf85d7a7/SKILL.md"
+        }
+      }
+    ],
     "autonomous-web-research": [
       {
         "id": "balukosuri/autoresearch-universal",
@@ -429,7 +482,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 205.15,
+        "trustMagnitude": 205.75,
         "links": {
           "github": "https://github.com/mvanhorn/last30days-skill/blob/main/skills/last30days/SKILL.md"
         }
@@ -437,7 +490,7 @@
     ],
     "brainstorming": [
       {
-        "id": "gsd-build/discuss-phase",
+        "id": "gsd-build/gsd-discuss-phase",
         "name": "GSD Discuss Phase",
         "title": "GSD Discuss Phase",
         "contributor": "gsd-build",
@@ -449,7 +502,7 @@
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/discuss-phase.md"
+          "github": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-discuss-phase/SKILL.md"
         }
       },
       {
@@ -487,7 +540,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 184.32,
+        "trustMagnitude": 184.87,
         "links": {
           "github": "https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md"
         }
@@ -532,8 +585,8 @@
         }
       },
       {
-        "id": "gooseworks/notte-browser",
-        "name": "Notte Browser",
+        "id": "gooseworks/browser-automation-notte",
+        "name": "Browser Automation Notte",
         "title": "The Digital Navigator",
         "contributor": "gooseworks",
         "genericSkillRef": "browser-automation",
@@ -551,7 +604,7 @@
         "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {
-          "github": "https://github.com/gooseworks-ai/goose-skills"
+          "github": "https://github.com/gooseworks-ai/goose-skills/blob/main/skills/research-tools/capabilities/browser-automation-notte/SKILL.md"
         }
       },
       {
@@ -579,6 +632,21 @@
       }
     ],
     "browser-control": [
+      {
+        "id": "addy-osmani/browser-testing-with-devtools",
+        "name": "browser-testing-with-devtools",
+        "title": "browser-testing-with-devtools",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "browser-control",
+        "description": "Tests in real browsers via Chrome DevTools MCP. Use when building or debugging anything that runs in a browser. Use when you need to inspect the DOM, capture console errors, analyze network requests, profile performance, or verify visual output with real runtime data. Requires the chrome-devtools MCP server to be configured.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/browser-testing-with-devtools/SKILL.md"
+        }
+      },
       {
         "id": "browser-use/browser-harness",
         "name": "Browser Harness",
@@ -938,6 +1006,24 @@
         }
       }
     ],
+    "codebase-graph-retrieval": [
+      {
+        "id": "trailhq/graft",
+        "name": "graft",
+        "title": "Graft",
+        "contributor": "trailhq",
+        "genericSkillRef": "codebase-graph-retrieval",
+        "description": "This repo is indexed by graft/. For ANY task here, whether understanding how something works, finding where code lives, tracing what calls a symbol or what a change breaks, or scoping an edit, get your context from graft before grepping or reading source files.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 145.16,
+        "links": {
+          "github": "https://github.com/trailhq/Graft/blob/main/.claude/skills/graft/SKILL.md"
+        }
+      }
+    ],
     "concept-synthesis": [
       {
         "id": "garrytan/concept-synthesis",
@@ -954,9 +1040,39 @@
         "links": {
           "github": "https://github.com/garrytan/gbrain/blob/8c70f6255047a7647adb30b1d6333a48068d9fa5/skills/concept-synthesis/SKILL.md"
         }
+      },
+      {
+        "id": "garrytan/idea-lineage",
+        "name": "idea-lineage",
+        "title": "idea-lineage",
+        "contributor": "garrytan",
+        "genericSkillRef": "concept-synthesis",
+        "description": "Trace one idea's evolution through the brain: first mention, best\narticulation, related concepts, reversals, contradictions, abandoned\nbranches, and the current live version. Use for single-idea conceptual\nlineage, not broad concept-map synthesis or structured entity metrics.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/idea-lineage/SKILL.md"
+        }
       }
     ],
     "context-compression": [
+      {
+        "id": "garrytan/context-audit",
+        "name": "context-audit",
+        "title": "context-audit",
+        "contributor": "garrytan",
+        "genericSkillRef": "context-compression",
+        "description": "Token-hygiene audit of the always-loaded context stack — CLAUDE.md,\nAGENTS.md, auto-memory MEMORY.md, and the bootstrap-rendered identity files\n(SOUL.md, USER.md, ACCESS_POLICY.md, HEARTBEAT.md) or their harness\nequivalents. Finds redundancy, contradictions, stale content, compression\ncandidates, and skill-extraction candidates; produces a ranked action list\nsorted by token savings with a risk class per finding. REPORT-ONLY: this\nskill never edits any audited file. Recommendations for bootstrap-rendered\nfiles target the interview answer bank / templates, never the rendered\noutput. Judging routes through `gbrain eval cross-modal` (single cheap\nmodel by default; full multi-model panel is explicit opt-in).",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/context-audit/SKILL.md"
+        }
+      },
       {
         "id": "garrytan/context-restore",
         "name": "Context Restore",
@@ -1028,7 +1144,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 151.89,
+        "trustMagnitude": 154.71,
         "links": {
           "github": "https://github.com/mksglu/context-mode/blob/6b8bf61f83abed6c3faf4e7c3ba02c162fadfedf/skills/context-mode/SKILL.md"
         }
@@ -1140,6 +1256,21 @@
     ],
     "deployment-automation": [
       {
+        "id": "addy-osmani/ci-cd-and-automation",
+        "name": "ci-cd-and-automation",
+        "title": "ci-cd-and-automation",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "deployment-automation",
+        "description": "Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to automate quality gates, configure test runners in CI, or establish deployment strategies.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/ci-cd-and-automation/SKILL.md"
+        }
+      },
+      {
         "id": "garrytan/land-and-deploy",
         "name": "Land and Deploy",
         "title": "Land and Deploy",
@@ -1227,7 +1358,39 @@
         }
       }
     ],
+    "deprecation-and-migration": [
+      {
+        "id": "addy-osmani/deprecation-and-migration",
+        "name": "deprecation-and-migration",
+        "title": "deprecation-and-migration",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "deprecation-and-migration",
+        "description": "Manages deprecation and migration. Use when removing old systems, APIs, or features. Use when migrating users from one implementation to another. Use when migrating a database schema in production, such as renaming or dropping a column without downtime (expand/contract). Use when deciding whether to maintain or sunset existing code.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/deprecation-and-migration/SKILL.md"
+        }
+      }
+    ],
     "design-generation": [
+      {
+        "id": "addy-osmani/frontend-ui-engineering",
+        "name": "frontend-ui-engineering",
+        "title": "frontend-ui-engineering",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "design-generation",
+        "description": "Builds production-quality, accessible, responsive user-facing UIs. Use when building or modifying interfaces and pages, creating components, implementing layouts, meeting WCAG accessibility requirements, managing state, or when the output needs to look and feel production-quality rather than AI-generated.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/frontend-ui-engineering/SKILL.md"
+        }
+      },
       {
         "id": "leonxlnx/brutalist-skill",
         "name": "brutalist-skill",
@@ -1303,7 +1466,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 172.43,
+        "trustMagnitude": 174.68,
         "suiteComponents": [
           "leonxlnx/brandkit",
           "leonxlnx/brutalist-skill",
@@ -1358,7 +1521,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 169.34,
+        "trustMagnitude": 171.27,
         "links": {
           "github": "https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md"
         }
@@ -1605,6 +1768,38 @@
         }
       }
     ],
+    "document-analyst": [
+      {
+        "id": "garrytan/book-mirror",
+        "name": "book-mirror",
+        "title": "book-mirror",
+        "contributor": "garrytan",
+        "genericSkillRef": "document-analyst",
+        "description": "Take any book (EPUB/PDF), produce a personalized chapter-by-chapter analysis. Each chapter is preserved in detail (The Chapter) and mirrored back to the reader's actual life (The Mirror) using brain context. The mirror observes and resonates — a friend pointing out parallels, NOT a consultant rearranging the reader's life, NOT a therapist assigning homework. The reader decides what to do about it. Layout is a top-aligned HTML table or stacked sections, never a bare markdown pipe table (pipe tables center-misalign uneven columns). Output is a single brain page at media/books/<slug>-personalized.md plus an optional PDF via brain-pdf.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/book-mirror/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/strategic-reading",
+        "name": "strategic-reading",
+        "title": "strategic-reading",
+        "contributor": "garrytan",
+        "genericSkillRef": "document-analyst",
+        "description": "Read a book, article, transcript, or case study through the lens of a specific strategic problem you're facing. Produces an applied playbook that maps the source onto the problem and gives short/medium/long-term recommendations. NOT for general book summaries.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/strategic-reading/SKILL.md"
+        }
+      }
+    ],
     "document-editing": [
       {
         "id": "anthropic/pptx",
@@ -1687,7 +1882,7 @@
           "section-structure",
           "clarity"
         ],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 94.92,
@@ -2141,7 +2336,7 @@
         }
       },
       {
-        "id": "gsd-build/ship",
+        "id": "gsd-build/gsd-ship",
         "name": "GSD Ship",
         "title": "GSD Ship Phase",
         "contributor": "gsd-build",
@@ -2153,7 +2348,7 @@
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/ship.md"
+          "github": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-ship/SKILL.md"
         }
       },
       {
@@ -2197,7 +2392,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 70.69,
+        "trustMagnitude": 72.86,
         "suiteComponents": [
           "firecrawl/firecrawl-build-interact",
           "firecrawl/firecrawl-build-onboarding",
@@ -2222,7 +2417,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 119.66,
+        "trustMagnitude": 130.23,
         "links": {
           "github": "https://github.com/ayghri/i-have-adhd/blob/main/skills/i-have-adhd/SKILL.md"
         }
@@ -2286,7 +2481,7 @@
         "level": "5★",
         "status": "named",
         "overallTrustGrade": "S",
-        "trustMagnitude": 355.66,
+        "trustMagnitude": 356.11,
         "suiteComponents": [
           "garrytan/benchmark",
           "garrytan/benchmark-models",
@@ -2405,7 +2600,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 121.52,
+        "trustMagnitude": 121.94,
         "suiteComponents": [
           "garrytan/brain-ops",
           "garrytan/capture",
@@ -2454,6 +2649,23 @@
         "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {}
+      }
+    ],
+    "ghostwrite": [
+      {
+        "id": "garrytan/draft-in-voice",
+        "name": "draft-in-voice",
+        "title": "draft-in-voice",
+        "contributor": "garrytan",
+        "genericSkillRef": "ghostwrite",
+        "description": "Ghostwrite content in a specific person's voice from a VALIDATED voice profile — tweets, replies, short posts, launch copy, recruiting blurbs, emails. Loads the subject's voice profile (people/<slug>-voice) plus first-party context from the brain, drafts 2-3 options in-register, then runs a hard voice-fidelity self-check before showing anything. Includes the profile BUILDER: if no validated profile exists, drafting hard-stops and this skill walks the corpus-to-fingerprint build instead. Never auto-posts.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/draft-in-voice/SKILL.md"
+        }
       }
     ],
     "git-diff-risk-analysis": [
@@ -2541,7 +2753,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 174.62,
+        "trustMagnitude": 176.04,
         "suiteComponents": [
           "addy-osmani/code-review-and-quality",
           "addy-osmani/code-simplification",
@@ -2571,16 +2783,32 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 169.36,
+        "trustMagnitude": 169.31,
         "suiteComponents": [
-          "gsd-build/discuss-phase",
-          "gsd-build/execute-phase",
-          "gsd-build/plan-phase",
-          "gsd-build/ship",
-          "gsd-build/verify-work"
+          "gsd-build/gsd-discuss-phase",
+          "gsd-build/gsd-execute-phase",
+          "gsd-build/gsd-plan-phase",
+          "gsd-build/gsd-ship",
+          "gsd-build/gsd-verify-work"
         ],
+        "links": {}
+      }
+    ],
+    "gpu-dataframe-acceleration": [
+      {
+        "id": "nvidia/accelerated-computing-cudf",
+        "name": "accelerated-computing-cudf",
+        "title": "Accelerated Computing cuDF",
+        "contributor": "nvidia",
+        "genericSkillRef": "gpu-dataframe-acceleration",
+        "description": "Official NVIDIA-authored guidance for NVIDIA cuDF GPU DataFrames, pandas acceleration, dask-cuDF, ETL, joins, groupby, CSV/Parquet I/O, nullable semantics, and multi-GPU DataFrame workloads.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 126.12,
         "links": {
-          "github": "https://github.com/gsd-build/get-shit-done/blob/main/README.md"
+          "github": "https://github.com/NVIDIA/skills/blob/main/skills/accelerated-computing-cudf/SKILL.md"
         }
       }
     ],
@@ -2695,7 +2923,69 @@
         }
       }
     ],
+    "grounding": [
+      {
+        "id": "addy-osmani/source-driven-development",
+        "name": "source-driven-development",
+        "title": "source-driven-development",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "grounding",
+        "description": "Grounds every implementation decision in official documentation. Use when you want to verify an approach against the official docs before implementing it, or when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/source-driven-development/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/academic-verify",
+        "name": "academic-verify",
+        "title": "academic-verify",
+        "contributor": "garrytan",
+        "genericSkillRef": "grounding",
+        "description": "Verify a research claim or academic citation by tracing it through publication → methodology → raw data → independent replication. Routes through perplexity-research for the actual web lookup, then formats results as a citation-checked brain page. Use when a book/article/conversation cites a study and you want to confirm the claim is real, replicated, and accurately characterized.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/academic-verify/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/fact-check",
+        "name": "fact-check",
+        "title": "fact-check",
+        "contributor": "garrytan",
+        "genericSkillRef": "grounding",
+        "description": "Systematic claim-by-claim verification for any content before it ships.\nModeled on professional fact-checking desks (The New Yorker, ProPublica,\nIFCN standards): extract every verifiable claim, check each against live\ncitable sources (never training data), assign a 6-level confidence status,\napply corrections, and produce a scored pass/fail report. Includes a\ndata-derived-claims gate for outputs produced FROM the brain or a database:\nPRODUCER ≠ VERIFIER (re-derive each claim via a different query path) and\nAFFILIATION ≠ AUTHORSHIP (person→thing claims resolve through typed edges),\nwith delivery hard-blocked on unsupported claims.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/fact-check/SKILL.md"
+        }
+      }
+    ],
     "guardrails": [
+      {
+        "id": "addy-osmani/constraint-driven-development",
+        "name": "constraint-driven-development",
+        "title": "constraint-driven-development",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "guardrails",
+        "description": "Establishes a project's quality bar as a written contract and stops agents quietly lowering it. Interviews the user on which dimensions matter, supplies sane default thresholds when they have no number in mind, records everything in CONSTRAINTS.md, and watches the diff for a weakened bar — new @ts-ignore or eslint-disable suppressions, skipped or deleted tests, assertions stripped out, unimplemented stubs, thresholds edited down. Use when no quality bar is written down, when the user says \"set up constraints\" or \"define our standards\", when the user wants dimensions they care about — accessibility, web performance, coverage — set up as enforced constraints, when an agent keeps silencing checks or skipping tests to get to green, when you need a coverage or performance threshold and don't know what number to pick, or when an agent writes more code than anyone will read.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/constraint-driven-development/SKILL.md"
+        }
+      },
       {
         "id": "garrytan/careful",
         "name": "Careful",
@@ -2893,7 +3183,7 @@
         "level": "1★",
         "status": "named",
         "overallTrustGrade": "ungraded",
-        "trustMagnitude": 5,
+        "trustMagnitude": 6.28,
         "links": {
           "github": "https://github.com/favorchurch/favor-skills/blob/main/speak-like-favor/SKILL.md"
         }
@@ -2970,9 +3260,41 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 221.96,
+        "trustMagnitude": 225.42,
         "links": {
           "github": "https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md"
+        }
+      },
+      {
+        "id": "rico-favor/implement-with-discernment",
+        "name": "implement-with-discernment",
+        "title": "Implement With Discernment",
+        "contributor": "rico-favor",
+        "genericSkillRef": "implement-with-discernment",
+        "description": "Applies deliberate judgment before writing code, evaluating whether to implement at all, scoping to the minimum needed, deferring or rejecting features that add complexity without proportionate value, and stopping when the task is done.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 5.7,
+        "installable": false,
+        "links": {}
+      }
+    ],
+    "interactive-mechanism-illustration": [
+      {
+        "id": "wheresryan22/anatomy",
+        "name": "anatomy",
+        "title": "Anatomy",
+        "contributor": "wheresryan22",
+        "genericSkillRef": "interactive-mechanism-illustration",
+        "description": "Build crafted, highly detailed, interactive isometric SVG figures that explain a technical idea as a real physical object (a test rig, a dial gauge, a cabinet of drawers, a plotter, a lock), with many small precise solid parts, four-tone shading, correct painter's order, a framed card with title, hint and live readout, and calm eased motion. Use this whenever someone wants an isometric illustration, an explanatory diagram or figure for docs, a blog post, a landing page or an article, a 'Linear-style' or 'premium' technical drawing, an interactive explainer, or an SVG that shows how a system, algorithm or component works, even if they never say 'isometric'. Works framework-free (TypeScript/JS that writes SVG and HTML) and in React/Next.js, and can add realistic WebGL shaders (fire, exhaust, water, caustics, lamp light) that live inside the drawing in the same isometric perspective. Also prints a figure as an A4 PDF (poster, drawing or handout) and publishes it to the Anatomy community gallery when asked.",
+        "tags": [],
+        "level": "4★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 152.48,
+        "links": {
+          "github": "https://github.com/wheresryan22/anatomy/blob/main/SKILL.md"
         }
       }
     ],
@@ -3024,7 +3346,7 @@
         "title": "The Issue Sorter",
         "contributor": "mbtiongson1",
         "genericSkillRef": "issue-triage",
-        "description": "Triages incoming skill proposals and issues against the Gaia registry backlog — sorting by impact, feasibility, and dependency order to produce an actionable prioritized work queue.",
+        "description": "Triages incoming skill proposals and issues against the registry backlog — sorting by impact, feasibility, and dependency order to produce an actionable prioritized work queue.",
         "tags": [
           "registry-curation",
           "triage",
@@ -3041,6 +3363,21 @@
     ],
     "knowledge-graph-build": [
       {
+        "id": "garrytan/citation-graph-ingest",
+        "name": "citation-graph-ingest",
+        "title": "citation-graph-ingest",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-graph-build",
+        "description": "Build a TYPED citation/reference graph over an ingested corpus — not just\nembeddings. Flat similarity retrieval cannot tell you that document A\n*overrules* B, *distinguishes* C, or *relies_on* D. This skill extracts every\ninter-document reference, classifies the edge TYPE with LLM judgment, and\nwrites first-class typed edges via `gbrain link`, so `gbrain graph-query\n--type` can walk the argument (\"everything this brief relies on, minus\nanything overruled since\"). Every cite-heavy corpus is the same shape: law,\nacademic papers, patents, regulatory filings, a book's bibliography.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/citation-graph-ingest/SKILL.md"
+        }
+      },
+      {
         "id": "safishamsi/graphify",
         "name": "Graphify",
         "title": "The Structural Muse",
@@ -3055,9 +3392,71 @@
         "level": "5★",
         "status": "named",
         "overallTrustGrade": "S",
-        "trustMagnitude": 316.88,
+        "trustMagnitude": 318.14,
         "links": {
-          "github": "https://github.com/safishamsi/graphify/blob/v8/graphify/__init__.py"
+          "github": "https://github.com/Graphify-Labs/graphify/blob/v8/graphify/__init__.py"
+        }
+      }
+    ],
+    "knowledge-harvest": [
+      {
+        "id": "garrytan/archive-crawler",
+        "name": "archive-crawler",
+        "title": "archive-crawler",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-harvest",
+        "description": "Universal archivist for personal file archives (Dropbox/B2/Gmail-takeout/local-mount/hard-drive-dump). Filters for high-value content (the user's own writing, ideas, relationships) and surfaces it interactively. REFUSES TO RUN without an explicit gbrain.yml `archive-crawler.scan_paths:` allow-list.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/archive-crawler/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/blog-ingest",
+        "name": "blog-ingest",
+        "title": "blog-ingest",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-harvest",
+        "description": "Feed and whole-publication ingestion: turn an entire blog, newsletter, or\nRSS/Atom archive into brain source pages. Covers feed discovery, pagination\nwalking, normalization to a common article shape, canonical-URL dedup,\nidempotent re-runs, 429 pacing, and empty-husk repair. This is the\nPUBLICATION-scope skill — a single article URL routes to idea-ingest\ninstead. Per-article enrichment hands off to the brain-ingest-gate skill;\npublic posts only (gated content is skipped, never worked around).",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/blog-ingest/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/bulk-ingestion",
+        "name": "bulk-ingestion",
+        "title": "bulk-ingestion",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-harvest",
+        "description": "End-to-end discipline for turning any large data source (audio libraries,\nemail takeouts, document corpora, chat exports, API dumps) into brain pages\nat scale. The lifecycle spine: SCHEMA → ACCESS → TRIAL → EVALUATE → IMPROVE\n→ CODIFY → TEST → SKILLIFY → BULK → MONITOR. State is tracked in a durable\nJSON manifest (see MANIFEST-PATTERN.md) so any crash, session boundary, or\nsubagent fan-out resumes from ground truth instead of memory.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/bulk-ingestion/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/two-tier-extraction",
+        "name": "two-tier-extraction",
+        "title": "two-tier-extraction",
+        "contributor": "garrytan",
+        "genericSkillRef": "knowledge-harvest",
+        "description": "Tiered LLM extraction pattern for large corpus processing (email archives,\ndocument dumps, transcript libraries). A utility-tier model triages and\nclassifies at speed; the reasoning tier does the default deep read; the\ndeep tier is the escalation for the highest-value content. Prevents\nspending deep-tier money on noise while ensuring the important content\ngets the best eyes. A deterministic privacy wall runs before any LLM call.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/two-tier-extraction/SKILL.md"
         }
       }
     ],
@@ -3172,7 +3571,7 @@
         "catalogRef": "firecrawl-firecrawl-research-index",
         "description": "Retrieve and query academic literature through Firecrawl Research.",
         "tags": [],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
@@ -3209,7 +3608,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 199.13,
+        "trustMagnitude": 200.29,
         "suiteComponents": [
           "mattpocock/git-guardrails-claude-code",
           "mattpocock/migrate-to-shoehorn",
@@ -3283,6 +3682,23 @@
         "trustMagnitude": 0,
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
+        }
+      }
+    ],
+    "mcp-server-deployment": [
+      {
+        "id": "garrytan/remote-mcp",
+        "name": "remote-mcp",
+        "title": "remote-mcp",
+        "contributor": "garrytan",
+        "genericSkillRef": "mcp-server-deployment",
+        "description": "Publish the user's own gbrain over MCP so other devices, desktop apps and\ncloud agents can reach it. `gbrain mcp expose` installs and signs in\nTailscale, publishes the running `gbrain serve --http` on the tailnet\n(HTTPS, tailnet-only by default; Funnel only when a client lives in a\nvendor cloud), keeps the server alive as a user service, and hands back the\nMCP URL. Then grant one least-privilege client per consumer, install the\nhandoff inside that client, and verify a real memory round trip.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/remote-mcp/SKILL.md"
         }
       }
     ],
@@ -3417,6 +3833,21 @@
     ],
     "multi-agent-orchestration-v": [
       {
+        "id": "garrytan/minion-orchestrator",
+        "name": "minion-orchestrator",
+        "title": "minion-orchestrator",
+        "contributor": "garrytan",
+        "genericSkillRef": "multi-agent-orchestration-v",
+        "description": "Unified Minions skill for both deterministic shell jobs and LLM subagent\norchestration. Replaces the older `gbrain-jobs` routing intent. Use when:\nsubmitting gbrain jobs, shell/background tasks, spawning subagents,\nchecking progress, steering running work, pausing/resuming, parallel\nfan-out. One durable, observable, steerable queue interface. Also carries\nthe durable-execution doctrine for any operation expected to exceed ~2\nminutes: capability ladder, deadman checks that verify the result was\nreported, and content-addressed stage checkpoints for expensive pipelines.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/minion-orchestrator/SKILL.md"
+        }
+      },
+      {
         "id": "ruvnet/flow-nexus-swarm",
         "name": "Flow Nexus Swarm",
         "title": "The Grand Conductor's Blueprint",
@@ -3539,7 +3970,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 174.59,
+        "trustMagnitude": 175.34,
         "suiteComponents": [
           "ruvnet/agentdb",
           "ruvnet/agentdb-advanced",
@@ -3659,6 +4090,23 @@
         "trustMagnitude": 0,
         "links": {
           "github": "https://github.com/huggingface/skills/blob/main/skills/huggingface-vision-trainer/SKILL.md"
+        }
+      }
+    ],
+    "observability-instrumentation": [
+      {
+        "id": "addy-osmani/observability-and-instrumentation",
+        "name": "observability-and-instrumentation",
+        "title": "observability-and-instrumentation",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "observability-instrumentation",
+        "description": "Instruments code so production behavior is visible and diagnosable. Use when adding logging, metrics, tracing, or alerting. Use when shipping any feature that runs in production and you need evidence it works. Use when production issues are reported but you can't tell what happened from the available data.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/observability-and-instrumentation/SKILL.md"
         }
       }
     ],
@@ -3813,6 +4261,51 @@
         }
       },
       {
+        "id": "garrytan/conversation-archive",
+        "name": "conversation-archive",
+        "title": "conversation-archive",
+        "contributor": "garrytan",
+        "genericSkillRef": "personal-knowledge-management",
+        "description": "Import AI-assistant chat exports (ChatGPT, Claude, Perplexity) and agent session transcripts into the brain as one dated page per conversation under conversations/, validate each page against the native conversation parser, extract facts via the native conversation-facts flow, and keep the archive gap-free with a detect-and-backfill loop. Then answer archive questions: \"when did I first discuss X\", trace how an idea evolved across past conversations, pull a specific thread.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/conversation-archive/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/meeting-ingestion",
+        "name": "meeting-ingestion",
+        "title": "meeting-ingestion",
+        "contributor": "garrytan",
+        "genericSkillRef": "personal-knowledge-management",
+        "description": "Ingest meeting transcripts from ANY meeting recorder into brain pages with\nattendee enrichment, entity propagation, and timeline merge. One unified\npipeline: normalize the source into a standard transcript record, split\nmulti-meeting recordings, resolve speakers by evidence, create the page,\npass every surprising claim through the consistency check (transcript +\nbrain + plausibility), enrich every entity, then run the verification\nchecklist — substance AND sequence. A meeting is NOT fully ingested until\nthe enrich skill has processed every entity AND the verification checklist\npasses, including the sequence verify (PASS or explicit user waive).",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/meeting-ingestion/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/signal-detector",
+        "name": "signal-detector",
+        "title": "signal-detector",
+        "contributor": "garrytan",
+        "genericSkillRef": "personal-knowledge-management",
+        "description": "Opt-in ambient signal capture. After explicit enablement, applies on\nsubstantive inbound messages to detect original thinking and entity mentions.\nUse an authorized sub-agent where supported; otherwise detect inline.\nAim to never block the main response.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/signal-detector/SKILL.md"
+        }
+      },
+      {
         "id": "mattpocock/obsidian-vault",
         "name": "Obsidian Vault Manager",
         "title": "The Obsidian Vault Mapper",
@@ -3820,7 +4313,7 @@
         "genericSkillRef": "personal-knowledge-management",
         "description": "Manage notes and organization in a specific Obsidian vault using Title Case and wikilinks.",
         "tags": [],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 94.92,
@@ -4004,6 +4497,24 @@
         "links": {}
       }
     ],
+    "project-launch-video-production": [
+      {
+        "id": "latent-spaces/brag",
+        "name": "brag",
+        "title": "Project Launch Director",
+        "contributor": "latent-spaces",
+        "genericSkillRef": "project-launch-video-production",
+        "description": "Turn the current project website into a short, polished, shareable launch video using Hyperframes. Use when someone says \"/brag\", \"let's brag about this\", \"make a launch video\", \"turn this into a video\", or wants to share what they built. Reads the project code directly — no live URL or screenshots needed.",
+        "tags": [],
+        "level": "3★",
+        "status": "named",
+        "overallTrustGrade": "A",
+        "trustMagnitude": 144.54,
+        "links": {
+          "github": "https://github.com/latent-spaces/brag/blob/c893c5ed52aed84e3e2ee56787de869fccdae6b0/skills/brag/SKILL.md"
+        }
+      }
+    ],
     "project-management": [
       {
         "id": "garrytan/landing-report",
@@ -4048,6 +4559,22 @@
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
+      },
+      {
+        "id": "yylo-dev/ledger-tasks-yylo",
+        "name": "Ledger Tasks (yylo)",
+        "title": "Ledger Tasks (yylo)",
+        "contributor": "yylo-dev",
+        "genericSkillRef": "project-management",
+        "description": "Comprehensive guide for using YYLO Ledger task management — a Kanban board and task state stored as hash-chained Markdown inside the repository (no hosted tracker). Covers create/list/search/get/mark/update/archive, dependency management (deps/ready/order), history/receipts, cold archive, cross-project routing, and typed merge orchestration across agent worktrees. The underlying YYLO CLI orchestrates multiple coding-agent harnesses (Claude Code, Codex, Gemini CLI, Pi) over that same shared task state.",
+        "tags": [],
+        "level": "2★",
+        "status": "named",
+        "overallTrustGrade": "C",
+        "trustMagnitude": 36.6,
+        "links": {
+          "github": "https://github.com/yylo-dev/yylo-skills/blob/main/skills/ledger-tasks-yylo/SKILL.md"
+        }
       }
     ],
     "prompt-optimization": [
@@ -4070,6 +4597,21 @@
         "trustMagnitude": 36,
         "links": {
           "github": "https://github.com/garrytan/gstack/blob/main/plan-tune/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/skill-optimizer",
+        "name": "skill-optimizer",
+        "title": "skill-optimizer",
+        "contributor": "garrytan",
+        "genericSkillRef": "prompt-optimization",
+        "description": "Self-evolving skill optimization via SkillOpt-paper-grounded text-space optimizer.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/skill-optimizer/SKILL.md"
         }
       }
     ],
@@ -4154,8 +4696,8 @@
     ],
     "rag-pipeline": [
       {
-        "id": "yonatangross/orchestkit-rag",
-        "name": "OrchestrKit RAG",
+        "id": "yonatangross/rag-retrieval",
+        "name": "RAG Retrieval",
         "title": "The Knowledge Architect",
         "contributor": "yonatangross",
         "genericSkillRef": "rag-pipeline",
@@ -4175,7 +4717,7 @@
         "overallTrustGrade": "ungraded",
         "trustMagnitude": 0,
         "links": {
-          "github": "https://github.com/yonatangross/orchestkit"
+          "github": "https://github.com/yonatangross/orchestkit/blob/main/plugins/ork/skills/rag-retrieval/SKILL.md"
         }
       }
     ],
@@ -4191,7 +4733,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 162.66,
+        "trustMagnitude": 163.19,
         "links": {
           "github": "https://github.com/vercel-labs/agent-skills/blob/main/skills/react-best-practices/SKILL.md"
         }
@@ -4314,7 +4856,7 @@
         "title": "The Automated Curator",
         "contributor": "mbtiongson1",
         "genericSkillRef": "registry-curation",
-        "description": "Runs an automated batch curation pass over the Gaia skill registry — scanning for new agent skills, validating evidence, and opening versioned draft PRs without human intervention.",
+        "description": "Runs an automated batch curation pass over the registry — scanning for new agent skills, validating evidence, and opening versioned draft PRs without human intervention.",
         "tags": [
           "registry-curation",
           "automation",
@@ -4334,7 +4876,7 @@
         "title": "The Registrar",
         "contributor": "mbtiongson1",
         "genericSkillRef": "registry-curation",
-        "description": "Expands the Gaia skill registry with new, fully evidenced AI agent skills — researching skill sources, running validation, opening versioned PRs, and appending discovered marketplaces to the sources registry in one end-to-end workflow.",
+        "description": "Expands the Gaia skill tree with new, fully evidenced AI agent skills — researching skill sources, running validation, opening versioned PRs, and appending discovered marketplaces to the sources registry in one end-to-end workflow.",
         "tags": [
           "registry-curation",
           "skill-discovery",
@@ -4396,7 +4938,7 @@
         "title": "The Schema Sentinel",
         "contributor": "mbtiongson1",
         "genericSkillRef": "registry-curation",
-        "description": "Validates the structural integrity of the Gaia registry — checking schema compliance, detecting duplicate IDs, verifying cross-references, and reporting any inconsistencies that would break build or generation.",
+        "description": "Validates the structural integrity of the registry — checking schema compliance, detecting duplicate IDs, verifying cross-references, and reporting any inconsistencies that would break build or generation.",
         "tags": [
           "registry-curation",
           "integrity",
@@ -4482,7 +5024,7 @@
         "title": "The Triage Director",
         "contributor": "mbtiongson1",
         "genericSkillRef": "registry-health-scan",
-        "description": "Produces a prioritized review queue of Gaia registry entries needing attention — flagging stale evidence, broken links, mis-classified tiers, and naming inconsistencies in one structured audit pass.",
+        "description": "Produces a prioritized review queue of registry entries needing attention — flagging stale evidence, broken links, mis-classified tiers, and naming inconsistencies in one structured audit pass.",
         "tags": [
           "registry-curation",
           "prioritization",
@@ -4630,6 +5172,36 @@
     ],
     "research": [
       {
+        "id": "garrytan/data-research",
+        "name": "data-research",
+        "title": "data-research",
+        "contributor": "garrytan",
+        "genericSkillRef": "research",
+        "description": "Structured data research: search sources, extract structured data,\narchive raw sources, maintain canonical tracker pages, deduplicate.\nParameterized via YAML recipes for investor updates, donations,\ncompany updates, or any email-to-structured-data pipeline.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/data-research/SKILL.md"
+        }
+      },
+      {
+        "id": "garrytan/research-compendium",
+        "name": "research-compendium",
+        "title": "research-compendium",
+        "contributor": "garrytan",
+        "genericSkillRef": "research",
+        "description": "Deep-research a topic end to end and produce a permanent, reusable knowledge asset: archive every primary source verbatim (gated by the user's privacy/retention posture), write one 1:1 summary per source, then synthesize a single self-contained compendium page. Depth is a dial (base synthesis → grounded primaries → books + counter-canon → saturation), each level an idempotent superset of the one below. Distinct from data-research (structured trackers) and perplexity-research (web deltas): this produces prose knowledge synthesis backed by an archived source corpus.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/research-compendium/SKILL.md"
+        }
+      },
+      {
         "id": "mattpocock/research",
         "name": "Research",
         "title": "The Primary-Source Researcher",
@@ -4647,6 +5219,21 @@
       }
     ],
     "route-intent": [
+      {
+        "id": "garrytan/functional-area-resolver",
+        "name": "functional-area-resolver",
+        "title": "functional-area-resolver",
+        "contributor": "garrytan",
+        "genericSkillRef": "route-intent",
+        "description": "Compress an agent's routing file (RESOLVER.md or AGENTS.md) by converting\ngranular skill-per-row tables into functional-area dispatchers. Each area\nlists sub-skills in a \"(dispatcher for: ...)\" clause. The LLM reads one\narea entry and routes to the correct sub-skill. Proven via held-out\nA/B eval: dispatcher pattern outperforms naive pipe-table compression.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/functional-area-resolver/SKILL.md"
+        }
+      },
       {
         "id": "mattpocock/ask-matt",
         "name": "Ask Matt",
@@ -4702,7 +5289,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 82.22,
+        "trustMagnitude": 87.38,
         "links": {
           "github": "https://github.com/nateherkai/scroll-craft/blob/0b816225945e45380397d6a0487efa3c98916858/plugins/nateherk-design/skills/scroll-craft/SKILL.md"
         }
@@ -4727,6 +5314,21 @@
       }
     ],
     "security-audit": [
+      {
+        "id": "addy-osmani/security-and-hardening",
+        "name": "security-and-hardening",
+        "title": "security-and-hardening",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "security-audit",
+        "description": "Hardens code against vulnerabilities. Use when auditing an input handler for vulnerabilities, when handling user input, authentication, data storage, or external integrations, or when checking a login flow is safe against the OWASP Top Ten. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services. Use when auditing dependencies for known vulnerabilities, triaging package-manager audit findings, or assessing supply-chain risk in a new package. Use when personal data or privacy compliance (GDPR, CCPA) is involved.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/security-and-hardening/SKILL.md"
+        }
+      },
       {
         "id": "garrytan/cso",
         "name": "CSO",
@@ -4831,10 +5433,10 @@
         "genericSkillRef": "session-journaling",
         "description": "Logs conversation activity to today's daily note on demand, capturing decisions, outcomes, and next steps in a structured dated entry.",
         "tags": [],
-        "level": "1★",
+        "level": "2★",
         "status": "named",
         "overallTrustGrade": "C",
-        "trustMagnitude": 21.51,
+        "trustMagnitude": 22.67,
         "links": {
           "github": "https://github.com/aplaceforallmystuff/daily-patterns-pack/blob/main/skills/log-to-daily/SKILL.md"
         }
@@ -4931,6 +5533,21 @@
         }
       },
       {
+        "id": "obra/writing-skills",
+        "name": "writing-skills",
+        "title": "writing-skills",
+        "contributor": "obra",
+        "genericSkillRef": "skill-authoring",
+        "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/obra/superpowers/blob/v6.4.1/skills/writing-skills/SKILL.md"
+        }
+      },
+      {
         "id": "ruvnet/skill-builder",
         "name": "Skill Builder",
         "title": "The Skill Forger",
@@ -5024,7 +5641,7 @@
         "level": "5★",
         "status": "named",
         "overallTrustGrade": "S",
-        "trustMagnitude": 373.22,
+        "trustMagnitude": 374.99,
         "suiteComponents": [
           "mattpocock/code-review",
           "mattpocock/diagnose",
@@ -5080,6 +5697,21 @@
         }
       },
       {
+        "id": "garrytan/skill-autobench",
+        "name": "skill-autobench",
+        "title": "skill-autobench",
+        "contributor": "garrytan",
+        "genericSkillRef": "skill-performance-benchmarking",
+        "description": "Author an eval for an existing skill from its REAL usage history, not its\nspec. Mine invocations from the brain's conversation archive\n(conversations/) and per-harness session transcripts — a user correction\nafter an invocation is the gold signal — then synthesize an eval_contract\nplus 4-8 replayable cases with honesty labels (SPEC-DERIVED vs\nHISTORY-IMPLIED) and stage the result at skills/<name>/eval/autobench-<date>.md\nas PENDING-HUMAN-APPROVAL. Never rewrites SKILL.md. Ships two guard\ncompanions: panel integrity (multi-model judging must prove each provider\nactually responded) and the fail-improve taxonomy (logged LLM-fallback\ncases convert to deterministic code over time).",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/skills/skill-autobench/SKILL.md"
+        }
+      },
+      {
         "id": "ruvnet/worker-benchmarks",
         "name": "Worker Benchmarks",
         "title": "The Performance Judge",
@@ -5104,6 +5736,21 @@
       }
     ],
     "software-design": [
+      {
+        "id": "addy-osmani/api-and-interface-design",
+        "name": "api-and-interface-design",
+        "title": "api-and-interface-design",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "software-design",
+        "description": "Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/api-and-interface-design/SKILL.md"
+        }
+      },
       {
         "id": "mattpocock/codebase-design",
         "name": "Codebase Design",
@@ -5141,7 +5788,7 @@
     ],
     "subagent-driven-development": [
       {
-        "id": "gsd-build/execute-phase",
+        "id": "gsd-build/gsd-execute-phase",
         "name": "GSD Execute Phase",
         "title": "GSD Execute Phase",
         "contributor": "gsd-build",
@@ -5153,7 +5800,7 @@
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/execute-phase.md"
+          "github": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-execute-phase/SKILL.md"
         }
       },
       {
@@ -5236,7 +5883,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 220.81,
+        "trustMagnitude": 221.52,
         "suiteComponents": [
           "obra/brainstorming",
           "obra/dispatching-parallel-agents",
@@ -5329,6 +5976,21 @@
         }
       },
       {
+        "id": "garrytan/measure-before-you-fix",
+        "name": "measure-before-you-fix",
+        "title": "measure-before-you-fix",
+        "contributor": "garrytan",
+        "genericSkillRef": "systematic-debugging",
+        "description": "Before fixing a slow/stale/timeout alert, measure the step yourself.\nKill the theory with a stopwatch, not a code change. Measure-first ops\ntriage for temporal alerts (stale, timeout, freshness, wedged, N hours\nbehind) from gbrain doctor, autopilot, sync, and cron monitors — runs\nBEFORE any timeout raise, threshold change, or pipeline rewrite.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/garrytan/gbrain/blob/v0.51.6.0/plugin/skills/measure-before-you-fix/SKILL.md"
+        }
+      },
+      {
         "id": "mattpocock/diagnosing-bugs",
         "name": "Diagnosing Bugs",
         "title": "Diagnosing Bugs",
@@ -5376,10 +6038,10 @@
         "genericSkillRef": "task-depth-enforcement",
         "description": "Anti-laziness execution discipline for substantial tasks. Decomposes work into recursive depth trees and enforces completion criteria through gate files and runnable checks.",
         "tags": [],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 65.81,
+        "trustMagnitude": 91.46,
         "links": {
           "github": "https://github.com/leonxlnx/unlazy/blob/main/SKILL.md"
         }
@@ -5419,12 +6081,27 @@
         "genericSkillRef": "test-driven-development",
         "description": "Test-driven development with red-green-refactor, verifying behavior through public interfaces.",
         "tags": [],
-        "level": "3★",
+        "level": "2★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
         "links": {
           "github": "https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md"
+        }
+      },
+      {
+        "id": "obra/test-driven-development",
+        "name": "test-driven-development",
+        "title": "test-driven-development",
+        "contributor": "obra",
+        "genericSkillRef": "test-driven-development",
+        "description": "Use when implementing any feature or bugfix, before writing implementation code",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 9,
+        "links": {
+          "github": "https://github.com/obra/superpowers/blob/v6.4.1/skills/test-driven-development/SKILL.md"
         }
       }
     ],
@@ -5611,7 +6288,7 @@
           "terminology",
           "alignment"
         ],
-        "level": "1★",
+        "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
         "trustMagnitude": 94.92,
@@ -5807,7 +6484,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 226.5,
+        "trustMagnitude": 227.51,
         "links": {
           "github": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/ui-ux-pro-max/SKILL.md"
         }
@@ -5864,7 +6541,7 @@
     ],
     "verification-before-completion": [
       {
-        "id": "gsd-build/verify-work",
+        "id": "gsd-build/gsd-verify-work",
         "name": "GSD Verify Work",
         "title": "GSD Verify Work",
         "contributor": "gsd-build",
@@ -5874,9 +6551,25 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 50,
+        "trustMagnitude": 52.66,
         "links": {
-          "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/verify-work.md"
+          "github": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-verify-work/SKILL.md"
+        }
+      },
+      {
+        "id": "hikari9/office-submit",
+        "name": "Office Submit",
+        "title": "Office Submit",
+        "contributor": "hikari9",
+        "genericSkillRef": "verification-before-completion",
+        "description": "Finish an Auto Office executor task: behavior-preserving simplify pass, adversarial self-review of the diff, fix and mutation-prove medium+ findings, run the brief's checks, commit and push, `office preflight`, `office submit`, and end with one status line. Use when you are an Office executor (inside a task worktree with an Office brief) and your work is ready to submit, or when asked to submit, resubmit, or finish an Office task.",
+        "tags": [],
+        "level": "2★",
+        "status": "named",
+        "overallTrustGrade": "C",
+        "trustMagnitude": 24.34,
+        "links": {
+          "github": "https://github.com/Hikari9/auto-office/blob/da6aa9a93dbab98c03d2fbb3593f994acf85d7a7/skills/office-submit/SKILL.md"
         }
       },
       {
@@ -5896,7 +6589,7 @@
         "level": "3★",
         "status": "named",
         "overallTrustGrade": "B",
-        "trustMagnitude": 95.15,
+        "trustMagnitude": 97.81,
         "links": {
           "github": "https://github.com/obra/superpowers/blob/main/skills/verification-before-completion/SKILL.md"
         }
@@ -5919,7 +6612,7 @@
         "level": "2★",
         "status": "named",
         "overallTrustGrade": "C",
-        "trustMagnitude": 36,
+        "trustMagnitude": 38.66,
         "links": {
           "github": "https://github.com/ruvnet/ruflo"
         }
@@ -6046,6 +6739,21 @@
         }
       },
       {
+        "id": "heygen-com/general-video",
+        "name": "general-video",
+        "title": "general-video",
+        "contributor": "heygen-com",
+        "genericSkillRef": "video-composition",
+        "description": "Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scene pieces, brand and sizzle reels, montages, static loops, static title cards, footage remixes, and freeform builds. Use motion-graphics instead for a short unnarrated motion-first unit, including an animated title. Route fresh creation through hyperframes before using this skill.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/heygen-com/hyperframes/blob/v0.8.60/skills/general-video/SKILL.md"
+        }
+      },
+      {
         "id": "heygen-com/hyperframes",
         "name": "HyperFrames",
         "title": "HyperFrames",
@@ -6056,7 +6764,7 @@
         "level": "4★",
         "status": "named",
         "overallTrustGrade": "A",
-        "trustMagnitude": 163.63,
+        "trustMagnitude": 166.92,
         "suiteComponents": [
           "heygen-com/embedded-captions",
           "heygen-com/faceless-explainer",
@@ -6497,6 +7205,21 @@
     ],
     "write-report": [
       {
+        "id": "addy-osmani/documentation-and-adrs",
+        "name": "documentation-and-adrs",
+        "title": "documentation-and-adrs",
+        "contributor": "addy-osmani",
+        "genericSkillRef": "write-report",
+        "description": "Records decisions and documentation. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.",
+        "tags": [],
+        "level": "1★",
+        "status": "named",
+        "trustMagnitude": 0,
+        "links": {
+          "github": "https://github.com/addyosmani/agent-skills/blob/0.6.10/skills/documentation-and-adrs/SKILL.md"
+        }
+      },
+      {
         "id": "garrytan/retro",
         "name": "Retro",
         "title": "Gstack Retro — Sprint Retrospective Report",
@@ -6565,7 +7288,7 @@
     ],
     "writing-plans": [
       {
-        "id": "gsd-build/plan-phase",
+        "id": "gsd-build/gsd-plan-phase",
         "name": "GSD Plan Phase",
         "title": "GSD Plan Phase",
         "contributor": "gsd-build",
@@ -6577,7 +7300,7 @@
         "overallTrustGrade": "B",
         "trustMagnitude": 50,
         "links": {
-          "github": "https://github.com/open-gsd/gsd-core/blob/next/commands/gsd/plan-phase.md"
+          "github": "https://github.com/open-gsd/gsd-core/blob/next/skills/gsd-plan-phase/SKILL.md"
         }
       },
       {
@@ -7178,7 +7901,7 @@
       "genericSkillRef": "skill-authoring",
       "description": "Distills a completed user workflow or interaction into a reusable agent skill. Use when the user asks to turn their workflow, interaction, or multi-step process into a skill, or when they say \"make this a skill\", \"create a skill from what we just did\", \"package this workflow\" or similar. Do not use for creating skills from scratch without an existing workflow (use a generic skill-creator for that).",
       "tags": [],
-      "level": "1★",
+      "level": "4★",
       "status": "awakened",
       "overallTrustGrade": "A",
       "trustMagnitude": 100.82,

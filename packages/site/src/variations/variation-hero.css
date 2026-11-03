@@ -548,7 +548,9 @@ body.vh-hero-page {
 }
 
 .vha-flash,
-.vhb-flash {
+.vhb-flash,
+.vha-od,
+.vhb-od {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -560,6 +562,15 @@ body.vh-hero-page {
   right: -20%;
   top: 44%;
   height: 12%;
+  transform: rotate(-28deg);
+}
+.vha-od__wedge,
+.vhb-od__wedge {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 36%;
+  height: 20%;
   transform: rotate(-28deg);
 }
 .vha-scan,

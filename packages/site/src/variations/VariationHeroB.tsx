@@ -148,6 +148,10 @@ export function VariationHeroB({ assetSet }: VariationHeroProps) {
         <div className="vhb-flash__wedge" style={{ background: v.flashInk, opacity: v.flashWedge }} />
       </div>
 
+      <div aria-hidden="true" className="vhb-od" style={{ background: v.odSheet, opacity: v.odOp }}>
+        <div className="vhb-od__wedge" style={{ background: v.odWedge }} />
+      </div>
+
       <div
         aria-hidden="true"
         className="vhb-scan"

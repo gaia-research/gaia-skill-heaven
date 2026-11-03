@@ -16,9 +16,12 @@ npx tsx packages/core/bench/run.ts --system bm25f
 
 `results/*` (top level) is the 2026-09-04 measurement against
 `gaia.skill-index/v1` (326 docs) and is preserved unedited as historical
-evidence. `results/runs/2026-10-03/` is a measurement of the index the runtime
-ships today: `gaia.skill-index/v2` (354 docs), as recorded in its new ledger.
-The two measurements must not be compared as if the corpus were the same.
+evidence. `results/runs/2026-10-03/` records the R4 `v8.4.1` measurement
+(`gaia.skill-index/v2`, 354 docs). `results/runs/2026-10-30/` is the measurement
+of the current index the runtime ships today: `gaia.skill-index/v2` (`v8.29.1`,
+400 docs, recalibrated floor `27.9867`), as recorded in its ledger.
+Measurements across different corpus snapshots must not be compared as if the
+corpus were the same.
 
 Offline by contract. `run.ts` replaces `globalThis.fetch` with a throw before
 it does anything else, so **G3 ("summon works with the network down") is
