@@ -34,6 +34,7 @@ import {
   fromData,
   initialState,
   noteAgentId,
+  qualifyCommand,
   recordEvent,
   recordRead,
   recordSelection,
@@ -66,7 +67,7 @@ const isoOf = (ms: number): string => new Date(ms).toISOString()
 
 /** Re-set the status entry from state. `off` removes it; it never touches statusLine. */
 function paintStatus($: EngineInterface, mode: StatusMode, state: ConsoleState): void {
-  $.ui.status(mode === 'off' ? undefined : toPlain(renderStatusSegments(state.status, mode)))
+  $.ui.status(mode === 'off' ? undefined : toPlain(renderStatusSegments(state.status, 'compact')))
 }
 
 async function load($: EngineInterface): Promise<ConsoleState> {
@@ -81,7 +82,7 @@ async function change($: EngineInterface, mode: StatusMode, fn: (s: ConsoleState
 }
 
 async function openPane($: EngineInterface): Promise<void> {
-  await $.ui.open({ id: PANE_ID, title: 'Skill Heaven' })
+  await $.ui.open({ id: PANE_ID, title: 'Skill Heaven', focus: true, closeOnEscape: true, rows: 12 })
 }
 
 /** Fire and forget, but never leave a rejection unhandled. */
@@ -89,8 +90,10 @@ function later(work: Promise<unknown>): void {
   work.catch(() => {})
 }
 
-/** Pre-fill the prompt without wiping a draft; say so when the box could not take it. */
-async function fillPrompt($: EngineInterface, text: string): Promise<void> {
+/** Pre-fill the prompt without wiping a draft; say so when the box could not take it.
+ * Skill Heaven commands are filled in the spelling the session accepts. */
+async function fillPrompt($: EngineInterface, command: string): Promise<void> {
+  const text = qualifyCommand(command)
   try {
     const filled = await $.prompt.fill({ text, mode: 'insert' })
     if (!filled.isFilled) $.ui.toast(`Type this: ${text}`)
@@ -117,7 +120,26 @@ type Preview = { event: SummonEvent; reached: boolean } | { notConnected: true }
  * tool the list names that is rejected was aborted or failed: that is an error
  * event, and says nothing about whether the tool is connected.
  */
+/** MCP servers connect in the background after session.start: observed on
+ * 2.1.294, `$.tool.list()` names no MCP tool at session.start and a /lens typed in
+ * the first seconds found no summon tool. An absent tool is checked again, a few
+ * times, before the band says "not connected". */
+const CONNECT_CHECKS = 4
+const CONNECT_WAIT_MS = 1500
+
 async function previewSummon($: EngineInterface, query: string): Promise<Preview> {
+  for (let check = 1; ; check++) {
+    const outcome = await previewOnce($, query)
+    if (!('notConnected' in outcome) || check >= CONNECT_CHECKS) return outcome
+    try {
+      await $.clock.sleep(CONNECT_WAIT_MS)
+    } catch {
+      return outcome
+    }
+  }
+}
+
+async function previewOnce($: EngineInterface, query: string): Promise<Preview> {
   const listed: string[] = []
   try {
     for (const t of await $.tool.list()) if (SUMMON_TOOL.test(t.name)) listed.push(t.name)
@@ -135,7 +157,7 @@ async function previewSummon($: EngineInterface, query: string): Promise<Preview
     let result
     try {
       result = await $.tool.call({
-        tool: name as `mcp__${string}__${string}`,
+        tool: name as typeof MARKETPLACE_SUMMON_TOOL | typeof LAUNCHER_SUMMON_TOOL,
         query,
         surface: 'any',
         preview: true,
@@ -173,7 +195,7 @@ export const register: Register = (on, options) => {
    * ----------------------------------------------------------------------- */
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'heaven', description: 'Open the Skill Heaven console', argumentHint: '[session|scope|flow|trust]' })
+    await $.command.register({ name: 'heaven', description: 'Open the Skill Heaven console', argumentHint: '[inspect] [session|scope|flow|trust] | dismiss' })
     await $.command.register({
       name: 'lens',
       description: 'Preview which skill would be summoned — nothing is materialized',
@@ -207,9 +229,15 @@ export const register: Register = (on, options) => {
    * ----------------------------------------------------------------------- */
 
   on('command.run', { command: 'heaven' }, async ($, e) => {
-    const arg = e.args.trim().toLowerCase()
-    const section = SECTIONS.find((s) => s === arg)
-    if (section) await change($, mode, (s) => ({ ...s, section }))
+    const args = e.args.trim().toLowerCase().split(/\s+/)
+    if (args[0] === 'dismiss') {
+      await $.ui.close({ id: PANE_ID })
+      await change($, mode, (s) => ({ ...s, band: null, bandRequested: false }))
+      return { text: 'Skill Heaven console dismissed.' }
+    }
+    const inspectSection = args[0] === 'inspect'
+    const section = SECTIONS.find((s) => s === args[inspectSection ? 1 : 0])
+    await change($, mode, (s) => ({ ...s, section: section ?? s.section, inspectSection, openEntry: null }))
     await openPane($)
     // The model reads this row: fixed text only.
     return { text: 'Skill Heaven console opened.' }
@@ -218,7 +246,7 @@ export const register: Register = (on, options) => {
   on('command.run', { command: 'lens' }, async ($, e) => {
     const query = sanitizeDisplay(e.args, 200)
     if (query === '') return { text: 'Usage: /lens <intent>. Nothing was summoned.' }
-    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query } }))
+    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query }, bandRequested: true }))
     lensInFlight = true
     try {
       let outcome: Preview
@@ -360,6 +388,9 @@ export const register: Register = (on, options) => {
   // Rung selection: the person typed /skill-heaven, /skill-hell, /skill-ultra or
   // /skill-zero. The console reads it; the prompt goes on unchanged.
   on('prompt.submit', async ($, e, next) => {
+    // A subagent's hand-back arrives as a prompt too (origin `peer`, observed on
+    // 2.1.294): it is not the person's next prompt and selects no rung.
+    if ((e as { origin?: { kind?: string } }).origin?.kind === 'peer') return next(e)
     try {
       const reading = selectionFromCommand(e.text)
       await change($, mode, (s) => {
@@ -380,13 +411,13 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
     const state = await load($)
-    if (state.band === null) return next(e)
+    if (state.band === null || !state.bandRequested) return next(e)
     const actions: BandActions = {
       inspect: (id) => {
-        later(change($, mode, (s) => ({ ...s, section: 'session', openEntry: id })).then(() => openPane($)))
+        later(change($, mode, (s) => ({ ...s, section: 'session', openEntry: id, inspectSection: true })).then(() => openPane($)))
       },
       dismiss: () => {
-        later(change($, mode, (s) => ({ ...s, band: null })))
+        later(change($, mode, (s) => ({ ...s, band: null, bandRequested: false })))
       },
       summon: (name) => {
         later(fillPrompt($, `/summon ${name}`))
@@ -399,8 +430,10 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: 'skill-heaven' }, async ($, e) => {
     const state = await load($)
     const actions: PaneActions = {
+      inspect: () => { later(change($, mode, (s) => ({ ...s, inspectSection: !s.inspectSection, openEntry: null }))) },
+      close: () => { later($.ui.close({ id: PANE_ID })) },
       section: (section) => {
-        later(change($, mode, (s) => ({ ...s, section })))
+        later(change($, mode, (s) => ({ ...s, section, inspectSection: false, openEntry: null })))
       },
       toggle: (id) => {
         later(change($, mode, (s) => ({ ...s, openEntry: s.openEntry === id ? null : id })))

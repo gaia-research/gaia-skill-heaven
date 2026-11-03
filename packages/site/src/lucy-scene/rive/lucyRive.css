@@ -1,0 +1,42 @@
+/* LucyLive loading veil: holds Lucy's place while her Rive file downloads
+   (owner: no static master behind it). Bone ink, one hairline that breathes.
+   Never shown under prefers-reduced-motion: the masters are the experience there. */
+.lucy-rive__loading {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  translate: -50% -50%;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: #eeebe6;
+  font-family: var(--sh-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  text-shadow: 0 0 12px rgba(27, 26, 28, 0.9);
+}
+.lucy-rive__bar {
+  position: relative;
+  width: 120px;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(238, 235, 230, 0.2);
+}
+.lucy-rive__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #a58ae0, #5fc2d6, transparent);
+  animation: lucy-rive-sweep 1.4s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+@keyframes lucy-rive-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lucy-rive__loading { display: none; }
+}

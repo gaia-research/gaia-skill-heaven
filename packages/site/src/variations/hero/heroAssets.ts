@@ -84,30 +84,38 @@ export const HERO_ASSETS: LucyHeroAssetSet = HERO_ASSET_SETS[DEFAULT_LUCY_ASSET_
 const PRELOAD_CACHE = new Set<HTMLImageElement>()
 
 /**
- * Preloads and pre-decodes all Lucy character states, katanas, and weapons
- * into browser and GPU texture memory.
+ * Preloads and pre-decodes Lucy character states, katanas, and weapons into
+ * browser and GPU texture memory. `states` limits the masters fetched (the
+ * katanas and the slash arc always come along: they are small and the hero's
+ * own layer). Resolves when every requested image has decoded or failed.
  */
-export function preloadLucyAssets(set: LucyAssetSet = DEFAULT_LUCY_ASSET_SET) {
-  if (typeof window === 'undefined') return
+export function preloadLucyAssets(
+  set: LucyAssetSet = DEFAULT_LUCY_ASSET_SET,
+  states: readonly LucyHeroState[] = ['zero', 'heaven', 'hell', 'ultra'],
+): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
   const assets = HERO_ASSET_SETS[set]
   const list = [
-    assets.zero.lucy,
-    assets.heaven.lucy,
-    assets.hell.lucy,
-    assets.ultra.lucy,
+    ...states.map((s) => assets[s].lucy),
     assets.zero.katana,
     assets.heaven.katana,
     assets.hell.katana,
     assets.ultra.katana,
     assets.zero.slashArc,
   ]
-  list.forEach((src) => {
-    const img = new Image()
-    img.src = src
-    img.decode?.().catch(() => {})
-    PRELOAD_CACHE.add(img)
-  })
+  return Promise.all(
+    list.map((src) => {
+      const img = new Image()
+      img.src = src
+      PRELOAD_CACHE.add(img)
+      return img.decode?.().catch(() => {}) ?? Promise.resolve()
+    }),
+  ).then(() => undefined)
 }
 
-// Eagerly preload the production delivery masters on initial module load
-preloadLucyAssets('v5')
+// Preload only the Heaven master at module load: it is the out-of-the-box
+// state and the one Skip needs at once. In the live (Rive) path the other
+// masters would compete with the figure file and Ultra's sidecars for the
+// bandwidth of the first seconds, so the hero fetches them after the entrance
+// cuts (or immediately, when the session is static).
+export const HEAVEN_POSTER_READY: Promise<void> = preloadLucyAssets('v5', ['heaven'])

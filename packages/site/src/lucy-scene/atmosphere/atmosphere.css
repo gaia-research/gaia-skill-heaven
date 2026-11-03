@@ -1,0 +1,547 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   LucyAtmosphere — the four rooms.
+
+   Every gradient here is painted once and never repainted: motion is
+   transform and opacity on top of static paint. Rest loops are CSS keyframes
+   on an inner element, gated by [data-on], so only the current world spends
+   anything. No animated filter, no backdrop-filter, no blend mode.
+
+   Palette is the hero's own (useHeroEngine HERO): Heaven runs the prism at
+   light-on-black; Hell is that prism INVERTED (cyan → rust #a03d29, blue →
+   umber #833b00, violet → olive #5a751f) on paper — its red is what the
+   spectrum becomes inverted, never a red applied by hand; Ultra is gold
+   #ffd24a with the red edge #c81e1e; Zero is bone at whisper alpha with a
+   breath of its own cyan #37d6e0.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.la {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  /* Where the light lives: behind her head and shoulders. */
+  --ax: 50%;
+  --ay: 33%;
+}
+
+.la-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ── Layer frame ───────────────────────────────────────────────────────── */
+
+.la-l {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform-origin: var(--ax) var(--ay);
+  /* A world that is not home leaves the layer tree entirely once it has faded. */
+  visibility: hidden;
+  transition:
+    opacity 420ms linear,
+    visibility 0s linear 420ms;
+}
+.la-l > i,
+.la-l > span,
+.la-l > b {
+  position: absolute;
+  display: block;
+}
+
+.la[data-state='zero'] .la-l--zero,
+.la[data-state='heaven'] .la-l--heaven,
+.la[data-state='hell'] .la-l--hell,
+.la[data-state='ultra'] .la-l--ultra {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 420ms linear,
+    visibility 0s;
+}
+
+/* Near planes sit in front of the shard field. */
+.la-l--zero-horizon,
+.la-l--ultra-sweep {
+  z-index: 3;
+}
+
+/* A soft disc centred on the light anchor; size set per layer. */
+.la-orb {
+  left: var(--ax);
+  top: var(--ay);
+  border-radius: 50%;
+}
+
+/* ═══ ZERO — discovered, not announced ═════════════════════════════════ */
+
+.la-l--zero-vignette > i {
+  inset: 0;
+  background: radial-gradient(ellipse 75% 70% at 50% 42%, transparent 52%, rgba(8, 8, 9, 0.34) 100%);
+}
+
+.la-l--zero-bloom > i {
+  left: var(--ax);
+  top: var(--ay);
+  width: 118vh;
+  height: 118vh;
+  margin: -59vh 0 0 -59vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(238, 235, 230, 0.13),
+    rgba(238, 235, 230, 0.055) 44%,
+    rgba(238, 235, 230, 0.016) 72%,
+    transparent
+  );
+}
+.la-l--zero-bloom[data-on] > i {
+  animation: la-breathe 12s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.la-l--zero-column > i {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 36vw;
+  margin-left: -18vw;
+  background: linear-gradient(to right, transparent, rgba(238, 235, 230, 0.05) 50%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 64%, transparent 94%);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 64%, transparent 94%);
+}
+
+.la-l--zero-horizon > i {
+  left: -4vw;
+  right: -4vw;
+  top: 34%;
+  height: 26vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(238, 235, 230, 0.045) 46%,
+    rgba(55, 214, 224, 0.02) 52%,
+    transparent
+  );
+}
+.la-l--zero-horizon > .la-horizon-line {
+  left: 18vw;
+  right: 18vw;
+  top: calc(34% + 13vh);
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(55, 214, 224, 0.16) 30%, rgba(238, 235, 230, 0.12) 50%, rgba(55, 214, 224, 0.16) 70%, transparent);
+}
+.la-l--zero-horizon[data-on] > i {
+  animation: la-zero-tide 26s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+/* ═══ HEAVEN — ordered glass, falling light ═════════════════════════════ */
+
+.la-l--heaven-bloom > i {
+  left: var(--ax);
+  top: var(--ay);
+  width: 132vh;
+  height: 132vh;
+  margin: -66vh 0 0 -66vh;
+  background:
+    radial-gradient(closest-side, rgba(214, 239, 255, 0.42), rgba(124, 196, 255, 0.14) 55%, transparent) center / 38% 38% no-repeat,
+    radial-gradient(
+      closest-side,
+      rgba(124, 196, 255, 0.4),
+      rgba(95, 194, 214, 0.2) 28%,
+      rgba(165, 138, 224, 0.09) 54%,
+      rgba(165, 138, 224, 0.025) 78%,
+      transparent
+    );
+}
+.la-l--heaven-bloom[data-on] > i {
+  animation: la-breathe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+/* The corona: split light as a ring, never a fill. The spectrum orbits. */
+.la-l--heaven-corona > i {
+  left: var(--ax);
+  top: var(--ay);
+  width: min(74vh, 88vw);
+  height: min(74vh, 88vw);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    rgba(95, 194, 214, 0) 0deg,
+    rgba(95, 194, 214, 0.75) 40deg,
+    rgba(124, 196, 255, 0.7) 90deg,
+    rgba(165, 138, 224, 0.75) 150deg,
+    rgba(224, 148, 200, 0.5) 200deg,
+    rgba(165, 138, 224, 0.15) 250deg,
+    rgba(95, 194, 214, 0) 300deg,
+    rgba(124, 196, 255, 0.4) 340deg,
+    rgba(95, 194, 214, 0) 360deg
+  );
+  -webkit-mask-image: radial-gradient(closest-side, transparent 77%, #000 83%, #000 85%, transparent 93%);
+  mask-image: radial-gradient(closest-side, transparent 77%, #000 83%, #000 85%, transparent 93%);
+  opacity: 0.9;
+}
+/* A hairline inner ring: the refraction's second edge. */
+.la-l--heaven-corona > i::after {
+  content: '';
+  position: absolute;
+  inset: 13%;
+  border-radius: 50%;
+  border: 1px solid rgba(190, 228, 255, 0.16);
+}
+.la-l--heaven-corona[data-on] > i {
+  animation: la-orbit 150s linear infinite;
+}
+
+.la-l--heaven-shafts {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 58%, transparent 90%);
+  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 58%, transparent 90%);
+}
+.la-shaft {
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  background: linear-gradient(to right, transparent, rgba(124, 196, 255, 0.07) 50%, transparent);
+}
+.la-shaft > i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -100%;
+  height: 200%;
+  /* Soft both ways, so the shaft never shows a hard edge. */
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(206, 235, 255, 0.16), transparent 100%) 0 0 / 100% 50% repeat-y;
+}
+.la-shaft--0 { left: 12vw; width: 2.4vw; }
+.la-shaft--1 { left: 25vw; width: 5.5vw; opacity: 0.7; }
+.la-shaft--2 { left: 45vw; width: 10vw; opacity: 0.6; }
+.la-shaft--3 { left: 69vw; width: 4vw; opacity: 0.8; }
+.la-shaft--4 { left: 84vw; width: 1.8vw; }
+.la-l--heaven-shafts[data-on] .la-shaft > i {
+  animation: la-pour 17s linear infinite;
+}
+.la-l--heaven-shafts[data-on] .la-shaft--1 > i { animation-duration: 23s; animation-delay: -6s; }
+.la-l--heaven-shafts[data-on] .la-shaft--2 > i { animation-duration: 29s; animation-delay: -14s; }
+.la-l--heaven-shafts[data-on] .la-shaft--3 > i { animation-duration: 21s; animation-delay: -3s; }
+.la-l--heaven-shafts[data-on] .la-shaft--4 > i { animation-duration: 15s; animation-delay: -9s; }
+
+/* ═══ HELL — the world stops agreeing with itself ═══════════════════════ */
+
+/* Light comes up from the floor: an inverted bloom is a stain on paper. */
+.la-l--hell-underlight > i {
+  left: -10vw;
+  right: -10vw;
+  bottom: 30vh;
+  height: 70vh;
+  background: radial-gradient(
+    ellipse 46% 80% at 50% 100%,
+    rgba(160, 61, 41, 0.17),
+    rgba(131, 59, 0, 0.08) 38%,
+    rgba(90, 117, 31, 0.025) 64%,
+    transparent 84%
+  );
+}
+
+/* Two copies of Heaven's corona, inverted, out of register, counter-spun. */
+.la-l--hell-ring-a > i,
+.la-l--hell-ring-b > i {
+  left: var(--ax);
+  top: var(--ay);
+  width: min(74vh, 88vw);
+  height: min(74vh, 88vw);
+  translate: -50% -50%;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(closest-side, transparent 79%, #000 83%, #000 84.5%, transparent 89%);
+  mask-image: radial-gradient(closest-side, transparent 79%, #000 83%, #000 84.5%, transparent 89%);
+}
+.la-l--hell-ring-a > i {
+  background: conic-gradient(
+    from 30deg,
+    rgba(160, 61, 41, 0) 0deg,
+    rgba(160, 61, 41, 0.7) 50deg,
+    rgba(131, 59, 0, 0.62) 110deg,
+    rgba(90, 117, 31, 0.5) 170deg,
+    rgba(160, 61, 41, 0) 230deg,
+    rgba(10, 10, 10, 0.3) 300deg,
+    rgba(160, 61, 41, 0) 360deg
+  );
+}
+.la-l--hell-ring-b > i {
+  margin: 1.1vh 0 0 1.4vh;
+  width: min(71vh, 85vw);
+  height: min(71vh, 85vw);
+  background: conic-gradient(
+    from 200deg,
+    rgba(10, 10, 10, 0) 0deg,
+    rgba(10, 10, 10, 0.32) 60deg,
+    rgba(10, 10, 10, 0) 120deg,
+    rgba(160, 61, 41, 0.4) 210deg,
+    rgba(160, 61, 41, 0) 280deg,
+    rgba(10, 10, 10, 0.2) 330deg,
+    rgba(10, 10, 10, 0) 360deg
+  );
+}
+.la-l--hell-ring-a[data-on] > i { animation: la-orbit-rev 97s linear infinite; }
+.la-l--hell-ring-b[data-on] > i { animation: la-orbit 61s linear infinite; }
+
+/* Registration slips: an ink hairline and its rust echo, drifting in and out
+   of register on mismatched clocks. Opposing directions band to band. */
+.la-slip {
+  height: 6px;
+}
+.la-slip > i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.la-slip__ink {
+  top: 0;
+  background: linear-gradient(to right, transparent, rgba(10, 10, 10, 0.2) 18%, rgba(10, 10, 10, 0.2) 82%, transparent);
+}
+.la-slip__red {
+  top: 4px;
+  background: linear-gradient(to right, transparent, rgba(160, 61, 41, 0.42) 22%, rgba(160, 61, 41, 0.42) 78%, transparent);
+}
+.la-slip--0 { left: 26vw; width: 30vw; top: 8%; }
+.la-slip--1 { right: 2vw; width: 34vw; top: 43%; }
+.la-slip--2 { left: 2vw; width: 26vw; top: 46.5%; }
+.la-l--hell-slips[data-on] .la-slip--0 .la-slip__ink { animation: la-slip 13s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.la-l--hell-slips[data-on] .la-slip--0 .la-slip__red { animation: la-slip 17s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.la-l--hell-slips[data-on] .la-slip--1 .la-slip__ink { animation: la-slip-rev 11s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.la-l--hell-slips[data-on] .la-slip--1 .la-slip__red { animation: la-slip-rev 15.5s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.la-l--hell-slips[data-on] .la-slip--2 .la-slip__ink { animation: la-slip 14.5s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.la-l--hell-slips[data-on] .la-slip--2 .la-slip__red { animation: la-slip 19s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+
+/* ═══ ULTRA — she lights the room ══════════════════════════════════════ */
+
+.la-l--ultra-bloom > i {
+  left: var(--ax);
+  top: calc(var(--ay) - 4vh);
+  width: 150vh;
+  height: 150vh;
+  margin: -75vh 0 0 -75vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 230, 150, 0.4),
+    rgba(255, 210, 74, 0.2) 22%,
+    rgba(217, 160, 60, 0.09) 46%,
+    rgba(160, 90, 20, 0.03) 72%,
+    transparent
+  );
+}
+.la-l--ultra-bloom[data-on] > i {
+  animation: la-breathe-strong 7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+/* Interference: two fields of fine gold rings, one orbiting a hair off-centre
+   of the other. The moiré between them is the refraction. Hollow at the
+   centre so nothing crosses her face. */
+.la-rings {
+  left: var(--ax);
+  top: calc(var(--ay) - 4vh);
+  width: 128vh;
+  height: 128vh;
+  margin: -64vh 0 0 -64vh;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, rgba(255, 210, 74, 0.11) 0 1px, transparent 1.5px 12px);
+  -webkit-mask-image: radial-gradient(closest-side, transparent 30%, #000 50%, #000 62%, transparent 96%);
+  mask-image: radial-gradient(closest-side, transparent 30%, #000 50%, #000 62%, transparent 96%);
+}
+.la-rings--b {
+  background: repeating-radial-gradient(circle, rgba(255, 226, 140, 0.1) 0 1px, transparent 1.5px 12.6px);
+}
+.la-l--ultra-interference[data-on] .la-rings--b {
+  animation: la-wander 23s linear infinite;
+}
+
+/* The sweep: one band of gold with a red leading edge crosses the room, then
+   the room rests. Fires on arrival, then on a long, unhurried cycle. */
+.la-l--ultra-sweep > i {
+  top: -40vh;
+  bottom: -40vh;
+  left: 0;
+  width: 34vw;
+  rotate: 18deg;
+  translate: -60vw 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 226, 140, 0) 30%,
+    rgba(255, 226, 140, 0.11) 58%,
+    rgba(255, 244, 214, 0.16) 66%,
+    rgba(200, 30, 30, 0.09) 68%,
+    transparent 74%
+  );
+}
+.la-l--ultra-sweep[data-on] > i {
+  animation: la-sweep 12s cubic-bezier(0.55, 0.05, 0.25, 1) 0.35s infinite;
+}
+
+/* ═══ The shard field ══════════════════════════════════════════════════ */
+
+.la-field {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  transition: opacity 220ms linear;
+}
+.la-shard {
+  --sw: clamp(26px, 3.4vw, 62px);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--sw);
+  height: calc(var(--sw) * 4.2);
+  margin: calc(var(--sw) * -2.1) 0 0 calc(var(--sw) * -0.5);
+  opacity: 0;
+}
+.la[data-shards='zero'] .la-shard { transform: var(--t-zero); opacity: var(--o-zero); }
+.la[data-shards='heaven'] .la-shard { transform: var(--t-heaven); opacity: var(--o-heaven); }
+.la[data-shards='hell'] .la-shard { transform: var(--t-hell); opacity: var(--o-hell); }
+.la[data-shards='ultra'] .la-shard { transform: var(--t-ultra); opacity: var(--o-ultra); }
+
+.la-skin {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: 0;
+}
+.la-skin--ghost { opacity: 1; }
+.la[data-shards='heaven'] .la-skin--heaven,
+.la[data-shards='hell'] .la-skin--hell,
+.la[data-shards='ultra'] .la-skin--ultra {
+  opacity: 1;
+}
+.la-skin__edge { stroke-width: 1px; }
+/* Static glow: rasterised once with the skin, then only composited. */
+.la-skin--heaven { filter: drop-shadow(0 0 6px rgba(124, 196, 255, 0.55)); }
+.la-skin--ultra { filter: drop-shadow(0 0 8px rgba(255, 200, 80, 0.6)); }
+.la-skin__facet { stroke-width: 0.75px; }
+.la-skin--heaven .la-skin__edge { stroke: rgba(205, 235, 255, 0.42); }
+.la-skin--heaven .la-skin__facet { stroke: rgba(255, 255, 255, 0.32); }
+.la-skin--hell .la-skin__edge { stroke: rgba(10, 10, 10, 0.5); }
+.la-skin--hell .la-skin__facet { stroke: rgba(10, 10, 10, 0.2); }
+.la-skin--ghost .la-skin__edge { stroke: rgba(160, 61, 41, 0.7); }
+.la-skin--ultra .la-skin__edge { stroke: rgba(255, 236, 170, 0.6); }
+.la-skin--ultra .la-skin__facet { stroke: rgba(255, 246, 220, 0.55); }
+
+/* ── Rest loops ────────────────────────────────────────────────────────── */
+
+@keyframes la-breathe {
+  from { transform: scale(1); opacity: 0.86; }
+  to { transform: scale(1.035); opacity: 1; }
+}
+@keyframes la-breathe-strong {
+  from { transform: scale(0.98); opacity: 0.82; }
+  to { transform: scale(1.05); opacity: 1; }
+}
+@keyframes la-orbit {
+  to { rotate: 360deg; }
+}
+@keyframes la-orbit-rev {
+  to { rotate: -360deg; }
+}
+@keyframes la-pour {
+  from { transform: translateY(0); }
+  to { transform: translateY(50%); }
+}
+@keyframes la-zero-tide {
+  from { transform: translateX(-0.6vw); }
+  to { transform: translateX(0.6vw); }
+}
+@keyframes la-slip {
+  from { transform: translateX(-2.2vw); }
+  to { transform: translateX(2.2vw); }
+}
+@keyframes la-slip-rev {
+  from { transform: translateX(2.2vw); }
+  to { transform: translateX(-2.2vw); }
+}
+@keyframes la-wander {
+  0% { transform: translate(0.9vh, 0); }
+  25% { transform: translate(0, 0.9vh); }
+  50% { transform: translate(-0.9vh, 0); }
+  75% { transform: translate(0, -0.9vh); }
+  100% { transform: translate(0.9vh, 0); }
+}
+@keyframes la-sweep {
+  0% { translate: -60vw 0; }
+  26% { translate: 130vw 0; }
+  100% { translate: 130vw 0; }
+}
+
+/* ── Phones: a deliberately sparser room ─────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .la {
+    --ay: 27%;
+  }
+  .la [data-desktop-only] {
+    display: none;
+  }
+  .la-field {
+    top: 36%;
+  }
+  .la-shard {
+    --sw: clamp(22px, 6.4vw, 34px);
+  }
+  .la-shaft--1,
+  .la-shaft--3 {
+    display: none;
+  }
+  .la-slip--0 { left: 30vw; width: 50vw; top: 15%; }
+  .la-slip--1 { width: 60vw; top: 50%; }
+  .la-slip--2 { display: none; }
+}
+
+/* ── Reduced motion: the same four rooms, held still ────────────────────────
+   Each world keeps its palette, its light and its shard order; what goes is
+   drift, parallax and spatial travel. A state change is a short opacity
+   exchange. (The hero's blanket rule collapses .vha transitions to ~0ms; these
+   two are deliberate and outrank it.) */
+@media (prefers-reduced-motion: reduce) {
+  .la *,
+  .la *::before,
+  .la *::after {
+    animation: none !important;
+  }
+  .vha .la .la-l {
+    transition:
+      opacity 360ms linear,
+      visibility 0s linear 360ms !important;
+  }
+  .vha .la[data-state] .la-l[data-on] {
+    transition:
+      opacity 360ms linear,
+      visibility 0s !important;
+  }
+  .vha .la .la-field {
+    transition: opacity 220ms linear !important;
+  }
+  /* The sweep is a moving event; held still it would be a stripe. */
+  .la-l--ultra-sweep {
+    display: none;
+  }
+}
+
+/* Once the conductor owns the room, Motion is the only thing that moves it,
+   and `data-on` (set on arrival, cleared when an exit finishes) decides which
+   layers exist at all. */
+.la[data-conducted] .la-l,
+.la[data-conducted] .la-field {
+  transition: none;
+}
+.la[data-conducted] .la-l {
+  visibility: hidden;
+}
+.la[data-conducted] .la-l[data-on] {
+  visibility: visible;
+}

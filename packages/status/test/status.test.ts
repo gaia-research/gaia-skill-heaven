@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import * as api from "../src/index.js";
 import {
   CHIP_LABEL,
+  AGENT_PLUGIN_INSTALL,
   HARNESS_PATHS,
   GROUND_HEX,
   ROLE_COLORS,
@@ -241,6 +242,11 @@ describe("events: state, event, evidence stay distinct (#137)", () => {
     expect(e.skills[0]).toMatchObject({ lane: "human-led", stage: "materialized", ms: 200 });
   });
 
+  it("reports the index age in whole days (the engine sends a fraction)", () => {
+    const e = eventFromSummonResult({ summoned: [], previewed: [], noMatch: null, ranking: { stale: true, indexAgeDays: 30.832282523148148 } });
+    expect(e.kind === "summoned" || e.kind === "previewed" || e.kind === "no-match" ? e.sourceHealth : null).toEqual({ kind: "stale", indexAgeDays: 30 });
+  });
+
   it("tool errors become error or unavailable, never a fabricated summon", () => {
     expect(eventFromSummonResult(null, {}, { isError: true, text: "fetch failed" }).kind).toBe("unavailable");
     expect(eventFromSummonResult(null, {}, { isError: true, text: "boom" }).kind).toBe("error");
@@ -415,9 +421,15 @@ describe("harness table (CONTROL-PLANE §5.4)", () => {
     expect(text).not.toMatch(/skill-heaven\.dev|npx |npm install/);
   });
 
-  it("Antigravity is partial and prints no registration command until probed", () => {
+  it("Antigravity is compatible on its probed version and prints the probed install command (#187)", () => {
     const agy = HARNESS_PATHS.find((h) => h.id === "agy")!;
-    expect(agy.chip).toBe("partial");
-    expect(agy.commands).toEqual([]);
+    expect(agy.chip).toBe("compatible");
+    expect(agy.probedVersion).toBe("1.3.1");
+    expect(agy.commands).toEqual([`agy plugin install "${AGENT_PLUGIN_INSTALL.plugin}"`]);
+    expect(agy.firstRun).toMatch(/^\/skill-heaven:summon /);
+  });
+
+  it("Claude's first run is the qualified spelling 2.1.294 accepts (#187)", () => {
+    expect(HARNESS_PATHS.find((h) => h.id === "claude")!.firstRun).toMatch(/^\/skill-heaven:summon /);
   });
 });

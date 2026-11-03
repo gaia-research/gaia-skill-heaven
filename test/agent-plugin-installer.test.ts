@@ -31,6 +31,7 @@ describe("portable Agent Plugin installer", () => {
     mkdirSync(archiveRoot, { recursive: true });
     cpSync(join(REPO, "plugins"), join(archiveRoot, "plugins"), { recursive: true });
     cpSync(join(REPO, ".claude-plugin"), join(archiveRoot, ".claude-plugin"), { recursive: true });
+    cpSync(join(REPO, "scripts"), join(archiveRoot, "scripts"), { recursive: true });
     const archive = join(root, "source.tar.gz");
     execFileSync("tar", ["-czf", archive, "-C", join(root, "archive"), "gaia-skill-heaven-probe"]);
 
@@ -106,13 +107,11 @@ describe("portable Agent Plugin installer", () => {
     writeFileSync(preserve, "previous install");
     const fakeBin = join(root, "fake-bin");
     mkdirSync(fakeBin);
-    const realMv = execFileSync("sh", ["-c", "command -v mv"], { encoding: "utf8" }).trim();
-    const fakeMv = join(fakeBin, "mv");
-    writeFileSync(
-      fakeMv,
-      `#!/bin/sh\ncase $1 in */install) exit 73 ;; esac\nexec '${realMv}' "$@"\n`,
-    );
-    chmodSync(fakeMv, 0o755);
+    // Node now activates with renameSync. A staging Git failure must leave the
+    // prior installation intact, rather than relying on an obsolete mv shim.
+    const fakeGit = join(fakeBin, "git");
+    writeFileSync(fakeGit, "#!/bin/sh\nexit 73\n");
+    chmodSync(fakeGit, 0o755);
     expect(() =>
       execFileSync("sh", [INSTALLER], {
         env: { ...installEnv, PATH: `${fakeBin}:${process.env.PATH ?? ""}` },
