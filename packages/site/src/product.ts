@@ -369,13 +369,13 @@ export const INSTALL = {
     'Primary path. Installs one portable Agent Plugin and a local marketplace, then prints both directories. Point any Agent Plugins client at the printed plugin directory and use that client’s own registration command.',
   /** Tested Claude Code compatibility — a client route, not the universal install. */
   claudeMarketplace: {
-    testedVersion: '2.1.288',
+    testedVersion: '2.1.318',
     commands: [
       '/plugin marketplace add gaia-research/gaia-skill-heaven',
       '/plugin install skill-heaven@gaia-skill-heaven',
     ] as const,
     note:
-      'Tested on Claude Code 2.1.288 from a clean install (see the production page). This client-owned route is available; it is not the harness-neutral Agent Plugin installer.',
+      'Tested on Claude Code 2.1.318 from a clean install (see the production page). This client-owned route is available; it is not the harness-neutral Agent Plugin installer.',
   },
   /** Optional — the standalone source-built launcher doors. */
   sh: 'curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh',
