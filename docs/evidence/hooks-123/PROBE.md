@@ -3,7 +3,7 @@
 **Date:** 2026-11-04 · **Harness:** Claude Code **2.1.318** (`claude --version`), headless
 `-p` with `--output-format stream-json --verbose` · **Plugin under test:** `skill-heaven`
 0.1.2 at commit `0a9aad3`. The hook files, `.claude-plugin/plugin.json` and the
-renderer are unchanged by every later commit on this branch.
+renderer have no behavioural change in any later commit on this branch; `3373931` edits one comment in `zero-cut.mjs`.
 
 This is a functional acceptance record, not a benchmark. No gold data, no floor, no
 scoring. Every cell is one real session. The evidence is the harness's own
