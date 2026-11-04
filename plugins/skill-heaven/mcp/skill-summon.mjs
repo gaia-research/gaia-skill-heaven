@@ -21543,7 +21543,7 @@ function zeroCutFromEnv(env = process.env) {
 function normalizeZeroCut(raw) {
   return typeof raw === "string" && raw.trim().toLowerCase() === "all" ? "all" : "temporary";
 }
-var ZERO_CUT_REFUSAL = "Skill Heaven: nothing was summoned. zero_cuts = all is configured, which cuts every skill summon, including manual /summon and previews. To summon again, set zero_cuts back to temporary (the plugin setting, or SKILL_HEAVEN_ZERO_CUTS for a claude-zero launch) and start a new session.";
+var ZERO_CUT_REFUSAL = "Skill Heaven: nothing was summoned. zero_cuts = all is configured, which cuts every skill summon, including manual /summon and previews. Summoning is available again in a new session once zero_cuts is temporary (the user's plugin setting, or SKILL_HEAVEN_ZERO_CUTS for a claude-zero launch).";
 
 // node_modules/zod/v4/mini/schemas.js
 var ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {

@@ -31,6 +31,6 @@ export function normalizeZeroCut(raw: unknown): ZeroCut {
 /** Constant text: nothing from a request or a catalogue is ever echoed into it. */
 export const ZERO_CUT_REFUSAL =
   "Skill Heaven: nothing was summoned. zero_cuts = all is configured, which cuts every skill " +
-  "summon, including manual /summon and previews. To summon again, set zero_cuts back to " +
-  "temporary (the plugin setting, or SKILL_HEAVEN_ZERO_CUTS for a claude-zero launch) and " +
-  "start a new session.";
+  "summon, including manual /summon and previews. Summoning is available again in a new " +
+  "session once zero_cuts is temporary (the user's plugin setting, or SKILL_HEAVEN_ZERO_CUTS " +
+  "for a claude-zero launch).";

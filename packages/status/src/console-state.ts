@@ -66,7 +66,9 @@ export interface ConsoleCoreState {
    * status and does no observer work in a session that never summons, selects
    * a rung, or opens /heaven or /lens. Observing a summon (a refused one
    * included) or a typed rung command wakes it, and so does an explicit console
-   * command. Nothing un-wakes it within a conversation.
+   * command. A reset returns it to dormant: Claude Code's /clear, and a Pi
+   * rebuild (session start or branch change), which re-wakes only when the
+   * replayed branch holds a summon result — rung commands are not replayed.
    */
   awake: boolean;
 }

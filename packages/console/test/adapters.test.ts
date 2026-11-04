@@ -231,6 +231,12 @@ describe("separate Pi extension", () => {
     rung.handlers.input({ text: "/skill-hell high" }, rung.ctx);
     expect(rung.statuses.at(-1)[1]).toContain("HIGH");
 
+    // Dismissing, or a usage error, is not using the console.
+    const declined = piFixture();
+    await declined.commands.heaven.handler("dismiss", declined.ctx);
+    await declined.commands.heaven.handler("not-a-section", declined.ctx);
+    expect(paintedNothing(declined)).toBe(true);
+
     const opened = piFixture();
     await opened.commands.heaven.handler("fill", opened.ctx);
     expect(opened.statuses.at(-1)[1]).toContain("0 skills");

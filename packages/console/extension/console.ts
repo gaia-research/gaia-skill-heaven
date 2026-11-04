@@ -202,15 +202,17 @@ export default function consolePi(pi: ExtensionAPI): void {
     description: "Compact console; 1–6 sections, i inspect, Esc/q close; [all|status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]",
     handler: async (args, ctx) => {
       if (!ctx.hasUI) return;
-      state = wake(state); paint(ctx); // opening the console is using it
       const sub = args.trim() || "all";
+      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
+      const opens = sub === "fill" || inspect !== null || sub === "all" || CONSOLE_SURFACES.includes(sub as ConsoleSurface);
+      // Opening the console is using it; dismissing it or a usage error is not.
+      if (opens) { state = wake(state); paint(ctx); }
       if (sub === "dismiss") { closePane(); bandRequested = false; state = { ...state, band: null }; ctx.ui.setWidget(KEY, undefined); return; }
       if (sub === "fill") {
         const draft = buildConsoleView(state, projection).lens?.prefill;
         if (draft) ctx.ui.setEditorText(draft); // never sends a message
         return;
       }
-      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
       if (inspect) await show(ctx, inspect[1] as ConsoleSurface, true);
       else if (sub === "all" || CONSOLE_SURFACES.includes(sub as ConsoleSurface)) await show(ctx, sub as ConsoleSurface | "all");
       else ctx.ui.notify("Usage: /heaven [status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]", "info");

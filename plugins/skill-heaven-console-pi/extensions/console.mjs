@@ -1697,9 +1697,13 @@ function consolePi(pi) {
     description: "Compact console; 1\u20136 sections, i inspect, Esc/q close; [all|status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]",
     handler: async (args, ctx) => {
       if (!ctx.hasUI) return;
-      state = wake(state);
-      paint2(ctx);
       const sub = args.trim() || "all";
+      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
+      const opens = sub === "fill" || inspect !== null || sub === "all" || CONSOLE_SURFACES.includes(sub);
+      if (opens) {
+        state = wake(state);
+        paint2(ctx);
+      }
       if (sub === "dismiss") {
         closePane();
         bandRequested = false;
@@ -1712,7 +1716,6 @@ function consolePi(pi) {
         if (draft) ctx.ui.setEditorText(draft);
         return;
       }
-      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
       if (inspect) await show(ctx, inspect[1], true);
       else if (sub === "all" || CONSOLE_SURFACES.includes(sub)) await show(ctx, sub);
       else ctx.ui.notify("Usage: /heaven [status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]", "info");
