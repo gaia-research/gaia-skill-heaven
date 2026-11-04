@@ -24,6 +24,7 @@
   "author": {
     "name": "Gaia Research"
   },
+  "hooks": "./hooks/claude-code.json",
   "userConfig": {
     "skill_url": {
       "type": "string",

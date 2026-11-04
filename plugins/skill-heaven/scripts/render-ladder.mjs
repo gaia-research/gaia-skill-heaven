@@ -334,8 +334,8 @@ function renderSummon(
       text: [
         "⛔ manual /summon is cut by the configured zero_cuts = all.",
         "   Skill Zero's default cuts temporary skills; this configuration cuts the",
-        "   manual call too. Change it in the plugin's settings (zero_cuts:",
-        "   temporary), or select a rung above the floor: /skill-heaven · /skill-hell.",
+        "   manual call too. Selecting another rung does not lift it; change it in",
+        "   the plugin's settings (zero_cuts: temporary).",
         "",
       ].join("\n"),
       refused: true,

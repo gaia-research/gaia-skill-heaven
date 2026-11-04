@@ -19,6 +19,10 @@
     "packages/*/scripts",
     "packages/*/bench",
     "plugins/*/scripts",
+    // The Claude Code hook is plain ESM for the same reason as the renderer.
+    // Named explicitly: plugins/skill-heaven-console/hooks is a Mods module
+    // that only type-checks under the engine.
+    "plugins/skill-heaven/hooks",
     "scripts",
     "test"
   ],
