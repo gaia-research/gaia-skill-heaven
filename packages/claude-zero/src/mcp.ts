@@ -37,6 +37,7 @@ import {
   DOOR_MCP_BUNDLE_RELATIVE,
   DOOR_MCP_SERVER_NAME,
   DOOR_MCP_SOURCE_ENV_KEY,
+  DOOR_MCP_ZERO_CUTS_ENV_KEY,
   type DoorMcpConfig,
   type DoorMcpServer,
 } from "skill-zero";
@@ -44,18 +45,25 @@ import {
 /** The only placeholder the shipped declaration may carry, per server. */
 const PLUGIN_ROOT_PLACEHOLDER = "${CLAUDE_PLUGIN_ROOT}";
 const SKILL_URL_PLACEHOLDER = "${user_config.skill_url}";
+const ZERO_CUTS_PLACEHOLDER = "${user_config.zero_cuts}";
 
 /** The bundle path the declaration's argv must resolve to, relative to the
  * plugin dir — shared with core, which checks the admitted argv against it. */
 const BUNDLE_RELATIVE = DOOR_MCP_BUNDLE_RELATIVE;
-/** The only env key the door's server carries. */
+/** The env keys the door's server may carry: the source (required) and the
+ * configured zero cut (optional, #123). */
 const SKILL_SOURCE_ENV_KEY = DOOR_MCP_SOURCE_ENV_KEY;
+const ZERO_CUTS_ENV_KEY = DOOR_MCP_ZERO_CUTS_ENV_KEY;
 
 export interface ResolveDoorMcpOptions {
   /** The door's own plugin dir — the one core mounts with `--plugin-dir`. */
   pluginDir: string;
   /** Explicit override for the summon source URL (SKILL_SOURCE). */
   skillSource?: string;
+  /** Explicit zero cut for this launch (the CLI passes SKILL_HEAVEN_ZERO_CUTS).
+   * Precedence: this override, then the manifest's userConfig.zero_cuts.default.
+   * `all` stays `all`; anything else reads as `temporary`, as in the renderer. */
+  zeroCuts?: string;
 }
 
 function readJsonFile(path: string, what: string): Record<string, unknown> {
@@ -178,9 +186,16 @@ export function resolveDoorMcpConfig(options: ResolveDoorMcpOptions): DoorMcpCon
 
   const env = asRecord(server.env) ?? {};
   const envKeys = Object.keys(env);
-  if (envKeys.some((k) => k !== SKILL_SOURCE_ENV_KEY)) {
+  if (envKeys.some((k) => k !== SKILL_SOURCE_ENV_KEY && k !== ZERO_CUTS_ENV_KEY)) {
     throw new Error(
-      `the door's "${DOOR_MCP_SERVER_NAME}" server may carry only ${SKILL_SOURCE_ENV_KEY} (got ${envKeys.join(", ")})`,
+      `the door's "${DOOR_MCP_SERVER_NAME}" server may carry only ${SKILL_SOURCE_ENV_KEY} and ${ZERO_CUTS_ENV_KEY} (got ${envKeys.join(", ")})`,
+    );
+  }
+  const declaresZeroCuts = ZERO_CUTS_ENV_KEY in env;
+  if (declaresZeroCuts && env[ZERO_CUTS_ENV_KEY] !== ZERO_CUTS_PLACEHOLDER) {
+    throw new Error(
+      `the door's "${DOOR_MCP_SERVER_NAME}" ${ZERO_CUTS_ENV_KEY} must be the ${ZERO_CUTS_PLACEHOLDER} placeholder ` +
+        `so the door resolves it explicitly (got ${JSON.stringify(env[ZERO_CUTS_ENV_KEY])})`,
     );
   }
   const declaredSource = env[SKILL_SOURCE_ENV_KEY];
@@ -229,7 +244,21 @@ export function resolveDoorMcpConfig(options: ResolveDoorMcpOptions): DoorMcpCon
     // ONE argv element, always: a path with spaces stays one argument because
     // this is an argv array, never a shell string.
     args: [bundlePath],
-    env: { [SKILL_SOURCE_ENV_KEY]: skillSource },
+    env: {
+      [SKILL_SOURCE_ENV_KEY]: skillSource,
+      // Claude does not interpolate ${user_config.*} in an explicit
+      // --mcp-config, so the cut is resolved here to a literal, like the source.
+      ...(declaresZeroCuts ? { [ZERO_CUTS_ENV_KEY]: resolveZeroCuts(options.zeroCuts, manifest) } : {}),
+    },
   };
   return { mcpServers: { [DOOR_MCP_SERVER_NAME]: resolved } };
+}
+/** The configured zero cut for a launch: explicit override first (a blank one
+ * counts as unset), then the manifest default, else `temporary`. Closed to
+ * `all | temporary` — the value core admits. */
+function resolveZeroCuts(explicit: string | undefined, manifest: Record<string, unknown>): "all" | "temporary" {
+  const chosen = explicit?.trim()
+    ? explicit
+    : asRecord(asRecord(manifest.userConfig)?.zero_cuts)?.default;
+  return typeof chosen === "string" && chosen.trim().toLowerCase() === "all" ? "all" : "temporary";
 }

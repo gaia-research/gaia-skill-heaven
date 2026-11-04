@@ -281,6 +281,7 @@ export function run(argv: string[], opts: RunOptions = {}): number {
         statuslineBin: statuslineBinPath(),
         doorPluginDir: doorPluginDir(),
         skillSource: process.env.SKILL_SOURCE,
+        zeroCuts: process.env.SKILL_HEAVEN_ZERO_CUTS,
         claudeArgs: args.claudeArgs,
         // Same lookup as a live launch — --print must show the same argv,
         // settings and disclosure the real launch would use.
@@ -331,6 +332,7 @@ export function run(argv: string[], opts: RunOptions = {}): number {
         statuslineBin: statuslineBinPath(),
         doorPluginDir: doorPluginDir(),
         skillSource: process.env.SKILL_SOURCE,
+        zeroCuts: process.env.SKILL_HEAVEN_ZERO_CUTS,
         claudeArgs: args.claudeArgs,
         configDir: opts.configDir ?? process.env.CLAUDE_CONFIG_DIR,
         home: opts.home,

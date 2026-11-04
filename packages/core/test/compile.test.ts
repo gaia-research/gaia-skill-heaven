@@ -263,6 +263,20 @@ describe("door MCP admission (#143)", () => {
         /may carry only SKILL_SOURCE/,
       ],
       [
+        "a zero cut outside all | temporary (#123)",
+        {
+          mcpServers: {
+            "skill-summon": {
+              type: "stdio",
+              command: "node",
+              args: ["/opt/door/mcp/skill-summon.mjs"],
+              env: { SKILL_SOURCE: "https://gaiaskilltree.com", SKILL_HEAVEN_ZERO_CUTS: "--require /tmp/evil.js" },
+            },
+          },
+        },
+        /must be one of temporary, all/,
+      ],
+      [
         "extra argv passed to the admitted bundle",
         {
           mcpServers: {

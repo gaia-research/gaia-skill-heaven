@@ -82,7 +82,7 @@ Run `/reload` in a Pi session that was already open; other clients pick up the p
 /plugin install skill-heaven-console@gaia-skill-heaven
 ```
 
-Adds a status entry beside yours (it never replaces your statusLine), the **Lens** band — what a summon returned and whether the skill body actually entered context — and `/heaven`, a pane with the session's receipts, scope, agents and what you are trusting. It only *observes*: it never calls a tool on its own, never changes a summon, and writes nothing to disk. It is built on Claude Code 2.1.293's early-access Mods API and is labelled **preview** until a logged-in desktop session has been probed ([what it reads and writes](plugins/skill-heaven-console/README.md)).
+Stays dormant until you use Skill Heaven in a session, then adds a status entry beside yours (it never replaces your statusLine), the **Lens** band — what a summon returned and whether the skill body actually entered context — and `/heaven`, a pane with the session's receipts, scope, agents and what you are trusting. It only *observes*: it never calls a tool on its own, never changes a summon, and writes nothing to disk. It is built on Claude Code 2.1.293's early-access Mods API and is labelled **preview** until a logged-in desktop session has been probed ([what it reads and writes](plugins/skill-heaven-console/README.md)).
 
 Some clients copy plugins into their own cache. Re-running the script updates the stable local artifact; run that client's update or reinstall command to refresh its cached copy.
 

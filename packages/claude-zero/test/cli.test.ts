@@ -264,6 +264,8 @@ describe("run", () => {
   // reach BOTH the dry-run plan and the real launch.
   it("propagates SKILL_SOURCE into the admitted door MCP declaration, and restores the environment", () => {
     const previous = process.env.SKILL_SOURCE;
+    const previousCut = process.env.SKILL_HEAVEN_ZERO_CUTS;
+    delete process.env.SKILL_HEAVEN_ZERO_CUTS;
     try {
       process.env.SKILL_SOURCE = "https://github.com/example/skills";
       const { code, out } = captureStdout(() => run(["--print", "--posture", "product-floor"]));
@@ -271,6 +273,7 @@ describe("run", () => {
       const plan = JSON.parse(out);
       expect(JSON.parse(plan.fsPlan[0].contents).mcpServers["skill-summon"].env).toEqual({
         SKILL_SOURCE: "https://github.com/example/skills",
+        SKILL_HEAVEN_ZERO_CUTS: "temporary",
       });
       // and the plan says where the answer came from
       expect(plan.notes.join(" ")).toContain("explicit SKILL_SOURCE override");
@@ -282,11 +285,34 @@ describe("run", () => {
       const clean = JSON.parse(captureStdout(() => run(["--print", "--posture", "product-floor"])).out);
       expect(JSON.parse(clean.fsPlan[0].contents).mcpServers["skill-summon"].env).toEqual({
         SKILL_SOURCE: "https://gaiaskilltree.com",
+        SKILL_HEAVEN_ZERO_CUTS: "temporary",
       });
       expect(clean.notes.join(" ")).toContain("userConfig.skill_url.default");
     } finally {
       if (previous === undefined) delete process.env.SKILL_SOURCE;
       else process.env.SKILL_SOURCE = previous;
+      if (previousCut === undefined) delete process.env.SKILL_HEAVEN_ZERO_CUTS;
+      else process.env.SKILL_HEAVEN_ZERO_CUTS = previousCut;
+    }
+  });
+
+  // #123: the configured cut reaches the door's server as a literal, because
+  // Claude does not interpolate ${user_config.*} in an explicit --mcp-config.
+  it("propagates SKILL_HEAVEN_ZERO_CUTS into the door MCP declaration as all | temporary", () => {
+    const previous = process.env.SKILL_HEAVEN_ZERO_CUTS;
+    const previousSource = process.env.SKILL_SOURCE;
+    delete process.env.SKILL_SOURCE;
+    try {
+      for (const [given, expected] of [["all", "all"], [" ALL ", "all"], ["temporary", "temporary"], ["junk", "temporary"], ["", "temporary"]]) {
+        process.env.SKILL_HEAVEN_ZERO_CUTS = given;
+        const plan = JSON.parse(captureStdout(() => run(["--print", "--posture", "product-floor"])).out);
+        expect(JSON.parse(plan.fsPlan[0].contents).mcpServers["skill-summon"].env.SKILL_HEAVEN_ZERO_CUTS).toBe(expected);
+      }
+    } finally {
+      if (previous === undefined) delete process.env.SKILL_HEAVEN_ZERO_CUTS;
+      else process.env.SKILL_HEAVEN_ZERO_CUTS = previous;
+      if (previousSource === undefined) delete process.env.SKILL_SOURCE;
+      else process.env.SKILL_SOURCE = previousSource;
     }
   });
 

@@ -41,6 +41,7 @@ import {
   startAgentCall,
   structuredOf,
   toData,
+  wake,
 } from './model.ts'
 import type { ConsoleSection, ConsoleState } from './model.ts'
 import { renderBand, renderPane } from './views.tsx'
@@ -49,7 +50,7 @@ import type { BandActions, PaneActions } from './views.tsx'
 // The shape tag: a reload whose code names another tag starts from a clean state
 // instead of reading a value an older layout wrote.
 const stateAtom = atom({ plugin: 'skill-heaven-console', key: 'state' } as const, toData(initialState()), {
-  shape: 'skill-heaven-console/state@2',
+  shape: 'skill-heaven-console/state@3',
 })
 
 const SECTIONS: readonly ConsoleSection[] = ['session', 'scope', 'flow', 'trust']
@@ -65,9 +66,17 @@ function modeOf(options: PluginOptions): StatusMode {
 
 const isoOf = (ms: number): string => new Date(ms).toISOString()
 
-/** Re-set the status entry from state. `off` removes it; it never touches statusLine. */
+/** Re-set the status entry from state. `off` removes it, and so does a dormant
+ * console: nothing is shown until Skill Heaven is used this session. It never
+ * touches statusLine. */
 function paintStatus($: EngineInterface, mode: StatusMode, state: ConsoleState): void {
-  $.ui.status(mode === 'off' ? undefined : toPlain(renderStatusSegments(state.status, 'compact')))
+  $.ui.status(mode === 'off' || !state.awake ? undefined : toPlain(renderStatusSegments(state.status, 'compact')))
+}
+
+/** Dormant until Skill Heaven is used (founder ruling, 2026-11-04): observers do
+ * no work in a session that never summons, selects a rung, or opens the console. */
+async function dormant($: EngineInterface): Promise<boolean> {
+  return !(await load($)).awake
 }
 
 async function load($: EngineInterface): Promise<ConsoleState> {
@@ -237,7 +246,8 @@ export const register: Register = (on, options) => {
     }
     const inspectSection = args[0] === 'inspect'
     const section = SECTIONS.find((s) => s === args[inspectSection ? 1 : 0])
-    await change($, mode, (s) => ({ ...s, section: section ?? s.section, inspectSection, openEntry: null }))
+    // Opening the console is using it: from here it paints and observes.
+    await change($, mode, (s) => ({ ...wake(s), section: section ?? s.section, inspectSection, openEntry: null }))
     await openPane($)
     // The model reads this row: fixed text only.
     return { text: 'Skill Heaven console opened.' }
@@ -246,7 +256,7 @@ export const register: Register = (on, options) => {
   on('command.run', { command: 'lens' }, async ($, e) => {
     const query = sanitizeDisplay(e.args, 200)
     if (query === '') return { text: 'Usage: /lens <intent>. Nothing was summoned.' }
-    await change($, mode, (s) => ({ ...s, band: { kind: 'looking', query }, bandRequested: true }))
+    await change($, mode, (s) => ({ ...wake(s), band: { kind: 'looking', query }, bandRequested: true }))
     lensInFlight = true
     try {
       let outcome: Preview
@@ -283,6 +293,8 @@ export const register: Register = (on, options) => {
   // Agents: the host reports an agent id on calls made inside a subagent, and the
   // Agent tool starts one. Both only add rows to Flow.
   on('tool.call', async ($, e, next) => {
+    // Dormant: pass straight through. Flow starts at the first Skill Heaven use.
+    if (await dormant($)) return next(e)
     const args = e as unknown as Record<string, unknown>
     const isAgentCall = String(e.tool) === 'Agent' || String(e.tool) === 'Task'
     const key = typeof e.tool_use_id === 'string' ? e.tool_use_id : ''
@@ -356,6 +368,7 @@ export const register: Register = (on, options) => {
   on('tool.call', { tool: 'Read' }, async ($, e, next) => {
     const r = await next(e)
     try {
+      if (await dormant($)) return r
       const args = e as unknown as Record<string, unknown>
       // a partial read (an offset or a limit) is not the body read
       const isWhole = (args.offset === undefined || args.offset === null) && (args.limit === undefined || args.limit === null)
@@ -375,7 +388,7 @@ export const register: Register = (on, options) => {
 
   on('turn.complete', async ($, e, next) => {
     try {
-      if (typeof e.agentId === 'string') {
+      if (typeof e.agentId === 'string' && !(await dormant($))) {
         const id = e.agentId
         await change($, mode, (s) => agentReturned(s, id))
       }
@@ -393,6 +406,8 @@ export const register: Register = (on, options) => {
     if ((e as { origin?: { kind?: string } }).origin?.kind === 'peer') return next(e)
     try {
       const reading = selectionFromCommand(e.text)
+      // A dormant console wakes only on a rung command; any other prompt is not its business.
+      if (!reading && (await dormant($))) return next(e)
       await change($, mode, (s) => {
         const seen = reading ? recordSelection(s, reading, e.text.trim()) : s
         // The band hides on the next prompt (a /lens in flight keeps its own).

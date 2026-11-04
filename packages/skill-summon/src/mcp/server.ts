@@ -1,3 +1,4 @@
+import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
 import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
 import {
   ErrorCode,
@@ -31,6 +32,13 @@ export type CreateSkillSummonMcpServerOptions = {
   describeSkill?: DescribeSkill;
   /** Optional reader used by tests or an embedding host with its own source cache. */
   readSkillResource?: ReadSkillResource;
+  /**
+   * The configured zero cut (#123). `all` means no skill is used: every route
+   * that would put a skill into a session refuses and the listings are empty.
+   * Defaults to `temporary`, which changes nothing here. The bin resolves it
+   * from SKILL_HEAVEN_ZERO_CUTS; see ../zero-cut.ts.
+   */
+  zeroCut?: ZeroCut;
 };
 
 const SKILL_LIST_PAGE_SIZE = 64;
@@ -176,7 +184,9 @@ export function createSkillSummonMcpServer({
   version = VERSION,
   describeSkill,
   readSkillResource,
+  zeroCut = "temporary",
 }: CreateSkillSummonMcpServerOptions): McpServer {
+  const cutsAll = zeroCut === "all";
   const server = new McpServer(
     { name: "skill-summon", version },
     {
@@ -214,6 +224,7 @@ export function createSkillSummonMcpServer({
 
   function registerSkillsSurface(): void {
     server.server.setRequestHandler(ListSkillsRequestSchema, async (request) => {
+      if (cutsAll) return { resultType: "complete", skills: [], ttlMs: SKILL_LIST_TTL_MS, cacheScope: "private" };
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill,
@@ -237,6 +248,7 @@ export function createSkillSummonMcpServer({
     });
 
     server.server.setRequestHandler(GetSkillRequestSchema, async (request) => {
+      if (cutsAll) throw invalidParams(ZERO_CUT_REFUSAL);
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill,
@@ -258,6 +270,7 @@ export function createSkillSummonMcpServer({
     });
 
     server.server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
+      if (cutsAll) return { resultType: "complete", resources: [], ttlMs: SKILL_LIST_TTL_MS, cacheScope: "private" };
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill,
@@ -314,6 +327,7 @@ export function createSkillSummonMcpServer({
     );
 
     server.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      if (cutsAll) throw invalidParams(ZERO_CUT_REFUSAL);
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill,
@@ -371,6 +385,9 @@ export function createSkillSummonMcpServer({
       annotations: summonAnnotations,
     },
     async ({ query, limit, surface, source, preview }): Promise<CallToolResult> => {
+      // Before any session, index or network work: a cut summon materializes
+      // nothing and opens no session root.
+      if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
         const outcome = await summon(service, session, {
@@ -559,6 +576,16 @@ function decodeCursor(
 
 function invalidParams(message: string): McpError {
   return new McpError(ErrorCode.InvalidParams, message);
+}
+
+function zeroCutResult(): CallToolResult {
+  return {
+    content: [{ type: "text", text: ZERO_CUT_REFUSAL }],
+    structuredContent: {
+      error: { name: "ZeroCutError", message: ZERO_CUT_REFUSAL, retryable: false },
+    },
+    isError: true,
+  };
 }
 
 function toolError(error: unknown): CallToolResult {

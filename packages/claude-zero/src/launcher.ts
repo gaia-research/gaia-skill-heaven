@@ -110,6 +110,9 @@ export interface LaunchOptions {
    * installed-plugin preference file is ever read — the door resolves the
    * source from the plugin dir it was given, or from what the caller passed. */
   skillSource?: string;
+  /** Explicit zero cut for this launch (the CLI passes SKILL_HEAVEN_ZERO_CUTS).
+   * Resolved by the door into its literal door-mcp.json (#123). */
+  zeroCuts?: string;
   /** Issue #144: `CLAUDE_CONFIG_DIR` when the caller runs under one, else
    * omitted and `<home>/.claude/settings.json` is read. The ONLY user file this
    * door reads (read-only, P3), and only for a default permission mode. */
@@ -251,6 +254,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       ? resolveDoorMcpConfig({
           pluginDir: opts.doorPluginDir,
           ...(opts.skillSource !== undefined ? { skillSource: opts.skillSource } : {}),
+          ...(opts.zeroCuts !== undefined ? { zeroCuts: opts.zeroCuts } : {}),
         })
       : undefined;
 

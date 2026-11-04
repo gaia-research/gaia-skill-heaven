@@ -4,7 +4,8 @@
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
       "env": {
-        "SKILL_SOURCE": "${user_config.skill_url}"
+        "SKILL_SOURCE": "${user_config.skill_url}",
+        "SKILL_HEAVEN_ZERO_CUTS": "${user_config.zero_cuts}"
       }
     }
   }

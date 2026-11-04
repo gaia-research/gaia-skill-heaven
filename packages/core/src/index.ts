@@ -25,6 +25,8 @@ export {
   DOOR_MCP_CONFIG_PATH,
   DOOR_MCP_SERVER_NAME,
   DOOR_MCP_SOURCE_ENV_KEY,
+  DOOR_MCP_ZERO_CUTS_ENV_KEY,
+  DOOR_MCP_ZERO_CUTS_VALUES,
   type Band,
   type BandInfo,
   type DoorMcpConfig,

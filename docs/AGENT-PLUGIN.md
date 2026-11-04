@@ -153,10 +153,33 @@ Manual `/summon` still works — that is the product floor per N13 ("ships
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
 userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
-**Honest limit:** nothing in the plugin enforces the cut. It is honoured (or not)
-by the caller on each use, from a reference block that carries no authority of its
-own; there is no session state to flip. Hard enforcement would need server-side
-session state — filed as a follow-up, not faked.
+**What is enforced (#123).** The *configured* `zero_cuts = all` is a real cut, and
+it means no skill is used. The summon server enforces it itself, so the core plugin
+ships **no hooks** (founder ruling, 2026-11-04: anything that fires while Skill Heaven
+is not in use is bloat). With `all`:
+- the `summon` tool refuses, previews included, before any session, index or network
+  work;
+- `skills/get` and `resources/read` refuse;
+- `skills/list` and `resources/list` are empty.
+
+The server reads `SKILL_HEAVEN_ZERO_CUTS` (`packages/skill-summon/src/zero-cut.ts`):
+- **Claude marketplace:** `.mcp.json` fills it from `${user_config.zero_cuts}`.
+- **`claude-zero` launcher:** the door writes it as a literal into `door-mcp.json`,
+  taken from an explicit `SKILL_HEAVEN_ZERO_CUTS`, else the manifest default.
+- **Pi:** inherits it from the environment.
+- **Other clients:** inherit it if their MCP launch passes the environment through
+  (not probed).
+
+Probed live on Claude Code 2.1.318:
+[`docs/evidence/hooks-123/PROBE.md`](evidence/hooks-123/PROBE.md).
+
+**`/skill-zero all` is stored, and its store is the setting (founder ruling,
+2026-11-04).** The stored form is `zero_cuts = all`: the plugin's userConfig on the
+Claude marketplace, or `SKILL_HEAVEN_ZERO_CUTS` for a `claude-zero` launch. That is
+what the server enforces. Typing `/skill-zero all` writes nothing (P3), and nothing
+keeps a rung. Known gap, #228: in a marketplace install the command renderer cannot
+see the stored setting, so `/skill-zero` reports `temporary` while the server
+enforces `all`.
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
@@ -223,6 +246,13 @@ points different directions for each:
    `process.env` inside `render-ladder.mjs` without the command file doing
    anything — documented **only** for hook processes, so this is the weaker
    of the two paths and likely does not hold for a `!`-block subprocess.
+   (The hook-process half is now probed: on Claude Code 2.1.318 a configured
+   `zero_cuts` reached a plugin `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
+   historical cell C1 in `docs/evidence/hooks-123/PROBE.md`; that hook was later
+   replaced by server-side enforcement. The `!`-block half is now
+   probed too, on the same version: `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is **not**
+   exported to a command's `!` block, while `${user_config.zero_cuts}` written into
+   command content **is** substituted. Cells M1 and M2; fix tracked in #228.)
 
 **This degrades safely either way.** `zeroCuts()` in
 `plugins/skill-heaven/scripts/render-ladder.mjs` reads
@@ -382,7 +412,8 @@ Antigravity the surfaces are namespaced (`/skill-heaven:summon`).
 marketplace, built on Claude Code 2.1.293's early-access Mods API (function
 hooks). It is a **projection**, not part of the portable package: the portable
 `skill-heaven` plugin is unchanged, and no other client sees the console. It
-adds a status entry beside the user's own (`$.ui.status` — it never touches
+stays dormant until Skill Heaven is used in the session (a summon, a rung command, `/heaven` or `/lens`;
+founder ruling 2026-11-04), then adds a status entry beside the user's own (`$.ui.status` — it never touches
 `statusLine` settings), the Lens band, and the `/heaven` pane. It observes summon
 results, `Read`s of materialized `SKILL.md` files, `/skill-*` command text and
 agent ids; it returns every observed result unchanged, writes nothing to disk,

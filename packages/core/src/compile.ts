@@ -192,8 +192,14 @@ export const DOOR_MCP_CONFIG_PATH = "$SESSION/door-mcp.json";
  * against the mount so an admitted entry can only ever be that program. */
 export const DOOR_MCP_BUNDLE_RELATIVE = join("mcp", "skill-summon.mjs");
 
-/** The one env key the door's server carries. */
+/** The env key that carries the door server's summon source. */
 export const DOOR_MCP_SOURCE_ENV_KEY = "SKILL_SOURCE";
+
+/** The env key that carries the configured zero cut to the door's server
+ * (#123). Its value is closed to `all | temporary`, so admitting it cannot
+ * change how `node` itself starts. */
+export const DOOR_MCP_ZERO_CUTS_ENV_KEY = "SKILL_HEAVEN_ZERO_CUTS";
+export const DOOR_MCP_ZERO_CUTS_VALUES = ["temporary", "all"] as const;
 
 /** A RESOLVED stdio MCP server declaration. "Resolved" is the whole contract:
  * every value is a literal — no `${...}` interpolation survives, because
@@ -367,13 +373,18 @@ export function assertDoorMcpConfig(config: DoorMcpConfig, doorPluginDir?: strin
     for (const [key, value] of Object.entries(server.env)) {
       // An env entry on an admitted stdio server changes how `node` ITSELF
       // starts (NODE_OPTIONS, PATH, LD_*), so the allowlist stays minimal.
-      if (key !== DOOR_MCP_SOURCE_ENV_KEY) {
+      if (key !== DOOR_MCP_SOURCE_ENV_KEY && key !== DOOR_MCP_ZERO_CUTS_ENV_KEY) {
         throw new Error(
-          `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env may carry only ${DOOR_MCP_SOURCE_ENV_KEY} (got ${key})`,
+          `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env may carry only ${DOOR_MCP_SOURCE_ENV_KEY} and ${DOOR_MCP_ZERO_CUTS_ENV_KEY} (got ${key})`,
         );
       }
       if (typeof value !== "string") {
         throw new Error(`doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env.${key} must be a string (got ${typeof value})`);
+      }
+      if (key === DOOR_MCP_ZERO_CUTS_ENV_KEY && !(DOOR_MCP_ZERO_CUTS_VALUES as readonly string[]).includes(value)) {
+        throw new Error(
+          `doorMcpConfig: ${DOOR_MCP_SERVER_NAME}.env.${key} must be one of ${DOOR_MCP_ZERO_CUTS_VALUES.join(", ")} (got ${JSON.stringify(value)})`,
+        );
       }
       rejectUnresolved(`${DOOR_MCP_SERVER_NAME}.env.${key}`, value);
     }

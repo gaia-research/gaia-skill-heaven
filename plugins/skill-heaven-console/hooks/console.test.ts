@@ -187,13 +187,40 @@ const heaven = (args = '') =>
   ({ command: 'heaven', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } }) as const
 
 describe('status entry', () => {
-  test('starts at 0 skills on the NATIVE reading and registers /heaven and /lens', async ($, on) => {
+  test('starts dormant — no status entry — and registers /heaven and /lens', async ($, on) => {
     const w = world(on, () => summonResult())
     await $.session.start(START)
-    expect(w.last()).toContain('[NATIVE]')
-    expect(w.last()).toContain('0 skills')
+    expect(w.statuses.every((text) => text === undefined)).toBe(true)
     expect(w.names).toContain('heaven')
     expect(w.names).toContain('lens')
+    // Opening the console wakes it, on the honest NATIVE reading at 0 skills.
+    await $.command.run(heaven())
+    expect(w.last()).toContain('[NATIVE]')
+    expect(w.last()).toContain('0 skills')
+  })
+
+  // Founder ruling 2026-11-04: an installed console must not fire, paint or
+  // observe in a session that never uses Skill Heaven.
+  test('stays dormant through a whole session that never uses Skill Heaven', async ($, on) => {
+    const w = world(on, () => summonResult(), { agentIds: true })
+    await $.session.start(START)
+    await $.prompt.submit({ text: 'fix the failing unit test', wait: false, origin: { kind: 'composer' } })
+    await $.tool.call({ tool: 'Read', file_path: '/project/README.md' })
+    await $.tool.call({ tool: 'Agent', description: 'map the auth module', prompt: 'p', subagent_type: 'Explore' })
+    await $.prompt.submit({ text: '/skill-hell low', wait: false, origin: { kind: 'composer' } })
+    expect(w.statuses.every((text) => text === undefined)).toBe(true)
+    for (const surface of SURFACES) {
+      const band = await $.ui.mount({ plugin: PLUGIN, surface, component: 'AbovePrompt', props: AT_REST })
+      expect(await band.find({ type: 'Text', text: /Skill Heaven|Lens/ })).toBeUndefined()
+      await band.unmount()
+    }
+    // The first summon wakes it; the earlier agent call was never recorded.
+    await $.tool.call({ tool: SUMMON, query: 'x', surface: 'any' })
+    expect(w.last()).toContain('1 skill')
+    await $.command.run(heaven('inspect flow'))
+    const pane = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: 'skill-heaven', props: PANE })
+    expect(await pane.find({ type: 'Text', text: /map the auth module/ })).toBeUndefined()
+    await pane.unmount()
   })
 
   test('shows the arrival after a summon result, and returns the result unchanged', async ($, on) => {
@@ -255,10 +282,12 @@ describe('rung selection', () => {
     }
   })
 
-  test('an invalid rung argument selects nothing', async ($, on) => {
+  test('an invalid rung argument selects nothing, so it does not wake the console', async ($, on) => {
     const w = world(on, () => summonResult())
     await $.session.start(START)
     await $.prompt.submit({ text: '/skill-hell low', wait: false, origin: { kind: 'composer' } })
+    expect(w.statuses.every((text) => text === undefined)).toBe(true)
+    await $.command.run(heaven())
     expect(w.last()).toContain('[NATIVE]')
   })
 })
@@ -515,6 +544,7 @@ describe('the /heaven pane', () => {
   test('agents the host reports appear in Flow, and more than 12 collapse', async ($, on) => {
     world(on, () => summonResult(), { agentIds: true })
     await $.session.start(START)
+    await $.command.run(heaven()) // Flow starts at the first Skill Heaven use
     for (let i = 0; i < 14; i++) {
       await $.tool.call({ tool: 'Agent', description: `task number ${i}`, prompt: 'p', subagent_type: 'Explore' })
     }
@@ -532,6 +562,7 @@ describe('Flow without agent ids', () => {
   test('says so when the host never reports one', async ($, on) => {
     world(on, () => summonResult(), { agentIds: false })
     await $.session.start(START)
+    await $.command.run(heaven()) // Flow starts at the first Skill Heaven use
     await $.tool.call({ tool: 'Agent', description: 'map the auth module', prompt: 'p', subagent_type: 'Explore' })
     for (const surface of SURFACES) {
       await $.command.run(heaven('inspect flow'))
@@ -671,7 +702,8 @@ describe('which tool is the summon tool', () => {
     const w = world(on, () => summonResult(), { summon: false, listed: ['mcp__evil-skill-summon__summon'] })
     await $.session.start(START)
     await $.tool.call({ tool: 'mcp__evil-skill-summon__summon', query: 'x', surface: 'any' })
-    expect(w.last()).toContain('0 skills')
+    // A lookalike is not Skill Heaven: it neither counts nor wakes the console.
+    expect(w.statuses.every((text) => text === undefined)).toBe(true)
     w.evilCalls.length = 0
     const run = $.command.run(lens('x'))
     await w.clock!.advance(10_000)
@@ -776,6 +808,7 @@ describe('agents', () => {
   test('keeps the last 100 agents', async ($, on) => {
     world(on, () => summonResult(), { agentIds: true })
     await $.session.start(START)
+    await $.command.run(heaven()) // Flow starts at the first Skill Heaven use
     for (let i = 0; i < 105; i++) {
       await $.tool.call({ tool: 'Agent', description: `task ${i}`, prompt: 'p', subagent_type: 'Explore' })
     }

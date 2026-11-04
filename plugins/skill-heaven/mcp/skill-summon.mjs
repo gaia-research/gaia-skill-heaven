@@ -21535,6 +21535,16 @@ function localPath(value) {
   return fileURLToPath3(url);
 }
 
+// packages/skill-summon/src/zero-cut.ts
+var ZERO_CUT_ENV = "SKILL_HEAVEN_ZERO_CUTS";
+function zeroCutFromEnv(env = process.env) {
+  return normalizeZeroCut(env[ZERO_CUT_ENV]);
+}
+function normalizeZeroCut(raw) {
+  return typeof raw === "string" && raw.trim().toLowerCase() === "all" ? "all" : "temporary";
+}
+var ZERO_CUT_REFUSAL = "Skill Heaven: nothing was summoned. zero_cuts = all is configured, which cuts every skill summon, including manual /summon and previews. Summoning is available again in a new session once zero_cuts is temporary (the user's plugin setting, or SKILL_HEAVEN_ZERO_CUTS for a claude-zero launch).";
+
 // node_modules/zod/v4/mini/schemas.js
 var ZodMiniType = /* @__PURE__ */ $constructor("ZodMiniType", (inst, def) => {
   if (!inst._zod)
@@ -27625,8 +27635,10 @@ function createSkillSummonMcpServer({
   service,
   version: version2 = VERSION,
   describeSkill,
-  readSkillResource: readSkillResource2
+  readSkillResource: readSkillResource2,
+  zeroCut = "temporary"
 }) {
+  const cutsAll = zeroCut === "all";
   const server = new McpServer(
     { name: "skill-summon", version: version2 },
     {
@@ -27653,6 +27665,7 @@ function createSkillSummonMcpServer({
   }
   function registerSkillsSurface() {
     server.server.setRequestHandler(ListSkillsRequestSchema, async (request) => {
+      if (cutsAll) return { resultType: "complete", skills: [], ttlMs: SKILL_LIST_TTL_MS, cacheScope: "private" };
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill
@@ -27673,6 +27686,7 @@ function createSkillSummonMcpServer({
       };
     });
     server.server.setRequestHandler(GetSkillRequestSchema, async (request) => {
+      if (cutsAll) throw invalidParams(ZERO_CUT_REFUSAL);
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill
@@ -27693,6 +27707,7 @@ function createSkillSummonMcpServer({
       };
     });
     server.server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
+      if (cutsAll) return { resultType: "complete", resources: [], ttlMs: SKILL_LIST_TTL_MS, cacheScope: "private" };
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill
@@ -27742,6 +27757,7 @@ function createSkillSummonMcpServer({
       })
     );
     server.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      if (cutsAll) throw invalidParams(ZERO_CUT_REFUSAL);
       const entries = await buildInternalEntries(
         await service.namedSkills(),
         describeSkill
@@ -27779,6 +27795,7 @@ function createSkillSummonMcpServer({
       annotations: summonAnnotations
     },
     async ({ query, limit, surface, source, preview }) => {
+      if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
         const outcome = await summon(service, session, {
@@ -27916,6 +27933,15 @@ function decodeCursor(cursor, length, method) {
 function invalidParams(message) {
   return new McpError(ErrorCode.InvalidParams, message);
 }
+function zeroCutResult() {
+  return {
+    content: [{ type: "text", text: ZERO_CUT_REFUSAL }],
+    structuredContent: {
+      error: { name: "ZeroCutError", message: ZERO_CUT_REFUSAL, retryable: false }
+    },
+    isError: true
+  };
+}
 function toolError(error2) {
   const message = error2 instanceof Error ? error2.message : String(error2);
   const structuredContent = {
@@ -27935,7 +27961,7 @@ function toolError(error2) {
 // packages/skill-summon/src/bin/skill-summon-mcp.ts
 async function main() {
   const service = createConfiguredService();
-  const server = createSkillSummonMcpServer({ service });
+  const server = createSkillSummonMcpServer({ service, zeroCut: zeroCutFromEnv() });
   const transport = new StdioServerTransport();
   const shutdown = async () => {
     await server.close();

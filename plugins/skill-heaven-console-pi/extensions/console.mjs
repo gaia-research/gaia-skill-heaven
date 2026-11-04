@@ -599,7 +599,7 @@ var HARNESS_PATHS = [
     update: "claude plugin marketplace update gaia-skill-heaven && claude plugin update skill-heaven@gaia-skill-heaven",
     remove: ["claude plugin uninstall skill-heaven@gaia-skill-heaven"],
     statusIntegration: "APPEND",
-    statusNote: "The optional console (preview) adds a status entry beside yours \u2014 it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
+    statusNote: "The optional console (preview) stays dormant until you use Skill Heaven in a session, then adds a status entry beside yours \u2014 it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
     launcher: "claude-zero",
     // 2.1.294 refuses a bare /summon: it resolves to the portable skill, which is user-invocable: false.
     firstRun: "/skill-heaven:summon <what you need>",
@@ -713,7 +713,7 @@ var HARNESS_PATHS = [
     update: "Re-run the installer, then pi update.",
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
-    statusNote: "Core + Console requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
+    statusNote: "Core + Console requires Pi 1.1+ and, once Skill Heaven is used in a session, adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>"
   },
@@ -852,8 +852,12 @@ function initialConsoleState() {
     agentIdsSeen: false,
     selectedFrom: null,
     hostVersion: null,
-    seq: 0
+    seq: 0,
+    awake: false
   };
+}
+function wake(state) {
+  return state.awake ? state : { ...state, awake: true };
 }
 var isRec2 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var looksLikeSummon = (v) => isRec2(v) && ("summoned" in v || "previewed" in v || "noMatch" in v);
@@ -967,7 +971,8 @@ function recordEvent(state, event, agent, via, opts = {}) {
     status: reached ? { ...status, summonTool: "connected" } : status,
     entries,
     band: { kind: "event", id },
-    seq: id
+    seq: id,
+    awake: true
   };
 }
 function recordRead(state, path, reader, complete = true) {
@@ -988,7 +993,7 @@ function recordRead(state, path, reader, complete = true) {
   return changed ? { ...state, entries } : state;
 }
 function recordSelection(state, reading, typed) {
-  return { ...state, status: withReading(state.status, reading), selectedFrom: sanitizeDisplay(typed, 40) };
+  return { ...state, status: withReading(state.status, reading), selectedFrom: sanitizeDisplay(typed, 40), awake: true };
 }
 function entryById(state, id) {
   return state.entries.find((e) => e.id === id);
@@ -1606,7 +1611,7 @@ function consolePi(pi) {
   };
   const paint2 = (ctx) => {
     if (!ctx.hasUI) return;
-    ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" ? void 0 : buildConsoleView(state, projection).status.compact);
+    ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" || !state.awake ? void 0 : buildConsoleView(state, projection).status.compact);
   };
   const rebuild = (ctx) => {
     closePane();
@@ -1648,6 +1653,8 @@ function consolePi(pi) {
     if (event.toolName === "summon") {
       const structured = structuredOf(event.details) ?? structuredOf({ content: event.content });
       state = recordEvent(state, eventFromSummonResult(structured, { preview: event.input.preview === true }, event.isError ? { isError: true, text: "Core summon failed" } : void 0), null, "tool");
+    } else if (!state.awake) {
+      return;
     } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string") {
       const complete = completeRead(
         event.input,
@@ -1691,6 +1698,12 @@ function consolePi(pi) {
     handler: async (args, ctx) => {
       if (!ctx.hasUI) return;
       const sub = args.trim() || "all";
+      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
+      const opens = sub === "fill" || inspect !== null || sub === "all" || CONSOLE_SURFACES.includes(sub);
+      if (opens) {
+        state = wake(state);
+        paint2(ctx);
+      }
       if (sub === "dismiss") {
         closePane();
         bandRequested = false;
@@ -1703,7 +1716,6 @@ function consolePi(pi) {
         if (draft) ctx.ui.setEditorText(draft);
         return;
       }
-      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
       if (inspect) await show(ctx, inspect[1], true);
       else if (sub === "all" || CONSOLE_SURFACES.includes(sub)) await show(ctx, sub);
       else ctx.ui.notify("Usage: /heaven [status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]", "info");
@@ -1715,7 +1727,8 @@ function consolePi(pi) {
       const query = args.trim();
       if (!query || query.length > 4096 || !ctx.hasUI) return;
       bandRequested = true;
-      state = { ...state, band: { kind: "draft", query } };
+      state = { ...wake(state), band: { kind: "draft", query } };
+      paint2(ctx);
       band(ctx);
     }
   });

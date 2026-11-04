@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { VERSION, type ExtensionAPI, type ExtensionContext, type Theme } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey, ScrollView, truncateToWidth, wrapTextWithAnsi, type Component, type TUI } from "@earendil-works/pi-tui";
 import {
-  initialConsoleState, recordEvent, recordRead, recordSelection, structuredOf,
+  initialConsoleState, wake, recordEvent, recordRead, recordSelection, structuredOf,
   eventFromSummonResult, selectionFromCommand, buildConsoleView, renderConsoleText,
   harnessById, CONSOLE_SURFACES, SURFACE_LABEL, type ConsoleSurface, type ConsoleView,
 } from "../../status/src/index.js";
@@ -115,9 +115,12 @@ export default function consolePi(pi: ExtensionAPI): void {
       },
     }), { placement: "belowEditor" });
   };
+  // Dormant until Skill Heaven is used (founder ruling, 2026-11-04): no status
+  // line until a summon is observed (live or in the replayed branch), a rung
+  // command is typed, or /heaven or /lens is used.
   const paint = (ctx: ExtensionContext) => {
     if (!ctx.hasUI) return;
-    ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" ? undefined : buildConsoleView(state, projection).status.compact);
+    ctx.ui.setStatus(KEY, process.env.SKILL_HEAVEN_STATUS === "off" || !state.awake ? undefined : buildConsoleView(state, projection).status.compact);
   };
   // Reconstruct only the active branch; abandoned tree branches never enter this console.
   const rebuild = (ctx: ExtensionContext) => {
@@ -164,6 +167,8 @@ export default function consolePi(pi: ExtensionAPI): void {
     if (event.toolName === "summon") {
       const structured = structuredOf(event.details) ?? structuredOf({ content: event.content });
       state = recordEvent(state, eventFromSummonResult(structured, { preview: event.input.preview === true }, event.isError ? { isError: true, text: "Core summon failed" } : undefined), null, "tool");
+    } else if (!state.awake) {
+      return; // dormant: a non-summon result is not this console's business yet
     } else if (event.toolName === "read" && !event.isError && typeof event.input.path === "string") {
       const complete = completeRead(event.input, event.details,
         VERSION === "1.1.0" && pi.getAllTools().some(tool => tool.name === "read" && tool.sourceInfo.source === "builtin" && tool.sourceInfo.path === "builtin:read") &&
@@ -198,13 +203,16 @@ export default function consolePi(pi: ExtensionAPI): void {
     handler: async (args, ctx) => {
       if (!ctx.hasUI) return;
       const sub = args.trim() || "all";
+      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
+      const opens = sub === "fill" || inspect !== null || sub === "all" || CONSOLE_SURFACES.includes(sub as ConsoleSurface);
+      // Opening the console is using it; dismissing it or a usage error is not.
+      if (opens) { state = wake(state); paint(ctx); }
       if (sub === "dismiss") { closePane(); bandRequested = false; state = { ...state, band: null }; ctx.ui.setWidget(KEY, undefined); return; }
       if (sub === "fill") {
         const draft = buildConsoleView(state, projection).lens?.prefill;
         if (draft) ctx.ui.setEditorText(draft); // never sends a message
         return;
       }
-      const inspect = /^inspect (status|lens|session|scope|flow|trust)$/.exec(sub);
       if (inspect) await show(ctx, inspect[1] as ConsoleSurface, true);
       else if (sub === "all" || CONSOLE_SURFACES.includes(sub as ConsoleSurface)) await show(ctx, sub as ConsoleSurface | "all");
       else ctx.ui.notify("Usage: /heaven [status|lens|session|scope|flow|trust|inspect <section>|dismiss|fill]", "info");
@@ -218,8 +226,8 @@ export default function consolePi(pi: ExtensionAPI): void {
       // There is no public API to run a model tool through ALL host/extension
       // permission hooks from a command. Draft only: normal tool approval wins.
       bandRequested = true;
-      state = { ...state, band: { kind: "draft", query } };
-      band(ctx);
+      state = { ...wake(state), band: { kind: "draft", query } };
+      paint(ctx); band(ctx);
       // No Core call, event bridge, editor overwrite, prompt or materialization.
       // Human explicitly uses /heaven fill and presses Enter; tool_result observes it.
     },

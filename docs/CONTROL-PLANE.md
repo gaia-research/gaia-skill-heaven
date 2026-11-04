@@ -235,6 +235,10 @@ Rules:
 
 ### 5.1 Status entry — everywhere (#137)
 
+Every console status contribution is **dormant until Skill Heaven is used in the
+session**: a summon (a refused one included), a valid rung command, `/heaven` or
+`/lens` (founder ruling, 2026-11-04). Before that, nothing is shown.
+
 | Door | Integration | Class | Status |
 |---|---|---|---|
 | Claude Code + console mod | `$.ui.status(text)` | **APPEND** — adds an entry; never touches `statusLine` settings | preview · terminal probed live on 2.1.294 (beside a user `statusLine`) · desktop paint not probed |
@@ -386,7 +390,8 @@ It is the hand-off for builders and the review surface for owners.
 
 | State | Status entry | Lens | Session | Scope | Flow | Trust | `/start` |
 |---|---|---|---|---|---|---|---|
-| empty (fresh session) | `· 0 skills` | nothing | "Nothing summoned yet. Try `/summon <need>` or `/lens <need>`." | sources shown, active: none | main · no skills | normal | — |
+| dormant (no Skill Heaven use yet this session) | none — the console paints and observes nothing until a summon, a rung command, `/heaven` or `/lens` (founder ruling, 2026-11-04) | nothing | — | — | — | — | — |
+| empty (woken, nothing summoned) | `· 0 skills` | nothing | "Nothing summoned yet. Try `/summon <need>` or `/lens <need>`." | sources shown, active: none | main · no skills | normal | — |
 | loading (`/lens` in flight) | unchanged | `◇ lens  looking…` (`noticeLines`; no spinner animation) | — | — | — | — | — |
 | no-match | unchanged | `× no match · N considered` | row, refusal reason | — | — | — | — |
 | stale source | unchanged | `? source stale` | flag on row | "index N days old" | — | — | — |
@@ -403,10 +408,11 @@ It is the hand-off for builders and the review surface for owners.
 
 | Behaviour | Mechanism | Class |
 |---|---|---|
-| status entry without touching settings | `$.ui.status` | **probed** (terminal, 2.1.294) · desktop paint not probed |
+| status entry without touching settings | `$.ui.status`, painted only once awake | **probed** (terminal, 2.1.294) · desktop paint not probed · dormancy unit/engine-tested, not live-probed (#227) |
 | observe summon results | `on('tool.call')` matching the exact summon names, `await next(e)` | **probed** — `result` is the JSON text as a string; no `structuredContent` |
 | observe body read | `on('tool.call', {tool:'Read'})` path ∈ materialized paths | **probed** — materialized → in context |
 | observe rung selection | `on('prompt.submit')` text starts with `/skill-` or `/skill-heaven:skill-` | **probed** — raw typed text, after `command.run`; `peer` origin ignored |
+| enforce the configured `zero_cuts = all` | the summon server itself: `SKILL_HEAVEN_ZERO_CUTS` from `${user_config.zero_cuts}` or the launcher's literal `door-mcp.json` (#123) | **probed** live on 2.1.318 (`docs/evidence/hooks-123/PROBE.md`) — enforcement, not a projection: no hook, no state, no context |
 | agent attribution | `agentId` on `tool.call` input; Agent/Task calls | **probed** — subagent calls and `turn.complete` carry it; Agent result carries the same id |
 | preview retrieval outside model context | `$.tool.call({ tool, preview:true })` | **probed** — no count change; `$.tool.list()` names the deferred tool once MCP connected |
 | pre-fill a command | `$.prompt.fill` | Mod API now |

@@ -12,7 +12,8 @@
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { assertSkillSourceUrl, resolveDoorMcpConfig } from "../src/mcp.js";
 import { SHIPPED_SKILL_URL_DEFAULT, writeDoorPluginFixture, type DoorPluginFixtureOptions } from "./door-plugin-fixture.js";
@@ -207,6 +208,51 @@ describe("resolveDoorMcpConfig — refuses rather than admitting something it sh
     expect(message(() => resolveDoorMcpConfig({ pluginDir: plugin("envlit", { mcpJson: hardcoded }) }))).toMatch(
       /user_config\.skill_url/,
     );
+  });
+
+  // #123: the server enforces the configured zero cut, so the door resolves it
+  // to a literal exactly like the source — explicit override, else the
+  // manifest default, closed to all | temporary.
+  describe("SKILL_HEAVEN_ZERO_CUTS", () => {
+    const withCut = (value: unknown) => ({
+      mcpServers: {
+        "skill-summon": {
+          command: "node",
+          args: ["${CLAUDE_PLUGIN_ROOT}/mcp/skill-summon.mjs"],
+          env: { SKILL_SOURCE: "${user_config.skill_url}", SKILL_HEAVEN_ZERO_CUTS: value },
+        },
+      },
+    });
+    const cutOf = (config: ReturnType<typeof resolveDoorMcpConfig>) =>
+      config.mcpServers["skill-summon"]?.env?.SKILL_HEAVEN_ZERO_CUTS;
+
+    it("is omitted when the declaration does not carry it", () => {
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: plugin("nocut") }))).toBeUndefined();
+    });
+
+    it("resolves the explicit value first, then the default, closed to all | temporary", () => {
+      const dir = plugin("cut", { mcpJson: withCut("${user_config.zero_cuts}") });
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: dir, zeroCuts: "all" }))).toBe("all");
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: dir, zeroCuts: " ALL " }))).toBe("all");
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: dir, zeroCuts: "junk" }))).toBe("temporary");
+      // blank counts as unset; the fixture manifest declares no zero_cuts default
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: dir, zeroCuts: "" }))).toBe("temporary");
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: dir }))).toBe("temporary");
+    });
+
+    it("rejects any value other than the ${user_config.zero_cuts} placeholder", () => {
+      for (const [name, value] of [["cutlit", "all"], ["cutother", "${user_config.skill_url}"]] as const) {
+        expect(message(() => resolveDoorMcpConfig({ pluginDir: plugin(name, { mcpJson: withCut(value) }) }))).toMatch(
+          /user_config\.zero_cuts/,
+        );
+      }
+    });
+
+    it("reads the real plugin's manifest default (temporary) when nothing is passed", () => {
+      const real = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "plugins", "skill-heaven");
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: real }))).toBe("temporary");
+      expect(cutOf(resolveDoorMcpConfig({ pluginDir: real, zeroCuts: "all" }))).toBe("all");
+    });
   });
 
   it("refuses to admit a server whose bundle is not on disk — a doorless floor is not a fallback", () => {
