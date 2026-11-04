@@ -25,6 +25,13 @@ artifacts — never the working tree:
 | 5 · live sessions | real Claude Code sessions through the installed launcher: one MCP tool, synthetic ambient MCP / skill / hook absent, user plugins absent, one real summon, permission modes behave as designed |
 | 6 · no mutation | installed plugin tree, the operator's `settings.json` and plugin registries are unchanged |
 
+**`--ref <sha>`, for a version bump only.** By default the script installs GitHub `main`.
+A version bump has to carry its new receipt before `main` can (`test/site-truth.test.ts`
+holds the receipt to the plugin's version), so the bump's receipt is taken against the
+pushed PR-head commit with `--ref <full sha>`. That receipt names that commit, not `main`.
+After the squash merge, `main`'s shipped tree (`plugins`, `packages`, installers) is
+confirmed equal to it, apart from the receipt record itself.
+
 **Why phase 5 uses the operator's login.** A throwaway `CLAUDE_CONFIG_DIR` is logged out
 (macOS keys the credential to the config directory), so model calls cannot run there. Phase
 5 therefore runs under the operator's real home, **reading settings read-only**, against the

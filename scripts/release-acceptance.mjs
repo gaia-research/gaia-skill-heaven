@@ -33,7 +33,14 @@
 // receipt. Skip it with --no-live.
 //
 // Usage:
-//   node scripts/release-acceptance.mjs [--repo <checkout>] [--out <dir>] [--no-live] [--model <m>]
+//   node scripts/release-acceptance.mjs [--repo <checkout>] [--out <dir>] [--no-live] [--model <m>] [--ref <sha>]
+//
+// --ref <sha> tests one pushed commit instead of GitHub main: a full 40-hex SHA,
+// so the public installer downloads an immutable archive. It exists for the one
+// receipt that must precede its merge: a version bump, whose release receipt has
+// to carry the new version before main can (test/site-truth.test.ts). The
+// receipt then names that commit, not main; after the merge, confirm main's
+// shipped tree equals it.
 //
 // <checkout> must be a clean checkout at the commit under test (default: the
 // repository this script lives in) with `npm ci` done. Exit code 1 on any
@@ -163,6 +170,11 @@ async function main() {
   // sonnet, not haiku: `auto` permission mode is model-gated, and haiku silently falls back to `default`,
   // which would make an inherited `auto` look lost when Claude simply declined it for that model.
   const model = option("--model", "sonnet");
+  const ref = option("--ref", "");
+  if (ref && !/^[0-9a-f]{40}$/.test(ref)) {
+    console.error(`--ref must be a full 40-hex commit SHA pushed to GitHub (got ${JSON.stringify(ref)})`);
+    process.exit(2);
+  }
   const outDir = option("--out", mkdtempSync(join(tmpdir(), "release-acceptance-out-")));
   mkdirSync(outDir, { recursive: true });
 
@@ -186,15 +198,15 @@ async function main() {
   section("pins");
   const head = sh("git", ["-C", repo, "rev-parse", "HEAD"]).out.trim();
   const dirty = sh("git", ["-C", repo, "status", "--porcelain", "--untracked-files=no"]).out.trim();
-  const remote = sh("git", ["ls-remote", "https://github.com/gaia-research/gaia-skill-heaven.git", "refs/heads/main"]).out.split(/\s+/)[0];
-  sh("git", ["-C", repo, "fetch", "-q", "https://github.com/gaia-research/gaia-skill-heaven.git", "main"]);
+  const remote = ref || sh("git", ["ls-remote", "https://github.com/gaia-research/gaia-skill-heaven.git", "refs/heads/main"]).out.split(/\s+/)[0];
+  sh("git", ["-C", repo, "fetch", "-q", "https://github.com/gaia-research/gaia-skill-heaven.git", ref || "main"]);
   const claudeVersion = sh("claude", ["--version"]).out.trim();
   // What gets installed is GitHub main. The checkout only has to CONTAIN the same product: this
   // script lives in the repo it tests, so HEAD may legitimately be main plus a commit that touches
   // neither the plugin, the packages nor the installers.
   const shipped = ["plugins", "packages", "install.sh", "install.ps1", "install-agent-plugin.sh", "install-agent-plugin.ps1", "package.json", "package-lock.json"];
   const sameProduct = sh("git", ["-C", repo, "diff", "--quiet", remote, "HEAD", "--", ...shipped]).code === 0;
-  fact("tested commit (GitHub main)", remote);
+  fact(ref ? "tested commit (--ref, pushed to GitHub; not main)" : "tested commit (GitHub main)", remote);
   fact("checkout HEAD", head);
   fact("claude", claudeVersion);
   fact("node", process.version);
