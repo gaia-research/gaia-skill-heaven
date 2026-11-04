@@ -153,10 +153,21 @@ Manual `/summon` still works — that is the product floor per N13 ("ships
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
 userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
-**Honest limit:** nothing in the plugin enforces the cut. It is honoured (or not)
-by the caller on each use, from a reference block that carries no authority of its
-own; there is no session state to flip. Hard enforcement would need server-side
-session state — filed as a follow-up, not faked.
+**What is enforced, and what is not (#123).** On Claude Code, the *configured*
+`zero_cuts = all` is a real cut. A `PreToolUse` hook (`hooks/zero-cut.mjs`, declared
+only in `.claude-plugin/plugin.json`) blocks the summon tool under both of its names
+(`mcp__plugin_skill-heaven_skill-summon__summon` from the marketplace,
+`mcp__skill-summon__summon` from the `claude-zero` launcher). It exits 2 with the
+reason on stderr. It reads the cut from `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`, then
+`SKILL_HEAVEN_ZERO_CUTS`, through the renderer's own `zeroCuts()`. It keeps no state,
+writes nothing and injects no context. Probed live on Claude Code 2.1.318:
+[`docs/evidence/hooks-123/PROBE.md`](evidence/hooks-123/PROBE.md).
+
+Still advisory, by design: a per-invocation `/skill-zero all` is a stateless
+reference renderer (#91), so it reports a cut it cannot enforce. Enforcing it would
+mean persisting a rung (CONTROL-PLANE §7). Other harnesses have no hook, so there the
+cut stays a renderer refusal. A hook process that *crashes* is treated by Claude Code
+as non-blocking, so the cut fails open in that case (probe cell C7).
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
