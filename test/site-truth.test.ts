@@ -37,9 +37,21 @@ describe("the tool is LIVE (#174)", () => {
     expect(site("src/variations/VariationHeroA.tsx")).toContain('to="/live"');
   });
 
+  // The release page shows the version a real acceptance run read back, never
+  // one typed in. The receipt runs against GitHub main (scripts/release-acceptance.mjs),
+  // so after a version bump it trails the plugin until it is re-run on main and
+  // recorded (founder decision 2026-11-04). It may trail; it may never lead.
   it("keeps the receipt consistent with the plugin and the install copy", () => {
-    expect(RELEASE.pluginVersion).toBe(pluginVersion);
-    expect(RECEIPT.pluginVersion).toBe(pluginVersion);
+    const parts = (v: string) => v.split(".").map(Number);
+    const notAfter = (a: string, b: string) => {
+      const [x, y] = [parts(a), parts(b)];
+      for (let i = 0; i < Math.max(x.length, y.length); i++) {
+        if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0);
+      }
+      return true;
+    };
+    expect(RELEASE.pluginVersion).toBe(RECEIPT.pluginVersion);
+    expect(notAfter(RECEIPT.pluginVersion, pluginVersion), `receipt ${RECEIPT.pluginVersion} is ahead of plugin ${pluginVersion}`).toBe(true);
     expect(RECEIPT.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(RECEIPT.passed).toBe(RECEIPT.total);
     expect(RECEIPT.total).toBeGreaterThan(0);

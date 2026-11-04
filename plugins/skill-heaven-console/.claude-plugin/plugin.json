@@ -1,7 +1,7 @@
 {
   "name": "skill-heaven-console",
   "displayName": "Skill Heaven console (preview)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Optional PREVIEW console for Claude Code that observes Skill Heaven summons and never changes them: a status entry, a Lens band above the prompt, and a /heaven pane (Session, Scope, Flow, Trust). Early-access Mods API; desktop paint still needs a local probe.",
   "author": {
     "name": "Gaia Research"
