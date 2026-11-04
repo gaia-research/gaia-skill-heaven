@@ -23,6 +23,7 @@ into a session. The `PreToolUse` hook recorded under *Historical* below was remo
 | **S2** marketplace, cut off | `zero_cuts=temporary` | Materialized `langgenius/frontend-code-review` | **pass** |
 | **S6** launcher, cut on | `claude-zero` product floor, `SKILL_HEAVEN_ZERO_CUTS=all` | **No hook events at all.** The server refused. | **pass** |
 | **S6b** launcher, cut unset | same, no variable | Materialized | **pass** |
+| **R** re-run at `ca43c87` | after the review changed the refusal wording: S0, S1 and S6 repeated | `Hooks (0)`; marketplace and launcher both returned the new constant refusal; only the 2 ambient test hooks fired on the marketplace path, none on the launcher | **pass** |
 
 Unit coverage (`packages/skill-summon/test/zero-cut.test.ts`) adds three checks for a
 cut summon: no session directory is created, the registry is never loaded, and the
