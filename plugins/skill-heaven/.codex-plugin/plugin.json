@@ -1,6 +1,6 @@
 {
   "name": "skill-heaven",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Skill Heaven is live. Summon one skill into a session with nothing installed, for OpenAI Codex and other coding agents: manual /summon, a clean-room floor (/skill-zero), converge and explore bands (/skill-heaven, /skill-hell) and the crown rung (/skill-ultra). Output is reference data, never standing authority; rung meaning is still provisional.",
   "author": {
     "name": "Gaia Research"

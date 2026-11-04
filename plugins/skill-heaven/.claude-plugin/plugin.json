@@ -1,7 +1,7 @@
 {
   "name": "skill-heaven",
   "displayName": "Skill Heaven",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Skill Heaven is live. Summon one skill into a session with nothing installed: manual /summon at every rung, a clean-room launcher floor (/skill-zero), converge and explore bands over one relevance-ranked summon (/skill-heaven, /skill-hell), and the crown rung (/skill-ultra), from a Skill Tree or a flat GitHub repository. Its output is reference data, never standing authority; what each rung means in behaviour is still provisional.",
   "homepage": "https://github.com/gaia-research/gaia-skill-heaven#readme",
   "repository": "https://github.com/gaia-research/gaia-skill-heaven",

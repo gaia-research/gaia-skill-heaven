@@ -29,7 +29,7 @@ describe("manifest", () => {
 
   test("names the plugin, its version, licence and homes", () => {
     expect(manifest.name).toBe("skill-heaven-console");
-    expect(manifest.version).toBe("0.1.0");
+    expect(manifest.version).toBe("0.1.1");
     expect(manifest.license).toBe("MIT");
     expect(manifest.repository).toBe("https://github.com/gaia-research/gaia-skill-heaven");
     expect(manifest.homepage).toBe("https://gaia-research.github.io/gaia-skill-heaven/");
