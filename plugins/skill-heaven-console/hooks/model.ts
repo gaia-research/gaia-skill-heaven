@@ -28,6 +28,7 @@ import {
   summonSuggestion,
   summonableName,
   timeLabel,
+  wake,
 } from './status-model.mjs'
 import type { SkillHeavenStatus, SummonEvent } from './status-model.mjs'
 import type { ConsoleAgent, ConsoleBand, ConsoleEntryData, ConsoleSection, ConsoleStateData } from '../types'
@@ -95,4 +96,5 @@ export {
   summonSuggestion,
   summonableName,
   timeLabel,
+  wake,
 }

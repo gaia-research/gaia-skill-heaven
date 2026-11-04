@@ -65,6 +65,8 @@ export type ConsoleStateData = {
   /** Claude Code's version string, when the host reported it. */
   hostVersion: string | null
   seq: number
+  /** Dormant until Skill Heaven is used this session; see packages/status console-state. */
+  awake: boolean
 }
 
 declare module 'claude-code' {

@@ -60,6 +60,15 @@ export interface ConsoleCoreState {
   /** The host's version string, when it reported one. */
   hostVersion: string | null;
   seq: number;
+  /**
+   * Dormant until Skill Heaven is used this session (founder ruling,
+   * 2026-11-04). A console is opt-in, but even an installed console paints no
+   * status and does no observer work in a session that never summons, selects
+   * a rung, or opens /heaven or /lens. Observing a summon (a refused one
+   * included) or a typed rung command wakes it, and so does an explicit console
+   * command. Nothing un-wakes it within a conversation.
+   */
+  awake: boolean;
 }
 
 export const MAX_ENTRIES = 50;
@@ -85,7 +94,13 @@ export function initialConsoleState(): ConsoleCoreState {
     selectedFrom: null,
     hostVersion: null,
     seq: 0,
+    awake: false,
   };
+}
+
+/** Skill Heaven was used: the console may paint and observe from here on. */
+export function wake<S extends ConsoleCoreState>(state: S): S {
+  return state.awake ? state : { ...state, awake: true };
 }
 
 /* ------------------------------------------------------------------------- *
@@ -299,6 +314,7 @@ export function recordEvent<S extends ConsoleCoreState>(
     entries,
     band: { kind: "event", id },
     seq: id,
+    awake: true,
   };
 }
 
@@ -324,7 +340,7 @@ export function recordRead<S extends ConsoleCoreState>(state: S, path: string, r
 
 /** A rung command was typed and observed. */
 export function recordSelection<S extends ConsoleCoreState>(state: S, reading: EntropyReading, typed: string): S {
-  return { ...state, status: withReading(state.status, reading), selectedFrom: sanitizeDisplay(typed, 40) };
+  return { ...state, status: withReading(state.status, reading), selectedFrom: sanitizeDisplay(typed, 40), awake: true };
 }
 
 export function entryById(state: ConsoleCoreState, id: number): ConsoleEntry | undefined {

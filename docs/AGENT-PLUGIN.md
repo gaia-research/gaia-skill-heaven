@@ -412,7 +412,8 @@ Antigravity the surfaces are namespaced (`/skill-heaven:summon`).
 marketplace, built on Claude Code 2.1.293's early-access Mods API (function
 hooks). It is a **projection**, not part of the portable package: the portable
 `skill-heaven` plugin is unchanged, and no other client sees the console. It
-adds a status entry beside the user's own (`$.ui.status` — it never touches
+stays dormant until Skill Heaven is used in the session (a summon, a rung command, `/heaven` or `/lens`;
+founder ruling 2026-11-04), then adds a status entry beside the user's own (`$.ui.status` — it never touches
 `statusLine` settings), the Lens band, and the `/heaven` pane. It observes summon
 results, `Read`s of materialized `SKILL.md` files, `/skill-*` command text and
 agent ids; it returns every observed result unchanged, writes nothing to disk,

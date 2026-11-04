@@ -136,7 +136,7 @@ var HARNESS_PATHS = [
     update: "claude plugin marketplace update gaia-skill-heaven && claude plugin update skill-heaven@gaia-skill-heaven",
     remove: ["claude plugin uninstall skill-heaven@gaia-skill-heaven"],
     statusIntegration: "APPEND",
-    statusNote: "The optional console (preview) adds a status entry beside yours \u2014 it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
+    statusNote: "The optional console (preview) stays dormant until you use Skill Heaven in a session, then adds a status entry beside yours \u2014 it never replaces your statusLine. Probed live in the terminal on 2.1.294; its desktop paint is not probed.",
     launcher: "claude-zero",
     // 2.1.294 refuses a bare /summon: it resolves to the portable skill, which is user-invocable: false.
     firstRun: "/skill-heaven:summon <what you need>",
@@ -250,7 +250,7 @@ var HARNESS_PATHS = [
     update: "Re-run the installer, then pi update.",
     remove: [`pi remove "${AGENT_PLUGIN_INSTALL.plugin}"`, AGENT_PLUGIN_INSTALL.uninstall],
     statusIntegration: "NATIVE SLOT",
-    statusNote: "Core + Console requires Pi 1.1+ and adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
+    statusNote: "Core + Console requires Pi 1.1+ and, once Skill Heaven is used in a session, adds one compact owned status line plus an explicitly opened bounded terminal pane (Escape/q dismiss; inspect for details). Native 1.1.0 height, paging and editor restoration observed. Core registers no console.",
     launcher: "pi-zero",
     firstRun: "/summon <what you need>"
   },

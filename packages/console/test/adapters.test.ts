@@ -152,7 +152,8 @@ describe("separate Pi extension", () => {
     update();
     expect(f.widgets).toEqual([]); expect(f.overlays).toEqual([]);
     expect(f.statuses.at(-1)[1]).toContain("1 skill");
-    expect(f.statuses.every(args => typeof args[1] === "string" && !/[\r\n]/.test(args[1]))).toBe(true);
+    // Dormant paints clear the entry (undefined); every painted entry is one line.
+    expect(f.statuses.every(args => args[1] === undefined || (typeof args[1] === "string" && !/[\r\n]/.test(args[1])))).toBe(true);
     // Even an explicitly requested band is not repainted by ordinary events.
     await f.commands.lens.handler("synthetic", f.ctx);
     const count = f.widgets.length; update(); expect(f.widgets).toHaveLength(count);
@@ -181,7 +182,8 @@ describe("separate Pi extension", () => {
   it("does not mark failed or proposed reads as in context; no lookalike summon", async () => {
     const f = piFixture();
     f.handlers.tool_result({ toolName: "evil_summon", details: result, input: {} }, f.ctx);
-    expect(f.statuses.at(-1)[1]).toContain("0 skills");
+    // A lookalike neither counts nor wakes the dormant console.
+    expect(f.statuses.at(-1)[1]).toBeUndefined();
     f.handlers.tool_result({ toolName: "summon", details: result, input: {} }, f.ctx);
     f.handlers.tool_result({ toolName: "read", isError: true, input: { path: "/synthetic/skill/SKILL.md" } }, f.ctx);
     f.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/synthetic/skill/SKILL.md", limit: 1 } }, f.ctx);
@@ -206,7 +208,39 @@ describe("separate Pi extension", () => {
     expect(pane.text()).not.toContain("body read (in context)"); await pane.close();
     f.ctx.sessionManager.getBranch = () => [];
     f.handlers.session_tree(null, f.ctx);
-    expect(f.statuses.at(-1)[1]).toContain("0 skills");
+    // A branch that never used Skill Heaven is dormant again: no status line.
+    expect(f.statuses.at(-1)[1]).toBeUndefined();
+  });
+  it("stays dormant until Skill Heaven is used, then wakes on a summon, a rung command or a console command", async () => {
+    const paintedNothing = (f: ReturnType<typeof piFixture>) => f.statuses.every(args => args[1] === undefined);
+    const quiet = piFixture();
+    quiet.handlers.tool_result({ toolName: "read", isError: false, input: { path: "/project/README.md" }, content: [{ type: "text", text: "x" }] }, quiet.ctx);
+    quiet.handlers.tool_result({ toolName: "bash", isError: false, input: { command: "ls" } }, quiet.ctx);
+    quiet.handlers.input({ text: "fix the failing test" }, quiet.ctx);
+    quiet.handlers.session_tree(null, quiet.ctx);
+    expect(paintedNothing(quiet)).toBe(true);
+    // Start and branch change only ever clear the widget slot; nothing is shown.
+    expect(quiet.widgets.every((args: any[]) => args[1] === undefined)).toBe(true);
+    expect(quiet.overlays).toEqual([]);
+
+    const summoned = piFixture();
+    summoned.handlers.tool_result({ toolName: "summon", details: result, input: {} }, summoned.ctx);
+    expect(summoned.statuses.at(-1)[1]).toContain("1 skill");
+
+    const rung = piFixture();
+    rung.handlers.input({ text: "/skill-hell high" }, rung.ctx);
+    expect(rung.statuses.at(-1)[1]).toContain("HIGH");
+
+    const opened = piFixture();
+    await opened.commands.heaven.handler("fill", opened.ctx);
+    expect(opened.statuses.at(-1)[1]).toContain("0 skills");
+
+    const resumed = piFixture();
+    const call = { type: "message", message: { role: "assistant", content: [{ type: "toolCall", id: "s", name: "summon", arguments: {} }] } };
+    const back = { type: "message", message: { role: "toolResult", toolCallId: "s", toolName: "summon", details: result, isError: false } };
+    resumed.ctx.sessionManager.getBranch = () => [call, back];
+    resumed.handlers.session_tree(null, resumed.ctx);
+    expect(resumed.statuses.at(-1)[1]).toContain("1 skill");
   });
   it.each([undefined, null, {}, { truncation: {} }, { truncation: { truncated: false } }, { truncation: { truncated: true } }, { truncation: { truncated: false, firstLineExceedsLimit: true } }, { firstLineTooLong: true }])("fails closed for unknown/partial live and historical read metadata: %j", async details => {
     const f = piFixture();
