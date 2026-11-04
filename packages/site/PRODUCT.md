@@ -223,8 +223,9 @@ The public site is served from `packages/site`.
   `marketplace.json` migrates existing installs).
 - Launcher door names end in `-zero`: `claude-zero`, `pi-zero`, `codex-zero`,
   `hermes-zero`, `grok-zero`, `agy-zero`. The old `*-heaven` door names are retired.
-- Persona/figure: **the line's own persona (public name reserved)** — internal
-  working name `Lucy`, never hard-coded in shipped copy. Distinct from Milim,
+- Persona/figure: **the line's own persona** — official first name `Lucia`,
+  public nickname `Lucy` (both approved for public use; `Lucy` stays the everyday
+  name; no surname — gaia-research N7, 2026-11-04). Distinct from Milim,
   the Gaia Research lab mascot. Four states, and the state is carried by eyes,
   gravity, wings, weapon count and inversion — never by a costume change:
   **Zero** cyan `#37D6E0`, seated, eyes closed, no wings, one katana ·
