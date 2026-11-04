@@ -12,9 +12,10 @@
 //
 // What it deliberately does NOT do:
 //   - It keeps no session state and resolves no rung. Rung commands are
-//     stateless reference renderers (#91, docs/CONTROL-PLANE.md §7). A
-//     per-invocation `/skill-zero all` is NOT enforced here, because enforcing it
-//     would mean persisting a rung.
+//     stateless reference renderers (#91, docs/CONTROL-PLANE.md §7). The stored
+//     form of `/skill-zero all` IS the zero_cuts setting (founder ruling,
+//     2026-11-04); that setting is what this hook reads. Typing the command
+//     writes nothing.
 //   - It writes nothing, anywhere — not even under ${CLAUDE_PLUGIN_DATA}.
 //   - It never answers "allow". When the cut is inactive it exits 0 with no
 //     output, so a user or project hook that wants to deny still can.

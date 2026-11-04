@@ -64,6 +64,15 @@ What the cells establish:
 - **Plugin data:** the harness creates the plugin data directory and it stays empty.
   The hook writes nothing.
 
+## Follow-up cells (same version, same isolation, after the #226 review request)
+
+| Cell | Setup | Observed | Result |
+|---|---|---|---|
+| **M1** renderer vs stored setting | `zero_cuts=all` stored; `/skill-heaven:skill-zero`, then `/skill-heaven:summon frontend code review` | `/skill-zero` rendered `requested cut: temporary … manual /summon available`. The `/summon` renderer printed no refusal and the model called the tool. **Our hook blocked it (exit 2).** | Enforcement holds; **renderer misreports the stored setting**: #228 |
+| **M2** what reaches a `!` block | probe-only command (in the snapshot, never committed): `` !`echo "subst=[${user_config.zero_cuts}] env=[$CLAUDE_PLUGIN_OPTION_ZERO_CUTS]"` `` | `subst=[all]`; the env variable was not exported | Substitution reaches command content; the hook-only env does not |
+
+Interactive (TUI) cells are tracked in #227.
+
 ## Not verified here
 
 - Interactive (TUI) sessions. All cells are headless `-p`.

@@ -163,10 +163,14 @@ reason on stderr. It reads the cut from `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`, then
 writes nothing and injects no context. Probed live on Claude Code 2.1.318:
 [`docs/evidence/hooks-123/PROBE.md`](evidence/hooks-123/PROBE.md).
 
-Still advisory, by design: a per-invocation `/skill-zero all` is a stateless
-reference renderer (#91), so it reports a cut it cannot enforce. Enforcing it would
-mean persisting a rung (CONTROL-PLANE §7). Other harnesses have no hook, so there the
-cut stays a renderer refusal. A hook process that *crashes* is treated by Claude Code
+**`/skill-zero all` is stored, and its store is the setting (founder ruling,
+2026-11-04).** The stored form is `zero_cuts = all`: the plugin's userConfig on the
+Claude marketplace, or `SKILL_HEAVEN_ZERO_CUTS` for a `claude-zero` launch. That is
+what the hook enforces. Typing `/skill-zero all` writes nothing (P3), and the hook
+keeps no rung of its own. Known gap, #228: in a marketplace install the command
+renderer cannot see the stored setting, so `/skill-zero` reports `temporary` while
+the hook enforces `all`. Other harnesses have no hook, so there the cut stays a
+renderer refusal. A hook process that *crashes* is treated by Claude Code
 as non-blocking, so the cut fails open in that case (probe cell C7).
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
@@ -236,8 +240,10 @@ points different directions for each:
    of the two paths and likely does not hold for a `!`-block subprocess.
    (The hook-process half is now probed: on Claude Code 2.1.318 a configured
    `zero_cuts` reaches the `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
-   cell C1 in `docs/evidence/hooks-123/PROBE.md`. The `!`-block question here
-   is still not verified.)
+   cell C1 in `docs/evidence/hooks-123/PROBE.md`. The `!`-block half is now
+   probed too, on the same version: `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is **not**
+   exported to a command's `!` block, while `${user_config.zero_cuts}` written into
+   command content **is** substituted. Cells M1 and M2; fix tracked in #228.)
 
 **This degrades safely either way.** `zeroCuts()` in
 `plugins/skill-heaven/scripts/render-ladder.mjs` reads
