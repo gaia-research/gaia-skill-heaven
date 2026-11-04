@@ -234,6 +234,10 @@ points different directions for each:
    `process.env` inside `render-ladder.mjs` without the command file doing
    anything — documented **only** for hook processes, so this is the weaker
    of the two paths and likely does not hold for a `!`-block subprocess.
+   (The hook-process half is now probed: on Claude Code 2.1.318 a configured
+   `zero_cuts` reaches the `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
+   cell C1 in `docs/evidence/hooks-123/PROBE.md`. The `!`-block question here
+   is still not verified.)
 
 **This degrades safely either way.** `zeroCuts()` in
 `plugins/skill-heaven/scripts/render-ladder.mjs` reads
