@@ -4,10 +4,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import { createConfiguredService } from "../configured-service.js";
 import { createSkillSummonMcpServer } from "../mcp/server.js";
+import { zeroCutFromEnv } from "../zero-cut.js";
 
 async function main(): Promise<void> {
   const service = createConfiguredService();
-  const server = createSkillSummonMcpServer({ service });
+  const server = createSkillSummonMcpServer({ service, zeroCut: zeroCutFromEnv() });
   const transport = new StdioServerTransport();
 
   const shutdown = async (): Promise<void> => {

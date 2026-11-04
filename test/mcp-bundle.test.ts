@@ -33,9 +33,11 @@ describe(".mcp.json — the summon MCP server declaration", () => {
     ]);
   });
 
-  it("wires one SKILL_SOURCE to the Skill URL userConfig", () => {
+  it("wires SKILL_SOURCE and the zero cut to their userConfig values, and nothing else", () => {
     expect(mcpConfig.mcpServers["skill-summon"].env).toEqual({
       SKILL_SOURCE: "${user_config.skill_url}",
+      // #123: the server enforces the stored cut itself, so no hook is needed.
+      SKILL_HEAVEN_ZERO_CUTS: "${user_config.zero_cuts}",
     });
   });
 });
