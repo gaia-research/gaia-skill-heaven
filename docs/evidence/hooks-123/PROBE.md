@@ -1,9 +1,35 @@
-# PROBE: the zero-cut `PreToolUse` hook, live in Claude Code (#123 · gate #125)
+# PROBE: the zero cut, live in Claude Code (#123 · gate #125)
 
 **Date:** 2026-11-04 · **Harness:** Claude Code **2.1.318** (`claude --version`), headless
-`-p` with `--output-format stream-json --verbose` · **Plugin under test:** `skill-heaven`
-0.1.2 at commit `0a9aad3`. The hook files, `.claude-plugin/plugin.json` and the
-renderer have no behavioural change in any later commit on this branch; `3373931` edits one comment in `zero-cut.mjs`.
+`-p` with `--output-format stream-json --verbose`.
+
+## Current design: the summon server enforces the cut (commit `f005a15`)
+
+Founder ruling, 2026-11-04: the core plugin installs **no hooks**, and `zero_cuts = all`
+means no skill is used. The summon server refuses every route that would put a skill
+into a session. The `PreToolUse` hook recorded under *Historical* below was removed in
+`f005a15`.
+
+| Cell | Setup | Observed (harness events, `tool_result`) | Result |
+|---|---|---|---|
+| **S0** inventory | `claude plugin details skill-heaven@gaia-skill-heaven` | `Hooks (0)` · `MCP servers (1) skill-summon` | **pass**: no hook installed |
+| **S1** marketplace, cut on | `zero_cuts=all` via `pluginConfigs`; summon `Frontend Code Review` | Only the 2 ambient test hooks fired, none from Skill Heaven. The server answered `is_error: true` with the constant refusal and nothing was summoned. This also shows `${user_config.zero_cuts}` reaches the server's env. | **pass** |
+| **S1p** preview, cut on | same, `preview: true` | Refused with the same text | **pass**: no catalogue cards either |
+| **S2** marketplace, cut off | `zero_cuts=temporary` | Materialized `langgenius/frontend-code-review` | **pass** |
+| **S6** launcher, cut on | `claude-zero` product floor, `SKILL_HEAVEN_ZERO_CUTS=all` | **No hook events at all.** The server refused. | **pass** |
+| **S6b** launcher, cut unset | same, no variable | Materialized | **pass** |
+
+Unit coverage (`packages/skill-summon/test/zero-cut.test.ts`) adds three checks for a
+cut summon: no session directory is created, the registry is never loaded, and the
+resource reader and describer are never called. `skills/list` and `resources/list`
+come back empty, and `skills/get` and `resources/read` refuse.
+
+---
+
+## Historical: the `PreToolUse` hook (commit `0a9aad3`, removed in `f005a15`)
+
+**Plugin under test:** `skill-heaven` 0.1.2 at commit `0a9aad3`. Kept as evidence for
+how Claude Code dispatches plugin hooks. It is not the shipped design.
 
 This is a functional acceptance record, not a benchmark. No gold data, no floor, no
 scoring. Every cell is one real session. The evidence is the harness's own
@@ -77,7 +103,7 @@ Interactive (TUI) cells are tracked in #227.
 
 - Interactive (TUI) sessions. All cells are headless `-p`.
 - Desktop.
-- Any Claude Code version other than 2.1.318. **Re-run C1, C3 and C6 on every Claude
+- Any Claude Code version other than 2.1.318. **Re-run S0, S1, S1p and S6 on every Claude
   Code upgrade (M0).**
 
 ## Decisions recorded with this probe

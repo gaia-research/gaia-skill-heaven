@@ -407,7 +407,7 @@ It is the hand-off for builders and the review surface for owners.
 | observe summon results | `on('tool.call')` matching the exact summon names, `await next(e)` | **probed** — `result` is the JSON text as a string; no `structuredContent` |
 | observe body read | `on('tool.call', {tool:'Read'})` path ∈ materialized paths | **probed** — materialized → in context |
 | observe rung selection | `on('prompt.submit')` text starts with `/skill-` or `/skill-heaven:skill-` | **probed** — raw typed text, after `command.run`; `peer` origin ignored |
-| enforce the configured `zero_cuts = all` | core plugin `PreToolUse` command hook on both summon names, exit 2 (#123) | **probed** live on 2.1.318 (`docs/evidence/hooks-123/PROBE.md`) — enforcement, not a projection: no state, no context, no writes |
+| enforce the configured `zero_cuts = all` | the summon server itself: `SKILL_HEAVEN_ZERO_CUTS` from `${user_config.zero_cuts}` or the launcher's literal `door-mcp.json` (#123) | **probed** live on 2.1.318 (`docs/evidence/hooks-123/PROBE.md`) — enforcement, not a projection: no hook, no state, no context |
 | agent attribution | `agentId` on `tool.call` input; Agent/Task calls | **probed** — subagent calls and `turn.complete` carry it; Agent result carries the same id |
 | preview retrieval outside model context | `$.tool.call({ tool, preview:true })` | **probed** — no count change; `$.tool.list()` names the deferred tool once MCP connected |
 | pre-fill a command | `$.prompt.fill` | Mod API now |

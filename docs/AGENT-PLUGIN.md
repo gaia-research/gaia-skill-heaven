@@ -153,25 +153,33 @@ Manual `/summon` still works — that is the product floor per N13 ("ships
 `/skill-zero all` additionally cuts manual `/summon`; the plugin's `zero_cuts`
 userConfig (`temporary` | `all`, default `temporary`) sets the default.
 
-**What is enforced, and what is not (#123).** On Claude Code, the *configured*
-`zero_cuts = all` is a real cut. A `PreToolUse` hook (`hooks/zero-cut.mjs`, declared
-only in `.claude-plugin/plugin.json`) blocks the summon tool under both of its names
-(`mcp__plugin_skill-heaven_skill-summon__summon` from the marketplace,
-`mcp__skill-summon__summon` from the `claude-zero` launcher). It exits 2 with the
-reason on stderr. It reads the cut from `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`, then
-`SKILL_HEAVEN_ZERO_CUTS`, through the renderer's own `zeroCuts()`. It keeps no state,
-writes nothing and injects no context. Probed live on Claude Code 2.1.318:
+**What is enforced (#123).** The *configured* `zero_cuts = all` is a real cut, and
+it means no skill is used. The summon server enforces it itself, so the core plugin
+ships **no hooks** (founder ruling, 2026-11-04: anything that fires while Skill Heaven
+is not in use is bloat). With `all`:
+- the `summon` tool refuses, previews included, before any session, index or network
+  work;
+- `skills/get` and `resources/read` refuse;
+- `skills/list` and `resources/list` are empty.
+
+The server reads `SKILL_HEAVEN_ZERO_CUTS` (`packages/skill-summon/src/zero-cut.ts`):
+- **Claude marketplace:** `.mcp.json` fills it from `${user_config.zero_cuts}`.
+- **`claude-zero` launcher:** the door writes it as a literal into `door-mcp.json`,
+  taken from an explicit `SKILL_HEAVEN_ZERO_CUTS`, else the manifest default.
+- **Pi:** inherits it from the environment.
+- **Other clients:** inherit it if their MCP launch passes the environment through
+  (not probed).
+
+Probed live on Claude Code 2.1.318:
 [`docs/evidence/hooks-123/PROBE.md`](evidence/hooks-123/PROBE.md).
 
 **`/skill-zero all` is stored, and its store is the setting (founder ruling,
 2026-11-04).** The stored form is `zero_cuts = all`: the plugin's userConfig on the
 Claude marketplace, or `SKILL_HEAVEN_ZERO_CUTS` for a `claude-zero` launch. That is
-what the hook enforces. Typing `/skill-zero all` writes nothing (P3), and the hook
-keeps no rung of its own. Known gap, #228: in a marketplace install the command
-renderer cannot see the stored setting, so `/skill-zero` reports `temporary` while
-the hook enforces `all`. Other harnesses have no hook, so there the cut stays a
-renderer refusal. A hook process that *crashes* is treated by Claude Code
-as non-blocking, so the cut fails open in that case (probe cell C7).
+what the server enforces. Typing `/skill-zero all` writes nothing (P3), and nothing
+keeps a rung. Known gap, #228: in a marketplace install the command renderer cannot
+see the stored setting, so `/skill-zero` reports `temporary` while the server
+enforces `all`.
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
@@ -239,8 +247,9 @@ points different directions for each:
    anything — documented **only** for hook processes, so this is the weaker
    of the two paths and likely does not hold for a `!`-block subprocess.
    (The hook-process half is now probed: on Claude Code 2.1.318 a configured
-   `zero_cuts` reaches the `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
-   cell C1 in `docs/evidence/hooks-123/PROBE.md`. The `!`-block half is now
+   `zero_cuts` reached a plugin `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
+   historical cell C1 in `docs/evidence/hooks-123/PROBE.md`; that hook was later
+   replaced by server-side enforcement. The `!`-block half is now
    probed too, on the same version: `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is **not**
    exported to a command's `!` block, while `${user_config.zero_cuts}` written into
    command content **is** substituted. Cells M1 and M2; fix tracked in #228.)
