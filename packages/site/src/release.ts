@@ -22,8 +22,8 @@ const REPO = 'https://github.com/gaia-research/gaia-skill-heaven';
 export const RELEASE = {
   status: 'LIVE',
   /** `plugins/skill-heaven/plugin.json` — read back from a clean install. */
-  pluginVersion: '0.1.2',
-  updated: '2026-10-04',
+  pluginVersion: '0.1.3',
+  updated: '2026-11-04',
   links: {
     program: `${REPO}/issues/116`,
     acceptance: `${REPO}/issues/172`,
@@ -124,7 +124,7 @@ export const SHIPPED: readonly Shipped[] = [
     id: 'plugin',
     title: 'Portable Agent Plugin · tested install',
     claim:
-      'One portable package with five commands. The marketplace install was verified from scratch on Claude Code 2.1.288. Codex 0.146.0, Grok 1.0.5, Hermes 0.20.0 and Pi 0.84.2 were probed at those versions earlier; they were not re-run for this release.',
+      'One portable package with five commands. The marketplace install was verified from scratch on Claude Code 2.1.318. Codex 0.146.0, Grok 1.0.5, Hermes 0.20.0 and Pi 0.84.2 were probed at those versions earlier; they were not re-run for this release.',
     proof:
       'Clean-install run: install.sh into a disposable home and config directory, then the plugin listed, enabled, with five commands and its bytes equal to the repository.',
   },
@@ -181,12 +181,12 @@ export const NOT_CLAIMED: readonly NotClaimed[] = [
  *  `node scripts/release-acceptance.mjs`; do not edit by hand. */
 export const RECEIPT = {
   /** GitHub `main` at the time of the run — the commit that was installed. */
-  commit: 'fdfd94e408850146d6bf9a38a3fb39a6407d70c8',
-  date: '2026-10-04',
-  claude: '2.1.288',
-  node: 'v22.23.1',
-  platform: 'macOS (darwin arm64)',
-  pluginVersion: '0.1.2',
+  commit: 'f0b2084932d38986c9e4c3d319bb7a684b3e5e2d',
+  date: '2026-11-04',
+  claude: '2.1.318',
+  node: 'v22.23.4',
+  platform: 'Linux (linux x64)',
+  pluginVersion: '0.1.3',
   liveModel: 'claude-sonnet-5-5',
   passed: 76,
   total: 76,
@@ -195,7 +195,7 @@ export const RECEIPT = {
       title: 'Fresh install',
       items: [
         'The public installer ran into a throwaway home and config directory, and registered the Claude plugin.',
-        'skill-heaven 0.1.2 is listed and enabled, installed into the throwaway config directory.',
+        'skill-heaven 0.1.3 is listed and enabled, installed into the throwaway config directory.',
         'Five commands, five skills, exactly one MCP server (skill-summon).',
         'Installed bytes equal the repository at the tested commit.',
         'The MCP bundle is current: two consecutive rebuilds from source changed nothing.',

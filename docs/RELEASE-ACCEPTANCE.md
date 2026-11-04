@@ -54,7 +54,124 @@ look lost when Claude simply declined it, so the live phase defaults to `--model
   floor adds that one server; its dose is not re-priced, and no surface may present the old
   figure as the current floor's.
 
-## Receipt — 2026-10-04, GitHub `main` @ `fdfd94e` (final, after the release PRs merged)
+## Receipt — 2026-11-04, GitHub `main` @ `f0b2084` (0.1.3, after #226 and #229 merged)
+
+| | |
+| --- | --- |
+| Result | **76 / 76 checks passed** |
+| Installed commit | `f0b2084932d38986c9e4c3d319bb7a684b3e5e2d` (GitHub `main`) |
+| Claude Code | 2.1.318 |
+| Plugin | `skill-heaven` 0.1.3 · MCP bundle sha256 `e43566de…` |
+| Live model | `claude-sonnet-5-5` |
+| Node · platform | v22.23.4 · Linux (linux x64) |
+| Negotiated MCP protocol | `2025-11-25` (`2026-07-28` is **not** negotiated by the pinned SDK) |
+
+This receipt was taken in a Linux cloud container, not on macOS. Phase 5 used that
+container's own login, and settings were read-only and hashed before and after, as
+the script requires. Codex, Grok, Hermes, Pi and Antigravity were not re-run in this
+pass; they stay pinned at their earlier probes.
+
+An earlier attempt to take this receipt before the merge, against the pushed PR head,
+failed 75/76. `install.sh` registers the Claude marketplace from the GitHub git URL, so
+the installed plugin was `main`'s 0.1.2 and the "installed plugin bytes equal the repo
+at the tested commit" check failed on the four version manifests. That run is not a
+receipt. The script itself was left unchanged, so it still installs `main`.
+
+### Checks
+
+```text
+· tested commit (GitHub main): f0b2084932d38986c9e4c3d319bb7a684b3e5e2d
+· checkout HEAD: f0b2084932d38986c9e4c3d319bb7a684b3e5e2d
+· claude: 2.1.318 (Claude Code)
+· node: v22.23.4
+· platform: linux x64
+· install.sh sha256: f90358e8f31bf10a
+✔ repo checkout is clean
+✔ the checkout's shipped paths are identical to GitHub main
+✔ install.sh exits 0
+✔ installer registered the Claude plugin
+✔ claude-zero launcher linked
+✔ plugin is listed and enabled
+· plugin version: 0.1.3
+✔ exactly one MCP server, skill-summon
+✔ plugin installed into the throwaway config dir
+✔ the five expected commands are present
+✔ the five skills are present
+✔ installed plugin bytes equal the repo at the tested commit
+· MCP bundle sha256: e43566de893709fc
+✔ MCP bundle is current: a rebuild from source changes nothing
+✔ a second rebuild also produces no diff
+✔ product-floor plan composes
+✔ strict MCP allowlist stays on
+✔ exactly one --mcp-config, session-local
+✔ the door MCP file declares exactly one server: skill-summon
+✔ …and it points at the INSTALLED bundle
+✔ the clean room mounts the installed door plugin
+✔ project/user setting sources stay evicted
+✔ inherited permissions.defaultMode is carried on the session settings
+✔ …and is the ONLY permissions key
+✔ …and the session settings hold nothing else but the statusline
+✔ allow/deny rules, hooks, env, MCP, plugins and directories do not leak
+✔ the plan discloses what was inherited
+✔ an explicit --permission-mode is forwarded verbatim
+✔ …and wins: the configured mode is not injected
+✔ an explicit --dangerously-skip-permissions is forwarded and wins
+✔ no configured mode ⇒ nothing is injected
+✔ malformed settings fail clearly (exit 2, named reason) instead of degrading
+✔ …and no plan is emitted
+✔ native reads no user file and injects nothing
+✔ exactly one tool is exposed: summon
+✔ server instructions state the reference-data boundary
+✔ server instructions decide per use and authorize nothing
+✔ server instructions carry no authority phrase
+✔ tool description is a lane filter, not authorization
+· negotiated protocol: 2025-11-25
+✔ a harmless summon call returns structured content
+✔ the preview result carries no authority phrase (provenance wording excepted)
+✔ composition is relevance-only and selection is unchanged
+✔ Arbor publication cache loaded with the governed record
+✔ the candidate joins the governed record content-pinned
+✔ …and the record's support is `inconclusive`
+✔ …set by the human-curated interpretation c8d6b2cb
+✔ band judgment is reported, not applied: no direction, relevance untouched
+✔ inconclusive evidence fails closed (no direction from it)
+✔ a real summon materializes one skill and returns a card
+✔ …the card states it is a listing entry, not a grant
+✔ …the card carries no authority phrase (full tripwire list, Arbor provenance lines excepted)
+✔ …and it ranked by relevance only
+✔ …the full result JSON carries no authority phrase (provenance wording excepted)
+✔ control: the empty publication really has no governed record
+✔ ranking is IDENTICAL with and without the Arbor record
+✔ refusal is IDENTICAL with and without the Arbor record
+✔ a nonsense query is an honest refusal, not a forced match
+· authored surfaces scanned for authority phrases: 20
+✔ no installed command, skill or rendering asks to be treated as standing authority
+✔ live: the session started
+✔ live: exactly ONE MCP tool, and it is the bundled summon
+✔ live: exactly one MCP server, connected
+✔ live: the synthetic ambient MCP server is absent
+✔ live: the synthetic ambient project skill is absent
+✔ live: the five plugin commands are present
+✔ live: the only non-builtin plugin is the door, mounted from the FRESH install
+· live: builtin plugins Claude itself adds (not user/project settings): ["cc-plugin-agents-md","cc-plugin-telemetry","cc-plugin-privacy","cc-plugin-plugin-authoring"]
+✔ live: none of the operator's 0 user-enabled plugins leaked into the clean room
+✔ live: the project SessionStart hook did not fire
+✔ live: with no configured mode, the project's mode (plan) is NOT adopted
+✔ live: the project's permissions.defaultMode (plan) did not leak
+· live: model: claude-sonnet-5-5
+· live: inherited permissionMode: default
+✔ live: one summon call was made and returned a card
+✔ live: the card names its reference-data nature
+✔ live: the tool result carries no authority phrase (provenance wording excepted)
+✔ live: an explicit --permission-mode plan wins over the inherited mode
+✔ live: an explicit --dangerously-skip-permissions wins over the inherited mode
+✔ the installed plugin tree is byte-identical after every run
+✔ the operator's real settings.json is unchanged (read-only)
+✔ the operator's real plugin registries never reference the throwaway install
+✔ the repository checkout is untouched
+```
+
+## Receipt — 2026-10-04, GitHub `main` @ `fdfd94e` (previous release, 0.1.2)
 
 | | |
 | --- | --- |
