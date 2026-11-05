@@ -168,18 +168,42 @@ export function levelForPosture(posture) {
   return null;
 }
 
-/** What `/skill-zero` cuts by default.
+/** The literal placeholder the command markdown carries. Claude Code
+ * substitutes it with the plugin's stored `zero_cuts` on a marketplace install;
+ * under `claude-zero --plugin-dir` it is left as written (probed, 2.1.318). */
+export const STORED_CUT_PLACEHOLDER = "${user_config.zero_cuts}";
+
+/** What `/skill-zero` cuts, as stored.
  *
  * `temporary` — temporary automatic skills are cut; manual `/summon` still works.
  * `all` — every skill summon, including manual `/summon`, is cut.
  *
- * Read from the plugin's userConfig if the harness exports it, otherwise from
- * SKILL_HEAVEN_ZERO_CUTS, otherwise `temporary`.
+ * The store is the one the summon server enforces (#123, #228):
+ * - Claude marketplace: the plugin's userConfig `zero_cuts`, which reaches this
+ *   renderer only through the command's `${user_config.zero_cuts}` substitution
+ *   (`stored`). `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is exported to hooks only, never
+ *   to a command's `!` block, so it is kept solely as a fallback.
+ * - `claude-zero` launch: `SKILL_HEAVEN_ZERO_CUTS` in the environment.
+ * A substituted value wins, exactly as it does for the server's `.mcp.json`.
+ * Anything other than `all` reads as `temporary`, matching the server.
  * @param {NodeJS.ProcessEnv} [env]
+ * @param {string | null} [stored] the substituted userConfig value, if any
  * @returns {"temporary" | "all"} */
-export function zeroCuts(env = process.env) {
-  const raw = (env.CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? env.SKILL_HEAVEN_ZERO_CUTS ?? "").trim().toLowerCase();
-  return raw === "all" ? "all" : "temporary";
+export function zeroCuts(env = process.env, stored = null) {
+  const substituted = storedCut(stored);
+  const raw = substituted ?? env.CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? env.SKILL_HEAVEN_ZERO_CUTS ?? "";
+  return raw.trim().toLowerCase() === "all" ? "all" : "temporary";
+}
+
+/** The substituted userConfig value, or null when there is none: no line, an
+ * empty line, or the placeholder left unsubstituted.
+ * @param {unknown} stored
+ * @returns {string | null} */
+export function storedCut(stored) {
+  if (typeof stored !== "string") return null;
+  const value = stored.trim();
+  if (value === "" || value.includes(STORED_CUT_PLACEHOLDER)) return null;
+  return value;
 }
 
 /** @param {LaunchManifest} manifest */
@@ -294,6 +318,8 @@ const SESSION_RUNG_NOTE = "   A session sits at exactly one rung.";
  * @param {LaunchManifest | null} [options.manifest]
  * @param {LadderData | null} [options.data]
  * @param {NodeJS.ProcessEnv} [options.env]
+ * @param {string | null} [options.storedCut] the command's substituted
+ *   `${user_config.zero_cuts}`, when the command passes one (#228)
  * @returns {{ text: string, refused: boolean }}
  */
 export function renderLadder(options) {
@@ -309,19 +335,20 @@ export function renderLadder(options) {
   const env = options.env ?? process.env;
   const detail = options.detail === "full" ? "full" : "concise";
 
-  if (mode === "summon") return renderSummon(options.target, env, detail);
-  if (mode === "zero") return renderZero(data, target, options.manifest ?? null, env, detail);
+  const stored = options.storedCut ?? null;
+  if (mode === "summon") return renderSummon(options.target, zeroCuts(env, stored), detail);
+  if (mode === "zero") return renderZero(data, target, options.manifest ?? null, zeroCuts(env, stored), detail);
   return renderBand(data, mode, target, options.manifest ?? null, detail);
 }
 
 /** `/summon <intent>` — the manual path, present at every rung including `zero`. */
 function renderSummon(
   /** @type {unknown} */ rawIntent,
-  /** @type {NodeJS.ProcessEnv} */ env,
+  /** @type {"temporary" | "all"} */ stored,
   /** @type {"concise" | "full"} */ detail = "concise",
 ) {
   const intent = String(rawIntent ?? "").trim();
-  const cutsAll = zeroCuts(env) === "all";
+  const cutsAll = stored === "all";
 
   if (cutsAll) {
     if (detail === "concise") {
@@ -393,26 +420,44 @@ function renderSummon(
   };
 }
 
-/** `/skill-zero [all]` — the floor. */
+/** Where the `all` cut is stored. Skill Heaven never writes it (P3). */
+const STORE_HINT = [
+  "   To store it: /plugin configure skill-heaven@gaia-skill-heaven (zero_cuts → all),",
+  "   or SKILL_HEAVEN_ZERO_CUTS=all for a claude-zero launch. Skill Heaven never",
+  "   writes your settings; the stored cut applies from the next session.",
+];
+
+/** `/skill-zero [all]` — the floor. The stored cut is what the summon server
+ * enforces; a typed `all` is a request, and is labelled not stored unless the
+ * setting already says `all` (#228). */
 function renderZero(
   /** @type {LadderData} */ data,
   /** @type {string | null} */ target,
   /** @type {LaunchManifest | null} */ manifest,
-  /** @type {NodeJS.ProcessEnv} */ env,
+  /** @type {"temporary" | "all"} */ stored,
   /** @type {"concise" | "full"} */ detail = "concise",
 ) {
-  const cutsAll = target === "all" || zeroCuts(env) === "all";
+  const cutsAll = stored === "all";
+  const unstoredAll = !cutsAll && target === "all";
 
   if (detail === "concise") {
     const session = manifest ? `\n${sessionLine(manifest)}` : "";
     if (cutsAll) {
       return {
-        text: `⚡ Skill Zero · zero\nrequested cut: all skills — no automatic or manual summon · ${REFERENCE_TAG}${session}\n`,
+        text: `⚡ Skill Zero · zero\nstored cut: all skills — no automatic or manual summon · ${REFERENCE_TAG}${session}\n`,
+        refused: false,
+      };
+    }
+    if (unstoredAll) {
+      return {
+        text:
+          `⚡ Skill Zero · zero\nrequested cut: all — not stored · stored cut: temporary, manual /summon still available · ${REFERENCE_TAG}${session}\n` +
+          "to store it: /plugin configure skill-heaven@gaia-skill-heaven (zero_cuts → all)\n",
         refused: false,
       };
     }
     return {
-      text: `⚡ Skill Zero · zero\nrequested cut: temporary automatic skills — manual /summon available · ${REFERENCE_TAG}${session}\n`,
+      text: `⚡ Skill Zero · zero\nstored cut: temporary automatic skills — manual /summon available · ${REFERENCE_TAG}${session}\n`,
       refused: false,
     };
   }
@@ -420,12 +465,18 @@ function renderZero(
   const lines = header(data, "⚡ Skill Zero · the floor · selected: zero");
   lines.push(...line(data, "zero"));
   lines.push("");
-  lines.push(
-    cutsAll
-      ? "   requested cut: no temporary automatic skills, and no manual /summon either."
-      : "   requested cut: no temporary automatic skills. Manual /summon still works — the floor ships it.",
-  );
-  if (!cutsAll) lines.push("   The `all` cut is available with: /skill-zero all");
+  if (cutsAll) {
+    lines.push("   stored cut: all — no temporary automatic skills, and no manual /summon either.");
+  } else if (unstoredAll) {
+    lines.push(
+      "   requested cut: all — NOT STORED. The stored cut is temporary, so manual /summon",
+      "   still works in this session and the summon server still serves it.",
+      ...STORE_HINT,
+    );
+  } else {
+    lines.push("   stored cut: temporary — no temporary automatic skills. Manual /summon still works — the floor ships it.");
+    lines.push("   The `all` cut is a stored setting: /plugin configure skill-heaven@gaia-skill-heaven (zero_cuts → all)");
+  }
   lines.push("");
   if (manifest) {
     lines.push(`   ${sessionLine(manifest)}`);
@@ -575,15 +626,21 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   const isFull = argv.includes("--full");
   const filtered = isFull ? argv.filter((a) => a !== "--full") : argv;
   const [mode, ...rest] = filtered;
-  const intentStdinIdx = rest.indexOf("--intent-stdin");
-  const readStdin = intentStdinIdx !== -1;
-  const argvRest = readStdin
-    ? rest.slice(0, intentStdinIdx).concat(rest.slice(intentStdinIdx + 1))
-    : rest;
-  const target = readStdin ? (readIntentFromStdin() ?? "") : argvRest.join(" ");
+  const readStdin = rest.includes("--intent-stdin");
+  // `--stored-cut-stdin` (with `--intent-stdin`): the first stdin line is the
+  // command's substituted `${user_config.zero_cuts}` (#228) and the intent is
+  // everything after it. The value rides the same quoted heredoc as
+  // $ARGUMENTS, never the shell argv.
+  const storedFirst = readStdin && rest.includes("--stored-cut-stdin");
+  const argvRest = rest.filter((a) => a !== "--intent-stdin" && a !== "--stored-cut-stdin");
+  const input = readStdin ? (readStdinRaw() ?? "") : argvRest.join(" ");
+  const newline = storedFirst ? input.indexOf("\n") : -1;
+  const storedLine = storedFirst ? (newline === -1 ? input : input.slice(0, newline)) : null;
+  const target = (storedFirst ? (newline === -1 ? "" : input.slice(newline + 1)) : input).trim();
   const { text } = renderLadder({
     mode: String(mode ?? "").trim().toLowerCase(),
     target,
+    storedCut: storedLine,
     detail: isFull ? "full" : "concise",
     manifest: loadManifest(),
   });
@@ -591,14 +648,12 @@ export function main(/** @type {string[]} */ argv = process.argv.slice(2)) {
   return 0;
 }
 
-/** Read the user intent piped in on stdin. Only called when the command
+/** Read what the command piped in on stdin. Only called when the command
  * markdown passed `--intent-stdin`, so fd 0 is a heredoc/pipe the caller
- * controls — never an interactive TTY. Returns null on empty/error. */
-function readIntentFromStdin() {
+ * controls — never an interactive TTY. Returns null on error. */
+function readStdinRaw() {
   try {
-    const raw = readFileSync(0, "utf8");
-    const trimmed = raw.trim();
-    return trimmed.length > 0 ? trimmed : null;
+    return readFileSync(0, "utf8");
   } catch {
     return null;
   }

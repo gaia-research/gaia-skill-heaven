@@ -19,6 +19,7 @@ import {
   readLadderData,
   renderLadder,
   zeroCuts,
+  STORED_CUT_PLACEHOLDER,
 } from "../plugins/skill-heaven/scripts/render-ladder.mjs";
 
 const data = readLadderData();
@@ -31,12 +32,18 @@ const productFloor = {
   launcherLocked: true,
 };
 
-function render(mode: string, target = "", env: NodeJS.ProcessEnv = {}, detail: "concise" | "full" = "full") {
-  return renderLadder({ mode, target, data, env, manifest: null, detail });
+function render(
+  mode: string,
+  target = "",
+  env: NodeJS.ProcessEnv = {},
+  detail: "concise" | "full" = "full",
+  storedCut: string | null = null,
+) {
+  return renderLadder({ mode, target, data, env, manifest: null, detail, storedCut });
 }
 
-function renderConcise(mode: string, target = "", env: NodeJS.ProcessEnv = {}) {
-  return renderLadder({ mode, target, data, env, manifest: null, detail: "concise" });
+function renderConcise(mode: string, target = "", env: NodeJS.ProcessEnv = {}, storedCut: string | null = null) {
+  return renderLadder({ mode, target, data, env, manifest: null, detail: "concise", storedCut });
 }
 
 describe("the shipped ladder artifact", () => {
@@ -178,19 +185,37 @@ describe("concise mode (default)", () => {
 describe("the floor", () => {
   it("cuts temporary automatic skills but keeps manual /summon", () => {
     const { text } = render("zero");
+    expect(text).toContain("stored cut: temporary");
     expect(text).toContain("no temporary automatic skills");
     expect(text).toContain("Manual /summon still works");
-    expect(text).toContain("/skill-zero all");
+    expect(text).toContain("/plugin configure skill-heaven@gaia-skill-heaven");
   });
 
-  it("cuts manual too on `all`, and on the zero_cuts plugin default", () => {
-    expect(render("zero", "all").text).toContain("no manual /summon either");
+  it("reports the stored `all` cut, from the substituted setting or the launch env", () => {
+    expect(render("zero", "", {}, "full", "all").text).toContain("no manual /summon either");
     expect(render("zero", "", { SKILL_HEAVEN_ZERO_CUTS: "all" }).text).toContain(
       "no manual /summon either",
     );
     expect(render("zero", "", { CLAUDE_PLUGIN_OPTION_ZERO_CUTS: "all" }).text).toContain(
       "no manual /summon either",
     );
+    expect(renderConcise("zero", "", {}, "all").text).toContain("stored cut: all skills");
+  });
+
+  it("labels a typed `/skill-zero all` as not stored while the setting is temporary (#228)", () => {
+    for (const stored of ["temporary", null]) {
+      const full = render("zero", "all", {}, "full", stored).text;
+      expect(full).toContain("NOT STORED");
+      expect(full).toContain("manual /summon");
+      expect(full).not.toContain("no manual /summon either");
+      expect(full).toContain("/plugin configure skill-heaven@gaia-skill-heaven (zero_cuts → all)");
+      expect(full).toMatch(/never\s+writes your settings/);
+      const concise = renderConcise("zero", "all", {}, stored).text;
+      expect(concise).toContain("requested cut: all — not stored");
+      expect(concise).toContain("/plugin configure skill-heaven@gaia-skill-heaven");
+    }
+    // Once the setting stores `all`, the typed request matches it.
+    expect(render("zero", "all", {}, "full", "all").text).not.toContain("NOT STORED");
   });
 
   it("never claims the cut emptied the session (D12)", () => {
@@ -333,5 +358,28 @@ describe("launch-manifest helpers carried over from the posture renderer", () =>
     expect(zeroCuts({})).toBe("temporary");
     expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "ALL" })).toBe("all");
     expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "nonsense" })).toBe("temporary");
+  });
+
+  it("reads the substituted setting first, as the server's .mcp.json does (#228)", () => {
+    expect(zeroCuts({}, "all")).toBe("all");
+    expect(zeroCuts({}, " ALL ")).toBe("all");
+    // A substituted value wins over the environment in both directions.
+    expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "all" }, "temporary")).toBe("temporary");
+    // Unsubstituted (claude-zero --plugin-dir leaves the placeholder) or empty:
+    // fall back to the launch environment.
+    expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "all" }, STORED_CUT_PLACEHOLDER)).toBe("all");
+    expect(zeroCuts({ SKILL_HEAVEN_ZERO_CUTS: "all" }, "")).toBe("all");
+    expect(zeroCuts({}, STORED_CUT_PLACEHOLDER)).toBe("temporary");
+    // Anything but `all` is temporary, matching the server's normalizeZeroCut.
+    for (const hostile of ["all' \"q\"", "all; rm -rf ~", "$(id)", "`id`", "alll"]) {
+      expect(zeroCuts({}, hostile)).toBe("temporary");
+    }
+  });
+
+  it("summon prints its refusal under a stored `all` (#228)", () => {
+    const result = renderConcise("summon", "frontend code review", {}, "all");
+    expect(result.refused).toBe(true);
+    expect(result.text).toContain("⛔ manual /summon is cut");
+    expect(renderConcise("summon", "frontend code review", {}, "temporary").refused).toBe(false);
   });
 });

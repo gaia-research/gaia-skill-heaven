@@ -133,3 +133,31 @@ What the cells establish:
 
 Interactive (TUI) cells are tracked in #227.
 
+
+## #228: the renderer reads the stored setting (2026-11-05, Claude Code 2.1.318)
+
+Headless `-p`, `--output-format stream-json --verbose`. Every cell used a fresh
+`CLAUDE_CONFIG_DIR` in scratch, and the real `~/.claude` was not touched. The
+marketplace was a snapshot of the working tree, diffed equal to
+`plugins/skill-heaven` before the run. Evidence: the rendered `!` block in the
+`result`, and the `tool_use` list (empty in every cell).
+
+| Cell | Setup | Observed | Result |
+|---|---|---|---|
+| **Z1** marketplace, stored `all` | `install --config zero_cuts=all`; `/skill-heaven:skill-zero` | `stored cut: all skills — no automatic or manual summon` | **pass** |
+| **Z2** marketplace, stored `all` | `/skill-heaven:summon frontend code review` | `⛔ manual /summon is cut by the configured zero_cuts = all.`, no tool call | **pass**: the renderer now refuses before the server needs to |
+| **Z3** marketplace, stored `temporary` | `configure --values-stdin` → `temporary`; `/skill-heaven:skill-zero all` | `requested cut: all — not stored · stored cut: temporary …` plus the `/plugin configure` pointer | **pass** |
+| **Z3b** same | `/skill-heaven:skill-zero` | `stored cut: temporary automatic skills — manual /summon available` | **pass** |
+| **Z4** launch, `SKILL_HEAVEN_ZERO_CUTS=all` | `--setting-sources '' --plugin-dir <plugin>`; `/skill-heaven:skill-zero` | `stored cut: all skills …`. A probe command showed the placeholder stays literal on this route | **pass** |
+| **Z4b** launch, unset | same, no variable | `stored cut: temporary …` | **pass** |
+
+Attack cells, on a probe-only command that `cat`s the same heredoc shape (in the
+snapshot, never committed). A marker file under scratch was the hard signal.
+
+| Cell | Stored value | Observed | Result |
+|---|---|---|---|
+| **A1** | multi-line value through `claude plugin configure --values-stdin` | `must be a single line`; nothing saved | refused by the CLI |
+| **A2** | `all' "q" $(touch M) …` (single line, settings hand-edited) | printed literally; no marker | inert |
+| **A3** | ``all` !`node -e …` ` `` (an attempted second `!` block) | Claude Code escaped it to `\!`; no marker | inert |
+| **A4** | `all⏎SKILL_HEAVEN_ARGS_EOF⏎node -e …` (hand-edited), default permission mode | `Shell command permission check failed`; no marker | refused by the harness |
+| **A5** | same as A4, `--permission-mode bypassPermissions` | **marker written** | residual, same exposure as `$ARGUMENTS`; needs a hand edit of settings and confers nothing a settings writer lacks (they can add a hook) |

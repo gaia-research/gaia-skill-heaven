@@ -197,7 +197,7 @@ describe("Issue #91 static authority regression tests", () => {
         expect(text, `${mode} full output reports the selected rung`).toMatch(/selected: /);
         // The floor names its cut; the three bands name discovery parameters.
         expect(text, `${mode} full output names its requested state`).toMatch(
-          mode === "zero" ? /requested cut: / : /discovery reference:/,
+          mode === "zero" ? /(stored|requested) cut: / : /discovery reference:/,
         );
         expect(text.toLowerCase(), `${mode} does not claim an armed lane`).not.toContain("armed");
       }
