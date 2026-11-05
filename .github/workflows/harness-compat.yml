@@ -1,0 +1,54 @@
+name: Harness compat
+
+# Credential-free Claude Code compatibility checks (#35). This does NOT run an
+# authenticated session and proves nothing about session-level behaviour; see
+# docs/COMPAT-MATRIX.md for exactly what each cell checks.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 5 * * 1' # weekly, to notice `latest` drifting
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  claude-code:
+    name: claude-code ${{ matrix.version }}${{ matrix.pinned && ' (pinned, blocking)' || ' (informational)' }}
+    runs-on: ubuntu-latest
+    # `latest` is informational: a failure there is a signal to re-probe, not a
+    # red build. The pinned probe version is blocking.
+    continue-on-error: ${{ !matrix.pinned }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '2.1.318' # pinned probe version; kept equal to RECEIPT.claude by test/compat-matrix.test.ts
+            pinned: true
+          - version: 'latest'
+            pinned: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install Claude Code ${{ matrix.version }}
+        run: npm install -g @anthropic-ai/claude-code@${{ matrix.version }}
+      - name: claude --version
+        run: claude --version
+      - name: Installed version equals the pin
+        if: ${{ matrix.pinned }}
+        run: test "$(claude --version | awk '{print $1}')" = "${{ matrix.version }}"
+      - name: plugin validate (core plugin)
+        run: claude plugin validate ./plugins/skill-heaven
+      - name: plugin validate (console mod)
+        run: claude plugin validate ./plugins/skill-heaven-console
+      - name: claude-zero door composition (--print, no session)
+        run: node packages/claude-zero/bin/claude-zero.mjs --print > /dev/null
+      - name: Door composition tests (no auth, no session)
+        run: npx vitest run packages/claude-zero packages/core/test/door-ladder.test.ts test/compat-matrix.test.ts
