@@ -24,7 +24,7 @@ character. Her anatomy and outfit do not transform between states.
 
 ## Paid generation contract
 
-- Use `gpt-image-2` only.
+- Use `gpt-image-2.6` only (`gpt-image-2.6-sunburst` for precision masters).
 - Make exactly one generation call for each assigned `GEN-*` job.
 - Do not request alternates, variations, or a second attempt.
 - Include the authority images in the generation context.

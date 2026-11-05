@@ -1337,7 +1337,7 @@ function appendImageGenDirective(parts) {
   parts.push([
     'IMAGE_GEN_AVAILABLE: your harness-native image tool is always the first choice for generation; use it whenever one exists.',
     'This environment also carries an OpenAI key as the fallback for harnesses with no native tool:',
-    `\`node ${scriptsPath}/generate-image.mjs --prompt "..." --out <file>\` (gpt-image-2, billed to the user's key; say so before the first render, and never reach for it when a native tool exists).`,
+    `\`node ${scriptsPath}/generate-image.mjs --prompt "..." --out <file>\` (gpt-image-2.6, billed to the user's key; say so before the first render, and never reach for it when a native tool exists).`,
     'Visualizing a direction before building it measurably strengthens the result.',
   ].join(' '));
 }

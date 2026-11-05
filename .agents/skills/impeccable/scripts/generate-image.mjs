@@ -4,7 +4,7 @@
  * user's own OpenAI key when the harness has no native image generation.
  *
  * context.mjs reports availability (it checks OPENAI_API_KEY); harness-native
- * generation always wins when present. This uses gpt-image-2 and spends the
+ * generation always wins when present. This uses gpt-image-2.6 and spends the
  * user's API credit (roughly $0.05-0.25 per image at default quality), so the
  * skill states that before the first call in a session.
  *
@@ -233,7 +233,7 @@ const refs = (() => {
 let response;
 if (refs.length) {
   const form = new FormData();
-  form.append('model', 'gpt-image-2');
+  form.append('model', 'gpt-image-2.6');
   form.append('prompt', prompt);
   form.append('size', size);
   form.append('quality', quality);
@@ -252,7 +252,7 @@ if (refs.length) {
   response = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-image-2', prompt, size, quality, n: 1 }),
+    body: JSON.stringify({ model: 'gpt-image-2.6', prompt, size, quality, n: 1 }),
   });
 }
 if (!response.ok) {
@@ -272,6 +272,6 @@ fs.writeFileSync(out, Buffer.from(b64, 'base64'));
 try {
   const { spawnSync } = await import('node:child_process');
   spawnSync(process.execPath, [new URL('./embed-prompt.mjs', import.meta.url).pathname, out, '--prompt', prompt], { stdio: 'ignore' });
-  fs.writeFileSync(`${out}.json`, JSON.stringify({ prompt, createdAt: new Date().toISOString(), tool: 'generate-image.mjs', model: 'gpt-image-2', ...(refs.length ? { refs } : {}) }, null, 2));
+  fs.writeFileSync(`${out}.json`, JSON.stringify({ prompt, createdAt: new Date().toISOString(), tool: 'generate-image.mjs', model: 'gpt-image-2.6', ...(refs.length ? { refs } : {}) }, null, 2));
 } catch { /* embedding is best-effort */ }
-console.log(`IMAGE: ${out} (${size}, ${quality}, gpt-image-2, billed to your OpenAI key); prompt embedded + sidecar at ${out}.json`);
+console.log(`IMAGE: ${out} (${size}, ${quality}, gpt-image-2.6, billed to your OpenAI key); prompt embedded + sidecar at ${out}.json`);
