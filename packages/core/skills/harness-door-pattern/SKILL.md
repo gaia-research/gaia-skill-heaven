@@ -181,6 +181,9 @@ cost (claude +515 tok; pi ~1,762 tok).
    `herdr agent prompt … --wait --until working --timeout 60000` and verify it started.
 9. **Never claim a harness limitation when you have only shown an account limitation.** A
    free-tier account is not the harness.
+10. **Never sum a directory's own `stat.size`.** It is a filesystem property (4096 on ext4,
+    ~64 on APFS), so any size, cap, or "reclaimed bytes" figure that includes it differs per
+    host for identical content. Count file bytes only (#41; fixed in the session reaper).
 
 ---
 

@@ -15818,7 +15818,7 @@ function isProcessLive(pid) {
 async function directorySize(root) {
   const target = await lstat(root);
   if (!target.isDirectory()) return target.size;
-  let bytes = target.size;
+  let bytes = 0;
   for (const entry of await readdir(root)) {
     bytes += await directorySize(path2.join(root, entry));
   }
