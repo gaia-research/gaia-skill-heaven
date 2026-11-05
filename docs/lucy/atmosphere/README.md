@@ -26,6 +26,14 @@ lifecycle attribute, `data-scene-running` on the hero root
 state). The Rive adapter should read that attribute rather than run its own
 observers.
 
+The hero root is the scene: `LucyScene` (`src/lucy-scene/LucyScene.tsx`) renders
+it as a plain `div` that forwards the hero's own props, owns the lifecycle
+attribute, and mirrors the product state as `data-scene-state` (read-only, for
+CSS and tests). The atmosphere and the character are its siblings, so either can
+be omitted. `LucyScene` holds no state of its own.
+
+Contract tests: `test/site-lucy-scene.test.ts`.
+
 **Boundary:** if it moves because Lucy moved, it is Rive's. If it moves because
 the world moved, it is the atmosphere's.
 
