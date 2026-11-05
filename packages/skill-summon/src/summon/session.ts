@@ -573,10 +573,16 @@ function isProcessLive(pid: number): boolean {
   }
 }
 
+/**
+ * Total size of the session's FILES. A directory's own inode size is excluded:
+ * it is platform-dependent (4096 on ext4, ~64 on APFS), so counting it makes
+ * `reclaimedBytes` report a different number for identical content per host.
+ * Same rule as payload-cache's directorySize (#41).
+ */
 async function directorySize(root: string): Promise<number> {
   const target = await lstat(root);
   if (!target.isDirectory()) return target.size;
-  let bytes = target.size;
+  let bytes = 0;
   for (const entry of await readdir(root)) {
     bytes += await directorySize(path.join(root, entry));
   }

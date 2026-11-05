@@ -102,6 +102,27 @@ describe("summon session garbage collection", () => {
     }
   });
 
+  it("reports reclaimed bytes as file bytes only, not directory inode sizes (#41)", async () => {
+    const parent = await temporaryParent();
+    const root = path.join(parent, "skill-summon-session-sized");
+    await mkdir(path.join(root, "a", "b"), { recursive: true });
+    await writeFile(path.join(root, "session.json"), "not json"); // 8 bytes
+    await writeFile(path.join(root, "a", "one.txt"), "12345"); // 5 bytes
+    await writeFile(path.join(root, "a", "b", "two.txt"), "123"); // 3 bytes
+    await utimes(root, new Date(0), new Date(0));
+
+    const outcome = await reapSessions({
+      dryRun: true,
+      tempRoot: parent,
+      ttlHours: 1,
+      now: new Date("2026-04-01T12:00:00.000Z"),
+    });
+
+    // Three directories (root, a, b) would add 3 x 4096 on ext4 if counted.
+    expect(outcome.candidates[0]?.bytes).toBe(16);
+    expect(outcome.reclaimedBytes).toBe(16);
+  });
+
   it("reports dry-run candidates without deleting them", async () => {
     const parent = await temporaryParent();
     const root = path.join(parent, "skill-summon-session-malformed");
