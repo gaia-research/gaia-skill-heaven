@@ -14,7 +14,7 @@ import { LucyRiveFigure, prefersReducedMotion } from '../lucy-scene/rive/LucyRiv
 import type { LucyLoadProgress } from '../lucy-scene/rive/createLucyCharacter'
 import { Entrance } from '../lucy-scene/entrance/Entrance'
 import { useEntrance } from '../lucy-scene/entrance/useEntrance'
-import { useSceneLifecycle } from '../lucy-scene/useSceneLifecycle'
+import { LucyScene } from '../lucy-scene/LucyScene'
 import './variation-hero.css'
 
 import wingLeft from '../assets/hero-commission/v01/wing-left.png'
@@ -199,7 +199,9 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     setEntered(true)
   }, [])
   const entrance = useEntrance({
-    enabled: riveOn && !entranceOff,
+    // With Lucy switched off for review there is no figure to wait for, so the
+    // entrance would never lift and the room could not be inspected alone.
+    enabled: riveOn && !entranceOff && !lucyOff,
     progress: lucyProgress,
     failed: riveFailed,
     posterReady,
@@ -210,9 +212,6 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
     setLucyProgress(null)
     setRiveKey((k) => k + 1)
   }, [])
-  // One lifecycle signal for everything in the scene: `data-scene-running`
-  // on the hero root, held false while the entrance covers it.
-  useSceneLifecycle(rootRef, entrance.visible)
   // While the entrance is up the hero is neither reachable nor announced.
   useEffect(() => {
     const root = rootRef.current
@@ -351,8 +350,13 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
 
   return (
     <>
-    <div
-      ref={rootRef}
+    {/* The hero root is the Lucy Scene (#201): one lifecycle signal
+        (`data-scene-running`) for everything inside, held false while the
+        entrance covers it. */}
+    <LucyScene
+      rootRef={rootRef}
+      state={v.scene}
+      held={entrance.visible}
       className={`vha${bare ? ' vha--bare' : ''}${focus ? ' vha--focus' : ''}`}
       onClick={onHeroClick}
       onDoubleClick={resetZoom}
@@ -928,7 +932,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
           onSelectScene={onSelectScene}
         />
       )}
-    </div>
+    </LucyScene>
     {entrance.visible && <Entrance entrance={entrance} progress={lucyProgress} onRetry={retryRive} />}
     </>
   )
