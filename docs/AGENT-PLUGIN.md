@@ -177,9 +177,12 @@ Probed live on Claude Code 2.1.318:
 2026-11-04).** The stored form is `zero_cuts = all`: the plugin's userConfig on the
 Claude marketplace, or `SKILL_HEAVEN_ZERO_CUTS` for a `claude-zero` launch. That is
 what the server enforces. Typing `/skill-zero all` writes nothing (P3), and nothing
-keeps a rung. Known gap, #228: in a marketplace install the command renderer cannot
-see the stored setting, so `/skill-zero` reports `temporary` while the server
-enforces `all`.
+keeps a rung. The command renderer reads the same store (#228): `/skill-zero` and
+`/summon` pass `${user_config.zero_cuts}` as the first line of the quoted heredoc
+that already carries `$ARGUMENTS`, and fall back to `SKILL_HEAVEN_ZERO_CUTS` when the
+placeholder is left unsubstituted (a `claude-zero --plugin-dir` launch). A typed
+`/skill-zero all` while the store says `temporary` is labelled **not stored** and
+points at `/plugin configure skill-heaven@gaia-skill-heaven` (zero_cuts → all).
 
 `claude-zero --level zero` remains the boot-time all-skills-off launcher, and
 is the only thing that gives a genuinely clean start: already-loaded skills
@@ -187,89 +190,34 @@ is the only thing that gives a genuinely clean start: already-loaded skills
 
 ## M0 probe — does `${user_config.*}` reach a command's `!` bash block?
 
-**Status: not verified.** The four-cell live harness campaign in
-`plugins/skill-heaven/PROBE.md` proved install, commands, and summon, but did not
-change `zero_cuts` through Claude's config UI. Earlier work recorded only the
-official-doc evidence below. This remains unknown per D8 rather than being
-inferred from the successful default-path probes.
+**Status: answered, both halves, on Claude Code 2.1.318** (live cells in
+[`docs/evidence/hooks-123/PROBE.md`](evidence/hooks-123/PROBE.md), M1–M2 and
+#228's Z1–Z4 and A1–A5).
 
-**Question:** does `${user_config.zero_cuts}` text-substitution, or a
-`CLAUDE_PLUGIN_OPTION_ZERO_CUTS` environment variable, actually reach the
-`!`-prefixed bash line inside `commands/skill-zero.md` (and the other rung
-commands) — the mechanism `zeroCuts()` in `render-ladder.mjs` would need to
-read the plugin's configured `zero_cuts` option at all?
+1. **Substitution: positive.** `${user_config.zero_cuts}` written into command
+   content is substituted with the stored value before the `!` line runs, on a
+   marketplace install (M2). Under `claude-zero`'s `--plugin-dir` launch it is
+   left as the literal placeholder (Z4).
+2. **Environment: negative.** `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is exported to hook
+   processes only (historical cell C1), never to a command's `!` block (M2).
 
-**Documented, directly (plugins-reference, "User configuration"):**
-- *"Each value is available for substitution as `${user_config.KEY}` in MCP
-  and LSP server configs and hook commands. **Non-sensitive values can also
-  be substituted in skill and agent content.**"* Command files under
-  `commands/` are skill content per the docs merge ("Custom commands have
-  been merged into skills... work[s] the same way"), so this is the closest
-  direct statement that `${user_config.zero_cuts}`, written literally inside
-  a command's `!` line, would interpolate before the line runs.
-- The rejected-fields table for `${user_config.*}` (shell-form hook
-  commands, monitor commands, MCP `headersHelper` — each rejected because
-  "substituting a configured value into a shell command would let the shell
-  run whatever that value contains") does **not** list skill/command
-  content. It is not documented as rejected there.
-- Separately: *"All values are exported to hook processes as
-  `CLAUDE_PLUGIN_OPTION_<KEY>` environment variables."* This is scoped
-  explicitly to **hook processes** — a different execution path from a
-  command's `!` block, which runs through the session's Bash tool. Neither
-  doc page says `CLAUDE_PLUGIN_OPTION_<KEY>` is exported into *that*
-  subprocess's environment automatically.
+**What ships (#228).** `commands/skill-zero.md` and `commands/summon.md` put the
+placeholder on the first line of their existing quoted heredoc and pass
+`--stored-cut-stdin`, so the value never rides the shell argv. `zeroCuts()` in
+`render-ladder.mjs` takes a substituted value first, exactly as the server's
+`.mcp.json` does. With no value, an empty one, or the placeholder left as written,
+it falls back to `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`, then `SKILL_HEAVEN_ZERO_CUTS`.
+Anything but `all` reads as `temporary`, matching the server's `normalizeZeroCut`.
 
-**Inferred by analogy, not spelled out for `user_config` specifically:** the
-three path variables (`CLAUDE_PLUGIN_ROOT`, `CLAUDE_PLUGIN_DATA`,
-`CLAUDE_PROJECT_DIR`) get an explicit table in the same doc: for "Skill and
-agent content" they resolve "Anywhere the placeholder appears" — and our own
-`commands/summon.md` already relies on exactly that
-(`` !`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ...` ``), proven
-by `verify-marketplace-install.mjs` to resolve inside a `!` block on a real
-install. The `user_config` section reuses the words "substituted" and "skill
-and agent content" but does not repeat "anywhere the placeholder appears"
-verbatim for `user_config`, and the skills reference's own canonical
-"Available string substitutions" table — the definitive list for
-`$ARGUMENTS`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_PLUGIN_ROOT}`, etc. — does
-**not** list `${user_config.*}` at all. That is an inconsistency between two
-doc pages, not a confirmed answer either way.
-
-**Net assessment.** Two distinct mechanisms are in play and the evidence
-points different directions for each:
-
-1. Writing `${user_config.zero_cuts}` literally into a command's `!` line
-   (e.g. `CLAUDE_PLUGIN_OPTION_ZERO_CUTS='${user_config.zero_cuts}' node ...`)
-   — plausible per the substitution-surface statement above, but **not
-   implemented in this PR**: none of `plugins/skill-heaven/commands/*.md`
-   do this today. Wiring it up is future work, not this probe's question.
-2. Relying on `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` simply appearing in
-   `process.env` inside `render-ladder.mjs` without the command file doing
-   anything — documented **only** for hook processes, so this is the weaker
-   of the two paths and likely does not hold for a `!`-block subprocess.
-   (The hook-process half is now probed: on Claude Code 2.1.318 a configured
-   `zero_cuts` reached a plugin `PreToolUse` hook as `CLAUDE_PLUGIN_OPTION_ZERO_CUTS`,
-   historical cell C1 in `docs/evidence/hooks-123/PROBE.md`; that hook was later
-   replaced by server-side enforcement. The `!`-block half is now
-   probed too, on the same version: `CLAUDE_PLUGIN_OPTION_ZERO_CUTS` is **not**
-   exported to a command's `!` block, while `${user_config.zero_cuts}` written into
-   command content **is** substituted. Cells M1 and M2; fix tracked in #228.)
-
-**This degrades safely either way.** `zeroCuts()` in
-`plugins/skill-heaven/scripts/render-ladder.mjs` reads
-`CLAUDE_PLUGIN_OPTION_ZERO_CUTS ?? SKILL_HEAVEN_ZERO_CUTS`, and treats
-anything other than `"all"` as `"temporary"`. If this probe resolves
-negative, the floor still ships exactly what N13 specifies by default (cut
-temporary automatic skills, keep manual `/summon`) — nothing breaks; the plugin's
-`zero_cuts` userConfig option just stays inert until a follow-up wires the
-substitution into the command files' `!` lines explicitly and a live pane
-confirms it lands.
-
-**What would close this out:** in a real `claude` session with the plugin
-installed and `zero_cuts` set to `all` via the plugin's config UI, run
-`/skill-zero` and check whether the rendered output
-shows the `all`-cut copy — and separately, whether `${user_config.zero_cuts}`
-written directly into a test command's `!` line comes through as literal
-text or as the configured value. Neither was run here.
+**Attacked in review (A1–A5).** Single-line values with quotes, `$(…)` or backticks
+stay inert data. Claude Code escapes a `` !` `` inside the substituted value, so it
+cannot open a second `!` block. `claude plugin configure` refuses a multi-line
+value ("must be a single line"). The residual: a multi-line value written into
+`settings.json` **by hand**, in a session run under `bypassPermissions`, can close
+the heredoc and run a line (A5). Default permission mode refuses it ("Shell command
+permission check failed"). `$ARGUMENTS` in the same heredoc has always had this
+exposure. A writer of `settings.json` could also install a hook directly, so this
+gains no privilege. It is recorded, not papered over.
 
 ## What the MCP exposes
 

@@ -3,7 +3,8 @@ description: "Summon one skill into context for this session. Nothing is install
 allowed-tools: Bash(node:*), mcp__skill-summon__summon
 ---
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" summon --intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" summon --intent-stdin --stored-cut-stdin <<'SKILL_HEAVEN_ARGS_EOF'
+${user_config.zero_cuts}
 $ARGUMENTS
 SKILL_HEAVEN_ARGS_EOF`
 

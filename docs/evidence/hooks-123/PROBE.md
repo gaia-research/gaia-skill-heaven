@@ -133,3 +133,67 @@ What the cells establish:
 
 Interactive (TUI) cells are tracked in #227.
 
+
+## #228: the renderer reads the stored setting (2026-11-05, Claude Code 2.1.318)
+
+Headless `-p`, `--output-format stream-json --verbose`. Every cell used a fresh
+`CLAUDE_CONFIG_DIR` in scratch, and the real `~/.claude` was not touched. The
+marketplace was a snapshot of the working tree, diffed equal to
+`plugins/skill-heaven` before the run. Evidence: the rendered `!` block in the
+`result`, and the `tool_use` list (empty in every cell).
+
+| Cell | Setup | Observed | Result |
+|---|---|---|---|
+| **Z1** marketplace, stored `all` | `install --config zero_cuts=all`; `/skill-heaven:skill-zero` | `stored cut: all skills — no automatic or manual summon` | **pass** |
+| **Z2** marketplace, stored `all` | `/skill-heaven:summon frontend code review` | `⛔ manual /summon is cut by the configured zero_cuts = all.`, no tool call | **pass**: the renderer now refuses before the server needs to |
+| **Z3** marketplace, stored `temporary` | `configure --values-stdin` → `temporary`; `/skill-heaven:skill-zero all` | `requested cut: all — not stored · stored cut: temporary …` plus the `/plugin configure` pointer | **pass** |
+| **Z3b** same | `/skill-heaven:skill-zero` | `stored cut: temporary automatic skills — manual /summon available` | **pass** |
+| **Z4** launch, `SKILL_HEAVEN_ZERO_CUTS=all` | `--setting-sources '' --plugin-dir <plugin>`; `/skill-heaven:skill-zero` | `stored cut: all skills …`. A probe command showed the placeholder stays literal on this route | **pass** |
+| **Z4b** launch, unset | same, no variable | `stored cut: temporary …` | **pass** |
+
+Attack cells, on a probe-only command that `cat`s the same heredoc shape (in the
+snapshot, never committed). A marker file under scratch was the hard signal.
+
+| Cell | Stored value | Observed | Result |
+|---|---|---|---|
+| **A1** | multi-line value through `claude plugin configure --values-stdin` | `must be a single line`; nothing saved | refused by the CLI |
+| **A2** | `all' "q" $(touch M) …` (single line, settings hand-edited) | printed literally; no marker | inert |
+| **A3** | ``all` !`node -e …` ` `` (an attempted second `!` block) | Claude Code escaped it to `\!`; no marker | inert |
+| **A4** | `all⏎SKILL_HEAVEN_ARGS_EOF⏎node -e …` (hand-edited), default permission mode | `Shell command permission check failed`; no marker | refused by the harness |
+| **A5** | same as A4, `--permission-mode bypassPermissions` | **marker written** | residual, same exposure as `$ARGUMENTS`; needs a hand edit of settings and confers nothing a settings writer lacks (they can add a hook) |
+
+## #227: the interactive session (TUI), real PTY (2026-11-05, Claude Code 2.1.318)
+
+These cells ran in the **interactive TUI**, not `-p`. `claude` ran inside a `tmux`
+pane (a real PTY, 200×50) on Linux, and was driven by keystrokes. The evidence is the
+painted pane (`tmux capture-pane`), the stored `settings.json`, and the summon
+server's process environment (`/proc/<pid>/environ`). Onboarding (theme, security
+notes, workspace trust) was answered in the pane. Isolation was the same as above:
+a fresh `CLAUDE_CONFIG_DIR` in scratch and a working-tree snapshot of the
+marketplace that includes the #228 renderer fix. The real `~/.claude` was not
+touched. Tool permission prompts appeared (default mode) and were approved in the
+pane.
+
+| Cell | Setup | Observed in the pane | Result |
+|---|---|---|---|
+| **T1a** `/summon`, cut on | marketplace, `zero_cuts=all`; `/skill-heaven:summon frontend code review` | Renderer block `⛔ manual /summon is cut…`; the model reported it and made **no** tool call | **pass** |
+| **T1b** tool + preview, cut on | same session; model asked to call `summon` (`surface:"any"`), then `preview:true` | Two permission prompts approved; both results `<error>Skill Heaven: nothing was summoned. zero_cuts = all is configured…</error>`; no `frontend-code-review` directory appeared under any summon session dir | **pass** |
+| **T3** mid-session change | `/plugin configure skill-heaven@gaia-skill-heaven`, zero cuts edited inline to `temporary`, Enter | `Configuration saved.`, then Claude Code ran `/reload-plugins` **by itself** (`0 hooks`). The summon server restarted (new pid), its env read `SKILL_HEAVEN_ZERO_CUTS=temporary`, and `/skill-zero` reported `stored cut: temporary`. **No new session was needed** on 2.1.318 | **pass**: the CLI's "Restart Claude Code to apply it" applies to `claude plugin configure` outside a session; inside the TUI the reload does it |
+| **T2** cut off | same session, after T3; `/skill-heaven:summon frontend code review` | `✳ /summon · manual discovery request`; materialized `langgenius__frontend-code-review` under a summon session dir | **pass** |
+| **T4a** hooks | `/hooks` | `no hooks yet` | **pass**: Skill Heaven adds none |
+| **T4b** disable, uninstall | `/plugin disable …`, then `/plugin uninstall skill-heaven@gaia-skill-heaven` typed in the TUI (console removed with `claude plugin uninstall`) | `settings.json` keeps only `extraKnownMarketplaces.gaia-skill-heaven` (from `marketplace add`), `enabledPlugins: {}`, `pluginConfigs: {}`, no `hooks` key. `plugins/cache/gaia-skill-heaven/` stays | **pass**: what remains is Claude Code's own uninstall residue |
+| **T5** launcher, cut on | `claude-zero` (product floor) in the pane, `SKILL_HEAVEN_ZERO_CUTS=all` | Statusline `◇ entropy ‹‹ [ZERO] ›› · ? skills · 0 standing`. `/summon` showed the renderer refusal and no tool call. The direct tool call was refused with the constant text | **pass** |
+| **T6** console dormant | `skill-heaven-console` installed; fresh session; `Read`, `Bash`, an `Agent` call | No console status entry and no Lens band at any point | **pass** |
+| **T7** console wakes | same session; `/skill-heaven:skill-hell high`, then a summon | After the rung command the status row painted `⚠ skill-heaven-console: ◇ entropy ‹‹ [HIGH] ›› · 0 skills`; after the summon, `· 1 skill`. No Lens band opened (none is opened without `/lens`) | **pass**. Claude Code prefixes a mod's status row with `⚠ <plugin>:`; that is host chrome, not a console warning |
+| **T8** `/clear` | same session | The status entry is gone; still absent after a new prompt | **pass** |
+
+**#59, `/reload-skills`, in the same TUI.** Before a summon it read `136 skills
+available (none added or removed)`. After a summon materialized
+`langgenius__frontend-code-review` it read the same count, `none added or removed`.
+A summon lands in a session-locked temp directory, not in a skill directory Claude
+Code scans, and the model reads `SKILL.md` from the card's path. So
+`/reload-skills` neither helps nor is needed for `/summon`. Making it register would
+mean writing into a scanned skill directory, which is the installation that
+`/summon` exists not to do.
+
+Not covered: desktop paint, Windows, other harnesses (out of scope per #227).

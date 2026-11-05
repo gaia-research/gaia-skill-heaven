@@ -94,8 +94,20 @@ describe.each(SURFACES)("$file", ({ file, mode }) => {
     // ride the shell argv. Every surface pipes it on stdin through a
     // quoted-delimiter heredoc — whose body is never re-parsed for shell
     // metacharacters — and tells the renderer to read it with --intent-stdin.
-    expect(source).toContain("--intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'");
-    expect(source).toMatch(/<<'SKILL_HEAVEN_ARGS_EOF'\n\$ARGUMENTS\nSKILL_HEAVEN_ARGS_EOF/);
+    // /skill-zero and /summon also carry the stored zero_cuts (#228) as the
+    // heredoc's first line, the same quoted body $ARGUMENTS rides in.
+    const reportsStoredCut = mode === "zero" || mode === "summon";
+    if (reportsStoredCut) {
+      expect(source).toContain("--intent-stdin --stored-cut-stdin <<'SKILL_HEAVEN_ARGS_EOF'");
+      expect(source).toMatch(
+        /<<'SKILL_HEAVEN_ARGS_EOF'\n\$\{user_config\.zero_cuts\}\n\$ARGUMENTS\nSKILL_HEAVEN_ARGS_EOF/,
+      );
+    } else {
+      expect(source).toContain("--intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'");
+      expect(source).toMatch(/<<'SKILL_HEAVEN_ARGS_EOF'\n\$ARGUMENTS\nSKILL_HEAVEN_ARGS_EOF/);
+    }
+    // The stored value must never ride the shell argv either (#228).
+    expect(source).not.toMatch(/\$\{user_config\.zero_cuts\}[^\n]*render-ladder|render-ladder[^\n]*\$\{user_config/);
     // The old injectable form — $ARGUMENTS interpolated into a quoted argv slot —
     // must be gone.
     expect(source).not.toContain("'$ARGUMENTS'");
@@ -365,5 +377,56 @@ describe("standing-dose disclosure survives the real process invocation (KC2)", 
       launcherLocked: true,
     });
     expect(text).toMatch(/`doctor`.*not counted/);
+  });
+});
+
+// #228. The real `!` line, run through bash exactly as Claude Code runs it after
+// substitution: `${user_config.zero_cuts}` becomes the stored value on a
+// marketplace install and stays literal under `claude-zero --plugin-dir`
+// (both probed on Claude Code 2.1.318).
+describe("the stored zero_cuts reaches the renderer through the heredoc (#228)", () => {
+  function bangLine(file: string): string {
+    const source = readFileSync(join(PLUGIN, "commands", file), "utf-8");
+    const match = source.match(/^!`([\s\S]*?SKILL_HEAVEN_ARGS_EOF)`$/m);
+    if (!match) throw new Error(`${file} has no heredoc ! line`);
+    return match[1];
+  }
+
+  function run(file: string, stored: string | null, args: string, env: NodeJS.ProcessEnv = {}): string {
+    let line = bangLine(file).replaceAll("${CLAUDE_PLUGIN_ROOT}", PLUGIN);
+    if (stored !== null) line = line.replaceAll("${user_config.zero_cuts}", stored);
+    line = line.replaceAll("$ARGUMENTS", args);
+    const base = { ...process.env };
+    delete base.SKILL_HEAVEN_ZERO_CUTS;
+    delete base.CLAUDE_PLUGIN_OPTION_ZERO_CUTS;
+    delete base.CLAUDE_ZERO_PROFILE;
+    const r = spawnSync("bash", ["-c", line], { env: { ...base, ...env }, encoding: "utf-8" });
+    expect(r.status, r.stderr).toBe(0);
+    return r.stdout;
+  }
+
+  it("marketplace, zero_cuts = all: /skill-zero reports all and /summon refuses", () => {
+    expect(run("skill-zero.md", "all", "")).toContain("stored cut: all skills");
+    expect(run("summon.md", "all", "frontend code review")).toContain("⛔ manual /summon is cut");
+  });
+
+  it("marketplace, zero_cuts = temporary: a typed /skill-zero all is labelled not stored", () => {
+    const out = run("skill-zero.md", "temporary", "all");
+    expect(out).toContain("requested cut: all — not stored");
+    expect(out).toContain("/plugin configure skill-heaven@gaia-skill-heaven (zero_cuts → all)");
+    expect(run("summon.md", "temporary", "frontend code review")).toContain('query: "frontend code review"');
+  });
+
+  it("claude-zero launch: the unsubstituted placeholder falls back to SKILL_HEAVEN_ZERO_CUTS", () => {
+    expect(run("skill-zero.md", null, "", { SKILL_HEAVEN_ZERO_CUTS: "all" })).toContain("stored cut: all skills");
+    expect(run("summon.md", null, "x", { SKILL_HEAVEN_ZERO_CUTS: "all" })).toContain("⛔");
+    expect(run("summon.md", null, "x")).not.toContain("⛔");
+  });
+
+  it("a single-line hostile stored value stays inert data and reads as temporary", () => {
+    const marker = join(tmpdir(), `sh228-${process.pid}-${Date.now()}`);
+    const hostile = `all' "q" $(touch ${marker}) ; touch ${marker}`;
+    expect(run("skill-zero.md", hostile, "")).toContain("stored cut: temporary");
+    expect(existsSync(marker)).toBe(false);
   });
 });
