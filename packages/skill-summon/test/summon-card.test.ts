@@ -103,6 +103,25 @@ describe("summon result card", () => {
     expect(matched).not.toContain("Name mismatch");
   });
 
+  it("says an explicit-name match was resolved by name, not by score (#240)", () => {
+    const card = renderSummonCard(
+      {
+        ...base,
+        retrieval: {
+          score: 1_000_000,
+          margin: 1,
+          matchKind: "exact",
+          matchedBy: { key: "name", scope: "within-query" },
+          classified: true,
+          nameMatchesQuery: true,
+        },
+      },
+      { mode: "relevance-only", trustFields: [], disclosure: "relevance", ...index },
+    );
+    expect(card).toContain("Resolved by: exact name named inside the query");
+    expect(card).toContain("not by relevance score");
+  });
+
   it("discloses when the tree has not classified the skill it summoned", () => {
     const card = renderSummonCard(
       {
