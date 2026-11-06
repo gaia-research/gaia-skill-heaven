@@ -66,11 +66,24 @@ describe("harness compat matrix: pi and codex pins (#35)", () => {
     });
   }
 
-  it("has no cell for harnesses without a verified pinned install route, and says why", () => {
-    for (const none of ["hermes", "grok", "agy"]) {
-      expect(wf, `${none} cell added without a pinned install route`).not.toMatch(new RegExp(`\\n  ${none}:\\n`));
+  it("grok and agy: pinned blocking cell, informational latest, agy install is checksum-verified", () => {
+    const doc = read("docs/COMPAT-MATRIX.md");
+    for (const [harness, version] of [["grok", "1.0.77"], ["agy", "1.5.2"]] as const) {
+      const job = jobBlock(harness);
+      expect(job).toContain(`version: '${version}'`);
+      expect(job).toMatch(/version: 'latest'\n\s+pinned: false/);
+      expect(job).toMatch(/continue-on-error: \$\{\{ !matrix\.pinned \}\}/);
+      expect(job).toContain(`node scripts/compat-check.mjs ${harness} --pin \${{ matrix.version }}`);
+      expect(doc).toContain(`node scripts/compat-check.mjs ${harness} --pin ${version}`);
     }
-    expect(read("docs/COMPAT-MATRIX.md")).toMatch(/hermes, grok, agy: no CI cell/);
+    expect(jobBlock("grok")).toContain("npm install -g @xai-official/grok@${{ matrix.version }}");
+    expect(jobBlock("agy")).toMatch(/sha512sum -c/);
+    expect(jobBlock("agy")).toMatch(/sha512: '[0-9a-f]{128}'/);
+  });
+
+  it("has no hermes cell (no verified install route that works here) and says why", () => {
+    expect(wf, "hermes cell added without a verified pinned install route").not.toMatch(/\n  hermes:\n/);
+    expect(read("docs/COMPAT-MATRIX.md")).toMatch(/hermes: no CI cell/);
   });
 
   it("tags the evidence levels and states that no CI cell is a session cell", () => {
