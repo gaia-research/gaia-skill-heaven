@@ -344,13 +344,14 @@ const absenceGuards: Partial<Record<Cell, Check>> = {
 // The suite
 // ---------------------------------------------------------------------------
 
-describe.concurrent("door behavioural contract (#33)", () => {
+describe("door behavioural contract (#33)", () => {
   for (const door of DOORS) {
     describe(door.id, () => {
       for (const cell of CELLS) {
         const na = notApplicable(door, cell);
         const key = `${door.id}/${cell}`;
-        // One sandbox per cell, so cells are independent and run concurrently.
+        // One sandbox per cell, so cells are independent. Run sequentially: 48 concurrent
+        // subprocess cells starved other spawn-heavy suites (steering.test.ts) on CI.
         it(na ? `${cell} [n/a]` : cell, async () => {
           const sb = makeSandbox();
           try {
