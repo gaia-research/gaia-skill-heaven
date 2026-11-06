@@ -95,7 +95,26 @@ inspected and nothing from it was committed. That log carries a structured
 parenthetical source (`- id (plugin): …`). The reader now prefers `names` and accepts
 the parenthetical; see `listing-2.1.318-shape.jsonl`. Stamping that log listed 140
 skills and found 0 invocations, which matches a session that made no Skill calls. The
-`Skill` tool-use, injected-body and compaction shapes are **still unprobed**: that log
-contained no Skill call. Re-probe those on a pinned version before relying on
-invocation-level stamps as evidence. This reader
+`Skill` tool-use shape was then probed in a real session (below). The compaction
+shape is **still unprobed**.
+
+**Invocation probe, Claude Code 2.1.318 (2026-11-06).** This was a real authenticated
+`claude -p` with a throwaway `HOME`/`CLAUDE_CONFIG_DIR`, `--model haiku` and
+`--allowedTools Skill`. A temp project held two synthetic skills: `fixture-greeter`,
+which the prompt asked for, and `fixture-unused`, which was never relevant. The
+stream showed `tool_use Skill {"skill":"fixture-greeter"}` followed by a non-error
+`tool_result`. The persisted log contained one `skill_listing` attachment and one
+`user` `isMeta` entry, the injected body. `skill-zero --ultra-stamp` on that log,
+with `--ultra-stamp-skill fixture-greeter=<path>`, produced:
+
+| skill | activation | installed | loaded | invoked | active | materially_used | verified_outcome |
+|---|---|---|---|---|---|---|---|
+| `fixture-greeter` | `skill-tool` | true (high) | true (high) | true (high) | true (medium) | **unknown** | **unknown** |
+| `fixture-unused` | `listing-only` | true (high) | false | false | false | false | false |
+
+`unattributed: 0`, and the output passes `--ultra-stamp-validate`. The account's
+other listed skills also stamp as `listing-only`. `materially_used` stays `unknown`
+even though the reply was the skill's exact phrase. That is the intended behaviour:
+the stamper does not read reply text, so a match there is not evidence. Nothing from
+the probe log is committed. Re-probe on each Claude Code upgrade. This reader
 does not touch `~/.claude` or any user config.
