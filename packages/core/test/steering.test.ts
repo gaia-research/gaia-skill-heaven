@@ -329,7 +329,9 @@ describe("public skill-zero CLI steering path", () => {
       expect(result.status, flags.join(" ")).toBe(2);
       expect(result.stderr).toContain("standalone");
     }
-  });
+    // 29 sequential CLI spawns (~0.7s each) sit at the 20s default and time out
+    // under full-suite load; the assertion is about refusal, not speed.
+  }, 90_000);
 
   it("verifies a recorded trace through the public CLI", () => {
     const recordPath = resolve(import.meta.dirname, "steering-record.json");
