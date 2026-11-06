@@ -71,10 +71,19 @@ export type MatchKind = "exact" | "ranked";
  */
 export const EXACT_MATCH_SCORE = 1_000_000;
 
+/** A bare single-token skill name must appear in at most this many documents to resolve by name inside a longer query (#240). */
+export const NAMED_MAX_DF = 3;
+
 export type ScoredSkill = {
   doc: IndexedSkill;
   score: number;
   matchKind: MatchKind;
+  /**
+   * Set only on `exact` hits: which key the query named, and whether it named
+   * it as the whole query or inside a longer one (#240). The reason a skill was
+   * resolved without a score, so a card can say so.
+   */
+  matchedBy?: { key: "id" | "catalogRef" | "name"; scope: "whole-query" | "within-query" };
   /** Query terms that hit at least one field of this document. */
   matchedTerms: string[];
 };
@@ -87,6 +96,8 @@ type DocumentPostings = {
   terms: Map<string, FieldPosting[]>;
   fieldLength: Record<IndexField, number>;
   exactKeys: Set<string>;
+  /** Normalized key text by kind, for the named-in-query path (#240). */
+  keys: { id: string; catalogRef: string; name: string };
   /** Share of total field weight this document actually has content for. */
   presentWeightShare: number;
 };
@@ -136,7 +147,13 @@ export class Bm25fRanker {
   rank(query: string): ScoredSkill[] {
     const exact = this.#exactMatches(query);
     if (exact.length > 0) return exact;
+    const named = this.#namedWithinQuery(query);
+    if (named.length > 0) return named;
 
+    return this.#rankFuzzy(query);
+  }
+
+  #rankFuzzy(query: string): ScoredSkill[] {
     const terms = tokenizeText(query);
     if (terms.length === 0) return [];
 
@@ -164,8 +181,76 @@ export class Bm25fRanker {
       doc,
       score: EXACT_MATCH_SCORE,
       matchKind: "exact" as const,
+      matchedBy: { key: this.#keyKind(doc, key), scope: "whole-query" as const },
       matchedTerms: tokenizeText(query),
     }));
+  }
+
+  #keyKind(doc: IndexedSkill, key: string): "id" | "catalogRef" | "name" {
+    if (normalize(doc.id) === key) return "id";
+    if (normalize(doc.catalogRef ?? "") === key) return "catalogRef";
+    return "name";
+  }
+
+  /**
+   * #240 — a query that NAMES a skill and adds descriptive words
+   * ("impeccable frontend design skill") scores far below the floor on BM25F
+   * because the extra words dilute the name hit, even though the name is
+   * unambiguous. Resolve it by name without a score, conservatively:
+   *
+   *  - an `owner/name` id or catalogRef contained in the query (contiguous
+   *    tokens) always counts and outranks a bare name;
+   *  - a multi-token name contained contiguously counts when it leads the
+   *    query or its doc is BM25F rank 1 for the full query;
+   *  - a single-token name counts only when it LEADS the query, is
+   *    distinctive (appears in at most NAMED_MAX_DF documents), AND the same
+   *    doc is BM25F rank 1 for the full query, so "review my diff" or
+   *    "teach me X" cannot be hijacked by a skill that merely shares a word.
+   *
+   * Typos and partial names do not qualify: they stay fuzzy.
+   */
+  #namedWithinQuery(query: string): ScoredSkill[] {
+    const tokens = normalize(query).split(" ").filter(Boolean);
+    if (tokens.length < 2) return [];
+    const padded = ` ${tokens.join(" ")} `;
+    let top: string | undefined;
+    const idHits: ScoredSkill[] = [];
+    const nameHits: ScoredSkill[] = [];
+    for (const document of this.#documents) {
+      const { id, catalogRef, name } = document.keys;
+      const hit = (key: "id" | "catalogRef" | "name"): ScoredSkill => ({
+        doc: document.doc,
+        score: EXACT_MATCH_SCORE,
+        matchKind: "exact",
+        matchedBy: { key, scope: "within-query" },
+        matchedTerms: tokenizeText(query),
+      });
+      if (id.includes(" ") && padded.includes(` ${id} `)) idHits.push(hit("id"));
+      else if (catalogRef.includes(" ") && padded.includes(` ${catalogRef} `)) idHits.push(hit("catalogRef"));
+      else if (name.length > 0) {
+        if (name.includes(" ")) {
+          // A multi-token name can also be an ordinary phrase ("code review"):
+          // it resolves by name only when it leads the query or the same doc is
+          // already BM25F rank 1, so a fuzzy request is not hijacked mid-sentence.
+          if (padded.includes(` ${name} `)) {
+            const leads = padded.startsWith(` ${name} `);
+            if (!leads) top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+            if (leads || top === name) nameHits.push(hit("name"));
+          }
+        } else if (
+          tokens[0] === name &&
+          (this.#documentFrequency.get(name) ?? 0) <= NAMED_MAX_DF
+        ) {
+          // Leading + rare is still not enough on its own ("teach me X"):
+          // the same doc must also be BM25F rank 1 for the full query.
+          // Skills sharing that exact name qualify together, so the ambiguity
+          // is reported rather than one sharer being chosen by rank.
+          top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+          if (top === name) nameHits.push(hit("name"));
+        }
+      }
+    }
+    return idHits.length > 0 ? idHits : nameHits;
   }
 
   #score(
@@ -256,6 +341,11 @@ function indexDocument(
     terms,
     fieldLength,
     exactKeys,
+    keys: {
+      id: normalize(doc.id),
+      catalogRef: normalize(doc.catalogRef ?? ""),
+      name: normalize(doc.name),
+    },
     presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight,
   };
 }

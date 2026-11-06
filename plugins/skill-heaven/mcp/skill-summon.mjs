@@ -14158,6 +14158,7 @@ var DEFAULT_BM25F_PARAMS = {
   }
 };
 var EXACT_MATCH_SCORE = 1e6;
+var NAMED_MAX_DF = 3;
 var Bm25fRanker = class {
   #params;
   #documents;
@@ -14195,6 +14196,11 @@ var Bm25fRanker = class {
   rank(query) {
     const exact = this.#exactMatches(query);
     if (exact.length > 0) return exact;
+    const named = this.#namedWithinQuery(query);
+    if (named.length > 0) return named;
+    return this.#rankFuzzy(query);
+  }
+  #rankFuzzy(query) {
     const terms = tokenizeText(query);
     if (terms.length === 0) return [];
     const scored = [];
@@ -14220,8 +14226,64 @@ var Bm25fRanker = class {
       doc,
       score: EXACT_MATCH_SCORE,
       matchKind: "exact",
+      matchedBy: { key: this.#keyKind(doc, key), scope: "whole-query" },
       matchedTerms: tokenizeText(query)
     }));
+  }
+  #keyKind(doc, key) {
+    if (normalize(doc.id) === key) return "id";
+    if (normalize(doc.catalogRef ?? "") === key) return "catalogRef";
+    return "name";
+  }
+  /**
+   * #240 — a query that NAMES a skill and adds descriptive words
+   * ("impeccable frontend design skill") scores far below the floor on BM25F
+   * because the extra words dilute the name hit, even though the name is
+   * unambiguous. Resolve it by name without a score, conservatively:
+   *
+   *  - an `owner/name` id or catalogRef contained in the query (contiguous
+   *    tokens) always counts and outranks a bare name;
+   *  - a multi-token name contained contiguously counts when it leads the
+   *    query or its doc is BM25F rank 1 for the full query;
+   *  - a single-token name counts only when it LEADS the query, is
+   *    distinctive (appears in at most NAMED_MAX_DF documents), AND the same
+   *    doc is BM25F rank 1 for the full query, so "review my diff" or
+   *    "teach me X" cannot be hijacked by a skill that merely shares a word.
+   *
+   * Typos and partial names do not qualify: they stay fuzzy.
+   */
+  #namedWithinQuery(query) {
+    const tokens = normalize(query).split(" ").filter(Boolean);
+    if (tokens.length < 2) return [];
+    const padded = ` ${tokens.join(" ")} `;
+    let top;
+    const idHits = [];
+    const nameHits = [];
+    for (const document of this.#documents) {
+      const { id, catalogRef, name } = document.keys;
+      const hit = (key) => ({
+        doc: document.doc,
+        score: EXACT_MATCH_SCORE,
+        matchKind: "exact",
+        matchedBy: { key, scope: "within-query" },
+        matchedTerms: tokenizeText(query)
+      });
+      if (id.includes(" ") && padded.includes(` ${id} `)) idHits.push(hit("id"));
+      else if (catalogRef.includes(" ") && padded.includes(` ${catalogRef} `)) idHits.push(hit("catalogRef"));
+      else if (name.length > 0) {
+        if (name.includes(" ")) {
+          if (padded.includes(` ${name} `)) {
+            const leads = padded.startsWith(` ${name} `);
+            if (!leads) top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+            if (leads || top === name) nameHits.push(hit("name"));
+          }
+        } else if (tokens[0] === name && (this.#documentFrequency.get(name) ?? 0) <= NAMED_MAX_DF) {
+          top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+          if (top === name) nameHits.push(hit("name"));
+        }
+      }
+    }
+    return idHits.length > 0 ? idHits : nameHits;
   }
   #score(document, terms) {
     const { k1, b, weights } = this.#params;
@@ -14283,6 +14345,11 @@ function indexDocument(doc, weights, totalWeight) {
     terms,
     fieldLength,
     exactKeys: exactKeys2,
+    keys: {
+      id: normalize(doc.id),
+      catalogRef: normalize(doc.catalogRef ?? ""),
+      name: normalize(doc.name)
+    },
     presentWeightShare: totalWeight === 0 ? 1 : presentWeight / totalWeight
   };
 }
@@ -14308,6 +14375,9 @@ function decide({
     if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
     else eligible.push(hit);
   }
+  if (ranked.length > 0 && ranked[0]?.matchKind !== "exact" && isBareId(query)) {
+    return noMatchDecision(query, "name_not_found", [], filtered, floor, source);
+  }
   const top = eligible[0];
   if (!top) {
     return noMatchDecision(
@@ -14321,6 +14391,9 @@ function decide({
   }
   if (top.matchKind === "exact") {
     const exact = eligible.filter((hit) => hit.matchKind === "exact");
+    if (exact.length > 1) {
+      return noMatchDecision(query, "ambiguous_name", exact, filtered, floor, source);
+    }
     return {
       admitted: exact,
       noMatch: null,
@@ -14363,6 +14436,9 @@ function withholdReason(doc, surface) {
   }
   return null;
 }
+function isBareId(query) {
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(query.trim());
+}
 function noMatchDecision(query, reason, considered, filtered, floor, source) {
   return {
     admitted: [],
@@ -14387,6 +14463,10 @@ function noMatchDecision(query, reason, considered, filtered, floor, source) {
 function suggestionFor(reason, source) {
   const where = source ? `\`${source}\`` : "the configured source";
   switch (reason) {
+    case "ambiguous_name":
+      return `More than one skill in ${where} answers to that name, so nothing was materialized. Re-run with the full owner/name id of the one you want (see topCandidates).`;
+    case "name_not_found":
+      return `No skill in ${where} has that id. Nothing was substituted; check the owner/name spelling or search by description instead.`;
     case "no_candidates":
       return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
     case "below_floor":
@@ -26239,6 +26319,13 @@ function renderSummonCard(skill, ranking) {
     lines.push(
       `  Match: ${displayField(skill.retrieval.matchKind)} \xB7 score ${skill.retrieval.score.toFixed(2)} \xB7 margin ${skill.retrieval.margin.toFixed(2)}`
     );
+    if (skill.retrieval.matchedBy) {
+      const by = skill.retrieval.matchedBy;
+      const label = by.key === "name" ? "exact name" : by.key === "id" ? "exact id" : "exact catalog ref";
+      lines.push(
+        `  Resolved by: ${label}${by.scope === "within-query" ? " named inside the query" : ""} \u2014 not by relevance score (the score above is a sentinel)`
+      );
+    }
     if (!skill.retrieval.classified) {
       lines.push(
         "  Classification: the tree has not filed this skill under a generic node yet \u2014 it is indexed, but its bucket and trust context are missing."
@@ -26794,6 +26881,7 @@ function disclosureById(decision, query) {
         score: Math.round(hit.score * 1e4) / 1e4,
         margin: decision.margin,
         matchKind: hit.matchKind,
+        ...hit.matchedBy ? { matchedBy: hit.matchedBy } : {},
         classified: hit.doc.classified,
         nameMatchesQuery: normalize(hit.doc.name) === normalizedQuery || normalize(hit.doc.id) === normalizedQuery || normalize(hit.doc.catalogRef ?? "") === normalizedQuery || normalizedQuery.includes(normalize(hit.doc.name))
       }

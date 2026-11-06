@@ -140,6 +140,13 @@ export function renderSummonCard(
     lines.push(
       `  Match: ${displayField(skill.retrieval.matchKind)} · score ${skill.retrieval.score.toFixed(2)} · margin ${skill.retrieval.margin.toFixed(2)}`,
     );
+    if (skill.retrieval.matchedBy) {
+      const by = skill.retrieval.matchedBy;
+      const label = by.key === "name" ? "exact name" : by.key === "id" ? "exact id" : "exact catalog ref";
+      lines.push(
+        `  Resolved by: ${label}${by.scope === "within-query" ? " named inside the query" : ""} — not by relevance score (the score above is a sentinel)`,
+      );
+    }
     if (!skill.retrieval.classified) {
       lines.push(
         "  Classification: the tree has not filed this skill under a generic node yet — it is indexed, but its bucket and trust context are missing.",
