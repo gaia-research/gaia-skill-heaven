@@ -29,6 +29,7 @@ import {
   type StatusMode,
 } from "@gaia-skill-heaven/status";
 import type { Posture } from "skill-zero";
+import type { ToolPolicyDisclosure } from "./tools.js";
 
 export interface ProfileManifest {
   schema: "claude-zero/profile@1";
@@ -49,6 +50,8 @@ export interface ProfileManifest {
   /** true when launched via the claude-zero launcher (the subtractive floor is
    * reachable); false under vanilla claude. Consumed by the WS4-step-2 picker. */
   launcherLocked: boolean;
+  /** #147: present only when the launch reduced the tool surface. */
+  toolPolicy?: ToolPolicyDisclosure;
   createdAt?: string;
 }
 
@@ -135,7 +138,8 @@ const SEP: Segment = { text: " · ", role: "dim" };
  * in this order — ctx% first, then standing — and only then does the
  * instrument itself degrade (the reading is the last thing to go). */
 function doorSuffixTiers(manifest: ProfileManifest, input: StatuslineInput | null | undefined): Segment[][] {
-  const standing: Segment[] = [SEP, { text: standingPhrase(manifest), role: "dim" }];
+  const tools: Segment[] = manifest.toolPolicy ? [SEP, { text: `tools reduced (${manifest.toolPolicy.tools})`, role: "dim" }] : [];
+  const standing: Segment[] = [SEP, { text: standingPhrase(manifest), role: "dim" }, ...tools];
   const pct = input?.context_window?.used_percentage;
   const ctx: Segment[] = typeof pct === "number" && Number.isFinite(pct) ? [SEP, { text: `${Math.round(pct)}% ctx`, role: "dim" }] : [];
   return [[...standing, ...ctx], standing, []];
@@ -231,6 +235,8 @@ export function isProfileManifest(value: unknown): value is ProfileManifest {
     typeof m.skillCount === "number" &&
     typeof m.scope === "string" &&
     typeof m.launcherLocked === "boolean" &&
+    (m.toolPolicy === undefined ||
+      (!!m.toolPolicy && typeof m.toolPolicy === "object" && typeof (m.toolPolicy as { tools?: unknown }).tools === "string")) &&
     MANIFEST_KEYS.every((k) => k in m)
   );
 }

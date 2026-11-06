@@ -39,6 +39,7 @@ import {
 } from "skill-zero";
 import { censusStandingDose, nativeSkillRoots } from "./census.js";
 import { resolveDoorMcpConfig } from "./mcp.js";
+import { toolPolicyArgv, toolPolicyDisclosure, type ToolPolicy } from "./tools.js";
 import { resolveLaunchPermissions, type ResolvedPermissions } from "./permissions.js";
 import type { ProfileManifest } from "./statusline.js";
 
@@ -119,6 +120,8 @@ export interface LaunchOptions {
   configDir?: string;
   createdAt?: string;
   claudeArgs?: string[]; // passthrough to claude (after our flags)
+  /** #147: session-scoped reduced-tool policy (flags only, P3). */
+  toolPolicy?: ToolPolicy;
 }
 
 export interface LaunchPlan {
@@ -151,6 +154,20 @@ export function assertLevelAllowed(level: string | undefined): void {
     );
   }
 }
+
+const toolsField = (p: ToolPolicy | undefined) => {
+  const d = toolPolicyDisclosure(p);
+  return d ? { toolPolicy: d } : {};
+};
+
+const toolNotes = (p: ToolPolicy | undefined): string[] =>
+  p
+    ? [
+        "reduced tools (session-scoped, flags only): --tools restricts BUILT-IN tools only and leaves MCP tools alone; " +
+          "--disallowedTools removes named built-in or mcp__ tools. Verified on claude 2.1.318 (docs/evidence/tools-147/PROBE.md).",
+        ...p.warnings.map((w) => `WARNING: ${w}`),
+      ]
+    : [];
 
 const substSession = (s: string, sessionDir: string) => s.replaceAll("$SESSION", sessionDir);
 
@@ -218,6 +235,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       scope: census.scope,
       ...(census.incomplete ? { incomplete: true } : {}),
       launcherLocked: true, // launched via claude-zero → a subtractive posture is reachable
+      ...toolsField(opts.toolPolicy),
       ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
     };
     return {
@@ -228,10 +246,10 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       settings,
       command: "claude",
       // No eviction / suppression flags — native is claude untouched (P1).
-      argv: ["--settings", settingsPath, ...permissions.argv, ...(opts.claudeArgs ?? [])],
+      argv: ["--settings", settingsPath, ...permissions.argv, ...toolPolicyArgv(opts.toolPolicy), ...(opts.claudeArgs ?? [])],
       env: { CLAUDE_ZERO_PROFILE: manifestPath },
       fsPlan: [],
-      notes: [...permissions.notes],
+      notes: [...permissions.notes, ...toolNotes(opts.toolPolicy)],
       ...(permissions.disclosure ? { permissionDisclosure: permissions.disclosure } : {}),
     };
   }
@@ -314,6 +332,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     // product-floor.
     scope: "session",
     launcherLocked: true,
+    ...toolsField(opts.toolPolicy),
     ...(opts.createdAt ? { createdAt: opts.createdAt } : {}),
   };
 
@@ -334,6 +353,8 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
       // it rides the session settings file (probed cell D), which keeps a
       // single source of truth instead of two channels saying the same thing.
       ...permissions.argv,
+      // #147: reduced-tool flags (verified --tools / --disallowedTools only).
+      ...toolPolicyArgv(opts.toolPolicy),
       ...(opts.claudeArgs ?? []),
     ],
     env,
@@ -348,6 +369,7 @@ export function planLaunch(opts: LaunchOptions): LaunchPlan {
     notes: [
       ...compiled.notes,
       ...permissions.notes,
+      ...toolNotes(opts.toolPolicy),
       ...(posture === "curated" ? [CURATED_DOOR_ABSENCE_NOTE] : []),
       // #143: say WHICH source the admitted summon server will use, and where
       // that answer came from. The precedence is explicit override (SKILL_SOURCE

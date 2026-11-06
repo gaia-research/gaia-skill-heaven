@@ -32,6 +32,8 @@ usage() {
   cat <<EOF
 Usage: curl -fsSL https://gaia-research.github.io/gaia-skill-heaven/install.sh | sh
        $0 --uninstall
+       $0 --onboarding            print the first-run guide only (no install)
+       $0 --non-interactive       force the no-TTY wording (also: SKILL_HEAVEN_NONINTERACTIVE=1, CI)
 
 Installs the five Skill Zero launcher doors (claude-zero is the verified door; the others are launcher prototypes) and the Claude
 plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
@@ -119,22 +121,91 @@ uninstall_all() {
   say "Removed the five doors and installer-managed Claude plugin state."
 }
 
-case ${1:-} in
-  --help|-h)
-    usage
-    exit 0
-    ;;
-  --uninstall)
-    uninstall_all
-    exit 0
-    ;;
-  "")
-    ;;
-  *)
-    usage >&2
-    fail "unknown argument: $1"
-    ;;
-esac
+# Onboarding mode (#147). The installer never prompts, so it is always safe
+# under `curl | sh`, CI and a closed stdin. Interactive vs non-interactive only
+# changes the closing "try it" lines: non-interactive when --non-interactive is
+# given, SKILL_HEAVEN_NONINTERACTIVE is set, CI is set, or stdout is not a TTY.
+# --interactive forces the interactive wording (used by tests).
+ONBOARD_MODE=auto
+ONBOARD_ONLY=
+UNINSTALL=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --uninstall)
+      UNINSTALL=1
+      ;;
+    --onboarding)
+      ONBOARD_ONLY=1
+      ;;
+    --non-interactive|--yes|-y)
+      ONBOARD_MODE=non-interactive
+      ;;
+    --interactive)
+      ONBOARD_MODE=interactive
+      ;;
+    *)
+      usage >&2
+      fail "unknown argument: $1"
+      ;;
+  esac
+  shift
+done
+
+is_interactive() {
+  case $ONBOARD_MODE in
+    interactive) return 0 ;;
+    non-interactive) return 1 ;;
+  esac
+  [ -z "${SKILL_HEAVEN_NONINTERACTIVE:-}" ] && [ -z "${CI:-}" ] && [ -t 1 ]
+}
+
+print_onboarding() {
+  say ""
+  say "== Skill Heaven: first run =="
+  say "Installed:"
+  say "  claude-zero (the Claude Code door) and its sibling doors, as launchers under $INSTALL_HOME,"
+  say "  linked into $USER_BIN; the bundled summon engine; $INSTALL_HOME/uninstall.sh."
+  say "  The Claude plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) is"
+  say "  registered only when a working claude is on PATH (see the plugin line above)."
+  say "Not installed:"
+  say "  Claude Code or any other harness; no edits to ~/.claude, your settings or your skills;"
+  say "  no daemons, no shell rc changes. Every launch composes flags in a throwaway session dir."
+  say "Default: the zero rung (Skill Zero: zero skills, zero skill entropy, /summon available)."
+  say "  Ladder, one line: zero . low . med . high . xhigh . max . ultra"
+  say "  zero = Skill Zero; low|med = /skill-heaven (converge); high|xhigh|max = /skill-hell (explore);"
+  say "  ultra = /skill-ultra. A session sits at exactly one rung. Nothing refuses."
+  say "First command:"
+  say "  claude-zero                   # launch Claude Code at the zero rung"
+  say "  claude-zero --print           # dry run: the exact claude command, flags and manifest; no model call"
+  say "Reduced tools (optional, this session only, nothing saved):"
+  say "  claude-zero --tools minimal --print   # preview: built-in tools cut to Read,Grep,Glob,Skill"
+  say "  claude-zero --tools minimal           # launch that way; MCP tools (the summon tool) are unchanged"
+  say "  claude-zero --remove-tools Bash,WebFetch      # drop named built-in tools"
+  say "  claude-zero --remove-tools mcp__skill-summon__summon   # drops summon: /summon stops working, with a warning"
+  say "  Built-in tools and MCP tools are separate surfaces: --tools only reduces built-ins."
+  say "Change or reverse it: launch again without --tools/--remove-tools. The choice is never stored."
+  say "Uninstall:"
+  say "  $INSTALL_HOME/uninstall.sh"
+  if is_interactive; then
+    say "Try it now: run  claude-zero --print  first, then  claude-zero"
+  else
+    say "Non-interactive install: no prompts were used. Copy the commands above as needed."
+  fi
+}
+
+if [ -n "$ONBOARD_ONLY" ]; then
+  print_onboarding
+  exit 0
+fi
+
+if [ -n "$UNINSTALL" ]; then
+  uninstall_all
+  exit 0
+fi
 
 say "SKILL HEAVEN — LIVE. claude-zero is the verified door; the other launchers are prototypes."
 say "Installing all five Skill Zero doors and the Claude plugin under the Skill Heaven umbrella; the plugin bundles its own summon engine."
@@ -349,4 +420,5 @@ case :$PATH: in
 esac
 say "Uninstall everything this command added with:"
 say "  $INSTALL_HOME/uninstall.sh"
+print_onboarding
 say "Install complete. Re-run the same one-liner to update idempotently."

@@ -6,7 +6,9 @@
 [CmdletBinding()]
 param(
   [switch]$Uninstall,
-  [switch]$Help
+  [switch]$Help,
+  [switch]$Onboarding,
+  [switch]$NonInteractive
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,6 +46,45 @@ function Say-Message {
   Write-Host $Message
 }
 
+function Test-InteractiveInstall {
+  # The installer never prompts; this only picks the closing wording (#147).
+  if ($NonInteractive -or $env:SKILL_HEAVEN_NONINTERACTIVE -or $env:CI) { return $false }
+  try { return (-not [Console]::IsOutputRedirected) } catch { return $false }
+}
+
+function Show-Onboarding {
+  Say-Message ""
+  Say-Message "== Skill Heaven: first run =="
+  Say-Message "Installed:"
+  Say-Message "  claude-zero (the Claude Code door) and its sibling doors, as launchers under $INSTALL_HOME;"
+  Say-Message "  the bundled summon engine; $INSTALL_HOME\uninstall.ps1."
+  Say-Message "  The Claude plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) is"
+  Say-Message "  registered only when a working claude is on PATH (see the plugin line above)."
+  Say-Message "Not installed:"
+  Say-Message "  Claude Code or any other harness; no edits to your Claude config, settings or skills; no daemons."
+  Say-Message "Default: the zero rung (Skill Zero: zero skills, zero skill entropy, /summon available)."
+  Say-Message "  Ladder, one line: zero . low . med . high . xhigh . max . ultra"
+  Say-Message "  zero = Skill Zero; low|med = /skill-heaven (converge); high|xhigh|max = /skill-hell (explore);"
+  Say-Message "  ultra = /skill-ultra. A session sits at exactly one rung. Nothing refuses."
+  Say-Message "First command:"
+  Say-Message "  claude-zero                   # launch Claude Code at the zero rung"
+  Say-Message "  claude-zero --print           # dry run: the exact claude command, flags and manifest; no model call"
+  Say-Message "Reduced tools (optional, this session only, nothing saved):"
+  Say-Message "  claude-zero --tools minimal --print   # preview: built-in tools cut to Read,Grep,Glob,Skill"
+  Say-Message "  claude-zero --tools minimal           # launch that way; MCP tools (the summon tool) are unchanged"
+  Say-Message "  claude-zero --remove-tools Bash,WebFetch      # drop named built-in tools"
+  Say-Message "  claude-zero --remove-tools mcp__skill-summon__summon   # drops summon: /summon stops working, with a warning"
+  Say-Message "  Built-in tools and MCP tools are separate surfaces: --tools only reduces built-ins."
+  Say-Message "Change or reverse it: launch again without --tools/--remove-tools. The choice is never stored."
+  Say-Message "Uninstall:"
+  Say-Message "  $INSTALL_HOME\uninstall.ps1"
+  if (Test-InteractiveInstall) {
+    Say-Message "Try it now: run  claude-zero --print  first, then  claude-zero"
+  } else {
+    Say-Message "Non-interactive install: no prompts were used. Copy the commands above as needed."
+  }
+}
+
 function Fail-Installation {
   param([string]$Message)
   Write-Error "${PROGRAM}: $Message"
@@ -54,6 +95,8 @@ function Show-Usage {
   @"
 Usage: irm https://gaia-research.github.io/gaia-skill-heaven/install.ps1 | iex
        .\install.ps1 -Uninstall
+       .\install.ps1 -Onboarding        print the first-run guide only (no install)
+       .\install.ps1 -NonInteractive    force the no-TTY wording (also: SKILL_HEAVEN_NONINTERACTIVE=1, CI)
 
 Installs the five Skill Zero launcher doors (claude-zero is the verified door; the others are launcher prototypes) and the Claude
 plugin (/summon, /skill-zero, /skill-heaven, /skill-hell, /skill-ultra) when the
@@ -168,6 +211,11 @@ function Uninstall-All {
 
 if ($Help) {
   Show-Usage
+  exit 0
+}
+
+if ($Onboarding) {
+  Show-Onboarding
   exit 0
 }
 
@@ -479,6 +527,7 @@ Write-Host "Removed the doors and installer-managed Claude plugin state."
   }
   Say-Message "Uninstall everything this command added with:"
   Say-Message "  $INSTALL_HOME\uninstall.ps1"
+  Show-Onboarding
   Say-Message "Install complete. Re-run the same one-liner to update idempotently."
   $global:LASTEXITCODE = 0
 
