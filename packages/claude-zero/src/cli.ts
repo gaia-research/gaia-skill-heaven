@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { HEAVEN_LEVELS, HELL_LEVELS, SUMMON_ONLY_LEVELS, LEVEL_ALIASES, materialize, POSTURES, type Posture } from "skill-zero";
 import { CURATED_DOOR_ABSENCE_NOTE, planLaunch } from "./launcher.js";
 import { CLI_PERMISSION_MODES } from "./permissions.js";
+import { CLAUDE_TOOL_FLAGS, resolveToolPolicy, TOOL_PRESETS, ToolPolicyError, type ToolPolicy } from "./tools.js";
 
 /**
  * The postures this door can actually compose today — the ONE place the answer
@@ -50,6 +51,10 @@ interface CliArgs {
   level?: string;
   /** --skill <path>, repeatable */
   skills: string[];
+  /** #147 --tools value (preset | default | comma list of built-ins) */
+  tools?: string;
+  /** #147 --remove-tools values (repeatable; built-in and/or mcp__ names) */
+  removeTools: string[];
   claudeArgs: string[];
 }
 
@@ -75,6 +80,8 @@ export function parseArgs(argv: string[]): CliArgs {
   let postureProvided = false;
   let level: string | undefined;
   const skills: string[] = [];
+  const removeTools: string[] = [];
+  let tools: string | undefined;
   const claudeArgs: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -87,6 +94,23 @@ export function parseArgs(argv: string[]): CliArgs {
       posture = argv[++i] ?? "";
       postureProvided = true;
     } else if (a === "--level") level = argv[++i];
+    else if (a === "--tools" || a.startsWith("--tools=")) {
+      const v = a === "--tools" ? argv[++i] : a.slice("--tools=".length);
+      if (v === undefined || v === "" || v.startsWith("-")) {
+        throw new CliArgumentError(
+          `--tools needs a value: a preset (${Object.keys(TOOL_PRESETS).join("|")}), "default", or a comma list of built-in tool names. Got ${v === undefined ? "nothing" : `"${v}"`}.`,
+        );
+      }
+      tools = v;
+    } else if (a === "--remove-tools" || a.startsWith("--remove-tools=")) {
+      const v = a === "--remove-tools" ? argv[++i] : a.slice("--remove-tools=".length);
+      if (v === undefined || v === "" || v.startsWith("-")) {
+        throw new CliArgumentError(
+          `--remove-tools needs a comma list of tool names (built-in like Bash, or MCP like mcp__server__tool). Got ${v === undefined ? "nothing" : `"${v}"`}.`,
+        );
+      }
+      removeTools.push(v);
+    }
     else if (a === "--skill") {
       const p = argv[++i];
       if (p !== undefined) skills.push(p);
@@ -118,7 +142,7 @@ export function parseArgs(argv: string[]): CliArgs {
       claudeArgs.push("--permission-mode", mode);
     } else claudeArgs.push(a);
   }
-  return { help, print, posture, postureProvided, level, skills, claudeArgs };
+  return { help, print, posture, postureProvided, level, skills, tools, removeTools, claudeArgs };
 }
 
 /** Absolute path to the statusline bin shipped alongside this CLI. */
@@ -151,8 +175,18 @@ function helpText(): string {
     "  --level native     Explicitly keep the user's native setup",
     "  --skill <path>     Skill for low/curated (repeatable)",
     "  --posture <name>   Internal/benchmark vocabulary (compatibility)",
+    "  --tools <set>      Reduce BUILT-IN tools for this session only (claude --tools):",
+    `                     ${Object.keys(TOOL_PRESETS).join(" | ")} | default | Read,Grep,... (comma list)`,
+    "                     MCP tools are NOT affected (the summon tool stays)",
+    "  --remove-tools <l> Remove named tools for this session only (claude --disallowedTools):",
+    "                     built-in (Bash,WebFetch) and/or MCP (mcp__<server>__<tool>); repeatable",
+    "                     Removing the summon MCP tool disables /summon and warns",
     "  --print            Print the composed plan without launching",
     "  -h, --help         Show this help",
+    "",
+    "Reduced tools (#147): flags only, nothing is written to ~/.claude or any",
+    "  settings; reverse it by launching without --tools / --remove-tools.",
+    "    claude-zero --tools minimal --print     # inspect before launching",
     "",
     "Permission handling (#144): --dangerously-skip-permissions,",
     "  --allow-dangerously-skip-permissions and --permission-mode <mode> are",
@@ -202,6 +236,27 @@ export function run(argv: string[], opts: RunOptions = {}): number {
   if (args.help) {
     process.stdout.write(helpText());
     return 0;
+  }
+
+  // #147: resolve the reduced-tool policy up front, before any session dir. A
+  // policy plus a hand-passed claude tool flag would silently fight, so refuse.
+  let toolPolicy: ToolPolicy | undefined;
+  try {
+    toolPolicy = resolveToolPolicy({ tools: args.tools, removeTools: args.removeTools });
+    if (toolPolicy) {
+      const clash = args.claudeArgs.find((a) => CLAUDE_TOOL_FLAGS.some((f) => a === f || a.startsWith(`${f}=`)));
+      if (clash !== undefined) {
+        throw new ToolPolicyError(
+          `${clash} passed through to claude conflicts with --tools/--remove-tools. Use one mechanism.`,
+        );
+      }
+    }
+  } catch (e) {
+    if (e instanceof ToolPolicyError) {
+      process.stderr.write(`claude-zero: ${e.message}\n`);
+      return 2;
+    }
+    throw e;
   }
 
   // The upper band (high · xhigh · max · ultra) is handled below as live
@@ -283,6 +338,7 @@ export function run(argv: string[], opts: RunOptions = {}): number {
         skillSource: process.env.SKILL_SOURCE,
         zeroCuts: process.env.SKILL_HEAVEN_ZERO_CUTS,
         claudeArgs: args.claudeArgs,
+        ...(toolPolicy ? { toolPolicy } : {}),
         // Same lookup as a live launch — --print must show the same argv,
         // settings and disclosure the real launch would use.
         configDir: opts.configDir ?? process.env.CLAUDE_CONFIG_DIR,
@@ -307,6 +363,7 @@ export function run(argv: string[], opts: RunOptions = {}): number {
           fsPlan: plan.fsPlan,
           notes: plan.notes,
           permissionDisclosure: plan.permissionDisclosure ?? null,
+          toolPolicy: plan.manifest.toolPolicy ?? null,
           manifest: plan.manifest,
           settings: plan.settings,
         },
@@ -334,6 +391,7 @@ export function run(argv: string[], opts: RunOptions = {}): number {
         skillSource: process.env.SKILL_SOURCE,
         zeroCuts: process.env.SKILL_HEAVEN_ZERO_CUTS,
         claudeArgs: args.claudeArgs,
+        ...(toolPolicy ? { toolPolicy } : {}),
         configDir: opts.configDir ?? process.env.CLAUDE_CONFIG_DIR,
         home: opts.home,
       });
@@ -361,6 +419,18 @@ export function run(argv: string[], opts: RunOptions = {}): number {
     // One line, no settings content, no paths.
     if (live.permissionDisclosure) {
       process.stderr.write(`claude-zero: ${live.permissionDisclosure}\n`);
+    }
+
+    // #147: the tool choice is stated BEFORE claude exists, like the permission
+    // disclosure above. Warnings (e.g. summon removed) are never silent.
+    if (toolPolicy) {
+      const d = live.manifest.toolPolicy!;
+      process.stderr.write(
+        `claude-zero: reduced tools (${d.tools}) — built-in: ${d.builtin.mode === "allowlist" ? d.builtin.allow!.join(",") || "none" : "default"}` +
+          `${d.builtin.removed.length ? `, removed ${d.builtin.removed.join(",")}` : ""}` +
+          `${d.mcp.removed.length ? `; MCP removed ${d.mcp.removed.join(",")}` : "; MCP tools unchanged"}. Session-only; relaunch without --tools to restore.\n`,
+      );
+      for (const w of toolPolicy.warnings) process.stderr.write(`claude-zero: WARNING: ${w}\n`);
     }
 
     const r = spawnSync(live.command, live.argv, {

@@ -89,6 +89,7 @@ describe("parseArgs", () => {
       postureProvided: false,
       level: undefined,
       skills: [],
+      removeTools: [],
       claudeArgs: [],
     });
   });

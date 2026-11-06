@@ -39,6 +39,28 @@ claude-zero --print                          # inspect; do not spawn
 claude-zero -- --model sonnet                # pass through after --
 ```
 
+### Reduced tools (#147)
+
+Session-only, flags only: nothing is written to `~/.claude` or any settings, and the
+choice is never stored. Relaunch without the flags to reverse it.
+
+```bash
+claude-zero --tools minimal --print           # preview; built-ins become Read,Grep,Glob,Skill
+claude-zero --tools minimal                   # launch that way
+claude-zero --tools Read,Grep                 # an explicit built-in allowlist (--tools none = no built-ins)
+claude-zero --remove-tools Bash,WebFetch      # drop named built-in tools
+claude-zero --remove-tools mcp__skill-summon__summon   # drop an MCP tool (this one disables /summon, with a warning)
+```
+
+Built-in tools and MCP tools are separate surfaces. `--tools` maps to claude's `--tools`
+and reduces **built-ins only**; MCP tools (the summon tool) are unchanged, and an
+`mcp__` name inside `--tools` is refused. `--remove-tools` maps to `--disallowedTools` and
+takes built-in and `mcp__` names. `--allowedTools` is deliberately not used: it is a
+permission allow-rule, not a restriction. The selection appears in `--print`
+(`toolPolicy`, notes), the launch manifest, a pre-launch stderr line, and the statusline
+(`tools reduced (minimal)`). Evidence: `docs/evidence/tools-147/PROBE.md` (claude 2.1.318,
+real sessions).
+
 ### Permission handling (#144)
 
 `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, and
