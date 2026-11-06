@@ -174,3 +174,19 @@ describe("skill-zero --ultra-stamp CLI", () => {
     expect(run(["--ultra-stamp", src, "--ultra-stamp-salt-env", "US_SALT", "--print"], { US_SALT: SALT }).status).not.toBe(0);
   });
 });
+
+describe("skill_listing in the Claude Code 2.1.318 shape", () => {
+  const d = stamp("listing-2.1.318-shape.jsonl");
+  it("reads the structured names[] when present, including parenthetical-source entries", () => {
+    expect(of(d, "plugin-skill").levels.installed.state).toBe("true");
+    expect(of(d, "plain-skill").levels.installed.state).toBe("true");
+  });
+  it("falls back to rendered lines with an optional `(source)` parenthetical", () => {
+    expect(of(d, "rendered-only").levels.installed.state).toBe("true");
+    expect(of(d, "rendered-plain").levels.installed.state).toBe("true");
+  });
+  it("carries no fixture secret", () => {
+    const out = JSON.stringify(d);
+    for (const s of FIXTURE_SECRETS) expect(out).not.toContain(s);
+  });
+});

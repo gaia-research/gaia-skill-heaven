@@ -88,5 +88,14 @@ Parser behaviour is verified against **synthetic fixtures only**
 with `tool_use_id`, `isMeta` body injection, `compact_boundary`) are written from
 knowledge of the format, not re-probed against a pinned Claude Code build in this
 change, so format drift degrades to `unknown`/`false` rather than being detected.
-Re-probe on a pinned version before relying on stamps as evidence. This reader
+**Partial re-probe, Claude Code 2.1.318 (2026-11-06).** The `skill_listing` attachment
+was checked against a real local 2.1.318 session log. Only field names and shapes were
+inspected and nothing from it was committed. That log carries a structured
+`names: string[]` beside the rendered `content`, and rendered lines can take a
+parenthetical source (`- id (plugin): …`). The reader now prefers `names` and accepts
+the parenthetical; see `listing-2.1.318-shape.jsonl`. Stamping that log listed 140
+skills and found 0 invocations, which matches a session that made no Skill calls. The
+`Skill` tool-use, injected-body and compaction shapes are **still unprobed**: that log
+contained no Skill call. Re-probe those on a pinned version before relying on
+invocation-level stamps as evidence. This reader
 does not touch `~/.claude` or any user config.

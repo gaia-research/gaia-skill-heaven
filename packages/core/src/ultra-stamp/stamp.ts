@@ -101,8 +101,16 @@ export function stampTranscript(jsonl: string, opts: StampOptions): UltraStampDo
   events.forEach((e, idx) => {
     if (e.type === "attachment" && e.attachment?.type === "skill_listing") {
       listing ??= new Map();
-      for (const m of textOf(e.attachment.content).matchAll(/^- ([A-Za-z0-9][A-Za-z0-9._:/-]{0,127})\s*(?::|$)/gm)) {
-        if (!listing.has(m[1])) listing.set(m[1], ref(e, "skill-listing"));
+      // Claude Code 2.1.318 ships a structured `names: string[]` beside the rendered `content`;
+      // prefer it. Rendered lines may carry a parenthetical source: `- id (plugin): desc`.
+      const names = Array.isArray(e.attachment.names)
+        ? e.attachment.names.filter((n: unknown): n is string => typeof n === "string" && SKILL_ID.test(n))
+        : [];
+      const ids = names.length > 0
+        ? names
+        : [...textOf(e.attachment.content).matchAll(/^- ([A-Za-z0-9][A-Za-z0-9._:/-]{0,127})(?:\s+\([^)\n]*\))?\s*(?::|$)/gm)].map((m) => m[1]);
+      for (const id of ids) {
+        if (!listing.has(id)) listing.set(id, ref(e, "skill-listing"));
       }
     }
     if (e.type === "summary" || (e.type === "system" && e.subtype === "compact_boundary")) compactions.push(ref(e, "compaction"));

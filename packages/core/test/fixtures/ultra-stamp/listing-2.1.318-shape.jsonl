@@ -1,0 +1,2 @@
+{"type":"attachment","uuid":"eeeeeeee-0001","sessionId":"sess-fixture-5","version":"2.1.318","attachment":{"type":"skill_listing","content":"- plugin-skill (some-plugin): private description\n- plain-skill: does alpha things","skillCount":2,"isInitial":true,"names":["plugin-skill","plain-skill"]}}
+{"type":"attachment","uuid":"eeeeeeee-0002","sessionId":"sess-fixture-5","version":"2.1.318","attachment":{"type":"skill_listing","content":"- rendered-only (another-plugin): private description\n- rendered-plain: card text"}}
