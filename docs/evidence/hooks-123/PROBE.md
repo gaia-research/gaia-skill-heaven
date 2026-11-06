@@ -70,7 +70,7 @@ Coexistence fixtures:
 
 ## Decisions recorded with this probe
 
-**SessionStart: not shipped.** The only facts a hook can truthfully report at session
+**SessionStart: not shipped in Core (still true); shipped for Full only, opt-in, in the section at the end of this file.** The only facts a hook can truthfully report at session
 start are configuration: `zero_cuts`, `skill_url`, and the launcher's boot posture.
 There is no observed rung yet, because rung commands are stateless (#91) and
 persisting one is what CONTROL-PLANE §7 says needs a core contract. Shipping that
@@ -197,3 +197,91 @@ mean writing into a scanned skill directory, which is the installation that
 `/summon` exists not to do.
 
 Not covered: desktop paint, Windows, other harnesses (out of scope per #227).
+
+
+## #123: the Full-profile SessionStart hook (2026-11-06, Claude Code 2.1.318)
+
+Operator ruling (Backlog Campaign 3, Lane A2): Core (`skill-heaven`) installs no hooks and has no
+SessionStart integration. Core + Console (`skill-heaven-console` on Claude Code) may install one `SessionStart`
+hook that states facts only. It must not summon, grant permission, or claim or persist a rung (#91,
+CONTROL-PLANE), and its text must pass the `AUTHORITY_PHRASES` checks (#85/#169).
+
+Evidence levels: **(3) real authenticated sessions** throughout, headless `-p --output-format stream-json
+--verbose --include-hook-events` plus one interactive TUI in `tmux`. Every cell used a fresh `CLAUDE_CONFIG_DIR`
+under scratch (auth came through the container environment, as in the earlier rounds); the real `~/.claude` was
+not touched. The marketplace was a `directory` snapshot of the tracked and untracked working tree, diffed equal
+to `plugins/skill-heaven-console` before the runs. The hard signals are the harness's `hook_started` /
+`hook_response` events and the session JSONL's `hook_additional_context` attachment, not the model's account.
+
+### Mechanism (decided by the probe)
+
+| Option | Result |
+|---|---|
+| Mods API `on('session.start')` adds model-visible context | **No.** In this build's API types `SessionStartResult` is `{ cwd }`; there is no context field. (`prompt.compose` can add a system-prompt section, but that is a different, heavier surface than a hook.) |
+| Standard `{"hooks":{"SessionStart":[...]}}` command hook beside `"modules"` in `hooks/hooks.json` | **Works.** One file carries both keys: `claude plugin details` shows `Hooks (1) SessionStart`, the hook fires, and in the same TUI `/heaven` still opens the console pane (modules loaded). No second hooks file and no `plugin.json` hooks entry were needed. |
+
+`hookSpecificOutput.additionalContext` on stdout is stored in the session JSONL as an attachment
+`{"type":"hook_additional_context","content":[...],"hookEvent":"SessionStart"}`; that is the model-visible channel.
+
+### The hook
+
+- `plugins/skill-heaven-console/hooks/hooks.json`: `SessionStart`, matcher `startup|clear`, command
+  `node "${CLAUDE_PLUGIN_ROOT}/scripts/session-context.mjs"`. `resume` and `compact` are excluded because the
+  line is already in that conversation.
+- `plugins/skill-heaven-console/scripts/session-context.mjs`: prints the JSON only when
+  `CLAUDE_PLUGIN_OPTION_SESSION_CONTEXT` is exactly `on`. It reads stdin (the `source`) and writes stdout; nothing
+  else. It lives in `scripts/`, not `hooks/`, so the Mods module scan does not pick it up.
+- Toggle: console `userConfig.session_context`, `off | on`, **default `off`**. Justification: the console is dormant
+  until used (founder ruling 2026-11-04), and an installed console that updates into adding context to sessions that
+  never summon would be an unannounced standing dose. Opt in with `--config session_context=on` or `/plugin configure`.
+  The default is the one open call in this lane.
+
+Exact text (203 characters):
+
+```
+Skill Heaven console is on for this session (preview). No rung has been selected in this session yet. With the skill-heaven plugin installed, /summon adds one skill to this session; nothing is installed.
+```
+
+Two-number dose, `chars4` (`tokenize()` in `packages/core/src/vendor/census-pure.ts`): **standing 50 tokens per
+session when `on`, 0 when `off`; invocation 0** (no body is loaded later). `claude plugin details` reports
+`Hooks (1) SessionStart (harness-only — no model context cost)` and `Always-on: ~0 tok`: that estimator does not
+count hook output, so with `on` it understates by the 50 tokens above.
+
+### Lifecycle (headless, real sessions, one fresh config dir `full`)
+
+| Cell | Setup | Observed | Result |
+|---|---|---|---|
+| **L0** Core only | `install skill-heaven@gaia-skill-heaven` | `claude plugin details`: `Hooks (0)`, `MCP servers (1) skill-summon`. Session: **0** `SessionStart` `hook_started`, 0 `hook_response`, context not in the transcript | **pass** |
+| **L1** Full, on | `install skill-heaven-console --config session_context=on` | `Hooks (1) SessionStart`. 1 `hook_started` (`SessionStart:startup`), `hook_response` exit 0, `stdout` the JSON; transcript has one `hook_additional_context` with the text | **pass** |
+| **L2** reinstall | `install` again with the same config | `installed_plugins.json` still one entry; `Hooks (1)`; the next session has **1** `hook_started` and one context attachment | **pass**: no duplicates |
+| **L3** toggle off | `configure --values-stdin {"session_context":"off"}` | 1 `hook_started`, exit 0, `stdout` length 0; text absent from the transcript | **pass**: emits nothing |
+| **L3b** option never set | fresh config, `install` with no `--config` | hook fires, `stdout` length 0, no context. The manifest default `off` reaches the hook | **pass** |
+| **L4** disable | `plugin disable` (option was `on`) | 0 `SessionStart` events, no context | **pass** |
+| **L5** uninstall | `plugin uninstall` | 0 events, no context. Scratch `settings.json` keeps `extraKnownMarketplaces.gaia-skill-heaven` (from `marketplace add`), `enabledPlugins: {}`, `pluginConfigs: {}`, no `hooks` key | **pass**: nothing but Claude Code's own marketplace entry is left |
+
+Note: after `install --config session_context=on` the CLI prints `1 userConfig option not yet set`; `settings.json`
+holds `session_context: "on"` regardless (the notice is about the other, defaulted option).
+
+### Interactive TUI (tmux, 200x50, real PTY)
+
+Fresh config `tui` with `skill-heaven` and `skill-heaven-console` installed, `session_context=on`. Onboarding and
+the workspace-trust prompt were answered in the pane.
+
+- `/hooks` listed `SessionStart` with `[Plugin] node "${CLAUDE_PLUGIN_ROOT}/scripts/session-conte…
+  skill-heaven-console@gaia-skill-heaven · startup|clear · command`.
+- The session JSONL held exactly one `hook_additional_context` attachment with the text above.
+- Asked, without tools, whether it had a Skill Heaven line from session start, the model quoted it
+  (`SessionStart hook additional context: Skill Heaven console is on …`). That is corroboration only.
+- `/heaven` still opened the console pane (`◇ entropy ‹‹ [NATIVE] ›› · 0 skills`): the module and the command hook
+  coexist in one `hooks.json`. Note the console's own default reading is `[NATIVE]` while the context line says no
+  rung has been selected; both are accurate (nothing selected) but the wording differs.
+
+### What this does and does not close for #123
+
+Exit (a), "the rung is visible to the model with nothing typed", is met **as far as SessionStart can honestly make
+it**: with the opt-in on, the model is told at session start that the console is on and that no rung is selected.
+It cannot name a rung, because rung commands are stateless (#91) and persisting one is out of bounds. Exit (b) and (c)
+are as recorded above. Not verified: desktop, Windows, other Claude Code versions (re-run L0-L5 on every upgrade, M0).
+Delivery note: Claude Code decides plugin updates by `version`; this change adds a hook and an option to
+`skill-heaven-console` without bumping `0.1.1`, because that version string is shared with the cross-harness status
+model and the Trust section. Existing installs get the hook only once the version is bumped in a release.
