@@ -14243,7 +14243,8 @@ var Bm25fRanker = class {
    *
    *  - an `owner/name` id or catalogRef contained in the query (contiguous
    *    tokens) always counts and outranks a bare name;
-   *  - a multi-token name contained contiguously counts;
+   *  - a multi-token name contained contiguously counts when it leads the
+   *    query or its doc is BM25F rank 1 for the full query;
    *  - a single-token name counts only when it LEADS the query, is
    *    distinctive (appears in at most NAMED_MAX_DF documents), AND the same
    *    doc is BM25F rank 1 for the full query, so "review my diff" or
@@ -14271,7 +14272,11 @@ var Bm25fRanker = class {
       else if (catalogRef.includes(" ") && padded.includes(` ${catalogRef} `)) idHits.push(hit("catalogRef"));
       else if (name.length > 0) {
         if (name.includes(" ")) {
-          if (padded.includes(` ${name} `)) nameHits.push(hit("name"));
+          if (padded.includes(` ${name} `)) {
+            const leads = padded.startsWith(` ${name} `);
+            if (!leads) top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+            if (leads || top === name) nameHits.push(hit("name"));
+          }
         } else if (tokens[0] === name && (this.#documentFrequency.get(name) ?? 0) <= NAMED_MAX_DF) {
           top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
           if (top === name) nameHits.push(hit("name"));
