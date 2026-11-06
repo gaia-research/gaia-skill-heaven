@@ -24,7 +24,7 @@ export type FilterReason = {
 };
 
 export type NoMatch = {
-  reason: "no_candidates" | "below_floor" | "all_filtered";
+  reason: "no_candidates" | "below_floor" | "all_filtered" | "ambiguous_name" | "name_not_found";
   query: string;
   /** Shown so the caller can judge, not use. */
   topCandidates: Array<{ id: string; name: string; score: number; floor: number | null }>;
@@ -71,6 +71,12 @@ export function decide({
     else eligible.push(hit);
   }
 
+  // #240: a pasted `owner/name` id that names nothing in the index is an
+  // honest miss, never a fuzzy neighbour (the #104 failure).
+  if (ranked.length > 0 && ranked[0]?.matchKind !== "exact" && isBareId(query)) {
+    return noMatchDecision(query, "name_not_found", [], filtered, floor, source);
+  }
+
   const top = eligible[0];
   if (!top) {
     return noMatchDecision(
@@ -87,6 +93,11 @@ export function decide({
   // (SPEC §3.4): "summon scout-fleet" must not go through a relevance band.
   if (top.matchKind === "exact") {
     const exact = eligible.filter((hit) => hit.matchKind === "exact");
+    // #240: more than one skill answers to the name. Choosing one would be a
+    // guess presented as a resolution — list them and let the caller choose.
+    if (exact.length > 1) {
+      return noMatchDecision(query, "ambiguous_name", exact, filtered, floor, source);
+    }
     return {
       admitted: exact,
       noMatch: null,
@@ -141,6 +152,10 @@ function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | nul
   return null;
 }
 
+function isBareId(query: string): boolean {
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(query.trim());
+}
+
 function noMatchDecision(
   query: string,
   reason: NoMatch["reason"],
@@ -173,6 +188,10 @@ function noMatchDecision(
 function suggestionFor(reason: NoMatch["reason"], source: string | undefined): string {
   const where = source ? `\`${source}\`` : "the configured source";
   switch (reason) {
+    case "ambiguous_name":
+      return `More than one skill in ${where} answers to that name, so nothing was materialized. Re-run with the full owner/name id of the one you want (see topCandidates).`;
+    case "name_not_found":
+      return `No skill in ${where} has that id. Nothing was substituted; check the owner/name spelling or search by description instead.`;
     case "no_candidates":
       return `No skill in ${where} shares any term with that query. Try naming the repo explicitly: summon(query, source: "owner/repo").`;
     case "below_floor":
