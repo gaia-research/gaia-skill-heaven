@@ -78,6 +78,22 @@ describe("explicit-name resolution (#240)", () => {
     expect(run("I want the layout kit skill please").admitted[0]?.doc.id).toBe("x/layout-kit");
   });
 
+  it("a multi-token name mid-sentence that is not BM25F rank 1 stays fuzzy; leading it resolves", () => {
+    const index = makeIndex([
+      skill("a/code-review", "Code Review", { description: "Reviews diffs.", tags: ["review"] }),
+      skill("b/pr-helper", "PR Helper", {
+        description: "Pull request checklist automation: pull request checklist, pull request automation, code review checklist.",
+        tags: ["pull-request", "checklist", "automation"],
+      }),
+    ]);
+    const r = new Bm25fRanker(index);
+    const ask = (q: string) => decide({ index, query: q, ranked: r.rank(q), surface: "any" });
+    const mid = ask("please automate my pull request checklist and code review checklist");
+    expect(r.rank("please automate my pull request checklist and code review checklist")[0]?.doc.id).toBe("b/pr-helper");
+    expect(mid.admitted.some((h) => h.matchKind === "exact")).toBe(false);
+    expect(ask("code review for my diff").admitted[0]?.doc.id).toBe("a/code-review");
+  });
+
   it("ambiguous name: nothing admitted, all sharers listed", () => {
     for (const q of ["browse", "browse the web for docs"]) {
       const d = run(q);
