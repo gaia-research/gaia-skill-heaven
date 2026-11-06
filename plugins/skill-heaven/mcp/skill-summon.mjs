@@ -14436,7 +14436,7 @@ var ArborContractError = class extends Error {
 };
 var SHA256 = /^[a-f0-9]{64}$/u;
 var RECORD_ID = /^[a-z][a-z0-9.-]*$/u;
-var SKILL_ID = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
+var SKILL_ID2 = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(\/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$/u;
 var DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/u;
 function assertArborProfile(value, label = "Arbor profile") {
   const profile = closedRecord(value, label, [
@@ -14714,7 +14714,7 @@ function nonNegativeInteger2(record3, key, label) {
 }
 function subjectRef(value, label) {
   const subject = closedRecord(value, label, ["id", "contentSha256"]);
-  pattern(subject, "id", SKILL_ID, label);
+  pattern(subject, "id", SKILL_ID2, label);
   sha2562(subject, "contentSha256", label);
 }
 function authority(value, label) {
