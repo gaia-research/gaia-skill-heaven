@@ -61,9 +61,23 @@ explicitly and prints a warning.
 
 Not shipped: `--allowedTools` (A7, not a restriction). No MCP allowlist beyond what the posture already composes.
 
-Not verified: that `/summon` executes end to end under `--tools minimal` (the tool is listed and the
-`Skill` built-in is kept for plugin commands, but no model turn invoked it); behaviour on any claude
-version other than 2.1.318. Re-probe on upgrade (same M0 rule as the bundled-skills knob).
+## Part C — a real summon turn under `--tools minimal` (level 3, coordinator re-run)
+
+`claude-zero --tools minimal -- -p "Use the summon tool once with the query 'code review checklist', then reply with only the name of the skill it returned." --output-format stream-json --verbose --max-turns 4 --model haiku [--allowedTools mcp__skill-summon__summon]`.
+Each run used a throwaway `HOME`/`CLAUDE_CONFIG_DIR`. The signals are the `tool_use` and `tool_result` events in the stream.
+
+| # | Extra flag | init tools | `tool_use` | `tool_result` | Result |
+|---|---|---|---|---|---|
+| C1 | (none) | Glob, Grep, Read, Skill + `mcp__skill-summon__summon` | `mcp__skill-summon__summon {"query":"code review checklist","limit":1}` | `is_error: true`, "Claude requested permissions to use mcp__skill-summon__summon, but you haven't granted it yet." | headless `-p` permission gate, not a tool-surface cut |
+| C2 | `--allowedTools mcp__skill-summon__summon` (session-only permission rule) | same | `mcp__skill-summon__summon {"query":"code review checklist"}` | `is_error: false`, a 6.1 kB card | the server answered with an honest no-match ("no match above its relevance floor"); 2 turns; `success` |
+
+So under `--tools minimal` the summon tool stays listed, is callable, and round-trips through the
+bundled server. C1 shows why `--allowedTools` is **not** a restriction (A7): it is the permission
+grant that headless `-p` needs, and an interactive session asks the user instead. The C2 result is a
+no-match, which tests the round trip and nothing about retrieval quality.
+
+Not verified: behaviour on any claude version other than 2.1.318. Re-probe on upgrade (the same M0
+rule as for the bundled-skills knob).
 
 ## Reproduce
 
