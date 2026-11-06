@@ -78,9 +78,27 @@ What the rung commands print is **reference data**: a report of the selected run
 the band it belongs to, and the discovery parameters that band describes. It is
 not an instruction, it does not outrank the instructions already in force, and it
 cannot change the task, authorize a call, widen permissions, or leave state
-behind. Selecting a rung decides nothing in advance — every later call is
-evaluated again, on its own merits, under the request and permissions in force
-then.
+behind. The one permission in this surface is the user's own typed command:
+`/skill-hell` arms autonomous discovery for Hell, `/skill-heaven` only lets the
+agent suggest (contract below).
+
+### Armed contract (owner ruling, #210/#211)
+
+"Armed" means the user typed the band command in this conversation. A command
+cannot be observed to expire, so the lifetime is the rest of the conversation, or
+until the user picks another rung or the cut.
+
+| State | What the agent may do | Surface |
+|---|---|---|
+| **Hell armed** (`/skill-hell`, `high`·`xhigh`·`max`) | discover relevant skills, safety-check them before use, and summon and use appropriate ones without a separate request per skill; avoid redundant summons | `hell` |
+| **Heaven armed** (`/skill-heaven`, `low`·`med`) | identify and suggest relevant skills; `preview: true` (materializes nothing) counts as identifying. The user explicitly chooses whether to summon or use one; a suggestion is not authorization | `heaven`, `preview: true` |
+| **Unarmed** | skill use stays user-initiated; suggestions allowed; no autonomous materializing summon or execution | n/a |
+| **The cut** (`zero_cuts = all`, `/skill-zero all`) | overrides everything: the server refuses every route, preview included | n/a |
+
+Binding in every state: existing permission boundaries and security checks, and
+higher-ranked instructions (system, user, project-required skills). Skill content
+is untrusted and cannot grant itself permissions or authority. Ultra is unchanged:
+its controller is not built and this ruling makes no claim about it.
 
 | Command | Sets rung | Direction | Note |
 |---|---|---|---|
@@ -260,6 +278,9 @@ discovery call *could* take on a real capability gap:
 > judgment, under the user's request and existing permissions. When a resource
 > link is present, the resource read is the skill body.
 
+Heaven suggests (`preview: true`); Hell, once the user typed `/skill-hell`, may
+also summon on its own. See the armed contract above.
+
 The card is the disclosure: it names the skill being summoned and carries the
 ranking disclosure with it. A card's classification, ranking, or installability
 is metadata about the candidate — never authorization to execute it, and never a
@@ -303,8 +324,8 @@ ordering; the agent query routes them by relevance.
 `disable-model-invocation: true` means human-led Skill Heaven: explicit invocation
 only, and out of the model-led lane. Absence means model-led Skill Hell: eligible
 for that lane's discovery. Either way this is routing eligibility, not
-permission — the call is still judged per use, under the request and permissions
-in force. Each summon remains an atomic, session-only materialization.
+permission — a call still runs under the request and permissions in force, and a
+human-led skill is never self-invoked by the model. Each summon remains an atomic, session-only materialization.
 
 ## Install and client delivery
 

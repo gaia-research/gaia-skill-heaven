@@ -75,7 +75,7 @@ export function HeroInfo({
                 <strong style={{ color: fg }}>High · explore.</strong> Reaches wider —
                 gstack pitting rival roles against each other, a CSO hunting security
                 holes. Not lower quality: more varied, more surprising, seen only
-                once it ships. Each call is still judged per use.
+                once it ships. Type /skill-hell and the agent may find, safety-check and summon on its own.
               </p>
               <EntropyCurve fg={fg} dim={dim} accent={accent} />
               <p className="vha-info-body" style={{ color: dim, opacity: 0.8 }}>
@@ -101,8 +101,8 @@ export function HeroInfo({
                 leave. The ladder reads how wide the agent reaches for skills:{' '}
                 <strong style={{ color: fg }}>converge</strong> to shape a plan you
                 steer, or <strong style={{ color: fg }}>explore</strong> to let it
-                reach wider — every call judged per use, under your request and
-                permissions. One summon — you stay in control.
+                reach wider — under your permissions, with every skill safety-checked
+                first. One summon — you stay in control.
               </p>
             </>
           )}

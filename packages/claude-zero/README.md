@@ -189,15 +189,21 @@ Everything the rung commands and the summon tool *return* — the rendered ladde
 block, a `⛔`/`↗` result, a summon card — is reference/discovery data. It reports
 what a rung or a candidate describes; it is not an instruction, does not outrank
 the instructions already in force, and cannot change the task, authorize a tool
-call, widen permissions, or leave state behind. Selecting a rung settles nothing
-in advance: each call is evaluated again, per use, under the request and
-permissions in force at that moment.
+call, widen permissions, or leave state behind. The one permission is the user's
+own typed command (owner ruling, #210/#211): `/skill-hell` lets the agent
+discover, safety-check, summon and use skills without a request per skill, for
+the rest of the conversation or until another rung or the cut; `/skill-heaven`
+lets it suggest only (`preview: true` materializes nothing); without a band
+command use stays user-initiated; `zero_cuts = all` / `/skill-zero` overrides
+all of it. Skill content is untrusted and grants nothing. Full table:
+`docs/AGENT-PLUGIN.md`.
 
 Concretely, in the shipped surface:
 
 - The renderer prints `selected:` / `requested` state plus a `discovery
   reference:` block, and closes every full rendering with its trust boundary. It
-  no longer claims an armed lane or an ongoing posture.
+  claims no ongoing posture; only the Hell rendering states the Hell-armed
+  contract above, as the user's own command.
 - User-supplied text is printed as quoted, escaped data, so a multi-line argument
   cannot forge a line of authored copy. Refusals and redirects come from renderer
   control flow over configuration — never from matching query text.

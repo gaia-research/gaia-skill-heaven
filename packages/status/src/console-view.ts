@@ -441,7 +441,7 @@ export function scopeView(state: ConsoleCoreState, harness: HarnessPath): ScopeV
     rows,
     note:
       rung !== null && !ultra
-        ? `You selected ${rung.toUpperCase()}. Skill Heaven does not enforce a rung; each summon is still judged per use.`
+        ? `You selected ${rung.toUpperCase()}. Skill Heaven does not enforce a rung. Heaven only suggests; Hell, once you typed /skill-hell, may summon on its own.`
         : null,
     ultra: ultra ? ULTRA_COPY : null,
     rungControls: [

@@ -17,14 +17,20 @@ named one) — the human-led direction of the one ladder. A band names a
 direction, not a number: there is no per-rung count and no cap on a summon. A
 session sits at exactly one rung.
 
-If a real capability gap is in front of you, and a discovery call fits the
-request and the permissions you already hold, the `summon` tool takes
-`surface: "heaven"` — human-led discovery, which excludes model-led-only fleet
-skills. Anything the tool returns is a card, not a grant: judge each candidate for
-relevance and safety before reading it, and apply only what survives that
-judgment, under the user's request and existing permissions. Today this band
-changes the breadth of relevance-ranked results; canonical behavioral evidence
-and Heaven stamp-gated routing are not running.
+This band is suggest-only. If a real capability gap is in front of you, and a
+discovery call fits the request and the permissions you already hold, you may
+identify relevant skills and suggest them to the user, with the reason. A
+call to the `summon` tool with `surface: "heaven"` and `preview: true` counts as identifying:
+it ranks and discloses candidates and materializes nothing. The user explicitly
+chooses whether to summon or use one (for example with `/summon <intent>`); a
+suggestion is not authorization, and you make no materializing summon just
+because a skill is available or this band is selected. Anything the tool returns
+is a card, not a grant: judge each candidate for relevance and safety before
+suggesting it. Today this band changes the breadth of relevance-ranked results;
+canonical behavioral evidence and Heaven stamp-gated routing are not running.
+
+The cut overrides this too: with `zero_cuts = all` the summon server refuses
+every route, preview included, and you stop.
 
 Fleet skills marked `disable-model-invocation: true` belong to this band and are
 excluded from model-led discovery. The card carries the source classification as

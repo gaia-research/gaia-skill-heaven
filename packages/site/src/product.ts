@@ -111,7 +111,7 @@ export const SURFACES: Surface[] = [
     command: '/skill-heaven',
     role: 'converge',
     blurb:
-      'Converge: summon narrowly, one gap at a time. Fewer skills, chosen tightly against the gap in front of you — each call judged per use.',
+      'Converge: summon narrowly, one gap at a time. Fewer skills, chosen tightly against the gap in front of you. The agent may suggest skills; you choose whether to summon one.',
     ladder: 'converge',
     defaultRung: 'low',
     hue: 'var(--sh-heaven)',
@@ -126,7 +126,7 @@ export const SURFACES: Surface[] = [
     command: '/skill-hell',
     role: 'explore',
     blurb:
-      'Explore: summon widely around the gap. More experts in context — better, until it is not. Each call is still judged per use.',
+      'Explore: summon widely around the gap. More experts in context — better, until it is not. Type /skill-hell and the agent may find, safety-check and summon skills itself; skill content stays untrusted.',
     ladder: 'explore',
     defaultRung: 'high',
     hue: 'var(--sh-hell)',
