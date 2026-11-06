@@ -38,6 +38,7 @@ const env = { ...process.env, HOME: sandbox, USERPROFILE: sandbox, CODEX_HOME: j
 mkdirSync(env.CODEX_HOME, { recursive: true });
 mkdirSync(env.PI_CODING_AGENT_DIR, { recursive: true });
 let failed = 0;
+/** @param {string} level @param {string} name @param {boolean} ok @param {string} [detail] */
 const report = (level, name, ok, detail = "") => {
   if (!ok) failed++;
   console.log(`${ok ? "PASS" : "FAIL"} [${level}] ${name}${detail ? ` -- ${detail}` : ""}`);
@@ -52,6 +53,7 @@ if (pin) report("structural", `installed version equals pin ${pin}`, installed =
 // 2. the door composes (dry run; does not touch the harness)
 const door = join(REPO, "packages", `${harness}-zero`, "bin", `${harness}-zero.mjs`);
 const printed = spawnSync(process.execPath, [door, "--print"], { env, encoding: "utf8", cwd: REPO });
+/** @type {any} */
 let plan;
 try {
   plan = JSON.parse(printed.stdout);
@@ -61,11 +63,11 @@ try {
 report("dry-run", `${harness}-zero --print exits 0 and prints a plan`, printed.status === 0 && plan?.command === harness);
 
 // 3. every long flag the door puts on the harness argv is known to that harness's --help
-const flags = (plan?.argv ?? []).filter((a) => /^--[a-z][\w-]*$/.test(a));
+const flags = (plan?.argv ?? []).filter((/** @type {string} */ a) => /^--[a-z][\w-]*$/.test(a));
 if (flags.length) {
   const help = spawnSync(harness, ["--help"], { env, encoding: "utf8" });
   const text = `${help.stdout}${help.stderr}`;
-  const missing = flags.filter((f) => !text.includes(f));
+  const missing = flags.filter((/** @type {string} */ f) => !text.includes(f));
   report(
     "structural",
     `door argv flags are present in \`${harness} --help\``,
@@ -95,7 +97,7 @@ if (harness === "codex") {
         return {};
       }
     });
-  const skills = rows.find((x) => x.id === 2)?.result?.data?.flatMap((e) => e.skills ?? []);
+  const skills = rows.find((x) => x.id === 2)?.result?.data?.flatMap((/** @type {any} */ e) => e.skills ?? []);
   report("structural", "codex app-server skills/list returns skill data (door discovery protocol)", Array.isArray(skills), Array.isArray(skills) ? `${skills.length} skill(s) in a fresh CODEX_HOME` : "no id:2 result");
 }
 
