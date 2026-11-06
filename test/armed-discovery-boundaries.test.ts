@@ -320,6 +320,16 @@ describe("The cut overrides every mode", () => {
   }, 30_000);
 });
 
+describe("tool description: an unasked call without /skill-hell is preview-only", () => {
+  it("says a call the user did not ask for uses preview:true outside Hell", async () => {
+    const c = await connect({ SKILL_SOURCE: "http://127.0.0.1:9" });
+    const { tools } = await c.listTools();
+    const summon = tools.find((t) => t.name === "summon");
+    expect(summon?.description).toContain("Without it (by default, and under /skill-heaven), a call the user did not ask for uses preview:true and materializes nothing.");
+    expect(authorityHits(summon?.description ?? "")).toEqual([]);
+  }, 30_000);
+});
+
 describe("server text cannot supply the Hell permission", () => {
   it("the server instructions never say armed and pass the strict tripwire list", async () => {
     const c = await connect({ SKILL_SOURCE: "http://127.0.0.1:9" });
