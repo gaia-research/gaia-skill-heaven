@@ -1,0 +1,2 @@
+{"type":"assistant","uuid":"dddddddd-0001","sessionId":"sess-fixture-4","version":"2.1.318","message":{"role":"assistant","model":"fixture-model-1","content":[{"type":"tool_use","id":"toolu_20","name":"mcp__plugin_skill-heaven_skill-summon__summon","input":{"skill":"gamma-skill"}}]}}
+{"type":"user","uuid":"dddddddd-0002","sessionId":"sess-fixture-4","version":"2.1.318","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_20","content":"summoned"}]}}
