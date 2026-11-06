@@ -150,6 +150,10 @@ export class Bm25fRanker {
     const named = this.#namedWithinQuery(query);
     if (named.length > 0) return named;
 
+    return this.#rankFuzzy(query);
+  }
+
+  #rankFuzzy(query: string): ScoredSkill[] {
     const terms = tokenizeText(query);
     if (terms.length === 0) return [];
 
@@ -197,9 +201,10 @@ export class Bm25fRanker {
    *  - an `owner/name` id or catalogRef contained in the query (contiguous
    *    tokens) always counts and outranks a bare name;
    *  - a multi-token name contained contiguously counts;
-   *  - a single-token name counts only when it LEADS the query and is
-   *    distinctive (appears in at most NAMED_MAX_DF documents), so "review my
-   *    diff" or "ship it" cannot be hijacked by common-word skill names.
+   *  - a single-token name counts only when it LEADS the query, is
+   *    distinctive (appears in at most NAMED_MAX_DF documents), AND the same
+   *    doc is BM25F rank 1 for the full query, so "review my diff" or
+   *    "teach me X" cannot be hijacked by a skill that merely shares a word.
    *
    * Typos and partial names do not qualify: they stay fuzzy.
    */
@@ -207,6 +212,7 @@ export class Bm25fRanker {
     const tokens = normalize(query).split(" ").filter(Boolean);
     if (tokens.length < 2) return [];
     const padded = ` ${tokens.join(" ")} `;
+    let top: string | undefined;
     const idHits: ScoredSkill[] = [];
     const nameHits: ScoredSkill[] = [];
     for (const document of this.#documents) {
@@ -227,7 +233,12 @@ export class Bm25fRanker {
           tokens[0] === name &&
           (this.#documentFrequency.get(name) ?? 0) <= NAMED_MAX_DF
         ) {
-          nameHits.push(hit("name"));
+          // Leading + rare is still not enough on its own ("teach me X"):
+          // the same doc must also be BM25F rank 1 for the full query.
+          // Skills sharing that exact name qualify together, so the ambiguity
+          // is reported rather than one sharer being chosen by rank.
+          top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+          if (top === name) nameHits.push(hit("name"));
         }
       }
     }

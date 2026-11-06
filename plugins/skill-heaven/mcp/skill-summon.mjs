@@ -14198,6 +14198,9 @@ var Bm25fRanker = class {
     if (exact.length > 0) return exact;
     const named = this.#namedWithinQuery(query);
     if (named.length > 0) return named;
+    return this.#rankFuzzy(query);
+  }
+  #rankFuzzy(query) {
     const terms = tokenizeText(query);
     if (terms.length === 0) return [];
     const scored = [];
@@ -14241,9 +14244,10 @@ var Bm25fRanker = class {
    *  - an `owner/name` id or catalogRef contained in the query (contiguous
    *    tokens) always counts and outranks a bare name;
    *  - a multi-token name contained contiguously counts;
-   *  - a single-token name counts only when it LEADS the query and is
-   *    distinctive (appears in at most NAMED_MAX_DF documents), so "review my
-   *    diff" or "ship it" cannot be hijacked by common-word skill names.
+   *  - a single-token name counts only when it LEADS the query, is
+   *    distinctive (appears in at most NAMED_MAX_DF documents), AND the same
+   *    doc is BM25F rank 1 for the full query, so "review my diff" or
+   *    "teach me X" cannot be hijacked by a skill that merely shares a word.
    *
    * Typos and partial names do not qualify: they stay fuzzy.
    */
@@ -14251,6 +14255,7 @@ var Bm25fRanker = class {
     const tokens = normalize(query).split(" ").filter(Boolean);
     if (tokens.length < 2) return [];
     const padded = ` ${tokens.join(" ")} `;
+    let top;
     const idHits = [];
     const nameHits = [];
     for (const document of this.#documents) {
@@ -14268,7 +14273,8 @@ var Bm25fRanker = class {
         if (name.includes(" ")) {
           if (padded.includes(` ${name} `)) nameHits.push(hit("name"));
         } else if (tokens[0] === name && (this.#documentFrequency.get(name) ?? 0) <= NAMED_MAX_DF) {
-          nameHits.push(hit("name"));
+          top ??= normalize(this.#rankFuzzy(query)[0]?.doc.name ?? "");
+          if (top === name) nameHits.push(hit("name"));
         }
       }
     }

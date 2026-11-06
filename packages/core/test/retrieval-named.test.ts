@@ -45,6 +45,8 @@ const index = makeIndex([
   skill("someone/review", "Review"),
   skill("x/layout-kit", "Layout Kit"),
   ...[1, 2, 3, 4].map((n) => skill(`rev/helper${n}`, `Helper${n}`, { description: "Reviews things and does a review of code review." })),
+  skill("t/teach", "Teach", { description: "Mentoring." }),
+  skill("p/pandas", "Pandas", { description: "Teach me dataframes: teach teach teach dataframe teaching tutorial.", tags: ["teach", "dataframe"] }),
   skill("hum/teachy", "Teachy", { invocation: "human" }),
   skill("hum/modelonly", "Modelonly", { invocation: "model" }),
 ]);
@@ -111,6 +113,14 @@ describe("explicit-name resolution (#240)", () => {
   it("a single-token name that does not lead the query stays fuzzy", () => {
     const d = run("use impeccable for design");
     expect(d.admitted.every((h) => h.matchKind !== "exact")).toBe(true);
+  });
+
+  it("a leading rare single-token name that is NOT BM25F rank 1 stays fuzzy", () => {
+    const q = "teach me dataframes teach teach tutorial";
+    const ranked = ranker.rank(q);
+    expect(ranked[0]?.doc.id).not.toBe("t/teach");
+    expect(ranked.some((h) => h.matchKind === "exact")).toBe(false);
+    expect(run(q).noMatch?.reason).toBe("below_floor");
   });
 
   it("respects the lane: a named human-led skill on surface hell is withheld with a reason", () => {
