@@ -16,7 +16,10 @@ skill-zero --ultra-stamp-validate stamps.json
 
 The flags are standalone (they refuse to combine with launch, record, telemetry
 or steering flags). The reader does no network calls, uploads, hooks or model
-calls, and writes nothing except the `--ultra-stamp-out` file you name.
+calls, and writes nothing except the `--ultra-stamp-out` file you name. The one
+exception is the opt-in `--advisory` flag below: it sends a bounded, redacted
+excerpt of the selected session to the model provider through `claude -p`.
+Without `--advisory`, nothing leaves the machine.
 `--ultra-stamp-skill` hashes `SKILL.md` with the vendored `contentSha256`
 (`sha256(SKILL.md)`) into `sourceDigest`; the path is never emitted. Without it
 `sourceDigest` is `null` (unknown).
