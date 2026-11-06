@@ -121,8 +121,12 @@ export function buildExcerpt(jsonl: string, skillId: string, maxChars: number = 
 export type ParsedAnswer = { judgement: (typeof ADVISORY_JUDGEMENTS)[number]; confidence: (typeof ADVISORY_CONFIDENCES)[number]; reason: (typeof ADVISORY_REASONS)[number] };
 export function parseAnswer(text: string): ParsedAnswer | null {
   let t = text.trim();
-  const fence = /^```(?:json)?\s*([\s\S]*?)\s*```$/.exec(t);
-  if (fence) t = fence[1];
+  // Strip one optional ``` / ```json fence with plain string ops (no backtracking regex on model output).
+  if (t.startsWith("```") && t.endsWith("```") && t.length >= 6) {
+    t = t.slice(3, -3);
+    if (t.startsWith("json")) t = t.slice(4);
+    t = t.trim();
+  }
   let v: unknown;
   try { v = JSON.parse(t); } catch { return null; }
   if (typeof v !== "object" || v === null || Array.isArray(v)) return null;
