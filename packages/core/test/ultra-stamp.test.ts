@@ -190,3 +190,55 @@ describe("skill_listing in the Claude Code 2.1.318 shape", () => {
     for (const s of FIXTURE_SECRETS) expect(out).not.toContain(s);
   });
 });
+
+describe("compaction in the Claude Code 2.1.318 shape (synthetic, structure from a real /compact probe)", () => {
+  const G = "fixture-plug:fixture-greeter";
+  const raw = fx("compaction-2.1.318-shape.jsonl");
+  const d = stampTranscript(raw, { salt: SALT });
+  const g = of(d, G);
+  it("a skill invoked before compaction is still invoked and loaded", () => {
+    expect(g.levels.invoked).toMatchObject({ state: "true", confidence: "high" });
+    expect(g.levels.loaded.state).toBe("true");
+    expect(g.activationMode).toBe("skill-tool");
+  });
+  it("active after compaction is unknown when the body is neither preserved nor re-injected (summary prose is not evidence)", () => {
+    expect(g.levels.active.state).toBe("unknown");
+    expect(g.levels.active.evidence.map((e) => e.kind)).toEqual(["compaction"]);
+    expect(g.levels.materially_used.state).not.toBe("true");
+    expect(g.levels.verified_outcome.state).toBe("unknown");
+  });
+  it("the post-compaction skill_listing re-emission does not turn a listing into an invocation", () => {
+    const u = of(d, "fixture-plug:fixture-unused");
+    expect(u.levels.installed.state).toBe("true");
+    expect(u.levels.invoked.state).toBe("false");
+    expect(u.activationMode).toBe("listing-only");
+  });
+  it("body listed as preserved by the boundary keeps active true, with compaction-preserved evidence", () => {
+    const kept = raw.replace(/"uuids":\["cccccccc-0006"\],"allUuids":\["cccccccc-0006"\]/, '"uuids":["cccccccc-0005","cccccccc-0006"],"allUuids":["cccccccc-0005","cccccccc-0006"]');
+    expect(kept).not.toBe(raw);
+    const a = of(stampTranscript(kept, { salt: SALT }), G).levels.active;
+    expect(a.state).toBe("true");
+    expect(a.evidence.map((e) => e.kind)).toContain("compaction-preserved");
+  });
+  it("body re-injected after the boundary keeps active true, with body-reinjection evidence", () => {
+    const re = raw + JSON.stringify({ type: "user", uuid: "cccccccc-0013", isMeta: true, message: { role: "user", content: [{ type: "text", text: "Base directory for this skill: /synthetic/plug/skills/fixture-greeter\n\nSYNTHETIC BODY" }] } }) + "\n";
+    const a = of(stampTranscript(re, { salt: SALT }), G).levels.active;
+    expect(a.state).toBe("true");
+    expect(a.evidence.map((e) => e.kind)).toContain("body-reinjection");
+  });
+  it("a re-injection of a different skill's directory is not evidence for this one", () => {
+    const other = raw + JSON.stringify({ type: "user", uuid: "cccccccc-0013", isMeta: true, message: { role: "user", content: "Base directory for this skill: /synthetic/plug/skills/fixture-unused" } }) + "\n";
+    expect(of(stampTranscript(other, { salt: SALT }), G).levels.active.state).toBe("unknown");
+  });
+  it("a fresh invocation after the boundary is a new load, so active is true", () => {
+    const again = raw
+      + JSON.stringify({ type: "assistant", uuid: "cccccccc-0013", message: { role: "assistant", content: [{ type: "tool_use", id: "toolu_c2", name: "Skill", input: { skill: G } }] } }) + "\n"
+      + JSON.stringify({ type: "user", uuid: "cccccccc-0014", message: { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_c2", content: "ok" }] } }) + "\n";
+    expect(of(stampTranscript(again, { salt: SALT }), G).levels.active.state).toBe("true");
+  });
+  it("validates and carries no synthetic body or summary text", () => {
+    expect(() => validateUltraStamp(d)).not.toThrow();
+    const out = JSON.stringify(d);
+    for (const t of ["SYNTHETIC BODY", "SYNTHETIC SUMMARY", "/synthetic/plug"]) expect(out).not.toContain(t);
+  });
+});

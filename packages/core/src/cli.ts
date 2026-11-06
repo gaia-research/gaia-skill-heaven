@@ -7,7 +7,7 @@ import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
 import { contentSha256 } from "./vendor/census-pure.js";
-import { stampTranscript, validateUltraStamp } from "./ultra-stamp/index.js";
+import { applyAdvisory, claudeHaikuRunner, stampTranscript, validateUltraStamp } from "./ultra-stamp/index.js";
 import {
   assembleRuntimeObservation,
   newSessionPseudonym,
@@ -50,7 +50,7 @@ interface CliArgs {
     churnCount?: number;
   };
   telemetryValidate?: string;
-  ultraStamp?: { file: string; saltEnv: string; skills: string[]; out?: string };
+  ultraStamp?: { file: string; saltEnv: string; skills: string[]; out?: string; advisory?: { runner: string; maxChars?: number; timeoutMs?: number; only: string[] } };
   ultraStampValidate?: string;
   steeringEvent?: string;
   steeringState?: string;
@@ -92,6 +92,11 @@ export function parseArgs(argv: string[]): CliArgs {
   let ultraStampOut: string | undefined;
   let ultraStampValidate: string | undefined;
   const ultraStampSkills: string[] = [];
+  let advisoryOn = false;
+  let advisoryRunner: string | undefined;
+  let advisoryMaxChars: number | undefined;
+  let advisoryTimeoutMs: number | undefined;
+  const advisorySkills: string[] = [];
   let steeringEvent: string | undefined;
   let steeringState: string | undefined;
   let steeringPolicy: string | undefined;
@@ -162,6 +167,11 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--ultra-stamp-skill") ultraStampSkills.push(need(a, ++i));
     else if (a === "--ultra-stamp-out") ultraStampOut = need(a, ++i);
     else if (a === "--ultra-stamp-validate") ultraStampValidate = need(a, ++i);
+    else if (a === "--advisory") advisoryOn = true;
+    else if (a === "--advisory-runner") advisoryRunner = need(a, ++i);
+    else if (a === "--advisory-max-chars") advisoryMaxChars = Number(need(a, ++i));
+    else if (a === "--advisory-timeout-ms") advisoryTimeoutMs = Number(need(a, ++i));
+    else if (a === "--advisory-skill") advisorySkills.push(need(a, ++i));
     else if (a === "--steering-event" || a === "--steer-event") steeringEvent = need(a, ++i);
     else if (a === "--steering-state") steeringState = need(a, ++i);
     else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
@@ -169,10 +179,17 @@ export function parseArgs(argv: string[]): CliArgs {
     else throw new Error(`unknown arg: ${a}`);
   }
 
-  const ultraFlags = new Set(["--ultra-stamp", "--ultra-stamp-salt-env", "--ultra-stamp-skill", "--ultra-stamp-out", "--ultra-stamp-validate"]);
+  const ultraFlags = new Set(["--ultra-stamp", "--ultra-stamp-salt-env", "--ultra-stamp-skill", "--ultra-stamp-out", "--ultra-stamp-validate", "--advisory", "--advisory-runner", "--advisory-max-chars", "--advisory-timeout-ms", "--advisory-skill"]);
   if ([...suppliedFlags].some((f) => ultraFlags.has(f))) {
     if ([...suppliedFlags].some((f) => !ultraFlags.has(f))) throw new Error("ultra-stamp flags are standalone and cannot be combined with launch, record, telemetry, or steering flags");
     if (ultraStampValidate !== undefined && ultraStampFile !== undefined) throw new Error("--ultra-stamp-validate cannot be combined with --ultra-stamp");
+    const advisoryFlags = ["--advisory-runner", "--advisory-max-chars", "--advisory-timeout-ms", "--advisory-skill"];
+    if (!advisoryOn && advisoryFlags.some((f) => suppliedFlags.has(f))) throw new Error("--advisory-* options require --advisory");
+    if (advisoryOn && ultraStampFile === undefined) throw new Error("--advisory requires --ultra-stamp");
+    if (advisoryOn && advisoryRunner !== "claude-haiku") throw new Error("--advisory requires an explicit --advisory-runner claude-haiku (the only built-in runner; it makes a model call)");
+    for (const [n, v] of [["--advisory-max-chars", advisoryMaxChars], ["--advisory-timeout-ms", advisoryTimeoutMs]] as const) {
+      if (v !== undefined && (!Number.isSafeInteger(v) || v < 1)) throw new Error(`${n} must be a positive integer`);
+    }
     if (ultraStampValidate === undefined && (ultraStampFile === undefined || ultraStampSaltEnv === undefined)) {
       throw new Error("--ultra-stamp <transcript.jsonl> requires --ultra-stamp-salt-env <ENV_VAR_NAME> (the salt is read from the environment, never argv)");
     }
@@ -279,7 +296,7 @@ export function parseArgs(argv: string[]): CliArgs {
       },
     }),
     ...(telemetryValidate === undefined ? {} : { telemetryValidate }),
-    ...(ultraStampFile === undefined ? {} : { ultraStamp: { file: ultraStampFile, saltEnv: ultraStampSaltEnv!, skills: ultraStampSkills, ...(ultraStampOut === undefined ? {} : { out: ultraStampOut }) } }),
+    ...(ultraStampFile === undefined ? {} : { ultraStamp: { file: ultraStampFile, saltEnv: ultraStampSaltEnv!, skills: ultraStampSkills, ...(ultraStampOut === undefined ? {} : { out: ultraStampOut }), ...(advisoryOn ? { advisory: { runner: advisoryRunner!, ...(advisoryMaxChars === undefined ? {} : { maxChars: advisoryMaxChars }), ...(advisoryTimeoutMs === undefined ? {} : { timeoutMs: advisoryTimeoutMs }), only: advisorySkills } } : {}) } }),
     ...(ultraStampValidate === undefined ? {} : { ultraStampValidate }),
     ...(steeringEvent === undefined ? {} : { steeringEvent }),
     ...(steeringState === undefined ? {} : { steeringState }),
@@ -326,6 +343,7 @@ export function main(argv: string[]): number {
     return 0;
   }
   if (args.ultraStamp !== undefined) {
+    if (args.ultraStamp.advisory) throw new Error("--advisory runs through the async entry point (mainAsync)");
     const salt = process.env[args.ultraStamp.saltEnv];
     if (!salt) throw new Error(`environment variable ${args.ultraStamp.saltEnv} is unset or empty; supply a salt (it is never stored)`);
     const skills = args.ultraStamp.skills.map((spec) => {
@@ -458,12 +476,38 @@ export function main(argv: string[]): number {
   return result.status;
 }
 
+/** Async entry: handles --advisory (one opt-in model call per eligible skill); everything else is main(). */
+export async function mainAsync(argv: string[]): Promise<number> {
+  const args = parseArgs(argv);
+  const adv = args.ultraStamp?.advisory;
+  if (!args.ultraStamp || !adv) return main(argv);
+  const salt = process.env[args.ultraStamp.saltEnv];
+  if (!salt) throw new Error(`environment variable ${args.ultraStamp.saltEnv} is unset or empty; supply a salt (it is never stored)`);
+  const skills = args.ultraStamp.skills.map((spec) => {
+    const eq = spec.indexOf("=");
+    if (eq < 1) throw new Error("--ultra-stamp-skill must be ID=PATH/to/SKILL.md");
+    return { id: spec.slice(0, eq), sha256: contentSha256(readFileSync(spec.slice(eq + 1), "utf8")) };
+  });
+  const jsonl = readFileSync(args.ultraStamp.file, "utf8");
+  const base = stampTranscript(jsonl, { salt, skills });
+  let usage: Record<string, unknown> | undefined;
+  const real = claudeHaikuRunner();
+  const doc = await applyAdvisory(base, jsonl, {
+    runner: async (i) => { const o = await real(i); usage = o.usage; return o; },
+    maxExcerptChars: adv.maxChars, timeoutMs: adv.timeoutMs, only: adv.only.length ? adv.only : undefined,
+  });
+  const out = JSON.stringify(doc, null, 2) + "\n";
+  if (args.ultraStamp.out) writeFileSync(args.ultraStamp.out, out);
+  else process.stdout.write(out);
+  // Usage from the model's own JSON result goes to stderr only; it is not a cost basis (skill-cost is).
+  if (usage) console.error(`[skill-zero] advisory usage (model-reported, not a cost basis): ${JSON.stringify(usage)}`);
+  return 0;
+}
+
 const isMain = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("skill-zero.mjs");
 if (isMain) {
-  try {
-    process.exit(main(process.argv.slice(2)));
-  } catch (e) {
+  mainAsync(process.argv.slice(2)).then((code) => process.exit(code), (e: unknown) => {
     console.error(`skill-zero: ${(e as Error).message}`);
     process.exit(2);
-  }
+  });
 }
