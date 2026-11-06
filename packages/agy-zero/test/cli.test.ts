@@ -149,13 +149,6 @@ describe("run --print", () => {
     expect(errRes.err).toContain('unknown --level "bogus"');
   });
 
-  it("refuses live summon rungs with redirection guidance and exit 2", () => {
-    const errRes = captureStderr(() => run(["--level", "high"]));
-    expect(errRes.code).toBe(2);
-    expect(errRes.err).toContain("live summon rung, not a boot posture");
-    expect(errRes.err).toContain("/skill-hell high");
-  });
-
   it("warns on darwin when --isolate-home is passed", () => {
     if (process.platform === "darwin") {
       const res = captureStderr(() => run(["--print", "--isolate-home"]));

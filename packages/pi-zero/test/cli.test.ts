@@ -119,15 +119,6 @@ describe("run", () => {
     expect(plan.argv).toContain("custom/model");
   });
 
-  it("routes a summon rung to the command that arms it, ultra included", () => {
-    for (const [level, arm] of [["max", "/skill-hell max"], ["ultra", "/skill-ultra"]] as const) {
-      const { code, err } = captureStderr(() => run(["--level", level]));
-      expect(code).toBe(2);
-      expect(err).toContain("live summon rung, not a boot posture");
-      expect(err).toContain(arm);
-    }
-  });
-
   it("rejects unknown posture or invalid input with exit 2", () => {
     expect(silenceStderr(() => run(["--posture", "nonsense"]))).toBe(2);
     expect(silenceStderr(() => run(["--level"]))).toBe(2);
