@@ -72,7 +72,9 @@ describe("marketplace", () => {
 describe("hooks module", () => {
   test("hooks.json names exactly one module, and it exists", () => {
     const hooks = json(join(HOOKS, "hooks.json"));
-    expect(hooks).toEqual({ modules: ["./register.tsx"] });
+    // One module, plus the single SessionStart command hook (#123); see console-session-context.test.ts.
+    expect(hooks.modules).toEqual(["./register.tsx"]);
+    expect(Object.keys(hooks).sort()).toEqual(["hooks", "modules"]);
     expect(text(join(HOOKS, "register.tsx"))).toContain("export const register");
   });
 

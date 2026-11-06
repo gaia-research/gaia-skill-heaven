@@ -43,6 +43,7 @@ user-scope install, but the install command itself is typed in a terminal sessio
 
 - **Reads:** the results of the Skill Heaven summon tool, the `/skill-*` commands you submit, and
   `Read` and `Agent` tool calls — only to observe them.
+- **Hooks:** one `SessionStart` command hook (`startup` and `clear`), visible in `claude plugin details` and `/hooks`. It runs `scripts/session-context.mjs`, which reads the one option below and prints one line. It reads no file, writes nothing and calls no network. Skill Heaven Core installs no hook at all.
 - **Writes:** nothing of its own to disk and nothing to your settings. State lives in the session only and is gone when it ends. (The summon engine keeps its own session directory, including for a `/lens` preview.)
 - **Network:** none of its own. `/lens` calls the bundled summon tool, which fetches the skill source.
 - **What the model can read:** the one-line result of `/lens` and `/heaven` is a row the model can see. It is fixed text and carries nothing a skill source, a tool error or a refusal supplied; all detail stays in the band and the pane.
@@ -56,6 +57,21 @@ user-scope install, but the install command itself is typed in a terminal sessio
 awake, its persistent contribution is **one compact line maximum**, including when the legacy
 `full` statusline option is selected; details belong in the deliberately opened pane.
 
+`session_context`: `off` (default) or `on`. `on` adds one factual line to the model's context at the
+start of a session (`startup` and `clear`; a resume or compaction already carries it), so the model
+can see, with nothing typed, that the console is on and no rung is selected yet:
+
+```
+Skill Heaven console is on for this session (preview). No rung has been selected in this session yet. With the skill-heaven plugin installed, /summon adds one skill to this session; nothing is installed.
+```
+
+That is 203 characters, 50 tokens by the repo's `chars4` count, paid once per session as a *standing* dose; there is no
+invocation dose. `off` pays 0: the hook still runs (it is installed) but prints nothing. The line states facts only. It
+does not summon, grant permission, select a rung or keep any state, and the console still knows no rung until you
+choose one. Turn it on with `claude plugin install skill-heaven-console@gaia-skill-heaven --config session_context=on` or
+`/plugin configure skill-heaven-console@gaia-skill-heaven`. It is off by default because the console is dormant until used
+(founder ruling, 2026-11-04) and an update must not start adding context to sessions that never summon.
+
 Core + Console is a Skill Heaven terminal installation profile. It does not install or claim
 the optional cross-product Gaia Ecosystem Desktop Mod / Living Tree B.
 
@@ -66,7 +82,8 @@ the optional cross-product Gaia Ecosystem Desktop Mod / Living Tree B.
 /plugin uninstall skill-heaven-console@gaia-skill-heaven
 ```
 
-The status entry, band and pane disappear. Skill Heaven is unchanged.
+The status entry, band, pane and the SessionStart hook disappear. Skill Heaven is unchanged. Claude Code keeps its
+own uninstall residue (the marketplace entry and `plugins/cache`); no hook or `pluginConfigs` entry remains.
 
 ## What a live probe established (Claude Code 2.1.294, terminal)
 
