@@ -18,6 +18,13 @@
       "description": "How much of the Skill Heaven status entry to show beside your own status line. off removes the entry; compact shows the reading and skills in this session; full adds summons and the last arrival.",
       "options": ["off", "compact", "full"],
       "default": "compact"
+    },
+    "session_context": {
+      "type": "string",
+      "title": "Session context line",
+      "description": "on adds one short factual line to the model's context at the start of a session: the console is on, no rung is selected yet, and /summon adds one skill. off (default) adds nothing. The line is about 50 tokens, paid once per session.",
+      "options": ["off", "on"],
+      "default": "off"
     }
   }
 }

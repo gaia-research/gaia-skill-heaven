@@ -19,6 +19,13 @@ The two choices:
 | **Core** | The Skill Heaven runtime: the summon engine, Skill Zero, Skill Heaven, Skill Hell and the Skill Ultra surface. | No console package, no persistent HUD, no pane, no console registration. |
 | **Core + Console** | Core, **plus** the supported Skill Heaven console for your harness — Status, Lens, Session, Scope, Flow and Trust where the harness supports them. | A pixel-for-pixel copy of another harness's console. Hosts paint the same six surfaces differently. |
 
+**Hooks, by profile (#123).** Core installs **no hooks**: `claude plugin details skill-heaven@gaia-skill-heaven`
+reports `Hooks (0)` and no `SessionStart` event fires. Core + Console on Claude Code installs exactly one: a
+`SessionStart` command hook in `skill-heaven-console`, which prints one factual context line only when the console's
+`session_context` option is `on` (default `off`; about 50 tokens per session by `chars4` when on). It does not summon,
+grant permission or state a rung. Switching back to Core removes it with the console. Details and evidence:
+`plugins/skill-heaven-console/README.md` and `docs/evidence/hooks-123/PROBE.md`.
+
 > **Core means no console. Core + Console means console.** That holds for fresh installs, updates,
 > reinstalls, switches and uninstalls.
 
