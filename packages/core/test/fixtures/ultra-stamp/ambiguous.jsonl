@@ -1,0 +1,5 @@
+{"type":"attachment","uuid":"cccccccc-0001","sessionId":"sess-fixture-3","version":"2.1.318","attachment":{"type":"skill_listing","content":"- alpha-skill: does alpha things\n- beta-skill: does beta things"}}
+{"type":"assistant","uuid":"cccccccc-0002","sessionId":"sess-fixture-3","version":"2.1.318","message":{"role":"assistant","model":"fixture-model-1","content":[{"type":"tool_use","id":"toolu_10","name":"mcp__plugin_skill-heaven_skill-summon__summon","input":{"query":"something about SECRET-TOKEN-ZZ9"}}]}}
+{"type":"user","uuid":"cccccccc-0003","sessionId":"sess-fixture-3","version":"2.1.318","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_10","content":"card text"}]}}
+{"type":"assistant","uuid":"cccccccc-0004","sessionId":"sess-fixture-3","version":"2.1.318","message":{"role":"assistant","model":"fixture-model-1","content":[{"type":"tool_use","id":"toolu_11","name":"Skill","input":{"skill":"beta-skill"}}]}}
+not json at all SECRET-TOKEN-ZZ9

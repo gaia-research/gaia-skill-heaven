@@ -6,6 +6,8 @@ import { compile, DEFAULT_CLAUDE_MECHANISM, HARNESSES, LEVEL_ALIASES, MECHANISMS
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
 import { resolveSkill, type ResolvedSkill } from "./skills.js";
+import { contentSha256 } from "./vendor/census-pure.js";
+import { stampTranscript, validateUltraStamp } from "./ultra-stamp/index.js";
 import {
   assembleRuntimeObservation,
   newSessionPseudonym,
@@ -48,6 +50,8 @@ interface CliArgs {
     churnCount?: number;
   };
   telemetryValidate?: string;
+  ultraStamp?: { file: string; saltEnv: string; skills: string[]; out?: string };
+  ultraStampValidate?: string;
   steeringEvent?: string;
   steeringState?: string;
   steeringPolicy?: string;
@@ -83,6 +87,11 @@ export function parseArgs(argv: string[]): CliArgs {
   let telemetryRecoveryObserved: boolean | undefined;
   let telemetryChurnCount: number | undefined;
   let telemetryValidate: string | undefined;
+  let ultraStampFile: string | undefined;
+  let ultraStampSaltEnv: string | undefined;
+  let ultraStampOut: string | undefined;
+  let ultraStampValidate: string | undefined;
+  const ultraStampSkills: string[] = [];
   let steeringEvent: string | undefined;
   let steeringState: string | undefined;
   let steeringPolicy: string | undefined;
@@ -148,11 +157,25 @@ export function parseArgs(argv: string[]): CliArgs {
       telemetryRecoveryObserved = value === "observed";
     } else if (a === "--telemetry-churn-count") telemetryChurnCount = Number(need(a, ++i));
     else if (a === "--telemetry-validate") telemetryValidate = need(a, ++i);
+    else if (a === "--ultra-stamp") ultraStampFile = need(a, ++i);
+    else if (a === "--ultra-stamp-salt-env") ultraStampSaltEnv = need(a, ++i);
+    else if (a === "--ultra-stamp-skill") ultraStampSkills.push(need(a, ++i));
+    else if (a === "--ultra-stamp-out") ultraStampOut = need(a, ++i);
+    else if (a === "--ultra-stamp-validate") ultraStampValidate = need(a, ++i);
     else if (a === "--steering-event" || a === "--steer-event") steeringEvent = need(a, ++i);
     else if (a === "--steering-state") steeringState = need(a, ++i);
     else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
     else if (a === "--steering-verify") steeringVerify = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
+  }
+
+  const ultraFlags = new Set(["--ultra-stamp", "--ultra-stamp-salt-env", "--ultra-stamp-skill", "--ultra-stamp-out", "--ultra-stamp-validate"]);
+  if ([...suppliedFlags].some((f) => ultraFlags.has(f))) {
+    if ([...suppliedFlags].some((f) => !ultraFlags.has(f))) throw new Error("ultra-stamp flags are standalone and cannot be combined with launch, record, telemetry, or steering flags");
+    if (ultraStampValidate !== undefined && ultraStampFile !== undefined) throw new Error("--ultra-stamp-validate cannot be combined with --ultra-stamp");
+    if (ultraStampValidate === undefined && (ultraStampFile === undefined || ultraStampSaltEnv === undefined)) {
+      throw new Error("--ultra-stamp <transcript.jsonl> requires --ultra-stamp-salt-env <ENV_VAR_NAME> (the salt is read from the environment, never argv)");
+    }
   }
 
   const steeringRequested = steeringEvent !== undefined || steeringState !== undefined || steeringPolicy !== undefined || steeringVerify !== undefined;
@@ -256,6 +279,8 @@ export function parseArgs(argv: string[]): CliArgs {
       },
     }),
     ...(telemetryValidate === undefined ? {} : { telemetryValidate }),
+    ...(ultraStampFile === undefined ? {} : { ultraStamp: { file: ultraStampFile, saltEnv: ultraStampSaltEnv!, skills: ultraStampSkills, ...(ultraStampOut === undefined ? {} : { out: ultraStampOut }) } }),
+    ...(ultraStampValidate === undefined ? {} : { ultraStampValidate }),
     ...(steeringEvent === undefined ? {} : { steeringEvent }),
     ...(steeringState === undefined ? {} : { steeringState }),
     ...(steeringPolicy === undefined ? {} : { steeringPolicy }),
@@ -292,6 +317,26 @@ export function main(argv: string[]): number {
     if (policy === null) throw new Error("--steering-policy must be JSON with version, floor, and ceiling from the steering policy contract");
     const event = createOperatorEvent(command.type, command.eventId);
     console.log(JSON.stringify(stepSteering(state, event, policy), null, 2));
+    return 0;
+  }
+  if (args.ultraStampValidate !== undefined) {
+    const value: unknown = JSON.parse(readFileSync(args.ultraStampValidate, "utf8"));
+    validateUltraStamp(value);
+    console.error(`[skill-zero] valid ${String((value as { schema?: unknown }).schema)}`);
+    return 0;
+  }
+  if (args.ultraStamp !== undefined) {
+    const salt = process.env[args.ultraStamp.saltEnv];
+    if (!salt) throw new Error(`environment variable ${args.ultraStamp.saltEnv} is unset or empty; supply a salt (it is never stored)`);
+    const skills = args.ultraStamp.skills.map((spec) => {
+      const eq = spec.indexOf("=");
+      if (eq < 1) throw new Error("--ultra-stamp-skill must be ID=PATH/to/SKILL.md");
+      return { id: spec.slice(0, eq), sha256: contentSha256(readFileSync(spec.slice(eq + 1), "utf8")) };
+    });
+    const doc = stampTranscript(readFileSync(args.ultraStamp.file, "utf8"), { salt, skills });
+    const out = JSON.stringify(doc, null, 2) + "\n";
+    if (args.ultraStamp.out) writeFileSync(args.ultraStamp.out, out);
+    else process.stdout.write(out);
     return 0;
   }
   if (args.telemetryValidate) {

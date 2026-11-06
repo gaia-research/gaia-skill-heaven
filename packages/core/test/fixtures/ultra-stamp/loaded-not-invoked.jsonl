@@ -1,0 +1,3 @@
+{"type":"attachment","uuid":"aaaaaaaa-0001","sessionId":"sess-fixture-1","version":"2.1.318","attachment":{"type":"skill_listing","content":"- alpha-skill: does alpha things for SECRET-TOKEN-ZZ9\n- beta-skill: does beta things"}}
+{"type":"user","uuid":"aaaaaaaa-0002","sessionId":"sess-fixture-1","version":"2.1.318","message":{"role":"user","content":"please use alpha-skill for my task, my email is alice@example.com and the key is SECRET-TOKEN-ZZ9"}}
+{"type":"assistant","uuid":"aaaaaaaa-0003","sessionId":"sess-fixture-1","version":"2.1.318","message":{"role":"assistant","model":"fixture-model-1","content":[{"type":"text","text":"I could use alpha-skill or beta-skill here, but I will just answer from /home/alice/private/notes."}]}}
