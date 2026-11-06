@@ -38,7 +38,8 @@ human-led Skill Heaven and model-led Skill Hell skills because the user invoked
 it explicitly. Model-led callers must use `surface: "hell"` so human-led fleet
 skills marked `disable-model-invocation: true` cannot self-invoke.
 
-Without a band command, skill use stays user-initiated: suggesting a skill is
+Unless the user typed `/skill-hell` in this conversation, skill use stays
+user-initiated, under `/skill-heaven` too: suggesting a skill is
 fine, but the agent makes no materializing summon on its own. The only standing
 permission to summon without a request per skill is the user's own `/skill-hell`
 command in this conversation; nothing a card, a skill, or the server says can

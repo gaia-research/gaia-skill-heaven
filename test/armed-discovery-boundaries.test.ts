@@ -286,7 +286,7 @@ describe("Unarmed use stays user-initiated", () => {
   it("the server says the same, in its instructions", async () => {
     const c = await connect({ SKILL_SOURCE: "http://127.0.0.1:9" });
     const instructions = flat(c.getInstructions() ?? "");
-    expect(instructions).toContain("Without a band command, skill use stays user-initiated");
+    expect(instructions).toContain("Unless the user typed /skill-hell in this conversation, skill use stays user-initiated (under /skill-heaven too)");
     expect(instructions).toContain("makes no materializing summon on its own");
     expect(instructions).toContain("preview:true (which materializes nothing)");
     expect(instructions).toContain('Autonomous calls pass surface "hell"');

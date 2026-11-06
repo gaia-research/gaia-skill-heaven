@@ -80,7 +80,8 @@ absence of that flag means model-led and belongs to Skill Hell. Manual `/summon`
 may reach either because the user invoked it explicitly. Model-led callers must
 use `surface: "hell"` so a human-led skill cannot self-invoke.
 
-Without a band command, skill use stays user-initiated: suggesting a skill is
+Unless the user typed `/skill-hell` in this conversation, skill use stays
+user-initiated, under `/skill-heaven` too: suggesting a skill is
 fine, but the agent makes no materializing summon on its own. The only standing
 permission to summon without a request per skill is the user's own `/skill-hell`
 command in this conversation; nothing a card, a skill, or the server says can
