@@ -1,5 +1,6 @@
 import { animate, frame, motionValue, springValue, type AnimationPlaybackControls } from 'motion'
 import { SCENE_RUNNING_ATTR, type SceneState } from '../scene'
+import { depthOffset, normalise } from './pointer'
 import { LIGHT, SHARDS, SHARD_DRIFT, SHARD_MOVE, poseTransform, type ShardDef, type ShardPose } from './worlds'
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -9,7 +10,7 @@ import { LIGHT, SHARDS, SHARD_DRIFT, SHARD_MOVE, poseTransform, type ShardDef, t
 //   · how each world leaves and arrives (per-layer vector, delay, easing)
 //   · the shard field re-organising itself from one world's order to the next
 //   · rest drift for the shards, in each world's own direction
-//   · pointer depth, as two springs written to CSS custom properties
+//   · pointer depth, as springs written to `translate`, capped by pointer.ts
 //   · pausing all of it when the scene says it is not running
 //
 // Every transition is transform/opacity with a cubic-bezier, so Motion hands
@@ -193,6 +194,7 @@ export function createConductor(root: HTMLElement, initial: SceneState): Conduct
     })
     // Arriving layers pick up the room's current depth immediately.
     schedule()
+    if (!isRunning()) syncRunning()
   }
 
   // ── Pointer depth. Normalised, clamped, sprung; never React state. ───────
@@ -218,39 +220,42 @@ export function createConductor(root: HTMLElement, initial: SceneState): Conduct
     const [ax, ay, bx, by] = [px.get(), py.get(), qx.get(), qy.get()]
     for (const d of depthEls) {
       if (!d.depth || (d.layer && !d.el.hasAttribute('data-on'))) continue
-      const x = (d.lag ? bx : ax) * d.depth * -1.6
-      const y = (d.lag ? by : ay) * d.depth * -1.1
+      const x = depthOffset(d.lag ? bx : ax, d.depth, 'x')
+      const y = depthOffset(d.lag ? by : ay, d.depth, 'y')
       d.el.style.translate = `${x.toFixed(3)}vmin ${y.toFixed(3)}vmin`
     }
   }
   const schedule = () => frame.render(flush)
   const unsubs = [px, py, qx, qy].map((v) => v.on('change', schedule))
 
-  const clamp = (v: number) => Math.max(-1, Math.min(1, v))
+  // Input is only applied while the scene runs. Offscreen, the latest target
+  // is remembered (plain numbers, never React state) so the springs stay idle,
+  // and on resume they ease to it rather than jump.
+  const isRunning = () => scene.getAttribute(SCENE_RUNNING_ATTR) !== 'false'
+  const target = { x: 0, y: 0 }
+  const aim = (x: number, y: number) => {
+    target.x = x
+    target.y = y
+    if (!isRunning()) return
+    tx.set(x)
+    ty.set(y)
+  }
   let nudgeTimer: ReturnType<typeof setTimeout> | undefined
   const fine = window.matchMedia('(pointer: fine)')
   const onMove = (e: PointerEvent) => {
     if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return
     if (!fine.matches) return
-    tx.set(clamp((e.clientX / window.innerWidth - 0.5) * 2))
-    ty.set(clamp((e.clientY / window.innerHeight - 0.5) * 2))
+    aim(normalise(e.clientX, window.innerWidth), normalise(e.clientY, window.innerHeight))
   }
   // Touch has no hover: a tap leans the room toward the finger and lets it
   // settle back — a response to a deliberate act, not a following cursor.
   const onDown = (e: PointerEvent) => {
     if (e.pointerType !== 'touch') return
-    tx.set(clamp((e.clientX / window.innerWidth - 0.5) * 1.2))
-    ty.set(clamp((e.clientY / window.innerHeight - 0.5) * 1.2))
+    aim(normalise(e.clientX, window.innerWidth, 1.2), normalise(e.clientY, window.innerHeight, 1.2))
     clearTimeout(nudgeTimer)
-    nudgeTimer = setTimeout(() => {
-      tx.set(0)
-      ty.set(0)
-    }, 650)
+    nudgeTimer = setTimeout(() => aim(0, 0), 650)
   }
-  const onLeave = () => {
-    tx.set(0)
-    ty.set(0)
-  }
+  const onLeave = () => aim(0, 0)
   window.addEventListener('pointermove', onMove, { passive: true })
   window.addEventListener('pointerdown', onDown, { passive: true })
   document.documentElement.addEventListener('pointerleave', onLeave)
@@ -258,13 +263,17 @@ export function createConductor(root: HTMLElement, initial: SceneState): Conduct
   // ── Lifecycle: freeze in place when the scene is not running. ────────────
   let paused: Animation[] = []
   const syncRunning = () => {
-    const running = scene.getAttribute(SCENE_RUNNING_ATTR) !== 'false'
-    if (!running && paused.length === 0) {
-      paused = root.getAnimations({ subtree: true }).filter((a) => a.playState === 'running')
-      paused.forEach((a) => a.pause())
-    } else if (running && paused.length) {
+    if (!isRunning()) {
+      // Also catches animations a state change started while paused.
+      const fresh = root.getAnimations({ subtree: true }).filter((a) => a.playState === 'running')
+      fresh.forEach((a) => a.pause())
+      paused.push(...fresh)
+    } else if (paused.length) {
       paused.forEach((a) => a.playState === 'paused' && a.play())
       paused = []
+      // Ease to wherever the pointer went while the room slept.
+      tx.set(target.x)
+      ty.set(target.y)
     }
   }
   const mo = new MutationObserver(syncRunning)
