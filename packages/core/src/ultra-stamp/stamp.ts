@@ -33,6 +33,8 @@ interface Ev {
   isMeta: boolean;
   content: unknown;
   attachment?: Record<string, unknown>;
+  /** compact_boundary only: uuids the harness says it kept verbatim across the boundary. */
+  preserved?: Set<string>;
 }
 interface Call { skill: string | null; mode: "skill-tool" | "summon"; ref: EventRef; toolUseId?: string; idx: number }
 
@@ -52,6 +54,17 @@ function textOf(content: unknown): string {
 }
 function isSummonTool(name: unknown): boolean {
   return typeof name === "string" && /^mcp__.*summon$/.test(name);
+}
+/** compact_boundary.compactMetadata.preservedMessages.{uuids,allUuids}: ids only, no content. */
+function preservedUuids(o: Record<string, unknown>): Set<string> | undefined {
+  if (o.type !== "system" || o.subtype !== "compact_boundary") return undefined;
+  const cm = typeof o.compactMetadata === "object" && o.compactMetadata !== null ? (o.compactMetadata as Record<string, unknown>) : {};
+  const pm = typeof cm.preservedMessages === "object" && cm.preservedMessages !== null ? (cm.preservedMessages as Record<string, unknown>) : {};
+  const out = new Set<string>();
+  for (const k of ["uuids", "allUuids"]) {
+    if (Array.isArray(pm[k])) for (const u of pm[k] as unknown[]) if (typeof u === "string") out.add(u);
+  }
+  return out;
 }
 function level(state: TriState, confidence: Confidence, evidence: EventRef[] = []): LevelStamp {
   return { state, confidence, evidence: evidence.slice(0, 64) };
@@ -86,6 +99,7 @@ export function stampTranscript(jsonl: string, opts: StampOptions): UltraStampDo
       line: i + 1, uuid, type: String(o.type ?? ""), subtype: typeof o.subtype === "string" ? o.subtype : undefined,
       isMeta: o.isMeta === true, content: msg.content,
       attachment: typeof o.attachment === "object" && o.attachment !== null ? (o.attachment as Record<string, unknown>) : undefined,
+      preserved: preservedUuids(o),
     });
   });
 
@@ -95,7 +109,7 @@ export function stampTranscript(jsonl: string, opts: StampOptions): UltraStampDo
   const calls: Call[] = [];
   const unattributed: Array<{ kind: EventKind; evidence: EventRef[] }> = [];
   const results = new Map<string, { ref: EventRef; error: boolean; text: string; idx: number }>();
-  const compactions: EventRef[] = [];
+  const compactions: Array<EventRef & { idx: number; preserved?: Set<string> }> = [];
   let sawAssistant = false;
 
   events.forEach((e, idx) => {
@@ -113,7 +127,7 @@ export function stampTranscript(jsonl: string, opts: StampOptions): UltraStampDo
         if (!listing.has(id)) listing.set(id, ref(e, "skill-listing"));
       }
     }
-    if (e.type === "summary" || (e.type === "system" && e.subtype === "compact_boundary")) compactions.push(ref(e, "compaction"));
+    if (e.type === "summary" || (e.type === "system" && e.subtype === "compact_boundary")) compactions.push({ ...ref(e, "compaction"), idx, preserved: e.preserved });
     if (e.type === "assistant") {
       sawAssistant = true;
       for (const b of blocks(e.content)) {
@@ -207,13 +221,31 @@ export function stampTranscript(jsonl: string, opts: StampOptions): UltraStampDo
     } else if (invoked.state === "false") loaded = level("false", invoked.confidence);
     else loaded = level("unknown", "low", invoked.evidence);
 
-    // active: body still in context at the end of the observed window
+    // active: body still in context at the end of the observed window.
+    // A compaction after the latest load makes this unknown UNLESS the trace shows the
+    // body survived: (a) the boundary lists the body event as preserved verbatim, or
+    // (b) the body was re-injected after the boundary. The summary text is never read
+    // as evidence (a name in prose proves nothing). Invoked/loaded stay true regardless.
     let active: LevelStamp;
     if (loaded.state === "false") active = level("false", loaded.confidence);
     else if (loaded.state === "unknown") active = level("unknown", "low");
     else {
-      const after = compactions.filter((c) => c.line > loaded.evidence[0].line);
-      active = after.length > 0 ? level("unknown", "low", after) : level("true", "medium", loaded.evidence.slice(0, 1));
+      const last = okCalls.length > 0 ? okCalls[okCalls.length - 1] : undefined;
+      const lastRes = last ? results.get(last.toolUseId!)! : undefined;
+      const lastBody = lastRes ? bodyAfter(lastRes.idx) : undefined;
+      const carrier = lastBody?.ref ?? lastRes?.ref ?? loaded.evidence[loaded.evidence.length - 1];
+      const loadIdxLatest = lastRes ? lastRes.idx : loadIdx;
+      const after = compactions.filter((c) => c.idx > loadIdxLatest);
+      if (after.length === 0) active = level("true", "medium", loaded.evidence.slice(0, 1));
+      else {
+        const lastB = after[after.length - 1];
+        const keptByAll = after.every((c) => carrier.uuid !== undefined && c.preserved?.has(carrier.uuid) === true);
+        const reinjected = baseDir === undefined ? undefined : events.slice(lastB.idx + 1).find((e) =>
+          e.type === "user" && e.isMeta && textOf(e.content).includes("Base directory for this skill: " + baseDir));
+        if (reinjected) active = level("true", "medium", [carrier, { ...ref(reinjected, "body-reinjection") }]);
+        else if (keptByAll) active = level("true", "medium", [carrier, ...after.map((c) => ({ line: c.line, ...(c.uuid ? { uuid: c.uuid } : {}), kind: "compaction-preserved" as EventKind }))]);
+        else active = level("unknown", "low", after.map((c) => ({ line: c.line, ...(c.uuid ? { uuid: c.uuid } : {}), kind: "compaction" as EventKind })));
+      }
     }
 
     // materially_used: only a deterministic signal counts — a later tool call that

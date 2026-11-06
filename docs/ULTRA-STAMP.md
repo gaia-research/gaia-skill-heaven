@@ -16,7 +16,10 @@ skill-zero --ultra-stamp-validate stamps.json
 
 The flags are standalone (they refuse to combine with launch, record, telemetry
 or steering flags). The reader does no network calls, uploads, hooks or model
-calls, and writes nothing except the `--ultra-stamp-out` file you name.
+calls, and writes nothing except the `--ultra-stamp-out` file you name. The one
+exception is the opt-in `--advisory` flag below: it sends a bounded, redacted
+excerpt of the selected session to the model provider through `claude -p`.
+Without `--advisory`, nothing leaves the machine.
 `--ultra-stamp-skill` hashes `SKILL.md` with the vendored `contentSha256`
 (`sha256(SKILL.md)`) into `sourceDigest`; the path is never emitted. Without it
 `sourceDigest` is `null` (unknown).
@@ -33,13 +36,13 @@ JSONL line, event uuid, and an enum kind; never content).
 | `installed` | available to the session | skill is in a `skill_listing` attachment (high) or user-pinned via `--ultra-stamp-skill` (medium) | a listing exists and omits it |
 | `loaded` | the skill **body** entered context (the listing line does not count) | a `Skill`/summon `tool_use` got a non-error `tool_result` (high if the body-injection event is also seen) | call returned an error, or the skill was never invoked |
 | `invoked` | the model or user actually called it | attributed `Skill`/summon `tool_use`, or a user `/command` naming a known skill | no call in a transcript that has assistant turns |
-| `active` | body still in context at the end of the window | loaded and no later compaction | not loaded |
+| `active` | body still in context at the end of the window | loaded and no later compaction; or, after a compaction, the boundary lists the body event as preserved verbatim, or the body is re-injected after it, or the skill is invoked again | not loaded |
 | `materially_used` | work demonstrably touched the skill | a later tool call references the skill's own bundled directory (`Base directory for this skill`) | not loaded |
 | `verified_outcome` | an outcome check ties the result to the skill | never set by this reader | not loaded |
 
 `unknown` is kept wherever the trace cannot decide: a summon call that names no
 skill (`unattributed[]`) leaves every candidate's `invoked` unknown; a call with no
-result leaves `loaded` unknown; compaction leaves `active` unknown; later tool
+result leaves `loaded` unknown; a compaction after the load with no preserved or re-injected body leaves `active` unknown (the summary text is never evidence; `invoked`/`loaded` stay true); later tool
 calls without a bundled-directory reference leave `materially_used` unknown. A
 skill name in plain text (prompt or reply) is never evidence.
 
@@ -72,9 +75,6 @@ This repo does not read or modify those repos; the contract above is the boundar
 
 ## Not implemented (seams)
 
-- **Cheap-model advisory classification.** Would run only on already-redacted
-  stamp output, and could only annotate; it must never raise a level to `"true"`
-  or manufacture evidence. Out of scope here.
 - **`verified_outcome`** needs an external outcome check (tests, reviewer).
 - **Graft vs Graft + Context Mode trial telemetry and cost accounting.** Cost
   must come from `gaia-research/skill-cost`, not from this reader.
@@ -96,7 +96,7 @@ parenthetical source (`- id (plugin): …`). The reader now prefers `names` and 
 the parenthetical; see `listing-2.1.318-shape.jsonl`. Stamping that log listed 140
 skills and found 0 invocations, which matches a session that made no Skill calls. The
 `Skill` tool-use shape was then probed in a real session (below). The compaction
-shape is **still unprobed**.
+shape was probed afterwards (below).
 
 **Invocation probe, Claude Code 2.1.318 (2026-11-06).** This was a real authenticated
 `claude -p` with a throwaway `HOME`/`CLAUDE_CONFIG_DIR`, `--model haiku` and
@@ -118,3 +118,65 @@ even though the reply was the skill's exact phrase. That is the intended behavio
 the stamper does not read reply text, so a match there is not evidence. Nothing from
 the probe log is committed. Re-probe on each Claude Code upgrade. This reader
 does not touch `~/.claude` or any user config.
+
+## Compaction probe, Claude Code 2.1.318 (2026-11-06)
+
+Real authenticated sessions, throwaway `HOME`/`CLAUDE_CONFIG_DIR`, synthetic prompts,
+and a synthetic plugin (`fixture-plug` with skills `fixture-greeter` and `fixture-unused`)
+loaded with `--plugin-dir`. Structure only was inspected; nothing from the logs is committed.
+
+```
+claude -p "Use the fixture-greeter skill and reply with its phrase." --plugin-dir <plug> \
+  --model haiku --allowedTools Skill --output-format json --max-turns 4
+claude -p "/compact" --resume <session-id> --plugin-dir <plug> --model haiku \
+  --output-format json --max-turns 2
+```
+
+`/compact` in a headless `-p` turn on `--resume` works, and appends to the same JSONL
+(`trigger: "manual"`). Observed shape, after the Skill `tool_use`/`tool_result`/`isMeta`
+body (the tool_use input names the skill namespaced, `fixture-plug:fixture-greeter`):
+
+| entry | shape |
+|---|---|
+| boundary | `type:"system", subtype:"compact_boundary", level:"info", logicalParentUuid, parentUuid:null, compactMetadata:{trigger, preTokens, postTokens, durationMs, cumulativeDroppedTokens, preservedSegment:{headUuid,anchorUuid,tailUuid}, preservedMessages:{anchorUuid, uuids[], allUuids[]}}` |
+| summary | next `user` entry, `isCompactSummary:true, isVisibleInTranscriptOnly:true`, string content |
+| command echo | `isMeta` `<local-command-caveat>`, `<command-name>/compact`, `<local-command-stdout>` user entries |
+| listing | a fresh `skill_listing` attachment (`isInitial:true`, `names[]`, `digests[]`) after the boundary |
+
+What survived: the preserved set held only the last assistant turn. The Skill
+`tool_use`, its `tool_result` and the `isMeta` body were **not** preserved and the body
+was **not** re-injected. The summary text mentioned the skill's reply phrase, which is
+prose and not evidence. `compactMetadata` carries uuids only.
+
+Stamper behaviour (observer 1.1.0, fixture `compaction-2.1.318-shape.jsonl`, synthetic content, faithful structure):
+`invoked`/`loaded` stay true; `active` is `unknown` (low) citing a `compaction` ref;
+`active` becomes `true` (medium) only on (a) the body event's uuid in the boundary's
+`preservedMessages` (`compaction-preserved` evidence), (b) an `isMeta` body after the boundary with the
+same `Base directory for this skill`, or (c) a fresh successful invocation after the boundary.
+The listing re-emission is not an invocation. Two evidence kinds were added
+(`compaction-preserved`, `body-reinjection`); the schema id stays `skill-ultra-stamp/v1`. The
+change is additive, but a v1 validator from before observer 1.1.0 rejects those kinds and the
+`advisory` key. Re-injection (b) and preservation (a) are covered by synthetic variants only; no real session showed either.
+
+## Advisory adapter (opt-in, model-judged)
+
+```bash
+skill-zero --ultra-stamp session.jsonl --ultra-stamp-salt-env US_SALT \
+  --advisory --advisory-runner claude-haiku [--advisory-skill ID] [--advisory-max-chars N] [--advisory-timeout-ms N]
+```
+
+Implementation: `packages/core/src/ultra-stamp/advisory.ts`. It adds an optional per-skill
+`advisory` object and touches nothing else: `levels`, evidence and `activationMode` are
+carried through unchanged, so it can never set `materially_used` or `verified_outcome` in
+either direction (tested). Those still come from evidence only.
+
+- Shape (enums only, no free text): `{label:"advisory-model-judged", status: ok|malformed|timeout|runner-error|no-excerpt, materiallyUsedJudgement: used|not_used|unknown, confidence, reason, model, excerptChars}`. The vocabulary differs from the tri-state on purpose.
+- Eligible: skills with `loaded` true. One runner call per eligible skill, no retry, at most 3 skills (`maxCalls`).
+- Input: a deterministic excerpt from the skill's load onward, default cap 6000 chars (hard max 20000), per-line clips, skill bodies and compaction summaries replaced by markers, best-effort pattern redaction (emails, URLs, paths, token-like strings, long blobs). Redaction is not a guarantee; review before using on real sessions.
+- Output: parsed against a closed JSON schema (exactly three known keys, closed enums). Anything else is `malformed`, judged `unknown`. Timeouts and runner errors are `unknown` with a status.
+- The runner is an injected function (`AdvisoryRunner`), so tests run offline with a fake. The one built-in, `claudeHaikuRunner`, spawns `claude -p --model haiku --output-format json --tools "" --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-session-persistence --max-turns 1 --system-prompt <classifier>` with the prompt on stdin, in a mkdtemp `HOME`/`CLAUDE_CONFIG_DIR` that is removed afterwards. `--tools ""` removes built-ins only and leaves MCP, hence the explicit empty MCP config (docs/evidence/tools-147/PROBE.md, A1/A2).
+- Usage from the JSON result is printed to stderr as model-reported and not a cost basis (`skill-cost` is).
+
+Real run (Claude Code 2.1.318, synthetic fixture `true-invocation.jsonl`, 154-char excerpt): status `ok`,
+judgement `unknown`, confidence `low`, reason `insufficient-excerpt`; the stamp's `materially_used` stayed
+`true` (medium) and `verified_outcome` `unknown`, both from evidence. Usage: 2 input, 1706 cache-creation, 0 cache-read, 35 output tokens. The output validates.

@@ -1,11 +1,11 @@
 name: Harness compat
 
-# Credential-free harness compatibility checks (#35): Claude Code, pi, codex. This
+# Credential-free harness compatibility checks (#35): Claude Code, pi, codex, grok, agy. This
 # does NOT run an authenticated session and proves nothing about session-level
 # behaviour; see docs/COMPAT-MATRIX.md for exactly what each cell checks and at which
 # evidence level (structural / dry-run / session). There is no session cell: CI holds
-# no harness credentials. hermes, grok and agy have no cell because there is no
-# verified pinned public install route for them (docs/COMPAT-MATRIX.md).
+# no harness credentials. hermes has no cell because there is no verified pinned install
+# route that works without building external source (docs/COMPAT-MATRIX.md).
 
 on:
   push:
@@ -111,3 +111,80 @@ jobs:
       - name: codex checks (latest, no pin)
         if: ${{ !matrix.pinned }}
         run: node scripts/compat-check.mjs codex
+
+  grok:
+    name: grok ${{ matrix.version }}${{ matrix.pinned && ' (pinned, blocking)' || ' (informational)' }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ !matrix.pinned }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '1.0.77' # pinned; the version in packages/grok-zero/PROBE.md, installed from npm and observed on Linux 2026-11-06
+            pinned: true
+          - version: 'latest'
+            pinned: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install grok ${{ matrix.version }}
+        run: npm install -g @xai-official/grok@${{ matrix.version }}
+      - name: grok checks (version pin, door --print, door flags accepted by grok)
+        if: ${{ matrix.pinned }}
+        run: node scripts/compat-check.mjs grok --pin ${{ matrix.version }}
+      - name: grok checks (latest, no pin)
+        if: ${{ !matrix.pinned }}
+        run: node scripts/compat-check.mjs grok
+
+  agy:
+    name: agy ${{ matrix.version }}${{ matrix.pinned && ' (pinned, blocking)' || ' (informational)' }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ !matrix.pinned }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '1.5.2' # pinned release tarball; sha512 below is the vendor manifest value observed 2026-11-06
+            pinned: true
+            url: 'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.2-4951595792859136/linux-x64/cli_linux_x64.tar.gz'
+            sha512: 'aa876c0813572efaf85ed47983cc937414705d40490cbdb54f6e255656a4f8744ae38e457823e924fa8270b348124e0521d3cda3fec6824bb2d14b98a7a05baa'
+          - version: 'latest'
+            pinned: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install agy (pinned tarball, sha512 verified)
+        if: ${{ matrix.pinned }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/agy"
+          curl -fsSL -o "$RUNNER_TEMP/agy.tgz" "${{ matrix.url }}"
+          echo "${{ matrix.sha512 }}  $RUNNER_TEMP/agy.tgz" | sha512sum -c -
+          tar -xzf "$RUNNER_TEMP/agy.tgz" -C "$RUNNER_TEMP/agy"
+          mv "$RUNNER_TEMP/agy/antigravity" "$RUNNER_TEMP/agy/agy"
+          echo "$RUNNER_TEMP/agy" >> "$GITHUB_PATH"
+      - name: Install agy (latest, per the vendor manifest, sha512 verified)
+        if: ${{ !matrix.pinned }}
+        run: |
+          m=$(curl -fsSL https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json)
+          url=$(echo "$m" | node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(0,"utf8")).url)')
+          sha=$(echo "$m" | node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(0,"utf8")).sha512)')
+          mkdir -p "$RUNNER_TEMP/agy"
+          curl -fsSL -o "$RUNNER_TEMP/agy.tgz" "$url"
+          echo "$sha  $RUNNER_TEMP/agy.tgz" | sha512sum -c -
+          tar -xzf "$RUNNER_TEMP/agy.tgz" -C "$RUNNER_TEMP/agy"
+          mv "$RUNNER_TEMP/agy/antigravity" "$RUNNER_TEMP/agy/agy"
+          echo "$RUNNER_TEMP/agy" >> "$GITHUB_PATH"
+      - name: agy checks (version pin, door --print, door flags vs agy --help)
+        if: ${{ matrix.pinned }}
+        run: node scripts/compat-check.mjs agy --pin ${{ matrix.version }}
+      - name: agy checks (latest, no pin)
+        if: ${{ !matrix.pinned }}
+        run: node scripts/compat-check.mjs agy

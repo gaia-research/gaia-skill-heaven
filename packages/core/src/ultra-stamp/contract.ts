@@ -10,7 +10,7 @@
 import { containsAbsolutePath } from "../telemetry.js";
 
 export const ULTRA_STAMP_SCHEMA = "skill-ultra-stamp/v1" as const;
-export const ULTRA_STAMP_OBSERVER = { name: "skill-ultra-stamper", version: "1.0.0", parser: "claude-code-jsonl/1" } as const;
+export const ULTRA_STAMP_OBSERVER = { name: "skill-ultra-stamper", version: "1.1.0", parser: "claude-code-jsonl/1" } as const;
 
 export const LEVELS = ["installed", "loaded", "invoked", "active", "materially_used", "verified_outcome"] as const;
 export type Level = (typeof LEVELS)[number];
@@ -22,6 +22,8 @@ export type Confidence = (typeof CONFIDENCES)[number];
 export const EVENT_KINDS = [
   "skill-listing", "manifest", "skill-tool-use", "summon-tool-use", "slash-command", "tool-result",
   "tool-result-error", "body-injection", "resource-reference", "later-tool-use", "compaction",
+  // added in observer 1.1.0 (additive): evidence that a loaded body survived a compaction
+  "compaction-preserved", "body-reinjection",
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 export const ACTIVATION_MODES = ["skill-tool", "summon", "user-slash", "listing-only", "none", "unknown"] as const;
@@ -37,6 +39,27 @@ export interface SkillStamp {
   sourceDigest: string | null;
   activationMode: ActivationMode;
   levels: Record<Level, LevelStamp>;
+  /** Optional, opt-in, model-judged annotation. Never changes `levels` (see advisory.ts). */
+  advisory?: Advisory;
+}
+
+export const ADVISORY_LABEL = "advisory-model-judged" as const;
+export const ADVISORY_JUDGEMENTS = ["used", "not_used", "unknown"] as const;
+export const ADVISORY_CONFIDENCES = ["high", "medium", "low"] as const;
+export const ADVISORY_REASONS = [
+  "followed-skill-instructions", "referenced-skill-resources", "no-visible-effect", "insufficient-excerpt", "other",
+] as const;
+export const ADVISORY_STATUSES = ["ok", "malformed", "timeout", "runner-error", "no-excerpt"] as const;
+/** Enum-only on purpose: no free text from the model can ride into a stamp. Not evidence; never sets materially_used or verified_outcome. */
+export interface Advisory {
+  label: typeof ADVISORY_LABEL;
+  status: (typeof ADVISORY_STATUSES)[number];
+  /** Answer to "was the skill materially used?" in the model's judgement. Distinct vocabulary from the tri-state levels on purpose. */
+  materiallyUsedJudgement: (typeof ADVISORY_JUDGEMENTS)[number];
+  confidence: (typeof ADVISORY_CONFIDENCES)[number] | null;
+  reason: (typeof ADVISORY_REASONS)[number] | null;
+  model: string | null;
+  excerptChars: number;
 }
 
 export interface UltraStampDocument {
@@ -95,6 +118,21 @@ function validateLevel(v: unknown, at: string): void {
   if (state !== "unknown" && conf === "none") throw new Error(`${at}: a decided level cannot have confidence "none"`);
 }
 
+function validateAdvisory(v: unknown, at: string): void {
+  const a = obj(v, at);
+  const all = ["label", "status", "materiallyUsedJudgement", "confidence", "reason", "model", "excerptChars"];
+  keys(a, all, all, at);
+  if (a.label !== ADVISORY_LABEL) throw new Error(`${at}.label must be ${ADVISORY_LABEL}`);
+  const status = oneOf(a.status, ADVISORY_STATUSES, `${at}.status`);
+  const j = oneOf(a.materiallyUsedJudgement, ADVISORY_JUDGEMENTS, `${at}.materiallyUsedJudgement`);
+  if (a.confidence !== null) oneOf(a.confidence, ADVISORY_CONFIDENCES, `${at}.confidence`);
+  if (a.reason !== null) oneOf(a.reason, ADVISORY_REASONS, `${at}.reason`);
+  if (a.model !== null) matching(a.model, MODEL_ID, `${at}.model`);
+  if (!Number.isSafeInteger(a.excerptChars) || (a.excerptChars as number) < 0) throw new Error(`${at}.excerptChars must be a non-negative integer`);
+  if (status !== "ok" && (j !== "unknown" || a.confidence !== null || a.reason !== null)) throw new Error(`${at}: a non-ok advisory must be unknown with no confidence or reason`);
+  if (status === "ok" && (a.confidence === null || a.reason === null)) throw new Error(`${at}: an ok advisory needs confidence and reason`);
+}
+
 export function validateUltraStamp(value: unknown): asserts value is UltraStampDocument {
   const d = obj(value, "stamp");
   const top = ["schema", "observer", "sessionPseudonym", "harness", "models", "source", "stamps", "unattributed"];
@@ -122,7 +160,8 @@ export function validateUltraStamp(value: unknown): asserts value is UltraStampD
     const at = `stamp.stamps[${i}]`;
     const st = obj(raw, at);
     const sk = ["skillId", "sourceDigest", "activationMode", "levels"];
-    keys(st, sk, sk, at);
+    keys(st, [...sk, "advisory"], sk, at);
+    if ("advisory" in st) validateAdvisory(st.advisory, `${at}.advisory`);
     const id = matching(st.skillId, SKILL_ID, `${at}.skillId`);
     if (seen.has(id)) throw new Error(`${at}.skillId duplicates ${id}`);
     seen.add(id);
