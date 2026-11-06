@@ -6,9 +6,11 @@
 // than she does, so its travel is capped below the gaze budget and every
 // plane's offset is clamped to that cap, whatever depth a layer declares.
 //
-// PROVISIONAL: `look()` has no gaze rig yet (createLucyCharacter.ts), so
-// GAZE_BUDGET_VMIN is a design budget, not a measured Rive displacement.
-// Re-derive it from the rig when the gaze lands; the tests pin the ratio.
+// PROVISIONAL: the shipped rig has no gaze input (scripts/inspect-rig.mjs lists
+// zero state-machine inputs and a view model with only `state`), so `look()` is
+// a no-op and GAZE_BUDGET_VMIN is a design budget, not a measured Rive
+// displacement. Re-derive it from the rig when the gaze lands; the unit test
+// pins the ratio and scripts/e2e-atmosphere.mjs samples the live planes against it.
 
 /** Travel the character's gaze is budgeted to use at full deflection, in vmin. */
 export const GAZE_BUDGET_VMIN = 2

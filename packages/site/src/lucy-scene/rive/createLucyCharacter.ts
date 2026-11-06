@@ -304,7 +304,18 @@ export function createLucyCharacter(
       return loaded && stateReady(s)
     },
     look() {
-      // No gaze rig yet; the contract keeps the call so the hero can wire it now.
+      // Deliberately a no-op: the shipped rig has no gaze to drive. Probed with
+      // scripts/inspect-rig.mjs (lucy-live/012bd2c6ea, @rive-app/webgl2 2.43.1):
+      // five artboards, ZERO state-machine inputs, one view model ("Lucy") whose
+      // only property is the enum `state`. A scene-level transform on the canvas
+      // would shift the whole body, which is a second parallax and not a gaze (and
+      // #203 forbids a cursor-following character), so nothing stands in for it.
+      // The rig change that unblocks this is in gaia-research/lucy: view-model
+      // number properties `gazeX` and `gazeY` (-1..1) blended into the eye/pupil
+      // and a small head turn, with a hold at 0. Then: map target to those two
+      // properties here, skip it under reduced motion and while
+      // data-scene-running is false, and cap the resulting travel at
+      // GAZE_BUDGET_VMIN (pointer.ts).
     },
     setRunning(running) {
       if (!loaded || !r) return
