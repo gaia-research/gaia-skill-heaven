@@ -193,16 +193,6 @@ describe("run", () => {
     expect(plan).not.toHaveProperty("sessionDir");
   });
 
-  it("routes a summon rung to the command that arms it, ultra included", () => {
-    for (const [level, arm] of [["max", "/skill-hell max"], ["ultra", "/skill-ultra"]] as const) {
-      const { code, err } = captureStderr(() => run(["--level", level]));
-      expect(code, level).toBe(2);
-      expect(err).toContain("live summon rung, not a boot posture");
-      expect(err).toContain(arm);
-      expect(err).not.toMatch(/UNRATIFIED|P2|gated/i);
-    }
-  });
-
   it("refuses the doorless benchmark floor — it is core's, for measurement runs (exit 2)", () => {
     // F6: --disable-slash-commands suppresses plugin COMMANDS too, so a door
     // that launched it would be launching a session it cannot then talk to.

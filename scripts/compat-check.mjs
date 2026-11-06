@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Credential-free harness compatibility checks (#35).
 //
-//   node scripts/compat-check.mjs <pi|codex> [--pin <version>]
+//   node scripts/compat-check.mjs <pi|codex|grok|agy> [--pin <version>]
 //
-// Runs against whatever `pi` / `codex` is on PATH. Every line it prints is tagged with
+// Runs against whatever `pi` / `codex` / `grok` / `agy` is on PATH. Every line it prints is tagged with
 // the evidence level it actually reaches:
 //
 //   [structural] reads the installed harness binary (version / --help / a local
@@ -28,13 +28,13 @@ const [, , harness, ...rest] = process.argv;
 const pinAt = rest.indexOf("--pin");
 const pin = pinAt >= 0 ? rest[pinAt + 1] : undefined;
 
-if (!["pi", "codex"].includes(harness ?? "")) {
-  console.error("usage: compat-check.mjs <pi|codex> [--pin <version>]");
+if (!["pi", "codex", "grok", "agy"].includes(harness ?? "")) {
+  console.error("usage: compat-check.mjs <pi|codex|grok|agy> [--pin <version>]");
   process.exit(2);
 }
 
 const sandbox = mkdtempSync(join(tmpdir(), "compat-check-"));
-const env = { ...process.env, HOME: sandbox, USERPROFILE: sandbox, CODEX_HOME: join(sandbox, "codex"), PI_CODING_AGENT_DIR: join(sandbox, "pi") };
+const env = { ...process.env, HOME: sandbox, USERPROFILE: sandbox, CODEX_HOME: join(sandbox, "codex"), PI_CODING_AGENT_DIR: join(sandbox, "pi"), GROK_HOME: join(sandbox, "grok"), XDG_CONFIG_HOME: join(sandbox, "xdg") };
 mkdirSync(env.CODEX_HOME, { recursive: true });
 mkdirSync(env.PI_CODING_AGENT_DIR, { recursive: true });
 let failed = 0;
@@ -67,12 +67,24 @@ const flags = (plan?.argv ?? []).filter((/** @type {string} */ a) => /^--[a-z][\
 if (flags.length) {
   const help = spawnSync(harness, ["--help"], { env, encoding: "utf8" });
   const text = `${help.stdout}${help.stderr}`;
-  const missing = flags.filter((/** @type {string} */ f) => !text.includes(f));
+  let missing = flags.filter((/** @type {string} */ f) => !text.includes(f));
+  // grok hides some accepted flags from `--help` (1.0.77: --no-memory is accepted but unlisted).
+  // Its parser rejects unknown flags even alongside --version, so acceptance is checkable, with
+  // a bogus-flag negative control so a parser that accepts everything cannot pass this.
+  /** @type {string[]} */
+  let viaParser = [];
+  if (harness === "grok" && missing.length) {
+    const accepts = (/** @type {string} */ f) => spawnSync(harness, [f, "--version"], { env, encoding: "utf8" }).status === 0;
+    if (!accepts("--compat-check-bogus-flag")) {
+      viaParser = missing.filter(accepts);
+      missing = missing.filter((/** @type {string} */ f) => !viaParser.includes(f));
+    }
+  }
   report(
     "structural",
     `door argv flags are present in \`${harness} --help\``,
     help.status === 0 && missing.length === 0,
-    `${flags.length} flag(s) checked${missing.length ? `; missing ${missing.join(", ")}` : ""}`,
+    `${flags.length} flag(s) checked${viaParser.length ? `; ${viaParser.join(", ")} unlisted in --help but accepted by the parser` : ""}${missing.length ? `; missing ${missing.join(", ")}` : ""}`,
   );
 }
 

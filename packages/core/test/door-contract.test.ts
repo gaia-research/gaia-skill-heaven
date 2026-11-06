@@ -226,22 +226,26 @@ const checks: Record<Cell, Check> = {
       [["--level", "native"], "native"],
       [["--level", "low", "--skill", SKILL_FIXTURE, ...(door.lowArgs ?? [])], "curated"],
     ];
-    for (const [args, posture] of expected) {
-      const plan = parse(await runDoor(sb, door, [...args, "--print"]));
-      expect(plan.posture, `${door.id} ${args.join(" ")}`).toBe(posture);
-    }
+    // --print runs are read-only and independent, so they run concurrently (the cell is
+    // latency-bound on the tsx shim start, ~0.8s each); assertions stay per-run.
+    const runs = await Promise.all(expected.map(([args]) => runDoor(sb, door, [...args, "--print"])));
+    expected.forEach(([args, posture], i) => {
+      expect(parse(runs[i]!).posture, `${door.id} ${args.join(" ")}`).toBe(posture);
+    });
   },
 
   "upper-rungs-route-live": async (sb, door) => {
     // N13: nothing refuses. high..max and ultra are live summon rungs: exit 2 with
     // the in-session command, never gate/policy language.
-    for (const [level, arm] of [
+    const rungs = [
       ["high", "/skill-hell high"],
       ["xhigh", "/skill-hell xhigh"],
       ["max", "/skill-hell max"],
       ["ultra", "/skill-ultra"],
-    ] as const) {
-      const r = await runDoor(sb, door, ["--level", level, "--print"]);
+    ] as const;
+    const runs = await Promise.all(rungs.map(([level]) => runDoor(sb, door, ["--level", level, "--print"])));
+    for (const [i, [level, arm]] of rungs.entries()) {
+      const r = runs[i]!;
       expect(r.code, `${door.id} --level ${level}`).toBe(2);
       expect(r.stderr).toContain("live summon rung, not a boot posture");
       expect(r.stderr).toContain(arm);
@@ -251,8 +255,8 @@ const checks: Record<Cell, Check> = {
 
   "print-is-dry-run": async (sb, door) => {
     const before = snapshot(sb.home);
-    for (const args of [["--print"], ["--level", "native", "--print"]]) {
-      const r = await runDoor(sb, door, args);
+    const runs = await Promise.all([["--print"], ["--level", "native", "--print"]].map((args) => runDoor(sb, door, args)));
+    for (const r of runs) {
       expect(r.code, r.stderr).toBe(0);
       expect(() => JSON.parse(r.stdout)).not.toThrow();
     }
@@ -305,10 +309,12 @@ const checks: Record<Cell, Check> = {
       const env = mcp?.contents ? JSON.parse(mcp.contents).mcpServers["skill-summon"].env : {};
       return env.SKILL_HEAVEN_ZERO_CUTS;
     };
-    const all = await runDoor(sb, door, ["--print"], { SKILL_HEAVEN_ZERO_CUTS: "all" });
+    const [all, unset] = await Promise.all([
+      runDoor(sb, door, ["--print"], { SKILL_HEAVEN_ZERO_CUTS: "all" }),
+      runDoor(sb, door, ["--print"]),
+    ]);
     expect(all.code, all.stderr).toBe(0);
     expect(cutOf(all.stdout)).toBe("all");
-    const unset = await runDoor(sb, door, ["--print"]);
     expect(unset.code, unset.stderr).toBe(0);
     expect(cutOf(unset.stdout)).not.toBe("all");
   },
