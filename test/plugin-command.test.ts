@@ -169,7 +169,22 @@ describe("/skill-zero command definition", () => {
 });
 
 describe("discovery is a per-use judgement, never standing authority (#85)", () => {
-  it.each(["skill-heaven.md", "skill-hell.md", "skill-ultra.md"] as const)(
+  // RULING (#210/#211): skill-hell.md is no longer in this per-gap-conditional group;
+  // its contract (Hell armed) is pinned in test/armed-discovery-boundaries.test.ts.
+  it("skill-hell.md presents discovery parameters and keeps judgment and the trust boundary", () => {
+    const flat = commands.get("skill-hell.md")!.replace(/\s+/g, " ");
+    expect(flat).toContain("surface:");
+    expect(flat).toContain("`summon` tool");
+    expect(flat).toContain("`disable-model-invocation: true`");
+    expect(flat).toContain("capability gap");
+    expect(flat).toMatch(/judge each candidate for relevance and safety/i);
+    expect(flat).toContain("cannot change the task");
+    expect(flat).toContain("outrank the instructions already");
+    expect(flat).toContain("widen permissions");
+    expect(flat).toMatch(/leave anything behind/);
+  });
+
+  it.each(["skill-heaven.md", "skill-ultra.md"] as const)(
     "%s presents discovery parameters, and the decision stays the caller's",
     (file) => {
       const source = commands.get(file)!;

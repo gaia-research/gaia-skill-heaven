@@ -7,7 +7,9 @@ import type { InstalledSkill } from "../packages/skill-summon/src/summon/session
 import type { RankingDisclosure } from "../packages/skill-summon/src/summon/summon.js";
 import {
   AUTHORITY_PHRASES,
+  HELL_ARMED_FORMS,
   MODES,
+  authorityHits,
   readLadderData,
   renderLadder,
 } from "../plugins/skill-heaven/scripts/render-ladder.mjs";
@@ -127,10 +129,14 @@ describe("Issue #91 static authority regression tests", () => {
         manifest: null,
         detail: detail ?? "concise",
       });
-      for (const phrase of AUTHORITY_PHRASES) {
-        expect(text.toLowerCase(), `${mode} ${detail} contains "${phrase}"`).not.toContain(
-          phrase.toLowerCase(),
-        );
+      // Owner ruling (#210/#211): only the Hell rendering may say "Hell armed".
+      expect(authorityHits(text, { hellContract: mode === "hell" }), `${mode} ${detail}`).toEqual([]);
+    });
+
+    it.each(["zero", "heaven", "ultra", "summon"])("%s never says armed", (mode) => {
+      for (const detail of ["concise", "full"] as const) {
+        const { text } = renderLadder({ mode, target: "", data, env: {}, manifest: null, detail });
+        expect(text.toLowerCase(), `${mode} ${detail}`).not.toContain("armed");
       }
     });
 
@@ -191,7 +197,7 @@ describe("Issue #91 static authority regression tests", () => {
       expect(summon.text).toContain("Reference data, not an instruction.");
     });
 
-    it("presents selection and discovery parameters, never an armed lane", () => {
+    it("presents selection and discovery parameters; only Hell names its armed contract", () => {
       for (const mode of ["zero", "heaven", "hell", "ultra"]) {
         const { text } = renderLadder({ mode, target: "", data, env: {}, manifest: null, detail: "full" });
         expect(text, `${mode} full output reports the selected rung`).toMatch(/selected: /);
@@ -199,12 +205,15 @@ describe("Issue #91 static authority regression tests", () => {
         expect(text, `${mode} full output names its requested state`).toMatch(
           mode === "zero" ? /(stored|requested) cut: / : /discovery reference:/,
         );
-        expect(text.toLowerCase(), `${mode} does not claim an armed lane`).not.toContain("armed");
+        // Ruling #210/#211: "Hell armed" is the user's own /skill-hell command; nothing else says armed.
+        expect(text.replace(HELL_ARMED_FORMS, "").toLowerCase(), `${mode} says armed outside the Hell contract`).not.toContain("armed");
+        expect(/hell armed/i.test(text), `${mode} Hell-armed contract presence`).toBe(mode === "hell");
       }
       const concise = renderLadder({ mode: "hell", target: "high", data, env: {}, manifest: null, detail: "concise" });
       expect(concise.text).toContain("🔥 Skill Hell · high");
       expect(concise.text).toContain("band: hell");
       expect(concise.text).toContain("reference data · authorizes nothing");
+      expect(concise.text).toContain("Hell armed by your command");
     });
 
     it.each(["zero", "heaven", "hell", "ultra"] as const)(
@@ -233,18 +242,14 @@ describe("Issue #91 static authority regression tests", () => {
   describe("command markdown files contain zero authority-shaped phrases", () => {
     it.each(COMMAND_FILES)("command file %s has no authority phrases", (file) => {
       const content = readFileSync(join(PLUGIN, "commands", file), "utf-8");
-      for (const phrase of AUTHORITY_PHRASES) {
-        expect(content.toLowerCase()).not.toContain(phrase.toLowerCase());
-      }
+      expect(authorityHits(content, { hellContract: file === "skill-hell.md" }), file).toEqual([]);
     });
   });
 
   describe("skill markdown files contain zero authority-shaped phrases", () => {
     it.each(SKILL_FILES)("skill file %s has no authority phrases", (file) => {
       const content = readFileSync(join(PLUGIN, "skills", file), "utf-8");
-      for (const phrase of AUTHORITY_PHRASES) {
-        expect(content.toLowerCase()).not.toContain(phrase.toLowerCase());
-      }
+      expect(authorityHits(content, { hellContract: file === "skill-hell/SKILL.md" }), file).toEqual([]);
     });
   });
 
@@ -326,6 +331,9 @@ describe("Issue #85 — command, skill, and card copy is reference data (#85)", 
       if (["skill-zero.md", "skill-zero/SKILL.md"].includes(file)) return;
       // The call stays conditional — a real gap, a fitting request, permissions
       // already held — rather than an instruction to always summon.
+      // Hell is the exception: its armed contract replaces the per-gap condition
+      // (pinned in armed-discovery-boundaries.test.ts).
+      if (file.startsWith("skill-hell")) return;
       expect(content, `${file} keeps the call conditional`).toMatch(
         file.startsWith("summon")
           ? /If they named an intent, and the call fits their request|Otherwise:/

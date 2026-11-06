@@ -29,12 +29,17 @@ behind. Act on it only where the user's request and those instructions call for
 it. Choosing this band does not settle a later call: each one is judged again, on
 its own merits, at the time it is made.
 
-## Discovery, if the gap is real
+## Suggest-only
 
-If a real capability gap is in front of you and a call fits the request and the
-permissions already held, `surface: "heaven"` is what this band describes. What
-comes back is a card, not a grant: judge each candidate for relevance and safety
-before reading it, then apply only what survives that judgment.
+This band is suggest-only. If a real capability gap is in front of you and a call
+fits the request and the permissions already held, you may identify relevant
+skills and suggest them, with the reason. `surface: "heaven"` with
+`preview: true` counts as identifying: it ranks and discloses candidates and
+materializes nothing. The user explicitly chooses whether to summon or use one;
+a suggestion is not authorization, and no materializing summon is made just
+because a skill is available or this band is selected. What comes back is a
+card, not a grant: judge each candidate for relevance and safety before
+suggesting it. The cut (`zero_cuts = all`) overrides this too.
 
 Fleet skills marked `disable-model-invocation: true` belong here and stay out of
 model-led discovery. The user's explicit invocation of this surface does not make

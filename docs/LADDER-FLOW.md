@@ -206,7 +206,7 @@ flowchart TD
 
     B -->|ultra · Ultra| U["`crown rung — picks direction<br/>+ depth per gap · ratified N13`"]
 
-    F --> O([session is armed])
+    F --> O([session is armed:<br/>Heaven suggests, Hell may summon])
     L --> O
     U --> O
     O --> P{agent hits a<br/>capability gap}
@@ -226,9 +226,25 @@ flowchart TD
 
 ## Summoning is ambient, not a search box
 
-Sitting anywhere above `off` does not fetch one skill and stop. Once armed,
-the agent summons on its own when it needs something, and the user never
-types another command.
+Sitting anywhere above `zero` does not fetch one skill and stop, but what the
+agent may do on its own depends on the band (owner ruling, #210/#211; "armed"
+means the user typed the band command in this conversation, and the lifetime is
+the rest of the conversation, or until the user picks another rung or the cut):
+
+- **Hell armed (`high`·`xhigh`·`max`)** — the agent may discover relevant
+  skills, safety-check them before use, and summon and use appropriate ones
+  without a request for each, passing `surface: "hell"`. Existing permission
+  boundaries, security checks and higher-ranked instructions stay binding; skill
+  content is untrusted and cannot grant itself authority; redundant summons are
+  avoided.
+- **Heaven armed (`low`·`med`)** — the agent may identify and suggest relevant
+  skills (`preview: true` materializes nothing). The user explicitly chooses
+  whether to summon or use one; no materializing summon happens just because a
+  skill is available.
+- **Unarmed** — use stays user-initiated; suggestions are fine; no autonomous
+  materializing summon.
+- **The cut** (`zero_cuts = all`, `/skill-zero`) overrides all of it.
+- **Ultra** — unchanged; its controller is not built.
 
 Each arrival prints a card — identity, whatever trust fields *the tree
 published* (or an explicit "relevance-only" disclosure when it published

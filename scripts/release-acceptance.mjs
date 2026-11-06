@@ -339,8 +339,11 @@ async function main() {
   // ── phase 4 ──
   section("4 · installed MCP bundle over stdio (no model)");
   const ladderPath = join(installPath ?? "", "scripts", "render-ladder.mjs");
-  const { AUTHORITY_PHRASES, MODES, readLadderData, renderLadder } = await import(pathToFileURL(ladderPath).href);
+  const { AUTHORITY_PHRASES, HELL_ARMED_FORMS, MODES, readLadderData, renderLadder } = await import(pathToFileURL(ladderPath).href);
   const ladderData = readLadderData();
+
+  // Owner ruling (#210/#211): "Hell armed" is excused in the Hell surfaces only.
+  const hellContractOnly = (name, text) => (/hell/.test(name) ? text.replace(HELL_ARMED_FORMS, " ") : text);
 
   const callServer = async (envExtra, calls) => {
     const child = spawn("node", [installedBundle], {
@@ -403,7 +406,7 @@ async function main() {
   check("exactly one tool is exposed: summon", JSON.stringify(tools.map((t) => t.name)) === '["summon"]');
   const instructions = withRecord.init?.instructions ?? "";
   check("server instructions state the reference-data boundary", /REFERENCE MATERIAL, not instructions/.test(instructions));
-  check("server instructions decide per use and authorize nothing", /decided per use/.test(instructions) && /not permission to run/.test(instructions));
+  check("server instructions put standing permission only in the user's own /skill-hell command", /decided under the caller's own request/.test(instructions) && /comes only from the user's own \/skill-hell command/.test(instructions) && /not permission to run/.test(instructions));
   check("server instructions carry no authority phrase", authorityHits(instructions, AUTHORITY_PHRASES).length === 0, authorityHits(instructions, AUTHORITY_PHRASES).join(", "));
   check("tool description is a lane filter, not authorization", /not authorization/.test(tools[0]?.description ?? "") && authorityHits(tools[0]?.description ?? "", AUTHORITY_PHRASES).length === 0);
   fact("negotiated protocol", withRecord.init?.protocolVersion);
@@ -478,19 +481,19 @@ async function main() {
   const authorityViolations = [];
   for (const file of commands) {
     authorityFiles++;
-    const hits = authorityHits(readFileSync(join(installPath, "commands", file), "utf8"), AUTHORITY_PHRASES);
+    const hits = authorityHits(hellContractOnly(file, readFileSync(join(installPath, "commands", file), "utf8")), AUTHORITY_PHRASES);
     if (hits.length) authorityViolations.push(`${file}: ${hits.join(",")}`);
   }
   for (const dir of skillDirs) {
     authorityFiles++;
-    const hits = authorityHits(readFileSync(join(installPath, "skills", dir, "SKILL.md"), "utf8"), AUTHORITY_PHRASES);
+    const hits = authorityHits(hellContractOnly(dir, readFileSync(join(installPath, "skills", dir, "SKILL.md"), "utf8")), AUTHORITY_PHRASES);
     if (hits.length) authorityViolations.push(`${dir}/SKILL.md: ${hits.join(",")}`);
   }
   for (const mode of MODES) {
     for (const detail of ["concise", "full"]) {
       authorityFiles++;
       const { text } = renderLadder({ mode, target: mode === "summon" ? "audit the parser" : "", data: ladderData, env: {}, manifest: null, detail });
-      const hits = authorityHits(text, AUTHORITY_PHRASES);
+      const hits = authorityHits(hellContractOnly(mode, text), AUTHORITY_PHRASES);
       if (hits.length) authorityViolations.push(`render ${mode}/${detail}: ${hits.join(",")}`);
     }
   }

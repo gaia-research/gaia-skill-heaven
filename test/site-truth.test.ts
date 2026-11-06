@@ -124,8 +124,14 @@ describe("no stale pre-#169 authority language (#174)", () => {
     for (const surface of SURFACES) {
       for (const pattern of bannedHere) expect(surface.blurb, `${surface.id}: ${pattern}`).not.toMatch(pattern);
     }
-    expect(SURFACES.find((s) => s.id === "heaven")!.blurb).toMatch(/judged per use/);
-    expect(SURFACES.find((s) => s.id === "hell")!.blurb).toMatch(/judged per use/);
+    // Owner ruling (#210/#211): Heaven suggests and the user chooses; Hell's standing
+    // permission is the user's own typed command, with content staying untrusted.
+    const blurb = (id: string) => SURFACES.find((s) => s.id === id)!.blurb;
+    expect(blurb("heaven")).toMatch(/you choose whether to summon/);
+    expect(blurb("hell")).toMatch(/Type \/skill-hell/);
+    expect(blurb("hell")).toMatch(/safety-check/);
+    expect(blurb("hell")).toMatch(/untrusted/);
+    expect(blurb("heaven")).not.toMatch(/summon skills itself/);
   });
 
   it("the landing page, the production page and the product constants carry none of it", () => {
