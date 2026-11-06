@@ -1,8 +1,11 @@
 name: Harness compat
 
-# Credential-free Claude Code compatibility checks (#35). This does NOT run an
-# authenticated session and proves nothing about session-level behaviour; see
-# docs/COMPAT-MATRIX.md for exactly what each cell checks.
+# Credential-free harness compatibility checks (#35): Claude Code, pi, codex. This
+# does NOT run an authenticated session and proves nothing about session-level
+# behaviour; see docs/COMPAT-MATRIX.md for exactly what each cell checks and at which
+# evidence level (structural / dry-run / session). There is no session cell: CI holds
+# no harness credentials. hermes, grok and agy have no cell because there is no
+# verified pinned public install route for them (docs/COMPAT-MATRIX.md).
 
 on:
   push:
@@ -52,3 +55,59 @@ jobs:
         run: node packages/claude-zero/bin/claude-zero.mjs --print > /dev/null
       - name: Door composition tests (no auth, no session)
         run: npx vitest run packages/claude-zero packages/core/test/door-ladder.test.ts test/compat-matrix.test.ts
+
+  pi:
+    name: pi ${{ matrix.version }}${{ matrix.pinned && ' (pinned, blocking)' || ' (informational)' }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ !matrix.pinned }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '1.5.0' # pinned; kept equal to the pi version in docs/evidence/linux-41/PROBE.md by test/compat-matrix.test.ts
+            pinned: true
+          - version: 'latest'
+            pinned: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install pi ${{ matrix.version }}
+        run: npm install -g @earendil-works/pi-coding-agent@${{ matrix.version }}
+      - name: pi checks (version pin, door --print, door flags vs pi --help)
+        if: ${{ matrix.pinned }}
+        run: node scripts/compat-check.mjs pi --pin ${{ matrix.version }}
+      - name: pi checks (latest, no pin)
+        if: ${{ !matrix.pinned }}
+        run: node scripts/compat-check.mjs pi
+
+  codex:
+    name: codex ${{ matrix.version }}${{ matrix.pinned && ' (pinned, blocking)' || ' (informational)' }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ !matrix.pinned }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '0.166.0' # pinned; kept equal to the codex version in docs/evidence/linux-41/PROBE.md by test/compat-matrix.test.ts
+            pinned: true
+          - version: 'latest'
+            pinned: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install codex ${{ matrix.version }}
+        run: npm install -g @openai/codex@${{ matrix.version }}
+      - name: codex checks (version pin, door --print, app-server skills/list)
+        if: ${{ matrix.pinned }}
+        run: node scripts/compat-check.mjs codex --pin ${{ matrix.version }}
+      - name: codex checks (latest, no pin)
+        if: ${{ !matrix.pinned }}
+        run: node scripts/compat-check.mjs codex
