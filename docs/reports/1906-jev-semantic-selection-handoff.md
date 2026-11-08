@@ -47,7 +47,9 @@ The system introduces a unified, modular `DecisionBackend` abstraction supportin
   - `ClassicDecisionBackend`: Deterministic baseline delegation to `decide()`.
   - `JevDecisionBackend`:
     - Exact-match fast path bypass: exact hits (`matchKind === "exact"`) bypass Jev entirely (\$0 spend), whether admitted or withheld.
-    - Strict deterministic gate enforcement: `withholdReason(doc, surface)` and `doc.installability` are checked before and after model evaluation. Jev can never admit an uninstalled, unverified, or lane-violating skill.
+    - Bounded candidate set restriction: admitted skills are strictly bounded to `candidatesToEvaluate` (`eligible.slice(0, maxCandidates)`). Unexpected probability keys for out-of-set or unevaluated candidates are completely ignored and cannot expand admission.
+    - Pre-threshold candidate membership gate: any non-`none` choice must exist in `candidatesToEvaluate` before probability/confidence thresholds are evaluated; out-of-set or unevaluated choices immediately fall back to classic deterministic decision with `invalid_candidate_selected:${choice}`.
+    - Strict deterministic gate enforcement: `withholdReason(doc, surface)` and `doc.installability` are checked before and after model evaluation (covering the entire probability BAND). Jev can never admit an uninstalled, unverified, or lane-violating skill.
     - Calibrated `noMatch`: returns `below_floor` when Jev selects `"none"` or confidence falls below threshold.
     - Safe offline fallback: all network, timeout, HTTP, or budget errors degrade gracefully to classic deterministic decision with `backend: "fallback"` and `fallbackReason`.
   - `CompareDecisionBackend`:
@@ -115,19 +117,23 @@ Tested live with authentic credentials (`TYPESAFE_API_KEY` present in environmen
   ```
 
 ### 3.2 Automated Test Suite
-All 101 tests pass across 5 targeted test suites (100% pass rate):
+All 109 tests pass across 5 targeted test suites (100% pass rate):
 - `packages/core/test/retrieval-jev-client.test.ts` (37 tests)
   - Verified TypeSafe System One contract constants, pricing math (\$0.042/M), Choice question validation, argmax check.
   - Verified streaming chunk abort on oversized payloads (>131KB) in `defaultTransport`.
   - Verified atomic locking, recovery guard serialization, dead-process eviction, and live-owner protection.
   - Verified strict ledger validation, fail-closed behavior on corrupt ledgers, and multi-month rollover integrity.
   - Verified per-invocation `live` option override without mutating client instance state.
-- `packages/core/test/retrieval-decision.test.ts` (24 tests)
+- `packages/core/test/retrieval-decision.test.ts` (32 tests)
   - Verified classic baseline parity with `decide()`.
   - Verified exact match fast-path bypass (\$0 spend, no model calls).
   - Verified deterministic policy enforcement: surface filter (heaven excludes model-led, hell excludes human-led) and installability gates.
   - Verified safe offline fallback: dry-run, network timeout, HTTP errors cleanly degrade to classic deterministic decisions.
   - Verified compare mode: classic strictly authoritative for admitted candidates while recording shadow semantic decisions.
+  - Verified bounded candidate set restriction: out-of-set IDs and unevaluated candidates trigger fallback to classic decide.
+  - Verified membership check precedes confidence thresholds: out-of-set choices with low probability/confidence cannot mask as `below_floor`.
+  - Verified unexpected probability keys cannot expand admitted candidates.
+  - Verified post-evaluation BAND defense-in-depth policy filter.
 - `packages/skill-summon/test/summon-decision.test.ts` (17 tests)
   - Verified default summon is `classic` with classic disclosure.
   - Verified `--decision=jev` with mock transport and offline fallback.
@@ -152,8 +158,9 @@ The review validated:
 2. **Lazy Constructor & Non-Blocking Client Initialization**: `new JevClient()` performs zero eager file I/O or lock acquisition. `createDecisionBackend("classic")` completely avoids Jev client instantiation.
 3. **Contention Sleep**: Replaced busy-spin with non-busy `Atomics.wait()` yielding CPU time.
 4. **Exact-Match Fast-Path**: Bypasses Jev entirely (\$0 spend).
-5. **Deterministic Baseline Preservation**: BM25F remains 100% authoritative in compare mode; classic mode remains the product default.
-6. **Verdict**: **PASS** (status clean).
+5. **Bounded Candidate Set & Security Gates**: Admitted skills strictly bounded to `candidatesToEvaluate`; candidate-membership check precedes threshold evaluations; unexpected probability keys cannot expand admission; post-evaluation BAND candidates strictly enforce deterministic policy gates.
+6. **Deterministic Baseline Preservation**: BM25F remains 100% authoritative in compare mode; classic mode remains the product default.
+7. **Verdict**: **PASS** (status clean).
 
 ---
 

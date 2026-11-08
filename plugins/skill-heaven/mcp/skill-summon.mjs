@@ -15733,6 +15733,18 @@ var JevDecisionBackend = class {
     const choice = answer.choice;
     const choiceProb = answer.probabilities[choice] ?? 0;
     const isNone = choice === "none" || choice === "none_of_the_above";
+    let chosenHit;
+    if (!isNone) {
+      chosenHit = candidatesToEvaluate.find((h) => h.doc.id === choice);
+      if (!chosenHit) {
+        const classic = decide(options);
+        return {
+          ...classic,
+          backend: "fallback",
+          fallbackReason: `invalid_candidate_selected:${choice}`
+        };
+      }
+    }
     const isLowProb = choiceProb < this.minProbability;
     const isLowConfidence = answer.confidence < this.minConfidence;
     const semanticRecord = {
@@ -15748,7 +15760,7 @@ var JevDecisionBackend = class {
       bypassed: false
     };
     if (isNone || isLowProb || isLowConfidence) {
-      const topCandidates = eligible.slice(0, 3).map((hit) => ({
+      const topCandidates = candidatesToEvaluate.slice(0, 3).map((hit) => ({
         id: hit.doc.id,
         name: hit.doc.name,
         score: Math.round((answer.probabilities[hit.doc.id] ?? hit.score) * 1e4) / 1e4,
@@ -15771,18 +15783,11 @@ var JevDecisionBackend = class {
         semantic: semanticRecord
       };
     }
-    const chosenHit = eligible.find((h) => h.doc.id === choice);
-    if (!chosenHit) {
-      const classic = decide(options);
-      return {
-        ...classic,
-        backend: "fallback",
-        fallbackReason: `invalid_candidate_selected:${choice}`
-      };
-    }
     const policyWhy = withholdReason(chosenHit.doc, surface);
     if (policyWhy) {
-      filtered.push({ id: chosenHit.doc.id, name: chosenHit.doc.name, why: policyWhy });
+      if (!filtered.some((f) => f.id === chosenHit.doc.id)) {
+        filtered.push({ id: chosenHit.doc.id, name: chosenHit.doc.name, why: policyWhy });
+      }
       return {
         admitted: [],
         noMatch: {
@@ -15802,7 +15807,7 @@ var JevDecisionBackend = class {
         semantic: semanticRecord
       };
     }
-    const scored = eligible.map((hit) => {
+    const scored = candidatesToEvaluate.map((hit) => {
       const prob = answer.probabilities[hit.doc.id] ?? 0;
       return {
         doc: hit.doc,
@@ -15812,7 +15817,41 @@ var JevDecisionBackend = class {
       };
     }).sort((a, b) => b.score - a.score);
     const topProb = scored[0]?.score ?? choiceProb;
-    const admitted = scored.filter((hit) => hit.score >= topProb * BAND && hit.score > 0);
+    const candidateBand = scored.filter((hit) => hit.score >= topProb * BAND && hit.score > 0);
+    const admitted = [];
+    for (const hit of candidateBand) {
+      const why = withholdReason(hit.doc, surface);
+      if (why) {
+        if (!filtered.some((f) => f.id === hit.doc.id)) {
+          filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
+        }
+      } else {
+        admitted.push(hit);
+      }
+    }
+    if (admitted.length === 0) {
+      return {
+        admitted: [],
+        noMatch: {
+          reason: "all_filtered",
+          query,
+          topCandidates: scored.slice(0, 3).map((h) => ({
+            id: h.doc.id,
+            name: h.doc.name,
+            score: h.score,
+            floor
+          })),
+          filtered,
+          suggestion: "All evaluated candidates were withheld by policy filters."
+        },
+        margin: 0,
+        ambiguous: false,
+        filtered,
+        floor,
+        backend: "jev",
+        semantic: semanticRecord
+      };
+    }
     const margin = marginOf(admitted);
     return {
       admitted,

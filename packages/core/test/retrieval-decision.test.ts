@@ -14,6 +14,7 @@ import {
   PINNED_MODEL,
   getSharedJevClient,
   resetSharedJevClient,
+  type JevResult,
   type JevTransport,
 } from "../src/retrieval/jev-client.js";
 import type { SkillIndex } from "../src/retrieval/schema.js";
@@ -728,5 +729,271 @@ describe("CompareDecisionBackend: shadow mode and agreement tracking", () => {
     expect(result.admitted[0]?.doc.id).toBe("someone/profiler");
     expect(result.compare?.semantic?.status).toBe("bypassed");
     expect(result.compare?.agreement).toBe(true);
+  });
+});
+
+describe("Regression: Bounded candidate set restriction & unexpected probability keys", () => {
+  const query = "analyze slow queries and traces";
+
+  function makeMockSuccess(
+    choice: string,
+    probabilities: Record<string, number>,
+    confidence = 0.95,
+  ): JevResult {
+    return {
+      ok: true,
+      reason: "ok",
+      model: "jev-1.13.0",
+      answers: {
+        selection: {
+          type: "choice",
+          choice,
+          confidence,
+          probabilities,
+        },
+      },
+      usage: { input_tokens: 100, output_tokens: 10 },
+      costUsd: 0.0001,
+      latencyMs: 10,
+      reservedUsd: 0.003,
+      costStatus: "reconciled",
+    };
+  }
+
+  it("falls back to classic when Jev selects an out-of-set candidate ID (decision gate)", async () => {
+    const ranked = ranker.rank(query);
+    const classicExpected = decide({ index: testIndex, query, ranked });
+
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    client.evaluate = async () =>
+      makeMockSuccess("malicious/injected-skill", {
+        "malicious/injected-skill": 0.95,
+        none: 0.05,
+      });
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    expect(result.backend).toBe("fallback");
+    expect(result.fallbackReason).toBe("invalid_candidate_selected:malicious/injected-skill");
+    expect(result.admitted).toEqual(classicExpected.admitted);
+  });
+
+  it("falls back to classic when Jev selects a candidate beyond maxCandidates (unevaluated)", async () => {
+    const ranked = ranker.rank(query);
+    expect(ranked.length).toBeGreaterThanOrEqual(2);
+    const candidate2Id = ranked[1]!.doc.id;
+    const classicExpected = decide({ index: testIndex, query, ranked });
+
+    // Restrict bounded evaluation to only 1 candidate
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    client.evaluate = async () =>
+      makeMockSuccess(candidate2Id, { [candidate2Id]: 0.88, none: 0.12 }, 0.90);
+
+    const backend = new JevDecisionBackend({ client, maxCandidates: 1 });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    expect(result.backend).toBe("fallback");
+    expect(result.fallbackReason).toBe(`invalid_candidate_selected:${candidate2Id}`);
+    expect(result.admitted).toEqual(classicExpected.admitted);
+  });
+
+  it("falls back to classic when transport returns an invalid response with out-of-set choices", async () => {
+    const ranked = ranker.rank(query);
+    const classicExpected = decide({ index: testIndex, query, ranked });
+
+    const client = new JevClient({
+      live: true,
+      apiKey: "test-api-key",
+      transport: async () => ({
+        status: 200,
+        body: JSON.stringify({
+          model: "jev-1.13.0",
+          usage: { input_tokens: 100, output_tokens: 10 },
+          answers: {
+            selection: {
+              type: "choice",
+              choice: "completely-unknown",
+              confidence: 0.9,
+              probabilities: { "completely-unknown": 0.9, none: 0.1 },
+            },
+          },
+        }),
+      }),
+    });
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    expect(result.backend).toBe("fallback");
+    expect(result.fallbackReason).toBe("invalid_response");
+    expect(result.admitted).toEqual(classicExpected.admitted);
+  });
+
+  it("does not expand admitted skills via unexpected probability keys for unevaluated candidates", async () => {
+    const ranked = ranker.rank(query);
+    expect(ranked.length).toBeGreaterThanOrEqual(2);
+    const candidate1Id = ranked[0]!.doc.id;
+    const candidate2Id = ranked[1]!.doc.id;
+
+    // Only candidate 1 is evaluated (maxCandidates: 1).
+    // The model returns choice: candidate1, but attempts to inject probability for candidate2.
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    client.evaluate = async () =>
+      makeMockSuccess(
+        candidate1Id,
+        {
+          [candidate1Id]: 0.60,
+          [candidate2Id]: 0.99,
+          "unindexed/attacker-skill": 0.99,
+          none: 0.10,
+        },
+        0.85,
+      );
+
+    const backend = new JevDecisionBackend({ client, maxCandidates: 1 });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    expect(result.backend).toBe("jev");
+    expect(result.admitted).toHaveLength(1);
+    expect(result.admitted[0]?.doc.id).toBe(candidate1Id);
+
+    // Ensure candidate2 and unindexed skill were NOT admitted
+    const admittedIds = result.admitted.map((h) => h.doc.id);
+    expect(admittedIds).not.toContain(candidate2Id);
+    expect(admittedIds).not.toContain("unindexed/attacker-skill");
+  });
+
+  it("does not expand admitted skills via unexpected probability keys for out-of-set IDs", async () => {
+    const ranked = ranker.rank(query);
+    const topId = ranked[0]!.doc.id;
+
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    client.evaluate = async () =>
+      makeMockSuccess(
+        topId,
+        {
+          [topId]: 0.80,
+          "rogue/out-of-set-1": 0.95,
+          "rogue/out-of-set-2": 0.75,
+          none: 0.05,
+        },
+        0.90,
+      );
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    expect(result.backend).toBe("jev");
+    expect(result.admitted).toHaveLength(1);
+    expect(result.admitted[0]?.doc.id).toBe(topId);
+
+    const admittedIds = result.admitted.map((h) => h.doc.id);
+    expect(admittedIds).not.toContain("rogue/out-of-set-1");
+    expect(admittedIds).not.toContain("rogue/out-of-set-2");
+  });
+
+  it("enforces policy gate when Jev choice violates withholdReason", async () => {
+    // Create an index where the top candidate has a policy violation on surface: heaven
+    const policyIndex = makeIndex([
+      {
+        id: "someone/model-tool",
+        name: "Model Tool",
+        contributor: "someone",
+        description: "A model-led tool for analyzing slow queries and traces.",
+        invocation: "model",
+        links: { github: "https://github.com/a/b" },
+      },
+    ]);
+
+    const policyRanker = new Bm25fRanker(policyIndex);
+    const ranked = policyRanker.rank(query);
+
+    // If surface is heaven, withholdReason filters it out in step 1 -> all_filtered
+    const client = new JevClient({
+      live: true,
+      apiKey: "test-api-key",
+      transport: async () => ({
+        status: 200,
+        body: JSON.stringify({ answers: {} }),
+      }),
+    });
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({
+      index: policyIndex,
+      query,
+      ranked,
+      surface: "heaven",
+    });
+
+    expect(result.admitted).toHaveLength(0);
+    expect(result.noMatch?.reason).toBe("all_filtered");
+    expect(result.filtered.some((f) => f.id === "someone/model-tool")).toBe(true);
+  });
+
+  it("falls back to classic when Jev selects an out-of-set candidate ID even with low probability or confidence", async () => {
+    const ranked = ranker.rank(query);
+    const classicExpected = decide({ index: testIndex, query, ranked });
+
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    // Out-of-set choice with low confidence (0.2 < 0.6) and low prob (0.1 < 0.3)
+    client.evaluate = async () =>
+      makeMockSuccess(
+        "malicious/injected-skill",
+        {
+          "malicious/injected-skill": 0.10,
+          none: 0.90,
+        },
+        0.20,
+      );
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({ index: testIndex, query, ranked });
+
+    // Must NOT be swallowed as below_floor noMatch; must trigger classic fallback!
+    expect(result.backend).toBe("fallback");
+    expect(result.fallbackReason).toBe("invalid_candidate_selected:malicious/injected-skill");
+    expect(result.admitted).toEqual(classicExpected.admitted);
+  });
+
+  it("defense-in-depth: filters out runner-up candidate within BAND if it violates policy", async () => {
+    const ranked = ranker.rank(query);
+    expect(ranked.length).toBeGreaterThanOrEqual(2);
+    // Clone candidate objects so we can mutate doc during evaluation
+    const candidate1 = { ...ranked[0]!, doc: { ...ranked[0]!.doc } };
+    const candidate2 = { ...ranked[1]!, doc: { ...ranked[1]!.doc } };
+
+    const client = new JevClient({ live: true, apiKey: "test-api-key" });
+    client.evaluate = async () => {
+      // Both candidates were eligible at pre-flight filter time.
+      // Mutate candidate2 during async evaluation to simulate post-eval policy invalidation.
+      candidate2.doc.registryOnly = true;
+
+      return makeMockSuccess(
+        candidate1.doc.id,
+        {
+          [candidate1.doc.id]: 0.55,
+          [candidate2.doc.id]: 0.45,
+          none: 0.0,
+        },
+        0.90,
+      );
+    };
+
+    const backend = new JevDecisionBackend({ client });
+    const result = await backend.decide({
+      index: testIndex,
+      query,
+      ranked: [candidate1, candidate2],
+    });
+
+    expect(result.backend).toBe("jev");
+    expect(result.admitted).toHaveLength(1);
+    expect(result.admitted[0]?.doc.id).toBe(candidate1.doc.id);
+
+    // candidate2 was filtered out by the post-eval BAND policy gate
+    expect(result.filtered.some((f) => f.id === candidate2.doc.id)).toBe(true);
+    expect(result.filtered.find((f) => f.id === candidate2.doc.id)?.why).toMatch(/registry-only/);
   });
 });

@@ -285,6 +285,21 @@ export class JevDecisionBackend implements DecisionBackend {
     const choice = answer.choice;
     const choiceProb = answer.probabilities[choice] ?? 0;
     const isNone = choice === "none" || choice === "none_of_the_above";
+
+    // 6. Security gate: Any non-none Jev choice MUST be in the bounded evaluated candidate set
+    let chosenHit: ScoredSkill | undefined;
+    if (!isNone) {
+      chosenHit = candidatesToEvaluate.find((h) => h.doc.id === choice);
+      if (!chosenHit) {
+        const classic = decide(options);
+        return {
+          ...classic,
+          backend: "fallback",
+          fallbackReason: `invalid_candidate_selected:${choice}`,
+        };
+      }
+    }
+
     const isLowProb = choiceProb < this.minProbability;
     const isLowConfidence = answer.confidence < this.minConfidence;
 
@@ -303,7 +318,7 @@ export class JevDecisionBackend implements DecisionBackend {
 
     // Low confidence or "none" selected -> calibrated noMatch
     if (isNone || isLowProb || isLowConfidence) {
-      const topCandidates = eligible.slice(0, 3).map((hit) => ({
+      const topCandidates = candidatesToEvaluate.slice(0, 3).map((hit) => ({
         id: hit.doc.id,
         name: hit.doc.name,
         score: Math.round((answer.probabilities[hit.doc.id] ?? hit.score) * 10_000) / 10_000,
@@ -329,30 +344,22 @@ export class JevDecisionBackend implements DecisionBackend {
       };
     }
 
-    // 6. Security gate: Jev choice MUST be an eligible candidate and pass policy
-    const chosenHit = eligible.find((h) => h.doc.id === choice);
-    if (!chosenHit) {
-      const classic = decide(options);
-      return {
-        ...classic,
-        backend: "fallback",
-        fallbackReason: `invalid_candidate_selected:${choice}`,
-      };
-    }
-
-    const policyWhy = withholdReason(chosenHit.doc, surface);
+    // Policy gate: check withholdReason on the validated chosen candidate
+    const policyWhy = withholdReason(chosenHit!.doc, surface);
     if (policyWhy) {
-      filtered.push({ id: chosenHit.doc.id, name: chosenHit.doc.name, why: policyWhy });
+      if (!filtered.some((f) => f.id === chosenHit!.doc.id)) {
+        filtered.push({ id: chosenHit!.doc.id, name: chosenHit!.doc.name, why: policyWhy });
+      }
       return {
         admitted: [],
         noMatch: {
           reason: "all_filtered",
           query,
           topCandidates: [
-            { id: chosenHit.doc.id, name: chosenHit.doc.name, score: choiceProb, floor },
+            { id: chosenHit!.doc.id, name: chosenHit!.doc.name, score: choiceProb, floor },
           ],
           filtered,
-          suggestion: `Selected candidate '${chosenHit.doc.id}' withheld: ${policyWhy}`,
+          suggestion: `Selected candidate '${chosenHit!.doc.id}' withheld: ${policyWhy}`,
         },
         margin: 0,
         ambiguous: false,
@@ -363,8 +370,8 @@ export class JevDecisionBackend implements DecisionBackend {
       };
     }
 
-    // Sort eligible by semantic probability, admit within BAND of top probability
-    const scored: ScoredSkill[] = eligible
+    // 7. Sort evaluated candidates by semantic probability; unexpected probability keys are ignored
+    const scored: ScoredSkill[] = candidatesToEvaluate
       .map((hit) => {
         const prob = answer.probabilities[hit.doc.id] ?? 0;
         return {
@@ -377,7 +384,45 @@ export class JevDecisionBackend implements DecisionBackend {
       .sort((a, b) => b.score - a.score);
 
     const topProb = scored[0]?.score ?? choiceProb;
-    const admitted = scored.filter((hit) => hit.score >= topProb * BAND && hit.score > 0);
+    const candidateBand = scored.filter((hit) => hit.score >= topProb * BAND && hit.score > 0);
+
+    // Strictly enforce deterministic policy gates on all admitted candidates
+    const admitted: ScoredSkill[] = [];
+    for (const hit of candidateBand) {
+      const why = withholdReason(hit.doc, surface);
+      if (why) {
+        if (!filtered.some((f) => f.id === hit.doc.id)) {
+          filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
+        }
+      } else {
+        admitted.push(hit);
+      }
+    }
+
+    if (admitted.length === 0) {
+      return {
+        admitted: [],
+        noMatch: {
+          reason: "all_filtered",
+          query,
+          topCandidates: scored.slice(0, 3).map((h) => ({
+            id: h.doc.id,
+            name: h.doc.name,
+            score: h.score,
+            floor,
+          })),
+          filtered,
+          suggestion: "All evaluated candidates were withheld by policy filters.",
+        },
+        margin: 0,
+        ambiguous: false,
+        filtered,
+        floor,
+        backend: "jev",
+        semantic: semanticRecord,
+      };
+    }
+
     const margin = marginOf(admitted);
 
     return {
