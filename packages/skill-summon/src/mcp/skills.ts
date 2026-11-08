@@ -426,13 +426,17 @@ function validSkillName(value: unknown): value is string {
   return typeof value === "string" && SAFE_SKILL_NAME.test(value);
 }
 
-function slug(value: string): string {
-  const result = value
+export function slug(value: string): string {
+  const bounded = value.length > 131_072 ? value.slice(0, 131_072) : value;
+  const collapsed = bounded
     .toLocaleLowerCase("en-US")
     .normalize("NFKD")
-    .replace(/[^a-z0-9]+/gu, "-")
-    .replace(/^-+|-+$/gu, "")
-    .slice(0, 64);
+    .replace(/[^a-z0-9]+/gu, "-");
+  let start = 0;
+  while (start < collapsed.length && collapsed.charCodeAt(start) === 45) start++;
+  let end = collapsed.length;
+  while (end > start && collapsed.charCodeAt(end - 1) === 45) end--;
+  const result = collapsed.slice(start, end).slice(0, 64);
   return validSkillName(result) ? result : "skill";
 }
 
