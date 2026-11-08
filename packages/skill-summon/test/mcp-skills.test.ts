@@ -9,8 +9,10 @@ import {
   GaiaService,
   InMemoryGaiaRegistrySource,
   createSkillSummonMcpServer,
+  skillUri as buildSkillUri,
   type GaiaRegistryDocuments,
 } from "../src/index.js";
+import { slug } from "../src/mcp/skills.js";
 
 const body = "---\nname: health\ndescription: Exact body\n---\n\n# Health\n\nπ\n";
 const bodyDigest = `sha256:${createHash("sha256").update(body).digest("hex")}`;
@@ -351,5 +353,26 @@ describe("SEP-2640 MCP Skills extension surface", () => {
       connected.client.readResource({ uri: "skill://example/unknown/SKILL.md" }),
     ).rejects.toThrow(/no skill resource/i);
     expect(connected.reads).toBe(0);
+  });
+
+  describe("bounded deterministic slug normalization", () => {
+    it("normalizes long mixed input without changing the expected name", () => {
+      expect(slug("-".repeat(50_000) + "alpha---beta" + "-".repeat(50_000))).toBe("alpha-beta");
+    });
+
+    it("returns the fallback for separator-only input", () => {
+      expect(slug("-".repeat(100_000))).toBe("skill");
+    });
+
+    it("bounds input processing and output length", () => {
+      expect(slug("a".repeat(200_000))).toBe("a".repeat(64));
+      expect(slug("-".repeat(131_072) + "later")).toBe("skill");
+    });
+
+    it("keeps public URI behavior and rejects invalid segments", () => {
+      const name = "a" + "-".repeat(50_000) + "alpha---beta" + "-".repeat(50_000);
+      expect(buildSkillUri(`example/${name}`)).toBe("skill://example/a-alpha-beta/SKILL.md");
+      expect(() => buildSkillUri(`example/${"-".repeat(50_000)}`)).toThrow(/unsafe skill identifier/i);
+    });
   });
 });

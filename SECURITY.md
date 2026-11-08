@@ -67,11 +67,27 @@ Committed generated bundles are release artifacts and should be reproducible fro
 
 Keep compatibility adapters thin. Do not patch private harness internals or maintain a client fork solely to obtain a UI/integration hook.
 
+## Ecosystem security governance (Gaia Security)
+
+This repository participates in the Gaia Research ecosystem security governance standard maintained at [**gaia-research/gaia-security**](https://github.com/gaia-research/gaia-security).
+
+`gaia-research/gaia-security` serves as the canonical reference for:
+- Ecosystem security policies, threat models, and scanner profiles across CodeQL, Dependabot, Gitleaks, OSV-Scanner, Trivy, and Semgrep CE;
+- The 3-stage vulnerability-management protocol:
+  - **Stage A (Detection):** Complementary scanners, normalized candidates and scope boundaries.
+  - **Stage B (Validation):** Evidence-based investigation of genuineness, reachability, boundaries, exploitation plausibility, mitigations and duplicates. Unknown results stay pending; fixture paths and devDependency labels do not prove safety.
+  - **Stage C (Authorized Remediation):** Reviewed root-cause fixes, regression tests, related-instance checks and independent verification. Detection does not authorize repair or merge.
+- Central coordination and cross-repository security guidance.
+
 ## Reporting a vulnerability
 
 Do not publish exploit details, credentials, malicious payloads that would endanger users, or private user data in a public issue.
 
-Use GitHub's private vulnerability reporting/security-advisory flow when available, or contact the repository maintainers privately before disclosure. Include the minimum reproduction needed and redact secrets.
+Please report security issues using GitHub Private Vulnerability Reporting:
+- For vulnerabilities specific to Skill Heaven: [Open a Private Advisory on gaia-skill-heaven](https://github.com/gaia-research/gaia-skill-heaven/security/advisories/new)
+- For ecosystem-wide or multi-repository security issues: use this repository's private channel above, or [Skill Tree private reporting](https://github.com/gaia-research/gaia-skill-tree/security/advisories/new). Gaia Security's own private reporting is not yet enabled and remains pending founder approval; its SECURITY.md documents the interim private intake.
+
+If the private advisory flow is unavailable, contact the repository maintainers privately before disclosure. Include the minimum reproduction needed and redact secrets. Exploitable vulnerability details, payloads, or credentials must never be posted in public GitHub issues.
 
 Security reports are especially welcome for installer/update integrity, unsafe config mutation, MCP permission expansion, command injection, terminal escape injection, path traversal, unsafe archive/materialization behavior, or cross-client privilege surprises.
 
