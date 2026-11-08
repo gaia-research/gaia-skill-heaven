@@ -198,12 +198,30 @@ export {
   BAND,
   MARGIN,
   decide,
+  isBareId,
+  noMatchDecision,
+  withholdReason,
   type Decision,
   type DecideOptions,
   type FilterReason,
   type NoMatch,
   type SummonSurface,
 } from "./retrieval/decide.js";
+export {
+  ClassicDecisionBackend,
+  CompareDecisionBackend,
+  JevDecisionBackend,
+  createDecisionBackend,
+  type CompareDecisionBackendOptions,
+  type CompareDecisionRecord,
+  type CreateDecisionBackendOptions,
+  type DecisionBackend,
+  type DecisionMode,
+  type DecisionResult,
+  type JevDecisionBackendOptions,
+  type SemanticCandidateEvaluation,
+  type SemanticDecision,
+} from "./retrieval/decision.js";
 export {
   mean,
   mulberry32,
@@ -213,6 +231,35 @@ export {
   type BootstrapResult,
 } from "./retrieval/metrics.js";
 export { INDEX_BUILDER_VERSION } from "./retrieval/version.js";
+export {
+  DEFAULT_ENDPOINT,
+  DEFAULT_MAX_CALLS,
+  DEFAULT_MONTHLY_LIMIT_USD,
+  DEFAULT_TIMEOUT_MS,
+  JevClient,
+  MAX_INPUT_TOKENS,
+  MAX_MONTHLY_LIMIT_USD,
+  MAX_QUESTIONS,
+  MAX_REQUEST_BYTES,
+  MAX_RESPONSE_BYTES,
+  PINNED_MODEL,
+  PRICE_PER_INPUT_TOKEN,
+  RESERVATION_AMOUNT_USD,
+  createJevClient,
+  getSharedJevClient,
+  resetSharedJevClient,
+  type BudgetStatus,
+  type CostStatus,
+  type JevAnswer,
+  type JevClientOptions,
+  type JevFailureReason,
+  type JevFailureResult,
+  type JevQuestion,
+  type JevResult,
+  type JevSuccessResult,
+  type JevTransport,
+  type JevUsage,
+} from "./retrieval/jev-client.js";
 
 // Arbor consumption (SPEC §4, INV-7/INV-8/INV-13; issue #118 Lane A).
 //

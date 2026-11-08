@@ -4,14 +4,17 @@ import path from "node:path";
 import {
   Bm25fRanker,
   consumeArbor,
+  createDecisionBackend,
   decide,
   describeArborIdentityMiss,
   describeArborPublication,
+  getSharedJevClient,
   indexAgeDays,
   isStale,
   normalize,
   resolveArborIdentity,
   conditionMatcher,
+  withholdReason,
   type ArborCompositionReport,
   type ArborDeliveryContext,
   type CompositionMember,
@@ -20,8 +23,11 @@ import {
   type ArborPublication,
   type ArborSubjectReport,
   type Decision,
+  type DecisionMode,
+  type DecisionResult,
   type IndexedSkill,
   type InstallabilityAssessment,
+  type JevClient,
   type SkillIndex,
 } from "skill-zero";
 
@@ -74,6 +80,12 @@ export type SummonOptions = {
   source?: string | undefined;
   /** Rank and disclose without materialising anything to disk (SPEC §5.1). */
   preview?: boolean | undefined;
+  /** Decision backend mode: classic deterministic BM25F, jev probabilistic semantic decision, or compare shadow mode. */
+  decision?: DecisionMode | undefined;
+  /** Optional custom or pre-configured JevClient instance. */
+  jevClient?: JevClient | undefined;
+  /** Opt-in to live Jev System One semantic evaluation. */
+  live?: boolean | undefined;
 };
 
 /** One ranked candidate, disclosed without being installed (SPEC §5.1 `preview`). */
@@ -146,6 +158,12 @@ export type RankingDisclosure = RankingSummary & {
     sourceUrl?: string | undefined;
     warning?: string | undefined;
   } | undefined;
+  decision?: {
+    mode: DecisionMode;
+    backend: string;
+    semantic?: unknown;
+    compare?: unknown;
+  } | undefined;
 };
 
 export type SkippedCandidate = {
@@ -201,6 +219,8 @@ type InstallContext = {
   payloadCache: PayloadCache;
   ranking: RankingDisclosure;
   disclosures: Map<string, RetrievalDisclosure>;
+  surface: SummonSurface;
+  index: SkillIndex;
   /** Arbor disclosure for one candidate id. Never affects what is installed. */
   arborFor: (skillId: string, delivery?: ArborDeliveryContext) => ArborSubjectReport;
 };
@@ -226,7 +246,17 @@ type InstallOutcome = {
 export async function summon(
   service: GaiaService,
   session: SummonSession,
-  { query, limit = DEFAULT_LIMIT, surface = "hell", source, preview = false, taskSignals }: SummonOptions,
+  {
+    query,
+    limit = DEFAULT_LIMIT,
+    surface = "hell",
+    source,
+    preview = false,
+    taskSignals,
+    decision: requestedDecision,
+    jevClient,
+    live,
+  }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -249,14 +279,28 @@ export async function summon(
   // explicit `source` we hold no index for reaches the network, and it fails
   // loudly rather than falling back to the configured source.
   const resolved = await service.skillIndex(source);
-  const decision = decide({
+  const rawDecision =
+    requestedDecision ??
+    process.env.SKILL_HEAVEN_DECISION ??
+    process.env.SKILL_DECISION_BACKEND ??
+    "classic";
+  const decisionMode: DecisionMode =
+    rawDecision === "classic" || rawDecision === "jev" || rawDecision === "compare"
+      ? rawDecision
+      : "classic";
+  const backend =
+    decisionMode === "classic"
+      ? createDecisionBackend("classic")
+      : createDecisionBackend(decisionMode, { client: jevClient ?? getSharedJevClient(), live });
+  const decision = await backend.decide({
     index: resolved.index,
     query: trimmedQuery,
     ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
     surface,
     source: resolved.source,
+    live,
   });
-  const ranking = disclose(resolved, decision);
+  const ranking = disclose(resolved, decision, decisionMode);
   const registry = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
 
@@ -400,6 +444,8 @@ export async function summon(
     payloadCache: new PayloadCache(),
     ranking,
     disclosures,
+    surface,
+    index: resolved.index,
     arborFor,
   };
   const summoned: InstalledSkill[] = [];
@@ -449,7 +495,11 @@ export async function summon(
   return outcome;
 }
 
-function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosure {
+function disclose(
+  resolved: ResolvedIndex,
+  decision: DecisionResult,
+  decisionMode: DecisionMode,
+): RankingDisclosure {
   const { index } = resolved;
   const floorNote =
     decision.floor === null
@@ -463,21 +513,43 @@ function disclose(resolved: ResolvedIndex, decision: Decision): RankingDisclosur
         : resolved.installability?.status === "not-applicable"
           ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative."
           : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
+
+  let disclosureText =
+    `Ranked by BM25F over the committed retrieval index; ${floorNote}. ` +
+    "The tree publishes no behavioural stamps, so no trust ordering is applied. " +
+    installabilityNote;
+
+  if (decisionMode === "jev") {
+    if (decision.backend === "fallback") {
+      disclosureText += ` Semantic decision backend failed (${decision.fallbackReason ?? "offline"}); degraded gracefully to classic BM25F fallback.`;
+    } else if (decision.semantic?.bypassed) {
+      disclosureText += " Semantic decision bypassed: exact candidate match.";
+    } else {
+      disclosureText += ` Probabilistic semantic decision evaluated candidates via Jev (${decision.semantic?.model ?? "jev"}).`;
+    }
+  } else if (decisionMode === "compare") {
+    const agreement = decision.compare?.agreement ? "agreed" : "disagreed";
+    disclosureText += ` Compare mode: BM25F authoritative; shadow semantic decision ${agreement}.`;
+  }
+
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure:
-      `Ranked by BM25F over the committed retrieval index; ${floorNote}. ` +
-      "The tree publishes no behavioural stamps, so no trust ordering is applied. " +
-      installabilityNote,
+    disclosure: disclosureText,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source,
     ...(resolved.installability ? { installability: resolved.installability } : {}),
+    decision: {
+      mode: decisionMode,
+      backend: decision.backend,
+      ...(decision.semantic !== undefined ? { semantic: decision.semantic } : {}),
+      ...(decision.compare !== undefined ? { compare: decision.compare } : {}),
+    },
   };
 }
 
@@ -628,6 +700,59 @@ async function installSkill(
       suites: [],
       reason: `Skill '${ref}' not found in registry.`,
     };
+  }
+
+  // Policy check against withholdReason and installability
+  const doc = ctx.index.docs.find((d) => d.id === resolved.id);
+  if (doc) {
+    const why = withholdReason(doc, ctx.surface);
+    if (why) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: ${why}`,
+      };
+    }
+    if (
+      doc.installability?.applicability === "verified" &&
+      doc.installability?.state === "not-materializable"
+    ) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is verified not materializable: ${doc.installability.reason}`,
+      };
+    }
+  } else {
+    if (ctx.surface === "heaven" && resolved.invocation === "model") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: surface:heaven excludes model-led skills`,
+      };
+    }
+    if (ctx.surface === "hell" && resolved.invocation === "human") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: surface:hell excludes human-led skills`,
+      };
+    }
+    if (
+      resolved.installability?.applicability === "verified" &&
+      resolved.installability?.state === "not-materializable"
+    ) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is verified not materializable: ${resolved.installability.reason}`,
+      };
+    }
   }
 
   const suiteComponents = resolved.suiteComponents ?? [];
@@ -783,6 +908,58 @@ async function installSingle(
   viaSuite?: string,
 ): Promise<InstallOutcome> {
   const skillStartedAt = startTiming();
+  const doc = ctx.index.docs.find((d) => d.id === skill.id);
+  if (doc) {
+    const why = withholdReason(doc, ctx.surface);
+    if (why) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: ${why}`,
+      };
+    }
+    if (
+      doc.installability?.applicability === "verified" &&
+      doc.installability?.state === "not-materializable"
+    ) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is verified not materializable: ${doc.installability.reason}`,
+      };
+    }
+  } else {
+    if (ctx.surface === "heaven" && skill.invocation === "model") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: surface:heaven excludes model-led skills`,
+      };
+    }
+    if (ctx.surface === "hell" && skill.invocation === "human") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: surface:hell excludes human-led skills`,
+      };
+    }
+    if (
+      skill.installability?.applicability === "verified" &&
+      skill.installability?.state === "not-materializable"
+    ) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is verified not materializable: ${skill.installability.reason}`,
+      };
+    }
+  }
+
   if (skill.installable === false) {
     return {
       ok: false,

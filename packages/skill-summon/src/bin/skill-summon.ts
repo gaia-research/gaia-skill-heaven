@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
-import { arborCompositionLines, arborPublicationLines, arborSubjectLines } from "skill-zero";
+import {
+  arborCompositionLines,
+  arborPublicationLines,
+  arborSubjectLines,
+  type DecisionMode,
+} from "skill-zero";
 
 import { createConfiguredService } from "../configured-service.js";
 import type { TrustFields } from "../domain/types.js";
@@ -16,7 +21,7 @@ import { displayTrustFields } from "../trust.js";
 const LABEL_WIDTH = 8;
 
 const USAGE = `Usage:
-  skill-summon summon "<intent>" [--count N] [--source <url|owner/repo>] [--preview] [--card | --json]
+  skill-summon summon "<intent>" [--count N] [--source <url|owner/repo>] [--preview] [--decision <classic|jev|compare>] [--card | --json]
   skill-summon list [--json]
   skill-summon sessions [--json]
   skill-summon attach <session-id|name|root> [--json]
@@ -42,6 +47,7 @@ type ParsedArgs = {
   dryRun: boolean;
   source: string | undefined;
   preview: boolean;
+  decision: DecisionMode | undefined;
 };
 
 async function main(): Promise<void> {
@@ -86,6 +92,7 @@ async function runSummon(args: ParsedArgs): Promise<void> {
     limit: args.limit,
     ...(args.source === undefined ? {} : { source: args.source }),
     ...(args.preview ? { preview: true } : {}),
+    ...(args.decision === undefined ? {} : { decision: args.decision }),
   });
 
   if (!args.json) {
@@ -349,6 +356,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   let dryRun = false;
   let source: string | undefined;
   let preview = false;
+  let decision: DecisionMode | undefined;
   const positionals: string[] = [];
 
   for (let i = 0; i < rest.length; i++) {
@@ -398,6 +406,24 @@ function parseArgs(argv: string[]): ParsedArgs {
       preview = true;
       continue;
     }
+    if (arg === "--decision") {
+      const value = rest[i + 1];
+      if (value === undefined) throw new UsageError("--decision requires a value.");
+      if (value !== "classic" && value !== "jev" && value !== "compare") {
+        throw new UsageError(`--decision must be one of: classic, jev, compare, got: ${value}`);
+      }
+      decision = value;
+      i++;
+      continue;
+    }
+    if (arg.startsWith("--decision=")) {
+      const value = arg.slice("--decision=".length);
+      if (value !== "classic" && value !== "jev" && value !== "compare") {
+        throw new UsageError(`--decision must be one of: classic, jev, compare, got: ${value}`);
+      }
+      decision = value;
+      continue;
+    }
     if (arg.startsWith("-")) {
       throw new UsageError(`Unknown flag: ${arg}\n\n${USAGE}`);
     }
@@ -419,11 +445,14 @@ function parseArgs(argv: string[]): ParsedArgs {
   if (preview && command !== "summon") {
     throw new UsageError("--preview is only valid with summon.");
   }
+  if (decision !== undefined && command !== "summon") {
+    throw new UsageError("--decision is only valid with summon.");
+  }
   if (card && json) {
     throw new UsageError("--card and --json cannot be used together.");
   }
 
-  return { command, query: positionals[0], limit, json, card, dryRun, source, preview };
+  return { command, query: positionals[0], limit, json, card, dryRun, source, preview, decision };
 }
 
 function parseCount(value: string): number {

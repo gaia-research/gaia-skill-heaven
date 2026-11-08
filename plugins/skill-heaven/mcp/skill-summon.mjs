@@ -417,11 +417,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants3) {
+      optimizeNames(names, constants4) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants3);
+          this.rhs = optimizeExpr(this.rhs, names, constants4);
         return this;
       }
       get names() {
@@ -438,10 +438,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants3) {
+      optimizeNames(names, constants4) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants3);
+        this.rhs = optimizeExpr(this.rhs, names, constants4);
         return this;
       }
       get names() {
@@ -502,8 +502,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants3) {
-        this.code = optimizeExpr(this.code, names, constants3);
+      optimizeNames(names, constants4) {
+        this.code = optimizeExpr(this.code, names, constants4);
         return this;
       }
       get names() {
@@ -532,12 +532,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants3) {
+      optimizeNames(names, constants4) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants3))
+          if (n.optimizeNames(names, constants4))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -590,12 +590,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants3) {
+      optimizeNames(names, constants4) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
-        if (!(super.optimizeNames(names, constants3) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants4);
+        if (!(super.optimizeNames(names, constants4) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants3);
+        this.condition = optimizeExpr(this.condition, names, constants4);
         return this;
       }
       get names() {
@@ -618,10 +618,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants3) {
-        if (!super.optimizeNames(names, constants3))
+      optimizeNames(names, constants4) {
+        if (!super.optimizeNames(names, constants4))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants3);
+        this.iteration = optimizeExpr(this.iteration, names, constants4);
         return this;
       }
       get names() {
@@ -657,10 +657,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants3) {
-        if (!super.optimizeNames(names, constants3))
+      optimizeNames(names, constants4) {
+        if (!super.optimizeNames(names, constants4))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants3);
+        this.iterable = optimizeExpr(this.iterable, names, constants4);
         return this;
       }
       get names() {
@@ -702,11 +702,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants3) {
+      optimizeNames(names, constants4) {
         var _a, _b;
-        super.optimizeNames(names, constants3);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants3);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants3);
+        super.optimizeNames(names, constants4);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants4);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants4);
         return this;
       }
       get names() {
@@ -1007,7 +1007,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants3) {
+    function optimizeExpr(expr, names, constants4) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1022,14 +1022,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants3[n.str];
+        const c = constants4[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants3[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants4[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -14485,6 +14485,1491 @@ function suggestionFor(reason, source) {
   }
 }
 
+// packages/core/src/retrieval/jev-client.ts
+import {
+  closeSync,
+  constants,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync
+} from "node:fs";
+import { homedir } from "node:os";
+import { join as join2 } from "node:path";
+var PINNED_MODEL = "jev-1.13.0";
+var DEFAULT_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
+var PRICE_PER_INPUT_TOKEN = 0.042 / 1e6;
+var RESERVATION_AMOUNT_USD = 3e-3;
+var DEFAULT_MONTHLY_LIMIT_USD = 0.5;
+var MAX_MONTHLY_LIMIT_USD = 5;
+var DEFAULT_MAX_CALLS = 20;
+var MAX_REQUEST_BYTES = 12e3;
+var MAX_RESPONSE_BYTES = 131072;
+var MAX_QUESTIONS = 3;
+var MAX_INPUT_TOKENS = 64e3;
+var DEFAULT_TIMEOUT_MS = 1e4;
+var BudgetCorruptError = class extends Error {
+  name = "BudgetCorruptError";
+};
+var LockFailedError = class extends Error {
+  name = "LockFailedError";
+};
+function validateBudgetLedger(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new BudgetCorruptError("Budget ledger must be a dictionary");
+  }
+  const entries = Object.entries(data);
+  for (const [monthKey, entry] of entries) {
+    if (!/^\d{4}-\d{2}$/.test(monthKey)) {
+      throw new BudgetCorruptError(`Invalid month key '${monthKey}' in budget ledger`);
+    }
+    const parts = monthKey.split("-");
+    const monthVal = parseInt(parts[1], 10);
+    if (monthVal < 1 || monthVal > 12) {
+      throw new BudgetCorruptError(`Invalid calendar month '${monthKey}' in budget ledger`);
+    }
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new BudgetCorruptError(`Invalid entry for month '${monthKey}': must be a dictionary`);
+    }
+    const rec = entry;
+    const {
+      reserved_usd,
+      spent_usd,
+      attempts,
+      successes,
+      active_reservations,
+      active_attempts
+    } = rec;
+    if (typeof reserved_usd !== "number" || !Number.isFinite(reserved_usd) || reserved_usd < 0) {
+      throw new BudgetCorruptError(`reserved_usd must be a non-negative finite number for month '${monthKey}'`);
+    }
+    if (typeof spent_usd !== "number" || !Number.isFinite(spent_usd) || spent_usd < 0) {
+      throw new BudgetCorruptError(`spent_usd must be a non-negative finite number for month '${monthKey}'`);
+    }
+    if (typeof attempts !== "number" || !Number.isSafeInteger(attempts) || attempts < 0) {
+      throw new BudgetCorruptError(`attempts must be a non-negative safe integer for month '${monthKey}'`);
+    }
+    if (typeof successes !== "number" || !Number.isSafeInteger(successes) || successes < 0) {
+      throw new BudgetCorruptError(`successes must be a non-negative safe integer for month '${monthKey}'`);
+    }
+    if (active_reservations !== void 0 && (typeof active_reservations !== "number" || !Number.isFinite(active_reservations) || active_reservations < 0)) {
+      throw new BudgetCorruptError(
+        `active_reservations must be a non-negative finite number for month '${monthKey}'`
+      );
+    }
+    if (active_attempts !== void 0 && (typeof active_attempts !== "number" || !Number.isSafeInteger(active_attempts) || active_attempts < 0)) {
+      throw new BudgetCorruptError(
+        `active_attempts must be a non-negative safe integer for month '${monthKey}'`
+      );
+    }
+    if (successes > attempts) {
+      throw new BudgetCorruptError(`successes (${successes}) cannot exceed attempts (${attempts}) for month '${monthKey}'`);
+    }
+    if (attempts === 0) {
+      if (reserved_usd !== 0 || spent_usd !== 0 || successes !== 0 || (active_reservations ?? 0) !== 0 || (active_attempts ?? 0) !== 0) {
+        throw new BudgetCorruptError(`Month '${monthKey}' has 0 attempts but non-zero amounts`);
+      }
+    } else {
+      if (spent_usd > reserved_usd + 1e-9) {
+        throw new BudgetCorruptError(`spent_usd (${spent_usd}) cannot exceed reserved_usd (${reserved_usd}) for month '${monthKey}'`);
+      }
+    }
+  }
+}
+function withBudgetLock(stateDir, fn) {
+  if (!existsSync(stateDir)) {
+    mkdirSync(stateDir, { recursive: true });
+  }
+  const lockPath = join2(stateDir, "jev.lock");
+  const recoveryPath = join2(stateDir, "jev.recovery.lock");
+  const lockId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const startTime = Date.now();
+  const timeoutMs = 1e4;
+  let acquired = false;
+  let acquiredIno = null;
+  while (!acquired) {
+    try {
+      const fd = openSync(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_RDWR);
+      try {
+        writeFileSync(
+          fd,
+          JSON.stringify({ pid: process.pid, lockId, createdAt: Date.now() }),
+          "utf-8"
+        );
+        acquiredIno = statSync(lockPath).ino;
+      } finally {
+        closeSync(fd);
+      }
+      acquired = true;
+    } catch (err) {
+      if (err && err.code === "EEXIST") {
+        try {
+          const stat5 = statSync(lockPath);
+          const ageMs = Date.now() - stat5.mtimeMs;
+          if (ageMs >= 15e3) {
+            let isDead = false;
+            let currentOwner = null;
+            try {
+              const raw = readFileSync(lockPath, "utf-8");
+              currentOwner = JSON.parse(raw);
+              if (currentOwner && typeof currentOwner.pid === "number") {
+                try {
+                  process.kill(currentOwner.pid, 0);
+                } catch (killErr) {
+                  if (killErr.code === "ESRCH") {
+                    isDead = true;
+                  }
+                }
+              } else {
+                isDead = true;
+              }
+            } catch {
+              isDead = true;
+            }
+            if (isDead) {
+              let recoveryFd = null;
+              try {
+                recoveryFd = openSync(
+                  recoveryPath,
+                  constants.O_CREAT | constants.O_EXCL | constants.O_RDWR
+                );
+              } catch (recErr) {
+                if (recErr && recErr.code === "EEXIST") {
+                  try {
+                    const recStat = statSync(recoveryPath);
+                    if (Date.now() - recStat.mtimeMs > 15e3) {
+                      unlinkSync(recoveryPath);
+                    }
+                  } catch {
+                  }
+                }
+              }
+              if (recoveryFd !== null) {
+                try {
+                  const freshStat = statSync(lockPath);
+                  if (freshStat.ino === stat5.ino && Date.now() - freshStat.mtimeMs >= 15e3) {
+                    unlinkSync(lockPath);
+                  }
+                } catch {
+                } finally {
+                  try {
+                    closeSync(recoveryFd);
+                    unlinkSync(recoveryPath);
+                  } catch {
+                  }
+                }
+              }
+            }
+          }
+        } catch {
+        }
+        if (Date.now() - startTime > timeoutMs) {
+          throw new LockFailedError("Lock timeout acquiring jev.lock");
+        }
+        try {
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+        } catch {
+          const end = Date.now() + 25;
+          while (Date.now() < end) {
+          }
+        }
+      } else {
+        throw new LockFailedError(`Lock error: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    try {
+      if (existsSync(lockPath)) {
+        const freshStat = statSync(lockPath);
+        if (acquiredIno !== null && freshStat.ino === acquiredIno) {
+          const raw = readFileSync(lockPath, "utf-8");
+          const data = JSON.parse(raw);
+          if (data.lockId === lockId && data.pid === process.pid) {
+            unlinkSync(lockPath);
+          }
+        }
+      }
+    } catch {
+    }
+  }
+}
+async function defaultTransport(endpoint, headers, body, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error("Timeout"));
+  }, timeoutMs);
+  try {
+    const response = await globalThis.fetch(endpoint, {
+      method: "POST",
+      headers,
+      body,
+      signal: controller.signal,
+      redirect: "manual"
+    });
+    if (!response.body) {
+      const text2 = await response.text();
+      return {
+        status: response.status,
+        body: text2
+      };
+    }
+    const reader = response.body.getReader();
+    const chunks = [];
+    let totalBytes = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          totalBytes += value.byteLength;
+          if (totalBytes > MAX_RESPONSE_BYTES) {
+            controller.abort(new Error(`Response exceeded maximum size of ${MAX_RESPONSE_BYTES} bytes`));
+            const err = new Error(`Response exceeded maximum size of ${MAX_RESPONSE_BYTES} bytes`);
+            err.name = "ResponseTooLargeError";
+            throw err;
+          }
+          chunks.push(value);
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    const concatenated = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      concatenated.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const text = new TextDecoder().decode(concatenated);
+    return {
+      status: response.status,
+      body: text
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+var JevClient = class {
+  endpoint;
+  live;
+  monthlyLimitUsd;
+  maxCalls;
+  timeoutMs;
+  transport;
+  apiKey;
+  stateDir;
+  inMemoryLedger = {};
+  inFlightCount = 0;
+  totalTokens = 0;
+  constructor(options = {}) {
+    this.endpoint = options.endpoint ?? process.env.TYPESAFE_ENDPOINT ?? process.env.JEV_ENDPOINT ?? DEFAULT_ENDPOINT;
+    this.apiKey = options.apiKey !== void 0 ? options.apiKey : process.env.TYPESAFE_API_KEY ?? process.env.JEV_API_KEY;
+    const envLive = process.env.SKILL_HEAVEN_JEV_LIVE === "true" || process.env.TYPESAFE_LIVE === "true" || process.env.JEV_LIVE === "true";
+    const hasKey = Boolean(this.apiKey?.trim());
+    if (options.live !== void 0) {
+      this.live = options.live === true;
+    } else {
+      this.live = envLive && hasKey;
+    }
+    this.monthlyLimitUsd = Math.min(
+      Math.max(0, options.monthlyLimitUsd ?? DEFAULT_MONTHLY_LIMIT_USD),
+      MAX_MONTHLY_LIMIT_USD
+    );
+    this.maxCalls = options.maxCalls ?? DEFAULT_MAX_CALLS;
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.transport = options.transport ?? defaultTransport;
+    const configuredStateDir = options.stateDir ?? process.env.SKILL_HEAVEN_JEV_STATE_DIR;
+    const isTest = Boolean(process.env.VITEST || process.env.NODE_ENV === "test");
+    const defaultStateDir = isTest ? void 0 : join2(homedir(), ".gaia", "jev");
+    this.stateDir = configuredStateDir ?? defaultStateDir;
+  }
+  setLive(live) {
+    this.live = live;
+  }
+  readLedgerLocked() {
+    if (!this.stateDir) return {};
+    const budgetPath = join2(this.stateDir, "budget.json");
+    if (!existsSync(budgetPath)) return {};
+    let data;
+    try {
+      const raw = readFileSync(budgetPath, "utf-8");
+      data = JSON.parse(raw);
+    } catch (err) {
+      throw new BudgetCorruptError(
+        `Existing budget ledger is corrupt: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+    validateBudgetLedger(data);
+    return data;
+  }
+  writeLedgerLocked(ledger) {
+    if (!this.stateDir) return;
+    const budgetPath = join2(this.stateDir, "budget.json");
+    if (!existsSync(this.stateDir)) {
+      mkdirSync(this.stateDir, { recursive: true });
+    }
+    const tmpPath = join2(
+      this.stateDir,
+      `budget.json.tmp.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`
+    );
+    writeFileSync(tmpPath, JSON.stringify(ledger, null, 2), "utf-8");
+    renameSync(tmpPath, budgetPath);
+  }
+  getMonthEntry(month) {
+    let entry = this.inMemoryLedger[month];
+    if (!entry) {
+      if (this.stateDir) {
+        try {
+          const ledger = this.readLedgerLocked();
+          if (ledger[month]) {
+            entry = { ...ledger[month] };
+            this.inMemoryLedger[month] = entry;
+          }
+        } catch {
+        }
+      }
+      if (!entry) {
+        entry = {
+          reserved_usd: 0,
+          spent_usd: 0,
+          attempts: 0,
+          successes: 0
+        };
+        this.inMemoryLedger[month] = entry;
+      }
+    }
+    return entry;
+  }
+  get spentAmountUsd() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    return this.getMonthEntry(month).spent_usd;
+  }
+  get reservedAmountUsd() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    return this.getMonthEntry(month).reserved_usd;
+  }
+  get callCount() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    return this.getMonthEntry(month).attempts;
+  }
+  get successCount() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    return this.getMonthEntry(month).successes;
+  }
+  get totalInputTokens() {
+    return this.totalTokens;
+  }
+  getBudgetStatus() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    if (this.stateDir) {
+      try {
+        withBudgetLock(this.stateDir, () => {
+          const ledger = this.readLedgerLocked();
+          if (ledger[month]) {
+            this.inMemoryLedger[month] = { ...ledger[month] };
+          } else {
+            this.inMemoryLedger[month] = {
+              reserved_usd: 0,
+              spent_usd: 0,
+              attempts: 0,
+              successes: 0
+            };
+          }
+        });
+      } catch (err) {
+        throw new BudgetCorruptError(
+          `Failed to read budget status from ledger: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+    }
+    const entry = this.getMonthEntry(month);
+    return {
+      monthlyLimitUsd: this.monthlyLimitUsd,
+      spentUsd: entry.spent_usd,
+      reservedUsd: entry.reserved_usd,
+      remainingUsd: Math.max(0, this.monthlyLimitUsd - entry.reserved_usd),
+      calls: entry.attempts,
+      maxCalls: this.maxCalls,
+      successes: entry.successes
+    };
+  }
+  resetBudget() {
+    const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    this.totalTokens = 0;
+    if (this.stateDir) {
+      try {
+        withBudgetLock(this.stateDir, () => {
+          let ledger;
+          try {
+            ledger = this.readLedgerLocked();
+          } catch {
+            ledger = {};
+          }
+          const entry = ledger[month];
+          const activeAttempts = entry?.active_attempts ?? 0;
+          const activeReserved = entry?.active_reservations ?? 0;
+          if (activeAttempts > 0) {
+            ledger[month] = {
+              reserved_usd: activeReserved,
+              spent_usd: 0,
+              attempts: activeAttempts,
+              successes: 0,
+              active_reservations: activeReserved,
+              active_attempts: activeAttempts
+            };
+          } else {
+            ledger[month] = {
+              reserved_usd: 0,
+              spent_usd: 0,
+              attempts: 0,
+              successes: 0,
+              active_reservations: 0,
+              active_attempts: 0
+            };
+          }
+          validateBudgetLedger(ledger);
+          this.writeLedgerLocked(ledger);
+          this.inMemoryLedger[month] = { ...ledger[month] };
+        });
+      } catch {
+      }
+    } else {
+      const entry = this.inMemoryLedger[month];
+      const activeAttempts = entry?.active_attempts ?? 0;
+      const activeReserved = entry?.active_reservations ?? 0;
+      if (activeAttempts > 0) {
+        this.inMemoryLedger[month] = {
+          reserved_usd: activeReserved,
+          spent_usd: 0,
+          attempts: activeAttempts,
+          successes: 0,
+          active_reservations: activeReserved,
+          active_attempts: activeAttempts
+        };
+      } else {
+        this.inMemoryLedger[month] = {
+          reserved_usd: 0,
+          spent_usd: 0,
+          attempts: 0,
+          successes: 0,
+          active_reservations: 0,
+          active_attempts: 0
+        };
+      }
+    }
+  }
+  /**
+   * Evaluate state against bounded Choice questions.
+   * Degrades cleanly to `{ ok: false, reason: ... }` on failure, never throws.
+   */
+  async evaluate(state, questions, invocationOptions) {
+    if (state === void 0 || state === null) {
+      return {
+        ok: false,
+        reason: "invalid_request",
+        error: "state must not be null or undefined",
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    if (!questions || typeof questions !== "object" || Array.isArray(questions)) {
+      return {
+        ok: false,
+        reason: "invalid_request",
+        error: "questions must be an object",
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    const questionKeys = Object.keys(questions);
+    if (questionKeys.length === 0) {
+      return {
+        ok: false,
+        reason: "invalid_request",
+        error: "at least one question is required",
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    if (questionKeys.length > MAX_QUESTIONS) {
+      return {
+        ok: false,
+        reason: "too_many_questions",
+        error: `questions count (${questionKeys.length}) exceeds MAX_QUESTIONS (${MAX_QUESTIONS})`,
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    for (const qid of questionKeys) {
+      const q = questions[qid];
+      if (!q || typeof q !== "object") {
+        return {
+          ok: false,
+          reason: "invalid_request",
+          error: `question '${qid}' must be an object`,
+          costUsd: 0,
+          latencyMs: 0
+        };
+      }
+      if (q.type !== "choice") {
+        return {
+          ok: false,
+          reason: "invalid_request",
+          error: `question '${qid}' type must be 'choice'`,
+          costUsd: 0,
+          latencyMs: 0
+        };
+      }
+      if (!q.instructions || typeof q.instructions !== "string" || !q.instructions.trim()) {
+        return {
+          ok: false,
+          reason: "invalid_request",
+          error: `question '${qid}' instructions must be a non-empty string`,
+          costUsd: 0,
+          latencyMs: 0
+        };
+      }
+      const hasCriteria = q.criteria && typeof q.criteria === "object" && Object.keys(q.criteria).length > 0;
+      const hasChoices = Array.isArray(q.choices) && q.choices.length > 0;
+      if (!hasCriteria && !hasChoices) {
+        return {
+          ok: false,
+          reason: "invalid_request",
+          error: `question '${qid}' must provide criteria or choices`,
+          costUsd: 0,
+          latencyMs: 0
+        };
+      }
+    }
+    let body;
+    try {
+      body = JSON.stringify({
+        model: PINNED_MODEL,
+        state,
+        questions
+      });
+    } catch (err) {
+      return {
+        ok: false,
+        reason: "invalid_request",
+        error: `Failed to serialize request payload: ${err instanceof Error ? err.message : String(err)}`,
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    const requestBytes = new TextEncoder().encode(body).length;
+    if (requestBytes > MAX_REQUEST_BYTES) {
+      return {
+        ok: false,
+        reason: "request_too_large",
+        error: `Request payload size (${requestBytes} bytes) exceeds MAX_REQUEST_BYTES (${MAX_REQUEST_BYTES} bytes)`,
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    const effectiveLive = invocationOptions?.live ?? this.live;
+    if (!effectiveLive) {
+      return {
+        ok: false,
+        reason: "dry_run",
+        error: "dry-run mode active (live is false)",
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    const apiKey = (this.apiKey !== void 0 ? this.apiKey : process.env.TYPESAFE_API_KEY ?? process.env.JEV_API_KEY)?.trim();
+    if (!apiKey) {
+      return {
+        ok: false,
+        reason: "missing_api_key",
+        error: "TYPESAFE_API_KEY is not configured",
+        costUsd: 0,
+        latencyMs: 0
+      };
+    }
+    const reservationMonth = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+    this.inFlightCount++;
+    let reservationAcquired = false;
+    try {
+      try {
+        if (this.stateDir) {
+          withBudgetLock(this.stateDir, () => {
+            const ledger = this.readLedgerLocked();
+            const entry = ledger[reservationMonth] ?? {
+              reserved_usd: 0,
+              spent_usd: 0,
+              attempts: 0,
+              successes: 0
+            };
+            if (entry.attempts >= this.maxCalls) {
+              throw new Error(`max_calls_exceeded:${this.maxCalls}`);
+            }
+            if (entry.reserved_usd + RESERVATION_AMOUNT_USD > this.monthlyLimitUsd + 1e-9) {
+              throw new Error(`budget_exceeded:${this.monthlyLimitUsd}`);
+            }
+            entry.reserved_usd = Number(
+              (entry.reserved_usd + RESERVATION_AMOUNT_USD).toFixed(10)
+            );
+            entry.active_reservations = Number(
+              ((entry.active_reservations ?? 0) + RESERVATION_AMOUNT_USD).toFixed(10)
+            );
+            entry.attempts += 1;
+            entry.active_attempts = (entry.active_attempts ?? 0) + 1;
+            ledger[reservationMonth] = entry;
+            validateBudgetLedger(ledger);
+            this.writeLedgerLocked(ledger);
+            this.inMemoryLedger[reservationMonth] = { ...entry };
+            reservationAcquired = true;
+          });
+        } else {
+          const entry = this.getMonthEntry(reservationMonth);
+          if (entry.attempts >= this.maxCalls) {
+            return {
+              ok: false,
+              reason: "max_calls_exceeded",
+              error: `Process max call limit of ${this.maxCalls} reached`,
+              costUsd: 0,
+              latencyMs: 0
+            };
+          }
+          if (entry.reserved_usd + RESERVATION_AMOUNT_USD > this.monthlyLimitUsd + 1e-9) {
+            return {
+              ok: false,
+              reason: "budget_exceeded",
+              error: `Monthly budget limit ($${this.monthlyLimitUsd.toFixed(4)}) reached`,
+              costUsd: 0,
+              latencyMs: 0
+            };
+          }
+          entry.reserved_usd = Number(
+            (entry.reserved_usd + RESERVATION_AMOUNT_USD).toFixed(10)
+          );
+          entry.active_reservations = Number(
+            ((entry.active_reservations ?? 0) + RESERVATION_AMOUNT_USD).toFixed(10)
+          );
+          entry.attempts += 1;
+          entry.active_attempts = (entry.active_attempts ?? 0) + 1;
+          reservationAcquired = true;
+        }
+      } catch (err) {
+        if (err instanceof BudgetCorruptError) {
+          return {
+            ok: false,
+            reason: "budget_corrupt",
+            error: err.message,
+            costUsd: 0,
+            latencyMs: 0
+          };
+        }
+        if (err instanceof LockFailedError) {
+          return {
+            ok: false,
+            reason: "lock_failed",
+            error: err.message,
+            costUsd: 0,
+            latencyMs: 0
+          };
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.startsWith("max_calls_exceeded:")) {
+          return {
+            ok: false,
+            reason: "max_calls_exceeded",
+            error: `Process max call limit of ${msg.split(":")[1]} reached`,
+            costUsd: 0,
+            latencyMs: 0
+          };
+        }
+        if (msg.startsWith("budget_exceeded:")) {
+          return {
+            ok: false,
+            reason: "budget_exceeded",
+            error: `Monthly budget limit ($${msg.split(":")[1]}) reached`,
+            costUsd: 0,
+            latencyMs: 0
+          };
+        }
+        return {
+          ok: false,
+          reason: "budget_corrupt",
+          error: `Budget ledger access failed: ${msg}`,
+          costUsd: 0,
+          latencyMs: 0
+        };
+      }
+      const reservedUsd = RESERVATION_AMOUNT_USD;
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+        "User-Agent": `gaia-skill-heaven/${PINNED_MODEL}`
+      };
+      const startTime = performance.now();
+      let transportResult;
+      try {
+        transportResult = await this.transport(this.endpoint, headers, body, this.timeoutMs);
+      } catch (err) {
+        const latencyMs2 = Math.round(performance.now() - startTime);
+        const isResponseTooLarge = err instanceof Error && (err.name === "ResponseTooLargeError" || /exceeded maximum size|response_too_large/i.test(err.message));
+        const isTimeout = !isResponseTooLarge && err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError" || /timeout|timed out/i.test(err.message));
+        return {
+          ok: false,
+          reason: isResponseTooLarge ? "response_too_large" : isTimeout ? "timeout" : "network_error",
+          error: err instanceof Error ? err.message : String(err),
+          costUsd: 0,
+          latencyMs: latencyMs2,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      const latencyMs = Math.round(performance.now() - startTime);
+      const { status, body: responseText } = transportResult;
+      if (status >= 300 && status < 400) {
+        return {
+          ok: false,
+          reason: "http_redirect_prohibited",
+          error: `HTTP redirect (${status}) is prohibited to prevent token leakage`,
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      if (status !== 200) {
+        return {
+          ok: false,
+          reason: `http_${status}`,
+          error: `HTTP ${status}: ${responseText.slice(0, 200)}`,
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      const responseBytes = new TextEncoder().encode(responseText).length;
+      if (responseBytes > MAX_RESPONSE_BYTES) {
+        return {
+          ok: false,
+          reason: "response_too_large",
+          error: `Response size (${responseBytes} bytes) exceeds MAX_RESPONSE_BYTES (${MAX_RESPONSE_BYTES} bytes)`,
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      let respObj;
+      try {
+        const parsed = JSON.parse(responseText);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: "Response must be a JSON object",
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        respObj = parsed;
+      } catch {
+        return {
+          ok: false,
+          reason: "invalid_response",
+          error: "Failed to parse response as JSON",
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      if (respObj.model !== PINNED_MODEL) {
+        return {
+          ok: false,
+          reason: "model_mismatch",
+          error: `Response model '${String(respObj.model)}' does not match pinned model '${PINNED_MODEL}'`,
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      const usage = respObj.usage;
+      if (!usage || typeof usage !== "object" || typeof usage.input_tokens !== "number" || typeof usage.output_tokens !== "number" || !Number.isInteger(usage.input_tokens) || !Number.isInteger(usage.output_tokens) || usage.input_tokens < 0 || usage.output_tokens < 0) {
+        return {
+          ok: false,
+          reason: "invalid_response",
+          error: "Response usage must include non-negative integer input_tokens and output_tokens",
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      if (usage.input_tokens > MAX_INPUT_TOKENS) {
+        return {
+          ok: false,
+          reason: "invalid_response",
+          error: `input_tokens (${usage.input_tokens}) exceeds MAX_INPUT_TOKENS (${MAX_INPUT_TOKENS})`,
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      const validatedUsage = {
+        input_tokens: usage.input_tokens,
+        output_tokens: usage.output_tokens
+      };
+      const rawAnswers = respObj.answers;
+      if (!rawAnswers || typeof rawAnswers !== "object" || Array.isArray(rawAnswers)) {
+        return {
+          ok: false,
+          reason: "invalid_response",
+          error: "Response answers must be an object",
+          costUsd: 0,
+          latencyMs,
+          reservedUsd,
+          costStatus: "reserved_unreconciled"
+        };
+      }
+      const validatedAnswers = {};
+      for (const qid of questionKeys) {
+        const q = questions[qid];
+        const ans = rawAnswers[qid];
+        if (!ans || typeof ans !== "object" || Array.isArray(ans)) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Missing or invalid answer for question '${qid}'`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        if (ans.type !== "choice") {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Answer for '${qid}' type must be 'choice'`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        const validChoices = new Set(
+          q.criteria ? Object.keys(q.criteria) : q.choices ?? []
+        );
+        const choice = ans.choice;
+        if (typeof choice !== "string" || !validChoices.has(choice)) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Choice '${String(choice)}' for '${qid}' is not in allowed choices: [${Array.from(validChoices).join(", ")}]`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        const confidence = ans.confidence;
+        if (typeof confidence !== "number" || !Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Confidence for '${qid}' must be a finite number in [0, 1], got ${String(confidence)}`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        const probs = ans.probabilities;
+        if (!probs || typeof probs !== "object" || Array.isArray(probs)) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Probabilities for '${qid}' must be an object`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        const probKeys = Object.keys(probs);
+        if (probKeys.length !== validChoices.size || !probKeys.every((k) => validChoices.has(k))) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Probabilities keys for '${qid}' do not match expected choices`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        let probSum = 0;
+        let maxProb = -1;
+        const validatedProbs = {};
+        for (const [opt, pVal] of Object.entries(probs)) {
+          if (typeof pVal !== "number" || !Number.isFinite(pVal) || pVal < 0 || pVal > 1) {
+            return {
+              ok: false,
+              reason: "invalid_response",
+              error: `Probability for '${qid}:${opt}' must be a finite number in [0, 1]`,
+              costUsd: 0,
+              latencyMs,
+              reservedUsd,
+              costStatus: "reserved_unreconciled"
+            };
+          }
+          validatedProbs[opt] = pVal;
+          probSum += pVal;
+          if (pVal > maxProb) {
+            maxProb = pVal;
+          }
+        }
+        if (Math.abs(probSum - 1) > 0.03) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Probabilities for '${qid}' must sum to ~1.0 (got ${probSum})`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        if (validatedProbs[choice] < maxProb - 1e-6) {
+          return {
+            ok: false,
+            reason: "invalid_response",
+            error: `Choice '${choice}' for '${qid}' does not have the maximum probability (${validatedProbs[choice]} vs max ${maxProb})`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+        validatedAnswers[qid] = {
+          type: "choice",
+          choice,
+          confidence,
+          probabilities: validatedProbs
+        };
+      }
+      const costUsd = Number(
+        (validatedUsage.input_tokens * PRICE_PER_INPUT_TOKEN).toFixed(10)
+      );
+      if (this.stateDir) {
+        try {
+          withBudgetLock(this.stateDir, () => {
+            const ledger = this.readLedgerLocked();
+            let entry = ledger[reservationMonth];
+            if (!entry) {
+              entry = {
+                reserved_usd: RESERVATION_AMOUNT_USD,
+                spent_usd: 0,
+                attempts: 1,
+                successes: 0
+              };
+              ledger[reservationMonth] = entry;
+            }
+            if (entry.attempts < entry.successes + 1) {
+              entry.attempts = entry.successes + 1;
+            }
+            if (entry.reserved_usd < entry.spent_usd + costUsd) {
+              entry.reserved_usd = Number((entry.spent_usd + costUsd).toFixed(10));
+            }
+            entry.spent_usd = Number((entry.spent_usd + costUsd).toFixed(10));
+            entry.successes += 1;
+            validateBudgetLedger(ledger);
+            this.writeLedgerLocked(ledger);
+            this.inMemoryLedger[reservationMonth] = { ...entry };
+            this.totalTokens += validatedUsage.input_tokens;
+          });
+        } catch (err) {
+          return {
+            ok: false,
+            reason: "budget_corrupt",
+            error: `Reconciliation failed: ${err instanceof Error ? err.message : String(err)}`,
+            costUsd: 0,
+            latencyMs,
+            reservedUsd,
+            costStatus: "reserved_unreconciled"
+          };
+        }
+      } else {
+        const entry = this.getMonthEntry(reservationMonth);
+        if (entry.attempts < entry.successes + 1) {
+          entry.attempts = entry.successes + 1;
+        }
+        if (entry.reserved_usd < entry.spent_usd + costUsd) {
+          entry.reserved_usd = Number((entry.spent_usd + costUsd).toFixed(10));
+        }
+        entry.spent_usd = Number((entry.spent_usd + costUsd).toFixed(10));
+        entry.successes += 1;
+        this.totalTokens += validatedUsage.input_tokens;
+      }
+      return {
+        ok: true,
+        reason: "ok",
+        model: PINNED_MODEL,
+        answers: validatedAnswers,
+        usage: validatedUsage,
+        costUsd,
+        latencyMs,
+        reservedUsd,
+        costStatus: "reconciled"
+      };
+    } finally {
+      this.inFlightCount--;
+      if (reservationAcquired) {
+        if (this.stateDir) {
+          try {
+            withBudgetLock(this.stateDir, () => {
+              const ledger = this.readLedgerLocked();
+              const entry = ledger[reservationMonth];
+              if (entry && entry.active_attempts && entry.active_attempts > 0) {
+                entry.active_attempts -= 1;
+                entry.active_reservations = Math.max(
+                  0,
+                  Number(
+                    ((entry.active_reservations ?? RESERVATION_AMOUNT_USD) - RESERVATION_AMOUNT_USD).toFixed(10)
+                  )
+                );
+                validateBudgetLedger(ledger);
+                this.writeLedgerLocked(ledger);
+                this.inMemoryLedger[reservationMonth] = { ...entry };
+              }
+            });
+          } catch {
+          }
+        } else {
+          const entry = this.getMonthEntry(reservationMonth);
+          if (entry.active_attempts && entry.active_attempts > 0) {
+            entry.active_attempts -= 1;
+            entry.active_reservations = Math.max(
+              0,
+              Number(
+                ((entry.active_reservations ?? RESERVATION_AMOUNT_USD) - RESERVATION_AMOUNT_USD).toFixed(10)
+              )
+            );
+          }
+        }
+      }
+    }
+  }
+  /**
+   * Alias for evaluate.
+   */
+  async classify(state, questions) {
+    return this.evaluate(state, questions);
+  }
+};
+var sharedJevClientInstance;
+function getSharedJevClient(options) {
+  if (!sharedJevClientInstance) {
+    sharedJevClientInstance = new JevClient(options);
+  }
+  return sharedJevClientInstance;
+}
+
+// packages/core/src/retrieval/decision.ts
+var ClassicDecisionBackend = class {
+  mode = "classic";
+  async decide(options) {
+    const outcome = decide(options);
+    return {
+      ...outcome,
+      backend: "classic"
+    };
+  }
+};
+var JevDecisionBackend = class {
+  mode = "jev";
+  client;
+  minProbability;
+  minConfidence;
+  maxCandidates;
+  constructor(options = {}) {
+    this.client = options.client ?? getSharedJevClient();
+    this.minProbability = options.minProbability ?? 0.4;
+    this.minConfidence = options.minConfidence ?? 0.5;
+    this.maxCandidates = options.maxCandidates ?? 10;
+  }
+  async decide(options) {
+    const { index, query, ranked, surface = "any", source } = options;
+    const floor = index.stats.floor;
+    const filtered = [];
+    const eligible = [];
+    const hasExact = ranked.some((hit) => hit.matchKind === "exact");
+    if (hasExact) {
+      const classicResult = decide(options);
+      const exactHits = ranked.filter((hit) => hit.matchKind === "exact");
+      const admittedExact = classicResult.admitted.find((hit) => hit.matchKind === "exact");
+      const chosen = admittedExact?.doc.id ?? null;
+      const probabilities = chosen ? { [chosen]: 1 } : {};
+      const evaluations2 = exactHits.map((h) => ({
+        id: h.doc.id,
+        name: h.doc.name,
+        probability: h.doc.id === chosen ? 1 : 0,
+        confidence: 1,
+        chosen: h.doc.id === chosen,
+        withheldReason: withholdReason(h.doc, surface)
+      }));
+      return {
+        ...classicResult,
+        backend: "jev",
+        semantic: {
+          chosen,
+          confidence: 1,
+          noneProbability: 0,
+          probabilities,
+          evaluations: evaluations2,
+          bypassed: true,
+          costUsd: 0,
+          inputTokens: 0,
+          rationale: "Exact-match fast path: bypassed Jev semantic inference ($0 spend)."
+        }
+      };
+    }
+    for (const hit of ranked) {
+      const why = withholdReason(hit.doc, surface);
+      if (why) filtered.push({ id: hit.doc.id, name: hit.doc.name, why });
+      else eligible.push(hit);
+    }
+    if (ranked.length > 0 && ranked[0]?.matchKind !== "exact" && isBareId(query)) {
+      const miss = noMatchDecision(query, "name_not_found", [], filtered, floor, source);
+      return {
+        ...miss,
+        backend: "jev",
+        semantic: null
+      };
+    }
+    if (eligible.length === 0) {
+      const reason = ranked.length === 0 ? "no_candidates" : "all_filtered";
+      const miss = noMatchDecision(query, reason, ranked, filtered, floor, source);
+      return {
+        ...miss,
+        backend: "jev",
+        semantic: null
+      };
+    }
+    const candidatesToEvaluate = eligible.slice(0, this.maxCandidates);
+    const candidateIds = candidatesToEvaluate.map((c) => c.doc.id);
+    const choices = [...candidateIds, "none"];
+    const state = {
+      query,
+      surface,
+      candidates: candidatesToEvaluate.map((c) => ({
+        id: c.doc.id,
+        name: c.doc.name,
+        description: c.doc.description,
+        tags: c.doc.tags
+      }))
+    };
+    const questions = {
+      selection: {
+        type: "choice",
+        instructions: "Select the single best skill for the user's query intent, or 'none' if none match well.",
+        choices,
+        criteria: {
+          ...Object.fromEntries(
+            candidatesToEvaluate.map((c) => [c.doc.id, `${c.doc.name}: ${c.doc.description}`])
+          ),
+          none: "None of the candidate skills are a suitable match for the user query intent."
+        }
+      }
+    };
+    let evalResult;
+    try {
+      evalResult = await this.client.evaluate(state, questions, { live: options.live });
+    } catch (err) {
+      const classic = decide(options);
+      return {
+        ...classic,
+        backend: "fallback",
+        fallbackReason: err instanceof Error ? err.message : String(err)
+      };
+    }
+    if (!evalResult.ok) {
+      const classic = decide(options);
+      return {
+        ...classic,
+        backend: "fallback",
+        fallbackReason: evalResult.reason
+      };
+    }
+    const answer = evalResult.answers.selection ?? evalResult.answers.relevance ?? Object.values(evalResult.answers)[0];
+    if (!answer) {
+      const classic = decide(options);
+      return {
+        ...classic,
+        backend: "fallback",
+        fallbackReason: "missing_answer"
+      };
+    }
+    const noneProb = answer.probabilities["none"] ?? answer.probabilities["none_of_the_above"] ?? 0;
+    const evaluations = candidatesToEvaluate.map((hit) => {
+      const prob = answer.probabilities[hit.doc.id] ?? 0;
+      return {
+        id: hit.doc.id,
+        name: hit.doc.name,
+        probability: prob,
+        confidence: answer.confidence,
+        chosen: hit.doc.id === answer.choice
+      };
+    });
+    const choice = answer.choice;
+    const choiceProb = answer.probabilities[choice] ?? 0;
+    const isNone = choice === "none" || choice === "none_of_the_above";
+    const isLowProb = choiceProb < this.minProbability;
+    const isLowConfidence = answer.confidence < this.minConfidence;
+    const semanticRecord = {
+      chosen: isNone ? null : choice,
+      confidence: answer.confidence,
+      noneProbability: noneProb,
+      probabilities: answer.probabilities,
+      evaluations,
+      model: evalResult.model,
+      costUsd: evalResult.costUsd,
+      inputTokens: evalResult.usage?.input_tokens ?? 0,
+      latencyMs: evalResult.latencyMs,
+      bypassed: false
+    };
+    if (isNone || isLowProb || isLowConfidence) {
+      const topCandidates = eligible.slice(0, 3).map((hit) => ({
+        id: hit.doc.id,
+        name: hit.doc.name,
+        score: Math.round((answer.probabilities[hit.doc.id] ?? hit.score) * 1e4) / 1e4,
+        floor
+      }));
+      return {
+        admitted: [],
+        noMatch: {
+          reason: "below_floor",
+          query,
+          topCandidates,
+          filtered,
+          suggestion: isNone ? "Semantic decision evaluated candidate skills and concluded none match the query intent." : `Semantic choice probability (${choiceProb.toFixed(4)}) is below the required threshold (${this.minProbability}).`
+        },
+        margin: 0,
+        ambiguous: false,
+        filtered,
+        floor,
+        backend: "jev",
+        semantic: semanticRecord
+      };
+    }
+    const chosenHit = eligible.find((h) => h.doc.id === choice);
+    if (!chosenHit) {
+      const classic = decide(options);
+      return {
+        ...classic,
+        backend: "fallback",
+        fallbackReason: `invalid_candidate_selected:${choice}`
+      };
+    }
+    const policyWhy = withholdReason(chosenHit.doc, surface);
+    if (policyWhy) {
+      filtered.push({ id: chosenHit.doc.id, name: chosenHit.doc.name, why: policyWhy });
+      return {
+        admitted: [],
+        noMatch: {
+          reason: "all_filtered",
+          query,
+          topCandidates: [
+            { id: chosenHit.doc.id, name: chosenHit.doc.name, score: choiceProb, floor }
+          ],
+          filtered,
+          suggestion: `Selected candidate '${chosenHit.doc.id}' withheld: ${policyWhy}`
+        },
+        margin: 0,
+        ambiguous: false,
+        filtered,
+        floor,
+        backend: "jev",
+        semantic: semanticRecord
+      };
+    }
+    const scored = eligible.map((hit) => {
+      const prob = answer.probabilities[hit.doc.id] ?? 0;
+      return {
+        doc: hit.doc,
+        score: prob > 0 ? prob : 0,
+        matchKind: hit.matchKind,
+        matchedTerms: hit.matchedTerms
+      };
+    }).sort((a, b) => b.score - a.score);
+    const topProb = scored[0]?.score ?? choiceProb;
+    const admitted = scored.filter((hit) => hit.score >= topProb * BAND && hit.score > 0);
+    const margin = marginOf(admitted);
+    return {
+      admitted,
+      noMatch: null,
+      margin,
+      ambiguous: admitted.length > 1 && margin < MARGIN,
+      filtered,
+      floor,
+      backend: "jev",
+      semantic: semanticRecord
+    };
+  }
+};
+var CompareDecisionBackend = class {
+  mode = "compare";
+  classic;
+  jev;
+  constructor(options = {}) {
+    this.classic = options.classic ?? new ClassicDecisionBackend();
+    this.jev = options.jev ?? new JevDecisionBackend({
+      client: options.client,
+      minProbability: options.minProbability,
+      minConfidence: options.minConfidence,
+      maxCandidates: options.maxCandidates
+    });
+  }
+  async decide(options) {
+    const classicDecision = decide(options);
+    const classicChosen = classicDecision.admitted[0]?.doc.id ?? null;
+    const hasExact = options.ranked.some((h) => h.matchKind === "exact");
+    if (hasExact) {
+      const compareRecord2 = {
+        query: options.query,
+        classic: {
+          chosen: classicChosen,
+          margin: classicDecision.margin,
+          admittedCount: classicDecision.admitted.length,
+          noMatchReason: classicDecision.noMatch?.reason ?? null
+        },
+        semantic: {
+          chosen: classicChosen,
+          confidence: 1,
+          none: 0,
+          noneProbability: 0,
+          status: "bypassed",
+          costUsd: 0,
+          inputTokens: 0,
+          rationale: "Exact-match fast path: bypassed Jev semantic inference ($0 spend)."
+        },
+        agreement: true
+      };
+      return {
+        ...classicDecision,
+        backend: "compare",
+        compare: compareRecord2
+      };
+    }
+    let shadowResult = null;
+    let shadowError;
+    try {
+      shadowResult = await this.jev.decide(options);
+      if (shadowResult.backend === "fallback") {
+        shadowError = shadowResult.fallbackReason ?? "fallback";
+      }
+    } catch (err) {
+      shadowError = err instanceof Error ? err.message : String(err);
+    }
+    let semanticRecord = null;
+    let agreement = false;
+    let disagreementReason;
+    if (shadowResult && shadowResult.backend !== "fallback") {
+      const semanticChosen = shadowResult.admitted[0]?.doc.id ?? null;
+      const confidence = shadowResult.semantic?.confidence ?? 0;
+      const noneProb = shadowResult.semantic?.noneProbability ?? 0;
+      semanticRecord = {
+        chosen: semanticChosen,
+        confidence,
+        none: noneProb,
+        noneProbability: noneProb,
+        probabilities: shadowResult.semantic?.probabilities,
+        evaluations: shadowResult.semantic?.evaluations,
+        status: "ok",
+        costUsd: shadowResult.semantic?.costUsd,
+        inputTokens: shadowResult.semantic?.inputTokens
+      };
+      agreement = classicChosen === semanticChosen;
+      if (!agreement) {
+        if (classicChosen && !semanticChosen) {
+          disagreementReason = `Classic admitted '${classicChosen}' but Jev refused or chose none.`;
+        } else if (!classicChosen && semanticChosen) {
+          disagreementReason = `Classic refused (${classicDecision.noMatch?.reason}) but Jev admitted '${semanticChosen}'.`;
+        } else {
+          disagreementReason = `Classic chose '${classicChosen}' while Jev chose '${semanticChosen}'.`;
+        }
+      }
+    } else {
+      semanticRecord = {
+        chosen: null,
+        confidence: 0,
+        none: 0,
+        noneProbability: 0,
+        status: "failed",
+        error: shadowError
+      };
+      agreement = false;
+      disagreementReason = `Jev shadow evaluation failed: ${shadowError}`;
+    }
+    const compareRecord = {
+      query: options.query,
+      classic: {
+        chosen: classicChosen,
+        margin: classicDecision.margin,
+        admittedCount: classicDecision.admitted.length,
+        noMatchReason: classicDecision.noMatch?.reason ?? null
+      },
+      semantic: semanticRecord,
+      agreement,
+      disagreementReason,
+      shadowError
+    };
+    return {
+      ...classicDecision,
+      backend: "compare",
+      compare: compareRecord
+    };
+  }
+};
+function createDecisionBackend(modeOrOptions, maybeOptions) {
+  let mode = "classic";
+  let options = {};
+  if (typeof modeOrOptions === "string") {
+    mode = modeOrOptions;
+    if (maybeOptions) options = maybeOptions;
+  } else if (modeOrOptions && typeof modeOrOptions === "object") {
+    mode = modeOrOptions.mode ?? "classic";
+    options = modeOrOptions;
+  }
+  if (mode === "classic") {
+    return new ClassicDecisionBackend();
+  }
+  const client = options.client ?? getSharedJevClient(options.live !== void 0 ? { live: options.live } : void 0);
+  const backendOptions = {
+    ...options,
+    client
+  };
+  switch (mode) {
+    case "jev":
+      return new JevDecisionBackend(backendOptions);
+    case "compare":
+      return new CompareDecisionBackend(backendOptions);
+    default: {
+      const exhaustiveCheck = mode;
+      throw new Error(`Unsupported decision mode: ${String(exhaustiveCheck)}`);
+    }
+  }
+}
+
 // packages/core/src/arbor/contract.ts
 var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
 var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
@@ -14958,15 +16443,15 @@ function describeArborPublication(publication) {
   };
 }
 function consumeArbor(publication, candidate, options = {}) {
-  const join5 = resolveJoin(publication, candidate);
-  const matchedSubject = join5 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
+  const join6 = resolveJoin(publication, candidate);
+  const matchedSubject = join6 === "content-pinned" && candidate.contentSha256 !== null ? { id: candidate.skillId, contentSha256: candidate.contentSha256 } : null;
   const runtime = matchedSubject ? publication.runtimes.get(subjectKey(matchedSubject)) : void 0;
   const lenses = {};
   for (const lens of ARBOR_LENSES) {
     const payloadUnreadable = lens === "claims" && runtime?.lenses.claims.status === "present" && runtime.lenses.claims.profile === null;
     lenses[lens] = reportLens(
       lens,
-      join5,
+      join6,
       runtime?.lenses[lens],
       candidate.identityNote,
       payloadUnreadable
@@ -15002,7 +16487,7 @@ function consumeArbor(publication, candidate, options = {}) {
     skillId: candidate.skillId,
     contentSha256: candidate.contentSha256,
     canonicalSource: candidate.canonicalSource,
-    join: join5,
+    join: join6,
     matchedSubject,
     lenses,
     lensesConsulted,
@@ -15014,7 +16499,7 @@ function consumeArbor(publication, candidate, options = {}) {
     deliveryContext: candidate.delivery ?? "not-materialized",
     problems,
     note: subjectNote(
-      join5,
+      join6,
       lensesConsulted,
       lensesAbsent,
       lensesUnknown,
@@ -15039,14 +16524,14 @@ function resolveJoin(publication, candidate) {
     subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
   ) ? "content-pinned" : "identity-unproven";
 }
-function reportLens(lens, join5, upstream, identityNote, payloadUnreadable = false) {
-  if (join5 !== "content-pinned" || upstream === void 0) {
+function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = false) {
+  if (join6 !== "content-pinned" || upstream === void 0) {
     return {
       lens,
       availability: "unknown",
       upstreamStatus: null,
       sourceDigest: null,
-      reason: identityNote && join5 === "identity-unproven" ? `${joinReason(join5)} \u2014 ${identityNote}` : joinReason(join5)
+      reason: identityNote && join6 === "identity-unproven" ? `${joinReason(join6)} \u2014 ${identityNote}` : joinReason(join6)
     };
   }
   if (upstream.status === "present") {
@@ -15096,8 +16581,8 @@ function absentReason(status) {
       return "no record was consulted";
   }
 }
-function joinReason(join5) {
-  switch (join5) {
+function joinReason(join6) {
+  switch (join6) {
     case "publication-unavailable":
       return "no readable Arbor publication is available to this runtime";
     case "source-not-canonical":
@@ -15112,14 +16597,14 @@ function joinReason(join5) {
       return "";
   }
 }
-function subjectNote(join5, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
   const parts = [
     `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
     `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
     `unknown: ${unknown2.length > 0 ? unknown2.join(", ") : "none"}`
   ];
-  let note = `${parts.join(" \xB7 ")}. ${joinNote(join5)}`;
-  if (join5 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  let note = `${parts.join(" \xB7 ")}. ${joinNote(join6)}`;
+  if (join6 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }
@@ -15131,8 +16616,8 @@ function subjectNote(join5, consulted, absent2, unknown2, claimCount, edgeCount,
   }
   return note;
 }
-function joinNote(join5) {
-  switch (join5) {
+function joinNote(join6) {
+  switch (join6) {
     case "content-pinned":
       return "Subject identity proven by id and exact content pin.";
     case "identity-unproven":
@@ -15453,7 +16938,7 @@ function short(digest) {
 
 // packages/skill-summon/src/data/skill-index-source.ts
 import { readFile as readFile3 } from "node:fs/promises";
-import { dirname as dirname2, join as join2 } from "node:path";
+import { dirname as dirname2, join as join3 } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // packages/skill-summon/src/domain/types.ts
@@ -15493,12 +16978,12 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 // packages/skill-summon/src/summon/timing.ts
-import { performance } from "node:perf_hooks";
+import { performance as performance2 } from "node:perf_hooks";
 function startTiming() {
-  return performance.now();
+  return performance2.now();
 }
 function elapsedSeconds(startedAt) {
-  return Number(((performance.now() - startedAt) / 1e3).toFixed(3));
+  return Number(((performance2.now() - startedAt) / 1e3).toFixed(3));
 }
 
 // packages/skill-summon/src/summon/clone.ts
@@ -20593,7 +22078,7 @@ function isGithubRepository(value) {
 }
 
 // packages/skill-summon/src/data/skill-index-source.ts
-var INDEX_RELATIVE_PATH = join2("plugins", "skill-heaven", "data", "skill-index.json");
+var INDEX_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "skill-index.json");
 var committed;
 function loadCommittedIndex() {
   committed ??= readCommittedIndex();
@@ -20630,10 +22115,10 @@ function candidatePaths() {
   const configured = process.env.SKILL_INDEX_PATH?.trim();
   const here = dirname2(fileURLToPath(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join2(here, "..", "data", "skill-index.json"));
+  paths.push(join3(here, "..", "data", "skill-index.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join2(directory, INDEX_RELATIVE_PATH));
+    paths.push(join3(directory, INDEX_RELATIVE_PATH));
     const parent = dirname2(directory);
     if (parent === directory) break;
     directory = parent;
@@ -21123,11 +22608,11 @@ function isInstallable(skill) {
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
 import { createHash as createHash2 } from "node:crypto";
-import { dirname as dirname3, join as join3 } from "node:path";
+import { dirname as dirname3, join as join4 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 
 // packages/skill-summon/src/data/confined-file.ts
-import { constants } from "node:fs";
+import { constants as constants2 } from "node:fs";
 import { open } from "node:fs/promises";
 import { resolve as resolve2 } from "node:path";
 async function readConfinedFile(root, target) {
@@ -21138,23 +22623,23 @@ async function readConfinedFile(root, target) {
   try {
     let file;
     if (process.platform === "darwin") {
-      file = await open(absolute, constants.O_RDONLY | constants.O_NONBLOCK | 536870912);
+      file = await open(absolute, constants2.O_RDONLY | constants2.O_NONBLOCK | 536870912);
       handles.push(file);
     } else if (process.platform === "linux") {
-      let parent = await open("/", constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      let parent = await open("/", constants2.O_RDONLY | constants2.O_DIRECTORY | constants2.O_NOFOLLOW);
       handles.push(parent);
       const parts = absolute.split("/").filter(Boolean);
       if (parts.length === 0) throw new Error("Evidence file is not a regular file");
       for (const part of parts.slice(0, -1)) {
         parent = await open(
           `/proc/self/fd/${parent.fd}/${part}`,
-          constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW
+          constants2.O_RDONLY | constants2.O_DIRECTORY | constants2.O_NOFOLLOW
         );
         handles.push(parent);
       }
       file = await open(
         `/proc/self/fd/${parent.fd}/${parts.at(-1)}`,
-        constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW
+        constants2.O_RDONLY | constants2.O_NONBLOCK | constants2.O_NOFOLLOW
       );
       handles.push(file);
     } else {
@@ -21174,7 +22659,7 @@ function darwinAlias(value) {
 }
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
-var IDENTITY_RELATIVE_PATH = join3("plugins", "skill-heaven", "data", "arbor-identity.json");
+var IDENTITY_RELATIVE_PATH = join4("plugins", "skill-heaven", "data", "arbor-identity.json");
 var cached2;
 function loadArborIdentityContext() {
   cached2 ??= readIdentityFromDisk();
@@ -21214,10 +22699,10 @@ function candidatePaths2() {
   const configured = process.env.ARBOR_IDENTITY_PATH?.trim();
   const here = dirname3(fileURLToPath2(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join3(here, "..", "data", "arbor-identity.json"));
+  paths.push(join4(here, "..", "data", "arbor-identity.json"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join3(directory, IDENTITY_RELATIVE_PATH));
+    paths.push(join4(directory, IDENTITY_RELATIVE_PATH));
     const parent = dirname3(directory);
     if (parent === directory) break;
     directory = parent;
@@ -26006,11 +27491,11 @@ import path8 from "node:path";
 
 // packages/skill-summon/src/data/arbor-source.ts
 import { createHash as createHash3 } from "node:crypto";
-import { dirname as dirname4, join as join4, isAbsolute as isAbsolute2, relative, sep } from "node:path";
+import { dirname as dirname4, join as join5, isAbsolute as isAbsolute2, relative, sep } from "node:path";
 import { fileURLToPath as fileURLToPath4 } from "node:url";
-var ARBOR_RELATIVE_PATH = join4("plugins", "skill-heaven", "data", "arbor");
+var ARBOR_RELATIVE_PATH = join5("plugins", "skill-heaven", "data", "arbor");
 var EDGE_INDEX_FILE = "edges.json";
-var RUNTIME_INDEX_FILE = join4("runtime", "index.json");
+var RUNTIME_INDEX_FILE = join5("runtime", "index.json");
 var PROVENANCE_FILE = "provenance.json";
 var cached3;
 function loadArborPublication() {
@@ -26042,7 +27527,7 @@ async function readArborPublicationDir(root) {
   try {
     assertArborRuntimeIndex(runtimeIndexFile.value);
     for (const subject of runtimeIndexFile.value.subjects) {
-      const relativePath = join4("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
+      const relativePath = join5("runtime", ...subject.id.split("/"), `${subject.contentSha256}.json`);
       expected.add(relativePath);
       const document = await readConfinedJson(root, relativePath, problems);
       if (document === void 0) {
@@ -26085,10 +27570,10 @@ function candidatePaths3() {
   const configured = process.env.ARBOR_PUBLICATION_PATH?.trim();
   const here = dirname4(fileURLToPath4(import.meta.url));
   const paths = configured ? [configured] : [];
-  paths.push(join4(here, "..", "data", "arbor"));
+  paths.push(join5(here, "..", "data", "arbor"));
   let directory = here;
   for (let depth = 0; depth < 8; depth++) {
-    paths.push(join4(directory, ARBOR_RELATIVE_PATH));
+    paths.push(join5(directory, ARBOR_RELATIVE_PATH));
     const parent = dirname4(directory);
     if (parent === directory) break;
     directory = parent;
@@ -26096,7 +27581,7 @@ function candidatePaths3() {
   return paths;
 }
 async function readConfinedJson(root, relativePath, problems) {
-  const target = join4(root, relativePath);
+  const target = join5(root, relativePath);
   try {
     const bytes = await readConfinedFile(root, target);
     const digest = createHash3("sha256").update(bytes).digest("hex");
@@ -26194,7 +27679,7 @@ async function verifyProvenance(root, expected, digests, problems) {
 }
 function normalizeRelative(value) {
   if (value.length === 0 || isAbsolute2(value)) return null;
-  const normalized = relative(".", join4(".", value));
+  const normalized = relative(".", join5(".", value));
   if (normalized.length === 0) return null;
   if (normalized === ".." || normalized.startsWith(`..${sep}`)) return null;
   return normalized;
@@ -26653,7 +28138,17 @@ async function appendSummonLog(session, outcome) {
 
 // packages/skill-summon/src/summon/summon.ts
 var DEFAULT_LIMIT2 = 1;
-async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface = "hell", source, preview = false, taskSignals }) {
+async function summon(service, session, {
+  query,
+  limit = DEFAULT_LIMIT2,
+  surface = "hell",
+  source,
+  preview = false,
+  taskSignals,
+  decision: requestedDecision,
+  jevClient,
+  live
+}) {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
   if (trimmedQuery.length === 0) {
@@ -26667,14 +28162,18 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   await reapSessions({ excludeRoots: [session.root] });
   await session.ensureRoots();
   const resolved = await service.skillIndex(source);
-  const decision = decide({
+  const rawDecision = requestedDecision ?? process.env.SKILL_HEAVEN_DECISION ?? process.env.SKILL_DECISION_BACKEND ?? "classic";
+  const decisionMode = rawDecision === "classic" || rawDecision === "jev" || rawDecision === "compare" ? rawDecision : "classic";
+  const backend = decisionMode === "classic" ? createDecisionBackend("classic") : createDecisionBackend(decisionMode, { client: jevClient ?? getSharedJevClient(), live });
+  const decision = await backend.decide({
     index: resolved.index,
     query: trimmedQuery,
     ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
     surface,
-    source: resolved.source
+    source: resolved.source,
+    live
   });
-  const ranking = disclose(resolved, decision);
+  const ranking = disclose(resolved, decision, decisionMode);
   const registry2 = resolved.index.docs.map(toNamedSkill);
   const disclosures = disclosureById(decision, trimmedQuery);
   const publication = await loadArborPublication();
@@ -26788,6 +28287,8 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
     payloadCache: new PayloadCache(),
     ranking,
     disclosures,
+    surface,
+    index: resolved.index,
     arborFor
   };
   const summoned = [];
@@ -26833,22 +28334,41 @@ async function summon(service, session, { query, limit = DEFAULT_LIMIT2, surface
   await appendSummonLog(session, outcome);
   return outcome;
 }
-function disclose(resolved, decision) {
+function disclose(resolved, decision, decisionMode) {
   const { index } = resolved;
   const floorNote = decision.floor === null ? "no calibrated relevance floor in this index \u2014 summon cannot yet decline on relevance" : `candidates below the calibrated floor (${decision.floor.toFixed(2)}) are refused, not returned`;
   const installabilityNote = resolved.installability?.status === "applied" ? `Tree installability projection applied from ${resolved.installability.projectionIndexPath ?? "an unspecified path"}; only exact verified negatives can withhold.` : resolved.installability?.status === "unavailable" ? `Optional Tree installability projection unavailable; materializability is unknown and summon continued offline (${resolved.installability.warning ?? "source error"}).` : resolved.installability?.status === "not-applicable" ? "This source is outside the Tree installability scope; materializability is unknown and source routing remains authoritative." : "Tree installability evidence is not configured; materializability is unknown and no URL-shape heuristic is used.";
+  let disclosureText = `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied. ` + installabilityNote;
+  if (decisionMode === "jev") {
+    if (decision.backend === "fallback") {
+      disclosureText += ` Semantic decision backend failed (${decision.fallbackReason ?? "offline"}); degraded gracefully to classic BM25F fallback.`;
+    } else if (decision.semantic?.bypassed) {
+      disclosureText += " Semantic decision bypassed: exact candidate match.";
+    } else {
+      disclosureText += ` Probabilistic semantic decision evaluated candidates via Jev (${decision.semantic?.model ?? "jev"}).`;
+    }
+  } else if (decisionMode === "compare") {
+    const agreement = decision.compare?.agreement ? "agreed" : "disagreed";
+    disclosureText += ` Compare mode: BM25F authoritative; shadow semantic decision ${agreement}.`;
+  }
   return {
     // Heaven/Hell stamps are not built. Routing is relevance only, and this
     // string is the surface that has to keep saying so.
     mode: "relevance-only",
     trustFields: [],
-    disclosure: `Ranked by BM25F over the committed retrieval index; ${floorNote}. The tree publishes no behavioural stamps, so no trust ordering is applied. ` + installabilityNote,
+    disclosure: disclosureText,
     indexGeneratedAt: index.generatedAt,
     indexAgeDays: indexAgeDays(index),
     stale: isStale(index),
     indexOrigin: resolved.origin,
     source: resolved.source,
-    ...resolved.installability ? { installability: resolved.installability } : {}
+    ...resolved.installability ? { installability: resolved.installability } : {},
+    decision: {
+      mode: decisionMode,
+      backend: decision.backend,
+      ...decision.semantic !== void 0 ? { semantic: decision.semantic } : {},
+      ...decision.compare !== void 0 ? { compare: decision.compare } : {}
+    }
   };
 }
 function summonArborDisclosure(publication, resolved, identity, pinnedSkills) {
@@ -26941,6 +28461,51 @@ async function installSkill(ref, ctx, visited, viaSuite) {
       suites: [],
       reason: `Skill '${ref}' not found in registry.`
     };
+  }
+  const doc = ctx.index.docs.find((d) => d.id === resolved.id);
+  if (doc) {
+    const why = withholdReason(doc, ctx.surface);
+    if (why) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: ${why}`
+      };
+    }
+    if (doc.installability?.applicability === "verified" && doc.installability?.state === "not-materializable") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is verified not materializable: ${doc.installability.reason}`
+      };
+    }
+  } else {
+    if (ctx.surface === "heaven" && resolved.invocation === "model") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: surface:heaven excludes model-led skills`
+      };
+    }
+    if (ctx.surface === "hell" && resolved.invocation === "human") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is withheld: surface:hell excludes human-led skills`
+      };
+    }
+    if (resolved.installability?.applicability === "verified" && resolved.installability?.state === "not-materializable") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${resolved.id}' is verified not materializable: ${resolved.installability.reason}`
+      };
+    }
   }
   const suiteComponents = resolved.suiteComponents ?? [];
   if (suiteComponents.length > 0) {
@@ -27036,6 +28601,51 @@ function resolveSafely(ref, registry2) {
 }
 async function installSingle(skill, ctx, viaSuite) {
   const skillStartedAt = startTiming();
+  const doc = ctx.index.docs.find((d) => d.id === skill.id);
+  if (doc) {
+    const why = withholdReason(doc, ctx.surface);
+    if (why) {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: ${why}`
+      };
+    }
+    if (doc.installability?.applicability === "verified" && doc.installability?.state === "not-materializable") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is verified not materializable: ${doc.installability.reason}`
+      };
+    }
+  } else {
+    if (ctx.surface === "heaven" && skill.invocation === "model") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: surface:heaven excludes model-led skills`
+      };
+    }
+    if (ctx.surface === "hell" && skill.invocation === "human") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is withheld: surface:hell excludes human-led skills`
+      };
+    }
+    if (skill.installability?.applicability === "verified" && skill.installability?.state === "not-materializable") {
+      return {
+        ok: false,
+        installed: [],
+        suites: [],
+        reason: `Skill '${skill.id}' is verified not materializable: ${skill.installability.reason}`
+      };
+    }
+  }
   if (skill.installable === false) {
     return {
       ok: false,
@@ -27255,7 +28865,7 @@ function errorMessage6(error2) {
 }
 
 // packages/skill-summon/src/mcp/skills.ts
-import { constants as constants2 } from "node:fs";
+import { constants as constants3 } from "node:fs";
 import { createHash as createHash6 } from "node:crypto";
 import { mkdtemp as mkdtemp3, lstat as lstat5, open as open2, rm as rm5 } from "node:fs/promises";
 import { tmpdir as tmpdir4 } from "node:os";
@@ -27533,7 +29143,7 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
     const filePath = path9.resolve(skillRoot, resourceSubpath);
     assertInside(skillRoot, filePath);
     await assertNoSymlinkPath(skillRoot, resourceSubpath);
-    const flags = constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0);
+    const flags = constants3.O_RDONLY | (constants3.O_NOFOLLOW ?? 0);
     const handle = await open2(filePath, flags);
     try {
       const fileStat = await handle.stat();
@@ -27658,6 +29268,12 @@ var summonOutputSchema = external_exports.object({
       projectionIndexPath: external_exports.string().optional(),
       sourceUrl: external_exports.string().optional(),
       warning: external_exports.string().optional()
+    }).optional(),
+    decision: external_exports.object({
+      mode: external_exports.enum(["classic", "jev", "compare"]),
+      backend: external_exports.string(),
+      semantic: external_exports.unknown().optional(),
+      compare: external_exports.unknown().optional()
     }).optional()
   }),
   // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
@@ -27886,12 +29502,18 @@ function createSkillSummonMcpServer({
         ),
         preview: external_exports.boolean().optional().describe(
           "Rank and disclose without materialising anything to disk. Use it to ask what would be summoned."
+        ),
+        decision: external_exports.enum(["classic", "jev", "compare"]).optional().describe(
+          "Decision backend mode: classic deterministic BM25F, jev probabilistic semantic decision, or compare shadow mode."
+        ),
+        live: external_exports.boolean().optional().describe(
+          "Opt-in to live Jev System One semantic evaluation."
         )
       }),
       outputSchema: summonOutputSchema,
       annotations: summonAnnotations
     },
-    async ({ query, limit, surface, source, preview }) => {
+    async ({ query, limit, surface, source, preview, decision, live }) => {
       if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
@@ -27900,7 +29522,9 @@ function createSkillSummonMcpServer({
           ...limit === void 0 ? {} : { limit },
           ...surface === void 0 ? {} : { surface },
           ...source === void 0 ? {} : { source },
-          ...preview === void 0 ? {} : { preview }
+          ...preview === void 0 ? {} : { preview },
+          ...decision === void 0 ? {} : { decision },
+          ...live === void 0 ? {} : { live }
         });
         let linkSkills = [];
         if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
