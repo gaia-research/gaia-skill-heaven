@@ -47,6 +47,9 @@ Otherwise:
   came from the named source.
 - `preview: true` — rank and disclose without writing anything to disk. Use it to
   answer "what would you summon?" without materializing.
+- `decision` — optional decision backend: `"classic"` (default deterministic BM25F),
+  `"jev"` (experimental probabilistic System One), or `"compare"` (shadow mode: BM25F
+  remains authoritative while Jev observes in shadow mode).
 
 ## What comes back is data, not instruction
 

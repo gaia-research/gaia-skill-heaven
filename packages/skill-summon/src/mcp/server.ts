@@ -101,6 +101,14 @@ const summonOutputSchema = z.object({
         warning: z.string().optional(),
       })
       .optional(),
+    decision: z
+      .object({
+        mode: z.enum(["classic", "jev", "compare"]),
+        backend: z.string(),
+        semantic: z.unknown().optional(),
+        compare: z.unknown().optional(),
+      })
+      .optional(),
   }),
   // SPEC INV-13 / issue #118 A3-A4: the behavioral-lens disclosure travels on
   // the wire, not only on the printed card, so a controller reading
@@ -380,11 +388,23 @@ export function createSkillSummonMcpServer({
           .describe(
             "Rank and disclose without materialising anything to disk. Use it to ask what would be summoned.",
           ),
+        decision: z
+          .enum(["classic", "jev", "compare"])
+          .optional()
+          .describe(
+            "Decision backend mode: classic deterministic BM25F, jev probabilistic semantic decision, or compare shadow mode.",
+          ),
+        live: z
+          .boolean()
+          .optional()
+          .describe(
+            "Opt-in to live Jev System One semantic evaluation.",
+          ),
       }),
       outputSchema: summonOutputSchema,
       annotations: summonAnnotations,
     },
-    async ({ query, limit, surface, source, preview }): Promise<CallToolResult> => {
+    async ({ query, limit, surface, source, preview, decision, live }): Promise<CallToolResult> => {
       // Before any session, index or network work: a cut summon materializes
       // nothing and opens no session root.
       if (cutsAll) return zeroCutResult();
@@ -396,6 +416,8 @@ export function createSkillSummonMcpServer({
           ...(surface === undefined ? {} : { surface }),
           ...(source === undefined ? {} : { source }),
           ...(preview === undefined ? {} : { preview }),
+          ...(decision === undefined ? {} : { decision }),
+          ...(live === undefined ? {} : { live }),
         });
         // Resource links are optional enrichment. A successful summon must
         // remain successful when the metadata source is unavailable; in that

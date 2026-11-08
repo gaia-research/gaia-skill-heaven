@@ -128,7 +128,7 @@ export function decide({
  * Why a plausible skill was withheld. A caller who can see this can act; one
  * who cannot will assume the tool is broken (SPEC §4.2).
  */
-function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | null {
+export function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | null {
   if (doc.registryOnly) return "registry-only — the tree marks this skill installable: false";
   if (!isReachable(doc)) {
     const evidence = doc.installability;
@@ -152,11 +152,11 @@ function withholdReason(doc: IndexedSkill, surface: SummonSurface): string | nul
   return null;
 }
 
-function isBareId(query: string): boolean {
+export function isBareId(query: string): boolean {
   return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(query.trim());
 }
 
-function noMatchDecision(
+export function noMatchDecision(
   query: string,
   reason: NoMatch["reason"],
   considered: readonly ScoredSkill[],
