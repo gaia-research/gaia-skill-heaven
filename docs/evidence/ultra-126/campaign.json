@@ -5,7 +5,7 @@
   "planPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/255",
   "issue": "https://github.com/gaia-research/gaia-skill-heaven/issues/126",
   "integrationBranch": "integration/skill-ultra-126",
-  "integrationPr": null,
+  "integrationPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/256",
   "baseMain": "6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d",
   "status": "EXECUTING",
   "preflight": {
@@ -32,25 +32,212 @@
     "github": "repo allow_squash_merge=true, allow_merge_commit=false; ruleset 'main' active on main only"
   },
   "units": [
-    {"id": "U0a", "scope": "Pure campaign engine, strict schemas, replay, verify", "after": [], "tier": "heavy", "team": null, "worker": null, "branch": "feat/ws6-ultra-u0a", "pr": null, "head": null, "terra": "pending", "status": "ready"},
-    {"id": "U0b", "scope": "Store, session re-attach, status /v1, CLI", "after": ["U0a"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u0b", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U1", "scope": "campaign tool: open, recon, status", "after": ["U0b"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u1", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U2", "scope": "Manifest build and renderer", "after": ["U1"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u2", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U3", "scope": "Charter, decisions, operator channel, gaia-research N/lexicon delta", "after": ["U2"], "tier": "heavy", "team": null, "worker": null, "branch": "feat/ws6-ultra-u3", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U4", "scope": "Work-unit queue, receipts, steering wiring", "after": ["U1"], "tier": "heavy", "team": null, "worker": null, "branch": "feat/ws6-ultra-u4", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U5", "scope": "Summon gate under a campaign", "after": ["U3", "U4"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u5", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U6", "scope": "Incident packets and answers", "after": ["U4"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u6", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U7", "scope": "Compaction/resume probes, Console hook, release readiness", "after": ["U5", "U6"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u7", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U8", "scope": "Arbor refresh, declared claims, #253 doc fix", "after": ["U2"], "tier": "standard", "team": null, "worker": null, "branch": "feat/ws6-ultra-u8", "pr": null, "head": null, "terra": "pending", "status": "waiting"},
-    {"id": "U9", "scope": "End-to-end proof, evidence, availability copy", "after": ["U7", "U8"], "tier": "heavy", "team": null, "worker": null, "branch": "feat/ws6-ultra-u9", "pr": null, "head": null, "terra": "pending", "status": "waiting"}
+    {
+      "id": "U0a",
+      "scope": "Pure campaign engine, strict schemas, replay, verify",
+      "after": [],
+      "tier": "heavy",
+      "team": "B (Pi)",
+      "worker": "lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight",
+      "branch": "feat/ws6-ultra-u0a",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "active"
+    },
+    {
+      "id": "U0b",
+      "scope": "Store, session re-attach, status /v1, CLI",
+      "after": [
+        "U0a"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u0b",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U1",
+      "scope": "campaign tool: open, recon, status",
+      "after": [
+        "U0b"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u1",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U2",
+      "scope": "Manifest build and renderer",
+      "after": [
+        "U1"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u2",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U3",
+      "scope": "Charter, decisions, operator channel, gaia-research N/lexicon delta",
+      "after": [
+        "U2"
+      ],
+      "tier": "heavy",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u3",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting (P1 probe running early)"
+    },
+    {
+      "id": "U4",
+      "scope": "Work-unit queue, receipts, steering wiring",
+      "after": [
+        "U1"
+      ],
+      "tier": "heavy",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u4",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U5",
+      "scope": "Summon gate under a campaign",
+      "after": [
+        "U3",
+        "U4"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u5",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U6",
+      "scope": "Incident packets and answers",
+      "after": [
+        "U4"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u6",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U7",
+      "scope": "Compaction/resume probes, Console hook, release readiness",
+      "after": [
+        "U5",
+        "U6"
+      ],
+      "tier": "standard",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u7",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    },
+    {
+      "id": "U8",
+      "scope": "Arbor refresh, declared claims, #253 doc fix",
+      "after": [
+        "U2"
+      ],
+      "tier": "standard",
+      "team": "C (Antigravity)",
+      "worker": "gemini-4-hydrogen-medium",
+      "branch": "feat/ws6-ultra-u8",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "prep active (data + docs only; render waits for U2)"
+    },
+    {
+      "id": "U9",
+      "scope": "End-to-end proof, evidence, availability copy",
+      "after": [
+        "U7",
+        "U8"
+      ],
+      "tier": "heavy",
+      "team": null,
+      "worker": null,
+      "branch": "feat/ws6-ultra-u9",
+      "pr": null,
+      "head": null,
+      "terra": "pending",
+      "status": "waiting"
+    }
   ],
   "probes": [
-    {"id": "P1", "unit": "U3", "question": "Which operator channels work: elicitation, command pre-execution, permission prompt", "status": "not started"},
-    {"id": "P2", "unit": "U7", "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)", "status": "not started"},
-    {"id": "P3", "unit": "U7", "question": "Charter-excluded summon refused after compaction and resume (every run)", "status": "not started"},
-    {"id": "P4", "unit": "U7", "question": "Agent returns to queue after compaction/resume, with and without Console hook (n>=5)", "status": "not started"},
-    {"id": "P5", "unit": "U7", "question": "Forced auto-compaction in a scripted long run", "status": "not started"},
-    {"id": "P6", "unit": "U7", "question": "Per additional door: stable session id, working operator channel", "status": "not started"}
+    {
+      "id": "P1",
+      "unit": "U3",
+      "question": "Which operator channels work: elicitation, command pre-execution, permission prompt",
+      "status": "running",
+      "team": "C (Antigravity) gemini-4-hydrogen-high driver; model under test claude-haiku-5-5",
+      "branch": "feat/ws6-ultra-u3-p1"
+    },
+    {
+      "id": "P2",
+      "unit": "U7",
+      "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)",
+      "status": "not started"
+    },
+    {
+      "id": "P3",
+      "unit": "U7",
+      "question": "Charter-excluded summon refused after compaction and resume (every run)",
+      "status": "not started"
+    },
+    {
+      "id": "P4",
+      "unit": "U7",
+      "question": "Agent returns to queue after compaction/resume, with and without Console hook (n>=5)",
+      "status": "not started"
+    },
+    {
+      "id": "P5",
+      "unit": "U7",
+      "question": "Forced auto-compaction in a scripted long run",
+      "status": "not started"
+    },
+    {
+      "id": "P6",
+      "unit": "U7",
+      "question": "Per additional door: stable session id, working operator channel",
+      "status": "not started"
+    }
   ],
   "decisions": [
     {
@@ -74,7 +261,11 @@
       "team": "A (Opus orchestrator)",
       "unit": "all",
       "problem": "Repo permits only squash merges (allow_merge_commit=false). Squash-merging unit PRs into the integration branch would collapse unit commits, which the directive says must not lose unit-level evidence.",
-      "options": ["Squash-merge unit PRs via GitHub", "Local git merge --no-ff of the reviewed unit HEAD, pushed to the integration branch (no ruleset on that branch)", "Rebase-merge"],
+      "options": [
+        "Squash-merge unit PRs via GitHub",
+        "Local git merge --no-ff of the reviewed unit HEAD, pushed to the integration branch (no ruleset on that branch)",
+        "Rebase-merge"
+      ],
       "selected": "Local git merge --no-ff of the Terra-reviewed unit HEAD into integration/skill-ultra-126, then push. GitHub marks the unit PR merged because its commits are in base. Unit branches are never deleted.",
       "reason": "Preserves every unit commit, its review trail and handoff; no force-push; ruleset only governs main.",
       "authority": "Directive section 6 (internal integration merges authorized; do not squash away unit evidence)",
@@ -89,7 +280,10 @@
       "team": "A (Opus orchestrator)",
       "unit": "all",
       "problem": "PR-8 also said the campaign tool stays unregistered in the bundled MCP until U3, to keep each main merge inert.",
-      "options": ["Drop the gate since nothing reaches main until founder merge", "Keep the gate"],
+      "options": [
+        "Drop the gate since nothing reaches main until founder merge",
+        "Keep the gate"
+      ],
       "selected": "Keep the U1 server-option gate until U3 exactly as the plan's U1/U3 briefs specify.",
       "reason": "The gate is part of the approved unit briefs, costs nothing, and keeps intermediate integration states inert.",
       "authority": "Plan Appendix A U1/U3",
@@ -104,15 +298,76 @@
       "team": "A (Opus orchestrator)",
       "unit": "all",
       "problem": "Parallel lanes in one checkout would collide; main checkout has unrelated uncommitted founder files.",
-      "options": ["Shared checkout", "One git worktree per lane under ~/skill-heaven-wt/"],
+      "options": [
+        "Shared checkout",
+        "One git worktree per lane under ~/skill-heaven-wt/"
+      ],
       "selected": "One git worktree per lane under ~/skill-heaven-wt/<lane>; the founder's main checkout is never touched.",
       "reason": "File-ownership isolation; P3-style respect for the founder's working tree.",
       "authority": "Directive sections 1 and 6",
       "reversible": true,
       "terra": "n/a (process)",
       "risk": "Each worktree needs its own npm ci."
+    },
+    {
+      "id": "D-004",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U3",
+      "problem": "P1 (operator channel) gates U3's implementation choice but depends on no unit code; waiting for U2 would serialize it behind three units.",
+      "options": [
+        "Run P1 when U3 starts",
+        "Run P1 now as a U3 sub-branch; U3 consumes its record"
+      ],
+      "selected": "Run P1 now on feat/ws6-ultra-u3-p1 (Antigravity Hydrogen High drives; claude-haiku-5-5 is the model under test, n=3 per cell, TUI cells in visible herdr panes). The orchestrator interprets; the lane records hard signals only.",
+      "reason": "Removes U3's longest serial wait without changing the architecture; probe-only, cheap model under test (FD-9).",
+      "authority": "Plan U3 brief ('Run P1 first'), section 7.2; directive section 10",
+      "reversible": true,
+      "terra": "U3 review covers the P1 record",
+      "outcome": "pending",
+      "risk": "Claude Code may upgrade before U3; P1 then re-runs per M0."
+    },
+    {
+      "id": "D-005",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "reporting",
+      "problem": "The dashboard and decision-log renderer is orchestration reporting, not a product unit; a separate Terra pass for it would spend the scarce reviewer on non-product code.",
+      "options": [
+        "Separate Terra review",
+        "Merge after the orchestrator checks it; covered by the final full-integration Terra review"
+      ],
+      "selected": "Merge the DASH lane after an orchestrator check; it touches only docs/evidence/ultra-126/ and is included in the final integration review.",
+      "reason": "The review gate in directive section 7 is for implementation units; this lane writes no product code.",
+      "authority": "Directive sections 7 and 9",
+      "reversible": true,
+      "terra": "final integration review",
+      "outcome": "pending",
+      "risk": "low"
+    },
+    {
+      "id": "D-006",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U8",
+      "problem": "U8 is listed after U2, but only its declared-claims rendering touches U2's renderer. The Arbor cache refresh, identity pins, release-acceptance update and #253 doc fix have no code dependency on U2.",
+      "options": [
+        "Start U8 only after U2",
+        "Start the data and docs half now; the render half and the merge wait for U2"
+      ],
+      "selected": "Start U8 prep now (data, pins, release-acceptance, #253 docs). The declared-claims render is added after U2 lands, and U8 merges into integration only after U2.",
+      "reason": "Uses idle Antigravity capacity; the dependency's reason (the renderer) is still honored.",
+      "authority": "Plan section 7.1 (U8 'any time after U2' is satisfied at merge); directive section 5",
+      "reversible": true,
+      "terra": "U8 review",
+      "outcome": "pending",
+      "risk": "The refreshed data could conflict with U2 if U2 touches arbor data. U2's brief does not."
     }
   ],
   "blockers": [],
-  "awaitingFounder": []
+  "awaitingFounder": [],
+  "updatedAt": "2026-11-16"
 }
