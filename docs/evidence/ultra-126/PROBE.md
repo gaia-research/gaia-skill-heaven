@@ -126,3 +126,72 @@ Interpreted by the Team A orchestrator (Opus 5.5) from the signals above. The la
   auto-accepted? An auto-accept would void channel 1 in those modes, which is a
   blocking question.
 - Whether any harness-side setting can auto-answer elicitation for the model.
+
+## P1b: elicitation under bypass and auto modes
+
+- **Date:** 2026-11-16 (`2026-11-15T21:43:48Z` – `2026-11-15T21:48:00Z`)
+- **Harness binary & version:** `~/.local/bin/claude` — `2.1.325 (Claude Code)`
+- **Model:** `claude-haiku-5-5` (`--model claude-haiku-5-5`)
+- **Isolation flags (all runs):** fresh `mktemp -d` working directory, `--strict-mcp-config --mcp-config <run_dir>/mcp.json`, `--setting-sources project`
+- **Additional per-cell flags:**
+  - `C2-tb`: `--dangerously-skip-permissions`
+  - `C2-ta`: `--permission-mode auto --allowedTools mcp__p1__probe_elicit`
+  - `C2-hb`: `-p --no-session-persistence --output-format stream-json --verbose --dangerously-skip-permissions`
+- **Herdr pane IDs (TUI cells):** `w32:p4` (`C2-tb` r1–r3), `w32:p5` (`C2-ta` r1–r3), split inside tab `w32:t3`. Both panes closed after recording.
+- **Test fixture note:** Keystrokes sent to TUI panes (`Down` + `Enter` on workspace trust prompt, `Down` + `Enter` on bypass-permissions warning in `C2-tb`, `"call probe_elicit"` + `Enter`, `"ALPHA"` + `Down` + `Enter` + `Enter` on `Accept`) were sent via `herdr pane send-text` / `herdr pane send-keys` as a **test fixture standing in for an operator**, not a human decision.
+
+### Results (n = 3 per cell)
+
+| Cell | Mode | Run | Observed signal |
+|---|---|---:|---|
+| `C2-tb` | TUI pane (`w32:p4`, `--dangerously-skip-permissions`) | 1 | Elicitation prompt appeared (`MCP server “p1” requests your input` / `P1 operator check: type the word ALPHA` / `❯ * word: Type something…` / `Accept    Decline`). Server sent `elicitation/create` (`id:"srv-1"`) at `21:44:44.083Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:45:00.522Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-tb` | TUI pane (`w32:p4`, `--dangerously-skip-permissions`) | 2 | Same elicitation prompt appeared. Server sent `elicitation/create` (`id:"srv-1"`) at `21:45:35.924Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:45:56.830Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-tb` | TUI pane (`w32:p4`, `--dangerously-skip-permissions`) | 3 | Same elicitation prompt appeared. Server sent `elicitation/create` (`id:"srv-1"`) at `21:46:43.922Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:47:00.012Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-ta` | TUI pane (`w32:p5`, `--permission-mode auto --allowedTools mcp__p1__probe_elicit`) | 1 | Elicitation prompt appeared (`MCP server “p1” requests your input` / `P1 operator check: type the word ALPHA` / `❯ * word: Type something…` / `Accept    Decline`). Server sent `elicitation/create` (`id:"srv-1"`) at `21:46:28.564Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:46:50.313Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-ta` | TUI pane (`w32:p5`, `--permission-mode auto --allowedTools mcp__p1__probe_elicit`) | 2 | Same elicitation prompt appeared. Server sent `elicitation/create` (`id:"srv-1"`) at `21:47:20.707Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:47:31.088Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-ta` | TUI pane (`w32:p5`, `--permission-mode auto --allowedTools mcp__p1__probe_elicit`) | 3 | Same elicitation prompt appeared. Server sent `elicitation/create` (`id:"srv-1"`) at `21:47:50.392Z`; after fixture typed `ALPHA` and selected `Accept`, server logged at `21:47:59.655Z`: `{"result":{"action":"accept","content":{"word":"ALPHA"}},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-hb` | headless `-p --dangerously-skip-permissions` | 1 | Server sent `elicitation/create` (`id:"srv-1"`) at `21:43:50.945Z`; client logged response at `21:43:50.953Z`: `{"result":{"action":"cancel"},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-hb` | headless `-p --dangerously-skip-permissions` | 2 | Server sent `elicitation/create` (`id:"srv-1"`) at `21:43:55.901Z`; client logged response at `21:43:55.903Z`: `{"result":{"action":"cancel"},"jsonrpc":"2.0","id":"srv-1"}` |
+| `C2-hb` | headless `-p --dangerously-skip-permissions` | 3 | Server sent `elicitation/create` (`id:"srv-1"`) at `21:44:00.963Z`; client logged response at `21:44:00.965Z`: `{"result":{"action":"cancel"},"jsonrpc":"2.0","id":"srv-1"}` |
+
+### TUI pane excerpts (test fixture interactions)
+
+**`C2-tb` run 1 elicitation prompt (`w32:p4`):**
+```text
+────────────────────────────────────────────────────────────────────────
+  MCP server “p1” requests your input
+
+  P1 operator check: type the word ALPHA
+
+  ❯ * word: Type something…
+
+    Accept    Decline
+
+  Esc to cancel · ↑/↓ to navigate · Backspace to unset
+```
+
+**`C2-ta` run 1 elicitation prompt (`w32:p5`):**
+```text
+────────────────────────────────────────────────────────────────────────
+  MCP server “p1” requests your input
+
+  P1 operator check: type the word ALPHA
+
+  ❯ * word: Type something…
+
+    Accept    Decline
+
+  Esc to cancel · ↑/↓ to navigate · Backspace to unset
+```
+
+### Raw
+
+Committed MCP JSONL logs:
+
+- `C2-tb`: [C2-tb-r1.jsonl](probes/p1/logs/C2-tb-r1.jsonl), [C2-tb-r2.jsonl](probes/p1/logs/C2-tb-r2.jsonl), [C2-tb-r3.jsonl](probes/p1/logs/C2-tb-r3.jsonl)
+- `C2-ta`: [C2-ta-r1.jsonl](probes/p1/logs/C2-ta-r1.jsonl), [C2-ta-r2.jsonl](probes/p1/logs/C2-ta-r2.jsonl), [C2-ta-r3.jsonl](probes/p1/logs/C2-ta-r3.jsonl)
+- `C2-hb`: [C2-hb-r1.jsonl](probes/p1/logs/C2-hb-r1.jsonl), [C2-hb-r2.jsonl](probes/p1/logs/C2-hb-r2.jsonl), [C2-hb-r3.jsonl](probes/p1/logs/C2-hb-r3.jsonl)
+
+### Interpretation (orchestrator)
+
+pending
