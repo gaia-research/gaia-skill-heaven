@@ -53,13 +53,13 @@
         "U0a"
       ],
       "tier": "standard",
-      "team": null,
-      "worker": null,
+      "team": "B (Pi)",
+      "worker": "lead openai/gpt-6.1-sol xhigh; Hydrogen default workers",
       "branch": "feat/ws6-ultra-u0b",
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "waiting"
+      "status": "active"
     },
     {
       "id": "U1",
@@ -534,13 +534,13 @@
   "awaitingFounder": [],
   "updatedAt": "2026-11-16",
   "quota": {
-    "asOf": "2026-11-16T06:47:00-08:00",
+    "asOf": "2026-11-16T07:41:00-08:00",
     "pools": [
       {
         "pool": "openai",
         "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
-        "state": "nearly exhausted (founder report)",
-        "resetAt": "2026-11-16T07:38:00-08:00"
+        "state": "available: live probe 07:41 PST (pi openai/gpt-6-luna low returned PONG, herdr pane w31:p1C)",
+        "resetAt": null
       },
       {
         "pool": "openai-codex",
