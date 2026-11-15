@@ -817,6 +817,15 @@ tbody tr:last-child td {
         <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16</code></p>
         
       </article>
+      <article class="decision-card founder-card">
+        <div class="card-head">
+          <span class="pill pill-founder">TABS-DIRECTIVE</span>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <p class="card-summary">Remove the two-pane limit. Each lane runs in its own new herdr tab. Keep tabs clean, and archive session JSONL so cost can be logged and lanes resumed later.</p>
+        <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16</code></p>
+        
+      </article>
     </div>
   </div>
     
@@ -1147,11 +1156,60 @@ tbody tr:last-child td {
             </div>
             <div class="field-row">
               <dt>outcome</dt>
-              <dd><span>in effect</span></dd>
+              <dd><span>superseded by D-008 (two-pane limit removed by founder)</span></dd>
             </div>
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each).</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-008</span>
+            <span class="tag">unit: all</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>How to keep lane tabs clean while preserving sessions for skill-cost accounting and resume.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Move finished panes to an archive tab</span></li><li><span>Copy session files to a local archive, then close the tab</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>dispatch.sh opens one tab per lane (label = lane name, --no-focus) and records dispatch.json. archive.sh copies the lane&#39;s Pi session dirs (keyed by the worktree cwd) and its agy conversation (.db plus the brain/&lt;id&gt; transcript JSONL, found through cache/last_conversations.json) into ~/skill-heaven-wt/sessions/&lt;lane&gt;/, saves the final terminal buffer, writes archive.json, and closes the tab. Originals stay in place, so a lane can still be resumed. The archive is local only, never committed (transcripts are excluded from the repo by policy).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Founder directive; copies rather than moves keep resume possible and give skill-cost its canonical inputs.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>TABS-DIRECTIVE</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>n/a (process)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>in effect; verified on lane DASH (15 files archived)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>agy&#39;s cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree.</span></dd>
             </div>
         </dl>
       </article>

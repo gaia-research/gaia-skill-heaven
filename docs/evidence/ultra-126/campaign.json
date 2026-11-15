@@ -262,6 +262,13 @@
       "source": "founder message in orchestration session, 2026-11-16"
     },
     {
+      "id": "TABS-DIRECTIVE",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "Remove the two-pane limit. Each lane runs in its own new herdr tab. Keep tabs clean, and archive session JSONL so cost can be logged and lanes resumed later.",
+      "source": "founder message in orchestration session, 2026-11-16"
+    },
+    {
       "id": "D-001",
       "kind": "delegated",
       "date": "2026-11-16",
@@ -389,8 +396,27 @@
       "authority": "VISIBILITY-DIRECTIVE; herdr-dispatch skill sections 1 and 7",
       "reversible": true,
       "terra": "n/a (process)",
-      "outcome": "in effect",
+      "outcome": "superseded by D-008 (two-pane limit removed by founder)",
       "risk": "The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each)."
+    },
+    {
+      "id": "D-008",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "all",
+      "problem": "How to keep lane tabs clean while preserving sessions for skill-cost accounting and resume.",
+      "options": [
+        "Move finished panes to an archive tab",
+        "Copy session files to a local archive, then close the tab"
+      ],
+      "selected": "dispatch.sh opens one tab per lane (label = lane name, --no-focus) and records dispatch.json. archive.sh copies the lane's Pi session dirs (keyed by the worktree cwd) and its agy conversation (.db plus the brain/<id> transcript JSONL, found through cache/last_conversations.json) into ~/skill-heaven-wt/sessions/<lane>/, saves the final terminal buffer, writes archive.json, and closes the tab. Originals stay in place, so a lane can still be resumed. The archive is local only, never committed (transcripts are excluded from the repo by policy).",
+      "reason": "Founder directive; copies rather than moves keep resume possible and give skill-cost its canonical inputs.",
+      "authority": "TABS-DIRECTIVE",
+      "reversible": true,
+      "terra": "n/a (process)",
+      "outcome": "in effect; verified on lane DASH (15 files archived)",
+      "risk": "agy's cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree."
     }
   ],
   "blockers": [],
