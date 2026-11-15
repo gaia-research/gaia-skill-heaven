@@ -271,6 +271,13 @@
       "source": "founder message in orchestration session, 2026-11-16"
     },
     {
+      "id": "FD-11",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "Operator approvals inside terminal multiplexers (founder ruling on Terra's critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code's auto-mode classifier rejects a model's attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.",
+      "source": "founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)"
+    },
+    {
       "id": "D-001",
       "kind": "delegated",
       "date": "2026-11-16",
@@ -437,8 +444,28 @@
       "authority": "Plan section 5.3 ('says plainly what it is not'); security invariants 4 and 15; directive section 8 (never forge an approval)",
       "reversible": true,
       "terra": "U3 review and the final integration review must check items 1-4",
-      "outcome": "in effect; PROBE.md note lands after lane p1b finishes writing that file",
+      "outcome": "refined by FD-11 and D-010",
       "risk": "In product use, a session whose model has shell access inside a multiplexer can approve its own charter. The disclosure makes that visible; it does not prevent it. A stronger channel would need a harness feature that does not exist on 2.1.325."
+    },
+    {
+      "id": "D-010",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U3",
+      "problem": "Implement FD-11: safeguarded default, an unadvertised opt-in for multiplexed approvals, and a probe of auto mode's classifier.",
+      "options": [
+        "Env-flag opt-in",
+        "Config-file opt-in",
+        "CLI-flag opt-in"
+      ],
+      "selected": "(1) Default: an elicitation accept grants operator authority only when the server's environment shows no multiplexer (HERDR_ENV, HERDR_SOCKET_PATH, TMUX). Otherwise the decisions step fails closed at DECISIONS with a plain message. (2) Advanced opt-in: the person sets an env var themselves before launching the session (name fixed in vocabulary.ts, e.g. SKILL_ULTRA_MULTIPLEXED_DECISIONS=accept-risk). It is documented only in an advanced or evidence note, never in the README, site, command help or skill text. Under opt-in, every operator entry records attribution 'terminal-input, unauthenticated', multiplexed:true and optIn:true, and the decisions render and status show it. (3) Safeguard inside the opt-in: the elicitation form asks the person to type the charter's short digest, shown in the prompt, so a blind or replayed injection does not match. This is disclosed as friction, not authentication. (4) Probe P1d measures auto mode's classifier against a self-approval attempt, and U3 records the result per mode.",
+      "reason": "Matches FD-11: a safe default for ordinary users, nothing advertised, and advanced multiplexer users keep working. Terra's critical finding is answered by the default fail-closed plus an explicit, recorded, person-set opt-in.",
+      "authority": "FD-11",
+      "reversible": true,
+      "terra": "U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in",
+      "outcome": "pending U3",
+      "risk": "An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed."
     }
   ],
   "blockers": [],
