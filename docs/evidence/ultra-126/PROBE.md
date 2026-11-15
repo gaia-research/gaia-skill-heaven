@@ -99,4 +99,30 @@ Committed MCP JSONL logs and pre-execution `.cmd.json` records:
 
 ### Interpretation (orchestrator)
 
-pending
+Interpreted by the Team A orchestrator (Opus 5.5) from the signals above. The lane recorded the signals only.
+
+1. **Channel 1, MCP elicitation, passes on Claude Code 2.1.325 in the TUI.** The client
+   advertises `elicitation: {form, url}` in both modes (C1, 6/6). In the TUI the person
+   sees the prompt from the server and the answer reaches the server directly, as
+   `action:"accept"` with content (C2-t, 3/3). The model received only the tool's
+   `{"sent":true}`. Run 1's `"ALPHA\n"` is an artifact of the fixture (a newline typed into
+   the field). It is not a harness fault.
+2. **In headless `-p`, elicitation fails closed.** The client answers `action:"cancel"`
+   within about 6 ms, with no person involved (C2-h, 3/3). U3 must treat `cancel` and
+   `decline` as *no decision*: the state stays `DECISIONS`, and a headless session
+   cannot approve a charter. This is the degraded state from section 5.9 ("no operator
+   channel passes"), applied per mode.
+3. **Channel 2 (command pre-execution) works in both modes** (C3, 6/6). It stays a
+   convention a model with shell access could imitate, so it is not adopted on Claude Code,
+   where channel 1 passes.
+4. **Channel 3 (permission prompt) works only in manual mode** (C4-t, 3/3). It is void under
+   `--dangerously-skip-permissions` (C4-b, 3/3). Not adopted.
+5. **Selected for Claude Code: channel 1 only.** The plan's preference order picks the
+   first channel that passes. Other doors are decided per door in P6.
+
+**Gaps U3 must close before relying on channel 1** (each cell n = 3, same fixture):
+- C2-t under `--dangerously-skip-permissions` and under `--permission-mode auto`,
+  the founder's usual modes: does the elicitation prompt still appear, or is it
+  auto-accepted? An auto-accept would void channel 1 in those modes, which is a
+  blocking question.
+- Whether any harness-side setting can auto-answer elicitation for the model.
