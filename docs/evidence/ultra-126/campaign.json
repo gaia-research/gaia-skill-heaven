@@ -248,7 +248,8 @@
       "id": "P6",
       "unit": "U7",
       "question": "Per additional door: stable session id, working operator channel",
-      "status": "pass 1 (pi, agy) running on feat/ws6-ultra-u7-p6; codex deferred"
+      "status": "pass 1 merged: Pi has no operator channel and no stable id (DECISIONS stops); agy has a stable _meta.conversation_id and channel 3 only under request-review; Codex not probed",
+      "evidence": "docs/evidence/ultra-126/PROBE-P6.md (PR #264)"
     }
   ],
   "decisions": [
