@@ -205,10 +205,17 @@
       "id": "P1",
       "unit": "U3",
       "question": "Which operator channels work: elicitation, command pre-execution, permission prompt",
-      "status": "done (n=3/cell); channel 1 elicitation selected for Claude Code TUI; headless fails closed; see D-009 for the attribution limit; P1b (bypass/auto modes) running",
+      "status": "accepted: Terra no blocking findings at 81445a1 (reviews P1-9b89398 blocking -> FD-11/D-010 + P1c repairs; P1-31c90ba clear; P1-81445a1 clear). Non-blocking wording fixes after that; final state re-reviewed inside U3.",
       "team": "C (Antigravity) gemini-4-hydrogen-high driver; model under test claude-haiku-5-5",
       "branch": "feat/ws6-ultra-u3-p1",
-      "evidence": "docs/evidence/ultra-126/PROBE.md (branch feat/ws6-ultra-u3-p1, PR #258)"
+      "evidence": "docs/evidence/ultra-126/PROBE.md on feat/ws6-ultra-u3-p1 (PR #258)"
+    },
+    {
+      "id": "P1d",
+      "unit": "U3",
+      "question": "FD-11: does auto mode's classifier stop a session's own model from self-approving its elicitation by typing into its pane?",
+      "status": "running (agy Hydrogen High, Haiku under test, tab p1d)",
+      "branch": "feat/ws6-ultra-u3-p1d"
     },
     {
       "id": "P2",
