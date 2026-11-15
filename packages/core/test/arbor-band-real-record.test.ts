@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { consumeArbor } from "../src/arbor/consume.js";
 import { judgeArborBand, conditionMatcher } from "../src/arbor/band.js";
 import { inspectArborComposition, type CompositionMember } from "../src/arbor/composition.js";
+import { resolveArborIdentity, type ArborIdentityContext } from "../src/arbor/identity.js";
 import { readArborPublication } from "../src/arbor/publication.js";
 import type { BandDirection } from "../src/arbor/band.js";
 
@@ -138,5 +139,104 @@ describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree #2036)",
     const real = member.report.lenses.hellHeaven;
     expect(real.availability).toBe("absent");
     expect(real.upstreamStatus).toBe("absent-no-accepted-record");
+  });
+});
+
+describe.skipIf(!HAVE_TREE)("refreshed Arbor I seed publication and identity joins", () => {
+  const IDENTITY_PATH = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../plugins/skill-heaven/data/arbor-identity.json",
+  );
+
+  function fullPublication() {
+    const index = JSON.parse(
+      readFileSync(join(TREE_ARBOR, "runtime/index.json"), "utf8"),
+    ) as { subjects: { id: string; contentSha256: string }[] };
+    const runtimes = index.subjects.map((s) => ({
+      path: `runtime/${s.id}/${s.contentSha256}.json`,
+      document: JSON.parse(
+        readFileSync(join(TREE_ARBOR, "runtime", ...s.id.split("/"), `${s.contentSha256}.json`), "utf8"),
+      ),
+    }));
+    return readArborPublication({
+      provenance: null,
+      runtimeIndex: index,
+      edgeIndex: JSON.parse(readFileSync(join(TREE_ARBOR, "edges.json"), "utf8")),
+      runtimes,
+    });
+  }
+
+  it("loads all 22 subjects and 3 declared edges with zero validation problems", () => {
+    const publication = fullPublication();
+    expect(publication.state).toBe("loaded");
+    expect(publication.problems).toEqual([]);
+    expect(publication.subjects).toHaveLength(22);
+    expect(publication.edgeIndex?.edges).toHaveLength(3);
+  });
+
+  it("joins 16 refreshed subjects content-pinned against arbor-identity.json and reports 6 version mismatches", () => {
+    const publication = fullPublication();
+    const identity = JSON.parse(readFileSync(IDENTITY_PATH, "utf8")) as ArborIdentityContext;
+    const pinned: string[] = [];
+    const mismatched: string[] = [];
+
+    for (const subject of publication.subjects) {
+      const idResolution = resolveArborIdentity(identity, {
+        skillId: subject.id,
+        sourceUrl: identity.skills[subject.id]?.sourceUrl,
+        corpusRevision: identity.commit,
+      });
+      expect(idResolution.pinned).toBe(true);
+      const report = consumeArbor(publication, {
+        skillId: subject.id,
+        contentSha256: idResolution.pinned ? idResolution.contentSha256 : null,
+        canonicalSource: true,
+      });
+      if (report.join === "content-pinned") pinned.push(subject.id);
+      else mismatched.push(`${subject.id}:${report.join}`);
+    }
+
+    expect(pinned).toHaveLength(16);
+    expect(mismatched).toHaveLength(6);
+    expect(pinned).toContain("obra/receiving-code-review");
+    expect(pinned).toContain("garrytan/context-save");
+    expect(pinned).toContain("garrytan/context-restore");
+  });
+
+  it("abstains on expert-declared claims (no-governed-claim) and surfaces declared edge hypotheses", () => {
+    const publication = fullPublication();
+    const identity = JSON.parse(readFileSync(IDENTITY_PATH, "utf8")) as ArborIdentityContext;
+    const memberFor = (id: string): CompositionMember => ({
+      role: "proposed",
+      report: consumeArbor(publication, {
+        skillId: id,
+        contentSha256: identity.skills[id]!.contentSha256,
+        canonicalSource: true,
+      }),
+    });
+
+    const save = memberFor("garrytan/context-save");
+    const restore = memberFor("garrytan/context-restore");
+    expect(save.report.claims.every((c) => c.support === "expert-declared" && c.interpretationSource === null)).toBe(true);
+
+    const composition = inspectArborComposition(publication, [save, restore], {
+      matchesConditions: () => true,
+      resolveDirection: () => "explore",
+    });
+    expect(composition.mode).toBe("relevance-only");
+    expect(composition.selectionChanged).toBe(false);
+    expect(composition.band.direction).toBeNull();
+    expect(composition.band.abstained).toBe("no-governed-claim");
+    expect(composition.interactions).toHaveLength(1);
+    expect(composition.interactions[0]).toMatchObject({
+      endpointIdentity: "both-pinned",
+      applicability: "conditions-unverified",
+      edge: {
+        relation: "unlocks",
+        support: "expert-declared",
+        pairApplicable: true,
+        interpretationSource: null,
+      },
+    });
   });
 });

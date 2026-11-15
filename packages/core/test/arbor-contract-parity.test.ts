@@ -124,7 +124,13 @@ describe("pinned upstream Arbor contracts", () => {
 
   it("mirrors the runtime aggregate's three lenses and their required fields", () => {
     const runtime = pinned("runtime.schema.json");
-    expect([...runtime.required].sort()).toEqual(["inputDigest", "lenses", "schema", "subject"]);
+    expect([...runtime.required].sort()).toEqual([
+      "applicability",
+      "inputDigest",
+      "lenses",
+      "schema",
+      "subject",
+    ]);
     expect([...runtime.properties.lenses.required].sort()).toEqual([
       "claims",
       "hellHeaven",
@@ -181,16 +187,29 @@ describe("committed Arbor publication cache", () => {
     expect(() => assertArborEdgeIndex(edges)).not.toThrow();
   });
 
-  it("records the CURRENT real state of the canonical publication: one governed subject, no edges", () => {
+  it("records the CURRENT real state of the canonical publication: 22 subjects, 3 declared edges, 0 pairs evaluated", () => {
     // This is a statement of fact about upstream at the pinned revision, not a
-    // fixture convenience. Until 2026-10-03 the projection was empty; the first
-    // governed record (gaia-skill-tree #2036) published one single-skill
-    // subject. If this fails again, upstream published something else and this
-    // consumer's disclosures should be re-read against the real records.
+    // fixture convenience. At gaia-skill-tree 9b4d9b98043140188f00b14d0ac8fa6bc02491b7
+    // (Arbor I 2026-11-10 seed), the projection publishes 22 subjects (the
+    // governed `obra/receiving-code-review` record plus 21 subjects from the
+    // declaration-first seed) and 3 `expert-declared` edges (`duplicates`,
+    // `unlocks`, `recovers`) with `pairsEvaluated: 0`.
     const runtimeIndex = JSON.parse(readFileSync(join(cacheRoot, "runtime", "index.json"), "utf8"));
     const edges = JSON.parse(readFileSync(join(cacheRoot, "edges.json"), "utf8"));
-    expect(runtimeIndex.subjects.map((s: { id: string }) => s.id)).toEqual(["obra/receiving-code-review"]);
-    expect(edges.edges).toEqual([]);
+    expect(runtimeIndex.subjects).toHaveLength(22);
+    expect(runtimeIndex.subjects.map((s: { id: string }) => s.id)).toContain("obra/receiving-code-review");
+    expect(edges.edges).toHaveLength(3);
+    expect(edges.edges.map((e: { relation: string }) => e.relation)).toEqual([
+      "duplicates",
+      "unlocks",
+      "recovers",
+    ]);
+    for (const edge of edges.edges as { support: string; pairApplicable: boolean; observationSources: unknown[]; interpretationSource: unknown }[]) {
+      expect(edge.support).toBe("expert-declared");
+      expect(edge.pairApplicable).toBe(true);
+      expect(edge.observationSources).toEqual([]);
+      expect(edge.interpretationSource).toBeNull();
+    }
     expect(edges.coverage).toEqual({ pairsEvaluated: 0, absenceMeaning: "not-evaluated" });
   });
 });

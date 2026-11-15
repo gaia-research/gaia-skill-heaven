@@ -148,6 +148,17 @@ async function writePublication(
       schema: "gaia.arbor-runtime/v1",
       subject: pin,
       inputDigest: "d".repeat(64),
+      applicability: {
+        applicable: true,
+        identityVersion: "gaia.arbor-behavioral-identity/v1",
+        behavioralSha256: "b".repeat(64),
+        canonical: "behavior-equivalent",
+        instruction: {
+          status: "immutable-ref",
+          refKind: "commit",
+          baselineSha256: "c".repeat(64),
+        },
+      },
       lenses: {
         claims: subject.claims
           ? {
@@ -265,10 +276,15 @@ describe("the committed Arbor publication", () => {
     expect(publication.state).toBe("loaded");
     expect(publication.provenance?.upstream).toMatch(/gaia-skill-tree/u);
     expect(publication.provenance?.commit).toMatch(/^[a-f0-9]{40}$/u);
-    // REAL current state, not a fixture: upstream publishes one governed,
-    // single-skill subject and no interaction edges.
-    expect(publication.subjects.map((subject) => subject.id)).toEqual(["obra/receiving-code-review"]);
-    expect(publication.edgeIndex?.edges).toEqual([]);
+    // REAL current state, not a fixture: upstream publishes 22 subjects and
+    // 3 `expert-declared` interaction edges (`pairsEvaluated: 0`).
+    expect(publication.subjects).toHaveLength(22);
+    expect(publication.subjects.map((subject) => subject.id)).toContain("obra/receiving-code-review");
+    expect(publication.edgeIndex?.edges).toHaveLength(3);
+    expect(publication.edgeIndex?.coverage).toEqual({
+      pairsEvaluated: 0,
+      absenceMeaning: "not-evaluated",
+    });
     expect(publication.problems).toEqual([]);
   });
 
@@ -311,12 +327,12 @@ describe("summon discloses its behavioral lenses", () => {
       surface: "any",
     });
     expect(outcome.arbor.publicationState).toBe("loaded");
-    expect(outcome.arbor.subjectsPublished).toBe(1);
+    expect(outcome.arbor.subjectsPublished).toBe(22);
     expect(outcome.composition).toMatchObject({
       mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
       deliveryVerified: false,
       publication: {
-        state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
+        state: "loaded", subjectsPublished: 22, edgesPublished: 3, matchedEdges: 0, problems: [],
       },
       interactions: [],
     });
@@ -326,7 +342,7 @@ describe("summon discloses its behavioral lenses", () => {
       absenceMeaning: "not-evaluated",
     });
     expect(outcome.arbor.corpus.canonical).toBe(true);
-    expect(outcome.arbor.note).toMatch(/1 published subject\(s\), 0 interaction edge\(s\)\. Absence of a record means not-evaluated/u);
+    expect(outcome.arbor.note).toMatch(/22 published subject\(s\), 3 interaction edge\(s\)\. Absence of a record means not-evaluated/u);
     expect(outcome.previewed.length).toBeGreaterThan(0);
     for (const preview of outcome.previewed) {
       // Nothing is published, so the honest answer for every candidate is that
@@ -805,7 +821,7 @@ describe("the public wire", () => {
       expect(structured.composition).toMatchObject({
         mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
         publication: {
-          state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
+          state: "loaded", subjectsPublished: 22, edgesPublished: 3, matchedEdges: 0, problems: [],
         },
       });
     } finally {

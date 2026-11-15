@@ -17,8 +17,9 @@
 //            explicit permission flags win, a configured defaultMode is the
 //            ONLY thing inherited, malformed settings fail loudly
 //   phase 4  the installed MCP bundle over stdio, no model: exactly one tool,
-//            neutral server/tool/command text, Arbor cache = the governed
-//            INCONCLUSIVE record, and ranking/refusal identical with or without it
+//            neutral server/tool/command text, Arbor cache = 22 subjects (the governed
+//            INCONCLUSIVE record + 21 seed subjects) and 3 declared edges, and
+//            ranking/refusal identical with or without it
 //   phase 5  live Claude Code sessions through the installed claude-zero:
 //            exactly one MCP tool, synthetic ambient MCP / skill / project
 //            settings absent, one harmless summon returns a reference card,
@@ -421,7 +422,13 @@ async function main() {
   const previewList = AUTHORITY_PHRASES.filter((phrase) => phrase !== "verbatim");
   check("the preview result carries no authority phrase (provenance wording excepted)", authorityHits(cardText, previewList).length === 0, authorityHits(cardText, previewList).join(", "));
   check("composition is relevance-only and selection is unchanged", structured?.composition?.mode === "relevance-only" && structured?.composition?.selectionChanged === false);
-  check("Arbor publication cache loaded with the governed record", structured?.arbor?.publicationState === "loaded" && structured?.arbor?.subjectsPublished >= 1, JSON.stringify(structured?.arbor?.publicationState));
+  check(
+    "Arbor publication cache loaded with the 22 subjects and 3 declared edges",
+    structured?.arbor?.publicationState === "loaded" &&
+      structured?.arbor?.subjectsPublished === 22 &&
+      structured?.composition?.publication?.edgesPublished === 3,
+    JSON.stringify({ state: structured?.arbor?.publicationState, subjects: structured?.arbor?.subjectsPublished, edges: structured?.composition?.publication?.edgesPublished }),
+  );
   const candidate = (structured?.previewed ?? []).find((entry) => entry?.id === "obra/receiving-code-review");
   check("the candidate joins the governed record content-pinned", candidate?.arbor?.join === "content-pinned");
   check("…and the record's support is `inconclusive`", candidate?.arbor?.claims?.[0]?.support === "inconclusive");
@@ -452,7 +459,15 @@ async function main() {
   // Control: the same calls against an EMPTY Arbor publication.
   const emptyPublication = mkdtempSync(join(work, "arbor-empty-"));
   mkdirSync(join(emptyPublication, "runtime"), { recursive: true });
-  writeFileSync(join(emptyPublication, "edges.json"), readFileSync(join(installPath, "data", "arbor", "edges.json")));
+  writeFileSync(
+    join(emptyPublication, "edges.json"),
+    JSON.stringify({
+      schema: "gaia.arbor-edge-index/v1",
+      edgeSetVersion: "gaia.arbor-edge/v1",
+      coverage: { pairsEvaluated: 0, absenceMeaning: "not-evaluated" },
+      edges: [],
+    }),
+  );
   writeFileSync(join(emptyPublication, "runtime", "index.json"), JSON.stringify({ runtimeVersion: "gaia.arbor-runtime/v1", schema: "gaia.arbor-runtime-index/v1", subjects: [] }));
   const without = await callServer({ ARBOR_PUBLICATION_PATH: emptyPublication }, [
     { method: "tools/list", params: {} },
