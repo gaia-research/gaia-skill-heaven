@@ -2,7 +2,7 @@
 
 ## P1 — operator channel
 
-- **Date:** 2026-11-16 (`2026-11-15T21:33:36Z` – `2026-11-15T21:40:20Z`)
+- **Date:** 2026-11-16 (`2026-11-15T21:33:36Z` – `2026-11-15T21:40:20Z`) (C3-h and C4-b re-run for committed excerpts at about `21:56Z`–`21:57Z`, P1c)
 - **Harness binary & version:** `~/.local/bin/claude` — `2.1.325 (Claude Code)`
 - **Model:** `claude-haiku-5-5` (`--model claude-haiku-5-5`)
 - **Isolation flags (all runs):** fresh `mktemp -d` working directory, `--strict-mcp-config --mcp-config <run_dir>/mcp.json`, `--setting-sources project`
@@ -115,10 +115,10 @@ Interpreted by the Team A orchestrator (Opus 5.5) from the signals above. The la
 3. **Channel 2 (command pre-execution) works in headless mode** (C3-h, 3/3, committed stream-json excerpts). In the TUI
    (C3-t, 3/3) the writer ran (committed `.cmd.json`), but the ordering before the first model output was
    observed in the pane and is not independently verifiable from committed logs.
-   convention a model with shell access could imitate, so it is not adopted on Claude Code,
+   Channel 2 remains a convention a model with shell access could imitate, so it is not adopted on Claude Code,
    where channel 1 passes.
-4. **Channel 3 (permission prompt) works only in manual mode** (C4-t, 3/3). It is void under
-   `--dangerously-skip-permissions` (C4-b, 3/3). Not adopted.
+4. **Channel 3 (permission prompt) worked in the tested manual-mode TUI runs** (C4-t, 3/3) and was void in the tested
+   headless bypass runs (C4-b, 3/3). Other modes were not tested for channel 3. Not adopted.
 5. **Selected for Claude Code: channel 1 only.** The plan's preference order picks the
    first channel that passes. Other doors are decided per door in P6.
 
