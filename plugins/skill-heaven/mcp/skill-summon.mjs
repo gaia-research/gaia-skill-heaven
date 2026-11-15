@@ -4688,7 +4688,7 @@ var require_core = __commonJS({
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
         if (!errors || errors.length === 0)
           return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text, msg) => text + separator + msg);
+        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text2, msg) => text2 + separator + msg);
       }
       $dataMetaSchema(metaSchema, keywordsJsonPointers) {
         const rules = this.RULES.all;
@@ -7395,8 +7395,8 @@ function getEnumValues(entries) {
   const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
   return values;
 }
-function joinValues(array3, separator = "|") {
-  return array3.map((val) => stringifyPrimitive(val)).join(separator);
+function joinValues(array4, separator = "|") {
+  return array4.map((val) => stringifyPrimitive(val)).join(separator);
 }
 function jsonStringifyReplacer(_, value) {
   if (typeof value === "bigint")
@@ -7432,19 +7432,19 @@ function floatSafeRemainder(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-function defineLazy(object3, key, getter) {
+function defineLazy(object4, key, getter) {
   const set = false;
-  Object.defineProperty(object3, key, {
+  Object.defineProperty(object4, key, {
     get() {
       if (!set) {
         const value = getter();
-        object3[key] = value;
+        object4[key] = value;
         return value;
       }
       throw new Error("cached value already set");
     },
     set(v) {
-      Object.defineProperty(object3, key, {
+      Object.defineProperty(object4, key, {
         value: v
         // configurable: true,
       });
@@ -13414,6 +13414,112 @@ var ADVISORY_SYSTEM = [
   "No other text. If the excerpt is insufficient, use judgement unknown."
 ].join("\n");
 
+// packages/core/src/campaign/vocabulary.ts
+var CampaignStates = Object.freeze({
+  unarmed: "UNARMED",
+  recon: "RECON",
+  decisions: "DECISIONS",
+  executing: "EXECUTING",
+  convergence: "CONVERGENCE",
+  completed: "COMPLETED",
+  stoppedByUser: "STOPPED_BY_USER",
+  stoppedByPolicy: "STOPPED_BY_POLICY",
+  blocked: "BLOCKED",
+  failedSafe: "FAILED_SAFE",
+  endedWithSession: "ENDED_WITH_SESSION"
+});
+var CampaignDecisions = Object.freeze({
+  hold: "HOLD",
+  explore: "EXPLORE",
+  recover: "RECOVER",
+  reopen: "REOPEN",
+  checkpoint: "CHECKPOINT",
+  close: "CLOSE",
+  stop: "STOP",
+  recon: "RECON",
+  decisions: "DECISIONS",
+  convergence: "CONVERGENCE"
+});
+var OperatorVerbs = Object.freeze({
+  decide: "decide",
+  amend: "amend",
+  answer: "answer",
+  checkpoint: "checkpoint",
+  stop: "stop"
+});
+var AgentOps = Object.freeze({
+  open: "open",
+  recon: "recon",
+  propose: "propose",
+  next: "next",
+  report: "report",
+  incident: "incident",
+  status: "status"
+});
+var EngineOps = Object.freeze({
+  verify: "verify",
+  complete: "complete",
+  policyStop: "policy-stop",
+  block: "block",
+  fail: "fail",
+  sessionEnd: "session-end"
+});
+var DecisionActions = Object.freeze({ approve: "approve", decline: "decline" });
+var CAMPAIGN_STATES = Object.freeze(Object.values(CampaignStates));
+var CAMPAIGN_DECISIONS = Object.freeze(Object.values(CampaignDecisions));
+var OPERATOR_VERBS = Object.freeze(Object.values(OperatorVerbs));
+var AGENT_OPS = Object.freeze(Object.values(AgentOps));
+var ENGINE_OPS = Object.freeze(Object.values(EngineOps));
+var CAMPAIGN_CHANNELS = Object.freeze(["operator", "agent", "engine", "none"]);
+var CAMPAIGN_SIGNALS = Object.freeze([
+  "none",
+  "invalid-input",
+  "open-request",
+  "recon-complete",
+  "proposal",
+  "decision",
+  "amendment",
+  "answer",
+  "checkpoint-request",
+  "stop-request",
+  "work-ready",
+  "work-reported",
+  "incident-reported",
+  "policy-refusal",
+  "session-ended",
+  "behavioral-failure",
+  "behavioral-recovery",
+  "completed",
+  "blocked",
+  "failed-safe",
+  "person-required"
+]);
+var CampaignPhases = Object.freeze({
+  recon: "recon",
+  decisions: "decisions",
+  execution: "execution",
+  convergence: "convergence",
+  terminal: "terminal"
+});
+var CampaignSignals = Object.freeze({ answer: "answer", personRequired: "person-required" });
+var CAMPAIGN_PHASES = Object.freeze(Object.values(CampaignPhases));
+var TERMINAL_STATES = Object.freeze([
+  CampaignStates.completed,
+  CampaignStates.stoppedByUser,
+  CampaignStates.stoppedByPolicy,
+  CampaignStates.blocked,
+  CampaignStates.failedSafe,
+  CampaignStates.endedWithSession
+]);
+var CAMPAIGN_SCHEMA_IDS = Object.freeze({
+  trace: "skill-heaven/campaign-trace/v1",
+  charter: "skill-heaven/campaign-charter/v1",
+  recon: "skill-heaven/campaign-recon/v1",
+  manifest: "skill-heaven/campaign-manifest/v1",
+  incident: "skill-heaven/convergence-incident/v1",
+  status: "skill-heaven/controller-status/v1"
+});
+
 // packages/core/src/steering.ts
 var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
 var STEERING_POLICY_VERSION = "gaia-steering-policy/v1";
@@ -13421,6 +13527,7 @@ var SEARCH_STATES = ["open", "checkpointed", "closed", "stopped"];
 var RUNTIME_EVENT_TYPES = ["behavioral-failure", "behavioral-recovery"];
 var OPERATOR_EVENT_TYPES = ["reopen-search", "checkpoint", "close-search", "stop"];
 var EVENT_TYPES = [...RUNTIME_EVENT_TYPES, ...OPERATOR_EVENT_TYPES];
+var runtimeCapabilityBrand = /* @__PURE__ */ Symbol("runtime-adapter-capability");
 var DEFAULT_STEERING_POLICY = Object.freeze({
   version: STEERING_POLICY_VERSION,
   floor: "low",
@@ -13431,6 +13538,58 @@ var RUNTIME_EVENT_TYPE_SET = new Set(RUNTIME_EVENT_TYPES);
 var OPERATOR_EVENT_TYPE_SET = new Set(OPERATOR_EVENT_TYPES);
 var RUNG_SET = new Set(STEERING_RUNGS);
 var SEARCH_STATE_SET = new Set(SEARCH_STATES);
+function createRuntimeAdapter() {
+  return Object.freeze({ [runtimeCapabilityBrand]: true });
+}
+
+// packages/core/src/campaign/schema.ts
+var text = (v) => typeof v === "string" && v.trim().length > 0;
+var member = (values) => (v) => typeof v === "string" && values.includes(v);
+function object2(v, fields, optional2 = []) {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return false;
+  const proto = Object.getPrototypeOf(v);
+  if (proto !== Object.prototype && proto !== null) return false;
+  const descriptors = Object.getOwnPropertyDescriptors(v);
+  if (Reflect.ownKeys(v).some((k) => typeof k !== "string" || !Object.hasOwn(fields, k))) return false;
+  return Object.entries(fields).every(([k, check2]) => {
+    const d = descriptors[k];
+    return d ? Object.hasOwn(d, "value") && d.enumerable === true && check2(d.value) : optional2.includes(k);
+  });
+}
+var array2 = (check2) => (v) => {
+  if (!Array.isArray(v) || Object.getPrototypeOf(v) !== Array.prototype) return false;
+  if (Reflect.ownKeys(v).length !== v.length + 1) return false;
+  for (let i = 0; i < v.length; i++) {
+    const d = Object.getOwnPropertyDescriptor(v, String(i));
+    if (!d || !Object.hasOwn(d, "value") || !d.enumerable || !check2(d.value)) return false;
+  }
+  return true;
+};
+var strings = array2(text);
+var queueItem = (v) => object2(v, { id: text, skill: text, reconCitation: text });
+var queue = array2(queueItem);
+var stateName = member(CAMPAIGN_STATES);
+var allOps = [...AGENT_OPS, ...OPERATOR_VERBS, ...ENGINE_OPS];
+var isCampaignDecision = member(CAMPAIGN_DECISIONS);
+var isCampaignOp = member(allOps);
+var isCampaignSignal = member(CAMPAIGN_SIGNALS);
+
+// packages/core/src/campaign/engine.ts
+var steeringAdapter = createRuntimeAdapter();
+
+// packages/core/src/campaign/explain.ts
+var descriptions = {
+  [CampaignDecisions.hold]: "No campaign change was applied.",
+  [CampaignDecisions.explore]: "The campaign continued execution or exploration.",
+  [CampaignDecisions.recover]: "The working rung converged after a verification pass.",
+  [CampaignDecisions.reopen]: "The campaign reopened a path.",
+  [CampaignDecisions.checkpoint]: "The operator recorded a checkpoint.",
+  [CampaignDecisions.close]: "The runtime reported campaign completion.",
+  [CampaignDecisions.stop]: "The campaign ended.",
+  [CampaignDecisions.recon]: "The campaign gathered reconnaissance.",
+  [CampaignDecisions.decisions]: "The campaign awaits an operator decision.",
+  [CampaignDecisions.convergence]: "The campaign entered convergence."
+};
 
 // packages/core/src/retrieval/installability.ts
 var INSTALLABILITY_PROJECTION_SCHEMA = "gaia.installability/v1";
@@ -14142,8 +14301,8 @@ function toIndexedSkill(skill, expansion, classified) {
 function readInvocation(value) {
   return value === "model" || value === "human" ? value : "any";
 }
-function tokenCount(text) {
-  const normalized = normalize(text);
+function tokenCount(text2) {
+  const normalized = normalize(text2);
   return normalized.length === 0 ? 0 : normalized.split(" ").length;
 }
 function round4(value) {
@@ -14714,10 +14873,10 @@ async function defaultTransport(endpoint, headers, body, timeoutMs) {
       redirect: "manual"
     });
     if (!response.body) {
-      const text2 = await response.text();
+      const text3 = await response.text();
       return {
         status: response.status,
-        body: text2
+        body: text3
       };
     }
     const reader = response.body.getReader();
@@ -14747,10 +14906,10 @@ async function defaultTransport(endpoint, headers, body, timeoutMs) {
       concatenated.set(chunk, offset);
       offset += chunk.byteLength;
     }
-    const text = new TextDecoder().decode(concatenated);
+    const text2 = new TextDecoder().decode(concatenated);
     return {
       status: response.status,
-      body: text
+      body: text2
     };
   } finally {
     clearTimeout(timeoutId);
@@ -16070,7 +16229,7 @@ function assertArborProfile(value, label = "Arbor profile") {
   for (const key of ["declarations", "benchmarkReceipts", "interpretations"]) {
     digestList(sources[key], `${label}.sources.${key}`);
   }
-  const claims = array2(profile.claims, `${label}.claims`);
+  const claims = array3(profile.claims, `${label}.claims`);
   if (claims.length === 0) {
     throw new ArborContractError(`${label}.claims must contain at least one claim.`);
   }
@@ -16148,7 +16307,7 @@ function assertArborEdgeIndex(value, label = "Arbor edge index") {
   ]);
   nonNegativeInteger2(coverage, "pairsEvaluated", `${label}.coverage`);
   constant(coverage, "absenceMeaning", EDGE_ABSENCE_MEANING, `${label}.coverage`);
-  const edges = array2(index.edges, `${label}.edges`);
+  const edges = array3(index.edges, `${label}.edges`);
   edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
 }
 function assertArborRuntime(value, label = "Arbor runtime") {
@@ -16184,7 +16343,7 @@ function assertArborRuntime(value, label = "Arbor runtime") {
   ]);
   enumeration(interactionsLens, "status", ARBOR_LENS_STATUS, `${label}.lenses.interactions`);
   sha256OrNull(interactionsLens, "sourceDigest", `${label}.lenses.interactions`);
-  const edges = array2(interactionsLens.edges, `${label}.lenses.interactions.edges`);
+  const edges = array3(interactionsLens.edges, `${label}.lenses.interactions.edges`);
   edges.forEach(
     (edge, position) => assertArborEdge(edge, `${label}.lenses.interactions.edges[${position}]`)
   );
@@ -16193,7 +16352,7 @@ function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
   const index = closedRecord(value, label, ["schema", "runtimeVersion", "subjects"]);
   constant(index, "schema", ARBOR_RUNTIME_INDEX_SCHEMA, label);
   constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
-  const subjects = array2(index.subjects, `${label}.subjects`);
+  const subjects = array3(index.subjects, `${label}.subjects`);
   subjects.forEach(
     (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
   );
@@ -16217,7 +16376,7 @@ function closedRecord(value, label, allowed) {
   }
   return record3;
 }
-function array2(value, label) {
+function array3(value, label) {
   if (!Array.isArray(value)) throw new ArborContractError(`${label} must be an array.`);
   return value;
 }
@@ -16307,7 +16466,7 @@ function enumeration(record3, key, allowed, label) {
   }
 }
 function digestList(value, label) {
-  const digests = array2(value, label);
+  const digests = array3(value, label);
   const seen = /* @__PURE__ */ new Set();
   digests.forEach((digest, position) => {
     if (typeof digest !== "string" || !SHA256.test(digest)) {
@@ -16763,7 +16922,7 @@ var SUPPORT_GOVERNING = /* @__PURE__ */ new Set([
   "benchmark-revised"
 ]);
 function judgeArborBand(publicationState, members, options = {}) {
-  const evidence = members.map((member) => readMember(member, options.matchesConditions));
+  const evidence = members.map((member2) => readMember(member2, options.matchesConditions));
   const base = { members: evidence, relevanceUntouched: true };
   if (publicationState !== "loaded") {
     return abstain(
@@ -16828,8 +16987,8 @@ function readDirection(resolveDirection, conclusive) {
   }
   return BAND_DIRECTION.includes(value) ? value : null;
 }
-function readMember(member, matchesConditions) {
-  const report = member.report;
+function readMember(member2, matchesConditions) {
+  const report = member2.report;
   const source = report.join === "content-pinned" ? report.claims : [];
   const claims = source.map((claim) => {
     const governed2 = claim.interpretationSource !== null;
@@ -16851,7 +17010,7 @@ function readMember(member, matchesConditions) {
   const state = governed.length === 0 ? "evidence-absent" : governed.every((entry) => entry.support === "inconclusive") ? "evidence-inconclusive" : "evidence-governed";
   return {
     id: report.skillId,
-    role: member.role,
+    role: member2.role,
     join: report.join,
     state,
     claimCount: claims.length,
@@ -16876,18 +17035,18 @@ function conditionMatcher(signals) {
   const required2 = signals.map((signal) => signal.trim().toLowerCase()).filter((s) => s.length > 0);
   if (required2.length === 0) return () => false;
   return (claim) => {
-    const text = claim.conditions.toLowerCase();
-    return required2.every((signal) => text.includes(signal));
+    const text2 = claim.conditions.toLowerCase();
+    return required2.every((signal) => text2.includes(signal));
   };
 }
 
 // packages/core/src/arbor/composition.ts
 function inspectArborComposition(publication, members, bandOptions = {}) {
   const byId = /* @__PURE__ */ new Map();
-  for (const member of members) {
-    const group = byId.get(member.report.skillId) ?? [];
-    group.push(member);
-    byId.set(member.report.skillId, group);
+  for (const member2 of members) {
+    const group = byId.get(member2.report.skillId) ?? [];
+    group.push(member2);
+    byId.set(member2.report.skillId, group);
   }
   const interactions = [];
   if (publication.state === "loaded") {
@@ -16895,7 +17054,7 @@ function inspectArborComposition(publication, members, bandOptions = {}) {
       const from = byId.get(edge.pair.from.id);
       const to = byId.get(edge.pair.to.id);
       if (!from || !to) continue;
-      if (!from.every((member) => matches(member.report, edge.pair.from)) || !to.every((member) => matches(member.report, edge.pair.to))) {
+      if (!from.every((member2) => matches(member2.report, edge.pair.from)) || !to.every((member2) => matches(member2.report, edge.pair.to))) {
         continue;
       }
       interactions.push({
@@ -16946,7 +17105,7 @@ function matches(report, subject) {
   return report.canonicalSource && report.join === "content-pinned" && report.skillId === subject.id && report.contentSha256 === subject.contentSha256 && report.matchedSubject?.id === subject.id && report.matchedSubject.contentSha256 === subject.contentSha256;
 }
 function roles(members) {
-  return [...new Set(members.map((member) => member.role))];
+  return [...new Set(members.map((member2) => member2.role))];
 }
 
 // packages/core/src/arbor/disclose.ts
@@ -17898,10 +18057,10 @@ var util;
       return obj[e];
     });
   };
-  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object3) => {
+  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object4) => {
     const keys = [];
-    for (const key in object3) {
-      if (Object.prototype.hasOwnProperty.call(object3, key)) {
+    for (const key in object4) {
+      if (Object.prototype.hasOwnProperty.call(object4, key)) {
         keys.push(key);
       }
     }
@@ -17915,8 +18074,8 @@ var util;
     return void 0;
   };
   util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-  function joinValues2(array3, separator = " | ") {
-    return array3.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
+  function joinValues2(array4, separator = " | ") {
+    return array4.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
   util2.jsonStringifyReplacer = (_, value) => {
@@ -23192,7 +23351,7 @@ var ZodMiniObject = /* @__PURE__ */ $constructor("ZodMiniObject", (inst, def) =>
   ZodMiniType.init(inst, def);
   util_exports.defineLazy(inst, "shape", () => def.shape);
 });
-function object2(shape, params) {
+function object3(shape, params) {
   const def = {
     type: "object",
     get shape() {
@@ -23212,11 +23371,11 @@ function isZ4Schema(s) {
 function objectFromShape(shape) {
   const values = Object.values(shape);
   if (values.length === 0)
-    return object2({});
+    return object3({});
   const allV4 = values.every(isZ4Schema);
   const allV3 = values.every((s) => !isZ4Schema(s));
   if (allV4)
-    return object2(shape);
+    return object3(shape);
   if (allV3)
     return objectType(shape);
   throw new Error("Mixed Zod versions detected in object shape.");
@@ -24099,11 +24258,11 @@ function parseMapDef(def, refs) {
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
 function parseNativeEnumDef(def) {
-  const object3 = def.values;
+  const object4 = def.values;
   const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object3[object3[key]] !== "number";
+    return typeof object4[object4[key]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object3[key]);
+  const actualValues = actualKeys.map((key) => object4[key]);
   const parsedTypes = Array.from(new Set(actualValues.map((values) => typeof values)));
   return {
     type: parsedTypes.length === 1 ? parsedTypes[0] === "string" ? "string" : "number" : ["string", "number"],
