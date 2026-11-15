@@ -50,6 +50,13 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   repair, Terra reviews the **new** HEAD. Repeat until no blocking findings remain.
 - The worker that wrote the code never approves it.
 
+## Subagent limits (founder rule)
+
+- Pi subagent spawns: **never set max turns.** Timeouts practically unlimited:
+  **≥ 7200 s (2 h)** per spawn. Same for `pi-reviewer --timeout 7200` or more.
+  A worker killed mid-task by a short limit forces the expensive lead to redo
+  the work; that is what this rule prevents.
+
 ## Handoff (required before reporting done)
 
 Push `docs/evidence/ultra-126/handoffs/<unit>.md` on your branch containing:
