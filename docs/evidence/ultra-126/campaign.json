@@ -417,6 +417,26 @@
       "terra": "n/a (process)",
       "outcome": "in effect; verified on lane DASH (15 files archived)",
       "risk": "agy's cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree."
+    },
+    {
+      "id": "D-009",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U3, U9",
+      "problem": "Security limit raised by a side agent and confirmed against P1's own method. MCP elicitation (channel 1) delivers whatever is typed into the terminal to the server. In P1, a worker agent answered the elicitation prompt with herdr pane send-text, and the server received a normal accept that nothing distinguished from a person. Any process that can write to the terminal can do the same: every lane here (herdr socket), and a Skill Ultra session's own model when it has a shell tool and its terminal sits in herdr or tmux (HERDR_SOCKET_PATH / TMUX in its environment); for example, a parallel shell call issued beside the campaign call.",
+      "options": [
+        "Drop channel 1",
+        "Keep channel 1, state plainly what it is not, disclose terminal multiplexing at decision time, and require the real proof decision to be made where no agent can inject input",
+        "Invent a nonce or challenge (rejected: an agent can read the pane as easily as type into it)"
+      ],
+      "selected": "Keep channel 1 as the selected channel (it still keeps the model out of the tool path, and no channel on this harness authenticates a person), but: (1) the P1 record and the U3 evidence say that channel 1 is terminal input, not authentication, the same class of boundary as channels 2 and 3 and the steering brand; (2) U3's operator path records, with each operator entry, an attribution field 'terminal-input, unauthenticated' plus whether the server's environment shows a multiplexer (HERDR_ENV/HERDR_SOCKET_PATH/TMUX), and the decisions render discloses it; (3) U9's real operator decision is made by the founder in a terminal no agent controls (outside herdr and tmux, or a pane whose socket no running agent can reach), and PROOF.md says which; (4) no test fixture keystroke is ever recorded as a person's decision.",
+      "reason": "Honest disclosure of a real boundary without inventing authentication the harness does not provide; it preserves invariant 4 (agent text cannot manufacture operator authority) in the proof, where it matters.",
+      "authority": "Plan section 5.3 ('says plainly what it is not'); security invariants 4 and 15; directive section 8 (never forge an approval)",
+      "reversible": true,
+      "terra": "U3 review and the final integration review must check items 1-4",
+      "outcome": "in effect; PROBE.md note lands after lane p1b finishes writing that file",
+      "risk": "In product use, a session whose model has shell access inside a multiplexer can approve its own charter. The disclosure makes that visible; it does not prevent it. A stronger channel would need a harness feature that does not exist on 2.1.325."
     }
   ],
   "blockers": [],
