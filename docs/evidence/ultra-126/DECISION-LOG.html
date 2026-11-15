@@ -644,10 +644,10 @@ tbody tr:last-child td {
         <td class="nowrap">C (Antigravity)</td>
         <td class="nowrap">gemini-4-hydrogen-medium</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u8</code></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">prep active (data + docs only; render waits for U2)</span></td>
+        <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/259" target="_blank" rel="noopener noreferrer">#259</a></td>
+        <td class="nowrap"><code class="sha" title="ec17b57">ec17b57</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">prep done; render half waits for U2; merge after U2</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U9</strong></td>
@@ -686,8 +686,8 @@ tbody tr:last-child td {
         <td class="mono nowrap"><strong>P1</strong></td>
         <td class="mono nowrap">U3</td>
         <td>Which operator channels work: elicitation, command pre-execution, permission prompt</td>
-        <td class="nowrap"><span class="pill pill-active">running</span></td>
-        <td class="mono"><span class="muted">—</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">done (n=3/cell); channel 1 elicitation selected for Claude Code TUI; headless fails closed; see D-009 for the attribution limit; P1b (bypass/auto modes) running</span></td>
+        <td class="mono"><code>docs/evidence/ultra-126/PROBE.md (branch feat/ws6-ultra-u3-p1, PR #258)</code></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>P2</strong></td>
@@ -815,6 +815,24 @@ tbody tr:last-child td {
         </div>
         <p class="card-summary">Lanes, especially Pi and Antigravity, run visibly in herdr panes via /herdr-dispatch and the canonical skills; harness calls made by workers (including pi-reviewer) run in visible panes. Agents already running are not stopped. Supersedes the directive&#39;s earlier &#39;Claude team uses herdr only for benchmarks&#39; for lane dispatch.</p>
         <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16</code></p>
+        
+      </article>
+      <article class="decision-card founder-card">
+        <div class="card-head">
+          <span class="pill pill-founder">TABS-DIRECTIVE</span>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <p class="card-summary">Remove the two-pane limit. Each lane runs in its own new herdr tab. Keep tabs clean, and archive session JSONL so cost can be logged and lanes resumed later.</p>
+        <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16</code></p>
+        
+      </article>
+      <article class="decision-card founder-card">
+        <div class="card-head">
+          <span class="pill pill-founder">FD-11</span>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <p class="card-summary">Operator approvals inside terminal multiplexers (founder ruling on Terra&#39;s critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code&#39;s auto-mode classifier rejects a model&#39;s attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.</p>
+        <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)</code></p>
         
       </article>
     </div>
@@ -1147,11 +1165,158 @@ tbody tr:last-child td {
             </div>
             <div class="field-row">
               <dt>outcome</dt>
-              <dd><span>in effect</span></dd>
+              <dd><span>superseded by D-008 (two-pane limit removed by founder)</span></dd>
             </div>
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each).</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-008</span>
+            <span class="tag">unit: all</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>How to keep lane tabs clean while preserving sessions for skill-cost accounting and resume.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Move finished panes to an archive tab</span></li><li><span>Copy session files to a local archive, then close the tab</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>dispatch.sh opens one tab per lane (label = lane name, --no-focus) and records dispatch.json. archive.sh copies the lane&#39;s Pi session dirs (keyed by the worktree cwd) and its agy conversation (.db plus the brain/&lt;id&gt; transcript JSONL, found through cache/last_conversations.json) into ~/skill-heaven-wt/sessions/&lt;lane&gt;/, saves the final terminal buffer, writes archive.json, and closes the tab. Originals stay in place, so a lane can still be resumed. The archive is local only, never committed (transcripts are excluded from the repo by policy).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Founder directive; copies rather than moves keep resume possible and give skill-cost its canonical inputs.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>TABS-DIRECTIVE</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>n/a (process)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>in effect; verified on lane DASH (15 files archived)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>agy&#39;s cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-009</span>
+            <span class="tag">unit: U3, U9</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>Security limit raised by a side agent and confirmed against P1&#39;s own method. MCP elicitation (channel 1) delivers whatever is typed into the terminal to the server. In P1, a worker agent answered the elicitation prompt with herdr pane send-text, and the server received a normal accept that nothing distinguished from a person. Any process that can write to the terminal can do the same: every lane here (herdr socket), and a Skill Ultra session&#39;s own model when it has a shell tool and its terminal sits in herdr or tmux (HERDR_SOCKET_PATH / TMUX in its environment); for example, a parallel shell call issued beside the campaign call.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Drop channel 1</span></li><li><span>Keep channel 1, state plainly what it is not, disclose terminal multiplexing at decision time, and require the real proof decision to be made where no agent can inject input</span></li><li><span>Invent a nonce or challenge (rejected: an agent can read the pane as easily as type into it)</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Keep channel 1 as the selected channel (it still keeps the model out of the tool path, and no channel on this harness authenticates a person), but: (1) the P1 record and the U3 evidence say that channel 1 is terminal input, not authentication, the same class of boundary as channels 2 and 3 and the steering brand; (2) U3&#39;s operator path records, with each operator entry, an attribution field &#39;terminal-input, unauthenticated&#39; plus whether the server&#39;s environment shows a multiplexer (HERDR_ENV/HERDR_SOCKET_PATH/TMUX), and the decisions render discloses it; (3) U9&#39;s real operator decision is made by the founder in a terminal no agent controls (outside herdr and tmux, or a pane whose socket no running agent can reach), and PROOF.md says which; (4) no test fixture keystroke is ever recorded as a person&#39;s decision.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Honest disclosure of a real boundary without inventing authentication the harness does not provide; it preserves invariant 4 (agent text cannot manufacture operator authority) in the proof, where it matters.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Plan section 5.3 (&#39;says plainly what it is not&#39;); security invariants 4 and 15; directive section 8 (never forge an approval)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>U3 review and the final integration review must check items 1-4</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>refined by FD-11 and D-010</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>In product use, a session whose model has shell access inside a multiplexer can approve its own charter. The disclosure makes that visible; it does not prevent it. A stronger channel would need a harness feature that does not exist on 2.1.325.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-010</span>
+            <span class="tag">unit: U3</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>Implement FD-11: safeguarded default, an unadvertised opt-in for multiplexed approvals, and a probe of auto mode&#39;s classifier.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Env-flag opt-in</span></li><li><span>Config-file opt-in</span></li><li><span>CLI-flag opt-in</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>(1) Default: an elicitation accept grants operator authority only when the server&#39;s environment shows no multiplexer (HERDR_ENV, HERDR_SOCKET_PATH, TMUX). Otherwise the decisions step fails closed at DECISIONS with a plain message. (2) Advanced opt-in: the person sets an env var themselves before launching the session (name fixed in vocabulary.ts, e.g. SKILL_ULTRA_MULTIPLEXED_DECISIONS=accept-risk). It is documented only in an advanced or evidence note, never in the README, site, command help or skill text. Under opt-in, every operator entry records attribution &#39;terminal-input, unauthenticated&#39;, multiplexed:true and optIn:true, and the decisions render and status show it. (3) Safeguard inside the opt-in: the elicitation form asks the person to type the charter&#39;s short digest, shown in the prompt, so a blind or replayed injection does not match. This is disclosed as friction, not authentication. (4) Probe P1d measures auto mode&#39;s classifier against a self-approval attempt, and U3 records the result per mode.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Matches FD-11: a safe default for ordinary users, nothing advertised, and advanced multiplexer users keep working. Terra&#39;s critical finding is answered by the default fail-closed plus an explicit, recorded, person-set opt-in.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>FD-11</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>pending U3</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed.</span></dd>
             </div>
         </dl>
       </article>

@@ -34,6 +34,19 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 - Before the PR is final: `git fetch origin && git merge origin/integration/skill-ultra-126`
   if the integration branch moved, and re-run tests.
 
+## Who runs the review (founder directive)
+
+- **Your lane runs its own Terra review** with `~/.pi/agent/bin/pi-reviewer`
+  (or the Pi native `reviewer`), in a visible pane in your tab, and loops until
+  no blocking findings remain. The orchestrator does not run reviews. The lane
+  lead reports to the orchestrator only when Terra has cleared the exact HEAD, or
+  when the lane is BLOCKED.
+- **Antigravity escalation:** start on Gemini 4 Hydrogen. If Hydrogen is stuck in a
+  review loop (the same blocking finding survives two repair rounds), escalate the
+  repair to **Gemini 4 Argon** (`agy --model gemini-4-argon-high`, in a pane in
+  your tab) and record the escalation in your handoff. Terra stays the reviewer;
+  Argon never reviews.
+
 ## Independent review gate (mandatory)
 
 - Reviewer: Terra High, independent context. Either the Pi native `reviewer`
@@ -62,7 +75,11 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   which belongs to the orchestrator.
 - Pi `subagent` fan-out inside your own pane is visible and allowed (skill §6).
 - `git`, `npm`, `node`, `gh` and file inspection stay on your normal shell.
-- When finished, leave your pane as it is. The orchestrator stashes it to the archive tab.
+- Each lane runs in **its own herdr tab**. Keep any probe panes you split inside
+  that tab, and close a probe pane once you have recorded its result. When you
+  finish, leave your lane pane as it is: the orchestrator archives your session
+  files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
+  then closes the tab.
 
 ## Subagent limits (founder rule)
 
