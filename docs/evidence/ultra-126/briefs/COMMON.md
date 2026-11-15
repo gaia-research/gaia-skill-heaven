@@ -81,20 +81,25 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
 
-## Pi team roster and escalation (founder rule)
+## Pi team roster and escalation (founder rule, updated 2026-11-16)
 
-- Ladder: **L1 `worker-luna` → L2 Hydrogen → L3 `worker-terra` → L4 `worker-sol`.**
-  Start every task at Luna. Escalate exactly one level, and only after a recorded
-  verification failure at the current level. Write the reason in the handoff.
-  Sol is the last resort, not a default; do not reuse Sol out of habit.
-- Hydrogen has no `worker-hydrogen` profile. Spawn it with the per-task override
-  `model: "antigravity/gemini-4-hydrogen"`, and confirm with `subagent action:"plan"` first.
+- **Default worker: L2 Hydrogen.** Luna (L1), Terra (L3) and Sol (L4) share one
+  OpenAI quota pool; Hydrogen runs on a separate pool.
+- **L1 Luna only for very mechanical tasks** (renames, counting, formatting,
+  fixture generation). That is a de-escalation from the default and needs that reason.
+- Escalation from Hydrogen: **L3 `worker-terra` → L4 `worker-sol`**, one level at a time,
+  only after a recorded verification failure. Write the reason in the handoff. Sol is the
+  last resort; do not reuse Sol out of habit.
+- Hydrogen in Pi: use the working route the founder set up (model
+  `antigravity/gemini-4-hydrogen`, with extensions enabled), and confirm it with
+  `subagent action:"plan"` before the first spawn.
 - Set `fallback_models: []` on every spawn. If a requested model or effort is not
   honored, report it unavailable; never substitute another model.
+- **Only one Pi lead runs at a time** across the campaign.
 - **Lead like the orchestrator.** The lead decomposes into small self-contained
-  briefs with exact acceptance checks, fans them out in parallel (Luna and Hydrogen
-  should carry most of the work), verifies evidence, and sends precise repair
-  requests. The lead does not implement, rewrite worker code or micromanage.
+  briefs with exact acceptance checks, fans them out in parallel (mostly to Hydrogen),
+  verifies evidence, and sends precise repair requests. The lead does not implement,
+  rewrite worker code or micromanage.
 
 ## Subagent limits (founder rule)
 
