@@ -107,4 +107,32 @@ not probed in P6 pass 1
 
 ### Interpretation (orchestrator)
 
-pending
+Interpreted by the Team A orchestrator (Opus 5.5). Each door is judged only on its own cells
+(n = 3 each). Nothing is inferred from Claude Code.
+
+**Pi 1.5.2: no operator channel, no stable session id.**
+- Session id: no harness session variable reaches the MCP child, and `tools/call _meta` carries
+  none. `TERM_SESSION_ID` is the **terminal's** id, inherited from the pane. It is shared by
+  every session in that pane, so it must never be used as campaign identity. L3 re-attach does
+  not exist on Pi: a campaign ends when the server process does (plan section 5.9).
+- Channel 1: the client does not advertise elicitation and answers `Method not found` (6/6).
+  Channel 2: `!` lines in a prompt template are expanded literally and never executed (6/6).
+  Channel 3: default mode raised no permission prompt (3/3).
+- **Consequence:** on Pi the handshake stops at `DECISIONS` and says why. No campaign can be
+  decided on this door at this version.
+
+**Antigravity 1.5.9: a stable id through `_meta`; channel 3 only, and only under a setting.**
+- Session id: none in the environment, but `tools/call params._meta.conversation_id` was equal
+  across `--continue` (3/3). That is a per-call key, not a start-time one, so a door
+  adapter would have to bind the campaign on the first call. U0b's environment-based key does
+  not apply here unchanged.
+- Channel 1: elicitation is advertised, but the TUI auto-cancels with no prompt shown (3/3) and
+  headless cancels too (3/3). Channel 1 fails on agy.
+- Channel 2: skills and workflows do not pre-execute a script (fails).
+- Channel 3: with a session `toolPermission: "request-review"` setting, a permission prompt
+  appeared and a denial blocked the call (3/3). Under the user's `always-proceed` setting there
+  was no prompt (3/3).
+- **Consequence:** agy can decide only through channel 3, and only when that setting is in force.
+  This is a convention-class boundary like the others. FD-11's multiplexer default applies on top.
+
+Codex: not probed in this pass.
