@@ -40,10 +40,10 @@
       "team": "B (Pi)",
       "worker": "lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight",
       "branch": "feat/ws6-ultra-u0a",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "active"
+      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/260",
+      "head": "191f6cc",
+      "terra": "in progress (lane-run)",
+      "status": "active: lead resumed visibly in tab u0a-lead; roster correction sent; Terra loop in progress"
     },
     {
       "id": "U0b",
@@ -283,6 +283,13 @@
       "date": "2026-11-16",
       "summary": "Operator approvals inside terminal multiplexers (founder ruling on Terra's critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code's auto-mode classifier rejects a model's attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.",
       "source": "founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)"
+    },
+    {
+      "id": "ROSTER-DIRECTIVE",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "Founder stopped the U0a lead for reusing worker-sol. Pi ladder: Luna, then Hydrogen, then Terra, before any Sol escalation. Expect heavy Luna and Hydrogen delegation. Leads lead the way the orchestrator does: no soloing, no micromanaging.",
+      "source": "founder message in orchestration session, 2026-11-16"
     },
     {
       "id": "D-001",

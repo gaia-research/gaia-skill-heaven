@@ -81,6 +81,21 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
 
+## Pi team roster and escalation (founder rule)
+
+- Ladder: **L1 `worker-luna` → L2 Hydrogen → L3 `worker-terra` → L4 `worker-sol`.**
+  Start every task at Luna. Escalate exactly one level, and only after a recorded
+  verification failure at the current level. Write the reason in the handoff.
+  Sol is the last resort, not a default; do not reuse Sol out of habit.
+- Hydrogen has no `worker-hydrogen` profile. Spawn it with the per-task override
+  `model: "antigravity/gemini-4-hydrogen"`, and confirm with `subagent action:"plan"` first.
+- Set `fallback_models: []` on every spawn. If a requested model or effort is not
+  honored, report it unavailable; never substitute another model.
+- **Lead like the orchestrator.** The lead decomposes into small self-contained
+  briefs with exact acceptance checks, fans them out in parallel (Luna and Hydrogen
+  should carry most of the work), verifies evidence, and sends precise repair
+  requests. The lead does not implement, rewrite worker code or micromanage.
+
 ## Subagent limits (founder rule)
 
 - Pi subagent spawns: **never set max turns.** Timeouts practically unlimited:
