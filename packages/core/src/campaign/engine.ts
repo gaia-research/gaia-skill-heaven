@@ -54,7 +54,7 @@ function phase(state: CampaignState): CampaignTraceEntry["phase"] {
   return P.recon;
 }
 function validCharter(state: CampaignState, charter: CampaignCharter, revision: number): boolean {
-  if (!state.recon || charter.revision !== revision || charter.clauses.length === 0) return false;
+  if (!state.recon || charter.revision !== revision || charter.clauses.length === 0 || charter.queue.length === 0) return false;
   const ids = new Set(charter.queue.map(q => q.id));
   return ids.size === charter.queue.length && new Set(charter.allowedSkills).size === charter.allowedSkills.length && charter.queue.every(q => charter.allowedSkills.includes(q.skill) && state.recon!.citations.includes(q.reconCitation));
 }
@@ -123,9 +123,12 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
           break;
       }
     } else if (authorized && event.channel === "engine" && state.state !== S.unarmed) {
-      const allowed = state.charter?.clauses.includes(event.clause) ?? (event.op === E.sessionEnd || event.op === E.fail || event.op === E.block);
-      if (allowed) {
-        clause = event.clause;
+      const mechanicalTerminal = event.op === E.sessionEnd || event.op === E.fail || event.op === E.block || event.op === E.policyStop;
+      const charterAuthorized = state.charter?.clauses.includes(event.clause) === true;
+      if (mechanicalTerminal || charterAuthorized) {
+        // A runtime terminal is independently authoritative. Only claim a charter
+        // clause when that exact clause actually authorized the event.
+        if (charterAuthorized) clause = event.clause;
         switch (event.op) {
           case E.verify:
             if (state.approved && (state.state === S.executing || state.state === S.convergence)) {
