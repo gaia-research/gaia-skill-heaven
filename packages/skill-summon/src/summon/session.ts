@@ -13,10 +13,11 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import type { ArborSubjectReport } from "skill-zero";
+import { CampaignStates } from "skill-zero";
+import type { ArborSubjectReport, InstallabilityAssessment } from "skill-zero";
 
+import { CampaignStore } from "../campaign/store.js";
 import type { SkillInvocation, TrustFields } from "../domain/types.js";
-import type { InstallabilityAssessment } from "skill-zero";
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
 // cache directory (payload-cache.ts CACHE_DIR_NAME) also lives directly under
@@ -26,6 +27,24 @@ import type { InstallabilityAssessment } from "skill-zero";
 const SESSION_DIR_PREFIX = "skill-summon-session-";
 const MANIFEST_FILE = "session.json";
 const DEFAULT_SESSION_TTL_HOURS = 4;
+
+/**
+ * Environment variable(s) carrying the harness session ID. Kept in one
+ * constant so other doors can add theirs without duplicating lookup logic.
+ */
+export const HARNESS_SESSION_ID_ENV_VARS = Object.freeze([
+  "CLAUDE_CODE_SESSION_ID",
+] as const);
+
+export function readHarnessSessionId(
+  env: NodeJS.ProcessEnv = process.env,
+): string | undefined {
+  for (const key of HARNESS_SESSION_ID_ENV_VARS) {
+    const value = env[key]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+}
 
 /** What the ranker knew about this skill when it chose it (SPEC §5.2). */
 export type RetrievalDisclosure = {
@@ -90,6 +109,7 @@ export type MaterializedSkillRecord = InstalledSkill & {
 
 export type SessionManifest = {
   id: string;
+  harnessSessionId?: string | undefined;
   createdAt: string;
   pid: number;
   skills: MaterializedSkillRecord[];
@@ -97,6 +117,8 @@ export type SessionManifest = {
 
 export type OpenSessionOptions = {
   id?: string | undefined;
+  harnessSessionId?: string | undefined;
+  tempRoot?: string | undefined;
 };
 
 export type ResolveSessionResult = {
@@ -149,31 +171,47 @@ export class SummonSession {
   readonly root: string;
   readonly id: string;
   readonly #manifestPath: string;
+  readonly #tempRoot: string | undefined;
   #manifest: SessionManifest;
 
-  private constructor(root: string, manifest: SessionManifest) {
+  private constructor(
+    root: string,
+    manifest: SessionManifest,
+    tempRoot?: string,
+  ) {
     this.root = root;
     this.id = manifest.id;
     this.#manifestPath = path.join(root, MANIFEST_FILE);
+    this.#tempRoot = tempRoot;
     this.#manifest = manifest;
   }
 
-  static async createAt(root: string, id: string): Promise<SummonSession> {
-    await assertDisposableSessionRoot(root);
+  static async createAt(
+    root: string,
+    id: string,
+    opts: { harnessSessionId?: string | undefined; tempRoot?: string | undefined } = {},
+  ): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root, opts.tempRoot);
+    const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
     const manifest: SessionManifest = {
       id,
+      ...(harnessSessionId === undefined ? {} : { harnessSessionId }),
       createdAt: new Date().toISOString(),
       pid: process.pid,
       skills: [],
     };
-    const session = new SummonSession(root, manifest);
+    const session = new SummonSession(root, manifest, opts.tempRoot);
     await session.#writeManifest();
     return session;
   }
 
-  static async loadAt(root: string): Promise<SummonSession> {
-    await assertDisposableSessionRoot(root);
+  static async loadAt(
+    root: string,
+    tempRoot?: string,
+  ): Promise<SummonSession> {
+    await assertDisposableSessionRoot(root, tempRoot);
     const manifestPath = path.join(root, MANIFEST_FILE);
+    await assertConfinedPath(root, manifestPath, "Session manifest");
     let raw: string;
     try {
       raw = await readFile(manifestPath, "utf8");
@@ -183,7 +221,28 @@ export class SummonSession {
       );
     }
     const manifest = JSON.parse(raw) as SessionManifest;
-    return new SummonSession(root, manifest);
+    return new SummonSession(root, manifest, tempRoot);
+  }
+
+  static async reattachAt(
+    root: string,
+    tempRoot?: string,
+  ): Promise<SummonSession> {
+    const session = await SummonSession.loadAt(root, tempRoot);
+    session.#manifest = {
+      ...session.#manifest,
+      pid: process.pid,
+    };
+    await session.#writeManifest();
+    return session;
+  }
+
+  get harnessSessionId(): string | undefined {
+    return this.#manifest.harnessSessionId;
+  }
+
+  get pid(): number {
+    return this.#manifest.pid;
   }
 
   get createdAt(): string {
@@ -208,7 +267,7 @@ export class SummonSession {
     // The environment can name an existing directory, and both cache and
     // skills are recursive write targets. Validate the physical root before
     // creating either child so a symlink cannot redirect writes outside it.
-    await assertDisposableSessionRoot(this.root);
+    await assertDisposableSessionRoot(this.root, this.#tempRoot);
     await ensureConfinedDirectory(this.root, this.cacheRoot);
     await ensureConfinedDirectory(this.root, this.skillsRoot);
   }
@@ -243,8 +302,13 @@ export class SummonSession {
 export async function openSession(
   opts: OpenSessionOptions = {},
 ): Promise<SummonSession> {
-  const root = await mkdtemp(path.join(tmpdir(), SESSION_DIR_PREFIX));
-  return SummonSession.createAt(root, opts.id ?? randomUUID());
+  const tempRoot = opts.tempRoot ?? tmpdir();
+  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
+  const root = await mkdtemp(path.join(tempRoot, SESSION_DIR_PREFIX));
+  return SummonSession.createAt(root, opts.id ?? randomUUID(), {
+    harnessSessionId,
+    tempRoot,
+  });
 }
 
 /**
@@ -386,22 +450,83 @@ async function ensureConfinedDirectory(root: string, target: string): Promise<vo
 export async function resolveSession(
   opts: OpenSessionOptions = {},
 ): Promise<ResolveSessionResult> {
+  const tempRoot = opts.tempRoot ?? tmpdir();
   const existingRoot = process.env.SKILL_SUMMON_SESSION;
   if (existingRoot) {
-    if (!isDisposableSessionRoot(existingRoot)) {
+    if (!isDisposableSessionRoot(existingRoot, tempRoot)) {
       throw new Error(
         `SKILL_SUMMON_SESSION points at ${existingRoot}, which is not a disposable ` +
           `session directory. A session root must be a "${SESSION_DIR_PREFIX}*" ` +
-          `directory directly under the OS temp dir (${tmpdir()}); summon refuses ` +
+          `directory directly under the OS temp dir (${tempRoot}); summon refuses ` +
           `to write into or delete any other path.`,
       );
     }
     return {
-      session: await SummonSession.loadAt(existingRoot),
+      session: await SummonSession.loadAt(existingRoot, tempRoot),
       created: false,
     };
   }
-  return { session: await openSession(opts), created: true };
+
+  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
+  if (harnessSessionId) {
+    const match = await findDeadSessionForHarnessId(tempRoot, harnessSessionId);
+    if (match) {
+      return {
+        session: await SummonSession.reattachAt(match, tempRoot),
+        created: false,
+      };
+    }
+  }
+
+  return {
+    session: await openSession({ ...opts, harnessSessionId, tempRoot }),
+    created: true,
+  };
+}
+
+async function findDeadSessionForHarnessId(
+  tempRoot: string,
+  harnessSessionId: string,
+): Promise<string | undefined> {
+  let entries;
+  try {
+    entries = await readdir(tempRoot, { withFileTypes: true });
+  } catch {
+    return undefined;
+  }
+
+  const matches: { root: string; createdAt: string }[] = [];
+  for (const entry of entries) {
+    if (
+      entry.isSymbolicLink() ||
+      !entry.isDirectory() ||
+      !entry.name.startsWith(SESSION_DIR_PREFIX)
+    ) {
+      continue;
+    }
+    const candidateRoot = path.join(tempRoot, entry.name);
+    try {
+      await assertDisposableSessionRoot(candidateRoot, tempRoot);
+      await assertConfinedPath(
+        candidateRoot,
+        path.join(candidateRoot, MANIFEST_FILE),
+        "Session manifest",
+      );
+    } catch {
+      continue;
+    }
+    const manifest = await readManifestSafely(candidateRoot);
+    if (!manifest || manifest.harnessSessionId !== harnessSessionId) continue;
+    if (isProcessLive(manifest.pid)) continue;
+    matches.push({
+      root: candidateRoot,
+      createdAt: typeof manifest.createdAt === "string" ? manifest.createdAt : "",
+    });
+  }
+
+  if (matches.length === 0) return undefined;
+  matches.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  return matches[0]!.root;
 }
 
 /** List valid warm roots without creating or mutating a session. */
@@ -516,7 +641,9 @@ export async function reapSessions(
       ? createdAt
       : sessionStat.mtimeMs;
     const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
-    if (ageHours < ttlHours) continue;
+    const effectiveTtlHours =
+      (await pausedCampaignRetentionHours(sessionRoot)) ?? ttlHours;
+    if (ageHours < effectiveTtlHours) continue;
 
     let bytes = 0;
     try {
@@ -537,6 +664,27 @@ export async function reapSessions(
     reclaimedBytes: candidates.reduce((total, item) => total + item.bytes, 0),
     liveProtected,
   };
+}
+
+async function pausedCampaignRetentionHours(
+  sessionRoot: string,
+): Promise<number | undefined> {
+  try {
+    const store = await CampaignStore.load(sessionRoot);
+    if (!store.hasTrace || store.corrupted) return undefined;
+    const state = store.state;
+    if (
+      state.approved &&
+      state.charter !== null &&
+      (state.state === CampaignStates.executing ||
+        state.state === CampaignStates.convergence)
+    ) {
+      return state.charter.sessionRetention;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function sessionTtlHours(): number {

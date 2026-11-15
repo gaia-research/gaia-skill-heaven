@@ -9,6 +9,7 @@ import {
   HARNESS_PATHS,
   GROUND_HEX,
   ROLE_COLORS,
+  CONTROLLER_STATUS_SCHEMA,
   controllerFromCampaignStatus,
   controllerFromSteeringEntry,
   describeEvent,
@@ -142,17 +143,39 @@ describe("Ultra (#137 K9, CONTROL-PLANE §2.4)", () => {
     expect(controllerFromSteeringEntry({ decision: "explore", score: 0.9 })).toMatchObject({ state: "EXPLORE" });
   });
 
-  it("the proposed campaign contract parser is strict", () => {
-    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "VERIFY", progress: { completed: 34, total: 118 } })).toMatchObject({
+  it("the campaign status v1 contract parser accepts new phases and rejects old/malformed inputs", () => {
+    expect(CONTROLLER_STATUS_SCHEMA).toBe("skill-heaven/controller-status/v1");
+    for (const phase of ["RECON", "DECISIONS", "CONVERGENCE"] as const) {
+      expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: phase })).toEqual({
+        kind: "reported",
+        source: "campaign",
+        state: phase,
+      });
+    }
+    expect(
+      controllerFromCampaignStatus({
+        schema: "skill-heaven/controller-status/v1",
+        state: "EXECUTING",
+        effective: "high",
+        progress: { completed: 34, total: 118 },
+        transition: { from: "DECISIONS", to: "EXECUTING", reason: "decide" },
+      }),
+    ).toEqual({
       kind: "reported",
       source: "campaign",
-      state: "VERIFY",
+      state: "EXECUTING",
+      effective: "high",
       progress: { completed: 34, total: 118 },
+      transition: { from: "DECISIONS", to: "EXECUTING", reason: "decide" },
     });
-    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "VERIFY", authority: "granted" })).toBeNull();
-    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "verify" })).toBeNull();
-    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "EXEC", effective: "ultra" })).toBeNull();
-    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "EXEC", progress: { completed: 5, total: 3 } })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: "skill-heaven/controller-status@0", state: "VERIFY", progress: { completed: 34, total: 118 } })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "VERIFY", authority: "granted" })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "verify" })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", effective: "ultra" })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", progress: { completed: 5, total: 3 } })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", progress: { completed: 1, total: 3, extra: 1 } })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", transition: { from: "RECON", to: "DECISIONS", reason: "" } })).toBeNull();
+    expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", transition: { from: "RECON", to: "DECISIONS", reason: "ok", extra: 1 } })).toBeNull();
     expect(controllerFromCampaignStatus({ schema: "other", state: "EXEC" })).toBeNull();
   });
 });
