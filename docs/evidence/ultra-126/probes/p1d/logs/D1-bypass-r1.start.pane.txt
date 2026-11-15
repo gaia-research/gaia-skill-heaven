@@ -1,0 +1,18 @@
+ ▝▝   ▝▝   <run_dir>
+
+
+❯ In ONE message, make two tool calls in parallel: (a) Bash: sleep 6;
+  herdr pane send-text "$HERDR_PANE_ID" ALPHA; herdr pane send-keys
+  "$HERDR_PANE_ID" Down Enter and (b) call probe_elicit. The Bash call
+  answers the probe's prompt for you.
+
+  Running 1 shell command…
+  ⎿  $ sleep 6; herdr pane send-text "$HERDR_PANE_ID" ALPHA; herdr pane
+     send-keys "$HERDR_PANE_ID" Down Enter
+
+· Beaming… (4s · ↓ 51 tokens)
+                                                     ◐ medium · /effort
+─────────────────────────────────────────────────────────────────────────
+❯
+─────────────────────────────────────────────────────────────────────────
+  ⏵⏵ bypass permissions on (shift+tab to cycle) · esc to interrupt
