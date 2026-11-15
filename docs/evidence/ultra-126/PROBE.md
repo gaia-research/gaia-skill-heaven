@@ -112,7 +112,9 @@ Interpreted by the Team A orchestrator (Opus 5.5) from the signals above. The la
    `decline` as *no decision*: the state stays `DECISIONS`, and a headless session
    cannot approve a charter. This is the degraded state from section 5.9 ("no operator
    channel passes"), applied per mode.
-3. **Channel 2 (command pre-execution) works in both modes** (C3, 6/6). It stays a
+3. **Channel 2 (command pre-execution) works in headless mode** (C3-h, 3/3, committed stream-json excerpts). In the TUI
+   (C3-t, 3/3) the writer ran (committed `.cmd.json`), but the ordering before the first model output was
+   observed in the pane and is not independently verifiable from committed logs.
    convention a model with shell access could imitate, so it is not adopted on Claude Code,
    where channel 1 passes.
 4. **Channel 3 (permission prompt) works only in manual mode** (C4-t, 3/3). It is void under
@@ -218,7 +220,11 @@ that elicits.
 
 This is the same class of boundary as channels 2 and 3 and as the steering brand: "not
 authentication". Channel 1 still keeps the answer out of the model's tool path, and on
-Claude Code 2.1.325 no channel authenticates a person. Consequences, binding on U3 and U9:
+Claude Code 2.1.325 no channel authenticates a person. **Refined by founder ruling FD-11 and decision D-010 (decision log):** by default an elicitation
+`accept` grants operator authority only when the server sees no multiplexer. Otherwise the
+decisions step fails closed. Advanced users may opt in with an unadvertised, person-set env
+var; every entry under opt-in is recorded as such. Probe P1d measures whether auto mode's
+classifier blocks a self-approval attempt. Consequences, binding on U3 and U9:
 
 - Every operator entry records `attribution: "terminal-input, unauthenticated"` and
   whether the server process sees a multiplexer (`HERDR_ENV` / `HERDR_SOCKET_PATH` /

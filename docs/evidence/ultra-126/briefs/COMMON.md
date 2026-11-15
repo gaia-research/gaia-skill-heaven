@@ -25,7 +25,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 ## Git
 
-- Work only in the worktree you were given. Never touch `/Users/marcotiongson/skill-heaven`
+- Work only in the worktree you were given. Never touch `<founder main checkout>`
   (the founder's checkout) and never commit to `main`.
 - Your branch: `feat/ws6-ultra-<unit>`, based on `origin/integration/skill-ultra-126`.
 - Open your PR with `--base integration/skill-ultra-126` (draft is fine until review passes).
