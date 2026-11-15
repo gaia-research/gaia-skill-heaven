@@ -485,5 +485,40 @@
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-16"
+  "updatedAt": "2026-11-16",
+  "quota": {
+    "asOf": "2026-11-16T06:47:00-08:00",
+    "pools": [
+      {
+        "pool": "openai",
+        "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
+        "state": "nearly exhausted (founder report)",
+        "resetAt": "2026-11-16T07:38:00-08:00"
+      },
+      {
+        "pool": "openai-codex",
+        "covers": "Terra reviewer (pi-reviewer)",
+        "state": "available; separate pool, unaffected",
+        "resetAt": null
+      },
+      {
+        "pool": "antigravity",
+        "covers": "Hydrogen, Argon (agy lanes and Pi L2 default)",
+        "state": "available",
+        "resetAt": null
+      },
+      {
+        "pool": "claude",
+        "covers": "Opus orchestrator, Haiku probe subject",
+        "state": "about 68% of 7-day used (earlier reading); conserve",
+        "resetAt": null
+      },
+      {
+        "pool": "codex",
+        "covers": "Codex Luna Low probes",
+        "state": "unknown",
+        "resetAt": null
+      }
+    ]
+  }
 }
