@@ -200,7 +200,9 @@ Interpreted by the Team A orchestrator (Opus 5.5).
    waited for input and was not auto-accepted in either mode (C2-tb 3/3, C2-ta 3/3).
    Unlike channel 3, channel 1 holds in the founder's usual permission modes.
 2. **Headless remains fail-closed even with bypass** (C2-hb 3/3, `cancel` within ~8 ms).
-3. The gap listed under P1 is closed. Channel 1 stays selected for Claude Code.
+3. The two tested modes did not auto-accept in these runs (n = 3 each) on 2.1.325. This narrows the P1 gap
+   but does not close it: whether **any** harness-side setting can auto-answer elicitation remains open
+   and untested.
 
 ## Limit: channel 1 is terminal input, not authentication (decision D-009)
 
