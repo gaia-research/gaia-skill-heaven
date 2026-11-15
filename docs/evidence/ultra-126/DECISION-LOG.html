@@ -494,7 +494,7 @@ tbody tr:last-child td {
     </div>
     <p class="lead">Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).</p>
     <dl class="meta-grid">
-      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-active">EXECUTING</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><span class="muted">—</span></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div>
+      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-active">EXECUTING</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-16</code></dd></div>
     </dl>
   </header>
     
@@ -524,13 +524,13 @@ tbody tr:last-child td {
         <td class="col-scope">Pure campaign engine, strict schemas, replay, verify</td>
         <td class="mono nowrap">—</td>
         <td class="nowrap">heavy</td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
+        <td class="nowrap">B (Pi)</td>
+        <td class="nowrap">lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u0a</code></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-active">ready</span></td>
+        <td class="nowrap"><span class="pill pill-active">active</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U0b</strong></td>
@@ -582,7 +582,7 @@ tbody tr:last-child td {
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">waiting</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">waiting (P1 probe running early)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U4</strong></td>
@@ -641,13 +641,13 @@ tbody tr:last-child td {
         <td class="col-scope">Arbor refresh, declared claims, #253 doc fix</td>
         <td class="mono nowrap">U2</td>
         <td class="nowrap">standard</td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
+        <td class="nowrap">C (Antigravity)</td>
+        <td class="nowrap">gemini-4-hydrogen-medium</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u8</code></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">waiting</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">prep active (data + docs only; render waits for U2)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U9</strong></td>
@@ -686,7 +686,7 @@ tbody tr:last-child td {
         <td class="mono nowrap"><strong>P1</strong></td>
         <td class="mono nowrap">U3</td>
         <td>Which operator channels work: elicitation, command pre-execution, permission prompt</td>
-        <td class="nowrap"><span class="pill pill-neutral">not started</span></td>
+        <td class="nowrap"><span class="pill pill-active">running</span></td>
         <td class="mono"><span class="muted">—</span></td>
       </tr>
       <tr>
@@ -947,6 +947,153 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>Each worktree needs its own npm ci.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-004</span>
+            <span class="tag">unit: U3</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>P1 (operator channel) gates U3&#39;s implementation choice but depends on no unit code; waiting for U2 would serialize it behind three units.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Run P1 when U3 starts</span></li><li><span>Run P1 now as a U3 sub-branch; U3 consumes its record</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Run P1 now on feat/ws6-ultra-u3-p1 (Antigravity Hydrogen High drives; claude-haiku-5-5 is the model under test, n=3 per cell, TUI cells in visible herdr panes). The orchestrator interprets; the lane records hard signals only.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Removes U3&#39;s longest serial wait without changing the architecture; probe-only, cheap model under test (FD-9).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Plan U3 brief (&#39;Run P1 first&#39;), section 7.2; directive section 10</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>U3 review covers the P1 record</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>pending</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>Claude Code may upgrade before U3; P1 then re-runs per M0.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-005</span>
+            <span class="tag">unit: reporting</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>The dashboard and decision-log renderer is orchestration reporting, not a product unit; a separate Terra pass for it would spend the scarce reviewer on non-product code.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Separate Terra review</span></li><li><span>Merge after the orchestrator checks it; covered by the final full-integration Terra review</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Merge the DASH lane after an orchestrator check; it touches only docs/evidence/ultra-126/ and is included in the final integration review.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>The review gate in directive section 7 is for implementation units; this lane writes no product code.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Directive sections 7 and 9</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>final integration review</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>pending</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>low</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-006</span>
+            <span class="tag">unit: U8</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>U8 is listed after U2, but only its declared-claims rendering touches U2&#39;s renderer. The Arbor cache refresh, identity pins, release-acceptance update and #253 doc fix have no code dependency on U2.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Start U8 only after U2</span></li><li><span>Start the data and docs half now; the render half and the merge wait for U2</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Start U8 prep now (data, pins, release-acceptance, #253 docs). The declared-claims render is added after U2 lands, and U8 merges into integration only after U2.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Uses idle Antigravity capacity; the dependency&#39;s reason (the renderer) is still honored.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Plan section 7.1 (U8 &#39;any time after U2&#39; is satisfied at merge); directive section 5</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>U8 review</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>pending</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>The refreshed data could conflict with U2 if U2 touches arbor data. U2&#39;s brief does not.</span></dd>
             </div>
         </dl>
       </article>
