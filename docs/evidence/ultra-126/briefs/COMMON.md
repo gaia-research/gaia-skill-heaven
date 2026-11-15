@@ -50,6 +50,24 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   repair, Terra reviews the **new** HEAD. Repeat until no blocking findings remain.
 - The worker that wrote the code never approves it.
 
+## Visibility (founder directive, 2026-11-16)
+
+- Lanes run in **visible herdr panes**, dispatched per
+  `packages/core/skills/herdr-dispatch/SKILL.md`. You are probably already in one.
+- Any harness you invoke yourself (`claude`, `pi`, `agy`, `codex`, `hermes`, `grok`,
+  and `~/.pi/agent/bin/pi-reviewer`, which runs Pi) goes in a visible pane too:
+  split one probe pane next to yours with `herdr pane split <your pane> --direction down --cwd <worktree>`
+  (find your pane with `herdr pane current`), run it there, and `herdr pane read` the
+  result. Record the pane id beside any result you rely on. Never take over pane `w31:p1`,
+  which belongs to the orchestrator.
+- Pi `subagent` fan-out inside your own pane is visible and allowed (skill §6).
+- `git`, `npm`, `node`, `gh` and file inspection stay on your normal shell.
+- Each lane runs in **its own herdr tab**. Keep any probe panes you split inside
+  that tab, and close a probe pane once you have recorded its result. When you
+  finish, leave your lane pane as it is: the orchestrator archives your session
+  files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
+  then closes the tab.
+
 ## Subagent limits (founder rule)
 
 - Pi subagent spawns: **never set max turns.** Timeouts practically unlimited:
