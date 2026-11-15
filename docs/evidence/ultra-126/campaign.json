@@ -294,6 +294,13 @@
       "source": "founder message in orchestration session, 2026-11-16"
     },
     {
+      "id": "REVIEWER-DIRECTIVE",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "The reviewer may use the shell: the founder approved editing reviewer.md and reviewer-shared.md to add bash. Any lane may invoke the reviewer from its own bash instead of a herdr split; visibility is not required for reviews. The orchestrator added a verify-only shell rule to both agent bodies (no commits, pushes, branch changes or config edits); local backups are kept in the session archive.",
+      "source": "founder messages in orchestration session, 2026-11-16"
+    },
+    {
       "id": "D-001",
       "kind": "delegated",
       "date": "2026-11-16",
