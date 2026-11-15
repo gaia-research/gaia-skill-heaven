@@ -38,12 +38,13 @@
       "after": [],
       "tier": "heavy",
       "team": "B (Pi)",
-      "worker": "lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight",
+      "worker": "lead gpt-6.1-sol xhigh; workers Luna, Sol (pre-correction), Hydrogen; one resumed segment ran gemini-3.8-flash unrequested (disclosed)",
       "branch": "feat/ws6-ultra-u0a",
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/260",
-      "head": "191f6cc",
-      "terra": "in progress (lane-run)",
-      "status": "active: lead resumed visibly in tab u0a-lead; roster correction sent; Terra loop in progress"
+      "head": "5ffac74",
+      "terra": "PASS: no blocking findings at 5ffac74 (source PASS at dc9efca after blocking rounds 8d0511f and 16d98fc)",
+      "status": "integrated",
+      "tests": "107 files passed + 1 skipped; 2609 tests passed + 1 skipped; typecheck clean; build:mcp/status/console no diff (orchestrator re-run at 5ffac74)"
     },
     {
       "id": "U0b",
@@ -500,6 +501,25 @@
       "terra": "lane-run reviews; U7 review covers the final probe records",
       "outcome": "dispatched",
       "risk": "P2a runs Claude Haiku, which spends the Claude pool (cheap tier)."
+    },
+    {
+      "id": "D-012",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U0a",
+      "problem": "The U0a lead hit the OpenAI usage limit during closeout. The final HEAD 5ffac74 (evidence-only delta over Terra-passed dc9efca) had no exact-HEAD Terra review. Separately, the handoff discloses that a resumed worker-sol segment actually ran antigravity/gemini-3.8-flash without being asked (a silent route substitution by pi-subagent resume).",
+      "options": [
+        "Wait for the OpenAI reset and let the lead finish",
+        "Orchestrator verifies mechanically and requests an exact-HEAD Terra confirmation (separate pool)"
+      ],
+      "selected": "Orchestrator ran the full matrix on 5ffac74 (2609 tests, typecheck, three builds with no diff, no I/O/clock/randomness in the engine, no new deps, no new ratify), then requested Terra confirmation with a generated delta packet. Terra: PASS, no blocking findings. Merged --no-ff into integration. Flash substitution recorded as a tooling risk: every spawn now sets fallback_models: [], and the resumed segment's code was covered by later Terra reviews.",
+      "reason": "Directive: a reviewed SHA must match the integrated HEAD; Terra uses a separate pool and was available.",
+      "authority": "Directive sections 7, 12 and 13",
+      "reversible": true,
+      "terra": "U0a-5ffac74 PASS",
+      "outcome": "integrated",
+      "risk": "pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers."
     }
   ],
   "blockers": [],

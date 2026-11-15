@@ -575,12 +575,12 @@ tbody tr:last-child td {
         <td class="mono nowrap">—</td>
         <td class="nowrap">heavy</td>
         <td class="nowrap">B (Pi)</td>
-        <td class="nowrap">lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight</td>
+        <td class="nowrap">lead gpt-6.1-sol xhigh; workers Luna, Sol (pre-correction), Hydrogen; one resumed segment ran gemini-3.8-flash unrequested (disclosed)</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u0a</code></td>
         <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/260" target="_blank" rel="noopener noreferrer">#260</a></td>
-        <td class="nowrap"><code class="sha" title="191f6cc">191f6cc</code></td>
-        <td class="nowrap"><span class="pill pill-neutral">in progress (lane-run)</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">active: lead resumed visibly in tab u0a-lead; roster correction sent; Terra loop in progress</span></td>
+        <td class="nowrap"><code class="sha" title="5ffac74">5ffac74</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">PASS: no blocking findings at 5ffac74 (source PASS at dc9efca after blocking rounds 8d0511f and 16d98fc)</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">integrated</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U0b</strong></td>
@@ -1432,6 +1432,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>P2a runs Claude Haiku, which spends the Claude pool (cheap tier).</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-012</span>
+            <span class="tag">unit: U0a</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>The U0a lead hit the OpenAI usage limit during closeout. The final HEAD 5ffac74 (evidence-only delta over Terra-passed dc9efca) had no exact-HEAD Terra review. Separately, the handoff discloses that a resumed worker-sol segment actually ran antigravity/gemini-3.8-flash without being asked (a silent route substitution by pi-subagent resume).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Wait for the OpenAI reset and let the lead finish</span></li><li><span>Orchestrator verifies mechanically and requests an exact-HEAD Terra confirmation (separate pool)</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Orchestrator ran the full matrix on 5ffac74 (2609 tests, typecheck, three builds with no diff, no I/O/clock/randomness in the engine, no new deps, no new ratify), then requested Terra confirmation with a generated delta packet. Terra: PASS, no blocking findings. Merged --no-ff into integration. Flash substitution recorded as a tooling risk: every spawn now sets fallback_models: [], and the resumed segment&#39;s code was covered by later Terra reviews.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Directive: a reviewed SHA must match the integrated HEAD; Terra uses a separate pool and was available.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Directive sections 7, 12 and 13</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>U0a-5ffac74 PASS</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>integrated</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers.</span></dd>
             </div>
         </dl>
       </article>
