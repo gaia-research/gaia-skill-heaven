@@ -1,0 +1,8 @@
+{
+  "door": "pi",
+  "cell": "C2-h",
+  "run": 2,
+  "cmdJsonExists": false,
+  "userPromptExpandedContainsMarker": true,
+  "assistantText": "NONE"
+}

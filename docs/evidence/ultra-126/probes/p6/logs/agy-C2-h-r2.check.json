@@ -1,0 +1,13 @@
+{
+  "door": "agy",
+  "cell": "C2-h",
+  "run": 2,
+  "expandedCommands": [
+    {
+      "name": "probe-decide",
+      "type": "skill"
+    }
+  ],
+  "cmdJsonExists": false,
+  "assistantText": "NONE"
+}

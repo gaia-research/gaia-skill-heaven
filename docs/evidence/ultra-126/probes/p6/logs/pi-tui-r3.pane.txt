@@ -1,0 +1,20 @@
+
+
+ Call mcp__p6__operator_decide with note="c3-t-r3" now, then reply OK3.
+
+
+
+ p6/operator_decide note="c3-t-r3"
+
+ {"ok":true}
+
+
+ OK3
+
+▸Agy:○ 0%  ▸Agy C/G:○ 0%  Claude:◕ 68%↑ (7d)  Codex:○ 12%  Copilot:● 100%  OpenRtr:?
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+/private/tmp/p6-pi-tui3.vgS7S9
+↑34k ↓300 R95k CH91.8% $0.061 (sub) 2.5%/1.0M (auto)                                                            (antigravity) gemini-4-hydrogen • low
+0 mins ago Openai 5h ████████ 100% ↻ Mon 7:38 AM · wk ██░░░░░░ 25% ↻ Sun 9:28 PM 🎨 favor-finance-green

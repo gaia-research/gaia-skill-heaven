@@ -1,0 +1,20 @@
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+ 🎨 Theme: favor-indigo
+
+
+ !P6_LOG=/tmp/p6-pi-c2t-r3.3R53zL/probe.log.jsonl node /tmp/p6-pi-c2t-r3.3R53zL/write-record.mjs decide-x
+
+ Report verbatim the line starting with P6_PREEXEC_STDOUT above (or state NONE if absent), then stop. Do not run any tools.
+
+
+ NONE
+
+▸Agy:○ 0%  ▸Agy C/G:○ 0%  OpenRtr:?  Copilot:● 100%  Claude:◕ 68%↑ (7d)  Codex:○ 14%
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+/private/tmp/p6-pi-c2t-r3.3R53zL
+↑25k ↓151 $0.039 (sub) 2.4%/1.0M (auto)                                                                         (antigravity) gemini-4-hydrogen • low
+0 mins ago Openai 5h ████████ 100% ↻ Mon 7:38 AM · wk ██░░░░░░ 25% ↻ Sun 9:28 PM 🎨 favor-indigo
