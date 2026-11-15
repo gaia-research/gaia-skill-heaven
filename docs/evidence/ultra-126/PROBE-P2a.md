@@ -34,4 +34,19 @@ Session IDs are read from `CLAUDE_CODE_SESSION_ID` in the server JSONL logs and 
 
 ### Interpretation (orchestrator)
 
-pending
+Interpreted by the Team A orchestrator (Opus 5.5). Claude Code 2.1.325, `claude-haiku-5-5`, n = 3 per cell.
+
+1. **`/compact` does not restart the MCP server** (A-compact 3/3: same pid, no exit or start
+   between pings across the `compact_boundary`). Server-held campaign state (L0) and the
+   session directory survive compaction without help. Only the model's context is
+   compacted; the digest in tool results (L1) and the Console hook (L2) re-anchor it.
+2. **`--resume`, `--continue` and headless `-p --resume` start a new server process with the
+   same `CLAUDE_CODE_SESSION_ID`** (3/3 each). U0b's re-attach rule ("same session id + old pid
+   dead → re-attach") has a stable key on this harness version.
+3. **`--fork-session` gets a new session id** (3/3), so a fork finds no campaign: PR-10 holds
+   mechanically, with no special case.
+4. On `/exit` the server receives `SIGINT`. Nothing in this probe shows the server removing
+   its directory; the reaper behaviour in plan section 1.5 still governs. U0b must not delete the
+   session root on `SIGINT`.
+5. Scope: Claude Code only; other doors are in P6. Re-attach itself (finding and folding the
+   directory) is tested by U0b and re-probed in U7's P2 cells.
