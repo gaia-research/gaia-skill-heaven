@@ -1,0 +1,50 @@
+
+      ▄▀▀▄        Antigravity CLI 1.5.9
+     ▀▀▀▀▀▀       <REDACTED_EMAIL> (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 4 Hydrogen (Low)
+   ▄▀▀    ▀▀▄     /tmp/p6-agy-tui1.9ikYdQ
+  ▄▀▀      ▀▀▄
+
+────────────────────────────────────────────────────────────
+> Call probe_elicit now, then reply DONE.
+
+  probe_elicit is not an available tool in this environment, so I cannot call it.
+
+────────────────────────────────────────────────────────────
+> Call the probe_elicit MCP tool now, then reply DONE.
+
+2.4k in | 81 out | 39 thinking
+● p6_p6/probe_elicit({}) (ctrl+o to expand)
+
+  DONE
+────────────────────────────────────────────────────────────
+> /probe-decide/help
+
+● Read(~/.gemini/antigravity-cli/mcp/p6_p6/operator_decide.json) (ctrl+o to expand)
+
+  /probe-decide/help is not a recognized command or skill.
+
+  If you're looking for the p6_p6 MCP tool operator_decide, it is a no-op probe tool that logs its invocation and accepts an optional note string
+  parameter.
+> /help
+  ⎿  Exited /help command
+────────────────────────────────────────────────────────────
+> Call the p6_p6/operator_decide MCP tool with note="c3-t-r1" now, then reply OK3.
+
+● p6_p6/operator_decide({"note":"c3-t-r1"}) (ctrl+o to expand)
+
+  OK3
+
+> /config
+  ⎿  Exited /config command
+
+> /config
+  ⎿  Exited /config command
+
+> /config
+  ⎿  Exited /config command
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+? for shortcuts                                                                                                       auto · Gemini 4 Hydrogen · low
