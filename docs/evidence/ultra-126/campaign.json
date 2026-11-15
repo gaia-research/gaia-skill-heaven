@@ -222,7 +222,7 @@
       "id": "P2",
       "unit": "U7",
       "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)",
-      "status": "not started"
+      "status": "P2a (harness-level identity/lifetime) running early on feat/ws6-ultra-u7-p2a; re-attach cells wait for U0b"
     },
     {
       "id": "P3",
@@ -246,7 +246,7 @@
       "id": "P6",
       "unit": "U7",
       "question": "Per additional door: stable session id, working operator channel",
-      "status": "not started"
+      "status": "pass 1 (pi, agy) running on feat/ws6-ultra-u7-p6; codex deferred"
     }
   ],
   "decisions": [
@@ -481,6 +481,25 @@
       "terra": "U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in",
       "outcome": "P1d confirms the need: auto mode is a partial safeguard (1/3), bypass none; default fail-closed when multiplexed stands. Implementation pending U3.",
       "risk": "An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed."
+    },
+    {
+      "id": "D-011",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U7, U0b, reporting",
+      "problem": "The OpenAI pool (Pi team) is nearly exhausted until 07:38 PST and U0a is in its final review, so the next Pi lead (U0b) cannot start yet. Antigravity capacity is idle.",
+      "options": [
+        "Wait",
+        "Run code-independent work on Antigravity now"
+      ],
+      "selected": "Three Antigravity lanes in their own tabs: P2a (Claude Code session identity and MCP server lifetime across /compact, --resume, --continue, --fork-session; the harness facts U0b's re-attach relies on), P6 pass 1 (Pi and agy doors: session id, operator channel; Codex deferred), and DASH2 (an availability panel with a reset countdown in DECISION-LOG.html). Each lane runs its own Terra loop. A session-only timer at 07:41 checks the OpenAI reset.",
+      "reason": "Founder: continue on Antigravity until the reset. These probes depend on harnesses, not on unit code (same reasoning as D-004).",
+      "authority": "Founder message 2026-11-16; plan section 7.2; D-004 precedent",
+      "reversible": true,
+      "terra": "lane-run reviews; U7 review covers the final probe records",
+      "outcome": "dispatched",
+      "risk": "P2a runs Claude Haiku, which spends the Claude pool (cheap tier)."
     }
   ],
   "blockers": [],
