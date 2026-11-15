@@ -64,6 +64,27 @@ describe("mechanical runtime terminal authorization", () => {
   });
 
   it.each(
+    activeStates.flatMap(state => terminalExpectations.map(([op, target, signal]) => [state, op, target, signal] as const)),
+  )("%s maps trusted %s to %s with null charterClause even when clause matches charter", (stateName, op, expectedTarget, expectedSignal) => {
+    const state = stateAt(stateName);
+    const event = createCampaignEngineEvent(runtime, engineCommand(op, matchedClause));
+    const result = stepCampaign(state, event);
+    expect(event.clause).toBe(matchedClause);
+    expect(result.state.state).toBe(expectedTarget);
+    expect(result.entry).toMatchObject({
+      from: stateName,
+      to: expectedTarget,
+      trigger: op,
+      decision: D.stop,
+      signal: expectedSignal,
+      charterClause: null,
+      phase: P.terminal,
+      channel: "engine",
+      accepted: true,
+    });
+  });
+
+  it.each(
     activeStates.flatMap(state => [E.sessionEnd, E.fail, E.block, E.policyStop, E.complete, E.verify].map(op => [state, op] as const)),
   )("%s rejects raw, copied, and agent-channel %s claims", (stateName, op) => {
     const state = stateAt(stateName);

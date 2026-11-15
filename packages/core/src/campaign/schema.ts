@@ -53,6 +53,16 @@ const incident: Check = v => object(v, {
 });
 const stateName = member(CAMPAIGN_STATES);
 const steering: Check = v => object(v, { rung: member(STEERING_RUNGS), search: member(SEARCH_STATES) });
+export function isValidCharterForRecon(recon: CampaignRecon | null, value: CampaignCharter, revision: number): boolean {
+  if (!recon || !Number.isSafeInteger(revision) || revision < 1) return false;
+  if (value.revision !== revision || value.clauses.length === 0 || value.queue.length === 0) return false;
+  const ids = new Set(value.queue.map(q => q.id));
+  return (
+    ids.size === value.queue.length &&
+    new Set(value.allowedSkills).size === value.allowedSkills.length &&
+    value.queue.every(q => value.allowedSkills.includes(q.skill) && recon.citations.includes(q.reconCitation))
+  );
+}
 const state: Check = v => {
   if (!object(v, {
     state: stateName, charter: nullable(charter), recon: nullable(recon), queue,
@@ -64,9 +74,8 @@ const state: Check = v => {
   if (!s.charter) {
     if (s.charterRevision !== 0 || s.approved || s.queue.length !== 0) return false;
   } else {
-    if (!s.recon || s.charter.revision !== s.charterRevision || s.charterRevision < 1 || s.charter.clauses.length === 0) return false;
+    if (!isValidCharterForRecon(s.recon, s.charter, s.charterRevision)) return false;
     if (s.charter.queue.length !== s.queue.length || !s.queue.every((q, i) => q.id === s.charter!.queue[i]!.id && q.skill === s.charter!.queue[i]!.skill && q.reconCitation === s.charter!.queue[i]!.reconCitation)) return false;
-    if (new Set(s.queue.map(q => q.id)).size !== s.queue.length || !s.queue.every(q => s.charter!.allowedSkills.includes(q.skill) && s.recon!.citations.includes(q.reconCitation))) return false;
   }
   if (s.state === S.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0)) return false;
   if (s.state === S.recon && (s.charter || s.incident)) return false;

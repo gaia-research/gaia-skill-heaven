@@ -1,6 +1,6 @@
 import { createRuntimeAdapter, createRuntimeEvent, initialSteeringState, stepSteering } from "../steering.js";
 import { CampaignStates as S, CampaignDecisions as D, CampaignPhases as P, CampaignSignals, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions, TERMINAL_STATES, CAMPAIGN_SCHEMA_IDS } from "./vocabulary.js";
-import { immutableSnapshot, parseCampaignEvent, parseCampaignState, parseCampaignRecord } from "./schema.js";
+import { immutableSnapshot, isValidCharterForRecon, parseCampaignEvent, parseCampaignState, parseCampaignRecord } from "./schema.js";
 import type { CampaignState, CampaignEventDescriptor, CampaignStep, CampaignReplay, CampaignTraceEntry, CampaignTraceRecord, CampaignVerification, CampaignVerificationOptions, CampaignOperatorCommand, EngineCommand, OperatorEventCapability, EngineEventCapability, OperatorCampaignEvent, EngineCampaignEvent, CampaignCharter } from "./types.js";
 
 const operatorCapabilities = new WeakSet<object>();
@@ -54,9 +54,7 @@ function phase(state: CampaignState): CampaignTraceEntry["phase"] {
   return P.recon;
 }
 function validCharter(state: CampaignState, charter: CampaignCharter, revision: number): boolean {
-  if (!state.recon || charter.revision !== revision || charter.clauses.length === 0 || charter.queue.length === 0) return false;
-  const ids = new Set(charter.queue.map(q => q.id));
-  return ids.size === charter.queue.length && new Set(charter.allowedSkills).size === charter.allowedSkills.length && charter.queue.every(q => charter.allowedSkills.includes(q.skill) && state.recon!.citations.includes(q.reconCitation));
+  return isValidCharterForRecon(state.recon, charter, revision);
 }
 function equal(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -128,7 +126,7 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
       if (mechanicalTerminal || charterAuthorized) {
         // A runtime terminal is independently authoritative. Only claim a charter
         // clause when that exact clause actually authorized the event.
-        if (charterAuthorized) clause = event.clause;
+        if (!mechanicalTerminal && charterAuthorized) clause = event.clause;
         switch (event.op) {
           case E.verify:
             if (state.approved && (state.state === S.executing || state.state === S.convergence)) {
