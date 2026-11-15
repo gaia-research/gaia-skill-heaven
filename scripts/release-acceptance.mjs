@@ -431,12 +431,21 @@ async function main() {
   );
   const candidate = (structured?.previewed ?? []).find((entry) => entry?.id === "obra/receiving-code-review");
   check("the candidate joins the governed record content-pinned", candidate?.arbor?.join === "content-pinned");
-  check("…and the record's support is `inconclusive`", candidate?.arbor?.claims?.[0]?.support === "inconclusive");
-  check("…set by the human-curated interpretation c8d6b2cb", String(candidate?.arbor?.claims?.[0]?.interpretationSource ?? "").startsWith("c8d6b2cb"));
+  check(
+    "…and its applicability is disclosed as false (mutable-ref-unobserved)",
+    candidate?.arbor?.applicability?.applicable === false &&
+      candidate?.arbor?.applicability?.instruction?.status === "mutable-ref-unobserved",
+    JSON.stringify(candidate?.arbor?.applicability),
+  );
+  check(
+    "…and the inapplicable claims lens is not treated as consulted evidence",
+    candidate?.arbor?.lenses?.claims?.availability === "unknown" &&
+      (candidate?.arbor?.claims ?? []).length === 0,
+  );
   const band = structured?.composition?.band;
-  check("band judgment is reported, not applied: no direction, relevance untouched", band?.direction === null && band?.relevanceUntouched === true && /inconclusive|conditions-unverified/.test(String(band?.abstained)), JSON.stringify(band?.abstained));
-  const inconclusiveMember = (band?.members ?? []).find((member) => member?.id === "obra/receiving-code-review");
-  check("inconclusive evidence fails closed (no direction from it)", inconclusiveMember?.state === "evidence-inconclusive" || band?.abstained === "conditions-unverified");
+  check("band judgment is reported, not applied: no direction, relevance untouched", band?.direction === null && band?.relevanceUntouched === true && band?.abstained === "no-governed-claim", JSON.stringify(band?.abstained));
+  const inapplicableMember = (band?.members ?? []).find((member) => member?.id === "obra/receiving-code-review");
+  check("inapplicable evidence fails closed (no direction from it)", inapplicableMember?.state === "evidence-absent");
 
   // One real (materializing) summon: a disclosure card with the FULL tripwire list applied.
   const real = withRecord.results[3]?.result;

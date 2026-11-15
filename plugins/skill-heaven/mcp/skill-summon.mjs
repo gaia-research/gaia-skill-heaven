@@ -16582,7 +16582,8 @@ function consumeArbor(publication, candidate, options = {}) {
       join6,
       runtime?.lenses[lens],
       candidate.identityNote,
-      payloadUnreadable
+      payloadUnreadable,
+      runtime?.applicability
     );
   }
   const claimsLens = runtime?.lenses.claims;
@@ -16617,6 +16618,7 @@ function consumeArbor(publication, candidate, options = {}) {
     canonicalSource: candidate.canonicalSource,
     join: join6,
     matchedSubject,
+    applicability: runtime?.applicability ?? null,
     lenses,
     lensesConsulted,
     lensesAbsent,
@@ -16634,7 +16636,8 @@ function consumeArbor(publication, candidate, options = {}) {
       claims.length,
       interactions.length,
       candidate.delivery ?? "not-materialized",
-      candidate.identityNote
+      candidate.identityNote,
+      runtime?.applicability
     )
   };
 }
@@ -16652,7 +16655,7 @@ function resolveJoin(publication, candidate) {
     subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
   ) ? "content-pinned" : "identity-unproven";
 }
-function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = false) {
+function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = false, applicability) {
   if (join6 !== "content-pinned" || upstream === void 0) {
     return {
       lens,
@@ -16670,6 +16673,15 @@ function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = fal
         upstreamStatus: upstream.status,
         sourceDigest: upstream.sourceDigest,
         reason: "upstream reports a record for this subject, but its payload was not usable \u2014 it either failed the pinned contract or does not belong to this subject; nothing was read from it"
+      };
+    }
+    if (applicability && !applicability.applicable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason: `upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, instruction: ${applicability.instruction.status}); no record was treated as applicable evidence`
       };
     }
     return {
@@ -16725,7 +16737,7 @@ function joinReason(join6) {
       return "";
   }
 }
-function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote, applicability) {
   const parts = [
     `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
     `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
@@ -16733,6 +16745,9 @@ function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount,
   ];
   let note = `${parts.join(" \xB7 ")}. ${joinNote(join6)}`;
   if (join6 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  if (applicability && !applicability.applicable) {
+    note += ` Upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, instruction: ${applicability.instruction.status}); its claims are not treated as applicable evidence.`;
+  }
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }

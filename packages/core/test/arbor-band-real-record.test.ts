@@ -73,20 +73,25 @@ function realMember(publication: ReturnType<typeof realPublication>): Compositio
 }
 
 describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree #2036)", () => {
-  it("is a content-pinned join carrying one governed claim", () => {
+  it("is a content-pinned join whose inapplicable runtime is disclosed and not treated as applicable evidence", () => {
     const publication = realPublication();
     const member = realMember(publication);
     expect(member.report.join).toBe("content-pinned");
-    expect(member.report.claims).toHaveLength(1);
-    const claim = member.report.claims[0]!;
-    expect(claim.interpretationSource).toBe(INTERPRETATION);
-    expect(claim.support).toBe("inconclusive");
+    expect(member.report.applicability).toMatchObject({
+      applicable: false,
+      identityVersion: "gaia.arbor-behavioral-identity/v1",
+      canonical: "behavior-equivalent",
+      instruction: { status: "mutable-ref-unobserved", refKind: "mutable", baselineSha256: null },
+    });
+    expect(member.report.lenses.claims.availability).toBe("unknown");
+    expect(member.report.lenses.claims.upstreamStatus).toBe("present");
+    expect(member.report.lenses.claims.reason).toMatch(/inapplicable.*mutable-ref-unobserved/u);
+    expect(member.report.lensesConsulted).not.toContain("claims");
+    expect(member.report.claims).toEqual([]);
+    expect(member.report.note).toMatch(/inapplicable.*mutable-ref-unobserved/u);
   });
 
-  it("abstains with evidence-inconclusive, even when the conditions DO match", () => {
-    // The conditions matcher here matches the real claim's own prose, so this is
-    // not a "the task looked nothing like the claim" escape. The record is
-    // accepted, content-pinned, condition-matched, and still inconclusive.
+  it("abstains with no-governed-claim when the runtime is marked inapplicable, even when conditions match", () => {
     const publication = realPublication();
     const member = realMember(publication);
     const matches = conditionMatcher([
@@ -95,16 +100,13 @@ describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree #2036)",
     ]);
     const result = judgeArborBand(publication.state, [member], { matchesConditions: matches });
     expect(result.members[0]).toMatchObject({
-      state: "evidence-inconclusive", matched: true, governedCount: 1,
-      support: ["inconclusive"],
+      state: "evidence-absent", matched: false, governedCount: 0,
+      support: [],
     });
-    expect(result).toMatchObject({ direction: null, abstained: "evidence-inconclusive" });
+    expect(result).toMatchObject({ direction: null, abstained: "no-governed-claim" });
   });
 
   it("cannot be pushed to a direction by a resolver that would say yes", () => {
-    // The guard. "Inconclusive is embraced" is a statement about the curator's
-    // freedom to say "I don't know", never a licence for a runtime to read
-    // "I don't know" as "go ahead".
     const publication = realPublication();
     const member = realMember(publication);
     const forced = judgeArborBand(publication.state, [member], {
@@ -112,7 +114,7 @@ describe.skipIf(!HAVE_TREE)("the real published record (gaia-skill-tree #2036)",
       resolveDirection: (): BandDirection => "explore",
     });
     expect(forced.direction).toBeNull();
-    expect(forced.abstained).toBe("evidence-inconclusive");
+    expect(forced.abstained).toBe("no-governed-claim");
   });
 
   it("leaves the relevance-only composition completely untouched", () => {

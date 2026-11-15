@@ -1048,39 +1048,42 @@ describe("the real governed record reaches the runtime (Lane E)", () => {
   const QUERY = "receiving code review";
   const SIGNALS = ["adjudicate a plausible code-review suggestion", "state-specific nullability"];
 
-  it("joins the candidate to the governed, inconclusive claim", async () => {
+  it("joins the candidate content-pinned and fails closed on inapplicable runtime", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any",
     });
     const candidate = outcome.previewed.find((preview) => preview.id === SKILL);
     expect(candidate, `${SKILL} must be previewed for "${QUERY}"`).toBeTruthy();
     expect(candidate!.arbor.join).toBe("content-pinned");
-    expect(candidate!.arbor.claims).toHaveLength(1);
-    expect(candidate!.arbor.claims[0]).toMatchObject({
-      support: "inconclusive", interpretationSource: INTERPRETATION,
+    expect(candidate!.arbor.applicability).toMatchObject({
+      applicable: false,
+      canonical: "behavior-equivalent",
+      instruction: { status: "mutable-ref-unobserved", refKind: "mutable" },
     });
+    expect(candidate!.arbor.lenses.claims.availability).toBe("unknown");
+    expect(candidate!.arbor.claims).toEqual([]);
   });
 
-  it("discloses the evidence as inconclusive and abstains when the caller declared no task", async () => {
+  it("discloses inapplicable evidence as absent and abstains when the caller declared no task", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any",
     });
     const band = outcome.composition.band;
     expect(band.direction).toBeNull();
-    expect(band.abstained).toBe("conditions-unverified");
+    expect(band.abstained).toBe("no-governed-claim");
     expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
-      state: "evidence-inconclusive", governedCount: 1, support: ["inconclusive"], matched: false,
+      state: "evidence-absent", governedCount: 0, support: [], matched: false,
     });
   });
 
-  it("abstains BECAUSE the evidence is inconclusive when the task matches the claim", async () => {
+  it("abstains with no-governed-claim when the runtime is inapplicable even if task signals match", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
     });
     const band = outcome.composition.band;
-    expect(band).toMatchObject({ direction: null, abstained: "evidence-inconclusive", relevanceUntouched: true });
+    expect(band).toMatchObject({ direction: null, abstained: "no-governed-claim", relevanceUntouched: true });
     expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
-      state: "evidence-inconclusive", matched: true,
+      state: "evidence-absent", matched: false,
     });
   });
 
@@ -1104,6 +1107,6 @@ describe("the real governed record reaches the runtime (Lane E)", () => {
     });
     expect(shape(withRecord)).toEqual(shape(withoutRecord));
     expect(withoutRecord.composition.band.abstained).toBe("no-governed-claim");
-    expect(withRecord.composition.band.abstained).toBe("evidence-inconclusive");
+    expect(withRecord.composition.band.abstained).toBe("no-governed-claim");
   });
 });
