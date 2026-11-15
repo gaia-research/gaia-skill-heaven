@@ -16041,6 +16041,23 @@ var ARBOR_LENS_STATUS = [
 ];
 var EDGE_ABSENCE_MEANING = "not-evaluated";
 var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_BEHAVIORAL_IDENTITY_VERSION = "gaia.arbor-behavioral-identity/v1";
+var ARBOR_APPLICABILITY_CANONICAL = [
+  "behavior-equivalent",
+  "behavior-changed",
+  "unpinned",
+  "missing"
+];
+var ARBOR_APPLICABILITY_INSTRUCTION_STATUS = [
+  "no-instruction-link",
+  "immutable-ref",
+  "mutable-ref-unobserved",
+  "baseline-observed",
+  "instruction-unobservable",
+  "instruction-changed",
+  "instruction-unavailable"
+];
+var ARBOR_APPLICABILITY_REF_KIND = ["commit", "mutable", "unobservable", "none"];
 var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
 
 // packages/core/src/arbor/validate.ts
@@ -16152,10 +16169,57 @@ function assertArborEdgeIndex(value, label = "Arbor edge index") {
   edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
 }
 function assertArborRuntime(value, label = "Arbor runtime") {
-  const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
+  const runtime = closedRecord(value, label, [
+    "schema",
+    "subject",
+    "inputDigest",
+    "applicability",
+    "lenses"
+  ]);
   constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
   subjectRef(runtime.subject, `${label}.subject`);
   sha2562(runtime, "inputDigest", label);
+  const applicability = closedRecord(runtime.applicability, `${label}.applicability`, [
+    "applicable",
+    "identityVersion",
+    "behavioralSha256",
+    "canonical",
+    "instruction"
+  ]);
+  if (typeof applicability.applicable !== "boolean") {
+    throw new ArborContractError(`${label}.applicability.applicable must be a boolean.`);
+  }
+  constant(
+    applicability,
+    "identityVersion",
+    ARBOR_BEHAVIORAL_IDENTITY_VERSION,
+    `${label}.applicability`
+  );
+  sha256OrNull(applicability, "behavioralSha256", `${label}.applicability`);
+  enumeration(
+    applicability,
+    "canonical",
+    ARBOR_APPLICABILITY_CANONICAL,
+    `${label}.applicability`
+  );
+  const instruction = closedRecord(
+    applicability.instruction,
+    `${label}.applicability.instruction`,
+    ["status", "refKind", "baselineSha256"]
+  );
+  enumeration(
+    instruction,
+    "status",
+    ARBOR_APPLICABILITY_INSTRUCTION_STATUS,
+    `${label}.applicability.instruction`
+  );
+  enumeration(
+    instruction,
+    "refKind",
+    ARBOR_APPLICABILITY_REF_KIND,
+    `${label}.applicability.instruction`
+  );
+  sha256OrNull(instruction, "baselineSha256", `${label}.applicability.instruction`);
   const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
     "claims",
     "hellHeaven",
@@ -16195,8 +16259,33 @@ function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
   constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
   const subjects = array2(index.subjects, `${label}.subjects`);
   subjects.forEach(
-    (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
+    (subject, position) => runtimeIndexSubject(subject, `${label}.subjects[${position}]`)
   );
+}
+function runtimeIndexSubject(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborContractError(`${label} must be an object.`);
+  }
+  const record3 = value;
+  for (const key of Object.keys(record3)) {
+    if (key !== "id" && key !== "contentSha256" && key !== "applicable" && key !== "behavioralSha256") {
+      throw new ArborContractError(
+        `${label} carries unknown field '${key}'. The Arbor contracts are closed; a consumer that accepted it would be forking the schema.`
+      );
+    }
+  }
+  if (!("id" in record3)) throw new ArborContractError(`${label} is missing required field 'id'.`);
+  if (!("contentSha256" in record3)) {
+    throw new ArborContractError(`${label} is missing required field 'contentSha256'.`);
+  }
+  pattern(record3, "id", SKILL_ID2, label);
+  sha2562(record3, "contentSha256", label);
+  if ("applicable" in record3 && typeof record3.applicable !== "boolean") {
+    throw new ArborContractError(`${label}.applicable must be a boolean.`);
+  }
+  if ("behavioralSha256" in record3) {
+    sha256OrNull(record3, "behavioralSha256", label);
+  }
 }
 function closedRecord(value, label, allowed) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
