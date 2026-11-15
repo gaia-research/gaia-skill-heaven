@@ -25,7 +25,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 ## Git
 
-- Work only in the worktree you were given. Never touch `/Users/marcotiongson/skill-heaven`
+- Work only in the worktree you were given. Never touch `<founder main checkout>`
   (the founder's checkout) and never commit to `main`.
 - Your branch: `feat/ws6-ultra-<unit>`, based on `origin/integration/skill-ultra-126`.
 - Open your PR with `--base integration/skill-ultra-126` (draft is fine until review passes).
@@ -80,6 +80,26 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   finish, leave your lane pane as it is: the orchestrator archives your session
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
+
+## Pi team roster and escalation (founder rule, updated 2026-11-16)
+
+- **Default worker: L2 Hydrogen.** Luna (L1), Terra (L3) and Sol (L4) share one
+  OpenAI quota pool; Hydrogen runs on a separate pool.
+- **L1 Luna only for very mechanical tasks** (renames, counting, formatting,
+  fixture generation). That is a de-escalation from the default and needs that reason.
+- Escalation from Hydrogen: **L3 `worker-terra` → L4 `worker-sol`**, one level at a time,
+  only after a recorded verification failure. Write the reason in the handoff. Sol is the
+  last resort; do not reuse Sol out of habit.
+- Hydrogen in Pi: use the working route the founder set up (model
+  `antigravity/gemini-4-hydrogen`, with extensions enabled), and confirm it with
+  `subagent action:"plan"` before the first spawn.
+- Set `fallback_models: []` on every spawn. If a requested model or effort is not
+  honored, report it unavailable; never substitute another model.
+- **Only one Pi lead runs at a time** across the campaign.
+- **Lead like the orchestrator.** The lead decomposes into small self-contained
+  briefs with exact acceptance checks, fans them out in parallel (mostly to Hydrogen),
+  verifies evidence, and sends precise repair requests. The lead does not implement,
+  rewrite worker code or micromanage.
 
 ## Subagent limits (founder rule)
 

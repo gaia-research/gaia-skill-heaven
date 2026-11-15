@@ -1,7 +1,7 @@
 # Lane DASH — campaign dashboard and decision log (Team C, Antigravity)
 
 Worktree: `~/skill-heaven-wt/dashboard`, branch `feat/ws6-ultra-dashboard`
-(based on `origin/integration/skill-ultra-126`). Never touch `/Users/marcotiongson/skill-heaven`.
+(based on `origin/integration/skill-ultra-126`). Never touch `<founder main checkout>`.
 Never commit to `main`. Never force-push.
 
 ## Deliver

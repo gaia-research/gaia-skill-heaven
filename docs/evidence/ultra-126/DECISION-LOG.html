@@ -527,10 +527,10 @@ tbody tr:last-child td {
         <td class="nowrap">B (Pi)</td>
         <td class="nowrap">lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u0a</code></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-active">active</span></td>
+        <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/260" target="_blank" rel="noopener noreferrer">#260</a></td>
+        <td class="nowrap"><code class="sha" title="191f6cc">191f6cc</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">in progress (lane-run)</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">active: lead resumed visibly in tab u0a-lead; roster correction sent; Terra loop in progress</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U0b</strong></td>
@@ -686,8 +686,15 @@ tbody tr:last-child td {
         <td class="mono nowrap"><strong>P1</strong></td>
         <td class="mono nowrap">U3</td>
         <td>Which operator channels work: elicitation, command pre-execution, permission prompt</td>
-        <td class="nowrap"><span class="pill pill-neutral">done (n=3/cell); channel 1 elicitation selected for Claude Code TUI; headless fails closed; see D-009 for the attribution limit; P1b (bypass/auto modes) running</span></td>
-        <td class="mono"><code>docs/evidence/ultra-126/PROBE.md (branch feat/ws6-ultra-u3-p1, PR #258)</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">accepted: Terra no blocking findings at 81445a1 (reviews P1-9b89398 blocking -&gt; FD-11/D-010 + P1c repairs; P1-31c90ba clear; P1-81445a1 clear). Non-blocking wording fixes after that; final state re-reviewed inside U3.</span></td>
+        <td class="mono"><code>docs/evidence/ultra-126/PROBE.md on feat/ws6-ultra-u3-p1 (PR #258)</code></td>
+      </tr>
+      <tr>
+        <td class="mono nowrap"><strong>P1d</strong></td>
+        <td class="mono nowrap">U3</td>
+        <td>FD-11: does auto mode&#39;s classifier stop a session&#39;s own model from self-approving its elicitation by typing into its pane?</td>
+        <td class="nowrap"><span class="pill pill-neutral">done (n=3/cell): 0/9 self-approved accepts, but by accident (keystrokes hit chat input). Auto classifier blocked 1/3 cooperative attempts; bypass executed 3/3; Haiku refused injected instruction 3/3. FD-11 default fail-closed stands. Terra clear at 714d6e8.</span></td>
+        <td class="mono"><code>docs/evidence/ultra-126/PROBE-P1d.md (PR #261, merged into feat/ws6-ultra-u3-p1)</code></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>P2</strong></td>
@@ -833,6 +840,15 @@ tbody tr:last-child td {
         </div>
         <p class="card-summary">Operator approvals inside terminal multiplexers (founder ruling on Terra&#39;s critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code&#39;s auto-mode classifier rejects a model&#39;s attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.</p>
         <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)</code></p>
+        
+      </article>
+      <article class="decision-card founder-card">
+        <div class="card-head">
+          <span class="pill pill-founder">ROSTER-DIRECTIVE</span>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <p class="card-summary">Founder stopped the U0a lead for reusing worker-sol. Pi ladder: Luna, then Hydrogen, then Terra, before any Sol escalation. Expect heavy Luna and Hydrogen delegation. Leads lead the way the orchestrator does: no soloing, no micromanaging. Update (same day): L2 Hydrogen is the default because L1, L3 and L4 share one quota; de-escalation to L1 Luna only for very mechanical tasks; the founder directed the Hydrogen-in-Pi route fix; only one Pi lead at a time.</p>
+        <p class="card-source"><span class="field-label">Source:</span> <code>founder message in orchestration session, 2026-11-16</code></p>
         
       </article>
     </div>
@@ -1312,7 +1328,7 @@ tbody tr:last-child td {
             </div>
             <div class="field-row">
               <dt>outcome</dt>
-              <dd><span>pending U3</span></dd>
+              <dd><span>P1d confirms the need: auto mode is a partial safeguard (1/3), bypass none; default fail-closed when multiplexed stands. Implementation pending U3.</span></dd>
             </div>
             <div class="field-row">
               <dt>risk</dt>
