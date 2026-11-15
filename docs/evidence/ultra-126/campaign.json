@@ -255,6 +255,13 @@
       "source": "founder message in orchestration session, 2026-11-16"
     },
     {
+      "id": "VISIBILITY-DIRECTIVE",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "Lanes, especially Pi and Antigravity, run visibly in herdr panes via /herdr-dispatch and the canonical skills; harness calls made by workers (including pi-reviewer) run in visible panes. Agents already running are not stopped. Supersedes the directive's earlier 'Claude team uses herdr only for benchmarks' for lane dispatch.",
+      "source": "founder message in orchestration session, 2026-11-16"
+    },
+    {
       "id": "D-001",
       "kind": "delegated",
       "date": "2026-11-16",
@@ -365,6 +372,25 @@
       "terra": "U8 review",
       "outcome": "pending",
       "risk": "The refreshed data could conflict with U2 if U2 touches arbor data. U2's brief does not."
+    },
+    {
+      "id": "D-007",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "all",
+      "problem": "Three lanes (U0a Pi lead, P1 agy, U8 agy) were launched headless from the orchestrator's shell before the visibility directive, and the directive says not to stop them. herdr-dispatch caps concurrent pane workers at two.",
+      "options": [
+        "Kill and relaunch in panes",
+        "Let them finish headless; every new dispatch goes into panes, two pane workers at a time"
+      ],
+      "selected": "Let the three in-flight headless lanes finish (logs in ~/skill-heaven-wt/logs/, P1's TUI cells already in visible panes). From now on every lane is a herdr pane agent (kind pi or agy); at most two pane workers at once while the legacy headless lanes drain, then two as steady state.",
+      "reason": "Founder said not to stop running agents; the herdr-dispatch two-pane limit keeps panes readable.",
+      "authority": "VISIBILITY-DIRECTIVE; herdr-dispatch skill sections 1 and 7",
+      "reversible": true,
+      "terra": "n/a (process)",
+      "outcome": "in effect",
+      "risk": "The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each)."
     }
   ],
   "blockers": [],
