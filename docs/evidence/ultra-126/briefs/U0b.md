@@ -4,6 +4,15 @@ Read `COMMON.md` first, then U0a's handoff `docs/evidence/ultra-126/handoffs/U0a
 (it lists the engine API you build on). Branch `feat/ws6-ultra-u0b`, worktree as
 assigned, `npm ci` first.
 
+## Measured inputs (do not re-probe)
+
+`docs/evidence/ultra-126/PROBE-P2a.md` (Claude Code 2.1.325, n = 3 per cell):
+- `/compact` keeps the same server pid.
+- `--resume`, `--continue` and headless `--resume` start a new pid with the same
+  `CLAUDE_CODE_SESSION_ID`.
+- `--fork-session` gets a new id.
+- `/exit` sends `SIGINT`. The server must not delete its session root on `SIGINT`.
+
 ## Read (only these)
 
 - Plan §1.5 (what a resume keeps: `CLAUDE_CODE_SESSION_ID` reaches the MCP
