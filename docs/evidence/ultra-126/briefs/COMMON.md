@@ -47,6 +47,20 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   your tab) and record the escalation in your handoff. Terra stays the reviewer;
   Argon never reviews.
 
+## Reviewer evidence packet (the reviewer has no shell)
+
+`pi-reviewer` and the native `reviewer` run with read-only tools (`read, grep, find, ls`):
+they **cannot run git, node, npm or a browser**. Before every review, the lane writes an
+evidence packet to `~/skill-heaven-wt/sessions/<lane>/review-<shortsha>/` (outside
+the repo) and lists its paths in the review brief:
+- `name-status.txt`: `git diff --name-status <base>...HEAD`
+- `full.diff`: `git diff <base>...HEAD`
+- `commands.txt`: each verification command you ran, with its exit code and the
+  relevant output (test counts, typecheck, builds, determinism `cmp`, etc.)
+Tell the reviewer to cross-check at least two files from the diff against the worktree
+so it is not trusting the packet blindly. A review that says it could not
+verify because it lacked a diff is a packet failure: fix the packet and re-run it.
+
 ## Independent review gate (mandatory)
 
 - Reviewer: Terra High, independent context. Either the Pi native `reviewer`
