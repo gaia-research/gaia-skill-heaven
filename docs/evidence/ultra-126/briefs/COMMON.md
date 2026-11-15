@@ -37,7 +37,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 ## Who runs the review (founder directive)
 
 - **Your lane runs its own Terra review** with `~/.pi/agent/bin/pi-reviewer`
-  (or the Pi native `reviewer`), in a visible pane in your tab, and loops until
+  (or the Pi native `reviewer`) from its own shell, and loops until
   no blocking findings remain. The orchestrator does not run reviews. The lane
   lead reports to the orchestrator only when Terra has cleared the exact HEAD, or
   when the lane is BLOCKED.
@@ -46,6 +46,19 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   repair to **Gemini 4 Argon** (`agy --model gemini-4-argon-high`, in a pane in
   your tab) and record the escalation in your handoff. Terra stays the reviewer;
   Argon never reviews.
+
+## Reviewer invocation (founder directive, updated 2026-11-16)
+
+- **Run the reviewer from your own shell.** No herdr split and no visible pane are needed:
+  `~/.pi/agent/bin/pi-reviewer --cwd <worktree> --timeout 10800 --json --prompt-file <brief>`
+  (or the Pi native `reviewer` subagent). The reviewer now has `bash` and verifies
+  claims itself (git diff, tests, typecheck, builds). Its agent definition limits shell
+  use to verification: no commits, pushes, branch changes or config edits.
+- Tell the reviewer the base (`origin/integration/skill-ultra-126`) and the exact HEAD
+  SHA, and ask it to run the verification commands itself, not to trust your counts.
+- Fallback only: if a reviewer reports it could not run commands, give it an evidence
+  packet (`git diff --name-status`, the full diff, and the command outputs written to files
+  outside the repo), then re-run it.
 
 ## Independent review gate (mandatory)
 
@@ -67,8 +80,9 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 - Lanes run in **visible herdr panes**, dispatched per
   `packages/core/skills/herdr-dispatch/SKILL.md`. You are probably already in one.
-- Any harness you invoke yourself (`claude`, `pi`, `agy`, `codex`, `hermes`, `grok`,
-  and `~/.pi/agent/bin/pi-reviewer`, which runs Pi) goes in a visible pane too:
+- Any harness you invoke yourself (`claude`, `pi`, `agy`, `codex`, `hermes`, `grok`)
+  goes in a visible pane too. The exception is `pi-reviewer`, which you run from your
+  own shell (see "Reviewer invocation"):
   split one probe pane next to yours with `herdr pane split <your pane> --direction down --cwd <worktree>`
   (find your pane with `herdr pane current`), run it there, and `herdr pane read` the
   result. Record the pane id beside any result you rely on. Never take over pane `w31:p1`,

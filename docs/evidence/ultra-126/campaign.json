@@ -38,12 +38,13 @@
       "after": [],
       "tier": "heavy",
       "team": "B (Pi)",
-      "worker": "lead openai/gpt-6.1-sol xhigh; workers per pi-subagent preflight",
+      "worker": "lead gpt-6.1-sol xhigh; workers Luna, Sol (pre-correction), Hydrogen; one resumed segment ran gemini-3.8-flash unrequested (disclosed)",
       "branch": "feat/ws6-ultra-u0a",
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/260",
-      "head": "191f6cc",
-      "terra": "in progress (lane-run)",
-      "status": "active: lead resumed visibly in tab u0a-lead; roster correction sent; Terra loop in progress"
+      "head": "5ffac74",
+      "terra": "PASS: no blocking findings at 5ffac74 (source PASS at dc9efca after blocking rounds 8d0511f and 16d98fc)",
+      "status": "integrated",
+      "tests": "107 files passed + 1 skipped; 2609 tests passed + 1 skipped; typecheck clean; build:mcp/status/console no diff (orchestrator re-run at 5ffac74)"
     },
     {
       "id": "U0b",
@@ -222,7 +223,7 @@
       "id": "P2",
       "unit": "U7",
       "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)",
-      "status": "not started"
+      "status": "P2a (harness-level identity/lifetime) running early on feat/ws6-ultra-u7-p2a; re-attach cells wait for U0b"
     },
     {
       "id": "P3",
@@ -246,7 +247,7 @@
       "id": "P6",
       "unit": "U7",
       "question": "Per additional door: stable session id, working operator channel",
-      "status": "not started"
+      "status": "pass 1 (pi, agy) running on feat/ws6-ultra-u7-p6; codex deferred"
     }
   ],
   "decisions": [
@@ -291,6 +292,13 @@
       "date": "2026-11-16",
       "summary": "Founder stopped the U0a lead for reusing worker-sol. Pi ladder: Luna, then Hydrogen, then Terra, before any Sol escalation. Expect heavy Luna and Hydrogen delegation. Leads lead the way the orchestrator does: no soloing, no micromanaging. Update (same day): L2 Hydrogen is the default because L1, L3 and L4 share one quota; de-escalation to L1 Luna only for very mechanical tasks; the founder directed the Hydrogen-in-Pi route fix; only one Pi lead at a time.",
       "source": "founder message in orchestration session, 2026-11-16"
+    },
+    {
+      "id": "REVIEWER-DIRECTIVE",
+      "kind": "founder",
+      "date": "2026-11-16",
+      "summary": "The reviewer may use the shell: the founder approved editing reviewer.md and reviewer-shared.md to add bash. Any lane may invoke the reviewer from its own bash instead of a herdr split; visibility is not required for reviews. The orchestrator added a verify-only shell rule to both agent bodies (no commits, pushes, branch changes or config edits); local backups are kept in the session archive.",
+      "source": "founder messages in orchestration session, 2026-11-16"
     },
     {
       "id": "D-001",
@@ -481,6 +489,44 @@
       "terra": "U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in",
       "outcome": "P1d confirms the need: auto mode is a partial safeguard (1/3), bypass none; default fail-closed when multiplexed stands. Implementation pending U3.",
       "risk": "An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed."
+    },
+    {
+      "id": "D-011",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U7, U0b, reporting",
+      "problem": "The OpenAI pool (Pi team) is nearly exhausted until 07:38 PST and U0a is in its final review, so the next Pi lead (U0b) cannot start yet. Antigravity capacity is idle.",
+      "options": [
+        "Wait",
+        "Run code-independent work on Antigravity now"
+      ],
+      "selected": "Three Antigravity lanes in their own tabs: P2a (Claude Code session identity and MCP server lifetime across /compact, --resume, --continue, --fork-session; the harness facts U0b's re-attach relies on), P6 pass 1 (Pi and agy doors: session id, operator channel; Codex deferred), and DASH2 (an availability panel with a reset countdown in DECISION-LOG.html). Each lane runs its own Terra loop. A session-only timer at 07:41 checks the OpenAI reset.",
+      "reason": "Founder: continue on Antigravity until the reset. These probes depend on harnesses, not on unit code (same reasoning as D-004).",
+      "authority": "Founder message 2026-11-16; plan section 7.2; D-004 precedent",
+      "reversible": true,
+      "terra": "lane-run reviews; U7 review covers the final probe records",
+      "outcome": "dispatched",
+      "risk": "P2a runs Claude Haiku, which spends the Claude pool (cheap tier)."
+    },
+    {
+      "id": "D-012",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U0a",
+      "problem": "The U0a lead hit the OpenAI usage limit during closeout. The final HEAD 5ffac74 (evidence-only delta over Terra-passed dc9efca) had no exact-HEAD Terra review. Separately, the handoff discloses that a resumed worker-sol segment actually ran antigravity/gemini-3.8-flash without being asked (a silent route substitution by pi-subagent resume).",
+      "options": [
+        "Wait for the OpenAI reset and let the lead finish",
+        "Orchestrator verifies mechanically and requests an exact-HEAD Terra confirmation (separate pool)"
+      ],
+      "selected": "Orchestrator ran the full matrix on 5ffac74 (2609 tests, typecheck, three builds with no diff, no I/O/clock/randomness in the engine, no new deps, no new ratify), then requested Terra confirmation with a generated delta packet. Terra: PASS, no blocking findings. Merged --no-ff into integration. Flash substitution recorded as a tooling risk: every spawn now sets fallback_models: [], and the resumed segment's code was covered by later Terra reviews.",
+      "reason": "Directive: a reviewed SHA must match the integrated HEAD; Terra uses a separate pool and was available.",
+      "authority": "Directive sections 7, 12 and 13",
+      "reversible": true,
+      "terra": "U0a-5ffac74 PASS",
+      "outcome": "integrated",
+      "risk": "pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers."
     }
   ],
   "blockers": [],

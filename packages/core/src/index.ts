@@ -40,6 +40,7 @@ export {
   type FsOp,
 } from "./compile.js";
 export * from "./ultra-stamp/index.js";
+export * from "./campaign/index.js";
 export { resolveSkill, type ResolvedSkill } from "./skills.js";
 export {
   TELEMETRY_SCHEMA,

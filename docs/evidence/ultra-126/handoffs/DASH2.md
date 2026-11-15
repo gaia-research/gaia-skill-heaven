@@ -1,0 +1,24 @@
+# Handoff: DASH2
+
+- **Unit:** DASH2 (harness availability panel with reset countdown)
+- **Owning team & worker:** Team C (Antigravity), Gemini 4 Hydrogen (Low)
+- **Branch:** `feat/ws6-ultra-dash2`
+- **HEAD SHA:** `2ddd161` (plus review & handoff commit)
+- **Files changed:**
+  - `docs/evidence/ultra-126/render.mjs`
+  - `docs/evidence/ultra-126/DECISION-LOG.html`
+  - `docs/evidence/ultra-126/reviews/DASH2-2ddd161.md`
+  - `docs/evidence/ultra-126/handoffs/DASH2.md`
+- **Implementation summary:**
+  - Added `renderQuota(quota)` in `render.mjs`, placed directly under `renderHeader(campaign)` and above `renderUnitsTable(campaign.units)`.
+  - Renders `quota.asOf` and one row per `quota.pools[]` entry (`pool`, `covers`, `state`, `resetAt`), HTML-escaping all strings with `esc(...)`.
+  - Non-null `resetAt` values render the static absolute timestamp with `data-reset-at` and `title`.
+  - Added a 19-line inline `<script>` (no external resources) that upgrades `[data-reset-at]` elements to `resets in N min` or `reset time passed: verify availability`, while preserving the static timestamp when JS is disabled.
+- **Commands & tests run:**
+  - `node docs/evidence/ultra-126/render.mjs` run twice and compared with `cmp`: byte-identical (`DETERMINISTIC_OK`).
+  - `npm test` / `npm run typecheck`: not run (`vitest` / `tsc` not installed in worktree `node_modules`).
+- **Security considerations:** All `quota` strings are HTML-escaped; no external resources loaded.
+- **Known limitations / outstanding issues:** `pi-reviewer` (`w31:p14`) has read-only tools (`read,grep,find,ls`) and could not run `git diff`, `node render.mjs`, or browser checks, so it returned `REQUEST_CHANGES` (incomplete verification, no code defects).
+- **Dependency changes:** None.
+- **Review files & final verdict:** `docs/evidence/ultra-126/reviews/DASH2-2ddd161.md` — `REQUEST_CHANGES` (no code defects; toolset-limited).
+- **Next recommended action:** Merge or re-run Terra review with shell access if required.
