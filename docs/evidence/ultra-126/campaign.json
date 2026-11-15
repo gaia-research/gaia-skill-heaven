@@ -177,10 +177,11 @@
       "team": "C (Antigravity)",
       "worker": "gemini-4-hydrogen-medium",
       "branch": "feat/ws6-ultra-u8",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "prep active (data + docs only; render waits for U2)"
+      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/259",
+      "head": "ec17b57",
+      "terra": "prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.",
+      "status": "prep done; render half waits for U2; merge after U2",
+      "tests": "1844 passed + 1 skipped; typecheck clean (at 4db4faf/ec17b57)"
     },
     {
       "id": "U9",
@@ -204,9 +205,10 @@
       "id": "P1",
       "unit": "U3",
       "question": "Which operator channels work: elicitation, command pre-execution, permission prompt",
-      "status": "running",
+      "status": "done (n=3/cell); channel 1 elicitation selected for Claude Code TUI; headless fails closed; see D-009 for the attribution limit; P1b (bypass/auto modes) running",
       "team": "C (Antigravity) gemini-4-hydrogen-high driver; model under test claude-haiku-5-5",
-      "branch": "feat/ws6-ultra-u3-p1"
+      "branch": "feat/ws6-ultra-u3-p1",
+      "evidence": "docs/evidence/ultra-126/PROBE.md (branch feat/ws6-ultra-u3-p1, PR #258)"
     },
     {
       "id": "P2",
