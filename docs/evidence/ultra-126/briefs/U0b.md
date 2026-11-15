@@ -59,4 +59,6 @@ existing suite stays green: with no campaign, behaviour is unchanged.
 
 ## Team shape
 
-Pi lead decomposes; `worker-luna` first; escalate only on failed verification.
+Follow COMMON.md, "Pi team roster and escalation": Hydrogen is the default worker. Luna takes
+only very mechanical pieces. Terra and then Sol come only after a recorded verification failure. The lead
+decomposes and verifies; it does not implement.
