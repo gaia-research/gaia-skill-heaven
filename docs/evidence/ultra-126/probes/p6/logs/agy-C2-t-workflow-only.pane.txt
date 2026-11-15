@@ -1,0 +1,15 @@
+
+      ▄▀▀▄        Antigravity CLI 1.5.9
+     ▀▀▀▀▀▀       <REDACTED_EMAIL> (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 4 Hydrogen (Low)
+   ▄▀▀    ▀▀▄     /tmp/p6-agy-c2t-wf.8aBpqM
+  ▄▀▀      ▀▀▄
+
+
+ ┃ Introducing Gemini 4 Hydrogen
+ ┃ Our daily driver for rapid coding and dependable agentic execution!
+ ┃ esc to dismiss
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> Unknown command: /probe-decide
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                                      auto · Gemini 4 Hydrogen · low
