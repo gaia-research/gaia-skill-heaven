@@ -194,4 +194,33 @@ Committed MCP JSONL logs:
 
 ### Interpretation (orchestrator)
 
-pending
+Interpreted by the Team A orchestrator (Opus 5.5).
+
+1. **Bypass mode and auto mode do not void channel 1.** The elicitation prompt appeared,
+   waited for input and was not auto-accepted in either mode (C2-tb 3/3, C2-ta 3/3).
+   Unlike channel 3, channel 1 holds in the founder's usual permission modes.
+2. **Headless remains fail-closed even with bypass** (C2-hb 3/3, `cancel` within ~8 ms).
+3. The gap listed under P1 is closed. Channel 1 stays selected for Claude Code.
+
+## Limit: channel 1 is terminal input, not authentication (decision D-009)
+
+What channel 1 is not, stated plainly as plan section 5.3 requires: **it does not prove a
+person answered.** The elicitation answer is whatever is typed into the terminal running
+Claude Code. In P1 and P1b, a worker agent answered every TUI prompt by sending keystrokes
+with `herdr pane send-text`. The server received an ordinary `accept`, indistinguishable
+from a person's. Any process that can write to that terminal can do the same: a
+multiplexer client (herdr, tmux), the person's own automation, or the session's **own
+model** when it has a shell tool and its terminal sits inside a multiplexer. For example,
+the model could issue a shell call that types into its own pane alongside the campaign call
+that elicits.
+
+This is the same class of boundary as channels 2 and 3 and as the steering brand: "not
+authentication". Channel 1 still keeps the answer out of the model's tool path, and on
+Claude Code 2.1.325 no channel authenticates a person. Consequences, binding on U3 and U9:
+
+- Every operator entry records `attribution: "terminal-input, unauthenticated"` and
+  whether the server process sees a multiplexer (`HERDR_ENV` / `HERDR_SOCKET_PATH` /
+  `TMUX`). The decisions render shows both.
+- U9's real operator decision is made by the founder in a terminal no agent can write to
+  (outside herdr and tmux), and `PROOF.md` says where it was made.
+- No keystroke a test fixture sends is ever recorded as a person's decision.
