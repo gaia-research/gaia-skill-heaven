@@ -219,10 +219,14 @@ describe("DecisionBackend integration in summon", () => {
   let service: GaiaService;
 
   beforeEach(() => {
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.SKILL_SUMMON_SESSION;
     service = new GaiaService(new InMemoryGaiaRegistrySource(testDocuments));
   });
 
   afterEach(async () => {
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.SKILL_SUMMON_SESSION;
     delete process.env.SKILL_HEAVEN_DECISION;
     delete process.env.SKILL_DECISION_BACKEND;
     await Promise.all(closeCallbacks.splice(0).map((cb) => cb()));

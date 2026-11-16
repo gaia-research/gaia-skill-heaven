@@ -16,7 +16,7 @@ import path from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
@@ -45,6 +45,11 @@ import {
 const cleanupRoots: string[] = [];
 const savedHarnessSessionId = process.env.CLAUDE_CODE_SESSION_ID;
 const savedSummonSession = process.env.SKILL_SUMMON_SESSION;
+
+beforeEach(() => {
+  delete process.env.CLAUDE_CODE_SESSION_ID;
+  delete process.env.SKILL_SUMMON_SESSION;
+});
 
 afterEach(async () => {
   if (savedHarnessSessionId === undefined) delete process.env.CLAUDE_CODE_SESSION_ID;

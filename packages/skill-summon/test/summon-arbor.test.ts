@@ -15,7 +15,7 @@ import { dirname, join } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   arborPublicationLines,
@@ -45,7 +45,14 @@ import type { GaiaRegistryDocuments } from "../src/domain/types.js";
 const roots: string[] = [];
 const sessions: SummonSession[] = [];
 
+beforeEach(() => {
+  delete process.env.CLAUDE_CODE_SESSION_ID;
+  delete process.env.SKILL_SUMMON_SESSION;
+});
+
 afterEach(async () => {
+  delete process.env.CLAUDE_CODE_SESSION_ID;
+  delete process.env.SKILL_SUMMON_SESSION;
   resetArborPublicationCache();
   resetArborIdentityCache();
   delete process.env.ARBOR_PUBLICATION_PATH;
