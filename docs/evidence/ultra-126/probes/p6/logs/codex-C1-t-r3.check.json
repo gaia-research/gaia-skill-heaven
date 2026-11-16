@@ -1,0 +1,120 @@
+{
+  "threadId": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+  "rollout": {
+    "rolloutFile": "rollout-2026-11-16T08-03-37-01a1e1aa-9e10-7430-92a5-fcb832035b3d.jsonl",
+    "sessionMeta": {
+      "session_id": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+      "originator": "codex-tui",
+      "cli_version": "0.169.0",
+      "source": "cli",
+      "model_provider": "openai"
+    },
+    "turns": [
+      {
+        "turn_id": "01a1e1aa-a3ed-7883-b2f2-077766d65780",
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "approval_policy": "on-request",
+        "approvals_reviewer": "auto_review",
+        "sandbox_policy": {
+          "type": "workspace-write",
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      }
+    ],
+    "skillLoadedInRollout": false,
+    "preexecMarkerInRollout": false
+  },
+  "cmdJsonExists": false,
+  "mcp": {
+    "envNames": [],
+    "envValues": {},
+    "initializeParams": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {
+        "experimental": {
+          "codex/auth-change": {}
+        },
+        "extensions": {
+          "openai/elicitation": {}
+        },
+        "elicitation": {
+          "form": {},
+          "url": {}
+        }
+      },
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.169.0"
+      }
+    },
+    "toolsCallMeta": [
+      {
+        "callId": "exec-4581e30d-f8c6-4a0f-8562-e8777328810a",
+        "x-codex-turn-metadata": {
+          "session_id": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+          "thread_id": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+          "reasoning_effort": "low",
+          "turn_id": "01a1e1aa-a3ed-7883-b2f2-077766d65780",
+          "model": "gpt-6-luna",
+          "thread_source": "user",
+          "turn_trigger": "user",
+          "sandbox": "seatbelt",
+          "sandbox_mode": "workspace-write",
+          "auto_review_enabled": true,
+          "node_repl_auto_review_required": false,
+          "node_repl_disabled": false,
+          "turn_started_at_unix_ms": 1794787419162,
+          "codex_version": "0.169.0"
+        },
+        "threadId": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+        "sessionId": "01a1e1aa-9e10-7430-92a5-fcb832035b3d",
+        "windowId": "01a1e1aa-9e10-7430-92a5-fcb832035b3d:0",
+        "itemId": "ctc_02dae1ac4403adea016afa4860178487d0924d8c5877b35781",
+        "progressToken": 1
+      }
+    ],
+    "toolsCallNames": [
+      "probe_elicit"
+    ],
+    "elicitationRequests": [
+      {
+        "jsonrpc": "2.0",
+        "id": "srv-1",
+        "method": "elicitation/create",
+        "params": {
+          "message": "P6 operator check: type the word ALPHA",
+          "requestedSchema": {
+            "type": "object",
+            "properties": {
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word"
+            ]
+          }
+        }
+      }
+    ],
+    "elicitationResponses": [
+      {
+        "jsonrpc": "2.0",
+        "id": "srv-1",
+        "result": {
+          "action": "accept",
+          "content": {
+            "word": "ALPHA"
+          }
+        }
+      }
+    ],
+    "elicitationTimeouts": [],
+    "operatorDecideCalled": false,
+    "operatorDecideCount": 0
+  }
+}
