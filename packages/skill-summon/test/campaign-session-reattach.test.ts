@@ -1,8 +1,11 @@
 import {
   access,
+  lstat,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
+  readlink,
   rm,
   symlink,
   writeFile,
@@ -501,7 +504,8 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     expect(afterSecondExit.candidates).toEqual([]);
     await expect(access(first.session.root)).resolves.toBeUndefined();
 
-    // Tampered future pause.json fails closed (falls back to default TTL from createdAt).
+    // Tampered future pause.json must NOT fall back to creation TTL; it safely
+    // reestablishes one observation boundary, does not renew, and reaps after 48h.
     await writeFile(
       path.join(first.session.root, "campaign", "pause.json"),
       JSON.stringify({
@@ -511,9 +515,203 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
       }),
       "utf8",
     );
-    const futureNow = new Date(Date.now() + 5 * 3_600_000);
-    const afterTamper = await reapSessions({ tempRoot, ttlHours: 4, now: futureNow });
-    expect(afterTamper.candidates.map((c) => c.root)).toEqual([first.session.root]);
+    const tTamperObs = new Date("2026-04-03T14:00:00.000Z");
+    const afterTamper = await reapSessions({ tempRoot, ttlHours: 4, now: tTamperObs });
+    expect(afterTamper.candidates).toEqual([]);
+    await expect(access(first.session.root)).resolves.toBeUndefined();
+
+    // Subsequent reap before 48h from tTamperObs does not renew and keeps the root.
+    const beforeReestablishedEnd = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tTamperObs.getTime() + 47 * 3_600_000 + 59 * 60_000),
+    });
+    expect(beforeReestablishedEnd.candidates).toEqual([]);
+    await expect(access(first.session.root)).resolves.toBeUndefined();
+
+    // At 48h from tTamperObs, the reestablished window expires and it reaps.
+    const atReestablishedEnd = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tTamperObs.getTime() + 48 * 3_600_000),
+    });
+    expect(atReestablishedEnd.candidates.map((c) => c.root)).toEqual([first.session.root]);
+    await expect(access(first.session.root)).rejects.toThrow();
+  });
+
+  it("never falls back to creation TTL on malformed, future, or symlink pause boundaries and does not touch symlink targets", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideDir = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+
+    // 1. Old session (created 49h ago) with malformed pause.json
+    const malformedRoot = await createDeadRoot(tempRoot, "old-malformed-pause", createdAt);
+    await seedPausedCampaign(malformedRoot, 48);
+    await writeFile(path.join(malformedRoot, "campaign", "pause.json"), "{not-valid-json", "utf8");
+
+    // 2. Old session (created 49h ago) with future-dated pause.json
+    const futureRoot = await createDeadRoot(tempRoot, "old-future-pause", createdAt);
+    await seedPausedCampaign(futureRoot, 48);
+    await writeFile(
+      path.join(futureRoot, "campaign", "pause.json"),
+      JSON.stringify({ pausedAt: "2099-01-01T00:00:00.000Z", pid: 99_999_999, recordSha256: "a".repeat(64) }),
+      "utf8",
+    );
+
+    // 3. Old session (created 49h ago) with symlink pause.json pointing outside
+    const symlinkRoot = await createDeadRoot(tempRoot, "old-symlink-pause", createdAt);
+    await seedPausedCampaign(symlinkRoot, 48);
+    const outsideTarget = path.join(outsideDir, "outside-pause.json");
+    await writeFile(outsideTarget, "DO-NOT-TOUCH", "utf8");
+    const targetBeforeStat = await lstat(outsideTarget);
+    await symlink(outsideTarget, path.join(symlinkRoot, "campaign", "pause.json"));
+
+    const tObs = new Date("2026-04-03T01:00:00.000Z"); // +49h from createdAt
+    const firstReap = await reapSessions({ tempRoot, ttlHours: 4, now: tObs });
+    expect(firstReap.candidates).toEqual([]);
+    await expect(access(malformedRoot)).resolves.toBeUndefined();
+    await expect(access(futureRoot)).resolves.toBeUndefined();
+    await expect(access(symlinkRoot)).resolves.toBeUndefined();
+
+    // Symlink target was not modified or overwritten
+    expect(await readFile(outsideTarget, "utf8")).toBe("DO-NOT-TOUCH");
+    expect((await lstat(outsideTarget)).mtimeMs).toBe(targetBeforeStat.mtimeMs);
+
+    // Subsequent reap at +24h and +47h59m59s from tObs: no renewal, still kept
+    const at24h = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tObs.getTime() + 24 * 3_600_000),
+    });
+    expect(at24h.candidates).toEqual([]);
+
+    const justBefore48h = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tObs.getTime() + 48 * 3_600_000 - 1_000),
+    });
+    expect(justBefore48h.candidates).toEqual([]);
+    await expect(access(malformedRoot)).resolves.toBeUndefined();
+    await expect(access(futureRoot)).resolves.toBeUndefined();
+    await expect(access(symlinkRoot)).resolves.toBeUndefined();
+
+    // At +48h from tObs: malformed & future reap after their safely reestablished 48h window;
+    // symlink boundary remains conservatively preserved and its target untouched.
+    const at48h = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tObs.getTime() + 48 * 3_600_000),
+    });
+    expect(at48h.candidates.map((c) => c.root).sort()).toEqual(
+      [futureRoot, malformedRoot].sort(),
+    );
+    await expect(access(malformedRoot)).rejects.toThrow();
+    await expect(access(futureRoot)).rejects.toThrow();
+    await expect(access(symlinkRoot)).resolves.toBeUndefined();
+    expect(await readFile(outsideTarget, "utf8")).toBe("DO-NOT-TOUCH");
+  });
+
+  it("reapSessions({ dryRun: true }) writes no campaign artifacts across missing/stale/corrupt status, malformed trace, and no-campaign roots", async () => {
+    const tempRoot = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+
+    type ArtifactSnapshot = Record<
+      string,
+      {
+        kind: "file" | "symlink" | "dir";
+        size: number;
+        mtimeMs: number;
+        content?: string;
+        target?: string;
+      }
+    >;
+
+    async function snapshotRootArtifacts(sessionRoot: string): Promise<ArtifactSnapshot> {
+      const snap: ArtifactSnapshot = {};
+      async function walk(dir: string, relBase: string): Promise<void> {
+        const entries = (await readdir(dir)).sort();
+        for (const entry of entries) {
+          const full = path.join(dir, entry);
+          const rel = relBase ? `${relBase}/${entry}` : entry;
+          const st = await lstat(full);
+          if (st.isSymbolicLink()) {
+            snap[rel] = {
+              kind: "symlink",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              target: await readlink(full),
+            };
+          } else if (st.isDirectory()) {
+            snap[rel] = { kind: "dir", size: st.size, mtimeMs: st.mtimeMs };
+            await walk(full, rel);
+          } else {
+            snap[rel] = {
+              kind: "file",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              content: await readFile(full, "utf8"),
+            };
+          }
+        }
+      }
+      await walk(sessionRoot, "");
+      return snap;
+    }
+
+    // 1. Approved paused campaign with missing status.json (and no pause.json)
+    const missingStatus = await createDeadRoot(tempRoot, "dry-missing-status", createdAt);
+    await seedPausedCampaign(missingStatus, 48);
+    await rm(path.join(missingStatus, "campaign", "status.json"));
+
+    // 2. Approved paused campaign with stale status.json and malformed pause.json
+    const staleStatus = await createDeadRoot(tempRoot, "dry-stale-status", createdAt);
+    await seedPausedCampaign(staleStatus, 48);
+    await writeFile(
+      path.join(staleStatus, "campaign", "status.json"),
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+    await writeFile(path.join(staleStatus, "campaign", "pause.json"), "{bad", "utf8");
+
+    // 3. Approved paused campaign with corrupt status.json
+    const corruptStatus = await createDeadRoot(tempRoot, "dry-corrupt-status", createdAt);
+    await seedPausedCampaign(corruptStatus, 48);
+    await writeFile(path.join(corruptStatus, "campaign", "status.json"), "{corrupt-json", "utf8");
+
+    // 4. Malformed trace.jsonl with stale status.json (retains old reap behavior -> candidate)
+    const malformedTrace = await createDeadRoot(tempRoot, "dry-malformed-trace", createdAt);
+    await seedPausedCampaign(malformedTrace, 48);
+    await writeFile(
+      path.join(malformedTrace, "campaign", "trace.jsonl"),
+      `${await readFile(path.join(malformedTrace, "campaign", "trace.jsonl"), "utf8")}corrupt-line\n`,
+      "utf8",
+    );
+    await writeFile(
+      path.join(malformedTrace, "campaign", "status.json"),
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.executing }),
+      "utf8",
+    );
+
+    // 5. Genuinely no campaign (retains old reap behavior -> candidate)
+    const noCampaign = await createDeadRoot(tempRoot, "dry-no-campaign", createdAt);
+
+    const allRoots = [missingStatus, staleStatus, corruptStatus, malformedTrace, noCampaign];
+    const beforeSnapshots = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
+
+    const dryOutcome = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-02T00:00:00.000Z"), // +24h from createdAt
+      dryRun: true,
+    });
+
+    expect(dryOutcome.dryRun).toBe(true);
+    expect(dryOutcome.candidates.map((c) => c.root).sort()).toEqual(
+      [malformedTrace, noCampaign].sort(),
+    );
+
+    const afterSnapshots = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
+    expect(afterSnapshots).toEqual(beforeSnapshots);
   });
 
   it("has no compiled pause default (sessionRetention: 0 reaps immediately) and ignores unapproved/terminal/forged-status roots", async () => {

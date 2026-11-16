@@ -668,19 +668,23 @@ export async function reapSessions(
       ? createdAt
       : sessionStat.mtimeMs;
     let effectiveTtlHours = ttlHours;
-    const paused = await loadPausedCampaignRetention(sessionRoot);
-    if (paused !== undefined && manifest !== undefined) {
-      const pauseBoundaryMs = await resolvePauseBoundaryMs(
+    const paused = await loadPausedCampaignRetention(sessionRoot, dryRun);
+    if (paused !== undefined) {
+      if (manifest === undefined) {
+        continue;
+      }
+      const pauseBoundary = await resolvePauseBoundaryMs(
         sessionRoot,
         manifest.pid,
         paused.recordSha256,
         now,
         dryRun,
       );
-      if (pauseBoundaryMs !== undefined) {
-        startedAt = pauseBoundaryMs;
-        effectiveTtlHours = paused.retentionHours;
+      if (pauseBoundary.kind === "preserve") {
+        continue;
       }
+      startedAt = pauseBoundary.boundaryMs;
+      effectiveTtlHours = paused.retentionHours;
     }
     const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
     if (ageHours < effectiveTtlHours) continue;
@@ -713,9 +717,12 @@ type PausedCampaignRetention = {
 
 async function loadPausedCampaignRetention(
   sessionRoot: string,
+  dryRun: boolean,
 ): Promise<PausedCampaignRetention | undefined> {
   try {
-    const store = await CampaignStore.load(sessionRoot);
+    const store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: !dryRun,
+    });
     if (!store.hasTrace || store.corrupted || !store.recordSha256) {
       return undefined;
     }
@@ -743,51 +750,70 @@ async function clearPauseBoundary(sessionRoot: string): Promise<void> {
   await rm(pausePath, { force: true });
 }
 
+type PauseBoundaryResolution =
+  | { kind: "preserve" }
+  | { kind: "boundary"; boundaryMs: number };
+
 async function resolvePauseBoundaryMs(
   sessionRoot: string,
   expectedPid: number,
   expectedRecordSha256: string,
   nowMs: number,
   dryRun: boolean,
-): Promise<number | undefined> {
+): Promise<PauseBoundaryResolution> {
   const pausePath = path.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
   try {
     await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
   } catch {
-    return undefined;
+    return { kind: "preserve" };
   }
 
+  let stat;
   try {
-    const stat = await lstat(pausePath);
-    if (stat.isSymbolicLink() || !stat.isFile()) {
-      return undefined;
-    }
-    const raw = await readFile(pausePath, "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return undefined;
-    }
-    const obj = parsed as Record<string, unknown>;
-    if (typeof obj.pausedAt !== "string") return undefined;
-    const pausedAtMs = Date.parse(obj.pausedAt);
-    if (!Number.isFinite(pausedAtMs) || pausedAtMs > nowMs) {
-      return undefined;
-    }
-    if (obj.pid !== expectedPid || obj.recordSha256 !== expectedRecordSha256) {
-      if (!dryRun) {
-        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
-      }
-      return nowMs;
-    }
-    return pausedAtMs;
+    stat = await lstat(pausePath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       if (!dryRun) {
         await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
       }
-      return nowMs;
+      return { kind: "boundary", boundaryMs: nowMs };
     }
-    return undefined;
+    return { kind: "preserve" };
+  }
+
+  if (stat.isSymbolicLink() || !stat.isFile()) {
+    return { kind: "preserve" };
+  }
+
+  try {
+    const raw = await readFile(pausePath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return { kind: "boundary", boundaryMs: nowMs };
+    }
+    const obj = parsed as Record<string, unknown>;
+    const pausedAtMs =
+      typeof obj.pausedAt === "string" ? Date.parse(obj.pausedAt) : Number.NaN;
+    if (
+      !Number.isFinite(pausedAtMs) ||
+      pausedAtMs > nowMs ||
+      obj.pid !== expectedPid ||
+      obj.recordSha256 !== expectedRecordSha256
+    ) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return { kind: "boundary", boundaryMs: nowMs };
+    }
+    return { kind: "boundary", boundaryMs: pausedAtMs };
+  } catch {
+    if (!dryRun) {
+      await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+    }
+    return { kind: "boundary", boundaryMs: nowMs };
   }
 }
 

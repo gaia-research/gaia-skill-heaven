@@ -556,4 +556,41 @@ describe("CampaignStore persistence and verification", () => {
       state: CampaignStates.failedSafe,
     });
   });
+
+  it("supports read-only load with refreshStatus: false without writing missing, stale, or FAILED_SAFE status.json", async () => {
+    const root = await makeTempSessionRoot();
+    const store = await CampaignStore.load(root);
+    await store.append({ channel: "agent", op: "open" });
+
+    // Missing status.json stays absent when refreshStatus: false
+    await rm(store.statusPath);
+    const roMissing = await CampaignStore.load(root, { refreshStatus: false });
+    expect(roMissing.hasTrace).toBe(true);
+    expect(roMissing.corrupted).toBe(false);
+    expect(roMissing.state.state).toBe(CampaignStates.recon);
+    await expect(lstat(store.statusPath)).rejects.toThrow();
+
+    // Stale status.json stays untouched when refreshStatus: false
+    await writeFile(store.statusPath, "{\"stale\":true}\n", "utf8");
+    const roStale = await CampaignStore.load(root, { refreshStatus: false });
+    expect(roStale.corrupted).toBe(false);
+    expect(roStale.state.state).toBe(CampaignStates.recon);
+    expect(await readFile(store.statusPath, "utf8")).toBe("{\"stale\":true}\n");
+
+    // Corrupt trace still reports FAILED_SAFE in memory without overwriting status.json
+    await writeFile(store.tracePath, `${await readFile(store.tracePath, "utf8")}corrupt\n`, "utf8");
+    const roCorrupt = await CampaignStore.load(root, { refreshStatus: false });
+    expect(roCorrupt.hasTrace).toBe(true);
+    expect(roCorrupt.corrupted).toBe(true);
+    expect(roCorrupt.state.state).toBe(CampaignStates.failedSafe);
+    expect(await readFile(store.statusPath, "utf8")).toBe("{\"stale\":true}\n");
+
+    // Default load (refreshStatus: true) still refreshes status.json to FAILED_SAFE
+    const rwCorrupt = await CampaignStore.load(root);
+    expect(rwCorrupt.corrupted).toBe(true);
+    expect(JSON.parse(await readFile(store.statusPath, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+  });
 });

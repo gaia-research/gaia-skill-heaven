@@ -42,6 +42,10 @@ export type CampaignStoreAppendResult = Readonly<{
   status: ControllerStatus;
 }>;
 
+export type CampaignStoreLoadOptions = CampaignVerificationOptions & {
+  refreshStatus?: boolean;
+};
+
 /**
  * Persistent campaign store confined to `<sessionRoot>/campaign/`.
  *
@@ -132,11 +136,16 @@ export class CampaignStore {
 
   static async load(
     sessionRoot: string,
-    options: CampaignVerificationOptions = {},
+    options: CampaignStoreLoadOptions = {},
   ): Promise<CampaignStore> {
+    const refreshStatus = options.refreshStatus ?? true;
+    const verificationOptions: CampaignVerificationOptions = {
+      authorize: options.authorize,
+      expectedRecord: options.expectedRecord,
+    };
     const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
     const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
-    const verified = await verifyOnDiskState(sessionRoot, options);
+    const verified = await verifyOnDiskState(sessionRoot, verificationOptions);
 
     if (verified.kind === "absent") {
       return new CampaignStore(
@@ -147,7 +156,7 @@ export class CampaignStore {
         false,
         undefined,
         undefined,
-        options,
+        verificationOptions,
       );
     }
 
@@ -156,11 +165,13 @@ export class CampaignStore {
         ...initialCampaignState(),
         state: CampaignStates.failedSafe,
       });
-      await syncStatusIfNeeded(
-        sessionRoot,
-        statusPath,
-        toControllerStatus(failedState),
-      );
+      if (refreshStatus) {
+        await syncStatusIfNeeded(
+          sessionRoot,
+          statusPath,
+          toControllerStatus(failedState),
+        );
+      }
       return new CampaignStore(
         sessionRoot,
         failedState,
@@ -169,15 +180,17 @@ export class CampaignStore {
         true,
         verified.error,
         undefined,
-        options,
+        verificationOptions,
       );
     }
 
-    const expectedStatus = toControllerStatus(
-      verified.state,
-      verified.lines.at(-1)?.entry,
-    );
-    await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+    if (refreshStatus) {
+      const expectedStatus = toControllerStatus(
+        verified.state,
+        verified.lines.at(-1)?.entry,
+      );
+      await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+    }
 
     return new CampaignStore(
       sessionRoot,
@@ -187,7 +200,7 @@ export class CampaignStore {
       false,
       undefined,
       verified.recordSha256,
-      options,
+      verificationOptions,
     );
   }
 
