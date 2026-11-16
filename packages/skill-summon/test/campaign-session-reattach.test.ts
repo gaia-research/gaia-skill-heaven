@@ -1182,4 +1182,198 @@ describe("reattach campaign fold/verification and status refresh", () => {
       await server.close();
     }
   });
+
+  it("preserves exact pause boundary and dead owner PID on failed status refresh (status directory) and reaps at original expiry", async () => {
+    const tempRoot = await makeTempRoot();
+    const tPause = new Date("2026-04-01T10:00:00.000Z");
+
+    for (const mode of ["scan", "env"] as const) {
+      delete process.env.SKILL_SUMMON_SESSION;
+      process.env.CLAUDE_CODE_SESSION_ID = `sess-fail-status-${mode}`;
+
+      const seeded = await resolveSession({ tempRoot });
+      await seedPausedCampaign(seeded.session.root, 48);
+      await markDeadPid(seeded.session.root);
+
+      // Establish original pause boundary at tPause.
+      const obsReap = await reapSessions({ tempRoot, ttlHours: 4, now: tPause });
+      expect(obsReap.candidates).toEqual([]);
+
+      const pausePath = path.join(seeded.session.root, "campaign", "pause.json");
+      const statusPath = path.join(seeded.session.root, "campaign", "status.json");
+      const manifestPath = path.join(seeded.session.root, "session.json");
+      const originalPauseRaw = await readFile(pausePath, "utf8");
+      const originalPause = JSON.parse(originalPauseRaw) as Record<string, unknown>;
+      expect(originalPause.pausedAt).toBe(tPause.toISOString());
+      expect(originalPause.pid).toBe(99_999_999);
+
+      // Corrupt derived status.json into a directory so CampaignStore.load fails.
+      await rm(statusPath);
+      await mkdir(statusPath);
+
+      if (mode === "env") {
+        process.env.SKILL_SUMMON_SESSION = seeded.session.root;
+      } else {
+        delete process.env.SKILL_SUMMON_SESSION;
+      }
+
+      // Failed resume must throw (not expose the failed root), leave pause.json
+      // byte-identical, and leave session.json PID as the dead owner.
+      await expect(resolveSession({ tempRoot })).rejects.toThrow(/regular file/u);
+      expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+      const manifestAfterFail = JSON.parse(
+        await readFile(manifestPath, "utf8"),
+      ) as Record<string, unknown>;
+      expect(manifestAfterFail.pid).toBe(99_999_999);
+
+      // Deterministic clock: 1ms before original 48h expiry is still kept;
+      // at exact original 48h expiry it reaps (expiry was NOT renewed).
+      const justBeforeOriginalExpiry = new Date(tPause.getTime() + 48 * 3_600_000 - 1);
+      expect(
+        (await reapSessions({ tempRoot, ttlHours: 4, now: justBeforeOriginalExpiry })).candidates,
+      ).toEqual([]);
+      await expect(access(seeded.session.root)).resolves.toBeUndefined();
+
+      const atOriginalExpiry = new Date(tPause.getTime() + 48 * 3_600_000);
+      const reaped = await reapSessions({ tempRoot, ttlHours: 4, now: atOriginalExpiry });
+      expect(reaped.candidates.map((c) => c.root)).toEqual([seeded.session.root]);
+      await expect(access(seeded.session.root)).rejects.toThrow();
+    }
+  });
+
+  it("preserves exact pause boundary and dead owner PID on failed manifest write and reaps at original expiry", async () => {
+    if (process.getuid?.() === 0) return;
+
+    const tempRoot = await makeTempRoot();
+    const tPause = new Date("2026-04-01T10:00:00.000Z");
+
+    for (const mode of ["scan", "env"] as const) {
+      delete process.env.SKILL_SUMMON_SESSION;
+      process.env.CLAUDE_CODE_SESSION_ID = `sess-fail-manifest-${mode}`;
+
+      const seeded = await resolveSession({ tempRoot });
+      await seedPausedCampaign(seeded.session.root, 48);
+      await markDeadPid(seeded.session.root);
+
+      const obsReap = await reapSessions({ tempRoot, ttlHours: 4, now: tPause });
+      expect(obsReap.candidates).toEqual([]);
+
+      const pausePath = path.join(seeded.session.root, "campaign", "pause.json");
+      const manifestPath = path.join(seeded.session.root, "session.json");
+      const originalPauseRaw = await readFile(pausePath, "utf8");
+
+      if (mode === "env") {
+        process.env.SKILL_SUMMON_SESSION = seeded.session.root;
+      } else {
+        delete process.env.SKILL_SUMMON_SESSION;
+      }
+
+      // Make session.json read-only so manifest owner commit fails after CampaignStore.load.
+      await chmod(manifestPath, 0o444);
+      try {
+        await expect(resolveSession({ tempRoot })).rejects.toThrow();
+        expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+        const manifestAfterFail = JSON.parse(
+          await readFile(manifestPath, "utf8"),
+        ) as Record<string, unknown>;
+        expect(manifestAfterFail.pid).toBe(99_999_999);
+
+        // Next reap must use original tPause + 48h expiry, not a renewed boundary.
+        const justBeforeOriginalExpiry = new Date(tPause.getTime() + 48 * 3_600_000 - 1);
+        expect(
+          (await reapSessions({ tempRoot, ttlHours: 4, now: justBeforeOriginalExpiry })).candidates,
+        ).toEqual([]);
+        await expect(access(seeded.session.root)).resolves.toBeUndefined();
+
+        const atOriginalExpiry = new Date(tPause.getTime() + 48 * 3_600_000);
+        const reaped = await reapSessions({ tempRoot, ttlHours: 4, now: atOriginalExpiry });
+        expect(reaped.candidates.map((c) => c.root)).toEqual([seeded.session.root]);
+        await expect(access(seeded.session.root)).rejects.toThrow();
+      } finally {
+        await chmod(manifestPath, 0o600).catch(() => {});
+      }
+    }
+  });
+
+  it("confines pause boundary on reattach, rolls back owner PID if pause clear fails, and resets lifecycle once reattach succeeds", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideDir = await makeTempRoot();
+
+    // 1. Symlinked pause.json fails pre-commit confinement without writing status.json,
+    // claiming process.pid, or touching the outside symlink target.
+    delete process.env.SKILL_SUMMON_SESSION;
+    process.env.CLAUDE_CODE_SESSION_ID = "sess-pause-symlink";
+    const symSeeded = await resolveSession({ tempRoot });
+    await seedPausedCampaign(symSeeded.session.root, 48);
+    await markDeadPid(symSeeded.session.root);
+
+    const statusPath = path.join(symSeeded.session.root, "campaign", "status.json");
+    await writeFile(
+      statusPath,
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+    const outsideTarget = path.join(outsideDir, "outside-pause.json");
+    await writeFile(outsideTarget, "DO-NOT-DELETE", "utf8");
+    const symPausePath = path.join(symSeeded.session.root, "campaign", "pause.json");
+    await symlink(outsideTarget, symPausePath, "file");
+
+    await expect(resolveSession({ tempRoot })).rejects.toThrow(/symlink/u);
+    expect(await readFile(outsideTarget, "utf8")).toBe("DO-NOT-DELETE");
+    const symManifest = JSON.parse(
+      await readFile(path.join(symSeeded.session.root, "session.json"), "utf8"),
+    ) as Record<string, unknown>;
+    expect(symManifest.pid).toBe(99_999_999);
+    expect(
+      (JSON.parse(await readFile(statusPath, "utf8")) as Record<string, unknown>).state,
+    ).toBe(CampaignStates.unarmed);
+    await rm(symSeeded.session.root, { recursive: true, force: true });
+
+    // 2. If clearPauseBoundary fails post-manifest write (read-only campaign/),
+    // owner PID is rolled back to dead PID, pause.json stays intact, and recovery succeeds once writable.
+    if (process.getuid?.() !== 0) {
+      delete process.env.SKILL_SUMMON_SESSION;
+      process.env.CLAUDE_CODE_SESSION_ID = "sess-pause-clear-fail";
+      const seeded = await resolveSession({ tempRoot });
+      await seedPausedCampaign(seeded.session.root, 48);
+      await markDeadPid(seeded.session.root);
+
+      const tPause = new Date("2026-04-01T10:00:00.000Z");
+      expect((await reapSessions({ tempRoot, ttlHours: 4, now: tPause })).candidates).toEqual([]);
+
+      const campaignDir = path.join(seeded.session.root, "campaign");
+      const pausePath = path.join(campaignDir, "pause.json");
+      const manifestPath = path.join(seeded.session.root, "session.json");
+      const originalPauseRaw = await readFile(pausePath, "utf8");
+
+      await chmod(campaignDir, 0o500);
+      try {
+        await expect(resolveSession({ tempRoot })).rejects.toThrow();
+        expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+        const rolledBackManifest = JSON.parse(
+          await readFile(manifestPath, "utf8"),
+        ) as Record<string, unknown>;
+        expect(rolledBackManifest.pid).toBe(99_999_999);
+      } finally {
+        await chmod(campaignDir, 0o700);
+      }
+
+      // Now make status.json stale and verify successful resume refreshes projection,
+      // claims process.pid, and clears pause.json.
+      const seededStatusPath = path.join(campaignDir, "status.json");
+      await writeFile(
+        seededStatusPath,
+        JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+        "utf8",
+      );
+      const resumed = await resolveSession({ tempRoot });
+      expect(resumed.created).toBe(false);
+      expect(resumed.session.root).toBe(seeded.session.root);
+      expect(resumed.session.pid).toBe(process.pid);
+      await expect(access(pausePath)).rejects.toThrow();
+      expect(
+        (JSON.parse(await readFile(seededStatusPath, "utf8")) as Record<string, unknown>).state,
+      ).toBe(CampaignStates.executing);
+    }
+  });
 });

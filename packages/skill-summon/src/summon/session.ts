@@ -241,13 +241,43 @@ export class SummonSession {
     tempRoot?: string,
   ): Promise<SummonSession> {
     const session = await SummonSession.loadAt(root, tempRoot);
-    await clearPauseBoundary(root);
+    const pausePath = path.join(root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+    await assertConfinedPath(root, pausePath, "Campaign pause boundary");
+    try {
+      const pauseStat = await lstat(pausePath);
+      if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
+        throw new Error(
+          `Campaign pause boundary must be a regular file: ${pausePath}`,
+        );
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+
     await CampaignStore.load(root);
-    session.#manifest = {
-      ...session.#manifest,
+
+    const previousManifest = session.#manifest;
+    const nextManifest: SessionManifest = {
+      ...previousManifest,
       pid: process.pid,
     };
-    await session.#writeManifest();
+    await session.#writeManifest(nextManifest);
+    session.#manifest = nextManifest;
+
+    try {
+      await clearPauseBoundary(root);
+    } catch (error) {
+      session.#manifest = previousManifest;
+      try {
+        await session.#writeManifest(previousManifest);
+      } catch {
+        // Best-effort rollback of owner PID while preserving the pause-boundary error.
+      }
+      throw error;
+    }
+
     return session;
   }
 
@@ -304,10 +334,14 @@ export class SummonSession {
     await rm(this.root, { recursive: true, force: true });
   }
 
-  async #writeManifest(): Promise<void> {
+  async #writeManifest(
+    manifest: SessionManifest = this.#manifest,
+  ): Promise<void> {
+    await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
     await writeFile(
       this.#manifestPath,
-      JSON.stringify(this.#manifest, null, 2),
+      JSON.stringify(manifest, null, 2),
       "utf8",
     );
   }
