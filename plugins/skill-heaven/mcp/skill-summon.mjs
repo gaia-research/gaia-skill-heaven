@@ -18101,9 +18101,14 @@ var CampaignStore = class _CampaignStore {
     return this.#recordSha256;
   }
   static async load(sessionRoot, options = {}) {
+    const refreshStatus = options.refreshStatus ?? true;
+    const verificationOptions = {
+      authorize: options.authorize,
+      expectedRecord: options.expectedRecord
+    };
     const campaignDir = path2.join(sessionRoot, CAMPAIGN_DIR_NAME);
     const statusPath = path2.join(campaignDir, CAMPAIGN_STATUS_FILE);
-    const verified = await verifyOnDiskState(sessionRoot, options);
+    const verified = await verifyOnDiskState(sessionRoot, verificationOptions);
     if (verified.kind === "absent") {
       return new _CampaignStore(
         sessionRoot,
@@ -18113,7 +18118,7 @@ var CampaignStore = class _CampaignStore {
         false,
         void 0,
         void 0,
-        options
+        verificationOptions
       );
     }
     if (verified.kind === "failed_safe") {
@@ -18121,11 +18126,13 @@ var CampaignStore = class _CampaignStore {
         ...initialCampaignState(),
         state: CampaignStates.failedSafe
       });
-      await syncStatusIfNeeded(
-        sessionRoot,
-        statusPath,
-        toControllerStatus(failedState)
-      );
+      if (refreshStatus) {
+        await syncStatusIfNeeded(
+          sessionRoot,
+          statusPath,
+          toControllerStatus(failedState)
+        );
+      }
       return new _CampaignStore(
         sessionRoot,
         failedState,
@@ -18134,14 +18141,16 @@ var CampaignStore = class _CampaignStore {
         true,
         verified.error,
         void 0,
-        options
+        verificationOptions
       );
     }
-    const expectedStatus = toControllerStatus(
-      verified.state,
-      verified.lines.at(-1)?.entry
-    );
-    await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+    if (refreshStatus) {
+      const expectedStatus = toControllerStatus(
+        verified.state,
+        verified.lines.at(-1)?.entry
+      );
+      await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+    }
     return new _CampaignStore(
       sessionRoot,
       verified.state,
@@ -18150,7 +18159,7 @@ var CampaignStore = class _CampaignStore {
       false,
       void 0,
       verified.recordSha256,
-      options
+      verificationOptions
     );
   }
   async append(event2) {
@@ -18751,19 +18760,23 @@ async function reapSessions(opts = {}) {
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
     let startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
     let effectiveTtlHours = ttlHours;
-    const paused = await loadPausedCampaignRetention(sessionRoot);
-    if (paused !== void 0 && manifest !== void 0) {
-      const pauseBoundaryMs = await resolvePauseBoundaryMs(
+    const paused = await loadPausedCampaignRetention(sessionRoot, dryRun);
+    if (paused !== void 0) {
+      if (manifest === void 0) {
+        continue;
+      }
+      const pauseBoundary = await resolvePauseBoundaryMs(
         sessionRoot,
         manifest.pid,
         paused.recordSha256,
         now,
         dryRun
       );
-      if (pauseBoundaryMs !== void 0) {
-        startedAt = pauseBoundaryMs;
-        effectiveTtlHours = paused.retentionHours;
+      if (pauseBoundary.kind === "preserve") {
+        continue;
       }
+      startedAt = pauseBoundary.boundaryMs;
+      effectiveTtlHours = paused.retentionHours;
     }
     const ageHours = Math.max(0, (now - startedAt) / 36e5);
     if (ageHours < effectiveTtlHours) continue;
@@ -18786,9 +18799,11 @@ async function reapSessions(opts = {}) {
     liveProtected
   };
 }
-async function loadPausedCampaignRetention(sessionRoot) {
+async function loadPausedCampaignRetention(sessionRoot, dryRun) {
   try {
-    const store = await CampaignStore.load(sessionRoot);
+    const store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: !dryRun
+    });
     if (!store.hasTrace || store.corrupted || !store.recordSha256) {
       return void 0;
     }
@@ -18814,39 +18829,46 @@ async function resolvePauseBoundaryMs(sessionRoot, expectedPid, expectedRecordSh
   try {
     await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
   } catch {
-    return void 0;
+    return { kind: "preserve" };
   }
+  let stat5;
   try {
-    const stat5 = await lstat2(pausePath);
-    if (stat5.isSymbolicLink() || !stat5.isFile()) {
-      return void 0;
-    }
-    const raw = await readFile2(pausePath, "utf8");
-    const parsed = JSON.parse(raw);
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return void 0;
-    }
-    const obj = parsed;
-    if (typeof obj.pausedAt !== "string") return void 0;
-    const pausedAtMs = Date.parse(obj.pausedAt);
-    if (!Number.isFinite(pausedAtMs) || pausedAtMs > nowMs) {
-      return void 0;
-    }
-    if (obj.pid !== expectedPid || obj.recordSha256 !== expectedRecordSha256) {
-      if (!dryRun) {
-        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
-      }
-      return nowMs;
-    }
-    return pausedAtMs;
+    stat5 = await lstat2(pausePath);
   } catch (error2) {
     if (error2.code === "ENOENT") {
       if (!dryRun) {
         await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
       }
-      return nowMs;
+      return { kind: "boundary", boundaryMs: nowMs };
     }
-    return void 0;
+    return { kind: "preserve" };
+  }
+  if (stat5.isSymbolicLink() || !stat5.isFile()) {
+    return { kind: "preserve" };
+  }
+  try {
+    const raw = await readFile2(pausePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return { kind: "boundary", boundaryMs: nowMs };
+    }
+    const obj = parsed;
+    const pausedAtMs = typeof obj.pausedAt === "string" ? Date.parse(obj.pausedAt) : Number.NaN;
+    if (!Number.isFinite(pausedAtMs) || pausedAtMs > nowMs || obj.pid !== expectedPid || obj.recordSha256 !== expectedRecordSha256) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return { kind: "boundary", boundaryMs: nowMs };
+    }
+    return { kind: "boundary", boundaryMs: pausedAtMs };
+  } catch {
+    if (!dryRun) {
+      await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+    }
+    return { kind: "boundary", boundaryMs: nowMs };
   }
 }
 async function writePauseBoundary(pausePath, pid, recordSha256, nowMs) {
