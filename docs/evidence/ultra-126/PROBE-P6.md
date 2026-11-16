@@ -156,7 +156,21 @@
 
 ### Interpretation (orchestrator)
 
-pending
+Door 3, interpreted by the Team A orchestrator (Opus 5.5). Codex 0.169.0, `gpt-6-luna` low (verified
+in the rollouts), n = 3 per cell.
+
+- **Session id:** none in the environment. `tools/call _meta.sessionId` (= `threadId`) was
+  equal across `codex exec resume` (3/3). Like agy, this is a per-call key, so a Codex door
+  adapter would bind the campaign on the first tool call, not at server start.
+- **Channel 1 (elicitation) passes in the TUI:** a prompt appeared and the fixture answer
+  arrived as `accept` (3/3). Headless `codex exec` auto-cancels (3/3) and fails closed, as on
+  Claude Code. D-009 and FD-11 apply unchanged: it is terminal input, not authentication, and
+  it fails closed when multiplexed unless the advanced opt-in is set.
+- **Channel 2:** no pre-execution mechanism. Skills load but do not run a script (6/6).
+- **Channel 3:** an approval prompt that can deny appears with `approvals_reviewer="user"`
+  (3/3). It is void under the user's `auto_review` setting (3/3).
+- **Consequence:** Codex is the second door, after Claude Code, where channel 1 works. A
+  Codex door needs a first-call session binding before campaigns can re-attach.
 
 ---
 
