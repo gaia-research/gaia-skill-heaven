@@ -1,12 +1,14 @@
-import { randomUUID } from "node:crypto";
-import { realpathSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { constants, realpathSync } from "node:fs";
 import {
   lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
+  rename,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -25,9 +27,14 @@ import type { SkillInvocation, TrustFields } from "../domain/types.js";
 // prefix were only "skill-summon-" the reaper below would treat the payload
 // cache directory itself as an abandoned session candidate and delete it.
 const SESSION_DIR_PREFIX = "skill-summon-session-";
+// Must NOT start with SESSION_DIR_PREFIX so listSessions()/reapSessions()
+// never treat the index directory as a disposable session root.
+const SESSION_INDEX_DIR_PREFIX = "skill-summon-index-v1";
 const MANIFEST_FILE = "session.json";
 const CAMPAIGN_PAUSE_FILE = "pause.json";
 const DEFAULT_SESSION_TTL_HOURS = 4;
+const MAX_INDEX_ENTRY_BYTES = 64 * 1024;
+const MAX_INDEX_ROOTS_PER_ID = 16;
 
 /**
  * Environment variable(s) carrying the harness session ID. Kept in one
@@ -192,7 +199,8 @@ export class SummonSession {
     id: string,
     opts: { harnessSessionId?: string | undefined; tempRoot?: string | undefined } = {},
   ): Promise<SummonSession> {
-    await assertDisposableSessionRoot(root, opts.tempRoot);
+    const tempRoot = opts.tempRoot ?? tmpdir();
+    await assertDisposableSessionRoot(root, tempRoot);
     const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
     const manifest: SessionManifest = {
       id,
@@ -201,8 +209,11 @@ export class SummonSession {
       pid: process.pid,
       skills: [],
     };
-    const session = new SummonSession(root, manifest, opts.tempRoot);
-    await session.#writeManifest();
+    const session = new SummonSession(root, manifest, tempRoot);
+    await session.#writeManifest(manifest, { skipRootCheck: true });
+    if (harnessSessionId !== undefined) {
+      await recordSessionInIndex(tempRoot, harnessSessionId, root);
+    }
     return session;
   }
 
@@ -278,6 +289,14 @@ export class SummonSession {
       throw error;
     }
 
+    if (session.harnessSessionId !== undefined) {
+      await recordSessionInIndex(
+        tempRoot ?? tmpdir(),
+        session.harnessSessionId,
+        root,
+      ).catch(() => {});
+    }
+
     return session;
   }
 
@@ -331,13 +350,25 @@ export class SummonSession {
   }
 
   async close(): Promise<void> {
+    const harnessSessionId = this.#manifest.harnessSessionId;
+    const tempRoot = this.#tempRoot ?? tmpdir();
     await rm(this.root, { recursive: true, force: true });
+    if (harnessSessionId !== undefined) {
+      await removeSessionFromIndex(
+        tempRoot,
+        harnessSessionId,
+        this.root,
+      ).catch(() => {});
+    }
   }
 
   async #writeManifest(
     manifest: SessionManifest = this.#manifest,
+    opts: { skipRootCheck?: boolean } = {},
   ): Promise<void> {
-    await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    if (!opts.skipRootCheck) {
+      await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    }
     await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
     await writeFile(
       this.#manifestPath,
@@ -456,11 +487,11 @@ export async function assertConfinedPath(
     if (current !== targetResolved && !currentStat.isDirectory()) {
       throw new Error(`${label} traverses a non-directory path: ${current}`);
     }
+    if (current === rootResolved) return;
     const currentReal = await realpath(current);
     if (!isWithin(rootReal, currentReal)) {
       throw new Error(`${label} resolves outside session root: ${target}`);
     }
-    if (current === rootResolved) return;
     current = path.dirname(current);
   }
 }
@@ -530,7 +561,7 @@ export async function resolveSession(
   }
 
   if (harnessSessionId) {
-    const match = await findDeadSessionForHarnessId(tempRoot, harnessSessionId);
+    const match = await findIndexedDeadSession(tempRoot, harnessSessionId);
     if (match) {
       return {
         session: await SummonSession.reattachAt(match, tempRoot),
@@ -545,27 +576,279 @@ export async function resolveSession(
   };
 }
 
-async function findDeadSessionForHarnessId(
+type HarnessSessionIndexEntry = {
+  version: 1;
+  roots: string[];
+};
+
+const indexWriteQueues = new Map<string, Promise<void>>();
+
+function sessionIndexDirName(): string {
+  const uid = process.getuid?.();
+  return uid === undefined
+    ? SESSION_INDEX_DIR_PREFIX
+    : `${SESSION_INDEX_DIR_PREFIX}-${uid}`;
+}
+
+function sessionIndexDir(tempRoot: string): string {
+  return path.join(tempRoot, sessionIndexDirName());
+}
+
+function harnessSessionIndexKey(harnessSessionId: string): string {
+  return createHash("sha256")
+    .update("skill-summon-harness-session-v1\0")
+    .update(harnessSessionId, "utf8")
+    .digest("hex");
+}
+
+function isCurrentProcessUid(uid: number): boolean {
+  const currentUid = process.getuid?.();
+  return currentUid === undefined || uid === currentUid;
+}
+
+async function assertConfinedIndexDir(
+  tempRoot: string,
+  indexDir: string,
+): Promise<void> {
+  const dirStat = await lstat(indexDir);
+  if (dirStat.isSymbolicLink() || !dirStat.isDirectory()) {
+    throw new Error(`Session index directory ${indexDir} must be a real directory.`);
+  }
+  if (!isCurrentProcessUid(dirStat.uid)) {
+    throw new Error(`Session index directory ${indexDir} has unexpected owner.`);
+  }
+  const [tempReal, dirReal] = await Promise.all([
+    realpath(tempRoot),
+    realpath(indexDir),
+  ]);
+  if (
+    path.dirname(dirReal) !== tempReal ||
+    path.basename(dirReal) !== path.basename(indexDir)
+  ) {
+    throw new Error(`Session index directory ${indexDir} resolves outside ${tempRoot}.`);
+  }
+}
+
+function parseIndexEntry(raw: unknown): string[] | undefined {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return undefined;
+  }
+  const obj = raw as Record<string, unknown>;
+  if (obj.version !== 1 || !Array.isArray(obj.roots)) {
+    return undefined;
+  }
+  const roots: string[] = [];
+  const seen = new Set<string>();
+  for (const item of obj.roots) {
+    if (typeof item !== "string" || item.length === 0 || !path.isAbsolute(item)) {
+      continue;
+    }
+    if (seen.has(item)) continue;
+    seen.add(item);
+    roots.push(item);
+    if (roots.length >= MAX_INDEX_ROOTS_PER_ID) break;
+  }
+  return roots;
+}
+
+async function readConfinedIndexFile(
+  indexDir: string,
+  entryPath: string,
+): Promise<{ exists: boolean; confined: boolean; roots?: string[] }> {
+  try {
+    await assertConfinedPath(indexDir, entryPath, "Session index entry");
+  } catch {
+    return { exists: true, confined: false };
+  }
+
+  let entryStat;
+  try {
+    entryStat = await lstat(entryPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { exists: false, confined: true };
+    }
+    return { exists: true, confined: false };
+  }
+
+  if (
+    entryStat.isSymbolicLink() ||
+    !entryStat.isFile() ||
+    !isCurrentProcessUid(entryStat.uid)
+  ) {
+    return { exists: true, confined: false };
+  }
+  if (entryStat.size > MAX_INDEX_ENTRY_BYTES) {
+    return { exists: true, confined: true, roots: undefined };
+  }
+
+  const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
+  let handle;
+  try {
+    handle = await open(entryPath, flags);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { exists: false, confined: true };
+    }
+    return { exists: true, confined: false };
+  }
+
+  try {
+    const openedStat = await handle.stat();
+    if (!openedStat.isFile() || !isCurrentProcessUid(openedStat.uid)) {
+      return { exists: true, confined: false };
+    }
+    if (openedStat.size > MAX_INDEX_ENTRY_BYTES) {
+      return { exists: true, confined: true, roots: undefined };
+    }
+    const raw = await handle.readFile("utf8");
+    return {
+      exists: true,
+      confined: true,
+      roots: parseIndexEntry(JSON.parse(raw) as unknown),
+    };
+  } catch {
+    return { exists: true, confined: true, roots: undefined };
+  } finally {
+    await handle.close();
+  }
+}
+
+function enqueueIndexUpdate(
+  indexDir: string,
+  key: string,
+  fn: () => Promise<void>,
+): Promise<void> {
+  const queueKey = `${indexDir}\0${key}`;
+  const prev = indexWriteQueues.get(queueKey) ?? Promise.resolve();
+  const next = prev.then(fn, fn);
+  const tracked = next.then(
+    () => {
+      if (indexWriteQueues.get(queueKey) === tracked) {
+        indexWriteQueues.delete(queueKey);
+      }
+    },
+    () => {
+      if (indexWriteQueues.get(queueKey) === tracked) {
+        indexWriteQueues.delete(queueKey);
+      }
+    },
+  );
+  indexWriteQueues.set(queueKey, tracked);
+  return next;
+}
+
+async function writeIndexEntryAtomically(
+  indexDir: string,
+  entryPath: string,
+  key: string,
+  roots: readonly string[],
+): Promise<void> {
+  const tmpPath = path.join(
+    indexDir,
+    `.tmp-${key}-${process.pid}-${randomUUID()}`,
+  );
+  const payload: HarnessSessionIndexEntry = {
+    version: 1,
+    roots: [...roots],
+  };
+  try {
+    await writeFile(tmpPath, `${JSON.stringify(payload)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+      flag: "wx",
+    });
+    await rename(tmpPath, entryPath);
+  } finally {
+    await rm(tmpPath, { force: true }).catch(() => {});
+  }
+}
+
+async function recordSessionInIndex(
+  tempRoot: string,
+  harnessSessionId: string,
+  sessionRoot: string,
+): Promise<void> {
+  const indexDir = sessionIndexDir(tempRoot);
+  const key = harnessSessionIndexKey(harnessSessionId);
+  const absoluteRoot = path.resolve(sessionRoot);
+  await enqueueIndexUpdate(indexDir, key, async () => {
+    try {
+      await mkdir(indexDir, { mode: 0o700 });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") return;
+    }
+    try {
+      await assertConfinedIndexDir(tempRoot, indexDir);
+    } catch {
+      return;
+    }
+
+    const entryPath = path.join(indexDir, `${key}.json`);
+    const existing = await readConfinedIndexFile(indexDir, entryPath);
+    if (!existing.confined) return;
+    const existingRoots = existing.roots ?? [];
+    if (existingRoots[0] === absoluteRoot) return;
+
+    const nextRoots = [
+      absoluteRoot,
+      ...existingRoots.filter((item) => item !== absoluteRoot),
+    ].slice(0, MAX_INDEX_ROOTS_PER_ID);
+
+    await writeIndexEntryAtomically(indexDir, entryPath, key, nextRoots);
+  });
+}
+
+async function removeSessionFromIndex(
+  tempRoot: string,
+  harnessSessionId: string,
+  sessionRoot: string,
+): Promise<void> {
+  const indexDir = sessionIndexDir(tempRoot);
+  const key = harnessSessionIndexKey(harnessSessionId);
+  const absoluteRoot = path.resolve(sessionRoot);
+  await enqueueIndexUpdate(indexDir, key, async () => {
+    try {
+      await assertConfinedIndexDir(tempRoot, indexDir);
+    } catch {
+      return;
+    }
+
+    const entryPath = path.join(indexDir, `${key}.json`);
+    const existing = await readConfinedIndexFile(indexDir, entryPath);
+    if (!existing.confined || !existing.exists || !existing.roots) return;
+    if (!existing.roots.includes(absoluteRoot)) return;
+
+    const nextRoots = existing.roots.filter((item) => item !== absoluteRoot);
+    if (nextRoots.length === 0) {
+      await rm(entryPath, { force: true });
+      return;
+    }
+
+    await writeIndexEntryAtomically(indexDir, entryPath, key, nextRoots);
+  });
+}
+
+async function findIndexedDeadSession(
   tempRoot: string,
   harnessSessionId: string,
 ): Promise<string | undefined> {
-  let entries;
+  const indexDir = sessionIndexDir(tempRoot);
   try {
-    entries = await readdir(tempRoot, { withFileTypes: true });
+    await assertConfinedIndexDir(tempRoot, indexDir);
   } catch {
     return undefined;
   }
 
+  const key = harnessSessionIndexKey(harnessSessionId);
+  const entryPath = path.join(indexDir, `${key}.json`);
+  const existing = await readConfinedIndexFile(indexDir, entryPath);
+  if (!existing.confined || !existing.exists || !existing.roots || existing.roots.length === 0) {
+    return undefined;
+  }
+
   const matches: { root: string; createdAt: string }[] = [];
-  for (const entry of entries) {
-    if (
-      entry.isSymbolicLink() ||
-      !entry.isDirectory() ||
-      !entry.name.startsWith(SESSION_DIR_PREFIX)
-    ) {
-      continue;
-    }
-    const candidateRoot = path.join(tempRoot, entry.name);
+  for (const candidateRoot of existing.roots) {
     try {
       await assertDisposableSessionRoot(candidateRoot, tempRoot);
       await assertConfinedPath(
@@ -734,7 +1017,16 @@ export async function reapSessions(
       throw error;
     }
     candidates.push({ root: sessionRoot, ageHours, bytes });
-    if (!dryRun) await rm(sessionRoot, { recursive: true, force: true });
+    if (!dryRun) {
+      await rm(sessionRoot, { recursive: true, force: true });
+      if (manifest?.harnessSessionId !== undefined) {
+        await removeSessionFromIndex(
+          root,
+          manifest.harnessSessionId,
+          sessionRoot,
+        ).catch(() => {});
+      }
+    }
   }
 
   return {
@@ -756,6 +1048,20 @@ type PausedCampaignRetention =
 async function loadPausedCampaignRetention(
   sessionRoot: string,
 ): Promise<PausedCampaignRetention> {
+  const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
+  let campaignStat;
+  try {
+    campaignStat = await lstat(campaignDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { kind: "absent" };
+    }
+    return { kind: "preserve" };
+  }
+  if (campaignStat.isSymbolicLink() || !campaignStat.isDirectory()) {
+    return { kind: "preserve" };
+  }
+
   let store: CampaignStore;
   try {
     store = await CampaignStore.load(sessionRoot, {

@@ -212,7 +212,7 @@ describe("session re-attachment by harness session id", () => {
     expect(forkedStore.state.state).toBe(CampaignStates.unarmed);
   });
 
-  it("refuses forged outside-directory SKILL_SUMMON_SESSION and ignores symlinked roots on scan", async () => {
+  it("refuses forged outside-directory SKILL_SUMMON_SESSION and ignores symlinked roots on lookup", async () => {
     const tempRoot = await makeTempRoot();
     const outside = await makeTempRoot();
 
@@ -240,6 +240,32 @@ describe("session re-attachment by harness session id", () => {
     expect(res.created).toBe(true);
     expect(res.session.root).not.toBe(outside);
     expect(res.session.root).not.toBe(path.join(tempRoot, "skill-summon-session-symlinked"));
+
+    // Even when an indexed root is replaced by a symlink to outside, lookup refuses it
+    // and leaves the outside directory untouched.
+    const indexed = await resolveSession({ tempRoot, harnessSessionId: "sess-indexed-symlink" });
+    await rm(indexed.session.root, { recursive: true, force: true });
+    await writeFile(
+      path.join(outside, "session.json"),
+      JSON.stringify({
+        id: "forged-indexed",
+        harnessSessionId: "sess-indexed-symlink",
+        createdAt: "2026-04-01T00:00:00.000Z",
+        pid: 99_999_999,
+        skills: [],
+      }),
+      "utf8",
+    );
+    await symlink(outside, indexed.session.root, "dir");
+
+    const afterSymlink = await resolveSession({
+      tempRoot,
+      harnessSessionId: "sess-indexed-symlink",
+    });
+    expect(afterSymlink.created).toBe(true);
+    expect(afterSymlink.session.root).not.toBe(indexed.session.root);
+    expect(afterSymlink.session.root).not.toBe(outside);
+    await expect(access(path.join(outside, "cache"))).rejects.toThrow();
   });
 
   it("enforces automatic reattachment policy when SKILL_SUMMON_SESSION is set with harnessSessionId (same/mismatched/fork/live/missing-manifest-id)", async () => {
@@ -330,29 +356,34 @@ describe("session re-attachment by harness session id", () => {
     delete process.env.SKILL_SUMMON_SESSION;
 
     for (const [label, badManifest] of [
-      ["missing-pid", { id: "m1", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", skills: [] }],
-      ["string-pid", { id: "m2", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: "99999999", skills: [] }],
-      ["zero-pid", { id: "m3", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: 0, skills: [] }],
-      ["negative-pid", { id: "m4", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: -5, skills: [] }],
-      ["missing-skills", { id: "m5", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: 99_999_999 }],
+      ["missing-pid", { id: "m1", createdAt: "2026-04-01T00:00:00.000Z", skills: [] }],
+      ["string-pid", { id: "m2", createdAt: "2026-04-01T00:00:00.000Z", pid: "99999999", skills: [] }],
+      ["zero-pid", { id: "m3", createdAt: "2026-04-01T00:00:00.000Z", pid: 0, skills: [] }],
+      ["negative-pid", { id: "m4", createdAt: "2026-04-01T00:00:00.000Z", pid: -5, skills: [] }],
+      ["missing-skills", { id: "m5", createdAt: "2026-04-01T00:00:00.000Z", pid: 99_999_999 }],
     ] as const) {
-      const badRoot = path.join(tempRoot, `skill-summon-session-${label}`);
-      await mkdir(badRoot);
-      await writeFile(path.join(badRoot, "session.json"), JSON.stringify(badManifest), "utf8");
-
-      // Scan path must not treat malformed/missing pid as proven dead.
+      const harnessId = `sess-bad-pid-${label}`;
       delete process.env.SKILL_SUMMON_SESSION;
-      const scanned = await resolveSession({
+      const seeded = await resolveSession({ tempRoot, harnessSessionId: harnessId });
+      const badRoot = seeded.session.root;
+      await writeFile(
+        path.join(badRoot, "session.json"),
+        JSON.stringify({ ...badManifest, harnessSessionId: harnessId }),
+        "utf8",
+      );
+
+      // Indexed lookup path must not treat malformed/missing pid as proven dead.
+      const lookedUp = await resolveSession({
         tempRoot,
-        harnessSessionId: "sess-bad-pid",
+        harnessSessionId: harnessId,
       });
-      expect(scanned.created).toBe(true);
-      expect(scanned.session.root).not.toBe(badRoot);
+      expect(lookedUp.created).toBe(true);
+      expect(lookedUp.session.root).not.toBe(badRoot);
 
       // Explicit env-root path must reject malformed manifest shape.
       process.env.SKILL_SUMMON_SESSION = badRoot;
       await expect(
-        resolveSession({ tempRoot, harnessSessionId: "sess-bad-pid" }),
+        resolveSession({ tempRoot, harnessSessionId: harnessId }),
       ).rejects.toThrow(/Invalid session manifest/u);
     }
   });
@@ -1153,38 +1184,54 @@ describe("reattach campaign fold/verification and status refresh", () => {
   });
 
   it("folds and refreshes campaign status through the actual MCP resolveSession path", async () => {
-    delete process.env.SKILL_SUMMON_SESSION;
-    process.env.CLAUDE_CODE_SESSION_ID = "sess-mcp-reattach";
-
-    const seeded = await resolveSession();
-    cleanupRoots.push(seeded.session.root);
-    await seedPausedCampaign(seeded.session.root, 24);
-    const tracePath = path.join(seeded.session.root, "campaign", "trace.jsonl");
-    const statusPath = path.join(seeded.session.root, "campaign", "status.json");
-    await writeFile(tracePath, `${await readFile(tracePath, "utf8")}tampered\n`, "utf8");
-    await markDeadPid(seeded.session.root);
-
-    // Point MCP's resolveSession() at our seeded session root via SKILL_SUMMON_SESSION.
-    process.env.SKILL_SUMMON_SESSION = seeded.session.root;
-
-    const service = new GaiaService(new InMemoryGaiaRegistrySource(emptyRegistryDocs), {
-      now: () => new Date("2026-07-16T12:00:00Z"),
-    });
-    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
-    const client = new Client({ name: "reattach-test", version: "1.0.0" });
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    const isolatedTemp = await makeTempRoot();
+    const savedTmpdir = process.env.TMPDIR;
+    const savedTmp = process.env.TMP;
+    const savedTemp = process.env.TEMP;
+    process.env.TMPDIR = isolatedTemp;
+    process.env.TMP = isolatedTemp;
+    process.env.TEMP = isolatedTemp;
 
     try {
-      await client.callTool({ name: "summon", arguments: { query: "nonexistent" } });
-      const statusAfterMcp = JSON.parse(await readFile(statusPath, "utf8")) as Record<string, unknown>;
-      expect(statusAfterMcp).toMatchObject({
-        schema: CAMPAIGN_SCHEMA_IDS.status,
-        state: CampaignStates.failedSafe,
+      delete process.env.SKILL_SUMMON_SESSION;
+      process.env.CLAUDE_CODE_SESSION_ID = "sess-mcp-reattach";
+
+      const seeded = await resolveSession();
+      await seedPausedCampaign(seeded.session.root, 24);
+      const tracePath = path.join(seeded.session.root, "campaign", "trace.jsonl");
+      const statusPath = path.join(seeded.session.root, "campaign", "status.json");
+      await writeFile(tracePath, `${await readFile(tracePath, "utf8")}tampered\n`, "utf8");
+      await markDeadPid(seeded.session.root);
+
+      // Point MCP's resolveSession() at our seeded session root via SKILL_SUMMON_SESSION.
+      process.env.SKILL_SUMMON_SESSION = seeded.session.root;
+
+      const service = new GaiaService(new InMemoryGaiaRegistrySource(emptyRegistryDocs), {
+        now: () => new Date("2026-07-16T12:00:00Z"),
       });
+      const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+      const client = new Client({ name: "reattach-test", version: "1.0.0" });
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+      await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+      try {
+        await client.callTool({ name: "summon", arguments: { query: "nonexistent" } });
+        const statusAfterMcp = JSON.parse(await readFile(statusPath, "utf8")) as Record<string, unknown>;
+        expect(statusAfterMcp).toMatchObject({
+          schema: CAMPAIGN_SCHEMA_IDS.status,
+          state: CampaignStates.failedSafe,
+        });
+      } finally {
+        await client.close();
+        await server.close();
+      }
     } finally {
-      await client.close();
-      await server.close();
+      if (savedTmpdir === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = savedTmpdir;
+      if (savedTmp === undefined) delete process.env.TMP;
+      else process.env.TMP = savedTmp;
+      if (savedTemp === undefined) delete process.env.TEMP;
+      else process.env.TEMP = savedTemp;
     }
   });
 
