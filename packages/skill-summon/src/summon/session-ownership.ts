@@ -13,7 +13,7 @@ import path from "node:path";
 export const SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
 const SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
 
-export type SessionClaimPurpose = "reattach" | "gc" | "close";
+export type SessionClaimPurpose = "create" | "reattach" | "gc" | "close";
 
 export type AcquiredSessionClaim = {
   readonly status: "acquired";

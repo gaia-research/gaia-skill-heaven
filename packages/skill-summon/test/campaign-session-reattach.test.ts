@@ -1320,8 +1320,8 @@ describe("reattach campaign fold/verification and status refresh", () => {
         delete process.env.SKILL_SUMMON_SESSION;
       }
 
-      // Make session.json read-only so manifest owner commit fails after CampaignStore.load.
-      await chmod(manifestPath, 0o444);
+      // Make session root read-only (0500) so atomic manifest commit fails after CampaignStore.load.
+      await chmod(seeded.session.root, 0o500);
       try {
         await expect(resolveSession({ tempRoot })).rejects.toThrow();
         expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
@@ -1337,12 +1337,13 @@ describe("reattach campaign fold/verification and status refresh", () => {
         ).toEqual([]);
         await expect(access(seeded.session.root)).resolves.toBeUndefined();
 
+        await chmod(seeded.session.root, 0o700);
         const atOriginalExpiry = new Date(tPause.getTime() + 48 * 3_600_000);
         const reaped = await reapSessions({ tempRoot, ttlHours: 4, now: atOriginalExpiry });
         expect(reaped.candidates.map((c) => c.root)).toEqual([seeded.session.root]);
         await expect(access(seeded.session.root)).rejects.toThrow();
       } finally {
-        await chmod(manifestPath, 0o600).catch(() => {});
+        await chmod(seeded.session.root, 0o700).catch(() => {});
       }
     }
   });

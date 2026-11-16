@@ -352,7 +352,8 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     expect(crowdedLegacyRun.result.created).toBe(true);
     assertZeroEnumerationAndZeroForeignInspection(crowdedLegacyRun.ops, legacyForeign);
     expect(crowdedLegacyRun.counts).toEqual(emptyColdRun.counts);
-    expect(crowdedLegacyRun.ops.length).toBeLessThanOrEqual(30);
+    // Measured 42 ops with exclusive creation claim + atomic manifest + release.
+    expect(crowdedLegacyRun.ops.length).toBeLessThanOrEqual(55);
 
     // 2. Warm-index namespace (indexDir already exists) vs 1000 mixed foreign roots
     const emptyWarm = await makeTempRoot();
@@ -373,7 +374,8 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     expect(crowdedMixedRun.result.created).toBe(true);
     assertZeroEnumerationAndZeroForeignInspection(crowdedMixedRun.ops, mixedForeign);
     expect(crowdedMixedRun.counts).toEqual(emptyWarmRun.counts);
-    expect(crowdedMixedRun.ops.length).toBeLessThanOrEqual(30);
+    // Measured 48 ops with exclusive creation claim + atomic manifest + release.
+    expect(crowdedMixedRun.ops.length).toBeLessThanOrEqual(55);
   });
 
   it("keeps dead-pid hit reattach work identical and free of directory scans across 0 vs 1000 foreign roots", async () => {
@@ -832,7 +834,11 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     );
     expect(oversizedLookup.result.created).toBe(true);
     expect(oversizedLookup.ops.filter((op) => op.op === "readdir")).toEqual([]);
-    expect(oversizedLookup.ops.filter((op) => op.op === "open")).toHaveLength(0);
+    expect(
+      oversizedLookup.ops.filter(
+        (op) => op.op === "open" && op.args[0]?.includes(INDEX_DIR_PREFIX),
+      ),
+    ).toHaveLength(0);
   });
 
   it("handles concurrent starts, close(), and reapSessions() index pruning safely", async () => {
@@ -1370,11 +1376,15 @@ describe("best-effort sidecar index failures and index directory privacy", () =>
       SummonSession.createAt(symlinkSession, "sym-root", { tempRoot }),
     ).rejects.toThrow(/real directory|symlink/u);
 
-    // 3. Manifest write failure is propagated, not swallowed.
+    // 3. Manifest write and rename failures are propagated, not swallowed, and leave no orphan tmp/claim.
     const realRoot = path.join(tempRoot, "skill-summon-session-manifest-fail");
     await mkdir(realRoot);
     fsSpyState.onOp = (op, args) => {
-      if (op === "writeFile" && args[0] === path.join(realRoot, "session.json")) {
+      if (
+        op === "writeFile" &&
+        typeof args[0] === "string" &&
+        args[0].startsWith(path.join(realRoot, ".session.json.tmp-"))
+      ) {
         throw Object.assign(new Error("Injected manifest write failure"), {
           code: "EIO",
         });
@@ -1387,6 +1397,29 @@ describe("best-effort sidecar index failures and index directory privacy", () =>
           harnessSessionId: "manifest-fail-id",
         }),
       ).rejects.toThrow(/Injected manifest write failure/u);
+      expect(await readdir(realRoot)).toEqual([]);
+    } finally {
+      fsSpyState.onOp = undefined;
+    }
+
+    fsSpyState.onOp = (op, args) => {
+      if (
+        op === "rename" &&
+        args[1] === path.join(realRoot, "session.json")
+      ) {
+        throw Object.assign(new Error("Injected manifest rename failure"), {
+          code: "EIO",
+        });
+      }
+    };
+    try {
+      await expect(
+        SummonSession.createAt(realRoot, "manifest-rename-fail", {
+          tempRoot,
+          harnessSessionId: "manifest-rename-fail-id",
+        }),
+      ).rejects.toThrow(/Injected manifest rename failure/u);
+      expect(await readdir(realRoot)).toEqual([]);
     } finally {
       fsSpyState.onOp = undefined;
     }
@@ -1519,8 +1552,12 @@ describe("best-effort sidecar index failures and index directory privacy", () =>
       expect(await readFile(entryPath, "utf8")).toBe(entryPayload);
       expect(await readFile(sentinelPath, "utf8")).toBe("UNMODIFIED");
 
-      // Closing must also leave the foreign-owned index directory untouched.
-      await ops.result.session.close();
+      // When claimsDir also appears foreign-owned under uidSpy, close() refuses conservatively
+      // and leaves both the session root and the foreign-owned index directory untouched.
+      await expect(ops.result.session.close()).rejects.toThrow(
+        /ownership claim is unavailable/u,
+      );
+      await expect(access(ops.result.session.root)).resolves.toBeUndefined();
       expect(await readFile(entryPath, "utf8")).toBe(entryPayload);
       expect(await readFile(sentinelPath, "utf8")).toBe("UNMODIFIED");
     } finally {

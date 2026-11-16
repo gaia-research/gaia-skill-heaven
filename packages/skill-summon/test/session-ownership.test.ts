@@ -16,6 +16,13 @@ const hookState = vi.hoisted(() => {
           result: unknown,
         ) => Promise<void> | void)
       | undefined,
+    onWriteFile: undefined as
+      | ((
+          actualOpen: typeof import("node:fs/promises").open,
+          actualWriteFile: typeof import("node:fs/promises").writeFile,
+          args: Parameters<typeof import("node:fs/promises").writeFile>,
+        ) => Promise<void>)
+      | undefined,
   };
 });
 
@@ -38,6 +45,25 @@ vi.mock("node:fs/promises", async () => {
       return result;
     }) as unknown as T;
 
+  const wrapWriteFile = vi.fn(
+    async (...args: Parameters<typeof actual.writeFile>) => {
+      if (hookState.beforeOp) {
+        await hookState.beforeOp("writeFile", args as readonly unknown[]);
+      }
+      const result = hookState.onWriteFile
+        ? await hookState.onWriteFile(actual.open, actual.writeFile, args)
+        : await actual.writeFile(...args);
+      if (hookState.afterOp) {
+        await hookState.afterOp(
+          "writeFile",
+          args as readonly unknown[],
+          result,
+        );
+      }
+      return result;
+    },
+  ) as unknown as typeof actual.writeFile;
+
   return {
     ...actual,
     lstat: wrap("lstat", actual.lstat),
@@ -51,7 +77,7 @@ vi.mock("node:fs/promises", async () => {
     rm: wrap("rm", actual.rm),
     stat: wrap("stat", actual.stat),
     unlink: wrap("unlink", actual.unlink),
-    writeFile: wrap("writeFile", actual.writeFile),
+    writeFile: wrapWriteFile,
   };
 });
 
@@ -82,6 +108,7 @@ import {
 
 import { CampaignStore } from "../src/campaign/store.js";
 import {
+  openSession,
   reapSessions,
   resolveSession,
   SummonSession,
@@ -127,6 +154,7 @@ function deferred<T = void>(): {
 beforeEach(() => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.onWriteFile = undefined;
   delete process.env.CLAUDE_CODE_SESSION_ID;
   delete process.env.SKILL_SUMMON_SESSION;
 });
@@ -134,6 +162,7 @@ beforeEach(() => {
 afterEach(async () => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.onWriteFile = undefined;
   if (savedEnv.CLAUDE_CODE_SESSION_ID === undefined) {
     delete process.env.CLAUDE_CODE_SESSION_ID;
   } else {
@@ -262,7 +291,10 @@ describe("per-root filesystem ownership claim and coordination", () => {
           caller2InPrelim.resolve();
           await releaseCaller2.promise;
         }
-      } else if (op === "writeFile" && args[0] === manifestPath) {
+      } else if (
+        op === "rename" &&
+        args[1] === manifestPath
+      ) {
         // Winner now holds the claim and is about to commit process.pid.
         winnerHoldingClaim.resolve();
         await releaseWinnerCommit.promise;
@@ -792,6 +824,8 @@ process.stdin.on("data", async (chunk) => {
     await seedDeadIndexedSession(tempRoot, dryId, {
       createdAt: "2026-04-01T00:00:00.000Z",
     });
+    await rm(sessionClaimDir(tempRoot), { recursive: true, force: true });
+    await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
     const dryCheck = await reapSessions({
       tempRoot,
       ttlHours: 4,
@@ -809,7 +843,7 @@ process.stdin.on("data", async (chunk) => {
       withCampaignRetention: 24,
     });
     const claimsDir = sessionClaimDir(tempRoot);
-    await mkdir(claimsDir, { mode: 0o700 });
+    await mkdir(claimsDir, { mode: 0o700, recursive: true });
     const crashClaimPath = path.join(
       claimsDir,
       `${sessionClaimKey(await (await import("node:fs/promises")).realpath(crashSeed.root))}.claim`,
@@ -894,7 +928,7 @@ process.stdin.on("data", async (chunk) => {
       createdAt: "2026-04-01T00:00:00.000Z",
     });
     const unsafeClaimsDir = sessionClaimDir(unsafeTemp);
-    await mkdir(unsafeClaimsDir, { mode: 0o700 });
+    await mkdir(unsafeClaimsDir, { mode: 0o700, recursive: true });
     await chmod(unsafeClaimsDir, 0o755);
 
     const unsafeResolve = await resolveSession({
@@ -977,5 +1011,476 @@ process.stdin.on("data", async (chunk) => {
     expect(SESSION_CLAIM_DIR_PREFIX.startsWith("skill-summon-session-")).toBe(
       false,
     );
+  });
+
+  it("never exposes an absent or truncated session.json to GC during recordSkill truncate-to-write barrier on an old live root", async () => {
+    const tempRoot = await makeTempRoot();
+    const oldRoot = path.join(tempRoot, "skill-summon-session-old-live-writer");
+    await mkdir(oldRoot, { mode: 0o700 });
+    const oldCreatedAt = "2026-04-01T00:00:00.000Z";
+    const initialManifest = {
+      id: "old-live-writer",
+      harnessSessionId: "old-live-writer-id",
+      createdAt: oldCreatedAt,
+      pid: process.pid,
+      skills: [],
+    };
+    const manifestPath = path.join(oldRoot, "session.json");
+    await writeFile(manifestPath, JSON.stringify(initialManifest, null, 2), "utf8");
+    const session = await SummonSession.loadAt(oldRoot, tempRoot);
+
+    const sampleSkill = (id: string) => ({
+      id,
+      name: id,
+      contributor: "gaia",
+      sourceUrl: `https://example.invalid/${id}`,
+      repoUrl: "https://example.invalid/repo",
+      branch: "main",
+      subpath: `skills/${id}`,
+      path: path.join(session.skillsRoot, id),
+      fileCount: 1,
+      sha256: "a".repeat(64),
+      cacheState: "cold" as const,
+      cache: "cold" as const,
+      cacheSource: "remote" as const,
+      inspectUrl: "https://example.invalid/inspect",
+      card: id,
+      cloneSeconds: 0.1,
+      materializeSeconds: 0.1,
+      totalSeconds: 0.2,
+    });
+
+    // Deterministic pass-through FS barrier: executes real open(flag, mode) (O_TRUNC or O_CREAT|O_EXCL),
+    // pauses BEFORE writing bytes, runs real GC on the old root, then finishes write + close.
+    const writerPausedBetweenTruncateAndWrite = deferred();
+    const releaseWriter = deferred();
+    let interceptedTarget: string | undefined;
+
+    hookState.onWriteFile = async (actualOpen, actualWriteFile, args) => {
+      const [targetPath, data, opts] = args;
+      if (
+        typeof targetPath === "string" &&
+        path.dirname(targetPath) === oldRoot &&
+        (targetPath === manifestPath ||
+          path.basename(targetPath).startsWith(".session.json.tmp-"))
+      ) {
+        interceptedTarget = targetPath;
+        const flag =
+          typeof opts === "object" && opts !== null && "flag" in opts && typeof opts.flag === "string"
+            ? opts.flag
+            : "w";
+        const mode =
+          typeof opts === "object" && opts !== null && "mode" in opts && typeof opts.mode === "number"
+            ? opts.mode
+            : 0o666;
+        const fh = await actualOpen(targetPath, flag, mode);
+        try {
+          writerPausedBetweenTruncateAndWrite.resolve();
+          await releaseWriter.promise;
+          await fh.writeFile(data as string, "utf8");
+        } finally {
+          await fh.close();
+        }
+        return;
+      }
+      await actualWriteFile(...args);
+    };
+
+    const recordPromise = session.recordSkill(sampleSkill("skill-one"));
+    await writerPausedBetweenTruncateAndWrite.promise;
+    expect(interceptedTarget).toBeDefined();
+    expect(interceptedTarget).not.toBe(manifestPath);
+
+    // While recordSkill is paused between open/truncate and write, session.json MUST stay valid & live,
+    // and real GC with a future clock must protect oldRoot rather than treating it as missing/abandoned.
+    const parsedDuringWrite = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; skills: unknown[] };
+    expect(parsedDuringWrite.pid).toBe(process.pid);
+
+    const gcDuringRecord = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-02T00:00:00.000Z"),
+      dryRun: false,
+    });
+    expect(gcDuringRecord.candidates).toEqual([]);
+    expect(gcDuringRecord.liveProtected).toContain(oldRoot);
+    await expect(access(oldRoot)).resolves.toBeUndefined();
+
+    releaseWriter.resolve();
+    await recordPromise;
+    hookState.onWriteFile = undefined;
+
+    const finalManifest = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; skills: Array<{ id: string }> };
+    expect(finalManifest.pid).toBe(process.pid);
+    expect(finalManifest.skills.map((s) => s.id)).toEqual(["skill-one"]);
+
+    // Concurrent recordSkill calls are serialized so neither rename clobbers the other,
+    // and an injected rename failure preserves the committed manifest and cleans up tmp.
+    await Promise.all([
+      session.recordSkill(sampleSkill("skill-two")),
+      session.recordSkill(sampleSkill("skill-three")),
+    ]);
+    const afterConcurrent = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { skills: Array<{ id: string }> };
+    expect(afterConcurrent.skills.map((s) => s.id)).toEqual([
+      "skill-one",
+      "skill-two",
+      "skill-three",
+    ]);
+
+    hookState.beforeOp = (op, args) => {
+      if (op === "rename" && args[1] === manifestPath) {
+        throw Object.assign(new Error("Injected recordSkill rename failure"), {
+          code: "EIO",
+        });
+      }
+    };
+    await expect(
+      session.recordSkill(sampleSkill("skill-four")),
+    ).rejects.toThrow(/Injected recordSkill rename failure/u);
+    hookState.beforeOp = undefined;
+    expect(
+      (
+        JSON.parse(await readFile(manifestPath, "utf8")) as {
+          skills: Array<{ id: string }>;
+        }
+      ).skills.map((s) => s.id),
+    ).toEqual(["skill-one", "skill-two", "skill-three"]);
+    expect(
+      (await readdir(oldRoot)).filter((name) => name.startsWith(".session.json.tmp-")),
+    ).toEqual([]);
+  });
+
+  it("coordinates initial fresh owner publication against ttl0 GC without exposing deleted roots or poisoning fresh sessions when claim/index are unavailable", async () => {
+    const tempRoot = await makeTempRoot();
+    const indexPathFor = (id: string) =>
+      path.join(
+        tempRoot,
+        expectedIndexDirName(),
+        `${expectedIndexKey(id)}.json`,
+      );
+
+    // 1. ttl0 GC deletes empty mkdtemp root before createAt acquires claim ->
+    // openSession/createAt MUST reject and never expose or index the deleted root.
+    const gcDeletedBeforeClaim = deferred();
+    let createdDirPath: string | undefined;
+    let openPaused = false;
+    hookState.afterOp = async (op, _args, result) => {
+      if (op === "mkdtemp" && !openPaused && typeof result === "string") {
+        openPaused = true;
+        createdDirPath = result;
+        const gcRes = await reapSessions({ tempRoot, ttlHours: 0 });
+        expect(gcRes.candidates.map((c) => c.root)).toContain(result);
+        gcDeletedBeforeClaim.resolve();
+      }
+    };
+    await expect(
+      openSession({ tempRoot, harnessSessionId: "ttl0-deleted-before-claim" }),
+    ).rejects.toThrow(/not an existing directory/u);
+    await gcDeletedBeforeClaim.promise;
+    hookState.afterOp = undefined;
+    expect(createdDirPath).toBeDefined();
+    await expect(access(createdDirPath!)).rejects.toThrow();
+    await expect(access(indexPathFor("ttl0-deleted-before-claim"))).rejects.toThrow();
+
+    // 2. createAt acquires claim and pauses before publishing session.json ->
+    // ttl0 GC sees busy and skips; createAt commits and subsequent ttl0 GC protects live root.
+    const createHoldingClaim = deferred();
+    const releaseCreateWrite = deferred();
+    let pausedCreate = false;
+    hookState.beforeOp = async (op, args) => {
+      if (
+        !pausedCreate &&
+        op === "writeFile" &&
+        typeof args[0] === "string" &&
+        path.basename(args[0]).startsWith(".session.json.tmp-")
+      ) {
+        pausedCreate = true;
+        createHoldingClaim.resolve();
+        await releaseCreateWrite.promise;
+      }
+    };
+    const createPromise = openSession({
+      tempRoot,
+      harnessSessionId: "ttl0-during-create-claim",
+    });
+    await createHoldingClaim.promise;
+
+    const gcWhileCreating = await reapSessions({ tempRoot, ttlHours: 0 });
+    expect(gcWhileCreating.candidates).toEqual([]);
+
+    releaseCreateWrite.resolve();
+    const createdSession = await createPromise;
+    hookState.beforeOp = undefined;
+
+    await expect(access(createdSession.root)).resolves.toBeUndefined();
+    const gcAfterCreate = await reapSessions({ tempRoot, ttlHours: 0 });
+    expect(gcAfterCreate.candidates).toEqual([]);
+    expect(gcAfterCreate.liveProtected).toContain(createdSession.root);
+
+    // 3. ttl0 GC holds claim right before rm(root) -> direct createAt sees busy and fails
+    // without publishing session.json or exposing the doomed root.
+    const doomedRoot = path.join(tempRoot, "skill-summon-session-doomed-by-gc");
+    await mkdir(doomedRoot, { mode: 0o700 });
+    const gcAboutToRm = deferred();
+    const releaseGcRm = deferred();
+    hookState.beforeOp = async (op, args) => {
+      if (op === "rm" && args[0] === doomedRoot) {
+        gcAboutToRm.resolve();
+        await releaseGcRm.promise;
+      }
+    };
+    const gcDoomedPromise = reapSessions({ tempRoot, ttlHours: 0 });
+    await gcAboutToRm.promise;
+
+    await expect(
+      SummonSession.createAt(doomedRoot, "doomed-id", {
+        tempRoot,
+        harnessSessionId: "doomed-harness-id",
+      }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+    await expect(access(indexPathFor("doomed-harness-id"))).rejects.toThrow();
+
+    releaseGcRm.resolve();
+    const gcDoomedOutcome = await gcDoomedPromise;
+    hookState.beforeOp = undefined;
+    expect(gcDoomedOutcome.candidates.map((c) => c.root)).toEqual([doomedRoot]);
+    await expect(access(doomedRoot)).rejects.toThrow();
+
+    // 4. Unavailable claim dir (0500 or 0755) + unavailable index dir (0500) must NOT poison fresh sessions.
+    if (process.platform !== "win32" && process.getuid?.() !== 0) {
+      const degradedTemp = await makeTempRoot();
+      const claimsDir = sessionClaimDir(degradedTemp);
+      const indexDir = path.join(degradedTemp, expectedIndexDirName());
+      await mkdir(claimsDir, { mode: 0o500 });
+      await chmod(claimsDir, 0o500);
+      await mkdir(indexDir, { mode: 0o500 });
+      await chmod(indexDir, 0o500);
+      try {
+        const freshInDegraded = await resolveSession({
+          tempRoot: degradedTemp,
+          harnessSessionId: "fresh-degraded-id",
+        });
+        expect(freshInDegraded.created).toBe(true);
+        expect(freshInDegraded.session.pid).toBe(process.pid);
+        await expect(
+          access(path.join(freshInDegraded.session.root, "session.json")),
+        ).resolves.toBeUndefined();
+
+        const gcDegraded = await reapSessions({
+          tempRoot: degradedTemp,
+          ttlHours: 0,
+        });
+        expect(gcDegraded.candidates).toEqual([]);
+        expect(gcDegraded.liveProtected).toContain(freshInDegraded.session.root);
+      } finally {
+        await chmod(claimsDir, 0o700).catch(() => {});
+        await chmod(indexDir, 0o700).catch(() => {});
+      }
+    }
+  });
+
+  it("refuses explicit close() conservatively when claim status is unavailable so held/adopting roots cannot be deleted", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+
+    const tempRoot = await makeTempRoot();
+    const harnessId = "close-unavailable-preserve-id";
+    const seeded = await seedDeadIndexedSession(tempRoot, harnessId, {
+      withCampaignRetention: 24,
+    });
+    const claimsDir = sessionClaimDir(tempRoot);
+    const indexPath = path.join(
+      tempRoot,
+      expectedIndexDirName(),
+      `${expectedIndexKey(harnessId)}.json`,
+    );
+
+    // Spawn a real child holding a reattach claim on seeded.root, then degrade claimsDir to 0755 & 0500.
+    const ownershipModuleUrl = pathToFileURL(
+      path.resolve("packages/skill-summon/src/summon/session-ownership.ts"),
+    ).href;
+    const holderScript = path.join(tempRoot, "close-guard-holder.mts");
+    await writeFile(
+      holderScript,
+      `import { realpath } from "node:fs/promises";
+import { acquireSessionClaimForRealRoot } from ${JSON.stringify(ownershipModuleUrl)};
+const [sessionRoot, tempRoot] = process.argv.slice(2);
+const realRoot = await realpath(sessionRoot);
+const claim = await acquireSessionClaimForRealRoot(realRoot, tempRoot, "reattach");
+if (claim.status !== "acquired") {
+  process.stderr.write("acquire-failed:" + claim.status + "\\n");
+  process.exit(2);
+}
+process.stdout.write("HELD\\n");
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", async (chunk) => {
+  if (chunk.includes("RELEASE")) {
+    await claim.release();
+    process.exit(0);
+  }
+});
+`,
+      "utf8",
+    );
+
+    const holder = spawn(
+      process.execPath,
+      [tsxCli, holderScript, seeded.root, tempRoot],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        env: { ...process.env, TMPDIR: tempRoot, TMP: tempRoot, TEMP: tempRoot },
+      },
+    );
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let out = "";
+        let err = "";
+        holder.stdout.on("data", (d: Buffer) => {
+          out += d.toString("utf8");
+          if (out.includes("HELD\n")) resolve();
+        });
+        holder.stderr.on("data", (d: Buffer) => {
+          err += d.toString("utf8");
+        });
+        holder.on("exit", (code) => {
+          if (!out.includes("HELD\n")) {
+            reject(new Error(`Holder exited early (${code}): ${err}`));
+          }
+        });
+      });
+
+      const session = await SummonSession.loadAt(seeded.root, tempRoot);
+
+      // Unsafe permissive claimsDir (0755) while child holds claim -> close() MUST fail conservatively.
+      await chmod(claimsDir, 0o755);
+      await expect(session.close()).rejects.toThrow(
+        /ownership claim is unavailable/u,
+      );
+      await expect(access(seeded.root)).resolves.toBeUndefined();
+      await expect(access(path.join(seeded.root, "session.json"))).resolves.toBeUndefined();
+      expect(JSON.parse(await readFile(indexPath, "utf8"))).toMatchObject({
+        roots: [seeded.root],
+      });
+
+      // Read-only claimsDir (0500) on an unclaimed root (cannot create claim -> unavailable)
+      // AND 0400 claimsDir while child holds claim -> close() MUST fail conservatively in both!
+      const secondSeed = await seedDeadIndexedSession(tempRoot, "close-unavailable-unclaimed-id");
+      const secondSession = await SummonSession.loadAt(secondSeed.root, tempRoot);
+      await chmod(claimsDir, 0o500);
+      await expect(secondSession.close()).rejects.toThrow(
+        /ownership claim is unavailable/u,
+      );
+      await expect(access(secondSeed.root)).resolves.toBeUndefined();
+
+      await chmod(claimsDir, 0o400);
+      await expect(session.close()).rejects.toThrow(
+        /ownership claim is unavailable/u,
+      );
+      await expect(access(seeded.root)).resolves.toBeUndefined();
+      expect(JSON.parse(await readFile(indexPath, "utf8"))).toMatchObject({
+        roots: [seeded.root],
+      });
+
+      // Restore 0700 while child still holds claim -> busy still blocks close().
+      await chmod(claimsDir, 0o700);
+      await expect(session.close()).rejects.toThrow(/ownership claim is busy/u);
+
+      // Release child claim -> explicit close() now succeeds cleanly and prunes index.
+      holder.stdin.write("RELEASE\n");
+      await new Promise<void>((resolve, reject) => {
+        holder.on("exit", (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`Holder exit code ${code}`));
+        });
+      });
+      await session.close();
+      await expect(access(seeded.root)).rejects.toThrow();
+      await expect(access(indexPath)).rejects.toThrow();
+
+      // Symlinked claimsDir pointing outside -> close() refuses conservatively and leaves both root and target intact.
+      const symTemp = await makeTempRoot();
+      const symOutside = await makeTempRoot();
+      const symCreated = await resolveSession({
+        tempRoot: symTemp,
+        harnessSessionId: "sym-close-preserve",
+      });
+      await rm(sessionClaimDir(symTemp), { recursive: true, force: true });
+      await writeFile(path.join(symOutside, "sentinel.txt"), "KEEP", "utf8");
+      await symlink(symOutside, sessionClaimDir(symTemp), "dir");
+      await expect(symCreated.session.close()).rejects.toThrow(
+        /ownership claim is unavailable/u,
+      );
+      await expect(access(symCreated.session.root)).resolves.toBeUndefined();
+      expect(await readFile(path.join(symOutside, "sentinel.txt"), "utf8")).toBe("KEEP");
+    } finally {
+      await chmod(claimsDir, 0o700).catch(() => {});
+      if (holder.exitCode === null) {
+        holder.kill("SIGKILL");
+      }
+    }
+  }, 20_000);
+
+  it("preserves pause boundary, dead PID, and primary error when atomic manifest rename fails during reattach", async () => {
+    const tempRoot = await makeTempRoot();
+    const harnessId = "reattach-rename-fail-id";
+    const seeded = await seedDeadIndexedSession(tempRoot, harnessId, {
+      withCampaignRetention: 48,
+    });
+    const tPause = new Date("2026-04-01T10:00:00.000Z");
+    expect((await reapSessions({ tempRoot, ttlHours: 4, now: tPause })).candidates).toEqual([]);
+
+    const manifestPath = path.join(seeded.root, "session.json");
+    const pausePath = path.join(seeded.root, "campaign", "pause.json");
+    const originalPause = await readFile(pausePath, "utf8");
+
+    hookState.beforeOp = (op, args) => {
+      if (op === "rename" && args[1] === manifestPath) {
+        throw Object.assign(new Error("Injected reattach rename failure"), {
+          code: "EIO",
+        });
+      }
+    };
+
+    try {
+      await expect(
+        resolveSession({ tempRoot, harnessSessionId: harnessId }),
+      ).rejects.toThrow(/Injected reattach rename failure/u);
+    } finally {
+      hookState.beforeOp = undefined;
+    }
+
+    expect(await readFile(pausePath, "utf8")).toBe(originalPause);
+    expect(
+      (JSON.parse(await readFile(manifestPath, "utf8")) as { pid: number }).pid,
+    ).toBe(DEAD_PID);
+    expect(await readdir(sessionClaimDir(tempRoot))).toEqual([]);
+    expect(
+      (await readdir(seeded.root)).filter((name) =>
+        name.startsWith(".session.json.tmp-"),
+      ),
+    ).toEqual([]);
+
+    // Original pause retention window remains intact.
+    expect(
+      (
+        await reapSessions({
+          tempRoot,
+          ttlHours: 4,
+          now: new Date(tPause.getTime() + 48 * 3_600_000 - 1),
+        })
+      ).candidates,
+    ).toEqual([]);
+    const atExpiry = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tPause.getTime() + 48 * 3_600_000),
+    });
+    expect(atExpiry.candidates.map((c) => c.root)).toEqual([seeded.root]);
   });
 });

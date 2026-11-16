@@ -194,6 +194,7 @@ export class SummonSession {
   readonly #manifestPath: string;
   readonly #tempRoot: string | undefined;
   #manifest: SessionManifest;
+  #manifestWriteQueue: Promise<void> = Promise.resolve();
 
   private constructor(
     root: string,
@@ -213,7 +214,6 @@ export class SummonSession {
     opts: { harnessSessionId?: string | undefined; tempRoot?: string | undefined } = {},
   ): Promise<SummonSession> {
     const tempRoot = opts.tempRoot ?? tmpdir();
-    await assertDisposableSessionRoot(root, tempRoot);
     const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
     const manifest: SessionManifest = {
       id,
@@ -223,7 +223,28 @@ export class SummonSession {
       skills: [],
     };
     const session = new SummonSession(root, manifest, tempRoot);
-    await session.#writeManifest(manifest, { skipRootCheck: true });
+    const claimAttempt = await acquireSessionClaim(root, tempRoot, "create");
+    if (claimAttempt.status === "ineligible") {
+      await assertDisposableSessionRoot(root, tempRoot);
+      throw new Error(`Session root ${root} is no longer available.`);
+    }
+    if (claimAttempt.status === "busy") {
+      throw new Error(
+        `Cannot initialize session root ${root}: ownership claim is busy.`,
+      );
+    }
+    try {
+      await session.#writeManifest(manifest, {
+        skipRootCheck: claimAttempt.status === "acquired",
+      });
+      if (claimAttempt.status === "unavailable") {
+        await assertDisposableSessionRoot(root, tempRoot);
+      }
+    } finally {
+      if (claimAttempt.status === "acquired") {
+        await claimAttempt.release();
+      }
+    }
     if (harnessSessionId !== undefined) {
       await recordSessionInIndex(tempRoot, harnessSessionId, root).catch(
         () => {},
@@ -371,8 +392,18 @@ export class SummonSession {
       ...(opts.viaSuite === undefined ? {} : { viaSuite: opts.viaSuite }),
       materializedAt: new Date().toISOString(),
     };
-    this.#manifest.skills.push(record);
-    await this.#writeManifest();
+    const run = this.#manifestWriteQueue
+      .catch(() => {})
+      .then(async () => {
+        const nextManifest: SessionManifest = {
+          ...this.#manifest,
+          skills: [...this.#manifest.skills, record],
+        };
+        await this.#writeManifestSnapshot(nextManifest);
+        this.#manifest = nextManifest;
+      });
+    this.#manifestWriteQueue = run;
+    return run;
   }
 
   async close(): Promise<void> {
@@ -381,15 +412,15 @@ export class SummonSession {
     const claimAttempt = await acquireSessionClaim(this.root, tempRoot, "close");
     if (claimAttempt.status === "acquired") {
       try {
+        await assertDisposableSessionRoot(this.root, tempRoot);
         await rm(this.root, { recursive: true, force: true });
+      } catch (error) {
+        if (!isConcurrentRemovalErrorOrCause(error)) {
+          throw error;
+        }
       } finally {
         await claimAttempt.release();
       }
-    } else if (claimAttempt.status === "unavailable") {
-      // If claim metadata dir is unavailable/foreign-owned, still allow explicit
-      // teardown of the validated disposable root (never follow symlinks).
-      await assertDisposableSessionRoot(this.root, tempRoot);
-      await rm(this.root, { recursive: true, force: true });
     } else if (claimAttempt.status !== "ineligible") {
       throw new Error(
         `Cannot close session root ${this.root}: ownership claim is ${claimAttempt.status}.`,
@@ -408,15 +439,55 @@ export class SummonSession {
     manifest: SessionManifest = this.#manifest,
     opts: { skipRootCheck?: boolean } = {},
   ): Promise<void> {
+    const snapshot: SessionManifest = {
+      ...manifest,
+      skills: [...manifest.skills],
+    };
+    const run = this.#manifestWriteQueue
+      .catch(() => {})
+      .then(() => this.#writeManifestSnapshot(snapshot, opts));
+    this.#manifestWriteQueue = run;
+    return run;
+  }
+
+  async #writeManifestSnapshot(
+    manifest: SessionManifest,
+    opts: { skipRootCheck?: boolean } = {},
+  ): Promise<void> {
     if (!opts.skipRootCheck) {
       await assertDisposableSessionRoot(this.root, this.#tempRoot);
     }
     await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
-    await writeFile(
-      this.#manifestPath,
-      JSON.stringify(manifest, null, 2),
-      "utf8",
+    const tmpPath = path.join(
+      this.root,
+      `.${MANIFEST_FILE}.tmp-${process.pid}-${randomUUID()}`,
     );
+    let renamed = false;
+    try {
+      await writeFile(tmpPath, JSON.stringify(manifest, null, 2), {
+        encoding: "utf8",
+        mode: 0o600,
+        flag: "wx",
+      });
+      try {
+        const targetStat = await lstat(this.#manifestPath);
+        if (targetStat.isSymbolicLink()) {
+          throw new Error(
+            `Session manifest traverses a symlink: ${this.#manifestPath}`,
+          );
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+          throw error;
+        }
+      }
+      await rename(tmpPath, this.#manifestPath);
+      renamed = true;
+    } finally {
+      if (!renamed) {
+        await rm(tmpPath, { force: true }).catch(() => {});
+      }
+    }
   }
 }
 
