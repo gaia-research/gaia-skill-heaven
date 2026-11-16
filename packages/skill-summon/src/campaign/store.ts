@@ -77,6 +77,8 @@ export class CampaignStore {
   #hasTrace: boolean;
   #corrupted: boolean;
   #error: string | undefined;
+  #options: CampaignVerificationOptions;
+  #appendQueue: Promise<void> = Promise.resolve();
 
   private constructor(
     sessionRoot: string,
@@ -85,6 +87,7 @@ export class CampaignStore {
     hasTrace: boolean,
     corrupted: boolean,
     error?: string,
+    options: CampaignVerificationOptions = {},
   ) {
     this.sessionRoot = sessionRoot;
     this.campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
@@ -97,6 +100,7 @@ export class CampaignStore {
     this.#hasTrace = hasTrace;
     this.#corrupted = corrupted;
     this.#error = error;
+    this.#options = options;
   }
 
   get state(): CampaignState {
@@ -124,118 +128,78 @@ export class CampaignStore {
     options: CampaignVerificationOptions = {},
   ): Promise<CampaignStore> {
     const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
-    const tracePath = path.join(campaignDir, CAMPAIGN_TRACE_FILE);
-    const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
     const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
+    const verified = await verifyOnDiskState(sessionRoot, options);
 
-    await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
-    await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
-    await assertConfinedPath(sessionRoot, statusPath, "Campaign status");
-
-    let traceStat;
-    try {
-      traceStat = await lstat(tracePath);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        return new CampaignStore(
-          sessionRoot,
-          initialCampaignState(),
-          [],
-          false,
-          false,
-        );
-      }
-      throw error;
-    }
-
-    if (traceStat.isSymbolicLink() || !traceStat.isFile()) {
-      throw new Error(`Campaign trace must be a regular file: ${tracePath}`);
-    }
-
-    const traceRaw = await readFile(tracePath, "utf8");
-    const parsedTrace = parseCampaignTraceLines(traceRaw);
-    if (!parsedTrace.ok) {
-      return CampaignStore.#failedSafe(sessionRoot, parsedTrace.error);
-    }
-
-    let evidenceLines: readonly PersistedCampaignEvidenceLine[] | undefined;
-    let evidencePresent = false;
-    try {
-      const evidenceStat = await lstat(evidencePath);
-      if (evidenceStat.isSymbolicLink() || !evidenceStat.isFile()) {
-        return CampaignStore.#failedSafe(
-          sessionRoot,
-          "Campaign evidence must be a regular file",
-        );
-      }
-      evidencePresent = true;
-      const evidenceRaw = await readFile(evidencePath, "utf8");
-      const parsedEvidence = parseCampaignEvidenceLines(evidenceRaw);
-      if (!parsedEvidence.ok) {
-        return CampaignStore.#failedSafe(sessionRoot, parsedEvidence.error);
-      }
-      evidenceLines = parsedEvidence.lines;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-    }
-
-    if (evidencePresent && evidenceLines!.length !== parsedTrace.lines.length) {
-      return CampaignStore.#failedSafe(
+    if (verified.kind === "absent") {
+      return new CampaignStore(
         sessionRoot,
-        `Campaign evidence length (${evidenceLines!.length}) does not match trace length (${parsedTrace.lines.length})`,
+        initialCampaignState(),
+        [],
+        false,
+        false,
+        undefined,
+        options,
       );
     }
 
-    const authorize = (
-      event: CampaignOperatorCommand | EngineCommand,
-      index: number,
-    ): boolean => {
-      if (options.authorize) {
-        return options.authorize(event, index) === true;
-      }
-      if (!evidenceLines) return false;
-      const ev = evidenceLines[index];
-      if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
-      return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event));
-    };
-
-    const verification = verifyCampaignTraceLines(parsedTrace.lines, {
-      authorize,
-      expectedRecord: options.expectedRecord,
-    });
-    if (!verification.valid) {
-      return CampaignStore.#failedSafe(sessionRoot, verification.error);
-    }
-
-    if (evidenceLines && parsedTrace.lines.length > 0) {
-      const lastEvidence = evidenceLines[parsedTrace.lines.length - 1]!;
-      const actualRecordSha = campaignSha256Hex(
-        serializeCampaignRecord(verification.record),
+    if (verified.kind === "failed_safe") {
+      const failedState = immutableSnapshot({
+        ...initialCampaignState(),
+        state: CampaignStates.failedSafe,
+      });
+      await syncStatusIfNeeded(
+        sessionRoot,
+        statusPath,
+        toControllerStatus(failedState),
       );
-      if (lastEvidence.recordSha256 !== actualRecordSha) {
-        return CampaignStore.#failedSafe(sessionRoot, "Campaign record commitment mismatch");
-      }
+      return new CampaignStore(
+        sessionRoot,
+        failedState,
+        [],
+        true,
+        true,
+        verified.error,
+        options,
+      );
     }
+
+    const expectedStatus = toControllerStatus(
+      verified.state,
+      verified.lines.at(-1)?.entry,
+    );
+    await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
 
     return new CampaignStore(
       sessionRoot,
-      verification.record.final,
-      [...parsedTrace.lines],
+      verified.state,
+      verified.lines,
       true,
       false,
+      undefined,
+      options,
     );
   }
 
   async append(event: CampaignEvent | unknown): Promise<CampaignStoreAppendResult> {
+    const run = this.#appendQueue.then(() => this.#appendSerialized(event));
+    this.#appendQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  async #appendSerialized(
+    event: CampaignEvent | unknown,
+  ): Promise<CampaignStoreAppendResult> {
     if (this.#corrupted) {
       throw new Error(
         `Refusing to append to corrupted campaign trace (${this.#error ?? "FAILED_SAFE"})`,
       );
     }
 
-    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(this.sessionRoot, this.campaignDir, "Campaign directory");
     await assertConfinedPath(this.sessionRoot, this.tracePath, "Campaign trace");
     await assertConfinedPath(
       this.sessionRoot,
@@ -243,6 +207,8 @@ export class CampaignStore {
       "Campaign evidence",
     );
     await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
+
+    await this.#assertDiskMatchesMemory();
 
     const seq = this.#lines.length;
     const step = stepCampaign(this.#state, event, seq);
@@ -274,21 +240,36 @@ export class CampaignStore {
 
     const status = toControllerStatus(step.state, step.entry);
 
-    await appendFile(
-      this.tracePath,
-      `${formatCampaignTraceLine(line)}\n`,
-      { encoding: "utf8", flag: "a" },
-    );
-    await appendFile(
+    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(this.sessionRoot, this.tracePath, "Campaign trace");
+    await assertConfinedPath(
+      this.sessionRoot,
       this.evidencePath,
-      `${formatCampaignEvidenceLine(evidenceLine)}\n`,
-      { encoding: "utf8", flag: "a" },
+      "Campaign evidence",
     );
-    await writeFile(
-      this.statusPath,
-      `${JSON.stringify(status, null, 2)}\n`,
-      "utf8",
-    );
+    await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
+
+    try {
+      await appendFile(
+        this.tracePath,
+        `${formatCampaignTraceLine(line)}\n`,
+        { encoding: "utf8", flag: "a" },
+      );
+      await appendFile(
+        this.evidencePath,
+        `${formatCampaignEvidenceLine(evidenceLine)}\n`,
+        { encoding: "utf8", flag: "a" },
+      );
+      await writeFile(
+        this.statusPath,
+        `${JSON.stringify(status, null, 2)}\n`,
+        "utf8",
+      );
+    } catch (error) {
+      this.#corrupted = true;
+      this.#error = `Partial write failure during campaign append: ${error instanceof Error ? error.message : String(error)}`;
+      throw error;
+    }
 
     this.#state = step.state;
     this.#lines = nextLines;
@@ -297,13 +278,183 @@ export class CampaignStore {
     return { state: step.state, entry: step.entry, status };
   }
 
-  static #failedSafe(sessionRoot: string, error: string): CampaignStore {
-    const failedState = immutableSnapshot({
-      ...initialCampaignState(),
-      state: CampaignStates.failedSafe,
+  async #assertDiskMatchesMemory(): Promise<void> {
+    if (!this.#hasTrace) {
+      for (const target of [this.tracePath, this.evidencePath]) {
+        try {
+          await lstat(target);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+          throw error;
+        }
+        this.#corrupted = true;
+        this.#error = "Campaign trace on disk changed since load";
+        throw new Error(
+          `Refusing to append: ${this.#error} (${target})`,
+        );
+      }
+      return;
+    }
+
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize,
     });
-    return new CampaignStore(sessionRoot, failedState, [], true, true, error);
+    if (disk.kind === "absent") {
+      this.#corrupted = true;
+      this.#error = "Campaign trace on disk was removed since load";
+      throw new Error(`Refusing to append: ${this.#error}`);
+    }
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(
+        `Refusing to append to corrupted campaign trace (${disk.error})`,
+      );
+    }
+    if (
+      disk.lines.length !== this.#lines.length ||
+      canonicalCampaignJson(disk.lines) !== canonicalCampaignJson(this.#lines)
+    ) {
+      this.#corrupted = true;
+      this.#error = "Campaign trace on disk changed since load";
+      throw new Error(`Refusing to append: ${this.#error}`);
+    }
   }
+}
+
+type OnDiskVerificationResult =
+  | { kind: "absent" }
+  | { kind: "failed_safe"; error: string }
+  | {
+      kind: "valid";
+      state: CampaignState;
+      lines: PersistedCampaignTraceLine[];
+    };
+
+async function verifyOnDiskState(
+  sessionRoot: string,
+  options: CampaignVerificationOptions = {},
+): Promise<OnDiskVerificationResult> {
+  const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
+  const tracePath = path.join(campaignDir, CAMPAIGN_TRACE_FILE);
+  const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+  const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
+
+  await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
+  await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
+  await assertConfinedPath(sessionRoot, statusPath, "Campaign status");
+
+  let traceStat;
+  try {
+    traceStat = await lstat(tracePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { kind: "absent" };
+    }
+    throw error;
+  }
+
+  if (traceStat.isSymbolicLink() || !traceStat.isFile()) {
+    throw new Error(`Campaign trace must be a regular file: ${tracePath}`);
+  }
+
+  const traceRaw = await readFile(tracePath, "utf8");
+  const parsedTrace = parseCampaignTraceLines(traceRaw);
+  if (!parsedTrace.ok) {
+    return { kind: "failed_safe", error: parsedTrace.error };
+  }
+
+  let evidenceLines: readonly PersistedCampaignEvidenceLine[] | undefined;
+  let evidencePresent = false;
+  try {
+    const evidenceStat = await lstat(evidencePath);
+    if (evidenceStat.isSymbolicLink() || !evidenceStat.isFile()) {
+      return {
+        kind: "failed_safe",
+        error: "Campaign evidence must be a regular file",
+      };
+    }
+    evidencePresent = true;
+    const evidenceRaw = await readFile(evidencePath, "utf8");
+    const parsedEvidence = parseCampaignEvidenceLines(evidenceRaw);
+    if (!parsedEvidence.ok) {
+      return { kind: "failed_safe", error: parsedEvidence.error };
+    }
+    evidenceLines = parsedEvidence.lines;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  if (evidencePresent && evidenceLines!.length !== parsedTrace.lines.length) {
+    return {
+      kind: "failed_safe",
+      error: `Campaign evidence length (${evidenceLines!.length}) does not match trace length (${parsedTrace.lines.length})`,
+    };
+  }
+
+  const authorize = (
+    event: CampaignOperatorCommand | EngineCommand,
+    index: number,
+  ): boolean => {
+    if (options.authorize) {
+      return options.authorize(event, index) === true;
+    }
+    if (!evidenceLines) return false;
+    const ev = evidenceLines[index];
+    if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+    return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event));
+  };
+
+  const verification = verifyCampaignTraceLines(parsedTrace.lines, {
+    authorize,
+    expectedRecord: options.expectedRecord,
+  });
+  if (!verification.valid) {
+    return { kind: "failed_safe", error: verification.error };
+  }
+
+  if (evidenceLines && parsedTrace.lines.length > 0) {
+    const lastEvidence = evidenceLines[parsedTrace.lines.length - 1]!;
+    const actualRecordSha = campaignSha256Hex(
+      serializeCampaignRecord(verification.record),
+    );
+    if (lastEvidence.recordSha256 !== actualRecordSha) {
+      return {
+        kind: "failed_safe",
+        error: "Campaign record commitment mismatch",
+      };
+    }
+  }
+
+  return {
+    kind: "valid",
+    state: verification.record.final,
+    lines: [...parsedTrace.lines],
+  };
+}
+
+async function syncStatusIfNeeded(
+  sessionRoot: string,
+  statusPath: string,
+  expectedStatus: ControllerStatus,
+): Promise<void> {
+  await assertConfinedPath(sessionRoot, statusPath, "Campaign status");
+  const expectedText = `${JSON.stringify(expectedStatus, null, 2)}\n`;
+  try {
+    const stat = await lstat(statusPath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(`Campaign status must be a regular file: ${statusPath}`);
+    }
+    const existingText = await readFile(statusPath, "utf8");
+    if (existingText === expectedText) return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+  await writeFile(statusPath, expectedText, "utf8");
 }
 
 async function ensureConfinedCampaignDir(

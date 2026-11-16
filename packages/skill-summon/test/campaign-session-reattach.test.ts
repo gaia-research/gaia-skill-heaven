@@ -224,6 +224,121 @@ describe("session re-attachment by harness session id", () => {
     expect(res.session.root).not.toBe(outside);
     expect(res.session.root).not.toBe(path.join(tempRoot, "skill-summon-session-symlinked"));
   });
+
+  it("enforces automatic reattachment policy when SKILL_SUMMON_SESSION is set with harnessSessionId (same/mismatched/fork/live/missing-manifest-id)", async () => {
+    const tempRoot = await makeTempRoot();
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+
+    // Seed original session with a campaign and dead pid.
+    delete process.env.SKILL_SUMMON_SESSION;
+    const original = await resolveSession({
+      tempRoot,
+      harnessSessionId: "original",
+    });
+    await seedPausedCampaign(original.session.root, 24);
+    const manifestPath = path.join(original.session.root, "session.json");
+    const deadManifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
+    deadManifest.pid = 99_999_999;
+    await writeFile(manifestPath, JSON.stringify(deadManifest, null, 2), "utf8");
+
+    // 1. Fork id with SKILL_SUMMON_SESSION pointing at original root -> fresh root, no campaign!
+    process.env.SKILL_SUMMON_SESSION = original.session.root;
+    const forked = await resolveSession({
+      tempRoot,
+      harnessSessionId: "fork-id",
+    });
+    expect(forked.created).toBe(true);
+    expect(forked.session.root).not.toBe(original.session.root);
+    expect(forked.session.id).not.toBe(original.session.id);
+    const forkedStore = await CampaignStore.load(forked.session.root);
+    expect(forkedStore.hasTrace).toBe(false);
+    expect(forkedStore.state.state).toBe(CampaignStates.unarmed);
+
+    // 2. Mismatched id with SKILL_SUMMON_SESSION pointing at original root -> fresh root
+    const mismatched = await resolveSession({
+      tempRoot,
+      harnessSessionId: "mismatched-id",
+    });
+    expect(mismatched.created).toBe(true);
+    expect(mismatched.session.root).not.toBe(original.session.root);
+
+    // 3. Same id + dead pid with SKILL_SUMMON_SESSION -> re-attaches and updates pid
+    const same = await resolveSession({
+      tempRoot,
+      harnessSessionId: "original",
+    });
+    expect(same.created).toBe(false);
+    expect(same.session.root).toBe(original.session.root);
+    expect(same.session.id).toBe(original.session.id);
+    expect(same.session.pid).toBe(process.pid);
+
+    // 4. Same id + live pid (now process.pid) with SKILL_SUMMON_SESSION -> must NOT steal live root
+    const live = await resolveSession({
+      tempRoot,
+      harnessSessionId: "original",
+    });
+    expect(live.created).toBe(true);
+    expect(live.session.root).not.toBe(original.session.root);
+
+    // 5. Missing harnessSessionId in manifest with SKILL_SUMMON_SESSION + caller harnessSessionId -> fresh root
+    const noManifestIdRoot = path.join(tempRoot, "skill-summon-session-no-harness-id");
+    await mkdir(noManifestIdRoot);
+    await writeFile(
+      path.join(noManifestIdRoot, "session.json"),
+      JSON.stringify({
+        id: "legacy-warm",
+        createdAt: "2026-04-01T00:00:00.000Z",
+        pid: 99_999_999,
+        skills: [],
+      }),
+      "utf8",
+    );
+    process.env.SKILL_SUMMON_SESSION = noManifestIdRoot;
+    const withCallerId = await resolveSession({
+      tempRoot,
+      harnessSessionId: "caller-id",
+    });
+    expect(withCallerId.created).toBe(true);
+    expect(withCallerId.session.root).not.toBe(noManifestIdRoot);
+
+    // 6. Legacy explicit warm-root reuse without harness ID -> still reuses SKILL_SUMMON_SESSION
+    const legacy = await resolveSession({ tempRoot });
+    expect(legacy.created).toBe(false);
+    expect(legacy.session.root).toBe(noManifestIdRoot);
+    expect(legacy.session.id).toBe("legacy-warm");
+  });
+
+  it("validates manifest shape and pid evidence rather than treating malformed/missing pid as proven dead", async () => {
+    const tempRoot = await makeTempRoot();
+    delete process.env.SKILL_SUMMON_SESSION;
+
+    for (const [label, badManifest] of [
+      ["missing-pid", { id: "m1", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", skills: [] }],
+      ["string-pid", { id: "m2", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: "99999999", skills: [] }],
+      ["zero-pid", { id: "m3", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: 0, skills: [] }],
+      ["negative-pid", { id: "m4", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: -5, skills: [] }],
+      ["missing-skills", { id: "m5", harnessSessionId: "sess-bad-pid", createdAt: "2026-04-01T00:00:00.000Z", pid: 99_999_999 }],
+    ] as const) {
+      const badRoot = path.join(tempRoot, `skill-summon-session-${label}`);
+      await mkdir(badRoot);
+      await writeFile(path.join(badRoot, "session.json"), JSON.stringify(badManifest), "utf8");
+
+      // Scan path must not treat malformed/missing pid as proven dead.
+      delete process.env.SKILL_SUMMON_SESSION;
+      const scanned = await resolveSession({
+        tempRoot,
+        harnessSessionId: "sess-bad-pid",
+      });
+      expect(scanned.created).toBe(true);
+      expect(scanned.session.root).not.toBe(badRoot);
+
+      // Explicit env-root path must reject malformed manifest shape.
+      process.env.SKILL_SUMMON_SESSION = badRoot;
+      await expect(
+        resolveSession({ tempRoot, harnessSessionId: "sess-bad-pid" }),
+      ).rejects.toThrow(/Invalid session manifest/u);
+    }
+  });
 });
 
 describe("paused campaign reaper retention (deterministic clock)", () => {

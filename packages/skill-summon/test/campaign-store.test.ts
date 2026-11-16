@@ -1,4 +1,6 @@
 import {
+  access,
+  chmod,
   lstat,
   mkdir,
   mkdtemp,
@@ -288,5 +290,175 @@ describe("CampaignStore persistence and verification", () => {
     );
     await expect(store3.append({ channel: "agent", op: "open" })).rejects.toThrow(/symlink/u);
     expect((await lstat(path.join(outside, "status.json"))).size).toBe(2);
+  });
+
+  it("serializes Promise.all concurrent appends deterministically without duplicate seq", async () => {
+    const root = await makeTempSessionRoot();
+    const opCap = createCampaignOperatorAdapter();
+    const store = await CampaignStore.load(root);
+
+    const results = await Promise.all([
+      store.append({ channel: "agent", op: "open" }),
+      store.append({ channel: "agent", op: "recon", recon: reconPayload }),
+      store.append({ channel: "agent", op: "propose", charter: makeCharter(1) }),
+      store.append(
+        createCampaignOperatorEvent(opCap, {
+          channel: "operator",
+          op: "decide",
+          action: "approve",
+          charterRevision: 1,
+        }),
+      ),
+    ]);
+
+    expect(results.map((r) => r.entry.seq)).toEqual([0, 1, 2, 3]);
+    expect(store.state.state).toBe(CampaignStates.executing);
+
+    const reloaded = await CampaignStore.load(root);
+    expect(reloaded.corrupted).toBe(false);
+    expect(reloaded.trace.map((e) => e.seq)).toEqual([0, 1, 2, 3]);
+    expect(reloaded.state.state).toBe(CampaignStates.executing);
+  });
+
+  it("refuses append when on-disk trace is externally tampered or stale between load and append without modifying disk", async () => {
+    // 1. External tamper between load and append
+    const root1 = await makeTempSessionRoot();
+    const store1 = await CampaignStore.load(root1);
+    await store1.append({ channel: "agent", op: "open" });
+    await store1.append({ channel: "agent", op: "recon", recon: reconPayload });
+
+    const originalTrace = await readFile(store1.tracePath, "utf8");
+    const tamperedTrace = `${originalTrace}{"seq":2,"event":bad\n`;
+    await writeFile(store1.tracePath, tamperedTrace, "utf8");
+    const evidenceBefore = await readFile(store1.evidencePath, "utf8");
+    const statusBefore = await readFile(store1.statusPath, "utf8");
+
+    await expect(
+      store1.append({ channel: "agent", op: "propose", charter: makeCharter(1) }),
+    ).rejects.toThrow(/corrupted|Refusing to append/u);
+
+    expect(await readFile(store1.tracePath, "utf8")).toBe(tamperedTrace);
+    expect(await readFile(store1.evidencePath, "utf8")).toBe(evidenceBefore);
+    expect(await readFile(store1.statusPath, "utf8")).toBe(statusBefore);
+
+    // 2. Stale in-memory store (another writer appended between load and append)
+    const root2 = await makeTempSessionRoot();
+    const writerA = await CampaignStore.load(root2);
+    const writerB = await CampaignStore.load(root2);
+    await writerA.append({ channel: "agent", op: "open" });
+
+    const traceAfterA = await readFile(writerA.tracePath, "utf8");
+    const evidenceAfterA = await readFile(writerA.evidencePath, "utf8");
+    const statusAfterA = await readFile(writerA.statusPath, "utf8");
+
+    await expect(
+      writerB.append({ channel: "agent", op: "open" }),
+    ).rejects.toThrow(/changed since load|Refusing to append/u);
+
+    expect(await readFile(writerA.tracePath, "utf8")).toBe(traceAfterA);
+    expect(await readFile(writerA.evidencePath, "utf8")).toBe(evidenceAfterA);
+    expect(await readFile(writerA.statusPath, "utf8")).toBe(statusAfterA);
+  });
+
+  it("fails closed on partial write failures", async () => {
+    if (process.getuid?.() === 0) return;
+    const root = await makeTempSessionRoot();
+    const store = await CampaignStore.load(root);
+    await store.append({ channel: "agent", op: "open" });
+
+    // Make evidence.jsonl read-only so trace append succeeds and evidence append fails.
+    await chmod(store.evidencePath, 0o444);
+    try {
+      await expect(
+        store.append({ channel: "agent", op: "recon", recon: reconPayload }),
+      ).rejects.toThrow();
+
+      // In-memory store did not advance and refuses further appends.
+      expect(store.trace).toHaveLength(1);
+      await expect(
+        store.append({ channel: "agent", op: "status" }),
+      ).rejects.toThrow(/corrupted|FAILED_SAFE/u);
+    } finally {
+      await chmod(store.evidencePath, 0o600);
+    }
+
+    // Reloading the partially written store fails closed into FAILED_SAFE.
+    const reloaded = await CampaignStore.load(root);
+    expect(reloaded.corrupted).toBe(true);
+    expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+  });
+
+  it("regenerates missing or stale status.json on load without rewriting trace/evidence, projects FAILED_SAFE on corrupt trace, and stays write-free when absent", async () => {
+    // 1. Absent campaign remains write-free
+    const emptyRoot = await makeTempSessionRoot();
+    const emptyStore = await CampaignStore.load(emptyRoot);
+    expect(emptyStore.hasTrace).toBe(false);
+    expect(emptyStore.corrupted).toBe(false);
+    await expect(access(emptyStore.campaignDir)).rejects.toThrow();
+
+    // 2. Missing or stale status.json after restart derives from verified fold
+    const root = await makeTempSessionRoot();
+    const opCap = createCampaignOperatorAdapter();
+    const store = await CampaignStore.load(root);
+    await store.append({ channel: "agent", op: "open" });
+    await store.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await store.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await store.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+
+    const traceBefore = await readFile(store.tracePath, "utf8");
+    const evidenceBefore = await readFile(store.evidencePath, "utf8");
+
+    // Delete status.json and reload
+    await rm(store.statusPath);
+    const reloadedMissing = await CampaignStore.load(root);
+    expect(reloadedMissing.corrupted).toBe(false);
+    expect(reloadedMissing.state.state).toBe(CampaignStates.executing);
+    const regeneratedFromMissing = JSON.parse(
+      await readFile(store.statusPath, "utf8"),
+    ) as Record<string, unknown>;
+    expect(regeneratedFromMissing).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+    });
+    expect(await readFile(store.tracePath, "utf8")).toBe(traceBefore);
+    expect(await readFile(store.evidencePath, "utf8")).toBe(evidenceBefore);
+
+    // Overwrite status.json with stale UNARMED and reload
+    await writeFile(
+      store.statusPath,
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+    await CampaignStore.load(root);
+    const regeneratedFromStale = JSON.parse(
+      await readFile(store.statusPath, "utf8"),
+    ) as Record<string, unknown>;
+    expect(regeneratedFromStale).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+    });
+
+    // 3. Corrupt trace must not leave observable EXECUTING status pretending healthy
+    const corruptTrace = `${traceBefore}{"seq":4,"event":corrupt\n`;
+    await writeFile(store.tracePath, corruptTrace, "utf8");
+    const reloadedCorrupt = await CampaignStore.load(root);
+    expect(reloadedCorrupt.corrupted).toBe(true);
+    expect(reloadedCorrupt.state.state).toBe(CampaignStates.failedSafe);
+    const statusAfterCorrupt = JSON.parse(
+      await readFile(store.statusPath, "utf8"),
+    ) as Record<string, unknown>;
+    expect(statusAfterCorrupt).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+    expect(await readFile(store.tracePath, "utf8")).toBe(corruptTrace);
+    expect(await readFile(store.evidencePath, "utf8")).toBe(evidenceBefore);
   });
 });

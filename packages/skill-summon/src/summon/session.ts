@@ -220,7 +220,18 @@ export class SummonSession {
         `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage(error)}`,
       );
     }
-    const manifest = JSON.parse(raw) as SessionManifest;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw) as unknown;
+    } catch (error) {
+      throw new Error(
+        `Invalid session manifest JSON at ${root}: ${errorMessage(error)}`,
+      );
+    }
+    const manifest = parseSessionManifest(parsed);
+    if (!manifest) {
+      throw new Error(`Invalid session manifest shape at ${root}.`);
+    }
     return new SummonSession(root, manifest, tempRoot);
   }
 
@@ -451,6 +462,7 @@ export async function resolveSession(
   opts: OpenSessionOptions = {},
 ): Promise<ResolveSessionResult> {
   const tempRoot = opts.tempRoot ?? tmpdir();
+  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
   const existingRoot = process.env.SKILL_SUMMON_SESSION;
   if (existingRoot) {
     if (!isDisposableSessionRoot(existingRoot, tempRoot)) {
@@ -461,13 +473,24 @@ export async function resolveSession(
           `to write into or delete any other path.`,
       );
     }
-    return {
-      session: await SummonSession.loadAt(existingRoot, tempRoot),
-      created: false,
-    };
+    const existing = await SummonSession.loadAt(existingRoot, tempRoot);
+    if (harnessSessionId === undefined) {
+      return {
+        session: existing,
+        created: false,
+      };
+    }
+    if (
+      existing.harnessSessionId === harnessSessionId &&
+      hasProvenDeadPid(existing.pid)
+    ) {
+      return {
+        session: await SummonSession.reattachAt(existingRoot, tempRoot),
+        created: false,
+      };
+    }
   }
 
-  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
   if (harnessSessionId) {
     const match = await findDeadSessionForHarnessId(tempRoot, harnessSessionId);
     if (match) {
@@ -517,10 +540,10 @@ async function findDeadSessionForHarnessId(
     }
     const manifest = await readManifestSafely(candidateRoot);
     if (!manifest || manifest.harnessSessionId !== harnessSessionId) continue;
-    if (isProcessLive(manifest.pid)) continue;
+    if (!hasProvenDeadPid(manifest.pid)) continue;
     matches.push({
       root: candidateRoot,
-      createdAt: typeof manifest.createdAt === "string" ? manifest.createdAt : "",
+      createdAt: manifest.createdAt,
     });
   }
 
@@ -703,16 +726,50 @@ async function readManifestSafely(
   root: string,
 ): Promise<SessionManifest | undefined> {
   try {
-    return JSON.parse(
+    const parsed = JSON.parse(
       await readFile(path.join(root, MANIFEST_FILE), "utf8"),
-    ) as SessionManifest;
+    ) as unknown;
+    return parseSessionManifest(parsed);
   } catch {
     return undefined;
   }
 }
 
-function isProcessLive(pid: number): boolean {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+function parseSessionManifest(raw: unknown): SessionManifest | undefined {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return undefined;
+  }
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.id !== "string" || obj.id.length === 0) return undefined;
+  if (typeof obj.createdAt !== "string") return undefined;
+  if (!isValidPid(obj.pid)) return undefined;
+  if (!Array.isArray(obj.skills)) return undefined;
+  if (
+    obj.harnessSessionId !== undefined &&
+    (typeof obj.harnessSessionId !== "string" ||
+      obj.harnessSessionId.trim().length === 0)
+  ) {
+    return undefined;
+  }
+  return obj as SessionManifest;
+}
+
+function isValidPid(pid: unknown): pid is number {
+  return typeof pid === "number" && Number.isSafeInteger(pid) && pid > 0;
+}
+
+function hasProvenDeadPid(pid: unknown): boolean {
+  if (!isValidPid(pid)) return false;
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ESRCH";
+  }
+}
+
+function isProcessLive(pid: unknown): boolean {
+  if (!isValidPid(pid)) return false;
   try {
     process.kill(pid, 0);
     return true;
