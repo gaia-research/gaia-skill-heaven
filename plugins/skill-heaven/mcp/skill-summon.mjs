@@ -18493,13 +18493,38 @@ var SummonSession = class _SummonSession {
   }
   static async reattachAt(root, tempRoot) {
     const session = await _SummonSession.loadAt(root, tempRoot);
-    await clearPauseBoundary(root);
+    const pausePath = path3.join(root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+    await assertConfinedPath(root, pausePath, "Campaign pause boundary");
+    try {
+      const pauseStat = await lstat2(pausePath);
+      if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
+        throw new Error(
+          `Campaign pause boundary must be a regular file: ${pausePath}`
+        );
+      }
+    } catch (error2) {
+      if (error2.code !== "ENOENT") {
+        throw error2;
+      }
+    }
     await CampaignStore.load(root);
-    session.#manifest = {
-      ...session.#manifest,
+    const previousManifest = session.#manifest;
+    const nextManifest = {
+      ...previousManifest,
       pid: process.pid
     };
-    await session.#writeManifest();
+    await session.#writeManifest(nextManifest);
+    session.#manifest = nextManifest;
+    try {
+      await clearPauseBoundary(root);
+    } catch (error2) {
+      session.#manifest = previousManifest;
+      try {
+        await session.#writeManifest(previousManifest);
+      } catch {
+      }
+      throw error2;
+    }
     return session;
   }
   get harnessSessionId() {
@@ -18540,10 +18565,12 @@ var SummonSession = class _SummonSession {
   async close() {
     await rm2(this.root, { recursive: true, force: true });
   }
-  async #writeManifest() {
+  async #writeManifest(manifest = this.#manifest) {
+    await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
     await writeFile2(
       this.#manifestPath,
-      JSON.stringify(this.#manifest, null, 2),
+      JSON.stringify(manifest, null, 2),
       "utf8"
     );
   }
