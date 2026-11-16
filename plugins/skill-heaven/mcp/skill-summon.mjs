@@ -14252,7 +14252,12 @@ function parseCampaignTraceLines(raw) {
 }
 function verifyCampaignTraceLines(lines, options = {}) {
   const events = lines.map((line) => line.event);
-  const replayed = replayCampaign(events, { authorize: options.authorize });
+  let replayed;
+  try {
+    replayed = replayCampaign(events, { authorize: options.authorize });
+  } catch {
+    return { valid: false, error: "Authority evidence failed during replay" };
+  }
   const candidate = {
     schema: CAMPAIGN_SCHEMA_IDS.trace,
     initial: replayed.initial,
@@ -18059,9 +18064,10 @@ var CampaignStore = class _CampaignStore {
   #hasTrace;
   #corrupted;
   #error;
+  #recordSha256;
   #options;
   #appendQueue = Promise.resolve();
-  constructor(sessionRoot, state2, lines, hasTrace, corrupted, error2, options = {}) {
+  constructor(sessionRoot, state2, lines, hasTrace, corrupted, error2, recordSha256, options = {}) {
     this.sessionRoot = sessionRoot;
     this.campaignDir = path2.join(sessionRoot, CAMPAIGN_DIR_NAME);
     this.tracePath = path2.join(this.campaignDir, CAMPAIGN_TRACE_FILE);
@@ -18073,6 +18079,7 @@ var CampaignStore = class _CampaignStore {
     this.#hasTrace = hasTrace;
     this.#corrupted = corrupted;
     this.#error = error2;
+    this.#recordSha256 = recordSha256;
     this.#options = options;
   }
   get state() {
@@ -18090,6 +18097,9 @@ var CampaignStore = class _CampaignStore {
   get error() {
     return this.#error;
   }
+  get recordSha256() {
+    return this.#recordSha256;
+  }
   static async load(sessionRoot, options = {}) {
     const campaignDir = path2.join(sessionRoot, CAMPAIGN_DIR_NAME);
     const statusPath = path2.join(campaignDir, CAMPAIGN_STATUS_FILE);
@@ -18101,6 +18111,7 @@ var CampaignStore = class _CampaignStore {
         [],
         false,
         false,
+        void 0,
         void 0,
         options
       );
@@ -18122,6 +18133,7 @@ var CampaignStore = class _CampaignStore {
         true,
         true,
         verified.error,
+        void 0,
         options
       );
     }
@@ -18137,6 +18149,7 @@ var CampaignStore = class _CampaignStore {
       true,
       false,
       void 0,
+      verified.recordSha256,
       options
     );
   }
@@ -18222,11 +18235,12 @@ var CampaignStore = class _CampaignStore {
     this.#state = step.state;
     this.#lines = nextLines;
     this.#hasTrace = true;
+    this.#recordSha256 = evidenceLine.recordSha256;
     return { state: step.state, entry: step.entry, status };
   }
   async #assertDiskMatchesMemory() {
     if (!this.#hasTrace) {
-      for (const target of [this.tracePath, this.evidencePath]) {
+      for (const target of [this.tracePath, this.evidencePath, this.statusPath]) {
         try {
           await lstat(target);
         } catch (error2) {
@@ -18276,6 +18290,12 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
     traceStat = await lstat(tracePath);
   } catch (error2) {
     if (error2.code === "ENOENT") {
+      if (await anyCampaignArtifactExists([evidencePath, statusPath])) {
+        return {
+          kind: "failed_safe",
+          error: "Campaign trace is missing while campaign artifacts survive"
+        };
+      }
       return { kind: "absent" };
     }
     throw error2;
@@ -18332,11 +18352,11 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
   if (!verification.valid) {
     return { kind: "failed_safe", error: verification.error };
   }
+  const actualRecordSha = campaignSha256Hex(
+    serializeCampaignRecord(verification.record)
+  );
   if (evidenceLines && parsedTrace.lines.length > 0) {
     const lastEvidence = evidenceLines[parsedTrace.lines.length - 1];
-    const actualRecordSha = campaignSha256Hex(
-      serializeCampaignRecord(verification.record)
-    );
     if (lastEvidence.recordSha256 !== actualRecordSha) {
       return {
         kind: "failed_safe",
@@ -18347,8 +18367,21 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
   return {
     kind: "valid",
     state: verification.record.final,
-    lines: [...parsedTrace.lines]
+    lines: [...parsedTrace.lines],
+    recordSha256: actualRecordSha
   };
+}
+async function anyCampaignArtifactExists(paths) {
+  for (const target of paths) {
+    try {
+      await lstat(target);
+      return true;
+    } catch (error2) {
+      if (error2.code === "ENOENT") continue;
+      throw error2;
+    }
+  }
+  return false;
 }
 async function syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus) {
   await assertConfinedPath(sessionRoot, statusPath, "Campaign status");
@@ -18385,6 +18418,7 @@ async function ensureConfinedCampaignDir(sessionRoot, campaignDir) {
 // packages/skill-summon/src/summon/session.ts
 var SESSION_DIR_PREFIX = "skill-summon-session-";
 var MANIFEST_FILE = "session.json";
+var CAMPAIGN_PAUSE_FILE = "pause.json";
 var DEFAULT_SESSION_TTL_HOURS = 4;
 var HARNESS_SESSION_ID_ENV_VARS = Object.freeze([
   "CLAUDE_CODE_SESSION_ID"
@@ -18451,6 +18485,8 @@ var SummonSession = class _SummonSession {
   }
   static async reattachAt(root, tempRoot) {
     const session = await _SummonSession.loadAt(root, tempRoot);
+    await clearPauseBoundary(root);
+    await CampaignStore.load(root);
     session.#manifest = {
       ...session.#manifest,
       pid: process.pid
@@ -18608,6 +18644,7 @@ async function resolveSession(opts = {}) {
     }
     const existing = await SummonSession.loadAt(existingRoot, tempRoot);
     if (harnessSessionId === void 0) {
+      await CampaignStore.load(existingRoot);
       return {
         session: existing,
         created: false
@@ -18712,9 +18749,23 @@ async function reapSessions(opts = {}) {
       throw error2;
     }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
-    const startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
+    let startedAt = Number.isFinite(createdAt) ? createdAt : sessionStat.mtimeMs;
+    let effectiveTtlHours = ttlHours;
+    const paused = await loadPausedCampaignRetention(sessionRoot);
+    if (paused !== void 0 && manifest !== void 0) {
+      const pauseBoundaryMs = await resolvePauseBoundaryMs(
+        sessionRoot,
+        manifest.pid,
+        paused.recordSha256,
+        now,
+        dryRun
+      );
+      if (pauseBoundaryMs !== void 0) {
+        startedAt = pauseBoundaryMs;
+        effectiveTtlHours = paused.retentionHours;
+      }
+    }
     const ageHours = Math.max(0, (now - startedAt) / 36e5);
-    const effectiveTtlHours = await pausedCampaignRetentionHours(sessionRoot) ?? ttlHours;
     if (ageHours < effectiveTtlHours) continue;
     let bytes = 0;
     try {
@@ -18735,18 +18786,84 @@ async function reapSessions(opts = {}) {
     liveProtected
   };
 }
-async function pausedCampaignRetentionHours(sessionRoot) {
+async function loadPausedCampaignRetention(sessionRoot) {
   try {
     const store = await CampaignStore.load(sessionRoot);
-    if (!store.hasTrace || store.corrupted) return void 0;
+    if (!store.hasTrace || store.corrupted || !store.recordSha256) {
+      return void 0;
+    }
     const state2 = store.state;
     if (state2.approved && state2.charter !== null && (state2.state === CampaignStates.executing || state2.state === CampaignStates.convergence)) {
-      return state2.charter.sessionRetention;
+      return {
+        retentionHours: state2.charter.sessionRetention,
+        recordSha256: store.recordSha256
+      };
     }
     return void 0;
   } catch {
     return void 0;
   }
+}
+async function clearPauseBoundary(sessionRoot) {
+  const pausePath = path3.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+  await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
+  await rm2(pausePath, { force: true });
+}
+async function resolvePauseBoundaryMs(sessionRoot, expectedPid, expectedRecordSha256, nowMs, dryRun) {
+  const pausePath = path3.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+  try {
+    await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
+  } catch {
+    return void 0;
+  }
+  try {
+    const stat5 = await lstat2(pausePath);
+    if (stat5.isSymbolicLink() || !stat5.isFile()) {
+      return void 0;
+    }
+    const raw = await readFile2(pausePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return void 0;
+    }
+    const obj = parsed;
+    if (typeof obj.pausedAt !== "string") return void 0;
+    const pausedAtMs = Date.parse(obj.pausedAt);
+    if (!Number.isFinite(pausedAtMs) || pausedAtMs > nowMs) {
+      return void 0;
+    }
+    if (obj.pid !== expectedPid || obj.recordSha256 !== expectedRecordSha256) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return nowMs;
+    }
+    return pausedAtMs;
+  } catch (error2) {
+    if (error2.code === "ENOENT") {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return nowMs;
+    }
+    return void 0;
+  }
+}
+async function writePauseBoundary(pausePath, pid, recordSha256, nowMs) {
+  await writeFile2(
+    pausePath,
+    `${JSON.stringify(
+      {
+        pausedAt: new Date(nowMs).toISOString(),
+        pid,
+        recordSha256
+      },
+      null,
+      2
+    )}
+`,
+    "utf8"
+  );
 }
 function sessionTtlHours() {
   const configured = process.env.SKILL_SUMMON_TTL_HOURS;

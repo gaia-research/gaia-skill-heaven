@@ -153,7 +153,7 @@ function controllerSegments(controller, opts = { progress: true }) {
 function statusLevels(status, mode) {
   if (mode === "off") return [];
   const ultra = isUltra(status);
-  const controller = ultra ? status.controller : { kind: "not-selected" };
+  const controller = ultra || status.controller.kind === "reported" ? status.controller : { kind: "not-selected" };
   const skills = [SEP, seg(skillsText(status.skills, false), "ink")];
   const summons = status.summons === null ? [] : [seg(" / ", "dim"), seg(`${status.summons} ${status.summons === 1 ? "summon" : "summons"}`, "dim")];
   const arrival = status.lastArrival ? [SEP, seg(`+${sanitizeDisplay(status.lastArrival, 32)}`, "ink")] : [];
@@ -288,12 +288,16 @@ function describeStatus(status) {
   parts.push(
     status.skills === null ? "Skills in this session: unknown." : `${status.skills} ${status.skills === 1 ? "skill" : "skills"} materialized in this session.`
   );
+  const c = status.controller;
   if (isUltra(status)) {
-    const c = status.controller;
     if (c.kind === "unavailable") parts.push("Ultra controller: unavailable; nothing is choosing for you yet.");
     else if (c.kind === "reported" || c.kind === "fixture") {
       parts.push(`Ultra controller: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}.`);
     }
+  } else if (c.kind === "reported") {
+    const label = c.source === "campaign" ? "Reported campaign status" : "Reported controller";
+    const progress = c.progress ? ` (${c.progress.completed}/${c.progress.total})` : "";
+    parts.push(`${label}: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}${progress}.`);
   }
   if (status.fixture || status.controller.kind === "fixture") parts.unshift("Fixture, design state only.");
   return parts.join(" ");
@@ -377,7 +381,7 @@ function selectionFromCommand(text) {
 function withReading(status, reading) {
   const ultra = reading.kind === "selected" && reading.rung === "ultra";
   const boot = status.boot ?? (status.reading.kind === "selected" || status.reading.kind === "unknown" ? void 0 : status.reading);
-  const controller = ultra ? status.controller.kind === "reported" ? status.controller : { kind: "unavailable" } : { kind: "not-selected" };
+  const controller = ultra ? status.controller.kind === "reported" ? status.controller : { kind: "unavailable" } : status.controller.kind === "reported" && status.controller.source === "campaign" ? status.controller : { kind: "not-selected" };
   return { ...status, reading, controller, ...boot ? { boot } : {} };
 }
 function skillsFromSessionManifest(manifest) {
@@ -1489,6 +1493,15 @@ function scopeView(state, harness) {
       value: rung === null ? rungObservable ? "none \u2014 no rung selected in this session" : "unknown \u2014 this host does not let the console see which rung command you typed" : ultra ? "rung ULTRA \xB7 controller unavailable" : `rung ${rung.toUpperCase()} \u2014 observed from ${state.selectedFrom ?? "a rung command"} \xB7 not enforced`,
       evidence: rung === null ? "unknown" : "observed"
     },
+    ...state.status.controller.kind === "reported" ? [{
+      label: state.status.controller.source === "campaign" ? "campaign" : "controller",
+      value: [
+        sanitizeDisplay(state.status.controller.state, 24),
+        state.status.controller.effective ? `now ${state.status.controller.effective.toUpperCase()}` : null,
+        state.status.controller.progress ? `${state.status.controller.progress.completed}/${state.status.controller.progress.total}` : null
+      ].filter(Boolean).join(" \xB7 "),
+      evidence: "reported"
+    }] : [],
     { label: "allowed", value: "/summon by hand: yes \xB7 zero cut: temporary (default)", evidence: "reported" },
     {
       label: "keep small",
