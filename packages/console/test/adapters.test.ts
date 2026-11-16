@@ -172,6 +172,75 @@ describe("bounded, exact-session readers", () => {
     symlinkSync(outsideDir, join(rootDirEscape, "campaign"));
     expect(() => ledgerState(rootDirEscape)).toThrow("escapes");
   });
+
+  it("renders RECON/progress in a fresh no-summon session without summon-log.jsonl", () => {
+    const root = temp();
+    writeFileSync(join(root, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(root, "campaign"), { recursive: true });
+    writeFileSync(
+      join(root, "campaign", "status.json"),
+      JSON.stringify({
+        schema: "skill-heaven/controller-status/v1",
+        state: "RECON",
+        progress: { completed: 0, total: 3 },
+      }),
+    );
+
+    const state = ledgerState(root);
+    expect(state.entries).toEqual([]);
+    expect(state.selectedFrom).toBeNull();
+    expect(state.status.skills).toBe(0);
+    expect(state.status.summons).toBe(0);
+    expect(state.status.lastArrival).toBeNull();
+    expect(state.status.controller).toEqual({
+      kind: "reported",
+      source: "campaign",
+      state: "RECON",
+      progress: { completed: 0, total: 3 },
+    });
+    expect(toPlain(renderStatusSegments(state.status, "full"))).toBe(
+      "◆ entropy ‹‹ [ULTRA] ›› · 0 skills / 0 summons · RECON · 0/3",
+    );
+    const consoleText = renderConsoleText(buildConsoleView(state, harnessById("codex")), { details: true });
+    expect(consoleText).toContain("RECON · 0/3");
+  });
+
+  it("preserves ENOENT when neither campaign nor log exists and never suppresses log errors", () => {
+    const rootMissing = temp();
+    writeFileSync(join(rootMissing, "session.json"), JSON.stringify({ skills: [] }));
+    expect(() => ledgerState(rootMissing)).toThrow(/ENOENT/);
+
+    const rootMalformedCampaign = temp();
+    writeFileSync(join(rootMalformedCampaign, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootMalformedCampaign, "campaign"), { recursive: true });
+    writeFileSync(join(rootMalformedCampaign, "campaign", "status.json"), "{malformed");
+    expect(() => ledgerState(rootMalformedCampaign)).toThrow(/ENOENT/);
+
+    const validCampaign = JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "RECON" });
+
+    const rootMalformedLog = temp();
+    writeFileSync(join(rootMalformedLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootMalformedLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootMalformedLog, "campaign", "status.json"), validCampaign);
+    writeFileSync(join(rootMalformedLog, "summon-log.jsonl"), "{partial");
+    expect(() => ledgerState(rootMalformedLog)).toThrow("incomplete source");
+
+    const rootOversizedLog = temp();
+    writeFileSync(join(rootOversizedLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootOversizedLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootOversizedLog, "campaign", "status.json"), validCampaign);
+    writeFileSync(join(rootOversizedLog, "summon-log.jsonl"), Buffer.alloc(MAX_BYTES + 1));
+    expect(() => ledgerState(rootOversizedLog)).toThrow("bound");
+
+    const rootSymlinkLog = temp();
+    writeFileSync(join(rootSymlinkLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootSymlinkLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootSymlinkLog, "campaign", "status.json"), validCampaign);
+    const outsideLog = join(temp(), "outside-log.jsonl");
+    writeFileSync(outsideLog, "");
+    symlinkSync(outsideLog, join(rootSymlinkLog, "summon-log.jsonl"));
+    expect(() => ledgerState(rootSymlinkLog)).toThrow("escapes");
+  });
 });
 
 function piFixture() {

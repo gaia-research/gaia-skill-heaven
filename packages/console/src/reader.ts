@@ -85,16 +85,42 @@ function readCampaignStatus(sessionRoot: string): Controller | null {
   return controllerFromCampaignStatus(parsed);
 }
 
+function readLedgerLines(safeRoot: string, allowMissing: boolean): unknown[] {
+  const logPath = join(safeRoot, "summon-log.jsonl");
+  let logStat;
+  try {
+    logStat = lstatSync(logPath);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (allowMissing && code === "ENOENT") return [];
+    throw err;
+  }
+  if (logStat.isSymbolicLink()) throw new Error("summon log escapes session root");
+  if (!logStat.isFile()) return jsonLines(readBounded(logPath, { noFollow: true }));
+  if (!realpathSync(logPath).startsWith(safeRoot + sep)) throw new Error("summon log escapes session root");
+  try {
+    return jsonLines(readBounded(logPath, { noFollow: true }));
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ELOOP") throw new Error("summon log escapes session root");
+    throw err;
+  }
+}
+
 export function ledgerState(sessionRoot: string): ConsoleCoreState {
   // The caller must supply the exact sessionRoot returned by THEIR Core tool.
-  const manifest: unknown = JSON.parse(readBounded(join(sessionRoot, "session.json")));
-  const lines = jsonLines(readBounded(join(sessionRoot, "summon-log.jsonl")));
+  const safeRoot = realpathSync(sessionRoot);
+  const manifest: unknown = JSON.parse(readBounded(join(safeRoot, "session.json")));
+  const controller = readCampaignStatus(safeRoot);
+  const lines = readLedgerLines(safeRoot, controller !== null);
   let state = initialConsoleState();
   for (const event of eventsFromLedger(manifest, lines)) state = recordEvent(state, event, null, "ledger", { readObservable: false });
   const facts = skillsFromSessionManifest(manifest);
   state.status = { ...state.status, skills: facts.skills };
-  const controller = readCampaignStatus(sessionRoot);
   if (controller) {
+    // EntropyReading only models `selected` with `source: "observed-command"`, and
+    // render.ts gates controllerSegments on `readingRung(status.reading) === "ultra"`.
+    // Keep `selectedFrom` null and `controller.source: "campaign"` (`kind: "reported"`).
     state.status = {
       ...withReading(state.status, { kind: "selected", rung: "ultra", source: "observed-command" }),
       controller,
