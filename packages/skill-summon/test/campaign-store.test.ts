@@ -461,4 +461,99 @@ describe("CampaignStore persistence and verification", () => {
     expect(await readFile(store.tracePath, "utf8")).toBe(corruptTrace);
     expect(await readFile(store.evidencePath, "utf8")).toBe(evidenceBefore);
   });
+
+  it("loads FAILED_SAFE when trace.jsonl alone is deleted while evidence or status survives, preserving artifacts and replacing old status", async () => {
+    const opCap = createCampaignOperatorAdapter();
+
+    // 1. Delete trace.jsonl alone while both evidence.jsonl and status.json survive
+    const root1 = await makeTempSessionRoot();
+    const store1 = await CampaignStore.load(root1);
+    await store1.append({ channel: "agent", op: "open" });
+    await store1.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await store1.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await store1.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+    const evidenceBefore1 = await readFile(store1.evidencePath, "utf8");
+    await rm(store1.tracePath);
+
+    const reloaded1 = await CampaignStore.load(root1);
+    expect(reloaded1.corrupted).toBe(true);
+    expect(reloaded1.state.state).toBe(CampaignStates.failedSafe);
+    expect(await readFile(store1.evidencePath, "utf8")).toBe(evidenceBefore1);
+    const status1 = JSON.parse(await readFile(store1.statusPath, "utf8")) as Record<string, unknown>;
+    expect(status1).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+    await expect(reloaded1.append({ channel: "agent", op: "status" })).rejects.toThrow(
+      /corrupted|FAILED_SAFE/u,
+    );
+
+    // 2. Delete trace.jsonl and status.json while evidence.jsonl survives -> FAILED_SAFE
+    const root2 = await makeTempSessionRoot();
+    const store2 = await CampaignStore.load(root2);
+    await store2.append({ channel: "agent", op: "open" });
+    const evidenceBefore2 = await readFile(store2.evidencePath, "utf8");
+    await rm(store2.tracePath);
+    await rm(store2.statusPath);
+
+    const reloaded2 = await CampaignStore.load(root2);
+    expect(reloaded2.corrupted).toBe(true);
+    expect(reloaded2.state.state).toBe(CampaignStates.failedSafe);
+    expect(await readFile(store2.evidencePath, "utf8")).toBe(evidenceBefore2);
+
+    // 3. Delete trace.jsonl and evidence.jsonl while status.json survives -> FAILED_SAFE
+    const root3 = await makeTempSessionRoot();
+    const store3 = await CampaignStore.load(root3);
+    await store3.append({ channel: "agent", op: "open" });
+    await rm(store3.tracePath);
+    await rm(store3.evidencePath);
+
+    const reloaded3 = await CampaignStore.load(root3);
+    expect(reloaded3.corrupted).toBe(true);
+    expect(reloaded3.state.state).toBe(CampaignStates.failedSafe);
+    const status3 = JSON.parse(await readFile(store3.statusPath, "utf8")) as Record<string, unknown>;
+    expect(status3).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+  });
+
+  it("loads FAILED_SAFE when an injected authorize callback throws during replay", async () => {
+    const root = await makeTempSessionRoot();
+    const opCap = createCampaignOperatorAdapter();
+    const store = await CampaignStore.load(root);
+    await store.append({ channel: "agent", op: "open" });
+    await store.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await store.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await store.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+
+    const reloaded = await CampaignStore.load(root, {
+      authorize: () => {
+        throw new Error("evidence unavailable");
+      },
+    });
+    expect(reloaded.corrupted).toBe(true);
+    expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+    const statusAfter = JSON.parse(
+      await readFile(store.statusPath, "utf8"),
+    ) as Record<string, unknown>;
+    expect(statusAfter).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+  });
 });

@@ -77,6 +77,7 @@ export class CampaignStore {
   #hasTrace: boolean;
   #corrupted: boolean;
   #error: string | undefined;
+  #recordSha256: string | undefined;
   #options: CampaignVerificationOptions;
   #appendQueue: Promise<void> = Promise.resolve();
 
@@ -87,6 +88,7 @@ export class CampaignStore {
     hasTrace: boolean,
     corrupted: boolean,
     error?: string,
+    recordSha256?: string,
     options: CampaignVerificationOptions = {},
   ) {
     this.sessionRoot = sessionRoot;
@@ -100,6 +102,7 @@ export class CampaignStore {
     this.#hasTrace = hasTrace;
     this.#corrupted = corrupted;
     this.#error = error;
+    this.#recordSha256 = recordSha256;
     this.#options = options;
   }
 
@@ -123,6 +126,10 @@ export class CampaignStore {
     return this.#error;
   }
 
+  get recordSha256(): string | undefined {
+    return this.#recordSha256;
+  }
+
   static async load(
     sessionRoot: string,
     options: CampaignVerificationOptions = {},
@@ -138,6 +145,7 @@ export class CampaignStore {
         [],
         false,
         false,
+        undefined,
         undefined,
         options,
       );
@@ -160,6 +168,7 @@ export class CampaignStore {
         true,
         true,
         verified.error,
+        undefined,
         options,
       );
     }
@@ -177,6 +186,7 @@ export class CampaignStore {
       true,
       false,
       undefined,
+      verified.recordSha256,
       options,
     );
   }
@@ -274,13 +284,14 @@ export class CampaignStore {
     this.#state = step.state;
     this.#lines = nextLines;
     this.#hasTrace = true;
+    this.#recordSha256 = evidenceLine.recordSha256;
 
     return { state: step.state, entry: step.entry, status };
   }
 
   async #assertDiskMatchesMemory(): Promise<void> {
     if (!this.#hasTrace) {
-      for (const target of [this.tracePath, this.evidencePath]) {
+      for (const target of [this.tracePath, this.evidencePath, this.statusPath]) {
         try {
           await lstat(target);
         } catch (error) {
@@ -329,6 +340,7 @@ type OnDiskVerificationResult =
       kind: "valid";
       state: CampaignState;
       lines: PersistedCampaignTraceLine[];
+      recordSha256: string;
     };
 
 async function verifyOnDiskState(
@@ -349,6 +361,12 @@ async function verifyOnDiskState(
     traceStat = await lstat(tracePath);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      if (await anyCampaignArtifactExists([evidencePath, statusPath])) {
+        return {
+          kind: "failed_safe",
+          error: "Campaign trace is missing while campaign artifacts survive",
+        };
+      }
       return { kind: "absent" };
     }
     throw error;
@@ -415,11 +433,11 @@ async function verifyOnDiskState(
     return { kind: "failed_safe", error: verification.error };
   }
 
+  const actualRecordSha = campaignSha256Hex(
+    serializeCampaignRecord(verification.record),
+  );
   if (evidenceLines && parsedTrace.lines.length > 0) {
     const lastEvidence = evidenceLines[parsedTrace.lines.length - 1]!;
-    const actualRecordSha = campaignSha256Hex(
-      serializeCampaignRecord(verification.record),
-    );
     if (lastEvidence.recordSha256 !== actualRecordSha) {
       return {
         kind: "failed_safe",
@@ -432,7 +450,23 @@ async function verifyOnDiskState(
     kind: "valid",
     state: verification.record.final,
     lines: [...parsedTrace.lines],
+    recordSha256: actualRecordSha,
   };
+}
+
+async function anyCampaignArtifactExists(
+  paths: readonly string[],
+): Promise<boolean> {
+  for (const target of paths) {
+    try {
+      await lstat(target);
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+  }
+  return false;
 }
 
 async function syncStatusIfNeeded(

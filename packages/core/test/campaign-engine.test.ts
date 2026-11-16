@@ -3,7 +3,7 @@ import {
   CampaignStates as S, CampaignDecisions as D, AgentOps as A, OperatorVerbs as O, EngineOps as E,
   DecisionActions as Actions, CAMPAIGN_SCHEMA_IDS as IDs, CAMPAIGN_STATES, CAMPAIGN_DECISIONS,
   AGENT_OPS, OPERATOR_VERBS, ENGINE_OPS, TERMINAL_STATES,
-  initialCampaignState, stepCampaign, replayCampaign, verifyCampaignRecord, serializeCampaignRecord,
+  initialCampaignState, stepCampaign, replayCampaign, verifyCampaignRecord, verifyCampaignTraceLines, serializeCampaignRecord,
   createCampaignOperatorAdapter, createCampaignOperatorEvent, createCampaignEngineAdapter, createCampaignEngineEvent,
   parseCampaignCharter, parseCampaignRecon, parseCampaignManifest, parseConvergenceIncident,
   parseCampaignState, parseCampaignEvent, parseCampaignTraceEntry, parseCampaignRecord, parseControllerStatus,
@@ -517,4 +517,22 @@ describe("deterministic sequence properties", () => {
       expect(verifyCampaignRecord(clone(replay.record), { authorize: evidenceFor(replay.record) }).valid).toBe(true);
     }
   }, 60_000);
+  it("converts throwing authorize callbacks during verifyCampaignTraceLines replay into failed verification", () => {
+    const events = setup();
+    const replay = replayCampaign(events);
+    const lines = replay.record.events.map((event, seq) => ({
+      seq,
+      event,
+      entry: replay.trace[seq]!,
+    }));
+    const result = verifyCampaignTraceLines(lines, {
+      authorize: () => {
+        throw new Error("evidence unavailable");
+      },
+    });
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toMatch(/Authority evidence failed/u);
+    }
+  });
 });

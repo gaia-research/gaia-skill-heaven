@@ -16,7 +16,7 @@ import path from "node:path";
 import { CampaignStates } from "skill-zero";
 import type { ArborSubjectReport, InstallabilityAssessment } from "skill-zero";
 
-import { CampaignStore } from "../campaign/store.js";
+import { CAMPAIGN_DIR_NAME, CampaignStore } from "../campaign/store.js";
 import type { SkillInvocation, TrustFields } from "../domain/types.js";
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
@@ -26,6 +26,7 @@ import type { SkillInvocation, TrustFields } from "../domain/types.js";
 // cache directory itself as an abandoned session candidate and delete it.
 const SESSION_DIR_PREFIX = "skill-summon-session-";
 const MANIFEST_FILE = "session.json";
+const CAMPAIGN_PAUSE_FILE = "pause.json";
 const DEFAULT_SESSION_TTL_HOURS = 4;
 
 /**
@@ -240,6 +241,8 @@ export class SummonSession {
     tempRoot?: string,
   ): Promise<SummonSession> {
     const session = await SummonSession.loadAt(root, tempRoot);
+    await clearPauseBoundary(root);
+    await CampaignStore.load(root);
     session.#manifest = {
       ...session.#manifest,
       pid: process.pid,
@@ -475,6 +478,7 @@ export async function resolveSession(
     }
     const existing = await SummonSession.loadAt(existingRoot, tempRoot);
     if (harnessSessionId === undefined) {
+      await CampaignStore.load(existingRoot);
       return {
         session: existing,
         created: false,
@@ -660,12 +664,25 @@ export async function reapSessions(
       throw error;
     }
     const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
-    const startedAt = Number.isFinite(createdAt)
+    let startedAt = Number.isFinite(createdAt)
       ? createdAt
       : sessionStat.mtimeMs;
+    let effectiveTtlHours = ttlHours;
+    const paused = await loadPausedCampaignRetention(sessionRoot);
+    if (paused !== undefined && manifest !== undefined) {
+      const pauseBoundaryMs = await resolvePauseBoundaryMs(
+        sessionRoot,
+        manifest.pid,
+        paused.recordSha256,
+        now,
+        dryRun,
+      );
+      if (pauseBoundaryMs !== undefined) {
+        startedAt = pauseBoundaryMs;
+        effectiveTtlHours = paused.retentionHours;
+      }
+    }
     const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
-    const effectiveTtlHours =
-      (await pausedCampaignRetentionHours(sessionRoot)) ?? ttlHours;
     if (ageHours < effectiveTtlHours) continue;
 
     let bytes = 0;
@@ -689,12 +706,19 @@ export async function reapSessions(
   };
 }
 
-async function pausedCampaignRetentionHours(
+type PausedCampaignRetention = {
+  retentionHours: number;
+  recordSha256: string;
+};
+
+async function loadPausedCampaignRetention(
   sessionRoot: string,
-): Promise<number | undefined> {
+): Promise<PausedCampaignRetention | undefined> {
   try {
     const store = await CampaignStore.load(sessionRoot);
-    if (!store.hasTrace || store.corrupted) return undefined;
+    if (!store.hasTrace || store.corrupted || !store.recordSha256) {
+      return undefined;
+    }
     const state = store.state;
     if (
       state.approved &&
@@ -702,12 +726,90 @@ async function pausedCampaignRetentionHours(
       (state.state === CampaignStates.executing ||
         state.state === CampaignStates.convergence)
     ) {
-      return state.charter.sessionRetention;
+      return {
+        retentionHours: state.charter.sessionRetention,
+        recordSha256: store.recordSha256,
+      };
     }
     return undefined;
   } catch {
     return undefined;
   }
+}
+
+async function clearPauseBoundary(sessionRoot: string): Promise<void> {
+  const pausePath = path.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+  await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
+  await rm(pausePath, { force: true });
+}
+
+async function resolvePauseBoundaryMs(
+  sessionRoot: string,
+  expectedPid: number,
+  expectedRecordSha256: string,
+  nowMs: number,
+  dryRun: boolean,
+): Promise<number | undefined> {
+  const pausePath = path.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+  try {
+    await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
+  } catch {
+    return undefined;
+  }
+
+  try {
+    const stat = await lstat(pausePath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      return undefined;
+    }
+    const raw = await readFile(pausePath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return undefined;
+    }
+    const obj = parsed as Record<string, unknown>;
+    if (typeof obj.pausedAt !== "string") return undefined;
+    const pausedAtMs = Date.parse(obj.pausedAt);
+    if (!Number.isFinite(pausedAtMs) || pausedAtMs > nowMs) {
+      return undefined;
+    }
+    if (obj.pid !== expectedPid || obj.recordSha256 !== expectedRecordSha256) {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return nowMs;
+    }
+    return pausedAtMs;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      if (!dryRun) {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      }
+      return nowMs;
+    }
+    return undefined;
+  }
+}
+
+async function writePauseBoundary(
+  pausePath: string,
+  pid: number,
+  recordSha256: string,
+  nowMs: number,
+): Promise<void> {
+  await writeFile(
+    pausePath,
+    `${JSON.stringify(
+      {
+        pausedAt: new Date(nowMs).toISOString(),
+        pid,
+        recordSha256,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
 }
 
 function sessionTtlHours(): number {

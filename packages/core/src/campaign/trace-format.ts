@@ -96,7 +96,12 @@ export function verifyCampaignTraceLines(
   options: CampaignVerificationOptions = {},
 ): CampaignVerification {
   const events = lines.map((line) => line.event);
-  const replayed = replayCampaign(events, { authorize: options.authorize });
+  let replayed;
+  try {
+    replayed = replayCampaign(events, { authorize: options.authorize });
+  } catch {
+    return { valid: false, error: "Authority evidence failed during replay" };
+  }
   const candidate: CampaignTraceRecord = {
     schema: CAMPAIGN_SCHEMA_IDS.trace,
     initial: replayed.initial,

@@ -10,6 +10,8 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   CAMPAIGN_SCHEMA_IDS,
@@ -23,6 +25,12 @@ import {
 } from "skill-zero";
 
 import { CampaignStore } from "../src/campaign/store.js";
+import {
+  createSkillSummonMcpServer,
+  GaiaService,
+  InMemoryGaiaRegistrySource,
+  type GaiaRegistryDocuments,
+} from "../src/index.js";
 import {
   HARNESS_SESSION_ID_ENV_VARS,
   reapSessions,
@@ -381,7 +389,7 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     await expect(access(legacyRoot)).rejects.toThrow();
     await expect(access(pausedRoot)).resolves.toBeUndefined();
 
-    // At +47h59m: still kept.
+    // At +47h59m from creation (37h59m from pause): still kept.
     const at47h = await reapSessions({
       tempRoot,
       ttlHours: 4,
@@ -390,14 +398,122 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     expect(at47h.candidates).toEqual([]);
     await expect(access(pausedRoot)).resolves.toBeUndefined();
 
-    // At +48h01m: past decided window, reaped as usual.
-    const at48h = await reapSessions({
+    // At +48h01m from creation (38h01m from pause): still inside 48h pause window, kept.
+    const at38hFromPause = await reapSessions({
       tempRoot,
       ttlHours: 4,
       now: new Date("2026-04-03T00:01:00.000Z"),
     });
-    expect(at48h.candidates.map((c) => c.root)).toEqual([pausedRoot]);
+    expect(at38hFromPause.candidates).toEqual([]);
+    await expect(access(pausedRoot)).resolves.toBeUndefined();
+
+    // At +47h59m from pause (2026-04-03T09:59:00.000Z): still kept.
+    const at47h59mFromPause = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-03T09:59:00.000Z"),
+    });
+    expect(at47h59mFromPause.candidates).toEqual([]);
+    await expect(access(pausedRoot)).resolves.toBeUndefined();
+
+    // At +48h01m from pause (2026-04-03T10:01:00.000Z): past decided window, reaped as usual.
+    const at48hFromPause = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-03T10:01:00.000Z"),
+    });
+    expect(at48hFromPause.candidates.map((c) => c.root)).toEqual([pausedRoot]);
     await expect(access(pausedRoot)).rejects.toThrow();
+  });
+
+  it("anchors retention to pause boundary for 49h-old sessions, does not renew on repeated reaps, and enforces exact boundary", async () => {
+    const tempRoot = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+    const oldSessionRoot = await createDeadRoot(tempRoot, "old-49h-new-pause", createdAt);
+    await seedPausedCampaign(oldSessionRoot, 48);
+
+    // Process exits after 49h alive; first reap at +49h records pause boundary at 2026-04-03T01:00:00Z.
+    const firstReap = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-03T01:00:00.000Z"),
+    });
+    expect(firstReap.candidates).toEqual([]);
+    await expect(access(oldSessionRoot)).resolves.toBeUndefined();
+
+    // Repeated reaps at +10h and +47h59m59s from pause do not renew the window and keep the root.
+    const repeat1 = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-03T11:00:00.000Z"),
+    });
+    expect(repeat1.candidates).toEqual([]);
+
+    const justBeforeBoundary = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-05T00:59:59.000Z"),
+    });
+    expect(justBeforeBoundary.candidates).toEqual([]);
+    await expect(access(oldSessionRoot)).resolves.toBeUndefined();
+
+    // At exact 48h00m00s from pause boundary, it reaps.
+    const atExactBoundary = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-05T01:00:00.000Z"),
+    });
+    expect(atExactBoundary.candidates.map((c) => c.root)).toEqual([oldSessionRoot]);
+    await expect(access(oldSessionRoot)).rejects.toThrow();
+  });
+
+  it("resets pause lifecycle on reattach/resume and fails closed on tampered pause boundary", async () => {
+    const tempRoot = await makeTempRoot();
+    delete process.env.SKILL_SUMMON_SESSION;
+    process.env.CLAUDE_CODE_SESSION_ID = "sess-pause-reset";
+
+    const first = await resolveSession({ tempRoot });
+    await seedPausedCampaign(first.session.root, 48);
+
+    // Simulate dead pid and first reap recording pause at T0 + 1h.
+    const manifestPath = path.join(first.session.root, "session.json");
+    const m1 = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
+    m1.pid = 99_999_999;
+    await writeFile(manifestPath, JSON.stringify(m1, null, 2), "utf8");
+
+    const tPause1 = new Date("2026-04-01T01:00:00.000Z");
+    expect((await reapSessions({ tempRoot, ttlHours: 4, now: tPause1 })).candidates).toEqual([]);
+    await expect(access(path.join(first.session.root, "campaign", "pause.json"))).resolves.toBeUndefined();
+
+    // Reattach resets pause lifecycle (clears pause.json).
+    const resumed = await resolveSession({ tempRoot });
+    expect(resumed.created).toBe(false);
+    expect(resumed.session.root).toBe(first.session.root);
+    await expect(access(path.join(first.session.root, "campaign", "pause.json"))).rejects.toThrow();
+
+    // Simulate second exit 60h later (well past 48h from tPause1).
+    const m2 = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
+    m2.pid = 99_999_998;
+    await writeFile(manifestPath, JSON.stringify(m2, null, 2), "utf8");
+
+    const tPause2 = new Date("2026-04-03T13:00:00.000Z");
+    const afterSecondExit = await reapSessions({ tempRoot, ttlHours: 4, now: tPause2 });
+    expect(afterSecondExit.candidates).toEqual([]);
+    await expect(access(first.session.root)).resolves.toBeUndefined();
+
+    // Tampered future pause.json fails closed (falls back to default TTL from createdAt).
+    await writeFile(
+      path.join(first.session.root, "campaign", "pause.json"),
+      JSON.stringify({
+        pausedAt: "2099-01-01T00:00:00.000Z",
+        pid: 99_999_998,
+        recordSha256: "0".repeat(64),
+      }),
+      "utf8",
+    );
+    const futureNow = new Date(Date.now() + 5 * 3_600_000);
+    const afterTamper = await reapSessions({ tempRoot, ttlHours: 4, now: futureNow });
+    expect(afterTamper.candidates.map((c) => c.root)).toEqual([first.session.root]);
   });
 
   it("has no compiled pause default (sessionRetention: 0 reaps immediately) and ignores unapproved/terminal/forged-status roots", async () => {
@@ -462,5 +578,117 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     expect(at5h.candidates.map((c) => c.root).sort()).toEqual(
       [completed, forgedStatus, unapproved].sort(),
     );
+  });
+});
+
+describe("reattach campaign fold/verification and status refresh", () => {
+  const emptyRegistryDocs: GaiaRegistryDocuments = {
+    generic: { generatedAt: "2026-07-16T00:00:00Z", skills: [] },
+    named: { generatedAt: "2026-07-16", buckets: {} },
+  };
+
+  async function markDeadPid(sessionRoot: string): Promise<void> {
+    const manifestPath = path.join(sessionRoot, "session.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
+    manifest.pid = 99_999_999;
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+  }
+
+  it("folds and refreshes status.json to FAILED_SAFE or verified projection on scan and explicit env-root reattach", async () => {
+    const tempRoot = await makeTempRoot();
+
+    // 1. Scan path with tampered trace.jsonl -> status.json refreshed to FAILED_SAFE before returning
+    delete process.env.SKILL_SUMMON_SESSION;
+    process.env.CLAUDE_CODE_SESSION_ID = "sess-scan-tampered";
+    const s1 = await resolveSession({ tempRoot });
+    await seedPausedCampaign(s1.session.root, 24);
+    const tracePath1 = path.join(s1.session.root, "campaign", "trace.jsonl");
+    const statusPath1 = path.join(s1.session.root, "campaign", "status.json");
+    await writeFile(tracePath1, `${await readFile(tracePath1, "utf8")}corrupt-line\n`, "utf8");
+    await markDeadPid(s1.session.root);
+
+    const resumedScanTampered = await resolveSession({ tempRoot });
+    expect(resumedScanTampered.created).toBe(false);
+    expect(resumedScanTampered.session.root).toBe(s1.session.root);
+    const refreshedStatus1 = JSON.parse(await readFile(statusPath1, "utf8")) as Record<string, unknown>;
+    expect(refreshedStatus1).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+
+    // 2. Explicit SKILL_SUMMON_SESSION env-root with stale status.json -> refreshed to EXECUTING
+    delete process.env.SKILL_SUMMON_SESSION;
+    process.env.CLAUDE_CODE_SESSION_ID = "sess-env-stale";
+    const s2 = await resolveSession({ tempRoot });
+    await seedPausedCampaign(s2.session.root, 24);
+    const statusPath2 = path.join(s2.session.root, "campaign", "status.json");
+    await writeFile(
+      statusPath2,
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+    await markDeadPid(s2.session.root);
+
+    process.env.SKILL_SUMMON_SESSION = s2.session.root;
+    const resumedEnvStale = await resolveSession({ tempRoot });
+    expect(resumedEnvStale.created).toBe(false);
+    expect(resumedEnvStale.session.root).toBe(s2.session.root);
+    const refreshedStatus2 = JSON.parse(await readFile(statusPath2, "utf8")) as Record<string, unknown>;
+    expect(refreshedStatus2).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+    });
+
+    // 3. Explicit SKILL_SUMMON_SESSION env-root with tampered trace -> refreshed to FAILED_SAFE
+    await writeFile(
+      path.join(s2.session.root, "campaign", "trace.jsonl"),
+      `${await readFile(path.join(s2.session.root, "campaign", "trace.jsonl"), "utf8")}bad\n`,
+      "utf8",
+    );
+    await markDeadPid(s2.session.root);
+    const resumedEnvTampered = await resolveSession({ tempRoot });
+    expect(resumedEnvTampered.created).toBe(false);
+    expect(resumedEnvTampered.session.root).toBe(s2.session.root);
+    const refreshedStatus3 = JSON.parse(await readFile(statusPath2, "utf8")) as Record<string, unknown>;
+    expect(refreshedStatus3).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.failedSafe,
+    });
+  });
+
+  it("folds and refreshes campaign status through the actual MCP resolveSession path", async () => {
+    delete process.env.SKILL_SUMMON_SESSION;
+    process.env.CLAUDE_CODE_SESSION_ID = "sess-mcp-reattach";
+
+    const seeded = await resolveSession();
+    cleanupRoots.push(seeded.session.root);
+    await seedPausedCampaign(seeded.session.root, 24);
+    const tracePath = path.join(seeded.session.root, "campaign", "trace.jsonl");
+    const statusPath = path.join(seeded.session.root, "campaign", "status.json");
+    await writeFile(tracePath, `${await readFile(tracePath, "utf8")}tampered\n`, "utf8");
+    await markDeadPid(seeded.session.root);
+
+    // Point MCP's resolveSession() at our seeded session root via SKILL_SUMMON_SESSION.
+    process.env.SKILL_SUMMON_SESSION = seeded.session.root;
+
+    const service = new GaiaService(new InMemoryGaiaRegistrySource(emptyRegistryDocs), {
+      now: () => new Date("2026-07-16T12:00:00Z"),
+    });
+    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+    const client = new Client({ name: "reattach-test", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    try {
+      await client.callTool({ name: "summon", arguments: { query: "nonexistent" } });
+      const statusAfterMcp = JSON.parse(await readFile(statusPath, "utf8")) as Record<string, unknown>;
+      expect(statusAfterMcp).toMatchObject({
+        schema: CAMPAIGN_SCHEMA_IDS.status,
+        state: CampaignStates.failedSafe,
+      });
+    } finally {
+      await client.close();
+      await server.close();
+    }
   });
 });
