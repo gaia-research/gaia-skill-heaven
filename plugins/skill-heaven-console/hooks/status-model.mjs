@@ -646,9 +646,9 @@ function controllerFromSteeringEntry(entry) {
     ...from && explanation && entry.changed === true ? { transition: { from: from.toUpperCase(), to: state, reason: explanation } } : {}
   };
 }
-var PROPOSED_CONTROLLER_SCHEMA = "skill-heaven/controller-status@0";
+var CONTROLLER_STATUS_SCHEMA = "skill-heaven/controller-status/v1";
 function controllerFromCampaignStatus(value) {
-  if (!isRec(value) || value.schema !== PROPOSED_CONTROLLER_SCHEMA) return null;
+  if (!isRec(value) || value.schema !== CONTROLLER_STATUS_SCHEMA) return null;
   const allowed = /* @__PURE__ */ new Set(["schema", "state", "effective", "progress", "transition"]);
   if (Object.keys(value).some((k) => !allowed.has(k))) return null;
   if (typeof value.state !== "string" || !/^[A-Z][A-Z0-9 ·_-]{0,31}$/.test(value.state)) return null;
@@ -659,7 +659,8 @@ function controllerFromCampaignStatus(value) {
   }
   if (value.progress !== void 0) {
     const p = value.progress;
-    if (!isRec(p) || !Number.isInteger(p.completed) || !Number.isInteger(p.total)) return null;
+    if (!isRec(p) || Object.keys(p).some((k) => k !== "completed" && k !== "total")) return null;
+    if (!Number.isSafeInteger(p.completed) || !Number.isSafeInteger(p.total)) return null;
     const completed = p.completed;
     const total = p.total;
     if (completed < 0 || total < 1 || completed > total) return null;
@@ -667,7 +668,8 @@ function controllerFromCampaignStatus(value) {
   }
   if (value.transition !== void 0) {
     const t = value.transition;
-    if (!isRec(t) || typeof t.from !== "string" || typeof t.to !== "string" || typeof t.reason !== "string") return null;
+    if (!isRec(t) || Object.keys(t).some((k) => k !== "from" && k !== "to" && k !== "reason")) return null;
+    if (typeof t.from !== "string" || t.from.length === 0 || typeof t.to !== "string" || t.to.length === 0 || typeof t.reason !== "string" || t.reason.length === 0) return null;
     out.transition = { from: t.from, to: t.to, reason: t.reason };
   }
   return out;
@@ -1793,6 +1795,7 @@ export {
   CHIP_MEANING,
   CLOSE_CALL_MARGIN,
   CONSOLE_SURFACES,
+  CONTROLLER_STATUS_SCHEMA,
   DEFAULT_FIELD_LIMIT,
   DEFAULT_PLAN_PATHS,
   EVIDENCE_LEGEND,
@@ -1805,7 +1808,6 @@ export {
   MAX_SKILLS_PER_ENTRY,
   PROFILES,
   PROFILE_PITCH,
-  PROPOSED_CONTROLLER_SCHEMA,
   ROLE_COLORS,
   RUNGS,
   RUNG_BAND,

@@ -551,6 +551,34 @@ function eventsFromLedger(manifest, logLines) {
   }
   return events;
 }
+var CONTROLLER_STATUS_SCHEMA = "skill-heaven/controller-status/v1";
+function controllerFromCampaignStatus(value2) {
+  if (!isRec(value2) || value2.schema !== CONTROLLER_STATUS_SCHEMA) return null;
+  const allowed = /* @__PURE__ */ new Set(["schema", "state", "effective", "progress", "transition"]);
+  if (Object.keys(value2).some((k) => !allowed.has(k))) return null;
+  if (typeof value2.state !== "string" || !/^[A-Z][A-Z0-9 ·_-]{0,31}$/.test(value2.state)) return null;
+  const out = { kind: "reported", source: "campaign", state: value2.state };
+  if (value2.effective !== void 0) {
+    if (!isRung(value2.effective) || value2.effective === "zero" || value2.effective === "ultra") return null;
+    out.effective = value2.effective;
+  }
+  if (value2.progress !== void 0) {
+    const p = value2.progress;
+    if (!isRec(p) || Object.keys(p).some((k) => k !== "completed" && k !== "total")) return null;
+    if (!Number.isSafeInteger(p.completed) || !Number.isSafeInteger(p.total)) return null;
+    const completed = p.completed;
+    const total = p.total;
+    if (completed < 0 || total < 1 || completed > total) return null;
+    out.progress = { completed, total };
+  }
+  if (value2.transition !== void 0) {
+    const t = value2.transition;
+    if (!isRec(t) || Object.keys(t).some((k) => k !== "from" && k !== "to" && k !== "reason")) return null;
+    if (typeof t.from !== "string" || t.from.length === 0 || typeof t.to !== "string" || t.to.length === 0 || typeof t.reason !== "string" || t.reason.length === 0) return null;
+    out.transition = { from: t.from, to: t.to, reason: t.reason };
+  }
+  return out;
+}
 
 // packages/status/src/compat-console.ts
 var step = (argv, run, effect) => ({ where: "shell", argv, run, effect });
@@ -1554,13 +1582,14 @@ var DEFAULT_PLAN_PATHS = {
 };
 
 // packages/console/src/reader.ts
-import { openSync, closeSync, fstatSync, readSync, realpathSync } from "node:fs";
+import { openSync, closeSync, fstatSync, lstatSync, readSync, realpathSync, constants } from "node:fs";
 import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 var MAX_BYTES = 8 * 1024 * 1024;
 var MAX_ROWS = 1e4;
-function readBounded(path) {
-  const fd = openSync(path, "r");
+function readBounded(path, opts = {}) {
+  const flags = constants.O_RDONLY | (opts.noFollow ? constants.O_NOFOLLOW ?? 0 : 0);
+  const fd = openSync(path, flags);
   try {
     const stat = fstatSync(fd);
     if (!stat.isFile() || stat.size > MAX_BYTES) throw new Error("console input exceeds file bound");
@@ -1592,13 +1621,83 @@ function unknownState() {
   const state = initialConsoleState();
   return { ...state, status: { ...state.status, skills: null, summons: null, reading: { kind: "unknown" } } };
 }
+function readCampaignStatus(sessionRoot) {
+  const safeRoot = realpathSync(sessionRoot);
+  const campaignDir = join(safeRoot, "campaign");
+  let dirStat;
+  try {
+    dirStat = lstatSync(campaignDir);
+  } catch (err) {
+    const code = err.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return null;
+    throw err;
+  }
+  if (dirStat.isSymbolicLink()) throw new Error("campaign status escapes session root");
+  if (!dirStat.isDirectory()) return null;
+  const statusPath = join(campaignDir, "status.json");
+  let fileStat;
+  try {
+    fileStat = lstatSync(statusPath);
+  } catch (err) {
+    const code = err.code;
+    if (code === "ENOENT" || code === "ENOTDIR") return null;
+    throw err;
+  }
+  if (fileStat.isSymbolicLink()) throw new Error("campaign status escapes session root");
+  if (!fileStat.isFile()) return null;
+  if (!realpathSync(statusPath).startsWith(safeRoot + sep)) throw new Error("campaign status escapes session root");
+  let raw;
+  try {
+    raw = readBounded(statusPath, { noFollow: true });
+  } catch (err) {
+    const code = err.code;
+    if (code === "ELOOP") throw new Error("campaign status escapes session root");
+    throw err;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  return controllerFromCampaignStatus(parsed);
+}
+function readLedgerLines(safeRoot, allowMissing) {
+  const logPath = join(safeRoot, "summon-log.jsonl");
+  let logStat;
+  try {
+    logStat = lstatSync(logPath);
+  } catch (err) {
+    const code = err.code;
+    if (allowMissing && code === "ENOENT") return [];
+    throw err;
+  }
+  if (logStat.isSymbolicLink()) throw new Error("summon log escapes session root");
+  if (!logStat.isFile()) return jsonLines(readBounded(logPath, { noFollow: true }));
+  if (!realpathSync(logPath).startsWith(safeRoot + sep)) throw new Error("summon log escapes session root");
+  try {
+    return jsonLines(readBounded(logPath, { noFollow: true }));
+  } catch (err) {
+    const code = err.code;
+    if (code === "ELOOP") throw new Error("summon log escapes session root");
+    throw err;
+  }
+}
 function ledgerState(sessionRoot) {
-  const manifest = JSON.parse(readBounded(join(sessionRoot, "session.json")));
-  const lines = jsonLines(readBounded(join(sessionRoot, "summon-log.jsonl")));
+  const safeRoot = realpathSync(sessionRoot);
+  const manifest = JSON.parse(readBounded(join(safeRoot, "session.json")));
+  const controller = readCampaignStatus(safeRoot);
+  const lines = readLedgerLines(safeRoot, controller !== null);
   let state = initialConsoleState();
   for (const event of eventsFromLedger(manifest, lines)) state = recordEvent(state, event, null, "ledger", { readObservable: false });
   const facts = skillsFromSessionManifest(manifest);
   state.status = { ...state.status, skills: facts.skills };
+  if (controller) {
+    state.status = {
+      ...withReading(state.status, { kind: "selected", rung: "ultra", source: "observed-command" }),
+      controller
+    };
+  }
   return state;
 }
 var rec = (v) => !!v && typeof v === "object" && !Array.isArray(v);
