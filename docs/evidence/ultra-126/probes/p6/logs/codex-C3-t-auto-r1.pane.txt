@@ -1,10 +1,10 @@
-<USER>@<HOST> tmpe93abltw % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpsuzt4sem' && codex --no-alt-screen -m
- gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpsuzt4sem".trust_level="trust
+<USER>@<HOST> tmpe93abltw % cd '<TMP>/tmpsuzt4sem' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmpsuzt4sem".trust_level="trust
 ed"' -c 'mcp_servers.p6.command="node"' -c 'mcp_servers.p6.args=["<HOME>/skill-heaven-wt/p6b/docs/evidence/ultra-126/probes/p6/server.
-mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpsuzt4sem/c3t.jsonl"}'
+mjs"]' -c 'mcp_servers.p6.env={P6_LOG="<TMP>/tmpsuzt4sem/c3t.jsonl"}'
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpsuzt4sem
+     <TMP>/tmpsuzt4sem
 
   To get started, describe a task or try one of these commands:
 
@@ -28,5 +28,5 @@ mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/var/folders/lx/k6kw155s56d7l_crq
 
 › Ask Codex to do anything
 
-  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpsuzt4sem
+  GPT-6-Luna low · <TMP>/tmpsuzt4sem
   ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view

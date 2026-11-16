@@ -8,14 +8,14 @@
 Token usage: total=13,493 input=13,383 (+ 37,760 cached) output=110
 To continue this session, run:
   codex resume 01a1e1ad-3378-7fe2-afc9-672fc0034f1b
-<USER>@<HOST> tmp6408fek3 % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpjfq0f9hn' && codex --no-alt-screen -m
- gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpjfq0f9hn".trust_level="trust
+<USER>@<HOST> tmp6408fek3 % cd '<TMP>/tmpjfq0f9hn' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmpjfq0f9hn".trust_level="trust
 ed"' -c 'approvals_reviewer="user"' -c 'mcp_servers.p6.command="node"' -c 'mcp_servers.p6.args=["<HOME>/skill-heaven-wt/p6b/docs/evide
-nce/ultra-126/probes/p6/server.mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpjfq0f9hn/c3t.jsonl
+nce/ultra-126/probes/p6/server.mjs"]' -c 'mcp_servers.p6.env={P6_LOG="<TMP>/tmpjfq0f9hn/c3t.jsonl
 "}'
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpjfq0f9hn
+     <TMP>/tmpjfq0f9hn
 
   To get started, describe a task or try one of these commands:
 
@@ -41,5 +41,5 @@ nce/ultra-126/probes/p6/server.mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/v
 
 › Ask Codex to do anything
 
-  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpjfq0f9hn
+  GPT-6-Luna low · <TMP>/tmpjfq0f9hn
   ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view

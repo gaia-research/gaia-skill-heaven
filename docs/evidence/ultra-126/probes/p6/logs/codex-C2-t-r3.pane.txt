@@ -1,6 +1,6 @@
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpz2ag4y1k
+     <TMP>/tmpz2ag4y1k
 
   To get started, describe a task or try one of these commands:
 
@@ -15,12 +15,12 @@
 
 To continue this session, run:
   codex resume 01a1e1ab-cbb4-7633-a4d2-e77bb60ab220
-<USER>@<HOST> tmpz2ag4y1k % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp5h5in4w_' && codex --no-alt-screen -m
- gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp5h5in4w_".trust_level="trust
+<USER>@<HOST> tmpz2ag4y1k % cd '<TMP>/tmp5h5in4w_' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmp5h5in4w_".trust_level="trust
 ed"'
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp5h5in4w_
+     <TMP>/tmp5h5in4w_
 
   To get started, describe a task or try one of these commands:
 
@@ -41,5 +41,5 @@ ed"'
 
 › Ask Codex to do anything
 
-  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp5h5in4w_
+  GPT-6-Luna low · <TMP>/tmp5h5in4w_
   ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view

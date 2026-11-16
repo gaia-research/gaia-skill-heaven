@@ -9,13 +9,13 @@
 Token usage: total=12,593 input=12,500 (+ 36,736 cached) output=93
 To continue this session, run:
   codex resume 01a1e1aa-5ff3-7593-a29b-f88a83f86f67
-<USER>@<HOST> tmpeiu21c8f % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmplp1yr_jb' && codex --no-alt-screen -m
- gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmplp1yr_jb".trust_level="trust
+<USER>@<HOST> tmpeiu21c8f % cd '<TMP>/tmplp1yr_jb' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmplp1yr_jb".trust_level="trust
 ed"' -c 'mcp_servers.p6.command="node"' -c 'mcp_servers.p6.args=["<HOME>/skill-heaven-wt/p6b/docs/evidence/ultra-126/probes/p6/server.
-mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmplp1yr_jb/c1t.jsonl"}'
+mjs"]' -c 'mcp_servers.p6.env={P6_LOG="<TMP>/tmplp1yr_jb/c1t.jsonl"}'
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmplp1yr_jb
+     <TMP>/tmplp1yr_jb
 
   To get started, describe a task or try one of these commands:
 
@@ -41,5 +41,5 @@ mjs"]' -c 'mcp_servers.p6.env={P6_LOG="/private/var/folders/lx/k6kw155s56d7l_crq
 
 › Ask Codex to do anything
 
-  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmplp1yr_jb
+  GPT-6-Luna low · <TMP>/tmplp1yr_jb
   ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view

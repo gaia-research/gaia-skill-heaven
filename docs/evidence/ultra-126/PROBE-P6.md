@@ -102,7 +102,7 @@
 ## Door 3: Codex (codex)
 
 - **Date (pass 2):** 2026-11-16 (`2026-11-15T23:59:09Z` – `2026-11-16T00:09:16Z`)
-- **Herdr pane IDs:** `w31:p1F` (headless `codex exec` batch, `C1-t` r1–r3, `C2-t` slash menu / r1 / r3, `C3-t` `user` r1) and `w31:p1G` (`C1-t` r2, `C2-t` r2, `C3-t` `user` r2–r3, `C3-t` `auto` r1–r3); tab `w31:tM`, `w31:p1` untouched. Both probe panes were closed after recording.
+- **Herdr pane IDs:** `w31:p1F` (headless `codex exec` batch, `C1-t` r1 and r3, `C2-t` slash menu / r1 / r3) and `w31:p1G` (`C1-t` r2, `C2-t` r2, `C3-t` `user` r1–r3, `C3-t` `auto` r1–r3); tab `w31:tM`, `w31:p1` untouched. Both probe panes were closed after recording.
 - **Version:** `codex-cli 0.169.0` (`codex --version`)
 - **Model:** `gpt-6-luna`, reasoning effort `low` (`-m gpt-6-luna -c 'model_reasoning_effort="low"'`). Verified in Codex's own rollout session logs (`~/.codex/sessions/.../rollout-*.jsonl` `turn_context`: `"model": "gpt-6-luna"`, `"effort": "low"`) on every run.
 - **Config method:** Per-invocation `-c` overrides inside fresh `mktemp -d` directories (never editing `~/.codex/config.toml` or anything in `~/.codex/`; SHA-256 of `~/.codex/config.toml` verified unchanged before and after):
@@ -133,7 +133,7 @@
 | `C2-h` | headless `codex exec`, `$probe-decide` ([fixture](probes/p6/fixtures/codex-probe-decide-skill.md)); plus `/` menu & `/presets` evidence | 1 | No shell-pre-execution custom-prompt or slash-command mechanism (`/presets` states `"Presets support prompts and slash commands, not shell commands."`). `.agents/skills/probe-decide/SKILL.md` loaded in rollout (`skillLoadedInRollout: true`); `cmdJsonExists: false`; assistant output: `NONE`. Rollout verified `gpt-6-luna` / `low`. |
 | `C2-h` | headless `codex exec`, `$probe-decide` | 2 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; assistant output: `I can’t run tools to execute the skill’s command. I can’t report a P6_PREEXEC_STDOUT line from tool output.`. Rollout verified `gpt-6-luna` / `low`. |
 | `C2-h` | headless `codex exec`, `$probe-decide` | 3 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; assistant output: `NONE`. Rollout verified `gpt-6-luna` / `low`. |
-| `C2-t` | TUI (`w31:p1F` / `w31:p1G`), `$probe-decide` | 1 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; pane output: `NONE`. Rollout (`01a1e1ab-9e6e-7c91-bf0e-441dcde1dbfb`) verified `gpt-6-luna` / `low`. |
+| `C2-t` | TUI (`w31:p1F`), `$probe-decide` | 1 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; pane output: `NONE`. Rollout (`01a1e1ab-9e6e-7c91-bf0e-441dcde1dbfb`) verified `gpt-6-luna` / `low`. |
 | `C2-t` | TUI (`w31:p1G`), `$probe-decide` | 2 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; pane output: `NONE`. Rollout (`01a1e1ae-cce7-7e00-a638-7da5198c7257`) verified `gpt-6-luna` / `low`. |
 | `C2-t` | TUI (`w31:p1F`), `$probe-decide` | 3 | `skillLoadedInRollout: true`; `cmdJsonExists: false`; pane output: `NONE`. Rollout (`01a1e1ab-dfc2-7493-841d-c28e2ccb737b`) verified `gpt-6-luna` / `low`. |
 | `C3-t` | TUI (`w31:p1G`), `Ask for approval` (`approval_policy = "on-request"`, `sandbox_mode = "workspace-write"`, `-c approvals_reviewer="user"`), `operator_decide` | 1 | Approval prompt raised (`Allow the p6 MCP server to run tool "operator_decide"?`, options `1. Allow`, `2. Allow for this session`, `3. Always allow`, `4. Cancel`). Sending `4` + `Enter` printed `Error: user cancelled MCP tool call` and prevented `tools/call` / `operator_decide_called` (`operatorDecideCalled: false`). Rollout verified `gpt-6-luna` / `low`. |

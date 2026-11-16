@@ -1,9 +1,9 @@
-<USER>@<HOST> tmpyt4zxvx8 % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpyi8wyo8p' && codex --no-alt-screen -m
- gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpyi8wyo8p".trust_level="trust
+<USER>@<HOST> tmpyt4zxvx8 % cd '<TMP>/tmpyi8wyo8p' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmpyi8wyo8p".trust_level="trust
 ed"'
 
   >_ OpenAI Codex (v0.169.0)
-     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpyi8wyo8p
+     <TMP>/tmpyi8wyo8p
 
   To get started, describe a task or try one of these commands:
 
@@ -24,5 +24,5 @@ ed"'
 
 › Ask Codex to do anything
 
-  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpyi8wyo8p
+  GPT-6-Luna low · <TMP>/tmpyi8wyo8p
   ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view
