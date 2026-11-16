@@ -23,6 +23,7 @@ vi.mock("node:fs/promises", async () => {
 import { spawn } from "node:child_process";
 import {
   existsSync,
+  lstatSync,
   readdirSync,
   readFileSync,
   realpathSync,
@@ -35,6 +36,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,6 +62,10 @@ import {
   createIsolatedTempNamespace,
   disposeIsolatedTempNamespace,
   getActiveWorkerTempNamespace,
+  getEstimatedDoorPipeBytesForNamespaceRoot,
+  getMaxUnixSocketPathBytes,
+  getTsxIpcUserToken,
+  getTsxMaxPidDigits,
   HERMETIC_TEMP_ENV_VARS,
   WORKER_TEMP_NAMESPACE_PREFIX,
 } from "./hermetic-session-env.js";
@@ -587,9 +593,151 @@ describe("vitest worker temp-root namespace isolation", () => {
     expect(await readFile(callerSentinel, "utf8")).toBe("KEEP_CALLER_FILE");
     expect(await readFile(callerManifestPath, "utf8")).toBe(callerManifestBody);
 
-    // The child's own skill-heaven-vitest-tmp-* namespace was cleaned up on exit.
+    // The child's own isolated worker namespace was cleaned up on exit.
     expect(readdirSync(callerRoot).sort()).toEqual([
       "caller-sentinel.txt",
+      "skill-summon-session-caller-owned",
+    ]);
+  });
+
+  it("fits the derived door-contract tsx Unix socket path budget and binds a real socket", async () => {
+    const ns = getActiveWorkerTempNamespace()!;
+    const maxSocketBytes = getMaxUnixSocketPathBytes();
+    if (maxSocketBytes === undefined) {
+      expect(process.platform).toBe("win32");
+      return;
+    }
+
+    const estimatedBytes = getEstimatedDoorPipeBytesForNamespaceRoot(ns.root);
+    expect(estimatedBytes).toBeLessThanOrEqual(maxSocketBytes);
+
+    const sandboxRoot = await mkdtemp(path.join(tmpdir(), "door-contract-"));
+    dirsToRemove.push(sandboxRoot);
+    const tsxUserDir = path.join(
+      sandboxRoot,
+      "tmp",
+      `tsx-${getTsxIpcUserToken()}`,
+    );
+    await mkdir(tsxUserDir, { recursive: true });
+    const maxPidSocketPath = path.join(
+      tsxUserDir,
+      `${"9".repeat(getTsxMaxPidDigits())}.pipe`,
+    );
+
+    expect(Buffer.byteLength(maxPidSocketPath, "utf8")).toBeLessThanOrEqual(
+      maxSocketBytes,
+    );
+
+    const server = createServer();
+    try {
+      await new Promise<void>((resolveListen, rejectListen) => {
+        server.once("error", rejectListen);
+        server.listen(maxPidSocketPath, () => resolveListen());
+      });
+    } finally {
+      await new Promise<void>((resolveClose) => server.close(() => resolveClose()));
+    }
+  });
+
+  it("uses a private short parent fallback for oversized caller TMPDIR without mutating caller sentinels", async () => {
+    const maxSocketBytes = getMaxUnixSocketPathBytes();
+    if (maxSocketBytes === undefined) {
+      expect(process.platform).toBe("win32");
+      return;
+    }
+
+    const baseCaller = await mkdtemp(path.join(tmpdir(), "long-caller-base-"));
+    dirsToRemove.push(baseCaller);
+    const longCallerRoot = path.join(
+      baseCaller,
+      "deeply-nested-caller-temp-root-exceeding-darwin-sun-path-socket-limit",
+    );
+    await mkdir(longCallerRoot, { recursive: true });
+
+    const callerSentinel = path.join(longCallerRoot, "caller-keep.txt");
+    await writeFile(callerSentinel, "KEEP_LONG_CALLER", "utf8");
+    const callerSession = path.join(
+      longCallerRoot,
+      "skill-summon-session-caller-owned",
+    );
+    await mkdir(callerSession, { recursive: true });
+    const callerManifest = path.join(callerSession, "session.json");
+    const callerManifestBody = JSON.stringify({
+      id: "caller-owned",
+      pid: DEAD_FIXTURE_PID,
+      skills: [],
+    });
+    await writeFile(callerManifest, callerManifestBody, "utf8");
+
+    const syntheticEnv: NodeJS.ProcessEnv = {
+      TMPDIR: longCallerRoot,
+      TMP: undefined,
+      TEMP: longCallerRoot,
+    };
+
+    const isolated = createIsolatedTempNamespace(syntheticEnv, {
+      allowShortParentFallback: true,
+    });
+    try {
+      expect(isolated.callerTmpdir).toBe(path.resolve(longCallerRoot));
+      expect(canonicalDir(path.dirname(isolated.root))).not.toBe(
+        canonicalDir(longCallerRoot),
+      );
+      expect(
+        getEstimatedDoorPipeBytesForNamespaceRoot(isolated.root),
+      ).toBeLessThanOrEqual(maxSocketBytes);
+
+      const st = lstatSync(isolated.root);
+      expect(st.isSymbolicLink()).toBe(false);
+      expect(st.isDirectory()).toBe(true);
+      expect(st.mode & 0o077).toBe(0);
+      if (typeof process.geteuid === "function") {
+        expect(st.uid).toBe(process.geteuid());
+      }
+
+      const sandboxRoot = await mkdtemp(
+        path.join(isolated.root, "door-contract-"),
+      );
+      const tsxUserDir = path.join(
+        sandboxRoot,
+        "tmp",
+        `tsx-${getTsxIpcUserToken()}`,
+      );
+      await mkdir(tsxUserDir, { recursive: true });
+      const socketPath = path.join(
+        tsxUserDir,
+        `${"9".repeat(getTsxMaxPidDigits())}.pipe`,
+      );
+      expect(Buffer.byteLength(socketPath, "utf8")).toBeLessThanOrEqual(
+        maxSocketBytes,
+      );
+      const server = createServer();
+      try {
+        await new Promise<void>((resolveListen, rejectListen) => {
+          server.once("error", rejectListen);
+          server.listen(socketPath, () => resolveListen());
+        });
+      } finally {
+        await new Promise<void>((resolveClose) =>
+          server.close(() => resolveClose()),
+        );
+      }
+
+      expect(syntheticEnv.TMPDIR).toBe(isolated.root);
+      expect(syntheticEnv.TMP).toBe(isolated.root);
+      expect(syntheticEnv.TEMP).toBe(isolated.root);
+    } finally {
+      disposeIsolatedTempNamespace(isolated, syntheticEnv);
+    }
+
+    expect(syntheticEnv.TMPDIR).toBe(longCallerRoot);
+    expect(syntheticEnv.TMP).toBeUndefined();
+    expect(syntheticEnv.TEMP).toBe(longCallerRoot);
+    expect(existsSync(isolated.root)).toBe(false);
+    expect(await readFile(callerSentinel, "utf8")).toBe("KEEP_LONG_CALLER");
+    expect(await readFile(callerManifest, "utf8")).toBe(callerManifestBody);
+    expect(readdirSync(longCallerRoot).sort()).toEqual([
+      "caller-keep.txt",
       "skill-summon-session-caller-owned",
     ]);
   });
