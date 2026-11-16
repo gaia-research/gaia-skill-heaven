@@ -6,7 +6,10 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 ## Repo rules (from CLAUDE.md, binding)
 
 - TypeScript ESM, Node ≥ 22, **no runtime dependencies**.
-- `npm test` (vitest), `npm run typecheck`. Both must be green on your final HEAD.
+- `npm test` (vitest), `npm run typecheck`. Both must be green on your final HEAD, **run twice: once with
+  `CLAUDE_CODE_SESSION_ID` unset and once with it set to a fixed value** (e.g. `CLAUDE_CODE_SESSION_ID=test-fixed npm test`).
+  Any test that starts a summon server or session must be hermetic about that variable. (U0b shipped a
+  leak that only showed when the variable was set, as it is inside any Claude Code session.)
 - Rendered text must pass `test/authority-regression.test.ts`.
 - Rebuild committed bundles when their sources change: `npm run build:mcp`,
   `npm run build:status`, `npm run build:console`. Commit the rebuilt bundle.
@@ -54,6 +57,8 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   (or the Pi native `reviewer` subagent). The reviewer now has `bash` and verifies
   claims itself (git diff, tests, typecheck, builds). Its agent definition limits shell
   use to verification: no commits, pushes, branch changes or config edits.
+- Ask the reviewer for targeted `npx vitest run <files>` plus one full `npm test`. No watch mode and no
+  long-running servers: a reviewer once hung until its 3-hour timeout.
 - Tell the reviewer the base (`origin/integration/skill-ultra-126`) and the exact HEAD
   SHA, and ask it to run the verification commands itself, not to trust your counts.
 - Fallback only: if a reviewer reports it could not run commands, give it an evidence
