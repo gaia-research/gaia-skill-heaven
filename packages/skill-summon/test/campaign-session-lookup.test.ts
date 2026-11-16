@@ -6,6 +6,9 @@ const fsSpyState = vi.hoisted(() => {
   return {
     recording: false,
     ops: [] as OpRecord[],
+    onOp: undefined as
+      | ((op: string, args: readonly unknown[]) => void)
+      | undefined,
     reset() {
       this.ops.length = 0;
     },
@@ -33,6 +36,7 @@ vi.mock("node:fs/promises", async () => {
             .slice(0, 2),
         });
       }
+      fsSpyState.onOp?.(name, args as readonly unknown[]);
       return fn(...args);
     }) as unknown as T;
 
@@ -54,6 +58,8 @@ vi.mock("node:fs/promises", async () => {
 
 import {
   access,
+  chmod,
+  lstat,
   mkdir,
   mkdtemp,
   readdir,
@@ -89,6 +95,7 @@ import {
   listSessions,
   reapSessions,
   resolveSession,
+  SummonSession,
 } from "../src/summon/session.js";
 
 const DEAD_PID = 99_999_999;
@@ -109,6 +116,7 @@ const savedEnv = {
 
 beforeEach(() => {
   fsSpyState.recording = false;
+  fsSpyState.onOp = undefined;
   fsSpyState.reset();
   resetArborPublicationCache();
   resetArborIdentityCache();
@@ -118,6 +126,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   fsSpyState.recording = false;
+  fsSpyState.onOp = undefined;
   fsSpyState.reset();
   resetArborPublicationCache();
   resetArborIdentityCache();
@@ -1031,5 +1040,488 @@ describe("O(1) harness-session lookup and startup scaling", () => {
       ),
     ).rejects.toThrow();
     await expect(access(live.session.root)).resolves.toBeUndefined();
+  });
+});
+
+describe("best-effort sidecar index failures and index directory privacy", () => {
+  async function startOfflineMcpClient(
+    isolatedTmp: string,
+    harnessSessionId: string,
+    clientName: string,
+  ) {
+    resetArborPublicationCache();
+    resetArborIdentityCache();
+    process.env.TMPDIR = isolatedTmp;
+    process.env.TMP = isolatedTmp;
+    process.env.TEMP = isolatedTmp;
+    process.env.CLAUDE_CODE_SESSION_ID = harnessSessionId;
+    delete process.env.SKILL_SUMMON_SESSION;
+
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(summonRegistryDocs),
+      { now: () => new Date("2026-07-16T12:00:00Z") },
+    );
+    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+    const client = new Client({ name: clientName, version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    closeCallbacks.push(async () => {
+      await client.close();
+      await server.close();
+    });
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+    return {
+      client,
+      async close() {
+        await client.close();
+        await server.close();
+      },
+    };
+  }
+
+  for (const mode of ["writeFile", "rename"] as const) {
+    it(`succeeds unindexed on actual MCP summon when index ${mode} fails deterministically, preserves cached calls, and recovers safely after restoration`, async () => {
+      const tempRoot = await makeTempRoot();
+      const indexDir = path.join(tempRoot, expectedIndexDirName());
+      const harnessId = `injected-${mode}-failure-id`;
+
+      fsSpyState.onOp = (op, args) => {
+        if (
+          op === mode &&
+          typeof args[0] === "string" &&
+          args[0].startsWith(`${indexDir}${path.sep}.tmp-`)
+        ) {
+          throw Object.assign(
+            new Error(`Injected ${mode} failure for ${args[0]}`),
+            { code: mode === "writeFile" ? "EACCES" : "EPERM" },
+          );
+        }
+      };
+
+      const mcp1 = await startOfflineMcpClient(
+        tempRoot,
+        harnessId,
+        `mcp-${mode}-1`,
+      );
+      try {
+        // First summon creates a valid unindexed session even though index update failed.
+        const firstCall = await mcp1.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+        expect(firstCall.isError).toBeFalsy();
+        const root1 = (
+          firstCall.structuredContent as { sessionRoot: string }
+        ).sessionRoot;
+        expect(path.dirname(root1)).toBe(tempRoot);
+
+        // session.json was genuinely written with live PID and matching harnessSessionId.
+        const manifest1 = JSON.parse(
+          await readFile(path.join(root1, "session.json"), "utf8"),
+        ) as Record<string, unknown>;
+        expect(manifest1.pid).toBe(process.pid);
+        expect(manifest1.harnessSessionId).toBe(harnessId);
+
+        // No index entry and no orphan .tmp-* file left in indexDir.
+        const indexEntriesDuringFault = await readdir(indexDir);
+        expect(indexEntriesDuringFault).toEqual([]);
+
+        // Repeated cached calls on the same MCP server must NOT see a cached rejected sessionPromise.
+        const secondCall = await mcp1.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+        expect(secondCall.isError).toBeFalsy();
+        expect(
+          (secondCall.structuredContent as { sessionRoot: string }).sessionRoot,
+        ).toBe(root1);
+
+        const thirdCall = await mcp1.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", surface: "any" },
+        });
+        expect(thirdCall.isError).toBeFalsy();
+        expect(
+          (thirdCall.structuredContent as { sessionRoot: string }).sessionRoot,
+        ).toBe(root1);
+
+        // Restore index availability while mcp1 is still live on root1.
+        fsSpyState.onOp = undefined;
+
+        // A second MCP server / new lookup with the same ID must NOT adopt live root1,
+        // performs zero readdir, and now writes its own indexed root2.
+        const mcp2 = await startOfflineMcpClient(
+          tempRoot,
+          harnessId,
+          `mcp-${mode}-2`,
+        );
+        try {
+          const mcp2Ops = await recordFsOps(() =>
+            mcp2.client.callTool({
+              name: "summon",
+              arguments: { query: "lookup skill", preview: true, surface: "any" },
+            }),
+          );
+          expect(mcp2Ops.result.isError).toBeFalsy();
+          expect(mcp2Ops.ops.filter((op) => op.op === "readdir")).toEqual([]);
+          const root2 = (
+            mcp2Ops.result.structuredContent as { sessionRoot: string }
+          ).sessionRoot;
+          expect(root2).not.toBe(root1);
+
+          const entryPath = path.join(
+            indexDir,
+            `${expectedIndexKey(harnessId)}.json`,
+          );
+          const entry = JSON.parse(await readFile(entryPath, "utf8")) as {
+            version: number;
+            roots: string[];
+          };
+          expect(entry).toEqual({ version: 1, roots: [root2] });
+        } finally {
+          await mcp2.close();
+        }
+
+        // Unindexed dead root1 without readdir fallback is not auto-discovered by plain lookup,
+        // but explicit SKILL_SUMMON_SESSION reattach succeeds once dead and records root1 in index.
+        await markDeadPid(root1);
+        const plainLookupAfterDeath = await recordFsOps(() =>
+          resolveSession({ tempRoot, harnessSessionId: harnessId }),
+        );
+        expect(plainLookupAfterDeath.result.created).toBe(true);
+        expect(plainLookupAfterDeath.result.session.root).not.toBe(root1);
+        expect(
+          plainLookupAfterDeath.ops.filter((op) => op.op === "readdir"),
+        ).toEqual([]);
+
+        process.env.SKILL_SUMMON_SESSION = root1;
+        const explicitReattach = await resolveSession({
+          tempRoot,
+          harnessSessionId: harnessId,
+        });
+        expect(explicitReattach.created).toBe(false);
+        expect(explicitReattach.session.root).toBe(root1);
+
+        const entryAfterReattach = JSON.parse(
+          await readFile(
+            path.join(indexDir, `${expectedIndexKey(harnessId)}.json`),
+            "utf8",
+          ),
+        ) as { roots: string[] };
+        expect(entryAfterReattach.roots[0]).toBe(root1);
+      } finally {
+        fsSpyState.onOp = undefined;
+        await mcp1.close();
+      }
+    });
+  }
+
+  it("preserves a pre-existing valid index entry intact when atomic rename fails", async () => {
+    const tempRoot = await makeTempRoot();
+    const indexDir = path.join(tempRoot, expectedIndexDirName());
+    const harnessId = "atomic-rename-preserves-prior";
+
+    const first = await resolveSession({ tempRoot, harnessSessionId: harnessId });
+    const entryPath = path.join(indexDir, `${expectedIndexKey(harnessId)}.json`);
+    const beforePayload = await readFile(entryPath, "utf8");
+
+    fsSpyState.onOp = (op, args) => {
+      if (
+        op === "rename" &&
+        typeof args[0] === "string" &&
+        args[0].startsWith(`${indexDir}${path.sep}.tmp-`)
+      ) {
+        throw Object.assign(new Error("Injected rename failure"), { code: "EPERM" });
+      }
+    };
+
+    try {
+      const second = await resolveSession({
+        tempRoot,
+        harnessSessionId: harnessId,
+      });
+      expect(second.created).toBe(true);
+      expect(second.session.root).not.toBe(first.session.root);
+      expect(await readFile(entryPath, "utf8")).toBe(beforePayload);
+      expect(await readdir(indexDir)).toEqual([path.basename(entryPath)]);
+    } finally {
+      fsSpyState.onOp = undefined;
+    }
+  });
+
+  it("handles real POSIX mode 0500 read-only private indexDir on MCP summon and recovers after restoring 0700 (non-root only)", async () => {
+    // Non-root POSIX condition: root (uid 0) bypasses DAC write checks on 0500 directories.
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+
+    const tempRoot = await makeTempRoot();
+    const indexDir = path.join(tempRoot, expectedIndexDirName());
+    const harnessId = "real-0500-index-id";
+    await mkdir(indexDir, { mode: 0o500 });
+    // Ensure exact 0o500 regardless of process umask.
+    await chmod(indexDir, 0o500);
+
+    try {
+      const mcp1 = await startOfflineMcpClient(tempRoot, harnessId, "mcp-0500-1");
+      try {
+        const firstCall = await mcp1.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+        expect(firstCall.isError).toBeFalsy();
+        const root1 = (
+          firstCall.structuredContent as { sessionRoot: string }
+        ).sessionRoot;
+
+        const secondCall = await mcp1.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+        expect(secondCall.isError).toBeFalsy();
+        expect(
+          (secondCall.structuredContent as { sessionRoot: string }).sessionRoot,
+        ).toBe(root1);
+
+        expect(((await lstat(indexDir)).mode & 0o777)).toBe(0o500);
+        await chmod(indexDir, 0o700);
+        expect(await readdir(indexDir)).toEqual([]);
+
+        // After restoring writability, a new MCP server creates and indexes a fresh root
+        // without adopting live root1.
+        const mcp2 = await startOfflineMcpClient(
+          tempRoot,
+          harnessId,
+          "mcp-0500-2",
+        );
+        try {
+          const nextOps = await recordFsOps(() =>
+            mcp2.client.callTool({
+              name: "summon",
+              arguments: { query: "lookup skill", preview: true, surface: "any" },
+            }),
+          );
+          expect(nextOps.result.isError).toBeFalsy();
+          expect(nextOps.ops.filter((op) => op.op === "readdir")).toEqual([]);
+          const root2 = (
+            nextOps.result.structuredContent as { sessionRoot: string }
+          ).sessionRoot;
+          expect(root2).not.toBe(root1);
+
+          const entryPath = path.join(
+            indexDir,
+            `${expectedIndexKey(harnessId)}.json`,
+          );
+          const entry = JSON.parse(await readFile(entryPath, "utf8")) as {
+            roots: string[];
+          };
+          expect(entry.roots).toEqual([root2]);
+          expect(((await lstat(indexDir)).mode & 0o777)).toBe(0o700);
+          expect(((await lstat(entryPath)).mode & 0o777)).toBe(0o600);
+        } finally {
+          await mcp2.close();
+        }
+      } finally {
+        await mcp1.close();
+      }
+    } finally {
+      await chmod(indexDir, 0o700).catch(() => {});
+    }
+  });
+
+  it("never swallows actual session-root or manifest validation/write failures in SummonSession.createAt", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideRoot = await makeTempRoot();
+
+    // 1. Non-disposable root is rejected.
+    await expect(
+      SummonSession.createAt(outsideRoot, "non-disposable", { tempRoot }),
+    ).rejects.toThrow(/not a direct child|disposable/u);
+
+    // 2. Symlinked session root is rejected.
+    const symlinkSession = path.join(tempRoot, "skill-summon-session-sym-create");
+    await symlink(outsideRoot, symlinkSession, "dir");
+    await expect(
+      SummonSession.createAt(symlinkSession, "sym-root", { tempRoot }),
+    ).rejects.toThrow(/real directory|symlink/u);
+
+    // 3. Manifest write failure is propagated, not swallowed.
+    const realRoot = path.join(tempRoot, "skill-summon-session-manifest-fail");
+    await mkdir(realRoot);
+    fsSpyState.onOp = (op, args) => {
+      if (op === "writeFile" && args[0] === path.join(realRoot, "session.json")) {
+        throw Object.assign(new Error("Injected manifest write failure"), {
+          code: "EIO",
+        });
+      }
+    };
+    try {
+      await expect(
+        SummonSession.createAt(realRoot, "manifest-fail", {
+          tempRoot,
+          harnessSessionId: "manifest-fail-id",
+        }),
+      ).rejects.toThrow(/Injected manifest write failure/u);
+    } finally {
+      fsSpyState.onOp = undefined;
+    }
+
+    // 4. Real read-only session root (0500) rejects manifest creation (non-root POSIX).
+    if (process.platform !== "win32" && process.getuid?.() !== 0) {
+      const readOnlyRoot = path.join(tempRoot, "skill-summon-session-ro-root");
+      await mkdir(readOnlyRoot, { mode: 0o500 });
+      await chmod(readOnlyRoot, 0o500);
+      try {
+        await expect(
+          SummonSession.createAt(readOnlyRoot, "ro-root", {
+            tempRoot,
+            harnessSessionId: "ro-root-id",
+          }),
+        ).rejects.toMatchObject({ code: "EACCES" });
+      } finally {
+        await chmod(readOnlyRoot, 0o700).catch(() => {});
+      }
+    }
+  });
+
+  it("creates new index dir at 0700 and index files at 0600, and rejects pre-existing permissive group/other index dirs without chmod or overwriting preexisting data", async () => {
+    if (process.platform === "win32") return;
+
+    // 1. Fresh index directory and entry file permissions.
+    const freshTempRoot = await makeTempRoot();
+    const fresh = await resolveSession({
+      tempRoot: freshTempRoot,
+      harnessSessionId: "fresh-perms-id",
+    });
+    expect(fresh.created).toBe(true);
+    const freshIndexDir = path.join(freshTempRoot, expectedIndexDirName());
+    const freshEntryPath = path.join(
+      freshIndexDir,
+      `${expectedIndexKey("fresh-perms-id")}.json`,
+    );
+    expect(((await lstat(freshIndexDir)).mode & 0o777)).toBe(0o700);
+    expect(((await lstat(freshEntryPath)).mode & 0o777)).toBe(0o600);
+
+    // 2. Pre-existing permissive same-owner index dirs across group/other bits.
+    for (const mode of [0o755, 0o775, 0o777, 0o750, 0o701] as const) {
+      const tempRoot = await makeTempRoot();
+      const indexDir = path.join(tempRoot, expectedIndexDirName());
+      const deadRoot = path.join(tempRoot, "skill-summon-session-dead-in-permissive");
+      await mkdir(deadRoot);
+      const harnessId = `permissive-${mode.toString(8)}`;
+      await writeFile(
+        path.join(deadRoot, "session.json"),
+        JSON.stringify({
+          id: `dead-${mode}`,
+          harnessSessionId: harnessId,
+          createdAt: "2026-04-01T00:00:00.000Z",
+          pid: DEAD_PID,
+          skills: [],
+        }),
+        "utf8",
+      );
+
+      await mkdir(indexDir, { mode: 0o700 });
+      const entryPath = path.join(indexDir, `${expectedIndexKey(harnessId)}.json`);
+      const preexistingEntry = JSON.stringify({ version: 1, roots: [deadRoot] });
+      await writeFile(entryPath, preexistingEntry, "utf8");
+      const arbitraryFile = path.join(indexDir, "preexisting-data.json");
+      await writeFile(arbitraryFile, '{"keep":true}\n', "utf8");
+      await chmod(indexDir, mode);
+
+      const lookupOps = await recordFsOps(() =>
+        resolveSession({ tempRoot, harnessSessionId: harnessId }),
+      );
+      expect(lookupOps.result.created).toBe(true);
+      expect(lookupOps.result.session.root).not.toBe(deadRoot);
+      expect(lookupOps.ops.filter((op) => op.op === "readdir")).toEqual([]);
+      // Must neither chmod the directory nor overwrite/remove preexisting data.
+      expect(((await lstat(indexDir)).mode & 0o777)).toBe(mode);
+      expect(await readFile(entryPath, "utf8")).toBe(preexistingEntry);
+      expect(await readFile(arbitraryFile, "utf8")).toBe('{"keep":true}\n');
+
+      // Closing the created session also leaves the permissive dir untouched.
+      await lookupOps.result.session.close();
+      expect(((await lstat(indexDir)).mode & 0o777)).toBe(mode);
+      expect(await readFile(entryPath, "utf8")).toBe(preexistingEntry);
+      expect(await readFile(arbitraryFile, "utf8")).toBe('{"keep":true}\n');
+    }
+  });
+
+  it("rejects foreign-owned and symlinked index directories without chmod, readdir, or outside target mutation", async () => {
+    if (typeof process.getuid !== "function") return;
+
+    const realUid = process.getuid();
+    const fakeUid = realUid + 10_000;
+    const tempRoot = await makeTempRoot();
+    const foreignIndexDir = path.join(
+      tempRoot,
+      `${INDEX_DIR_PREFIX}-${fakeUid}`,
+    );
+    const deadRoot = path.join(tempRoot, "skill-summon-session-foreign-dead");
+    await mkdir(deadRoot);
+    const harnessId = "foreign-owned-index-id";
+    await writeFile(
+      path.join(deadRoot, "session.json"),
+      JSON.stringify({
+        id: "foreign-dead",
+        harnessSessionId: harnessId,
+        createdAt: "2026-04-01T00:00:00.000Z",
+        pid: DEAD_PID,
+        skills: [],
+      }),
+      "utf8",
+    );
+
+    await mkdir(foreignIndexDir, { mode: 0o700 });
+    const entryPath = path.join(
+      foreignIndexDir,
+      `${expectedIndexKey(harnessId)}.json`,
+    );
+    const entryPayload = JSON.stringify({ version: 1, roots: [deadRoot] });
+    await writeFile(entryPath, entryPayload, "utf8");
+    const sentinelPath = path.join(foreignIndexDir, "foreign-sentinel.txt");
+    await writeFile(sentinelPath, "UNMODIFIED", "utf8");
+
+    const uidSpy = vi.spyOn(process, "getuid").mockReturnValue(fakeUid);
+    try {
+      const ops = await recordFsOps(() =>
+        resolveSession({ tempRoot, harnessSessionId: harnessId }),
+      );
+      expect(ops.result.created).toBe(true);
+      expect(ops.result.session.root).not.toBe(deadRoot);
+      expect(ops.ops.filter((op) => op.op === "readdir")).toEqual([]);
+      expect(await readFile(entryPath, "utf8")).toBe(entryPayload);
+      expect(await readFile(sentinelPath, "utf8")).toBe("UNMODIFIED");
+
+      // Closing must also leave the foreign-owned index directory untouched.
+      await ops.result.session.close();
+      expect(await readFile(entryPath, "utf8")).toBe(entryPayload);
+      expect(await readFile(sentinelPath, "utf8")).toBe("UNMODIFIED");
+    } finally {
+      uidSpy.mockRestore();
+    }
+
+    // Symlinked indexDir pointing outside: close() as well as resolveSession() must not mutate target.
+    const symTempRoot = await makeTempRoot();
+    const outsideTarget = await makeTempRoot();
+    const outsideEntry = path.join(
+      outsideTarget,
+      `${expectedIndexKey("sym-close-id")}.json`,
+    );
+    await writeFile(outsideEntry, JSON.stringify({ version: 1, roots: [] }), "utf8");
+    await symlink(
+      outsideTarget,
+      path.join(symTempRoot, expectedIndexDirName()),
+      "dir",
+    );
+
+    const symResolved = await recordFsOps(() =>
+      resolveSession({ tempRoot: symTempRoot, harnessSessionId: "sym-close-id" }),
+    );
+    expect(symResolved.result.created).toBe(true);
+    expect(symResolved.ops.filter((op) => op.op === "readdir")).toEqual([]);
+    await symResolved.result.session.close();
+    expect(await readdir(outsideTarget)).toEqual([path.basename(outsideEntry)]);
   });
 });

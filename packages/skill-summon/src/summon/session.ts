@@ -212,7 +212,9 @@ export class SummonSession {
     const session = new SummonSession(root, manifest, tempRoot);
     await session.#writeManifest(manifest, { skipRootCheck: true });
     if (harnessSessionId !== undefined) {
-      await recordSessionInIndex(tempRoot, harnessSessionId, root);
+      await recordSessionInIndex(tempRoot, harnessSessionId, root).catch(
+        () => {},
+      );
     }
     return session;
   }
@@ -616,6 +618,11 @@ async function assertConfinedIndexDir(
   }
   if (!isCurrentProcessUid(dirStat.uid)) {
     throw new Error(`Session index directory ${indexDir} has unexpected owner.`);
+  }
+  if (process.platform !== "win32" && (dirStat.mode & 0o077) !== 0) {
+    throw new Error(
+      `Session index directory ${indexDir} must not have group or other permissions.`,
+    );
   }
   const [tempReal, dirReal] = await Promise.all([
     realpath(tempRoot),
