@@ -1,5 +1,6 @@
 import {
   access,
+  chmod,
   lstat,
   mkdir,
   mkdtemp,
@@ -777,6 +778,285 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
       [completed, forgedStatus, unapproved].sort(),
     );
   });
+
+  it("decouples retention from derived status I/O across real and dry-run reaps (directory/unreadable/symlink/malformed/missing status) with exact window expiry", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideDir = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+    const tObs = new Date("2026-04-01T10:00:00.000Z"); // +10h (> 4h default TTL)
+
+    type ArtifactSnapshot = Record<
+      string,
+      {
+        kind: "file" | "symlink" | "dir";
+        size: number;
+        mtimeMs: number;
+        content?: string;
+        target?: string;
+      }
+    >;
+
+    async function snapshotRootArtifacts(sessionRoot: string): Promise<ArtifactSnapshot> {
+      const snap: ArtifactSnapshot = {};
+      async function walk(dir: string, relBase: string): Promise<void> {
+        const entries = (await readdir(dir)).sort();
+        for (const entry of entries) {
+          const full = path.join(dir, entry);
+          const rel = relBase ? `${relBase}/${entry}` : entry;
+          const st = await lstat(full);
+          if (st.isSymbolicLink()) {
+            snap[rel] = {
+              kind: "symlink",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              target: await readlink(full),
+            };
+          } else if (st.isDirectory()) {
+            snap[rel] = { kind: "dir", size: st.size, mtimeMs: st.mtimeMs };
+            await walk(full, rel);
+          } else {
+            let content: string | undefined;
+            try {
+              content = await readFile(full, "utf8");
+            } catch {
+              content = "<unreadable>";
+            }
+            snap[rel] = {
+              kind: "file",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              content,
+            };
+          }
+        }
+      }
+      await walk(sessionRoot, "");
+      return snap;
+    }
+
+    // 1. status.json replaced by a directory
+    const dirStatus = await createDeadRoot(tempRoot, "status-dir", createdAt);
+    await seedPausedCampaign(dirStatus, 48);
+    await rm(path.join(dirStatus, "campaign", "status.json"));
+    await mkdir(path.join(dirStatus, "campaign", "status.json"));
+
+    // 2. status.json unreadable (0o000)
+    const unreadableStatus = await createDeadRoot(tempRoot, "status-unreadable", createdAt);
+    await seedPausedCampaign(unreadableStatus, 48);
+    const unreadablePath = path.join(unreadableStatus, "campaign", "status.json");
+    if (process.getuid?.() !== 0) {
+      await chmod(unreadablePath, 0o000);
+    }
+
+    // 3. status.json replaced by a symlink pointing outside sessionRoot
+    const symlinkStatus = await createDeadRoot(tempRoot, "status-symlink", createdAt);
+    await seedPausedCampaign(symlinkStatus, 48);
+    const outsideTarget = path.join(outsideDir, "outside-status.json");
+    await writeFile(outsideTarget, "DO-NOT-OVERWRITE", "utf8");
+    const outsideBefore = await lstat(outsideTarget);
+    await rm(path.join(symlinkStatus, "campaign", "status.json"));
+    await symlink(outsideTarget, path.join(symlinkStatus, "campaign", "status.json"), "file");
+
+    // 4. status.json malformed JSON
+    const malformedStatus = await createDeadRoot(tempRoot, "status-malformed", createdAt);
+    await seedPausedCampaign(malformedStatus, 48);
+    await writeFile(path.join(malformedStatus, "campaign", "status.json"), "{corrupt-status", "utf8");
+
+    // 5. status.json missing
+    const missingStatus = await createDeadRoot(tempRoot, "status-missing", createdAt);
+    await seedPausedCampaign(missingStatus, 48);
+    await rm(path.join(missingStatus, "campaign", "status.json"));
+
+    const allRoots = [
+      dirStatus,
+      unreadableStatus,
+      symlinkStatus,
+      malformedStatus,
+      missingStatus,
+    ];
+
+    try {
+      // Dry-run at tObs: zero writes anywhere, all preserved.
+      const beforeDry = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
+      const dryObs = await reapSessions({
+        tempRoot,
+        ttlHours: 4,
+        now: tObs,
+        dryRun: true,
+      });
+      expect(dryObs.candidates).toEqual([]);
+      const afterDry = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
+      expect(afterDry).toEqual(beforeDry);
+
+      // Real reap at tObs: same decision (all preserved), establishes pause.json at tObs,
+      // and performs NO status.json refresh or outside symlink write.
+      const realObs = await reapSessions({
+        tempRoot,
+        ttlHours: 4,
+        now: tObs,
+        dryRun: false,
+      });
+      expect(realObs.candidates).toEqual([]);
+      for (const root of allRoots) {
+        await expect(access(root)).resolves.toBeUndefined();
+        const pauseRaw = JSON.parse(
+          await readFile(path.join(root, "campaign", "pause.json"), "utf8"),
+        ) as Record<string, unknown>;
+        expect(pauseRaw.pausedAt).toBe(tObs.toISOString());
+      }
+      expect((await lstat(path.join(dirStatus, "campaign", "status.json"))).isDirectory()).toBe(true);
+      expect(await readFile(path.join(malformedStatus, "campaign", "status.json"), "utf8")).toBe("{corrupt-status");
+      await expect(lstat(path.join(missingStatus, "campaign", "status.json"))).rejects.toThrow();
+      expect(await readFile(outsideTarget, "utf8")).toBe("DO-NOT-OVERWRITE");
+      expect((await lstat(outsideTarget)).mtimeMs).toBe(outsideBefore.mtimeMs);
+
+      // 1ms before 48h from first-observation boundary: both dry-run and real reap preserve.
+      const justBefore = new Date(tObs.getTime() + 48 * 3_600_000 - 1);
+      expect((await reapSessions({ tempRoot, ttlHours: 4, now: justBefore, dryRun: true })).candidates).toEqual([]);
+      expect((await reapSessions({ tempRoot, ttlHours: 4, now: justBefore, dryRun: false })).candidates).toEqual([]);
+
+      // At exact 48h from first-observation boundary: dry-run and real reap decide identical candidates;
+      // dry-run writes nothing, real reap removes all 5 roots and leaves outside symlink target untouched.
+      const atExactExpiry = new Date(tObs.getTime() + 48 * 3_600_000);
+      const beforeExpiryDry = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
+      const dryExpiry = await reapSessions({
+        tempRoot,
+        ttlHours: 4,
+        now: atExactExpiry,
+        dryRun: true,
+      });
+      expect(dryExpiry.candidates.map((c) => c.root).sort()).toEqual([...allRoots].sort());
+      expect(await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)))).toEqual(beforeExpiryDry);
+
+      const realExpiry = await reapSessions({
+        tempRoot,
+        ttlHours: 4,
+        now: atExactExpiry,
+        dryRun: false,
+      });
+      expect(realExpiry.candidates.map((c) => c.root).sort()).toEqual([...allRoots].sort());
+      for (const root of allRoots) {
+        await expect(access(root)).rejects.toThrow();
+      }
+      expect(await readFile(outsideTarget, "utf8")).toBe("DO-NOT-OVERWRITE");
+      expect((await lstat(outsideTarget)).mtimeMs).toBe(outsideBefore.mtimeMs);
+    } finally {
+      if (process.getuid?.() !== 0) {
+        await chmod(unreadablePath, 0o600).catch(() => {});
+      }
+    }
+  });
+
+  it("conservatively preserves uncertain verification/projection I/O errors instead of collapsing to creation TTL, while keeping legacy reap for absent/unapproved/terminal/known-invalid traces", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideDir = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+    const now = new Date("2026-04-01T10:00:00.000Z"); // +10h (> 4h default TTL)
+
+    // Uncertain cases (must be conservatively preserved in both dryRun and real reap):
+    // 1. Symlinked campaign/ directory pointing outside
+    const symCampaignRoot = await createDeadRoot(tempRoot, "uncertain-sym-campaign", createdAt);
+    const outsideCampaignTarget = path.join(outsideDir, "outside-campaign");
+    await mkdir(outsideCampaignTarget);
+    await writeFile(path.join(outsideCampaignTarget, "marker.txt"), "KEEP", "utf8");
+    await symlink(outsideCampaignTarget, path.join(symCampaignRoot, "campaign"), "dir");
+
+    // 2. Symlinked trace.jsonl pointing outside
+    const symTraceRoot = await createDeadRoot(tempRoot, "uncertain-sym-trace", createdAt);
+    await seedPausedCampaign(symTraceRoot, 48);
+    const outsideTraceTarget = path.join(outsideDir, "outside-trace.jsonl");
+    await writeFile(outsideTraceTarget, "KEEP-TRACE", "utf8");
+    await rm(path.join(symTraceRoot, "campaign", "trace.jsonl"));
+    await symlink(outsideTraceTarget, path.join(symTraceRoot, "campaign", "trace.jsonl"), "file");
+
+    // 3. Unreadable trace.jsonl (0o000)
+    const unreadableTraceRoot = await createDeadRoot(tempRoot, "uncertain-unreadable-trace", createdAt);
+    await seedPausedCampaign(unreadableTraceRoot, 48);
+    const unreadableTracePath = path.join(unreadableTraceRoot, "campaign", "trace.jsonl");
+
+    // 4. Unreadable evidence.jsonl (0o000)
+    const unreadableEvidenceRoot = await createDeadRoot(tempRoot, "uncertain-unreadable-evidence", createdAt);
+    await seedPausedCampaign(unreadableEvidenceRoot, 48);
+    const unreadableEvidencePath = path.join(unreadableEvidenceRoot, "campaign", "evidence.jsonl");
+
+    // 5. Unreadable pause.json (0o000)
+    const unreadablePauseRoot = await createDeadRoot(tempRoot, "uncertain-unreadable-pause", createdAt);
+    await seedPausedCampaign(unreadablePauseRoot, 48);
+    const unreadablePausePath = path.join(unreadablePauseRoot, "campaign", "pause.json");
+    await writeFile(unreadablePausePath, "{}", "utf8");
+
+    if (process.getuid?.() !== 0) {
+      await chmod(unreadableTracePath, 0o000);
+      await chmod(unreadableEvidencePath, 0o000);
+      await chmod(unreadablePausePath, 0o000);
+    }
+
+    // Legacy cases (must still reap by 4h creation TTL):
+    const absentRoot = await createDeadRoot(tempRoot, "legacy-absent", createdAt);
+    const unapprovedRoot = await createDeadRoot(tempRoot, "legacy-unapproved", createdAt);
+    const unapprovedStore = await CampaignStore.load(unapprovedRoot);
+    await unapprovedStore.append({ channel: "agent", op: "open" });
+    await unapprovedStore.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await unapprovedStore.append({ channel: "agent", op: "propose", charter: makeCharter(72) });
+
+    const terminalRoot = await createDeadRoot(tempRoot, "legacy-terminal", createdAt);
+    await seedPausedCampaign(terminalRoot, 72);
+    const terminalStore = await CampaignStore.load(terminalRoot);
+    const engCap = createCampaignEngineAdapter();
+    await terminalStore.append(
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "complete",
+        clause: "termination",
+      }),
+    );
+
+    const invalidTraceRoot = await createDeadRoot(tempRoot, "legacy-invalid-trace", createdAt);
+    await seedPausedCampaign(invalidTraceRoot, 72);
+    await writeFile(
+      path.join(invalidTraceRoot, "campaign", "trace.jsonl"),
+      `${await readFile(path.join(invalidTraceRoot, "campaign", "trace.jsonl"), "utf8")}not-json\n`,
+      "utf8",
+    );
+
+    const expectedLegacyReaped = [
+      absentRoot,
+      unapprovedRoot,
+      terminalRoot,
+      invalidTraceRoot,
+    ].sort();
+
+    const uncertainRoots = [
+      symCampaignRoot,
+      symTraceRoot,
+      ...(process.getuid?.() !== 0
+        ? [unreadableTraceRoot, unreadableEvidenceRoot, unreadablePauseRoot]
+        : []),
+    ];
+
+    try {
+      const dry = await reapSessions({ tempRoot, ttlHours: 4, now, dryRun: true });
+      expect(dry.candidates.map((c) => c.root).sort()).toEqual(expectedLegacyReaped);
+
+      const real = await reapSessions({ tempRoot, ttlHours: 4, now, dryRun: false });
+      expect(real.candidates.map((c) => c.root).sort()).toEqual(expectedLegacyReaped);
+
+      for (const root of expectedLegacyReaped) {
+        await expect(access(root)).rejects.toThrow();
+      }
+      for (const root of uncertainRoots) {
+        await expect(access(root)).resolves.toBeUndefined();
+      }
+      expect(await readFile(path.join(outsideCampaignTarget, "marker.txt"), "utf8")).toBe("KEEP");
+      expect(await readFile(outsideTraceTarget, "utf8")).toBe("KEEP-TRACE");
+    } finally {
+      if (process.getuid?.() !== 0) {
+        await chmod(unreadableTracePath, 0o600).catch(() => {});
+        await chmod(unreadableEvidencePath, 0o600).catch(() => {});
+        await chmod(unreadablePausePath, 0o600).catch(() => {});
+      }
+    }
+  });
 });
 
 describe("reattach campaign fold/verification and status refresh", () => {
@@ -852,6 +1132,19 @@ describe("reattach campaign fold/verification and status refresh", () => {
       schema: CAMPAIGN_SCHEMA_IDS.status,
       state: CampaignStates.failedSafe,
     });
+
+    // 4. Normal reattach still refuses unsafe status.json writes (symlink or directory)
+    const outsideTarget = path.join(tempRoot, "outside-reattach.json");
+    await writeFile(outsideTarget, "OUTSIDE-INTACT", "utf8");
+    await rm(statusPath2);
+    await symlink(outsideTarget, statusPath2, "file");
+    await markDeadPid(s2.session.root);
+    await expect(resolveSession({ tempRoot })).rejects.toThrow(/symlink/u);
+    expect(await readFile(outsideTarget, "utf8")).toBe("OUTSIDE-INTACT");
+
+    await rm(statusPath2);
+    await mkdir(statusPath2);
+    await expect(resolveSession({ tempRoot })).rejects.toThrow(/regular file/u);
   });
 
   it("folds and refreshes campaign status through the actual MCP resolveSession path", async () => {

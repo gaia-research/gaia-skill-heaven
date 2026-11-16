@@ -668,8 +668,11 @@ export async function reapSessions(
       ? createdAt
       : sessionStat.mtimeMs;
     let effectiveTtlHours = ttlHours;
-    const paused = await loadPausedCampaignRetention(sessionRoot, dryRun);
-    if (paused !== undefined) {
+    const paused = await loadPausedCampaignRetention(sessionRoot);
+    if (paused.kind === "preserve") {
+      continue;
+    }
+    if (paused.kind === "paused") {
       if (manifest === undefined) {
         continue;
       }
@@ -710,38 +713,50 @@ export async function reapSessions(
   };
 }
 
-type PausedCampaignRetention = {
-  retentionHours: number;
-  recordSha256: string;
-};
+type PausedCampaignRetention =
+  | { kind: "absent" }
+  | { kind: "not_paused" }
+  | { kind: "preserve" }
+  | { kind: "paused"; retentionHours: number; recordSha256: string };
 
 async function loadPausedCampaignRetention(
   sessionRoot: string,
-  dryRun: boolean,
-): Promise<PausedCampaignRetention | undefined> {
+): Promise<PausedCampaignRetention> {
+  let store: CampaignStore;
   try {
-    const store = await CampaignStore.load(sessionRoot, {
-      refreshStatus: !dryRun,
+    store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: false,
     });
-    if (!store.hasTrace || store.corrupted || !store.recordSha256) {
-      return undefined;
-    }
-    const state = store.state;
-    if (
-      state.approved &&
-      state.charter !== null &&
-      (state.state === CampaignStates.executing ||
-        state.state === CampaignStates.convergence)
-    ) {
-      return {
-        retentionHours: state.charter.sessionRetention,
-        recordSha256: store.recordSha256,
-      };
-    }
-    return undefined;
   } catch {
-    return undefined;
+    return { kind: "preserve" };
   }
+
+  if (!store.hasTrace) {
+    return { kind: "absent" };
+  }
+  if (store.corrupted || !store.recordSha256) {
+    return { kind: "not_paused" };
+  }
+  const state = store.state;
+  if (
+    state.approved &&
+    state.charter !== null &&
+    (state.state === CampaignStates.executing ||
+      state.state === CampaignStates.convergence)
+  ) {
+    if (
+      !Number.isFinite(state.charter.sessionRetention) ||
+      state.charter.sessionRetention < 0
+    ) {
+      return { kind: "preserve" };
+    }
+    return {
+      kind: "paused",
+      retentionHours: state.charter.sessionRetention,
+      recordSha256: store.recordSha256,
+    };
+  }
+  return { kind: "not_paused" };
 }
 
 async function clearPauseBoundary(sessionRoot: string): Promise<void> {
@@ -774,7 +789,11 @@ async function resolvePauseBoundaryMs(
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       if (!dryRun) {
-        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        try {
+          await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        } catch {
+          return { kind: "preserve" };
+        }
       }
       return { kind: "boundary", boundaryMs: nowMs };
     }
@@ -785,12 +804,22 @@ async function resolvePauseBoundaryMs(
     return { kind: "preserve" };
   }
 
+  let raw: string;
   try {
-    const raw = await readFile(pausePath, "utf8");
+    raw = await readFile(pausePath, "utf8");
+  } catch {
+    return { kind: "preserve" };
+  }
+
+  try {
     const parsed = JSON.parse(raw) as unknown;
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
       if (!dryRun) {
-        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        try {
+          await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        } catch {
+          return { kind: "preserve" };
+        }
       }
       return { kind: "boundary", boundaryMs: nowMs };
     }
@@ -804,14 +833,22 @@ async function resolvePauseBoundaryMs(
       obj.recordSha256 !== expectedRecordSha256
     ) {
       if (!dryRun) {
-        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        try {
+          await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+        } catch {
+          return { kind: "preserve" };
+        }
       }
       return { kind: "boundary", boundaryMs: nowMs };
     }
     return { kind: "boundary", boundaryMs: pausedAtMs };
   } catch {
     if (!dryRun) {
-      await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      try {
+        await writePauseBoundary(pausePath, expectedPid, expectedRecordSha256, nowMs);
+      } catch {
+        return { kind: "preserve" };
+      }
     }
     return { kind: "boundary", boundaryMs: nowMs };
   }

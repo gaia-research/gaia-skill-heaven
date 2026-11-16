@@ -367,7 +367,6 @@ async function verifyOnDiskState(
 
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
-  await assertConfinedPath(sessionRoot, statusPath, "Campaign status");
 
   let traceStat;
   try {

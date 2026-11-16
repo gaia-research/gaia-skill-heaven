@@ -593,4 +593,90 @@ describe("CampaignStore persistence and verification", () => {
       state: CampaignStates.failedSafe,
     });
   });
+
+  it("folds read-only (refreshStatus: false) independently of directory/unreadable/symlink/malformed status.json while default load still refuses unsafe status writes", async () => {
+    const opCap = createCampaignOperatorAdapter();
+    const seedApproved = async (root: string) => {
+      const store = await CampaignStore.load(root);
+      await store.append({ channel: "agent", op: "open" });
+      await store.append({ channel: "agent", op: "recon", recon: reconPayload });
+      await store.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+      await store.append(
+        createCampaignOperatorEvent(opCap, {
+          channel: "operator",
+          op: "decide",
+          action: "approve",
+          charterRevision: 1,
+        }),
+      );
+      return store;
+    };
+
+    // 1. status.json replaced by a directory
+    const dirRoot = await makeTempSessionRoot();
+    const dirStore = await seedApproved(dirRoot);
+    await rm(dirStore.statusPath);
+    await mkdir(dirStore.statusPath);
+
+    const roDir = await CampaignStore.load(dirRoot, { refreshStatus: false });
+    expect(roDir.corrupted).toBe(false);
+    expect(roDir.state.approved).toBe(true);
+    expect(roDir.state.state).toBe(CampaignStates.executing);
+    expect(roDir.recordSha256).toBe(dirStore.recordSha256);
+    await expect(CampaignStore.load(dirRoot)).rejects.toThrow(/regular file/u);
+
+    // 2. status.json replaced by a symlink pointing outside sessionRoot
+    const symRoot = await makeTempSessionRoot();
+    const symStore = await seedApproved(symRoot);
+    const outsideDir = await makeTempSessionRoot();
+    const outsideTarget = path.join(outsideDir, "outside-status.json");
+    await writeFile(outsideTarget, "OUTSIDE-SENTINEL", "utf8");
+    const outsideBefore = await lstat(outsideTarget);
+    await rm(symStore.statusPath);
+    await symlink(outsideTarget, symStore.statusPath, "file");
+
+    const roSym = await CampaignStore.load(symRoot, { refreshStatus: false });
+    expect(roSym.corrupted).toBe(false);
+    expect(roSym.state.approved).toBe(true);
+    expect(roSym.state.state).toBe(CampaignStates.executing);
+    expect(roSym.recordSha256).toBe(symStore.recordSha256);
+    expect(await readFile(outsideTarget, "utf8")).toBe("OUTSIDE-SENTINEL");
+    expect((await lstat(outsideTarget)).mtimeMs).toBe(outsideBefore.mtimeMs);
+
+    await expect(CampaignStore.load(symRoot)).rejects.toThrow(/symlink/u);
+    expect(await readFile(outsideTarget, "utf8")).toBe("OUTSIDE-SENTINEL");
+
+    // 3. status.json unreadable (0o000)
+    if (process.getuid?.() !== 0) {
+      const unredRoot = await makeTempSessionRoot();
+      const unredStore = await seedApproved(unredRoot);
+      await chmod(unredStore.statusPath, 0o000);
+      try {
+        const roUnred = await CampaignStore.load(unredRoot, { refreshStatus: false });
+        expect(roUnred.corrupted).toBe(false);
+        expect(roUnred.state.approved).toBe(true);
+        expect(roUnred.state.state).toBe(CampaignStates.executing);
+        await expect(CampaignStore.load(unredRoot)).rejects.toThrow();
+      } finally {
+        await chmod(unredStore.statusPath, 0o600);
+      }
+    }
+
+    // 4. status.json malformed JSON
+    const badRoot = await makeTempSessionRoot();
+    const badStore = await seedApproved(badRoot);
+    await writeFile(badStore.statusPath, "{not-json", "utf8");
+
+    const roBad = await CampaignStore.load(badRoot, { refreshStatus: false });
+    expect(roBad.corrupted).toBe(false);
+    expect(roBad.state.state).toBe(CampaignStates.executing);
+    expect(await readFile(badStore.statusPath, "utf8")).toBe("{not-json");
+
+    const rwBad = await CampaignStore.load(badRoot);
+    expect(rwBad.corrupted).toBe(false);
+    expect(JSON.parse(await readFile(badStore.statusPath, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+    });
+  });
 });
