@@ -178,6 +178,23 @@ describe("Ultra (#137 K9, CONTROL-PLANE §2.4)", () => {
     expect(controllerFromCampaignStatus({ schema: CONTROLLER_STATUS_SCHEMA, state: "EXEC", transition: { from: "RECON", to: "DECISIONS", reason: "ok", extra: 1 } })).toBeNull();
     expect(controllerFromCampaignStatus({ schema: "other", state: "EXEC" })).toBeNull();
   });
+
+  it("renders reported campaign controller without forcing Ultra reading", () => {
+    const reported = controllerFromCampaignStatus({
+      schema: CONTROLLER_STATUS_SCHEMA,
+      state: "STOP",
+      effective: "med",
+      progress: { completed: 2, total: 4 },
+    })!;
+    const s = { ...st({ reading: { kind: "native", source: "no-launcher" }, skills: 2, summons: 1 }), controller: reported };
+    expect(line(s, "full")).toBe("◇ entropy ‹‹ [NATIVE] ›› · 2 skills / 1 summon · STOP · now MED ‹ · 2/4");
+    expect(describeStatus(s)).toContain("Skill entropy reading: native");
+    expect(describeStatus(s)).toContain("Reported campaign status: stop, working at med (2/4).");
+    const withLow = withReading(s, { kind: "selected", rung: "low", source: "observed-command" });
+    expect(withLow.reading).toEqual({ kind: "selected", rung: "low", source: "observed-command" });
+    expect(withLow.controller).toEqual(reported);
+    expect(line(withLow, "full")).toBe("◇ entropy ‹‹ [LOW] ›› · 2 skills / 1 summon · STOP · now MED ‹ · 2/4");
+  });
 });
 
 describe("fixtures cannot pass as runtime truth", () => {

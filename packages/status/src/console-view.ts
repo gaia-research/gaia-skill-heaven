@@ -430,6 +430,21 @@ export function scopeView(state: ConsoleCoreState, harness: HarnessPath): ScopeV
             : `rung ${rung.toUpperCase()} — observed from ${state.selectedFrom ?? "a rung command"} · not enforced`,
       evidence: rung === null ? "unknown" : "observed",
     },
+    ...(state.status.controller.kind === "reported"
+      ? [{
+          label: state.status.controller.source === "campaign" ? "campaign" : "controller",
+          value: [
+            sanitizeDisplay(state.status.controller.state, 24),
+            state.status.controller.effective ? `now ${state.status.controller.effective.toUpperCase()}` : null,
+            state.status.controller.progress
+              ? `${state.status.controller.progress.completed}/${state.status.controller.progress.total}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          evidence: "reported" as const,
+        }]
+      : []),
     { label: "allowed", value: "/summon by hand: yes · zero cut: temporary (default)", evidence: "reported" },
     {
       label: "keep small",

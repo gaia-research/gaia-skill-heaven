@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   initialConsoleState, recordEvent, recordRead, recordSelection, structuredOf,
   eventFromSummonResult, eventsFromLedger, skillsFromSessionManifest, selectionFromCommand,
-  controllerFromCampaignStatus, withReading,
+  controllerFromCampaignStatus,
   type ConsoleCoreState, type Controller,
 } from "../../status/src/index.js";
 
@@ -118,11 +118,10 @@ export function ledgerState(sessionRoot: string): ConsoleCoreState {
   const facts = skillsFromSessionManifest(manifest);
   state.status = { ...state.status, skills: facts.skills };
   if (controller) {
-    // EntropyReading only models `selected` with `source: "observed-command"`, and
-    // render.ts gates controllerSegments on `readingRung(status.reading) === "ultra"`.
-    // Keep `selectedFrom` null and `controller.source: "campaign"` (`kind: "reported"`).
+    // Campaign status is reported evidence, not an observed operator command.
+    // Preserve the actual session reading and selectedFrom.
     state.status = {
-      ...withReading(state.status, { kind: "selected", rung: "ultra", source: "observed-command" }),
+      ...state.status,
       controller,
     };
   }

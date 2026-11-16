@@ -73,7 +73,9 @@ export function withReading(status: SkillHeavenStatus, reading: EntropyReading):
     ? status.controller.kind === "reported"
       ? status.controller
       : { kind: "unavailable" }
-    : { kind: "not-selected" };
+    : status.controller.kind === "reported" && status.controller.source === "campaign"
+      ? status.controller
+      : { kind: "not-selected" };
   return { ...status, reading, controller, ...(boot ? { boot } : {}) };
 }
 

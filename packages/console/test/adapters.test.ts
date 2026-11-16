@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { ledgerState, agyState, jsonLines, readBounded, MAX_BYTES, unknownState } from "../src/reader.js";
-import { harnessById, HARNESS_PATHS, buildConsoleView, renderConsoleText, renderStatusSegments, toPlain } from "../../status/src/index.js";
+import { harnessById, HARNESS_PATHS, buildConsoleView, renderConsoleText, renderStatusSegments, toPlain, recordSelection, describeStatus } from "../../status/src/index.js";
 import { build } from "esbuild";
 import { visibleWidth } from "@earendil-works/pi-tui";
 
@@ -113,6 +113,8 @@ describe("bounded, exact-session readers", () => {
     const withCampaign = ledgerState(root);
     expect(withCampaign.status.skills).toBe(1);
     expect(withCampaign.status.summons).toBe(1);
+    expect(withCampaign.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+    expect(withCampaign.selectedFrom).toBeNull();
     expect(withCampaign.status.controller).toEqual({
       kind: "reported",
       source: "campaign",
@@ -121,9 +123,13 @@ describe("bounded, exact-session readers", () => {
       progress: { completed: 2, total: 5 },
     });
     const rendered = toPlain(renderStatusSegments(withCampaign.status, "full"));
-    expect(rendered).toBe("◆ entropy ‹‹ [ULTRA] ›› · 1 skill / 1 summon · CONVERGENCE · now LOW ‹ · 2/5 · +Synthetic Skill");
+    expect(rendered).toBe("◇ entropy ‹‹ [NATIVE] ›› · 1 skill / 1 summon · CONVERGENCE · now LOW ‹ · 2/5 · +Synthetic Skill");
+    expect(describeStatus(withCampaign.status)).toContain("Reported campaign status: convergence, working at low (2/5).");
     const consoleText = renderConsoleText(buildConsoleView(withCampaign, harnessById("codex")), { details: true });
     expect(consoleText).toContain("CONVERGENCE · now LOW ‹ · 2/5");
+    expect(consoleText).not.toContain("[ULTRA]");
+    expect(consoleText).not.toContain("rung ULTRA");
+    expect(consoleText).toContain("campaign        CONVERGENCE · now LOW · 2/5  reported");
   });
 
   it("fails closed on malformed campaign/status.json while preserving no-campaign counters", () => {
@@ -192,6 +198,7 @@ describe("bounded, exact-session readers", () => {
     expect(state.status.skills).toBe(0);
     expect(state.status.summons).toBe(0);
     expect(state.status.lastArrival).toBeNull();
+    expect(state.status.reading).toEqual({ kind: "native", source: "no-launcher" });
     expect(state.status.controller).toEqual({
       kind: "reported",
       source: "campaign",
@@ -199,10 +206,54 @@ describe("bounded, exact-session readers", () => {
       progress: { completed: 0, total: 3 },
     });
     expect(toPlain(renderStatusSegments(state.status, "full"))).toBe(
-      "◆ entropy ‹‹ [ULTRA] ›› · 0 skills / 0 summons · RECON · 0/3",
+      "◇ entropy ‹‹ [NATIVE] ›› · 0 skills / 0 summons · RECON · 0/3",
     );
     const consoleText = renderConsoleText(buildConsoleView(state, harnessById("codex")), { details: true });
     expect(consoleText).toContain("RECON · 0/3");
+    expect(consoleText).not.toContain("[ULTRA]");
+  });
+
+  it("terminal or stale reported campaign does not force Ultra or overwrite reading/source or command selection", () => {
+    for (const terminalState of ["STOP", "CLOSE", "FAILED_SAFE"] as const) {
+      const root = temp();
+      writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
+      writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n");
+      mkdirSync(join(root, "campaign"), { recursive: true });
+      writeFileSync(
+        join(root, "campaign", "status.json"),
+        JSON.stringify({
+          schema: "skill-heaven/controller-status/v1",
+          state: terminalState,
+          progress: { completed: 2, total: 5 },
+        }),
+      );
+
+      const state = ledgerState(root);
+      expect(state.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+      expect(state.selectedFrom).toBeNull();
+      expect(state.status.controller).toEqual({
+        kind: "reported",
+        source: "campaign",
+        state: terminalState,
+        progress: { completed: 2, total: 5 },
+      });
+      const rendered = toPlain(renderStatusSegments(state.status, "full"));
+      expect(rendered).toBe(`◇ entropy ‹‹ [NATIVE] ›› · 1 skill / 1 summon · ${terminalState} · 2/5 · +Synthetic Skill`);
+      expect(rendered).not.toContain("[ULTRA]");
+
+      const selected = recordSelection(state, { kind: "selected", rung: "low", source: "observed-command" }, "/skill-heaven low");
+      expect(selected.status.reading).toEqual({ kind: "selected", rung: "low", source: "observed-command" });
+      expect(selected.selectedFrom).toBe("/skill-heaven low");
+      expect(selected.status.controller).toEqual({
+        kind: "reported",
+        source: "campaign",
+        state: terminalState,
+        progress: { completed: 2, total: 5 },
+      });
+      expect(toPlain(renderStatusSegments(selected.status, "full"))).toBe(
+        `◇ entropy ‹‹ [LOW] ›› · 1 skill / 1 summon · ${terminalState} · 2/5 · +Synthetic Skill`,
+      );
+    }
   });
 
   it("preserves ENOENT when neither campaign nor log exists and never suppresses log errors", () => {
