@@ -56,10 +56,10 @@
       "team": "B (Pi)",
       "worker": "lead openai/gpt-6.1-sol xhigh; Hydrogen default workers",
       "branch": "feat/ws6-ultra-u0b",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "active"
+      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
+      "head": "0188bba",
+      "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
+      "status": "repair: env-dependent test regression found by orchestrator verification"
     },
     {
       "id": "U1",
@@ -529,6 +529,25 @@
       "terra": "U0a-5ffac74 PASS",
       "outcome": "integrated",
       "risk": "pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers."
+    },
+    {
+      "id": "D-013",
+      "kind": "delegated",
+      "date": "2026-11-16",
+      "team": "A (Opus orchestrator)",
+      "unit": "U0b",
+      "problem": "Orchestrator verification of U0b's final HEAD 0188bba found mcp-link-enrichment.test.ts failing 3/5 whenever CLAUDE_CODE_SESSION_ID is set (always true inside Claude Code). It passes with the variable unset, and the pre-U0b base passes with it set. The new env-keyed re-attach lets successive test servers re-attach to each other's session roots. Terra's PASS at c26d9b5 ran without the variable and missed it. Separately, a pi-reviewer confirmation hung for its full 3 h timeout, and pi-reviewer then crashed serializing bytes stderr (a pi-reviewer bug, in pi-config).",
+      "options": [
+        "Accept with a test-env workaround",
+        "Return to the U0b lead for a hermeticity repair plus regression test, then re-review"
+      ],
+      "selected": "Return to the U0b lead: tests hermetic about the session id, a regression test with the variable set, proof that two live servers in one session cannot re-attach, the full suite run both ways, then a Terra re-review of the new HEAD. COMMON.md now requires every unit to run the suite with the variable set and unset, and asks reviewers for targeted runs, no watch mode.",
+      "reason": "A green suite that depends on the caller's environment is not a pass; the U9 proof itself runs inside Claude Code.",
+      "authority": "Directive section 14 (a previous green run does not validate a changed environment or HEAD); section 7 (a test suite is necessary but not sufficient)",
+      "reversible": true,
+      "terra": "pending re-review",
+      "outcome": "repair in progress",
+      "risk": "Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder's repo; not changed here)."
     }
   ],
   "blockers": [],

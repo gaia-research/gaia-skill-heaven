@@ -590,10 +590,10 @@ tbody tr:last-child td {
         <td class="nowrap">B (Pi)</td>
         <td class="nowrap">lead openai/gpt-6.1-sol xhigh; Hydrogen default workers</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u0b</code></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-active">active</span></td>
+        <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/265" target="_blank" rel="noopener noreferrer">#265</a></td>
+        <td class="nowrap"><code class="sha" title="0188bba">0188bba</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">repair: env-dependent test regression found by orchestrator verification</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U1</strong></td>
@@ -1490,6 +1490,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-013</span>
+            <span class="tag">unit: U0b</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-16</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>Orchestrator verification of U0b&#39;s final HEAD 0188bba found mcp-link-enrichment.test.ts failing 3/5 whenever CLAUDE_CODE_SESSION_ID is set (always true inside Claude Code). It passes with the variable unset, and the pre-U0b base passes with it set. The new env-keyed re-attach lets successive test servers re-attach to each other&#39;s session roots. Terra&#39;s PASS at c26d9b5 ran without the variable and missed it. Separately, a pi-reviewer confirmation hung for its full 3 h timeout, and pi-reviewer then crashed serializing bytes stderr (a pi-reviewer bug, in pi-config).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Accept with a test-env workaround</span></li><li><span>Return to the U0b lead for a hermeticity repair plus regression test, then re-review</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Return to the U0b lead: tests hermetic about the session id, a regression test with the variable set, proof that two live servers in one session cannot re-attach, the full suite run both ways, then a Terra re-review of the new HEAD. COMMON.md now requires every unit to run the suite with the variable set and unset, and asks reviewers for targeted runs, no watch mode.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>A green suite that depends on the caller&#39;s environment is not a pass; the U9 proof itself runs inside Claude Code.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Directive section 14 (a previous green run does not validate a changed environment or HEAD); section 7 (a test suite is necessary but not sufficient)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>pending re-review</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>repair in progress</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder&#39;s repo; not changed here).</span></dd>
             </div>
         </dl>
       </article>
