@@ -591,9 +591,9 @@ tbody tr:last-child td {
         <td class="nowrap">lead openai/gpt-6.1-sol xhigh; Hydrogen default workers</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u0b</code></td>
         <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/265" target="_blank" rel="noopener noreferrer">#265</a></td>
-        <td class="nowrap"><code class="sha" title="0188bba">0188bba</code></td>
+        <td class="nowrap"><code class="sha" title="72f6277">72f6277</code></td>
         <td class="nowrap"><span class="pill pill-neutral">source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">repair: env-dependent test regression found by orchestrator verification</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">repair round 2: O(n) tmpdir scan on server start</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U1</strong></td>
@@ -1534,7 +1534,7 @@ tbody tr:last-child td {
             </div>
             <div class="field-row">
               <dt>outcome</dt>
-              <dd><span>repair in progress</span></dd>
+              <dd><span>Round 1 repaired at 72f6277 (Terra PASS at 1cb0535): the suite passes 2664/2664 with the variable unset and with it fixed. Round 2 found by the orchestrator in the live Claude Code + herdr environment: summon-arbor.test.ts times out under full-suite load. Run alone it takes 11s, against 4.3s on the pre-U0b base, because the re-attach/reaper path scans every root in tmpdir on each server start (522 roots on this machine). Returned for an O(1) session-id lookup, isolated test tempRoots and a 1000-root regression test.</span></dd>
             </div>
             <div class="field-row">
               <dt>risk</dt>
