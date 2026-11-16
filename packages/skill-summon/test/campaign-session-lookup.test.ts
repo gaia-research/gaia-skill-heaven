@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { appendFileSync } from "node:fs";
 import { vi } from "vitest";
 
 const fsSpyState = vi.hoisted(() => {
@@ -8,6 +9,9 @@ const fsSpyState = vi.hoisted(() => {
     ops: [] as OpRecord[],
     onOp: undefined as
       | ((op: string, args: readonly unknown[]) => void)
+      | undefined,
+    onOpenResult: undefined as
+      | ((args: readonly unknown[], handle: unknown) => unknown)
       | undefined,
     reset() {
       this.ops.length = 0;
@@ -40,18 +44,35 @@ vi.mock("node:fs/promises", async () => {
       return fn(...args);
     }) as unknown as T;
 
+  const wrapOpen = vi.fn(async (...args: Parameters<typeof actual.open>) => {
+    if (fsSpyState.recording) {
+      fsSpyState.ops.push({
+        op: "open",
+        args: (args as unknown[])
+          .filter((arg): arg is string => typeof arg === "string")
+          .slice(0, 2),
+      });
+    }
+    fsSpyState.onOp?.("open", args as readonly unknown[]);
+    const handle = await actual.open(...args);
+    return fsSpyState.onOpenResult
+      ? (fsSpyState.onOpenResult(args as readonly unknown[], handle) as typeof handle)
+      : handle;
+  });
+
   return {
     ...actual,
     lstat: wrap("lstat", actual.lstat),
     mkdir: wrap("mkdir", actual.mkdir),
     mkdtemp: wrap("mkdtemp", actual.mkdtemp),
-    open: wrap("open", actual.open),
+    open: wrapOpen,
     readFile: wrap("readFile", actual.readFile),
     readdir: wrap("readdir", actual.readdir),
     realpath: wrap("realpath", actual.realpath),
     rename: wrap("rename", actual.rename),
     rm: wrap("rm", actual.rm),
     stat: wrap("stat", actual.stat),
+    unlink: wrap("unlink", actual.unlink),
     writeFile: wrap("writeFile", actual.writeFile),
   };
 });
@@ -117,6 +138,7 @@ const savedEnv = {
 beforeEach(() => {
   fsSpyState.recording = false;
   fsSpyState.onOp = undefined;
+  fsSpyState.onOpenResult = undefined;
   fsSpyState.reset();
   resetArborPublicationCache();
   resetArborIdentityCache();
@@ -127,6 +149,7 @@ beforeEach(() => {
 afterEach(async () => {
   fsSpyState.recording = false;
   fsSpyState.onOp = undefined;
+  fsSpyState.onOpenResult = undefined;
   fsSpyState.reset();
   resetArborPublicationCache();
   resetArborIdentityCache();
@@ -387,7 +410,8 @@ describe("O(1) harness-session lookup and startup scaling", () => {
 
     assertZeroEnumerationAndZeroForeignInspection(crowdedHit.ops, foreignNames);
     expect(crowdedHit.counts).toEqual(emptyHit.counts);
-    expect(crowdedHit.ops.length).toBeLessThanOrEqual(80);
+    // Measured 85 ops with exclusive claim + post-claim revalidation + release.
+    expect(crowdedHit.ops.length).toBeLessThanOrEqual(95);
   });
 
   it("performs O(1) lookup on actual MCP server first-call getSession() startup with 1000 foreign roots", async () => {
@@ -456,7 +480,8 @@ describe("O(1) harness-session lookup and startup scaling", () => {
 
     assertZeroEnumerationAndZeroForeignInspection(crowdedMcp.ops, foreignNames);
     expect(crowdedMcp.counts).toEqual(baselineMcp.counts);
-    expect(crowdedMcp.ops.length).toBeLessThanOrEqual(80);
+    // Measured 85 ops with exclusive claim + post-claim revalidation + release.
+    expect(crowdedMcp.ops.length).toBeLessThanOrEqual(95);
 
     // Confirm MCP getSession() genuinely reattached to the dead-PID target root.
     const manifestAfter = JSON.parse(
@@ -1523,5 +1548,158 @@ describe("best-effort sidecar index failures and index directory privacy", () =>
     expect(symResolved.ops.filter((op) => op.op === "readdir")).toEqual([]);
     await symResolved.result.session.close();
     expect(await readdir(outsideTarget)).toEqual([path.basename(outsideEntry)]);
+  });
+
+  it("enforces actual index byte read cap (bound + 1) when an index file grows after stat", async () => {
+    const tempRoot = await makeTempRoot();
+    const indexDir = path.join(tempRoot, expectedIndexDirName());
+    await mkdir(indexDir, { mode: 0o700 });
+
+    const harnessId = "post-stat-growth-id";
+    const deadRoot = path.join(tempRoot, "skill-summon-session-grown-target");
+    await mkdir(deadRoot);
+    await writeFile(
+      path.join(deadRoot, "session.json"),
+      JSON.stringify({
+        id: "grown-target",
+        harnessSessionId: harnessId,
+        createdAt: "2026-04-01T00:00:00.000Z",
+        pid: DEAD_PID,
+        skills: [],
+      }),
+      "utf8",
+    );
+
+    const entryPath = path.join(indexDir, `${expectedIndexKey(harnessId)}.json`);
+    const initialJson = JSON.stringify({ version: 1, roots: [deadRoot] });
+    expect(Buffer.byteLength(initialJson, "utf8")).toBeLessThan(1024);
+    await writeFile(entryPath, initialJson, "utf8");
+
+    let bytesReadTotal = 0;
+    let unboundedReadFileCalled = false;
+    let grewAfterStat = false;
+
+    fsSpyState.onOpenResult = (args, rawHandle) => {
+      if (args[0] !== entryPath) return rawHandle;
+      const handle = rawHandle as Awaited<ReturnType<typeof import("node:fs/promises").open>>;
+      const origStat = handle.stat.bind(handle);
+      const origRead = handle.read.bind(handle);
+      return new Proxy(handle, {
+        get(target, prop, receiver) {
+          if (prop === "stat") {
+            return async () => {
+              const st = await origStat();
+              if (!grewAfterStat) {
+                grewAfterStat = true;
+                // Grow the file well past 64 KiB AFTER stat() observes the small size.
+                appendFileSync(entryPath, " ".repeat(70 * 1024), "utf8");
+              }
+              return st;
+            };
+          }
+          if (prop === "read") {
+            return async (...readArgs: Parameters<typeof handle.read>) => {
+              const result = await origRead(...readArgs);
+              bytesReadTotal += result.bytesRead;
+              return result;
+            };
+          }
+          if (prop === "readFile") {
+            return () => {
+              unboundedReadFileCalled = true;
+              throw new Error("Unbounded handle.readFile must not be used");
+            };
+          }
+          const value = Reflect.get(target, prop, receiver);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+    };
+
+    try {
+      const lookup = await recordFsOps(() =>
+        resolveSession({ tempRoot, harnessSessionId: harnessId }),
+      );
+      expect(grewAfterStat).toBe(true);
+      expect(unboundedReadFileCalled).toBe(false);
+      // Bounded to MAX_INDEX_ENTRY_BYTES + 1 = 65537 bytes despite >70 KiB on disk.
+      expect(bytesReadTotal).toBe(64 * 1024 + 1);
+      expect(lookup.result.created).toBe(true);
+      expect(lookup.result.session.root).not.toBe(deadRoot);
+      expect(lookup.ops.filter((op) => op.op === "readdir")).toEqual([]);
+    } finally {
+      fsSpyState.onOpenResult = undefined;
+    }
+  });
+
+  it("preserves session root and valid locator on server.close() (SIGINT-equivalent) for automatic resume, distinct from explicit SummonSession.close()", async () => {
+    const tempRoot = await makeTempRoot();
+    const indexDir = path.join(tempRoot, expectedIndexDirName());
+    const harnessId = "sigint-close-resume-id";
+    const entryPath = path.join(indexDir, `${expectedIndexKey(harnessId)}.json`);
+
+    // 1. Start MCP server 1, run summon, then call server.close() (the SIGINT/SIGTERM action).
+    const mcp1 = await startOfflineMcpClient(tempRoot, harnessId, "mcp-sigint-1");
+    const call1 = await mcp1.client.callTool({
+      name: "summon",
+      arguments: { query: "lookup skill", preview: true, surface: "any" },
+    });
+    expect(call1.isError).toBeFalsy();
+    const root1 = (call1.structuredContent as { sessionRoot: string }).sessionRoot;
+
+    // Seed campaign state so we also prove campaign continuity across close -> dead -> resume.
+    const seededStore = await CampaignStore.load(root1);
+    await seededStore.append({ channel: "agent", op: "open" });
+    await seededStore.append({
+      channel: "agent",
+      op: "recon",
+      recon: {
+        schema: CAMPAIGN_SCHEMA_IDS.recon,
+        findings: ["Preserved across server.close"],
+        citations: ["citation:sigint"],
+      },
+    });
+
+    await mcp1.close();
+
+    // Root, manifest, campaign, and valid locator entry must ALL remain intact.
+    await expect(access(root1)).resolves.toBeUndefined();
+    await expect(access(path.join(root1, "session.json"))).resolves.toBeUndefined();
+    const entryAfterServerClose = JSON.parse(await readFile(entryPath, "utf8")) as {
+      roots: string[];
+    };
+    expect(entryAfterServerClose.roots).toContain(root1);
+
+    // 2. After previous server process dies, a new MCP server automatically discovers and reattaches.
+    await markDeadPid(root1);
+    const mcp2 = await startOfflineMcpClient(tempRoot, harnessId, "mcp-sigint-2");
+    try {
+      const resumeOps = await recordFsOps(() =>
+        mcp2.client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        }),
+      );
+      expect(resumeOps.result.isError).toBeFalsy();
+      expect(resumeOps.ops.filter((op) => op.op === "readdir")).toEqual([]);
+      expect(
+        (resumeOps.result.structuredContent as { sessionRoot: string }).sessionRoot,
+      ).toBe(root1);
+
+      const resumedStore = await CampaignStore.load(root1);
+      expect(resumedStore.state.state).toBe(CampaignStates.recon);
+    } finally {
+      await mcp2.close();
+    }
+
+    // 3. Explicit SummonSession.close() removes the root and prunes its locator entry.
+    await markDeadPid(root1);
+    const reattached = await resolveSession({ tempRoot, harnessSessionId: harnessId });
+    expect(reattached.created).toBe(false);
+    expect(reattached.session.root).toBe(root1);
+    await reattached.session.close();
+
+    await expect(access(root1)).rejects.toThrow();
+    await expect(access(entryPath)).rejects.toThrow();
   });
 });

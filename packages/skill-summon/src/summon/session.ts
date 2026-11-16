@@ -20,6 +20,17 @@ import type { ArborSubjectReport, InstallabilityAssessment } from "skill-zero";
 
 import { CAMPAIGN_DIR_NAME, CampaignStore } from "../campaign/store.js";
 import type { SkillInvocation, TrustFields } from "../domain/types.js";
+import {
+  acquireSessionClaimForRealRoot,
+  assertConfinedPath,
+  assertConfinedPrivateMetadataDir,
+  hasExistingSessionClaimForRealRoot,
+  isCurrentProcessUid,
+  type AcquiredSessionClaim,
+  type SessionClaimPurpose,
+} from "./session-ownership.js";
+
+export { assertConfinedPath };
 
 // Deliberately more specific than a bare "skill-summon-" prefix: the payload
 // cache directory (payload-cache.ts CACHE_DIR_NAME) also lives directly under
@@ -170,6 +181,8 @@ export type ListSessionOptions = {
   tempRoot?: string | undefined;
 };
 
+let commitReattachUnderClaim: (session: SummonSession) => Promise<void>;
+
 /**
  * A session is a single mkdtemp root. All summon writes are confined to it
  * (invariant P3: never write outside the session root, never touch user
@@ -253,9 +266,30 @@ export class SummonSession {
     root: string,
     tempRoot?: string,
   ): Promise<SummonSession> {
-    const session = await SummonSession.loadAt(root, tempRoot);
-    const pausePath = path.join(root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
-    await assertConfinedPath(root, pausePath, "Campaign pause boundary");
+    const resolvedTempRoot = tempRoot ?? tmpdir();
+    const prelim = await SummonSession.loadAt(root, resolvedTempRoot);
+    const outcome = await tryReattachWithClaim(
+      root,
+      resolvedTempRoot,
+      true,
+      prelim.harnessSessionId,
+    );
+    if (outcome.status !== "adopted") {
+      throw new Error(
+        `Cannot reattach to session root ${root}: ${outcome.status}.`,
+      );
+    }
+    return outcome.session;
+  }
+
+  static {
+    commitReattachUnderClaim = (session: SummonSession) =>
+      session.#commitReattachUnderClaim();
+  }
+
+  async #commitReattachUnderClaim(): Promise<void> {
+    const pausePath = path.join(this.root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+    await assertConfinedPath(this.root, pausePath, "Campaign pause boundary");
     try {
       const pauseStat = await lstat(pausePath);
       if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
@@ -269,37 +303,27 @@ export class SummonSession {
       }
     }
 
-    await CampaignStore.load(root);
+    await CampaignStore.load(this.root);
 
-    const previousManifest = session.#manifest;
+    const previousManifest = this.#manifest;
     const nextManifest: SessionManifest = {
       ...previousManifest,
       pid: process.pid,
     };
-    await session.#writeManifest(nextManifest);
-    session.#manifest = nextManifest;
+    await this.#writeManifest(nextManifest);
+    this.#manifest = nextManifest;
 
     try {
-      await clearPauseBoundary(root);
+      await clearPauseBoundary(this.root);
     } catch (error) {
-      session.#manifest = previousManifest;
+      this.#manifest = previousManifest;
       try {
-        await session.#writeManifest(previousManifest);
+        await this.#writeManifest(previousManifest);
       } catch {
         // Best-effort rollback of owner PID while preserving the pause-boundary error.
       }
       throw error;
     }
-
-    if (session.harnessSessionId !== undefined) {
-      await recordSessionInIndex(
-        tempRoot ?? tmpdir(),
-        session.harnessSessionId,
-        root,
-      ).catch(() => {});
-    }
-
-    return session;
   }
 
   get harnessSessionId(): string | undefined {
@@ -354,7 +378,23 @@ export class SummonSession {
   async close(): Promise<void> {
     const harnessSessionId = this.#manifest.harnessSessionId;
     const tempRoot = this.#tempRoot ?? tmpdir();
-    await rm(this.root, { recursive: true, force: true });
+    const claimAttempt = await acquireSessionClaim(this.root, tempRoot, "close");
+    if (claimAttempt.status === "acquired") {
+      try {
+        await rm(this.root, { recursive: true, force: true });
+      } finally {
+        await claimAttempt.release();
+      }
+    } else if (claimAttempt.status === "unavailable") {
+      // If claim metadata dir is unavailable/foreign-owned, still allow explicit
+      // teardown of the validated disposable root (never follow symlinks).
+      await assertDisposableSessionRoot(this.root, tempRoot);
+      await rm(this.root, { recursive: true, force: true });
+    } else if (claimAttempt.status !== "ineligible") {
+      throw new Error(
+        `Cannot close session root ${this.root}: ownership claim is ${claimAttempt.status}.`,
+      );
+    }
     if (harnessSessionId !== undefined) {
       await removeSessionFromIndex(
         tempRoot,
@@ -407,6 +447,7 @@ export function isDisposableSessionRoot(
   root: string,
   tempRoot: string = tmpdir(),
 ): boolean {
+  if (root.includes("\0")) return false;
   const resolved = path.resolve(root);
   const name = path.basename(resolved);
   if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
@@ -441,13 +482,25 @@ export async function assertDisposableSessionRoot(
   try {
     rootStat = await lstat(root);
   } catch (error) {
-    throw new Error(`Session root ${root} is not an existing directory: ${errorMessage(error)}`);
+    throw new Error(
+      `Session root ${root} is not an existing directory: ${errorMessage(error)}`,
+      { cause: error },
+    );
   }
   if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
     throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
   }
 
-  const [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
+  let rootReal: string;
+  let tempReal: string;
+  try {
+    [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
+  } catch (error) {
+    throw new Error(
+      `Session root ${root} could not be resolved: ${errorMessage(error)}`,
+      { cause: error },
+    );
+  }
   if (
     path.dirname(rootReal) !== tempReal ||
     !path.basename(rootReal).startsWith(SESSION_DIR_PREFIX)
@@ -456,52 +509,6 @@ export async function assertDisposableSessionRoot(
       `Session root ${root} resolves outside the disposable temp-root namespace.`,
     );
   }
-}
-
-/** Validate an existing or not-yet-created path stays physically below root. */
-export async function assertConfinedPath(
-  root: string,
-  target: string,
-  label = "Path",
-): Promise<void> {
-  const rootResolved = path.resolve(root);
-  const targetResolved = path.resolve(target);
-  if (!isWithin(rootResolved, targetResolved)) {
-    throw new Error(`${label} escapes session root: ${target}`);
-  }
-
-  const rootReal = await realpath(rootResolved);
-  let current = targetResolved;
-  while (true) {
-    let currentStat;
-    try {
-      currentStat = await lstat(current);
-    } catch (error) {
-      const code = (error as NodeJS.ErrnoException).code;
-      if (code !== "ENOENT" && code !== "ENOTDIR") throw error;
-      if (current === rootResolved) throw error;
-      current = path.dirname(current);
-      continue;
-    }
-    if (currentStat.isSymbolicLink()) {
-      throw new Error(`${label} traverses a symlink: ${current}`);
-    }
-    if (current !== targetResolved && !currentStat.isDirectory()) {
-      throw new Error(`${label} traverses a non-directory path: ${current}`);
-    }
-    if (current === rootResolved) return;
-    const currentReal = await realpath(current);
-    if (!isWithin(rootReal, currentReal)) {
-      throw new Error(`${label} resolves outside session root: ${target}`);
-    }
-    current = path.dirname(current);
-  }
-}
-
-function isWithin(parent: string, child: string): boolean {
-  const relative = path.relative(parent, child);
-  return relative === "" ||
-    (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }
 
 async function ensureConfinedDirectory(root: string, target: string): Promise<void> {
@@ -516,6 +523,100 @@ async function ensureConfinedDirectory(root: string, target: string): Promise<vo
     await mkdir(target);
   }
   await assertConfinedPath(root, target, "Session directory");
+}
+
+type ReattachWithClaimOutcome =
+  | { status: "adopted"; session: SummonSession }
+  | { status: "busy" | "ineligible" };
+
+function isConcurrentRemovalErrorOrCause(error: unknown): boolean {
+  if (isConcurrentRemoval(error)) return true;
+  if (error instanceof Error && error.cause !== undefined) {
+    return isConcurrentRemoval(error.cause);
+  }
+  return false;
+}
+
+async function acquireSessionClaim(
+  root: string,
+  tempRoot: string,
+  purpose: SessionClaimPurpose,
+): Promise<
+  | AcquiredSessionClaim
+  | { readonly status: "busy" | "unavailable" | "ineligible" }
+> {
+  try {
+    await assertDisposableSessionRoot(root, tempRoot);
+  } catch (error) {
+    if (isConcurrentRemovalErrorOrCause(error)) {
+      return { status: "ineligible" };
+    }
+    throw error;
+  }
+
+  let realSessionRoot: string;
+  try {
+    realSessionRoot = await realpath(root);
+  } catch (error) {
+    if (isConcurrentRemoval(error)) {
+      return { status: "ineligible" };
+    }
+    throw error;
+  }
+
+  return acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose);
+}
+
+async function tryReattachWithClaim(
+  root: string,
+  tempRoot: string,
+  hasExpectedHarnessId: boolean,
+  expectedHarnessSessionId: string | undefined,
+): Promise<ReattachWithClaimOutcome> {
+  const claimAttempt = await acquireSessionClaim(root, tempRoot, "reattach");
+  if (claimAttempt.status !== "acquired") {
+    return {
+      status: claimAttempt.status === "ineligible" ? "ineligible" : "busy",
+    };
+  }
+
+  let adoptedSession: SummonSession | undefined;
+  try {
+    let session: SummonSession;
+    try {
+      session = await SummonSession.loadAt(root, tempRoot);
+    } catch (error) {
+      if (isConcurrentRemovalErrorOrCause(error)) {
+        return { status: "ineligible" };
+      }
+      throw error;
+    }
+
+    if (
+      hasExpectedHarnessId &&
+      session.harnessSessionId !== expectedHarnessSessionId
+    ) {
+      return { status: "ineligible" };
+    }
+    if (!hasProvenDeadPid(session.pid)) {
+      return { status: "ineligible" };
+    }
+
+    await commitReattachUnderClaim(session);
+    adoptedSession = session;
+  } finally {
+    await claimAttempt.release();
+  }
+
+  if (adoptedSession.harnessSessionId !== undefined) {
+    await recordSessionInIndex(
+      tempRoot,
+      adoptedSession.harnessSessionId,
+      root,
+    ).catch(() => {});
+  }
+
+  return { status: "adopted", session: adoptedSession };
 }
 
 /**
@@ -555,9 +656,23 @@ export async function resolveSession(
       existing.harnessSessionId === harnessSessionId &&
       hasProvenDeadPid(existing.pid)
     ) {
+      const outcome = await tryReattachWithClaim(
+        existingRoot,
+        tempRoot,
+        true,
+        harnessSessionId,
+      );
+      if (outcome.status === "adopted") {
+        return {
+          session: outcome.session,
+          created: false,
+        };
+      }
+      // Contender or crash-left claim ("busy") or concurrently invalidated/deleted:
+      // skip this root and create a fresh root without waiting or scanning.
       return {
-        session: await SummonSession.reattachAt(existingRoot, tempRoot),
-        created: false,
+        session: await openSession({ ...opts, harnessSessionId, tempRoot }),
+        created: true,
       };
     }
   }
@@ -565,10 +680,18 @@ export async function resolveSession(
   if (harnessSessionId) {
     const match = await findIndexedDeadSession(tempRoot, harnessSessionId);
     if (match) {
-      return {
-        session: await SummonSession.reattachAt(match, tempRoot),
-        created: false,
-      };
+      const outcome = await tryReattachWithClaim(
+        match,
+        tempRoot,
+        true,
+        harnessSessionId,
+      );
+      if (outcome.status === "adopted") {
+        return {
+          session: outcome.session,
+          created: false,
+        };
+      }
     }
   }
 
@@ -603,37 +726,15 @@ function harnessSessionIndexKey(harnessSessionId: string): string {
     .digest("hex");
 }
 
-function isCurrentProcessUid(uid: number): boolean {
-  const currentUid = process.getuid?.();
-  return currentUid === undefined || uid === currentUid;
-}
-
 async function assertConfinedIndexDir(
   tempRoot: string,
   indexDir: string,
 ): Promise<void> {
-  const dirStat = await lstat(indexDir);
-  if (dirStat.isSymbolicLink() || !dirStat.isDirectory()) {
-    throw new Error(`Session index directory ${indexDir} must be a real directory.`);
-  }
-  if (!isCurrentProcessUid(dirStat.uid)) {
-    throw new Error(`Session index directory ${indexDir} has unexpected owner.`);
-  }
-  if (process.platform !== "win32" && (dirStat.mode & 0o077) !== 0) {
-    throw new Error(
-      `Session index directory ${indexDir} must not have group or other permissions.`,
-    );
-  }
-  const [tempReal, dirReal] = await Promise.all([
-    realpath(tempRoot),
-    realpath(indexDir),
-  ]);
-  if (
-    path.dirname(dirReal) !== tempReal ||
-    path.basename(dirReal) !== path.basename(indexDir)
-  ) {
-    throw new Error(`Session index directory ${indexDir} resolves outside ${tempRoot}.`);
-  }
+  await assertConfinedPrivateMetadataDir(
+    tempRoot,
+    indexDir,
+    "Session index directory",
+  );
 }
 
 function parseIndexEntry(raw: unknown): string[] | undefined {
@@ -647,7 +748,12 @@ function parseIndexEntry(raw: unknown): string[] | undefined {
   const roots: string[] = [];
   const seen = new Set<string>();
   for (const item of obj.roots) {
-    if (typeof item !== "string" || item.length === 0 || !path.isAbsolute(item)) {
+    if (
+      typeof item !== "string" ||
+      item.length === 0 ||
+      item.includes("\0") ||
+      !path.isAbsolute(item)
+    ) {
       continue;
     }
     if (seen.has(item)) continue;
@@ -708,7 +814,23 @@ async function readConfinedIndexFile(
     if (openedStat.size > MAX_INDEX_ENTRY_BYTES) {
       return { exists: true, confined: true, roots: undefined };
     }
-    const raw = await handle.readFile("utf8");
+    const maxReadBytes = MAX_INDEX_ENTRY_BYTES + 1;
+    const buffer = Buffer.allocUnsafe(maxReadBytes);
+    let totalBytes = 0;
+    while (totalBytes < maxReadBytes) {
+      const { bytesRead } = await handle.read(
+        buffer,
+        totalBytes,
+        maxReadBytes - totalBytes,
+        totalBytes,
+      );
+      if (bytesRead === 0) break;
+      totalBytes += bytesRead;
+    }
+    if (totalBytes > MAX_INDEX_ENTRY_BYTES) {
+      return { exists: true, confined: true, roots: undefined };
+    }
+    const raw = buffer.subarray(0, totalBytes).toString("utf8");
     return {
       exists: true,
       confined: true,
@@ -938,6 +1060,53 @@ export async function findSession(
   return matches[0]!;
 }
 
+type RetentionDecision =
+  | { kind: "preserve"; needsPauseWrite: boolean }
+  | { kind: "reap"; ageHours: number; needsPauseWrite: boolean };
+
+async function evaluateRetentionDecision(
+  sessionRoot: string,
+  manifest: SessionManifest | undefined,
+  mtimeMs: number,
+  paused: PausedCampaignRetention,
+  ttlHours: number,
+  nowMs: number,
+  dryRun: boolean,
+): Promise<RetentionDecision> {
+  if (paused.kind === "preserve") {
+    return { kind: "preserve", needsPauseWrite: false };
+  }
+  const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
+  let startedAt = Number.isFinite(createdAt) ? createdAt : mtimeMs;
+  let effectiveTtlHours = ttlHours;
+  let needsPauseWrite = false;
+
+  if (paused.kind === "paused") {
+    if (manifest === undefined) {
+      return { kind: "preserve", needsPauseWrite: false };
+    }
+    const pauseBoundary = await resolvePauseBoundaryMs(
+      sessionRoot,
+      manifest.pid,
+      paused.recordSha256,
+      nowMs,
+      dryRun,
+    );
+    if (pauseBoundary.kind === "preserve") {
+      return { kind: "preserve", needsPauseWrite: false };
+    }
+    startedAt = pauseBoundary.boundaryMs;
+    effectiveTtlHours = paused.retentionHours;
+    needsPauseWrite = pauseBoundary.needsMutation;
+  }
+
+  const ageHours = Math.max(0, (nowMs - startedAt) / 3_600_000);
+  if (ageHours < effectiveTtlHours) {
+    return { kind: "preserve", needsPauseWrite };
+  }
+  return { kind: "reap", ageHours, needsPauseWrite };
+}
+
 /** Remove expired, abandoned session roots while preserving every live PID. */
 export async function reapSessions(
   opts: ReapSessionOptions = {},
@@ -970,62 +1139,116 @@ export async function reapSessions(
   for (const entry of entries) {
     if (!entry.isDirectory() || !entry.name.startsWith(SESSION_DIR_PREFIX))
       continue;
-      const sessionRoot = path.join(root, entry.name);
+    const sessionRoot = path.join(root, entry.name);
     if (excluded.has(path.resolve(sessionRoot))) continue;
     scanned++;
 
-    const manifest = await readManifestSafely(sessionRoot);
-    if (manifest?.pid !== undefined && isProcessLive(manifest.pid)) {
+    const prelimManifest = await readManifestSafely(sessionRoot);
+    if (prelimManifest?.pid !== undefined && isProcessLive(prelimManifest.pid)) {
       liveProtected.push(sessionRoot);
       continue;
     }
 
-    let sessionStat;
+    let prelimStat;
     try {
-      sessionStat = await lstat(sessionRoot);
+      prelimStat = await lstat(sessionRoot);
     } catch (error) {
       if (isConcurrentRemoval(error)) continue;
       throw error;
     }
-    const createdAt = manifest ? Date.parse(manifest.createdAt) : Number.NaN;
-    let startedAt = Number.isFinite(createdAt)
-      ? createdAt
-      : sessionStat.mtimeMs;
-    let effectiveTtlHours = ttlHours;
-    const paused = await loadPausedCampaignRetention(sessionRoot);
-    if (paused.kind === "preserve") {
+    if (prelimStat.isSymbolicLink() || !prelimStat.isDirectory()) {
       continue;
     }
-    if (paused.kind === "paused") {
-      if (manifest === undefined) {
-        continue;
-      }
-      const pauseBoundary = await resolvePauseBoundaryMs(
-        sessionRoot,
-        manifest.pid,
-        paused.recordSha256,
-        now,
-        dryRun,
-      );
-      if (pauseBoundary.kind === "preserve") {
-        continue;
-      }
-      startedAt = pauseBoundary.boundaryMs;
-      effectiveTtlHours = paused.retentionHours;
-    }
-    const ageHours = Math.max(0, (now - startedAt) / 3_600_000);
-    if (ageHours < effectiveTtlHours) continue;
 
-    let bytes = 0;
-    try {
-      bytes = await directorySize(sessionRoot);
-    } catch (error) {
-      if (isConcurrentRemoval(error)) continue;
-      throw error;
+    const prelimPaused = await loadPausedCampaignRetention(sessionRoot);
+    const prelimDecision = await evaluateRetentionDecision(
+      sessionRoot,
+      prelimManifest,
+      prelimStat.mtimeMs,
+      prelimPaused,
+      ttlHours,
+      now,
+      true,
+    );
+
+    if (dryRun) {
+      if (prelimDecision.kind !== "reap") continue;
+      let realSessionRoot: string;
+      try {
+        realSessionRoot = await realpath(sessionRoot);
+      } catch (error) {
+        if (isConcurrentRemoval(error)) continue;
+        throw error;
+      }
+      if (await hasExistingSessionClaimForRealRoot(realSessionRoot, root)) {
+        continue;
+      }
+      let bytes = 0;
+      try {
+        bytes = await directorySize(sessionRoot);
+      } catch (error) {
+        if (isConcurrentRemoval(error)) continue;
+        throw error;
+      }
+      candidates.push({
+        root: sessionRoot,
+        ageHours: prelimDecision.ageHours,
+        bytes,
+      });
+      continue;
     }
-    candidates.push({ root: sessionRoot, ageHours, bytes });
-    if (!dryRun) {
+
+    if (
+      !prelimDecision.needsPauseWrite &&
+      prelimDecision.kind !== "reap"
+    ) {
+      continue;
+    }
+
+    const claimAttempt = await acquireSessionClaim(sessionRoot, root, "gc");
+    if (claimAttempt.status !== "acquired") {
+      continue;
+    }
+
+    try {
+      let sessionStat;
+      try {
+        sessionStat = await lstat(sessionRoot);
+      } catch (error) {
+        if (isConcurrentRemoval(error)) continue;
+        throw error;
+      }
+      if (sessionStat.isSymbolicLink() || !sessionStat.isDirectory()) {
+        continue;
+      }
+
+      const manifest = await readManifestSafely(sessionRoot);
+      if (manifest?.pid !== undefined && isProcessLive(manifest.pid)) {
+        liveProtected.push(sessionRoot);
+        continue;
+      }
+
+      const paused = await loadPausedCampaignRetention(sessionRoot);
+      const decision = await evaluateRetentionDecision(
+        sessionRoot,
+        manifest,
+        sessionStat.mtimeMs,
+        paused,
+        ttlHours,
+        now,
+        false,
+      );
+      if (decision.kind !== "reap") continue;
+
+      let bytes = 0;
+      try {
+        bytes = await directorySize(sessionRoot);
+      } catch (error) {
+        if (isConcurrentRemoval(error)) continue;
+        throw error;
+      }
       await rm(sessionRoot, { recursive: true, force: true });
+      candidates.push({ root: sessionRoot, ageHours: decision.ageHours, bytes });
       if (manifest?.harnessSessionId !== undefined) {
         await removeSessionFromIndex(
           root,
@@ -1033,6 +1256,8 @@ export async function reapSessions(
           sessionRoot,
         ).catch(() => {});
       }
+    } finally {
+      await claimAttempt.release();
     }
   }
 
@@ -1114,7 +1339,7 @@ async function clearPauseBoundary(sessionRoot: string): Promise<void> {
 
 type PauseBoundaryResolution =
   | { kind: "preserve" }
-  | { kind: "boundary"; boundaryMs: number };
+  | { kind: "boundary"; boundaryMs: number; needsMutation: boolean };
 
 async function resolvePauseBoundaryMs(
   sessionRoot: string,
@@ -1142,7 +1367,7 @@ async function resolvePauseBoundaryMs(
           return { kind: "preserve" };
         }
       }
-      return { kind: "boundary", boundaryMs: nowMs };
+      return { kind: "boundary", boundaryMs: nowMs, needsMutation: true };
     }
     return { kind: "preserve" };
   }
@@ -1168,7 +1393,7 @@ async function resolvePauseBoundaryMs(
           return { kind: "preserve" };
         }
       }
-      return { kind: "boundary", boundaryMs: nowMs };
+      return { kind: "boundary", boundaryMs: nowMs, needsMutation: true };
     }
     const obj = parsed as Record<string, unknown>;
     const pausedAtMs =
@@ -1186,9 +1411,9 @@ async function resolvePauseBoundaryMs(
           return { kind: "preserve" };
         }
       }
-      return { kind: "boundary", boundaryMs: nowMs };
+      return { kind: "boundary", boundaryMs: nowMs, needsMutation: true };
     }
-    return { kind: "boundary", boundaryMs: pausedAtMs };
+    return { kind: "boundary", boundaryMs: pausedAtMs, needsMutation: false };
   } catch {
     if (!dryRun) {
       try {
@@ -1197,7 +1422,7 @@ async function resolvePauseBoundaryMs(
         return { kind: "preserve" };
       }
     }
-    return { kind: "boundary", boundaryMs: nowMs };
+    return { kind: "boundary", boundaryMs: nowMs, needsMutation: true };
   }
 }
 
