@@ -1,6 +1,23 @@
-# U0b handoff — campaign persistence and hermetic harness-session tests
+# U0b handoff — campaign persistence, hermetic tests and bounded startup
 
-## Current publication and acceptance
+## Performance round 2 — founder-directed one-time design advice
+
+**This new performance round supersedes the 72f6277 closeout below; it is not yet accepted.** The orchestrator reported 522 historical temp roots, an O(number of roots) resolver scan, and an Arbor timeout under full-suite load. Source inspection also found a full reaper scan awaited on every `summon`/preview request. Hydrogen had implemented an initial bounded sidecar lookup, removed request-path reaping, and isolated test temp namespaces before the founder directed a design pause.
+
+Exactly **one** `advisor-astra` subagent was then spawned, with `fallback_models: []`, no tools and no further delegation. Actual persisted route/effort were `openai/gpt-6-astra`, `xhigh` (Pi); zero tool calls. No `/advisor` command or other advisor was launched. Full advice is preserved verbatim at [`../advice/U0b-advisor-astra.md`](../advice/U0b-advisor-astra.md). It is reasoning from the supplied packet, not a code review or test result.
+
+### Advice adopted before continuing implementation
+
+- Keep validated random `mkdtemp` roots and the private hashed temporary sidecar as an **advisory locator**, never ownership/authority. Retain bounded metadata (16 candidate references / 64 KiB), no scan fallback, exact ID/dead-PID/disposable-root/confinement checks, optional index updates only after authoritative success, and explicit recovery for legacy/unindexed roots. Eviction removes references, never session data.
+- Keep **all** automatic enumeration/reaping off startup and request paths. Only explicit maintenance may scan. The existing 1000-foreign-root first/cached real-MCP operation-count tests and isolated test namespaces remain acceptance gates; timings are measurements, not thresholds.
+- Distinguish tolerable lost **index** references from unacceptable double **owner adoption**. Add a nonblocking exclusive per-root filesystem claim, re-read/revalidate authoritative state after acquiring it, and coordinate real GC with the same exclusion. Hold it through campaign verification/owner commit or deletion. Crash-left claims conservatively block adoption/deletion until explicit recovery; do not invent stale-lock breaking.
+- Preserve locator references on `server.close()`/SIGINT. Current shutdown already leaves the root and locator intact; `SummonSession.close()` is explicit root deletion and may prune only after actual removal. Add close-then-resume discoverability coverage rather than conflating these APIs.
+- Keep verified charter pause retention independent of discovery. Mutable real-GC bookkeeping must respect ownership exclusion; failed adoption must preserve prior PID/pause expiry. Dry-run must remain entirely read-only, including no claim acquisition, index initialization/pruning or repair.
+- Bound the **actual** index read, not only the pre-read stat size. Retain no-follow/private/ownership checks and all root/campaign validation. Add focused simultaneous-adoption, adoption-versus-GC, crash-left-claim and bounded-read tests.
+
+These are recorded design decisions; the new ownership fence/bounded-read changes are **pending Hydrogen implementation and Terra review**, not claimed complete. No new implementation task was dispatched after the founder's directive until this advice and adoption record were saved. Earlier tests/edits and an already-running three-mode verification predated that directive. No advisor rerun is planned.
+
+## Previous round publication and acceptance (historical)
 
 - Unit: **U0b**; owning team: **Pi lane**.
 - Branch: `feat/ws6-ultra-u0b`; draft PR: [#265](https://github.com/gaia-research/gaia-skill-heaven/pull/265), base `integration/skill-ultra-126`.
