@@ -1,0 +1,32 @@
+{
+  "threadId": "01a1e1a9-1c09-72f1-82c3-efe1a256257a",
+  "rollout": {
+    "rolloutFile": "rollout-2026-11-16T08-01-58-01a1e1a9-1c09-72f1-82c3-efe1a256257a.jsonl",
+    "sessionMeta": {
+      "session_id": "01a1e1a9-1c09-72f1-82c3-efe1a256257a",
+      "originator": "codex_exec",
+      "cli_version": "0.169.0",
+      "source": "exec",
+      "model_provider": "openai"
+    },
+    "turns": [
+      {
+        "turn_id": "01a1e1a9-1ec7-7331-a43c-0c5570e1b5be",
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "approval_policy": "on-request",
+        "approvals_reviewer": "auto_review",
+        "sandbox_policy": {
+          "type": "workspace-write",
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      }
+    ],
+    "skillLoadedInRollout": true,
+    "preexecMarkerInRollout": true
+  },
+  "cmdJsonExists": false,
+  "assistantOutput": "NONE"
+}

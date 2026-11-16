@@ -1,0 +1,45 @@
+
+  >_ OpenAI Codex (v0.169.0)
+     <TMP>/tmpz2ag4y1k
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /permissions - choose what Codex is allowed to do
+  /model - choose what model and reasoning effort to use
+  /review - review any changes and find issues
+
+
+› $probe-decide
+
+To continue this session, run:
+  codex resume 01a1e1ab-cbb4-7633-a4d2-e77bb60ab220
+<USER>@<HOST> tmpz2ag4y1k % cd '<TMP>/tmp5h5in4w_' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmp5h5in4w_".trust_level="trust
+ed"'
+
+  >_ OpenAI Codex (v0.169.0)
+     <TMP>/tmp5h5in4w_
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /permissions - choose what Codex is allowed to do
+  /model - choose what model and reasoning effort to use
+  /review - review any changes and find issues
+
+
+› $probe-decide
+
+
+• NONE
+
+  Worked for 3s • 8:05 AM
+
+
+› Ask Codex to do anything
+
+  GPT-6-Luna low · <TMP>/tmp5h5in4w_
+  ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view
