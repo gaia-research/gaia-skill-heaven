@@ -361,9 +361,8 @@ describe("vitest worker temp-root namespace isolation", () => {
     }
   });
 
-  it("default openSession() and resolveSession() use the isolated namespace and never readdir the original OS temp directory", async () => {
+  it("default openSession() and resolveSession() use the isolated namespace with zero root enumeration", async () => {
     const ns = getActiveWorkerTempNamespace()!;
-    const callerReal = canonicalDir(ns.callerTmpdir);
     const isolatedReal = canonicalDir(ns.root);
 
     // 1. Default openSession() with clean env
@@ -371,23 +370,18 @@ describe("vitest worker temp-root namespace isolation", () => {
     const opened = await openSession();
     sessionsToClose.push(opened);
     expect(canonicalDir(path.dirname(opened.root))).toBe(isolatedReal);
-    expect(
-      fsPromisesSpy.readdirPaths.some((p) => canonicalDir(p) === callerReal),
-    ).toBe(false);
+    expect(fsPromisesSpy.readdirPaths).toEqual([]);
 
-    // 2. Default resolveSession() with CLAUDE_CODE_SESSION_ID set (triggers reattach scan)
+    // 2. Default resolveSession() with CLAUDE_CODE_SESSION_ID set (O(1) index lookup, zero scan)
     process.env.CLAUDE_CODE_SESSION_ID = "iso-resolve-fixed-id";
     fsPromisesSpy.readdirPaths.length = 0;
     const resolved = await resolveSession();
     sessionsToClose.push(resolved.session);
     expect(resolved.created).toBe(true);
     expect(canonicalDir(path.dirname(resolved.session.root))).toBe(isolatedReal);
+    expect(fsPromisesSpy.readdirPaths).toEqual([]);
 
-    const readdirCanonicals = fsPromisesSpy.readdirPaths.map(canonicalDir);
-    expect(readdirCanonicals).toContain(isolatedReal);
-    expect(readdirCanonicals).not.toContain(callerReal);
-
-    // 3. Dead-PID reattach via default resolveSession() also scans only isolated namespace
+    // 3. Dead-PID reattach via default resolveSession() also performs zero directory scans
     const manifestPath = path.join(resolved.session.root, "session.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<
       string,
@@ -400,15 +394,11 @@ describe("vitest worker temp-root namespace isolation", () => {
     const reattached = await resolveSession();
     expect(reattached.created).toBe(false);
     expect(reattached.session.root).toBe(resolved.session.root);
-
-    const reattachReadCanonicals = fsPromisesSpy.readdirPaths.map(canonicalDir);
-    expect(reattachReadCanonicals).toContain(isolatedReal);
-    expect(reattachReadCanonicals).not.toContain(callerReal);
+    expect(fsPromisesSpy.readdirPaths).toEqual([]);
   });
 
-  it("default MCP server summon path uses the isolated namespace and never readdirs the original OS temp directory", async () => {
+  it("default MCP server summon path uses the isolated namespace with zero root enumeration", async () => {
     const ns = getActiveWorkerTempNamespace()!;
-    const callerReal = canonicalDir(ns.callerTmpdir);
     const isolatedReal = canonicalDir(ns.root);
 
     for (const harnessId of [undefined, "iso-mcp-fixed-id"] as const) {
@@ -447,12 +437,7 @@ describe("vitest worker temp-root namespace isolation", () => {
       dirsToRemove.push(sessionRoot);
 
       expect(canonicalDir(path.dirname(sessionRoot))).toBe(isolatedReal);
-
-      const readdirCanonicals = fsPromisesSpy.readdirPaths.map(canonicalDir);
-      expect(readdirCanonicals).not.toContain(callerReal);
-      if (harnessId !== undefined) {
-        expect(readdirCanonicals).toContain(isolatedReal);
-      }
+      expect(fsPromisesSpy.readdirPaths).toEqual([]);
 
       await client.close();
       await server.close();

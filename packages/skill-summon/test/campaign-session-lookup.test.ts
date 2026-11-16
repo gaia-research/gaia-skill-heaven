@@ -68,7 +68,17 @@ import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  CAMPAIGN_SCHEMA_IDS,
+  CampaignStates,
+  createCampaignOperatorAdapter,
+  createCampaignOperatorEvent,
+  type CampaignRecon,
+} from "skill-zero";
 
+import { CampaignStore } from "../src/campaign/store.js";
+import { resetArborIdentityCache } from "../src/data/arbor-identity-source.js";
+import { resetArborPublicationCache } from "../src/data/arbor-source.js";
 import {
   createSkillSummonMcpServer,
   GaiaService,
@@ -100,6 +110,8 @@ const savedEnv = {
 beforeEach(() => {
   fsSpyState.recording = false;
   fsSpyState.reset();
+  resetArborPublicationCache();
+  resetArborIdentityCache();
   delete process.env.CLAUDE_CODE_SESSION_ID;
   delete process.env.SKILL_SUMMON_SESSION;
 });
@@ -107,6 +119,8 @@ beforeEach(() => {
 afterEach(async () => {
   fsSpyState.recording = false;
   fsSpyState.reset();
+  resetArborPublicationCache();
+  resetArborIdentityCache();
 
   await Promise.all(
     closeCallbacks.splice(0).map(async (close) => {
@@ -247,6 +261,43 @@ async function recordFsOps<T>(fn: () => Promise<T>): Promise<{
 const emptyRegistryDocs: GaiaRegistryDocuments = {
   generic: { generatedAt: "2026-07-16T00:00:00Z", skills: [] },
   named: { generatedAt: "2026-07-16", buckets: {} },
+};
+
+const summonRegistryDocs: GaiaRegistryDocuments = {
+  generic: {
+    generatedAt: "2026-07-16T00:00:00Z",
+    skills: [
+      {
+        id: "testing",
+        name: "Testing",
+        type: "basic",
+        description: "Testing workflows.",
+        prerequisites: [],
+        derivatives: [],
+        evidence: [],
+        status: "active",
+      },
+    ],
+  },
+  named: {
+    generatedAt: "2026-07-16",
+    buckets: {
+      testing: [
+        {
+          id: "example/lookup-skill",
+          name: "Lookup Skill",
+          contributor: "example",
+          genericSkillRef: "testing",
+          status: "named",
+          description: "Offline lookup scaling fixture skill.",
+          catalogRef: "example-lookup-skill",
+          tags: ["lookup"],
+          links: {},
+          evidence: [],
+        },
+      ],
+    },
+  },
 };
 
 describe("O(1) harness-session lookup and startup scaling", () => {
@@ -403,6 +454,186 @@ describe("O(1) harness-session lookup and startup scaling", () => {
       await readFile(path.join(crowdedTarget.session.root, "session.json"), "utf8"),
     ) as Record<string, unknown>;
     expect(manifestAfter.pid).toBe(process.pid);
+  });
+
+  it("performs O(1) bounded work on actual MCP client.callTool summon first call AND repeated cached calls across 0 vs 1000 foreign roots", async () => {
+    const baselineRoot = await makeTempRoot();
+    await mkdir(path.join(baselineRoot, expectedIndexDirName()), { mode: 0o700 });
+
+    const crowdedRoot = await makeTempRoot();
+    const foreignNames = await seedForeignRoots(crowdedRoot, FOREIGN_COUNT, {
+      includeIndexedEntries: true,
+    });
+
+    const baselineTarget = await resolveSession({
+      tempRoot: baselineRoot,
+      harnessSessionId: "mcp-summon-reattach",
+    });
+    await markDeadPid(baselineTarget.session.root);
+
+    const crowdedTarget = await resolveSession({
+      tempRoot: crowdedRoot,
+      harnessSessionId: "mcp-summon-reattach",
+    });
+    await markDeadPid(crowdedTarget.session.root);
+
+    async function runMcpSummonSequence(
+      isolatedTmp: string,
+      harnessSessionId: string,
+    ) {
+      resetArborPublicationCache();
+      resetArborIdentityCache();
+      process.env.TMPDIR = isolatedTmp;
+      process.env.TMP = isolatedTmp;
+      process.env.TEMP = isolatedTmp;
+      process.env.CLAUDE_CODE_SESSION_ID = harnessSessionId;
+      delete process.env.SKILL_SUMMON_SESSION;
+
+      const service = new GaiaService(
+        new InMemoryGaiaRegistrySource(summonRegistryDocs),
+        { now: () => new Date("2026-07-16T12:00:00Z") },
+      );
+      const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+      const client = new Client({
+        name: `lookup-summon-${harnessSessionId}`,
+        version: "1.0.0",
+      });
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+      closeCallbacks.push(async () => {
+        await client.close();
+        await server.close();
+      });
+
+      await Promise.all([
+        server.connect(serverTransport),
+        client.connect(clientTransport),
+      ]);
+
+      const firstCall = await recordFsOps(async () => {
+        await client.listTools();
+        return client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+      });
+
+      const cachedCalls = await recordFsOps(async () => {
+        const second = await client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", preview: true, surface: "any" },
+        });
+        const third = await client.callTool({
+          name: "summon",
+          arguments: { query: "lookup skill", surface: "any" },
+        });
+        return { second, third };
+      });
+
+      await client.close();
+      await server.close();
+
+      return { firstCall, cachedCalls };
+    }
+
+    // 1. Dead-PID reattach via actual MCP client.callTool("summon")
+    const baselineReattach = await runMcpSummonSequence(
+      baselineRoot,
+      "mcp-summon-reattach",
+    );
+    const crowdedReattach = await runMcpSummonSequence(
+      crowdedRoot,
+      "mcp-summon-reattach",
+    );
+
+    expect(baselineReattach.firstCall.result.isError).toBeFalsy();
+    expect(crowdedReattach.firstCall.result.isError).toBeFalsy();
+    const crowdedFirstRoot = (
+      crowdedReattach.firstCall.result.structuredContent as { sessionRoot: string }
+    ).sessionRoot;
+    expect(crowdedFirstRoot).toBe(crowdedTarget.session.root);
+
+    expect(crowdedReattach.cachedCalls.result.second.isError).toBeFalsy();
+    expect(
+      (
+        crowdedReattach.cachedCalls.result.second.structuredContent as {
+          sessionRoot: string;
+        }
+      ).sessionRoot,
+    ).toBe(crowdedTarget.session.root);
+    expect(crowdedReattach.cachedCalls.result.third.isError).toBeFalsy();
+    expect(
+      crowdedReattach.cachedCalls.result.third.structuredContent as {
+        sessionRoot: string;
+        summoned: unknown[];
+        skipped: Array<{ id: string; reason: string }>;
+      },
+    ).toMatchObject({
+      sessionRoot: crowdedTarget.session.root,
+      summoned: [],
+      skipped: [expect.objectContaining({ id: "example/lookup-skill" })],
+    });
+
+    assertZeroEnumerationAndZeroForeignInspection(
+      crowdedReattach.firstCall.ops,
+      foreignNames,
+    );
+    assertZeroEnumerationAndZeroForeignInspection(
+      crowdedReattach.cachedCalls.ops,
+      foreignNames,
+    );
+    expect(crowdedReattach.firstCall.counts).toEqual(
+      baselineReattach.firstCall.counts,
+    );
+    expect(crowdedReattach.cachedCalls.counts).toEqual(
+      baselineReattach.cachedCalls.counts,
+    );
+    expect(crowdedReattach.firstCall.ops.length).toBeLessThanOrEqual(160);
+    expect(crowdedReattach.cachedCalls.ops.length).toBeLessThanOrEqual(50);
+    expect(crowdedReattach.cachedCalls.ops.length).toBeLessThan(
+      crowdedReattach.firstCall.ops.length,
+    );
+
+    const manifestAfter = JSON.parse(
+      await readFile(path.join(crowdedTarget.session.root, "session.json"), "utf8"),
+    ) as Record<string, unknown>;
+    expect(manifestAfter.pid).toBe(process.pid);
+
+    // 2. Fresh miss via actual MCP client.callTool("summon")
+    const baselineMiss = await runMcpSummonSequence(
+      baselineRoot,
+      "mcp-summon-miss",
+    );
+    const crowdedMiss = await runMcpSummonSequence(
+      crowdedRoot,
+      "mcp-summon-miss",
+    );
+
+    const missRoot = (
+      crowdedMiss.firstCall.result.structuredContent as { sessionRoot: string }
+    ).sessionRoot;
+    expect(path.dirname(missRoot)).toBe(crowdedRoot);
+    expect(
+      (
+        crowdedMiss.cachedCalls.result.second.structuredContent as {
+          sessionRoot: string;
+        }
+      ).sessionRoot,
+    ).toBe(missRoot);
+
+    assertZeroEnumerationAndZeroForeignInspection(
+      crowdedMiss.firstCall.ops,
+      foreignNames,
+    );
+    assertZeroEnumerationAndZeroForeignInspection(
+      crowdedMiss.cachedCalls.ops,
+      foreignNames,
+    );
+    expect(crowdedMiss.firstCall.counts).toEqual(baselineMiss.firstCall.counts);
+    expect(crowdedMiss.cachedCalls.counts).toEqual(
+      baselineMiss.cachedCalls.counts,
+    );
+    expect(crowdedMiss.firstCall.ops.length).toBeLessThanOrEqual(120);
+    expect(crowdedMiss.cachedCalls.ops.length).toBeLessThanOrEqual(50);
   });
 
   it("hashes harness session IDs in index paths, stays inside tempRoot, and hides index from list/reap", async () => {
@@ -613,5 +844,192 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     });
     expect(reapOutcome.candidates.map((c) => c.root)).toEqual([second.session.root]);
     await expect(access(indexPath)).rejects.toThrow();
+  });
+
+  it("leaves abandoned roots untouched during summon and respects live PID and paused charter retention on explicit manual reap", async () => {
+    const tempRoot = await makeTempRoot();
+    const oldCreatedAt = "2026-04-01T00:00:00.000Z";
+    const tPause = new Date("2026-04-01T12:00:00.000Z");
+
+    // 1. Expired abandoned dead-PID root (no campaign)
+    const abandoned = await resolveSession({
+      tempRoot,
+      harnessSessionId: "manual-gc-abandoned",
+    });
+    const abandonedManifestPath = path.join(abandoned.session.root, "session.json");
+    const abandonedManifest = JSON.parse(
+      await readFile(abandonedManifestPath, "utf8"),
+    ) as Record<string, unknown>;
+    abandonedManifest.pid = DEAD_PID;
+    abandonedManifest.createdAt = oldCreatedAt;
+    await writeFile(
+      abandonedManifestPath,
+      JSON.stringify(abandonedManifest, null, 2),
+      "utf8",
+    );
+
+    // 2. Old live-PID root (must be protected by live PID)
+    const live = await resolveSession({
+      tempRoot,
+      harnessSessionId: "manual-gc-live",
+    });
+    const liveManifestPath = path.join(live.session.root, "session.json");
+    const liveManifest = JSON.parse(
+      await readFile(liveManifestPath, "utf8"),
+    ) as Record<string, unknown>;
+    liveManifest.createdAt = oldCreatedAt;
+    await writeFile(
+      liveManifestPath,
+      JSON.stringify(liveManifest, null, 2),
+      "utf8",
+    );
+
+    // 3. Old dead-PID root with an active paused campaign (48h charter retention)
+    const paused = await resolveSession({
+      tempRoot,
+      harnessSessionId: "manual-gc-paused",
+    });
+    const opCap = createCampaignOperatorAdapter();
+    const store = await CampaignStore.load(paused.session.root);
+    const recon: CampaignRecon = {
+      schema: CAMPAIGN_SCHEMA_IDS.recon,
+      findings: ["Manual GC charter retention check"],
+      citations: ["citation:manual-gc"],
+    };
+    await store.append({ channel: "agent", op: "open" });
+    await store.append({ channel: "agent", op: "recon", recon });
+    await store.append({
+      channel: "agent",
+      op: "propose",
+      charter: {
+        schema: CAMPAIGN_SCHEMA_IDS.charter,
+        revision: 1,
+        goal: "Verify explicit manual reap preserves paused charter",
+        allowedSkills: ["example/lookup-skill"],
+        queue: [
+          {
+            id: "u1",
+            skill: "example/lookup-skill",
+            reconCitation: "citation:manual-gc",
+          },
+        ],
+        recoverLimit: 1,
+        reopenLimit: 1,
+        sessionRetention: 48,
+        clauses: ["verify-command", "termination"],
+      },
+    });
+    await store.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+    const pausedManifestPath = path.join(paused.session.root, "session.json");
+    const pausedManifest = JSON.parse(
+      await readFile(pausedManifestPath, "utf8"),
+    ) as Record<string, unknown>;
+    pausedManifest.pid = DEAD_PID;
+    pausedManifest.createdAt = oldCreatedAt;
+    await writeFile(
+      pausedManifestPath,
+      JSON.stringify(pausedManifest, null, 2),
+      "utf8",
+    );
+
+    // Running MCP summon on another session must NOT scan tempRoot or reap expired abandoned roots.
+    process.env.TMPDIR = tempRoot;
+    process.env.TMP = tempRoot;
+    process.env.TEMP = tempRoot;
+    process.env.CLAUDE_CODE_SESSION_ID = "manual-gc-caller";
+    delete process.env.SKILL_SUMMON_SESSION;
+
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(summonRegistryDocs),
+      { now: () => new Date("2026-07-16T12:00:00Z") },
+    );
+    const server = createSkillSummonMcpServer({ service, version: "0.0.0" });
+    const client = new Client({ name: "manual-gc-client", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    closeCallbacks.push(async () => {
+      await client.close();
+      await server.close();
+    });
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const summonOps = await recordFsOps(async () => {
+      await client.callTool({
+        name: "summon",
+        arguments: { query: "lookup skill", preview: true, surface: "any" },
+      });
+      await client.callTool({
+        name: "summon",
+        arguments: { query: "lookup skill", preview: true, surface: "any" },
+      });
+    });
+    await client.close();
+    await server.close();
+
+    expect(summonOps.ops.filter((op) => op.op === "readdir")).toEqual([]);
+    await expect(access(abandoned.session.root)).resolves.toBeUndefined();
+    await expect(access(live.session.root)).resolves.toBeUndefined();
+    await expect(access(paused.session.root)).resolves.toBeUndefined();
+
+    // Explicit manual reap: reaps abandoned root and prunes its index entry,
+    // protects live PID, and establishes pause boundary for paused charter.
+    const firstReap = await reapSessions({ tempRoot, ttlHours: 4, now: tPause });
+    expect(firstReap.candidates.map((c) => c.root)).toEqual([
+      abandoned.session.root,
+    ]);
+    expect(firstReap.liveProtected).toContain(live.session.root);
+    await expect(access(abandoned.session.root)).rejects.toThrow();
+    await expect(
+      access(
+        path.join(
+          tempRoot,
+          expectedIndexDirName(),
+          `${expectedIndexKey("manual-gc-abandoned")}.json`,
+        ),
+      ),
+    ).rejects.toThrow();
+    await expect(access(live.session.root)).resolves.toBeUndefined();
+    await expect(access(paused.session.root)).resolves.toBeUndefined();
+
+    // Inside 48h charter retention window: paused root stays protected.
+    const beforeCharterEnd = new Date(tPause.getTime() + 47 * 3_600_000);
+    const midReap = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: beforeCharterEnd,
+    });
+    expect(midReap.candidates).toEqual([]);
+    await expect(access(paused.session.root)).resolves.toBeUndefined();
+
+    // Once charter retention window expires: manual reap removes paused root and its index entry.
+    const atCharterEnd = new Date(tPause.getTime() + 48 * 3_600_000);
+    const finalReap = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: atCharterEnd,
+    });
+    expect(finalReap.candidates.map((c) => c.root)).toEqual([
+      paused.session.root,
+    ]);
+    await expect(access(paused.session.root)).rejects.toThrow();
+    await expect(
+      access(
+        path.join(
+          tempRoot,
+          expectedIndexDirName(),
+          `${expectedIndexKey("manual-gc-paused")}.json`,
+        ),
+      ),
+    ).rejects.toThrow();
+    await expect(access(live.session.root)).resolves.toBeUndefined();
   });
 });
