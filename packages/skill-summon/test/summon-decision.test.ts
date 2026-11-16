@@ -1,22 +1,57 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { rm } from "node:fs/promises";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   JevClient,
   PINNED_MODEL,
+  type InstallabilityProjection,
+  type InstallabilityProjectionSkill,
+  type InstallabilitySourceRoute,
   type JevTransport,
 } from "skill-zero";
 
 import {
   createSkillSummonMcpServer,
+  GaiaInstallabilityAdapter,
   GaiaService,
   InMemoryGaiaRegistrySource,
+  sourceRouteFromUrl,
+  StaticInstallabilitySource,
   type GaiaRegistryDocuments,
 } from "../src/index.js";
 import { openSession, type SummonSession } from "../src/summon/session.js";
 import { summon } from "../src/summon/summon.js";
+
+const cloneSpies = vi.hoisted(() => ({
+  resolveRemoteCommit: vi.fn<typeof import("../src/summon/clone.js").resolveRemoteCommit>(),
+  ensureCachedRepo: vi.fn<typeof import("../src/summon/clone.js").ensureCachedRepo>(),
+}));
+
+vi.mock("../src/summon/clone.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/summon/clone.js")>();
+  cloneSpies.resolveRemoteCommit.mockImplementation((...args) =>
+    actual.resolveRemoteCommit(...args),
+  );
+  cloneSpies.ensureCachedRepo.mockImplementation((...args) =>
+    actual.ensureCachedRepo(...args),
+  );
+  return {
+    ...actual,
+    resolveRemoteCommit: cloneSpies.resolveRemoteCommit,
+    ensureCachedRepo: cloneSpies.ensureCachedRepo,
+  };
+});
+
+const UNMATERIALIZABLE_URL =
+  "https://github.com/example/unmaterializable-tool/blob/main/SKILL.md";
+const UNMATERIALIZABLE_ROUTE = sourceRouteFromUrl(
+  UNMATERIALIZABLE_URL,
+) as InstallabilitySourceRoute;
+const UNMATERIALIZABLE_OBSERVATION = "a".repeat(64);
+const UNMATERIALIZABLE_CONTENT_SHA256 = "b".repeat(64);
+const UNMATERIALIZABLE_OBSERVED_AT = "2026-07-16T00:00:00Z";
 
 const testDocuments: GaiaRegistryDocuments = {
   generic: {
@@ -140,16 +175,8 @@ const testDocuments: GaiaRegistryDocuments = {
           status: "named",
           description: "Tool with verified not materializable status.",
           tags: ["bottlenecks"],
-          links: { github: "https://github.com/example/unmaterializable-tool/blob/main/SKILL.md" },
+          links: { github: UNMATERIALIZABLE_URL },
           evidence: [],
-          installability: {
-            applicability: "verified",
-            applicabilityReason: "matched",
-            state: "not-materializable",
-            reason: "no-source",
-            projectionIndexPath: "test/projection.json",
-            upstream: null,
-          },
         },
       ],
     },
@@ -221,6 +248,8 @@ describe("DecisionBackend integration in summon", () => {
   beforeEach(() => {
     delete process.env.CLAUDE_CODE_SESSION_ID;
     delete process.env.SKILL_SUMMON_SESSION;
+    cloneSpies.resolveRemoteCommit.mockClear();
+    cloneSpies.ensureCachedRepo.mockClear();
     service = new GaiaService(new InMemoryGaiaRegistrySource(testDocuments));
   });
 
@@ -694,6 +723,8 @@ describe("DecisionBackend integration in summon", () => {
 
       // The human-led skill must not have been materialized into summoned
       expect(outcome.summoned.some((s) => s.id === "example/human-only-tool")).toBe(false);
+      expect(cloneSpies.resolveRemoteCommit).not.toHaveBeenCalled();
+      expect(cloneSpies.ensureCachedRepo).not.toHaveBeenCalled();
     });
 
     it("fails suite component installation on surface:heaven when component is model-led", async () => {
@@ -711,15 +742,64 @@ describe("DecisionBackend integration in summon", () => {
 
       // The model-led skill must not have been materialized into summoned
       expect(outcome.summoned.some((s) => s.id === "example/model-only-tool")).toBe(false);
+      expect(cloneSpies.resolveRemoteCommit).not.toHaveBeenCalled();
+      expect(cloneSpies.ensureCachedRepo).not.toHaveBeenCalled();
     });
 
     it("fails suite component installation when component is verified not materializable", async () => {
+      const negativeRecord: InstallabilityProjectionSkill = {
+        state: "not-materializable",
+        reason: "intrinsic-content-failure",
+        observationDigest: UNMATERIALIZABLE_OBSERVATION,
+        observedAt: UNMATERIALIZABLE_OBSERVED_AT,
+        currentSourceRoute: UNMATERIALIZABLE_ROUTE,
+        currentSkillContentSha256: UNMATERIALIZABLE_CONTENT_SHA256,
+        observedSourceRoute: UNMATERIALIZABLE_ROUTE,
+        observedSkillContentSha256: UNMATERIALIZABLE_CONTENT_SHA256,
+        resolvedRevision: null,
+        deliveredContentSha256: null,
+      };
+      const projection: InstallabilityProjection = {
+        schema: "gaia.installability/v1",
+        indexPath: "test/projection.json",
+        observations: [
+          {
+            digest: UNMATERIALIZABLE_OBSERVATION,
+            checkedAt: UNMATERIALIZABLE_OBSERVED_AT,
+            runId: "synthetic-suite-policy",
+          },
+        ],
+        skills: {
+          "example/unmaterializable-tool": negativeRecord,
+        },
+      };
+      const gatedService = new GaiaService(
+        new InMemoryGaiaRegistrySource(testDocuments),
+        {
+          installabilityAdapter: new GaiaInstallabilityAdapter({
+            source: new StaticInstallabilitySource(projection),
+            contextFor: (candidate) =>
+              candidate.id === "example/unmaterializable-tool"
+                ? {
+                    id: candidate.id,
+                    sourceRoute: UNMATERIALIZABLE_ROUTE,
+                    skillContentSha256: UNMATERIALIZABLE_CONTENT_SHA256,
+                  }
+                : undefined,
+          }),
+        },
+      );
+
       const session = await makeSession();
-      const outcome = await summon(service, session, {
+      const outcome = await summon(gatedService, session, {
         query: "example/suite-unmaterializable",
         surface: "any",
       });
 
+      expect(outcome.ranking.installability).toEqual({
+        status: "applied",
+        projectionIndexPath: "test/projection.json",
+      });
       expect(outcome.suites.length).toBeGreaterThan(0);
       const suiteAttempt = outcome.suites.find(
         (s) => s.suiteId === "example/suite-unmaterializable",
@@ -728,8 +808,29 @@ describe("DecisionBackend integration in summon", () => {
       expect(suiteAttempt?.ok).toBe(false);
       expect(suiteAttempt?.failedComponents).toContain("example/unmaterializable-tool");
 
-      // The unmaterializable component must not have been materialized
+      // The unmaterializable component must not have been materialized and must
+      // never fall through to remote git resolution.
       expect(outcome.summoned.some((s) => s.id === "example/unmaterializable-tool")).toBe(false);
+      expect(cloneSpies.resolveRemoteCommit).not.toHaveBeenCalled();
+      expect(cloneSpies.ensureCachedRepo).not.toHaveBeenCalled();
+
+      // Verify the component itself is withheld by the verified not-materializable gate.
+      const componentOutcome = await summon(gatedService, session, {
+        query: "example/unmaterializable-tool",
+        surface: "any",
+      });
+      expect(componentOutcome.summoned).toEqual([]);
+      expect(componentOutcome.noMatch?.reason).toBe("all_filtered");
+      expect(componentOutcome.filtered).toEqual([
+        expect.objectContaining({
+          id: "example/unmaterializable-tool",
+          why: expect.stringContaining(
+            `not materializable — upstream Tree installability reason: intrinsic-content-failure; observation ${UNMATERIALIZABLE_OBSERVATION}`,
+          ),
+        }),
+      ]);
+      expect(cloneSpies.resolveRemoteCommit).not.toHaveBeenCalled();
+      expect(cloneSpies.ensureCachedRepo).not.toHaveBeenCalled();
     });
   });
 });
