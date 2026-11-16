@@ -1,0 +1,45 @@
+  /review - review any changes and find issues
+Session ID: 01a1e1ab-5bcf-7f11-8f29-ede9870c4ecf
+<USER>@<HOST> tmpi5e_y011 % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpvra_9aok' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpvra_9aok".trust_level="trust
+ed"'
+
+  >_ OpenAI Codex (v0.169.0)
+     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmpvra_9aok
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /permissions - choose what Codex is allowed to do
+  /model - choose what model and reasoning effort to use
+  /review - review any changes and find issues
+Session ID: 01a1e1ab-8823-7651-a7b9-d7b2726e7531
+<USER>@<HOST> tmpvra_9aok % cd '/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp1i51e4sa' && codex --no-alt-screen -m
+ gpt-6-luna -c 'model_reasoning_effort="low"' -c 'projects."/private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp1i51e4sa".trust_level="trust
+ed"'
+
+  >_ OpenAI Codex (v0.169.0)
+     /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp1i51e4sa
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /permissions - choose what Codex is allowed to do
+  /model - choose what model and reasoning effort to use
+  /review - review any changes and find issues
+
+
+› $probe-decide
+
+
+• NONE
+
+  Worked for 4s • 8:04 AM
+
+
+› Ask Codex to do anything
+
+  GPT-6-Luna low · /private/var/folders/lx/k6kw155s56d7l_crqplcn8nw0000gn/T/tmp1i51e4sa
+  ← for agents · ? for shortcuts                                                                                          ⚠ 5 warnings · f2 to view
