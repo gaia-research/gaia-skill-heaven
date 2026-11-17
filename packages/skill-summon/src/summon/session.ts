@@ -1422,7 +1422,7 @@ async function loadPausedCampaignRetention(
     return { kind: "absent" };
   }
   if (store.corrupted || !store.recordSha256) {
-    return { kind: "not_paused" };
+    return { kind: "preserve" };
   }
   const state = store.state;
   if (

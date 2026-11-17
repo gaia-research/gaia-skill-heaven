@@ -715,7 +715,7 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     await seedPausedCampaign(corruptStatus, 48);
     await writeFile(path.join(corruptStatus, "campaign", "status.json"), "{corrupt-json", "utf8");
 
-    // 4. Malformed trace.jsonl with stale status.json (retains old reap behavior -> candidate)
+    // 4. Malformed trace.jsonl with stale status.json (uncertain retention -> preserved, NOT candidate)
     const malformedTrace = await createDeadRoot(tempRoot, "dry-malformed-trace", createdAt);
     await seedPausedCampaign(malformedTrace, 48);
     await writeFile(
@@ -743,15 +743,27 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     });
 
     expect(dryOutcome.dryRun).toBe(true);
-    expect(dryOutcome.candidates.map((c) => c.root).sort()).toEqual(
-      [malformedTrace, noCampaign].sort(),
-    );
+    expect(dryOutcome.candidates.map((c) => c.root)).toEqual([noCampaign]);
 
     const afterSnapshots = await Promise.all(allRoots.map((r) => snapshotRootArtifacts(r)));
     expect(afterSnapshots).toEqual(beforeSnapshots);
+
+    // Real GC at the same expired timestamp must also preserve malformedTrace byte-for-byte
+    // while reaping genuinely no-campaign root.
+    const malformedBeforeReal = await snapshotRootArtifacts(malformedTrace);
+    const realOutcome = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date("2026-04-02T00:00:00.000Z"),
+      dryRun: false,
+    });
+    expect(realOutcome.candidates.map((c) => c.root)).toEqual([noCampaign]);
+    await expect(access(noCampaign)).rejects.toThrow();
+    await expect(access(malformedTrace)).resolves.toBeUndefined();
+    expect(await snapshotRootArtifacts(malformedTrace)).toEqual(malformedBeforeReal);
   });
 
-  it("has no compiled pause default (sessionRetention: 0 reaps immediately) and ignores unapproved/terminal/forged-status roots", async () => {
+  it("has no compiled pause default (sessionRetention: 0 reaps immediately), ignores forged derived status on verified non-paused states, and preserves missing-trace FAILED_SAFE artifacts", async () => {
     const tempRoot = await makeTempRoot();
     const createdAt = "2026-04-01T10:00:00.000Z";
 
@@ -759,7 +771,7 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     const zeroRetention = await createDeadRoot(tempRoot, "zero-retention", createdAt);
     await seedPausedCampaign(zeroRetention, 0);
 
-    // 2. Unapproved proposal (DECISIONS, approved: false) with sessionRetention: 72 -> falls back to 4h TTL
+    // 2. Unapproved proposal (DECISIONS, approved: false) with sessionRetention: 72 and forged EXECUTING status -> falls back to 4h TTL
     const unapproved = await createDeadRoot(tempRoot, "unapproved-72h", createdAt);
     const unapprovedStore = await CampaignStore.load(unapproved);
     await unapprovedStore.append({ channel: "agent", op: "open" });
@@ -769,8 +781,17 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
       op: "propose",
       charter: makeCharter(72),
     });
+    await writeFile(
+      path.join(unapproved, "campaign", "status.json"),
+      JSON.stringify({
+        schema: CAMPAIGN_SCHEMA_IDS.status,
+        state: CampaignStates.executing,
+        effective: "med",
+      }),
+      "utf8",
+    );
 
-    // 3. Completed terminal campaign with sessionRetention: 72 -> falls back to 4h TTL
+    // 3. Completed terminal campaign with sessionRetention: 72 and forged EXECUTING status -> falls back to 4h TTL
     const completed = await createDeadRoot(tempRoot, "completed-72h", createdAt);
     await seedPausedCampaign(completed, 72);
     const completedStore = await CampaignStore.load(completed);
@@ -782,17 +803,28 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
         clause: "termination",
       }),
     );
-
-    // 4. Forged status.json without valid trace.jsonl -> falls back to 4h TTL
-    const forgedStatus = await createDeadRoot(tempRoot, "forged-status", createdAt);
-    await mkdir(path.join(forgedStatus, "campaign"));
     await writeFile(
-      path.join(forgedStatus, "campaign", "status.json"),
+      path.join(completed, "campaign", "status.json"),
       JSON.stringify({
         schema: CAMPAIGN_SCHEMA_IDS.status,
         state: CampaignStates.executing,
         effective: "med",
       }),
+      "utf8",
+    );
+
+    // 4. Orphaned status.json without trace.jsonl -> CampaignStore classifies FAILED_SAFE
+    // ("Campaign trace is missing while campaign artifacts survive"); preserved conservatively without trusting status.json.
+    const forgedStatus = await createDeadRoot(tempRoot, "forged-status", createdAt);
+    await mkdir(path.join(forgedStatus, "campaign"));
+    const forgedStatusContent = JSON.stringify({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+      effective: "med",
+    });
+    await writeFile(
+      path.join(forgedStatus, "campaign", "status.json"),
+      forgedStatusContent,
       "utf8",
     );
 
@@ -804,15 +836,21 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     });
     expect(at1h.candidates.map((c) => c.root)).toEqual([zeroRetention]);
 
-    // At +5h: unapproved, completed, and forgedStatus all reap at the 4h default TTL.
+    // At +5h: verified unapproved and completed reap at the 4h default TTL (ignoring forged EXECUTING status);
+    // orphaned status.json (missing trace -> FAILED_SAFE) is preserved untouched without writing pause.json.
     const at5h = await reapSessions({
       tempRoot,
       ttlHours: 4,
       now: new Date("2026-04-01T15:00:00.000Z"),
     });
     expect(at5h.candidates.map((c) => c.root).sort()).toEqual(
-      [completed, forgedStatus, unapproved].sort(),
+      [completed, unapproved].sort(),
     );
+    await expect(access(forgedStatus)).resolves.toBeUndefined();
+    expect(await readFile(path.join(forgedStatus, "campaign", "status.json"), "utf8")).toBe(
+      forgedStatusContent,
+    );
+    await expect(access(path.join(forgedStatus, "campaign", "pause.json"))).rejects.toThrow();
   });
 
   it("decouples retention from derived status I/O across real and dry-run reaps (directory/unreadable/symlink/malformed/missing status) with exact window expiry", async () => {
@@ -983,7 +1021,7 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     }
   });
 
-  it("conservatively preserves uncertain verification/projection I/O errors instead of collapsing to creation TTL, while keeping legacy reap for absent/unapproved/terminal/known-invalid traces", async () => {
+  it("conservatively preserves uncertain verification/projection I/O errors and malformed traces instead of collapsing to creation TTL, while keeping legacy reap for absent/unapproved/terminal campaigns", async () => {
     const tempRoot = await makeTempRoot();
     const outsideDir = await makeTempRoot();
     const createdAt = "2026-04-01T00:00:00.000Z";
@@ -1021,6 +1059,20 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
     const unreadablePausePath = path.join(unreadablePauseRoot, "campaign", "pause.json");
     await writeFile(unreadablePausePath, "{}", "utf8");
 
+    // 6. Malformed trace.jsonl (uncertain retention -> preserved with bytes unchanged)
+    const invalidTraceRoot = await createDeadRoot(tempRoot, "uncertain-invalid-trace", createdAt);
+    await seedPausedCampaign(invalidTraceRoot, 72);
+    const invalidTraceContent = `${await readFile(path.join(invalidTraceRoot, "campaign", "trace.jsonl"), "utf8")}not-json\n`;
+    await writeFile(
+      path.join(invalidTraceRoot, "campaign", "trace.jsonl"),
+      invalidTraceContent,
+      "utf8",
+    );
+    const invalidEvidenceBefore = await readFile(
+      path.join(invalidTraceRoot, "campaign", "evidence.jsonl"),
+      "utf8",
+    );
+
     if (process.getuid?.() !== 0) {
       await chmod(unreadableTracePath, 0o000);
       await chmod(unreadableEvidencePath, 0o000);
@@ -1047,24 +1099,16 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
       }),
     );
 
-    const invalidTraceRoot = await createDeadRoot(tempRoot, "legacy-invalid-trace", createdAt);
-    await seedPausedCampaign(invalidTraceRoot, 72);
-    await writeFile(
-      path.join(invalidTraceRoot, "campaign", "trace.jsonl"),
-      `${await readFile(path.join(invalidTraceRoot, "campaign", "trace.jsonl"), "utf8")}not-json\n`,
-      "utf8",
-    );
-
     const expectedLegacyReaped = [
       absentRoot,
       unapprovedRoot,
       terminalRoot,
-      invalidTraceRoot,
     ].sort();
 
     const uncertainRoots = [
       symCampaignRoot,
       symTraceRoot,
+      invalidTraceRoot,
       ...(process.getuid?.() !== 0
         ? [unreadableTraceRoot, unreadableEvidenceRoot, unreadablePauseRoot]
         : []),
@@ -1083,6 +1127,13 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
       for (const root of uncertainRoots) {
         await expect(access(root)).resolves.toBeUndefined();
       }
+      expect(
+        await readFile(path.join(invalidTraceRoot, "campaign", "trace.jsonl"), "utf8"),
+      ).toBe(invalidTraceContent);
+      expect(
+        await readFile(path.join(invalidTraceRoot, "campaign", "evidence.jsonl"), "utf8"),
+      ).toBe(invalidEvidenceBefore);
+      await expect(access(path.join(invalidTraceRoot, "campaign", "pause.json"))).rejects.toThrow();
       expect(await readFile(path.join(outsideCampaignTarget, "marker.txt"), "utf8")).toBe("KEEP");
       expect(await readFile(outsideTraceTarget, "utf8")).toBe("KEEP-TRACE");
     } finally {
@@ -1092,6 +1143,238 @@ describe("paused campaign reaper retention (deterministic clock)", () => {
         await chmod(unreadablePausePath, 0o600).catch(() => {});
       }
     }
+  });
+
+  it("preserves expired malformed, tampered, hash-mismatched, and evidence-inconsistent campaign histories unchanged across dry-run and real GC while reaping verified no-retention and absent roots", async () => {
+    const tempRoot = await makeTempRoot();
+    const outsideDir = await makeTempRoot();
+    const createdAt = "2026-04-01T00:00:00.000Z";
+    const expiredNow = new Date("2026-04-06T00:00:00.000Z"); // +120h (past both 4h default TTL and 72h charter)
+
+    type Snapshot = Record<
+      string,
+      {
+        kind: "file" | "symlink" | "dir";
+        size: number;
+        mtimeMs: number;
+        content?: string;
+        target?: string;
+      }
+    >;
+
+    async function snapshotTree(sessionRoot: string): Promise<Snapshot> {
+      const snap: Snapshot = {};
+      async function walk(dir: string, relBase: string): Promise<void> {
+        const entries = (await readdir(dir)).sort();
+        for (const entry of entries) {
+          const full = path.join(dir, entry);
+          const rel = relBase ? `${relBase}/${entry}` : entry;
+          const st = await lstat(full);
+          if (st.isSymbolicLink()) {
+            snap[rel] = {
+              kind: "symlink",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              target: await readlink(full),
+            };
+          } else if (st.isDirectory()) {
+            snap[rel] = { kind: "dir", size: st.size, mtimeMs: st.mtimeMs };
+            await walk(full, rel);
+          } else {
+            snap[rel] = {
+              kind: "file",
+              size: st.size,
+              mtimeMs: st.mtimeMs,
+              content: await readFile(full, "utf8"),
+            };
+          }
+        }
+      }
+      await walk(sessionRoot, "");
+      return snap;
+    }
+
+    // --- Preserved corrupt / tampered / unverifiable histories ---
+    // 1. Truncated JSON line in trace.jsonl
+    const truncatedTrace = await createDeadRoot(tempRoot, "corrupt-truncated-trace", createdAt);
+    await seedPausedCampaign(truncatedTrace, 48);
+    await writeFile(
+      path.join(truncatedTrace, "campaign", "trace.jsonl"),
+      `${await readFile(path.join(truncatedTrace, "campaign", "trace.jsonl"), "utf8")}{"seq":4,"event":`,
+      "utf8",
+    );
+
+    // 2. Syntactically valid JSONL with tampered charter field (recordSha256 mismatch against evidence.jsonl)
+    const tamperedHash = await createDeadRoot(tempRoot, "corrupt-tampered-hash", createdAt);
+    await seedPausedCampaign(tamperedHash, 48);
+    const originalTrace2 = await readFile(path.join(tamperedHash, "campaign", "trace.jsonl"), "utf8");
+    const tamperedTrace2 = originalTrace2.replace(
+      "Test session retention",
+      "Tampered session retention",
+    );
+    expect(tamperedTrace2).not.toBe(originalTrace2);
+    await writeFile(path.join(tamperedHash, "campaign", "trace.jsonl"), tamperedTrace2, "utf8");
+
+    // 3. Forged operator approval in trace.jsonl without matching evidence line
+    const forgedOperator = await createDeadRoot(tempRoot, "corrupt-forged-operator", createdAt);
+    const forgedOpStore = await CampaignStore.load(forgedOperator);
+    await forgedOpStore.append({ channel: "agent", op: "open" });
+    await forgedOpStore.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await forgedOpStore.append({ channel: "agent", op: "propose", charter: makeCharter(48) });
+    const forgedLine = JSON.stringify({
+      seq: 3,
+      event: {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      },
+      entry: {
+        seq: 3,
+        from: CampaignStates.decisions,
+        to: CampaignStates.executing,
+        trigger: "decide",
+        decision: "EXPLORE",
+        signal: "decision",
+        charterRevision: 1,
+        charterClause: "operator-control-plane",
+        skills: ["skill-alpha"],
+        phase: "execution",
+        workUnit: null,
+        personRequired: true,
+        channel: "operator",
+        accepted: true,
+      },
+    });
+    await writeFile(
+      path.join(forgedOperator, "campaign", "trace.jsonl"),
+      `${await readFile(path.join(forgedOperator, "campaign", "trace.jsonl"), "utf8")}${forgedLine}\n`,
+      "utf8",
+    );
+
+    // 4. Missing evidence.jsonl on trace with privileged operator event
+    const missingEvidence = await createDeadRoot(tempRoot, "corrupt-missing-evidence", createdAt);
+    await seedPausedCampaign(missingEvidence, 48);
+    await rm(path.join(missingEvidence, "campaign", "evidence.jsonl"));
+
+    // 5. Corrupt evidence.jsonl (malformed JSON)
+    const corruptEvidence = await createDeadRoot(tempRoot, "corrupt-bad-evidence", createdAt);
+    await seedPausedCampaign(corruptEvidence, 48);
+    await writeFile(path.join(corruptEvidence, "campaign", "evidence.jsonl"), "{bad-evidence\n", "utf8");
+
+    // 6. Evidence/trace length mismatch (trailing no-op deleted from trace.jsonl)
+    const lengthMismatch = await createDeadRoot(tempRoot, "corrupt-length-mismatch", createdAt);
+    await seedPausedCampaign(lengthMismatch, 48);
+    const lmStore = await CampaignStore.load(lengthMismatch);
+    await lmStore.append({ channel: "agent", op: "status" });
+    const lmLines = (await readFile(lmStore.tracePath, "utf8")).trimEnd().split("\n");
+    await writeFile(lmStore.tracePath, `${lmLines.slice(0, -1).join("\n")}\n`, "utf8");
+
+    // 7. Missing trace.jsonl while evidence.jsonl and status.json survive
+    const missingTraceWithEvidence = await createDeadRoot(tempRoot, "corrupt-missing-trace-evidence", createdAt);
+    await seedPausedCampaign(missingTraceWithEvidence, 48);
+    await rm(path.join(missingTraceWithEvidence, "campaign", "trace.jsonl"));
+
+    // 8. Symlinked evidence.jsonl pointing outside sessionRoot
+    const symlinkEvidence = await createDeadRoot(tempRoot, "corrupt-symlink-evidence", createdAt);
+    await seedPausedCampaign(symlinkEvidence, 48);
+    const outsideEvidenceTarget = path.join(outsideDir, "outside-evidence.jsonl");
+    await writeFile(outsideEvidenceTarget, "KEEP-EVIDENCE", "utf8");
+    const outsideEvidenceBefore = await lstat(outsideEvidenceTarget);
+    await rm(path.join(symlinkEvidence, "campaign", "evidence.jsonl"));
+    await symlink(
+      outsideEvidenceTarget,
+      path.join(symlinkEvidence, "campaign", "evidence.jsonl"),
+      "file",
+    );
+
+    const preservedRoots = [
+      truncatedTrace,
+      tamperedHash,
+      forgedOperator,
+      missingEvidence,
+      corruptEvidence,
+      lengthMismatch,
+      missingTraceWithEvidence,
+      symlinkEvidence,
+    ];
+
+    // --- Verified non-paused / genuinely absent roots (must reap) ---
+    const absentNoDir = await createDeadRoot(tempRoot, "reap-absent-nodir", createdAt);
+
+    const absentEmptyDir = await createDeadRoot(tempRoot, "reap-absent-emptydir", createdAt);
+    await mkdir(path.join(absentEmptyDir, "campaign"));
+
+    const verifiedRecon = await createDeadRoot(tempRoot, "reap-verified-recon", createdAt);
+    const reconStore = await CampaignStore.load(verifiedRecon);
+    await reconStore.append({ channel: "agent", op: "open" });
+    await reconStore.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await writeFile(
+      path.join(verifiedRecon, "campaign", "status.json"),
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.executing }),
+      "utf8",
+    );
+
+    const verifiedUnapproved = await createDeadRoot(tempRoot, "reap-verified-unapproved", createdAt);
+    const unappStore = await CampaignStore.load(verifiedUnapproved);
+    await unappStore.append({ channel: "agent", op: "open" });
+    await unappStore.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await unappStore.append({ channel: "agent", op: "propose", charter: makeCharter(72) });
+    await writeFile(
+      path.join(verifiedUnapproved, "campaign", "status.json"),
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.executing }),
+      "utf8",
+    );
+
+    // Verified terminal FAILED_SAFE via genuine engine:fail (known no-retention, NOT corrupt)
+    const verifiedTerminalFail = await createDeadRoot(tempRoot, "reap-verified-engine-fail", createdAt);
+    await seedPausedCampaign(verifiedTerminalFail, 72);
+    const failStore = await CampaignStore.load(verifiedTerminalFail);
+    const engCap = createCampaignEngineAdapter();
+    await failStore.append(
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "fail",
+        clause: "termination",
+      }),
+    );
+
+    const expectedReaped = [
+      absentNoDir,
+      absentEmptyDir,
+      verifiedRecon,
+      verifiedUnapproved,
+      verifiedTerminalFail,
+    ].sort();
+
+    const beforePreserved = await Promise.all(preservedRoots.map((r) => snapshotTree(r)));
+
+    const dryOutcome = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: expiredNow,
+      dryRun: true,
+    });
+    expect(dryOutcome.candidates.map((c) => c.root).sort()).toEqual(expectedReaped);
+    expect(await Promise.all(preservedRoots.map((r) => snapshotTree(r)))).toEqual(beforePreserved);
+
+    const realOutcome = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: expiredNow,
+      dryRun: false,
+    });
+    expect(realOutcome.candidates.map((c) => c.root).sort()).toEqual(expectedReaped);
+
+    for (const root of expectedReaped) {
+      await expect(access(root)).rejects.toThrow();
+    }
+    for (const root of preservedRoots) {
+      await expect(access(root)).resolves.toBeUndefined();
+    }
+    expect(await Promise.all(preservedRoots.map((r) => snapshotTree(r)))).toEqual(beforePreserved);
+    expect(await readFile(outsideEvidenceTarget, "utf8")).toBe("KEEP-EVIDENCE");
+    expect((await lstat(outsideEvidenceTarget)).mtimeMs).toBe(outsideEvidenceBefore.mtimeMs);
   });
 });
 
