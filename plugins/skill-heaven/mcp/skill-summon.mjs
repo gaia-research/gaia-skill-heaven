@@ -417,11 +417,11 @@ var require_codegen = __commonJS({
         const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
         return `${varKind} ${this.name}${rhs};` + _n;
       }
-      optimizeNames(names, constants5) {
+      optimizeNames(names, constants6) {
         if (!names[this.name.str])
           return;
         if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants5);
+          this.rhs = optimizeExpr(this.rhs, names, constants6);
         return this;
       }
       get names() {
@@ -438,10 +438,10 @@ var require_codegen = __commonJS({
       render({ _n }) {
         return `${this.lhs} = ${this.rhs};` + _n;
       }
-      optimizeNames(names, constants5) {
+      optimizeNames(names, constants6) {
         if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
           return;
-        this.rhs = optimizeExpr(this.rhs, names, constants5);
+        this.rhs = optimizeExpr(this.rhs, names, constants6);
         return this;
       }
       get names() {
@@ -502,8 +502,8 @@ var require_codegen = __commonJS({
       optimizeNodes() {
         return `${this.code}` ? this : void 0;
       }
-      optimizeNames(names, constants5) {
-        this.code = optimizeExpr(this.code, names, constants5);
+      optimizeNames(names, constants6) {
+        this.code = optimizeExpr(this.code, names, constants6);
         return this;
       }
       get names() {
@@ -532,12 +532,12 @@ var require_codegen = __commonJS({
         }
         return nodes.length > 0 ? this : void 0;
       }
-      optimizeNames(names, constants5) {
+      optimizeNames(names, constants6) {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
           const n = nodes[i];
-          if (n.optimizeNames(names, constants5))
+          if (n.optimizeNames(names, constants6))
             continue;
           subtractNames(names, n.names);
           nodes.splice(i, 1);
@@ -590,12 +590,12 @@ var require_codegen = __commonJS({
           return void 0;
         return this;
       }
-      optimizeNames(names, constants5) {
+      optimizeNames(names, constants6) {
         var _a;
-        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants5);
-        if (!(super.optimizeNames(names, constants5) || this.else))
+        this.else = (_a = this.else) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants6);
+        if (!(super.optimizeNames(names, constants6) || this.else))
           return;
-        this.condition = optimizeExpr(this.condition, names, constants5);
+        this.condition = optimizeExpr(this.condition, names, constants6);
         return this;
       }
       get names() {
@@ -618,10 +618,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.iteration})` + super.render(opts);
       }
-      optimizeNames(names, constants5) {
-        if (!super.optimizeNames(names, constants5))
+      optimizeNames(names, constants6) {
+        if (!super.optimizeNames(names, constants6))
           return;
-        this.iteration = optimizeExpr(this.iteration, names, constants5);
+        this.iteration = optimizeExpr(this.iteration, names, constants6);
         return this;
       }
       get names() {
@@ -657,10 +657,10 @@ var require_codegen = __commonJS({
       render(opts) {
         return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
       }
-      optimizeNames(names, constants5) {
-        if (!super.optimizeNames(names, constants5))
+      optimizeNames(names, constants6) {
+        if (!super.optimizeNames(names, constants6))
           return;
-        this.iterable = optimizeExpr(this.iterable, names, constants5);
+        this.iterable = optimizeExpr(this.iterable, names, constants6);
         return this;
       }
       get names() {
@@ -702,11 +702,11 @@ var require_codegen = __commonJS({
         (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
         return this;
       }
-      optimizeNames(names, constants5) {
+      optimizeNames(names, constants6) {
         var _a, _b;
-        super.optimizeNames(names, constants5);
-        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants5);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants5);
+        super.optimizeNames(names, constants6);
+        (_a = this.catch) === null || _a === void 0 ? void 0 : _a.optimizeNames(names, constants6);
+        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants6);
         return this;
       }
       get names() {
@@ -1007,7 +1007,7 @@ var require_codegen = __commonJS({
     function addExprNames(names, from) {
       return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
     }
-    function optimizeExpr(expr, names, constants5) {
+    function optimizeExpr(expr, names, constants6) {
       if (expr instanceof code_1.Name)
         return replaceName(expr);
       if (!canOptimize(expr))
@@ -1022,14 +1022,14 @@ var require_codegen = __commonJS({
         return items;
       }, []));
       function replaceName(n) {
-        const c = constants5[n.str];
+        const c = constants6[n.str];
         if (c === void 0 || names[n.str] !== 1)
           return n;
         delete names[n.str];
         return c;
       }
       function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants5[c.str] !== void 0);
+        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants6[c.str] !== void 0);
       }
     }
     function subtractNames(names, from) {
@@ -3269,8 +3269,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path11) {
-      let input = path11;
+    function removeDotSegments(path12) {
+      let input = path12;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3344,11 +3344,11 @@ var require_utils = __commonJS({
       }
       return output.join("");
     }
-    function removeDotSegmentsRelative(path11) {
-      if (path11 === "" || path11[0] === "/") {
-        return removeDotSegments(path11);
+    function removeDotSegmentsRelative(path12) {
+      if (path12 === "" || path12[0] === "/") {
+        return removeDotSegments(path12);
       }
-      const segments = path11.split("/");
+      const segments = path12.split("/");
       const last = segments.length - 1;
       const output = [];
       let trailingDirectory = false;
@@ -3711,8 +3711,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path11 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path11 && path11 !== "/" ? path11 : void 0;
+        const path12 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path12 && path12 !== "/" ? path12 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7460,10 +7460,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path11) {
-  if (!path11)
+function getElementAtPath(obj, path12) {
+  if (!path12)
     return obj;
-  return path11.reduce((acc, key) => acc?.[key], obj);
+  return path12.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -7783,11 +7783,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path11, issues) {
+function prefixIssues(path12, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path11);
+    iss.path.unshift(path12);
     return iss;
   });
 }
@@ -17279,18 +17279,18 @@ function readArborPublication(documents) {
     };
   }
   const runtimes = /* @__PURE__ */ new Map();
-  for (const { path: path11, document } of documents.runtimes) {
+  for (const { path: path12, document } of documents.runtimes) {
     try {
-      assertArborRuntime(document, path11);
+      assertArborRuntime(document, path12);
     } catch (error2) {
-      problems.push({ where: path11, detail: describe(error2) });
+      problems.push({ where: path12, detail: describe(error2) });
       continue;
     }
     const claimsLens = document.lenses.claims;
     if (claimsLens.profile !== null) {
       let quarantine = null;
       try {
-        assertArborProfile(claimsLens.profile, `${path11} lenses.claims.profile`);
+        assertArborProfile(claimsLens.profile, `${path12} lenses.claims.profile`);
         const embedded = claimsLens.profile.skill;
         if (embedded.id !== document.subject.id) {
           quarantine = `embedded profile is for skill '${embedded.id}' but the aggregate's subject is '${document.subject.id}'; the lens was quarantined and no claim was consumed`;
@@ -17301,7 +17301,7 @@ function readArborPublication(documents) {
         quarantine = describe(error2);
       }
       if (quarantine !== null) {
-        problems.push({ where: `${path11} lenses.claims.profile`, detail: quarantine });
+        problems.push({ where: `${path12} lenses.claims.profile`, detail: quarantine });
         runtimes.set(subjectKey(document.subject), {
           ...document,
           lenses: {
@@ -17316,7 +17316,7 @@ function readArborPublication(documents) {
       const governed = claim.interpretationSource !== null;
       if (governed === (claim.support === "expert-declared")) {
         problems.push({
-          where: `${path11} lenses.claims.profile claim '${claim.id}'`,
+          where: `${path12} lenses.claims.profile claim '${claim.id}'`,
           detail: governed ? "support is 'expert-declared' but a governed interpretationSource is present" : `support is '${claim.support}' with no interpretationSource; only a governed interpretation may set it`
         });
       }
@@ -17900,9 +17900,9 @@ function flattenNamedSkills(document) {
 }
 
 // packages/skill-summon/src/data/fleet-source.ts
-import { lstat as lstat3, mkdtemp as mkdtemp2, readFile as readFile3, readdir as readdir2, rm as rm3, stat as stat2 } from "node:fs/promises";
+import { lstat as lstat4, mkdtemp as mkdtemp2, readFile as readFile3, readdir as readdir2, rm as rm4, stat as stat2 } from "node:fs/promises";
 import { tmpdir as tmpdir2 } from "node:os";
-import path4 from "node:path";
+import path5 from "node:path";
 
 // packages/skill-summon/src/summon/clone.ts
 import { execFile } from "node:child_process";
@@ -18030,22 +18030,22 @@ function errorMessage(error2) {
 }
 
 // packages/skill-summon/src/summon/session.ts
-import { createHash as createHash3, randomUUID } from "node:crypto";
-import { constants as constants2, realpathSync } from "node:fs";
+import { createHash as createHash4, randomUUID } from "node:crypto";
+import { constants as constants3, realpathSync } from "node:fs";
 import {
-  lstat as lstat2,
-  mkdir as mkdir3,
+  lstat as lstat3,
+  mkdir as mkdir4,
   mkdtemp,
-  open,
+  open as open2,
   readFile as readFile2,
   readdir,
-  realpath,
+  realpath as realpath2,
   rename,
-  rm as rm2,
+  rm as rm3,
   writeFile as writeFile2
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import path3 from "node:path";
+import path4 from "node:path";
 
 // packages/skill-summon/src/campaign/store.ts
 import { appendFile, lstat, mkdir as mkdir2, readFile, writeFile } from "node:fs/promises";
@@ -18425,225 +18425,37 @@ async function ensureConfinedCampaignDir(sessionRoot, campaignDir) {
   await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
 }
 
-// packages/skill-summon/src/summon/session.ts
-var SESSION_DIR_PREFIX = "skill-summon-session-";
-var SESSION_INDEX_DIR_PREFIX = "skill-summon-index-v1";
-var MANIFEST_FILE = "session.json";
-var CAMPAIGN_PAUSE_FILE = "pause.json";
-var MAX_INDEX_ENTRY_BYTES = 64 * 1024;
-var MAX_INDEX_ROOTS_PER_ID = 16;
-var HARNESS_SESSION_ID_ENV_VARS = Object.freeze([
-  "CLAUDE_CODE_SESSION_ID"
-]);
-function readHarnessSessionId(env = process.env) {
-  for (const key of HARNESS_SESSION_ID_ENV_VARS) {
-    const value = env[key]?.trim();
-    if (value) return value;
-  }
-  return void 0;
+// packages/skill-summon/src/summon/session-ownership.ts
+import { createHash as createHash3 } from "node:crypto";
+import { constants as constants2 } from "node:fs";
+import {
+  lstat as lstat2,
+  mkdir as mkdir3,
+  open,
+  realpath,
+  rm as rm2,
+  unlink
+} from "node:fs/promises";
+import path3 from "node:path";
+var SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
+var SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
+function isCurrentProcessUid(uid) {
+  const currentUid = process.getuid?.();
+  return currentUid === void 0 || uid === currentUid;
 }
-var SummonSession = class _SummonSession {
-  root;
-  id;
-  #manifestPath;
-  #tempRoot;
-  #manifest;
-  constructor(root, manifest, tempRoot) {
-    this.root = root;
-    this.id = manifest.id;
-    this.#manifestPath = path3.join(root, MANIFEST_FILE);
-    this.#tempRoot = tempRoot;
-    this.#manifest = manifest;
-  }
-  static async createAt(root, id, opts = {}) {
-    const tempRoot = opts.tempRoot ?? tmpdir();
-    await assertDisposableSessionRoot(root, tempRoot);
-    const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
-    const manifest = {
-      id,
-      ...harnessSessionId === void 0 ? {} : { harnessSessionId },
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      pid: process.pid,
-      skills: []
-    };
-    const session = new _SummonSession(root, manifest, tempRoot);
-    await session.#writeManifest(manifest, { skipRootCheck: true });
-    if (harnessSessionId !== void 0) {
-      await recordSessionInIndex(tempRoot, harnessSessionId, root);
-    }
-    return session;
-  }
-  static async loadAt(root, tempRoot) {
-    await assertDisposableSessionRoot(root, tempRoot);
-    const manifestPath = path3.join(root, MANIFEST_FILE);
-    await assertConfinedPath(root, manifestPath, "Session manifest");
-    let raw;
-    try {
-      raw = await readFile2(manifestPath, "utf8");
-    } catch (error2) {
-      throw new Error(
-        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage2(error2)}`
-      );
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (error2) {
-      throw new Error(
-        `Invalid session manifest JSON at ${root}: ${errorMessage2(error2)}`
-      );
-    }
-    const manifest = parseSessionManifest(parsed);
-    if (!manifest) {
-      throw new Error(`Invalid session manifest shape at ${root}.`);
-    }
-    return new _SummonSession(root, manifest, tempRoot);
-  }
-  static async reattachAt(root, tempRoot) {
-    const session = await _SummonSession.loadAt(root, tempRoot);
-    const pausePath = path3.join(root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
-    await assertConfinedPath(root, pausePath, "Campaign pause boundary");
-    try {
-      const pauseStat = await lstat2(pausePath);
-      if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
-        throw new Error(
-          `Campaign pause boundary must be a regular file: ${pausePath}`
-        );
-      }
-    } catch (error2) {
-      if (error2.code !== "ENOENT") {
-        throw error2;
-      }
-    }
-    await CampaignStore.load(root);
-    const previousManifest = session.#manifest;
-    const nextManifest = {
-      ...previousManifest,
-      pid: process.pid
-    };
-    await session.#writeManifest(nextManifest);
-    session.#manifest = nextManifest;
-    try {
-      await clearPauseBoundary(root);
-    } catch (error2) {
-      session.#manifest = previousManifest;
-      try {
-        await session.#writeManifest(previousManifest);
-      } catch {
-      }
-      throw error2;
-    }
-    if (session.harnessSessionId !== void 0) {
-      await recordSessionInIndex(
-        tempRoot ?? tmpdir(),
-        session.harnessSessionId,
-        root
-      ).catch(() => {
-      });
-    }
-    return session;
-  }
-  get harnessSessionId() {
-    return this.#manifest.harnessSessionId;
-  }
-  get pid() {
-    return this.#manifest.pid;
-  }
-  get createdAt() {
-    return this.#manifest.createdAt;
-  }
-  get skills() {
-    return this.#manifest.skills;
-  }
-  /** Directory for transient clone scaffolding: <root>/cache/. */
-  get cacheRoot() {
-    return path3.join(this.root, "cache");
-  }
-  /** Directory under which materialized skills for this session live: <root>/skills/. */
-  get skillsRoot() {
-    return path3.join(this.root, "skills");
-  }
-  async ensureRoots() {
-    await assertDisposableSessionRoot(this.root, this.#tempRoot);
-    await ensureConfinedDirectory(this.root, this.cacheRoot);
-    await ensureConfinedDirectory(this.root, this.skillsRoot);
-  }
-  /** Record a skill (or suite component) already materialized on disk into the session manifest. */
-  async recordSkill(skill, opts = {}) {
-    const record4 = {
-      ...skill,
-      ...opts.viaSuite === void 0 ? {} : { viaSuite: opts.viaSuite },
-      materializedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    this.#manifest.skills.push(record4);
-    await this.#writeManifest();
-  }
-  async close() {
-    const harnessSessionId = this.#manifest.harnessSessionId;
-    const tempRoot = this.#tempRoot ?? tmpdir();
-    await rm2(this.root, { recursive: true, force: true });
-    if (harnessSessionId !== void 0) {
-      await removeSessionFromIndex(
-        tempRoot,
-        harnessSessionId,
-        this.root
-      ).catch(() => {
-      });
-    }
-  }
-  async #writeManifest(manifest = this.#manifest, opts = {}) {
-    if (!opts.skipRootCheck) {
-      await assertDisposableSessionRoot(this.root, this.#tempRoot);
-    }
-    await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
-    await writeFile2(
-      this.#manifestPath,
-      JSON.stringify(manifest, null, 2),
-      "utf8"
-    );
-  }
-};
-async function openSession(opts = {}) {
-  const tempRoot = opts.tempRoot ?? tmpdir();
-  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
-  const root = await mkdtemp(path3.join(tempRoot, SESSION_DIR_PREFIX));
-  return SummonSession.createAt(root, opts.id ?? randomUUID(), {
-    harnessSessionId,
-    tempRoot
-  });
+function sessionClaimDirName() {
+  const uid = process.getuid?.();
+  return uid === void 0 ? SESSION_CLAIM_DIR_PREFIX : `${SESSION_CLAIM_DIR_PREFIX}-${uid}`;
 }
-function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
-  const resolved = path3.resolve(root);
-  const name = path3.basename(resolved);
-  if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
-  if (path3.dirname(resolved) === path3.resolve(tempRoot)) return true;
-  try {
-    return realpathSync(path3.dirname(resolved)) === realpathSync(tempRoot);
-  } catch {
-    return false;
-  }
+function sessionClaimDir(tempRoot) {
+  return path3.join(tempRoot, sessionClaimDirName());
 }
-async function assertDisposableSessionRoot(root, tempRoot = tmpdir()) {
-  if (!isDisposableSessionRoot(root, tempRoot)) {
-    throw new Error(
-      `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`
-    );
-  }
-  let rootStat;
-  try {
-    rootStat = await lstat2(root);
-  } catch (error2) {
-    throw new Error(`Session root ${root} is not an existing directory: ${errorMessage2(error2)}`);
-  }
-  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
-    throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
-  }
-  const [rootReal, tempReal] = await Promise.all([realpath(root), realpath(tempRoot)]);
-  if (path3.dirname(rootReal) !== tempReal || !path3.basename(rootReal).startsWith(SESSION_DIR_PREFIX)) {
-    throw new Error(
-      `Session root ${root} resolves outside the disposable temp-root namespace.`
-    );
-  }
+function sessionClaimKey(realSessionRoot) {
+  return createHash3("sha256").update(SESSION_CLAIM_KEY_DOMAIN).update(realSessionRoot, "utf8").digest("hex");
+}
+function isWithin(parent, child) {
+  const relative2 = path3.relative(parent, child);
+  return relative2 === "" || !relative2.startsWith(`..${path3.sep}`) && relative2 !== ".." && !path3.isAbsolute(relative2);
 }
 async function assertConfinedPath(root, target, label = "Path") {
   const rootResolved = path3.resolve(root);
@@ -18678,22 +18490,522 @@ async function assertConfinedPath(root, target, label = "Path") {
     current = path3.dirname(current);
   }
 }
-function isWithin(parent, child) {
-  const relative2 = path3.relative(parent, child);
-  return relative2 === "" || !relative2.startsWith(`..${path3.sep}`) && relative2 !== ".." && !path3.isAbsolute(relative2);
+async function assertConfinedPrivateMetadataDir(tempRoot, metadataDir, label) {
+  const dirStat = await lstat2(metadataDir);
+  if (dirStat.isSymbolicLink() || !dirStat.isDirectory()) {
+    throw new Error(`${label} ${metadataDir} must be a real directory.`);
+  }
+  if (!isCurrentProcessUid(dirStat.uid)) {
+    throw new Error(`${label} ${metadataDir} has unexpected owner.`);
+  }
+  if (process.platform !== "win32" && (dirStat.mode & 63) !== 0) {
+    throw new Error(
+      `${label} ${metadataDir} must not have group or other permissions.`
+    );
+  }
+  const [tempReal, dirReal] = await Promise.all([
+    realpath(tempRoot),
+    realpath(metadataDir)
+  ]);
+  if (path3.dirname(dirReal) !== tempReal || path3.basename(dirReal) !== path3.basename(metadataDir)) {
+    throw new Error(`${label} ${metadataDir} resolves outside ${tempRoot}.`);
+  }
+}
+async function acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose) {
+  const claimsDir = sessionClaimDir(tempRoot);
+  try {
+    await mkdir3(claimsDir, { mode: 448 });
+  } catch (error2) {
+    if (error2.code !== "EEXIST") {
+      return { status: "unavailable" };
+    }
+  }
+  try {
+    await assertConfinedPrivateMetadataDir(
+      tempRoot,
+      claimsDir,
+      "Session claim directory"
+    );
+  } catch {
+    return { status: "unavailable" };
+  }
+  const claimPath = path3.join(
+    claimsDir,
+    `${sessionClaimKey(realSessionRoot)}.claim`
+  );
+  try {
+    await assertConfinedPath(claimsDir, claimPath, "Session ownership claim");
+  } catch (error2) {
+    if (isSymlinkOrUnsafeClaimPathError(error2)) {
+      return { status: "busy" };
+    }
+    return { status: "unavailable" };
+  }
+  const flags = constants2.O_WRONLY | constants2.O_CREAT | constants2.O_EXCL | (constants2.O_NOFOLLOW ?? 0);
+  let handle;
+  try {
+    handle = await open(claimPath, flags, 384);
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "EEXIST" || code === "ELOOP") {
+      return { status: "busy" };
+    }
+    return { status: "unavailable" };
+  }
+  try {
+    const metadata = JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      purpose,
+      acquiredAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    await handle.writeFile(`${metadata}
+`, "utf8");
+    await handle.close();
+  } catch {
+    await handle.close().catch(() => {
+    });
+    await rm2(claimPath, { force: true }).catch(() => {
+    });
+    return { status: "unavailable" };
+  }
+  let released = false;
+  return {
+    status: "acquired",
+    claimPath,
+    async release() {
+      if (released) return;
+      released = true;
+      try {
+        await assertConfinedPrivateMetadataDir(
+          tempRoot,
+          claimsDir,
+          "Session claim directory"
+        );
+        await assertConfinedPath(
+          claimsDir,
+          claimPath,
+          "Session ownership claim"
+        );
+        const st = await lstat2(claimPath);
+        if (!st.isSymbolicLink() && st.isFile() && isCurrentProcessUid(st.uid)) {
+          await unlink(claimPath);
+        }
+      } catch {
+      }
+    }
+  };
+}
+function isSymlinkOrUnsafeClaimPathError(error2) {
+  return error2 instanceof Error && (error2.message.includes("traverses a symlink") || error2.message.includes("traverses a non-directory") || error2.message.includes("resolves outside"));
+}
+
+// packages/skill-summon/src/summon/session.ts
+var SESSION_DIR_PREFIX = "skill-summon-session-";
+var SESSION_INDEX_DIR_PREFIX = "skill-summon-index-v1";
+var MANIFEST_FILE = "session.json";
+var CAMPAIGN_PAUSE_FILE = "pause.json";
+var MAX_INDEX_ENTRY_BYTES = 64 * 1024;
+var MAX_INDEX_ROOTS_PER_ID = 16;
+var HARNESS_SESSION_ID_ENV_VARS = Object.freeze([
+  "CLAUDE_CODE_SESSION_ID"
+]);
+function readHarnessSessionId(env = process.env) {
+  for (const key of HARNESS_SESSION_ID_ENV_VARS) {
+    const value = env[key]?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+var commitReattachUnderClaim;
+var SummonSession = class _SummonSession {
+  root;
+  id;
+  #manifestPath;
+  #tempRoot;
+  #manifest;
+  #manifestWriteQueue = Promise.resolve();
+  constructor(root, manifest, tempRoot) {
+    this.root = root;
+    this.id = manifest.id;
+    this.#manifestPath = path4.join(root, MANIFEST_FILE);
+    this.#tempRoot = tempRoot;
+    this.#manifest = manifest;
+  }
+  static async createAt(root, id, opts = {}) {
+    const tempRoot = opts.tempRoot ?? tmpdir();
+    const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
+    const manifest = {
+      id,
+      ...harnessSessionId === void 0 ? {} : { harnessSessionId },
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      pid: process.pid,
+      skills: []
+    };
+    const session = new _SummonSession(root, manifest, tempRoot);
+    const claimAttempt = await acquireSessionClaim(root, tempRoot, "create");
+    if (claimAttempt.status === "ineligible") {
+      await assertDisposableSessionRoot(root, tempRoot);
+      throw new Error(`Session root ${root} is no longer available.`);
+    }
+    if (claimAttempt.status === "busy") {
+      throw new Error(
+        `Cannot initialize session root ${root}: ownership claim is busy.`
+      );
+    }
+    try {
+      await session.#writeManifest(manifest, {
+        skipRootCheck: claimAttempt.status === "acquired"
+      });
+      if (claimAttempt.status === "unavailable") {
+        await assertDisposableSessionRoot(root, tempRoot);
+      }
+    } finally {
+      if (claimAttempt.status === "acquired") {
+        await claimAttempt.release();
+      }
+    }
+    if (harnessSessionId !== void 0) {
+      await recordSessionInIndex(tempRoot, harnessSessionId, root).catch(
+        () => {
+        }
+      );
+    }
+    return session;
+  }
+  static async loadAt(root, tempRoot) {
+    await assertDisposableSessionRoot(root, tempRoot);
+    const manifestPath = path4.join(root, MANIFEST_FILE);
+    await assertConfinedPath(root, manifestPath, "Session manifest");
+    let raw;
+    try {
+      raw = await readFile2(manifestPath, "utf8");
+    } catch (error2) {
+      throw new Error(
+        `SKILL_SUMMON_SESSION points at ${root}, but no session manifest was found there: ${errorMessage2(error2)}`
+      );
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error2) {
+      throw new Error(
+        `Invalid session manifest JSON at ${root}: ${errorMessage2(error2)}`
+      );
+    }
+    const manifest = parseSessionManifest(parsed);
+    if (!manifest) {
+      throw new Error(`Invalid session manifest shape at ${root}.`);
+    }
+    return new _SummonSession(root, manifest, tempRoot);
+  }
+  static async reattachAt(root, tempRoot) {
+    const resolvedTempRoot = tempRoot ?? tmpdir();
+    const prelim = await _SummonSession.loadAt(root, resolvedTempRoot);
+    const outcome = await tryReattachWithClaim(
+      root,
+      resolvedTempRoot,
+      true,
+      prelim.harnessSessionId
+    );
+    if (outcome.status !== "adopted") {
+      throw new Error(
+        `Cannot reattach to session root ${root}: ${outcome.status}.`
+      );
+    }
+    return outcome.session;
+  }
+  static {
+    commitReattachUnderClaim = (session) => session.#commitReattachUnderClaim();
+  }
+  async #commitReattachUnderClaim() {
+    const pausePath = path4.join(this.root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+    await assertConfinedPath(this.root, pausePath, "Campaign pause boundary");
+    try {
+      const pauseStat = await lstat3(pausePath);
+      if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
+        throw new Error(
+          `Campaign pause boundary must be a regular file: ${pausePath}`
+        );
+      }
+    } catch (error2) {
+      if (error2.code !== "ENOENT") {
+        throw error2;
+      }
+    }
+    await CampaignStore.load(this.root);
+    const previousManifest = this.#manifest;
+    const nextManifest = {
+      ...previousManifest,
+      pid: process.pid
+    };
+    await this.#writeManifest(nextManifest);
+    this.#manifest = nextManifest;
+    try {
+      await clearPauseBoundary(this.root);
+    } catch (error2) {
+      this.#manifest = previousManifest;
+      try {
+        await this.#writeManifest(previousManifest);
+      } catch {
+      }
+      throw error2;
+    }
+  }
+  get harnessSessionId() {
+    return this.#manifest.harnessSessionId;
+  }
+  get pid() {
+    return this.#manifest.pid;
+  }
+  get createdAt() {
+    return this.#manifest.createdAt;
+  }
+  get skills() {
+    return this.#manifest.skills;
+  }
+  /** Directory for transient clone scaffolding: <root>/cache/. */
+  get cacheRoot() {
+    return path4.join(this.root, "cache");
+  }
+  /** Directory under which materialized skills for this session live: <root>/skills/. */
+  get skillsRoot() {
+    return path4.join(this.root, "skills");
+  }
+  async ensureRoots() {
+    await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    await ensureConfinedDirectory(this.root, this.cacheRoot);
+    await ensureConfinedDirectory(this.root, this.skillsRoot);
+  }
+  /** Record a skill (or suite component) already materialized on disk into the session manifest. */
+  async recordSkill(skill, opts = {}) {
+    const record4 = {
+      ...skill,
+      ...opts.viaSuite === void 0 ? {} : { viaSuite: opts.viaSuite },
+      materializedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    const run = this.#manifestWriteQueue.catch(() => {
+    }).then(async () => {
+      const nextManifest = {
+        ...this.#manifest,
+        skills: [...this.#manifest.skills, record4]
+      };
+      await this.#writeManifestSnapshot(nextManifest);
+      this.#manifest = nextManifest;
+    });
+    this.#manifestWriteQueue = run;
+    return run;
+  }
+  async close() {
+    const harnessSessionId = this.#manifest.harnessSessionId;
+    const tempRoot = this.#tempRoot ?? tmpdir();
+    const claimAttempt = await acquireSessionClaim(this.root, tempRoot, "close");
+    if (claimAttempt.status === "acquired") {
+      try {
+        await assertDisposableSessionRoot(this.root, tempRoot);
+        await rm3(this.root, { recursive: true, force: true });
+      } catch (error2) {
+        if (!isConcurrentRemovalErrorOrCause(error2)) {
+          throw error2;
+        }
+      } finally {
+        await claimAttempt.release();
+      }
+    } else if (claimAttempt.status !== "ineligible") {
+      throw new Error(
+        `Cannot close session root ${this.root}: ownership claim is ${claimAttempt.status}.`
+      );
+    }
+    if (harnessSessionId !== void 0) {
+      await removeSessionFromIndex(
+        tempRoot,
+        harnessSessionId,
+        this.root
+      ).catch(() => {
+      });
+    }
+  }
+  async #writeManifest(manifest = this.#manifest, opts = {}) {
+    const snapshot = {
+      ...manifest,
+      skills: [...manifest.skills]
+    };
+    const run = this.#manifestWriteQueue.catch(() => {
+    }).then(() => this.#writeManifestSnapshot(snapshot, opts));
+    this.#manifestWriteQueue = run;
+    return run;
+  }
+  async #writeManifestSnapshot(manifest, opts = {}) {
+    if (!opts.skipRootCheck) {
+      await assertDisposableSessionRoot(this.root, this.#tempRoot);
+    }
+    await assertConfinedPath(this.root, this.#manifestPath, "Session manifest");
+    const tmpPath = path4.join(
+      this.root,
+      `.${MANIFEST_FILE}.tmp-${process.pid}-${randomUUID()}`
+    );
+    let renamed = false;
+    try {
+      await writeFile2(tmpPath, JSON.stringify(manifest, null, 2), {
+        encoding: "utf8",
+        mode: 384,
+        flag: "wx"
+      });
+      try {
+        const targetStat = await lstat3(this.#manifestPath);
+        if (targetStat.isSymbolicLink()) {
+          throw new Error(
+            `Session manifest traverses a symlink: ${this.#manifestPath}`
+          );
+        }
+      } catch (error2) {
+        if (error2.code !== "ENOENT") {
+          throw error2;
+        }
+      }
+      await rename(tmpPath, this.#manifestPath);
+      renamed = true;
+    } finally {
+      if (!renamed) {
+        await rm3(tmpPath, { force: true }).catch(() => {
+        });
+      }
+    }
+  }
+};
+async function openSession(opts = {}) {
+  const tempRoot = opts.tempRoot ?? tmpdir();
+  const harnessSessionId = opts.harnessSessionId ?? readHarnessSessionId();
+  const root = await mkdtemp(path4.join(tempRoot, SESSION_DIR_PREFIX));
+  return SummonSession.createAt(root, opts.id ?? randomUUID(), {
+    harnessSessionId,
+    tempRoot
+  });
+}
+function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  if (root.includes("\0")) return false;
+  const resolved = path4.resolve(root);
+  const name = path4.basename(resolved);
+  if (!name.startsWith(SESSION_DIR_PREFIX)) return false;
+  if (path4.dirname(resolved) === path4.resolve(tempRoot)) return true;
+  try {
+    return realpathSync(path4.dirname(resolved)) === realpathSync(tempRoot);
+  } catch {
+    return false;
+  }
+}
+async function assertDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  if (!isDisposableSessionRoot(root, tempRoot)) {
+    throw new Error(
+      `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`
+    );
+  }
+  let rootStat;
+  try {
+    rootStat = await lstat3(root);
+  } catch (error2) {
+    throw new Error(
+      `Session root ${root} is not an existing directory: ${errorMessage2(error2)}`,
+      { cause: error2 }
+    );
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`Session root ${root} must be a real directory, not a symlink or file.`);
+  }
+  let rootReal;
+  let tempReal;
+  try {
+    [rootReal, tempReal] = await Promise.all([realpath2(root), realpath2(tempRoot)]);
+  } catch (error2) {
+    throw new Error(
+      `Session root ${root} could not be resolved: ${errorMessage2(error2)}`,
+      { cause: error2 }
+    );
+  }
+  if (path4.dirname(rootReal) !== tempReal || !path4.basename(rootReal).startsWith(SESSION_DIR_PREFIX)) {
+    throw new Error(
+      `Session root ${root} resolves outside the disposable temp-root namespace.`
+    );
+  }
 }
 async function ensureConfinedDirectory(root, target) {
   await assertConfinedPath(root, target, "Session directory");
   try {
-    const targetStat = await lstat2(target);
+    const targetStat = await lstat3(target);
     if (targetStat.isSymbolicLink() || !targetStat.isDirectory()) {
       throw new Error(`Session directory ${target} must be a real directory.`);
     }
   } catch (error2) {
     if (error2.code !== "ENOENT") throw error2;
-    await mkdir3(target);
+    await mkdir4(target);
   }
   await assertConfinedPath(root, target, "Session directory");
+}
+function isConcurrentRemovalErrorOrCause(error2) {
+  if (isConcurrentRemoval(error2)) return true;
+  if (error2 instanceof Error && error2.cause !== void 0) {
+    return isConcurrentRemoval(error2.cause);
+  }
+  return false;
+}
+async function acquireSessionClaim(root, tempRoot, purpose) {
+  try {
+    await assertDisposableSessionRoot(root, tempRoot);
+  } catch (error2) {
+    if (isConcurrentRemovalErrorOrCause(error2)) {
+      return { status: "ineligible" };
+    }
+    throw error2;
+  }
+  let realSessionRoot;
+  try {
+    realSessionRoot = await realpath2(root);
+  } catch (error2) {
+    if (isConcurrentRemoval(error2)) {
+      return { status: "ineligible" };
+    }
+    throw error2;
+  }
+  return acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose);
+}
+async function tryReattachWithClaim(root, tempRoot, hasExpectedHarnessId, expectedHarnessSessionId) {
+  const claimAttempt = await acquireSessionClaim(root, tempRoot, "reattach");
+  if (claimAttempt.status !== "acquired") {
+    return {
+      status: claimAttempt.status === "ineligible" ? "ineligible" : "busy"
+    };
+  }
+  let adoptedSession;
+  try {
+    let session;
+    try {
+      session = await SummonSession.loadAt(root, tempRoot);
+    } catch (error2) {
+      if (isConcurrentRemovalErrorOrCause(error2)) {
+        return { status: "ineligible" };
+      }
+      throw error2;
+    }
+    if (hasExpectedHarnessId && session.harnessSessionId !== expectedHarnessSessionId) {
+      return { status: "ineligible" };
+    }
+    if (!hasProvenDeadPid(session.pid)) {
+      return { status: "ineligible" };
+    }
+    await commitReattachUnderClaim(session);
+    adoptedSession = session;
+  } finally {
+    await claimAttempt.release();
+  }
+  if (adoptedSession.harnessSessionId !== void 0) {
+    await recordSessionInIndex(
+      tempRoot,
+      adoptedSession.harnessSessionId,
+      root
+    ).catch(() => {
+    });
+  }
+  return { status: "adopted", session: adoptedSession };
 }
 async function resolveSession(opts = {}) {
   const tempRoot = opts.tempRoot ?? tmpdir();
@@ -18714,19 +19026,39 @@ async function resolveSession(opts = {}) {
       };
     }
     if (existing.harnessSessionId === harnessSessionId && hasProvenDeadPid(existing.pid)) {
+      const outcome = await tryReattachWithClaim(
+        existingRoot,
+        tempRoot,
+        true,
+        harnessSessionId
+      );
+      if (outcome.status === "adopted") {
+        return {
+          session: outcome.session,
+          created: false
+        };
+      }
       return {
-        session: await SummonSession.reattachAt(existingRoot, tempRoot),
-        created: false
+        session: await openSession({ ...opts, harnessSessionId, tempRoot }),
+        created: true
       };
     }
   }
   if (harnessSessionId) {
     const match = await findIndexedDeadSession(tempRoot, harnessSessionId);
     if (match) {
-      return {
-        session: await SummonSession.reattachAt(match, tempRoot),
-        created: false
-      };
+      const outcome = await tryReattachWithClaim(
+        match,
+        tempRoot,
+        true,
+        harnessSessionId
+      );
+      if (outcome.status === "adopted") {
+        return {
+          session: outcome.session,
+          created: false
+        };
+      }
     }
   }
   return {
@@ -18740,30 +19072,17 @@ function sessionIndexDirName() {
   return uid === void 0 ? SESSION_INDEX_DIR_PREFIX : `${SESSION_INDEX_DIR_PREFIX}-${uid}`;
 }
 function sessionIndexDir(tempRoot) {
-  return path3.join(tempRoot, sessionIndexDirName());
+  return path4.join(tempRoot, sessionIndexDirName());
 }
 function harnessSessionIndexKey(harnessSessionId) {
-  return createHash3("sha256").update("skill-summon-harness-session-v1\0").update(harnessSessionId, "utf8").digest("hex");
-}
-function isCurrentProcessUid(uid) {
-  const currentUid = process.getuid?.();
-  return currentUid === void 0 || uid === currentUid;
+  return createHash4("sha256").update("skill-summon-harness-session-v1\0").update(harnessSessionId, "utf8").digest("hex");
 }
 async function assertConfinedIndexDir(tempRoot, indexDir) {
-  const dirStat = await lstat2(indexDir);
-  if (dirStat.isSymbolicLink() || !dirStat.isDirectory()) {
-    throw new Error(`Session index directory ${indexDir} must be a real directory.`);
-  }
-  if (!isCurrentProcessUid(dirStat.uid)) {
-    throw new Error(`Session index directory ${indexDir} has unexpected owner.`);
-  }
-  const [tempReal, dirReal] = await Promise.all([
-    realpath(tempRoot),
-    realpath(indexDir)
-  ]);
-  if (path3.dirname(dirReal) !== tempReal || path3.basename(dirReal) !== path3.basename(indexDir)) {
-    throw new Error(`Session index directory ${indexDir} resolves outside ${tempRoot}.`);
-  }
+  await assertConfinedPrivateMetadataDir(
+    tempRoot,
+    indexDir,
+    "Session index directory"
+  );
 }
 function parseIndexEntry(raw) {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
@@ -18776,7 +19095,7 @@ function parseIndexEntry(raw) {
   const roots = [];
   const seen = /* @__PURE__ */ new Set();
   for (const item of obj.roots) {
-    if (typeof item !== "string" || item.length === 0 || !path3.isAbsolute(item)) {
+    if (typeof item !== "string" || item.length === 0 || item.includes("\0") || !path4.isAbsolute(item)) {
       continue;
     }
     if (seen.has(item)) continue;
@@ -18794,7 +19113,7 @@ async function readConfinedIndexFile(indexDir, entryPath) {
   }
   let entryStat;
   try {
-    entryStat = await lstat2(entryPath);
+    entryStat = await lstat3(entryPath);
   } catch (error2) {
     if (error2.code === "ENOENT") {
       return { exists: false, confined: true };
@@ -18807,10 +19126,10 @@ async function readConfinedIndexFile(indexDir, entryPath) {
   if (entryStat.size > MAX_INDEX_ENTRY_BYTES) {
     return { exists: true, confined: true, roots: void 0 };
   }
-  const flags = constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0);
+  const flags = constants3.O_RDONLY | (constants3.O_NOFOLLOW ?? 0);
   let handle;
   try {
-    handle = await open(entryPath, flags);
+    handle = await open2(entryPath, flags);
   } catch (error2) {
     if (error2.code === "ENOENT") {
       return { exists: false, confined: true };
@@ -18825,7 +19144,23 @@ async function readConfinedIndexFile(indexDir, entryPath) {
     if (openedStat.size > MAX_INDEX_ENTRY_BYTES) {
       return { exists: true, confined: true, roots: void 0 };
     }
-    const raw = await handle.readFile("utf8");
+    const maxReadBytes = MAX_INDEX_ENTRY_BYTES + 1;
+    const buffer = Buffer.allocUnsafe(maxReadBytes);
+    let totalBytes = 0;
+    while (totalBytes < maxReadBytes) {
+      const { bytesRead } = await handle.read(
+        buffer,
+        totalBytes,
+        maxReadBytes - totalBytes,
+        totalBytes
+      );
+      if (bytesRead === 0) break;
+      totalBytes += bytesRead;
+    }
+    if (totalBytes > MAX_INDEX_ENTRY_BYTES) {
+      return { exists: true, confined: true, roots: void 0 };
+    }
+    const raw = buffer.subarray(0, totalBytes).toString("utf8");
     return {
       exists: true,
       confined: true,
@@ -18857,7 +19192,7 @@ function enqueueIndexUpdate(indexDir, key, fn) {
   return next;
 }
 async function writeIndexEntryAtomically(indexDir, entryPath, key, roots) {
-  const tmpPath = path3.join(
+  const tmpPath = path4.join(
     indexDir,
     `.tmp-${key}-${process.pid}-${randomUUID()}`
   );
@@ -18874,17 +19209,17 @@ async function writeIndexEntryAtomically(indexDir, entryPath, key, roots) {
     });
     await rename(tmpPath, entryPath);
   } finally {
-    await rm2(tmpPath, { force: true }).catch(() => {
+    await rm3(tmpPath, { force: true }).catch(() => {
     });
   }
 }
 async function recordSessionInIndex(tempRoot, harnessSessionId, sessionRoot) {
   const indexDir = sessionIndexDir(tempRoot);
   const key = harnessSessionIndexKey(harnessSessionId);
-  const absoluteRoot = path3.resolve(sessionRoot);
+  const absoluteRoot = path4.resolve(sessionRoot);
   await enqueueIndexUpdate(indexDir, key, async () => {
     try {
-      await mkdir3(indexDir, { mode: 448 });
+      await mkdir4(indexDir, { mode: 448 });
     } catch (error2) {
       if (error2.code !== "EEXIST") return;
     }
@@ -18893,7 +19228,7 @@ async function recordSessionInIndex(tempRoot, harnessSessionId, sessionRoot) {
     } catch {
       return;
     }
-    const entryPath = path3.join(indexDir, `${key}.json`);
+    const entryPath = path4.join(indexDir, `${key}.json`);
     const existing = await readConfinedIndexFile(indexDir, entryPath);
     if (!existing.confined) return;
     const existingRoots = existing.roots ?? [];
@@ -18908,20 +19243,20 @@ async function recordSessionInIndex(tempRoot, harnessSessionId, sessionRoot) {
 async function removeSessionFromIndex(tempRoot, harnessSessionId, sessionRoot) {
   const indexDir = sessionIndexDir(tempRoot);
   const key = harnessSessionIndexKey(harnessSessionId);
-  const absoluteRoot = path3.resolve(sessionRoot);
+  const absoluteRoot = path4.resolve(sessionRoot);
   await enqueueIndexUpdate(indexDir, key, async () => {
     try {
       await assertConfinedIndexDir(tempRoot, indexDir);
     } catch {
       return;
     }
-    const entryPath = path3.join(indexDir, `${key}.json`);
+    const entryPath = path4.join(indexDir, `${key}.json`);
     const existing = await readConfinedIndexFile(indexDir, entryPath);
     if (!existing.confined || !existing.exists || !existing.roots) return;
     if (!existing.roots.includes(absoluteRoot)) return;
     const nextRoots = existing.roots.filter((item) => item !== absoluteRoot);
     if (nextRoots.length === 0) {
-      await rm2(entryPath, { force: true });
+      await rm3(entryPath, { force: true });
       return;
     }
     await writeIndexEntryAtomically(indexDir, entryPath, key, nextRoots);
@@ -18935,7 +19270,7 @@ async function findIndexedDeadSession(tempRoot, harnessSessionId) {
     return void 0;
   }
   const key = harnessSessionIndexKey(harnessSessionId);
-  const entryPath = path3.join(indexDir, `${key}.json`);
+  const entryPath = path4.join(indexDir, `${key}.json`);
   const existing = await readConfinedIndexFile(indexDir, entryPath);
   if (!existing.confined || !existing.exists || !existing.roots || existing.roots.length === 0) {
     return void 0;
@@ -18946,7 +19281,7 @@ async function findIndexedDeadSession(tempRoot, harnessSessionId) {
       await assertDisposableSessionRoot(candidateRoot, tempRoot);
       await assertConfinedPath(
         candidateRoot,
-        path3.join(candidateRoot, MANIFEST_FILE),
+        path4.join(candidateRoot, MANIFEST_FILE),
         "Session manifest"
       );
     } catch {
@@ -18965,14 +19300,14 @@ async function findIndexedDeadSession(tempRoot, harnessSessionId) {
   return matches2[0].root;
 }
 async function clearPauseBoundary(sessionRoot) {
-  const pausePath = path3.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
+  const pausePath = path4.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
   await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
-  await rm2(pausePath, { force: true });
+  await rm3(pausePath, { force: true });
 }
 async function readManifestSafely(root) {
   try {
     const parsed = JSON.parse(
-      await readFile2(path3.join(root, MANIFEST_FILE), "utf8")
+      await readFile2(path4.join(root, MANIFEST_FILE), "utf8")
     );
     return parseSessionManifest(parsed);
   } catch {
@@ -19004,6 +19339,10 @@ function hasProvenDeadPid(pid) {
   } catch (error2) {
     return error2.code === "ESRCH";
   }
+}
+function isConcurrentRemoval(error2) {
+  const code = error2?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
 }
 function errorMessage2(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
@@ -19123,13 +19462,13 @@ async function checkoutGithubFleet(sourceUrl) {
   if (!/^https:\/\/github\.com\//u.test(sourceUrl) || !parsed.repoUrl.endsWith(".git")) {
     throw new Error(`Skill fleet source must be a GitHub repository URL, got: ${sourceUrl}`);
   }
-  const root = await mkdtemp2(path4.join(tmpdir2(), "skill-summon-fleet-"));
-  const repoPath = path4.join(root, "repo");
+  const root = await mkdtemp2(path5.join(tmpdir2(), "skill-summon-fleet-"));
+  const repoPath = path5.join(root, "repo");
   try {
     const clone2 = await ensureCachedRepo(repoPath, parsed.repoUrl, parsed.branch);
-    const scanRoot = path4.resolve(clone2.path, parsed.subpath);
+    const scanRoot = path5.resolve(clone2.path, parsed.subpath);
     await assertConfinedPath(clone2.path, scanRoot, "Fleet subpath");
-    const scanStat = await lstat3(scanRoot);
+    const scanStat = await lstat4(scanRoot);
     if (scanStat.isSymbolicLink() || !scanStat.isDirectory()) {
       throw new Error(`Fleet path is not a real directory: ${parsed.subpath}`);
     }
@@ -19143,11 +19482,11 @@ async function checkoutGithubFleet(sourceUrl) {
       contributor,
       cleanup: async () => {
         await discardCachedRepo(repoPath);
-        await rm3(root, { recursive: true, force: true });
+        await rm4(root, { recursive: true, force: true });
       }
     };
   } catch (error2) {
-    await rm3(root, { recursive: true, force: true });
+    await rm4(root, { recursive: true, force: true });
     throw error2;
   }
 }
@@ -19160,7 +19499,7 @@ async function discoverFleetSkills(checkout) {
     );
     const skillFile = entries.find((entry) => entry.name === "SKILL.md" && entry.isFile());
     if (skillFile) {
-      const skillPath = path4.join(directory, skillFile.name);
+      const skillPath = path5.join(directory, skillFile.name);
       const skillStat = await stat2(skillPath);
       if (skillStat.size > MAX_SKILL_MD_BYTES) {
         throw new Error(`Fleet SKILL.md exceeds ${MAX_SKILL_MD_BYTES} bytes: ${skillPath}`);
@@ -19168,8 +19507,8 @@ async function discoverFleetSkills(checkout) {
       const source = await readFile3(skillPath, "utf8");
       const legacyFrontmatter = readSkillFrontmatter(source);
       const verifiedFrontmatter = readVerifiedSkillFrontmatter(source);
-      const relativeDirectory = path4.relative(checkout.path, directory).split(path4.sep).join("/");
-      const fallbackName = path4.basename(directory);
+      const relativeDirectory = path5.relative(checkout.path, directory).split(path5.sep).join("/");
+      const fallbackName = path5.basename(directory);
       const name = legacyFrontmatter.name || fallbackName;
       const idPath = relativeDirectory || fallbackName;
       const skillMdPath = relativeDirectory ? `${relativeDirectory}/SKILL.md` : "SKILL.md";
@@ -19193,7 +19532,7 @@ async function discoverFleetSkills(checkout) {
     }
     for (const entry of entries) {
       if (!entry.isDirectory() || SKIP_DIRECTORIES.has(entry.name)) continue;
-      await walk(path4.join(directory, entry.name), depth + 1);
+      await walk(path5.join(directory, entry.name), depth + 1);
       if (discovered.length >= MAX_DISCOVERED_SKILLS) break;
     }
   }
@@ -19796,8 +20135,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path11, errorMaps, issueData } = params;
-  const fullPath = [...path11, ...issueData.path || []];
+  const { data, path: path12, errorMaps, issueData } = params;
+  const fullPath = [...path12, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -19913,11 +20252,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path11, key) {
+  constructor(parent, value, path12, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path11;
+    this._path = path12;
     this._key = key;
   }
   get path() {
@@ -24210,13 +24549,13 @@ function isInstallable(skill) {
 }
 
 // packages/skill-summon/src/data/arbor-identity-source.ts
-import { createHash as createHash4 } from "node:crypto";
+import { createHash as createHash5 } from "node:crypto";
 import { dirname as dirname3, join as join4 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 
 // packages/skill-summon/src/data/confined-file.ts
-import { constants as constants3 } from "node:fs";
-import { open as open2 } from "node:fs/promises";
+import { constants as constants4 } from "node:fs";
+import { open as open3 } from "node:fs/promises";
 import { resolve as resolve2 } from "node:path";
 async function readConfinedFile(root, target) {
   const confinedRoot = darwinAlias(resolve2(root));
@@ -24226,23 +24565,23 @@ async function readConfinedFile(root, target) {
   try {
     let file;
     if (process.platform === "darwin") {
-      file = await open2(absolute, constants3.O_RDONLY | constants3.O_NONBLOCK | 536870912);
+      file = await open3(absolute, constants4.O_RDONLY | constants4.O_NONBLOCK | 536870912);
       handles.push(file);
     } else if (process.platform === "linux") {
-      let parent = await open2("/", constants3.O_RDONLY | constants3.O_DIRECTORY | constants3.O_NOFOLLOW);
+      let parent = await open3("/", constants4.O_RDONLY | constants4.O_DIRECTORY | constants4.O_NOFOLLOW);
       handles.push(parent);
       const parts = absolute.split("/").filter(Boolean);
       if (parts.length === 0) throw new Error("Evidence file is not a regular file");
       for (const part of parts.slice(0, -1)) {
-        parent = await open2(
+        parent = await open3(
           `/proc/self/fd/${parent.fd}/${part}`,
-          constants3.O_RDONLY | constants3.O_DIRECTORY | constants3.O_NOFOLLOW
+          constants4.O_RDONLY | constants4.O_DIRECTORY | constants4.O_NOFOLLOW
         );
         handles.push(parent);
       }
-      file = await open2(
+      file = await open3(
         `/proc/self/fd/${parent.fd}/${parts.at(-1)}`,
-        constants3.O_RDONLY | constants3.O_NONBLOCK | constants3.O_NOFOLLOW
+        constants4.O_RDONLY | constants4.O_NONBLOCK | constants4.O_NOFOLLOW
       );
       handles.push(file);
     } else {
@@ -24268,11 +24607,11 @@ function loadArborIdentityContext() {
   cached2 ??= readIdentityFromDisk();
   return cached2;
 }
-async function readArborIdentityFile(path11) {
-  const directory = dirname3(path11);
+async function readArborIdentityFile(path12) {
+  const directory = dirname3(path12);
   try {
-    const bytes = await readConfinedFile(directory, path11);
-    const digest = createHash4("sha256").update(bytes).digest("hex");
+    const bytes = await readConfinedFile(directory, path12);
+    const digest = createHash5("sha256").update(bytes).digest("hex");
     let parsed;
     try {
       parsed = JSON.parse(bytes.toString("utf8"));
@@ -24320,7 +24659,7 @@ function describe2(error2) {
 }
 
 // packages/skill-summon/src/data/installability.ts
-import path5 from "node:path";
+import path6 from "node:path";
 var PROJECTION_KEYS = /* @__PURE__ */ new Set(["schema", "indexPath", "observations", "skills"]);
 var OBSERVATION_REF_KEYS = /* @__PURE__ */ new Set(["digest", "checkedAt", "runId"]);
 var SKILL_KEYS = /* @__PURE__ */ new Set([
@@ -24350,8 +24689,8 @@ var FileInstallabilitySource = class {
     this.#path = filePath;
   }
   async load() {
-    const target = path5.resolve(this.#path);
-    const bytes = await readConfinedFile(path5.dirname(target), target);
+    const target = path6.resolve(this.#path);
+    const bytes = await readConfinedFile(path6.dirname(target), target);
     return JSON.parse(bytes.toString("utf8"));
   }
 };
@@ -24852,11 +25191,11 @@ function normalizeObjectSchema(schema2) {
   }
   return void 0;
 }
-function getDotPath(path11) {
-  if (path11.length === 0) {
+function getDotPath(path12) {
+  if (path12.length === 0) {
     return "object root";
   }
-  return path11.reduce((acc, seg, index) => {
+  return path12.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -29090,10 +29429,10 @@ var EMPTY_COMPLETION_RESULT = {
 
 // packages/skill-summon/src/summon/summon.ts
 import { stat as stat4 } from "node:fs/promises";
-import path9 from "node:path";
+import path10 from "node:path";
 
 // packages/skill-summon/src/data/arbor-source.ts
-import { createHash as createHash5 } from "node:crypto";
+import { createHash as createHash6 } from "node:crypto";
 import { dirname as dirname4, join as join5, isAbsolute as isAbsolute2, relative, sep } from "node:path";
 import { fileURLToPath as fileURLToPath4 } from "node:url";
 var ARBOR_RELATIVE_PATH = join5("plugins", "skill-heaven", "data", "arbor");
@@ -29187,7 +29526,7 @@ async function readConfinedJson(root, relativePath, problems) {
   const target = join5(root, relativePath);
   try {
     const bytes = await readConfinedFile(root, target);
-    const digest = createHash5("sha256").update(bytes).digest("hex");
+    const digest = createHash6("sha256").update(bytes).digest("hex");
     try {
       return { value: JSON.parse(bytes.toString("utf8")), sha256: digest };
     } catch {
@@ -29220,7 +29559,7 @@ async function verifyProvenance(root, expected, digests, problems) {
   const record4 = file.value;
   const upstream = record4.upstream;
   const commit = record4.commit;
-  const path11 = record4.path;
+  const path12 = record4.path;
   const capturedAt = record4.capturedAt;
   if (typeof upstream !== "string" || upstream.length === 0) {
     return reject("provenance.upstream must be a non-empty string");
@@ -29228,7 +29567,7 @@ async function verifyProvenance(root, expected, digests, problems) {
   if (typeof commit !== "string" || !/^[a-f0-9]{40}$/u.test(commit)) {
     return reject("provenance.commit must be a 40-character commit id");
   }
-  if (typeof path11 !== "string" || path11.length === 0) {
+  if (typeof path12 !== "string" || path12.length === 0) {
     return reject("provenance.path must be a non-empty string");
   }
   if (typeof capturedAt !== "string" || capturedAt.length === 0) {
@@ -29276,7 +29615,7 @@ async function verifyProvenance(root, expected, digests, problems) {
     }
   }
   return {
-    provenance: { upstream, commit, path: path11, capturedAt, files: Object.fromEntries(declared) },
+    provenance: { upstream, commit, path: path12, capturedAt, files: Object.fromEntries(declared) },
     rejected: false
   };
 }
@@ -29467,9 +29806,9 @@ function sessionComposition(publication, source, links, before, reportFor, addit
 }
 
 // packages/skill-summon/src/summon/materialize.ts
-import { createHash as createHash6 } from "node:crypto";
-import { cp, lstat as lstat4, readFile as readFile5, readdir as readdir3 } from "node:fs/promises";
-import path6 from "node:path";
+import { createHash as createHash7 } from "node:crypto";
+import { cp, lstat as lstat5, readFile as readFile5, readdir as readdir3 } from "node:fs/promises";
+import path7 from "node:path";
 async function materializeSkillDir(sourceDir, destDir) {
   const startedAt = startTiming();
   await rejectSymlinks(sourceDir);
@@ -29477,26 +29816,26 @@ async function materializeSkillDir(sourceDir, destDir) {
     recursive: true,
     dereference: false,
     filter: (source) => {
-      if (path6.basename(source) === ".git") return false;
+      if (path7.basename(source) === ".git") return false;
       return true;
     }
   });
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
-  const skillContent = await readFile5(path6.join(destDir, "SKILL.md"));
-  const sha2563 = createHash6("sha256").update(skillContent).digest("hex");
+  const skillContent = await readFile5(path7.join(destDir, "SKILL.md"));
+  const sha2563 = createHash7("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
   return { path: destDir, materializeSeconds, fileCount, sha256: sha2563 };
 }
 async function rejectSymlinks(dir) {
-  const root = await lstat4(dir);
+  const root = await lstat5(dir);
   if (root.isSymbolicLink() || !root.isDirectory()) {
     throw new Error(
       `refusing to materialize skill: '${dir}' is not a real directory.`
     );
   }
   for (const entry of await readdir3(dir, { withFileTypes: true })) {
-    const full = path6.join(dir, entry.name);
+    const full = path7.join(dir, entry.name);
     if (entry.isSymbolicLink()) {
       throw new Error(
         `refusing to materialize skill: '${full}' is a symlink, which could redirect reads outside the summoned payload.`
@@ -29508,7 +29847,7 @@ async function rejectSymlinks(dir) {
 async function countFiles(dir) {
   let count = 0;
   for (const entry of await readdir3(dir, { withFileTypes: true })) {
-    const full = path6.join(dir, entry.name);
+    const full = path7.join(dir, entry.name);
     if (entry.isDirectory()) count += await countFiles(full);
     else count += 1;
   }
@@ -29516,21 +29855,21 @@ async function countFiles(dir) {
 }
 
 // packages/skill-summon/src/summon/payload-cache.ts
-import { createHash as createHash7, randomUUID as randomUUID2 } from "node:crypto";
+import { createHash as createHash8, randomUUID as randomUUID2 } from "node:crypto";
 import {
   cp as cp2,
-  lstat as lstat5,
-  mkdir as mkdir4,
+  lstat as lstat6,
+  mkdir as mkdir5,
   readFile as readFile6,
   readdir as readdir4,
   rename as rename2,
-  rm as rm4,
+  rm as rm5,
   stat as stat3,
   utimes,
   writeFile as writeFile3
 } from "node:fs/promises";
 import { tmpdir as tmpdir3 } from "node:os";
-import path7 from "node:path";
+import path8 from "node:path";
 var DEFAULT_CACHE_MAX_MB = 16;
 var CACHE_DIR_NAME = "skill-summon-payload-cache-v1";
 var METADATA_FILE = "metadata.json";
@@ -29547,24 +29886,24 @@ var PayloadCache = class {
         `Payload cache size must be non-negative, got: ${this.maxBytes}`
       );
     }
-    this.#entriesRoot = path7.join(this.root, "entries");
+    this.#entriesRoot = path8.join(this.root, "entries");
   }
   async lookup(identity) {
     await this.prune();
     const entryRoot = this.#entryRoot(identity);
-    const payload = path7.join(entryRoot, PAYLOAD_DIR);
+    const payload = path8.join(entryRoot, PAYLOAD_DIR);
     try {
       const metadata = JSON.parse(
-        await readFile6(path7.join(entryRoot, METADATA_FILE), "utf8")
+        await readFile6(path8.join(entryRoot, METADATA_FILE), "utf8")
       );
       if (metadata.key !== cacheKey(identity)) return void 0;
-      if (!(await stat3(path7.join(payload, "SKILL.md"))).isFile())
+      if (!(await stat3(path8.join(payload, "SKILL.md"))).isFile())
         return void 0;
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
       return payload;
     } catch {
-      await rm4(entryRoot, { recursive: true, force: true });
+      await rm5(entryRoot, { recursive: true, force: true });
       return void 0;
     }
   }
@@ -29572,25 +29911,25 @@ var PayloadCache = class {
   async store(identity, sourceDir) {
     const payloadBytes = await directorySize(sourceDir);
     if (payloadBytes > this.maxBytes || this.maxBytes === 0) return false;
-    await mkdir4(this.#entriesRoot, { recursive: true });
+    await mkdir5(this.#entriesRoot, { recursive: true });
     const key = cacheKey(identity);
-    const entryRoot = path7.join(this.#entriesRoot, key);
+    const entryRoot = path8.join(this.#entriesRoot, key);
     if (await pathExists2(entryRoot)) {
       const now = /* @__PURE__ */ new Date();
       await utimes(entryRoot, now, now);
       await this.prune();
       return true;
     }
-    const temporaryRoot = path7.join(
+    const temporaryRoot = path8.join(
       this.#entriesRoot,
       `.tmp-${process.pid}-${randomUUID2()}`
     );
     try {
-      const payload = path7.join(temporaryRoot, PAYLOAD_DIR);
-      await mkdir4(temporaryRoot, { recursive: true });
+      const payload = path8.join(temporaryRoot, PAYLOAD_DIR);
+      await mkdir5(temporaryRoot, { recursive: true });
       await cp2(sourceDir, payload, {
         recursive: true,
-        filter: (source) => path7.basename(source) !== ".git"
+        filter: (source) => path8.basename(source) !== ".git"
       });
       const metadata = {
         ...identity,
@@ -29599,7 +29938,7 @@ var PayloadCache = class {
         bytes: payloadBytes
       };
       await writeFile3(
-        path7.join(temporaryRoot, METADATA_FILE),
+        path8.join(temporaryRoot, METADATA_FILE),
         JSON.stringify(metadata, null, 2),
         "utf8"
       );
@@ -29609,7 +29948,7 @@ var PayloadCache = class {
         if (!await pathExists2(entryRoot)) throw error2;
       }
     } finally {
-      await rm4(temporaryRoot, { recursive: true, force: true });
+      await rm5(temporaryRoot, { recursive: true, force: true });
     }
     await this.prune();
     return await pathExists2(entryRoot);
@@ -29624,15 +29963,15 @@ var PayloadCache = class {
     const retained = [];
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const entryRoot = path7.join(this.#entriesRoot, entry.name);
+      const entryRoot = path8.join(this.#entriesRoot, entry.name);
       if (entry.name.startsWith(".tmp-")) {
         const pid = Number(/^\.tmp-(\d+)-/u.exec(entry.name)?.[1]);
         if (!isProcessLive(pid)) {
-          await rm4(entryRoot, { recursive: true, force: true });
+          await rm5(entryRoot, { recursive: true, force: true });
         }
         continue;
       }
-      const entryStat = await lstat5(entryRoot);
+      const entryStat = await lstat6(entryRoot);
       retained.push({
         root: entryRoot,
         bytes: await directorySize(entryRoot),
@@ -29643,16 +29982,16 @@ var PayloadCache = class {
     retained.sort((left, right) => left.accessedAt - right.accessedAt);
     for (const entry of retained) {
       if (totalBytes <= this.maxBytes) break;
-      await rm4(entry.root, { recursive: true, force: true });
+      await rm5(entry.root, { recursive: true, force: true });
       totalBytes -= entry.bytes;
     }
   }
   #entryRoot(identity) {
-    return path7.join(this.#entriesRoot, cacheKey(identity));
+    return path8.join(this.#entriesRoot, cacheKey(identity));
   }
 };
 function payloadCacheRoot() {
-  return process.env.SKILL_SUMMON_CACHE_DIR ?? path7.join(tmpdir3(), CACHE_DIR_NAME);
+  return process.env.SKILL_SUMMON_CACHE_DIR ?? path8.join(tmpdir3(), CACHE_DIR_NAME);
 }
 function payloadCacheMaxBytes() {
   const configured = process.env.SKILL_SUMMON_CACHE_MAX_MB;
@@ -29666,16 +30005,16 @@ function payloadCacheMaxBytes() {
   return Math.floor(megabytes * 1024 ** 2);
 }
 function cacheKey(identity) {
-  return createHash7("sha256").update(
+  return createHash8("sha256").update(
     JSON.stringify([identity.repoUrl, identity.commit, identity.subpath])
   ).digest("hex");
 }
 async function directorySize(root) {
-  const target = await lstat5(root);
+  const target = await lstat6(root);
   if (!target.isDirectory()) return target.size;
   let bytes = 0;
   for (const entry of await readdir4(root)) {
-    bytes += await directorySize(path7.join(root, entry));
+    bytes += await directorySize(path8.join(root, entry));
   }
   return bytes;
 }
@@ -29699,10 +30038,10 @@ async function pathExists2(target) {
 
 // packages/skill-summon/src/summon/log.ts
 import { appendFile as appendFile2 } from "node:fs/promises";
-import path8 from "node:path";
+import path9 from "node:path";
 var SUMMON_LOG_FILE = "summon-log.jsonl";
 function summonLogPath(session) {
-  return path8.join(session.root, SUMMON_LOG_FILE);
+  return path9.join(session.root, SUMMON_LOG_FILE);
 }
 async function appendSummonLog(session, outcome) {
   const chosen = [
@@ -30327,7 +30666,7 @@ async function installSingle(skill, ctx, viaSuite) {
         /\.git$/,
         ""
       );
-      const cacheDir = path9.join(ctx.session.cacheRoot, cacheOwner, repoName);
+      const cacheDir = path10.join(ctx.session.cacheRoot, cacheOwner, repoName);
       let cloneOutcome;
       try {
         await assertConfinedPath(ctx.session.root, cacheDir, "Cache path");
@@ -30342,7 +30681,7 @@ async function installSingle(skill, ctx, viaSuite) {
         };
       }
       try {
-        const candidatePath = path9.resolve(cloneOutcome.path, subpath);
+        const candidatePath = path10.resolve(cloneOutcome.path, subpath);
         await assertConfinedPath(cloneOutcome.path, candidatePath, "Skill source path");
         sourceSkillPath = candidatePath;
       } catch (error2) {
@@ -30374,7 +30713,7 @@ async function installSingle(skill, ctx, viaSuite) {
         reason: `links.github for '${skill.id}' points at a file, not a skill directory (${sourceSkillPath}).`
       };
     }
-    if (!await pathExists3(path9.join(sourceSkillPath, "SKILL.md"))) {
+    if (!await pathExists3(path10.join(sourceSkillPath, "SKILL.md"))) {
       return {
         ok: false,
         installed: [],
@@ -30384,7 +30723,7 @@ async function installSingle(skill, ctx, viaSuite) {
     }
     const cloneSeconds = elapsedSeconds(sourceStartedAt);
     const safeId = skill.id.replaceAll("/", "__");
-    const destDir = path9.join(ctx.session.skillsRoot, safeId);
+    const destDir = path10.join(ctx.session.skillsRoot, safeId);
     let materializeOutcome;
     try {
       await assertConfinedPath(ctx.session.root, destDir, "Materialization path");
@@ -30447,12 +30786,12 @@ function installedTrust(skill) {
   };
 }
 async function isResidentPayload(session, payloadPath) {
-  const relative2 = path9.relative(
-    path9.resolve(session.skillsRoot),
-    path9.resolve(payloadPath)
+  const relative2 = path10.relative(
+    path10.resolve(session.skillsRoot),
+    path10.resolve(payloadPath)
   );
-  if (relative2.startsWith("..") || path9.isAbsolute(relative2)) return false;
-  return pathExists3(path9.join(payloadPath, "SKILL.md"));
+  if (relative2.startsWith("..") || path10.isAbsolute(relative2)) return false;
+  return pathExists3(path10.join(payloadPath, "SKILL.md"));
 }
 async function pathExists3(target) {
   try {
@@ -30467,11 +30806,11 @@ function errorMessage6(error2) {
 }
 
 // packages/skill-summon/src/mcp/skills.ts
-import { constants as constants4 } from "node:fs";
-import { createHash as createHash8 } from "node:crypto";
-import { mkdtemp as mkdtemp3, lstat as lstat6, open as open3, rm as rm5 } from "node:fs/promises";
+import { constants as constants5 } from "node:fs";
+import { createHash as createHash9 } from "node:crypto";
+import { mkdtemp as mkdtemp3, lstat as lstat7, open as open4, rm as rm6 } from "node:fs/promises";
 import { tmpdir as tmpdir4 } from "node:os";
-import path10 from "node:path";
+import path11 from "node:path";
 var SKILLS_EXTENSION_ID = "io.modelcontextprotocol/skills";
 var SKILL_RESOURCE_TEMPLATE = "skill://{+resourcePath}";
 var SKILL_MD = "SKILL.md";
@@ -30609,7 +30948,7 @@ function verifyResourceContent(uri, content, manifest) {
   if (bytes.byteLength > MAX_RESOURCE_BYTES) {
     throw new Error(`Skill resource exceeds ${MAX_RESOURCE_BYTES} bytes: ${uri}`);
   }
-  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash8("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
+  if (manifest && (bytes.byteLength !== manifest.size || `sha256:${createHash9("sha256").update(bytes).digest("hex")}` !== manifest.digest)) {
     throw new Error(`Skill resource failed manifest verification: ${uri}`);
   }
 }
@@ -30734,19 +31073,19 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
   }
   const sourceSubpath = safeRelativePath(parsed.subpath, "skill source", true);
   const resourceSubpath = safeRelativePath(relativePath, "resource");
-  const root = await mkdtemp3(path10.join(tempRoot, "skill-summon-resource-"));
-  const repoPath = path10.join(root, "repo");
+  const root = await mkdtemp3(path11.join(tempRoot, "skill-summon-resource-"));
+  const repoPath = path11.join(root, "repo");
   try {
     const commit = await resolveRemoteCommit(parsed.repoUrl, parsed.branch);
     const checkout = await ensureCachedRepo(repoPath, parsed.repoUrl, commit);
-    const skillRoot = path10.resolve(checkout.path, sourceSubpath);
+    const skillRoot = path11.resolve(checkout.path, sourceSubpath);
     assertInside(checkout.path, skillRoot);
     await assertNoSymlinkPath(checkout.path, sourceSubpath);
-    const filePath = path10.resolve(skillRoot, resourceSubpath);
+    const filePath = path11.resolve(skillRoot, resourceSubpath);
     assertInside(skillRoot, filePath);
     await assertNoSymlinkPath(skillRoot, resourceSubpath);
-    const flags = constants4.O_RDONLY | (constants4.O_NOFOLLOW ?? 0);
-    const handle = await open3(filePath, flags);
+    const flags = constants5.O_RDONLY | (constants5.O_NOFOLLOW ?? 0);
+    const handle = await open4(filePath, flags);
     try {
       const fileStat = await handle.stat();
       if (!fileStat.isFile()) {
@@ -30761,7 +31100,7 @@ async function readRemoteSkillResource(skill, relativePath, tempRoot) {
       await handle.close();
     }
   } finally {
-    await rm5(root, { recursive: true, force: true });
+    await rm6(root, { recursive: true, force: true });
   }
 }
 function safeRelativePath(value, label, allowEmpty = false) {
@@ -30772,22 +31111,22 @@ function safeRelativePath(value, label, allowEmpty = false) {
   )) {
     throw new Error(`Unsafe ${label} path.`);
   }
-  return segments.join(path10.sep);
+  return segments.join(path11.sep);
 }
 function assertInside(root, target) {
-  const relative2 = path10.relative(path10.resolve(root), path10.resolve(target));
-  if (relative2.startsWith("..") || path10.isAbsolute(relative2)) {
+  const relative2 = path11.relative(path11.resolve(root), path11.resolve(target));
+  if (relative2.startsWith("..") || path11.isAbsolute(relative2)) {
     throw new Error("Skill resource path escapes its source root.");
   }
 }
 async function assertNoSymlinkPath(root, relative2) {
-  const segments = relative2 ? relative2.split(path10.sep) : [];
-  let current = path10.resolve(root);
-  const rootStat = await lstat6(current);
+  const segments = relative2 ? relative2.split(path11.sep) : [];
+  let current = path11.resolve(root);
+  const rootStat = await lstat7(current);
   if (rootStat.isSymbolicLink()) throw new Error("Refusing symlinked skill resource root.");
   for (const segment of segments) {
-    current = path10.join(current, segment);
-    const entry = await lstat6(current);
+    current = path11.join(current, segment);
+    const entry = await lstat7(current);
     if (entry.isSymbolicLink()) {
       throw new Error(`Refusing symlinked skill resource path: ${relative2}.`);
     }
@@ -30804,7 +31143,7 @@ function mimeTypeFor(relativePath) {
   if (relativePath === SKILL_MD || relativePath.toLocaleLowerCase("en-US").endsWith(".md")) {
     return "text/markdown";
   }
-  const extension = path10.extname(relativePath).toLocaleLowerCase("en-US");
+  const extension = path11.extname(relativePath).toLocaleLowerCase("en-US");
   return {
     ".json": "application/json",
     ".txt": "text/plain",
