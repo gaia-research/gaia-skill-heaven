@@ -638,7 +638,22 @@ async function acquireSessionClaim(
     if (rootAbsence !== "absent") {
       return { status: rootAbsence };
     }
-    return acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose);
+    const externalClaim = await acquireSessionClaimForRealRoot(
+      realSessionRoot,
+      tempRoot,
+      purpose,
+    );
+    if (externalClaim.status !== "acquired") {
+      return externalClaim;
+    }
+    const rootAbsenceAfter = await checkRootLocalClaimAbsenceForRealRoot(
+      realSessionRoot,
+    );
+    if (rootAbsenceAfter !== "absent") {
+      await externalClaim.release();
+      return { status: rootAbsenceAfter };
+    }
+    return externalClaim;
   }
 
   const rootClaim = await acquireRootLocalClaimForRealRoot(

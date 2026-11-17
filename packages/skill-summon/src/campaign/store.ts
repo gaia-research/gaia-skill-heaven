@@ -30,6 +30,7 @@ import {
 } from "skill-zero";
 
 import { assertConfinedPath } from "../summon/session.js";
+import { acquireCampaignStoreClaimForRoot } from "../summon/session-ownership.js";
 
 export const CAMPAIGN_DIR_NAME = "campaign";
 export const CAMPAIGN_TRACE_FILE = "trace.jsonl";
@@ -79,6 +80,7 @@ export class CampaignStore {
   #state: CampaignState;
   #lines: PersistedCampaignTraceLine[];
   #hasTrace: boolean;
+  #hasCompleteEvidence: boolean;
   #corrupted: boolean;
   #error: string | undefined;
   #recordSha256: string | undefined;
@@ -90,6 +92,7 @@ export class CampaignStore {
     state: CampaignState,
     lines: PersistedCampaignTraceLine[],
     hasTrace: boolean,
+    hasCompleteEvidence: boolean,
     corrupted: boolean,
     error?: string,
     recordSha256?: string,
@@ -104,6 +107,7 @@ export class CampaignStore {
     this.#state = state;
     this.#lines = lines;
     this.#hasTrace = hasTrace;
+    this.#hasCompleteEvidence = hasCompleteEvidence;
     this.#corrupted = corrupted;
     this.#error = error;
     this.#recordSha256 = recordSha256;
@@ -153,6 +157,7 @@ export class CampaignStore {
         initialCampaignState(),
         [],
         false,
+        true,
         false,
         undefined,
         undefined,
@@ -177,6 +182,7 @@ export class CampaignStore {
         failedState,
         [],
         true,
+        false,
         true,
         verified.error,
         undefined,
@@ -197,6 +203,7 @@ export class CampaignStore {
       verified.state,
       verified.lines,
       true,
+      verified.lines.length === 0 || verified.hasEvidence,
       false,
       undefined,
       verified.recordSha256,
@@ -221,6 +228,11 @@ export class CampaignStore {
         `Refusing to append to corrupted campaign trace (${this.#error ?? "FAILED_SAFE"})`,
       );
     }
+    if (!this.#hasCompleteEvidence) {
+      throw new Error(
+        "Refusing to append: historical campaign evidence is absent",
+      );
+    }
 
     await assertConfinedPath(this.sessionRoot, this.campaignDir, "Campaign directory");
     await assertConfinedPath(this.sessionRoot, this.tracePath, "Campaign trace");
@@ -231,75 +243,87 @@ export class CampaignStore {
     );
     await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
 
-    await this.#assertDiskMatchesMemory();
-
-    const seq = this.#lines.length;
-    const step = stepCampaign(this.#state, event, seq);
-    const descriptor = parseCampaignEvent(event);
-    const line: PersistedCampaignTraceLine = {
-      seq,
-      event: descriptor,
-      entry: step.entry,
-    };
-
-    const nextLines = [...this.#lines, line];
-    const nextRecord: CampaignTraceRecord = {
-      schema: CAMPAIGN_SCHEMA_IDS.trace,
-      initial: this.#initial,
-      final: step.state,
-      events: nextLines.map((item) => item.event),
-      trace: nextLines.map((item) => item.entry),
-    };
-
-    const authorizedPrivileged =
-      (step.entry.channel === "operator" || step.entry.channel === "engine") &&
-      step.entry.accepted === true;
-    const evidenceLine: PersistedCampaignEvidenceLine = {
-      seq,
-      authorizedPrivileged,
-      eventSha256: campaignSha256Hex(canonicalCampaignJson(descriptor)),
-      recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord)),
-    };
-
-    const status = toControllerStatus(step.state, step.entry);
-
-    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
-    await assertConfinedPath(this.sessionRoot, this.tracePath, "Campaign trace");
-    await assertConfinedPath(
-      this.sessionRoot,
-      this.evidencePath,
-      "Campaign evidence",
-    );
-    await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
-
-    try {
-      await appendFile(
-        this.tracePath,
-        `${formatCampaignTraceLine(line)}\n`,
-        { encoding: "utf8", flag: "a" },
+    const claim = await acquireCampaignStoreClaimForRoot(this.sessionRoot);
+    if (claim.status !== "acquired") {
+      throw new Error(
+        `Refusing to append: campaign store ownership claim is ${claim.status}`,
       );
-      await appendFile(
-        this.evidencePath,
-        `${formatCampaignEvidenceLine(evidenceLine)}\n`,
-        { encoding: "utf8", flag: "a" },
-      );
-      await writeFile(
-        this.statusPath,
-        `${JSON.stringify(status, null, 2)}\n`,
-        "utf8",
-      );
-    } catch (error) {
-      this.#corrupted = true;
-      this.#error = `Partial write failure during campaign append: ${error instanceof Error ? error.message : String(error)}`;
-      throw error;
     }
 
-    this.#state = step.state;
-    this.#lines = nextLines;
-    this.#hasTrace = true;
-    this.#recordSha256 = evidenceLine.recordSha256;
+    try {
+      await this.#assertDiskMatchesMemory();
 
-    return { state: step.state, entry: step.entry, status };
+      const seq = this.#lines.length;
+      const step = stepCampaign(this.#state, event, seq);
+      const descriptor = parseCampaignEvent(event);
+      const line: PersistedCampaignTraceLine = {
+        seq,
+        event: descriptor,
+        entry: step.entry,
+      };
+
+      const nextLines = [...this.#lines, line];
+      const nextRecord: CampaignTraceRecord = {
+        schema: CAMPAIGN_SCHEMA_IDS.trace,
+        initial: this.#initial,
+        final: step.state,
+        events: nextLines.map((item) => item.event),
+        trace: nextLines.map((item) => item.entry),
+      };
+
+      const authorizedPrivileged =
+        (step.entry.channel === "operator" || step.entry.channel === "engine") &&
+        step.entry.accepted === true;
+      const evidenceLine: PersistedCampaignEvidenceLine = {
+        seq,
+        authorizedPrivileged,
+        eventSha256: campaignSha256Hex(canonicalCampaignJson(descriptor)),
+        recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord)),
+      };
+
+      const status = toControllerStatus(step.state, step.entry);
+
+      await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+      await assertConfinedPath(this.sessionRoot, this.tracePath, "Campaign trace");
+      await assertConfinedPath(
+        this.sessionRoot,
+        this.evidencePath,
+        "Campaign evidence",
+      );
+      await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
+
+      try {
+        await appendFile(
+          this.tracePath,
+          `${formatCampaignTraceLine(line)}\n`,
+          { encoding: "utf8", flag: "a" },
+        );
+        await appendFile(
+          this.evidencePath,
+          `${formatCampaignEvidenceLine(evidenceLine)}\n`,
+          { encoding: "utf8", flag: "a" },
+        );
+        await writeFile(
+          this.statusPath,
+          `${JSON.stringify(status, null, 2)}\n`,
+          "utf8",
+        );
+      } catch (error) {
+        this.#corrupted = true;
+        this.#error = `Partial write failure during campaign append: ${error instanceof Error ? error.message : String(error)}`;
+        throw error;
+      }
+
+      this.#state = step.state;
+      this.#lines = nextLines;
+      this.#hasTrace = true;
+      this.#hasCompleteEvidence = true;
+      this.#recordSha256 = evidenceLine.recordSha256;
+
+      return { state: step.state, entry: step.entry, status };
+    } finally {
+      await claim.release();
+    }
   }
 
   async #assertDiskMatchesMemory(): Promise<void> {
@@ -343,6 +367,12 @@ export class CampaignStore {
       this.#error = "Campaign trace on disk changed since load";
       throw new Error(`Refusing to append: ${this.#error}`);
     }
+    if (disk.lines.length > 0 && !disk.hasEvidence) {
+      this.#hasCompleteEvidence = false;
+      throw new Error(
+        "Refusing to append: historical campaign evidence is absent",
+      );
+    }
   }
 }
 
@@ -354,6 +384,7 @@ type OnDiskVerificationResult =
       state: CampaignState;
       lines: PersistedCampaignTraceLine[];
       recordSha256: string;
+      hasEvidence: boolean;
     };
 
 async function verifyOnDiskState(
@@ -463,6 +494,7 @@ async function verifyOnDiskState(
     state: verification.record.final,
     lines: [...parsedTrace.lines],
     recordSha256: actualRecordSha,
+    hasEvidence: evidencePresent,
   };
 }
 

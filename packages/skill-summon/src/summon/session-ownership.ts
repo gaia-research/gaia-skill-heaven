@@ -14,7 +14,12 @@ export const SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
 export const ROOT_SESSION_CLAIM_FILE = ".session.claim";
 const SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
 
-export type SessionClaimPurpose = "create" | "reattach" | "gc" | "close";
+export type SessionClaimPurpose =
+  | "create"
+  | "reattach"
+  | "gc"
+  | "close"
+  | "campaign";
 
 export type AcquiredSessionClaim = {
   readonly status: "acquired";
@@ -340,24 +345,15 @@ export async function acquireRootLocalClaimForRealRoot(
 }
 
 /**
- * Read-only check used by GC dry-run: never initializes `claimsDir`, never
- * creates or deletes claim files, and conservatively treats existing or unsafe
- * claim metadata as blocking deletion.
+ * Read-only check for an existing external claim under `tempRoot` for
+ * `realSessionRoot`: never initializes `claimsDir`, never creates or deletes
+ * claim files, and conservatively treats existing or unsafe claim metadata as
+ * busy.
  */
-export async function hasExistingSessionClaimForRealRoot(
+export async function hasExistingExternalSessionClaimForRealRoot(
   realSessionRoot: string,
   tempRoot: string,
 ): Promise<boolean> {
-  const rootClaimPath = path.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
-  try {
-    await lstat(rootClaimPath);
-    return true;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      return true;
-    }
-  }
-
   const claimsDir = sessionClaimDir(tempRoot);
   try {
     await lstat(claimsDir);
@@ -397,6 +393,89 @@ export async function hasExistingSessionClaimForRealRoot(
     }
     return true;
   }
+}
+
+/**
+ * Acquire a nonblocking, exclusive root-local claim for `CampaignStore`
+ * append transactions on any confined `sessionRoot` (including standalone
+ * isolated roots outside `tmpdir()`), while also respecting any active
+ * external `SummonSession` claim when `sessionRoot` is a disposable session
+ * root. Never creates external `claimsDir` and never breaks stale claims.
+ */
+export async function acquireCampaignStoreClaimForRoot(
+  sessionRoot: string,
+): Promise<
+  | AcquiredSessionClaim
+  | { readonly status: "busy" | "unavailable" | "ineligible" }
+> {
+  const rootResolved = path.resolve(sessionRoot);
+  let rootStat;
+  try {
+    rootStat = await lstat(rootResolved);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return { status: "ineligible" };
+    }
+    return { status: "unavailable" };
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    return { status: "ineligible" };
+  }
+
+  let realSessionRoot: string;
+  try {
+    realSessionRoot = await realpath(rootResolved);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return { status: "ineligible" };
+    }
+    return { status: "unavailable" };
+  }
+
+  const rootClaim = await acquireRootLocalClaimForRealRoot(
+    realSessionRoot,
+    "campaign",
+  );
+  if (rootClaim.status !== "acquired") {
+    return rootClaim;
+  }
+
+  if (path.basename(realSessionRoot).startsWith("skill-summon-session-")) {
+    const externalBusy = await hasExistingExternalSessionClaimForRealRoot(
+      realSessionRoot,
+      path.dirname(realSessionRoot),
+    );
+    if (externalBusy) {
+      await rootClaim.release();
+      return { status: "busy" };
+    }
+  }
+
+  return rootClaim;
+}
+
+/**
+ * Read-only check used by GC dry-run: never initializes `claimsDir`, never
+ * creates or deletes claim files, and conservatively treats existing or unsafe
+ * claim metadata as blocking deletion.
+ */
+export async function hasExistingSessionClaimForRealRoot(
+  realSessionRoot: string,
+  tempRoot: string,
+): Promise<boolean> {
+  const rootClaimPath = path.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  try {
+    await lstat(rootClaimPath);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      return true;
+    }
+  }
+
+  return hasExistingExternalSessionClaimForRealRoot(realSessionRoot, tempRoot);
 }
 
 function isSymlinkOrUnsafeClaimPathError(error: unknown): boolean {

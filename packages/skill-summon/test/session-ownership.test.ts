@@ -66,6 +66,7 @@ vi.mock("node:fs/promises", async () => {
 
   return {
     ...actual,
+    appendFile: wrap("appendFile", actual.appendFile),
     lstat: wrap("lstat", actual.lstat),
     mkdir: wrap("mkdir", actual.mkdir),
     mkdtemp: wrap("mkdtemp", actual.mkdtemp),
@@ -1788,5 +1789,143 @@ process.stdin.on("data", async (chunk) => {
     expect(gcQuarantineRes.candidates.map((c) => c.root)).toContain(
       targetRootFromMkdtemp!,
     );
+  });
+
+  it("coordinates CampaignStore.append() exclusion bidirectionally with GC (dry-run and real), adoption, and explicit close() without deadlocks", async () => {
+    const tempRoot = await makeTempRoot();
+    const harnessId = "store-vs-session-ops-id";
+    const seeded = await seedDeadIndexedSession(tempRoot, harnessId, {
+      createdAt: "2026-04-01T00:00:00.000Z",
+      withCampaignRetention: 24,
+    });
+
+    // 1. Store append paused mid-transaction -> GC (dry & real), adoption, and close() all see busy and skip/refuse.
+    const store1 = await CampaignStore.load(seeded.root);
+    const session1 = await SummonSession.loadAt(seeded.root, tempRoot);
+    const tracePath = store1.tracePath;
+    const appendPaused = deferred();
+    const releaseAppend = deferred();
+    let pausedAppend = false;
+
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedAppend && op === "appendFile" && args[0] === tracePath) {
+        pausedAppend = true;
+        appendPaused.resolve();
+        await releaseAppend.promise;
+      }
+    };
+
+    const appendPromise = store1.append({ channel: "agent", op: "status" });
+    await appendPaused.promise;
+
+    const futureNow = new Date("2099-01-01T00:00:00.000Z");
+    const dryWhileAppending = await reapSessions({
+      tempRoot,
+      ttlHours: 0,
+      now: futureNow,
+      dryRun: true,
+    });
+    expect(dryWhileAppending.candidates).toEqual([]);
+
+    const realWhileAppending = await reapSessions({
+      tempRoot,
+      ttlHours: 0,
+      now: futureNow,
+      dryRun: false,
+    });
+    expect(realWhileAppending.candidates).toEqual([]);
+    await expect(access(seeded.root)).resolves.toBeUndefined();
+
+    const adoptWhileAppending = await resolveSession({
+      tempRoot,
+      harnessSessionId: harnessId,
+    });
+    expect(adoptWhileAppending.created).toBe(true);
+    expect(adoptWhileAppending.session.root).not.toBe(seeded.root);
+
+    await expect(session1.close()).rejects.toThrow(/ownership claim is busy/u);
+    await expect(access(seeded.root)).resolves.toBeUndefined();
+
+    releaseAppend.resolve();
+    const appendRes = await appendPromise;
+    hookState.beforeOp = undefined;
+    expect(appendRes.entry.seq).toBe(4);
+
+    // 2. Reattach holding external claim during commit -> CampaignStore.append() sees busy BEFORE touching disk.
+    const manifestPath = path.join(seeded.root, "session.json");
+    const storeDuringReattach = await CampaignStore.load(seeded.root);
+    const traceBeforeReattach = await readFile(storeDuringReattach.tracePath, "utf8");
+    const evidenceBeforeReattach = await readFile(storeDuringReattach.evidencePath, "utf8");
+    const statusBeforeReattach = await readFile(storeDuringReattach.statusPath, "utf8");
+
+    const reattachInCommit = deferred();
+    const releaseReattach = deferred();
+    let pausedReattach = false;
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedReattach && op === "rename" && args[1] === manifestPath) {
+        pausedReattach = true;
+        reattachInCommit.resolve();
+        await releaseReattach.promise;
+      }
+    };
+
+    const reattachPromise = resolveSession({ tempRoot, harnessSessionId: harnessId });
+    await reattachInCommit.promise;
+
+    await expect(
+      storeDuringReattach.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+    expect(await readFile(storeDuringReattach.tracePath, "utf8")).toBe(traceBeforeReattach);
+    expect(await readFile(storeDuringReattach.evidencePath, "utf8")).toBe(evidenceBeforeReattach);
+    expect(await readFile(storeDuringReattach.statusPath, "utf8")).toBe(statusBeforeReattach);
+
+    releaseReattach.resolve();
+    const reattached = await reattachPromise;
+    hookState.beforeOp = undefined;
+    expect(reattached.created).toBe(false);
+    expect(reattached.session.root).toBe(seeded.root);
+
+    // 3. Real GC holding root+external claim before quarantine -> CampaignStore.append() sees busy BEFORE touching disk.
+    const manifestDead = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as Record<string, unknown>;
+    manifestDead.pid = DEAD_PID;
+    await writeFile(manifestPath, JSON.stringify(manifestDead, null, 2), "utf8");
+
+    // Anchor pause.json at tPause, then expire the 24h pause window at tExpired.
+    const tPause = new Date("2099-01-01T00:00:00.000Z");
+    const tExpired = new Date(tPause.getTime() + 24 * 3_600_000);
+    expect(
+      (await reapSessions({ tempRoot, ttlHours: 0, now: tPause })).candidates,
+    ).toEqual([]);
+
+    const storeBeforeGc = await CampaignStore.load(seeded.root);
+    const gcBeforeQuarantine = deferred();
+    const releaseGcQuarantine = deferred();
+    let pausedGc = false;
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedGc && op === "rename" && args[0] === seeded.root) {
+        pausedGc = true;
+        gcBeforeQuarantine.resolve();
+        await releaseGcQuarantine.promise;
+      }
+    };
+
+    const gcPromise = reapSessions({
+      tempRoot,
+      ttlHours: 0,
+      now: tExpired,
+    });
+    await gcBeforeQuarantine.promise;
+
+    await expect(
+      storeBeforeGc.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+
+    releaseGcQuarantine.resolve();
+    const gcOutcome = await gcPromise;
+    hookState.beforeOp = undefined;
+    expect(gcOutcome.candidates.map((c) => c.root)).toEqual([seeded.root]);
+    await expect(access(seeded.root)).rejects.toThrow();
   });
 });

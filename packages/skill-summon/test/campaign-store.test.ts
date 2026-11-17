@@ -1,9 +1,67 @@
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+import { vi } from "vitest";
+
+const hookState = vi.hoisted(() => {
+  return {
+    beforeOp: undefined as
+      | ((op: string, args: readonly unknown[]) => Promise<void> | void)
+      | undefined,
+    afterOp: undefined as
+      | ((
+          op: string,
+          args: readonly unknown[],
+          result: unknown,
+        ) => Promise<void> | void)
+      | undefined,
+  };
+});
+
+vi.mock("node:fs/promises", async () => {
+  const actual = await vi.importActual<typeof import("node:fs/promises")>(
+    "node:fs/promises",
+  );
+  const wrap = <T extends (...args: never[]) => Promise<unknown>>(
+    name: string,
+    fn: T,
+  ): T =>
+    vi.fn(async (...args: Parameters<T>) => {
+      if (hookState.beforeOp) {
+        await hookState.beforeOp(name, args as readonly unknown[]);
+      }
+      const result = await fn(...args);
+      if (hookState.afterOp) {
+        await hookState.afterOp(name, args as readonly unknown[], result);
+      }
+      return result;
+    }) as unknown as T;
+
+  return {
+    ...actual,
+    appendFile: wrap("appendFile", actual.appendFile),
+    lstat: wrap("lstat", actual.lstat),
+    mkdir: wrap("mkdir", actual.mkdir),
+    mkdtemp: wrap("mkdtemp", actual.mkdtemp),
+    open: wrap("open", actual.open),
+    readFile: wrap("readFile", actual.readFile),
+    readdir: wrap("readdir", actual.readdir),
+    realpath: wrap("realpath", actual.realpath),
+    rename: wrap("rename", actual.rename),
+    rm: wrap("rm", actual.rm),
+    stat: wrap("stat", actual.stat),
+    unlink: wrap("unlink", actual.unlink),
+    writeFile: wrap("writeFile", actual.writeFile),
+  };
+});
+
 import {
   access,
   chmod,
   lstat,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   symlink,
@@ -12,7 +70,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
@@ -26,10 +84,41 @@ import {
 } from "skill-zero";
 
 import { CampaignStore } from "../src/campaign/store.js";
+import {
+  acquireCampaignStoreClaimForRoot,
+  ROOT_SESSION_CLAIM_FILE,
+} from "../src/summon/session-ownership.js";
+
+const require = createRequire(import.meta.url);
+const tsxCli = path.join(
+  path.dirname(require.resolve("tsx/package.json")),
+  "dist/cli.mjs",
+);
 
 const cleanupRoots: string[] = [];
 
+function deferred<T = void>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (err: unknown) => void;
+} {
+  let resolve!: (value: T) => void;
+  let reject!: (err: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+beforeEach(() => {
+  hookState.beforeOp = undefined;
+  hookState.afterOp = undefined;
+});
+
 afterEach(async () => {
+  hookState.beforeOp = undefined;
+  hookState.afterOp = undefined;
   await Promise.all(
     cleanupRoots
       .splice(0)
@@ -678,5 +767,490 @@ describe("CampaignStore persistence and verification", () => {
       schema: CAMPAIGN_SCHEMA_IDS.status,
       state: CampaignStates.executing,
     });
+  });
+
+  it("excludes concurrent appends across independently loaded stores via deterministic FS barriers across compare, trace, evidence, and status projection without corrupting or clobbering winner", async () => {
+    const root = await makeTempSessionRoot();
+    const initial = await CampaignStore.load(root);
+    await initial.append({ channel: "agent", op: "open" });
+
+    // Barrier phases:
+    // 1. Before appendFile(tracePath) (after disk compare & stepCampaign)
+    // 2. Between appendFile(tracePath) and appendFile(evidencePath)
+    // 3. Between appendFile(evidencePath) and writeFile(statusPath)
+    for (const [phaseIndex, barrierTarget] of [
+      ["appendFile", initial.tracePath],
+      ["appendFile", initial.evidencePath],
+      ["writeFile", initial.statusPath],
+    ] as const) {
+      const storeA = await CampaignStore.load(root);
+      const storeB = await CampaignStore.load(root);
+      const expectedBeforeCount = storeA.trace.length;
+
+      const storeAHitBarrier = deferred();
+      const releaseStoreA = deferred();
+      let storeASettled = false;
+      let pausedOnce = false;
+
+      hookState.beforeOp = async (op, args) => {
+        if (!pausedOnce && op === phaseIndex && args[0] === barrierTarget) {
+          pausedOnce = true;
+          storeAHitBarrier.resolve();
+          await releaseStoreA.promise;
+        }
+      };
+
+      const appendA = storeA
+        .append(
+          expectedBeforeCount === 1
+            ? { channel: "agent", op: "recon", recon: reconPayload }
+            : { channel: "agent", op: "status" },
+        )
+        .then((res) => {
+          storeASettled = true;
+          return res;
+        });
+
+      await storeAHitBarrier.promise;
+      expect(await readdir(root)).toContain(ROOT_SESSION_CLAIM_FILE);
+
+      // While storeA holds the exclusion at the barrier, storeB MUST fail fast (nonblocking)
+      // as busy BEFORE writing anything, and must not corrupt or overwrite disk.
+      await expect(
+        storeB.append({ channel: "agent", op: "status" }),
+      ).rejects.toThrow(/ownership claim is busy/u);
+      expect(storeASettled).toBe(false);
+      expect(storeB.corrupted).toBe(false);
+
+      releaseStoreA.resolve();
+      const resA = await appendA;
+      hookState.beforeOp = undefined;
+      expect(resA.entry.seq).toBe(expectedBeforeCount);
+      expect(await readdir(root)).not.toContain(ROOT_SESSION_CLAIM_FILE);
+
+      // Winner's persisted trace, evidence, and status remain intact and valid.
+      const winnerTrace = await readFile(initial.tracePath, "utf8");
+      const winnerEvidence = await readFile(initial.evidencePath, "utf8");
+      const winnerStatus = await readFile(initial.statusPath, "utf8");
+
+      // Now that storeA committed and released, stale storeB MUST still be rejected cleanly
+      // without overwriting winner's valid trace, evidence, or status.
+      await expect(
+        storeB.append({ channel: "agent", op: "status" }),
+      ).rejects.toThrow(/changed since load|Refusing to append/u);
+      expect(await readFile(initial.tracePath, "utf8")).toBe(winnerTrace);
+      expect(await readFile(initial.evidencePath, "utf8")).toBe(winnerEvidence);
+      expect(await readFile(initial.statusPath, "utf8")).toBe(winnerStatus);
+
+      // Reloaded store is completely valid, sequences/evidence coherent, and retry succeeds.
+      const reloaded = await CampaignStore.load(root);
+      expect(reloaded.corrupted).toBe(false);
+      expect(reloaded.trace.map((e) => e.seq)).toEqual(
+        Array.from({ length: expectedBeforeCount + 1 }, (_, i) => i),
+      );
+      const retried = await reloaded.append({ channel: "agent", op: "status" });
+      expect(retried.entry.seq).toBe(expectedBeforeCount + 1);
+    }
+  });
+
+  it("serializes Promise.allSettled races across two independently loaded stores (both fresh and populated) and supports clean reload + retry", async () => {
+    const root = await makeTempSessionRoot();
+
+    // 1. Fresh root race between storeA and storeB
+    const freshA = await CampaignStore.load(root);
+    const freshB = await CampaignStore.load(root);
+    const freshOutcomes = await Promise.allSettled([
+      freshA.append({ channel: "agent", op: "open" }),
+      freshB.append({ channel: "agent", op: "open" }),
+    ]);
+
+    const freshFulfilled = freshOutcomes.filter((o) => o.status === "fulfilled");
+    const freshRejected = freshOutcomes.filter((o) => o.status === "rejected");
+    expect(freshFulfilled).toHaveLength(1);
+    expect(freshRejected).toHaveLength(1);
+    expect(freshFulfilled[0]!.value.entry.seq).toBe(0);
+
+    const afterFresh = await CampaignStore.load(root);
+    expect(afterFresh.corrupted).toBe(false);
+    expect(afterFresh.trace.map((e) => e.seq)).toEqual([0]);
+
+    // 2. Populated root race between storeC and storeD
+    const storeC = await CampaignStore.load(root);
+    const storeD = await CampaignStore.load(root);
+    const nextOutcomes = await Promise.allSettled([
+      storeC.append({ channel: "agent", op: "recon", recon: reconPayload }),
+      storeD.append({ channel: "agent", op: "status" }),
+    ]);
+    const nextFulfilled = nextOutcomes.filter((o) => o.status === "fulfilled");
+    const nextRejected = nextOutcomes.filter((o) => o.status === "rejected");
+    expect(nextFulfilled).toHaveLength(1);
+    expect(nextRejected).toHaveLength(1);
+    expect(nextFulfilled[0]!.value.entry.seq).toBe(1);
+
+    // Reload from disk, verify coherent, and retry an event cleanly.
+    const reloaded = await CampaignStore.load(root);
+    expect(reloaded.corrupted).toBe(false);
+    expect(reloaded.trace.map((e) => e.seq)).toEqual([0, 1]);
+    await reloaded.append({ channel: "agent", op: "status" });
+    const reloadedFinal = await CampaignStore.load(root);
+    expect(reloadedFinal.corrupted).toBe(false);
+    expect(reloadedFinal.trace.map((e) => e.seq)).toEqual([0, 1, 2]);
+  });
+
+  it("enforces cross-process append exclusion across real Node child processes and keeps standalone isolated roots free of external state", async () => {
+    // Use a standalone isolated root whose name does NOT start with "skill-summon-session-".
+    const isolatedParent = await mkdtemp(path.join(tmpdir(), "standalone-campaign-parent-"));
+    cleanupRoots.push(isolatedParent);
+    const standaloneRoot = path.join(isolatedParent, "nested", "campaign-root");
+    await mkdir(standaloneRoot, { recursive: true });
+
+    const seed = await CampaignStore.load(standaloneRoot);
+    await seed.append({ channel: "agent", op: "open" });
+
+    const storeModuleUrl = pathToFileURL(
+      path.resolve("packages/skill-summon/src/campaign/store.ts"),
+    ).href;
+    const ownershipModuleUrl = pathToFileURL(
+      path.resolve("packages/skill-summon/src/summon/session-ownership.ts"),
+    ).href;
+
+    // 1. Child holds root-local campaign claim -> parent append rejects nonblocking without writing.
+    const holderScript = path.join(isolatedParent, "hold-campaign-claim.mts");
+    await writeFile(
+      holderScript,
+      `import { acquireCampaignStoreClaimForRoot } from ${JSON.stringify(ownershipModuleUrl)};
+const [root] = process.argv.slice(2);
+const claim = await acquireCampaignStoreClaimForRoot(root);
+if (claim.status !== "acquired") {
+  process.stderr.write("claim-failed:" + claim.status + "\\n");
+  process.exit(2);
+}
+process.stdout.write("HELD\\n");
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", async (chunk) => {
+  if (chunk.includes("RELEASE")) {
+    await claim.release();
+    process.stdout.write("RELEASED\\n");
+    process.exit(0);
+  }
+});
+`,
+      "utf8",
+    );
+
+    const holder = spawn(process.execPath, [tsxCli, holderScript, standaloneRoot], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let out = "";
+        let err = "";
+        holder.stdout.on("data", (d: Buffer) => {
+          out += d.toString("utf8");
+          if (out.includes("HELD\n")) resolve();
+        });
+        holder.stderr.on("data", (d: Buffer) => {
+          err += d.toString("utf8");
+        });
+        holder.on("exit", (code) => {
+          if (!out.includes("HELD\n")) {
+            reject(new Error(`Holder exited early (${code}): ${err}`));
+          }
+        });
+      });
+
+      const parentStore = await CampaignStore.load(standaloneRoot);
+      const traceBefore = await readFile(parentStore.tracePath, "utf8");
+      const evidenceBefore = await readFile(parentStore.evidencePath, "utf8");
+      const statusBefore = await readFile(parentStore.statusPath, "utf8");
+
+      await expect(
+        parentStore.append({ channel: "agent", op: "recon", recon: reconPayload }),
+      ).rejects.toThrow(/ownership claim is busy/u);
+
+      expect(await readFile(parentStore.tracePath, "utf8")).toBe(traceBefore);
+      expect(await readFile(parentStore.evidencePath, "utf8")).toBe(evidenceBefore);
+      expect(await readFile(parentStore.statusPath, "utf8")).toBe(statusBefore);
+
+      holder.stdin.write("RELEASE\n");
+      await new Promise<void>((resolve, reject) => {
+        holder.on("exit", (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`Holder exited ${code}`));
+        });
+      });
+
+      // Retry after release succeeds cleanly.
+      const resAfterRelease = await parentStore.append({
+        channel: "agent",
+        op: "recon",
+        recon: reconPayload,
+      });
+      expect(resAfterRelease.entry.seq).toBe(1);
+    } finally {
+      if (holder.exitCode === null) holder.kill("SIGKILL");
+    }
+
+    // 2. Two real Node child processes concurrently race CampaignStore.load + append.
+    const racerScript = path.join(isolatedParent, "race-store-append.mts");
+    await writeFile(
+      racerScript,
+      `import { CampaignStore } from ${JSON.stringify(storeModuleUrl)};
+const [root] = process.argv.slice(2);
+const store = await CampaignStore.load(root);
+process.stdout.write("READY\\n");
+process.stdin.setEncoding("utf8");
+let buf = "";
+process.stdin.on("data", async (chunk) => {
+  buf += chunk;
+  if (buf.includes("GO\\n")) {
+    buf = buf.replace("GO\\n", "");
+    try {
+      const res = await store.append({ channel: "agent", op: "status" });
+      process.stdout.write(JSON.stringify({ ok: true, seq: res.entry.seq }) + "\\n");
+    } catch (err) {
+      process.stdout.write(JSON.stringify({ ok: false, error: err instanceof Error ? err.message : String(err) }) + "\\n");
+    }
+    process.exit(0);
+  }
+});
+`,
+      "utf8",
+    );
+
+    const runRacer = () => {
+      const child = spawn(process.execPath, [tsxCli, racerScript, standaloneRoot], {
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      let out = "";
+      let err = "";
+      const ready = new Promise<void>((resolve, reject) => {
+        const onData = (d: Buffer) => {
+          out += d.toString("utf8");
+          if (out.includes("READY\n")) {
+            child.stdout.off("data", onData);
+            resolve();
+          }
+        };
+        child.stdout.on("data", onData);
+        child.stderr.on("data", (d: Buffer) => {
+          err += d.toString("utf8");
+        });
+        child.on("exit", (code) => {
+          if (!out.includes("READY\n")) {
+            reject(new Error(`Racer failed before READY (${code}): ${err}`));
+          }
+        });
+      });
+      const result = new Promise<{ ok: boolean; seq?: number; error?: string }>(
+        (resolve, reject) => {
+          const onData = (d: Buffer) => {
+            out += d.toString("utf8");
+            const line = out.split("\n").find((l) => l.startsWith("{"));
+            if (line) {
+              child.stdout.off("data", onData);
+              resolve(
+                JSON.parse(line) as { ok: boolean; seq?: number; error?: string },
+              );
+            }
+          };
+          child.stdout.on("data", onData);
+          child.on("exit", (code) => {
+            if (!out.split("\n").some((l) => l.startsWith("{"))) {
+              reject(new Error(`Racer exited without JSON (${code}): ${err}`));
+            }
+          });
+        },
+      );
+      return { child, ready, result };
+    };
+
+    const r1 = runRacer();
+    const r2 = runRacer();
+    try {
+      await Promise.all([r1.ready, r2.ready]);
+      r1.child.stdin.write("GO\n");
+      r2.child.stdin.write("GO\n");
+
+      const [res1, res2] = await Promise.all([r1.result, r2.result]);
+      const successes = [res1, res2].filter((r) => r.ok);
+      const failures = [res1, res2].filter((r) => !r.ok);
+      expect(successes).toHaveLength(1);
+      expect(failures).toHaveLength(1);
+      expect(successes[0]!.seq).toBe(2);
+
+      // Reloaded state must be valid, coherent, and support subsequent append.
+      const afterRace = await CampaignStore.load(standaloneRoot);
+      expect(afterRace.corrupted).toBe(false);
+      expect(afterRace.trace.map((e) => e.seq)).toEqual([0, 1, 2]);
+      await afterRace.append({ channel: "agent", op: "status" });
+      const afterRetry = await CampaignStore.load(standaloneRoot);
+      expect(afterRetry.corrupted).toBe(false);
+      expect(afterRetry.trace.map((e) => e.seq)).toEqual([0, 1, 2, 3]);
+    } finally {
+      for (const r of [r1, r2]) {
+        if (r.child.exitCode === null) r.child.kill("SIGKILL");
+      }
+    }
+
+    // Standalone non-session root never created an external claimsDir in isolatedParent or nested/.
+    expect((await readdir(isolatedParent)).sort()).toEqual([
+      "hold-campaign-claim.mts",
+      "nested",
+      "race-store-append.mts",
+    ]);
+    expect(await readdir(path.join(isolatedParent, "nested"))).toEqual([
+      "campaign-root",
+    ]);
+
+    // 3. Symlinked .session.claim pointing outside standaloneRoot is refused conservatively.
+    const outsideTarget = path.join(isolatedParent, "outside-claim-target.txt");
+    await writeFile(outsideTarget, "UNTOUCHED-CLAIM", "utf8");
+    const localClaimPath = path.join(standaloneRoot, ROOT_SESSION_CLAIM_FILE);
+    await symlink(outsideTarget, localClaimPath, "file");
+    const storeSymClaim = await CampaignStore.load(standaloneRoot);
+    await expect(
+      storeSymClaim.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+    expect(await readFile(outsideTarget, "utf8")).toBe("UNTOUCHED-CLAIM");
+
+    // Verify standalone acquireCampaignStoreClaimForRoot behavior directly on non-existent root.
+    const missingCheck = await acquireCampaignStoreClaimForRoot(
+      path.join(isolatedParent, "does-not-exist"),
+    );
+    expect(missingCheck.status).toBe("ineligible");
+  }, 20_000);
+
+  it("refuses append before any disk mutation when historical evidence.jsonl is absent (callback-authorized or agent-only), without fabricating persistent provenance, while allowing append when complete evidence exists", async () => {
+    // 1. Callback-authorized historical trace without evidence.jsonl
+    const root1 = await makeTempSessionRoot();
+    const opCap = createCampaignOperatorAdapter();
+    const seed1 = await CampaignStore.load(root1);
+    await seed1.append({ channel: "agent", op: "open" });
+    await seed1.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await seed1.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await seed1.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+    await rm(seed1.evidencePath);
+
+    const authorizeApprove = (
+      event: { channel: string; op: string },
+      index: number,
+    ) => index === 3 && event.channel === "operator" && event.op === "decide";
+
+    const trustedNoEvidence = await CampaignStore.load(root1, {
+      authorize: authorizeApprove,
+    });
+    expect(trustedNoEvidence.corrupted).toBe(false);
+    expect(trustedNoEvidence.state.state).toBe(CampaignStates.executing);
+
+    const traceSnapshot = await readFile(trustedNoEvidence.tracePath, "utf8");
+    const statusSnapshot = await readFile(trustedNoEvidence.statusPath, "utf8");
+
+    await expect(
+      trustedNoEvidence.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/historical campaign evidence is absent/u);
+    await expect(
+      trustedNoEvidence.append({ channel: "agent", op: "incident", incident: incidentPayload }),
+    ).rejects.toThrow(/historical campaign evidence is absent/u);
+
+    // Bytes, artifacts, and store non-corruption remain completely unchanged.
+    expect(trustedNoEvidence.corrupted).toBe(false);
+    expect(await readFile(trustedNoEvidence.tracePath, "utf8")).toBe(traceSnapshot);
+    expect(await readFile(trustedNoEvidence.statusPath, "utf8")).toBe(statusSnapshot);
+    await expect(access(trustedNoEvidence.evidencePath)).rejects.toThrow();
+    await expect(
+      access(path.join(root1, ROOT_SESSION_CLAIM_FILE)),
+    ).rejects.toThrow();
+
+    // Reload WITH callback still succeeds at original length 4; reload WITHOUT callback
+    // still fails closed (callback authority was never fabricated into persistent provenance).
+    const reloadedWithCallback = await CampaignStore.load(root1, {
+      authorize: authorizeApprove,
+    });
+    expect(reloadedWithCallback.corrupted).toBe(false);
+    expect(reloadedWithCallback.trace).toHaveLength(4);
+    expect(reloadedWithCallback.state.state).toBe(CampaignStates.executing);
+
+    const reloadedWithoutCallback = await CampaignStore.load(root1);
+    expect(reloadedWithoutCallback.corrupted).toBe(true);
+    expect(reloadedWithoutCallback.state.state).toBe(CampaignStates.failedSafe);
+
+    // 2. Agent-only historical trace with evidence.jsonl deleted -> append also refuses cleanly.
+    const root2 = await makeTempSessionRoot();
+    const seed2 = await CampaignStore.load(root2);
+    await seed2.append({ channel: "agent", op: "open" });
+    await rm(seed2.evidencePath);
+    const agentLoaded = await CampaignStore.load(root2);
+    expect(agentLoaded.corrupted).toBe(false);
+    const traceSnapshot2 = await readFile(agentLoaded.tracePath, "utf8");
+    await expect(
+      agentLoaded.append({ channel: "agent", op: "recon", recon: reconPayload }),
+    ).rejects.toThrow(/historical campaign evidence is absent/u);
+    expect(await readFile(agentLoaded.tracePath, "utf8")).toBe(traceSnapshot2);
+    await expect(access(agentLoaded.evidencePath)).rejects.toThrow();
+
+    // 3. External deletion of evidence.jsonl between callback-authorized load and append.
+    const root3 = await makeTempSessionRoot();
+    const seed3 = await CampaignStore.load(root3);
+    await seed3.append({ channel: "agent", op: "open" });
+    await seed3.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await seed3.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await seed3.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+    const loadedWithEvidence = await CampaignStore.load(root3, {
+      authorize: authorizeApprove,
+    });
+    await rm(seed3.evidencePath);
+    const traceSnapshot3 = await readFile(loadedWithEvidence.tracePath, "utf8");
+    const statusSnapshot3 = await readFile(loadedWithEvidence.statusPath, "utf8");
+    await expect(
+      loadedWithEvidence.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/historical campaign evidence is absent/u);
+    expect(await readFile(loadedWithEvidence.tracePath, "utf8")).toBe(traceSnapshot3);
+    expect(await readFile(loadedWithEvidence.statusPath, "utf8")).toBe(statusSnapshot3);
+    await expect(access(loadedWithEvidence.evidencePath)).rejects.toThrow();
+
+    // 4. Normal history WITH complete evidence.jsonl loaded with authorize callback still appends & reloads.
+    const root4 = await makeTempSessionRoot();
+    const seed4 = await CampaignStore.load(root4);
+    await seed4.append({ channel: "agent", op: "open" });
+    await seed4.append({ channel: "agent", op: "recon", recon: reconPayload });
+    await seed4.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+    await seed4.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+    );
+    const completeLoaded = await CampaignStore.load(root4, {
+      authorize: authorizeApprove,
+    });
+    const appended = await completeLoaded.append({
+      channel: "agent",
+      op: "incident",
+      incident: incidentPayload,
+    });
+    expect(appended.entry.seq).toBe(4);
+    expect(appended.state.state).toBe(CampaignStates.convergence);
+
+    const reloadedComplete = await CampaignStore.load(root4);
+    expect(reloadedComplete.corrupted).toBe(false);
+    expect(reloadedComplete.trace.map((e) => e.seq)).toEqual([0, 1, 2, 3, 4]);
+    expect(reloadedComplete.state.state).toBe(CampaignStates.convergence);
   });
 });
