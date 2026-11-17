@@ -11,6 +11,7 @@ import {
 import path from "node:path";
 
 export const SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
+export const ROOT_SESSION_CLAIM_FILE = ".session.claim";
 const SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
 
 export type SessionClaimPurpose = "create" | "reattach" | "gc" | "close";
@@ -237,6 +238,107 @@ export async function acquireSessionClaimForRealRoot(
   };
 }
 
+export async function checkRootLocalClaimAbsenceForRealRoot(
+  realSessionRoot: string,
+): Promise<"absent" | "busy" | "ineligible" | "unavailable"> {
+  const claimPath = path.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  try {
+    await lstat(claimPath);
+    return "busy";
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return "absent";
+    if (code === "ENOTDIR") return "ineligible";
+    return "unavailable";
+  }
+}
+
+export async function acquireRootLocalClaimForRealRoot(
+  realSessionRoot: string,
+  purpose: SessionClaimPurpose,
+): Promise<
+  | AcquiredSessionClaim
+  | { readonly status: "busy" | "unavailable" | "ineligible" }
+> {
+  const claimPath = path.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  const flags =
+    constants.O_WRONLY |
+    constants.O_CREAT |
+    constants.O_EXCL |
+    (constants.O_NOFOLLOW ?? 0);
+  let handle;
+  try {
+    handle = await open(claimPath, flags, 0o600);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EEXIST" || code === "ELOOP" || code === "EISDIR") {
+      return { status: "busy" };
+    }
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return { status: "ineligible" };
+    }
+    if (purpose === "create") {
+      throw error;
+    }
+    return { status: "unavailable" };
+  }
+
+  let openedStat;
+  try {
+    openedStat = await handle.stat();
+    const metadata = JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      purpose,
+      acquiredAt: new Date().toISOString(),
+    });
+    await handle.writeFile(`${metadata}\n`, "utf8");
+    await handle.close();
+  } catch (error) {
+    await handle.close().catch(() => {});
+    try {
+      const st = await lstat(claimPath);
+      if (
+        !st.isSymbolicLink() &&
+        st.isFile() &&
+        (openedStat === undefined ||
+          (st.dev === openedStat.dev && st.ino === openedStat.ino))
+      ) {
+        await unlink(claimPath);
+      }
+    } catch {
+      // Best-effort safe cleanup; never follow symlinks.
+    }
+    if (purpose === "create") {
+      throw error;
+    }
+    return { status: "unavailable" };
+  }
+
+  let released = false;
+  return {
+    status: "acquired",
+    claimPath,
+    async release(): Promise<void> {
+      if (released) return;
+      released = true;
+      try {
+        const st = await lstat(claimPath);
+        if (
+          !st.isSymbolicLink() &&
+          st.isFile() &&
+          st.dev === openedStat.dev &&
+          st.ino === openedStat.ino
+        ) {
+          await unlink(claimPath);
+        }
+      } catch {
+        // Best-effort safe release; ENOENT after quarantine/removal is normal.
+      }
+    },
+  };
+}
+
 /**
  * Read-only check used by GC dry-run: never initializes `claimsDir`, never
  * creates or deletes claim files, and conservatively treats existing or unsafe
@@ -246,6 +348,16 @@ export async function hasExistingSessionClaimForRealRoot(
   realSessionRoot: string,
   tempRoot: string,
 ): Promise<boolean> {
+  const rootClaimPath = path.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  try {
+    await lstat(rootClaimPath);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      return true;
+    }
+  }
+
   const claimsDir = sessionClaimDir(tempRoot);
   try {
     await lstat(claimsDir);

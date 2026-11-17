@@ -396,15 +396,15 @@ describe("per-root filesystem ownership claim and coordination", () => {
       createdAt: "2026-04-01T00:00:00.000Z",
     });
 
-    // Interleaving A: GC holds claim while deleting root -> adopter sees busy & creates fresh;
-    // claim file remains on disk when rm(sessionRoot) starts (no deletion gap).
+    // Interleaving A: GC holds claim while quarantining & deleting root -> adopter sees busy & creates fresh;
+    // claim file remains on disk when quarantine rename(sessionRoot) starts (no deletion gap).
     const gcInRm = deferred();
     const releaseGcRm = deferred();
     let claimExistedWhenRmStarted = false;
     const claimsDir = sessionClaimDir(tempRoot);
 
     hookState.beforeOp = async (op, args) => {
-      if (op === "rm" && args[0] === seeded.root) {
+      if (op === "rename" && args[0] === seeded.root) {
         const claimFiles = await readdir(claimsDir);
         claimExistedWhenRmStarted = claimFiles.length === 1;
         gcInRm.resolve();
@@ -1223,14 +1223,14 @@ process.stdin.on("data", async (chunk) => {
     expect(gcAfterCreate.candidates).toEqual([]);
     expect(gcAfterCreate.liveProtected).toContain(createdSession.root);
 
-    // 3. ttl0 GC holds claim right before rm(root) -> direct createAt sees busy and fails
+    // 3. ttl0 GC holds claim right before quarantine rename(root) -> direct createAt sees busy and fails
     // without publishing session.json or exposing the doomed root.
     const doomedRoot = path.join(tempRoot, "skill-summon-session-doomed-by-gc");
     await mkdir(doomedRoot, { mode: 0o700 });
     const gcAboutToRm = deferred();
     const releaseGcRm = deferred();
     hookState.beforeOp = async (op, args) => {
-      if (op === "rm" && args[0] === doomedRoot) {
+      if (op === "rename" && args[0] === doomedRoot) {
         gcAboutToRm.resolve();
         await releaseGcRm.promise;
       }
@@ -1438,6 +1438,9 @@ process.stdin.on("data", async (chunk) => {
     const manifestPath = path.join(seeded.root, "session.json");
     const pausePath = path.join(seeded.root, "campaign", "pause.json");
     const originalPause = await readFile(pausePath, "utf8");
+    const originalManifest = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; ownerGeneration?: string };
 
     hookState.beforeOp = (op, args) => {
       if (op === "rename" && args[1] === manifestPath) {
@@ -1456,9 +1459,13 @@ process.stdin.on("data", async (chunk) => {
     }
 
     expect(await readFile(pausePath, "utf8")).toBe(originalPause);
-    expect(
-      (JSON.parse(await readFile(manifestPath, "utf8")) as { pid: number }).pid,
-    ).toBe(DEAD_PID);
+    const manifestAfterCommitFail = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; ownerGeneration?: string };
+    expect(manifestAfterCommitFail.pid).toBe(DEAD_PID);
+    expect(manifestAfterCommitFail.ownerGeneration).toBe(
+      originalManifest.ownerGeneration,
+    );
     expect(await readdir(sessionClaimDir(tempRoot))).toEqual([]);
     expect(
       (await readdir(seeded.root)).filter((name) =>
@@ -1482,5 +1489,304 @@ process.stdin.on("data", async (chunk) => {
       now: new Date(tPause.getTime() + 48 * 3_600_000),
     });
     expect(atExpiry.candidates.map((c) => c.root)).toEqual([seeded.root]);
+  });
+
+  it("commits reattach atomically without rollback dependency under simultaneous pause cleanup + rollback-write failure, and invalidates stale/forged markers for future real GC", async () => {
+    const tempRoot = await makeTempRoot();
+    const harnessId = "reattach-double-fault-id";
+    const seeded = await seedDeadIndexedSession(tempRoot, harnessId, {
+      withCampaignRetention: 48,
+    });
+    const tOldPause = new Date("2026-04-01T10:00:00.000Z");
+    expect(
+      (await reapSessions({ tempRoot, ttlHours: 4, now: tOldPause })).candidates,
+    ).toEqual([]);
+
+    const manifestPath = path.join(seeded.root, "session.json");
+    const pausePath = path.join(seeded.root, "campaign", "pause.json");
+    const originalPauseRaw = await readFile(pausePath, "utf8");
+    const originalManifest = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; ownerGeneration?: string };
+    const originalPause = JSON.parse(originalPauseRaw) as {
+      pausedAt: string;
+      pid: number;
+      ownerGeneration?: string;
+      recordSha256: string;
+    };
+    expect(originalManifest.ownerGeneration).toBeDefined();
+    expect(originalPause.ownerGeneration).toBe(originalManifest.ownerGeneration);
+
+    // Inject simultaneous failures:
+    // 1. pause.json cleanup (`rm`) fails with EIO, AND
+    // 2. ANY second manifest write/rename (what a rollback would attempt) ALSO fails with EIO.
+    let manifestRenameCount = 0;
+    let pauseRmAttempted = false;
+    hookState.beforeOp = (op, args) => {
+      if (op === "rename" && args[1] === manifestPath) {
+        manifestRenameCount++;
+        if (manifestRenameCount >= 2) {
+          throw Object.assign(new Error("Injected rollback manifest write failure"), {
+            code: "EIO",
+          });
+        }
+      }
+      if (op === "rm" && args[0] === pausePath) {
+        pauseRmAttempted = true;
+        throw Object.assign(new Error("Injected pause cleanup failure"), {
+          code: "EIO",
+        });
+      }
+    };
+
+    let adopted;
+    try {
+      adopted = await resolveSession({ tempRoot, harnessSessionId: harnessId });
+    } finally {
+      hookState.beforeOp = undefined;
+    }
+
+    // Coherent observable result: single authoritative commit succeeded with zero rollback write,
+    // new owner PID + fresh ownerGeneration are committed on disk, claims are released cleanly.
+    expect(manifestRenameCount).toBe(1);
+    expect(pauseRmAttempted).toBe(true);
+    expect(adopted.created).toBe(false);
+    expect(adopted.session.root).toBe(seeded.root);
+    expect(adopted.session.pid).toBe(process.pid);
+    expect(adopted.session.ownerGeneration).toBeDefined();
+    expect(adopted.session.ownerGeneration).not.toBe(
+      originalManifest.ownerGeneration,
+    );
+
+    const committedManifest = JSON.parse(
+      await readFile(manifestPath, "utf8"),
+    ) as { pid: number; ownerGeneration?: string };
+    expect(committedManifest.pid).toBe(process.pid);
+    expect(committedManifest.ownerGeneration).toBe(
+      adopted.session.ownerGeneration,
+    );
+    expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+    expect(await readdir(sessionClaimDir(tempRoot))).toEqual([]);
+
+    // Simulate new owner dying (preserving its new ownerGeneration).
+    // Even well past old expiry (tOldPause + 100h), real GC MUST NOT reuse old pause.json!
+    committedManifest.pid = DEAD_PID;
+    await writeFile(
+      manifestPath,
+      JSON.stringify(committedManifest, null, 2),
+      "utf8",
+    );
+
+    const tNewObs = new Date(tOldPause.getTime() + 100 * 3_600_000);
+    const dryAtNewObs = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: tNewObs,
+      dryRun: true,
+    });
+    expect(dryAtNewObs.candidates).toEqual([]);
+    expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+
+    const realAtNewObs = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: tNewObs,
+      dryRun: false,
+    });
+    expect(realAtNewObs.candidates).toEqual([]);
+    await expect(access(seeded.root)).resolves.toBeUndefined();
+
+    const refreshedPause = JSON.parse(
+      await readFile(pausePath, "utf8"),
+    ) as {
+      pausedAt: string;
+      pid: number;
+      ownerGeneration?: string;
+      recordSha256: string;
+    };
+    expect(refreshedPause.pausedAt).toBe(tNewObs.toISOString());
+    expect(refreshedPause.pid).toBe(DEAD_PID);
+    expect(refreshedPause.ownerGeneration).toBe(adopted.session.ownerGeneration);
+    expect(refreshedPause.recordSha256).toBe(originalPause.recordSha256);
+
+    // Forged stale pause.json (matching DEAD_PID & current recordSha256, but old/missing ownerGeneration)
+    // must ALSO be rejected and re-anchored to tForgeObs without reusing old expiry.
+    const tForgeObs = new Date(tNewObs.getTime() + 10 * 3_600_000);
+    await writeFile(
+      pausePath,
+      JSON.stringify({
+        pausedAt: "2020-01-01T00:00:00.000Z",
+        pid: DEAD_PID,
+        ownerGeneration: originalManifest.ownerGeneration,
+        recordSha256: originalPause.recordSha256,
+      }),
+      "utf8",
+    );
+    expect(
+      (await reapSessions({ tempRoot, ttlHours: 4, now: tForgeObs, dryRun: true }))
+        .candidates,
+    ).toEqual([]);
+    expect(
+      (await reapSessions({ tempRoot, ttlHours: 4, now: tForgeObs, dryRun: false }))
+        .candidates,
+    ).toEqual([]);
+    const afterForgeReap = JSON.parse(
+      await readFile(pausePath, "utf8"),
+    ) as { pausedAt: string; ownerGeneration?: string };
+    expect(afterForgeReap.pausedAt).toBe(tForgeObs.toISOString());
+    expect(afterForgeReap.ownerGeneration).toBe(adopted.session.ownerGeneration);
+
+    // Full 48h window from tForgeObs is preserved until 1ms before expiry, then reaped at exact expiry.
+    expect(
+      (
+        await reapSessions({
+          tempRoot,
+          ttlHours: 4,
+          now: new Date(tForgeObs.getTime() + 48 * 3_600_000 - 1),
+        })
+      ).candidates,
+    ).toEqual([]);
+    await expect(access(seeded.root)).resolves.toBeUndefined();
+
+    const atFinalExpiry = await reapSessions({
+      tempRoot,
+      ttlHours: 4,
+      now: new Date(tForgeObs.getTime() + 48 * 3_600_000),
+    });
+    expect(atFinalExpiry.candidates.map((c) => c.root)).toEqual([seeded.root]);
+    await expect(access(seeded.root)).rejects.toThrow();
+  });
+
+  it("fences fresh session publication against concurrent ttl0 real GC even on transient external claimsDir EIO, and quarantines atomically", async () => {
+    const tempRoot = await makeTempRoot();
+    const claimsDir = sessionClaimDir(tempRoot);
+
+    for (const faultOp of ["mkdir", "open"] as const) {
+      const harnessId = `transient-eio-${faultOp}`;
+      if (faultOp === "open") {
+        await mkdir(claimsDir, { mode: 0o700, recursive: true });
+      } else {
+        await rm(claimsDir, { recursive: true, force: true });
+      }
+
+      let injectedExternalEio = false;
+      let pausedBeforeManifestWrite = false;
+      const creatorReadyBeforeManifest = deferred();
+      const releaseCreatorWrite = deferred();
+
+      hookState.beforeOp = async (op, args) => {
+        if (
+          !injectedExternalEio &&
+          op === faultOp &&
+          typeof args[0] === "string" &&
+          (faultOp === "mkdir"
+            ? args[0] === claimsDir
+            : args[0].startsWith(`${claimsDir}${path.sep}`))
+        ) {
+          injectedExternalEio = true;
+          throw Object.assign(
+            new Error(`Injected transient ${faultOp} EIO on claimsDir`),
+            { code: "EIO" },
+          );
+        }
+
+        if (
+          !pausedBeforeManifestWrite &&
+          op === "writeFile" &&
+          typeof args[0] === "string" &&
+          path.basename(args[0]).startsWith(".session.json.tmp-")
+        ) {
+          pausedBeforeManifestWrite = true;
+          creatorReadyBeforeManifest.resolve();
+          await releaseCreatorWrite.promise;
+        }
+      };
+
+      const createPromise = resolveSession({
+        tempRoot,
+        harnessSessionId: harnessId,
+      });
+      await creatorReadyBeforeManifest.promise;
+      expect(injectedExternalEio).toBe(true);
+
+      // Transient EIO is now over: external claimsDir IS available to ttl0 GC!
+      // Yet GC MUST still see the root-local claim as busy and NOT quarantine/delete the root.
+      const gcDuringTransientEioCreate = await reapSessions({
+        tempRoot,
+        ttlHours: 0,
+      });
+      expect(gcDuringTransientEioCreate.candidates).toEqual([]);
+
+      releaseCreatorWrite.resolve();
+      const created = await createPromise;
+      hookState.beforeOp = undefined;
+
+      expect(created.created).toBe(true);
+      await expect(access(created.session.root)).resolves.toBeUndefined();
+      const manifest = JSON.parse(
+        await readFile(path.join(created.session.root, "session.json"), "utf8"),
+      ) as { pid: number; harnessSessionId?: string; ownerGeneration?: string };
+      expect(manifest.pid).toBe(process.pid);
+      expect(manifest.harnessSessionId).toBe(harnessId);
+      expect(manifest.ownerGeneration).toBe(created.session.ownerGeneration);
+
+      // Subsequent ttl0 GC sees live PID and protects the returned session root.
+      const gcAfterReturn = await reapSessions({ tempRoot, ttlHours: 0 });
+      expect(gcAfterReturn.candidates).toEqual([]);
+      expect(gcAfterReturn.liveProtected).toContain(created.session.root);
+    }
+
+    // Reverse interleaving: ttl0 GC acquires claim FIRST, executes atomic quarantine rename,
+    // and pauses BEFORE rm(quarantinePath). Creator resumes and MUST fail cleanly without
+    // writing session.json, indexing, or returning a deleted root.
+    const gcInQuarantineRm = deferred();
+    const releaseQuarantineRm = deferred();
+    let targetRootFromMkdtemp: string | undefined;
+    let pausedOpenSession = false;
+    const allowOpenCreateAt = deferred();
+    const openSessionPausedAfterMkdtemp = deferred();
+
+    hookState.afterOp = async (op, _args, result) => {
+      if (op === "mkdtemp" && !pausedOpenSession && typeof result === "string") {
+        pausedOpenSession = true;
+        targetRootFromMkdtemp = result;
+        openSessionPausedAfterMkdtemp.resolve();
+        await allowOpenCreateAt.promise;
+      }
+    };
+
+    const doomedOpenPromise = openSession({
+      tempRoot,
+      harnessSessionId: "ttl0-quarantine-before-create",
+    });
+    await openSessionPausedAfterMkdtemp.promise;
+    hookState.afterOp = undefined;
+
+    hookState.beforeOp = async (op, args) => {
+      if (
+        op === "rm" &&
+        typeof args[0] === "string" &&
+        path.basename(args[0]).startsWith(".skill-summon-reap-")
+      ) {
+        gcInQuarantineRm.resolve();
+        await releaseQuarantineRm.promise;
+      }
+    };
+
+    const gcQuarantinePromise = reapSessions({ tempRoot, ttlHours: 0 });
+    await gcInQuarantineRm.promise;
+
+    // While quarantined root is paused right before rm(quarantinePath),
+    // release creator -> creator MUST reject because targetRootFromMkdtemp is gone!
+    allowOpenCreateAt.resolve();
+    await expect(doomedOpenPromise).rejects.toThrow(/not an existing directory/u);
+    await expect(access(targetRootFromMkdtemp!)).rejects.toThrow();
+
+    releaseQuarantineRm.resolve();
+    const gcQuarantineRes = await gcQuarantinePromise;
+    hookState.beforeOp = undefined;
+    expect(gcQuarantineRes.candidates.map((c) => c.root)).toContain(
+      targetRootFromMkdtemp!,
+    );
   });
 });

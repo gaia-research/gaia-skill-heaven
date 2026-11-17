@@ -1348,7 +1348,7 @@ describe("reattach campaign fold/verification and status refresh", () => {
     }
   });
 
-  it("confines pause boundary on reattach, rolls back owner PID if pause clear fails, and resets lifecycle once reattach succeeds", async () => {
+  it("confines pause boundary on reattach, preserves owner on pre-commit failure, and commits atomically with generation-bound invalidation even when post-commit pause cleanup fails", async () => {
     const tempRoot = await makeTempRoot();
     const outsideDir = await makeTempRoot();
 
@@ -1382,8 +1382,10 @@ describe("reattach campaign fold/verification and status refresh", () => {
     ).toBe(CampaignStates.unarmed);
     await rm(symSeeded.session.root, { recursive: true, force: true });
 
-    // 2. If clearPauseBoundary fails post-manifest write (read-only campaign/),
-    // owner PID is rolled back to dead PID, pause.json stays intact, and recovery succeeds once writable.
+    // 2. Pre-commit status-refresh failure under read-only campaign/ (0500) preserves
+    // old dead PID, ownerGeneration, and pause.json. Once status is synced, commit
+    // succeeds atomically via session.json even if post-commit clearPauseBoundary fails
+    // (0500 campaign/), and future GC never reuses the stale pause.json expiry.
     if (process.getuid?.() !== 0) {
       delete process.env.SKILL_SUMMON_SESSION;
       process.env.CLAUDE_CODE_SESSION_ID = "sess-pause-clear-fail";
@@ -1397,36 +1399,75 @@ describe("reattach campaign fold/verification and status refresh", () => {
       const campaignDir = path.join(seeded.session.root, "campaign");
       const pausePath = path.join(campaignDir, "pause.json");
       const manifestPath = path.join(seeded.session.root, "session.json");
+      const seededStatusPath = path.join(campaignDir, "status.json");
       const originalPauseRaw = await readFile(pausePath, "utf8");
+      const preResumeManifest = JSON.parse(
+        await readFile(manifestPath, "utf8"),
+      ) as Record<string, unknown>;
 
+      // 2a. Missing status.json + 0500 campaign/ fails pre-commit (CampaignStore.load)
+      // and leaves owner PID, ownerGeneration, and pause.json unchanged.
+      await rm(seededStatusPath);
       await chmod(campaignDir, 0o500);
       try {
         await expect(resolveSession({ tempRoot })).rejects.toThrow();
         expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
-        const rolledBackManifest = JSON.parse(
+        const unchangedManifest = JSON.parse(
           await readFile(manifestPath, "utf8"),
         ) as Record<string, unknown>;
-        expect(rolledBackManifest.pid).toBe(99_999_999);
+        expect(unchangedManifest.pid).toBe(99_999_999);
+        expect(unchangedManifest.ownerGeneration).toBe(preResumeManifest.ownerGeneration);
       } finally {
         await chmod(campaignDir, 0o700);
       }
 
-      // Now make status.json stale and verify successful resume refreshes projection,
-      // claims process.pid, and clears pause.json.
-      const seededStatusPath = path.join(campaignDir, "status.json");
-      await writeFile(
-        seededStatusPath,
-        JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
-        "utf8",
-      );
-      const resumed = await resolveSession({ tempRoot });
-      expect(resumed.created).toBe(false);
-      expect(resumed.session.root).toBe(seeded.session.root);
-      expect(resumed.session.pid).toBe(process.pid);
-      await expect(access(pausePath)).rejects.toThrow();
+      // 2b. Synced status.json + 0500 campaign/ (clearPauseBoundary fails post-commit):
+      // single atomic owner commit succeeds with new PID & fresh ownerGeneration without
+      // rollback dependency, and old pause.json cannot be reused by later GC.
+      await CampaignStore.load(seeded.session.root);
+      await chmod(campaignDir, 0o500);
+      let resumed;
+      try {
+        resumed = await resolveSession({ tempRoot });
+        expect(resumed.created).toBe(false);
+        expect(resumed.session.root).toBe(seeded.session.root);
+        expect(resumed.session.pid).toBe(process.pid);
+        expect(resumed.session.ownerGeneration).toBeDefined();
+        expect(resumed.session.ownerGeneration).not.toBe(
+          preResumeManifest.ownerGeneration,
+        );
+        // Old pause.json still on disk because campaign/ was 0500 during cleanup.
+        expect(await readFile(pausePath, "utf8")).toBe(originalPauseRaw);
+      } finally {
+        await chmod(campaignDir, 0o700);
+      }
+
+      // Once writable and new owner dies, even 100h past tPause, real GC must NOT
+      // reuse the old pause.json expiry; it re-anchors a fresh 48h window from tNewObs.
+      await markDeadPid(seeded.session.root);
+      const tNewObs = new Date(tPause.getTime() + 100 * 3_600_000);
       expect(
-        (JSON.parse(await readFile(seededStatusPath, "utf8")) as Record<string, unknown>).state,
-      ).toBe(CampaignStates.executing);
+        (await reapSessions({ tempRoot, ttlHours: 4, now: tNewObs })).candidates,
+      ).toEqual([]);
+      await expect(access(seeded.session.root)).resolves.toBeUndefined();
+      expect(
+        (
+          await reapSessions({
+            tempRoot,
+            ttlHours: 4,
+            now: new Date(tNewObs.getTime() + 48 * 3_600_000 - 1),
+          })
+        ).candidates,
+      ).toEqual([]);
+      const atNewExpiry = await reapSessions({
+        tempRoot,
+        ttlHours: 4,
+        now: new Date(tNewObs.getTime() + 48 * 3_600_000),
+      });
+      expect(atNewExpiry.candidates.map((c) => c.root)).toEqual([
+        seeded.session.root,
+      ]);
+      await expect(access(seeded.session.root)).rejects.toThrow();
     }
   });
 });
