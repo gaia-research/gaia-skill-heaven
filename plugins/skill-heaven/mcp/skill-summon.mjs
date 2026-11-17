@@ -18066,6 +18066,8 @@ import path2 from "node:path";
 var SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
 var ROOT_SESSION_CLAIM_FILE = ".session.claim";
 var SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
+var claimRecords = /* @__PURE__ */ new WeakMap();
+var borrowRecords = /* @__PURE__ */ new WeakMap();
 function isCurrentProcessUid(uid) {
   const currentUid = process.getuid?.();
   return currentUid === void 0 || uid === currentUid;
@@ -18179,7 +18181,9 @@ async function acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose
     }
     return { status: "unavailable" };
   }
+  let openedStat;
   try {
+    openedStat = await handle.stat();
     const metadata = JSON.stringify({
       version: 1,
       pid: process.pid,
@@ -18197,7 +18201,7 @@ async function acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose
     return { status: "unavailable" };
   }
   let released = false;
-  return {
+  const claim = {
     status: "acquired",
     claimPath,
     async release() {
@@ -18215,13 +18219,39 @@ async function acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose
           "Session ownership claim"
         );
         const st = await lstat(claimPath);
-        if (!st.isSymbolicLink() && st.isFile() && isCurrentProcessUid(st.uid)) {
+        if (!st.isSymbolicLink() && st.isFile() && isCurrentProcessUid(st.uid) && st.dev === openedStat.dev && st.ino === openedStat.ino) {
           await unlink(claimPath);
         }
       } catch {
       }
     }
   };
+  claimRecords.set(claim, {
+    realSessionRoot,
+    isReleased: () => released,
+    async isActiveOnDisk(fullConfinementCheck) {
+      if (released) return false;
+      try {
+        if (fullConfinementCheck) {
+          await assertConfinedPrivateMetadataDir(
+            tempRoot,
+            claimsDir,
+            "Session claim directory"
+          );
+          await assertConfinedPath(
+            claimsDir,
+            claimPath,
+            "Session ownership claim"
+          );
+        }
+        const st = await lstat(claimPath);
+        return !st.isSymbolicLink() && st.isFile() && isCurrentProcessUid(st.uid) && st.dev === openedStat.dev && st.ino === openedStat.ino;
+      } catch {
+        return false;
+      }
+    }
+  });
+  return claim;
 }
 async function checkRootLocalClaimAbsenceForRealRoot(realSessionRoot) {
   const claimPath = path2.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
@@ -18282,7 +18312,7 @@ async function acquireRootLocalClaimForRealRoot(realSessionRoot, purpose) {
     return { status: "unavailable" };
   }
   let released = false;
-  return {
+  const claim = {
     status: "acquired",
     claimPath,
     async release() {
@@ -18297,6 +18327,27 @@ async function acquireRootLocalClaimForRealRoot(realSessionRoot, purpose) {
       }
     }
   };
+  claimRecords.set(claim, {
+    realSessionRoot,
+    isReleased: () => released,
+    async isActiveOnDisk(fullConfinementCheck) {
+      if (released) return false;
+      try {
+        if (fullConfinementCheck) {
+          await assertConfinedPath(
+            realSessionRoot,
+            claimPath,
+            "Session ownership claim"
+          );
+        }
+        const st = await lstat(claimPath);
+        return !st.isSymbolicLink() && st.isFile() && st.dev === openedStat.dev && st.ino === openedStat.ino;
+      } catch {
+        return false;
+      }
+    }
+  });
+  return claim;
 }
 async function hasExistingExternalSessionClaimForRealRoot(realSessionRoot, tempRoot) {
   const claimsDir = sessionClaimDir(tempRoot);
@@ -18380,6 +18431,135 @@ async function acquireCampaignStoreClaimForRoot(sessionRoot) {
   }
   return rootClaim;
 }
+function combineSessionClaims(primary, secondary) {
+  const primaryRecord = claimRecords.get(primary);
+  const secondaryRecord = claimRecords.get(secondary);
+  if (!primaryRecord || !secondaryRecord || primaryRecord.realSessionRoot !== secondaryRecord.realSessionRoot) {
+    throw new Error("Cannot combine mismatched or invalid session claims.");
+  }
+  let released = false;
+  const combined = {
+    status: "acquired",
+    claimPath: primary.claimPath,
+    async release() {
+      if (released) return;
+      released = true;
+      try {
+        await primary.release();
+      } finally {
+        await secondary.release();
+      }
+    }
+  };
+  claimRecords.set(combined, {
+    realSessionRoot: primaryRecord.realSessionRoot,
+    isReleased: () => released || primaryRecord.isReleased() || secondaryRecord.isReleased(),
+    async isActiveOnDisk(fullConfinementCheck) {
+      if (released || primaryRecord.isReleased() || secondaryRecord.isReleased()) {
+        return false;
+      }
+      const [primaryActive, secondaryActive] = await Promise.all([
+        primaryRecord.isActiveOnDisk(fullConfinementCheck),
+        secondaryRecord.isActiveOnDisk(fullConfinementCheck)
+      ]);
+      return primaryActive && secondaryActive;
+    }
+  });
+  return combined;
+}
+function createCampaignStoreClaimBorrow(claim) {
+  const record4 = claimRecords.get(claim);
+  if (!record4 || record4.isReleased()) {
+    throw new Error("Cannot borrow an invalid or released session claim.");
+  }
+  const token = Object.freeze({});
+  borrowRecords.set(token, record4);
+  return token;
+}
+async function assertClaimRecordActive(record4, sessionRoot, label, fullConfinementCheck = true) {
+  if (record4.isReleased()) {
+    throw new Error(`${label}: ownership claim is no longer active.`);
+  }
+  let realSessionRoot;
+  try {
+    realSessionRoot = await realpath(path2.resolve(sessionRoot));
+  } catch {
+    throw new Error(`${label}: session root could not be resolved.`);
+  }
+  if (realSessionRoot !== record4.realSessionRoot) {
+    throw new Error(`${label}: ownership claim does not match session root.`);
+  }
+  const active = await record4.isActiveOnDisk(fullConfinementCheck);
+  if (!active) {
+    throw new Error(`${label}: ownership claim is no longer active on disk.`);
+  }
+}
+async function assertCampaignStoreClaimBorrowActive(borrow, sessionRoot, opts = {}) {
+  if (typeof borrow !== "object" || borrow === null) {
+    throw new Error(
+      "Refusing to load campaign store: invalid ownership claim borrow."
+    );
+  }
+  const record4 = borrowRecords.get(borrow);
+  if (!record4) {
+    throw new Error(
+      "Refusing to load campaign store: invalid ownership claim borrow."
+    );
+  }
+  await assertClaimRecordActive(
+    record4,
+    sessionRoot,
+    "Refusing to load campaign store: borrowed",
+    opts.fullConfinementCheck ?? true
+  );
+}
+async function assertSessionClaimActive(claim, sessionRoot, action = "campaign store operation") {
+  const record4 = claimRecords.get(claim);
+  if (!record4) {
+    throw new Error(`Refusing ${action}: invalid ownership claim.`);
+  }
+  await assertClaimRecordActive(record4, sessionRoot, `Refusing ${action}`);
+}
+async function isCampaignClaimPresentReadOnly(sessionRoot) {
+  const rootResolved = path2.resolve(sessionRoot);
+  let rootStat;
+  try {
+    rootStat = await lstat(rootResolved);
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return "ineligible";
+    }
+    return "unavailable";
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    return "ineligible";
+  }
+  let realSessionRoot;
+  try {
+    realSessionRoot = await realpath(rootResolved);
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return "ineligible";
+    }
+    return "unavailable";
+  }
+  const rootAbsence = await checkRootLocalClaimAbsenceForRealRoot(realSessionRoot);
+  if (rootAbsence !== "absent") {
+    return rootAbsence;
+  }
+  if (path2.basename(realSessionRoot).startsWith("skill-summon-session-")) {
+    const externalBusy = await hasExistingExternalSessionClaimForRealRoot(
+      realSessionRoot,
+      path2.dirname(realSessionRoot)
+    );
+    if (externalBusy) {
+      return "busy";
+    }
+  }
+  return "absent";
+}
 function isSymlinkOrUnsafeClaimPathError(error2) {
   return error2 instanceof Error && (error2.message.includes("traverses a symlink") || error2.message.includes("traverses a non-directory") || error2.message.includes("resolves outside"));
 }
@@ -18400,12 +18580,13 @@ var CampaignStore = class _CampaignStore {
   #lines;
   #hasTrace;
   #hasCompleteEvidence;
+  #evidenceError;
   #corrupted;
   #error;
   #recordSha256;
   #options;
   #appendQueue = Promise.resolve();
-  constructor(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}) {
+  constructor(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError) {
     this.sessionRoot = sessionRoot;
     this.campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
     this.tracePath = path3.join(this.campaignDir, CAMPAIGN_TRACE_FILE);
@@ -18416,6 +18597,7 @@ var CampaignStore = class _CampaignStore {
     this.#lines = lines;
     this.#hasTrace = hasTrace;
     this.#hasCompleteEvidence = hasCompleteEvidence;
+    this.#evidenceError = evidenceError;
     this.#corrupted = corrupted;
     this.#error = error2;
     this.#recordSha256 = recordSha256;
@@ -18441,14 +18623,39 @@ var CampaignStore = class _CampaignStore {
   }
   static async load(sessionRoot, options = {}) {
     const refreshStatus = options.refreshStatus ?? true;
+    const claimBorrow = options.claimBorrow;
     const verificationOptions = {
       authorize: options.authorize,
       expectedRecord: options.expectedRecord
     };
     const campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
     const statusPath = path3.join(campaignDir, CAMPAIGN_STATUS_FILE);
-    const verified = await verifyOnDiskState(sessionRoot, verificationOptions);
-    if (verified.kind === "absent") {
+    await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
+    let campaignDirExists = false;
+    try {
+      const dirStat = await lstat2(campaignDir);
+      if (dirStat.isSymbolicLink() || !dirStat.isDirectory()) {
+        throw new Error(`Campaign directory ${campaignDir} must be a real directory.`);
+      }
+      campaignDirExists = true;
+    } catch (error2) {
+      if (error2.code !== "ENOENT") {
+        throw error2;
+      }
+    }
+    if (!campaignDirExists) {
+      if (claimBorrow !== void 0) {
+        await assertCampaignStoreClaimBorrowActive(claimBorrow, sessionRoot, {
+          fullConfinementCheck: false
+        });
+      } else {
+        const claimState = await isCampaignClaimPresentReadOnly(sessionRoot);
+        if (claimState !== "absent") {
+          throw new Error(
+            refreshStatus ? `Refusing to load campaign store: campaign store ownership claim is ${claimState}` : `Refusing unstable read-only campaign load: campaign store ownership claim is ${claimState}`
+          );
+        }
+      }
       return new _CampaignStore(
         sessionRoot,
         initialCampaignState(),
@@ -18461,48 +18668,58 @@ var CampaignStore = class _CampaignStore {
         verificationOptions
       );
     }
-    if (verified.kind === "failed_safe") {
-      const failedState = immutableSnapshot({
-        ...initialCampaignState(),
-        state: CampaignStates.failedSafe
-      });
-      if (refreshStatus) {
-        await syncStatusIfNeeded(
-          sessionRoot,
-          statusPath,
-          toControllerStatus(failedState)
-        );
+    if (claimBorrow !== void 0) {
+      await assertCampaignStoreClaimBorrowActive(claimBorrow, sessionRoot);
+      const verified = await verifyOnDiskState(sessionRoot, verificationOptions);
+      if (verified.kind !== "absent" && refreshStatus) {
+        await assertCampaignStoreClaimBorrowActive(claimBorrow, sessionRoot);
       }
-      return new _CampaignStore(
+      return buildLoadedStore(
         sessionRoot,
-        failedState,
-        [],
-        true,
-        false,
-        true,
-        verified.error,
-        void 0,
+        statusPath,
+        verified,
+        refreshStatus,
         verificationOptions
       );
     }
-    if (refreshStatus) {
-      const expectedStatus = toControllerStatus(
-        verified.state,
-        verified.lines.at(-1)?.entry
+    if (!refreshStatus) {
+      const verified = await verifyReadOnlyConsistentSnapshot(
+        sessionRoot,
+        verificationOptions
       );
-      await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+      return buildLoadedStore(
+        sessionRoot,
+        statusPath,
+        verified,
+        false,
+        verificationOptions
+      );
     }
-    return new _CampaignStore(
-      sessionRoot,
-      verified.state,
-      verified.lines,
-      true,
-      verified.lines.length === 0 || verified.hasEvidence,
-      false,
-      void 0,
-      verified.recordSha256,
-      verificationOptions
-    );
+    const claim = await acquireCampaignStoreClaimForRoot(sessionRoot);
+    if (claim.status !== "acquired") {
+      throw new Error(
+        `Refusing to load campaign store: campaign store ownership claim is ${claim.status}`
+      );
+    }
+    try {
+      const verified = await verifyOnDiskState(sessionRoot, verificationOptions);
+      if (verified.kind !== "absent") {
+        await assertSessionClaimActive(
+          claim,
+          sessionRoot,
+          "campaign status refresh"
+        );
+      }
+      return await buildLoadedStore(
+        sessionRoot,
+        statusPath,
+        verified,
+        true,
+        verificationOptions
+      );
+    } finally {
+      await claim.release();
+    }
   }
   async append(event2) {
     const run = this.#appendQueue.then(() => this.#appendSerialized(event2));
@@ -18520,7 +18737,7 @@ var CampaignStore = class _CampaignStore {
     }
     if (!this.#hasCompleteEvidence) {
       throw new Error(
-        "Refusing to append: historical campaign evidence is absent"
+        `Refusing to append: ${this.#evidenceError ?? "historical campaign evidence is absent"}`
       );
     }
     await assertConfinedPath(this.sessionRoot, this.campaignDir, "Campaign directory");
@@ -18571,6 +18788,7 @@ var CampaignStore = class _CampaignStore {
         "Campaign evidence"
       );
       await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
+      await assertSessionClaimActive(claim, this.sessionRoot, "campaign append");
       try {
         await appendFile(
           this.tracePath,
@@ -18599,6 +18817,7 @@ var CampaignStore = class _CampaignStore {
       this.#lines = nextLines;
       this.#hasTrace = true;
       this.#hasCompleteEvidence = true;
+      this.#evidenceError = void 0;
       this.#recordSha256 = evidenceLine.recordSha256;
       return { state: step.state, entry: step.entry, status };
     } finally {
@@ -18644,13 +18863,117 @@ var CampaignStore = class _CampaignStore {
     }
     if (disk.lines.length > 0 && !disk.hasEvidence) {
       this.#hasCompleteEvidence = false;
+      this.#evidenceError = disk.evidenceError;
       throw new Error(
-        "Refusing to append: historical campaign evidence is absent"
+        `Refusing to append: ${disk.evidenceError ?? "historical campaign evidence is absent"}`
       );
     }
   }
+  static createLoaded(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError) {
+    return new _CampaignStore(
+      sessionRoot,
+      state2,
+      lines,
+      hasTrace,
+      hasCompleteEvidence,
+      corrupted,
+      error2,
+      recordSha256,
+      options,
+      evidenceError
+    );
+  }
 };
-async function verifyOnDiskState(sessionRoot, options = {}) {
+async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus, verificationOptions) {
+  if (verified.kind === "absent") {
+    return CampaignStore["createLoaded"](
+      sessionRoot,
+      initialCampaignState(),
+      [],
+      false,
+      true,
+      false,
+      void 0,
+      void 0,
+      verificationOptions
+    );
+  }
+  if (verified.kind === "failed_safe") {
+    const failedState = immutableSnapshot({
+      ...initialCampaignState(),
+      state: CampaignStates.failedSafe
+    });
+    if (refreshStatus) {
+      await syncStatusIfNeeded(
+        sessionRoot,
+        statusPath,
+        toControllerStatus(failedState)
+      );
+    }
+    return CampaignStore["createLoaded"](
+      sessionRoot,
+      failedState,
+      [],
+      true,
+      false,
+      true,
+      verified.error,
+      void 0,
+      verificationOptions,
+      verified.error
+    );
+  }
+  if (refreshStatus) {
+    const expectedStatus = toControllerStatus(
+      verified.state,
+      verified.lines.at(-1)?.entry
+    );
+    await syncStatusIfNeeded(sessionRoot, statusPath, expectedStatus);
+  }
+  const hasCompleteEvidence = verified.lines.length === 0 || verified.hasEvidence;
+  return CampaignStore["createLoaded"](
+    sessionRoot,
+    verified.state,
+    verified.lines,
+    true,
+    hasCompleteEvidence,
+    false,
+    void 0,
+    verified.recordSha256,
+    verificationOptions,
+    hasCompleteEvidence ? void 0 : verified.evidenceError
+  );
+}
+function metaSnapshot(stat5) {
+  return {
+    dev: stat5.dev,
+    ino: stat5.ino,
+    size: stat5.size,
+    mtimeMs: stat5.mtimeMs
+  };
+}
+function metaSnapshotsEqual(a, b) {
+  return a.dev === b.dev && a.ino === b.ino && a.size === b.size && a.mtimeMs === b.mtimeMs;
+}
+function snapshotsEqual(a, b) {
+  if (!a.traceExists || !b.traceExists) {
+    return a.traceExists === b.traceExists && !a.traceExists && !b.traceExists && a.anyArtifactExists === b.anyArtifactExists;
+  }
+  if (!metaSnapshotsEqual(a.traceStat, b.traceStat) || a.traceRaw !== b.traceRaw) {
+    return false;
+  }
+  if (a.evidenceExists !== b.evidenceExists) {
+    return false;
+  }
+  if (!a.evidenceExists || !b.evidenceExists) {
+    return true;
+  }
+  if (a.evidenceNonRegular || b.evidenceNonRegular) {
+    return a.evidenceNonRegular === b.evidenceNonRegular;
+  }
+  return metaSnapshotsEqual(a.evidenceStat, b.evidenceStat) && a.evidenceRaw === b.evidenceRaw;
+}
+async function readCampaignRawSnapshot(sessionRoot) {
   const campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
   const tracePath = path3.join(campaignDir, CAMPAIGN_TRACE_FILE);
   const evidencePath = path3.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
@@ -18662,13 +18985,13 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
     traceStat = await lstat2(tracePath);
   } catch (error2) {
     if (error2.code === "ENOENT") {
-      if (await anyCampaignArtifactExists([evidencePath, statusPath])) {
-        return {
-          kind: "failed_safe",
-          error: "Campaign trace is missing while campaign artifacts survive"
-        };
-      }
-      return { kind: "absent" };
+      return {
+        traceExists: false,
+        anyArtifactExists: await anyCampaignArtifactExists([
+          evidencePath,
+          statusPath
+        ])
+      };
     }
     throw error2;
   }
@@ -18676,37 +18999,195 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
     throw new Error(`Campaign trace must be a regular file: ${tracePath}`);
   }
   const traceRaw = await readFile(tracePath, "utf8");
-  const parsedTrace = parseCampaignTraceLines(traceRaw);
+  let evidenceStat;
+  try {
+    evidenceStat = await lstat2(evidencePath);
+  } catch (error2) {
+    if (error2.code === "ENOENT") {
+      return {
+        traceExists: true,
+        traceStat: metaSnapshot(traceStat),
+        traceRaw,
+        evidenceExists: false
+      };
+    }
+    throw error2;
+  }
+  if (evidenceStat.isSymbolicLink() || !evidenceStat.isFile()) {
+    return {
+      traceExists: true,
+      traceStat: metaSnapshot(traceStat),
+      traceRaw,
+      evidenceExists: true,
+      evidenceNonRegular: true
+    };
+  }
+  const evidenceRaw = await readFile(evidencePath, "utf8");
+  return {
+    traceExists: true,
+    traceStat: metaSnapshot(traceStat),
+    traceRaw,
+    evidenceExists: true,
+    evidenceNonRegular: false,
+    evidenceStat: metaSnapshot(evidenceStat),
+    evidenceRaw
+  };
+}
+async function verifyReadOnlyConsistentSnapshot(sessionRoot, options = {}) {
+  const claimBefore = await isCampaignClaimPresentReadOnly(sessionRoot);
+  if (claimBefore !== "absent") {
+    throw new Error(
+      `Refusing unstable read-only campaign load: campaign store ownership claim is ${claimBefore}`
+    );
+  }
+  const snap1 = await readCampaignRawSnapshot(sessionRoot);
+  const claimMid = await isCampaignClaimPresentReadOnly(sessionRoot);
+  if (claimMid !== "absent") {
+    throw new Error(
+      `Refusing unstable read-only campaign load: campaign store ownership claim is ${claimMid}`
+    );
+  }
+  const snap2 = await readCampaignRawSnapshot(sessionRoot);
+  if (!snapshotsEqual(snap1, snap2)) {
+    throw new Error(
+      "Refusing unstable read-only campaign load: campaign files changed during read"
+    );
+  }
+  const claimAfter = await isCampaignClaimPresentReadOnly(sessionRoot);
+  if (claimAfter !== "absent") {
+    throw new Error(
+      `Refusing unstable read-only campaign load: campaign store ownership claim is ${claimAfter}`
+    );
+  }
+  return verifyCampaignRawSnapshot(snap1, options);
+}
+function validateStandaloneEvidence(lines, evidenceLines) {
+  if (lines.length === 0) {
+    if (evidenceLines && evidenceLines.length > 0) {
+      return {
+        ok: false,
+        kind: "inconsistent",
+        error: `Campaign evidence length (${evidenceLines.length}) does not match trace length (0)`
+      };
+    }
+    return { ok: true };
+  }
+  if (!evidenceLines) {
+    return {
+      ok: false,
+      kind: "absent",
+      error: "historical campaign evidence is absent"
+    };
+  }
+  if (evidenceLines.length !== lines.length) {
+    return {
+      ok: false,
+      kind: "inconsistent",
+      error: `Campaign evidence length (${evidenceLines.length}) does not match trace length (${lines.length})`
+    };
+  }
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const ev = evidenceLines[i];
+    if (ev.seq !== i) {
+      return {
+        ok: false,
+        kind: "inconsistent",
+        error: `Campaign evidence sequence mismatch at ${i}`
+      };
+    }
+    const expectedEventSha = campaignSha256Hex(
+      canonicalCampaignJson(line.event)
+    );
+    if (ev.eventSha256 !== expectedEventSha) {
+      return {
+        ok: false,
+        kind: "inconsistent",
+        error: `Campaign evidence event hash mismatch at ${i}`
+      };
+    }
+    const expectedAuthorizedPrivileged = (line.entry.channel === "operator" || line.entry.channel === "engine") && line.entry.accepted === true;
+    if (ev.authorizedPrivileged !== expectedAuthorizedPrivileged) {
+      return {
+        ok: false,
+        kind: "inconsistent",
+        error: `Campaign evidence authorization flag mismatch at ${i}`
+      };
+    }
+  }
+  const sidecarAuthorize = (event2, index) => {
+    const ev = evidenceLines[index];
+    if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+    return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event2));
+  };
+  const standaloneVerification = verifyCampaignTraceLines(lines, {
+    authorize: sidecarAuthorize
+  });
+  if (!standaloneVerification.valid) {
+    return {
+      ok: false,
+      kind: "inconsistent",
+      error: standaloneVerification.error
+    };
+  }
+  const events = lines.map((line) => line.event);
+  for (let i = 0; i < lines.length; i++) {
+    const prefixReplay = replayCampaign(events.slice(0, i + 1), {
+      authorize: sidecarAuthorize
+    });
+    const expectedRecordSha = campaignSha256Hex(
+      serializeCampaignRecord(prefixReplay.record)
+    );
+    if (evidenceLines[i].recordSha256 !== expectedRecordSha) {
+      return {
+        ok: false,
+        kind: "inconsistent",
+        error: `Campaign evidence record commitment mismatch at ${i}`
+      };
+    }
+  }
+  return { ok: true };
+}
+function verifyCampaignRawSnapshot(snap, options = {}) {
+  if (!snap.traceExists) {
+    if (snap.anyArtifactExists) {
+      return {
+        kind: "failed_safe",
+        error: "Campaign trace is missing while campaign artifacts survive"
+      };
+    }
+    return { kind: "absent" };
+  }
+  const parsedTrace = parseCampaignTraceLines(snap.traceRaw);
   if (!parsedTrace.ok) {
     return { kind: "failed_safe", error: parsedTrace.error };
   }
   let evidenceLines;
-  let evidencePresent = false;
-  try {
-    const evidenceStat = await lstat2(evidencePath);
-    if (evidenceStat.isSymbolicLink() || !evidenceStat.isFile()) {
+  if (snap.evidenceExists) {
+    if (snap.evidenceNonRegular) {
       return {
         kind: "failed_safe",
         error: "Campaign evidence must be a regular file"
       };
     }
-    evidencePresent = true;
-    const evidenceRaw = await readFile(evidencePath, "utf8");
-    const parsedEvidence = parseCampaignEvidenceLines(evidenceRaw);
+    const parsedEvidence = parseCampaignEvidenceLines(snap.evidenceRaw);
     if (!parsedEvidence.ok) {
       return { kind: "failed_safe", error: parsedEvidence.error };
     }
     evidenceLines = parsedEvidence.lines;
-  } catch (error2) {
-    if (error2.code !== "ENOENT") {
-      throw error2;
-    }
   }
-  if (evidencePresent && evidenceLines.length !== parsedTrace.lines.length) {
+  if (evidenceLines && evidenceLines.length !== parsedTrace.lines.length) {
     return {
       kind: "failed_safe",
       error: `Campaign evidence length (${evidenceLines.length}) does not match trace length (${parsedTrace.lines.length})`
     };
+  }
+  const standalone = validateStandaloneEvidence(
+    parsedTrace.lines,
+    evidenceLines
+  );
+  if (!options.authorize && evidenceLines !== void 0 && !standalone.ok) {
+    return { kind: "failed_safe", error: standalone.error };
   }
   const authorize = (event2, index) => {
     if (options.authorize) {
@@ -18741,8 +19222,15 @@ async function verifyOnDiskState(sessionRoot, options = {}) {
     state: verification.record.final,
     lines: [...parsedTrace.lines],
     recordSha256: actualRecordSha,
-    hasEvidence: evidencePresent
+    hasEvidence: standalone.ok,
+    ...standalone.ok ? {} : {
+      evidenceError: standalone.kind === "absent" ? "historical campaign evidence is absent" : `historical campaign evidence is inconsistent (${standalone.error})`
+    }
   };
+}
+async function verifyOnDiskState(sessionRoot, options = {}) {
+  const snap = await readCampaignRawSnapshot(sessionRoot);
+  return verifyCampaignRawSnapshot(snap, options);
 }
 async function anyCampaignArtifactExists(paths) {
   for (const target of paths) {
@@ -18898,9 +19386,9 @@ var SummonSession = class _SummonSession {
     return outcome.session;
   }
   static {
-    commitReattachUnderClaim = (session) => session.#commitReattachUnderClaim();
+    commitReattachUnderClaim = (session, claimBorrow) => session.#commitReattachUnderClaim(claimBorrow);
   }
-  async #commitReattachUnderClaim() {
+  async #commitReattachUnderClaim(claimBorrow) {
     const pausePath = path4.join(this.root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
     await assertConfinedPath(this.root, pausePath, "Campaign pause boundary");
     try {
@@ -18915,7 +19403,7 @@ var SummonSession = class _SummonSession {
         throw error2;
       }
     }
-    await CampaignStore.load(this.root);
+    await CampaignStore.load(this.root, { claimBorrow });
     const previousManifest = this.#manifest;
     const nextManifest = {
       ...previousManifest,
@@ -19177,17 +19665,7 @@ async function acquireSessionClaim(root, tempRoot, purpose) {
     purpose
   );
   if (externalClaim.status === "acquired") {
-    return {
-      status: "acquired",
-      claimPath: externalClaim.claimPath,
-      async release() {
-        try {
-          await externalClaim.release();
-        } finally {
-          await rootClaim.release();
-        }
-      }
-    };
+    return combineSessionClaims(externalClaim, rootClaim);
   }
   if (externalClaim.status === "unavailable" && purpose === "create") {
     return rootClaim;
@@ -19219,7 +19697,8 @@ async function tryReattachWithClaim(root, tempRoot, hasExpectedHarnessId, expect
     if (!hasProvenDeadPid(session.pid)) {
       return { status: "ineligible" };
     }
-    await commitReattachUnderClaim(session);
+    const claimBorrow = createCampaignStoreClaimBorrow(claimAttempt);
+    await commitReattachUnderClaim(session, claimBorrow);
     adoptedSession = session;
   } finally {
     await claimAttempt.release();
