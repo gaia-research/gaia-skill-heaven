@@ -494,7 +494,7 @@ tbody tr:last-child td {
     </div>
     <p class="lead">Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).</p>
     <dl class="meta-grid">
-      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING: resumed on founder go (2026-11-18); U0b repair round 2 resuming</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T00:00:00-08:00</code></dd></div>
+      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING: resumed on founder go (2026-11-18); U0b repair round 2 resuming</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T00:30:00-08:00</code></dd></div>
     </dl>
   </header>
     
@@ -1539,6 +1539,104 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder&#39;s repo; not changed here).</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-014</span>
+            <span class="tag">unit: U7</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-18</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>Plan Appendix A says U7 releases the Console plugin once the probe passes (FD-4). The campaign directive says no production release and no merge to main by agents.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Publish the Console release from U7</span></li><li><span>Bump the version and changelog in the U7 PR only; the founder merge of #256 is the release</span></li><li><span>Skip the release entirely</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Bump the version and changelog in the U7 PR only. No tag, no publish, no marketplace push.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Satisfies FD-4 (the release content is ready) without crossing the directive line; the founder decides when it ships by merging.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Campaign directive (no production release, founder-only merge to main); FD-4</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>via U7 review</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>Written into briefs/U7.md</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>None beyond the founder needing to tag after merge if a tag is wanted.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-015</span>
+            <span class="tag">unit: U9</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-18</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>Plan section 8 needs a real person to invoke /skill-ultra, decide the charter and answer incidents. FD-11 makes multiplexed approvals fail closed, and the directive forbids agent-generated approvals passing a proof gate.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>An agent drives the proof in a herdr pane</span></li><li><span>Agents prepare (runbook plus a verifier script), the founder runs the proof in a plain terminal, and agents record it</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Agents prepare and record; the founder runs it outside herdr and tmux with no opt-in. Any operator entry with multiplexed or optIn true disqualifies the run. The copy change happens only if every section 8 step has a trace entry.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>Invariant 4 (agent text cannot manufacture operator authority) and invariant 15 (receipts never overstated).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>Directive (no agent approval masquerading as a human decision); FD-11; D-009</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>via U9 review</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>Written into briefs/U9.md</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>The proof waits on founder time; U9 reports BLOCKED: awaiting founder proof run after phase 1.</span></dd>
             </div>
         </dl>
       </article>
