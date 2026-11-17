@@ -18438,6 +18438,7 @@ import {
 } from "node:fs/promises";
 import path3 from "node:path";
 var SESSION_CLAIM_DIR_PREFIX = "skill-summon-claims-v1";
+var ROOT_SESSION_CLAIM_FILE = ".session.claim";
 var SESSION_CLAIM_KEY_DOMAIN = "skill-summon-root-claim-v1\0";
 function isCurrentProcessUid(uid) {
   const currentUid = process.getuid?.();
@@ -18596,6 +18597,81 @@ async function acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose
     }
   };
 }
+async function checkRootLocalClaimAbsenceForRealRoot(realSessionRoot) {
+  const claimPath = path3.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  try {
+    await lstat2(claimPath);
+    return "busy";
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "ENOENT") return "absent";
+    if (code === "ENOTDIR") return "ineligible";
+    return "unavailable";
+  }
+}
+async function acquireRootLocalClaimForRealRoot(realSessionRoot, purpose) {
+  const claimPath = path3.join(realSessionRoot, ROOT_SESSION_CLAIM_FILE);
+  const flags = constants2.O_WRONLY | constants2.O_CREAT | constants2.O_EXCL | (constants2.O_NOFOLLOW ?? 0);
+  let handle;
+  try {
+    handle = await open(claimPath, flags, 384);
+  } catch (error2) {
+    const code = error2.code;
+    if (code === "EEXIST" || code === "ELOOP" || code === "EISDIR") {
+      return { status: "busy" };
+    }
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return { status: "ineligible" };
+    }
+    if (purpose === "create") {
+      throw error2;
+    }
+    return { status: "unavailable" };
+  }
+  let openedStat;
+  try {
+    openedStat = await handle.stat();
+    const metadata = JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      purpose,
+      acquiredAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    await handle.writeFile(`${metadata}
+`, "utf8");
+    await handle.close();
+  } catch (error2) {
+    await handle.close().catch(() => {
+    });
+    try {
+      const st = await lstat2(claimPath);
+      if (!st.isSymbolicLink() && st.isFile() && (openedStat === void 0 || st.dev === openedStat.dev && st.ino === openedStat.ino)) {
+        await unlink(claimPath);
+      }
+    } catch {
+    }
+    if (purpose === "create") {
+      throw error2;
+    }
+    return { status: "unavailable" };
+  }
+  let released = false;
+  return {
+    status: "acquired",
+    claimPath,
+    async release() {
+      if (released) return;
+      released = true;
+      try {
+        const st = await lstat2(claimPath);
+        if (!st.isSymbolicLink() && st.isFile() && st.dev === openedStat.dev && st.ino === openedStat.ino) {
+          await unlink(claimPath);
+        }
+      } catch {
+      }
+    }
+  };
+}
 function isSymlinkOrUnsafeClaimPathError(error2) {
   return error2 instanceof Error && (error2.message.includes("traverses a symlink") || error2.message.includes("traverses a non-directory") || error2.message.includes("resolves outside"));
 }
@@ -18640,6 +18716,7 @@ var SummonSession = class _SummonSession {
       ...harnessSessionId === void 0 ? {} : { harnessSessionId },
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
       pid: process.pid,
+      ownerGeneration: randomUUID(),
       skills: []
     };
     const session = new _SummonSession(root, manifest, tempRoot);
@@ -18648,22 +18725,15 @@ var SummonSession = class _SummonSession {
       await assertDisposableSessionRoot(root, tempRoot);
       throw new Error(`Session root ${root} is no longer available.`);
     }
-    if (claimAttempt.status === "busy") {
+    if (claimAttempt.status !== "acquired") {
       throw new Error(
-        `Cannot initialize session root ${root}: ownership claim is busy.`
+        `Cannot initialize session root ${root}: ownership claim is ${claimAttempt.status}.`
       );
     }
     try {
-      await session.#writeManifest(manifest, {
-        skipRootCheck: claimAttempt.status === "acquired"
-      });
-      if (claimAttempt.status === "unavailable") {
-        await assertDisposableSessionRoot(root, tempRoot);
-      }
+      await session.#writeManifest(manifest, { skipRootCheck: true });
     } finally {
-      if (claimAttempt.status === "acquired") {
-        await claimAttempt.release();
-      }
+      await claimAttempt.release();
     }
     if (harnessSessionId !== void 0) {
       await recordSessionInIndex(tempRoot, harnessSessionId, root).catch(
@@ -18737,26 +18807,22 @@ var SummonSession = class _SummonSession {
     const previousManifest = this.#manifest;
     const nextManifest = {
       ...previousManifest,
-      pid: process.pid
+      pid: process.pid,
+      ownerGeneration: randomUUID()
     };
     await this.#writeManifest(nextManifest);
     this.#manifest = nextManifest;
-    try {
-      await clearPauseBoundary(this.root);
-    } catch (error2) {
-      this.#manifest = previousManifest;
-      try {
-        await this.#writeManifest(previousManifest);
-      } catch {
-      }
-      throw error2;
-    }
+    await clearPauseBoundary(this.root).catch(() => {
+    });
   }
   get harnessSessionId() {
     return this.#manifest.harnessSessionId;
   }
   get pid() {
     return this.#manifest.pid;
+  }
+  get ownerGeneration() {
+    return this.#manifest.ownerGeneration;
   }
   get createdAt() {
     return this.#manifest.createdAt;
@@ -18803,7 +18869,7 @@ var SummonSession = class _SummonSession {
     if (claimAttempt.status === "acquired") {
       try {
         await assertDisposableSessionRoot(this.root, tempRoot);
-        await rm3(this.root, { recursive: true, force: true });
+        await quarantineAndRemoveSessionRoot(this.root);
       } catch (error2) {
         if (!isConcurrentRemovalErrorOrCause(error2)) {
           throw error2;
@@ -18895,6 +18961,9 @@ function isDisposableSessionRoot(root, tempRoot = tmpdir()) {
   }
 }
 async function assertDisposableSessionRoot(root, tempRoot = tmpdir()) {
+  await resolveValidatedDisposableSessionRoot(root, tempRoot);
+}
+async function resolveValidatedDisposableSessionRoot(root, tempRoot = tmpdir()) {
   if (!isDisposableSessionRoot(root, tempRoot)) {
     throw new Error(
       `Session root ${root} is not a direct child of the OS temp directory (${tempRoot}).`
@@ -18927,6 +18996,7 @@ async function assertDisposableSessionRoot(root, tempRoot = tmpdir()) {
       `Session root ${root} resolves outside the disposable temp-root namespace.`
     );
   }
+  return rootReal;
 }
 async function ensureConfinedDirectory(root, target) {
   await assertConfinedPath(root, target, "Session directory");
@@ -18949,24 +19019,54 @@ function isConcurrentRemovalErrorOrCause(error2) {
   return false;
 }
 async function acquireSessionClaim(root, tempRoot, purpose) {
+  let realSessionRoot;
   try {
-    await assertDisposableSessionRoot(root, tempRoot);
+    realSessionRoot = await resolveValidatedDisposableSessionRoot(root, tempRoot);
   } catch (error2) {
     if (isConcurrentRemovalErrorOrCause(error2)) {
       return { status: "ineligible" };
     }
     throw error2;
   }
-  let realSessionRoot;
-  try {
-    realSessionRoot = await realpath2(root);
-  } catch (error2) {
-    if (isConcurrentRemoval(error2)) {
-      return { status: "ineligible" };
+  if (purpose === "reattach") {
+    const rootAbsence = await checkRootLocalClaimAbsenceForRealRoot(
+      realSessionRoot
+    );
+    if (rootAbsence !== "absent") {
+      return { status: rootAbsence };
     }
-    throw error2;
+    return acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose);
   }
-  return acquireSessionClaimForRealRoot(realSessionRoot, tempRoot, purpose);
+  const rootClaim = await acquireRootLocalClaimForRealRoot(
+    realSessionRoot,
+    purpose
+  );
+  if (rootClaim.status !== "acquired") {
+    return rootClaim;
+  }
+  const externalClaim = await acquireSessionClaimForRealRoot(
+    realSessionRoot,
+    tempRoot,
+    purpose
+  );
+  if (externalClaim.status === "acquired") {
+    return {
+      status: "acquired",
+      claimPath: externalClaim.claimPath,
+      async release() {
+        try {
+          await externalClaim.release();
+        } finally {
+          await rootClaim.release();
+        }
+      }
+    };
+  }
+  if (externalClaim.status === "unavailable" && purpose === "create") {
+    return rootClaim;
+  }
+  await rootClaim.release();
+  return { status: externalClaim.status };
 }
 async function tryReattachWithClaim(root, tempRoot, hasExpectedHarnessId, expectedHarnessSessionId) {
   const claimAttempt = await acquireSessionClaim(root, tempRoot, "reattach");
@@ -19299,9 +19399,30 @@ async function findIndexedDeadSession(tempRoot, harnessSessionId) {
   matches2.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   return matches2[0].root;
 }
+async function quarantineAndRemoveSessionRoot(sessionRoot) {
+  const parentDir = path4.dirname(path4.resolve(sessionRoot));
+  const quarantinePath = path4.join(
+    parentDir,
+    `.skill-summon-reap-${process.pid}-${randomUUID()}`
+  );
+  await rename(sessionRoot, quarantinePath);
+  await rm3(quarantinePath, { recursive: true, force: true });
+}
 async function clearPauseBoundary(sessionRoot) {
   const pausePath = path4.join(sessionRoot, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
   await assertConfinedPath(sessionRoot, pausePath, "Campaign pause boundary");
+  let pauseStat;
+  try {
+    pauseStat = await lstat3(pausePath);
+  } catch (error2) {
+    if (error2.code === "ENOENT") return;
+    throw error2;
+  }
+  if (pauseStat.isSymbolicLink() || !pauseStat.isFile()) {
+    throw new Error(
+      `Campaign pause boundary must be a regular file: ${pausePath}`
+    );
+  }
   await rm3(pausePath, { force: true });
 }
 async function readManifestSafely(root) {
@@ -19324,6 +19445,9 @@ function parseSessionManifest(raw) {
   if (!isValidPid(obj.pid)) return void 0;
   if (!Array.isArray(obj.skills)) return void 0;
   if (obj.harnessSessionId !== void 0 && (typeof obj.harnessSessionId !== "string" || obj.harnessSessionId.trim().length === 0)) {
+    return void 0;
+  }
+  if (obj.ownerGeneration !== void 0 && (typeof obj.ownerGeneration !== "string" || obj.ownerGeneration.trim().length === 0)) {
     return void 0;
   }
   return obj;
