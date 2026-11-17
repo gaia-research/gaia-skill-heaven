@@ -548,11 +548,50 @@
       "terra": "pending re-review",
       "outcome": "Round 1 repaired at 72f6277 (Terra PASS at 1cb0535): the suite passes 2664/2664 with the variable unset and with it fixed. Round 2 found by the orchestrator in the live Claude Code + herdr environment: summon-arbor.test.ts times out under full-suite load. Run alone it takes 11s, against 4.3s on the pre-U0b base, because the re-attach/reaper path scans every root in tmpdir on each server start (522 roots on this machine). Returned for an O(1) session-id lookup, isolated test tempRoots and a 1000-root regression test.",
       "risk": "Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder's repo; not changed here)."
+    },
+    {
+      "id": "D-014",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U7",
+      "problem": "Plan Appendix A says U7 releases the Console plugin once the probe passes (FD-4). The campaign directive says no production release and no merge to main by agents.",
+      "options": [
+        "Publish the Console release from U7",
+        "Bump the version and changelog in the U7 PR only; the founder merge of #256 is the release",
+        "Skip the release entirely"
+      ],
+      "selected": "Bump the version and changelog in the U7 PR only. No tag, no publish, no marketplace push.",
+      "reason": "Satisfies FD-4 (the release content is ready) without crossing the directive line; the founder decides when it ships by merging.",
+      "authority": "Campaign directive (no production release, founder-only merge to main); FD-4",
+      "reversible": true,
+      "terra": "via U7 review",
+      "outcome": "Written into briefs/U7.md",
+      "risk": "None beyond the founder needing to tag after merge if a tag is wanted."
+    },
+    {
+      "id": "D-015",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U9",
+      "problem": "Plan section 8 needs a real person to invoke /skill-ultra, decide the charter and answer incidents. FD-11 makes multiplexed approvals fail closed, and the directive forbids agent-generated approvals passing a proof gate.",
+      "options": [
+        "An agent drives the proof in a herdr pane",
+        "Agents prepare (runbook plus a verifier script), the founder runs the proof in a plain terminal, and agents record it"
+      ],
+      "selected": "Agents prepare and record; the founder runs it outside herdr and tmux with no opt-in. Any operator entry with multiplexed or optIn true disqualifies the run. The copy change happens only if every section 8 step has a trace entry.",
+      "reason": "Invariant 4 (agent text cannot manufacture operator authority) and invariant 15 (receipts never overstated).",
+      "authority": "Directive (no agent approval masquerading as a human decision); FD-11; D-009",
+      "reversible": true,
+      "terra": "via U9 review",
+      "outcome": "Written into briefs/U9.md",
+      "risk": "The proof waits on founder time; U9 reports BLOCKED: awaiting founder proof run after phase 1."
     }
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-18T00:00:00-08:00",
+  "updatedAt": "2026-11-18T00:30:00-08:00",
   "quota": {
     "asOf": "2026-11-18T00:00:00-08:00",
     "pools": [
