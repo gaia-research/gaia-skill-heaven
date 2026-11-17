@@ -27,6 +27,20 @@ export type AcquiredSessionClaim = {
   release(): Promise<void>;
 };
 
+declare const campaignStoreClaimBorrowBrand: unique symbol;
+export type CampaignStoreClaimBorrow = {
+  readonly [campaignStoreClaimBorrowBrand]: true;
+};
+
+type ClaimRecord = {
+  readonly realSessionRoot: string;
+  isReleased(): boolean;
+  isActiveOnDisk(fullConfinementCheck: boolean): Promise<boolean>;
+};
+
+const claimRecords = new WeakMap<AcquiredSessionClaim, ClaimRecord>();
+const borrowRecords = new WeakMap<object, ClaimRecord>();
+
 export type SessionClaimAttempt =
   | AcquiredSessionClaim
   | { readonly status: "busy" | "unavailable" };
@@ -195,7 +209,9 @@ export async function acquireSessionClaimForRealRoot(
     return { status: "unavailable" };
   }
 
+  let openedStat;
   try {
+    openedStat = await handle.stat();
     const metadata = JSON.stringify({
       version: 1,
       pid: process.pid,
@@ -211,7 +227,7 @@ export async function acquireSessionClaimForRealRoot(
   }
 
   let released = false;
-  return {
+  const claim: AcquiredSessionClaim = {
     status: "acquired",
     claimPath,
     async release(): Promise<void> {
@@ -232,7 +248,9 @@ export async function acquireSessionClaimForRealRoot(
         if (
           !st.isSymbolicLink() &&
           st.isFile() &&
-          isCurrentProcessUid(st.uid)
+          isCurrentProcessUid(st.uid) &&
+          st.dev === openedStat.dev &&
+          st.ino === openedStat.ino
         ) {
           await unlink(claimPath);
         }
@@ -241,6 +259,38 @@ export async function acquireSessionClaimForRealRoot(
       }
     },
   };
+  claimRecords.set(claim, {
+    realSessionRoot,
+    isReleased: () => released,
+    async isActiveOnDisk(fullConfinementCheck: boolean): Promise<boolean> {
+      if (released) return false;
+      try {
+        if (fullConfinementCheck) {
+          await assertConfinedPrivateMetadataDir(
+            tempRoot,
+            claimsDir,
+            "Session claim directory",
+          );
+          await assertConfinedPath(
+            claimsDir,
+            claimPath,
+            "Session ownership claim",
+          );
+        }
+        const st = await lstat(claimPath);
+        return (
+          !st.isSymbolicLink() &&
+          st.isFile() &&
+          isCurrentProcessUid(st.uid) &&
+          st.dev === openedStat.dev &&
+          st.ino === openedStat.ino
+        );
+      } catch {
+        return false;
+      }
+    },
+  });
+  return claim;
 }
 
 export async function checkRootLocalClaimAbsenceForRealRoot(
@@ -321,7 +371,7 @@ export async function acquireRootLocalClaimForRealRoot(
   }
 
   let released = false;
-  return {
+  const claim: AcquiredSessionClaim = {
     status: "acquired",
     claimPath,
     async release(): Promise<void> {
@@ -342,6 +392,32 @@ export async function acquireRootLocalClaimForRealRoot(
       }
     },
   };
+  claimRecords.set(claim, {
+    realSessionRoot,
+    isReleased: () => released,
+    async isActiveOnDisk(fullConfinementCheck: boolean): Promise<boolean> {
+      if (released) return false;
+      try {
+        if (fullConfinementCheck) {
+          await assertConfinedPath(
+            realSessionRoot,
+            claimPath,
+            "Session ownership claim",
+          );
+        }
+        const st = await lstat(claimPath);
+        return (
+          !st.isSymbolicLink() &&
+          st.isFile() &&
+          st.dev === openedStat.dev &&
+          st.ino === openedStat.ino
+        );
+      } catch {
+        return false;
+      }
+    },
+  });
+  return claim;
 }
 
 /**
@@ -454,6 +530,179 @@ export async function acquireCampaignStoreClaimForRoot(
   }
 
   return rootClaim;
+}
+
+export function combineSessionClaims(
+  primary: AcquiredSessionClaim,
+  secondary: AcquiredSessionClaim,
+): AcquiredSessionClaim {
+  const primaryRecord = claimRecords.get(primary);
+  const secondaryRecord = claimRecords.get(secondary);
+  if (
+    !primaryRecord ||
+    !secondaryRecord ||
+    primaryRecord.realSessionRoot !== secondaryRecord.realSessionRoot
+  ) {
+    throw new Error("Cannot combine mismatched or invalid session claims.");
+  }
+
+  let released = false;
+  const combined: AcquiredSessionClaim = {
+    status: "acquired",
+    claimPath: primary.claimPath,
+    async release(): Promise<void> {
+      if (released) return;
+      released = true;
+      try {
+        await primary.release();
+      } finally {
+        await secondary.release();
+      }
+    },
+  };
+  claimRecords.set(combined, {
+    realSessionRoot: primaryRecord.realSessionRoot,
+    isReleased: () =>
+      released || primaryRecord.isReleased() || secondaryRecord.isReleased(),
+    async isActiveOnDisk(fullConfinementCheck: boolean): Promise<boolean> {
+      if (
+        released ||
+        primaryRecord.isReleased() ||
+        secondaryRecord.isReleased()
+      ) {
+        return false;
+      }
+      const [primaryActive, secondaryActive] = await Promise.all([
+        primaryRecord.isActiveOnDisk(fullConfinementCheck),
+        secondaryRecord.isActiveOnDisk(fullConfinementCheck),
+      ]);
+      return primaryActive && secondaryActive;
+    },
+  });
+  return combined;
+}
+
+export function createCampaignStoreClaimBorrow(
+  claim: AcquiredSessionClaim,
+): CampaignStoreClaimBorrow {
+  const record = claimRecords.get(claim);
+  if (!record || record.isReleased()) {
+    throw new Error("Cannot borrow an invalid or released session claim.");
+  }
+  const token = Object.freeze({}) as CampaignStoreClaimBorrow;
+  borrowRecords.set(token, record);
+  return token;
+}
+
+async function assertClaimRecordActive(
+  record: ClaimRecord,
+  sessionRoot: string,
+  label: string,
+  fullConfinementCheck = true,
+): Promise<void> {
+  if (record.isReleased()) {
+    throw new Error(`${label}: ownership claim is no longer active.`);
+  }
+  let realSessionRoot: string;
+  try {
+    realSessionRoot = await realpath(path.resolve(sessionRoot));
+  } catch {
+    throw new Error(`${label}: session root could not be resolved.`);
+  }
+  if (realSessionRoot !== record.realSessionRoot) {
+    throw new Error(`${label}: ownership claim does not match session root.`);
+  }
+  const active = await record.isActiveOnDisk(fullConfinementCheck);
+  if (!active) {
+    throw new Error(`${label}: ownership claim is no longer active on disk.`);
+  }
+}
+
+export async function assertCampaignStoreClaimBorrowActive(
+  borrow: CampaignStoreClaimBorrow,
+  sessionRoot: string,
+  opts: { fullConfinementCheck?: boolean } = {},
+): Promise<void> {
+  if (typeof borrow !== "object" || borrow === null) {
+    throw new Error(
+      "Refusing to load campaign store: invalid ownership claim borrow.",
+    );
+  }
+  const record = borrowRecords.get(borrow);
+  if (!record) {
+    throw new Error(
+      "Refusing to load campaign store: invalid ownership claim borrow.",
+    );
+  }
+  await assertClaimRecordActive(
+    record,
+    sessionRoot,
+    "Refusing to load campaign store: borrowed",
+    opts.fullConfinementCheck ?? true,
+  );
+}
+
+export async function assertSessionClaimActive(
+  claim: AcquiredSessionClaim,
+  sessionRoot: string,
+  action = "campaign store operation",
+): Promise<void> {
+  const record = claimRecords.get(claim);
+  if (!record) {
+    throw new Error(`Refusing ${action}: invalid ownership claim.`);
+  }
+  await assertClaimRecordActive(record, sessionRoot, `Refusing ${action}`);
+}
+
+/**
+ * Read-only check for any active or crash-left claim on `sessionRoot` without
+ * initializing metadata directories or creating/deleting files.
+ */
+export async function isCampaignClaimPresentReadOnly(
+  sessionRoot: string,
+): Promise<"absent" | "busy" | "unavailable" | "ineligible"> {
+  const rootResolved = path.resolve(sessionRoot);
+  let rootStat;
+  try {
+    rootStat = await lstat(rootResolved);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return "ineligible";
+    }
+    return "unavailable";
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    return "ineligible";
+  }
+
+  let realSessionRoot: string;
+  try {
+    realSessionRoot = await realpath(rootResolved);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") {
+      return "ineligible";
+    }
+    return "unavailable";
+  }
+
+  const rootAbsence = await checkRootLocalClaimAbsenceForRealRoot(realSessionRoot);
+  if (rootAbsence !== "absent") {
+    return rootAbsence;
+  }
+
+  if (path.basename(realSessionRoot).startsWith("skill-summon-session-")) {
+    const externalBusy = await hasExistingExternalSessionClaimForRealRoot(
+      realSessionRoot,
+      path.dirname(realSessionRoot),
+    );
+    if (externalBusy) {
+      return "busy";
+    }
+  }
+
+  return "absent";
 }
 
 /**

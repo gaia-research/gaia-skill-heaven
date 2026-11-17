@@ -115,7 +115,10 @@ import {
   SummonSession,
 } from "../src/summon/session.js";
 import {
+  acquireRootLocalClaimForRealRoot,
   acquireSessionClaimForRealRoot,
+  type CampaignStoreClaimBorrow,
+  createCampaignStoreClaimBorrow,
   SESSION_CLAIM_DIR_PREFIX,
   sessionClaimDir,
   sessionClaimKey,
@@ -1921,11 +1924,140 @@ process.stdin.on("data", async (chunk) => {
     await expect(
       storeBeforeGc.append({ channel: "agent", op: "status" }),
     ).rejects.toThrow(/ownership claim is busy/u);
+    await expect(CampaignStore.load(seeded.root)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
 
     releaseGcQuarantine.resolve();
     const gcOutcome = await gcPromise;
     hookState.beforeOp = undefined;
     expect(gcOutcome.candidates.map((c) => c.root)).toEqual([seeded.root]);
     await expect(access(seeded.root)).rejects.toThrow();
+  });
+
+  it("enforces CampaignStoreClaimBorrow lifetime, root-binding, and physical confinement while allowing adoption and real GC without self-refusal", async () => {
+    const tempRoot = await makeTempRoot();
+    const { realpath } = await import("node:fs/promises");
+
+    // 1. Seed two dead roots with paused campaigns (one with stale status.json so reattach writes status).
+    const seededA = await seedDeadIndexedSession(tempRoot, "borrow-root-a", {
+      withCampaignRetention: 24,
+    });
+    const seededB = await seedDeadIndexedSession(tempRoot, "borrow-root-b", {
+      withCampaignRetention: 24,
+    });
+    const realA = await realpath(seededA.root);
+
+    // Forged borrow token rejected.
+    await expect(
+      CampaignStore.load(seededA.root, {
+        claimBorrow: {} as CampaignStoreClaimBorrow,
+      }),
+    ).rejects.toThrow(/invalid ownership claim borrow/u);
+
+    // Valid claim borrow works ONLY for matching root and while unreleased & active on disk.
+    const claimA = await acquireRootLocalClaimForRealRoot(realA, "campaign");
+    expect(claimA.status).toBe("acquired");
+    if (claimA.status !== "acquired") return;
+    const borrowA = createCampaignStoreClaimBorrow(claimA);
+
+    // Wrong root rejected.
+    await expect(
+      CampaignStore.load(seededB.root, { claimBorrow: borrowA }),
+    ).rejects.toThrow(/does not match session root/u);
+
+    // Matching root succeeds without self-refusal even while claimA is held.
+    const loadedWithBorrow = await CampaignStore.load(seededA.root, {
+      claimBorrow: borrowA,
+    });
+    expect(loadedWithBorrow.corrupted).toBe(false);
+    expect(loadedWithBorrow.state.state).toBe(CampaignStates.executing);
+
+    // External non-borrowing load on seededA.root still refuses as busy while claimA is held.
+    await expect(CampaignStore.load(seededA.root)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
+
+    // External deletion / symlink replacement of physical claim file on disk invalidates borrow.
+    await rm(claimA.claimPath);
+    await expect(
+      CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+    ).rejects.toThrow(/no longer active on disk/u);
+
+    // Release invalidates borrow permanently.
+    await claimA.release();
+    await expect(
+      CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+    ).rejects.toThrow(/no longer active/u);
+    expect(() => createCampaignStoreClaimBorrow(claimA)).toThrow(
+      /invalid or released/u,
+    );
+
+    // 2. Real adoption (reattach) with stale status.json borrows its own claim cleanly,
+    // refreshes status.json, and excludes external CampaignStore.load() during commit.
+    const statusPathA = path.join(seededA.root, "campaign", "status.json");
+    await writeFile(
+      statusPathA,
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+    const manifestPathA = path.join(seededA.root, "session.json");
+    const hitCommit = deferred();
+    const releaseCommit = deferred();
+    let pausedCommit = false;
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedCommit && op === "rename" && args[1] === manifestPathA) {
+        pausedCommit = true;
+        hitCommit.resolve();
+        await releaseCommit.promise;
+      }
+    };
+
+    const reattachPromise = resolveSession({
+      tempRoot,
+      harnessSessionId: "borrow-root-a",
+    });
+    await hitCommit.promise;
+    // During adoption commit, external CampaignStore.load() sees busy.
+    await expect(CampaignStore.load(seededA.root)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
+    releaseCommit.resolve();
+    const adoptedA = await reattachPromise;
+    hookState.beforeOp = undefined;
+    expect(adoptedA.created).toBe(false);
+    expect(JSON.parse(await readFile(statusPathA, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.executing,
+    });
+
+    // 3. Dry-run GC stays completely write-free (no claimsDir) while racing store append.
+    await rm(sessionClaimDir(tempRoot), { recursive: true, force: true });
+    const dryStore = await CampaignStore.load(seededB.root);
+    const appendPaused = deferred();
+    const releaseAppend = deferred();
+    let pausedOnce = false;
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedOnce && op === "appendFile" && args[0] === dryStore.evidencePath) {
+        pausedOnce = true;
+        appendPaused.resolve();
+        await releaseAppend.promise;
+      }
+    };
+    const appendPromise = dryStore.append({ channel: "agent", op: "status" });
+    await appendPaused.promise;
+
+    const dryOutcome = await reapSessions({
+      tempRoot,
+      ttlHours: 0,
+      now: new Date("2099-01-01T00:00:00.000Z"),
+      dryRun: true,
+    });
+    expect(dryOutcome.candidates.map((c) => c.root)).not.toContain(seededB.root);
+    await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
+
+    releaseAppend.resolve();
+    await appendPromise;
+    hookState.beforeOp = undefined;
   });
 });

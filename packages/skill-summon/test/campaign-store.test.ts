@@ -78,6 +78,8 @@ import {
   createCampaignEngineEvent,
   createCampaignOperatorAdapter,
   createCampaignOperatorEvent,
+  formatCampaignEvidenceLine,
+  parseCampaignEvidenceLines,
   type CampaignCharter,
   type CampaignRecon,
   type ConvergenceIncident,
@@ -86,6 +88,7 @@ import {
 import { CampaignStore } from "../src/campaign/store.js";
 import {
   acquireCampaignStoreClaimForRoot,
+  type CampaignStoreClaimBorrow,
   ROOT_SESSION_CLAIM_FILE,
 } from "../src/summon/session-ownership.js";
 
@@ -938,6 +941,8 @@ process.stdin.on("data", async (chunk) => {
       "utf8",
     );
 
+    const parentStoreBeforeHold = await CampaignStore.load(standaloneRoot);
+
     const holder = spawn(process.execPath, [tsxCli, holderScript, standaloneRoot], {
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -959,18 +964,24 @@ process.stdin.on("data", async (chunk) => {
         });
       });
 
-      const parentStore = await CampaignStore.load(standaloneRoot);
-      const traceBefore = await readFile(parentStore.tracePath, "utf8");
-      const evidenceBefore = await readFile(parentStore.evidencePath, "utf8");
-      const statusBefore = await readFile(parentStore.statusPath, "utf8");
+      const traceBefore = await readFile(parentStoreBeforeHold.tracePath, "utf8");
+      const evidenceBefore = await readFile(parentStoreBeforeHold.evidencePath, "utf8");
+      const statusBefore = await readFile(parentStoreBeforeHold.statusPath, "utf8");
 
+      // While child holds claim, parent load() (both default and read-only) and append() reject as busy.
+      await expect(CampaignStore.load(standaloneRoot)).rejects.toThrow(
+        /ownership claim is busy/u,
+      );
       await expect(
-        parentStore.append({ channel: "agent", op: "recon", recon: reconPayload }),
+        CampaignStore.load(standaloneRoot, { refreshStatus: false }),
+      ).rejects.toThrow(/ownership claim is busy/u);
+      await expect(
+        parentStoreBeforeHold.append({ channel: "agent", op: "recon", recon: reconPayload }),
       ).rejects.toThrow(/ownership claim is busy/u);
 
-      expect(await readFile(parentStore.tracePath, "utf8")).toBe(traceBefore);
-      expect(await readFile(parentStore.evidencePath, "utf8")).toBe(evidenceBefore);
-      expect(await readFile(parentStore.statusPath, "utf8")).toBe(statusBefore);
+      expect(await readFile(parentStoreBeforeHold.tracePath, "utf8")).toBe(traceBefore);
+      expect(await readFile(parentStoreBeforeHold.evidencePath, "utf8")).toBe(evidenceBefore);
+      expect(await readFile(parentStoreBeforeHold.statusPath, "utf8")).toBe(statusBefore);
 
       holder.stdin.write("RELEASE\n");
       await new Promise<void>((resolve, reject) => {
@@ -981,7 +992,7 @@ process.stdin.on("data", async (chunk) => {
       });
 
       // Retry after release succeeds cleanly.
-      const resAfterRelease = await parentStore.append({
+      const resAfterRelease = await parentStoreBeforeHold.append({
         channel: "agent",
         op: "recon",
         recon: reconPayload,
@@ -1066,9 +1077,10 @@ process.stdin.on("data", async (chunk) => {
     };
 
     const r1 = runRacer();
+    await r1.ready;
     const r2 = runRacer();
     try {
-      await Promise.all([r1.ready, r2.ready]);
+      await r2.ready;
       r1.child.stdin.write("GO\n");
       r2.child.stdin.write("GO\n");
 
@@ -1104,11 +1116,17 @@ process.stdin.on("data", async (chunk) => {
     ]);
 
     // 3. Symlinked .session.claim pointing outside standaloneRoot is refused conservatively.
+    const storeSymClaim = await CampaignStore.load(standaloneRoot);
     const outsideTarget = path.join(isolatedParent, "outside-claim-target.txt");
     await writeFile(outsideTarget, "UNTOUCHED-CLAIM", "utf8");
     const localClaimPath = path.join(standaloneRoot, ROOT_SESSION_CLAIM_FILE);
     await symlink(outsideTarget, localClaimPath, "file");
-    const storeSymClaim = await CampaignStore.load(standaloneRoot);
+    await expect(CampaignStore.load(standaloneRoot)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
+    await expect(
+      CampaignStore.load(standaloneRoot, { refreshStatus: false }),
+    ).rejects.toThrow(/ownership claim is busy/u);
     await expect(
       storeSymClaim.append({ channel: "agent", op: "status" }),
     ).rejects.toThrow(/ownership claim is busy/u);
@@ -1253,4 +1271,439 @@ process.stdin.on("data", async (chunk) => {
     expect(reloadedComplete.trace.map((e) => e.seq)).toEqual([0, 1, 2, 3, 4]);
     expect(reloadedComplete.state.state).toBe(CampaignStates.convergence);
   });
+
+  it("coordinates CampaignStore.load() verification and status projection with append exclusion across deterministic barriers (interleavings 1 & 2) and detects unstable read-only snapshots", async () => {
+    // Interleaving 1: load() (both default and refreshStatus: false) during append() between
+    // trace.jsonl write and evidence.jsonl write MUST fail fast as busy/unstable, MUST NOT
+    // classify the valid trace as FAILED_SAFE, and MUST NOT overwrite status.json.
+    const root1 = await makeTempSessionRoot();
+    const seed1 = await CampaignStore.load(root1);
+    await seed1.append({ channel: "agent", op: "open" });
+    const statusBeforeInterleave1 = await readFile(seed1.statusPath, "utf8");
+
+    const storeWriter1 = await CampaignStore.load(root1);
+    const hitEvidenceBarrier = deferred();
+    const releaseEvidenceWrite = deferred();
+    let pausedBeforeEvidence = false;
+
+    hookState.beforeOp = async (op, args) => {
+      if (
+        !pausedBeforeEvidence &&
+        op === "appendFile" &&
+        args[0] === storeWriter1.evidencePath
+      ) {
+        pausedBeforeEvidence = true;
+        hitEvidenceBarrier.resolve();
+        await releaseEvidenceWrite.promise;
+      }
+    };
+
+    const append1Promise = storeWriter1.append({
+      channel: "agent",
+      op: "recon",
+      recon: reconPayload,
+    });
+    await hitEvidenceBarrier.promise;
+
+    // Between trace write and evidence write, trace has 2 lines and evidence has 1 line.
+    expect(
+      (await readFile(storeWriter1.tracePath, "utf8")).trimEnd().split("\n"),
+    ).toHaveLength(2);
+    expect(
+      (await readFile(storeWriter1.evidencePath, "utf8")).trimEnd().split("\n"),
+    ).toHaveLength(1);
+
+    await expect(CampaignStore.load(root1)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
+    await expect(
+      CampaignStore.load(root1, { refreshStatus: false }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+    expect(await readFile(seed1.statusPath, "utf8")).toBe(statusBeforeInterleave1);
+
+    releaseEvidenceWrite.resolve();
+    const appended1 = await append1Promise;
+    hookState.beforeOp = undefined;
+    expect(appended1.entry.seq).toBe(1);
+
+    const afterInterleave1 = await CampaignStore.load(root1);
+    expect(afterInterleave1.corrupted).toBe(false);
+    expect(afterInterleave1.trace).toHaveLength(2);
+    expect(JSON.parse(await readFile(seed1.statusPath, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      transition: { reason: "recon" },
+    });
+
+    // Interleaving 2a: load() holds claim across verification and pauses right before writing
+    // stale-replaced status.json -> concurrent append() MUST fail fast as busy without mutating disk,
+    // load() publishes status matching the verified trace, and subsequent append() succeeds.
+    const root2 = await makeTempSessionRoot();
+    const seed2 = await CampaignStore.load(root2);
+    await seed2.append({ channel: "agent", op: "open" });
+    const storeWriter2 = await CampaignStore.load(root2);
+    const traceBefore2 = await readFile(seed2.tracePath, "utf8");
+    const evidenceBefore2 = await readFile(seed2.evidencePath, "utf8");
+
+    // Make status.json stale so load() must refresh it inside syncStatusIfNeeded.
+    await writeFile(
+      seed2.statusPath,
+      JSON.stringify({ schema: CAMPAIGN_SCHEMA_IDS.status, state: CampaignStates.unarmed }),
+      "utf8",
+    );
+
+    const loadAtStatusWrite = deferred();
+    const releaseLoadStatusWrite = deferred();
+    let pausedLoadStatus = false;
+
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedLoadStatus && op === "writeFile" && args[0] === seed2.statusPath) {
+        pausedLoadStatus = true;
+        loadAtStatusWrite.resolve();
+        await releaseLoadStatusWrite.promise;
+      }
+    };
+
+    const load2Promise = CampaignStore.load(root2);
+    await loadAtStatusWrite.promise;
+
+    await expect(
+      storeWriter2.append({ channel: "agent", op: "recon", recon: reconPayload }),
+    ).rejects.toThrow(/ownership claim is busy/u);
+    expect(await readFile(seed2.tracePath, "utf8")).toBe(traceBefore2);
+    expect(await readFile(seed2.evidencePath, "utf8")).toBe(evidenceBefore2);
+
+    releaseLoadStatusWrite.resolve();
+    const loaded2 = await load2Promise;
+    hookState.beforeOp = undefined;
+    expect(loaded2.corrupted).toBe(false);
+    expect(loaded2.state.state).toBe(CampaignStates.recon);
+    expect(JSON.parse(await readFile(seed2.statusPath, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.recon,
+      transition: { reason: "open" },
+    });
+
+    const retried2 = await storeWriter2.append({
+      channel: "agent",
+      op: "recon",
+      recon: reconPayload,
+    });
+    expect(retried2.entry.seq).toBe(1);
+
+    // Interleaving 2b: append() pauses right before writeFile(statusPath) -> load() rejects busy
+    // rather than racing status projection; once append() finishes, status matches winning seq 2.
+    const hitAppendStatusBarrier = deferred();
+    const releaseAppendStatus = deferred();
+    let pausedAppendStatus = false;
+
+    hookState.beforeOp = async (op, args) => {
+      if (!pausedAppendStatus && op === "writeFile" && args[0] === seed2.statusPath) {
+        pausedAppendStatus = true;
+        hitAppendStatusBarrier.resolve();
+        await releaseAppendStatus.promise;
+      }
+    };
+
+    const append2bPromise = storeWriter2.append({
+      channel: "agent",
+      op: "propose",
+      charter: makeCharter(1),
+    });
+    await hitAppendStatusBarrier.promise;
+
+    await expect(CampaignStore.load(root2)).rejects.toThrow(
+      /ownership claim is busy/u,
+    );
+
+    releaseAppendStatus.resolve();
+    const res2b = await append2bPromise;
+    hookState.beforeOp = undefined;
+    expect(res2b.entry.seq).toBe(2);
+    expect(JSON.parse(await readFile(seed2.statusPath, "utf8"))).toMatchObject({
+      schema: CAMPAIGN_SCHEMA_IDS.status,
+      state: CampaignStates.decisions,
+      transition: { reason: "propose" },
+    });
+
+    // Interleaving 3: read-only preview (refreshStatus: false) passes initial claim check,
+    // reads trace.jsonl, then pauses before reading evidence.jsonl while append() runs to
+    // completion and releases its claim -> unstable snapshot detection MUST throw rather than
+    // reporting FAILED_SAFE or writing anything.
+    const root3 = await makeTempSessionRoot();
+    const seed3 = await CampaignStore.load(root3);
+    await seed3.append({ channel: "agent", op: "open" });
+    const storeWriter3 = await CampaignStore.load(root3);
+
+    const previewPausedBeforeEvidence = deferred();
+    const releasePreviewEvidenceRead = deferred();
+    let pausedPreviewOnce = false;
+    let writerRunning = false;
+
+    hookState.beforeOp = async (op, args) => {
+      if (
+        !writerRunning &&
+        !pausedPreviewOnce &&
+        op === "readFile" &&
+        args[0] === seed3.evidencePath
+      ) {
+        pausedPreviewOnce = true;
+        previewPausedBeforeEvidence.resolve();
+        await releasePreviewEvidenceRead.promise;
+      }
+    };
+
+    const previewPromise = CampaignStore.load(root3, { refreshStatus: false });
+    await previewPausedBeforeEvidence.promise;
+
+    writerRunning = true;
+    await storeWriter3.append({ channel: "agent", op: "recon", recon: reconPayload });
+    writerRunning = false;
+
+    releasePreviewEvidenceRead.resolve();
+    await expect(previewPromise).rejects.toThrow(
+      /unstable read-only campaign load|changed during read/u,
+    );
+    hookState.beforeOp = undefined;
+
+    // Subsequent clean read-only preview sees both seq 0 and seq 1 coherently.
+    const stablePreview = await CampaignStore.load(root3, { refreshStatus: false });
+    expect(stablePreview.corrupted).toBe(false);
+    expect(stablePreview.trace).toHaveLength(2);
+    expect(stablePreview.state.state).toBe(CampaignStates.recon);
+
+    // Absent-campaign load & read-only load on non-writable 0o500 roots remain write-free.
+    if (process.platform !== "win32" && process.getuid?.() !== 0) {
+      const roEmptyRoot = await makeTempSessionRoot();
+      await chmod(roEmptyRoot, 0o500);
+      try {
+        const absentStore = await CampaignStore.load(roEmptyRoot);
+        expect(absentStore.hasTrace).toBe(false);
+        expect(absentStore.corrupted).toBe(false);
+        expect(await readdir(roEmptyRoot)).toEqual([]);
+      } finally {
+        await chmod(roEmptyRoot, 0o700);
+      }
+
+      const roPopulatedRoot = await makeTempSessionRoot();
+      const popSeed = await CampaignStore.load(roPopulatedRoot);
+      await popSeed.append({ channel: "agent", op: "open" });
+      await rm(popSeed.statusPath);
+      await chmod(roPopulatedRoot, 0o500);
+      try {
+        const roLoaded = await CampaignStore.load(roPopulatedRoot, {
+          refreshStatus: false,
+        });
+        expect(roLoaded.corrupted).toBe(false);
+        expect(roLoaded.state.state).toBe(CampaignStates.recon);
+        await expect(access(popSeed.statusPath)).rejects.toThrow();
+        await expect(
+          access(path.join(roPopulatedRoot, ROOT_SESSION_CLAIM_FILE)),
+        ).rejects.toThrow();
+      } finally {
+        await chmod(roPopulatedRoot, 0o700);
+      }
+    }
+
+    // Forged serialized/unregistered claimBorrow is always rejected.
+    await expect(
+      CampaignStore.load(root3, {
+        claimBorrow: {} as CampaignStoreClaimBorrow,
+      }),
+    ).rejects.toThrow(/invalid ownership claim borrow/u);
+  });
+
+  it("rejects append before any disk mutation when callback masks present-but-inconsistent sidecar or sidecar becomes inconsistent post-load", async () => {
+    const opCap = createCampaignOperatorAdapter();
+    const authorizeApprove = (
+      event: { channel: string; op: string },
+      index: number,
+    ) => index === 3 && event.channel === "operator" && event.op === "decide";
+
+    async function seedFourStepApprovedCampaign(): Promise<string> {
+      const root = await makeTempSessionRoot();
+      const store = await CampaignStore.load(root);
+      await store.append({ channel: "agent", op: "open" });
+      await store.append({ channel: "agent", op: "recon", recon: reconPayload });
+      await store.append({ channel: "agent", op: "propose", charter: makeCharter(1) });
+      await store.append(
+        createCampaignOperatorEvent(opCap, {
+          channel: "operator",
+          op: "decide",
+          action: "approve",
+          charterRevision: 1,
+        }),
+      );
+      return root;
+    }
+
+    // 1. Callback + present-but-inconsistent sidecar cases where final recordSha256 matches:
+    // - wrong early agent eventSha256 (index 0)
+    // - authorizedPrivileged: false on accepted privileged operator step (index 3)
+    // - authorizedPrivileged: true on agent event (index 0)
+    // - wrong early prefix recordSha256 (index 1)
+    // - wrong privileged eventSha256 (index 3)
+    for (const [label, mutateLine] of [
+      [
+        "wrong-early-event-hash",
+        (lines: ReturnType<typeof parseEvidence>) => {
+          lines[0] = { ...lines[0]!, eventSha256: "0".repeat(64) };
+        },
+      ],
+      [
+        "wrong-privileged-flag-false",
+        (lines: ReturnType<typeof parseEvidence>) => {
+          lines[3] = { ...lines[3]!, authorizedPrivileged: false };
+        },
+      ],
+      [
+        "wrong-agent-privileged-flag-true",
+        (lines: ReturnType<typeof parseEvidence>) => {
+          lines[0] = { ...lines[0]!, authorizedPrivileged: true };
+        },
+      ],
+      [
+        "wrong-early-record-binding",
+        (lines: ReturnType<typeof parseEvidence>) => {
+          lines[1] = { ...lines[1]!, recordSha256: "f".repeat(64) };
+        },
+      ],
+      [
+        "wrong-privileged-event-hash",
+        (lines: ReturnType<typeof parseEvidence>) => {
+          lines[3] = { ...lines[3]!, eventSha256: "a".repeat(64) };
+        },
+      ],
+    ] as const) {
+      const root = await seedFourStepApprovedCampaign();
+      const evidencePath = path.join(root, "campaign", "evidence.jsonl");
+      const tracePath = path.join(root, "campaign", "trace.jsonl");
+      const statusPath = path.join(root, "campaign", "status.json");
+      const lines = parseEvidence(await readFile(evidencePath, "utf8"));
+      mutateLine(lines);
+      const mutatedEvidence = `${lines.map((l) => formatCampaignEvidenceLine(l)).join("\n")}\n`;
+      await writeFile(evidencePath, mutatedEvidence, "utf8");
+
+      const traceBefore = await readFile(tracePath, "utf8");
+      const statusBefore = await readFile(statusPath, "utf8");
+
+      // Callback load succeeds in memory, but marks evidence inconsistent (not standalone).
+      const callbackLoaded = await CampaignStore.load(root, {
+        authorize: authorizeApprove,
+      });
+      expect(callbackLoaded.corrupted, label).toBe(false);
+      expect(callbackLoaded.state.state, label).toBe(CampaignStates.executing);
+
+      // Track open() calls during refused append to prove ZERO claim bookkeeping / disk writes occur.
+      let openCountDuringRefusal = 0;
+      hookState.beforeOp = (op) => {
+        if (op === "open") openCountDuringRefusal++;
+      };
+      try {
+        await expect(
+          callbackLoaded.append({ channel: "agent", op: "status" }),
+          label,
+        ).rejects.toThrow(/historical campaign evidence is inconsistent/u);
+      } finally {
+        hookState.beforeOp = undefined;
+      }
+      expect(openCountDuringRefusal, label).toBe(0);
+
+      // Persisted bytes remain completely unchanged.
+      expect(await readFile(tracePath, "utf8"), label).toBe(traceBefore);
+      expect(await readFile(evidencePath, "utf8"), label).toBe(mutatedEvidence);
+      expect(await readFile(statusPath, "utf8"), label).toBe(statusBefore);
+      await expect(
+        access(path.join(root, ROOT_SESSION_CLAIM_FILE)),
+      ).rejects.toThrow();
+
+      // Subsequent reload WITH callback remains coherent at length 4;
+      // subsequent reload WITHOUT callback fails closed as FAILED_SAFE.
+      const reloadWithCallback = await CampaignStore.load(root, {
+        authorize: authorizeApprove,
+      });
+      expect(reloadWithCallback.corrupted, label).toBe(false);
+      expect(reloadWithCallback.trace, label).toHaveLength(4);
+      expect(reloadWithCallback.state.state, label).toBe(CampaignStates.executing);
+
+      const reloadWithoutCallback = await CampaignStore.load(root);
+      expect(reloadWithoutCallback.corrupted, label).toBe(true);
+      expect(reloadWithoutCallback.state.state, label).toBe(CampaignStates.failedSafe);
+    }
+
+    // 2. Sequence mismatch in evidence.jsonl (even with callback): fails closed & refuses append.
+    const seqRoot = await seedFourStepApprovedCampaign();
+    const seqEvidencePath = path.join(seqRoot, "campaign", "evidence.jsonl");
+    const seqTracePath = path.join(seqRoot, "campaign", "trace.jsonl");
+    const seqLines = parseEvidence(await readFile(seqEvidencePath, "utf8"));
+    const swappedEvidence = `${[
+      formatCampaignEvidenceLine({ ...seqLines[0]!, seq: 1 }),
+      formatCampaignEvidenceLine({ ...seqLines[1]!, seq: 0 }),
+      formatCampaignEvidenceLine(seqLines[2]!),
+      formatCampaignEvidenceLine(seqLines[3]!),
+    ].join("\n")}\n`;
+    await writeFile(seqEvidencePath, swappedEvidence, "utf8");
+    const seqTraceBefore = await readFile(seqTracePath, "utf8");
+
+    const seqLoaded = await CampaignStore.load(seqRoot, {
+      authorize: authorizeApprove,
+    });
+    expect(seqLoaded.corrupted).toBe(true);
+    expect(seqLoaded.state.state).toBe(CampaignStates.failedSafe);
+    await expect(
+      seqLoaded.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/corrupted|FAILED_SAFE/u);
+    expect(await readFile(seqTracePath, "utf8")).toBe(seqTraceBefore);
+    expect(await readFile(seqEvidencePath, "utf8")).toBe(swappedEvidence);
+
+    // 3. Post-load sidecar tamper (valid at load time, mutated into inconsistent sidecar
+    // before append) is caught under exclusive disk comparison before any write.
+    const postRoot = await seedFourStepApprovedCampaign();
+    const postLoaded = await CampaignStore.load(postRoot, {
+      authorize: authorizeApprove,
+    });
+    const postLines = parseEvidence(await readFile(postLoaded.evidencePath, "utf8"));
+    postLines[3] = { ...postLines[3]!, authorizedPrivileged: false };
+    const postMutatedEvidence = `${postLines.map((l) => formatCampaignEvidenceLine(l)).join("\n")}\n`;
+    await writeFile(postLoaded.evidencePath, postMutatedEvidence, "utf8");
+    const postTraceBefore = await readFile(postLoaded.tracePath, "utf8");
+    const postStatusBefore = await readFile(postLoaded.statusPath, "utf8");
+
+    await expect(
+      postLoaded.append({ channel: "agent", op: "status" }),
+    ).rejects.toThrow(/historical campaign evidence is inconsistent/u);
+    expect(await readFile(postLoaded.tracePath, "utf8")).toBe(postTraceBefore);
+    expect(await readFile(postLoaded.evidencePath, "utf8")).toBe(postMutatedEvidence);
+    expect(await readFile(postLoaded.statusPath, "utf8")).toBe(postStatusBefore);
+
+    const postReloadWithCallback = await CampaignStore.load(postRoot, {
+      authorize: authorizeApprove,
+    });
+    expect(postReloadWithCallback.corrupted).toBe(false);
+    expect(postReloadWithCallback.trace).toHaveLength(4);
+    const postReloadWithoutCallback = await CampaignStore.load(postRoot);
+    expect(postReloadWithoutCallback.corrupted).toBe(true);
+    expect(postReloadWithoutCallback.state.state).toBe(CampaignStates.failedSafe);
+
+    // 4. Agent-only trace with tampered early sidecar event hash fails closed without callback.
+    const agentTamperRoot = await makeTempSessionRoot();
+    const agentSeed = await CampaignStore.load(agentTamperRoot);
+    await agentSeed.append({ channel: "agent", op: "open" });
+    await agentSeed.append({ channel: "agent", op: "recon", recon: reconPayload });
+    const agentEvLines = parseEvidence(await readFile(agentSeed.evidencePath, "utf8"));
+    agentEvLines[0] = { ...agentEvLines[0]!, eventSha256: "b".repeat(64) };
+    await writeFile(
+      agentSeed.evidencePath,
+      `${agentEvLines.map((l) => formatCampaignEvidenceLine(l)).join("\n")}\n`,
+      "utf8",
+    );
+    const agentNoCallback = await CampaignStore.load(agentTamperRoot);
+    expect(agentNoCallback.corrupted).toBe(true);
+    expect(agentNoCallback.state.state).toBe(CampaignStates.failedSafe);
+  });
 });
+
+function parseEvidence(raw: string) {
+  const parsed = parseCampaignEvidenceLines(raw);
+  if (!parsed.ok) throw new Error(parsed.error);
+  return [...parsed.lines];
+}

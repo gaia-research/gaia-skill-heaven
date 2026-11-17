@@ -26,10 +26,13 @@ import {
   assertConfinedPath,
   assertConfinedPrivateMetadataDir,
   checkRootLocalClaimAbsenceForRealRoot,
+  combineSessionClaims,
+  createCampaignStoreClaimBorrow,
   hasExistingSessionClaimForRealRoot,
   isCurrentProcessUid,
   ROOT_SESSION_CLAIM_FILE,
   type AcquiredSessionClaim,
+  type CampaignStoreClaimBorrow,
   type SessionClaimPurpose,
 } from "./session-ownership.js";
 
@@ -185,7 +188,10 @@ export type ListSessionOptions = {
   tempRoot?: string | undefined;
 };
 
-let commitReattachUnderClaim: (session: SummonSession) => Promise<void>;
+let commitReattachUnderClaim: (
+  session: SummonSession,
+  claimBorrow: CampaignStoreClaimBorrow,
+) => Promise<void>;
 
 /**
  * A session is a single mkdtemp root. All summon writes are confined to it
@@ -302,11 +308,15 @@ export class SummonSession {
   }
 
   static {
-    commitReattachUnderClaim = (session: SummonSession) =>
-      session.#commitReattachUnderClaim();
+    commitReattachUnderClaim = (
+      session: SummonSession,
+      claimBorrow: CampaignStoreClaimBorrow,
+    ) => session.#commitReattachUnderClaim(claimBorrow);
   }
 
-  async #commitReattachUnderClaim(): Promise<void> {
+  async #commitReattachUnderClaim(
+    claimBorrow: CampaignStoreClaimBorrow,
+  ): Promise<void> {
     const pausePath = path.join(this.root, CAMPAIGN_DIR_NAME, CAMPAIGN_PAUSE_FILE);
     await assertConfinedPath(this.root, pausePath, "Campaign pause boundary");
     try {
@@ -322,7 +332,7 @@ export class SummonSession {
       }
     }
 
-    await CampaignStore.load(this.root);
+    await CampaignStore.load(this.root, { claimBorrow });
 
     const previousManifest = this.#manifest;
     const nextManifest: SessionManifest = {
@@ -670,17 +680,7 @@ async function acquireSessionClaim(
     purpose,
   );
   if (externalClaim.status === "acquired") {
-    return {
-      status: "acquired",
-      claimPath: externalClaim.claimPath,
-      async release(): Promise<void> {
-        try {
-          await externalClaim.release();
-        } finally {
-          await rootClaim.release();
-        }
-      },
-    };
+    return combineSessionClaims(externalClaim, rootClaim);
   }
 
   if (externalClaim.status === "unavailable" && purpose === "create") {
@@ -726,7 +726,8 @@ async function tryReattachWithClaim(
       return { status: "ineligible" };
     }
 
-    await commitReattachUnderClaim(session);
+    const claimBorrow = createCampaignStoreClaimBorrow(claimAttempt);
+    await commitReattachUnderClaim(session, claimBorrow);
     adoptedSession = session;
   } finally {
     await claimAttempt.release();
@@ -1353,7 +1354,10 @@ export async function reapSessions(
         continue;
       }
 
-      const paused = await loadPausedCampaignRetention(sessionRoot);
+      const paused = await loadPausedCampaignRetention(
+        sessionRoot,
+        createCampaignStoreClaimBorrow(claimAttempt),
+      );
       const decision = await evaluateRetentionDecision(
         sessionRoot,
         manifest,
@@ -1409,6 +1413,7 @@ type PausedCampaignRetention =
 
 async function loadPausedCampaignRetention(
   sessionRoot: string,
+  claimBorrow?: CampaignStoreClaimBorrow,
 ): Promise<PausedCampaignRetention> {
   const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
   let campaignStat;
@@ -1428,6 +1433,7 @@ async function loadPausedCampaignRetention(
   try {
     store = await CampaignStore.load(sessionRoot, {
       refreshStatus: false,
+      ...(claimBorrow === undefined ? {} : { claimBorrow }),
     });
   } catch {
     return { kind: "preserve" };
