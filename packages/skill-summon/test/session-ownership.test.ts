@@ -1,3 +1,4 @@
+import { constants } from "node:fs";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -15,6 +16,9 @@ const hookState = vi.hoisted(() => {
           args: readonly unknown[],
           result: unknown,
         ) => Promise<void> | void)
+      | undefined,
+    onOp: undefined as
+      | ((op: string, args: readonly unknown[]) => void)
       | undefined,
     onWriteFile: undefined as
       | ((
@@ -35,6 +39,7 @@ vi.mock("node:fs/promises", async () => {
     fn: T,
   ): T =>
     vi.fn(async (...args: Parameters<T>) => {
+      hookState.onOp?.(name, args as readonly unknown[]);
       if (hookState.beforeOp) {
         await hookState.beforeOp(name, args as readonly unknown[]);
       }
@@ -47,6 +52,7 @@ vi.mock("node:fs/promises", async () => {
 
   const wrapWriteFile = vi.fn(
     async (...args: Parameters<typeof actual.writeFile>) => {
+      hookState.onOp?.("writeFile", args as readonly unknown[]);
       if (hookState.beforeOp) {
         await hookState.beforeOp("writeFile", args as readonly unknown[]);
       }
@@ -158,6 +164,7 @@ function deferred<T = void>(): {
 beforeEach(() => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.onOp = undefined;
   hookState.onWriteFile = undefined;
   delete process.env.CLAUDE_CODE_SESSION_ID;
   delete process.env.SKILL_SUMMON_SESSION;
@@ -166,6 +173,7 @@ beforeEach(() => {
 afterEach(async () => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.onOp = undefined;
   hookState.onWriteFile = undefined;
   if (savedEnv.CLAUDE_CODE_SESSION_ID === undefined) {
     delete process.env.CLAUDE_CODE_SESSION_ID;
@@ -264,6 +272,135 @@ async function seedDeadIndexedSession(
   }
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
   return { root: created.session.root, id: created.session.id };
+}
+
+function isMutatingFsOp(op: string, args: readonly unknown[]): boolean {
+  if (
+    op === "writeFile" ||
+    op === "appendFile" ||
+    op === "mkdir" ||
+    op === "mkdtemp" ||
+    op === "rename" ||
+    op === "rm" ||
+    op === "unlink"
+  ) {
+    return true;
+  }
+  if (op === "open") {
+    const flags = args[1];
+    if (typeof flags === "string") {
+      return /[wa+x]/u.test(flags);
+    }
+    if (typeof flags === "number") {
+      return (
+        (flags &
+          (constants.O_WRONLY |
+            constants.O_RDWR |
+            constants.O_CREAT |
+            constants.O_TRUNC |
+            constants.O_APPEND)) !==
+        0
+      );
+    }
+  }
+  return false;
+}
+
+async function seedExpiredPauseBoundary(
+  sessionRoot: string,
+  pausedAtIso: string,
+): Promise<void> {
+  const manifest = JSON.parse(
+    await readFile(path.join(sessionRoot, "session.json"), "utf8"),
+  ) as { pid: number; ownerGeneration?: string };
+  const store = await CampaignStore.load(sessionRoot, { refreshStatus: false });
+  if (!store.recordSha256) {
+    throw new Error("Expected verified campaign recordSha256 before seeding pause.json");
+  }
+  await writeFile(
+    path.join(sessionRoot, "campaign", "pause.json"),
+    `${JSON.stringify(
+      {
+        pausedAt: pausedAtIso,
+        pid: manifest.pid,
+        ...(manifest.ownerGeneration === undefined
+          ? {}
+          : { ownerGeneration: manifest.ownerGeneration }),
+        recordSha256: store.recordSha256,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+}
+
+type TreeSnapshotEntry = {
+  path: string;
+  kind: "dir" | "file" | "symlink";
+  contentBase64?: string;
+};
+
+async function snapshotDirTree(
+  root: string,
+): Promise<TreeSnapshotEntry[]> {
+  const out: TreeSnapshotEntry[] = [];
+  async function walk(dir: string, relBase: string): Promise<void> {
+    const entries = (await readdir(dir)).sort();
+    for (const name of entries) {
+      const full = path.join(dir, name);
+      const rel = relBase ? `${relBase}/${name}` : name;
+      const st = await lstat(full);
+      if (st.isSymbolicLink()) {
+        out.push({ path: rel, kind: "symlink" });
+      } else if (st.isDirectory()) {
+        out.push({ path: rel, kind: "dir" });
+        await walk(full, rel);
+      } else {
+        const bytes = await readFile(full);
+        out.push({
+          path: rel,
+          kind: "file",
+          contentBase64: bytes.toString("base64"),
+        });
+      }
+    }
+  }
+  await walk(root, "");
+  return out;
+}
+
+async function runDryGcRecordingWrites(
+  tempRoot: string,
+  now: Date,
+): Promise<{
+  outcome: Awaited<ReturnType<typeof reapSessions>>;
+  mutatingOps: Array<{ op: string; args: string[] }>;
+}> {
+  const mutatingOps: Array<{ op: string; args: string[] }> = [];
+  const prevOnOp = hookState.onOp;
+  hookState.onOp = (op, args) => {
+    prevOnOp?.(op, args);
+    if (isMutatingFsOp(op, args)) {
+      mutatingOps.push({
+        op,
+        args: args
+          .filter((arg): arg is string => typeof arg === "string")
+          .slice(0, 2),
+      });
+    }
+  };
+  try {
+    const outcome = await reapSessions({
+      tempRoot,
+      ttlHours: 0,
+      now,
+      dryRun: true,
+    });
+    return { outcome, mutatingOps };
+  } finally {
+    hookState.onOp = prevOnOp;
+  }
 }
 
 describe("per-root filesystem ownership claim and coordination", () => {
@@ -1801,11 +1938,32 @@ process.stdin.on("data", async (chunk) => {
       createdAt: "2026-04-01T00:00:00.000Z",
       withCampaignRetention: 24,
     });
+    // Seed an already-expired matching pause boundary (dead PID + ownerGeneration + verified record)
+    // so baseline GC IS genuinely eligible to reap when no append claim is held.
+    await seedExpiredPauseBoundary(seeded.root, "2026-04-01T00:00:00.000Z");
+    await rm(sessionClaimDir(tempRoot), { recursive: true, force: true });
 
-    // 1. Store append paused mid-transaction -> GC (dry & real), adoption, and close() all see busy and skip/refuse.
+    const futureNow = new Date("2099-01-01T00:00:00.000Z");
+    const baselineTree = await snapshotDirTree(tempRoot);
+    const baselineDry = await runDryGcRecordingWrites(tempRoot, futureNow);
+    expect(baselineDry.outcome.candidates.map((c) => c.root)).toEqual([seeded.root]);
+    expect(baselineDry.mutatingOps).toEqual([]);
+    expect(await snapshotDirTree(tempRoot)).toEqual(baselineTree);
+    await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
+
+    // 1. Store append acquires claim and pauses BEFORE trace mutation -> dry/real GC exclude
+    // specifically because of the claim (not retention or torn trace), adoption creates fresh,
+    // and close() refuses as busy.
     const store1 = await CampaignStore.load(seeded.root);
     const session1 = await SummonSession.loadAt(seeded.root, tempRoot);
     const tracePath = store1.tracePath;
+    const traceBeforeAppend = await readFile(store1.tracePath, "utf8");
+    const evidenceBeforeAppend = await readFile(store1.evidencePath, "utf8");
+    const statusBeforeAppend = await readFile(store1.statusPath, "utf8");
+    const pauseBeforeAppend = await readFile(
+      path.join(seeded.root, "campaign", "pause.json"),
+      "utf8",
+    );
     const appendPaused = deferred();
     const releaseAppend = deferred();
     let pausedAppend = false;
@@ -1821,14 +1979,20 @@ process.stdin.on("data", async (chunk) => {
     const appendPromise = store1.append({ channel: "agent", op: "status" });
     await appendPaused.promise;
 
-    const futureNow = new Date("2099-01-01T00:00:00.000Z");
-    const dryWhileAppending = await reapSessions({
-      tempRoot,
-      ttlHours: 0,
-      now: futureNow,
-      dryRun: true,
-    });
-    expect(dryWhileAppending.candidates).toEqual([]);
+    // Confirm trace/evidence/status/pause are still byte-for-byte unmutated at the pause point.
+    expect(await readFile(store1.tracePath, "utf8")).toBe(traceBeforeAppend);
+    expect(await readFile(store1.evidencePath, "utf8")).toBe(evidenceBeforeAppend);
+    expect(await readFile(store1.statusPath, "utf8")).toBe(statusBeforeAppend);
+    expect(
+      await readFile(path.join(seeded.root, "campaign", "pause.json"), "utf8"),
+    ).toBe(pauseBeforeAppend);
+
+    const pausedTree = await snapshotDirTree(seeded.root);
+    const dryWhileAppending = await runDryGcRecordingWrites(tempRoot, futureNow);
+    expect(dryWhileAppending.outcome.candidates).toEqual([]);
+    expect(dryWhileAppending.mutatingOps).toEqual([]);
+    expect(await snapshotDirTree(seeded.root)).toEqual(pausedTree);
+    await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
 
     const realWhileAppending = await reapSessions({
       tempRoot,
@@ -1838,6 +2002,7 @@ process.stdin.on("data", async (chunk) => {
     });
     expect(realWhileAppending.candidates).toEqual([]);
     await expect(access(seeded.root)).resolves.toBeUndefined();
+    expect(await snapshotDirTree(seeded.root)).toEqual(pausedTree);
 
     const adoptWhileAppending = await resolveSession({
       tempRoot,
@@ -1937,7 +2102,7 @@ process.stdin.on("data", async (chunk) => {
 
   it("enforces CampaignStoreClaimBorrow lifetime, root-binding, and physical confinement while allowing adoption and real GC without self-refusal", async () => {
     const tempRoot = await makeTempRoot();
-    const { realpath } = await import("node:fs/promises");
+    const { open, realpath, rename } = await import("node:fs/promises");
 
     // 1. Seed two dead roots with paused campaigns (one with stale status.json so reattach writes status).
     const seededA = await seedDeadIndexedSession(tempRoot, "borrow-root-a", {
@@ -1978,20 +2143,69 @@ process.stdin.on("data", async (chunk) => {
       /ownership claim is busy/u,
     );
 
-    // External deletion / symlink replacement of physical claim file on disk invalidates borrow.
+    // Physical replacement case 1: DIFFERENT regular inode replacement while original token is still live.
+    // Pin the old inode with an open handle so POSIX cannot immediately reuse the inode number.
+    const pinnedOldHandle = await open(claimA.claimPath, "r");
+    try {
+      const oldStat = await pinnedOldHandle.stat();
+      const replacementTmp = path.join(realA, ".claim-inode-replacement.tmp");
+      await writeFile(
+        replacementTmp,
+        JSON.stringify({ version: 1, pid: process.pid, purpose: "forged" }),
+        "utf8",
+      );
+      const newStat = await lstat(replacementTmp);
+      expect(newStat.ino).not.toBe(oldStat.ino);
+      await rename(replacementTmp, claimA.claimPath);
+      await expect(
+        CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+      ).rejects.toThrow(/no longer active on disk/u);
+    } finally {
+      await pinnedOldHandle.close();
+    }
+
+    // Physical replacement case 2: symlink replacement pointing outside while original token is still live,
+    // rejecting borrow AND preserving the outside sentinel across both load and release.
+    const outsideDir = await makeTempRoot();
+    const outsideSentinel = path.join(outsideDir, "outside-claim-sentinel.json");
+    const sentinelPayload = JSON.stringify({ sentinel: "must-remain-intact" });
+    await writeFile(outsideSentinel, sentinelPayload, "utf8");
     await rm(claimA.claimPath);
+    await symlink(outsideSentinel, claimA.claimPath, "file");
     await expect(
       CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
     ).rejects.toThrow(/no longer active on disk/u);
+    expect(await readFile(outsideSentinel, "utf8")).toBe(sentinelPayload);
 
-    // Release invalidates borrow permanently.
+    // Release invalidates borrow permanently without following or mutating the replacement symlink target.
     await claimA.release();
+    expect(await readFile(outsideSentinel, "utf8")).toBe(sentinelPayload);
+    expect((await lstat(claimA.claimPath)).isSymbolicLink()).toBe(true);
+    await rm(claimA.claimPath);
     await expect(
       CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
     ).rejects.toThrow(/no longer active/u);
     expect(() => createCampaignStoreClaimBorrow(claimA)).toThrow(
       /invalid or released/u,
     );
+
+    // Physical unlinked case: deleting the physical claim file while a fresh token is live also invalidates borrow.
+    const claimUnlink = await acquireRootLocalClaimForRealRoot(realA, "campaign");
+    expect(claimUnlink.status).toBe("acquired");
+    if (claimUnlink.status !== "acquired") return;
+    const borrowUnlink = createCampaignStoreClaimBorrow(claimUnlink);
+    expect(
+      (await CampaignStore.load(seededA.root, { claimBorrow: borrowUnlink }))
+        .corrupted,
+    ).toBe(false);
+    await rm(claimUnlink.claimPath);
+    await expect(
+      CampaignStore.load(seededA.root, { claimBorrow: borrowUnlink }),
+    ).rejects.toThrow(/no longer active on disk/u);
+    await claimUnlink.release();
+    await expect(
+      CampaignStore.load(seededA.root, { claimBorrow: borrowUnlink }),
+    ).rejects.toThrow(/no longer active/u);
 
     // 2. Real adoption (reattach) with stale status.json borrows its own claim cleanly,
     // refreshes status.json, and excludes external CampaignStore.load() during commit.
@@ -2031,14 +2245,28 @@ process.stdin.on("data", async (chunk) => {
       state: CampaignStates.executing,
     });
 
-    // 3. Dry-run GC stays completely write-free (no claimsDir) while racing store append.
+    // 3. Dry-run GC stays completely write-free (all mutating APIs zero + tree/bytes unchanged,
+    // and no external claimsDir) while racing store append on an otherwise-reapable expired root.
+    await seedExpiredPauseBoundary(seededB.root, "2026-04-01T00:00:00.000Z");
     await rm(sessionClaimDir(tempRoot), { recursive: true, force: true });
+    const dryNow = new Date("2099-01-01T00:00:00.000Z");
+
+    const baselineDryTree = await snapshotDirTree(tempRoot);
+    const baselineDryB = await runDryGcRecordingWrites(tempRoot, dryNow);
+    expect(baselineDryB.outcome.candidates.map((c) => c.root)).toContain(
+      seededB.root,
+    );
+    expect(baselineDryB.mutatingOps).toEqual([]);
+    expect(await snapshotDirTree(tempRoot)).toEqual(baselineDryTree);
+    await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
+
     const dryStore = await CampaignStore.load(seededB.root);
+    const dryTraceBefore = await readFile(dryStore.tracePath, "utf8");
     const appendPaused = deferred();
     const releaseAppend = deferred();
     let pausedOnce = false;
     hookState.beforeOp = async (op, args) => {
-      if (!pausedOnce && op === "appendFile" && args[0] === dryStore.evidencePath) {
+      if (!pausedOnce && op === "appendFile" && args[0] === dryStore.tracePath) {
         pausedOnce = true;
         appendPaused.resolve();
         await releaseAppend.promise;
@@ -2046,14 +2274,15 @@ process.stdin.on("data", async (chunk) => {
     };
     const appendPromise = dryStore.append({ channel: "agent", op: "status" });
     await appendPaused.promise;
+    expect(await readFile(dryStore.tracePath, "utf8")).toBe(dryTraceBefore);
 
-    const dryOutcome = await reapSessions({
-      tempRoot,
-      ttlHours: 0,
-      now: new Date("2099-01-01T00:00:00.000Z"),
-      dryRun: true,
-    });
-    expect(dryOutcome.candidates.map((c) => c.root)).not.toContain(seededB.root);
+    const pausedTreeB = await snapshotDirTree(tempRoot);
+    const dryOutcome = await runDryGcRecordingWrites(tempRoot, dryNow);
+    expect(dryOutcome.outcome.candidates.map((c) => c.root)).not.toContain(
+      seededB.root,
+    );
+    expect(dryOutcome.mutatingOps).toEqual([]);
+    expect(await snapshotDirTree(tempRoot)).toEqual(pausedTreeB);
     await expect(access(sessionClaimDir(tempRoot))).rejects.toThrow();
 
     releaseAppend.resolve();

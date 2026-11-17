@@ -1,3 +1,4 @@
+import { constants } from "node:fs";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -15,6 +16,13 @@ const hookState = vi.hoisted(() => {
           result: unknown,
         ) => Promise<void> | void)
       | undefined,
+    afterError: undefined as
+      | ((
+          op: string,
+          args: readonly unknown[],
+          error: unknown,
+        ) => Promise<void> | void)
+      | undefined,
   };
 });
 
@@ -30,11 +38,18 @@ vi.mock("node:fs/promises", async () => {
       if (hookState.beforeOp) {
         await hookState.beforeOp(name, args as readonly unknown[]);
       }
-      const result = await fn(...args);
-      if (hookState.afterOp) {
-        await hookState.afterOp(name, args as readonly unknown[], result);
+      try {
+        const result = await fn(...args);
+        if (hookState.afterOp) {
+          await hookState.afterOp(name, args as readonly unknown[], result);
+        }
+        return result;
+      } catch (error) {
+        if (hookState.afterError) {
+          await hookState.afterError(name, args as readonly unknown[], error);
+        }
+        throw error;
       }
-      return result;
     }) as unknown as T;
 
   return {
@@ -63,6 +78,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -90,6 +106,7 @@ import {
   acquireCampaignStoreClaimForRoot,
   type CampaignStoreClaimBorrow,
   ROOT_SESSION_CLAIM_FILE,
+  sessionClaimDirName,
 } from "../src/summon/session-ownership.js";
 
 const require = createRequire(import.meta.url);
@@ -117,11 +134,13 @@ function deferred<T = void>(): {
 beforeEach(() => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.afterError = undefined;
 });
 
 afterEach(async () => {
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
+  hookState.afterError = undefined;
   await Promise.all(
     cleanupRoots
       .splice(0)
@@ -1470,6 +1489,232 @@ process.stdin.on("data", async (chunk) => {
     expect(stablePreview.corrupted).toBe(false);
     expect(stablePreview.trace).toHaveLength(2);
     expect(stablePreview.state.state).toBe(CampaignStates.recon);
+
+    // Interleaving 3b: read-only preview completes BOTH snapshots and the FINAL claim check
+    // (claimAfter === "absent"), then pauses BEFORE delivering that captured snapshot while
+    // a concurrent append commits seq 2 (`propose` -> `decisions`). Preview MUST return the
+    // CAPTURED old coherent snapshot (seq 0..1, `recon`), perform zero reads after pause and
+    // zero projection/disk writes, and leave the committed seq 2 `status.json` intact.
+    const isMutatingOp = (op: string, args: readonly unknown[]): boolean => {
+      if (
+        op === "appendFile" ||
+        op === "writeFile" ||
+        op === "mkdir" ||
+        op === "mkdtemp" ||
+        op === "rename" ||
+        op === "rm" ||
+        op === "unlink"
+      ) {
+        return true;
+      }
+      if (op === "open") {
+        const flags = args[1];
+        if (typeof flags === "string") {
+          return /[wa+x]/u.test(flags);
+        }
+        if (typeof flags === "number") {
+          return (
+            (flags &
+              (constants.O_WRONLY |
+                constants.O_RDWR |
+                constants.O_CREAT |
+                constants.O_TRUNC |
+                constants.O_APPEND)) !==
+            0
+          );
+        }
+      }
+      return false;
+    };
+
+    const parentTemp3b = await mkdtemp(
+      path.join(tmpdir(), "skill-summon-ro-postclaim-"),
+    );
+    cleanupRoots.push(parentTemp3b);
+    const root3b = await mkdtemp(
+      path.join(parentTemp3b, "skill-summon-session-"),
+    );
+    const claimsDir3b = path.join(
+      await realpath(parentTemp3b),
+      sessionClaimDirName(),
+    );
+    const seed3b = await CampaignStore.load(root3b);
+    await seed3b.append({ channel: "agent", op: "open" });
+    await seed3b.append({ channel: "agent", op: "recon", recon: reconPayload });
+    const storeWriter3b = await CampaignStore.load(root3b);
+    const preAppendRecordSha3b = storeWriter3b.recordSha256;
+    expect(preAppendRecordSha3b).toMatch(/^[0-9a-f]{64}$/u);
+
+    const pausedAfterFinalClaim3b = deferred();
+    const releaseAfterFinalClaim3b = deferred();
+    let finalClaimChecks3b = 0;
+    let pausedPostClaimOnce3b = false;
+    let writerRunning3b = false;
+    const previewWriteOps3b: string[] = [];
+    const previewReadsAfterPause3b: string[] = [];
+
+    hookState.beforeOp = (op, args) => {
+      if (writerRunning3b) return;
+      if (isMutatingOp(op, args)) {
+        previewWriteOps3b.push(op);
+      }
+      if (pausedPostClaimOnce3b && op === "readFile") {
+        previewReadsAfterPause3b.push(String(args[0]));
+      }
+    };
+    hookState.afterError = async (op, args, error) => {
+      if (writerRunning3b || pausedPostClaimOnce3b) return;
+      if (
+        op === "lstat" &&
+        args[0] === claimsDir3b &&
+        (error as NodeJS.ErrnoException).code === "ENOENT"
+      ) {
+        finalClaimChecks3b++;
+        if (finalClaimChecks3b === 3) {
+          pausedPostClaimOnce3b = true;
+          pausedAfterFinalClaim3b.resolve();
+          await releaseAfterFinalClaim3b.promise;
+        }
+      }
+    };
+
+    const previewPostClaimPromise3b = CampaignStore.load(root3b, {
+      refreshStatus: false,
+    });
+    await pausedAfterFinalClaim3b.promise;
+    expect(finalClaimChecks3b).toBe(3);
+
+    writerRunning3b = true;
+    const committed3b = await storeWriter3b.append({
+      channel: "agent",
+      op: "propose",
+      charter: makeCharter(1),
+    });
+    expect(committed3b.entry.seq).toBe(2);
+    expect(committed3b.state.state).toBe(CampaignStates.decisions);
+    const postAppendStatus3b = await readFile(seed3b.statusPath, "utf8");
+    writerRunning3b = false;
+
+    releaseAfterFinalClaim3b.resolve();
+    const previewCaptured3b = await previewPostClaimPromise3b;
+    hookState.beforeOp = undefined;
+    hookState.afterError = undefined;
+
+    expect(previewCaptured3b.corrupted).toBe(false);
+    expect(previewCaptured3b.trace.map((e) => e.seq)).toEqual([0, 1]);
+    expect(previewCaptured3b.state.state).toBe(CampaignStates.recon);
+    expect(previewCaptured3b.recordSha256).toBe(preAppendRecordSha3b);
+    expect(previewWriteOps3b).toEqual([]);
+    expect(previewReadsAfterPause3b).toEqual([]);
+    expect(await readFile(seed3b.statusPath, "utf8")).toBe(postAppendStatus3b);
+
+    // Interleaving 3c: paused after FINAL claim check while a concurrent append leaves
+    // trace.jsonl (3 lines) and evidence.jsonl (2 lines) TORN on disk -> preview still
+    // delivers its captured coherent [0, 1] snapshot rather than rereading torn files.
+    const parentTemp3c = await mkdtemp(
+      path.join(tmpdir(), "skill-summon-ro-torn-postclaim-"),
+    );
+    cleanupRoots.push(parentTemp3c);
+    const root3c = await mkdtemp(
+      path.join(parentTemp3c, "skill-summon-session-"),
+    );
+    const claimsDir3c = path.join(
+      await realpath(parentTemp3c),
+      sessionClaimDirName(),
+    );
+    const seed3c = await CampaignStore.load(root3c);
+    await seed3c.append({ channel: "agent", op: "open" });
+    await seed3c.append({ channel: "agent", op: "recon", recon: reconPayload });
+    const storeWriter3c = await CampaignStore.load(root3c);
+    const preAppendRecordSha3c = storeWriter3c.recordSha256;
+
+    const pausedAfterFinalClaim3c = deferred();
+    const releaseAfterFinalClaim3c = deferred();
+    const tornWriterPaused3c = deferred();
+    const releaseTornWriter3c = deferred();
+    let finalClaimChecks3c = 0;
+    let pausedPostClaimOnce3c = false;
+    let writerActive3c = false;
+    const previewWriteOps3c: string[] = [];
+    const previewReadsAfterPause3c: string[] = [];
+
+    hookState.beforeOp = async (op, args) => {
+      if (writerActive3c) {
+        if (op === "appendFile" && args[0] === seed3c.evidencePath) {
+          tornWriterPaused3c.resolve();
+          await releaseTornWriter3c.promise;
+        }
+        return;
+      }
+      if (isMutatingOp(op, args)) {
+        previewWriteOps3c.push(op);
+      }
+      if (pausedPostClaimOnce3c && op === "readFile") {
+        previewReadsAfterPause3c.push(String(args[0]));
+      }
+    };
+    hookState.afterError = async (op, args, error) => {
+      if (writerActive3c || pausedPostClaimOnce3c) return;
+      if (
+        op === "lstat" &&
+        args[0] === claimsDir3c &&
+        (error as NodeJS.ErrnoException).code === "ENOENT"
+      ) {
+        finalClaimChecks3c++;
+        if (finalClaimChecks3c === 3) {
+          pausedPostClaimOnce3c = true;
+          pausedAfterFinalClaim3c.resolve();
+          await releaseAfterFinalClaim3c.promise;
+        }
+      }
+    };
+
+    const previewPostClaimPromise3c = CampaignStore.load(root3c, {
+      refreshStatus: false,
+    });
+    await pausedAfterFinalClaim3c.promise;
+
+    writerActive3c = true;
+    const tornAppendPromise3c = storeWriter3c.append({
+      channel: "agent",
+      op: "propose",
+      charter: makeCharter(1),
+    });
+    await tornWriterPaused3c.promise;
+    writerActive3c = false;
+
+    // Confirm files are genuinely torn on disk right when preview resumes.
+    writerActive3c = true;
+    expect(
+      (await readFile(seed3c.tracePath, "utf8")).trimEnd().split("\n"),
+    ).toHaveLength(3);
+    expect(
+      (await readFile(seed3c.evidencePath, "utf8")).trimEnd().split("\n"),
+    ).toHaveLength(2);
+    writerActive3c = false;
+
+    releaseAfterFinalClaim3c.resolve();
+    const previewCaptured3c = await previewPostClaimPromise3c;
+
+    expect(previewCaptured3c.corrupted).toBe(false);
+    expect(previewCaptured3c.trace.map((e) => e.seq)).toEqual([0, 1]);
+    expect(previewCaptured3c.state.state).toBe(CampaignStates.recon);
+    expect(previewCaptured3c.recordSha256).toBe(preAppendRecordSha3c);
+    expect(previewWriteOps3c).toEqual([]);
+    expect(previewReadsAfterPause3c).toEqual([]);
+
+    writerActive3c = true;
+    releaseTornWriter3c.resolve();
+    await tornAppendPromise3c;
+    hookState.beforeOp = undefined;
+    hookState.afterError = undefined;
+
+    const stableAfter3c = await CampaignStore.load(root3c, {
+      refreshStatus: false,
+    });
+    expect(stableAfter3c.corrupted).toBe(false);
+    expect(stableAfter3c.trace.map((e) => e.seq)).toEqual([0, 1, 2]);
+    expect(stableAfter3c.state.state).toBe(CampaignStates.decisions);
 
     // Absent-campaign load & read-only load on non-writable 0o500 roots remain write-free.
     if (process.platform !== "win32" && process.getuid?.() !== 0) {

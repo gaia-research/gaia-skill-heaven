@@ -130,6 +130,8 @@ const closeCallbacks: Array<() => Promise<void>> = [];
 const savedEnv = {
   CLAUDE_CODE_SESSION_ID: process.env.CLAUDE_CODE_SESSION_ID,
   SKILL_SUMMON_SESSION: process.env.SKILL_SUMMON_SESSION,
+  ARBOR_PUBLICATION_PATH: process.env.ARBOR_PUBLICATION_PATH,
+  ARBOR_IDENTITY_PATH: process.env.ARBOR_IDENTITY_PATH,
   TMPDIR: process.env.TMPDIR,
   TMP: process.env.TMP,
   TEMP: process.env.TEMP,
@@ -144,6 +146,8 @@ beforeEach(() => {
   resetArborIdentityCache();
   delete process.env.CLAUDE_CODE_SESSION_ID;
   delete process.env.SKILL_SUMMON_SESSION;
+  delete process.env.ARBOR_PUBLICATION_PATH;
+  delete process.env.ARBOR_IDENTITY_PATH;
 });
 
 afterEach(async () => {
@@ -153,6 +157,8 @@ afterEach(async () => {
   fsSpyState.reset();
   resetArborPublicationCache();
   resetArborIdentityCache();
+  delete process.env.ARBOR_PUBLICATION_PATH;
+  delete process.env.ARBOR_IDENTITY_PATH;
 
   await Promise.all(
     closeCallbacks.splice(0).map(async (close) => {
@@ -180,6 +186,157 @@ async function makeTempRoot(): Promise<string> {
   const root = await mkdtemp(path.join(hostTmpdir, "skill-summon-lookup-test-"));
   cleanupRoots.push(root);
   return root;
+}
+
+type HermeticArborFixtures = {
+  arborDir: string;
+  identityPath: string;
+  files: string[];
+};
+
+/**
+ * Real offline Arbor publication + identity fixture owned inside a disposable
+ * test root so MCP summon scaling tests never walk ambient repository ancestors
+ * or depend on how many subjects exist in plugins/skill-heaven/data/arbor.
+ */
+async function seedHermeticArborFixtures(
+  baseDir: string,
+): Promise<HermeticArborFixtures> {
+  const arborDir = path.join(baseDir, "arbor");
+  const runtimeDir = path.join(arborDir, "runtime");
+  await mkdir(runtimeDir, { recursive: true });
+
+  const edgesPath = path.join(arborDir, "edges.json");
+  const edgesBytes = Buffer.from(
+    `${JSON.stringify(
+      {
+        schema: "gaia.arbor-edge-index/v1",
+        edgeSetVersion: "gaia.arbor-edge/v1",
+        coverage: { pairsEvaluated: 0, absenceMeaning: "not-evaluated" },
+        edges: [],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  await writeFile(edgesPath, edgesBytes);
+
+  const runtimeIndexPath = path.join(runtimeDir, "index.json");
+  const runtimeIndexBytes = Buffer.from(
+    `${JSON.stringify(
+      {
+        schema: "gaia.arbor-runtime-index/v1",
+        runtimeVersion: "gaia.arbor-runtime/v1",
+        subjects: [],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  await writeFile(runtimeIndexPath, runtimeIndexBytes);
+
+  const provenancePath = path.join(arborDir, "provenance.json");
+  await writeFile(
+    provenancePath,
+    `${JSON.stringify(
+      {
+        schema: "skill-heaven.arbor-publication-cache/v1",
+        upstream: "https://github.com/gaia-research/gaia-skill-tree",
+        commit: "0".repeat(40),
+        path: "docs/graph/arbor",
+        capturedAt: "2026-07-16T00:00:00Z",
+        files: {
+          "edges.json": createHash("sha256").update(edgesBytes).digest("hex"),
+          "runtime/index.json": createHash("sha256")
+            .update(runtimeIndexBytes)
+            .digest("hex"),
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  const identityPath = path.join(baseDir, "arbor-identity.json");
+  await writeFile(
+    identityPath,
+    `${JSON.stringify(
+      {
+        schema: "skill-heaven.arbor-identity-context/v1",
+        upstream: "https://github.com/gaia-research/gaia-skill-tree",
+        commit: "0".repeat(40),
+        corpusSource: "https://gaiaskilltree.com",
+        derivation: "hermetic lookup test fixture",
+        routeSource: "hermetic lookup test fixture",
+        capturedAt: "2026-07-16",
+        counts: { indexed: 0, resolved: 0, unresolved: 0 },
+        skills: {},
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  return {
+    arborDir,
+    identityPath,
+    files: [edgesPath, runtimeIndexPath, provenancePath, identityPath],
+  };
+}
+
+/**
+ * On Linux, readConfinedFile() anchors traversal via /proc/self/fd by opening
+ * "/" plus every path component of each confined file, whereas macOS uses a
+ * single O_NOFOLLOW_ANY open(). That delta depends only on the fixed path depth
+ * of the 4 owned Arbor files, never on foreign session root count.
+ */
+function linuxConfinedTraversalOps(files: readonly string[]): number {
+  if (process.platform !== "linux") return 0;
+  return files.reduce(
+    (sum, filePath) =>
+      sum + path.resolve(filePath).split("/").filter(Boolean).length,
+    0,
+  );
+}
+
+function summarizeFsOpsSafe(
+  ops: ReadonlyArray<{ op: string; args: string[] }>,
+): string {
+  const byOp: Record<string, number> = {};
+  const byCategory: Record<string, number> = {
+    sessionClaim: 0,
+    sessionIndex: 0,
+    sessionRoot: 0,
+    arbor: 0,
+    other: 0,
+  };
+  for (const entry of ops) {
+    byOp[entry.op] = (byOp[entry.op] ?? 0) + 1;
+    const joined = entry.args.join("\0");
+    if (
+      joined.includes("skill-summon-claims-v1") ||
+      joined.includes(".session.claim")
+    ) {
+      byCategory.sessionClaim!++;
+    } else if (joined.includes(INDEX_DIR_PREFIX)) {
+      byCategory.sessionIndex!++;
+    } else if (joined.includes("skill-summon-session-")) {
+      byCategory.sessionRoot!++;
+    } else if (
+      joined.includes("arbor") ||
+      joined.includes("plugins") ||
+      entry.args[0] === "/"
+    ) {
+      byCategory.arbor!++;
+    } else {
+      byCategory.other!++;
+    }
+  }
+  return JSON.stringify({ total: ops.length, byOp, byCategory });
 }
 
 function expectedIndexDirName(): string {
@@ -493,6 +650,12 @@ describe("O(1) harness-session lookup and startup scaling", () => {
   });
 
   it("performs O(1) bounded work on actual MCP client.callTool summon first call AND repeated cached calls across 0 vs 1000 foreign roots", async () => {
+    const arborRoot = await makeTempRoot();
+    const arborFixtures = await seedHermeticArborFixtures(arborRoot);
+    const linuxPathTraversalAllowance = linuxConfinedTraversalOps(
+      arborFixtures.files,
+    );
+
     const baselineRoot = await makeTempRoot();
     await mkdir(path.join(baselineRoot, expectedIndexDirName()), { mode: 0o700 });
 
@@ -516,12 +679,15 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     async function runMcpSummonSequence(
       isolatedTmp: string,
       harnessSessionId: string,
+      arborOverride: HermeticArborFixtures = arborFixtures,
     ) {
       resetArborPublicationCache();
       resetArborIdentityCache();
       process.env.TMPDIR = isolatedTmp;
       process.env.TMP = isolatedTmp;
       process.env.TEMP = isolatedTmp;
+      process.env.ARBOR_PUBLICATION_PATH = arborOverride.arborDir;
+      process.env.ARBOR_IDENTITY_PATH = arborOverride.identityPath;
       process.env.CLAUDE_CODE_SESSION_ID = harnessSessionId;
       delete process.env.SKILL_SUMMON_SESSION;
 
@@ -583,10 +749,14 @@ describe("O(1) harness-session lookup and startup scaling", () => {
 
     expect(baselineReattach.firstCall.result.isError).toBeFalsy();
     expect(crowdedReattach.firstCall.result.isError).toBeFalsy();
-    const crowdedFirstRoot = (
-      crowdedReattach.firstCall.result.structuredContent as { sessionRoot: string }
-    ).sessionRoot;
-    expect(crowdedFirstRoot).toBe(crowdedTarget.session.root);
+    const crowdedFirstContent = crowdedReattach.firstCall.result
+      .structuredContent as {
+      sessionRoot: string;
+      arbor: { publicationState: string; problems: unknown[] };
+    };
+    expect(crowdedFirstContent.sessionRoot).toBe(crowdedTarget.session.root);
+    expect(crowdedFirstContent.arbor.publicationState).toBe("loaded");
+    expect(crowdedFirstContent.arbor.problems).toEqual([]);
 
     expect(crowdedReattach.cachedCalls.result.second.isError).toBeFalsy();
     expect(
@@ -623,8 +793,17 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     expect(crowdedReattach.cachedCalls.counts).toEqual(
       baselineReattach.cachedCalls.counts,
     );
-    expect(crowdedReattach.firstCall.ops.length).toBeLessThanOrEqual(160);
-    expect(crowdedReattach.cachedCalls.ops.length).toBeLessThanOrEqual(50);
+    // Measured 126 base ops (reattach + session.ensureRoots + 4 hermetic Arbor files + summon log)
+    // plus exact Linux /proc/self/fd component-traversal open() delta when on Linux.
+    const reattachFirstBudget = 135 + linuxPathTraversalAllowance;
+    expect(
+      crowdedReattach.firstCall.ops.length,
+      summarizeFsOpsSafe(crowdedReattach.firstCall.ops),
+    ).toBeLessThanOrEqual(reattachFirstBudget);
+    expect(
+      crowdedReattach.cachedCalls.ops.length,
+      summarizeFsOpsSafe(crowdedReattach.cachedCalls.ops),
+    ).toBeLessThanOrEqual(50);
     expect(crowdedReattach.cachedCalls.ops.length).toBeLessThan(
       crowdedReattach.firstCall.ops.length,
     );
@@ -668,8 +847,74 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     expect(crowdedMiss.cachedCalls.counts).toEqual(
       baselineMiss.cachedCalls.counts,
     );
-    expect(crowdedMiss.firstCall.ops.length).toBeLessThanOrEqual(120);
-    expect(crowdedMiss.cachedCalls.ops.length).toBeLessThanOrEqual(50);
+    // Measured 91 base ops (miss creation + session.ensureRoots + 4 hermetic Arbor files + summon log)
+    // plus exact Linux /proc/self/fd component-traversal open() delta when on Linux.
+    const missFirstBudget = 95 + linuxPathTraversalAllowance;
+    expect(
+      crowdedMiss.firstCall.ops.length,
+      summarizeFsOpsSafe(crowdedMiss.firstCall.ops),
+    ).toBeLessThanOrEqual(missFirstBudget);
+    expect(
+      crowdedMiss.cachedCalls.ops.length,
+      summarizeFsOpsSafe(crowdedMiss.cachedCalls.ops),
+    ).toBeLessThanOrEqual(50);
+
+    // 3. Controlled deep-path Arbor fixture (simulating CI checkout depth) keeps base ops identical
+    // and keeps path-depth accounting independent of 0 vs 1000 foreign roots.
+    const deepBase = await makeTempRoot();
+    const deepDataDir = path.join(
+      deepBase,
+      "runner",
+      "work",
+      "gaia-skill-heaven",
+      "gaia-skill-heaven",
+      "plugins",
+      "skill-heaven",
+      "data",
+    );
+    const deepFixtures = await seedHermeticArborFixtures(deepDataDir);
+    const deepBaseline = await makeTempRoot();
+    const deepBaselineTarget = await resolveSession({
+      tempRoot: deepBaseline,
+      harnessSessionId: "mcp-deep-reattach",
+    });
+    await markDeadPid(deepBaselineTarget.session.root);
+
+    const deepCrowded = await makeTempRoot();
+    const deepForeignNames = await seedForeignRoots(deepCrowded, FOREIGN_COUNT, {
+      includeIndexedEntries: true,
+    });
+    const deepCrowdedTarget = await resolveSession({
+      tempRoot: deepCrowded,
+      harnessSessionId: "mcp-deep-reattach",
+    });
+    await markDeadPid(deepCrowdedTarget.session.root);
+
+    const deepBaselineRun = await runMcpSummonSequence(
+      deepBaseline,
+      "mcp-deep-reattach",
+      deepFixtures,
+    );
+    const deepCrowdedRun = await runMcpSummonSequence(
+      deepCrowded,
+      "mcp-deep-reattach",
+      deepFixtures,
+    );
+    assertZeroEnumerationAndZeroForeignInspection(
+      deepCrowdedRun.firstCall.ops,
+      deepForeignNames,
+    );
+    expect(deepCrowdedRun.firstCall.counts).toEqual(
+      deepBaselineRun.firstCall.counts,
+    );
+    expect(
+      deepCrowdedRun.firstCall.ops.length,
+      summarizeFsOpsSafe(deepCrowdedRun.firstCall.ops),
+    ).toBeLessThanOrEqual(135 + linuxConfinedTraversalOps(deepFixtures.files));
+    expect(
+      deepCrowdedRun.cachedCalls.ops.length,
+      summarizeFsOpsSafe(deepCrowdedRun.cachedCalls.ops),
+    ).toBeLessThanOrEqual(50);
   });
 
   it("hashes harness session IDs in index paths, stays inside tempRoot, and hides index from list/reap", async () => {
@@ -980,9 +1225,13 @@ describe("O(1) harness-session lookup and startup scaling", () => {
     );
 
     // Running MCP summon on another session must NOT scan tempRoot or reap expired abandoned roots.
+    const manualGcArborRoot = await makeTempRoot();
+    const manualGcArbor = await seedHermeticArborFixtures(manualGcArborRoot);
     process.env.TMPDIR = tempRoot;
     process.env.TMP = tempRoot;
     process.env.TEMP = tempRoot;
+    process.env.ARBOR_PUBLICATION_PATH = manualGcArbor.arborDir;
+    process.env.ARBOR_IDENTITY_PATH = manualGcArbor.identityPath;
     process.env.CLAUDE_CODE_SESSION_ID = "manual-gc-caller";
     delete process.env.SKILL_SUMMON_SESSION;
 
@@ -1080,11 +1329,15 @@ describe("best-effort sidecar index failures and index directory privacy", () =>
     harnessSessionId: string,
     clientName: string,
   ) {
+    const arborRoot = await makeTempRoot();
+    const arborFixtures = await seedHermeticArborFixtures(arborRoot);
     resetArborPublicationCache();
     resetArborIdentityCache();
     process.env.TMPDIR = isolatedTmp;
     process.env.TMP = isolatedTmp;
     process.env.TEMP = isolatedTmp;
+    process.env.ARBOR_PUBLICATION_PATH = arborFixtures.arborDir;
+    process.env.ARBOR_IDENTITY_PATH = arborFixtures.identityPath;
     process.env.CLAUDE_CODE_SESSION_ID = harnessSessionId;
     delete process.env.SKILL_SUMMON_SESSION;
 
