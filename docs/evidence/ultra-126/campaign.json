@@ -7,7 +7,7 @@
   "integrationBranch": "integration/skill-ultra-126",
   "integrationPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/256",
   "baseMain": "6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d",
-  "status": "PAUSED: founder hold (Pi lead hit the OpenAI subscription limit); resume only on founder \"go\"",
+  "status": "EXECUTING: resumed on founder go (2026-11-18); U0b repair round 2 resuming",
   "preflight": {
     "at": "2026-11-16",
     "env": "local (macOS), herdr present",
@@ -59,7 +59,7 @@
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
       "head": "72f6277",
       "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
-      "status": "paused mid repair round 2 (O(1) re-attach lookup; advisor-astra consult directed); lead in herdr tab u0b-lead (w31:p1D)"
+      "status": "repair round 2 resumed: indexed lookup + ownership claims committed locally (3d2d63f); re-running three-mode verification and Terra re-review"
     },
     {
       "id": "U1",
@@ -104,7 +104,7 @@
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "waiting (P1 probe running early)"
+      "status": "waiting (P1 probe done on feat/ws6-ultra-u3-p1, merges via U3)"
     },
     {
       "id": "U4",
@@ -552,14 +552,14 @@
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-16",
+  "updatedAt": "2026-11-18T00:00:00-08:00",
   "quota": {
-    "asOf": "2026-11-16T07:41:00-08:00",
+    "asOf": "2026-11-18T00:00:00-08:00",
     "pools": [
       {
         "pool": "openai",
         "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
-        "state": "exhausted again (founder report, 2026-11-16 afternoon); reset time not recorded",
+        "state": "available again (minimal Luna call answered, 2026-11-18)",
         "resetAt": null
       },
       {
@@ -577,7 +577,7 @@
       {
         "pool": "claude",
         "covers": "Opus orchestrator, Haiku probe subject",
-        "state": "about 68% of 7-day used (earlier reading); conserve",
+        "state": "new login 2026-11-18 (statusline Claude 9%); conserve",
         "resetAt": null
       },
       {
