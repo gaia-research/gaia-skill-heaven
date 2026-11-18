@@ -114,12 +114,12 @@
    ],
    "tier": "heavy",
    "team": null,
-   "worker": null,
+   "worker": "Pi lead Hydrogen xhigh (resumed session 01a1efe7, one /compact with checkpoint); workers worker-hydrogen",
    "branch": "feat/ws6-ultra-u4",
-   "pr": null,
-   "head": null,
-   "terra": "pending",
-   "status": "waiting"
+   "pr": 274,
+   "head": "dbe2e92",
+   "terra": "PASS c9d1cb6 (source) + dbe2e92 (evidence-only final)",
+   "status": "integrated 2026-11-19 (84bb788)"
   },
   {
    "id": "U5",
@@ -811,11 +811,30 @@
    "terra": "n/a",
    "outcome": "COMMON.md 'Lane roster and escalation' and U5/U6/U7/U9 team shape rewritten",
    "risk": "A single Hydrogen lane implements and coordinates alone; orchestrator acceptance checks stay unchanged."
+  },
+  {
+   "id": "D-028",
+   "kind": "delegated",
+   "date": "2026-11-19",
+   "team": "A (Opus orchestrator)",
+   "unit": "U4",
+   "problem": "U4 lane reported READY FOR REVIEW at dbe2e92 (PR #274).",
+   "options": [
+    "Accept and merge",
+    "Send back"
+   ],
+   "selected": "Accepted. Terra CHANGES REQUIRED on f2640b0 (5) and da92e32 (3), PASS on c9d1cb6; final evidence-only HEAD dbe2e92 PASS after a provenance note citing the pi-reviewer --json receipt (orchestrator checked the receipt: reviewer-shared, openai-codex/gpt-6.1-terra:high, thinking high). Orchestrator checks: integration ancestor; propose.ts/operator.ts/render.ts untouched; typecheck 0; 2872/2872 unset, fixed and inherited; builds no drift; tools/list ['summon','campaign']; authority regression no removals; no private paths or images. Merged --no-ff (84bb788); integration 2872/2872 unset and fixed.",
+   "reason": "All acceptance checks met.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/U4-c9d1cb6.md; final dbe2e92 confirmation)",
+   "outcome": "U5 and U6 unblocked; dispatched as agy Hydrogen xhigh lanes (D-027).",
+   "risk": "Lead was briefly stopped and resumed from its session, then compacted with a checkpoint; no work lost (checkpoint matched git)."
   }
  ],
  "blockers": [],
  "awaitingFounder": [],
- "updatedAt": "2026-11-18T18:41:26+00:00",
+ "updatedAt": "2026-11-18T19:51:50+00:00",
  "quota": {
   "asOf": "2026-11-18T02:00:00-08:00",
   "pools": [

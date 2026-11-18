@@ -494,7 +494,7 @@ tbody tr:last-child td {
     </div>
     <p class="lead">Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).</p>
     <dl class="meta-grid">
-      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T18:41:26+00:00</code></dd></div>
+      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T19:51:50+00:00</code></dd></div>
     </dl>
   </header>
     
@@ -640,12 +640,12 @@ tbody tr:last-child td {
         <td class="mono nowrap">U1</td>
         <td class="nowrap">heavy</td>
         <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
+        <td class="nowrap">Pi lead Hydrogen xhigh (resumed session 01a1efe7, one /compact with checkpoint); workers worker-hydrogen</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u4</code></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">waiting</span></td>
+        <td class="nowrap"><span>274</span></td>
+        <td class="nowrap"><code class="sha" title="dbe2e92">dbe2e92</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">PASS c9d1cb6 (source) + dbe2e92 (evidence-only final)</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">integrated 2026-11-19 (84bb788)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U5</strong></td>
@@ -2114,6 +2114,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>Live MCP elicitation is not exercised until U9&#39;s proof run. The final review gate (D-025) covers cross-unit interaction.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-028</span>
+            <span class="tag">unit: U4</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-19</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>U4 lane reported READY FOR REVIEW at dbe2e92 (PR #274).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Accept and merge</span></li><li><span>Send back</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Accepted. Terra CHANGES REQUIRED on f2640b0 (5) and da92e32 (3), PASS on c9d1cb6; final evidence-only HEAD dbe2e92 PASS after a provenance note citing the pi-reviewer --json receipt (orchestrator checked the receipt: reviewer-shared, openai-codex/gpt-6.1-terra:high, thinking high). Orchestrator checks: integration ancestor; propose.ts/operator.ts/render.ts untouched; typecheck 0; 2872/2872 unset, fixed and inherited; builds no drift; tools/list [&#39;summon&#39;,&#39;campaign&#39;]; authority regression no removals; no private paths or images. Merged --no-ff (84bb788); integration 2872/2872 unset and fixed.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>All acceptance checks met.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>D-001</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>PASS (reviews/U4-c9d1cb6.md; final dbe2e92 confirmation)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>U5 and U6 unblocked; dispatched as agy Hydrogen xhigh lanes (D-027).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>Lead was briefly stopped and resumed from its session, then compacted with a checkpoint; no work lost (checkpoint matched git).</span></dd>
             </div>
         </dl>
       </article>
