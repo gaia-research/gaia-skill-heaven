@@ -1,13 +1,13 @@
 {
-  "capturedAt": "2026-09-13",
-  "commit": "fb6a79700062b7addab3d9e05450316050d96e0b",
+  "capturedAt": "2026-11-16",
+  "commit": "9b4d9b98043140188f00b14d0ac8fa6bc02491b7",
   "files": {
     "contracts/edge-index.schema.json": "cda9f53f866882eff3ec214de0b5c876ca08d94a1ee9204df3f225a4c63c2f93",
     "contracts/edge-interpretation.schema.json": "dae91881f0ebc71634f6cf9816ed830bcc49ddbb3665e962f5e5270ea354f403",
     "contracts/edge.schema.json": "d015a257bf70363ae64bb023f5fe85e66740ca4adbe697d31b2a1e5be9339743",
     "contracts/interpretation.schema.json": "f83e1c746b2cbcd67147d397004ed17f4822364c5c406bfa6f54dd6004ca18fd",
     "contracts/profile.schema.json": "f6ab4dd074e7e398c9df66a249f6de196d7c5c024ec7097ac0bdf3387de737ec",
-    "contracts/runtime.schema.json": "3c24500527a18df799af9b77bacabac54938868e28a3599d8087c2a5fd70657e"
+    "contracts/runtime.schema.json": "b8bda2e2fc12b001aa99fe06151d1b8d86ef01b458f168c5dc2fd9813f778686"
   },
   "note": "Byte-for-byte copies of the ratified upstream Arbor contracts, pinned so that packages/core/src/arbor/* can be proven a mirror rather than a local fork. Never edited here.",
   "path": "registry/arbor/contracts",

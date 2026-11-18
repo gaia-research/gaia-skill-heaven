@@ -13827,6 +13827,23 @@ var ARBOR_LENS_STATUS = [
 ];
 var EDGE_ABSENCE_MEANING = "not-evaluated";
 var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_BEHAVIORAL_IDENTITY_VERSION = "gaia.arbor-behavioral-identity/v1";
+var ARBOR_APPLICABILITY_CANONICAL = [
+  "behavior-equivalent",
+  "behavior-changed",
+  "unpinned",
+  "missing"
+];
+var ARBOR_APPLICABILITY_INSTRUCTION_STATUS = [
+  "no-instruction-link",
+  "immutable-ref",
+  "mutable-ref-unobserved",
+  "baseline-observed",
+  "instruction-unobservable",
+  "instruction-changed",
+  "instruction-unavailable"
+];
+var ARBOR_APPLICABILITY_REF_KIND = ["commit", "mutable", "unobservable", "none"];
 var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
 
 // packages/core/src/campaign/manifest.ts
@@ -17179,10 +17196,57 @@ function assertArborEdgeIndex(value, label = "Arbor edge index") {
   edges.forEach((edge, position) => assertArborEdge(edge, `${label}.edges[${position}]`));
 }
 function assertArborRuntime(value, label = "Arbor runtime") {
-  const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
+  const runtime = closedRecord(value, label, [
+    "schema",
+    "subject",
+    "inputDigest",
+    "applicability",
+    "lenses"
+  ]);
   constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
   subjectRef(runtime.subject, `${label}.subject`);
   sha2563(runtime, "inputDigest", label);
+  const applicability = closedRecord(runtime.applicability, `${label}.applicability`, [
+    "applicable",
+    "identityVersion",
+    "behavioralSha256",
+    "canonical",
+    "instruction"
+  ]);
+  if (typeof applicability.applicable !== "boolean") {
+    throw new ArborContractError(`${label}.applicability.applicable must be a boolean.`);
+  }
+  constant(
+    applicability,
+    "identityVersion",
+    ARBOR_BEHAVIORAL_IDENTITY_VERSION,
+    `${label}.applicability`
+  );
+  sha256OrNull(applicability, "behavioralSha256", `${label}.applicability`);
+  enumeration(
+    applicability,
+    "canonical",
+    ARBOR_APPLICABILITY_CANONICAL,
+    `${label}.applicability`
+  );
+  const instruction = closedRecord(
+    applicability.instruction,
+    `${label}.applicability.instruction`,
+    ["status", "refKind", "baselineSha256"]
+  );
+  enumeration(
+    instruction,
+    "status",
+    ARBOR_APPLICABILITY_INSTRUCTION_STATUS,
+    `${label}.applicability.instruction`
+  );
+  enumeration(
+    instruction,
+    "refKind",
+    ARBOR_APPLICABILITY_REF_KIND,
+    `${label}.applicability.instruction`
+  );
+  sha256OrNull(instruction, "baselineSha256", `${label}.applicability.instruction`);
   const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
     "claims",
     "hellHeaven",
@@ -17222,8 +17286,33 @@ function assertArborRuntimeIndex(value, label = "Arbor runtime index") {
   constant(index, "runtimeVersion", ARBOR_RUNTIME_SCHEMA, label);
   const subjects = array3(index.subjects, `${label}.subjects`);
   subjects.forEach(
-    (subject, position) => subjectRef(subject, `${label}.subjects[${position}]`)
+    (subject, position) => runtimeIndexSubject(subject, `${label}.subjects[${position}]`)
   );
+}
+function runtimeIndexSubject(value, label) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ArborContractError(`${label} must be an object.`);
+  }
+  const record4 = value;
+  for (const key of Object.keys(record4)) {
+    if (key !== "id" && key !== "contentSha256" && key !== "applicable" && key !== "behavioralSha256") {
+      throw new ArborContractError(
+        `${label} carries unknown field '${key}'. The Arbor contracts are closed; a consumer that accepted it would be forking the schema.`
+      );
+    }
+  }
+  if (!("id" in record4)) throw new ArborContractError(`${label} is missing required field 'id'.`);
+  if (!("contentSha256" in record4)) {
+    throw new ArborContractError(`${label} is missing required field 'contentSha256'.`);
+  }
+  pattern(record4, "id", SKILL_ID2, label);
+  sha2563(record4, "contentSha256", label);
+  if ("applicable" in record4 && typeof record4.applicable !== "boolean") {
+    throw new ArborContractError(`${label}.applicable must be a boolean.`);
+  }
+  if ("behavioralSha256" in record4) {
+    sha256OrNull(record4, "behavioralSha256", label);
+  }
 }
 function closedRecord(value, label, allowed) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -17520,7 +17609,8 @@ function consumeArbor(publication, candidate, options = {}) {
       join6,
       runtime?.lenses[lens],
       candidate.identityNote,
-      payloadUnreadable
+      payloadUnreadable,
+      runtime?.applicability
     );
   }
   const claimsLens = runtime?.lenses.claims;
@@ -17555,6 +17645,7 @@ function consumeArbor(publication, candidate, options = {}) {
     canonicalSource: candidate.canonicalSource,
     join: join6,
     matchedSubject,
+    applicability: runtime?.applicability ?? null,
     lenses,
     lensesConsulted,
     lensesAbsent,
@@ -17572,7 +17663,8 @@ function consumeArbor(publication, candidate, options = {}) {
       claims.length,
       interactions.length,
       candidate.delivery ?? "not-materialized",
-      candidate.identityNote
+      candidate.identityNote,
+      runtime?.applicability
     )
   };
 }
@@ -17590,7 +17682,7 @@ function resolveJoin(publication, candidate) {
     subjectKey({ id: candidate.skillId, contentSha256: candidate.contentSha256 })
   ) ? "content-pinned" : "identity-unproven";
 }
-function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = false) {
+function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = false, applicability) {
   if (join6 !== "content-pinned" || upstream === void 0) {
     return {
       lens,
@@ -17608,6 +17700,15 @@ function reportLens(lens, join6, upstream, identityNote, payloadUnreadable = fal
         upstreamStatus: upstream.status,
         sourceDigest: upstream.sourceDigest,
         reason: "upstream reports a record for this subject, but its payload was not usable \u2014 it either failed the pinned contract or does not belong to this subject; nothing was read from it"
+      };
+    }
+    if (applicability && !applicability.applicable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason: `upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, instruction: ${applicability.instruction.status}); no record was treated as applicable evidence`
       };
     }
     return {
@@ -17663,7 +17764,7 @@ function joinReason(join6) {
       return "";
   }
 }
-function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote) {
+function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount, delivery, identityNote, applicability) {
   const parts = [
     `lenses \u2014 consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
     `absent: ${absent2.length > 0 ? absent2.join(", ") : "none"}`,
@@ -17671,6 +17772,9 @@ function subjectNote(join6, consulted, absent2, unknown2, claimCount, edgeCount,
   ];
   let note = `${parts.join(" \xB7 ")}. ${joinNote(join6)}`;
   if (join6 === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  if (applicability && !applicability.applicable) {
+    note += ` Upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, instruction: ${applicability.instruction.status}); its claims are not treated as applicable evidence.`;
+  }
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }
@@ -28972,7 +29076,7 @@ function escapeControlText(value) {
       continue;
     }
     const code = ch.codePointAt(0) ?? 0;
-    const unsafe = code < 32 || code === 127 || code >= 128 && code <= 159 || code >= 55296 && code <= 57343;
+    const unsafe = code < 32 || code === 127 || code >= 128 && code <= 159 || code >= 55296 && code <= 57343 || code === 8232 || code === 8233;
     out += unsafe ? `\\u${code.toString(16).padStart(4, "0")}` : ch;
   }
   return out;

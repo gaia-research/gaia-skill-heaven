@@ -208,10 +208,51 @@ export type ArborInteractionsLens = {
   edges: ArborEdge[];
 };
 
+export const ARBOR_BEHAVIORAL_IDENTITY_VERSION = "gaia.arbor-behavioral-identity/v1" as const;
+
+export const ARBOR_APPLICABILITY_CANONICAL = [
+  "behavior-equivalent",
+  "behavior-changed",
+  "unpinned",
+  "missing",
+] as const;
+
+export type ArborApplicabilityCanonical = (typeof ARBOR_APPLICABILITY_CANONICAL)[number];
+
+export const ARBOR_APPLICABILITY_INSTRUCTION_STATUS = [
+  "no-instruction-link",
+  "immutable-ref",
+  "mutable-ref-unobserved",
+  "baseline-observed",
+  "instruction-unobservable",
+  "instruction-changed",
+  "instruction-unavailable",
+] as const;
+
+export type ArborApplicabilityInstructionStatus =
+  (typeof ARBOR_APPLICABILITY_INSTRUCTION_STATUS)[number];
+
+export const ARBOR_APPLICABILITY_REF_KIND = ["commit", "mutable", "unobservable", "none"] as const;
+
+export type ArborApplicabilityRefKind = (typeof ARBOR_APPLICABILITY_REF_KIND)[number];
+
+export type ArborApplicability = {
+  applicable: boolean;
+  identityVersion: typeof ARBOR_BEHAVIORAL_IDENTITY_VERSION;
+  behavioralSha256: string | null;
+  canonical: ArborApplicabilityCanonical;
+  instruction: {
+    status: ArborApplicabilityInstructionStatus;
+    refKind: ArborApplicabilityRefKind;
+    baselineSha256: string | null;
+  };
+};
+
 export type ArborRuntime = {
   schema: typeof ARBOR_RUNTIME_SCHEMA;
   subject: ArborSubjectRef;
   inputDigest: string;
+  applicability: ArborApplicability;
   lenses: {
     claims: ArborClaimsLens;
     hellHeaven: ArborHellHeavenLens;
@@ -219,10 +260,15 @@ export type ArborRuntime = {
   };
 };
 
+export type ArborRuntimeIndexSubject = ArborSubjectRef & {
+  applicable?: boolean;
+  behavioralSha256?: string | null;
+};
+
 export type ArborRuntimeIndex = {
   schema: typeof ARBOR_RUNTIME_INDEX_SCHEMA;
   runtimeVersion: typeof ARBOR_RUNTIME_SCHEMA;
-  subjects: ArborSubjectRef[];
+  subjects: ArborRuntimeIndexSubject[];
 };
 
 /** The three lens names, in the order upstream declares them. */

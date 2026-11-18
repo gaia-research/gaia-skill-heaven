@@ -332,16 +332,25 @@ graph, or substituted for one another.
 
 ### 5.1 Status and the consumption gap
 
-Arbor's four ratified contracts cover declarations, receipts, interpretations
-and profiles — all **per-skill**. The interaction graph is specified in ENDGAME
-but has **no ratified contract and no published projection**.
+Upstream (`gaia-skill-tree`, `registry/arbor/README.md` item 5) now defines the
+edge contract chain (`gaia.arbor-edge-declaration/v1`,
+`gaia.arbor-edge-observation/v1`, `gaia.arbor-edge-interpretation/v1`,
+`gaia.arbor-edge/v1`, and `gaia.arbor-edge-index/v1`) covering all seven
+relation kinds above, rejecting Yggdrasil structural keys, and publishing
+`docs/graph/arbor/edges.json`. At the pinned Arbor I seed revision, the
+published edge index (`gaia.arbor-edge-index/v1`) carries **3 `expert-declared`
+edges** (`duplicates`, `unlocks`, `recovers`, all `pairApplicable: true`,
+`observationSources: []`, `interpretationSource: null`) and
+`coverage: { pairsEvaluated: 0, absenceMeaning: "not-evaluated" }`.
 
-This is a real gap and it is upstream's to close. This document records it
-rather than working around it, because working around it means inventing an edge
-schema in the wrong repository.
+What remains missing is **empirical interaction evidence** (`pairsEvaluated: 0`):
+a declared edge with no observation or governed interpretation is an unverified
+hypothesis, not an observed interaction.
 
-**Until an edge projection exists, composition (§6.3) degrades to relevance-only
-and discloses it.** That is the honest state, and it is acceptable.
+**Until governed interaction evidence exists, composition (§6.3) degrades to
+relevance-only and discloses it** (including any declared edge hypotheses as
+unverified, without filtering or reordering retrieval results). That is the
+honest state, and it is acceptable.
 
 ---
 
@@ -568,7 +577,7 @@ carrying the question.
 
 | # | Question | Owner |
 |---|---|---|
-| Q1 | What is the contract for Arbor interaction edges, and what projection publishes them? (§5.1) | `gaia-skill-tree` |
+| Q1 | **Answered upstream:** `gaia.arbor-edge-declaration/v1`, `gaia.arbor-edge-observation/v1`, `gaia.arbor-edge-interpretation/v1`, `gaia.arbor-edge/v1`, and `gaia.arbor-edge-index/v1` (`docs/graph/arbor/edges.json`), described in `gaia-skill-tree/registry/arbor/README.md` item 5. (§5.1) | `gaia-skill-tree` |
 | Q2 | Does a continuous score survive, or do the discrete stamps make it redundant? **Already open upstream** — `hh-benchmark/methodology.md` §7. Its tracking issue `gaia-research#62` was closed 2026-09-02; re-tracked at `gaia-research#207` | `gaia-research` |
 | Q2b | **Does the HH Index land inside `gaia.arbor-profile/v1`, or beside it?** Conceptually resolved in the [issue 116 decision](https://github.com/gaia-research/gaia-skill-heaven/issues/116#issuecomment-5559466527) (2026-09-06): HH belongs INSIDE Arbor; upstream will own a broader canonical Arbor runtime projection referencing HH result profiles and interaction evidence. Formal schema proposal in flight (`gaia-research#207`). | `gaia-research` / `gaia-skill-tree` |
 | Q3 | What does the first real evidence-loop path measure? (INTENT §15F) | `gaia-research` |
