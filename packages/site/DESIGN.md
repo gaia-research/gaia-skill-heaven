@@ -221,32 +221,84 @@ Layout stability is load-bearing here: the gauge column reserves one height
 across all four states and the blurb reserves its tallest line count, because
 otherwise clicking a direction plate relocates the plate you just clicked.
 
-## The document — `/landing`
+## The document — `/landing` · Lucia Refractions (draft, PR #268)
 
-Wireframe register, deliberately inverting every hero choice: scannable rather
-than cinematic, ledger rows and terminals rather than one statement per screen,
-numbered sections `01`–`05`.
+> **Draft register, pending founder review.** Design of record:
+> `docs/design/landing-refractions/DESIGN-BRIEF.md` (Study A, "Prism Stage",
+> founder ruling D-01). Everything in this section describes the draft; the
+> previous wireframe register is the fallback if the PR does not land.
 
-Wireframe cues are **load-bearing, not decoration**: dashed asset slots, `▸`
-annotation strips, section numbers over the 56px split-light rule, 5px accent
-squares in panel corners, hairline borders at **0px radius**.
+**Lucy is the heroine and the page is her instrument.** The document keeps its
+job (scannable, numbered, every install path and the terminal intact), but it
+is built from glass that her state cuts.
+
+- **The stage** (`surfaces/refractions/LucyStage.tsx`). At ≥1180px a fixed
+  stage on the right (40vw, 440–720px) hosts the hero's own `LucyAtmosphere`,
+  the hero's band grounds and the approved v5 master for the current state.
+  The document narrows so it ends over the stage's solid charcoal feather and
+  never prints text on Hell's paper. Below 1180px she opens the page as a
+  full-bleed plate. The stage steps aside (opacity, then hidden) when the
+  closing triptych or the footer is in view, so she is never shown twice.
+- **Lucy is alive on the desktop stage** (founder ruling D-07: "Rive supersedes
+  masters, create both and ill decide the interaction"). The hero's own
+  `LucyRiveFigure` runs inside the stage's figure box with the hero's per-state
+  treatment; while she is live no master shows. The masters remain the phone
+  plate, the reduced-motion path, the fallback when Rive cannot run, and
+  `?lucy=static`. A cut animates the figure in place (Web Animations), so the
+  rig is never remounted and owns its own transition; the scene root wraps the
+  figure, so she pauses whenever the stage steps aside.
+- **One Lucy per visit** (founder, 2026-11-18: "Lucy Rive default, but if user
+  skipped rive assets loading page (should show up once someone goes to the
+  site) then static. Similar behavior to the home page. Nothing shoud be loaded
+  twice."). The entrance shows once per page load, on whichever page the
+  visitor reaches first (`/` or `/landing`, desktop). Its outcome holds for the
+  visit (`src/lucy-scene/session.ts`): live means later pages go live without
+  it; Skip means the masters everywhere. The figure's bytes are fetched once
+  and shared between pages (`src/lucy-scene/rive/sharedFetch.ts`); a Skip stops
+  any download still in flight; while she is live no master is fetched.
+- **One state, many hands.** `data-lucy` on the root is cast by the hero
+  handoff (`?tab=`, or `?section=doors` → Zero), a sampler tab (click only,
+  never the auto-run), a rung, a direction card, and her own switch. The
+  last explicit choice wins. Casting from elsewhere moves the ladder to where
+  that band opens (`zero · low · high · ultra`), so the page never holds two
+  positions at once. The terminal's logic is untouched; the cast happens beside it.
+- **The shard grammar** (`surfaces/refractions/refractions.css`). Panels paint
+  their glass on two pseudo layers (edge, then face) instead of clipping the
+  host, because a clip would also clip the tooltips inside them. Her state
+  re-cuts every pane on the same frame: **Zero** plain (4px bevel, hairline, no
+  prism), **Heaven** ordered (struck corner, one shared rake), **Hell**
+  fractured (a notch in the right edge, the prism inverted), **Ultra** crowned
+  (the top edge peaks at 62%, gold with a red leading line). Tabs, rungs,
+  chips and the solid action are blades with one kissaki cut.
+- **Tear geometry.** In Hell and Ultra the §04 state cards and the dose readout
+  end in a tapering drip, drawn in the state's ink. The tear itself is never
+  multiplied or recoloured. The `?tear=1` leader (one red hairline from her
+  real tear) is a founder-gated preview, off by default (D-03).
+- **Light.** Split light stays on bevels and rules, never a fill. The page
+  carries one faint sheen every 12s in Heaven and Ultra; a cut fires the impact
+  frame on the stage only, plus one streak at ribbon height. No flare or glow is
+  ever attached to her eyes (owner ruling, gaia-research/lucy).
+- **Her reflection** sits in the terminal case's top-right glass: the same
+  master, never mirrored, never inverted by CSS.
+- **§05 is the three-name signature**: one beam enters a prism and leaves as
+  *Gaia Skill Tree — the record*, *Gaia Research — the laboratory*,
+  *Gaia Skill Heaven — the runtime*.
+- **Anton** gains no new moment: the stage's outline word is the hero's own
+  state word, continued as the seam, and it fades once the arrival scrolls away.
 
 | § | Name |
 |---|---|
-| — | Arrival header — compact, no repeat of the hero headline; measured dose panel |
-| 01 | Choose your door — portable plugin first, client registration second, Claude compatibility flow, standalone launcher secondary |
-| 02 | Watch it run — looping terminal, impact frame scoped to the panel |
-| 03 | Skills are permanent. Sessions are not. |
-| 04 | Converge or explore — the `/summon` floor, then the four surfaces |
-| 05 | One house, three rooms |
-| — | Footer — loud wordmark, four minimal link columns |
+| — | Arrival — the seam: her stage beside the headline; compact LIVE chip; dose readout as a glass instrument |
+| 01 | Install in your harness — portable plugin first, Claude compatibility flow, standalone launcher secondary |
+| 02 | Demo — "Watch it run."; the third install copy as a one-line disclosure (D-04, ruled); the terminal in a glass case |
+| 03 | Skills live in your session — unchanged behaviour and copy; glass only |
+| 04 | Heaven or Hell? — the peak: a rung re-casts her and re-cuts the page; Ultra says "provisioned · controller unavailable" |
+| 05 | Three names, one Gaia |
+| — | Closing triptych (tall shards), then the footer, byte-identical |
 
-**§03 is the strongest section and must not be weakened.** The argument in three
-beats, then a before/after pair where the reader clicks rows to mount and drop
-skills, live counters recomputing off the benchmark floor, and a verdict strip
-whose sentence changes with what the reader did. The point lands because the
-reader causes the mutation themselves and then watches `git status` refuse to
-notice. That is the product.
+**§03 is still the strongest section and must not be weakened.** The argument
+lands because the reader causes the mutation and then watches `git status`
+refuse to notice. The redesign only changes its glass.
 
 ## The impact frame
 

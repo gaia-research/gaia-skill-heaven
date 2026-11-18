@@ -1,0 +1,86 @@
+{
+  "threadId": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+  "rollout": {
+    "rolloutFile": "rollout-2026-11-16T08-00-25-01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec.jsonl",
+    "sessionMeta": {
+      "session_id": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+      "originator": "codex_exec",
+      "cli_version": "0.169.0",
+      "source": "exec",
+      "model_provider": "openai"
+    },
+    "turns": [
+      {
+        "turn_id": "01a1e1a7-b155-7a53-ae00-14dc6399c467",
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "approval_policy": "on-request",
+        "approvals_reviewer": "auto_review",
+        "sandbox_policy": {
+          "type": "workspace-write",
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      }
+    ],
+    "skillLoadedInRollout": false,
+    "preexecMarkerInRollout": false
+  },
+  "cmdJsonExists": false,
+  "mcp": {
+    "envNames": [],
+    "envValues": {},
+    "initializeParams": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {
+        "experimental": {
+          "codex/auth-change": {}
+        },
+        "elicitation": {
+          "form": {},
+          "url": {}
+        }
+      },
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.169.0"
+      }
+    },
+    "toolsCallMeta": [
+      {
+        "callId": "exec-6c1b4009-d5c7-40ec-8070-81dffbb620cf",
+        "x-codex-turn-metadata": {
+          "session_id": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+          "thread_id": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+          "reasoning_effort": "low",
+          "turn_id": "01a1e1a7-b155-7a53-ae00-14dc6399c467",
+          "model": "gpt-6-luna",
+          "thread_source": "user",
+          "turn_trigger": "exec",
+          "sandbox": "seatbelt",
+          "sandbox_mode": "workspace-write",
+          "auto_review_enabled": true,
+          "node_repl_auto_review_required": false,
+          "node_repl_disabled": false,
+          "turn_started_at_unix_ms": 1794787225954,
+          "codex_version": "0.169.0"
+        },
+        "threadId": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+        "sessionId": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec",
+        "windowId": "01a1e1a7-ad9c-7d91-8e22-ec14b9e2c2ec:0",
+        "itemId": "ctc_03e7185b0f29d488016afa47a0789087d0955d20ed51eab6e8",
+        "progressToken": 1
+      }
+    ],
+    "toolsCallNames": [
+      "operator_decide"
+    ],
+    "elicitationRequests": [],
+    "elicitationResponses": [],
+    "elicitationTimeouts": [],
+    "operatorDecideCalled": true,
+    "operatorDecideCount": 1
+  }
+}

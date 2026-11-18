@@ -57,6 +57,37 @@ export function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
+/**
+ * Remove CSS `drop-shadow(...)` from a live Rive wrapper's filter string.
+ * Safari clips a drop-shadow filter buffer to `.lucy-rive`'s layout box even
+ * though the `<canvas>` overflows it; the Rive rig already renders its own
+ * glow/aura layers. Uses balanced-paren scanning so nested `rgba(...)` stops
+ * cleanly without leaving a dangling `)`. Static `<img>` fallbacks keep theirs.
+ */
+export function stripDropShadow(filter: string | undefined): string | undefined {
+  if (!filter || !filter.includes('drop-shadow(')) return filter
+  let out = ''
+  let i = 0
+  while (i < filter.length) {
+    const idx = filter.indexOf('drop-shadow(', i)
+    if (idx === -1) {
+      out += filter.slice(i)
+      break
+    }
+    out += filter.slice(i, idx)
+    let depth = 1
+    let j = idx + 'drop-shadow('.length
+    while (j < filter.length && depth > 0) {
+      if (filter[j] === '(') depth++
+      else if (filter[j] === ')') depth--
+      j++
+    }
+    i = j
+  }
+  const trimmed = out.replace(/\s+/g, ' ').trim()
+  return trimmed || 'none'
+}
+
 export function LucyRiveFigure({ state, figureStyle, onFailed, onProgress, veil }: LucyRiveFigureProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -167,11 +198,22 @@ export function LucyRiveFigure({ state, figureStyle, onFailed, onProgress, veil 
     transition: 'opacity 320ms linear',
   }
 
+  const safeStyle: CSSProperties = {
+    ...figureStyle,
+    filter: stripDropShadow(figureStyle.filter),
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+  }
+
   return (
     <div
       ref={boxRef}
       className="lucy-rive"
-      style={{ ...figureStyle, position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+      style={safeStyle}
     >
       <canvas ref={canvasRef} style={canvasStyle} aria-hidden="true" />
       {phase === 'loading' && veil && (

@@ -1,0 +1,308 @@
+{
+  "schema": "lucia-refractions/asset-manifest/v1",
+  "campaign": "Lucia Refractions — post-door /landing",
+  "status": "ISSUED (round 2): LR-G01 A/B and LR-G02 A/B under founder ruling D-11, which overrides LR-PREFLIGHT BLOCKED. The first receipt must prove the model and the alpha path. Everything else stays DRAFT/HOLD.",
+  "brief": {
+    "path": "docs/design/landing-refractions/DESIGN-BRIEF.md",
+    "sha256": "24b294f977253a38a2e88a17317621632afc176f3d0a5879b570613eeebf33df",
+    "note": "Requests quote this hash. If the brief changes, the hash in each request changes with it and old requests are void."
+  },
+  "contract": {
+    "model": "gpt-image-2.6 only (gpt-image-2.6-sunburst permitted for precision facets). No fallback model. If gpt-image-2.6 is unavailable the job is BLOCKED, not substituted.",
+    "skill": ".agents/skills/lucy-image-production/SKILL.md (Skill Heaven specialization of gaia-image-production)",
+    "callsPerCandidate": 1,
+    "retakes": "A retake is a NEW job id with a new bounded brief from the design lead. Never an unrecorded retry.",
+    "storage": "Raw/intermediate PNGs: private staging only (D-08). Nothing generated enters gaia-skill-heaven until founder approval. Approved deliverables land as WebP under packages/site/src/assets/lucy/landing/ in a later commit that cites the approval.",
+    "transparency": "Request transparent output; if the generator returns opaque, the prompt has already asked for a flat #00FF00 field and the matte goes through scripts/assets/lucy-matte-guard.py. Never purple/magenta chroma. Never a painted checkerboard.",
+    "receipts": "Each candidate gets a receipt with model, full prompt, input references (path + sha256), raw hash, outputs, dimensions, alpha audit, self-review, and pass/fail per acceptance criterion.",
+    "noCharacter": "No job in this manifest draws Lucy. Character pixels come only from the approved v5 masters. LR-G05 is the single exception and is NOT issued.",
+    "preflightOverride": "D-11 (2026-11-18): the founder authorized the four unconditional calls although LR-PREFLIGHT was BLOCKED. LR-G01-A runs first, alone; its receipt must show gpt-image-2.6 as reported by the endpoint and a passing matte guard, else BLOCKED (model) and the other three calls do not run."
+  },
+  "stylePreamble": "Isolated pieces of a single shattered pane of thin optical crystal glass, photographed as product macro on a perfectly flat pure #00FF00 chroma-green field with no shadow, no floor, no reflection of the background. Each shard is a clean, sharp-edged, faceted sliver — long, tapering, asymmetric, with one or two polished bevels — never a feather, membrane, petal, leaf, ice cube, or gem cut. Light passes through the glass and splits at the bevels into thin, distinct bands of spectral color (violet, blue, cyan, mint, rose, magenta) as narrow lines along the edges, never as a wash over the whole shard. Interiors are mostly clear with soft internal caustics and a bright white specular glint on one edge. Hairline-crisp edges suitable for alpha extraction. No text, no logo, no watermark, no frame, no hands, no people, no character, no scenery.",
+  "jobs": [
+    {
+      "id": "LR-G01",
+      "revision": "r1",
+      "name": "Heaven ordered shard set",
+      "priority": "P0",
+      "kind": "generate",
+      "status": "FOUNDER APPROVED 2026-11-18: LR-G01-D r1 (design ACCEPT FOR PROTOTYPE; founder gate 2 {\"choice\":\"approve\",\"note\":\"\"}). Sprites 01,03,04,05,08 in packages/site/src/assets/lucy/refractions/heaven/. Source: gaia-research/lucy@staging/landing-refractions 6a356ee.",
+      "purpose": "Loose foreground glass around the Stage in Heaven, plus the glint shards on section transitions. Gives the prototype real refraction the procedural stand-ins cannot fake.",
+      "consumer": [
+        "LucyStage › loose-glass plane (Heaven)",
+        "section transition glints (§01→§02, §03→§04)"
+      ],
+      "canonReferences": [
+        {
+          "path": "packages/site/src/assets/hero-commission/v01/wing-left.png",
+          "use": "glass-wing material and edge language (shipped hero effect layer)"
+        },
+        {
+          "path": "packages/site/src/assets/hero-commission/v01/wing-right.png",
+          "use": "same"
+        },
+        {
+          "path": "packages/site/src/assets/lucy/identity/lucy-wing-heaven.svg",
+          "use": "ordered shard silhouette rhythm"
+        },
+        {
+          "path": "docs/lucy/authority/lucy-canon.json",
+          "use": "heaven.wings = ordered blue/cyan shard wings; wingType = independent floating prism/glass shards"
+        }
+      ],
+      "promptScaffold": "<stylePreamble>\n\nHeaven set — ORDER. Eight separate shards laid out in two rows of four with wide empty green gutters between every piece (at least one-tenth of the canvas between neighbours). All eight share ONE dominant long-axis angle of about 72 degrees from horizontal, like panes from the same wing, varying in length from 1:3 to 1:7 aspect. Saturated cyan-blue glass (#7CC4FF to #37D6E0 family) with the spectral split only along their long bevels. Calm, aligned, precise.",
+      "allowedTransformations": [
+        "connected-component extraction into individual shards",
+        "rotation by multiples of 0.5°",
+        "uniform scale",
+        "crop to shard bbox + 24px",
+        "alpha refinement via matte guard",
+        "WebP encode"
+      ],
+      "forbidden": [
+        "recolouring outside the cyan-blue family",
+        "adding or painting facets",
+        "compositing two shards into one",
+        "any character element"
+      ],
+      "composition": "Sheet of 8 isolated shards, 2×4 grid, wide gutters, shared long-axis angle.",
+      "generationSize": "the largest 3:2 landscape size the gpt-image-2.6 endpoint supports, long edge ≥ 2048px",
+      "delivery": {
+        "format": "8 individual WebP files, lossless alpha, plus shards.json (id, bbox, longAxisDeg, facetSide)",
+        "dimensions": "each shard long edge 768px (desktop), with a 384px derivative (mobile)",
+        "transparency": "real alpha, no green in the exterior partial-alpha band, no green spill in the 2px interior boundary",
+        "budget": "≤ 120 KB per desktop shard, ≤ 40 KB per mobile shard"
+      },
+      "desktopMobile": "Desktop uses 5–7 at once around the Stage; mobile uses ≤ 2 small shards in the arrival plate.",
+      "candidates": 2,
+      "candidateIds": [
+        "LR-G01-A",
+        "LR-G01-B"
+      ],
+      "generationCalls": 2,
+      "acceptance": [
+        "Reads as one pane of glass shattered, not as gems, ice, crystals-in-a-cave, or feathers",
+        "All shards share one long-axis angle within ±4°",
+        "Spectral colour only as edge bands; interiors clear",
+        "Clean alpha: lucy-matte-guard passes; white/black/grey/checker previews show no halo or green fringe",
+        "At 120px on screen each shard still shows a readable bevel and one specular glint",
+        "No text, frame, people or character"
+      ],
+      "reviewPriority": 1
+    },
+    {
+      "id": "LR-G02",
+      "revision": "r1",
+      "name": "Ultra gold-prismatic shard set",
+      "priority": "P0",
+      "kind": "generate",
+      "status": "FOUNDER APPROVED 2026-11-18: LR-G02-A r2 (design ACCEPT FOR PROTOTYPE; founder gate 2 {\"choice\":\"approve\",\"note\":\"\"}). Sprites 01-05 in packages/site/src/assets/lucy/refractions/ultra/. Source: gaia-research/lucy@staging/landing-refractions 6a356ee.",
+      "purpose": "Loose foreground glass in Ultra: the crown of shards that rises around the Stage.",
+      "consumer": [
+        "LucyStage › loose-glass plane (Ultra)",
+        "§04 Ultra crown shard accent"
+      ],
+      "canonReferences": [
+        {
+          "path": "packages/site/src/assets/lucy/v5/masters/lucy-ultra.png",
+          "use": "gold shard fans in the master — material, gold interference, edge treatment (reference only; never cropped into the deliverable)"
+        },
+        {
+          "path": "docs/lucy/authority/lucy-canon.json",
+          "use": "ultra.wings = gold-prismatic shard wings; accentRange #FFD24A–#F7C84B; never inverted"
+        }
+      ],
+      "promptScaffold": "<stylePreamble>\n\nUltra set — CROWN. Seven separate shards with wide empty green gutters. They fan outward like the points of a crown: each one's long axis points away from a shared centre below the sheet, angles spread from 60 to 120 degrees. Clear glass with gold interference (#FFD24A to #F7C84B) as thin iridescent banding along the bevels, a warm white specular glint, and on ONE edge of each shard a very thin red-crimson leading line (#C81E1E) no wider than the glint. Regal, decisive, never orange, never brass.",
+      "allowedTransformations": [
+        "connected-component extraction",
+        "rotation",
+        "uniform scale",
+        "crop to bbox + 24px",
+        "alpha refinement",
+        "WebP encode"
+      ],
+      "forbidden": [
+        "inversion",
+        "turning the red edge into a fill",
+        "recolouring to brass/orange",
+        "any character element"
+      ],
+      "composition": "Sheet of 7 isolated shards fanned around an implied centre below the sheet.",
+      "generationSize": "the largest 3:2 landscape size the endpoint supports, long edge ≥ 2048px",
+      "delivery": {
+        "format": "7 individual WebP files, lossless alpha, plus shards.json",
+        "dimensions": "long edge 768px desktop, 384px mobile derivative",
+        "transparency": "real alpha, same guard as LR-G01",
+        "budget": "≤ 120 KB / ≤ 40 KB"
+      },
+      "desktopMobile": "Desktop crown of 5–7 above/around her head on the Stage; mobile ≤ 2.",
+      "candidates": 2,
+      "candidateIds": [
+        "LR-G02-A",
+        "LR-G02-B"
+      ],
+      "generationCalls": 2,
+      "acceptance": [
+        "Gold reads as light interference on clear glass, not metal",
+        "Red appears only as a hairline leading edge",
+        "Fan reads as a crown when the seven are placed on their original angles",
+        "Clean alpha, guard passes, no green fringe",
+        "Sits beside the v5 Ultra master without a material clash (side-by-side review on #1b1a1c)"
+      ],
+      "reviewPriority": 2
+    },
+    {
+      "id": "LR-D01",
+      "revision": "r1",
+      "name": "Hell fragmented inverted shard set",
+      "priority": "P0",
+      "kind": "derive",
+      "status": "PROTOTYPE: rendered as LR-G01-D under CSS invert(1) (exact RGB inversion, identical alpha); no file job issued. The fragmentation pass stays open if the founder wants Hell shards as broken pieces.",
+      "purpose": "Loose foreground glass in Hell. Canon: Hell is the exact RGB inversion of Heaven, and its shards are highly fragmented.",
+      "consumer": [
+        "LucyStage › loose-glass plane (Hell, on the paper stage)"
+      ],
+      "source": "the founder-approved LR-G01 candidate",
+      "method": "Deterministic: for each Heaven shard, split along 1–3 fracture lines (seeded, recorded) into 2–4 fragments offset by 2–10px and rotated ±3°; then exact full-foreground RGB inversion with byte-identical alpha. Never recolour after inversion.",
+      "generationCalls": 0,
+      "candidates": 1,
+      "delivery": {
+        "format": "WebP lossless alpha + shards.json with fracture seeds",
+        "dimensions": "as LR-G01",
+        "budget": "as LR-G01"
+      },
+      "acceptance": [
+        "Inversion report proves full RGB inversion + identical alpha",
+        "Fragments read as broken from one Heaven shard, not as new shapes",
+        "On paper #efece7 the edges read as rust/umber/olive light, no hand-placed red",
+        "Guard run in --exact-inverted-hell mode only after the source report passes"
+      ],
+      "reviewPriority": 3
+    },
+    {
+      "id": "LR-D02",
+      "revision": "r1",
+      "name": "Wing-fragment divider (derive first)",
+      "priority": "P1",
+      "kind": "derive",
+      "status": "DRAFT",
+      "purpose": "A horizontal strip of broken wing glass between §03 and §04 (the approach to the peak). Heaven/Ultra only; none in Zero.",
+      "consumer": [
+        "section divider before §04"
+      ],
+      "source": "packages/site/src/assets/hero-commission/v01/wing-left.png and wing-right.png (shipped hero effect layers)",
+      "method": "Crop the outer third of each wing, rotate to horizontal, mirror is ALLOWED for the wing effect layer only (it is not character art), composite into a 3200×400 strip with real alpha.",
+      "generationCalls": 0,
+      "candidates": 1,
+      "delivery": {
+        "format": "WebP lossless alpha",
+        "dimensions": "3200×400 desktop, 1200×200 mobile",
+        "budget": "≤ 140 KB / ≤ 45 KB"
+      },
+      "acceptance": [
+        "No visible seam at the centre join",
+        "Reads as glass fragments, not feathers",
+        "Clean alpha on charcoal and on paper"
+      ],
+      "fallback": "If acceptance fails, the design lead may issue LR-G03.",
+      "reviewPriority": 4
+    },
+    {
+      "id": "LR-G03",
+      "revision": "r1",
+      "name": "Wing-fragment divider (generate only if LR-D02 fails)",
+      "priority": "P1",
+      "kind": "generate-conditional",
+      "status": "HOLD",
+      "purpose": "Same as LR-D02.",
+      "promptScaffold": "<stylePreamble>\n\nA single long horizontal band of glass fragments drifting apart from left to right, as if one wing of glass panes broke along its length. Fragments become sparser toward both ends. Cyan-blue glass family with spectral bands on bevels only. Extremely wide composition.",
+      "generationSize": "widest landscape size the endpoint supports",
+      "candidates": 1,
+      "candidateIds": [
+        "LR-G03-A"
+      ],
+      "generationCalls": 1,
+      "delivery": {
+        "format": "WebP lossless alpha",
+        "dimensions": "3200×400 and 1200×200",
+        "budget": "≤ 140 KB / ≤ 45 KB"
+      },
+      "acceptance": [
+        "As LR-D02",
+        "Consistent material with the LR-G01 approved candidate"
+      ],
+      "reviewPriority": 5
+    },
+    {
+      "id": "LR-D03",
+      "revision": "r1",
+      "name": "Mobile state plates (performance derivative)",
+      "priority": "P2",
+      "kind": "derive",
+      "status": "DRAFT",
+      "purpose": "Smaller mobile arrival plates so phones do not download the 2048×3072 masters. The prototype uses CSS crops of the existing masters until these exist.",
+      "consumer": [
+        "LucyStage › mobile arrival plate"
+      ],
+      "source": "packages/site/src/assets/lucy/v5/delivery/lucy-{zero,heaven,hell,ultra}.webp",
+      "method": "Deterministic crop + Lanczos resize, alpha preserved, no colour change, never mirrored. Crop window keeps face core, both eyes / tear, ribbon, and at least one katana guard.",
+      "generationCalls": 0,
+      "candidates": 1,
+      "delivery": {
+        "format": "WebP, alpha preserved",
+        "dimensions": "1080×1440 (3:4) per state",
+        "budget": "≤ 220 KB each"
+      },
+      "acceptance": [
+        "Pixel-diff vs master shows no change beyond resampling",
+        "Tear present and continuous in Hell/Ultra",
+        "Zero carries nothing added"
+      ],
+      "reviewPriority": 6
+    },
+    {
+      "id": "LR-G04",
+      "revision": "r1",
+      "name": "Prismatic caustic light plate",
+      "priority": "P2",
+      "kind": "generate-conditional",
+      "status": "HOLD",
+      "purpose": "Only if the procedural split light fails design acceptance: a faint caustic pattern cast by her glass, used at 6–10% opacity behind the stage.",
+      "promptScaffold": "Abstract caustic light pattern cast on a matte near-black floor by light passing through broken prismatic glass: thin bright filaments and soft spectral fringes, mostly dark, no objects visible, no text. Seamlessly tileable left to right.",
+      "candidates": 1,
+      "candidateIds": [
+        "LR-G04-A"
+      ],
+      "generationCalls": 1,
+      "delivery": {
+        "format": "WebP opaque, luminance-dominant",
+        "dimensions": "2560×1440",
+        "budget": "≤ 90 KB"
+      },
+      "acceptance": [
+        "Reads as light, not texture or noise",
+        "Tileable horizontally",
+        "Invisible cost at 8% opacity on mid mobile"
+      ],
+      "reviewPriority": 7
+    },
+    {
+      "id": "LR-G05",
+      "revision": "r0",
+      "name": "Key art — Lucy at the instrument",
+      "priority": "P3",
+      "kind": "proposed",
+      "status": "PROPOSED — NOT ISSUED. Requires an explicit founder go before any brief is written.",
+      "purpose": "A new illustration in which Lucy touches the glass panel that becomes the terminal. The strongest possible statement of 'the interface is her instrument', and the highest identity risk.",
+      "generationCalls": 0,
+      "candidates": 0,
+      "note": "Not needed for the prototype. Study A composes the existing masters so the terminal reads as a shard released from her open hand."
+    }
+  ],
+  "callBudget": {
+    "authorizedUnconditional": 4,
+    "conditional": 2,
+    "maximum": 6,
+    "note": "Unconditional = LR-G01 A/B + LR-G02 A/B. Conditional calls require a posted ISSUE request naming the failing acceptance criterion."
+  }
+}

@@ -112,7 +112,10 @@ export function controllerSegments(controller: Controller, opts: { progress: boo
 export function statusLevels(status: SkillHeavenStatus, mode: StatusMode): Segment[][] {
   if (mode === "off") return [];
   const ultra = isUltra(status);
-  const controller = ultra ? status.controller : ({ kind: "not-selected" } as Controller);
+  const controller =
+    ultra || status.controller.kind === "reported"
+      ? status.controller
+      : ({ kind: "not-selected" } as Controller);
   const skills = [SEP, seg(skillsText(status.skills, false), "ink")];
   const summons =
     status.summons === null ? [] : [seg(" / ", "dim"), seg(`${status.summons} ${status.summons === 1 ? "summon" : "summons"}`, "dim")];
@@ -282,12 +285,16 @@ export function describeStatus(status: SkillHeavenStatus): string {
       ? "Skills in this session: unknown."
       : `${status.skills} ${status.skills === 1 ? "skill" : "skills"} materialized in this session.`,
   );
+  const c = status.controller;
   if (isUltra(status)) {
-    const c = status.controller;
     if (c.kind === "unavailable") parts.push("Ultra controller: unavailable; nothing is choosing for you yet.");
     else if (c.kind === "reported" || c.kind === "fixture") {
       parts.push(`Ultra controller: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}.`);
     }
+  } else if (c.kind === "reported") {
+    const label = c.source === "campaign" ? "Reported campaign status" : "Reported controller";
+    const progress = c.progress ? ` (${c.progress.completed}/${c.progress.total})` : "";
+    parts.push(`${label}: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}${progress}.`);
   }
   if (status.fixture || status.controller.kind === "fixture") parts.unshift("Fixture, design state only.");
   return parts.join(" ");

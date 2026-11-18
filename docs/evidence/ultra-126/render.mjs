@@ -139,6 +139,43 @@ function renderHeader(campaign) {
   </header>`;
 }
 
+function renderQuota(quota) {
+  const pools = Array.isArray(quota?.pools) ? quota.pools : [];
+  const rows = pools.map((p) => {
+    const resetCell = p?.resetAt
+      ? `<span class="mono nowrap" data-reset-at="${esc(p.resetAt)}" title="${esc(p.resetAt)}">${esc(p.resetAt)}</span>`
+      : '<span class="muted">—</span>';
+    return `
+      <tr>
+        <td class="mono nowrap"><strong>${esc(p?.pool ?? '—')}</strong></td>
+        <td>${p?.covers ? esc(p.covers) : '<span class="muted">—</span>'}</td>
+        <td>${p?.state ? esc(p.state) : '<span class="muted">—</span>'}</td>
+        <td class="nowrap">${resetCell}</td>
+      </tr>`;
+  }).join('');
+
+  return `
+  <section class="panel" id="availability">
+    <h2>Harness availability</h2>
+    <p class="muted" style="margin:0 0 10px;font-size:12px;">As of ${quota?.asOf ? `<code>${esc(quota.asOf)}</code>` : '—'}</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pool</th>
+            <th>Covers</th>
+            <th>State</th>
+            <th>Reset</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || '<tr><td colspan="4" class="muted">No pools recorded.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
 function renderUnitsTable(units = []) {
   const rows = units.map((u) => {
     const afterText = Array.isArray(u.after) && u.after.length > 0 ? u.after.join(', ') : '—';
@@ -895,12 +932,33 @@ export function renderHtml(campaign) {
 <body>
   <main class="container">
     ${renderHeader(campaign)}
+    ${renderQuota(campaign.quota)}
     ${renderUnitsTable(campaign.units)}
     ${renderProbesTable(campaign.probes)}
     ${renderPreflight(campaign.preflight)}
     ${renderStatusLists(campaign)}
     ${renderDecisionLog(campaign.decisions)}
   </main>
+  <script>
+    (function () {
+      var els = document.querySelectorAll('[data-reset-at]');
+      if (!els.length) return;
+      function update() {
+        var now = Date.now();
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          var ts = Date.parse(el.getAttribute('data-reset-at'));
+          if (isNaN(ts)) continue;
+          var diff = ts - now;
+          el.textContent = diff <= 0
+            ? 'reset time passed: verify availability'
+            : 'resets in ' + Math.ceil(diff / 60000) + ' min';
+        }
+      }
+      update();
+      setInterval(update, 30000);
+    })();
+  </script>
 </body>
 </html>
 `;

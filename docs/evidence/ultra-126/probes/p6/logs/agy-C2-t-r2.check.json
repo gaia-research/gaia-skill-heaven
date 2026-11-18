@@ -1,0 +1,9 @@
+{
+  "door": "agy",
+  "cell": "C2-t",
+  "run": 2,
+  "config": "skill+workflow",
+  "cmdJsonExists": false,
+  "paneShowsProbeDecide": true,
+  "paneShowsNone": true
+}

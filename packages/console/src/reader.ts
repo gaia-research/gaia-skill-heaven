@@ -1,17 +1,19 @@
 // Adapter I/O only. No engine import, process discovery, directory enumeration or writes.
-import { openSync, closeSync, fstatSync, readSync, realpathSync } from "node:fs";
-import { join, resolve, dirname, sep } from "node:path";
+import { openSync, closeSync, fstatSync, lstatSync, readSync, realpathSync, constants } from "node:fs";
+import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   initialConsoleState, recordEvent, recordRead, recordSelection, structuredOf,
   eventFromSummonResult, eventsFromLedger, skillsFromSessionManifest, selectionFromCommand,
-  type ConsoleCoreState,
+  controllerFromCampaignStatus,
+  type ConsoleCoreState, type Controller,
 } from "../../status/src/index.js";
 
 export const MAX_BYTES = 8 * 1024 * 1024;
 export const MAX_ROWS = 10_000;
-export function readBounded(path: string): string {
-  const fd = openSync(path, "r");
+export function readBounded(path: string, opts: { noFollow?: boolean } = {}): string {
+  const flags = constants.O_RDONLY | (opts.noFollow ? (constants.O_NOFOLLOW ?? 0) : 0);
+  const fd = openSync(path, flags);
   try {
     const stat = fstatSync(fd);
     if (!stat.isFile() || stat.size > MAX_BYTES) throw new Error("console input exceeds file bound");
@@ -38,14 +40,91 @@ export function unknownState(): ConsoleCoreState {
   const state = initialConsoleState();
   return { ...state, status: { ...state.status, skills: null, summons: null, reading: { kind: "unknown" } } };
 }
+function readCampaignStatus(sessionRoot: string): Controller | null {
+  const safeRoot = realpathSync(sessionRoot);
+  const campaignDir = join(safeRoot, "campaign");
+  let dirStat;
+  try {
+    dirStat = lstatSync(campaignDir);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") return null;
+    throw err;
+  }
+  if (dirStat.isSymbolicLink()) throw new Error("campaign status escapes session root");
+  if (!dirStat.isDirectory()) return null;
+
+  const statusPath = join(campaignDir, "status.json");
+  let fileStat;
+  try {
+    fileStat = lstatSync(statusPath);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ENOENT" || code === "ENOTDIR") return null;
+    throw err;
+  }
+  if (fileStat.isSymbolicLink()) throw new Error("campaign status escapes session root");
+  if (!fileStat.isFile()) return null;
+  if (!realpathSync(statusPath).startsWith(safeRoot + sep)) throw new Error("campaign status escapes session root");
+
+  let raw: string;
+  try {
+    raw = readBounded(statusPath, { noFollow: true });
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ELOOP") throw new Error("campaign status escapes session root");
+    throw err;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  return controllerFromCampaignStatus(parsed);
+}
+
+function readLedgerLines(safeRoot: string, allowMissing: boolean): unknown[] {
+  const logPath = join(safeRoot, "summon-log.jsonl");
+  let logStat;
+  try {
+    logStat = lstatSync(logPath);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (allowMissing && code === "ENOENT") return [];
+    throw err;
+  }
+  if (logStat.isSymbolicLink()) throw new Error("summon log escapes session root");
+  if (!logStat.isFile()) return jsonLines(readBounded(logPath, { noFollow: true }));
+  if (!realpathSync(logPath).startsWith(safeRoot + sep)) throw new Error("summon log escapes session root");
+  try {
+    return jsonLines(readBounded(logPath, { noFollow: true }));
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ELOOP") throw new Error("summon log escapes session root");
+    throw err;
+  }
+}
+
 export function ledgerState(sessionRoot: string): ConsoleCoreState {
   // The caller must supply the exact sessionRoot returned by THEIR Core tool.
-  const manifest: unknown = JSON.parse(readBounded(join(sessionRoot, "session.json")));
-  const lines = jsonLines(readBounded(join(sessionRoot, "summon-log.jsonl")));
+  const safeRoot = realpathSync(sessionRoot);
+  const manifest: unknown = JSON.parse(readBounded(join(safeRoot, "session.json")));
+  const controller = readCampaignStatus(safeRoot);
+  const lines = readLedgerLines(safeRoot, controller !== null);
   let state = initialConsoleState();
   for (const event of eventsFromLedger(manifest, lines)) state = recordEvent(state, event, null, "ledger", { readObservable: false });
   const facts = skillsFromSessionManifest(manifest);
   state.status = { ...state.status, skills: facts.skills };
+  if (controller) {
+    // Campaign status is reported evidence, not an observed operator command.
+    // Preserve the actual session reading and selectedFrom.
+    state.status = {
+      ...state.status,
+      controller,
+    };
+  }
   return state;
 }
 type Rec = Record<string, any>;

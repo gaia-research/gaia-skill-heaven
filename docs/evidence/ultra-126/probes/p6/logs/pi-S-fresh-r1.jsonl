@@ -1,0 +1,9 @@
+{"ts":"2026-11-15T22:54:48.286Z","dir":"meta","event":"server_start","pid":42745,"ppid":42721,"envNames":["AI_AGENT","ANTIGRAVITY_USER_AGENT","PI_BG_FEATURES","PI_CACHE_RETENTION","PI_CODING_AGENT","PI_MANAGED_INSTALL_ROOT","TERM_SESSION_ID"],"envValues":{"TERM_SESSION_ID":"78A2EC78-8E6F-47EF-BD4B-73CD9CF17227"}}
+{"ts":"2026-11-15T22:54:48.290Z","dir":"in","message":{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{"roots":{}},"clientInfo":{"name":"pi","version":"1.5.2"}}}}
+{"ts":"2026-11-15T22:54:48.290Z","dir":"out","message":{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"p6-probe","version":"1.0.0"}}}}
+{"ts":"2026-11-15T22:54:48.291Z","dir":"in","message":{"jsonrpc":"2.0","method":"notifications/initialized"}}
+{"ts":"2026-11-15T22:54:48.291Z","dir":"in","message":{"jsonrpc":"2.0","id":2,"method":"tools/list"}}
+{"ts":"2026-11-15T22:54:48.291Z","dir":"out","message":{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"probe_elicit","description":"Send an MCP elicitation/create request to the client and return {\"sent\": true}.","inputSchema":{"type":"object","properties":{},"additionalProperties":false}},{"name":"operator_decide","description":"No-op probe tool that logs its invocation.","inputSchema":{"type":"object","properties":{"note":{"type":"string"}},"additionalProperties":true}}]}}}
+{"ts":"2026-11-15T22:54:54.765Z","dir":"in","message":{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"operator_decide","arguments":{"note":"s-fresh-r1"},"_meta":{"progressToken":3}}}}
+{"ts":"2026-11-15T22:54:54.765Z","dir":"meta","event":"operator_decide_called","arguments":{"note":"s-fresh-r1"}}
+{"ts":"2026-11-15T22:54:54.766Z","dir":"out","message":{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}]}}}

@@ -1,0 +1,35 @@
+<USER>@<HOST> p6b % cd '<TMP>/tmpuaulqs6z' && codex --no-alt-screen -m gpt-6-l
+una -c 'model_reasoning_effort="low"' -c 'projects."<TMP>/tmpuaulqs6z".trust_level="trusted"' -c
+'approvals_reviewer="user"' -c 'mcp_servers.p6.command="node"' -c 'mcp_servers.p6.args=["<HOME>/skill-heaven-wt/p6b/docs/evidence/ultr
+a-126/probes/p6/server.mjs"]' -c 'mcp_servers.p6.env={P6_LOG="<TMP>/tmpuaulqs6z/c3t.jsonl"}'
+
+  >_ OpenAI Codex (v0.169.0)
+     <TMP>/tmpuaulqs6z
+
+  To get started, describe a task or try one of these commands:
+
+  /init - create an AGENTS.md file with instructions for Codex
+  /status - show current session configuration
+  /permissions - choose what Codex is allowed to do
+  /model - choose what model and reasoning effort to use
+  /review - review any changes and find issues
+
+
+› Call the p6 operator_decide MCP tool with note="c3-t-user-r1".
+
+
+• I’ll locate the p6 operator_decide tool and call it with the exact note you gave.
+
+• Calling p6.operator_decide({"note":"c3-t-user-r1"})
+
+
+  Field 1/1
+  Allow the p6 MCP server to run tool "operator_decide"?
+
+  note: c3-t-user-r1
+
+  › 1. Allow                   Run the tool and continue
+    2. Allow for this session  Run the tool and remember this choice for this session
+    3. Always allow            Run the tool and remember this choice for future tool calls
+    4. Cancel                  Cancel this tool call
+  enter to submit | esc to cancel

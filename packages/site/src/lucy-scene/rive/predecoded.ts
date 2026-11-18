@@ -20,12 +20,12 @@
 //     and the bitmap is closed, so the decoded copy does not stay resident and
 //     a later re-upload (for example after a lost context) still works.
 //
-// The uploaded texels are byte-identical to the runtime's own path (verified
-// against texImage2D(<img>) with UNPACK_PREMULTIPLY_ALPHA_WEBGL in Chromium on
-// both raster paths). Everything here is a progressive enhancement over a pinned
-// runtime (@rive-app/webgl2 2.43.1): if the image table is not where this
-// version keeps it, or workers / OffscreenCanvas are missing, nothing is
-// swapped and the runtime's own path runs unchanged.
+// The worker decodes with `premultiplyAlpha: 'premultiply'` (within 1 LSB of
+// texImage2D(<img>) with UNPACK_PREMULTIPLY_ALPHA_WEBGL and zero unpremultiplied
+// alpha bleed across Chromium and WebKit). Everything here is a progressive
+// enhancement over a pinned runtime (@rive-app/webgl2 2.43.1): if the image
+// table is not where this version keeps it, or workers / createImageBitmap are
+// missing, nothing is swapped and the runtime's own path runs unchanged.
 
 type ImageTable = Map<unknown, unknown>
 
@@ -37,7 +37,7 @@ export interface Predecoder {
 
 export function createPredecoder(): Predecoder {
   let worker: Worker | null = null
-  let broken = typeof Worker !== 'function' || typeof OffscreenCanvas !== 'function'
+  let broken = typeof Worker !== 'function' || typeof createImageBitmap !== 'function'
   let seq = 0
   const waiting = new Map<number, (b: ImageBitmap | null) => void>()
   const fail = () => {

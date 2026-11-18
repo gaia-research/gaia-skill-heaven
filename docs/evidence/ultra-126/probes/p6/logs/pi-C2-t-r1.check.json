@@ -1,0 +1,8 @@
+{
+  "door": "pi",
+  "cell": "C2-t",
+  "run": 1,
+  "cmdJsonExists": false,
+  "paneShowsLiteralCommand": true,
+  "paneShowsNone": true
+}
