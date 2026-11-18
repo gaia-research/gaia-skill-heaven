@@ -130,7 +130,7 @@ describe("skill-summon-mcp stdio executable", () => {
     await client.connect(transport);
 
     const tools = await client.listTools();
-    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon"]);
+    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon", "campaign"]);
 
     const result = await client.callTool({
       name: "summon",

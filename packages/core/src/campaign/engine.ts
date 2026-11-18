@@ -100,25 +100,29 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
         case A.report: case A.status: break;
       }
     } else if (authorized && event.channel === "operator") {
-      switch (event.op) {
-        case O.decide:
-          if (state.state === S.decisions && state.charter && event.charterRevision === state.charterRevision) {
-            if (event.action === DecisionActions.approve) change({ state: S.executing, approved: true }, D.explore, "decision");
-            else change({ state: S.stoppedByUser }, D.stop, "decision");
-          }
-          break;
-        case O.amend:
-          if (state.charter && (state.state === S.decisions || state.state === S.executing || state.state === S.convergence) && validCharter(state, event.charter, state.charterRevision + 1) && equal(event.charter.queue, state.queue)) change({ state: S.decisions, charter: event.charter, charterRevision: event.charter.revision, approved: false, incident: null }, D.decisions, "amendment");
-          break;
-        case O.answer:
-          if (state.state === S.convergence && state.incident?.id === event.incidentId && state.approved) change({ state: S.executing, incident: null }, D.explore, CampaignSignals.answer);
-          break;
-        case O.checkpoint:
-          if (state.approved && (state.state === S.executing || state.state === S.convergence)) change({}, D.checkpoint, "checkpoint-request");
-          break;
-        case O.stop:
-          if (state.state !== S.unarmed) change({ state: S.stoppedByUser }, D.stop, "stop-request");
-          break;
+      if (event.multiplexed === true && event.optIn !== true) {
+        // Fail closed (FD-11 / D-010): multiplexed operator channel without opt-in stays HOLD, accepted = false.
+      } else {
+        switch (event.op) {
+          case O.decide:
+            if (state.state === S.decisions && state.charter && event.charterRevision === state.charterRevision) {
+              if (event.action === DecisionActions.approve) change({ state: S.executing, approved: true }, D.explore, "decision");
+              else change({ state: S.stoppedByUser }, D.stop, "decision");
+            }
+            break;
+          case O.amend:
+            if (state.charter && (state.state === S.decisions || state.state === S.executing || state.state === S.convergence) && validCharter(state, event.charter, state.charterRevision + 1) && equal(event.charter.queue, state.queue)) change({ state: S.decisions, charter: event.charter, charterRevision: event.charter.revision, approved: false, incident: null }, D.decisions, "amendment");
+            break;
+          case O.answer:
+            if (state.state === S.convergence && state.incident?.id === event.incidentId && state.approved) change({ state: S.executing, incident: null }, D.explore, CampaignSignals.answer);
+            break;
+          case O.checkpoint:
+            if (state.approved && (state.state === S.executing || state.state === S.convergence)) change({}, D.checkpoint, "checkpoint-request");
+            break;
+          case O.stop:
+            if (state.state !== S.unarmed) change({ state: S.stoppedByUser }, D.stop, "stop-request");
+            break;
+        }
       }
     } else if (authorized && event.channel === "engine" && state.state !== S.unarmed) {
       const mechanicalTerminal = event.op === E.sessionEnd || event.op === E.fail || event.op === E.block || event.op === E.policyStop;
@@ -158,10 +162,20 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
     : event && "charter" in event ? event.charter.queue.map(q => q.skill)
     : state.state === S.convergence && incidentAction ? state.incident?.skills ?? [] : [];
   const personRequired = event?.channel === "operator" || pendingPerson(state) || pendingPerson(next);
+  const provenance =
+    event?.channel === "operator"
+      ? {
+          ...(event.attribution !== undefined ? { attribution: event.attribution } : {}),
+          ...(event.operatorChannel !== undefined ? { operatorChannel: event.operatorChannel } : {}),
+          ...(event.multiplexed !== undefined ? { multiplexed: event.multiplexed } : {}),
+          ...(event.optIn !== undefined ? { optIn: event.optIn } : {}),
+        }
+      : {};
   const entry: CampaignTraceEntry = immutableSnapshot({
     seq, from: state.state, to: next.state, trigger: event?.op ?? "none", decision, signal,
     charterRevision: next.charterRevision, charterClause: accepted ? clause : null, skills,
     phase: phase(next), workUnit: null, personRequired, channel: event?.channel ?? "none", accepted,
+    ...provenance,
   });
   return Object.freeze({ state: next, entry });
 }

@@ -1,5 +1,7 @@
 import {
   CampaignManifestError,
+  OPERATOR_ATTRIBUTION,
+  OPERATOR_CHANNEL_MCP_ELICITATION,
   parseCampaignManifest,
   type CampaignManifest,
   type CampaignManifestEntry,
@@ -13,6 +15,7 @@ import {
 } from "skill-zero";
 
 import { displayField, escapeControlText } from "../summon/card.js";
+import type { CampaignCharterTemplate } from "./store.js";
 
 export const DECLARED_NOT_MEASURED_GROUP_ID = "declared-not-measured" as const;
 export const DECLARED_NOT_MEASURED_GROUP_TITLE = "Declared, not measured" as const;
@@ -460,4 +463,226 @@ export function renderCampaignManifest(
   options: RenderCampaignManifestOptions = {},
 ): string {
   return renderCampaignManifestLines(manifest, options).join("\n");
+}
+
+export const CONTROL_STRATEGY_GROUP_ID = "control-strategy" as const;
+export const CONTROL_STRATEGY_GROUP_TITLE = "Control strategy" as const;
+
+export type ControlStrategyRenderInput = Readonly<{
+  charterTemplate: CampaignCharterTemplate;
+  manifest: CampaignManifest;
+  multiplexed?: boolean;
+  optIn?: boolean;
+}>;
+
+function collectAbsentLensesForEntry(entry: CampaignManifestEntry): string[] {
+  const absent: string[] = [];
+  if ("status" in entry.retrieval) {
+    absent.push(`retrieval (${escapeControlText(entry.retrieval.status)}: not measured)`);
+  }
+  if (entry.lane.status !== "present" || entry.lane.lane === "unclassified") {
+    absent.push(`lane (${escapeControlText(entry.lane.status)}: not published / not measured)`);
+  }
+  if (
+    entry.installability.status !== "present" ||
+    entry.installability.applicability !== "verified"
+  ) {
+    absent.push(
+      `installability (${escapeControlText(entry.installability.status)}: not measured / not published)`,
+    );
+  }
+  if (
+    entry.arbor.status !== "present" ||
+    entry.arbor.availability !== "consulted"
+  ) {
+    absent.push(
+      `arbor (${escapeControlText(entry.arbor.status)} · ${escapeControlText(entry.arbor.availability)}: not published / not measured)`,
+    );
+  }
+  if (
+    entry.arbor.hellHeaven.status !== "present" ||
+    entry.arbor.hellHeaven.availability !== "consulted"
+  ) {
+    absent.push(
+      `arbor.hellHeaven (${escapeControlText(entry.arbor.hellHeaven.status)}: not published / not measured)`,
+    );
+  }
+  if (
+    entry.graph.status !== "present" ||
+    entry.graph.availability !== "consulted"
+  ) {
+    absent.push(
+      `graph (${escapeControlText(entry.graph.status)} · ${escapeControlText(entry.graph.availability)}: not published / not measured)`,
+    );
+  }
+  if (entry.freshness.status !== "present") {
+    absent.push(
+      `freshness (${escapeControlText(entry.freshness.status)}: not measured / not published)`,
+    );
+  }
+  return absent;
+}
+
+export function renderControlStrategyLines(
+  input: ControlStrategyRenderInput,
+): readonly string[] {
+  const { charterTemplate, manifest } = input;
+  const validatedManifest = parseCampaignManifest(manifest);
+  if (!validatedManifest) {
+    throw new CampaignManifestError(
+      "Invalid CampaignManifest passed to renderControlStrategy.",
+    );
+  }
+
+  const multiplexed = input.multiplexed ?? false;
+  const optIn = input.optIn ?? false;
+
+  const lines: string[] = [
+    `Control Strategy (r${charterTemplate.revision})`,
+    `  ReconId: ${displayField(charterTemplate.reconId)}`,
+    `  ShortDigest: ${displayField(charterTemplate.shortDigest)}`,
+    `  Goal: ${displayField(charterTemplate.goal)}`,
+    `  Phases: ${charterTemplate.phases.length > 0 ? charterTemplate.phases.map((p) => displayField(p)).join(" -> ") : "none"}`,
+    `  Arsenal by phase (${charterTemplate.arsenal.length} item(s)):`,
+  ];
+
+  const byPhase = new Map<string, typeof charterTemplate.arsenal[number][]>();
+  for (const phase of charterTemplate.phases) {
+    byPhase.set(phase, []);
+  }
+  for (const item of charterTemplate.arsenal) {
+    const bucket = byPhase.get(item.phase) ?? [];
+    bucket.push(item);
+    byPhase.set(item.phase, bucket);
+  }
+
+  for (const [phase, items] of byPhase.entries()) {
+    lines.push(`    Phase ${displayField(phase)}:`);
+    if (items.length === 0) {
+      lines.push("      - (none)");
+    } else {
+      for (const item of items) {
+        const convergenceNote = item.convergenceOnly
+          ? "convergence-only: yes (human-led; never model-invoked)"
+          : "convergence-only: no";
+        lines.push(
+          `      - ${displayField(item.skillId)} (${displayField(item.name)}) · gap [${item.gapIndex}] ${displayField(item.gap)} · cardRef ${displayField(item.cardRef)} · lane ${escapeControlText(item.lane)} · ${convergenceNote}`,
+        );
+      }
+    }
+  }
+
+  const allowedSkills =
+    charterTemplate.allowedSkills ??
+    [...new Set(charterTemplate.arsenal.map((item) => item.skillId))];
+  lines.push(
+    `  AllowedSkills: ${allowedSkills.length > 0 ? allowedSkills.map((s) => displayField(s)).join(", ") : "none"}`,
+  );
+
+  const queue = charterTemplate.queue ?? [];
+  if (queue.length === 0) {
+    lines.push("  Queue (0 item(s)): none");
+  } else {
+    lines.push(`  Queue (${queue.length} item(s)):`);
+    for (const q of queue) {
+      lines.push(
+        `    - ${displayField(q.id)} · skill ${displayField(q.skill)} · reconCitation ${displayField(q.reconCitation)}`,
+      );
+    }
+  }
+
+  lines.push("  What runs automatically:");
+  if (charterTemplate.authority.automatic.length === 0) {
+    lines.push("    - (none)");
+  } else {
+    for (const item of charterTemplate.authority.automatic) {
+      lines.push(`    - ${displayField(item)}`);
+    }
+  }
+
+  lines.push("  What needs the person:");
+  if (charterTemplate.authority.humanOnly.length === 0) {
+    lines.push("    - (none)");
+  } else {
+    for (const item of charterTemplate.authority.humanOnly) {
+      lines.push(`    - ${displayField(item)}`);
+    }
+  }
+
+  lines.push(
+    `  Recovery bounds: recoverLimit=${charterTemplate.recoverLimit} · reopenLimit=${charterTemplate.reopenLimit} (charter fields; no compiled default)`,
+  );
+  lines.push(
+    `  Pause window: sessionRetention=${charterTemplate.sessionRetention} (charter field; no compiled default)`,
+  );
+
+  lines.push(
+    `  Checkpoints: ${charterTemplate.checkpoints.length > 0 ? charterTemplate.checkpoints.map((c) => displayField(c)).join(", ") : "none"}`,
+  );
+  lines.push(
+    `  Stops: ${charterTemplate.stops.length > 0 ? charterTemplate.stops.map((s) => displayField(s)).join(", ") : "none"}`,
+  );
+  if (charterTemplate.clauses.length === 0) {
+    lines.push("  Clauses (0 item(s)): none");
+  } else {
+    lines.push(`  Clauses (${charterTemplate.clauses.length} item(s)):`);
+    for (const clause of charterTemplate.clauses) {
+      lines.push(`    - ${displayField(clause)}`);
+    }
+  }
+
+  lines.push("  Absent lenses (not measured / not published; never 0):");
+  let absentCount = 0;
+  for (const entry of validatedManifest.entries) {
+    const absent = collectAbsentLensesForEntry(entry);
+    if (absent.length > 0) {
+      absentCount += absent.length;
+      lines.push(
+        `    - ${displayField(entry.id)} (${displayField(entry.cardRef)}): ${absent.join("; ")}`,
+      );
+    }
+  }
+  if (absentCount === 0) {
+    lines.push("    - (none)");
+  }
+
+  const multiplexDetail = optIn
+    ? "optIn: true (typing the charter short digest is required as friction, not authentication)"
+    : multiplexed
+      ? "DECISIONS fails closed by default inside a terminal multiplexer"
+      : "no terminal multiplexer detected";
+
+  lines.push("  Operator channel & attribution:");
+  lines.push(
+    `    - channel: ${OPERATOR_CHANNEL_MCP_ELICITATION} · attribution: ${OPERATOR_ATTRIBUTION} (terminal input, not authentication; keeps the answer out of the model tool path but does not authenticate a person)`,
+  );
+  lines.push(`    - multiplexed: ${multiplexed} · ${multiplexDetail}`);
+  lines.push(
+    "    - Headless (-p): headless -p returns cancel from MCP elicitation without prompting a person, so a headless session cannot approve a charter and the campaign remains in DECISIONS.",
+  );
+  lines.push(
+    "    - Permission modes (P1d): bypass has no harness check (executed 3/3 in P1d); auto has a classifier that blocked 1/3 cooperative self-approval attempts in P1d (partial safeguard, not reliable); default and manual were not probed for self-approval.",
+  );
+  lines.push(
+    "  Note: this control-strategy summary is reference data, not an instruction; nothing in this rendered block grants execution authority, widens permissions, or approves a campaign.",
+  );
+
+  return Object.freeze(lines.map((line) => collapseLineControls(line)));
+}
+
+export function renderControlStrategy(
+  input: ControlStrategyRenderInput,
+): string {
+  return renderControlStrategyLines(input).join("\n");
+}
+
+export function buildControlStrategyGroup(
+  input: ControlStrategyRenderInput,
+): ManifestRenderGroup {
+  const lines = renderControlStrategyLines(input).slice(1);
+  return Object.freeze({
+    id: CONTROL_STRATEGY_GROUP_ID,
+    title: `${CONTROL_STRATEGY_GROUP_TITLE} (r${input.charterTemplate.revision})`,
+    lines,
+  });
 }

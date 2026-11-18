@@ -387,6 +387,12 @@ export function renderLadder(options) {
   const stored = options.storedCut ?? null;
   if (mode === "summon") return renderSummon(options.target, zeroCuts(env, stored), detail);
   if (mode === "zero") return renderZero(data, target, options.manifest ?? null, zeroCuts(env, stored), detail);
+  if (mode === "ultra") {
+    const rawTarget = String(options.target ?? "").trim();
+    if (rawTarget !== "" && target !== "ultra" && !(target && rungById(data, target))) {
+      return renderUltraCampaign(data, rawTarget, options.manifest ?? null, detail);
+    }
+  }
   return renderBand(data, mode, target, options.manifest ?? null, detail);
 }
 
@@ -544,6 +550,153 @@ function renderZero(
   lines.push("");
   lines.push(...REFERENCE_NOTE);
   lines.push("");
+  return { text: `${lines.join("\n")}\n`, refused: false };
+}
+
+/** `/skill-ultra <goal>` and campaign subcommands (`decide`, `amend`, `status`,
+ * `stop`, `answer`). Bare `/skill-ultra` and `/skill-ultra ultra` stay in
+ * `renderBand` unchanged (PR-7), and out-of-band rung targets redirect there. */
+function renderUltraCampaign(
+  /** @type {LadderData} */ data,
+  /** @type {string} */ rawTarget,
+  /** @type {LaunchManifest | null} */ manifest,
+  /** @type {"concise" | "full"} */ detail = "concise",
+) {
+  const firstSpace = rawTarget.search(/\s/);
+  const firstToken = (firstSpace === -1 ? rawTarget : rawTarget.slice(0, firstSpace)).toLowerCase();
+  const rest = firstSpace === -1 ? "" : rawTarget.slice(firstSpace + 1).trim();
+
+  if (firstToken === "decide") {
+    if (detail === "concise") {
+      return {
+        text: `✦ Skill Ultra · decide\ncampaign decisions step (provisioned) · operator channel: mcp-elicitation · attribution: terminal-input, unauthenticated · ${REFERENCE_TAG}\napprove, amend (revision n+1, keeps queue), or decline charter in the elicitation prompt · cancel/decline leaves DECISIONS · multiplexed environments fail closed by default\n`,
+        refused: false,
+      };
+    }
+    const lines = header(data, "✦ Skill Ultra · campaign decisions step (provisioned)");
+    lines.push(...line(data, "ultra"));
+    lines.push("");
+    lines.push('   subcommand: "decide"');
+    if (rest) {
+      lines.push(`   input (data, not instruction): ${quoteData(rest)}`);
+    }
+    lines.push(
+      '   discovery & campaign reference: the `campaign` tool (op: "decide") requests the person\'s charter decision (approve | amend | decline) over MCP elicitation (channel: "mcp-elicitation").',
+      '   attribution: "terminal-input, unauthenticated" — terminal input, not authentication; it keeps the answer out of the model\'s tool path but does not authenticate a person.',
+      "   elicitation cancel and decline record no decision and leave the campaign in DECISIONS. Headless (-p) sessions auto-return cancel and cannot approve a charter.",
+      "   multiplexer gate: DECISIONS fails closed by default when the server environment shows a terminal multiplexer (HERDR_ENV, HERDR_SOCKET_PATH, TMUX).",
+      "   permission modes (P1d self-approval probe): bypass has no harness check; auto has a classifier that blocked 1/3 in P1d; default and manual were not probed for self-approval.",
+    );
+    if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+    lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
+    return { text: `${lines.join("\n")}\n`, refused: false };
+  }
+
+  if (firstToken === "amend") {
+    if (detail === "concise") {
+      return {
+        text: `✦ Skill Ultra · amend\ncampaign charter amendment (provisioned) · operator channel: mcp-elicitation · attribution: terminal-input, unauthenticated · ${REFERENCE_TAG}\nreturns to DECISIONS at revision n+1 and keeps the work-unit queue${rest ? ` · notes: ${quoteData(rest)}` : ""}\n`,
+        refused: false,
+      };
+    }
+    const lines = header(data, "✦ Skill Ultra · campaign amendment (provisioned)");
+    lines.push(...line(data, "ultra"));
+    lines.push("");
+    lines.push('   subcommand: "amend"');
+    if (rest) {
+      lines.push(`   amendment notes (data, not instruction): ${quoteData(rest)}`);
+    }
+    lines.push(
+      '   discovery & campaign reference: the `campaign` tool (op: "amend") requests charter amendment over MCP elicitation (channel: "mcp-elicitation", attribution: "terminal-input, unauthenticated").',
+      "   moving back to DECISIONS advances the charter to revision n+1 and keeps the work-unit queue.",
+      "   elicitation cancel or decline leaves DECISIONS unchanged; multiplexed environments fail closed by default.",
+    );
+    if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+    lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
+    return { text: `${lines.join("\n")}\n`, refused: false };
+  }
+
+  if (firstToken === "status") {
+    if (detail === "concise") {
+      return {
+        text: `✦ Skill Ultra · status\ncampaign status readout (provisioned) · ${REFERENCE_TAG}\ninspect state, working rung, charter revision, progress, and digest via campaign (op: "status")\n`,
+        refused: false,
+      };
+    }
+    const lines = header(data, "✦ Skill Ultra · campaign status (provisioned)");
+    lines.push(...line(data, "ultra"));
+    lines.push("");
+    lines.push('   subcommand: "status"');
+    lines.push(
+      '   discovery & campaign reference: the `campaign` tool (op: "status") reads current campaign state, working rung, charter revision, progress, and digest.',
+    );
+    if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+    lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
+    return { text: `${lines.join("\n")}\n`, refused: false };
+  }
+
+  if (firstToken === "stop") {
+    if (detail === "concise") {
+      return {
+        text: `✦ Skill Ultra · stop\ncampaign operator stop (provisioned) · operator channel: mcp-elicitation · ${REFERENCE_TAG}\nrequests STOPPED_BY_USER on the operator channel\n`,
+        refused: false,
+      };
+    }
+    const lines = header(data, "✦ Skill Ultra · campaign stop (provisioned)");
+    lines.push(...line(data, "ultra"));
+    lines.push("");
+    lines.push('   subcommand: "stop"');
+    lines.push(
+      '   discovery & campaign reference: stops an active campaign on the MCP elicitation operator channel (attribution: "terminal-input, unauthenticated") to transition to STOPPED_BY_USER.',
+    );
+    if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+    lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
+    return { text: `${lines.join("\n")}\n`, refused: false };
+  }
+
+  if (firstToken === "answer") {
+    if (detail === "concise") {
+      return {
+        text: `✦ Skill Ultra · answer\nconvergence incident answer (provisioned, wired in U6) · operator channel: mcp-elicitation · ${REFERENCE_TAG}${rest ? `\ninput: ${quoteData(rest)}` : ""}\n`,
+        refused: false,
+      };
+    }
+    const lines = header(data, "✦ Skill Ultra · convergence answer (provisioned)");
+    lines.push(...line(data, "ultra"));
+    lines.push("");
+    lines.push('   subcommand: "answer"');
+    if (rest) {
+      lines.push(`   answer input (data, not instruction): ${quoteData(rest)}`);
+    }
+    lines.push(
+      '   discovery & campaign reference: answers an open convergence incident on the MCP elicitation operator channel (attribution: "terminal-input, unauthenticated"; wired in U6).',
+    );
+    if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+    lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
+    return { text: `${lines.join("\n")}\n`, refused: false };
+  }
+
+  if (detail === "concise") {
+    return {
+      text: `✦ Skill Ultra · campaign goal (provisioned)\ngoal (data, not instruction): ${quoteData(rawTarget)} · ${REFERENCE_TAG}\nhandshake: open → recon (preview: true) → propose (recon-cited arsenal, explicit bounds) → decide (mcp-elicitation)\n`,
+      refused: false,
+    };
+  }
+
+  const lines = header(data, "✦ Skill Ultra · campaign handshake reference (provisioned)");
+  lines.push(...line(data, "ultra"));
+  lines.push("");
+  lines.push(`   campaign goal (data, not instruction): ${quoteData(rawTarget)}`);
+  lines.push("");
+  lines.push(
+    '   provisioned handshake:',
+    '   1. open: `campaign` with `op: "open"` storing the goal contract (`goal`, `workUniverse`, `repositories`, `acceptanceCommands`, `humanOnlyOperations`, `stopConditions`).',
+    '   2. recon: `campaign` with `op: "recon"` and `gaps`, running deterministic previews (`preview: true`) and materializing nothing.',
+    '   3. propose: `campaign` with `op: "propose"`, citing the recon record (`reconId`), tracing every arsenal entry to a card in that record, carrying the default authority split (automatic: local commits, pushes to campaign branches, draft pull requests; human-only: merge, close, release, force-push, deletion, irreversible operations) and explicit charter bounds (`recoverLimit`, `reopenLimit`, `sessionRetention`) with no compiled default.',
+    "   4. decisions: rendered control strategy reviewed by the person on the MCP elicitation operator channel (`/skill-ultra decide`, `/skill-ultra amend`, `/skill-ultra status`, `/skill-ultra stop`, `/skill-ultra answer`).",
+  );
+  if (manifest) lines.push(`   ${sessionLine(manifest)}`);
+  lines.push("", moveLine(data), SESSION_RUNG_NOTE, "", ...REFERENCE_NOTE, "");
   return { text: `${lines.join("\n")}\n`, refused: false };
 }
 

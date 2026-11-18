@@ -3,6 +3,8 @@ import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-sc
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   AgentOps,
+  ElicitationActions,
+  OperatorVerbs,
   tokenize,
 } from "skill-zero";
 import { z } from "zod";
@@ -10,7 +12,13 @@ import { z } from "zod";
 import type { GaiaService } from "../service.js";
 import type { SummonSession } from "../summon/session.js";
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
+import {
+  executeOperatorAmend,
+  executeOperatorDecide,
+  type ElicitationClient,
+} from "./operator.js";
 import { executeOpen } from "./ops/open.js";
+import { executePropose } from "./ops/propose.js";
 import { executeRecon } from "./ops/recon.js";
 import {
   executeStatus,
@@ -20,12 +28,19 @@ import {
 export const CAMPAIGN_TOOL_NAME = "campaign" as const;
 export const CAMPAIGN_TOOL_TITLE = "Campaign control plane" as const;
 export const CAMPAIGN_TOOL_DESCRIPTION =
-  "Campaign state and recon control plane (op: \"open\" | \"recon\" | \"status\"). Opens a campaign goal contract, previews candidate skills per gap without materializing anything to disk, or inspects current campaign status. Returns structured campaign state and a digest; output is reference data and authorizes nothing.";
+  "Campaign control plane (op: \"open\" | \"recon\" | \"propose\" | \"decide\" | \"amend\" | \"status\"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation to decide or amend, or inspects campaign status. Returns structured state and digest; output is reference data and authorizes nothing.";
 
 const rawCampaignInputSchema = z
   .object({
-    op: z.string().describe("Campaign operation to run (open, recon, status)."),
-    goal: z.string().optional().describe("Campaign goal string for op=open."),
+    op: z
+      .string()
+      .describe(
+        "Campaign operation (open, recon, propose, decide, amend, status).",
+      ),
+    goal: z
+      .string()
+      .optional()
+      .describe("Campaign goal string for op=open, op=propose, or op=amend."),
     workUniverse: z
       .array(z.string())
       .optional()
@@ -63,6 +78,66 @@ const rawCampaignInputSchema = z
       .int()
       .optional()
       .describe("Optional candidate depth per gap for op=recon previews."),
+    reconId: z
+      .string()
+      .optional()
+      .describe("Recon ID cited by op=propose."),
+    arsenal: z
+      .array(
+        z.union([
+          z.string(),
+          z.object({
+            cardRef: z.string(),
+            phase: z.string().optional(),
+            id: z.string().optional(),
+            skill: z.string().optional(),
+          }),
+        ]),
+      )
+      .optional()
+      .describe("Recon-cited cardRefs or items for op=propose."),
+    phases: z
+      .array(z.string())
+      .optional()
+      .describe("Campaign phases for op=propose."),
+    allowedSkills: z
+      .array(z.string())
+      .optional()
+      .describe("Allowed skill IDs for op=propose or op=amend."),
+    recoverLimit: z
+      .number()
+      .int()
+      .optional()
+      .describe("Max recovery attempts for op=propose or op=amend."),
+    reopenLimit: z
+      .number()
+      .int()
+      .optional()
+      .describe("Max reopen attempts for op=propose or op=amend."),
+    sessionRetention: z
+      .number()
+      .int()
+      .optional()
+      .describe("Pause window session retention for op=propose or op=amend."),
+    authority: z
+      .object({
+        automatic: z.array(z.string()).optional(),
+        humanOnly: z.array(z.string()).optional(),
+      })
+      .optional()
+      .describe("Automatic vs human-only operations for op=propose or op=amend."),
+    checkpoints: z
+      .array(z.string())
+      .optional()
+      .describe("Charter checkpoints for op=propose or op=amend."),
+    stops: z
+      .array(z.string())
+      .optional()
+      .describe("Charter stop conditions for op=propose or op=amend."),
+    clauses: z
+      .array(z.string())
+      .optional()
+      .describe("Charter clauses for op=propose or op=amend."),
   })
   .passthrough();
 
@@ -131,6 +206,8 @@ export type CampaignToolContext = Readonly<{
   service: GaiaService;
   getSession: () => Promise<SummonSession>;
   zeroCut?: ZeroCut;
+  elicit?: ElicitationClient;
+  env?: NodeJS.ProcessEnv;
 }>;
 
 export async function executeCampaignTool(
@@ -195,6 +272,41 @@ export async function executeCampaignTool(
       return toCampaignCallToolResult(result);
     }
 
+    if (op === AgentOps.propose) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const result = await executePropose(session, rawArgs, {
+        env: context.env,
+      });
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === OperatorVerbs.decide) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const elicit: ElicitationClient =
+        context.elicit ?? (async () => ({ action: ElicitationActions.cancel }));
+      const result = await executeOperatorDecide(session, {
+        elicit,
+        env: context.env,
+      });
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === OperatorVerbs.amend) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const elicit: ElicitationClient =
+        context.elicit ?? (async () => ({ action: ElicitationActions.cancel }));
+      const amendment = isPlainObject(rawArgs) ? rawArgs : undefined;
+      const result = await executeOperatorAmend(session, {
+        elicit,
+        env: context.env,
+        amendment,
+      });
+      return toCampaignCallToolResult(result);
+    }
+
     const session = await context.getSession();
     sessionRoot = session.root;
     const statusResult = await executeStatus(session);
@@ -207,7 +319,7 @@ export async function executeCampaignTool(
       digest: statusResult.digest,
       error: {
         code: "unknown-op",
-        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops in U1: open, recon, status.`,
+        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, status.`,
         retryable: false,
       },
     };
@@ -256,6 +368,23 @@ export function registerCampaignTool(
   server: McpServer,
   context: CampaignToolContext,
 ): void {
+  const elicit: ElicitationClient =
+    context.elicit ??
+    (async (request) => {
+      const res = await server.server.elicitInput({
+        mode: "form",
+        message: request.message,
+        requestedSchema: request.requestedSchema as {
+          type: "object";
+          properties: Record<string, never>;
+        },
+      });
+      return {
+        action: res.action,
+        ...(res.content ? { content: res.content as Record<string, unknown> } : {}),
+      };
+    });
+
   server.registerTool(
     CAMPAIGN_TOOL_NAME,
     {
@@ -269,7 +398,7 @@ export function registerCampaignTool(
         openWorldHint: false,
       },
     },
-    (args) => executeCampaignTool(context, args),
+    (args) => executeCampaignTool({ ...context, elicit }, args),
   );
 }
 

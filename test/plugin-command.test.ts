@@ -66,7 +66,11 @@ describe.each(SURFACES)("$file", ({ file, mode }) => {
     // Everything but /skill-zero also calls the summon MCP tool — /skill-zero is
     // the floor, so it is the one surface that must NOT hold that grant.
     expect(fm["allowed-tools"]).toBe(
-      mode === "zero" ? "Bash(node:*)" : "Bash(node:*), mcp__skill-summon__summon",
+      mode === "zero"
+        ? "Bash(node:*)"
+        : mode === "ultra"
+          ? "Bash(node:*), mcp__skill-summon__summon, mcp__skill-summon__campaign"
+          : "Bash(node:*), mcp__skill-summon__summon",
     );
   });
 
@@ -443,5 +447,48 @@ describe("the stored zero_cuts reaches the renderer through the heredoc (#228)",
     const hostile = `all' "q" $(touch ${marker}) ; touch ${marker}`;
     expect(run("skill-zero.md", hostile, "")).toContain("stored cut: temporary");
     expect(existsSync(marker)).toBe(false);
+  });
+});
+
+describe("/skill-ultra campaign subcommands and handshake", () => {
+  function runUltra(args: string): string {
+    const source = readFileSync(join(PLUGIN, "commands", "skill-ultra.md"), "utf-8");
+    const match = source.match(/^!`([\s\S]*?SKILL_HEAVEN_ARGS_EOF)`$/m);
+    if (!match) throw new Error("skill-ultra.md has no heredoc ! line");
+    const line = match[1]
+      .replaceAll("${CLAUDE_PLUGIN_ROOT}", PLUGIN)
+      .replaceAll("$ARGUMENTS", args);
+    const r = spawnSync("bash", ["-c", line], { env: process.env, encoding: "utf-8" });
+    expect(r.status, r.stderr).toBe(0);
+    return r.stdout;
+  }
+
+  it("keeps bare /skill-ultra unchanged and routes goal + subcommands", () => {
+    const bare = runUltra("");
+    expect(bare).toContain("✦ Skill Ultra");
+    expect(bare).toContain("adaptive routing");
+    expect(bare).not.toContain("campaign goal");
+
+    const goal = runUltra("ship U3 cleanly");
+    expect(goal).toContain("campaign goal (provisioned)");
+    expect(goal).toContain('"ship U3 cleanly"');
+
+    expect(runUltra("decide")).toContain("✦ Skill Ultra · decide");
+    expect(runUltra("amend tighten bounds")).toContain('notes: "tighten bounds"');
+    expect(runUltra("status")).toContain("✦ Skill Ultra · status");
+    expect(runUltra("stop")).toContain("✦ Skill Ultra · stop");
+    expect(runUltra("answer keep going")).toContain('input: "keep going"');
+  });
+
+  it("documents the provisioned campaign handshake in skill-ultra.md", () => {
+    const flat = commands.get("skill-ultra.md")!.replace(/\s+/g, " ");
+    expect(flat).toContain("mcp__skill-summon__campaign");
+    expect(flat).toContain('op: "open"');
+    expect(flat).toContain('op: "recon"');
+    expect(flat).toContain('op: "propose"');
+    expect(flat).toContain('op: "decide"');
+    expect(flat).toContain('op: "amend"');
+    expect(flat).toContain('op: "status"');
+    expect(flat).toContain("provisioned");
   });
 });

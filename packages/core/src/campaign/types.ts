@@ -1,5 +1,12 @@
 import type { SteeringState, SteeringRung } from "../steering.js";
-import { AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions as D } from "./vocabulary.js";
+import {
+  AgentOps as A,
+  OperatorVerbs as O,
+  EngineOps as E,
+  DecisionActions as D,
+  OPERATOR_ATTRIBUTION,
+  OPERATOR_CHANNEL_MCP_ELICITATION,
+} from "./vocabulary.js";
 import type { CampaignChannel, CampaignDecision, CampaignPhase, CampaignSignal, CampaignStateName } from "./vocabulary.js";
 
 export type CampaignQueueItem = Readonly<{
@@ -54,11 +61,18 @@ export type AgentCampaignEvent =
   | Readonly<{ channel: "agent"; op: typeof A.recon; recon: CampaignRecon }>
   | Readonly<{ channel: "agent"; op: typeof A.propose; charter: CampaignCharter }>
   | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>;
-export type CampaignOperatorCommand =
+export type OperatorProvenanceFields = Readonly<{
+  attribution?: typeof OPERATOR_ATTRIBUTION;
+  operatorChannel?: typeof OPERATOR_CHANNEL_MCP_ELICITATION;
+  multiplexed?: boolean;
+  optIn?: boolean;
+}>;
+export type CampaignOperatorCommand = (
   | Readonly<{ channel: "operator"; op: typeof O.decide; action: typeof D[keyof typeof D]; charterRevision: number }>
   | Readonly<{ channel: "operator"; op: typeof O.amend; charter: CampaignCharter }>
   | Readonly<{ channel: "operator"; op: typeof O.answer; incidentId: string; answer: string }>
-  | Readonly<{ channel: "operator"; op: typeof O.checkpoint | typeof O.stop }>;
+  | Readonly<{ channel: "operator"; op: typeof O.checkpoint | typeof O.stop }>
+) & OperatorProvenanceFields;
 export type EngineCommand =
   | Readonly<{ channel: "engine"; op: typeof E.verify; passed: boolean; clause: string }>
   | Readonly<{ channel: "engine"; op: Exclude<typeof E[keyof typeof E], typeof E.verify>; clause: string }>;
@@ -97,6 +111,10 @@ export type CampaignTraceEntry = Readonly<{
   personRequired: boolean;
   channel: CampaignChannel;
   accepted: boolean;
+  attribution?: typeof OPERATOR_ATTRIBUTION;
+  operatorChannel?: typeof OPERATOR_CHANNEL_MCP_ELICITATION;
+  multiplexed?: boolean;
+  optIn?: boolean;
 }>;
 export type CampaignTraceRecord = Readonly<{
   schema: string;

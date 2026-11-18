@@ -102,7 +102,7 @@ describe("skill-summon MCP protocol", () => {
     );
 
     const tools = await client.listTools();
-    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon"]);
+    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon", "campaign"]);
   });
 
   // #85: server instructions are copied verbatim into client context, so they
@@ -310,7 +310,7 @@ describe("skill-summon MCP protocol", () => {
       );
 
       const tools = await client.listTools();
-      expect(tools.tools).toHaveLength(1);
+      expect(tools.tools).toHaveLength(2);
     },
   );
 });

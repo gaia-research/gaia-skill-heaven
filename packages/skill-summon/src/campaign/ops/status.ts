@@ -6,6 +6,7 @@ import {
   toControllerStatus,
   type CampaignState,
   type CampaignStateName,
+  type CampaignTraceEntry,
   type ControllerStatus,
   type SteeringRung,
 } from "skill-zero";
@@ -18,6 +19,8 @@ export type CampaignDigest = Readonly<{
   effective: SteeringRung;
   charterRevision: number;
   approved: boolean;
+  multiplexed?: boolean;
+  optIn?: boolean;
   progress: Readonly<{ completed: number; total: number }> | null;
   transition: Readonly<{ from: string; to: string; reason: string }> | null;
   text: string;
@@ -72,6 +75,7 @@ function displayStateToken(token: string): string {
 export function buildCampaignDigest(
   state: CampaignState,
   status?: ControllerStatus,
+  latestOperatorEntry?: CampaignTraceEntry,
 ): CampaignDigest {
   const projected = status ?? toControllerStatus(state);
   const effective = projected.effective ?? state.steering.rung;
@@ -81,7 +85,11 @@ export function buildCampaignDigest(
   const transitionText = projected.transition
     ? ` · transition=${displayStateToken(projected.transition.from)}->${displayStateToken(projected.transition.to)} (${projected.transition.reason})`
     : "";
-  const text = `[Campaign] state=${displayStateToken(projected.state)} · effective=${effective} · charter=r${state.charterRevision} (${state.approved ? "approved" : "unapproved"})${progressText}${transitionText} · reference data, authorizes nothing`;
+  const operatorProvenanceText =
+    latestOperatorEntry?.channel === "operator"
+      ? `${latestOperatorEntry.multiplexed !== undefined ? ` · multiplexed=${latestOperatorEntry.multiplexed}` : ""}${latestOperatorEntry.optIn === true ? " · optIn=true" : ""}`
+      : "";
+  const text = `[Campaign] state=${displayStateToken(projected.state)} · effective=${effective} · charter=r${state.charterRevision} (${state.approved ? "approved" : "unapproved"})${progressText}${transitionText}${operatorProvenanceText} · reference data, authorizes nothing`;
 
   return immutableSnapshot({
     schema: CAMPAIGN_SCHEMA_IDS.status,
@@ -89,6 +97,14 @@ export function buildCampaignDigest(
     effective,
     charterRevision: state.charterRevision,
     approved: state.approved,
+    ...(latestOperatorEntry?.channel === "operator" &&
+    latestOperatorEntry.multiplexed !== undefined
+      ? { multiplexed: latestOperatorEntry.multiplexed }
+      : {}),
+    ...(latestOperatorEntry?.channel === "operator" &&
+    latestOperatorEntry.optIn === true
+      ? { optIn: true }
+      : {}),
     progress: projected.progress
       ? {
           completed: projected.progress.completed,
@@ -145,10 +161,13 @@ export async function readSafeCampaignStateAndDigest(
       refreshStatus: false,
     });
     const status = toControllerStatus(store.state, store.trace.at(-1));
+    const latestAcceptedOperator = [...store.trace]
+      .reverse()
+      .find((entry) => entry.channel === "operator" && entry.accepted);
     return {
       state: store.state,
       status,
-      digest: buildCampaignDigest(store.state, status),
+      digest: buildCampaignDigest(store.state, status, latestAcceptedOperator),
     };
   } catch {
     return {
@@ -167,7 +186,13 @@ export async function readSessionCampaignDigest(
     return null;
   }
   const status = toControllerStatus(store.state, store.trace.at(-1));
-  return buildCampaignDigest(store.state, status);
+  return buildCampaignDigest(
+    store.state,
+    status,
+    [...store.trace]
+      .reverse()
+      .find((entry) => entry.channel === "operator" && entry.accepted),
+  );
 }
 
 export async function executeStatus(session: {
@@ -175,7 +200,14 @@ export async function executeStatus(session: {
 }): Promise<CampaignStatusResult> {
   const store = await CampaignStore.load(session.root, { refreshStatus: false });
   const status = toControllerStatus(store.state, store.trace.at(-1));
-  const digest = buildCampaignDigest(store.state, status);
+  const latestAcceptedOperator = [...store.trace]
+    .reverse()
+    .find((entry) => entry.channel === "operator" && entry.accepted);
+  const digest = buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperator,
+  );
 
   if (store.corrupted) {
     return immutableSnapshot({
