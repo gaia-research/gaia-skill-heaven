@@ -16,6 +16,8 @@ import {
   ENGINE_OPS,
   OPERATOR_ATTRIBUTION,
   OPERATOR_CHANNEL_MCP_ELICITATION,
+  RECEIPT_STATUSES,
+  ReceiptStatuses,
 } from "./vocabulary.js";
 import type { CampaignCharter, CampaignRecon, CampaignTraceEntry, CampaignTraceRecord, CampaignState, CampaignEventDescriptor, ConvergenceIncident, ControllerStatus } from "./types.js";
 export { CAMPAIGN_SCHEMA_IDS };
@@ -51,14 +53,31 @@ const array = (check: Check): Check => v => {
   return true;
 };
 const strings = array(text);
-const queueItem: Check = v => object(v, { id: text, skill: text, reconCitation: text });
+const queueItem: Check = v => object(v, { id: text, skill: text, reconCitation: text, phase: text, dependsOn: strings }, ["phase", "dependsOn"]);
 const queue = array(queueItem);
 const schema = (id: string): Check => v => v === id;
 const charter: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.charter), revision: nat, goal: text,
   allowedSkills: strings, queue, recoverLimit: nat, reopenLimit: nat,
-  sessionRetention: nat, clauses: strings,
-});
+  sessionRetention: nat, clauses: strings, acceptanceCommands: strings,
+}, ["acceptanceCommands"]);
+const verifyReceipt: Check = v => {
+  if (!object(v, {
+    schema: schema(CAMPAIGN_SCHEMA_IDS.receipt),
+    unitId: text,
+    command: text,
+    outputSha256: sha256,
+    exitCode: nat,
+    status: member(RECEIPT_STATUSES),
+    replayedExitCode: nat,
+    replayedOutputSha256: sha256,
+  }, ["replayedExitCode", "replayedOutputSha256"])) return false;
+  const r = v as { status: string; replayedExitCode?: number; replayedOutputSha256?: string };
+  if (r.status === ReceiptStatuses.attested) {
+    return r.replayedExitCode === undefined && r.replayedOutputSha256 === undefined;
+  }
+  return r.replayedExitCode !== undefined && r.replayedOutputSha256 !== undefined;
+};
 const recon: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.recon), findings: strings, citations: strings,
 });
@@ -132,7 +151,15 @@ const event: Check = v => {
       case O.checkpoint: case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
   }
-  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) return object(v, o.value === E.verify ? { ...base, passed: bool, clause: text } : { ...base, clause: text });
+  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) {
+    return o.value === E.verify
+      ? object(
+          v,
+          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool },
+          ["workUnit", "receipt", "closesUnit"],
+        )
+      : object(v, { ...base, clause: text });
+  }
   return false;
 };
 const trace: Check = v => {

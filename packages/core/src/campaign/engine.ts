@@ -1,4 +1,6 @@
 import { createRuntimeAdapter, createRuntimeEvent, initialSteeringState, stepSteering } from "../steering.js";
+import type { SteeringState, SteeringStep } from "../steering.js";
+import { canReceiptCloseUnit } from "./receipts.js";
 import { CampaignStates as S, CampaignDecisions as D, CampaignPhases as P, CampaignSignals, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions, TERMINAL_STATES, CAMPAIGN_SCHEMA_IDS } from "./vocabulary.js";
 import { immutableSnapshot, isValidCharterForRecon, parseCampaignEvent, parseCampaignState, parseCampaignRecord } from "./schema.js";
 import type { CampaignState, CampaignEventDescriptor, CampaignStep, CampaignReplay, CampaignTraceEntry, CampaignTraceRecord, CampaignVerification, CampaignVerificationOptions, CampaignOperatorCommand, EngineCommand, OperatorEventCapability, EngineEventCapability, OperatorCampaignEvent, EngineCampaignEvent, CampaignCharter } from "./types.js";
@@ -38,6 +40,13 @@ export function createCampaignEngineEvent(capability: EngineEventCapability, com
   if (!parsed || parsed.channel !== "engine") throw new Error("Invalid engine command");
   engineEvents.add(parsed);
   return parsed as EngineCampaignEvent;
+}
+export function stepCampaignSteering(steeringState: SteeringState, passed: boolean): SteeringStep {
+  if (typeof passed !== "boolean") {
+    throw new Error("stepCampaignSteering requires a boolean passed outcome");
+  }
+  const type = passed ? "behavioral-recovery" : "behavioral-failure";
+  return stepSteering(steeringState, createRuntimeEvent(steeringAdapter, type));
 }
 export function initialCampaignState(): CampaignState {
   return immutableSnapshot({ state: S.unarmed, charter: null, recon: null, queue: [], charterRevision: 0, approved: false, incident: null, steering: initialSteeringState(), completed: 0, total: 0 });
@@ -134,10 +143,38 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
         switch (event.op) {
           case E.verify:
             if (state.approved && (state.state === S.executing || state.state === S.convergence)) {
+              if (event.closesUnit === true) {
+                const unitInQueue = event.workUnit !== undefined && state.queue.some((q) => q.id === event.workUnit);
+                const acceptanceCommands = state.charter?.acceptanceCommands ?? [];
+                if (
+                  !event.passed ||
+                  !unitInQueue ||
+                  !canReceiptCloseUnit(event.receipt, event.workUnit!, acceptanceCommands)
+                ) {
+                  break;
+                }
+              }
               const type = event.passed ? "behavioral-recovery" : "behavioral-failure";
               const result = stepSteering(state.steering, createRuntimeEvent(steeringAdapter, type));
-              if (result.decision === "hold") { accepted = true; signal = type; }
-              else change({ steering: result.state }, event.passed ? D.recover : D.explore, type);
+              const nextCompleted =
+                event.closesUnit === true && state.completed < state.total ? state.completed + 1 : state.completed;
+              if (result.decision === "hold") {
+                if (nextCompleted !== state.completed) {
+                  change({ completed: nextCompleted }, D.recover, type);
+                } else {
+                  accepted = true;
+                  signal = type;
+                }
+              } else {
+                change(
+                  {
+                    steering: result.state,
+                    ...(nextCompleted !== state.completed ? { completed: nextCompleted } : {}),
+                  },
+                  event.passed ? D.recover : D.explore,
+                  type,
+                );
+              }
             }
             break;
           case E.complete:
@@ -171,10 +208,12 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
           ...(event.optIn !== undefined ? { optIn: event.optIn } : {}),
         }
       : {};
+  const workUnit =
+    event?.channel === "engine" && event.op === E.verify ? (event.workUnit ?? null) : null;
   const entry: CampaignTraceEntry = immutableSnapshot({
     seq, from: state.state, to: next.state, trigger: event?.op ?? "none", decision, signal,
     charterRevision: next.charterRevision, charterClause: accepted ? clause : null, skills,
-    phase: phase(next), workUnit: null, personRequired, channel: event?.channel ?? "none", accepted,
+    phase: phase(next), workUnit, personRequired, channel: event?.channel ?? "none", accepted,
     ...provenance,
   });
   return Object.freeze({ state: next, entry });

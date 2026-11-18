@@ -90,4 +90,38 @@ export const CAMPAIGN_SCHEMA_IDS = Object.freeze({
   manifest: "skill-heaven/campaign-manifest/v1",
   incident: "skill-heaven/convergence-incident/v1",
   status: "skill-heaven/controller-status/v1",
+  receipt: "skill-heaven/verify-receipt/v1",
+  units: "skill-heaven/work-units/v1",
 } as const);
+
+export const WorkUnitStates = Object.freeze({
+  ready: "ready",
+  active: "active",
+  verifying: "verifying",
+  recovering: "recovering",
+  reopened: "reopened",
+  done: "done",
+  needsHuman: "needs-human",
+  blocked: "blocked",
+} as const);
+export const WORK_UNIT_STATES = Object.freeze(Object.values(WorkUnitStates));
+export type WorkUnitState = typeof WORK_UNIT_STATES[number];
+
+export const ReceiptStatuses = Object.freeze({
+  attested: "attested",
+  replayed: "replayed",
+} as const);
+export const RECEIPT_STATUSES = Object.freeze(Object.values(ReceiptStatuses));
+export type ReceiptStatus = typeof RECEIPT_STATUSES[number];
+
+export const UnitReportOutcomes = Object.freeze({
+  pass: "pass",
+  fail: "fail",
+  block: "block",
+  unblock: "unblock",
+  needsHuman: "needs-human",
+  resume: "resume",
+  retrievalRefusal: "retrieval-refusal",
+} as const);
+export const UNIT_REPORT_OUTCOMES = Object.freeze(Object.values(UnitReportOutcomes));
+export type UnitReportOutcome = typeof UNIT_REPORT_OUTCOMES[number];

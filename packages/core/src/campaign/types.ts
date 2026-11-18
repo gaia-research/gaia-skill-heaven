@@ -1,4 +1,5 @@
 import type { SteeringState, SteeringRung } from "../steering.js";
+import type { VerifyReceipt } from "./receipts.js";
 import {
   AgentOps as A,
   OperatorVerbs as O,
@@ -13,6 +14,8 @@ export type CampaignQueueItem = Readonly<{
   id: string;
   skill: string;
   reconCitation: string;
+  phase?: string;
+  dependsOn?: readonly string[];
 }>;
 export type CampaignCharter = Readonly<{
   schema: string;
@@ -24,6 +27,7 @@ export type CampaignCharter = Readonly<{
   reopenLimit: number;
   sessionRetention: number;
   clauses: readonly string[];
+  acceptanceCommands?: readonly string[];
 }>;
 export type CampaignRecon = Readonly<{
   schema: string;
@@ -74,7 +78,15 @@ export type CampaignOperatorCommand = (
   | Readonly<{ channel: "operator"; op: typeof O.checkpoint | typeof O.stop }>
 ) & OperatorProvenanceFields;
 export type EngineCommand =
-  | Readonly<{ channel: "engine"; op: typeof E.verify; passed: boolean; clause: string }>
+  | Readonly<{
+      channel: "engine";
+      op: typeof E.verify;
+      passed: boolean;
+      clause: string;
+      workUnit?: string;
+      receipt?: VerifyReceipt;
+      closesUnit?: boolean;
+    }>
   | Readonly<{ channel: "engine"; op: Exclude<typeof E[keyof typeof E], typeof E.verify>; clause: string }>;
 
 /** These are data claims, not authority. Parsing never produces a live event. */
