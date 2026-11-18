@@ -60,5 +60,5 @@ existing suite stays green: with no campaign, behaviour is unchanged.
 ## Team shape
 
 Follow COMMON.md, "Pi team roster and escalation": Hydrogen is the default worker. Luna takes
-only very mechanical pieces. Argon (L3) and then Opus (L4) come only after a recorded verification failure. The lead
+only very mechanical pieces. Opus (the only escalation step; Argon is unavailable) comes only after a recorded verification failure. The lead
 decomposes and verifies; it does not implement.

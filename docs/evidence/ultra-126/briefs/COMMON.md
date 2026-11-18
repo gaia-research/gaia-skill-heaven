@@ -50,9 +50,9 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   when the lane is BLOCKED.
 - **Antigravity escalation:** start on Gemini 4 Hydrogen. If Hydrogen is stuck in a
   review loop (the same blocking finding survives two repair rounds), escalate the
-  repair to **Gemini 4 Argon** (`agy --model gemini-4-argon-high`, in a pane in
-  your tab) and record the escalation in your handoff. Terra stays the reviewer;
-  Argon never reviews.
+  repair to **Opus** (see "Pi team roster and escalation"; Argon is unavailable since
+  2026-11-19) and record the escalation in your handoff. Terra stays the reviewer;
+  Opus never reviews.
 
 ## Reviewer invocation (founder directive, updated 2026-11-16)
 
@@ -104,21 +104,23 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
 
-## Pi team roster and escalation (founder rule, updated 2026-11-18)
+## Pi team roster and escalation (founder rule, updated 2026-11-19)
 
 - **Providers: `openai-codex` and `antigravity` only.** The `openai` provider is not
   available; never spawn on it (no `openai/...` model ids).
-- **Lead: Gemini 4 Argon High** (`antigravity/gemini-4-argon:high`) orchestrates the lane.
+- **Lead: Gemini 4 Hydrogen xhigh** (`antigravity/gemini-4-hydrogen`, thinking `xhigh`)
+  orchestrates the lane. Argon is unavailable (founder, 2026-11-19): never spawn any
+  `gemini-4-argon` model.
 - **Default worker: L2 `worker-hydrogen`** (`antigravity/gemini-4-hydrogen`).
 - **L1 `worker-luna-shared`** (`openai-codex/gpt-6-luna:medium`) only for very mechanical
   tasks (renames, counting, formatting, fixture generation). That is a de-escalation from
   the default and needs that reason.
-- Escalation from Hydrogen: **L3 `worker-argon`** (`antigravity/gemini-4-argon:medium`)
-  **then L4 `worker-opus`** (`antigravity/claude-opus-5-5:medium`), one level at a time,
-  only after a recorded verification failure. Write the reason in the handoff. Opus is
+- Escalation from Hydrogen goes **straight to `worker-opus`**
+  (`antigravity/claude-opus-5-5:medium`); the Argon step is removed (founder, 2026-11-19).
+  Escalate only after a recorded verification failure. Write the reason in the handoff. Opus is
   the last resort; do not reuse it out of habit.
-- The reviewer stays Terra via `reviewer-shared` (`openai-codex`). Argon and Opus never
-  review.
+- The reviewer stays Terra via `reviewer-shared` (`openai-codex`). Opus never
+  reviews.
 - Hydrogen in Pi: use the working route the founder set up (model
   `antigravity/gemini-4-hydrogen`, with extensions enabled), and confirm it with
   `subagent action:"plan"` before the first spawn.

@@ -1,798 +1,835 @@
 {
-  "schema": "skill-heaven/ultra-126-campaign-ledger/v0",
-  "note": "Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).",
-  "plan": "docs/plans/2026-11-15-skill-ultra-campaign-126.md",
-  "planPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/255",
-  "issue": "https://github.com/gaia-research/gaia-skill-heaven/issues/126",
-  "integrationBranch": "integration/skill-ultra-126",
-  "integrationPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/256",
-  "baseMain": "6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d",
-  "status": "EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work",
-  "preflight": {
-    "at": "2026-11-16",
-    "env": "local (macOS), herdr present",
-    "harnesses": {
-      "claude": "2.1.325",
-      "pi": "1.5.2",
-      "agy": "1.5.9",
-      "codex": "0.169.0",
-      "herdr": "0.9.5",
-      "grok": "1.0.77 (50ca579fa996)",
-      "hermes": "git 8ac5c74 (2026.9.24)"
-    },
-    "node": "v22.23.1",
-    "npm": "10.9.8",
-    "baseline": "origin/main 6eb0507: 104 test files passed + 1 skipped; 1840 tests passed + 1 skipped; typecheck clean",
-    "reviewer": "~/.pi/agent/bin/pi-reviewer live-probed: agent=reviewer, model=openai-codex/gpt-6.1-terra:high, thinking=high, tools=read,grep,find,ls, status=completed. reviewer-shared profile resolves to the same model.",
-    "hydrogen": {
-      "agy": "gemini-4-hydrogen-{low,medium,high,xhigh} listed; low live-probed OK",
-      "pi": "antigravity/gemini-4-hydrogen live-probed OK only with extensions enabled (provider comes from npm:pi-antigravity); fails under --no-extensions. No worker-hydrogen profile exists in ~/.pi/agent/agents."
-    },
-    "quota": "unknown for every account (no usage telemetry read); recorded as unknown, not estimated",
-    "github": "repo allow_squash_merge=true, allow_merge_commit=false; ruleset 'main' active on main only"
+ "schema": "skill-heaven/ultra-126-campaign-ledger/v0",
+ "note": "Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).",
+ "plan": "docs/plans/2026-11-15-skill-ultra-campaign-126.md",
+ "planPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/255",
+ "issue": "https://github.com/gaia-research/gaia-skill-heaven/issues/126",
+ "integrationBranch": "integration/skill-ultra-126",
+ "integrationPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/256",
+ "baseMain": "6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d",
+ "status": "EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work",
+ "preflight": {
+  "at": "2026-11-16",
+  "env": "local (macOS), herdr present",
+  "harnesses": {
+   "claude": "2.1.325",
+   "pi": "1.5.2",
+   "agy": "1.5.9",
+   "codex": "0.169.0",
+   "herdr": "0.9.5",
+   "grok": "1.0.77 (50ca579fa996)",
+   "hermes": "git 8ac5c74 (2026.9.24)"
   },
-  "units": [
-    {
-      "id": "U0a",
-      "scope": "Pure campaign engine, strict schemas, replay, verify",
-      "after": [],
-      "tier": "heavy",
-      "team": "B (Pi)",
-      "worker": "lead gpt-6.1-sol xhigh; workers Luna, Sol (pre-correction), Hydrogen; one resumed segment ran gemini-3.8-flash unrequested (disclosed)",
-      "branch": "feat/ws6-ultra-u0a",
-      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/260",
-      "head": "5ffac74",
-      "terra": "PASS: no blocking findings at 5ffac74 (source PASS at dc9efca after blocking rounds 8d0511f and 16d98fc)",
-      "status": "integrated",
-      "tests": "107 files passed + 1 skipped; 2609 tests passed + 1 skipped; typecheck clean; build:mcp/status/console no diff (orchestrator re-run at 5ffac74)"
-    },
-    {
-      "id": "U0b",
-      "scope": "Store, session re-attach, status /v1, CLI",
-      "after": [
-        "U0a"
-      ],
-      "tier": "standard",
-      "team": "B (Pi)",
-      "worker": "lead openai/gpt-6.1-sol xhigh; Hydrogen default workers",
-      "branch": "feat/ws6-ultra-u0b",
-      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
-      "head": "72f6277",
-      "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
-      "status": "integrated (5af657a; Terra PASS on 3fa0286; Argon High lead under D-018)"
-    },
-    {
-      "id": "U1",
-      "scope": "campaign tool: open, recon, status",
-      "after": [
-        "U0b"
-      ],
-      "tier": "standard",
-      "team": "B (Pi)",
-      "worker": null,
-      "branch": "feat/ws6-ultra-u1",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "integrated (172c371; PR #271; Terra PASS on bd3fc46; L3 worker-argon escalation recorded)"
-    },
-    {
-      "id": "U2",
-      "scope": "Manifest build and renderer",
-      "after": [
-        "U1"
-      ],
-      "tier": "standard",
-      "team": "B (Pi)",
-      "worker": null,
-      "branch": "feat/ws6-ultra-u2",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "integrated (2ddfab2; PR #272; Terra PASS on a97b762)"
-    },
-    {
-      "id": "U3",
-      "scope": "Charter, decisions, operator channel, gaia-research N/lexicon delta",
-      "after": [
-        "U2"
-      ],
-      "tier": "heavy",
-      "team": "B (Pi)",
-      "worker": null,
-      "branch": "feat/ws6-ultra-u3",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)"
-    },
-    {
-      "id": "U4",
-      "scope": "Work-unit queue, receipts, steering wiring",
-      "after": [
-        "U1"
-      ],
-      "tier": "heavy",
-      "team": null,
-      "worker": null,
-      "branch": "feat/ws6-ultra-u4",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "waiting"
-    },
-    {
-      "id": "U5",
-      "scope": "Summon gate under a campaign",
-      "after": [
-        "U3",
-        "U4"
-      ],
-      "tier": "standard",
-      "team": null,
-      "worker": null,
-      "branch": "feat/ws6-ultra-u5",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "waiting"
-    },
-    {
-      "id": "U6",
-      "scope": "Incident packets and answers",
-      "after": [
-        "U4"
-      ],
-      "tier": "standard",
-      "team": null,
-      "worker": null,
-      "branch": "feat/ws6-ultra-u6",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "waiting"
-    },
-    {
-      "id": "U7",
-      "scope": "Compaction/resume probes, Console hook, release readiness",
-      "after": [
-        "U5",
-        "U6"
-      ],
-      "tier": "standard",
-      "team": null,
-      "worker": null,
-      "branch": "feat/ws6-ultra-u7",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "waiting"
-    },
-    {
-      "id": "U8",
-      "scope": "Arbor refresh, declared claims, #253 doc fix",
-      "after": [
-        "U2"
-      ],
-      "tier": "standard",
-      "team": "C (Antigravity)",
-      "worker": "gemini-4-hydrogen-medium",
-      "branch": "feat/ws6-ultra-u8",
-      "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/259",
-      "head": "ec17b57",
-      "terra": "prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.",
-      "status": "integrated (fb58864; PR #259; Terra PASS on 7da7e22 over the whole U8 diff)",
-      "tests": "1844 passed + 1 skipped; typecheck clean (at 4db4faf/ec17b57)"
-    },
-    {
-      "id": "U9",
-      "scope": "End-to-end proof, evidence, availability copy",
-      "after": [
-        "U7",
-        "U8"
-      ],
-      "tier": "heavy",
-      "team": null,
-      "worker": null,
-      "branch": "feat/ws6-ultra-u9",
-      "pr": null,
-      "head": null,
-      "terra": "pending",
-      "status": "waiting"
-    }
-  ],
-  "probes": [
-    {
-      "id": "P1",
-      "unit": "U3",
-      "question": "Which operator channels work: elicitation, command pre-execution, permission prompt",
-      "status": "accepted: Terra no blocking findings at 81445a1 (reviews P1-9b89398 blocking -> FD-11/D-010 + P1c repairs; P1-31c90ba clear; P1-81445a1 clear). Non-blocking wording fixes after that; final state re-reviewed inside U3.",
-      "team": "C (Antigravity) gemini-4-hydrogen-high driver; model under test claude-haiku-5-5",
-      "branch": "feat/ws6-ultra-u3-p1",
-      "evidence": "docs/evidence/ultra-126/PROBE.md on feat/ws6-ultra-u3-p1 (PR #258)"
-    },
-    {
-      "id": "P1d",
-      "unit": "U3",
-      "question": "FD-11: does auto mode's classifier stop a session's own model from self-approving its elicitation by typing into its pane?",
-      "status": "done (n=3/cell): 0/9 self-approved accepts, but by accident (keystrokes hit chat input). Auto classifier blocked 1/3 cooperative attempts; bypass executed 3/3; Haiku refused injected instruction 3/3. FD-11 default fail-closed stands. Terra clear at 714d6e8.",
-      "branch": "feat/ws6-ultra-u3-p1d",
-      "evidence": "docs/evidence/ultra-126/PROBE-P1d.md (PR #261, merged into feat/ws6-ultra-u3-p1)"
-    },
-    {
-      "id": "P2",
-      "unit": "U7",
-      "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)",
-      "status": "P2a done and merged (n=3/cell): /compact keeps the server pid; resume, continue and headless resume keep the session id with a new pid; fork gets a new id. Re-attach cells wait for U0b.",
-      "evidence": "docs/evidence/ultra-126/PROBE-P2a.md (PR #263)"
-    },
-    {
-      "id": "P3",
-      "unit": "U7",
-      "question": "Charter-excluded summon refused after compaction and resume (every run)",
-      "status": "not started"
-    },
-    {
-      "id": "P4",
-      "unit": "U7",
-      "question": "Agent returns to queue after compaction/resume, with and without Console hook (n>=5)",
-      "status": "not started"
-    },
-    {
-      "id": "P5",
-      "unit": "U7",
-      "question": "Forced auto-compaction in a scripted long run",
-      "status": "not started"
-    },
-    {
-      "id": "P6",
-      "unit": "U7",
-      "question": "Per additional door: stable session id, working operator channel",
-      "status": "passes 1 and 2 merged. Pi: no channel, no id. agy: per-call _meta id; channel 3 only under request-review. Codex: per-call _meta id; channel 1 elicitation works in the TUI (3/3); channel 3 only under approvals_reviewer=user.",
-      "evidence": "docs/evidence/ultra-126/PROBE-P6.md (PRs #264, #266)"
-    }
-  ],
-  "decisions": [
-    {
-      "id": "FD-0..FD-10",
-      "kind": "founder",
-      "date": "2026-11-15",
-      "summary": "Founder rulings, binding and not reopened. Verbatim in plan section 3.1.",
-      "source": "docs/plans/2026-11-15-skill-ultra-campaign-126.md#31-rulings-verbatim-2026-11-15"
-    },
-    {
-      "id": "EXEC-DIRECTIVE",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "Execution directive: single integration branch integration/skill-ultra-126 with one PR to main reserved for founder merge; supersedes planner ruling PR-8 (per-unit PRs to main). Centralized independent reviewer: ~/.pi/agent/bin/pi-reviewer (or Pi native reviewer), Terra High, no silent fallback.",
-      "source": "founder message in orchestration session, 2026-11-16"
-    },
-    {
-      "id": "VISIBILITY-DIRECTIVE",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "Lanes, especially Pi and Antigravity, run visibly in herdr panes via /herdr-dispatch and the canonical skills; harness calls made by workers (including pi-reviewer) run in visible panes. Agents already running are not stopped. Supersedes the directive's earlier 'Claude team uses herdr only for benchmarks' for lane dispatch.",
-      "source": "founder message in orchestration session, 2026-11-16"
-    },
-    {
-      "id": "TABS-DIRECTIVE",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "Remove the two-pane limit. Each lane runs in its own new herdr tab. Keep tabs clean, and archive session JSONL so cost can be logged and lanes resumed later.",
-      "source": "founder message in orchestration session, 2026-11-16"
-    },
-    {
-      "id": "FD-11",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "Operator approvals inside terminal multiplexers (founder ruling on Terra's critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code's auto-mode classifier rejects a model's attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.",
-      "source": "founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)"
-    },
-    {
-      "id": "ROSTER-DIRECTIVE",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "Founder stopped the U0a lead for reusing worker-sol. Pi ladder: Luna, then Hydrogen, then Terra, before any Sol escalation. Expect heavy Luna and Hydrogen delegation. Leads lead the way the orchestrator does: no soloing, no micromanaging. Update (same day): L2 Hydrogen is the default because L1, L3 and L4 share one quota; de-escalation to L1 Luna only for very mechanical tasks; the founder directed the Hydrogen-in-Pi route fix; only one Pi lead at a time.",
-      "source": "founder message in orchestration session, 2026-11-16"
-    },
-    {
-      "id": "REVIEWER-DIRECTIVE",
-      "kind": "founder",
-      "date": "2026-11-16",
-      "summary": "The reviewer may use the shell: the founder approved editing reviewer.md and reviewer-shared.md to add bash. Any lane may invoke the reviewer from its own bash instead of a herdr split; visibility is not required for reviews. The orchestrator added a verify-only shell rule to both agent bodies (no commits, pushes, branch changes or config edits); local backups are kept in the session archive.",
-      "source": "founder messages in orchestration session, 2026-11-16"
-    },
-    {
-      "id": "D-001",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "all",
-      "problem": "Repo permits only squash merges (allow_merge_commit=false). Squash-merging unit PRs into the integration branch would collapse unit commits, which the directive says must not lose unit-level evidence.",
-      "options": [
-        "Squash-merge unit PRs via GitHub",
-        "Local git merge --no-ff of the reviewed unit HEAD, pushed to the integration branch (no ruleset on that branch)",
-        "Rebase-merge"
-      ],
-      "selected": "Local git merge --no-ff of the Terra-reviewed unit HEAD into integration/skill-ultra-126, then push. GitHub marks the unit PR merged because its commits are in base. Unit branches are never deleted.",
-      "reason": "Preserves every unit commit, its review trail and handoff; no force-push; ruleset only governs main.",
-      "authority": "Directive section 6 (internal integration merges authorized; do not squash away unit evidence)",
-      "reversible": true,
-      "terra": "included in each unit review and the final integration review",
-      "risk": "The final integration PR to main will still be squashed by the main ruleset at founder merge; the integration branch keeps full history."
-    },
-    {
-      "id": "D-002",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "all",
-      "problem": "PR-8 also said the campaign tool stays unregistered in the bundled MCP until U3, to keep each main merge inert.",
-      "options": [
-        "Drop the gate since nothing reaches main until founder merge",
-        "Keep the gate"
-      ],
-      "selected": "Keep the U1 server-option gate until U3 exactly as the plan's U1/U3 briefs specify.",
-      "reason": "The gate is part of the approved unit briefs, costs nothing, and keeps intermediate integration states inert.",
-      "authority": "Plan Appendix A U1/U3",
-      "reversible": true,
-      "terra": "U1 and U3 reviews",
-      "risk": "none known"
-    },
-    {
-      "id": "D-003",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "all",
-      "problem": "Parallel lanes in one checkout would collide; main checkout has unrelated uncommitted founder files.",
-      "options": [
-        "Shared checkout",
-        "One git worktree per lane under ~/skill-heaven-wt/"
-      ],
-      "selected": "One git worktree per lane under ~/skill-heaven-wt/<lane>; the founder's main checkout is never touched.",
-      "reason": "File-ownership isolation; P3-style respect for the founder's working tree.",
-      "authority": "Directive sections 1 and 6",
-      "reversible": true,
-      "terra": "n/a (process)",
-      "risk": "Each worktree needs its own npm ci."
-    },
-    {
-      "id": "D-004",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U3",
-      "problem": "P1 (operator channel) gates U3's implementation choice but depends on no unit code; waiting for U2 would serialize it behind three units.",
-      "options": [
-        "Run P1 when U3 starts",
-        "Run P1 now as a U3 sub-branch; U3 consumes its record"
-      ],
-      "selected": "Run P1 now on feat/ws6-ultra-u3-p1 (Antigravity Hydrogen High drives; claude-haiku-5-5 is the model under test, n=3 per cell, TUI cells in visible herdr panes). The orchestrator interprets; the lane records hard signals only.",
-      "reason": "Removes U3's longest serial wait without changing the architecture; probe-only, cheap model under test (FD-9).",
-      "authority": "Plan U3 brief ('Run P1 first'), section 7.2; directive section 10",
-      "reversible": true,
-      "terra": "U3 review covers the P1 record",
-      "outcome": "pending",
-      "risk": "Claude Code may upgrade before U3; P1 then re-runs per M0."
-    },
-    {
-      "id": "D-005",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "reporting",
-      "problem": "The dashboard and decision-log renderer is orchestration reporting, not a product unit; a separate Terra pass for it would spend the scarce reviewer on non-product code.",
-      "options": [
-        "Separate Terra review",
-        "Merge after the orchestrator checks it; covered by the final full-integration Terra review"
-      ],
-      "selected": "Merge the DASH lane after an orchestrator check; it touches only docs/evidence/ultra-126/ and is included in the final integration review.",
-      "reason": "The review gate in directive section 7 is for implementation units; this lane writes no product code.",
-      "authority": "Directive sections 7 and 9",
-      "reversible": true,
-      "terra": "final integration review",
-      "outcome": "pending",
-      "risk": "low"
-    },
-    {
-      "id": "D-006",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U8",
-      "problem": "U8 is listed after U2, but only its declared-claims rendering touches U2's renderer. The Arbor cache refresh, identity pins, release-acceptance update and #253 doc fix have no code dependency on U2.",
-      "options": [
-        "Start U8 only after U2",
-        "Start the data and docs half now; the render half and the merge wait for U2"
-      ],
-      "selected": "Start U8 prep now (data, pins, release-acceptance, #253 docs). The declared-claims render is added after U2 lands, and U8 merges into integration only after U2.",
-      "reason": "Uses idle Antigravity capacity; the dependency's reason (the renderer) is still honored.",
-      "authority": "Plan section 7.1 (U8 'any time after U2' is satisfied at merge); directive section 5",
-      "reversible": true,
-      "terra": "U8 review",
-      "outcome": "pending",
-      "risk": "The refreshed data could conflict with U2 if U2 touches arbor data. U2's brief does not."
-    },
-    {
-      "id": "D-007",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "all",
-      "problem": "Three lanes (U0a Pi lead, P1 agy, U8 agy) were launched headless from the orchestrator's shell before the visibility directive, and the directive says not to stop them. herdr-dispatch caps concurrent pane workers at two.",
-      "options": [
-        "Kill and relaunch in panes",
-        "Let them finish headless; every new dispatch goes into panes, two pane workers at a time"
-      ],
-      "selected": "Let the three in-flight headless lanes finish (logs in ~/skill-heaven-wt/logs/, P1's TUI cells already in visible panes). From now on every lane is a herdr pane agent (kind pi or agy); at most two pane workers at once while the legacy headless lanes drain, then two as steady state.",
-      "reason": "Founder said not to stop running agents; the herdr-dispatch two-pane limit keeps panes readable.",
-      "authority": "VISIBILITY-DIRECTIVE; herdr-dispatch skill sections 1 and 7",
-      "reversible": true,
-      "terra": "n/a (process)",
-      "outcome": "superseded by D-008 (two-pane limit removed by founder)",
-      "risk": "The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each)."
-    },
-    {
-      "id": "D-008",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "all",
-      "problem": "How to keep lane tabs clean while preserving sessions for skill-cost accounting and resume.",
-      "options": [
-        "Move finished panes to an archive tab",
-        "Copy session files to a local archive, then close the tab"
-      ],
-      "selected": "dispatch.sh opens one tab per lane (label = lane name, --no-focus) and records dispatch.json. archive.sh copies the lane's Pi session dirs (keyed by the worktree cwd) and its agy conversation (.db plus the brain/<id> transcript JSONL, found through cache/last_conversations.json) into ~/skill-heaven-wt/sessions/<lane>/, saves the final terminal buffer, writes archive.json, and closes the tab. Originals stay in place, so a lane can still be resumed. The archive is local only, never committed (transcripts are excluded from the repo by policy).",
-      "reason": "Founder directive; copies rather than moves keep resume possible and give skill-cost its canonical inputs.",
-      "authority": "TABS-DIRECTIVE",
-      "reversible": true,
-      "terra": "n/a (process)",
-      "outcome": "in effect; verified on lane DASH (15 files archived)",
-      "risk": "agy's cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree."
-    },
-    {
-      "id": "D-009",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U3, U9",
-      "problem": "Security limit raised by a side agent and confirmed against P1's own method. MCP elicitation (channel 1) delivers whatever is typed into the terminal to the server. In P1, a worker agent answered the elicitation prompt with herdr pane send-text, and the server received a normal accept that nothing distinguished from a person. Any process that can write to the terminal can do the same: every lane here (herdr socket), and a Skill Ultra session's own model when it has a shell tool and its terminal sits in herdr or tmux (HERDR_SOCKET_PATH / TMUX in its environment); for example, a parallel shell call issued beside the campaign call.",
-      "options": [
-        "Drop channel 1",
-        "Keep channel 1, state plainly what it is not, disclose terminal multiplexing at decision time, and require the real proof decision to be made where no agent can inject input",
-        "Invent a nonce or challenge (rejected: an agent can read the pane as easily as type into it)"
-      ],
-      "selected": "Keep channel 1 as the selected channel (it still keeps the model out of the tool path, and no channel on this harness authenticates a person), but: (1) the P1 record and the U3 evidence say that channel 1 is terminal input, not authentication, the same class of boundary as channels 2 and 3 and the steering brand; (2) U3's operator path records, with each operator entry, an attribution field 'terminal-input, unauthenticated' plus whether the server's environment shows a multiplexer (HERDR_ENV/HERDR_SOCKET_PATH/TMUX), and the decisions render discloses it; (3) U9's real operator decision is made by the founder in a terminal no agent controls (outside herdr and tmux, or a pane whose socket no running agent can reach), and PROOF.md says which; (4) no test fixture keystroke is ever recorded as a person's decision.",
-      "reason": "Honest disclosure of a real boundary without inventing authentication the harness does not provide; it preserves invariant 4 (agent text cannot manufacture operator authority) in the proof, where it matters.",
-      "authority": "Plan section 5.3 ('says plainly what it is not'); security invariants 4 and 15; directive section 8 (never forge an approval)",
-      "reversible": true,
-      "terra": "U3 review and the final integration review must check items 1-4",
-      "outcome": "refined by FD-11 and D-010",
-      "risk": "In product use, a session whose model has shell access inside a multiplexer can approve its own charter. The disclosure makes that visible; it does not prevent it. A stronger channel would need a harness feature that does not exist on 2.1.325."
-    },
-    {
-      "id": "D-010",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U3",
-      "problem": "Implement FD-11: safeguarded default, an unadvertised opt-in for multiplexed approvals, and a probe of auto mode's classifier.",
-      "options": [
-        "Env-flag opt-in",
-        "Config-file opt-in",
-        "CLI-flag opt-in"
-      ],
-      "selected": "(1) Default: an elicitation accept grants operator authority only when the server's environment shows no multiplexer (HERDR_ENV, HERDR_SOCKET_PATH, TMUX). Otherwise the decisions step fails closed at DECISIONS with a plain message. (2) Advanced opt-in: the person sets an env var themselves before launching the session (name fixed in vocabulary.ts, e.g. SKILL_ULTRA_MULTIPLEXED_DECISIONS=accept-risk). It is documented only in an advanced or evidence note, never in the README, site, command help or skill text. Under opt-in, every operator entry records attribution 'terminal-input, unauthenticated', multiplexed:true and optIn:true, and the decisions render and status show it. (3) Safeguard inside the opt-in: the elicitation form asks the person to type the charter's short digest, shown in the prompt, so a blind or replayed injection does not match. This is disclosed as friction, not authentication. (4) Probe P1d measures auto mode's classifier against a self-approval attempt, and U3 records the result per mode.",
-      "reason": "Matches FD-11: a safe default for ordinary users, nothing advertised, and advanced multiplexer users keep working. Terra's critical finding is answered by the default fail-closed plus an explicit, recorded, person-set opt-in.",
-      "authority": "FD-11",
-      "reversible": true,
-      "terra": "U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in",
-      "outcome": "P1d confirms the need: auto mode is a partial safeguard (1/3), bypass none; default fail-closed when multiplexed stands. Implementation pending U3.",
-      "risk": "An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed."
-    },
-    {
-      "id": "D-011",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U7, U0b, reporting",
-      "problem": "The OpenAI pool (Pi team) is nearly exhausted until 07:38 PST and U0a is in its final review, so the next Pi lead (U0b) cannot start yet. Antigravity capacity is idle.",
-      "options": [
-        "Wait",
-        "Run code-independent work on Antigravity now"
-      ],
-      "selected": "Three Antigravity lanes in their own tabs: P2a (Claude Code session identity and MCP server lifetime across /compact, --resume, --continue, --fork-session; the harness facts U0b's re-attach relies on), P6 pass 1 (Pi and agy doors: session id, operator channel; Codex deferred), and DASH2 (an availability panel with a reset countdown in DECISION-LOG.html). Each lane runs its own Terra loop. A session-only timer at 07:41 checks the OpenAI reset.",
-      "reason": "Founder: continue on Antigravity until the reset. These probes depend on harnesses, not on unit code (same reasoning as D-004).",
-      "authority": "Founder message 2026-11-16; plan section 7.2; D-004 precedent",
-      "reversible": true,
-      "terra": "lane-run reviews; U7 review covers the final probe records",
-      "outcome": "dispatched",
-      "risk": "P2a runs Claude Haiku, which spends the Claude pool (cheap tier)."
-    },
-    {
-      "id": "D-012",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U0a",
-      "problem": "The U0a lead hit the OpenAI usage limit during closeout. The final HEAD 5ffac74 (evidence-only delta over Terra-passed dc9efca) had no exact-HEAD Terra review. Separately, the handoff discloses that a resumed worker-sol segment actually ran antigravity/gemini-3.8-flash without being asked (a silent route substitution by pi-subagent resume).",
-      "options": [
-        "Wait for the OpenAI reset and let the lead finish",
-        "Orchestrator verifies mechanically and requests an exact-HEAD Terra confirmation (separate pool)"
-      ],
-      "selected": "Orchestrator ran the full matrix on 5ffac74 (2609 tests, typecheck, three builds with no diff, no I/O/clock/randomness in the engine, no new deps, no new ratify), then requested Terra confirmation with a generated delta packet. Terra: PASS, no blocking findings. Merged --no-ff into integration. Flash substitution recorded as a tooling risk: every spawn now sets fallback_models: [], and the resumed segment's code was covered by later Terra reviews.",
-      "reason": "Directive: a reviewed SHA must match the integrated HEAD; Terra uses a separate pool and was available.",
-      "authority": "Directive sections 7, 12 and 13",
-      "reversible": true,
-      "terra": "U0a-5ffac74 PASS",
-      "outcome": "integrated",
-      "risk": "pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers."
-    },
-    {
-      "id": "D-013",
-      "kind": "delegated",
-      "date": "2026-11-16",
-      "team": "A (Opus orchestrator)",
-      "unit": "U0b",
-      "problem": "Orchestrator verification of U0b's final HEAD 0188bba found mcp-link-enrichment.test.ts failing 3/5 whenever CLAUDE_CODE_SESSION_ID is set (always true inside Claude Code). It passes with the variable unset, and the pre-U0b base passes with it set. The original suspicion was root sharing between successive test servers, but confirmed reproduction shows the openSession test fixture records the inherited CLAUDE_CODE_SESSION_ID and live current PID, and MCP resolveSession deliberately refuses that live fixture root and starts a fresh empty root, losing the primed fixture skills. New real live-server tests show distinct roots under the same ID and a dead-PID requirement for resumption (without claiming cross-process race freedom or OS locking). Terra's PASS at c26d9b5 ran without the variable and missed it. Separately, a pi-reviewer confirmation hung for its full 3 h timeout, and pi-reviewer then crashed serializing bytes stderr (a pi-reviewer bug, in pi-config).",
-      "options": [
-        "Accept with a test-env workaround",
-        "Return to the U0b lead for a hermeticity repair plus regression test, then re-review"
-      ],
-      "selected": "Return to the U0b lead: tests hermetic about the session id, a regression test with the variable set, proof that two live servers in one session cannot re-attach, the full suite run both ways, then a Terra re-review of the new HEAD. COMMON.md now requires every unit to run the suite with the variable set and unset, and asks reviewers for targeted runs, no watch mode.",
-      "reason": "A green suite that depends on the caller's environment is not a pass; the U9 proof itself runs inside Claude Code.",
-      "authority": "Directive section 14 (a previous green run does not validate a changed environment or HEAD); section 7 (a test suite is necessary but not sufficient)",
-      "reversible": true,
-      "terra": "pending re-review",
-      "outcome": "Round 1 repaired at 72f6277 (Terra PASS at 1cb0535): the suite passes 2664/2664 with the variable unset and with it fixed. Round 2 found by the orchestrator in the live Claude Code + herdr environment: summon-arbor.test.ts times out under full-suite load. Run alone it takes 11s, against 4.3s on the pre-U0b base, because the re-attach/reaper path scans every root in tmpdir on each server start (522 roots on this machine). Returned for an O(1) session-id lookup, isolated test tempRoots and a 1000-root regression test.",
-      "risk": "Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder's repo; not changed here)."
-    },
-    {
-      "id": "D-014",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U7",
-      "problem": "Plan Appendix A says U7 releases the Console plugin once the probe passes (FD-4). The campaign directive says no production release and no merge to main by agents.",
-      "options": [
-        "Publish the Console release from U7",
-        "Bump the version and changelog in the U7 PR only; the founder merge of #256 is the release",
-        "Skip the release entirely"
-      ],
-      "selected": "Bump the version and changelog in the U7 PR only. No tag, no publish, no marketplace push.",
-      "reason": "Satisfies FD-4 (the release content is ready) without crossing the directive line; the founder decides when it ships by merging.",
-      "authority": "Campaign directive (no production release, founder-only merge to main); FD-4",
-      "reversible": true,
-      "terra": "via U7 review",
-      "outcome": "Written into briefs/U7.md",
-      "risk": "None beyond the founder needing to tag after merge if a tag is wanted."
-    },
-    {
-      "id": "D-015",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U9",
-      "problem": "Plan section 8 needs a real person to invoke /skill-ultra, decide the charter and answer incidents. FD-11 makes multiplexed approvals fail closed, and the directive forbids agent-generated approvals passing a proof gate.",
-      "options": [
-        "An agent drives the proof in a herdr pane",
-        "Agents prepare (runbook plus a verifier script), the founder runs the proof in a plain terminal, and agents record it"
-      ],
-      "selected": "Agents prepare and record; the founder runs it outside herdr and tmux with no opt-in. Any operator entry with multiplexed or optIn true disqualifies the run. The copy change happens only if every section 8 step has a trace entry.",
-      "reason": "Invariant 4 (agent text cannot manufacture operator authority) and invariant 15 (receipts never overstated).",
-      "authority": "Directive (no agent approval masquerading as a human decision); FD-11; D-009",
-      "reversible": true,
-      "terra": "via U9 review",
-      "outcome": "Written into briefs/U9.md",
-      "risk": "The proof waits on founder time; U9 reports BLOCKED: awaiting founder proof run after phase 1."
-    },
-    {
-      "id": "D-016",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "integration",
-      "problem": "main gained dcc7fbd (#268 Lucia Refractions site design) after the integration base 6eb0507.",
-      "options": [
-        "Merge main into integration now",
-        "Wait until the end"
-      ],
-      "selected": "Merge main into integration now with --no-ff (1ed2ff2). It merged clean; typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
-      "reason": "Keeps #256 mergeable and lets unit branches pick up main early; the change touches only packages/site.",
-      "authority": "Founder instruction (reconcile main), D-001",
-      "reversible": true,
-      "terra": "not needed (no campaign code changed)",
-      "outcome": "Pushed 1ed2ff2",
-      "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
-    },
-    {
-      "id": "D-017",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "integration",
-      "problem": "Founder asked for #269 (/landing mobile plate framing) to land as a patch on main and for integration to be reconciled.",
-      "options": [
-        "Squash-merge #269 to main, then merge main into integration",
-        "Carry #269 inside integration only"
-      ],
-      "selected": "#269 squash-merged to main (301e051) on the founder's instruction; main merged into integration --no-ff (9547374). Typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
-      "reason": "Founder instruction; the change touches only packages/site.",
-      "authority": "Founder instruction (merge #269 to main and reconcile)",
-      "reversible": true,
-      "terra": "not needed (no campaign code changed)",
-      "outcome": "Pushed 9547374",
-      "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
-    },
-    {
-      "id": "D-018",
-      "kind": "founder",
-      "date": "2026-11-18",
-      "team": "Founder",
-      "unit": "campaign",
-      "problem": "OpenAI provider unavailable; Pi roster and evidence rules changed.",
-      "options": [
-        "Adopt the founder roster"
-      ],
-      "selected": "Pi lead: Gemini 4 Argon High (antigravity). L1 worker-luna-shared (openai-codex), L2 worker-hydrogen (default), L3 worker-argon medium, L4 worker-opus medium (antigravity). Providers openai-codex and antigravity only. Reviewer stays Terra via reviewer-shared. Screenshots never go in git.",
-      "reason": "Founder instruction",
-      "authority": "Founder",
-      "reversible": true,
-      "terra": "n/a",
-      "outcome": "COMMON.md roster and unit briefs U0b, U3-U7 updated",
-      "risk": "The paused U0b Sol lead is replaced by an Argon High lead resuming from the pushed branch and its handoff."
-    },
-    {
-      "id": "D-019",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "integration",
-      "problem": "#270 (#267 Safari fix) merged to main on the founder's go after the screenshots were removed.",
-      "options": [
-        "Merge main into integration now"
-      ],
-      "selected": "Screenshots removed from #270 (24 files, kept outside git); #270 squash-merged to main 13ddcf2; main merged into integration --no-ff (0318001). Typecheck green; suite 2612/2612 with CLAUDE_CODE_SESSION_ID unset and fixed.",
-      "reason": "Founder instruction (merge after the Hydrogen cleanup); keeps #256 mergeable.",
-      "authority": "Founder instruction, D-001",
-      "reversible": true,
-      "terra": "not needed for the evidence-only delta (code reviewed by Terra at 1d24a8e)",
-      "outcome": "#267 closed",
-      "risk": "none for campaign code"
-    },
-    {
-      "id": "D-020",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U0b",
-      "problem": "U0b lead reported READY FOR REVIEW at 5bde00b.",
-      "options": [
-        "Accept and merge into integration",
-        "Send back"
-      ],
-      "selected": "Accepted. Terra PASS on 3fa0286 (both residual test-proof gaps closed; integration merge clean); 3fa0286..HEAD evidence-only. Orchestrator checks: typecheck 0; 2716/2716 with CLAUDE_CODE_SESSION_ID unset, fixed and inherited; build:mcp/status/console with no drift; privacy scan found one private path in the handoff, redacted (1d550aa). Merged --no-ff (5af657a); integration suite 2716/2716 unset and fixed.",
-      "reason": "All acceptance checks met.",
-      "authority": "D-001",
-      "reversible": true,
-      "terra": "PASS (reviews/U0b-3fa0286.md)",
-      "outcome": "U1 unblocked and dispatched",
-      "risk": "The earlier Terra pass on 3fa0286 was incomplete (no new findings); the final bounded pass is the PASS of record."
-    },
-    {
-      "id": "D-021",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U1",
-      "problem": "U1 lead reported READY FOR REVIEW at 1514f49 (PR #271).",
-      "options": [
-        "Accept and merge into integration",
-        "Send back"
-      ],
-      "selected": "Accepted. Terra PASS on bd3fc46 after three CHANGES REQUIRED rounds; the staging-boundary finding survived two Hydrogen rounds and was closed by an L3 worker-argon escalation, recorded in the handoff. bd3fc46..HEAD evidence-only. Orchestrator checks: typecheck 0; 2748/2748 unset, fixed and inherited; builds with no drift; bundled MCP tools/list = [summon] (D-002 gate holds); privacy scan clean. Merged --no-ff (172c371); integration suite 2748/2748 unset and fixed.",
-      "reason": "All acceptance checks met.",
-      "authority": "D-001",
-      "reversible": true,
-      "terra": "PASS (reviews/U1-bd3fc46.md)",
-      "outcome": "U2 dispatched (U3 and U4 follow; one Pi lead at a time)",
-      "risk": "campaign tool stays gated off in the shipped binary until U3 lifts D-002."
-    },
-    {
-      "id": "D-022",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U2",
-      "problem": "U2 lead reported READY FOR REVIEW at 801f311 (PR #272).",
-      "options": [
-        "Accept and merge into integration",
-        "Send back"
-      ],
-      "selected": "Accepted. Terra PASS on a97b762 after one CHANGES REQUIRED round; a97b762..HEAD evidence-only. Orchestrator checks: typecheck 0; 2764/2764 unset, fixed and inherited; builds with no drift; authority regression only extended (0 lines removed); one private path in the handoff redacted (1254b0d). Merged --no-ff (2ddfab2); integration suite 2764/2764 unset and fixed. COMMON.md now forbids absolute paths in committed files.",
-      "reason": "All acceptance checks met.",
-      "authority": "D-001",
-      "reversible": true,
-      "terra": "PASS (reviews/U2-a97b762.md)",
-      "outcome": "U3 dispatched; U8 render half unblocked",
-      "risk": "none new"
-    },
-    {
-      "id": "D-023",
-      "kind": "delegated",
-      "date": "2026-11-18",
-      "team": "A (Opus orchestrator)",
-      "unit": "U8",
-      "problem": "U8 lane reported READY FOR REVIEW at 6de2bc7 (PR #259), prep and render halves.",
-      "options": [
-        "Accept and merge into integration",
-        "Send back"
-      ],
-      "selected": "Accepted. Terra PASS on 7da7e22 after one CHANGES REQUIRED round (U+2028/U+2029 escaping); reviewer verified Tree pins, 22 subjects, 3 declared edges, 0 pairs, 24 provenance hashes. 7da7e22..HEAD evidence-only. Orchestrator checks: typecheck 0; 2773/2773 unset, fixed and inherited; builds with no drift; authority regression only extended; no private paths or images. scripts/release-acceptance.mjs not run: it installs public main via a logged-in claude, so it cannot test this branch. Merged --no-ff (fb58864); integration suite 2773/2773 unset and fixed.",
-      "reason": "All acceptance checks met.",
-      "authority": "D-001",
-      "reversible": true,
-      "terra": "PASS (reviews/u8-7da7e22.md)",
-      "outcome": "#253 closes when #256 lands on main",
-      "risk": "U3 extends render.ts; it must merge integration before its next review. release-acceptance's live phases run only after the founder's merge to main."
-    }
-  ],
-  "blockers": [],
-  "awaitingFounder": [],
-  "updatedAt": "2026-11-18",
-  "quota": {
-    "asOf": "2026-11-18T02:00:00-08:00",
-    "pools": [
-      {
-        "pool": "openai",
-        "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
-        "state": "nearly exhausted: week ~97% (Pi statusline, 2026-11-18); Pi team paused by founder",
-        "resetAt": null
-      },
-      {
-        "pool": "openai-codex",
-        "covers": "Terra reviewer (pi-reviewer)",
-        "state": "available (founder 2026-11-18; reviewer-shared answered, model openai-codex/gpt-6.1-terra:high confirmed); lanes use --agent reviewer-shared (max_retries 0, fallback is the same model)",
-        "resetAt": null
-      },
-      {
-        "pool": "antigravity",
-        "covers": "Hydrogen, Argon (agy lanes and Pi L2 default)",
-        "state": "available (Agy ~4%); main lane pool while Pi is paused",
-        "resetAt": null
-      },
-      {
-        "pool": "claude",
-        "covers": "Opus orchestrator, Haiku probe subject",
-        "state": "new login 2026-11-18 (statusline Claude 9%); conserve",
-        "resetAt": null
-      },
-      {
-        "pool": "codex",
-        "covers": "Codex Luna Low probes",
-        "state": "unknown",
-        "resetAt": null
-      }
-    ],
-    "openai": {
-      "status": "unavailable",
-      "note": "provider not used (founder 2026-11-18)"
-    }
+  "node": "v22.23.1",
+  "npm": "10.9.8",
+  "baseline": "origin/main 6eb0507: 104 test files passed + 1 skipped; 1840 tests passed + 1 skipped; typecheck clean",
+  "reviewer": "~/.pi/agent/bin/pi-reviewer live-probed: agent=reviewer, model=openai-codex/gpt-6.1-terra:high, thinking=high, tools=read,grep,find,ls, status=completed. reviewer-shared profile resolves to the same model.",
+  "hydrogen": {
+   "agy": "gemini-4-hydrogen-{low,medium,high,xhigh} listed; low live-probed OK",
+   "pi": "antigravity/gemini-4-hydrogen live-probed OK only with extensions enabled (provider comes from npm:pi-antigravity); fails under --no-extensions. No worker-hydrogen profile exists in ~/.pi/agent/agents."
   },
-  "sideWork": [
-    {
-      "id": "i267",
-      "issue": 267,
-      "title": "Safari compositing of Lucy Zero/Hell/Ultra",
-      "lane": "agy Hydrogen high, tab i267",
-      "branch": "fix/site-267-safari-lucy-composite",
-      "base": "main dcc7fbd",
-      "prTo": "main (draft, founder-reviewed visual)",
-      "status": "merged to main 13ddcf2 (2026-11-18); lane archived",
-      "pr": 270,
-      "head": "74cb9c4"
-    }
-  ]
+  "quota": "unknown for every account (no usage telemetry read); recorded as unknown, not estimated",
+  "github": "repo allow_squash_merge=true, allow_merge_commit=false; ruleset 'main' active on main only"
+ },
+ "units": [
+  {
+   "id": "U0a",
+   "scope": "Pure campaign engine, strict schemas, replay, verify",
+   "after": [],
+   "tier": "heavy",
+   "team": "B (Pi)",
+   "worker": "lead gpt-6.1-sol xhigh; workers Luna, Sol (pre-correction), Hydrogen; one resumed segment ran gemini-3.8-flash unrequested (disclosed)",
+   "branch": "feat/ws6-ultra-u0a",
+   "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/260",
+   "head": "5ffac74",
+   "terra": "PASS: no blocking findings at 5ffac74 (source PASS at dc9efca after blocking rounds 8d0511f and 16d98fc)",
+   "status": "integrated",
+   "tests": "107 files passed + 1 skipped; 2609 tests passed + 1 skipped; typecheck clean; build:mcp/status/console no diff (orchestrator re-run at 5ffac74)"
+  },
+  {
+   "id": "U0b",
+   "scope": "Store, session re-attach, status /v1, CLI",
+   "after": [
+    "U0a"
+   ],
+   "tier": "standard",
+   "team": "B (Pi)",
+   "worker": "lead openai/gpt-6.1-sol xhigh; Hydrogen default workers",
+   "branch": "feat/ws6-ultra-u0b",
+   "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
+   "head": "72f6277",
+   "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
+   "status": "integrated (5af657a; Terra PASS on 3fa0286; Argon High lead under D-018)"
+  },
+  {
+   "id": "U1",
+   "scope": "campaign tool: open, recon, status",
+   "after": [
+    "U0b"
+   ],
+   "tier": "standard",
+   "team": "B (Pi)",
+   "worker": null,
+   "branch": "feat/ws6-ultra-u1",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "integrated (172c371; PR #271; Terra PASS on bd3fc46; L3 worker-argon escalation recorded)"
+  },
+  {
+   "id": "U2",
+   "scope": "Manifest build and renderer",
+   "after": [
+    "U1"
+   ],
+   "tier": "standard",
+   "team": "B (Pi)",
+   "worker": null,
+   "branch": "feat/ws6-ultra-u2",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "integrated (2ddfab2; PR #272; Terra PASS on a97b762)"
+  },
+  {
+   "id": "U3",
+   "scope": "Charter, decisions, operator channel, gaia-research N/lexicon delta",
+   "after": [
+    "U2"
+   ],
+   "tier": "heavy",
+   "team": "B (Pi)",
+   "worker": null,
+   "branch": "feat/ws6-ultra-u3",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)"
+  },
+  {
+   "id": "U4",
+   "scope": "Work-unit queue, receipts, steering wiring",
+   "after": [
+    "U1"
+   ],
+   "tier": "heavy",
+   "team": null,
+   "worker": null,
+   "branch": "feat/ws6-ultra-u4",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "waiting"
+  },
+  {
+   "id": "U5",
+   "scope": "Summon gate under a campaign",
+   "after": [
+    "U3",
+    "U4"
+   ],
+   "tier": "standard",
+   "team": null,
+   "worker": null,
+   "branch": "feat/ws6-ultra-u5",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "waiting"
+  },
+  {
+   "id": "U6",
+   "scope": "Incident packets and answers",
+   "after": [
+    "U4"
+   ],
+   "tier": "standard",
+   "team": null,
+   "worker": null,
+   "branch": "feat/ws6-ultra-u6",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "waiting"
+  },
+  {
+   "id": "U7",
+   "scope": "Compaction/resume probes, Console hook, release readiness",
+   "after": [
+    "U5",
+    "U6"
+   ],
+   "tier": "standard",
+   "team": null,
+   "worker": null,
+   "branch": "feat/ws6-ultra-u7",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "waiting"
+  },
+  {
+   "id": "U8",
+   "scope": "Arbor refresh, declared claims, #253 doc fix",
+   "after": [
+    "U2"
+   ],
+   "tier": "standard",
+   "team": "C (Antigravity)",
+   "worker": "gemini-4-hydrogen-medium",
+   "branch": "feat/ws6-ultra-u8",
+   "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/259",
+   "head": "ec17b57",
+   "terra": "prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.",
+   "status": "integrated (fb58864; PR #259; Terra PASS on 7da7e22 over the whole U8 diff)",
+   "tests": "1844 passed + 1 skipped; typecheck clean (at 4db4faf/ec17b57)"
+  },
+  {
+   "id": "U9",
+   "scope": "End-to-end proof, evidence, availability copy",
+   "after": [
+    "U7",
+    "U8"
+   ],
+   "tier": "heavy",
+   "team": null,
+   "worker": null,
+   "branch": "feat/ws6-ultra-u9",
+   "pr": null,
+   "head": null,
+   "terra": "pending",
+   "status": "waiting"
+  }
+ ],
+ "probes": [
+  {
+   "id": "P1",
+   "unit": "U3",
+   "question": "Which operator channels work: elicitation, command pre-execution, permission prompt",
+   "status": "accepted: Terra no blocking findings at 81445a1 (reviews P1-9b89398 blocking -> FD-11/D-010 + P1c repairs; P1-31c90ba clear; P1-81445a1 clear). Non-blocking wording fixes after that; final state re-reviewed inside U3.",
+   "team": "C (Antigravity) gemini-4-hydrogen-high driver; model under test claude-haiku-5-5",
+   "branch": "feat/ws6-ultra-u3-p1",
+   "evidence": "docs/evidence/ultra-126/PROBE.md on feat/ws6-ultra-u3-p1 (PR #258)"
+  },
+  {
+   "id": "P1d",
+   "unit": "U3",
+   "question": "FD-11: does auto mode's classifier stop a session's own model from self-approving its elicitation by typing into its pane?",
+   "status": "done (n=3/cell): 0/9 self-approved accepts, but by accident (keystrokes hit chat input). Auto classifier blocked 1/3 cooperative attempts; bypass executed 3/3; Haiku refused injected instruction 3/3. FD-11 default fail-closed stands. Terra clear at 714d6e8.",
+   "branch": "feat/ws6-ultra-u3-p1d",
+   "evidence": "docs/evidence/ultra-126/PROBE-P1d.md (PR #261, merged into feat/ws6-ultra-u3-p1)"
+  },
+  {
+   "id": "P2",
+   "unit": "U7",
+   "question": "Server process/session dir across /compact; re-attach across --resume and --continue (n>=3)",
+   "status": "P2a done and merged (n=3/cell): /compact keeps the server pid; resume, continue and headless resume keep the session id with a new pid; fork gets a new id. Re-attach cells wait for U0b.",
+   "evidence": "docs/evidence/ultra-126/PROBE-P2a.md (PR #263)"
+  },
+  {
+   "id": "P3",
+   "unit": "U7",
+   "question": "Charter-excluded summon refused after compaction and resume (every run)",
+   "status": "not started"
+  },
+  {
+   "id": "P4",
+   "unit": "U7",
+   "question": "Agent returns to queue after compaction/resume, with and without Console hook (n>=5)",
+   "status": "not started"
+  },
+  {
+   "id": "P5",
+   "unit": "U7",
+   "question": "Forced auto-compaction in a scripted long run",
+   "status": "not started"
+  },
+  {
+   "id": "P6",
+   "unit": "U7",
+   "question": "Per additional door: stable session id, working operator channel",
+   "status": "passes 1 and 2 merged. Pi: no channel, no id. agy: per-call _meta id; channel 3 only under request-review. Codex: per-call _meta id; channel 1 elicitation works in the TUI (3/3); channel 3 only under approvals_reviewer=user.",
+   "evidence": "docs/evidence/ultra-126/PROBE-P6.md (PRs #264, #266)"
+  }
+ ],
+ "decisions": [
+  {
+   "id": "FD-0..FD-10",
+   "kind": "founder",
+   "date": "2026-11-15",
+   "summary": "Founder rulings, binding and not reopened. Verbatim in plan section 3.1.",
+   "source": "docs/plans/2026-11-15-skill-ultra-campaign-126.md#31-rulings-verbatim-2026-11-15"
+  },
+  {
+   "id": "EXEC-DIRECTIVE",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "Execution directive: single integration branch integration/skill-ultra-126 with one PR to main reserved for founder merge; supersedes planner ruling PR-8 (per-unit PRs to main). Centralized independent reviewer: ~/.pi/agent/bin/pi-reviewer (or Pi native reviewer), Terra High, no silent fallback.",
+   "source": "founder message in orchestration session, 2026-11-16"
+  },
+  {
+   "id": "VISIBILITY-DIRECTIVE",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "Lanes, especially Pi and Antigravity, run visibly in herdr panes via /herdr-dispatch and the canonical skills; harness calls made by workers (including pi-reviewer) run in visible panes. Agents already running are not stopped. Supersedes the directive's earlier 'Claude team uses herdr only for benchmarks' for lane dispatch.",
+   "source": "founder message in orchestration session, 2026-11-16"
+  },
+  {
+   "id": "TABS-DIRECTIVE",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "Remove the two-pane limit. Each lane runs in its own new herdr tab. Keep tabs clean, and archive session JSONL so cost can be logged and lanes resumed later.",
+   "source": "founder message in orchestration session, 2026-11-16"
+  },
+  {
+   "id": "FD-11",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "Operator approvals inside terminal multiplexers (founder ruling on Terra's critical P1 finding). Multiplexers exist for highly autonomous agent work. The founder allows the bypass for advanced users only: it must not be advertised as available. The default must still have safeguards, but advanced users with multiplexers (bypass permissions and similar) may approve there. Probe whether Claude Code's auto-mode classifier rejects a model's attempt to self-approve. Also: Antigravity lanes may escalate Hydrogen to Argon on review loops; pi-reviewer is available to every lane for self-verified work; lane leads report to the orchestrator.",
+   "source": "founder message in orchestration session, 2026-11-16 (answer to the P1 approval-channel question)"
+  },
+  {
+   "id": "ROSTER-DIRECTIVE",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "Founder stopped the U0a lead for reusing worker-sol. Pi ladder: Luna, then Hydrogen, then Terra, before any Sol escalation. Expect heavy Luna and Hydrogen delegation. Leads lead the way the orchestrator does: no soloing, no micromanaging. Update (same day): L2 Hydrogen is the default because L1, L3 and L4 share one quota; de-escalation to L1 Luna only for very mechanical tasks; the founder directed the Hydrogen-in-Pi route fix; only one Pi lead at a time.",
+   "source": "founder message in orchestration session, 2026-11-16"
+  },
+  {
+   "id": "REVIEWER-DIRECTIVE",
+   "kind": "founder",
+   "date": "2026-11-16",
+   "summary": "The reviewer may use the shell: the founder approved editing reviewer.md and reviewer-shared.md to add bash. Any lane may invoke the reviewer from its own bash instead of a herdr split; visibility is not required for reviews. The orchestrator added a verify-only shell rule to both agent bodies (no commits, pushes, branch changes or config edits); local backups are kept in the session archive.",
+   "source": "founder messages in orchestration session, 2026-11-16"
+  },
+  {
+   "id": "D-001",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "all",
+   "problem": "Repo permits only squash merges (allow_merge_commit=false). Squash-merging unit PRs into the integration branch would collapse unit commits, which the directive says must not lose unit-level evidence.",
+   "options": [
+    "Squash-merge unit PRs via GitHub",
+    "Local git merge --no-ff of the reviewed unit HEAD, pushed to the integration branch (no ruleset on that branch)",
+    "Rebase-merge"
+   ],
+   "selected": "Local git merge --no-ff of the Terra-reviewed unit HEAD into integration/skill-ultra-126, then push. GitHub marks the unit PR merged because its commits are in base. Unit branches are never deleted.",
+   "reason": "Preserves every unit commit, its review trail and handoff; no force-push; ruleset only governs main.",
+   "authority": "Directive section 6 (internal integration merges authorized; do not squash away unit evidence)",
+   "reversible": true,
+   "terra": "included in each unit review and the final integration review",
+   "risk": "The final integration PR to main will still be squashed by the main ruleset at founder merge; the integration branch keeps full history."
+  },
+  {
+   "id": "D-002",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "all",
+   "problem": "PR-8 also said the campaign tool stays unregistered in the bundled MCP until U3, to keep each main merge inert.",
+   "options": [
+    "Drop the gate since nothing reaches main until founder merge",
+    "Keep the gate"
+   ],
+   "selected": "Keep the U1 server-option gate until U3 exactly as the plan's U1/U3 briefs specify.",
+   "reason": "The gate is part of the approved unit briefs, costs nothing, and keeps intermediate integration states inert.",
+   "authority": "Plan Appendix A U1/U3",
+   "reversible": true,
+   "terra": "U1 and U3 reviews",
+   "risk": "none known"
+  },
+  {
+   "id": "D-003",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "all",
+   "problem": "Parallel lanes in one checkout would collide; main checkout has unrelated uncommitted founder files.",
+   "options": [
+    "Shared checkout",
+    "One git worktree per lane under ~/skill-heaven-wt/"
+   ],
+   "selected": "One git worktree per lane under ~/skill-heaven-wt/<lane>; the founder's main checkout is never touched.",
+   "reason": "File-ownership isolation; P3-style respect for the founder's working tree.",
+   "authority": "Directive sections 1 and 6",
+   "reversible": true,
+   "terra": "n/a (process)",
+   "risk": "Each worktree needs its own npm ci."
+  },
+  {
+   "id": "D-004",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U3",
+   "problem": "P1 (operator channel) gates U3's implementation choice but depends on no unit code; waiting for U2 would serialize it behind three units.",
+   "options": [
+    "Run P1 when U3 starts",
+    "Run P1 now as a U3 sub-branch; U3 consumes its record"
+   ],
+   "selected": "Run P1 now on feat/ws6-ultra-u3-p1 (Antigravity Hydrogen High drives; claude-haiku-5-5 is the model under test, n=3 per cell, TUI cells in visible herdr panes). The orchestrator interprets; the lane records hard signals only.",
+   "reason": "Removes U3's longest serial wait without changing the architecture; probe-only, cheap model under test (FD-9).",
+   "authority": "Plan U3 brief ('Run P1 first'), section 7.2; directive section 10",
+   "reversible": true,
+   "terra": "U3 review covers the P1 record",
+   "outcome": "pending",
+   "risk": "Claude Code may upgrade before U3; P1 then re-runs per M0."
+  },
+  {
+   "id": "D-005",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "reporting",
+   "problem": "The dashboard and decision-log renderer is orchestration reporting, not a product unit; a separate Terra pass for it would spend the scarce reviewer on non-product code.",
+   "options": [
+    "Separate Terra review",
+    "Merge after the orchestrator checks it; covered by the final full-integration Terra review"
+   ],
+   "selected": "Merge the DASH lane after an orchestrator check; it touches only docs/evidence/ultra-126/ and is included in the final integration review.",
+   "reason": "The review gate in directive section 7 is for implementation units; this lane writes no product code.",
+   "authority": "Directive sections 7 and 9",
+   "reversible": true,
+   "terra": "final integration review",
+   "outcome": "pending",
+   "risk": "low"
+  },
+  {
+   "id": "D-006",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U8",
+   "problem": "U8 is listed after U2, but only its declared-claims rendering touches U2's renderer. The Arbor cache refresh, identity pins, release-acceptance update and #253 doc fix have no code dependency on U2.",
+   "options": [
+    "Start U8 only after U2",
+    "Start the data and docs half now; the render half and the merge wait for U2"
+   ],
+   "selected": "Start U8 prep now (data, pins, release-acceptance, #253 docs). The declared-claims render is added after U2 lands, and U8 merges into integration only after U2.",
+   "reason": "Uses idle Antigravity capacity; the dependency's reason (the renderer) is still honored.",
+   "authority": "Plan section 7.1 (U8 'any time after U2' is satisfied at merge); directive section 5",
+   "reversible": true,
+   "terra": "U8 review",
+   "outcome": "pending",
+   "risk": "The refreshed data could conflict with U2 if U2 touches arbor data. U2's brief does not."
+  },
+  {
+   "id": "D-007",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "all",
+   "problem": "Three lanes (U0a Pi lead, P1 agy, U8 agy) were launched headless from the orchestrator's shell before the visibility directive, and the directive says not to stop them. herdr-dispatch caps concurrent pane workers at two.",
+   "options": [
+    "Kill and relaunch in panes",
+    "Let them finish headless; every new dispatch goes into panes, two pane workers at a time"
+   ],
+   "selected": "Let the three in-flight headless lanes finish (logs in ~/skill-heaven-wt/logs/, P1's TUI cells already in visible panes). From now on every lane is a herdr pane agent (kind pi or agy); at most two pane workers at once while the legacy headless lanes drain, then two as steady state.",
+   "reason": "Founder said not to stop running agents; the herdr-dispatch two-pane limit keeps panes readable.",
+   "authority": "VISIBILITY-DIRECTIVE; herdr-dispatch skill sections 1 and 7",
+   "reversible": true,
+   "terra": "n/a (process)",
+   "outcome": "superseded by D-008 (two-pane limit removed by founder)",
+   "risk": "The two-pane limit serializes lanes after U1 (handshake and execution tracks map one pane each)."
+  },
+  {
+   "id": "D-008",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "all",
+   "problem": "How to keep lane tabs clean while preserving sessions for skill-cost accounting and resume.",
+   "options": [
+    "Move finished panes to an archive tab",
+    "Copy session files to a local archive, then close the tab"
+   ],
+   "selected": "dispatch.sh opens one tab per lane (label = lane name, --no-focus) and records dispatch.json. archive.sh copies the lane's Pi session dirs (keyed by the worktree cwd) and its agy conversation (.db plus the brain/<id> transcript JSONL, found through cache/last_conversations.json) into ~/skill-heaven-wt/sessions/<lane>/, saves the final terminal buffer, writes archive.json, and closes the tab. Originals stay in place, so a lane can still be resumed. The archive is local only, never committed (transcripts are excluded from the repo by policy).",
+   "reason": "Founder directive; copies rather than moves keep resume possible and give skill-cost its canonical inputs.",
+   "authority": "TABS-DIRECTIVE",
+   "reversible": true,
+   "terra": "n/a (process)",
+   "outcome": "in effect; verified on lane DASH (15 files archived)",
+   "risk": "agy's cwd map keeps only the most recent conversation per cwd, so a lane is archived after each run, before any re-dispatch in the same worktree."
+  },
+  {
+   "id": "D-009",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U3, U9",
+   "problem": "Security limit raised by a side agent and confirmed against P1's own method. MCP elicitation (channel 1) delivers whatever is typed into the terminal to the server. In P1, a worker agent answered the elicitation prompt with herdr pane send-text, and the server received a normal accept that nothing distinguished from a person. Any process that can write to the terminal can do the same: every lane here (herdr socket), and a Skill Ultra session's own model when it has a shell tool and its terminal sits in herdr or tmux (HERDR_SOCKET_PATH / TMUX in its environment); for example, a parallel shell call issued beside the campaign call.",
+   "options": [
+    "Drop channel 1",
+    "Keep channel 1, state plainly what it is not, disclose terminal multiplexing at decision time, and require the real proof decision to be made where no agent can inject input",
+    "Invent a nonce or challenge (rejected: an agent can read the pane as easily as type into it)"
+   ],
+   "selected": "Keep channel 1 as the selected channel (it still keeps the model out of the tool path, and no channel on this harness authenticates a person), but: (1) the P1 record and the U3 evidence say that channel 1 is terminal input, not authentication, the same class of boundary as channels 2 and 3 and the steering brand; (2) U3's operator path records, with each operator entry, an attribution field 'terminal-input, unauthenticated' plus whether the server's environment shows a multiplexer (HERDR_ENV/HERDR_SOCKET_PATH/TMUX), and the decisions render discloses it; (3) U9's real operator decision is made by the founder in a terminal no agent controls (outside herdr and tmux, or a pane whose socket no running agent can reach), and PROOF.md says which; (4) no test fixture keystroke is ever recorded as a person's decision.",
+   "reason": "Honest disclosure of a real boundary without inventing authentication the harness does not provide; it preserves invariant 4 (agent text cannot manufacture operator authority) in the proof, where it matters.",
+   "authority": "Plan section 5.3 ('says plainly what it is not'); security invariants 4 and 15; directive section 8 (never forge an approval)",
+   "reversible": true,
+   "terra": "U3 review and the final integration review must check items 1-4",
+   "outcome": "refined by FD-11 and D-010",
+   "risk": "In product use, a session whose model has shell access inside a multiplexer can approve its own charter. The disclosure makes that visible; it does not prevent it. A stronger channel would need a harness feature that does not exist on 2.1.325."
+  },
+  {
+   "id": "D-010",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U3",
+   "problem": "Implement FD-11: safeguarded default, an unadvertised opt-in for multiplexed approvals, and a probe of auto mode's classifier.",
+   "options": [
+    "Env-flag opt-in",
+    "Config-file opt-in",
+    "CLI-flag opt-in"
+   ],
+   "selected": "(1) Default: an elicitation accept grants operator authority only when the server's environment shows no multiplexer (HERDR_ENV, HERDR_SOCKET_PATH, TMUX). Otherwise the decisions step fails closed at DECISIONS with a plain message. (2) Advanced opt-in: the person sets an env var themselves before launching the session (name fixed in vocabulary.ts, e.g. SKILL_ULTRA_MULTIPLEXED_DECISIONS=accept-risk). It is documented only in an advanced or evidence note, never in the README, site, command help or skill text. Under opt-in, every operator entry records attribution 'terminal-input, unauthenticated', multiplexed:true and optIn:true, and the decisions render and status show it. (3) Safeguard inside the opt-in: the elicitation form asks the person to type the charter's short digest, shown in the prompt, so a blind or replayed injection does not match. This is disclosed as friction, not authentication. (4) Probe P1d measures auto mode's classifier against a self-approval attempt, and U3 records the result per mode.",
+   "reason": "Matches FD-11: a safe default for ordinary users, nothing advertised, and advanced multiplexer users keep working. Terra's critical finding is answered by the default fail-closed plus an explicit, recorded, person-set opt-in.",
+   "authority": "FD-11",
+   "reversible": true,
+   "terra": "U3 review must verify the default fail-closed, the opt-in recording, and that no user-facing surface advertises the opt-in",
+   "outcome": "P1d confirms the need: auto mode is a partial safeguard (1/3), bypass none; default fail-closed when multiplexed stands. Implementation pending U3.",
+   "risk": "An agent that launches sessions could set the env var itself. The opt-in is recorded on every entry so this is visible after the fact. The OS-level keystroke-injection residual stays disclosed."
+  },
+  {
+   "id": "D-011",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U7, U0b, reporting",
+   "problem": "The OpenAI pool (Pi team) is nearly exhausted until 07:38 PST and U0a is in its final review, so the next Pi lead (U0b) cannot start yet. Antigravity capacity is idle.",
+   "options": [
+    "Wait",
+    "Run code-independent work on Antigravity now"
+   ],
+   "selected": "Three Antigravity lanes in their own tabs: P2a (Claude Code session identity and MCP server lifetime across /compact, --resume, --continue, --fork-session; the harness facts U0b's re-attach relies on), P6 pass 1 (Pi and agy doors: session id, operator channel; Codex deferred), and DASH2 (an availability panel with a reset countdown in DECISION-LOG.html). Each lane runs its own Terra loop. A session-only timer at 07:41 checks the OpenAI reset.",
+   "reason": "Founder: continue on Antigravity until the reset. These probes depend on harnesses, not on unit code (same reasoning as D-004).",
+   "authority": "Founder message 2026-11-16; plan section 7.2; D-004 precedent",
+   "reversible": true,
+   "terra": "lane-run reviews; U7 review covers the final probe records",
+   "outcome": "dispatched",
+   "risk": "P2a runs Claude Haiku, which spends the Claude pool (cheap tier)."
+  },
+  {
+   "id": "D-012",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U0a",
+   "problem": "The U0a lead hit the OpenAI usage limit during closeout. The final HEAD 5ffac74 (evidence-only delta over Terra-passed dc9efca) had no exact-HEAD Terra review. Separately, the handoff discloses that a resumed worker-sol segment actually ran antigravity/gemini-3.8-flash without being asked (a silent route substitution by pi-subagent resume).",
+   "options": [
+    "Wait for the OpenAI reset and let the lead finish",
+    "Orchestrator verifies mechanically and requests an exact-HEAD Terra confirmation (separate pool)"
+   ],
+   "selected": "Orchestrator ran the full matrix on 5ffac74 (2609 tests, typecheck, three builds with no diff, no I/O/clock/randomness in the engine, no new deps, no new ratify), then requested Terra confirmation with a generated delta packet. Terra: PASS, no blocking findings. Merged --no-ff into integration. Flash substitution recorded as a tooling risk: every spawn now sets fallback_models: [], and the resumed segment's code was covered by later Terra reviews.",
+   "reason": "Directive: a reviewed SHA must match the integrated HEAD; Terra uses a separate pool and was available.",
+   "authority": "Directive sections 7, 12 and 13",
+   "reversible": true,
+   "terra": "U0a-5ffac74 PASS",
+   "outcome": "integrated",
+   "risk": "pi-subagent resume can change the model silently; leads must verify the persisted runtime model of resumed workers."
+  },
+  {
+   "id": "D-013",
+   "kind": "delegated",
+   "date": "2026-11-16",
+   "team": "A (Opus orchestrator)",
+   "unit": "U0b",
+   "problem": "Orchestrator verification of U0b's final HEAD 0188bba found mcp-link-enrichment.test.ts failing 3/5 whenever CLAUDE_CODE_SESSION_ID is set (always true inside Claude Code). It passes with the variable unset, and the pre-U0b base passes with it set. The original suspicion was root sharing between successive test servers, but confirmed reproduction shows the openSession test fixture records the inherited CLAUDE_CODE_SESSION_ID and live current PID, and MCP resolveSession deliberately refuses that live fixture root and starts a fresh empty root, losing the primed fixture skills. New real live-server tests show distinct roots under the same ID and a dead-PID requirement for resumption (without claiming cross-process race freedom or OS locking). Terra's PASS at c26d9b5 ran without the variable and missed it. Separately, a pi-reviewer confirmation hung for its full 3 h timeout, and pi-reviewer then crashed serializing bytes stderr (a pi-reviewer bug, in pi-config).",
+   "options": [
+    "Accept with a test-env workaround",
+    "Return to the U0b lead for a hermeticity repair plus regression test, then re-review"
+   ],
+   "selected": "Return to the U0b lead: tests hermetic about the session id, a regression test with the variable set, proof that two live servers in one session cannot re-attach, the full suite run both ways, then a Terra re-review of the new HEAD. COMMON.md now requires every unit to run the suite with the variable set and unset, and asks reviewers for targeted runs, no watch mode.",
+   "reason": "A green suite that depends on the caller's environment is not a pass; the U9 proof itself runs inside Claude Code.",
+   "authority": "Directive section 14 (a previous green run does not validate a changed environment or HEAD); section 7 (a test suite is necessary but not sufficient)",
+   "reversible": true,
+   "terra": "pending re-review",
+   "outcome": "Round 1 repaired at 72f6277 (Terra PASS at 1cb0535): the suite passes 2664/2664 with the variable unset and with it fixed. Round 2 found by the orchestrator in the live Claude Code + herdr environment: summon-arbor.test.ts times out under full-suite load. Run alone it takes 11s, against 4.3s on the pre-U0b base, because the re-attach/reaper path scans every root in tmpdir on each server start (522 roots on this machine). Returned for an O(1) session-id lookup, isolated test tempRoots and a 1000-root regression test.",
+   "risk": "Reviewer hangs cost up to 3 h each. The pi-reviewer stderr-bytes crash should be fixed in pi-config (founder's repo; not changed here)."
+  },
+  {
+   "id": "D-014",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U7",
+   "problem": "Plan Appendix A says U7 releases the Console plugin once the probe passes (FD-4). The campaign directive says no production release and no merge to main by agents.",
+   "options": [
+    "Publish the Console release from U7",
+    "Bump the version and changelog in the U7 PR only; the founder merge of #256 is the release",
+    "Skip the release entirely"
+   ],
+   "selected": "Bump the version and changelog in the U7 PR only. No tag, no publish, no marketplace push.",
+   "reason": "Satisfies FD-4 (the release content is ready) without crossing the directive line; the founder decides when it ships by merging.",
+   "authority": "Campaign directive (no production release, founder-only merge to main); FD-4",
+   "reversible": true,
+   "terra": "via U7 review",
+   "outcome": "Written into briefs/U7.md",
+   "risk": "None beyond the founder needing to tag after merge if a tag is wanted."
+  },
+  {
+   "id": "D-015",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U9",
+   "problem": "Plan section 8 needs a real person to invoke /skill-ultra, decide the charter and answer incidents. FD-11 makes multiplexed approvals fail closed, and the directive forbids agent-generated approvals passing a proof gate.",
+   "options": [
+    "An agent drives the proof in a herdr pane",
+    "Agents prepare (runbook plus a verifier script), the founder runs the proof in a plain terminal, and agents record it"
+   ],
+   "selected": "Agents prepare and record; the founder runs it outside herdr and tmux with no opt-in. Any operator entry with multiplexed or optIn true disqualifies the run. The copy change happens only if every section 8 step has a trace entry.",
+   "reason": "Invariant 4 (agent text cannot manufacture operator authority) and invariant 15 (receipts never overstated).",
+   "authority": "Directive (no agent approval masquerading as a human decision); FD-11; D-009",
+   "reversible": true,
+   "terra": "via U9 review",
+   "outcome": "Written into briefs/U9.md",
+   "risk": "The proof waits on founder time; U9 reports BLOCKED: awaiting founder proof run after phase 1."
+  },
+  {
+   "id": "D-016",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "integration",
+   "problem": "main gained dcc7fbd (#268 Lucia Refractions site design) after the integration base 6eb0507.",
+   "options": [
+    "Merge main into integration now",
+    "Wait until the end"
+   ],
+   "selected": "Merge main into integration now with --no-ff (1ed2ff2). It merged clean; typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+   "reason": "Keeps #256 mergeable and lets unit branches pick up main early; the change touches only packages/site.",
+   "authority": "Founder instruction (reconcile main), D-001",
+   "reversible": true,
+   "terra": "not needed (no campaign code changed)",
+   "outcome": "Pushed 1ed2ff2",
+   "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+  },
+  {
+   "id": "D-017",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "integration",
+   "problem": "Founder asked for #269 (/landing mobile plate framing) to land as a patch on main and for integration to be reconciled.",
+   "options": [
+    "Squash-merge #269 to main, then merge main into integration",
+    "Carry #269 inside integration only"
+   ],
+   "selected": "#269 squash-merged to main (301e051) on the founder's instruction; main merged into integration --no-ff (9547374). Typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+   "reason": "Founder instruction; the change touches only packages/site.",
+   "authority": "Founder instruction (merge #269 to main and reconcile)",
+   "reversible": true,
+   "terra": "not needed (no campaign code changed)",
+   "outcome": "Pushed 9547374",
+   "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+  },
+  {
+   "id": "D-018",
+   "kind": "founder",
+   "date": "2026-11-18",
+   "team": "Founder",
+   "unit": "campaign",
+   "problem": "OpenAI provider unavailable; Pi roster and evidence rules changed.",
+   "options": [
+    "Adopt the founder roster"
+   ],
+   "selected": "Pi lead: Gemini 4 Argon High (antigravity). L1 worker-luna-shared (openai-codex), L2 worker-hydrogen (default), L3 worker-argon medium, L4 worker-opus medium (antigravity). Providers openai-codex and antigravity only. Reviewer stays Terra via reviewer-shared. Screenshots never go in git.",
+   "reason": "Founder instruction",
+   "authority": "Founder",
+   "reversible": true,
+   "terra": "n/a",
+   "outcome": "COMMON.md roster and unit briefs U0b, U3-U7 updated",
+   "risk": "The paused U0b Sol lead is replaced by an Argon High lead resuming from the pushed branch and its handoff."
+  },
+  {
+   "id": "D-019",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "integration",
+   "problem": "#270 (#267 Safari fix) merged to main on the founder's go after the screenshots were removed.",
+   "options": [
+    "Merge main into integration now"
+   ],
+   "selected": "Screenshots removed from #270 (24 files, kept outside git); #270 squash-merged to main 13ddcf2; main merged into integration --no-ff (0318001). Typecheck green; suite 2612/2612 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+   "reason": "Founder instruction (merge after the Hydrogen cleanup); keeps #256 mergeable.",
+   "authority": "Founder instruction, D-001",
+   "reversible": true,
+   "terra": "not needed for the evidence-only delta (code reviewed by Terra at 1d24a8e)",
+   "outcome": "#267 closed",
+   "risk": "none for campaign code"
+  },
+  {
+   "id": "D-020",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U0b",
+   "problem": "U0b lead reported READY FOR REVIEW at 5bde00b.",
+   "options": [
+    "Accept and merge into integration",
+    "Send back"
+   ],
+   "selected": "Accepted. Terra PASS on 3fa0286 (both residual test-proof gaps closed; integration merge clean); 3fa0286..HEAD evidence-only. Orchestrator checks: typecheck 0; 2716/2716 with CLAUDE_CODE_SESSION_ID unset, fixed and inherited; build:mcp/status/console with no drift; privacy scan found one private path in the handoff, redacted (1d550aa). Merged --no-ff (5af657a); integration suite 2716/2716 unset and fixed.",
+   "reason": "All acceptance checks met.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/U0b-3fa0286.md)",
+   "outcome": "U1 unblocked and dispatched",
+   "risk": "The earlier Terra pass on 3fa0286 was incomplete (no new findings); the final bounded pass is the PASS of record."
+  },
+  {
+   "id": "D-021",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U1",
+   "problem": "U1 lead reported READY FOR REVIEW at 1514f49 (PR #271).",
+   "options": [
+    "Accept and merge into integration",
+    "Send back"
+   ],
+   "selected": "Accepted. Terra PASS on bd3fc46 after three CHANGES REQUIRED rounds; the staging-boundary finding survived two Hydrogen rounds and was closed by an L3 worker-argon escalation, recorded in the handoff. bd3fc46..HEAD evidence-only. Orchestrator checks: typecheck 0; 2748/2748 unset, fixed and inherited; builds with no drift; bundled MCP tools/list = [summon] (D-002 gate holds); privacy scan clean. Merged --no-ff (172c371); integration suite 2748/2748 unset and fixed.",
+   "reason": "All acceptance checks met.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/U1-bd3fc46.md)",
+   "outcome": "U2 dispatched (U3 and U4 follow; one Pi lead at a time)",
+   "risk": "campaign tool stays gated off in the shipped binary until U3 lifts D-002."
+  },
+  {
+   "id": "D-022",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U2",
+   "problem": "U2 lead reported READY FOR REVIEW at 801f311 (PR #272).",
+   "options": [
+    "Accept and merge into integration",
+    "Send back"
+   ],
+   "selected": "Accepted. Terra PASS on a97b762 after one CHANGES REQUIRED round; a97b762..HEAD evidence-only. Orchestrator checks: typecheck 0; 2764/2764 unset, fixed and inherited; builds with no drift; authority regression only extended (0 lines removed); one private path in the handoff redacted (1254b0d). Merged --no-ff (2ddfab2); integration suite 2764/2764 unset and fixed. COMMON.md now forbids absolute paths in committed files.",
+   "reason": "All acceptance checks met.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/U2-a97b762.md)",
+   "outcome": "U3 dispatched; U8 render half unblocked",
+   "risk": "none new"
+  },
+  {
+   "id": "D-023",
+   "kind": "delegated",
+   "date": "2026-11-18",
+   "team": "A (Opus orchestrator)",
+   "unit": "U8",
+   "problem": "U8 lane reported READY FOR REVIEW at 6de2bc7 (PR #259), prep and render halves.",
+   "options": [
+    "Accept and merge into integration",
+    "Send back"
+   ],
+   "selected": "Accepted. Terra PASS on 7da7e22 after one CHANGES REQUIRED round (U+2028/U+2029 escaping); reviewer verified Tree pins, 22 subjects, 3 declared edges, 0 pairs, 24 provenance hashes. 7da7e22..HEAD evidence-only. Orchestrator checks: typecheck 0; 2773/2773 unset, fixed and inherited; builds with no drift; authority regression only extended; no private paths or images. scripts/release-acceptance.mjs not run: it installs public main via a logged-in claude, so it cannot test this branch. Merged --no-ff (fb58864); integration suite 2773/2773 unset and fixed.",
+   "reason": "All acceptance checks met.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/u8-7da7e22.md)",
+   "outcome": "#253 closes when #256 lands on main",
+   "risk": "U3 extends render.ts; it must merge integration before its next review. release-acceptance's live phases run only after the founder's merge to main."
+  },
+  {
+   "id": "D-024",
+   "kind": "founder",
+   "date": "2026-11-19",
+   "team": "A (Opus orchestrator)",
+   "unit": "all Pi lanes",
+   "problem": "Argon is unavailable: the U3 lead's Argon High session was refused by the Antigravity backend mid-lane.",
+   "options": [
+    "Founder roster change"
+   ],
+   "selected": "Founder ruling: Hydrogen xhigh (antigravity/gemini-4-hydrogen, thinking xhigh) takes over as Pi lead, starting with u3-lead. Escalation from L2 Hydrogen goes straight to Opus (antigravity/claude-opus-5-5:medium); the Argon step is removed. Luna stays L1 for mechanical work; Terra stays the only reviewer. COMMON.md and the U-briefs are updated.",
+   "reason": "Founder instruction.",
+   "authority": "founder",
+   "reversible": true,
+   "terra": "n/a",
+   "outcome": "u3-lead continues on Hydrogen xhigh after compaction",
+   "risk": "Hydrogen is a weaker lead than Argon; the orchestrator's acceptance checks stay unchanged, and a finding that survives two repair rounds goes to Opus."
+  },
+  {
+   "id": "D-025",
+   "kind": "delegated",
+   "date": "2026-11-19",
+   "team": "A (Opus orchestrator)",
+   "unit": "integration",
+   "problem": "U0b's Terra PASS came from a bounded second pass after the full-scope pass was incomplete; Terra noted the merge was not fully re-read. Other units also cleared on bounded delta reviews (e.g. U3 c11c9e6).",
+   "options": [
+    "Accept unit-level passes as final",
+    "Add one full-scope Terra pass over the integration branch before #256 is marked ready"
+   ],
+   "selected": "Add a final gate: one full-scope Terra review (reviewer-shared) of integration/skill-ultra-126 against main, run by a dedicated review lane after U7 and before #256 is marked ready, split by package if the full diff does not fit one pass. Blocking findings go back to a repair lane.",
+   "reason": "Bounded passes leave merge resolutions and cross-unit interactions unreviewed as a whole; one integrated pass closes that gap at known cost.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "pending (final gate)",
+   "outcome": "planned",
+   "risk": "Terra quota: if the pool is short, the gate waits rather than substituting a reviewer."
+  }
+ ],
+ "blockers": [],
+ "awaitingFounder": [],
+ "updatedAt": "2026-11-18T18:11:12+00:00",
+ "quota": {
+  "asOf": "2026-11-18T02:00:00-08:00",
+  "pools": [
+   {
+    "pool": "openai",
+    "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
+    "state": "nearly exhausted: week ~97% (Pi statusline, 2026-11-18); Pi team paused by founder",
+    "resetAt": null
+   },
+   {
+    "pool": "openai-codex",
+    "covers": "Terra reviewer (pi-reviewer)",
+    "state": "available (founder 2026-11-18; reviewer-shared answered, model openai-codex/gpt-6.1-terra:high confirmed); lanes use --agent reviewer-shared (max_retries 0, fallback is the same model)",
+    "resetAt": null
+   },
+   {
+    "pool": "antigravity",
+    "covers": "Hydrogen, Argon (agy lanes and Pi L2 default)",
+    "state": "available (Agy ~4%); main lane pool while Pi is paused",
+    "resetAt": null
+   },
+   {
+    "pool": "claude",
+    "covers": "Opus orchestrator, Haiku probe subject",
+    "state": "new login 2026-11-18 (statusline Claude 9%); conserve",
+    "resetAt": null
+   },
+   {
+    "pool": "codex",
+    "covers": "Codex Luna Low probes",
+    "state": "unknown",
+    "resetAt": null
+   }
+  ],
+  "openai": {
+   "status": "unavailable",
+   "note": "provider not used (founder 2026-11-18)"
+  }
+ },
+ "sideWork": [
+  {
+   "id": "i267",
+   "issue": 267,
+   "title": "Safari compositing of Lucy Zero/Hell/Ultra",
+   "lane": "agy Hydrogen high, tab i267",
+   "branch": "fix/site-267-safari-lucy-composite",
+   "base": "main dcc7fbd",
+   "prTo": "main (draft, founder-reviewed visual)",
+   "status": "merged to main 13ddcf2 (2026-11-18); lane archived",
+   "pr": 270,
+   "head": "74cb9c4"
+  }
+ ]
 }
