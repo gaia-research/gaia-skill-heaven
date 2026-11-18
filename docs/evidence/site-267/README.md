@@ -1,5 +1,7 @@
 # Evidence: #267 — Safari / WebKit compositing for Lucy Zero, Hell, and Ultra
 
+Screenshots were captured locally and are not committed; they can be regenerated with the commands listed.
+
 ## Scope & Playwright WebKit vs real Safari
 
 Playwright WebKit (`27.2`) runs headless WebKit on macOS and **is not real macOS Safari**:
@@ -24,21 +26,19 @@ Each proposed fix was applied alone and captured before combining:
 
 | State & Surface | Symptom | Engine | Before | After | Fix |
 |---|---|---|---|---|---|
-| Heaven (Hero `/`) | Baseline (no corruption; regression check) | WebKit | [before](before/webkit-dsf1-hero-heaven.png) | [after](after/webkit-dsf1-hero-heaven.png) | None needed (no regression) |
-| Heaven (`/landing`) | Baseline (no corruption; regression check) | WebKit | [before](before/webkit-dsf1-landing-heaven.png) | [after](after/webkit-dsf1-landing-heaven.png) | None needed (no regression) |
-| Heaven (Hero `/`) | Baseline (no corruption; regression check) | Chromium | [before](before/chromium-dsf1-hero-heaven.png) | [after](after/chromium-dsf1-hero-heaven.png) | None needed (no regression) |
-| Zero (Hero `/`) | Stepped/posterized white-grey head aura & lower silhouette box | WebKit | [before](before/webkit-dsf1-hero-zero.png) | [after](after/webkit-dsf1-hero-zero.png) | Fix 1 (`predecode.worker.ts`) |
-| Zero (`/landing`) | Stepped/posterized aura & dark edges | WebKit | [before](before/webkit-dsf1-landing-zero.png) | [after](after/webkit-dsf1-landing-zero.png) | Fix 1 (`predecode.worker.ts`) |
-| Zero (Hero `/`) | Clean baseline (parity check) | Chromium | [before](before/chromium-dsf1-hero-zero.png) | [after](after/chromium-dsf1-hero-zero.png) | Fix 1 (worker parity) |
-| Hell (Hero `/`) | Jagged aura/hair boundary (`hell-aura-37.png`) & red/orange eyelid blob (`hell-lid-glow-22.png`) | WebKit | [before](before/webkit-dsf1-hero-hell.png) | [after](after/webkit-dsf1-hero-hell.png) | Fix 1 (`predecode.worker.ts`; Fix 3 dropped) |
-| Hell (`/landing`) | Rainbow body/aura bleed & red/orange eyelid blob | WebKit | [before](before/webkit-dsf1-landing-hell.png) | [after](after/webkit-dsf1-landing-hell.png) | Fix 1 (`predecode.worker.ts`) |
-| Hell (Hero `/`) | Clean baseline (parity check) | Chromium | [before](before/chromium-dsf1-hero-hell.png) | [after](after/chromium-dsf1-hero-hell.png) | Fix 1 (worker parity) |
-| Ultra (Hero `/`) | Rainbow hair/wing halo, upper-left alpha cutout, blown-out right-eye disc (`ultra-eye-glow-48.png`) | WebKit | [before](before/webkit-dsf1-hero-ultra.png) | [after](after/webkit-dsf1-hero-ultra.png) | Fix 1 (`predecode.worker.ts`) |
-| Ultra (`/landing`) | Rainbow halo/eye disc + `drop-shadow` on overflowing `.lucy-rive` box | WebKit | [before](before/webkit-dsf1-landing-ultra.png) | [after](after/webkit-dsf1-landing-ultra.png) | Fix 1 + Fix 2 (`LucyRiveFigure.tsx`) |
+| Heaven (Hero `/`) | Baseline (no corruption; regression check) | WebKit | Clean | Clean (no regression) | None needed |
+| Heaven (`/landing`) | Baseline (no corruption; regression check) | WebKit | Clean | Clean (no regression) | None needed |
+| Heaven (Hero `/`) | Baseline (no corruption; regression check) | Chromium | Clean | Clean (no regression) | None needed |
+| Zero (Hero `/`) | Stepped/posterized white-grey head aura & lower silhouette box | WebKit | Posterized stepped aura & dark box artifacts | Smooth monochrome aura & clean silhouette | Fix 1 (`predecode.worker.ts`) |
+| Zero (`/landing`) | Stepped/posterized aura & dark edges | WebKit | Posterized aura & dark edges | Smooth monochrome aura & clean edges | Fix 1 (`predecode.worker.ts`) |
+| Zero (Hero `/`) | Clean baseline (parity check) | Chromium | Clean | Clean (no regression) | Fix 1 (worker parity) |
+| Hell (Hero `/`) | Jagged aura/hair boundary (`hell-aura-37.png`) & red/orange eyelid blob (`hell-lid-glow-22.png`) | WebKit | Rainbow bleed, jagged halo, solid red/orange eyelid blob | Smooth inverted aura & clean red tear | Fix 1 (`predecode.worker.ts`; Fix 3 dropped) |
+| Hell (`/landing`) | Rainbow body/aura bleed & red/orange eyelid blob | WebKit | Rainbow body/aura bleed & eyelid blob | Clean inverted palette & tear | Fix 1 (`predecode.worker.ts`) |
+| Hell (Hero `/`) | Clean baseline (parity check) | Chromium | Clean | Clean (no regression) | Fix 1 (worker parity) |
+| Ultra (Hero `/`) | Rainbow hair/wing halo, upper-left alpha cutout, blown-out right-eye disc (`ultra-eye-glow-48.png`) | WebKit | Corrupted rainbow halo, cutout, blown-out eye disc | Clean golden aura & glowing right eye | Fix 1 (`predecode.worker.ts`) |
+| Ultra (`/landing`) | Rainbow halo/eye disc + `drop-shadow` on overflowing `.lucy-rive` box | WebKit | Corrupted rainbow halo/eye disc + `drop-shadow` on wrapper | Clean golden aura, no wrapper `drop-shadow` | Fix 1 + Fix 2 (`LucyRiveFigure.tsx`) |
 | Ultra (Hero `/`) | Rectangular `drop-shadow` box clip on overflowing `<canvas>` (not reproduced in headless WebKit; real Safari CoreAnimation behavior) | Real Safari (structural fix) | N/A (not captured; Playwright WebKit only) | N/A (needs founder check in real Safari) | Fix 2 (`stripDropShadow` in `LucyRiveFigure.tsx`) |
-| Ultra (Hero `/`) | Clean baseline (parity check) | Chromium | [before](before/chromium-dsf1-hero-ultra.png) | [after](after/chromium-dsf1-hero-ultra.png) | Fix 1 + Fix 2 (static `<img>` filter intact) |
-
-*(Note: `1x` and `2x` DPR captures were both verified in Chromium and WebKit; `1x` 800px-wide PNGs are committed here to keep repository assets compact.)*
+| Ultra (Hero `/`) | Clean baseline (parity check) | Chromium | Clean | Clean (no regression; static `<img>` filter intact) | Fix 1 + Fix 2 |
 
 ## Commands Run
 
