@@ -19,7 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   findSession,
@@ -33,7 +33,14 @@ import {
 
 const cleanupRoots: string[] = [];
 
+beforeEach(() => {
+  delete process.env.CLAUDE_CODE_SESSION_ID;
+  delete process.env.SKILL_SUMMON_SESSION;
+});
+
 afterEach(async () => {
+  delete process.env.CLAUDE_CODE_SESSION_ID;
+  delete process.env.SKILL_SUMMON_SESSION;
   await Promise.all(
     cleanupRoots
       .splice(0)

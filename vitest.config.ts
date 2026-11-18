@@ -10,6 +10,7 @@ export default defineConfig({
     // `claude-code/testing` and only run under the engine:
     // `claude plugin test plugins/skill-heaven-console`.
     exclude: ["**/node_modules/**", "**/dist/**", ".claude/**", "packages/site/**", "plugins/skill-heaven-console/**"],
+    setupFiles: ["./test/vitest-setup.ts"],
     testTimeout: 20000,
   },
 });

@@ -1,7 +1,8 @@
 // skill-zero CLI (working name — OPEN item 8; flag vocabulary provisional
 // pending N4/N5). See README for the full surface.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { compile, DEFAULT_CLAUDE_MECHANISM, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
@@ -26,6 +27,19 @@ import {
   stepSteering,
   verifySteeringRecord,
 } from "./steering.js";
+import {
+  CampaignStates,
+  campaignSha256Hex,
+  canonicalCampaignJson,
+  explainCampaignTransition,
+  parseCampaignEvidenceLines,
+  parseCampaignTraceInput,
+  serializeCampaignRecord,
+  verifyCampaignRecord,
+  verifyCampaignTraceLines,
+  type CampaignOperatorCommand,
+  type EngineCommand,
+} from "./campaign/index.js";
 
 interface CliArgs {
   posture: Posture;
@@ -56,6 +70,8 @@ interface CliArgs {
   steeringState?: string;
   steeringPolicy?: string;
   steeringVerify?: string;
+  campaignVerify?: string;
+  campaignExplain?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -101,6 +117,8 @@ export function parseArgs(argv: string[]): CliArgs {
   let steeringState: string | undefined;
   let steeringPolicy: string | undefined;
   let steeringVerify: string | undefined;
+  let campaignVerify: string | undefined;
+  let campaignExplain: string | undefined;
   const suppliedFlags = new Set<string>();
 
   const need = (flag: string, i: number): string => {
@@ -176,6 +194,8 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--steering-state") steeringState = need(a, ++i);
     else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
     else if (a === "--steering-verify") steeringVerify = need(a, ++i);
+    else if (a === "--campaign-verify") campaignVerify = need(a, ++i);
+    else if (a === "--campaign-explain") campaignExplain = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
   }
 
@@ -207,6 +227,18 @@ export function parseArgs(argv: string[]): CliArgs {
     }
     if (steeringVerify === undefined && steeringEvent === undefined) {
       throw new Error("--steering-state and --steering-policy require --steering-event");
+    }
+  }
+
+  const campaignRequested = campaignVerify !== undefined || campaignExplain !== undefined;
+  if (campaignRequested) {
+    const campaignFlags = new Set(["--campaign-verify", "--campaign-explain"]);
+    const unrelated = [...suppliedFlags].filter((flag) => !campaignFlags.has(flag));
+    if (unrelated.length > 0) {
+      throw new Error("campaign flags are standalone; do not combine them with launch, record, telemetry, or steering flags");
+    }
+    if (campaignVerify !== undefined && campaignExplain !== undefined) {
+      throw new Error("--campaign-verify and --campaign-explain cannot be combined");
     }
   }
 
@@ -302,11 +334,90 @@ export function parseArgs(argv: string[]): CliArgs {
     ...(steeringState === undefined ? {} : { steeringState }),
     ...(steeringPolicy === undefined ? {} : { steeringPolicy }),
     ...(steeringVerify === undefined ? {} : { steeringVerify }),
+    ...(campaignVerify === undefined ? {} : { campaignVerify }),
+    ...(campaignExplain === undefined ? {} : { campaignExplain }),
   };
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
+  if (args.campaignVerify !== undefined) {
+    const raw = readFileSync(args.campaignVerify, "utf8");
+    const parsed = parseCampaignTraceInput(raw);
+    if (!parsed.ok) throw new Error(`invalid campaign trace: ${parsed.error}`);
+    if (parsed.kind === "record") {
+      const verification = verifyCampaignRecord(parsed.record);
+      if (!verification.valid) throw new Error(`invalid campaign trace: ${verification.error}`);
+      console.log(JSON.stringify({
+        valid: true,
+        schema: verification.record.schema,
+        state: verification.record.final.state,
+        traceLength: verification.record.trace.length,
+      }, null, 2));
+      return 0;
+    }
+
+    const evidencePath = join(dirname(args.campaignVerify), "evidence.jsonl");
+    let authorize: ((event: CampaignOperatorCommand | EngineCommand, index: number) => boolean) | undefined;
+    let expectedLastRecordSha: string | undefined;
+    try {
+      const stat = lstatSync(evidencePath);
+      if (stat.isSymbolicLink() || !stat.isFile()) {
+        throw new Error("invalid campaign trace: sibling evidence.jsonl must be a regular file");
+      }
+      const parsedEvidence = parseCampaignEvidenceLines(readFileSync(evidencePath, "utf8"));
+      if (!parsedEvidence.ok) throw new Error(`invalid campaign trace: ${parsedEvidence.error}`);
+      if (parsedEvidence.lines.length !== parsed.lines.length) {
+        throw new Error(`invalid campaign trace: evidence length (${parsedEvidence.lines.length}) does not match trace length (${parsed.lines.length})`);
+      }
+      authorize = (event, index) => {
+        const ev = parsedEvidence.lines[index];
+        if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+        return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event));
+      };
+      if (parsed.lines.length > 0) {
+        expectedLastRecordSha = parsedEvidence.lines[parsed.lines.length - 1]!.recordSha256;
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+
+    const verification = verifyCampaignTraceLines(parsed.lines, { authorize });
+    if (!verification.valid) throw new Error(`invalid campaign trace: ${verification.error}`);
+    if (expectedLastRecordSha !== undefined) {
+      const actualSha = campaignSha256Hex(serializeCampaignRecord(verification.record));
+      if (actualSha !== expectedLastRecordSha) {
+        throw new Error("invalid campaign trace: record commitment mismatch");
+      }
+    }
+    console.log(JSON.stringify({
+      valid: true,
+      schema: verification.record.schema,
+      state: verification.record.final.state,
+      traceLength: verification.record.trace.length,
+    }, null, 2));
+    return 0;
+  }
+  if (args.campaignExplain !== undefined) {
+    const raw = readFileSync(args.campaignExplain, "utf8");
+    const parsed = parseCampaignTraceInput(raw);
+    if (!parsed.ok) throw new Error(`invalid campaign trace: ${parsed.error}`);
+    const entries = parsed.kind === "record" ? parsed.record.trace : parsed.lines.map((line) => line.entry);
+    for (const entry of entries) {
+      const personPending =
+        entry.to === CampaignStates.decisions ||
+        (entry.to === CampaignStates.convergence && entry.personRequired);
+      const explanation = explainCampaignTransition(
+        entry.from,
+        entry.to,
+        entry.decision,
+        entry.signal,
+        personPending,
+      );
+      console.log(`[${entry.seq}] ${explanation}`);
+    }
+    return 0;
+  }
   if (args.steeringVerify !== undefined) {
     const verification = verifySteeringRecord(JSON.parse(readFileSync(args.steeringVerify, "utf8")) as unknown);
     if (!verification.valid) throw new Error(`invalid steering record: ${verification.error}`);

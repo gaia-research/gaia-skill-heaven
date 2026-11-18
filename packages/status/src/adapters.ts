@@ -73,7 +73,9 @@ export function withReading(status: SkillHeavenStatus, reading: EntropyReading):
     ? status.controller.kind === "reported"
       ? status.controller
       : { kind: "unavailable" }
-    : { kind: "not-selected" };
+    : status.controller.kind === "reported" && status.controller.source === "campaign"
+      ? status.controller
+      : { kind: "not-selected" };
   return { ...status, reading, controller, ...(boot ? { boot } : {}) };
 }
 
@@ -426,16 +428,14 @@ export function controllerFromSteeringEntry(entry: unknown): Controller | null {
 }
 
 /**
- * PROPOSED consumer contract for #126 campaign state:
- * `{ schema: "skill-heaven/controller-status@0", state, effective?, progress?, transition? }`.
- * It is a proposal recorded in docs/CONTROL-PLANE.md, not a ratified schema;
- * the owner of #126 decides the real one and this parser follows it. Strict:
- * unknown keys or malformed fields → `null`.
+ * Consumer contract for #126 campaign state:
+ * `{ schema: "skill-heaven/controller-status/v1", state, effective?, progress?, transition? }`.
+ * Strict: unknown keys or malformed fields → `null`.
  */
-export const PROPOSED_CONTROLLER_SCHEMA = "skill-heaven/controller-status@0" as const;
+export const CONTROLLER_STATUS_SCHEMA = "skill-heaven/controller-status/v1" as const;
 
 export function controllerFromCampaignStatus(value: unknown): Controller | null {
-  if (!isRec(value) || value.schema !== PROPOSED_CONTROLLER_SCHEMA) return null;
+  if (!isRec(value) || value.schema !== CONTROLLER_STATUS_SCHEMA) return null;
   const allowed = new Set(["schema", "state", "effective", "progress", "transition"]);
   if (Object.keys(value).some((k) => !allowed.has(k))) return null;
   if (typeof value.state !== "string" || !/^[A-Z][A-Z0-9 ·_-]{0,31}$/.test(value.state)) return null;
@@ -446,7 +446,8 @@ export function controllerFromCampaignStatus(value: unknown): Controller | null 
   }
   if (value.progress !== undefined) {
     const p = value.progress;
-    if (!isRec(p) || !Number.isInteger(p.completed) || !Number.isInteger(p.total)) return null;
+    if (!isRec(p) || Object.keys(p).some((k) => k !== "completed" && k !== "total")) return null;
+    if (!Number.isSafeInteger(p.completed) || !Number.isSafeInteger(p.total)) return null;
     const completed = p.completed as number;
     const total = p.total as number;
     if (completed < 0 || total < 1 || completed > total) return null;
@@ -454,7 +455,15 @@ export function controllerFromCampaignStatus(value: unknown): Controller | null 
   }
   if (value.transition !== undefined) {
     const t = value.transition;
-    if (!isRec(t) || typeof t.from !== "string" || typeof t.to !== "string" || typeof t.reason !== "string") return null;
+    if (!isRec(t) || Object.keys(t).some((k) => k !== "from" && k !== "to" && k !== "reason")) return null;
+    if (
+      typeof t.from !== "string" ||
+      t.from.length === 0 ||
+      typeof t.to !== "string" ||
+      t.to.length === 0 ||
+      typeof t.reason !== "string" ||
+      t.reason.length === 0
+    ) return null;
     out.transition = { from: t.from, to: t.to, reason: t.reason };
   }
   return out;
