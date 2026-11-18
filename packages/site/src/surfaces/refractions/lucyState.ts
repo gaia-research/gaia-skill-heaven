@@ -74,3 +74,17 @@ export function lucyFromLocation(search: string, state: unknown): LucyState {
 export function lucyFromSampler(mode: string): LucyState | null {
   return mode === 'zero' || mode === 'heaven' || mode === 'hell' || mode === 'ultra' ? mode : null
 }
+
+/**
+ * The hero's per-state framing (variations/hero/useHeroEngine.ts FIG_CONFIG),
+ * expressed relative to Heaven: the masters are framed differently (Zero is a
+ * close portrait, Ultra a wider crown), so drawing all four at one size makes
+ * Zero and Ultra read too big. `k` = hero zoom / Heaven's zoom (1.59);
+ * `origin` is the hero's measured face centre, so the face stays put.
+ */
+export const FIG_FRAME: Record<LucyState, { k: number; origin: string }> = {
+  zero: { k: 1.0 / 1.59, origin: '47% 30%' },
+  heaven: { k: 1, origin: '49% 27%' },
+  hell: { k: 1.68 / 1.59, origin: '47% 30%' },
+  ultra: { k: 1.4 / 1.59, origin: '45% 24%' },
+}
