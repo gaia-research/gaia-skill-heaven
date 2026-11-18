@@ -1,0 +1,1016 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Lucia Refractions — the glass the /landing page is built from.
+
+   Design of record: docs/design/landing-refractions/DESIGN-BRIEF.md (§8).
+   Scoped to `.lp.lp--rf` and loaded after landing.css: nothing in
+   landing.css is edited, so removing this file and the root class restores
+   the previous page exactly. The footer (.lp-foot) and the terminal's inner
+   styles (.lp-cc-*) are never targeted.
+
+   The shard recipe paints on two pseudo layers instead of clipping the host,
+   because a clip-path on a panel would also clip the fixed-position tooltips
+   rendered inside it:
+     ::before  the EDGE — split light along the struck bevel, hairline after
+     ::after   the FACE — the same polygon inset 1.5px
+   Both sit at z-index -1 inside an isolated host, under the content.
+
+   Her state cuts the glass: `data-lucy` on the root swaps the shape and the
+   edge in one frame (no easing — a cut, not a morph).
+     zero    plain    · 4px bevel, hairline, no prism, nothing moves
+     heaven  ordered  · struck corner, every rake on one shared angle
+     hell    fracture · a notch in the right edge, the prism inverted
+     ultra   crowned  · the top edge rises to a crown point, gold, red lead
+   ───────────────────────────────────────────────────────────────────────── */
+
+.lp.lp--rf {
+  /* the stage sits at z-index -1 inside this context, under the document */
+  isolation: isolate;
+  --rf-stage-w: clamp(440px, 40vw, 720px);
+  --rf-a: 22px;
+  --rf-b: 9px;
+  --rf-r: 8px;
+  --rf-tip: 12px;
+  --rf-hair: rgba(238, 235, 230, 0.16);
+  --rf-face: rgba(33, 31, 33, 0.94);
+  --rf-face-hi: rgba(39, 36, 38, 0.96);
+  --rf-paper: #efece7;
+  --rf-paper-ink: #171618;
+
+  /* heaven: the default reading */
+  --rf-edge: linear-gradient(
+    135deg,
+    #a58ae0 0 30px,
+    #6f96d8 30px 42px,
+    #5fc2d6 42px 54px,
+    #71ccae 54px 66px,
+    #e094c8 66px 78px,
+    #d478b0 78px 90px,
+    var(--rf-hair) 90px
+  );
+  --rf-shape: polygon(
+    var(--rf-a) 0,
+    100% var(--rf-r),
+    100% calc(100% - var(--rf-b)),
+    calc(100% - var(--rf-b)) 100%,
+    0 100%,
+    0 var(--rf-a)
+  );
+  /* the state card / readout variant: the same grammar, plus the tear-drip */
+  --rf-shape-drip: var(--rf-shape);
+  --rf-blade: polygon(0 0, 100% 0, calc(100% - var(--rf-tip)) 100%, 0 100%);
+  --rf-split: linear-gradient(90deg, #a58ae0 0 16%, #6f96d8 16% 32%, #5fc2d6 32% 50%, #71ccae 50% 66%, #e094c8 66% 83%, #d478b0 83%);
+}
+
+.lp.lp--rf[data-lucy='zero'] {
+  --rf-edge: linear-gradient(var(--rf-hair), var(--rf-hair));
+  --rf-hair: rgba(238, 235, 230, 0.2);
+  --rf-shape: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  --rf-shape-drip: var(--rf-shape);
+  --rf-split: linear-gradient(90deg, rgba(238, 235, 230, 0.5), rgba(238, 235, 230, 0.5));
+}
+
+.lp.lp--rf[data-lucy='hell'] {
+  /* the prism inverted: olive, umber, rust, plum, pine, sea — never a red by hand */
+  --rf-edge: linear-gradient(
+    135deg,
+    #5a751f 0 30px,
+    #906927 30px 42px,
+    #a03d29 42px 54px,
+    #8e3351 54px 66px,
+    #1f6b37 66px 78px,
+    #2b874f 78px 90px,
+    var(--rf-hair) 90px
+  );
+  --rf-hair: rgba(238, 235, 230, 0.14);
+  --rf-shape: polygon(
+    var(--rf-a) 0,
+    100% var(--rf-r),
+    100% 34%,
+    calc(100% - 9px) 38%,
+    100% 42%,
+    100% calc(100% - var(--rf-b)),
+    calc(100% - var(--rf-b)) 100%,
+    0 100%,
+    0 var(--rf-a)
+  );
+  --rf-shape-drip: polygon(
+    var(--rf-a) 0,
+    100% var(--rf-r),
+    100% 34%,
+    calc(100% - 9px) 38%,
+    100% 42%,
+    100% calc(100% - var(--rf-b) - 16px),
+    calc(100% - var(--rf-b)) calc(100% - 16px),
+    64px calc(100% - 16px),
+    56px 100%,
+    48px calc(100% - 16px),
+    0 calc(100% - 16px),
+    0 var(--rf-a)
+  );
+  --rf-split: linear-gradient(90deg, #5a751f 0 16%, #906927 16% 32%, #a03d29 32% 50%, #8e3351 50% 66%, #1f6b37 66% 83%, #2b874f 83%);
+}
+
+.lp.lp--rf[data-lucy='ultra'] {
+  --rf-edge: linear-gradient(135deg, #c81e1e 0 6px, #d9b25c 6px 48px, #f7c84b 48px 58px, rgba(217, 178, 92, 0.3) 58px);
+  --rf-hair: rgba(217, 178, 92, 0.3);
+  --rf-shape: polygon(
+    var(--rf-a) 12px,
+    62% 0,
+    100% 12px,
+    100% calc(100% - var(--rf-b)),
+    calc(100% - var(--rf-b)) 100%,
+    0 100%,
+    0 calc(var(--rf-a) + 12px)
+  );
+  --rf-shape-drip: polygon(
+    var(--rf-a) 12px,
+    62% 0,
+    100% 12px,
+    100% calc(100% - var(--rf-b) - 16px),
+    calc(100% - var(--rf-b)) calc(100% - 16px),
+    64px calc(100% - 16px),
+    56px 100%,
+    48px calc(100% - 16px),
+    0 calc(100% - 16px),
+    0 calc(var(--rf-a) + 12px)
+  );
+  --rf-split: linear-gradient(90deg, #c81e1e 0 6%, #d9b25c 6% 70%, #f7c84b 70%);
+}
+
+/* ── the shard recipe ──────────────────────────────────────────────────── */
+
+.lp--rf :is(
+    .sh-panel,
+    .lp-install__panel,
+    .lp-beat,
+    .lp-story__disk,
+    .lp-story__session,
+    .lp-verdict,
+    .lp-zero-card,
+    .lp-dir-card,
+    .lp-ladder,
+    .lp-door,
+    .lp-room,
+    .lp-reel,
+    .lp-ann,
+    .rf-name
+  ) {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.lp--rf :is(
+    .sh-panel,
+    .lp-install__panel,
+    .lp-beat,
+    .lp-story__disk,
+    .lp-story__session,
+    .lp-verdict,
+    .lp-zero-card,
+    .lp-dir-card,
+    .lp-ladder,
+    .lp-door,
+    .lp-room,
+    .lp-reel,
+    .lp-ann,
+    .rf-name
+  )::before,
+.lp--rf :is(
+    .sh-panel,
+    .lp-install__panel,
+    .lp-beat,
+    .lp-story__disk,
+    .lp-story__session,
+    .lp-verdict,
+    .lp-zero-card,
+    .lp-dir-card,
+    .lp-ladder,
+    .lp-door,
+    .lp-room,
+    .lp-reel,
+    .lp-ann,
+    .rf-name
+  )::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: -1;
+  pointer-events: none;
+  clip-path: var(--rf-host-shape, var(--rf-shape));
+}
+
+.lp--rf :is(
+    .sh-panel,
+    .lp-install__panel,
+    .lp-beat,
+    .lp-story__disk,
+    .lp-story__session,
+    .lp-verdict,
+    .lp-zero-card,
+    .lp-dir-card,
+    .lp-ladder,
+    .lp-door,
+    .lp-room,
+    .lp-reel,
+    .lp-ann,
+    .rf-name
+  )::before {
+  background: var(--rf-host-edge, var(--rf-edge));
+}
+
+.lp--rf :is(
+    .sh-panel,
+    .lp-install__panel,
+    .lp-beat,
+    .lp-story__disk,
+    .lp-story__session,
+    .lp-verdict,
+    .lp-zero-card,
+    .lp-dir-card,
+    .lp-ladder,
+    .lp-door,
+    .lp-room,
+    .lp-reel,
+    .lp-ann,
+    .rf-name
+  )::after {
+  inset: 1.5px;
+  background: var(--rf-host-face, var(--rf-face));
+}
+
+/* the bevel catches the light when you reach for it */
+@media (hover: hover) {
+  .lp--rf :is(.lp-beat, .lp-door, .lp-dir-card, .lp-zero-card, .lp-room, .rf-name):hover {
+    --rf-hair: rgba(238, 235, 230, 0.36);
+    --rf-host-face: var(--rf-face-hi);
+  }
+  .lp--rf .lp-beat:hover {
+    transform: none;
+  }
+}
+
+/* Nested glass inside glass reads as one pane: the inner panels lose their own frame. */
+.lp--rf .lp-story :is(.lp-story__disk, .lp-story__session)::before {
+  background: none;
+}
+.lp--rf .lp-story__session {
+  --rf-host-face: rgba(35, 32, 34, 0.96);
+}
+.lp--rf .lp-story {
+  position: relative;
+  isolation: isolate;
+  border-color: transparent;
+  background: transparent;
+}
+.lp--rf .lp-story::before,
+.lp--rf .lp-story::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  clip-path: var(--rf-shape);
+}
+.lp--rf .lp-story::before {
+  background: var(--rf-edge);
+}
+.lp--rf .lp-story::after {
+  inset: 1.5px;
+  background: var(--rf-face);
+}
+
+.lp--rf .lp-ann {
+  border-color: transparent;
+  padding: 12px 16px;
+}
+.lp--rf .lp-reel {
+  border-color: transparent;
+}
+
+/* doors: a chosen door carries its own harness accent along the bevel */
+.lp--rf .lp-door.is-on {
+  --rf-host-edge: linear-gradient(135deg, var(--door-accent, var(--sh-violet)) 0 44px, rgba(238, 235, 230, 0.34) 44px);
+  --rf-host-face: rgba(43, 40, 42, 0.97);
+}
+.lp--rf .lp-door__tick {
+  display: none;
+}
+
+/* the state cards in §04 and the instrument readout carry the tear-drip */
+.lp--rf :is(.lp-dir-card, .lp-dose) {
+  --rf-host-shape: var(--rf-shape-drip);
+}
+.lp--rf[data-lucy='hell'] :is(.lp-dir-card, .lp-dose),
+.lp--rf[data-lucy='ultra'] :is(.lp-dir-card, .lp-dose) {
+  padding-bottom: calc(var(--rf-pad-b, 22px) + 16px);
+}
+
+/* the Hell card stays printed on paper: the document's one inverted pane */
+.lp--rf .lp-dir-card--hell {
+  --rf-host-face: rgba(239, 236, 231, 0.97);
+  --rf-hair: rgba(23, 22, 24, 0.22);
+}
+.lp--rf .lp-dir-card.is-highlighted {
+  --rf-hair: rgba(238, 235, 230, 0.42);
+}
+.lp--rf .lp-dir-card--hell.is-highlighted {
+  --rf-hair: rgba(23, 22, 24, 0.5);
+}
+
+/* the provisioned controller, said where Ultra is shown (PRODUCT.md) */
+.rf-provisioned {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 9px;
+  border: 1px solid rgba(224, 180, 92, 0.55);
+  color: #e0b45c;
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+/* ── blades: tabs, rungs, chips, the solid action ───────────────────────── */
+
+.lp--rf :is(.lp-sampler-btn, .lp-seg__btn, .lp-nav__cta, .lp-shead__n) {
+  clip-path: var(--rf-blade);
+  padding-right: calc(var(--rf-tip) + 10px);
+}
+.lp--rf .lp-sampler-tabs {
+  gap: 3px;
+  border-color: transparent;
+  background: transparent;
+}
+.lp--rf .lp-sampler-btn {
+  border-right: 0;
+  background: rgba(238, 235, 230, 0.05);
+}
+.lp--rf .lp-sampler-btn:hover {
+  background: rgba(238, 235, 230, 0.12);
+  color: var(--sh-ink);
+}
+.lp--rf .lp-sampler-btn.is-active {
+  background: var(--sh-ink);
+  color: var(--sh-void);
+}
+.lp--rf .lp-sampler-btn--hell.is-active {
+  background: var(--rf-paper);
+  color: var(--rf-paper-ink);
+}
+.lp--rf .lp-sampler-btn--ultra.is-active {
+  background: var(--sh-ultra);
+  color: var(--sh-void);
+}
+.lp--rf :is(.lp-sampler-btn, .lp-seg__btn, .lp-stop, .rf-switch__btn):focus-visible {
+  outline: 2px solid var(--sh-cyan);
+  outline-offset: -4px;
+}
+.lp--rf .lp-shead__n {
+  padding: 3px calc(var(--rf-tip) + 8px) 3px 8px;
+  background: rgba(238, 235, 230, 0.07);
+  color: var(--sh-ink-dim);
+}
+.lp--rf .lp-shead__rule {
+  background: var(--rf-split);
+}
+.lp--rf .sh-cta {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 12px);
+}
+
+/* the ladder: seven blade detents */
+.lp--rf .lp-stops {
+  gap: 4px;
+  background: transparent;
+  border-color: transparent;
+}
+.lp--rf .lp-stop {
+  clip-path: var(--rf-blade);
+  padding-right: calc(var(--rf-tip) + 10px);
+  border-color: transparent;
+  background: rgba(238, 235, 230, 0.05);
+}
+.lp--rf .lp-stop.is-on {
+  background: rgba(238, 235, 230, 0.14);
+}
+.lp--rf .lp-stop--hell.is-on {
+  background: var(--rf-paper);
+  color: var(--rf-paper-ink);
+}
+.lp--rf .lp-stop--ultra.is-on {
+  background: rgba(217, 178, 92, 0.24);
+}
+
+/* commands: a narrow pane with one kissaki cut */
+.lp--rf .lp-cmd {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+
+/* the dose readout: bars become split-light rods */
+.lp--rf .lp-bar__track {
+  height: 2px;
+  background: rgba(238, 235, 230, 0.08);
+}
+.lp--rf .lp-bar__fill--cyan {
+  background: linear-gradient(90deg, #5fc2d6 0 86%, #a58ae0 86% 93%, #6f96d8 93%);
+}
+.lp--rf .lp-bar__fill--mint {
+  background: linear-gradient(90deg, #71ccae 0 86%, #5fc2d6 86% 93%, #a58ae0 93%);
+}
+
+/* the LIVE chip that replaced the banner sentence */
+.lp--rf .lp-live-banner {
+  clip-path: var(--rf-blade);
+  padding-right: calc(var(--rf-tip) + 18px);
+  border-color: transparent;
+  background: rgba(113, 204, 174, 0.1);
+}
+
+/* ── §02: the terminal's glass case (housing only; .lp-cc-* untouched) ───── */
+
+.rf-case {
+  position: relative;
+  isolation: isolate;
+  padding: 1.5px;
+  filter: drop-shadow(0 22px 44px rgba(0, 0, 0, 0.55));
+}
+.rf-case::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 30px);
+  background: var(--rf-edge);
+}
+.lp--rf .rf-case .lp-cc-term {
+  border-color: transparent;
+  box-shadow: none;
+  clip-path: polygon(29px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%, 0 29px);
+}
+/* her reflection in the case's top-right glass: never mirrored, never inverted by CSS */
+.rf-case__refl {
+  position: absolute;
+  top: 1.5px;
+  right: 1.5px;
+  width: min(34%, 300px);
+  aspect-ratio: 1 / 1;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.16;
+  -webkit-mask-image: linear-gradient(225deg, #000 0 26%, transparent 64%);
+  mask-image: linear-gradient(225deg, #000 0 26%, transparent 64%);
+}
+.rf-case__refl img {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 240%;
+  height: auto;
+  translate: -50% -6%;
+}
+.rf-case[data-state='zero'] .rf-case__refl img {
+  filter: grayscale(1);
+}
+.rf-case[data-hell='true'] .rf-case__refl {
+  opacity: 0.12;
+}
+
+/* §02's third copy of the install command, as a one-line disclosure (D-04) */
+.rf-disclose {
+  margin-bottom: 18px;
+}
+.rf-disclose > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--sh-ink-dim);
+  border-top: 1px solid var(--rf-hair);
+  border-bottom: 1px solid var(--rf-hair);
+}
+.rf-disclose > summary::-webkit-details-marker {
+  display: none;
+}
+.rf-disclose > summary b {
+  color: var(--sh-ink);
+  font-weight: 500;
+}
+.rf-disclose > summary::after {
+  content: '+';
+  margin-left: auto;
+  color: var(--sh-ink);
+}
+.rf-disclose[open] > summary::after {
+  content: '−';
+}
+.rf-disclose > summary:focus-visible {
+  outline: 2px solid var(--sh-cyan);
+  outline-offset: 2px;
+}
+.rf-disclose[open] > .lp-plugin-box {
+  margin-top: 12px;
+}
+
+/* ── §05: the three names ──────────────────────────────────────────────── */
+
+.rf-names {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.5fr) repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+.rf-names__prism {
+  position: relative;
+  min-height: 220px;
+}
+.rf-names__prism svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.rf-name {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 26px 22px 22px;
+  color: var(--sh-ink);
+  text-decoration: none;
+  min-width: 0;
+}
+.rf-name__role {
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.rf-name__name {
+  margin: 0;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 108;
+  line-height: 1.05;
+}
+.rf-name__blurb {
+  margin: 0;
+  color: var(--sh-ink-dim);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.rf-name__action {
+  margin-top: auto;
+  font-family: var(--sh-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.rf-name--here .rf-name__action {
+  color: var(--sh-ink-dim);
+}
+.rf-name:focus-visible {
+  outline: 2px solid var(--sh-cyan);
+  outline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .rf-names {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rf-names__prism {
+    min-height: 120px;
+  }
+}
+
+/* ── closing triptych: tall shards, each cut to its own state ───────────── */
+
+.lp--rf .lp-closer__frame {
+  border-color: transparent;
+}
+.lp--rf .lp-closer__frame--heaven {
+  clip-path: polygon(26px 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 26px);
+}
+.lp--rf .lp-closer__frame--hell {
+  clip-path: polygon(20px 0, 100% 8px, 100% 34%, calc(100% - 12px) 38%, 100% 42%, 100% calc(100% - 26px), calc(100% - 10px) calc(100% - 18px), 64px calc(100% - 18px), 56px 100%, 48px calc(100% - 18px), 0 calc(100% - 18px), 0 20px);
+}
+.lp--rf .lp-closer__frame--ultra {
+  clip-path: polygon(22px 14px, 62% 0, 100% 14px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 36px);
+}
+
+/* ── the stage ─────────────────────────────────────────────────────────── */
+
+.rf-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--rf-ground, #000);
+  color: var(--sh-ink);
+}
+.rf-stage__scene {
+  position: absolute;
+  inset: 0;
+}
+.rf-stage__word {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 24%;
+  z-index: 1;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 360ms linear;
+}
+.rf-stage__word-ghost {
+  font-family: var(--sh-display);
+  font-weight: 400;
+  font-synthesis-weight: none;
+  font-size: clamp(120px, 14vw, 240px);
+  line-height: 0.8;
+  letter-spacing: -0.005em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(238, 235, 230, 0.26);
+}
+.rf-stage[data-state='hell'] .rf-stage__word-ghost {
+  -webkit-text-stroke-color: rgba(23, 22, 24, 0.28);
+}
+.rf-stage[data-state='ultra'] .rf-stage__word-ghost {
+  -webkit-text-stroke-color: rgba(255, 210, 74, 0.3);
+}
+.rf-stage[data-arrival='false'] .rf-stage__word {
+  opacity: 0;
+}
+.rf-stage__fig {
+  position: absolute;
+  z-index: 2;
+  bottom: -3%;
+  right: -2%;
+  height: 102%;
+  max-width: 108%;
+}
+.rf-stage__fig img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right bottom;
+  user-select: none;
+}
+.rf-stage[data-state='zero'] .rf-stage__fig img {
+  /* the hero's own Zero wash (useHeroEngine) */
+  filter: grayscale(1) brightness(1.55) contrast(1.06);
+}
+.rf-stage[data-state='heaven'] .rf-stage__fig img {
+  filter: drop-shadow(0 0 34px rgba(124, 196, 255, 0.16));
+}
+.rf-stage[data-state='ultra'] .rf-stage__fig img {
+  filter: drop-shadow(0 0 30px rgba(255, 210, 74, 0.26));
+}
+
+/* the tear points (D-03 preview, ?tear=1): one hairline from her one tear */
+.rf-tear {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  translate: -50% 0;
+  background: linear-gradient(180deg, #c81e1e 0 18%, rgba(200, 30, 30, 0.55) 60%, rgba(200, 30, 30, 0));
+  transform-origin: top;
+  animation: rf-tear-draw 640ms linear both;
+}
+
+/* the front glass: nearer than she is */
+.rf-stage__front {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.rf-glass {
+  position: absolute;
+  clip-path: polygon(50% 0, 96% 17%, 66% 100%, 30% 80%, 4% 27%);
+  background: linear-gradient(160deg, rgba(234, 247, 255, 0.5), rgba(124, 196, 255, 0.18) 42%, rgba(165, 138, 224, 0.04));
+}
+.rf-stage[data-state='hell'] .rf-glass {
+  clip-path: polygon(50% 0, 96% 17%, 70% 55%, 52% 52%, 66% 100%, 30% 80%, 4% 27%);
+  background: linear-gradient(160deg, rgba(23, 22, 24, 0.42), rgba(160, 61, 41, 0.2) 50%, rgba(144, 105, 39, 0.04));
+}
+.rf-stage[data-state='ultra'] .rf-glass {
+  background: linear-gradient(170deg, rgba(255, 244, 174, 0.62), rgba(255, 210, 74, 0.26) 45%, rgba(200, 30, 30, 0.05));
+}
+
+/* the cut: impact frame on the stage only, then one streak at ribbon height */
+.rf-stage__fig.is-cut {
+  animation: rf-shear var(--sh-impact, 46ms) steps(3, end) 1;
+}
+.rf-stage__flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: #efece7;
+  opacity: 0;
+  animation: rf-flash var(--sh-impact, 46ms) steps(1, end) 1;
+}
+.rf-stage[data-state='hell'] .rf-stage__flash {
+  background: #171618;
+}
+.rf-stage__streak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 46%;
+  z-index: 4;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #a58ae0 18%, #5fc2d6 40%, #eeebe6 50%, #e094c8 60%, transparent);
+  transform-origin: left center;
+  animation: rf-streak 220ms linear both;
+}
+.rf-stage[data-state='hell'] .rf-stage__streak {
+  background: linear-gradient(90deg, transparent, #5a751f 18%, #a03d29 40%, #171618 50%, #1f6b37 60%, transparent);
+}
+.rf-stage[data-state='ultra'] .rf-stage__streak {
+  background: linear-gradient(90deg, transparent, #c81e1e 14%, #d9b25c 30%, #fff4ae 50%, #d9b25c 70%, transparent);
+}
+.rf-stage[data-state='zero'] .rf-stage__streak {
+  background: linear-gradient(90deg, transparent, rgba(238, 235, 230, 0.7) 50%, transparent);
+}
+
+/* her own switch */
+.rf-switch {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+}
+.rf-switch__btn {
+  border: 0;
+  padding: 10px calc(var(--rf-tip, 12px) + 12px) 10px 12px;
+  min-height: 36px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  background: rgba(238, 235, 230, 0.1);
+  color: rgba(238, 235, 230, 0.78);
+  font-family: var(--sh-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+}
+.rf-switch__btn:hover {
+  background: rgba(238, 235, 230, 0.2);
+  color: #eeebe6;
+}
+.rf-switch__btn.is-on {
+  background: #eeebe6;
+  color: #1b1a1c;
+  font-weight: 700;
+}
+.rf-switch__btn--ultra.is-on {
+  background: #d9b25c;
+}
+.rf-stage[data-state='hell'] .rf-switch__btn {
+  background: rgba(23, 22, 24, 0.08);
+  color: rgba(23, 22, 24, 0.78);
+}
+.rf-stage[data-state='hell'] .rf-switch__btn.is-on {
+  background: #171618;
+  color: #f4f2ee;
+}
+
+/* desktop: the fixed stage beside the document */
+.rf-stage--stage {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--rf-stage-w, 44vw);
+  z-index: -1;
+  transition: opacity 320ms linear, visibility 0s linear 0s;
+}
+.rf-stage--stage[data-released='true'] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 320ms linear, visibility 0s linear 320ms;
+}
+.rf-stage--stage::after {
+  /* feather into the document so the stage never cuts a rectangle */
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 54%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, #1b1a1c 0 52%, rgba(27, 26, 28, 0));
+}
+.rf-stage--stage .rf-switch {
+  right: 24px;
+  bottom: 24px;
+}
+
+/* mobile and tablet: the plate that opens the page */
+.rf-stage--plate {
+  height: min(74svh, 620px);
+  min-height: 420px;
+}
+.rf-stage--plate .rf-stage__fig {
+  bottom: auto;
+  top: 2%;
+  right: auto;
+  left: 50%;
+  height: 158%;
+  max-width: none;
+  translate: -50% 0;
+}
+.rf-stage--plate .rf-stage__fig img {
+  object-position: center top;
+}
+.rf-stage--plate .rf-stage__word {
+  top: 30%;
+}
+.rf-stage--plate .rf-stage__word-ghost {
+  font-size: clamp(88px, 28vw, 180px);
+}
+.rf-stage--plate .rf-switch {
+  left: var(--lp-pad, 16px);
+  top: 14px;
+}
+.rf-stage--plate .rf-switch__btn:not(.is-on) {
+  background: rgba(27, 26, 28, 0.78);
+  color: #eeebe6;
+}
+.rf-stage--plate[data-state='hell'] .rf-switch__btn:not(.is-on) {
+  background: rgba(244, 242, 238, 0.86);
+  color: #171618;
+}
+.rf-stage--plate::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(0deg, #1b1a1c, rgba(27, 26, 28, 0));
+}
+
+/* ── the page shimmer: one faint sheen crossing the whole page ──────────── */
+
+.rf-sheen {
+  position: fixed;
+  inset: -10% -40%;
+  z-index: 30;
+  pointer-events: none;
+  background: linear-gradient(104deg, transparent 46%, rgba(238, 235, 230, 0.045) 50%, transparent 54%);
+  translate: -70% 0;
+  animation: rf-sheen 12s linear 2.4s infinite;
+}
+.lp--rf[data-lucy='zero'] .rf-sheen,
+.lp--rf[data-lucy='hell'] .rf-sheen {
+  display: none;
+}
+.lp--rf[data-lucy='ultra'] .rf-sheen {
+  background: linear-gradient(104deg, transparent 46%, rgba(255, 210, 74, 0.05) 50%, transparent 54%);
+}
+
+/* ── layout: the document makes room for her ───────────────────────────── */
+
+.lp--rf .lp-figure {
+  display: none;
+}
+.lp--rf .lp-head__grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lp--rf .lp-head__main {
+  max-width: 820px;
+}
+
+@media (min-width: 1180px) {
+  .lp--rf :is(.lp-head, .lp-section:not(.lp-closer)) {
+    max-width: min(var(--lp-maxw), calc(100vw - var(--rf-stage-w) * 0.7 - clamp(24px, 4vw, 72px)));
+    margin-left: clamp(24px, 4vw, 72px);
+    margin-right: auto;
+  }
+  .lp--rf .lp-head {
+    min-height: calc(100svh - 64px);
+    display: flex;
+    align-items: center;
+  }
+  .lp--rf .lp-head__grid {
+    width: 100%;
+  }
+  .lp--rf .lp-dose {
+    max-width: 520px;
+  }
+  .lp--rf .lp-closer {
+    max-width: var(--lp-maxw);
+  }
+  /* the stage is under the document; let its switch take clicks wherever no
+     section covers it (sections are narrowed to leave her side free) */
+  .lp--rf main {
+    pointer-events: none;
+  }
+  .lp--rf main > * {
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 1179px) {
+  .lp--rf .lp-head {
+    position: relative;
+    z-index: 2;
+    margin-top: -132px;
+  }
+  .lp--rf .lp-head__lede {
+    position: relative;
+    isolation: isolate;
+    padding: 24px 20px 22px;
+  }
+  .lp--rf .lp-head__lede::before,
+  .lp--rf .lp-head__lede::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    clip-path: var(--rf-shape);
+  }
+  .lp--rf .lp-head__lede::before {
+    background: var(--rf-edge);
+  }
+  .lp--rf .lp-head__lede::after {
+    inset: 1.5px;
+    background: var(--rf-face);
+  }
+  .lp--rf .rf-names {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes rf-shear {
+  0% { transform: translate(-6px, 0) skewX(-3deg); }
+  50% { transform: translate(8px, -2px) skewX(2deg); }
+  100% { transform: none; }
+}
+@keyframes rf-flash {
+  0% { opacity: 0.92; }
+  100% { opacity: 0; }
+}
+@keyframes rf-streak {
+  0% { transform: scaleX(0); opacity: 1; }
+  70% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+@keyframes rf-tear-draw {
+  0% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+@keyframes rf-sheen {
+  0% { translate: -70% 0; }
+  14% { translate: 70% 0; }
+  100% { translate: 70% 0; }
+}
+
+/* the front glass drifts with the page where scroll timelines exist */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rf-stage--stage .rf-glass {
+      animation: rf-drift linear both;
+      animation-timeline: scroll(root);
+    }
+    @keyframes rf-drift {
+      from { translate: 0 0; }
+      to { translate: 0 calc(-48px - var(--rf-i, 0) * 22px); }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-sheen {
+    display: none;
+  }
+  .rf-stage__fig.is-cut,
+  .rf-stage__flash,
+  .rf-stage__streak,
+  .rf-tear {
+    animation: none;
+  }
+  .rf-stage__flash,
+  .rf-stage__streak {
+    display: none;
+  }
+  .rf-stage--stage,
+  .rf-stage__word {
+    transition: none;
+  }
+}
