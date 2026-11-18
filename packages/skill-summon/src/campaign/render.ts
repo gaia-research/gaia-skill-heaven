@@ -115,6 +115,22 @@ export function withManifestGroup(
   return Object.freeze(next);
 }
 
+function isDeclaredClaim(claim: ManifestArborLens["claims"][number]): boolean {
+  return (
+    claim.support === "expert-declared" && claim.interpretationSource === null
+  );
+}
+
+function isDeclaredEdge(
+  edge: ManifestGraphLens["relations"][number]["edge"],
+): boolean {
+  return (
+    edge.support === "expert-declared" &&
+    edge.observationSources.length === 0 &&
+    edge.interpretationSource === null
+  );
+}
+
 export function buildDeclaredNotMeasuredGroup(
   manifest: CampaignManifest,
 ): ManifestRenderGroup {
@@ -127,13 +143,26 @@ export function buildDeclaredNotMeasuredGroup(
 
   const lines: string[] = [];
   for (const entry of validated.entries) {
+    if (
+      entry.arbor.status !== "present" ||
+      entry.arbor.availability !== "consulted"
+    ) {
+      continue;
+    }
     for (const claim of entry.arbor.claims) {
+      if (!isDeclaredClaim(claim)) {
+        continue;
+      }
       const conditionsText =
         claim.conditions.trim().length > 0
           ? displayField(claim.conditions)
           : '"none stated"';
+      const roleNote =
+        claim.facet === "human-led"
+          ? "convergence-point candidate (proposed to the person; never auto-invoked)"
+          : "no band direction or invocation permission inferred (disable-model-invocation, harness permissions, and charter govern)";
       lines.push(
-        `skill ${displayField(entry.id)} · claim ${displayField(claim.id)} · facet ${displayField(claim.facet)} · support ${displayField(claim.support)} · authority ${displayField(claim.authority.actor)} (${displayField(claim.authority.basis)}) · ONLY UNDER: ${conditionsText} · source ${displayField(claim.declarationSource)} · declared, not measured; conditions not evaluated`,
+        `skill ${displayField(entry.id)} · claim ${displayField(claim.id)} · facet ${displayField(claim.facet)} · support ${displayField(claim.support)} · authority ${displayField(claim.authority.actor)} (${displayField(claim.authority.basis)}) · ONLY UNDER: ${conditionsText} · source ${displayField(claim.declarationSource)} · declared, not measured; conditions not evaluated · ${roleNote}`,
       );
     }
   }
@@ -241,10 +270,18 @@ function renderArborLens(arbor: ManifestArborLens): string {
       claim.conditions.trim().length > 0
         ? displayField(claim.conditions)
         : '"none stated"';
-    return `${displayField(claim.id)} [${escapeControlText(claim.facet)} | ${escapeControlText(claim.support)} | actor=${displayField(claim.authority.actor)} | basis=${displayField(claim.authority.basis)} | ONLY UNDER: ${conditionsText} | rationale=${displayField(claim.rationale)} | declarationSource=${displayField(claim.declarationSource)}]`;
+    const claimKind = isDeclaredClaim(claim)
+      ? "declared, not measured"
+      : `governed interpretationSource=${displayField(claim.interpretationSource)}`;
+    return `${displayField(claim.id)} [${escapeControlText(claim.facet)} | ${escapeControlText(claim.support)} | ${claimKind} | actor=${displayField(claim.authority.actor)} | basis=${displayField(claim.authority.basis)} | ONLY UNDER: ${conditionsText} | rationale=${displayField(claim.rationale)} | declarationSource=${displayField(claim.declarationSource)}]`;
   });
 
-  return `  Lens [arbor]: present (consulted · join: ${escapeControlText(arbor.join)} · declared, not measured; conditions not evaluated) · ${arbor.claims.length} claim(s): ${claimSummaries.join("; ")} · ${hhSummary}`;
+  const allDeclared = arbor.claims.every(isDeclaredClaim);
+  const lensProvenance = allDeclared
+    ? "declared, not measured; conditions not evaluated"
+    : "conditions not evaluated; no band direction or invocation permission inferred";
+
+  return `  Lens [arbor]: present (consulted · join: ${escapeControlText(arbor.join)} · ${lensProvenance}) · ${arbor.claims.length} claim(s): ${claimSummaries.join("; ")} · ${hhSummary}`;
 }
 
 function renderGraphLens(graph: ManifestGraphLens): string {
@@ -268,7 +305,20 @@ function renderGraphLens(graph: ManifestGraphLens): string {
     const pairApplicableText = rel.edge.pairApplicable
       ? "true (publication-time only; not runtime assurance)"
       : "false (inapplicable at publication time; not runtime assurance)";
-    return `${escapeControlText(rel.edge.relation)} (${escapeControlText(rel.direction)} ${displayField(rel.counterpart.id)} · pin=${escapeControlText(rel.counterpartPin)} · pairApplicable=${pairApplicableText} · support=${escapeControlText(rel.edge.support)} · ONLY UNDER: ${conditionsText} · declarationSource=${displayField(rel.edge.declarationSource)})`;
+    const endpointsVerified =
+      graph.join === "content-pinned" && rel.counterpartPin === "verified";
+    let annotationText: string;
+    if (isDeclaredEdge(rel.edge)) {
+      annotationText =
+        rel.edge.pairApplicable && endpointsVerified
+          ? "unverified hypothesis (declared; not observed or governed)"
+          : "not an applicable hypothesis (inapplicable or unverified endpoints)";
+    } else if (rel.edge.interpretationSource !== null) {
+      annotationText = `governed interpretationSource=${displayField(rel.edge.interpretationSource)}`;
+    } else {
+      annotationText = `observed (${rel.edge.observationSources.length} observation source(s))`;
+    }
+    return `${escapeControlText(rel.edge.relation)} (${escapeControlText(rel.direction)} ${displayField(rel.counterpart.id)} · pin=${escapeControlText(rel.counterpartPin)} · pairApplicable=${pairApplicableText} · support=${escapeControlText(rel.edge.support)} · ${annotationText} · ONLY UNDER: ${conditionsText} · declarationSource=${displayField(rel.edge.declarationSource)})`;
   });
 
   return `  Lens [graph]: present (consulted · join: ${escapeControlText(graph.join)} · annotations only; never filter or reorder entries; conditions and publication-time pairApplicable are not evaluated or assured at runtime) · ${graph.relations.length} relation(s): ${relSummaries.join("; ")}`;
@@ -369,7 +419,16 @@ export function renderCampaignManifestLines(
   }
 
   let resolvedGroups: readonly ManifestRenderGroup[] = [];
-  if (options.includeDeclaredNotMeasuredGroup) {
+  const hasDeclaredClaims = validated.entries.some(
+    (entry) =>
+      entry.arbor.status === "present" &&
+      entry.arbor.availability === "consulted" &&
+      entry.arbor.claims.some(isDeclaredClaim),
+  );
+  if (
+    options.includeDeclaredNotMeasuredGroup === true ||
+    (options.includeDeclaredNotMeasuredGroup !== false && hasDeclaredClaims)
+  ) {
     resolvedGroups = withManifestGroup(
       resolvedGroups,
       buildDeclaredNotMeasuredGroup(validated),
