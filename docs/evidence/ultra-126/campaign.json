@@ -643,6 +643,24 @@
       "terra": "n/a",
       "outcome": "COMMON.md roster and unit briefs U0b, U3-U7 updated",
       "risk": "The paused U0b Sol lead is replaced by an Argon High lead resuming from the pushed branch and its handoff."
+    },
+    {
+      "id": "D-019",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "integration",
+      "problem": "#270 (#267 Safari fix) merged to main on the founder's go after the screenshots were removed.",
+      "options": [
+        "Merge main into integration now"
+      ],
+      "selected": "Screenshots removed from #270 (24 files, kept outside git); #270 squash-merged to main 13ddcf2; main merged into integration --no-ff (0318001). Typecheck green; suite 2612/2612 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+      "reason": "Founder instruction (merge after the Hydrogen cleanup); keeps #256 mergeable.",
+      "authority": "Founder instruction, D-001",
+      "reversible": true,
+      "terra": "not needed for the evidence-only delta (code reviewed by Terra at 1d24a8e)",
+      "outcome": "#267 closed",
+      "risk": "none for campaign code"
     }
   ],
   "blockers": [],
@@ -696,9 +714,9 @@
       "branch": "fix/site-267-safari-lucy-composite",
       "base": "main dcc7fbd",
       "prTo": "main (draft, founder-reviewed visual)",
-      "status": "PR #270 draft to main; Terra 0 blocking; typecheck/tests/site build green; founder reports it works; awaiting founder merge (~9.2 MB evidence PNGs)",
+      "status": "merged to main 13ddcf2 (2026-11-18); lane archived",
       "pr": 270,
-      "head": "8e7ee69"
+      "head": "74cb9c4"
     }
   ]
 }
