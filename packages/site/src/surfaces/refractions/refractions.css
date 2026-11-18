@@ -697,19 +697,6 @@
   z-index: 3;
   pointer-events: none;
 }
-.rf-glass {
-  position: absolute;
-  clip-path: polygon(50% 0, 96% 17%, 66% 100%, 30% 80%, 4% 27%);
-  background: linear-gradient(160deg, rgba(234, 247, 255, 0.5), rgba(124, 196, 255, 0.18) 42%, rgba(165, 138, 224, 0.04));
-}
-.rf-stage[data-state='hell'] .rf-glass {
-  clip-path: polygon(50% 0, 96% 17%, 70% 55%, 52% 52%, 66% 100%, 30% 80%, 4% 27%);
-  background: linear-gradient(160deg, rgba(23, 22, 24, 0.42), rgba(160, 61, 41, 0.2) 50%, rgba(144, 105, 39, 0.04));
-}
-.rf-stage[data-state='ultra'] .rf-glass {
-  background: linear-gradient(170deg, rgba(255, 244, 174, 0.62), rgba(255, 210, 74, 0.26) 45%, rgba(200, 30, 30, 0.05));
-}
-
 /* the cut: impact frame on the stage only (Web Animations on the figure, so a
    live Rive character is never remounted), then one streak at ribbon height */
 .rf-stage__flash {
@@ -982,7 +969,7 @@
 /* the front glass drifts with the page where scroll timelines exist */
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .rf-stage--stage .rf-glass {
+    .rf-stage--stage .rf-stage__front .rf-shard {
       animation: rf-drift linear both;
       animation-timeline: scroll(root);
     }
@@ -1009,5 +996,105 @@
   .rf-stage--stage,
   .rf-stage__word {
     transition: none;
+  }
+}
+
+/* ── the approved glass (founder gate 2, 2026-11-18) ───────────────────────
+   LR-G01-D (Heaven) and LR-G02-A r2 (Ultra) replace the procedural front
+   glass. Hell is LR-G01-D under an exact RGB inversion (identical alpha). */
+.rf-shard {
+  position: absolute;
+  width: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 50%;
+}
+.rf-stage[data-state='hell'] .rf-shard {
+  filter: invert(1);
+}
+.rf-stage[data-state='heaven'] .rf-stage__front .rf-shard {
+  opacity: 0.92;
+}
+
+/* ── the seam (founder nit, 2026-11-18: "left side of lucy image crops
+   badly, better if we add a prismatic effect to blend the leg onto the
+   components"). Her figure fades out over the stage's left edge, and a
+   slanted pane of glass refracts what passes behind it: blur, a spectral
+   split on its leading edge, and approved shards on it. */
+.rf-stage--stage .rf-stage__fig {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.55) 74px, #000 168px);
+  mask-image: linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.55) 74px, #000 168px);
+}
+.rf-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(110px, 10vw, 170px);
+  z-index: 3;
+  pointer-events: none;
+  --rf-seam-a: rgba(124, 196, 255, 0.85);
+  --rf-seam-b: rgba(165, 138, 224, 0.7);
+  --rf-seam-c: rgba(113, 204, 174, 0.6);
+  /* the page side of the seam is always the document's charcoal */
+  --rf-seam-wash: rgba(27, 26, 28, 0.6);
+}
+.rf-seam__pane,
+.rf-seam__edge {
+  position: absolute;
+  inset: 0;
+}
+.rf-seam__pane {
+  clip-path: polygon(0 0, 42% 0, 100% 100%, 0 100%);
+  -webkit-backdrop-filter: blur(6px) saturate(1.6);
+  backdrop-filter: blur(6px) saturate(1.6);
+  background: linear-gradient(90deg, var(--rf-seam-wash) 0 14%, transparent 72%);
+}
+/* the leading bevel: two spectral hairlines, offset like a split beam */
+.rf-seam__edge {
+  clip-path: polygon(42% 0, 43.6% 0, 100% 100%, 98.4% 100%);
+  background: linear-gradient(180deg, var(--rf-seam-a), var(--rf-seam-b) 48%, var(--rf-seam-c));
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  /* strongest where her leg crosses; gone before the nav and the floor */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0 10%, #000 46%, #000 90%, transparent);
+  mask-image: linear-gradient(180deg, transparent 0 10%, #000 46%, #000 90%, transparent);
+}
+.rf-seam__edge--b {
+  clip-path: polygon(45.5% 0, 46.3% 0, 100% 92%, 100% 94%);
+  background: linear-gradient(180deg, rgba(224, 148, 200, 0.6), rgba(95, 194, 214, 0.55));
+  opacity: 0.6;
+}
+.rf-stage[data-state='zero'] .rf-seam {
+  --rf-seam-a: rgba(238, 235, 230, 0.5);
+  --rf-seam-b: rgba(238, 235, 230, 0.32);
+  --rf-seam-c: rgba(238, 235, 230, 0.22);
+}
+.rf-stage[data-state='zero'] .rf-seam__pane {
+  -webkit-backdrop-filter: blur(6px) grayscale(1);
+  backdrop-filter: blur(6px) grayscale(1);
+}
+.rf-stage[data-state='zero'] .rf-seam__edge--b {
+  opacity: 0;
+}
+.rf-stage[data-state='ultra'] .rf-seam {
+  --rf-seam-a: rgba(255, 228, 140, 0.95);
+  --rf-seam-b: rgba(255, 210, 74, 0.7);
+  --rf-seam-c: rgba(200, 30, 30, 0.55);
+}
+/* Hell: the same pane, inverted onto paper (umber light, darkening blend) */
+.rf-stage[data-state='hell'] .rf-seam {
+  --rf-seam-a: rgba(131, 59, 0, 0.75);
+  --rf-seam-b: rgba(90, 117, 31, 0.6);
+  --rf-seam-c: rgba(142, 51, 81, 0.5);
+}
+.rf-stage[data-state='hell'] .rf-seam__edge {
+  mix-blend-mode: multiply;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .rf-seam__pane {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }

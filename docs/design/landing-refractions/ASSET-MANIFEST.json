@@ -26,7 +26,7 @@
       "name": "Heaven ordered shard set",
       "priority": "P0",
       "kind": "generate",
-      "status": "ISSUED r1 (D-11, 2026-11-18): Codex Sol XHigh lead; workers luna (A) and terra (B); reviewer terra (a separate instance)",
+      "status": "FOUNDER APPROVED 2026-11-18: LR-G01-D r1 (design ACCEPT FOR PROTOTYPE; founder gate 2 {\"choice\":\"approve\",\"note\":\"\"}). Sprites 01,03,04,05,08 in packages/site/src/assets/lucy/refractions/heaven/. Source: gaia-research/lucy@staging/landing-refractions 6a356ee.",
       "purpose": "Loose foreground glass around the Stage in Heaven, plus the glint shards on section transitions. Gives the prototype real refraction the procedural stand-ins cannot fake.",
       "consumer": [
         "LucyStage › loose-glass plane (Heaven)",
@@ -96,7 +96,7 @@
       "name": "Ultra gold-prismatic shard set",
       "priority": "P0",
       "kind": "generate",
-      "status": "ISSUED r1 (D-11, 2026-11-18): Codex Sol XHigh lead; workers luna (A) and terra (B); reviewer terra (a separate instance)",
+      "status": "FOUNDER APPROVED 2026-11-18: LR-G02-A r2 (design ACCEPT FOR PROTOTYPE; founder gate 2 {\"choice\":\"approve\",\"note\":\"\"}). Sprites 01-05 in packages/site/src/assets/lucy/refractions/ultra/. Source: gaia-research/lucy@staging/landing-refractions 6a356ee.",
       "purpose": "Loose foreground glass in Ultra: the crown of shards that rises around the Stage.",
       "consumer": [
         "LucyStage › loose-glass plane (Ultra)",
@@ -157,7 +157,7 @@
       "name": "Hell fragmented inverted shard set",
       "priority": "P0",
       "kind": "derive",
-      "status": "BLOCKED-ON LR-G01 founder approval",
+      "status": "PROTOTYPE: rendered as LR-G01-D under CSS invert(1) (exact RGB inversion, identical alpha); no file job issued. The fragmentation pass stays open if the founder wants Hell shards as broken pieces.",
       "purpose": "Loose foreground glass in Hell. Canon: Hell is the exact RGB inversion of Heaven, and its shards are highly fragmented.",
       "consumer": [
         "LucyStage › loose-glass plane (Hell, on the paper stage)"

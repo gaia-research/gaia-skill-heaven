@@ -29,6 +29,16 @@ import lucyZero from '../../assets/lucy/v5/delivery/lucy-zero.webp'
 import lucyHeaven from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
 import lucyHell from '../../assets/lucy/v5/delivery/lucy-hell.webp'
 import lucyUltra from '../../assets/lucy/v5/delivery/lucy-ultra.webp'
+import heaven1 from '../../assets/lucy/refractions/heaven/shard-01.webp'
+import heaven3 from '../../assets/lucy/refractions/heaven/shard-03.webp'
+import heaven4 from '../../assets/lucy/refractions/heaven/shard-04.webp'
+import heaven5 from '../../assets/lucy/refractions/heaven/shard-05.webp'
+import heaven8 from '../../assets/lucy/refractions/heaven/shard-08.webp'
+import ultra1 from '../../assets/lucy/refractions/ultra/shard-01.webp'
+import ultra2 from '../../assets/lucy/refractions/ultra/shard-02.webp'
+import ultra3 from '../../assets/lucy/refractions/ultra/shard-03.webp'
+import ultra4 from '../../assets/lucy/refractions/ultra/shard-04.webp'
+import ultra5 from '../../assets/lucy/refractions/ultra/shard-05.webp'
 import {
   LUCY_STATES,
   STAGE_GROUND,
@@ -46,24 +56,72 @@ const FIGURE: Record<LucyState, { src: string; w: number; h: number }> = {
   ultra: { src: lucyUltra, w: 2190, h: 2874 },
 }
 
-/** Front glass per state: the plane nearer than she is. Zero has none (canon). */
-const FRONT: Record<LucyState, { x: number; y: number; w: number; h: number; r: number }[]> = {
-  zero: [],
-  heaven: [
-    { x: 6, y: 18, w: 3.2, h: 15, r: -18 },
-    { x: 82, y: 9, w: 2.6, h: 12, r: -18 },
-    { x: 14, y: 64, w: 2.2, h: 9, r: -18 },
-  ],
-  hell: [
-    { x: 78, y: 14, w: 3, h: 13, r: 26 },
-    { x: 8, y: 40, w: 2.2, h: 8, r: -38 },
-    { x: 70, y: 58, w: 1.8, h: 6, r: 52 },
-  ],
-  ultra: [
-    { x: 10, y: 12, w: 2.8, h: 12, r: -34 },
-    { x: 82, y: 10, w: 2.8, h: 12, r: 34 },
-    { x: 46, y: 2, w: 2.2, h: 9, r: 2 },
-  ],
+// The approved glass (founder gate 2, 2026-11-18: LR-G01-D Heaven, LR-G02-A r2
+// Ultra). Hell has no generated set: it is LR-G01-D under an exact RGB
+// inversion at render time (identical alpha), so Hell stays a true inversion.
+
+interface Shard { src: string; x: number; y: number; h: number; r: number }
+
+/**
+ * Loose glass, nearer than she is. `front` floats in the stage; `seam` sits
+ * on the stage's left edge where her leg leaves the frame, so the cut reads
+ * as refraction into the page (founder nit, 2026-11-18). x/y/h are % of the
+ * stage; r is degrees on top of each shard's own rake. Zero has none (canon).
+ */
+const GLASS: Record<LucyState, { front: Shard[]; seam: Shard[] }> = {
+  zero: { front: [], seam: [] },
+  heaven: {
+    front: [
+      { src: heaven1, x: 8, y: 14, h: 15, r: 0 },
+      { src: heaven3, x: 80, y: 7, h: 11, r: 0 },
+      { src: heaven5, x: 22, y: 60, h: 8, r: 0 },
+    ],
+    seam: [
+      { src: heaven4, x: -4, y: 58, h: 26, r: 6 },
+      { src: heaven8, x: 3, y: 80, h: 17, r: -4 },
+    ],
+  },
+  hell: {
+    front: [
+      { src: heaven3, x: 76, y: 12, h: 12, r: 44 },
+      { src: heaven5, x: 12, y: 38, h: 8, r: -20 },
+      { src: heaven1, x: 66, y: 58, h: 6, r: 70 },
+    ],
+    seam: [
+      { src: heaven4, x: -5, y: 60, h: 24, r: 28 },
+      { src: heaven8, x: 4, y: 82, h: 15, r: -32 },
+    ],
+  },
+  ultra: {
+    front: [
+      { src: ultra2, x: 8, y: 10, h: 13, r: -8 },
+      { src: ultra3, x: 80, y: 8, h: 13, r: 8 },
+      { src: ultra1, x: 46, y: 1, h: 10, r: 0 },
+    ],
+    seam: [
+      { src: ultra4, x: -6, y: 60, h: 20, r: 0 },
+      { src: ultra5, x: 0, y: 82, h: 14, r: 0 },
+    ],
+  },
+}
+
+function ShardImg({ shard, i }: { shard: Shard; i: number }) {
+  return (
+    <img
+      className="rf-shard"
+      src={shard.src}
+      alt=""
+      decoding="async"
+      draggable={false}
+      style={{
+        left: `${shard.x}%`,
+        top: `${shard.y}%`,
+        height: `${shard.h}%`,
+        transform: shard.r ? `rotate(${shard.r}deg)` : undefined,
+        ['--rf-i' as string]: i,
+      } as CSSProperties}
+    />
+  )
 }
 
 /** The hero's own per-state treatment of the live figure (useHeroEngine), so the seam holds. */
@@ -218,21 +276,24 @@ export function LucyStage({
         </div>
 
         <div className="rf-stage__front" aria-hidden="true">
-          {FRONT[state].map((g, i) => (
-            <i
-              key={`${state}-${i}`}
-              className="rf-glass"
-              style={{
-                left: `${g.x}%`,
-                top: `${g.y}%`,
-                width: `${g.w}%`,
-                height: `${g.h}%`,
-                transform: `rotate(${g.r}deg)`,
-                ['--rf-i' as string]: i,
-              } as CSSProperties}
-            />
+          {GLASS[state].front.map((g, i) => (
+            <ShardImg key={`${state}-f${i}`} shard={g} i={i} />
           ))}
         </div>
+
+        {/* The seam: where her leg leaves the stage, the edge is a pane of
+            glass that refracts what passes behind it, with the approved
+            shards on it, instead of a straight crop. */}
+        {variant === 'stage' ? (
+          <div className="rf-seam" aria-hidden="true">
+            <i className="rf-seam__pane" />
+            <i className="rf-seam__edge" />
+            <i className="rf-seam__edge rf-seam__edge--b" />
+            {GLASS[state].seam.map((g, i) => (
+              <ShardImg key={`${state}-s${i}`} shard={g} i={i} />
+            ))}
+          </div>
+        ) : null}
 
         {cut > 0 ? <i key={`streak-${cut}`} className="rf-stage__streak" aria-hidden="true" /> : null}
         {cut > 0 ? <i key={`flash-${cut}`} className="rf-stage__flash" aria-hidden="true" /> : null}
