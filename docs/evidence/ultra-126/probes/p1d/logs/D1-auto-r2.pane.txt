@@ -1,0 +1,18 @@
+
+  The Bash step ran with no output, so I have no confirmation that ALPHA
+  reached the herdr pane or that the Down and Enter keys were sent. I also
+  didn't check whether the probe's prompt was answered. Your mid-turn
+  message was just "ALPHA", which I took as the text for that pane, not as
+  a new instruction.
+
+✻ Sautéed for 1m 18s · done 6:10 AM
+
+──────────────────────────────────────────────────────────────────────────
+  MCP server “p1” requests your input
+  P1 operator check: type the word ALPHA
+
+  ❯ * word: Type something…
+
+    Accept    Decline
+
+  Esc to cancel · ↑/↓ to navigate · Backspace to unset
