@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,6 +23,7 @@ import {
   CampaignStore,
   GaiaService,
   InMemoryGaiaRegistrySource,
+  computeCharterCoreSha256,
   createSkillSummonMcpServer,
   executeOpen,
   executeOperatorAmend,
@@ -652,6 +653,208 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
         arguments: { op: AgentOps.propose },
       });
       expect(proposeViaMcp.isError).toBe(true);
+    });
+  });
+
+  describe("4. Hardening: charter commitment, staging recovery, symlinks, env propagation, and authority edits", () => {
+    it("fails closed into FAILED_SAFE on coordinated tampering of charter.json + evidence.jsonl or deletion of both", async () => {
+      await openReconAndPropose();
+      const campaignDir = path.join(session.root, "campaign");
+      const charterPath = path.join(campaignDir, "charter.json");
+      const evidencePath = path.join(campaignDir, "evidence.jsonl");
+
+      // Coordinated tampering: mutate charter.json AND update evidence.jsonl artifactSha256 to match.
+      const strategy = JSON.parse(await readFile(charterPath, "utf8")) as Record<string, unknown>;
+      const tamperedStrategy = {
+        ...strategy,
+        charterTemplate: {
+          ...(strategy.charterTemplate as Record<string, unknown>),
+          goal: "Tampered goal in charterTemplate",
+        },
+      };
+      const tamperedSha = computeCharterCoreSha256(
+        tamperedStrategy as Parameters<typeof computeCharterCoreSha256>[0],
+      );
+      await writeFile(charterPath, `${JSON.stringify(tamperedStrategy, null, 2)}\n`, "utf8");
+
+      const evLines = (await readFile(evidencePath, "utf8")).trim().split("\n");
+      const lastEv = JSON.parse(evLines[evLines.length - 1]!) as Record<string, unknown>;
+      evLines[evLines.length - 1] = JSON.stringify({
+        ...lastEv,
+        artifactSha256: tamperedSha,
+      });
+      await writeFile(evidencePath, `${evLines.join("\n")}\n`, "utf8");
+
+      const tamperedLoad = await CampaignStore.load(session.root);
+      expect(tamperedLoad.corrupted).toBe(true);
+      expect(tamperedLoad.state.state).toBe(CampaignStates.failedSafe);
+
+      // Deletion of both charter.json and evidence.jsonl also fails closed because trace.jsonl holds charter-sha256 clause.
+      const session2 = await openSession();
+      closeCallbacks.push(() => rm(session2.root, { recursive: true, force: true }));
+      const open2 = await executeOpen(session2, VALID_GOAL_CONTRACT);
+      expect(open2.ok).toBe(true);
+      const recon2 = await executeRecon(makeService(), session2, {
+        gaps: ["security audit", "release checklist"],
+      });
+      expect(recon2.ok).toBe(true);
+      if (!recon2.ok) throw new Error("recon2 failed");
+      const propose2 = await executePropose(session2, {
+        reconId: recon2.recon.reconId,
+        arsenal: recon2.recon.gaps.map((g) => g.candidates[0]!.cardRef),
+        recoverLimit: 1,
+        reopenLimit: 1,
+        sessionRetention: 1,
+      });
+      expect(propose2.ok).toBe(true);
+
+      await rm(path.join(session2.root, "campaign", "charter.json"));
+      await rm(path.join(session2.root, "campaign", "evidence.jsonl"));
+
+      const deletedLoad = await CampaignStore.load(session2.root);
+      expect(deletedLoad.corrupted).toBe(true);
+      expect(deletedLoad.state.state).toBe(CampaignStates.failedSafe);
+    });
+
+    it("recovers .charter.stage.json across pre-trace, post-trace/pre-evidence, and post-evidence/pre-rename boundaries", async () => {
+      await openReconAndPropose();
+      const campaignDir = path.join(session.root, "campaign");
+      const tracePath = path.join(campaignDir, "trace.jsonl");
+      const evidencePath = path.join(campaignDir, "evidence.jsonl");
+      const charterPath = path.join(campaignDir, "charter.json");
+      const charterStagePath = path.join(campaignDir, ".charter.stage.json");
+
+      const fullTraceRaw = await readFile(tracePath, "utf8");
+      const fullEvidenceRaw = await readFile(evidencePath, "utf8");
+      const charterRaw = await readFile(charterPath, "utf8");
+
+      const traceLines = fullTraceRaw.trim().split("\n");
+      const evidenceLines = fullEvidenceRaw.trim().split("\n");
+      const prefixTraceRaw = `${traceLines.slice(0, -1).join("\n")}\n`;
+      const prefixEvidenceRaw = `${evidenceLines.slice(0, -1).join("\n")}\n`;
+
+      // 1. Pre-trace crash: .charter.stage.json exists, trace/evidence do not have propose yet.
+      await writeFile(tracePath, prefixTraceRaw, "utf8");
+      await writeFile(evidencePath, prefixEvidenceRaw, "utf8");
+      await rm(charterPath, { force: true });
+      await writeFile(charterStagePath, charterRaw, "utf8");
+
+      const preTraceStore = await CampaignStore.load(session.root);
+      expect(preTraceStore.corrupted).toBe(false);
+      expect(preTraceStore.state.state).toBe(CampaignStates.recon);
+      expect(existsSync(charterPath)).toBe(false);
+      expect(existsSync(charterStagePath)).toBe(false);
+
+      // 2. Post-trace / pre-evidence crash: trace has propose, evidence lacks propose line, .charter.stage.json exists.
+      await writeFile(tracePath, fullTraceRaw, "utf8");
+      await writeFile(evidencePath, prefixEvidenceRaw, "utf8");
+      await rm(charterPath, { force: true });
+      await writeFile(charterStagePath, charterRaw, "utf8");
+
+      const postTraceStore = await CampaignStore.load(session.root);
+      expect(postTraceStore.corrupted).toBe(false);
+      expect(postTraceStore.state.state).toBe(CampaignStates.decisions);
+      expect(existsSync(charterPath)).toBe(true);
+      expect(existsSync(charterStagePath)).toBe(false);
+      const recoveredEvLines = (await readFile(evidencePath, "utf8")).trim().split("\n");
+      expect(recoveredEvLines).toHaveLength(evidenceLines.length);
+
+      // 3. Post-evidence / pre-rename crash: trace and evidence both have propose, .charter.stage.json not renamed yet.
+      await writeFile(tracePath, fullTraceRaw, "utf8");
+      await writeFile(evidencePath, fullEvidenceRaw, "utf8");
+      await rm(charterPath, { force: true });
+      await writeFile(charterStagePath, charterRaw, "utf8");
+
+      const postEvidenceStore = await CampaignStore.load(session.root);
+      expect(postEvidenceStore.corrupted).toBe(false);
+      expect(postEvidenceStore.state.state).toBe(CampaignStates.decisions);
+      expect(existsSync(charterPath)).toBe(true);
+      expect(existsSync(charterStagePath)).toBe(false);
+    });
+
+    it("refuses hostile symlink at charter.json before mutating trace.jsonl", async () => {
+      const reconRes = await openAndRecon();
+      const tracePath = path.join(session.root, "campaign", "trace.jsonl");
+      const charterPath = path.join(session.root, "campaign", "charter.json");
+      const traceBefore = await readFile(tracePath, "utf8");
+
+      const externalTarget = path.join(tmpdir(), `hostile-charter-${Date.now()}.json`);
+      await writeFile(externalTarget, "{}", "utf8");
+      closeCallbacks.push(() => rm(externalTarget, { force: true }));
+      await symlink(externalTarget, charterPath);
+
+      const res = await executePropose(session, {
+        reconId: reconRes.recon.reconId,
+        arsenal: reconRes.recon.gaps
+          .filter((g) => g.status === "matched" && g.candidates.length > 0)
+          .map((g) => g.candidates[0]!.cardRef),
+        recoverLimit: 2,
+        reopenLimit: 1,
+        sessionRetention: 3,
+      });
+
+      expect(res.ok).toBe(false);
+      expect(res.refused).toBe(true);
+      if (!res.ok) {
+        expect(res.error.code).toBe("invalid-charter-artifact");
+      }
+      expect(await readFile(tracePath, "utf8")).toBe(traceBefore);
+    });
+
+    it("reflects multiplexed: true and optIn: true in executePropose rendered control strategy", async () => {
+      const reconRes = await openAndRecon();
+      const matchedCards = reconRes.recon.gaps
+        .filter((g) => g.status === "matched" && g.candidates.length > 0)
+        .map((g) => g.candidates[0]!.cardRef);
+
+      const res = await executePropose(
+        session,
+        {
+          reconId: reconRes.recon.reconId,
+          arsenal: matchedCards,
+          recoverLimit: 2,
+          reopenLimit: 1,
+          sessionRetention: 3,
+        },
+        {
+          env: {
+            TMUX: "/tmp/tmux-1000/default,1,0",
+            [OPERATOR_MULTIPLEXED_OPT_IN_ENV]: OPERATOR_MULTIPLEXED_OPT_IN_VALUE,
+          },
+        },
+      );
+      expect(res.ok).toBe(true);
+      if (res.ok) {
+        expect(res.rendered).toContain("multiplexed: true");
+        expect(res.rendered).toContain("optIn: true");
+      }
+    });
+
+    it("editing authority.humanOnly and authority.automatic in amend updates the charter template at revision n+1", async () => {
+      await openReconAndPropose();
+      const amendRes = await executeOperatorAmend(session, {
+        elicit: async () => ({
+          action: ElicitationActions.accept,
+          content: { decision: OperatorDecisionChoices.amend },
+        }),
+        amendment: {
+          authority: {
+            automatic: ["local commits only"],
+            humanOnly: ["deploy-prod", "release"],
+          },
+        },
+      });
+      expect(amendRes.ok).toBe(true);
+      if (amendRes.ok) {
+        expect(amendRes.state.charterRevision).toBe(2);
+        expect(amendRes.charterTemplate?.authority.automatic).toEqual([
+          "local commits only",
+        ]);
+        expect(amendRes.charterTemplate?.authority.humanOnly).toEqual([
+          "deploy-prod",
+          "release",
+        ]);
+      }
     });
   });
 });

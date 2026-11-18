@@ -1,3 +1,5 @@
+import { lstat } from "node:fs/promises";
+
 import {
   AgentOps,
   CAMPAIGN_SCHEMA_IDS,
@@ -18,9 +20,14 @@ import {
   type ReconGapRecordInput,
 } from "skill-zero";
 
+import { assertConfinedPath } from "../../summon/session.js";
+import { inspectOperatorEnvironment } from "../operator.js";
 import { renderControlStrategy } from "../render.js";
 import {
   CampaignStore,
+  computeCharterCoreSha256,
+  formatCharterSha256Clause,
+  stripSelfCharterShaClause,
   type CampaignCharterArsenalItem,
   type CampaignCharterAuthoritySplit,
   type CampaignCharterTemplate,
@@ -442,6 +449,13 @@ export function parseCharterProposalInput(
     if (!humanOnly.ok) {
       return { ok: false, code: "invalid-proposal-input", message: humanOnly.error };
     }
+    if (humanOnly.value !== undefined && humanOnly.value.length === 0) {
+      return {
+        ok: false,
+        code: "invalid-proposal-input",
+        message: "Charter 'authority.humanOnly' cannot be empty when provided.",
+      };
+    }
     authority = {
       ...(auto.value !== undefined ? { automatic: auto.value } : {}),
       ...(humanOnly.value !== undefined ? { humanOnly: humanOnly.value } : {}),
@@ -480,6 +494,7 @@ export function buildCharterTemplate(
   input: CharterProposalInput,
   fallbackGoal?: string,
   fallbackStops?: readonly string[],
+  fallbackHumanOnly?: readonly string[],
 ):
   | {
       ok: true;
@@ -650,13 +665,16 @@ export function buildCharterTemplate(
     };
   }
 
-  const clauses = input.clauses ?? [
-    "authority-split-enforced",
-    "bounds-enforced",
-    "recon-cited",
-  ];
+  const clauses = stripSelfCharterShaClause(
+    1,
+    input.clauses ?? [
+      "authority-split-enforced",
+      "bounds-enforced",
+      "recon-cited",
+    ],
+  );
 
-  const charter: CampaignCharter = immutableSnapshot({
+  const baseCharter: CampaignCharter = {
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: 1,
     goal: goal.trim(),
@@ -666,16 +684,19 @@ export function buildCharterTemplate(
     reopenLimit: input.reopenLimit,
     sessionRetention: input.sessionRetention,
     clauses: [...clauses],
-  });
+  };
 
   const authority: CampaignCharterAuthoritySplit = {
     automatic: input.authority?.automatic ?? [...CHARTER_AUTHORITY_SPLIT_TEMPLATE.automatic],
-    humanOnly: [
-      ...new Set([
-        ...CHARTER_AUTHORITY_SPLIT_TEMPLATE.humanOnly,
-        ...(input.authority?.humanOnly ?? []),
-      ]),
-    ],
+    humanOnly:
+      input.authority?.humanOnly !== undefined
+        ? [...new Set(input.authority.humanOnly)]
+        : [
+            ...new Set([
+              ...CHARTER_AUTHORITY_SPLIT_TEMPLATE.humanOnly,
+              ...(fallbackHumanOnly ?? []),
+            ]),
+          ],
   };
 
   const checkpoints = input.checkpoints ?? [];
@@ -685,31 +706,50 @@ export function buildCharterTemplate(
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: 1,
     reconId,
-    goal: charter.goal,
+    goal: baseCharter.goal,
     phases: [...phases],
     arsenal: arsenalItems,
     authority,
-    recoverLimit: charter.recoverLimit,
-    reopenLimit: charter.reopenLimit,
-    sessionRetention: charter.sessionRetention,
+    recoverLimit: baseCharter.recoverLimit,
+    reopenLimit: baseCharter.reopenLimit,
+    sessionRetention: baseCharter.sessionRetention,
     checkpoints: [...checkpoints],
     stops: [...stops],
-    clauses: [...charter.clauses],
+    clauses: [...baseCharter.clauses],
   };
 
   const charterSha256 = campaignSha256Hex(
     canonicalCampaignJson({
-      charter,
+      charter: baseCharter,
       templateBase,
       manifest: manifestResult.manifest,
     }),
   );
   const shortDigest = charterSha256.slice(0, 12);
 
-  const charterTemplate: CampaignCharterTemplate = immutableSnapshot({
+  const baseCharterTemplate: CampaignCharterTemplate = {
     ...templateBase,
     charterSha256,
     shortDigest,
+  };
+
+  const coreSha256 = computeCharterCoreSha256({
+    schema: CAMPAIGN_SCHEMA_IDS.charter,
+    reconId,
+    charter: baseCharter,
+    charterTemplate: baseCharterTemplate,
+    manifest: manifestResult.manifest,
+  });
+  const shaClause = formatCharterSha256Clause(1, coreSha256);
+
+  const charter: CampaignCharter = immutableSnapshot({
+    ...baseCharter,
+    clauses: [...baseCharter.clauses, shaClause],
+  });
+
+  const charterTemplate: CampaignCharterTemplate = immutableSnapshot({
+    ...baseCharterTemplate,
+    clauses: [...baseCharterTemplate.clauses, shaClause],
   });
 
   return {
@@ -725,10 +765,12 @@ export function buildCharterTemplate(
 export async function executePropose(
   session: { readonly root: string },
   rawArgs: unknown,
+  options?: { env?: NodeJS.ProcessEnv },
 ): Promise<CampaignProposeResult> {
   const store = await CampaignStore.load(session.root);
   const currentStatus = toControllerStatus(store.state, store.trace.at(-1));
   const currentDigest = buildCampaignDigest(store.state, currentStatus);
+  const opEnv = inspectOperatorEnvironment(options?.env);
 
   const refuse = (code: string, message: string): CampaignProposeResult =>
     immutableSnapshot({
@@ -740,6 +782,30 @@ export async function executePropose(
       digest: currentDigest,
       error: { code, message, retryable: false },
     });
+
+  try {
+    await assertConfinedPath(
+      session.root,
+      store.charterPath,
+      "Campaign charter strategy",
+    );
+    const stat = await lstat(store.charterPath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      return refuse(
+        "invalid-charter-artifact",
+        `Campaign charter strategy must be a regular file: ${store.charterPath}`,
+      );
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      return refuse(
+        "invalid-charter-artifact",
+        error instanceof Error
+          ? error.message
+          : "Campaign charter strategy path failed confinement check.",
+      );
+    }
+  }
 
   if (store.corrupted) {
     return refuse(
@@ -775,9 +841,34 @@ export async function executePropose(
     parsedInput.value,
     goalContract?.goal,
     goalContract?.stopConditions,
+    goalContract?.humanOnlyOperations,
   );
   if (!built.ok) {
     return refuse(built.code, built.message);
+  }
+
+  try {
+    await assertConfinedPath(
+      session.root,
+      store.charterPath,
+      "Campaign charter strategy",
+    );
+    const stat = await lstat(store.charterPath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      return refuse(
+        "invalid-charter-artifact",
+        `Campaign charter strategy must be a regular file: ${store.charterPath}`,
+      );
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      return refuse(
+        "invalid-charter-artifact",
+        error instanceof Error
+          ? error.message
+          : "Campaign charter strategy path failed confinement check.",
+      );
+    }
   }
 
   const strategy: PersistedCampaignCharterStrategy = immutableSnapshot({
@@ -801,6 +892,8 @@ export async function executePropose(
   const rendered = renderControlStrategy({
     charterTemplate: built.charterTemplate,
     manifest: built.manifest,
+    multiplexed: opEnv.multiplexed,
+    optIn: opEnv.optIn,
   });
 
   return immutableSnapshot({

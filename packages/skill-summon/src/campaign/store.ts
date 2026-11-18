@@ -112,6 +112,53 @@ export function computeCharterStrategySha256(
   return campaignSha256Hex(canonicalCampaignJson(strategy));
 }
 
+export function stripSelfCharterShaClause(
+  revision: number,
+  clauses: readonly string[],
+): string[] {
+  const prefix = `charter-sha256:r${revision}:`;
+  return clauses.filter((c) => !c.startsWith(prefix));
+}
+
+export function computeCharterCoreSha256(strategy: {
+  schema: string;
+  reconId: string;
+  charter: CampaignCharter;
+  charterTemplate: CampaignCharterTemplate;
+  manifest: CampaignManifest;
+}): string {
+  return campaignSha256Hex(
+    canonicalCampaignJson({
+      schema: strategy.schema,
+      reconId: strategy.reconId,
+      charter: {
+        ...strategy.charter,
+        clauses: stripSelfCharterShaClause(
+          strategy.charter.revision,
+          strategy.charter.clauses,
+        ),
+      },
+      charterTemplate: {
+        ...strategy.charterTemplate,
+        clauses: stripSelfCharterShaClause(
+          strategy.charter.revision,
+          strategy.charterTemplate.clauses,
+        ),
+      },
+      manifest: strategy.manifest,
+    }),
+  );
+}
+
+export function formatCharterSha256Clause(
+  revision: number,
+  sha256: string,
+): string {
+  return `charter-sha256:r${revision}:${sha256}`;
+}
+
+const CHARTER_SHA256_CLAUSE_RE = /^charter-sha256:r(\d+):([0-9a-f]{64})$/;
+
 export type CampaignGoalContract = Readonly<{
   goal: string;
   workUniverse: readonly string[];
@@ -753,6 +800,19 @@ export class CampaignStore {
   }
 
   async appendOperatorLog(entry: Readonly<Record<string, unknown>>): Promise<void> {
+    const run = this.#appendQueue.then(() =>
+      this.#appendOperatorLogSerialized(entry),
+    );
+    this.#appendQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  async #appendOperatorLogSerialized(
+    entry: Readonly<Record<string, unknown>>,
+  ): Promise<void> {
     await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
     await assertConfinedPath(
       this.sessionRoot,
@@ -764,10 +824,30 @@ export class CampaignStore {
       this.operatorLogPath,
       "Campaign operator log",
     );
-    await appendFile(this.operatorLogPath, `${JSON.stringify(entry)}\n`, {
-      encoding: "utf8",
-      flag: "a",
-    });
+    const claim = await acquireCampaignStoreClaimForRoot(this.sessionRoot);
+    if (claim.status !== "acquired") {
+      throw new Error(
+        `Refusing to append operator log: campaign store ownership claim is ${claim.status}`,
+      );
+    }
+    try {
+      await assertConfinedPath(
+        this.sessionRoot,
+        this.operatorLogPath,
+        "Campaign operator log",
+      );
+      await assertRegularOrMissingTarget(
+        this.sessionRoot,
+        this.operatorLogPath,
+        "Campaign operator log",
+      );
+      await appendFile(this.operatorLogPath, `${JSON.stringify(entry)}\n`, {
+        encoding: "utf8",
+        flag: "a",
+      });
+    } finally {
+      await claim.release();
+    }
   }
 
   async append(
@@ -867,7 +947,7 @@ export class CampaignStore {
           throw new Error("Invalid campaign charter strategy.");
         }
         validatedCharterStrategy = parsedStrategy;
-        artifactSha256 = computeCharterStrategySha256(parsedStrategy);
+        artifactSha256 = computeCharterCoreSha256(parsedStrategy);
       }
 
       const authorizedPrivileged =
@@ -1769,6 +1849,43 @@ function tryRecoverPendingStagedEvidenceLine(
       return undefined;
     }
     artifactSha256 = stageSha;
+  } else if (lastLine.event.op === AgentOps.propose) {
+    if (
+      snap.charter.exists ||
+      !snap.charterStage.exists ||
+      snap.charterStage.nonRegular
+    ) {
+      return undefined;
+    }
+    let parsedStageJson: unknown;
+    try {
+      parsedStageJson = JSON.parse(snap.charterStage.raw) as unknown;
+    } catch {
+      return undefined;
+    }
+    const parsedStage = parsePersistedCharterStrategy(parsedStageJson);
+    if (!parsedStage) {
+      return undefined;
+    }
+    if (
+      canonicalCampaignJson(parsedStage.charter) !==
+      canonicalCampaignJson(lastLine.event.charter)
+    ) {
+      return undefined;
+    }
+    const selfShaPrefix = `charter-sha256:r${parsedStage.charter.revision}:`;
+    const selfShaClauses = lastLine.event.charter.clauses.filter((c) =>
+      c.startsWith(selfShaPrefix),
+    );
+    const stageSha = computeCharterCoreSha256(parsedStage);
+    if (
+      selfShaClauses.length !== 1 ||
+      selfShaClauses[0] !==
+        formatCharterSha256Clause(parsedStage.charter.revision, stageSha)
+    ) {
+      return undefined;
+    }
+    artifactSha256 = stageSha;
   } else {
     return undefined;
   }
@@ -1909,7 +2026,8 @@ function verifyCampaignRawSnapshot(
   if (
     recoveredTrailingEvidenceLine !== undefined &&
     !artifactCheck.promoteGoalStage &&
-    !artifactCheck.promoteReconStage
+    !artifactCheck.promoteReconStage &&
+    !artifactCheck.promoteCharterStage
   ) {
     return {
       kind: "failed_safe",
@@ -2375,7 +2493,7 @@ function parseCharterStrategySnapshotForCommitments(
   }
   if (
     expectedArtifactSha !== undefined &&
-    computeCharterStrategySha256(parsed) !== expectedArtifactSha
+    computeCharterCoreSha256(parsed) !== expectedArtifactSha
   ) {
     return {
       ok: false,
@@ -2592,7 +2710,7 @@ function verifyBoundArtifacts(
   let charterStrategy: PersistedCampaignCharterStrategy | null = null;
   if (latestCharterLine) {
     const ev = evidenceLines?.[latestCharterLine.seq];
-    const expectedArtifactSha = ev?.artifactSha256;
+    const expectedEvidenceSha = ev?.artifactSha256;
     const expectedCharter =
       latestCharterLine.event?.channel === "agent" &&
       latestCharterLine.event.op === AgentOps.propose
@@ -2602,9 +2720,44 @@ function verifyBoundArtifacts(
           ? latestCharterLine.event.charter
           : undefined;
 
+    let expectedTraceSha: string | undefined;
+    if (expectedCharter) {
+      for (const clause of expectedCharter.clauses) {
+        const match = CHARTER_SHA256_CLAUSE_RE.exec(clause);
+        if (match) {
+          const rev = Number(match[1]);
+          const sha = match[2]!;
+          if (rev === expectedCharter.revision) {
+            if (expectedTraceSha !== undefined && expectedTraceSha !== sha) {
+              return {
+                ok: false,
+                error: `Conflicting charter commitments for r${rev}`,
+              };
+            }
+            expectedTraceSha = sha;
+          }
+        }
+      }
+    }
+
+    if (
+      expectedTraceSha !== undefined &&
+      expectedEvidenceSha !== undefined &&
+      expectedTraceSha !== expectedEvidenceSha
+    ) {
+      return {
+        ok: false,
+        error:
+          "Campaign charter commitment mismatch between trace and evidence",
+      };
+    }
+
+    const expectedArtifactSha = expectedTraceSha ?? expectedEvidenceSha;
+
     if (
       expectedCharter &&
-      (expectedArtifactSha !== undefined ||
+      (expectedTraceSha !== undefined ||
+        expectedEvidenceSha !== undefined ||
         charterSnap.exists ||
         charterStageSnap.exists)
     ) {

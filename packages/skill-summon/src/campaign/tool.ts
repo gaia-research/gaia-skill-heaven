@@ -208,7 +208,9 @@ export async function executeCampaignTool(
     if (op === AgentOps.propose) {
       const session = await context.getSession();
       sessionRoot = session.root;
-      const result = await executePropose(session, rawArgs);
+      const result = await executePropose(session, rawArgs, {
+        env: context.env,
+      });
       return toCampaignCallToolResult(result);
     }
 
@@ -250,7 +252,7 @@ export async function executeCampaignTool(
       digest: statusResult.digest,
       error: {
         code: "unknown-op",
-        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops in U1: open, recon, status.`,
+        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, status.`,
         retryable: false,
       },
     };

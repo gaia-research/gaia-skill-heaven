@@ -1,3 +1,5 @@
+import { lstat } from "node:fs/promises";
+
 import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
@@ -25,10 +27,8 @@ import {
   type OperatorDecisionChoice,
 } from "skill-zero";
 
-import {
-  CHARTER_AUTHORITY_SPLIT_TEMPLATE,
-  type CampaignProposeResult,
-} from "./ops/propose.js";
+import { assertConfinedPath } from "../summon/session.js";
+import { type CampaignProposeResult } from "./ops/propose.js";
 import {
   buildCampaignDigest,
   type CampaignDigest,
@@ -37,6 +37,9 @@ import {
 import { renderControlStrategy } from "./render.js";
 import {
   CampaignStore,
+  computeCharterCoreSha256,
+  formatCharterSha256Clause,
+  stripSelfCharterShaClause,
   type CampaignCharterTemplate,
   type PersistedCampaignCharterStrategy,
 } from "./store.js";
@@ -359,7 +362,11 @@ function applyAmendment(
     return { ok: false, code: "invalid-charter-bound", message: retention.message };
   }
 
-  let nextClauses = currentCharter.clauses;
+  const nextRevision = currentState.charterRevision + 1;
+
+  let nextClauses: readonly string[] = currentCharter.clauses.filter(
+    (c) => !/^charter-sha256:r\d+:[0-9a-f]{64}$/.test(c),
+  );
   if (amendment.clauses !== undefined) {
     const parsed = parseNonEmptyStringArray(amendment.clauses, "clauses");
     if (!parsed.ok) {
@@ -372,7 +379,7 @@ function applyAmendment(
         message: "Amended 'clauses' cannot be empty.",
       };
     }
-    nextClauses = parsed.value;
+    nextClauses = stripSelfCharterShaClause(nextRevision, parsed.value);
   }
 
   let nextCheckpoints = currentStrategy.charterTemplate.checkpoints;
@@ -422,12 +429,14 @@ function applyAmendment(
       if (!parsed.ok) {
         return { ok: false, code: "invalid-amendment", message: parsed.message };
       }
-      humanOnly = [
-        ...new Set([
-          ...CHARTER_AUTHORITY_SPLIT_TEMPLATE.humanOnly,
-          ...parsed.value,
-        ]),
-      ];
+      if (parsed.value.length === 0) {
+        return {
+          ok: false,
+          code: "invalid-amendment",
+          message: "Amended 'authority.humanOnly' cannot be empty.",
+        };
+      }
+      humanOnly = [...new Set(parsed.value)];
     }
     nextAuthority = { automatic: auto, humanOnly };
   }
@@ -472,8 +481,7 @@ function applyAmendment(
     nextAllowedSkills = deduped;
   }
 
-  const nextRevision = currentState.charterRevision + 1;
-  const nextCharter: CampaignCharter = immutableSnapshot({
+  const baseCharter: CampaignCharter = {
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: nextRevision,
     goal: nextGoal,
@@ -483,37 +491,56 @@ function applyAmendment(
     reopenLimit: reopen.value,
     sessionRetention: retention.value,
     clauses: [...nextClauses],
-  });
+  };
 
   const templateBase = {
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: nextRevision,
     reconId: currentStrategy.reconId,
-    goal: nextCharter.goal,
+    goal: baseCharter.goal,
     phases: [...currentStrategy.charterTemplate.phases],
     arsenal: [...currentStrategy.charterTemplate.arsenal],
     authority: nextAuthority,
-    recoverLimit: nextCharter.recoverLimit,
-    reopenLimit: nextCharter.reopenLimit,
-    sessionRetention: nextCharter.sessionRetention,
+    recoverLimit: baseCharter.recoverLimit,
+    reopenLimit: baseCharter.reopenLimit,
+    sessionRetention: baseCharter.sessionRetention,
     checkpoints: [...nextCheckpoints],
     stops: [...nextStops],
-    clauses: [...nextCharter.clauses],
+    clauses: [...baseCharter.clauses],
   };
 
   const charterSha256 = campaignSha256Hex(
     canonicalCampaignJson({
-      charter: nextCharter,
+      charter: baseCharter,
       templateBase,
       manifest: currentStrategy.manifest,
     }),
   );
   const shortDigest = charterSha256.slice(0, 12);
 
-  const charterTemplate: CampaignCharterTemplate = immutableSnapshot({
+  const baseCharterTemplate: CampaignCharterTemplate = {
     ...templateBase,
     charterSha256,
     shortDigest,
+  };
+
+  const coreSha256 = computeCharterCoreSha256({
+    schema: CAMPAIGN_SCHEMA_IDS.charter,
+    reconId: currentStrategy.reconId,
+    charter: baseCharter,
+    charterTemplate: baseCharterTemplate,
+    manifest: currentStrategy.manifest,
+  });
+  const shaClause = formatCharterSha256Clause(nextRevision, coreSha256);
+
+  const nextCharter: CampaignCharter = immutableSnapshot({
+    ...baseCharter,
+    clauses: [...baseCharter.clauses, shaClause],
+  });
+
+  const charterTemplate: CampaignCharterTemplate = immutableSnapshot({
+    ...baseCharterTemplate,
+    clauses: [...baseCharterTemplate.clauses, shaClause],
   });
 
   const nextStrategy: PersistedCampaignCharterStrategy = immutableSnapshot({
@@ -939,6 +966,30 @@ async function runOperatorDecisionFlow(
   );
   if (!amended.ok) {
     return simpleRefuse(amended.code, amended.message);
+  }
+
+  try {
+    await assertConfinedPath(
+      session.root,
+      store.charterPath,
+      "Campaign charter strategy",
+    );
+    const stat = await lstat(store.charterPath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      return simpleRefuse(
+        "invalid-charter-artifact",
+        `Campaign charter strategy must be a regular file: ${store.charterPath}`,
+      );
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      return simpleRefuse(
+        "invalid-charter-artifact",
+        error instanceof Error
+          ? error.message
+          : "Campaign charter strategy path failed confinement check.",
+      );
+    }
   }
 
   // Mint U0a operator capability ONLY here, after elicitation accept + all checks.
