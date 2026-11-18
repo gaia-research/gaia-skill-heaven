@@ -77,7 +77,8 @@ export type CampaignOperatorCommand = (
   | Readonly<{ channel: "operator"; op: typeof O.decide; action: typeof D[keyof typeof D]; charterRevision: number }>
   | Readonly<{ channel: "operator"; op: typeof O.amend; charter: CampaignCharter }>
   | Readonly<{ channel: "operator"; op: typeof O.answer; incidentId: string; answer: string }>
-  | Readonly<{ channel: "operator"; op: typeof O.checkpoint | typeof O.stop }>
+  | Readonly<{ channel: "operator"; op: typeof O.checkpoint; unitsSha256?: string }>
+  | Readonly<{ channel: "operator"; op: typeof O.stop }>
 ) & OperatorProvenanceFields;
 export type EngineCommand =
   | Readonly<{
@@ -89,6 +90,7 @@ export type EngineCommand =
       receipt?: VerifyReceipt;
       closesUnit?: boolean;
       convergenceIncident?: ConvergenceIncident;
+      unitsSha256?: string;
     }>
   | Readonly<{ channel: "engine"; op: Exclude<typeof E[keyof typeof E], typeof E.verify>; clause: string }>;
 

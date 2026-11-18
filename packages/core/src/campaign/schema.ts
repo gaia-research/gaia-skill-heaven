@@ -149,15 +149,16 @@ const event: Check = v => {
       case O.decide: return object(v, { ...base, ...provenanceFields, action: member(Object.values(D)), charterRevision: nat }, provenanceOptional);
       case O.amend: return object(v, { ...base, ...provenanceFields, charter }, provenanceOptional);
       case O.answer: return object(v, { ...base, ...provenanceFields, incidentId: text, answer: text }, provenanceOptional);
-      case O.checkpoint: case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
+      case O.checkpoint: return object(v, { ...base, ...provenanceFields, unitsSha256: sha256 }, [...provenanceOptional, "unitsSha256"]);
+      case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
   }
   if (c.value === "engine" && ENGINE_OPS.includes(o.value)) {
     return o.value === E.verify
       ? object(
           v,
-          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool, convergenceIncident: incident },
-          ["workUnit", "receipt", "closesUnit", "convergenceIncident"],
+          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool, convergenceIncident: incident, unitsSha256: sha256 },
+          ["workUnit", "receipt", "closesUnit", "convergenceIncident", "unitsSha256"],
         )
       : object(v, { ...base, clause: text });
   }

@@ -51,6 +51,8 @@ import {
 } from "../src/index.js";
 import {
   CAMPAIGN_RECEIPTS_STAGE_FILE,
+  CAMPAIGN_TRACE_FILE,
+  CAMPAIGN_TX_STAGE_FILE,
   CAMPAIGN_UNITS_STAGE_FILE,
 } from "../src/campaign/store.js";
 import { openSession, type SummonSession } from "../src/summon/session.js";
@@ -1203,5 +1205,352 @@ describe("U4 store persistence, next/report/checkpoint ops, and steering wiring"
     expect(receiptsAfter).toHaveLength(1);
     expect(receiptsAfter[0]?.status).toBe(ReceiptStatuses.replayed);
     expect(receiptsAfter[0]?.replayedExitCode).toBe(0);
+  });
+
+  it("Finding R2-2: fails closed (FAILED_SAFE) when unitsSha256 is stripped from evidence.jsonl or mismatched between trace and evidence", async () => {
+    // 1. Removing unitsSha256 from evidence.jsonl + deleting units.json -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        await executeNext(s);
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+
+        const evLines = (await readFile(evidencePath, "utf8"))
+          .trim()
+          .split("\n")
+          .map((l) => JSON.parse(l) as Record<string, unknown>);
+        const stripped = evLines.map((ev) => {
+          const copy = { ...ev };
+          delete copy.unitsSha256;
+          return JSON.stringify(copy);
+        });
+        await writeFile(evidencePath, `${stripped.join("\n")}\n`, "utf8");
+        await rm(unitsPath);
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        expect(reloaded.error).toMatch(/commitment mismatch/i);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 2. Replacing evidence+units.json commitment on A.next without matching trace unitsSha256 -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        await executeNext(s);
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+        const unitsObj = JSON.parse(await readFile(unitsPath, "utf8")) as Record<string, unknown>;
+        const tamperedUnits = {
+          ...unitsObj,
+          bounds: { recoverLimit: 99, reopenLimit: 99 },
+        };
+        await writeFile(unitsPath, `${JSON.stringify(tamperedUnits, null, 2)}\n`, "utf8");
+        const tamperedSha = campaignSha256Hex(canonicalCampaignJson(tamperedUnits));
+
+        const evLines = (await readFile(evidencePath, "utf8"))
+          .trim()
+          .split("\n")
+          .map((l) => JSON.parse(l) as Record<string, unknown>);
+        evLines[evLines.length - 1] = {
+          ...evLines[evLines.length - 1],
+          unitsSha256: tamperedSha,
+        };
+        await writeFile(
+          evidencePath,
+          `${evLines.map((e) => JSON.stringify(e)).join("\n")}\n`,
+          "utf8",
+        );
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 3. Replacing evidence+units.json commitment on E.verify without matching trace unitsSha256 -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        const n = await executeNext(s);
+        expect(n.ok && n.unit).toBeTruthy();
+        await executeReport(s, {
+          unitId: n.ok && n.unit ? n.unit.id : "u1",
+          outcome: UnitReportOutcomes.pass,
+          command: "npm test",
+          output: "ok",
+        });
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+        const unitsObj = JSON.parse(await readFile(unitsPath, "utf8")) as {
+          units: Array<Record<string, unknown>>;
+        };
+        const tamperedUnits = {
+          ...unitsObj,
+          units: unitsObj.units.map((u) => ({ ...u, state: WorkUnitStates.done })),
+        };
+        await writeFile(unitsPath, `${JSON.stringify(tamperedUnits, null, 2)}\n`, "utf8");
+        const tamperedSha = campaignSha256Hex(canonicalCampaignJson(tamperedUnits));
+
+        const evLines = (await readFile(evidencePath, "utf8"))
+          .trim()
+          .split("\n")
+          .map((l) => JSON.parse(l) as Record<string, unknown>);
+        evLines[evLines.length - 1] = {
+          ...evLines[evLines.length - 1],
+          unitsSha256: tamperedSha,
+        };
+        await writeFile(
+          evidencePath,
+          `${evLines.map((e) => JSON.stringify(e)).join("\n")}\n`,
+          "utf8",
+        );
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 4. Replacing evidence+units.json commitment on O.checkpoint without matching trace unitsSha256 -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        const store0 = await CampaignStore.load(s.root);
+        const unitIds = store0.state.queue.map((q) => q.id);
+        const cp = await executeCheckpoint(s, {
+          batches: [{ id: "b1", unitIds }],
+        });
+        expect(cp.ok).toBe(true);
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+        const unitsObj = JSON.parse(await readFile(unitsPath, "utf8")) as Record<string, unknown>;
+        const tamperedUnits = {
+          ...unitsObj,
+          batches: [{ id: "tampered-batch", unitIds }],
+        };
+        await writeFile(unitsPath, `${JSON.stringify(tamperedUnits, null, 2)}\n`, "utf8");
+        const tamperedSha = campaignSha256Hex(canonicalCampaignJson(tamperedUnits));
+
+        const evLines = (await readFile(evidencePath, "utf8"))
+          .trim()
+          .split("\n")
+          .map((l) => JSON.parse(l) as Record<string, unknown>);
+        evLines[evLines.length - 1] = {
+          ...evLines[evLines.length - 1],
+          unitsSha256: tamperedSha,
+        };
+        await writeFile(
+          evidencePath,
+          `${evLines.map((e) => JSON.stringify(e)).join("\n")}\n`,
+          "utf8",
+        );
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("Finding R2-3: recovers across pre-trace, post-trace/pre-evidence, and post-evidence/pre-rename boundaries for agent and privileged ops, and rejects trace-only privileged tampering", async () => {
+    // Helper to simulate each crash boundary by running the op on a session,
+    // capturing pre/post snapshots, and rewinding disk to the exact crash boundary.
+    const testBoundariesForOp = async (
+      kind: "agent-next" | "agent-report" | "engine-verify" | "operator-checkpoint",
+    ) => {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const tracePath = path.join(campaignDir, CAMPAIGN_TRACE_FILE);
+        const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+        const receiptsPath = path.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
+        const unitsStagePath = path.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+        const receiptsStagePath = path.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+        const txStagePath = path.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
+
+        let unitId = "u1";
+        if (kind === "agent-report" || kind === "engine-verify") {
+          const n = await executeNext(s);
+          expect(n.ok && n.unit).toBeTruthy();
+          unitId = n.ok && n.unit ? n.unit.id : "u1";
+        }
+
+        const preTrace = await readFile(tracePath, "utf8");
+        const preEvidence = await readFile(evidencePath, "utf8");
+        const preUnitsExists = existsSync(unitsPath);
+        const preUnits = preUnitsExists ? await readFile(unitsPath, "utf8") : null;
+        const preReceiptsExists = existsSync(receiptsPath);
+        const preReceipts = preReceiptsExists
+          ? await readFile(receiptsPath, "utf8")
+          : null;
+
+        if (kind === "agent-next") {
+          const res = await executeNext(s);
+          expect(res.ok).toBe(true);
+        } else if (kind === "agent-report") {
+          const res = await executeReport(s, {
+            unitId,
+            outcome: UnitReportOutcomes.block,
+            reason: "blocked for test",
+          });
+          expect(res.ok).toBe(true);
+        } else if (kind === "engine-verify") {
+          const res = await executeReport(s, {
+            unitId,
+            outcome: UnitReportOutcomes.pass,
+            command: "npm test",
+            output: "ok",
+          });
+          expect(res.ok).toBe(true);
+        } else {
+          const store0 = await CampaignStore.load(s.root);
+          const unitIds = store0.state.queue.map((q) => q.id);
+          const res = await executeCheckpoint(s, {
+            batches: [{ id: "tx-batch", unitIds }],
+          });
+          expect(res.ok).toBe(true);
+        }
+
+        const postTrace = await readFile(tracePath, "utf8");
+        const postEvidence = await readFile(evidencePath, "utf8");
+        const postEvidenceLines = postEvidence.trim().split("\n");
+        const lastEvidenceLine = postEvidenceLines.at(-1)!;
+        const postUnits = await readFile(unitsPath, "utf8");
+        const postReceiptsExists = existsSync(receiptsPath);
+        const postReceipts = postReceiptsExists
+          ? await readFile(receiptsPath, "utf8")
+          : null;
+
+        const restorePreArtifacts = async () => {
+          if (preUnits !== null) {
+            await writeFile(unitsPath, preUnits, "utf8");
+          } else {
+            await rm(unitsPath, { force: true });
+          }
+          if (preReceipts !== null) {
+            await writeFile(receiptsPath, preReceipts, "utf8");
+          } else {
+            await rm(receiptsPath, { force: true });
+          }
+        };
+
+        const writeStageArtifacts = async () => {
+          await writeFile(unitsStagePath, postUnits, "utf8");
+          if (postReceipts !== null) {
+            await writeFile(receiptsStagePath, postReceipts, "utf8");
+          }
+          await writeFile(txStagePath, `${lastEvidenceLine}\n`, "utf8");
+        };
+
+        // Boundary 1: pre-trace (stage files + .tx.stage.json written, trace/evidence NOT yet appended)
+        await writeFile(tracePath, preTrace, "utf8");
+        await writeFile(evidencePath, preEvidence, "utf8");
+        await restorePreArtifacts();
+        await writeStageArtifacts();
+
+        const preTraceLoaded = await CampaignStore.load(s.root);
+        expect(preTraceLoaded.corrupted).toBe(false);
+        expect(preTraceLoaded.trace.length).toBe(
+          preTrace.trim().split("\n").length,
+        );
+        expect(existsSync(txStagePath)).toBe(false);
+        expect(existsSync(unitsStagePath)).toBe(false);
+        expect(existsSync(receiptsStagePath)).toBe(false);
+
+        // Boundary 2: post-trace / pre-evidence (trace appended + stage files + .tx.stage.json present, evidence NOT appended)
+        await writeFile(tracePath, postTrace, "utf8");
+        await writeFile(evidencePath, preEvidence, "utf8");
+        await restorePreArtifacts();
+        await writeStageArtifacts();
+
+        const postTraceLoaded = await CampaignStore.load(s.root);
+        expect(postTraceLoaded.corrupted).toBe(false);
+        expect(postTraceLoaded.trace.length).toBe(
+          postTrace.trim().split("\n").length,
+        );
+        expect(await readFile(evidencePath, "utf8")).toBe(postEvidence);
+        expect(await readFile(unitsPath, "utf8")).toBe(postUnits);
+        expect(existsSync(txStagePath)).toBe(false);
+        expect(existsSync(unitsStagePath)).toBe(false);
+        expect(existsSync(receiptsStagePath)).toBe(false);
+
+        // Boundary 3: post-evidence / pre-rename (trace + evidence appended, stage files not yet renamed)
+        await writeFile(tracePath, postTrace, "utf8");
+        await writeFile(evidencePath, postEvidence, "utf8");
+        await restorePreArtifacts();
+        await writeStageArtifacts();
+
+        const postEvLoaded = await CampaignStore.load(s.root);
+        expect(postEvLoaded.corrupted).toBe(false);
+        expect(postEvLoaded.trace.length).toBe(
+          postTrace.trim().split("\n").length,
+        );
+        expect(await readFile(unitsPath, "utf8")).toBe(postUnits);
+        expect(existsSync(txStagePath)).toBe(false);
+        expect(existsSync(unitsStagePath)).toBe(false);
+        expect(existsSync(receiptsStagePath)).toBe(false);
+
+        // Tamper check: appending privileged/U4 event to trace.jsonl WITHOUT .tx.stage.json -> FAILED_SAFE
+        await writeFile(tracePath, postTrace, "utf8");
+        await writeFile(evidencePath, preEvidence, "utf8");
+        await restorePreArtifacts();
+        await rm(txStagePath, { force: true });
+        await rm(unitsStagePath, { force: true });
+        await rm(receiptsStagePath, { force: true });
+
+        const tamperedLoaded = await CampaignStore.load(s.root);
+        expect(tamperedLoaded.corrupted).toBe(true);
+        expect(tamperedLoaded.state.state).toBe(CampaignStates.failedSafe);
+
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    };
+
+    await testBoundariesForOp("agent-next");
+    await testBoundariesForOp("agent-report");
+    await testBoundariesForOp("engine-verify");
+    await testBoundariesForOp("operator-checkpoint");
   });
 });

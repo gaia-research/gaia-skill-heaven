@@ -427,6 +427,7 @@ export async function executeReport(
           }
         : undefined;
 
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(updatedQueue));
     const event = createCampaignEngineEvent(engineAdapter, {
       channel: "engine",
       op: EngineOps.verify,
@@ -436,6 +437,7 @@ export async function executeReport(
       receipt,
       ...(outcome === UnitReportOutcomes.pass ? { closesUnit: true } : {}),
       ...(convergenceIncident !== undefined ? { convergenceIncident } : {}),
+      unitsSha256,
     });
 
     const appended = await store.append(event, {

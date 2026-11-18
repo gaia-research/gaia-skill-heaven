@@ -14970,6 +14970,7 @@ var event = (v) => {
       case OperatorVerbs.answer:
         return object2(v, { ...base, ...provenanceFields, incidentId: text2, answer: text2 }, provenanceOptional);
       case OperatorVerbs.checkpoint:
+        return object2(v, { ...base, ...provenanceFields, unitsSha256: sha256 }, [...provenanceOptional, "unitsSha256"]);
       case OperatorVerbs.stop:
         return object2(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
@@ -14977,8 +14978,8 @@ var event = (v) => {
   if (c.value === "engine" && ENGINE_OPS.includes(o.value)) {
     return o.value === EngineOps.verify ? object2(
       v,
-      { ...base, passed: bool2, clause: text2, workUnit: text2, receipt: verifyReceipt, closesUnit: bool2, convergenceIncident: incident },
-      ["workUnit", "receipt", "closesUnit", "convergenceIncident"]
+      { ...base, passed: bool2, clause: text2, workUnit: text2, receipt: verifyReceipt, closesUnit: bool2, convergenceIncident: incident, unitsSha256: sha256 },
+      ["workUnit", "receipt", "closesUnit", "convergenceIncident", "unitsSha256"]
     ) : object2(v, { ...base, clause: text2 });
   }
   return false;
@@ -20794,6 +20795,7 @@ var CAMPAIGN_RECON_STAGE_FILE = ".recon.stage.json";
 var CAMPAIGN_CHARTER_STAGE_FILE = ".charter.stage.json";
 var CAMPAIGN_UNITS_STAGE_FILE = ".units.stage.json";
 var CAMPAIGN_RECEIPTS_STAGE_FILE = ".receipts.stage.jsonl";
+var CAMPAIGN_TX_STAGE_FILE = ".tx.stage.json";
 function stripSelfCharterShaClause(revision, clauses) {
   const prefix = `charter-sha256:r${revision}:`;
   return clauses.filter((c) => !c.startsWith(prefix));
@@ -20951,6 +20953,7 @@ var CampaignStore = class _CampaignStore {
   charterStagePath;
   unitsStagePath;
   receiptsStagePath;
+  txStagePath;
   #initial;
   #state;
   #lines;
@@ -20982,6 +20985,7 @@ var CampaignStore = class _CampaignStore {
     this.charterStagePath = path3.join(this.campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
     this.unitsStagePath = path3.join(this.campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
     this.receiptsStagePath = path3.join(this.campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+    this.txStagePath = path3.join(this.campaignDir, CAMPAIGN_TX_STAGE_FILE);
     this.#initial = initialCampaignState();
     this.#state = state2;
     this.#lines = lines;
@@ -21519,6 +21523,12 @@ var CampaignStore = class _CampaignStore {
         }
         validatedUnitsState = parsedUnits;
         unitsSha256 = campaignSha256Hex(canonicalCampaignJson(parsedUnits));
+        const descriptorUnitsSha256 = getDescriptorUnitsSha256(descriptor);
+        if (descriptorUnitsSha256 !== unitsSha256) {
+          throw new Error(
+            "Event must carry matching unitsSha256 when persisting work unit queue state."
+          );
+        }
       }
       if (options?.receipt !== void 0 && step.entry.accepted) {
         const parsedReceipt = parseVerifyReceipt(options.receipt);
@@ -21695,6 +21705,39 @@ var CampaignStore = class _CampaignStore {
           throw error2;
         }
       }
+      try {
+        await writeAtomicJsonArtifact(
+          this.sessionRoot,
+          this.campaignDir,
+          this.txStagePath,
+          `.${CAMPAIGN_TX_STAGE_FILE}`,
+          "Campaign transaction stage",
+          `${JSON.stringify(evidenceLine, null, 2)}
+`
+        );
+      } catch (error2) {
+        if (validatedGoal !== void 0) {
+          await rm3(this.goalStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedReconRecord !== void 0) {
+          await rm3(this.reconStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedCharterStrategy !== void 0) {
+          await rm3(this.charterStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedUnitsState !== void 0) {
+          await rm3(this.unitsStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedReceipt !== void 0) {
+          await rm3(this.receiptsStagePath, { force: true }).catch(() => {
+          });
+        }
+        throw error2;
+      }
       let traceMutated = false;
       try {
         await appendFile(
@@ -21731,8 +21774,11 @@ var CampaignStore = class _CampaignStore {
 `,
           "utf8"
         );
+        await rm3(this.txStagePath, { force: true });
       } catch (error2) {
         if (!traceMutated) {
+          await rm3(this.txStagePath, { force: true }).catch(() => {
+          });
           if (validatedGoal !== void 0) {
             await rm3(this.goalStagePath, { force: true }).catch(() => {
             });
@@ -21813,6 +21859,8 @@ var CampaignStore = class _CampaignStore {
       });
       await rm3(this.receiptsStagePath, { force: true }).catch(() => {
       });
+      await rm3(this.txStagePath, { force: true }).catch(() => {
+      });
       return;
     }
     const disk = await verifyOnDiskState(this.sessionRoot, {
@@ -21892,6 +21940,10 @@ async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus
       }).catch(() => {
       });
       await rm3(path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+      await rm3(path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE), {
         force: true
       }).catch(() => {
       });
@@ -21994,7 +22046,7 @@ function snapshotsEqual(a, b) {
   if (!metaSnapshotsEqual(a.traceStat, b.traceStat) || a.traceRaw !== b.traceRaw) {
     return false;
   }
-  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon) || !optionalArtifactSnapshotsEqual(a.charter, b.charter) || !optionalArtifactSnapshotsEqual(a.units, b.units) || !optionalArtifactSnapshotsEqual(a.receipts, b.receipts) || !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) || !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage) || !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage) || !optionalArtifactSnapshotsEqual(a.unitsStage, b.unitsStage) || !optionalArtifactSnapshotsEqual(a.receiptsStage, b.receiptsStage)) {
+  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon) || !optionalArtifactSnapshotsEqual(a.charter, b.charter) || !optionalArtifactSnapshotsEqual(a.units, b.units) || !optionalArtifactSnapshotsEqual(a.receipts, b.receipts) || !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) || !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage) || !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage) || !optionalArtifactSnapshotsEqual(a.unitsStage, b.unitsStage) || !optionalArtifactSnapshotsEqual(a.receiptsStage, b.receiptsStage) || !optionalArtifactSnapshotsEqual(a.txStage, b.txStage)) {
     return false;
   }
   if (a.evidenceExists !== b.evidenceExists) {
@@ -22045,6 +22097,7 @@ async function readCampaignRawSnapshot(sessionRoot) {
   const charterStagePath = path3.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
   const unitsStagePath = path3.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
   const receiptsStagePath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+  const txStagePath = path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
   let traceStat;
@@ -22121,6 +22174,11 @@ async function readCampaignRawSnapshot(sessionRoot) {
     receiptsStagePath,
     "Campaign receipts stage"
   );
+  const txStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    txStagePath,
+    "Campaign transaction stage"
+  );
   let evidenceStat;
   try {
     evidenceStat = await lstat2(evidencePath);
@@ -22140,7 +22198,8 @@ async function readCampaignRawSnapshot(sessionRoot) {
         reconStage,
         charterStage,
         unitsStage,
-        receiptsStage
+        receiptsStage,
+        txStage
       };
     }
     throw error2;
@@ -22161,7 +22220,8 @@ async function readCampaignRawSnapshot(sessionRoot) {
       reconStage,
       charterStage,
       unitsStage,
-      receiptsStage
+      receiptsStage,
+      txStage
     };
   }
   const evidenceRaw = await readFile(evidencePath, "utf8");
@@ -22182,7 +22242,8 @@ async function readCampaignRawSnapshot(sessionRoot) {
     reconStage,
     charterStage,
     unitsStage,
-    receiptsStage
+    receiptsStage,
+    txStage
   };
 }
 async function verifyReadOnlyConsistentSnapshot(sessionRoot, options = {}) {
@@ -22300,6 +22361,70 @@ function validateStandaloneEvidence(lines, evidenceLines) {
   }
   return { ok: true };
 }
+function getDescriptorUnitsSha256(descriptor) {
+  if (!descriptor) {
+    return void 0;
+  }
+  if (descriptor.channel === "agent" && (descriptor.op === AgentOps.next || descriptor.op === AgentOps.report)) {
+    return descriptor.unitsSha256;
+  }
+  if (descriptor.channel === "operator" && descriptor.op === OperatorVerbs.checkpoint) {
+    return descriptor.unitsSha256;
+  }
+  if (descriptor.channel === "engine" && descriptor.op === EngineOps.verify) {
+    return descriptor.unitsSha256;
+  }
+  return void 0;
+}
+function getTraceEventUnitsSha256(line) {
+  if (line.entry.accepted !== true) {
+    return void 0;
+  }
+  return getDescriptorUnitsSha256(line.event);
+}
+var TX_STAGE_SHA256_RE = /^[0-9a-f]{64}$/;
+function parseTxStageSnapshot(snap) {
+  if (!snap.exists || snap.nonRegular) {
+    return null;
+  }
+  let raw;
+  try {
+    raw = JSON.parse(snap.raw);
+  } catch {
+    return null;
+  }
+  if (!isPlainRecordObject(raw)) {
+    return null;
+  }
+  const allowed = /* @__PURE__ */ new Set([
+    "seq",
+    "authorizedPrivileged",
+    "eventSha256",
+    "recordSha256",
+    "artifactSha256",
+    "unitsSha256"
+  ]);
+  if (Reflect.ownKeys(raw).some((k) => typeof k !== "string" || !allowed.has(k))) {
+    return null;
+  }
+  if (typeof raw.seq !== "number" || !Number.isSafeInteger(raw.seq) || raw.seq < 0 || typeof raw.authorizedPrivileged !== "boolean" || typeof raw.eventSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.eventSha256) || typeof raw.recordSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.recordSha256)) {
+    return null;
+  }
+  if (raw.artifactSha256 !== void 0 && (typeof raw.artifactSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.artifactSha256))) {
+    return null;
+  }
+  if (raw.unitsSha256 !== void 0 && (typeof raw.unitsSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.unitsSha256))) {
+    return null;
+  }
+  return {
+    seq: raw.seq,
+    authorizedPrivileged: raw.authorizedPrivileged,
+    eventSha256: raw.eventSha256,
+    recordSha256: raw.recordSha256,
+    ...raw.artifactSha256 !== void 0 ? { artifactSha256: raw.artifactSha256 } : {},
+    ...raw.unitsSha256 !== void 0 ? { unitsSha256: raw.unitsSha256 } : {}
+  };
+}
 function tryRecoverPendingStagedEvidenceLine(snap, parsedLines, existingEvidenceLines) {
   if (parsedLines.length === 0) {
     return void 0;
@@ -22322,7 +22447,89 @@ function tryRecoverPendingStagedEvidenceLine(snap, parsedLines, existingEvidence
     }
   }
   const lastLine = parsedLines[seq];
-  if (lastLine.seq !== seq || lastLine.entry.accepted !== true || lastLine.entry.channel !== "agent" || lastLine.event?.channel !== "agent") {
+  if (lastLine.seq !== seq || lastLine.entry.accepted !== true || lastLine.event === null || lastLine.event.channel !== lastLine.entry.channel) {
+    return void 0;
+  }
+  const isU4RecoverableOp = lastLine.event.channel === "agent" && (lastLine.event.op === AgentOps.next || lastLine.event.op === AgentOps.report) || lastLine.event.channel === "operator" && lastLine.event.op === OperatorVerbs.checkpoint || lastLine.event.channel === "engine" && lastLine.event.op === EngineOps.verify;
+  if (isU4RecoverableOp) {
+    const txStage = parseTxStageSnapshot(snap.txStage);
+    if (!txStage) {
+      return void 0;
+    }
+    const expectedAuthorizedPrivileged = (lastLine.entry.channel === "operator" || lastLine.entry.channel === "engine") && lastLine.entry.accepted === true;
+    const expectedEventSha256 = campaignSha256Hex(
+      canonicalCampaignJson(lastLine.event)
+    );
+    if (txStage.seq !== seq || txStage.authorizedPrivileged !== expectedAuthorizedPrivileged || txStage.eventSha256 !== expectedEventSha256 || txStage.artifactSha256 !== void 0) {
+      return void 0;
+    }
+    const recoverAuthorize = (event2, index) => {
+      if (index === seq) {
+        return txStage.authorizedPrivileged === true && txStage.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event2));
+      }
+      const ev = existingEvidenceLines?.[index];
+      if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+      return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event2));
+    };
+    const verification2 = verifyCampaignTraceLines(parsedLines, {
+      authorize: recoverAuthorize
+    });
+    if (!verification2.valid) {
+      return void 0;
+    }
+    const expectedRecordSha256 = campaignSha256Hex(
+      serializeCampaignRecord(verification2.record)
+    );
+    if (txStage.recordSha256 !== expectedRecordSha256) {
+      return void 0;
+    }
+    const traceUnitsSha256 = getTraceEventUnitsSha256(lastLine);
+    if (txStage.unitsSha256 !== traceUnitsSha256) {
+      return void 0;
+    }
+    if (traceUnitsSha256 !== void 0) {
+      const checkedUnits = parseAndVerifyUnitsSnapshot(
+        snap.unitsStage,
+        traceUnitsSha256,
+        verification2.record.final
+      );
+      if (!checkedUnits.ok) {
+        return void 0;
+      }
+    } else if (snap.unitsStage.exists) {
+      return void 0;
+    }
+    const hasReceiptOnLastLine = lastLine.event.channel === "engine" && lastLine.event.op === EngineOps.verify && lastLine.event.receipt !== void 0;
+    if (hasReceiptOnLastLine) {
+      const expectedTraceReceipts = [];
+      for (const line of parsedLines) {
+        if (line.entry.accepted === true && line.event?.channel === "engine" && line.event.op === EngineOps.verify && line.event.receipt !== void 0) {
+          const parsedReceipt = parseVerifyReceipt(line.event.receipt);
+          if (!parsedReceipt) {
+            return void 0;
+          }
+          expectedTraceReceipts.push(parsedReceipt);
+        }
+      }
+      const checkedReceipts = verifyReceiptsSnapshot(
+        snap.receiptsStage,
+        expectedTraceReceipts
+      );
+      if (!checkedReceipts.ok) {
+        return void 0;
+      }
+    } else if (snap.receiptsStage.exists) {
+      return void 0;
+    }
+    return Object.freeze({
+      seq,
+      authorizedPrivileged: expectedAuthorizedPrivileged,
+      eventSha256: expectedEventSha256,
+      recordSha256: expectedRecordSha256,
+      ...traceUnitsSha256 !== void 0 ? { unitsSha256: traceUnitsSha256 } : {}
+    });
+  }
+  if (lastLine.entry.channel !== "agent" || lastLine.event?.channel !== "agent") {
     return void 0;
   }
   let artifactSha256;
@@ -22505,12 +22712,6 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
   if (!artifactCheck.ok) {
     return { kind: "failed_safe", error: artifactCheck.error };
   }
-  if (recoveredTrailingEvidenceLine !== void 0 && !artifactCheck.promoteGoalStage && !artifactCheck.promoteReconStage && !artifactCheck.promoteCharterStage) {
-    return {
-      kind: "failed_safe",
-      error: "Campaign trailing evidence recovery requires an unpromoted stage artifact"
-    };
-  }
   const unitsAndReceiptsCheck = verifyBoundUnitsAndReceipts(
     parsedTrace.lines,
     evidenceLines,
@@ -22522,6 +22723,13 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
   );
   if (!unitsAndReceiptsCheck.ok) {
     return { kind: "failed_safe", error: unitsAndReceiptsCheck.error };
+  }
+  const hasPendingStageForRecovery = artifactCheck.promoteGoalStage || artifactCheck.promoteReconStage || artifactCheck.promoteCharterStage || unitsAndReceiptsCheck.promoteUnitsStage || unitsAndReceiptsCheck.promoteReceiptsStage || snap.txStage.exists && !snap.txStage.nonRegular;
+  if (recoveredTrailingEvidenceLine !== void 0 && !hasPendingStageForRecovery) {
+    return {
+      kind: "failed_safe",
+      error: "Campaign trailing evidence recovery requires an unpromoted stage artifact"
+    };
   }
   return {
     kind: "valid",
@@ -23131,6 +23339,7 @@ async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalSta
   const unitsPath = path3.join(campaignDir, CAMPAIGN_UNITS_FILE);
   const receiptsStagePath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
   const receiptsPath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
+  const txStagePath = path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
   if (recoveredTrailingEvidenceLine !== void 0) {
     await assertRegularOrMissingTarget(
       sessionRoot,
@@ -23214,6 +23423,8 @@ async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalSta
     await rm3(receiptsStagePath, { force: true }).catch(() => {
     });
   }
+  await rm3(txStagePath, { force: true }).catch(() => {
+  });
 }
 function validateUnitsStateAgainstCampaignState(units, state2) {
   if (state2.charter === null) {
@@ -23329,23 +23540,36 @@ function verifyReceiptsSnapshot(snap, expectedTraceReceipts) {
   return { ok: true, receipts: parsed.lines };
 }
 function verifyBoundUnitsAndReceipts(lines, evidenceLines, finalState, unitsSnap, receiptsSnap, unitsStageSnap, receiptsStageSnap) {
-  let latestUnitsSha256;
+  let latestTraceUnitsSha256;
+  for (const line of lines) {
+    const traceUnitsSha = getTraceEventUnitsSha256(line);
+    if (traceUnitsSha !== void 0) {
+      const evUnitsSha = evidenceLines?.[line.seq]?.unitsSha256;
+      if (evUnitsSha !== traceUnitsSha) {
+        return {
+          ok: false,
+          error: `Campaign work units commitment mismatch between trace and evidence at ${line.seq}`
+        };
+      }
+      latestTraceUnitsSha256 = traceUnitsSha;
+    }
+  }
   if (evidenceLines) {
-    for (let i = evidenceLines.length - 1; i >= 0; i--) {
-      if (evidenceLines[i].unitsSha256 !== void 0) {
-        latestUnitsSha256 = evidenceLines[i].unitsSha256;
-        break;
+    for (let i = 0; i < evidenceLines.length; i++) {
+      const evUnitsSha = evidenceLines[i].unitsSha256;
+      if (evUnitsSha !== void 0) {
+        const line = lines[i];
+        const traceUnitsSha = line ? getTraceEventUnitsSha256(line) : void 0;
+        if (traceUnitsSha !== evUnitsSha) {
+          return {
+            ok: false,
+            error: `Campaign work units commitment mismatch between evidence and trace at ${i}`
+          };
+        }
       }
     }
   }
-  for (const line of lines) {
-    if (line.entry.accepted === true && line.event?.channel === "agent" && (line.event.op === AgentOps.next || line.event.op === AgentOps.report) && line.event.unitsSha256 !== void 0 && evidenceLines?.[line.seq]?.unitsSha256 !== void 0 && evidenceLines[line.seq].unitsSha256 !== line.event.unitsSha256) {
-      return {
-        ok: false,
-        error: `Campaign work units commitment mismatch between trace and evidence at ${line.seq}`
-      };
-    }
-  }
+  const latestUnitsSha256 = latestTraceUnitsSha256;
   let unitsState = null;
   let promoteUnitsStage = false;
   if (latestUnitsSha256 !== void 0) {
@@ -33369,9 +33593,9 @@ async function executeCheckpoint(session, rawArgs) {
         }
       });
     }
-    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
+    const unitsSha2562 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
     const appended2 = await store.append(
-      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { channel: "agent", op: AgentOps.next, unitsSha256: unitsSha2562 },
       { unitsState: regroupedQueue }
     );
     const nextDigest2 = buildCampaignDigest(
@@ -33429,9 +33653,11 @@ async function executeCheckpoint(session, rawArgs) {
       });
     }
   }
+  const unitsSha256 = updatedQueue ? campaignSha256Hex(canonicalCampaignJson(updatedQueue)) : void 0;
   const event2 = createCampaignOperatorEvent(operatorAdapter, {
     channel: "operator",
-    op: OperatorVerbs.checkpoint
+    op: OperatorVerbs.checkpoint,
+    ...unitsSha256 !== void 0 ? { unitsSha256 } : {}
   });
   const appended = await store.append(
     event2,
@@ -36693,6 +36919,7 @@ async function executeReport(session, rawArgs) {
       skills: [unit.skill],
       requiresPerson: true
     } : void 0;
+    const unitsSha2562 = campaignSha256Hex(canonicalCampaignJson(updatedQueue2));
     const event2 = createCampaignEngineEvent(engineAdapter, {
       channel: "engine",
       op: EngineOps.verify,
@@ -36701,7 +36928,8 @@ async function executeReport(session, rawArgs) {
       workUnit: unitId,
       receipt,
       ...outcome === UnitReportOutcomes.pass ? { closesUnit: true } : {},
-      ...convergenceIncident !== void 0 ? { convergenceIncident } : {}
+      ...convergenceIncident !== void 0 ? { convergenceIncident } : {},
+      unitsSha256: unitsSha2562
     });
     const appended2 = await store.append(event2, {
       unitsState: updatedQueue2,

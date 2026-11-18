@@ -477,8 +477,10 @@ export function main(argv: string[]): number {
           throw new Error(`invalid campaign receipts: receipt at ${i} does not match verified trace event`);
         }
       }
-    } else {
-      receipts = traceReceipts;
+    } else if (traceReceipts.length > 0) {
+      throw new Error(
+        "invalid campaign receipts: missing sibling receipts.jsonl for verified trace with receipts",
+      );
     }
 
     let upgraded = 0;

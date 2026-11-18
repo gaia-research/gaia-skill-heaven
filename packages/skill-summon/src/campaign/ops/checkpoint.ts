@@ -230,9 +230,13 @@ export async function executeCheckpoint(
     }
   }
 
+  const unitsSha256 = updatedQueue
+    ? campaignSha256Hex(canonicalCampaignJson(updatedQueue))
+    : undefined;
   const event = createCampaignOperatorEvent(operatorAdapter, {
     channel: "operator",
     op: OperatorVerbs.checkpoint,
+    ...(unitsSha256 !== undefined ? { unitsSha256 } : {}),
   });
   const appended = await store.append(
     event,
