@@ -265,10 +265,13 @@ function renderGraphLens(graph: ManifestGraphLens): string {
       rel.edge.conditions.trim().length > 0
         ? displayField(rel.edge.conditions)
         : '"none stated"';
-    return `${escapeControlText(rel.edge.relation)} (${escapeControlText(rel.direction)} ${displayField(rel.counterpart.id)} · pin=${escapeControlText(rel.counterpartPin)} · support=${escapeControlText(rel.edge.support)} · ONLY UNDER: ${conditionsText} · declarationSource=${displayField(rel.edge.declarationSource)})`;
+    const pairApplicableText = rel.edge.pairApplicable
+      ? "true (publication-time only; not runtime assurance)"
+      : "false (inapplicable at publication time; not runtime assurance)";
+    return `${escapeControlText(rel.edge.relation)} (${escapeControlText(rel.direction)} ${displayField(rel.counterpart.id)} · pin=${escapeControlText(rel.counterpartPin)} · pairApplicable=${pairApplicableText} · support=${escapeControlText(rel.edge.support)} · ONLY UNDER: ${conditionsText} · declarationSource=${displayField(rel.edge.declarationSource)})`;
   });
 
-  return `  Lens [graph]: present (consulted · join: ${escapeControlText(graph.join)} · annotations only; never filter or reorder entries) · ${graph.relations.length} relation(s): ${relSummaries.join("; ")}`;
+  return `  Lens [graph]: present (consulted · join: ${escapeControlText(graph.join)} · annotations only; never filter or reorder entries; conditions and publication-time pairApplicable are not evaluated or assured at runtime) · ${graph.relations.length} relation(s): ${relSummaries.join("; ")}`;
 }
 
 function renderFreshnessLens(freshness: ManifestFreshnessLens): string {
@@ -327,7 +330,10 @@ export function renderManifestGap(gap: CampaignManifestGap): string {
     return `  Gap [${gap.gapIndex}] ${displayField(gap.query)}: matched · ${selectedText}`;
   }
   const reason = gap.refusal?.reason ?? gap.status;
-  return `  Gap [${gap.gapIndex}] ${displayField(gap.query)}: ${escapeControlText(gap.status)} · No capability found (${displayField(reason)}) — recorded gap outcome, not a signal to explore`;
+  if (gap.status === "no-match") {
+    return `  Gap [${gap.gapIndex}] ${displayField(gap.query)}: no-match · No capability found (${displayField(reason)}) — recorded gap outcome, not a signal to explore`;
+  }
+  return `  Gap [${gap.gapIndex}] ${displayField(gap.query)}: refused · Retrieval refused (${displayField(reason)}) — capability not measured / unknown (operational refusal, not a no-match and not a signal to explore)`;
 }
 
 export function renderCampaignManifestLines(

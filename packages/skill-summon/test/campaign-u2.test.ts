@@ -763,4 +763,111 @@ describe("campaign-u2: manifest rendering & U1 integration", () => {
     expect(linesStartingWith("Note:")).toHaveLength(1);
     expect(linesStartingWith("Group [forged]:")).toEqual([]);
   });
+
+  it("renders operational retrieval refusals distinctly from no-match gaps", async () => {
+    const openRes = await executeOpen(session, {
+      goal: "Verify refused vs no-match gap rendering",
+      workUniverse: ["packages/core", "packages/skill-summon"],
+      repositories: ["gaia-research/gaia-skill-heaven"],
+      acceptanceCommands: ["npm run typecheck"],
+      humanOnlyOperations: ["merge"],
+      stopConditions: ["all tests pass"],
+    });
+    expect(openRes.ok).toBe(true);
+
+    const service = new GaiaService(
+      new InMemoryGaiaRegistrySource(testDocuments),
+      { now: () => new Date("2026-07-16T12:00:00Z") },
+    );
+    const origSkillIndex = service.skillIndex.bind(service);
+    let callCount = 0;
+    service.skillIndex = async (override?: string) => {
+      callCount++;
+      if (callCount === 3) {
+        throw new Error("Simulated index backend outage");
+      }
+      return origSkillIndex(override);
+    };
+
+    const reconRes = await executeRecon(service, session, {
+      gaps: ["automated testing", "broken backend gap", "zzzz-no-such-skill-xyz"],
+      surface: "any",
+      limit: 2,
+    });
+    expect(reconRes.ok).toBe(true);
+    if (!reconRes.ok) throw new Error("expected recon to succeed");
+
+    expect(reconRes.recon.gaps[0]!.status).toBe("matched");
+    expect(reconRes.recon.gaps[1]!.status).toBe("refused");
+    expect(reconRes.recon.gaps[2]!.status).toBe("no-match");
+
+    const selections = reconRes.recon.gaps[0]!.candidates.map((c) => c.cardRef);
+    const manifest = buildCampaignManifest(reconRes.recon, selections);
+    const rendered = renderCampaignManifest(manifest);
+
+    const lines = rendered.split("\n");
+    const refusedLine = lines.find((line) => line.includes("Gap [1]"));
+    const noMatchLine = lines.find((line) => line.includes("Gap [2]"));
+
+    expect(refusedLine).toBeDefined();
+    expect(refusedLine).toContain("refused · Retrieval refused");
+    expect(refusedLine).toContain("operational refusal, not a no-match");
+    expect(refusedLine).not.toContain("No capability found");
+
+    expect(noMatchLine).toBeDefined();
+    expect(noMatchLine).toContain("no-match · No capability found");
+
+    expect(authorityHits(rendered)).toEqual([]);
+  });
+
+  it("renders pairApplicable=true and pairApplicable=false with publication-time-only warnings on graph relations", () => {
+    const { recon } = makeRichManifest();
+    const baseRel = recon.gaps[0]!.candidates[0]!.graph.relations[0]!;
+    const inapplicableRel: ArborInteractionReport = {
+      ...baseRel,
+      edge: {
+        ...baseRel.edge,
+        edgeKey: "skill/human->skill/other",
+        relation: "stabilizes",
+        pairApplicable: false,
+      },
+      counterpart: { id: "skill/other", contentSha256: "d".repeat(64) },
+    };
+
+    const reconWithBoth: CampaignReconRecordInput = {
+      ...recon,
+      gaps: [
+        {
+          ...recon.gaps[0]!,
+          candidates: [
+            {
+              ...recon.gaps[0]!.candidates[0]!,
+              graph: {
+                ...recon.gaps[0]!.candidates[0]!.graph,
+                relations: [baseRel, inapplicableRel],
+              },
+            },
+            recon.gaps[0]!.candidates[1]!,
+          ],
+        },
+        recon.gaps[1]!,
+      ],
+    };
+
+    const manifest = buildCampaignManifest(reconWithBoth, [
+      "recon:recon-u2:gap:0:card:skill/human",
+    ]);
+    const rendered = renderCampaignManifest(manifest);
+
+    expect(rendered).toContain(
+      "pairApplicable=true (publication-time only; not runtime assurance)",
+    );
+    expect(rendered).toContain(
+      "pairApplicable=false (inapplicable at publication time; not runtime assurance)",
+    );
+    expect(rendered).toContain(
+      "conditions and publication-time pairApplicable are not evaluated or assured at runtime",
+    );
+    expect(authorityHits(rendered)).toEqual([]);
+  });
 });
