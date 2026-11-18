@@ -625,6 +625,24 @@
       "terra": "not needed (no campaign code changed)",
       "outcome": "Pushed 9547374",
       "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+    },
+    {
+      "id": "D-018",
+      "kind": "founder",
+      "date": "2026-11-18",
+      "team": "Founder",
+      "unit": "campaign",
+      "problem": "OpenAI provider unavailable; Pi roster and evidence rules changed.",
+      "options": [
+        "Adopt the founder roster"
+      ],
+      "selected": "Pi lead: Gemini 4 Argon High (antigravity). L1 worker-luna-shared (openai-codex), L2 worker-hydrogen (default), L3 worker-argon medium, L4 worker-opus medium (antigravity). Providers openai-codex and antigravity only. Reviewer stays Terra via reviewer-shared. Screenshots never go in git.",
+      "reason": "Founder instruction",
+      "authority": "Founder",
+      "reversible": true,
+      "terra": "n/a",
+      "outcome": "COMMON.md roster and unit briefs U0b, U3-U7 updated",
+      "risk": "The paused U0b Sol lead is replaced by an Argon High lead resuming from the pushed branch and its handoff."
     }
   ],
   "blockers": [],
@@ -663,7 +681,11 @@
         "state": "unknown",
         "resetAt": null
       }
-    ]
+    ],
+    "openai": {
+      "status": "unavailable",
+      "note": "provider not used (founder 2026-11-18)"
+    }
   },
   "sideWork": [
     {
