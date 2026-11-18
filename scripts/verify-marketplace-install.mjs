@@ -94,7 +94,7 @@ export function resolvePluginSource(
  * as a real child process, over stdio, with a minimal env (no repo-derived
  * vars, nothing that could help Node resolve a bare package from outside the
  * copied plugin dir), and confirm it answers `initialize` then `tools/list`
- * with exactly `["summon"]`. Hand-rolled newline-delimited JSON-RPC framing —
+ * with exactly `["summon", "campaign"]`. Hand-rolled newline-delimited JSON-RPC framing —
  * zero dependencies, matching the rest of this file's style. Not a general
  * MCP client: just enough to prove the bundle boots standalone and answers
  * the two calls a real host makes first.
@@ -377,8 +377,8 @@ export async function verifyMarketplaceInstall(log = /** @param {string} _msg */
       );
       if (boot.ok) {
         assert(
-          JSON.stringify(boot.tools) === JSON.stringify(["summon"]),
-          `bundled MCP server's tools/list is exactly ["summon"] (got ${JSON.stringify(boot.tools)})`,
+          JSON.stringify(boot.tools) === JSON.stringify(["summon", "campaign"]),
+          `bundled MCP server's tools/list is exactly ["summon", "campaign"] (got ${JSON.stringify(boot.tools)})`,
         );
       }
     }
