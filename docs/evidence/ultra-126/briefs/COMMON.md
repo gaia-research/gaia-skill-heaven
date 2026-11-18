@@ -34,6 +34,8 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 - Open your PR with `--base integration/skill-ultra-126` (draft is fine until review passes).
 - **Screenshots never go in git** (founder rule, 2026-11-18). Keep them outside the repo,
   under `~/skill-heaven-wt/sessions/<lane>/`, and describe them in text in the handoff.
+- **No absolute paths in committed files.** Write `<worktree>` or a repo-relative path,
+  never your home directory (two handoffs needed a redaction).
 - Never force-push, never delete branches, never merge your own PR. The orchestrator
   integrates after review.
 - Before the PR is final: `git fetch origin && git merge origin/integration/skill-ultra-126`

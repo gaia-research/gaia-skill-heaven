@@ -619,20 +619,20 @@ tbody tr:last-child td {
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">dispatched 2026-11-18 (Pi, Argon High lead, tab u2-lead)</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">integrated (2ddfab2; PR #272; Terra PASS on a97b762)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U3</strong></td>
         <td class="col-scope">Charter, decisions, operator channel, gaia-research N/lexicon delta</td>
         <td class="mono nowrap">U2</td>
         <td class="nowrap">heavy</td>
-        <td class="nowrap"><span class="muted">—</span></td>
+        <td class="nowrap">B (Pi)</td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u3</code></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="muted">—</span></td>
         <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">waiting (P1 probe done on feat/ws6-ultra-u3-p1, merges via U3)</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U4</strong></td>
@@ -1894,6 +1894,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>campaign tool stays gated off in the shipped binary until U3 lifts D-002.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-022</span>
+            <span class="tag">unit: U2</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-18</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>U2 lead reported READY FOR REVIEW at 801f311 (PR #272).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Accept and merge into integration</span></li><li><span>Send back</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Accepted. Terra PASS on a97b762 after one CHANGES REQUIRED round; a97b762..HEAD evidence-only. Orchestrator checks: typecheck 0; 2764/2764 unset, fixed and inherited; builds with no drift; authority regression only extended (0 lines removed); one private path in the handoff redacted (1254b0d). Merged --no-ff (2ddfab2); integration suite 2764/2764 unset and fixed. COMMON.md now forbids absolute paths in committed files.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>All acceptance checks met.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>D-001</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>PASS (reviews/U2-a97b762.md)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>U3 dispatched; U8 render half unblocked</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>none new</span></dd>
             </div>
         </dl>
       </article>

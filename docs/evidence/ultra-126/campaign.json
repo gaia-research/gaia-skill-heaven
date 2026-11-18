@@ -89,7 +89,7 @@
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u2-lead)"
+      "status": "integrated (2ddfab2; PR #272; Terra PASS on a97b762)"
     },
     {
       "id": "U3",
@@ -98,13 +98,13 @@
         "U2"
       ],
       "tier": "heavy",
-      "team": null,
+      "team": "B (Pi)",
       "worker": null,
       "branch": "feat/ws6-ultra-u3",
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "waiting (P1 probe done on feat/ws6-ultra-u3-p1, merges via U3)"
+      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)"
     },
     {
       "id": "U4",
@@ -699,6 +699,25 @@
       "terra": "PASS (reviews/U1-bd3fc46.md)",
       "outcome": "U2 dispatched (U3 and U4 follow; one Pi lead at a time)",
       "risk": "campaign tool stays gated off in the shipped binary until U3 lifts D-002."
+    },
+    {
+      "id": "D-022",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U2",
+      "problem": "U2 lead reported READY FOR REVIEW at 801f311 (PR #272).",
+      "options": [
+        "Accept and merge into integration",
+        "Send back"
+      ],
+      "selected": "Accepted. Terra PASS on a97b762 after one CHANGES REQUIRED round; a97b762..HEAD evidence-only. Orchestrator checks: typecheck 0; 2764/2764 unset, fixed and inherited; builds with no drift; authority regression only extended (0 lines removed); one private path in the handoff redacted (1254b0d). Merged --no-ff (2ddfab2); integration suite 2764/2764 unset and fixed. COMMON.md now forbids absolute paths in committed files.",
+      "reason": "All acceptance checks met.",
+      "authority": "D-001",
+      "reversible": true,
+      "terra": "PASS (reviews/U2-a97b762.md)",
+      "outcome": "U3 dispatched; U8 render half unblocked",
+      "risk": "none new"
     }
   ],
   "blockers": [],
