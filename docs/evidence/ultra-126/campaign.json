@@ -74,7 +74,7 @@
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u1-lead)"
+      "status": "integrated (172c371; PR #271; Terra PASS on bd3fc46; L3 worker-argon escalation recorded)"
     },
     {
       "id": "U2",
@@ -83,13 +83,13 @@
         "U1"
       ],
       "tier": "standard",
-      "team": null,
+      "team": "B (Pi)",
       "worker": null,
       "branch": "feat/ws6-ultra-u2",
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "waiting"
+      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u2-lead)"
     },
     {
       "id": "U3",
@@ -680,6 +680,25 @@
       "terra": "PASS (reviews/U0b-3fa0286.md)",
       "outcome": "U1 unblocked and dispatched",
       "risk": "The earlier Terra pass on 3fa0286 was incomplete (no new findings); the final bounded pass is the PASS of record."
+    },
+    {
+      "id": "D-021",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U1",
+      "problem": "U1 lead reported READY FOR REVIEW at 1514f49 (PR #271).",
+      "options": [
+        "Accept and merge into integration",
+        "Send back"
+      ],
+      "selected": "Accepted. Terra PASS on bd3fc46 after three CHANGES REQUIRED rounds; the staging-boundary finding survived two Hydrogen rounds and was closed by an L3 worker-argon escalation, recorded in the handoff. bd3fc46..HEAD evidence-only. Orchestrator checks: typecheck 0; 2748/2748 unset, fixed and inherited; builds with no drift; bundled MCP tools/list = [summon] (D-002 gate holds); privacy scan clean. Merged --no-ff (172c371); integration suite 2748/2748 unset and fixed.",
+      "reason": "All acceptance checks met.",
+      "authority": "D-001",
+      "reversible": true,
+      "terra": "PASS (reviews/U1-bd3fc46.md)",
+      "outcome": "U2 dispatched (U3 and U4 follow; one Pi lead at a time)",
+      "risk": "campaign tool stays gated off in the shipped binary until U3 lifts D-002."
     }
   ],
   "blockers": [],
