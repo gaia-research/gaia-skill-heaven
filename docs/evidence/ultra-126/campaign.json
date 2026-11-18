@@ -99,12 +99,12 @@
    ],
    "tier": "heavy",
    "team": "B (Pi)",
-   "worker": null,
+   "worker": "lead Argon High then Hydrogen xhigh (D-024); workers worker-hydrogen, L3 worker-argon (one repair round)",
    "branch": "feat/ws6-ultra-u3",
-   "pr": null,
-   "head": null,
-   "terra": "pending",
-   "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)"
+   "pr": 273,
+   "head": "c430f10",
+   "terra": "PASS 52878b6 (full) + c11c9e6 (bounded delta); gaia-research#336 PASS 9c0052e",
+   "status": "integrated 2026-11-19 (b156ff4)"
   },
   {
    "id": "U4",
@@ -774,11 +774,30 @@
    "terra": "pending (final gate)",
    "outcome": "planned",
    "risk": "Terra quota: if the pool is short, the gate waits rather than substituting a reviewer."
+  },
+  {
+   "id": "D-026",
+   "kind": "delegated",
+   "date": "2026-11-19",
+   "team": "A (Opus orchestrator)",
+   "unit": "U3",
+   "problem": "U3 lane reported READY FOR REVIEW at 87af6ff (PR #273), with companion draft gaia-research#336 (N14 + lexicon delta).",
+   "options": [
+    "Accept and merge",
+    "Send back"
+   ],
+   "selected": "Sent back once: inspectOperatorEnvironment accepted '1' and 'true' as the multiplexed opt-in, looser than D-010's fixed 'accept-risk'. Repaired to an exact match with refusal tests (c11c9e6, worker-hydrogen); Terra PASS on the bounded delta. Lead switched to Hydrogen xhigh mid-lane (D-024). Accepted at c430f10: c11c9e6..HEAD evidence-only; typecheck 0; 2830/2830 unset, fixed and inherited; builds no drift; bundled tools/list ['summon','campaign'] (D-002 lifted as U3 intends); authority regression only extended; no private paths or images. Merged --no-ff (b156ff4); integration suite 2830/2830 unset and fixed.",
+   "reason": "All acceptance checks met after the opt-in repair.",
+   "authority": "D-001",
+   "reversible": true,
+   "terra": "PASS (reviews/U3-52878b6.md, U3-c11c9e6.md, U3-gaia-research-9c0052e.md)",
+   "outcome": "gaia-research#336 stays draft for the founder: it edits founder/RATIFICATION.md (N14) and the lexicon.",
+   "risk": "Live MCP elicitation is not exercised until U9's proof run. The final review gate (D-025) covers cross-unit interaction."
   }
  ],
  "blockers": [],
  "awaitingFounder": [],
- "updatedAt": "2026-11-18T18:11:12+00:00",
+ "updatedAt": "2026-11-18T18:23:49+00:00",
  "quota": {
   "asOf": "2026-11-18T02:00:00-08:00",
   "pools": [

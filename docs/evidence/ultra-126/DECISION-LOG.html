@@ -494,7 +494,7 @@ tbody tr:last-child td {
     </div>
     <p class="lead">Development-orchestration ledger for the #126 build campaign. Source data for DECISION-LOG.html. This is NOT Skill Ultra runtime state (FD-5 governs that).</p>
     <dl class="meta-grid">
-      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T18:11:12+00:00</code></dd></div>
+      <div class="meta-card"><dt>Status</dt><dd><span class="pill pill-neutral">EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work</span></dd></div><div class="meta-card"><dt>Integration branch</dt><dd><code>integration/skill-ultra-126</code></dd></div><div class="meta-card"><dt>Integration PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/256" target="_blank" rel="noopener noreferrer">#256</a></dd></div><div class="meta-card"><dt>Base main</dt><dd><code class="sha" title="6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d">6eb0507</code> <span class="muted full-sha">(6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d)</span></dd></div><div class="meta-card"><dt>Plan PR</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/255" target="_blank" rel="noopener noreferrer">#255</a></dd></div><div class="meta-card"><dt>Issue</dt><dd><a href="https://github.com/gaia-research/gaia-skill-heaven/issues/126" target="_blank" rel="noopener noreferrer">#126</a></dd></div><div class="meta-card"><dt>Updated at</dt><dd><code>2026-11-18T18:23:49+00:00</code></dd></div>
     </dl>
   </header>
     
@@ -627,12 +627,12 @@ tbody tr:last-child td {
         <td class="mono nowrap">U2</td>
         <td class="nowrap">heavy</td>
         <td class="nowrap">B (Pi)</td>
-        <td class="nowrap"><span class="muted">—</span></td>
+        <td class="nowrap">lead Argon High then Hydrogen xhigh (D-024); workers worker-hydrogen, L3 worker-argon (one repair round)</td>
         <td class="mono nowrap"><code>feat/ws6-ultra-u3</code></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="muted">—</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">pending</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">dispatched 2026-11-18 (Pi, Argon High lead, tab u3-lead)</span></td>
+        <td class="nowrap"><span>273</span></td>
+        <td class="nowrap"><code class="sha" title="c430f10">c430f10</code></td>
+        <td class="nowrap"><span class="pill pill-neutral">PASS 52878b6 (full) + c11c9e6 (bounded delta); gaia-research#336 PASS 9c0052e</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">integrated 2026-11-19 (b156ff4)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U4</strong></td>
@@ -2053,6 +2053,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>Terra quota: if the pool is short, the gate waits rather than substituting a reviewer.</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-026</span>
+            <span class="tag">unit: U3</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-19</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>U3 lane reported READY FOR REVIEW at 87af6ff (PR #273), with companion draft gaia-research#336 (N14 + lexicon delta).</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Accept and merge</span></li><li><span>Send back</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Sent back once: inspectOperatorEnvironment accepted &#39;1&#39; and &#39;true&#39; as the multiplexed opt-in, looser than D-010&#39;s fixed &#39;accept-risk&#39;. Repaired to an exact match with refusal tests (c11c9e6, worker-hydrogen); Terra PASS on the bounded delta. Lead switched to Hydrogen xhigh mid-lane (D-024). Accepted at c430f10: c11c9e6..HEAD evidence-only; typecheck 0; 2830/2830 unset, fixed and inherited; builds no drift; bundled tools/list [&#39;summon&#39;,&#39;campaign&#39;] (D-002 lifted as U3 intends); authority regression only extended; no private paths or images. Merged --no-ff (b156ff4); integration suite 2830/2830 unset and fixed.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>All acceptance checks met after the opt-in repair.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>D-001</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>PASS (reviews/U3-52878b6.md, U3-c11c9e6.md, U3-gaia-research-9c0052e.md)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>gaia-research#336 stays draft for the founder: it edits founder/RATIFICATION.md (N14) and the lexicon.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>Live MCP elicitation is not exercised until U9&#39;s proof run. The final review gate (D-025) covers cross-unit interaction.</span></dd>
             </div>
         </dl>
       </article>
