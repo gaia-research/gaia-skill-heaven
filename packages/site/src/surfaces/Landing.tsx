@@ -18,6 +18,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -47,6 +48,14 @@ import {
 } from '../product'
 import '../styles/system.css'
 import './landing.css'
+import './refractions/refractions.css'
+import { LucyStage } from './refractions/LucyStage'
+import { Entrance } from '../lucy-scene/entrance/Entrance'
+import { useEntrance } from '../lucy-scene/entrance/useEntrance'
+import { lucyVisit, setLucyVisit } from '../lucy-scene/session'
+import type { LucyLoadProgress } from '../lucy-scene/rive/createLucyCharacter'
+import { HEAVEN_POSTER_READY } from '../variations/hero/heroAssets'
+import { lucyFromLocation, lucyFromSampler, type LucyState } from './refractions/lucyState'
 import { SlashReel } from './SlashReel'
 import { HarnessMark } from '../harnessMarks'
 import { PlatformToggle } from '../components/PlatformToggle'
@@ -73,6 +82,29 @@ const SURFACE_ICON: Record<SurfaceId, string> = {
   hell: iconHell,
   ultra: iconUltra,
 }
+
+/** Her reflection in the terminal's glass case: the same approved master, never mirrored. */
+const CASE_REFLECTION: Record<LucyState, string> = {
+  zero: lucyZero,
+  heaven: lucyHeaven,
+  hell: lucyHell,
+  ultra: lucyUltra,
+}
+
+/** Where each band opens on the one line (Heaven at low, Hell at high — PROVISIONAL, as the ladder says). */
+const BAND_OPENS: Record<LucyState, RungId> = {
+  zero: 'zero',
+  heaven: 'low',
+  hell: 'high',
+  ultra: 'ultra',
+}
+
+/** The three-name signature every Gaia site carries: the record, the laboratory, the runtime. */
+const GAIA_NAMES = [
+  { id: 'tree', role: 'the record' },
+  { id: 'research', role: 'the laboratory' },
+  { id: 'heaven', role: 'the runtime' },
+] as const
 
 const SESSION_DIR = '/tmp/skill-zero-a91f7c'
 const fmt = (n: number) => n.toLocaleString('en-US')
@@ -869,6 +901,125 @@ export default function Landing() {
   const location = useLocation()
   const initialTabHandledRef = useRef<string | null>(null)
 
+  /* ---- Lucia Refractions: one page-level state, played by every surface control ---- */
+  // First frame repeats the band the visitor left the hero in. After that the
+  // last explicit choice wins (sampler tab, rung, direction card, her switch).
+  // The terminal's own logic is untouched: a tab click still calls
+  // selectSampler exactly as before, and the cast happens beside it.
+  const [lucy, setLucy] = useState<LucyState>(() => lucyFromLocation(location.search, location.state))
+  const tearPreview = useMemo(() => new URLSearchParams(location.search).get('tear') === '1', [location.search])
+  // D-07 (founder): Rive supersedes the masters on the desktop stage; both are
+  // kept so the interaction can be chosen. `?lucy=static` shows the masters.
+  // Phones (the plate) and reduced motion always use the masters.
+  const lucyStatic = useMemo(() => new URLSearchParams(location.search).get('lucy') === 'static', [location.search])
+  const [riveFailed, setRiveFailed] = useState(false)
+  const onRiveFailed = useCallback(() => setRiveFailed(true), [])
+  // The visit's Lucy (owner, 2026-11-18; src/lucy-scene/session.ts): live by
+  // default; a Skip on the entrance, here or on the hero, keeps the masters
+  // for the rest of the visit. The entrance shows once, on the first page
+  // the visitor reaches with the live figure.
+  const [lucyStill, setLucyStill] = useState(() => lucyVisit() === 'static')
+  const [visitedLive] = useState(() => lucyVisit() === 'live')
+  const [riveKey, setRiveKey] = useState(0)
+  const lucyLive = !lucyStatic && !riveFailed && !lucyStill && !prefersReducedMotion()
+  const pickSampler = useCallback(
+    (mode: SamplerMode) => {
+      selectSampler(mode)
+      const cast = lucyFromSampler(mode)
+      if (cast) setLucy(cast)
+    },
+    [selectSampler],
+  )
+  const [wideStage, setWideStage] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 1180px)').matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia?.('(min-width: 1180px)')
+    if (!mq) return undefined
+    const sync = () => setWideStage(mq.matches)
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
+  }, [])
+  // Byte and readiness progress from the figure, throttled to ~10 Hz.
+  const [lucyProgress, setLucyProgress] = useState<LucyLoadProgress | null>(null)
+  const progressPending = useRef<LucyLoadProgress | null>(null)
+  const progressTimer = useRef(0)
+  const onLucyProgress = useCallback((p: LucyLoadProgress) => {
+    progressPending.current = p
+    if (progressTimer.current) return
+    progressTimer.current = window.setTimeout(() => {
+      progressTimer.current = 0
+      if (progressPending.current) setLucyProgress(progressPending.current)
+    }, 100)
+  }, [])
+  useEffect(() => () => window.clearTimeout(progressTimer.current), [])
+  const [posterReady, setPosterReady] = useState(false)
+  useEffect(() => {
+    let on = true
+    void HEAVEN_POSTER_READY.then(() => on && setPosterReady(true))
+    return () => {
+      on = false
+    }
+  }, [])
+  const onEntranceCut = useCallback((kind: 'live' | 'static') => {
+    setLucyVisit(kind)
+    if (kind === 'static') setLucyStill(true)
+  }, [])
+  const entrance = useEntrance({
+    enabled: wideStage && lucyLive && !visitedLive,
+    progress: lucyProgress,
+    failed: riveFailed,
+    posterReady,
+    onCut: onEntranceCut,
+  })
+  const retryRive = useCallback(() => {
+    setRiveFailed(false)
+    setLucyProgress(null)
+    setRiveKey((k) => k + 1)
+  }, [])
+  const lpRef = useRef<HTMLDivElement>(null)
+  // While the entrance is up the page is neither reachable nor announced.
+  useEffect(() => {
+    const root = lpRef.current
+    if (!root) return
+    if (entrance.visible) {
+      root.setAttribute('inert', '')
+      root.setAttribute('aria-hidden', 'true')
+    } else {
+      root.removeAttribute('inert')
+      root.removeAttribute('aria-hidden')
+    }
+  }, [entrance.visible])
+  const headRef = useRef<HTMLElement>(null)
+  const closerRef = useRef<HTMLElement>(null)
+  const footRef = useRef<HTMLElement>(null)
+  const [arrival, setArrival] = useState(true)
+  const [released, setReleased] = useState(false)
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return undefined
+    const head = headRef.current
+    const arrivalIo = new IntersectionObserver((es) => setArrival(es.some((e) => e.isIntersecting)), {
+      threshold: 0.35,
+    })
+    if (head) arrivalIo.observe(head)
+    const seen = new Set<Element>()
+    const releaseIo = new IntersectionObserver(
+      (es) => {
+        for (const e of es) {
+          if (e.isIntersecting) seen.add(e.target)
+          else seen.delete(e.target)
+        }
+        setReleased(seen.size > 0)
+      },
+      { threshold: 0.12 },
+    )
+    for (const el of [closerRef.current, footRef.current]) if (el) releaseIo.observe(el)
+    return () => {
+      arrivalIo.disconnect()
+      releaseIo.disconnect()
+    }
+  }, [])
+
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     const tabParam = (location.state as { tab?: string } | null)?.tab ?? searchParams.get('tab')
@@ -922,7 +1073,17 @@ export default function Landing() {
   const activeRung = RUNGS.find((r) => r.id === rung)!
   const activeSurface = surfaceById(RUNG_BAND[rung])
   const rungIndex = RUNGS.findIndex((r) => r.id === rung)
-  const pickRung = useCallback((id: RungId) => setRung(id), [])
+  // A rung (or a direction card that opens one) also casts her into its band.
+  const playRung = useCallback((id: RungId) => {
+    setRung(id)
+    setLucy(RUNG_BAND[id])
+  }, [])
+  // …and the other way round: a session sits at exactly one rung, so when she
+  // is cast from elsewhere (hero handoff, sampler tab, her switch) the ladder
+  // moves to where her band opens, unless it already reads inside that band.
+  useEffect(() => {
+    setRung((r) => (RUNG_BAND[r] === lucy ? r : BAND_OPENS[lucy]))
+  }, [lucy])
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -953,9 +1114,9 @@ export default function Landing() {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
       e.preventDefault()
       const next = Math.min(RUNGS.length - 1, Math.max(0, rungIndex + (e.key === 'ArrowRight' ? 1 : -1)))
-      pickRung(RUNGS[next].id)
+      playRung(RUNGS[next].id)
     },
-    [pickRung, rungIndex],
+    [playRung, rungIndex],
   )
 
   // The skip link must move focus, not only scroll: focus the install section.
@@ -968,7 +1129,25 @@ export default function Landing() {
   }, [])
 
   return (
-    <div className="lp" onClick={onLpAnchorClick}>
+    <>
+    <div ref={lpRef} className="lp lp--rf" data-lucy={lucy} onClick={onLpAnchorClick}>
+      {/* Lucia Refractions: the faint sheen that crosses the whole page (Heaven, Ultra) */}
+      <div className="rf-sheen" aria-hidden="true" />
+      {wideStage ? (
+        <LucyStage
+          variant="stage"
+          state={lucy}
+          onState={setLucy}
+          arrival={arrival}
+          released={released}
+          tear={tearPreview}
+          key={riveKey}
+          live={lucyLive}
+          onLiveFailed={onRiveFailed}
+          onLiveProgress={onLucyProgress}
+          liveVeil={visitedLive}
+        />
+      ) : null}
       {/* ---------------------------------------------------------------- nav */}
       <a className="lp-skip" href="#doors" onClick={skipToInstall}>
         Skip to install
@@ -1002,15 +1181,18 @@ export default function Landing() {
 
       <main id="main">
       {/* ------------------------------------------------------------- arrival */}
-      <header className="lp-head">
+      {!wideStage ? (
+        <LucyStage variant="plate" state={lucy} onState={setLucy} arrival={arrival} tear={tearPreview} />
+      ) : null}
+      <header className="lp-head" ref={headRef}>
         <div className="lp-head__grid">
           <div className="lp-head__main">
             <div className="lp-head__lede">
               <a className="lp-live-banner" href="#/live">
                 <span className="lp-live-dot" aria-hidden="true" />
                 <span>
-                  <b>{SITE.status}</b> · v{RELEASE.pluginVersion} — Skill Heaven is in production. Read what
-                  shipped, the clean-install receipt, and what stays provisional
+                  <b>{SITE.status}</b> · v{RELEASE.pluginVersion} — what shipped, the clean-install receipt,
+                  what stays provisional
                 </span>
                 <span aria-hidden="true">→</span>
               </a>
@@ -1021,9 +1203,7 @@ export default function Landing() {
               </h1>
               <p className="lp-lede">
                 Install the plugin in a harness you already use. <b>Core</b> gives you <code>{MECHANIC.floor}</code>
-                {' '}and the entropy controls, with no console. <b>Core + Console</b> adds the independently removable
-                console your harness genuinely supports — a native pane where available, a truthful
-                readout where not. The launcher is separate and optional.
+                {' '}and the entropy controls; <b>Core + Console</b> adds the console your harness supports.
               </p>
               <div className="lp-profile-cta">
                 <a className="sh-cta" href="#/start">Choose Core or add Console <span aria-hidden="true">→</span></a>
@@ -1104,7 +1284,9 @@ export default function Landing() {
         <div className="lp-start sh-panel">
           <div className="lp-start__head">
             <span className="sh-label">TWO PLUGIN PROFILES</span>
-            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
+            {/* D-05 cut 2, adjusted: this is the one place the page states that the
+                console is independently removable (#47), so the fact stays, in one sentence. */}
+            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console.</p>
             <a className="sh-cta" href="#/console">Preview the six harness projections <span aria-hidden="true">→</span></a>
           </div>
           <div className="lp-start__head">
@@ -1259,19 +1441,20 @@ export default function Landing() {
             />
           </div>
         </div>
-        <p className="lp-fineprint">
-          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, use the <b>Agent Plugin</b> route at the top of this section — <a href="#/start">the install page</a> has the exact steps per harness.
-        </p>
       </section>
 
       {/* ------------------------------------------------------------------ 02 */}
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
-        <p className="lp-section__lede">
-          Watch the live multi-agent simulation below, or mount <code>{MECHANIC.floor}</code> into your existing session with the portable Agent Plugin.
-        </p>
+        <p className="lp-section__lede">Watch it run.</p>
 
-        {/* In-Session Delivery / Plugin Install Panels */}
+        {/* In-Session Delivery / Plugin Install Panels — the page's third copy of
+            the install route, one click away instead of always open (D-04). */}
+        <details className="rf-disclose">
+        <summary>
+          <b>LOAD INTO YOUR HARNESS</b>
+          <span>Agent Plugin (all clients) · Claude tested</span>
+        </summary>
         <div className="lp-plugin-box sh-panel">
           <div className="lp-plugin-box__head">
             <div className="lp-plugin-box__title-wrap">
@@ -1356,48 +1539,49 @@ export default function Landing() {
             )}
           </div>
         </div>
+        </details>
 
         <div className="lp-sampler-ctrls">
           <div className="lp-sampler-tabs" role="group" aria-label="Terminal Sampler Modes">
             <button
               type="button"
               className={`lp-sampler-btn${samplerMode === 'all' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('all')}
+              onClick={() => pickSampler('all')}
             >
               ALL FLOW
             </button>
             <button
               type="button"
               className={`lp-sampler-btn${samplerMode === 'summon' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('summon')}
+              onClick={() => pickSampler('summon')}
             >
               /summon
             </button>
             <button
               type="button"
               className={`lp-sampler-btn${samplerMode === 'heaven' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('heaven')}
+              onClick={() => pickSampler('heaven')}
             >
               /skill-heaven (Converge)
             </button>
             <button
               type="button"
               className={`lp-sampler-btn lp-sampler-btn--hell${samplerMode === 'hell' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('hell')}
+              onClick={() => pickSampler('hell')}
             >
               /skill-hell (Explore)
             </button>
             <button
               type="button"
               className={`lp-sampler-btn lp-sampler-btn--ultra${samplerMode === 'ultra' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('ultra')}
+              onClick={() => pickSampler('ultra')}
             >
               /skill-ultra (Crown)
             </button>
             <button
               type="button"
               className={`lp-sampler-btn${samplerMode === 'zero' ? ' is-active' : ''}`}
-              onClick={() => selectSampler('zero')}
+              onClick={() => pickSampler('zero')}
             >
               /skill-zero
             </button>
@@ -1428,6 +1612,12 @@ export default function Landing() {
           </div>
         </div>
 
+        {/* Lucia Refractions: the terminal's glass case. Housing only — the
+            terminal below is byte-for-byte the same element, logic and copy. */}
+        <div className="rf-case" data-state={lucy} data-hell={hell ? 'true' : 'false'}>
+        <span className="rf-case__refl" aria-hidden="true">
+          <img src={CASE_REFLECTION[lucy]} alt="" loading="lazy" decoding="async" draggable={false} />
+        </span>
         {/* Claude Code Terminal TUI Mock */}
         <div
           className={`lp-cc-term${hell ? ' is-hell' : ''}${shear ? ' is-shearing' : ''}`}
@@ -1531,6 +1721,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* ------------------------------------------------------------------ 03 */}
@@ -1550,7 +1741,6 @@ export default function Landing() {
               <span className="lp-beat__badge">PERMANENT</span>
             </div>
             <h4 className="lp-beat__title">Installing is permanent.</h4>
-            <p>It is a diff you own forever. Loads on every turn whether needed or not.</p>
           </div>
           <div className="lp-beat lp-beat--violet">
             <div className="lp-beat__head">
@@ -1558,7 +1748,6 @@ export default function Landing() {
               <span className="lp-beat__badge">DISPOSABLE</span>
             </div>
             <h4 className="lp-beat__title">Summoning is borrowed.</h4>
-            <p>The loadout lives exclusively for this one active process session.</p>
           </div>
           <div className="lp-beat lp-beat--mint">
             <div className="lp-beat__head">
@@ -1566,7 +1755,6 @@ export default function Landing() {
               <span className="lp-beat__badge">CLEAN TREE</span>
             </div>
             <h4 className="lp-beat__title">Nothing left behind.</h4>
-            <p>The tree on disk remains 100% byte-identical after the session exits.</p>
           </div>
         </div>
 
@@ -1701,12 +1889,17 @@ export default function Landing() {
       {/* ------------------------------------------------------------------ 04 */}
       <section className="lp-section" id="directions">
         <SectionHead n="04" title="HEAVEN OR HELL?" />
-        <p className="lp-section__lede">Here’s how you choose.</p>
 
         {/* 1. Skill Zero & /summon in its own dedicated area */}
         <div
           className={`lp-zero-card${activeSurface.id === 'zero' ? ' is-highlighted' : ''}`}
-          onClick={() => pickRung('zero')}
+          onClick={() => playRung('zero')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              playRung('zero')
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label="Skill Zero · The floor"
@@ -1776,7 +1969,7 @@ export default function Landing() {
               <article
                 key={id}
                 className={`lp-dir-card lp-dir-card--${id}${isHighlighted ? ' is-highlighted' : ''}`}
-                onClick={() => pickRung(defaultRung)}
+                onClick={() => playRung(defaultRung)}
               >
                 <div className="lp-dir-card__head">
                   <div className="lp-dir-card__brand">
@@ -1790,6 +1983,9 @@ export default function Landing() {
                 </div>
 
                 <p className="lp-dir-card__blurb">{s.blurb}</p>
+                {id === 'ultra' ? (
+                  <span className="rf-provisioned">PROVISIONED · CONTROLLER UNAVAILABLE</span>
+                ) : null}
 
                 {s.stamp && (
                   <a
@@ -1886,7 +2082,7 @@ export default function Landing() {
                   type="button"
                   className={`lp-stop lp-stop--${band}${on ? ' is-on' : ''}${i <= rungIndex ? ' is-below' : ''}`}
                   aria-pressed={on}
-                  onClick={() => pickRung(r.id)}
+                  onClick={() => playRung(r.id)}
                 >
                   <span className="lp-stop__detent" aria-hidden="true" />
                   <div className="lp-stop__meta">
@@ -1929,40 +2125,53 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------------ 05 */}
       <section className="lp-section" id="house">
-        <SectionHead n="05" title="ONE HOUSE, THREE ROOMS" />
+        <SectionHead n="05" title="THREE NAMES, ONE GAIA." />
         <p className="lp-section__lede">
-          Research measures it, the registry records it, the launcher runs it. Each room keeps its own
-          colour.
+          Every Gaia site signs with the same three names. One beam of light, split three ways.
         </p>
-        <div className="lp-rooms">
-          {HOUSES.map((h) => {
+        <div className="rf-names">
+          <div className="rf-names__prism" aria-hidden="true">
+            <svg viewBox="0 0 160 220" preserveAspectRatio="xMidYMid meet" focusable="false">
+              <line x1="0" y1="96" x2="74" y2="96" stroke="#eeebe6" strokeWidth="1.5" />
+              <line x1="100" y1="96" x2="160" y2="52" stroke="#fbbf24" strokeWidth="1.5" />
+              <line x1="100" y1="96" x2="160" y2="96" stroke="#38bdf8" strokeWidth="1.5" />
+              <line x1="100" y1="96" x2="160" y2="140" stroke="#a58ae0" strokeWidth="1.5" />
+              <polygon points="70,48 70,144 124,96" fill="#1b1a1c" stroke="rgba(238,235,230,0.55)" strokeWidth="1" />
+              <text x="70" y="182" fill="#9a9691" fontFamily="JetBrains Mono, monospace" fontSize="11" letterSpacing="3">
+                GAIA
+              </text>
+            </svg>
+          </div>
+          {GAIA_NAMES.map(({ id, role }) => {
+            const h = HOUSES.find((x) => x.id === id)!
+            const edge = {
+              '--rf-host-edge': `linear-gradient(135deg, ${h.hue} 0 44px, var(--rf-hair) 44px)`,
+            } as CSSProperties
             const inner = (
               <>
-                <span className="lp-room__tick" aria-hidden="true" style={{ background: h.hue }} />
-                <div className="lp-room__label" style={{ color: h.hue }}>
-                  {h.room.toUpperCase()}
-                </div>
-                <h3 className="lp-room__name">{h.name}</h3>
-                <p className="lp-room__blurb">{h.blurb}</p>
-                <div className="lp-room__action" style={{ color: h.href ? h.hue : undefined }}>
-                  {h.action}
-                  {h.href ? <span aria-hidden="true"> ↗</span> : null}
-                </div>
+                <span className="rf-name__role" style={{ color: h.hue }}>
+                  {role}
+                </span>
+                <h3 className="rf-name__name">{h.name}</h3>
+                <p className="rf-name__blurb">{h.blurb}</p>
+                <span className="rf-name__action" style={{ color: h.href ? h.hue : undefined }}>
+                  {h.href ? (
+                    <>
+                      {h.action}
+                      <span aria-hidden="true"> ↗</span>
+                    </>
+                  ) : (
+                    'You are here'
+                  )}
+                </span>
               </>
             )
             return h.href ? (
-              <a
-                className="lp-room"
-                key={h.id}
-                href={h.href}
-                style={{ borderColor: h.hue }}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a className="rf-name" key={id} href={h.href} style={edge} target="_blank" rel="noreferrer">
                 {inner}
               </a>
             ) : (
-              <div className="lp-room lp-room--here" key={h.id} style={{ borderColor: h.hue }}>
+              <div className="rf-name rf-name--here" key={id} style={edge}>
                 {inner}
               </div>
             )
@@ -1971,7 +2180,7 @@ export default function Landing() {
       </section>
 
       {/* --------------------------------------------------------- closing art */}
-      <section className="lp-section lp-closer" aria-hidden="true">
+      <section className="lp-section lp-closer" aria-hidden="true" ref={closerRef}>
         <div className="lp-closer__row">
           <div className="lp-closer__frame lp-closer__frame--heaven">
             <img className="lp-closer__bg" src={bgHeaven} alt="" loading="lazy" decoding="async" />
@@ -1994,7 +2203,7 @@ export default function Landing() {
       {/* ------------------------------------------------------------- footer */}
       </main>
 
-      <footer className="lp-foot">
+      <footer className="lp-foot" ref={footRef}>
         <div className="lp-foot__cols">
           <div className="lp-foot__brand">
             <div className="lp-foot__mark">
@@ -2055,6 +2264,8 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    {entrance.visible && <Entrance entrance={entrance} progress={lucyProgress} onRetry={retryRive} />}
+    </>
   )
 }
 

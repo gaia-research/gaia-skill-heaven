@@ -1,0 +1,326 @@
+/**
+ * LucyStage — the heroine's stage on /landing (Lucia Refractions, Study A).
+ *
+ * Desktop (`variant="stage"`): a fixed stage on the right of the viewport that
+ * the document's glass slides past. Mobile (`variant="plate"`): a full-bleed
+ * state plate that opens the page. Both are the hero's own room continued — the
+ * same `LucyAtmosphere`, the same band grounds, the same approved v5 masters —
+ * so the first frame after the door repeats the last frame of the hero.
+ *
+ * Canon this file keeps (docs/lucy/authority, gaia-research/lucy DECISIONS):
+ *   · the figure is only ever an approved v5 delivery master: never mirrored,
+ *     never re-coloured, never CSS-inverted (the Hell master already is one);
+ *   · Zero carries no wings and no shards — its front glass is empty;
+ *   · no flare or glow is attached to her eyes; the cut's streak crosses at
+ *     ribbon height;
+ *   · the only red is her own tear. The `?tear=1` leader (founder decision
+ *     D-03, off by default) extends that one tear; it never adds another.
+ *
+ * Motion is transform/opacity except the bounded 46ms impact frame, and none
+ * of it runs under prefers-reduced-motion.
+ */
+
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { LucyScene } from '../../lucy-scene/LucyScene'
+import { LucyAtmosphere } from '../../lucy-scene/atmosphere/LucyAtmosphere'
+import { LucyRiveFigure } from '../../lucy-scene/rive/LucyRiveFigure'
+import type { LucyLoadProgress } from '../../lucy-scene/rive/createLucyCharacter'
+import lucyZero from '../../assets/lucy/v5/delivery/lucy-zero.webp'
+import lucyHeaven from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
+import lucyHell from '../../assets/lucy/v5/delivery/lucy-hell.webp'
+import lucyUltra from '../../assets/lucy/v5/delivery/lucy-ultra.webp'
+import heaven1 from '../../assets/lucy/refractions/heaven/shard-01.webp'
+import heaven3 from '../../assets/lucy/refractions/heaven/shard-03.webp'
+import heaven4 from '../../assets/lucy/refractions/heaven/shard-04.webp'
+import heaven5 from '../../assets/lucy/refractions/heaven/shard-05.webp'
+import heaven8 from '../../assets/lucy/refractions/heaven/shard-08.webp'
+import ultra1 from '../../assets/lucy/refractions/ultra/shard-01.webp'
+import ultra2 from '../../assets/lucy/refractions/ultra/shard-02.webp'
+import ultra3 from '../../assets/lucy/refractions/ultra/shard-03.webp'
+import ultra4 from '../../assets/lucy/refractions/ultra/shard-04.webp'
+import ultra5 from '../../assets/lucy/refractions/ultra/shard-05.webp'
+import {
+  LUCY_STATES,
+  STAGE_GROUND,
+  STATE_ALT,
+  STATE_ANNOUNCE,
+  STATE_WORD,
+  TEAR_ORIGIN,
+  type LucyState,
+  FIG_FRAME,
+} from './lucyState'
+
+const FIGURE: Record<LucyState, { src: string; w: number; h: number }> = {
+  zero: { src: lucyZero, w: 2048, h: 3072 },
+  heaven: { src: lucyHeaven, w: 2048, h: 3072 },
+  hell: { src: lucyHell, w: 2048, h: 3072 },
+  ultra: { src: lucyUltra, w: 2190, h: 2874 },
+}
+
+// The approved glass (founder gate 2, 2026-11-18: LR-G01-D Heaven, LR-G02-A r2
+// Ultra). Hell has no generated set: it is LR-G01-D under an exact RGB
+// inversion at render time (identical alpha), so Hell stays a true inversion.
+
+interface Shard { src: string; x: number; y: number; h: number; r: number }
+
+/**
+ * Loose glass, nearer than she is. `front` floats in the stage; `seam` sits
+ * on the stage's left edge where her leg leaves the frame, so the cut reads
+ * as refraction into the page (founder nit, 2026-11-18). x/y/h are % of the
+ * stage; r is degrees on top of each shard's own rake. Zero has none (canon).
+ */
+const GLASS: Record<LucyState, { front: Shard[]; seam: Shard[] }> = {
+  zero: { front: [], seam: [] },
+  heaven: {
+    front: [
+      { src: heaven1, x: 8, y: 14, h: 15, r: 0 },
+      { src: heaven3, x: 80, y: 7, h: 11, r: 0 },
+      { src: heaven5, x: 22, y: 60, h: 8, r: 0 },
+    ],
+    seam: [
+      { src: heaven4, x: -4, y: 58, h: 26, r: 6 },
+      { src: heaven8, x: 3, y: 80, h: 17, r: -4 },
+    ],
+  },
+  hell: {
+    front: [
+      { src: heaven3, x: 76, y: 12, h: 12, r: 44 },
+      { src: heaven5, x: 12, y: 38, h: 8, r: -20 },
+      { src: heaven1, x: 66, y: 58, h: 6, r: 70 },
+    ],
+    seam: [
+      { src: heaven4, x: -5, y: 60, h: 24, r: 28 },
+      { src: heaven8, x: 4, y: 82, h: 15, r: -32 },
+    ],
+  },
+  ultra: {
+    front: [
+      { src: ultra2, x: 8, y: 10, h: 13, r: -8 },
+      { src: ultra3, x: 80, y: 8, h: 13, r: 8 },
+      { src: ultra1, x: 46, y: 1, h: 10, r: 0 },
+    ],
+    seam: [
+      { src: ultra4, x: -6, y: 60, h: 20, r: 0 },
+      { src: ultra5, x: 0, y: 82, h: 14, r: 0 },
+    ],
+  },
+}
+
+function ShardImg({ shard, i }: { shard: Shard; i: number }) {
+  return (
+    <img
+      className="rf-shard"
+      src={shard.src}
+      alt=""
+      decoding="async"
+      draggable={false}
+      style={{
+        left: `${shard.x}%`,
+        top: `${shard.y}%`,
+        height: `${shard.h}%`,
+        transform: shard.r ? `rotate(${shard.r}deg)` : undefined,
+        ['--rf-i' as string]: i,
+      } as CSSProperties}
+    />
+  )
+}
+
+/** The hero's own per-state treatment of the live figure (useHeroEngine), so the seam holds. */
+const LIVE_FILTER: Record<LucyState, string> = {
+  zero: 'grayscale(1) brightness(1.55) contrast(1.06)',
+  heaven: 'none',
+  hell: 'none',
+  ultra: 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))',
+}
+
+/** The impact frame: 46ms, steps(3), shear + translate, at most 8px. */
+const IMPACT: Keyframe[] = [
+  { transform: 'translate(-6px, 0) skewX(-3deg)' },
+  { transform: 'translate(8px, -2px) skewX(2deg)' },
+  { transform: 'none' },
+]
+
+function reducedMotion(): boolean {
+  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+export interface LucyStageProps {
+  state: LucyState
+  onState: (next: LucyState) => void
+  variant: 'stage' | 'plate'
+  /** The arrival header is in view: the hero's state word is still on stage. */
+  arrival?: boolean
+  /** The closing triptych or the footer is in view: the stage steps aside. */
+  released?: boolean
+  /** Founder-gated preview of "the tear points" (D-03). */
+  tear?: boolean
+  /**
+   * D-07: the live Rive character (LucyLive) instead of the static master.
+   * Rive supersedes the masters on the desktop stage; the masters stay the
+   * phone plate, the reduced-motion path, `?lucy=static`, and the fallback.
+   */
+  live?: boolean
+  /** Rive cannot run in this session (no WebGL2, download or runtime failure). */
+  onLiveFailed?: () => void
+  /** Byte/readiness progress from the live figure (feeds the entrance). */
+  onLiveProgress?: (p: LucyLoadProgress) => void
+  /** The small in-figure veil while loading; off when the entrance covers the page. */
+  liveVeil?: boolean
+}
+
+export function LucyStage({
+  state,
+  onState,
+  variant,
+  arrival = true,
+  released = false,
+  tear = false,
+  live = false,
+  onLiveFailed,
+  onLiveProgress,
+  liveVeil = true,
+}: LucyStageProps) {
+  const [cut, setCut] = useState(0)
+  const [announce, setAnnounce] = useState('')
+  const first = useRef(true)
+  const figRef = useRef<HTMLDivElement>(null)
+
+  // Every cast after the first frame is a cut: impact frame + streak + announce.
+  // The figure is animated in place (never remounted), so a live Rive
+  // character keeps running and owns its own state transition.
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    setAnnounce(STATE_ANNOUNCE[state])
+    if (reducedMotion()) return
+    setCut((n) => n + 1)
+    figRef.current?.animate?.(IMPACT, { duration: 46, easing: 'steps(3, end)' })
+  }, [state])
+
+  // Warm the other three masters once the page is idle, so a cut never waits.
+  // Not while she is live: the masters would compete with the figure file
+  // (they load when the stage falls back to them).
+  useEffect(() => {
+    if (live) return undefined
+    const warm = () => {
+      for (const s of LUCY_STATES) {
+        const img = new Image()
+        img.decoding = 'async'
+        img.src = FIGURE[s].src
+      }
+    }
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
+      .requestIdleCallback
+    const handle = idle ? idle(warm, { timeout: 2400 }) : window.setTimeout(warm, 1200)
+    return () => {
+      if (!idle) window.clearTimeout(handle)
+    }
+  }, [live])
+
+  const fig = FIGURE[state]
+  const origin = tear ? TEAR_ORIGIN[state] : undefined
+
+  return (
+    <aside
+      className={`rf-stage rf-stage--${variant}`}
+      data-state={state}
+      data-arrival={arrival ? 'true' : 'false'}
+      data-released={released ? 'true' : 'false'}
+      style={{ '--rf-ground': STAGE_GROUND[state] } as CSSProperties}
+      aria-label="Lucy, the line's figure"
+    >
+      {/* The scene root wraps everything that animates, so the atmosphere and
+          the live figure both read its data-scene-running (offscreen, hidden
+          tab, released) instead of running observers of their own. */}
+      <LucyScene state={state} held={released} className="rf-stage__scene">
+        <LucyAtmosphere state={state} />
+
+        <div className="rf-stage__word" aria-hidden="true">
+          <span className="rf-stage__word-ghost">{STATE_WORD[state]}</span>
+        </div>
+
+        <div
+          ref={figRef}
+          className={`rf-stage__fig${live ? ' is-live' : ''}`}
+          style={{
+            aspectRatio: `${fig.w} / ${fig.h}`,
+            ['--rf-fig-k' as string]: FIG_FRAME[state].k,
+            ['--rf-fig-origin' as string]: FIG_FRAME[state].origin,
+          } as CSSProperties}
+        >
+          {/* One figure, never both: while she is live no master is fetched;
+              the box keeps her proportions from the aspect ratio alone. */}
+          {live ? (
+            <LucyRiveFigure
+              state={state}
+              figureStyle={{ filter: LIVE_FILTER[state] }}
+              onFailed={onLiveFailed ?? (() => {})}
+              onProgress={onLiveProgress}
+              veil={liveVeil}
+            />
+          ) : (
+            <img
+              src={fig.src}
+              alt={STATE_ALT[state]}
+              width={fig.w}
+              height={fig.h}
+              decoding="async"
+              fetchPriority={variant === 'stage' ? 'high' : 'auto'}
+              draggable={false}
+            />
+          )}
+          {origin ? (
+            <i
+              className="rf-tear"
+              aria-hidden="true"
+              style={{ left: `${origin.x * 100}%`, top: `${origin.y * 100}%` }}
+            />
+          ) : null}
+        </div>
+
+        <div className="rf-stage__front" aria-hidden="true">
+          {GLASS[state].front.map((g, i) => (
+            <ShardImg key={`${state}-f${i}`} shard={g} i={i} />
+          ))}
+        </div>
+
+        {/* The seam: where her leg leaves the stage, the edge is a pane of
+            glass that refracts what passes behind it, with the approved
+            shards on it, instead of a straight crop. */}
+        {variant === 'stage' ? (
+          <div className="rf-seam" aria-hidden="true">
+            <i className="rf-seam__pane" />
+            <i className="rf-seam__edge" />
+            <i className="rf-seam__edge rf-seam__edge--b" />
+            {GLASS[state].seam.map((g, i) => (
+              <ShardImg key={`${state}-s${i}`} shard={g} i={i} />
+            ))}
+          </div>
+        ) : null}
+
+        {cut > 0 ? <i key={`streak-${cut}`} className="rf-stage__streak" aria-hidden="true" /> : null}
+        {cut > 0 ? <i key={`flash-${cut}`} className="rf-stage__flash" aria-hidden="true" /> : null}
+      </LucyScene>
+
+      <div className="rf-switch" role="group" aria-label="Lucy's state — play her directly">
+        {LUCY_STATES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={`rf-switch__btn rf-switch__btn--${s}${s === state ? ' is-on' : ''}`}
+            aria-pressed={s === state}
+            onClick={() => onState(s)}
+          >
+            {STATE_WORD[s]}
+          </button>
+        ))}
+      </div>
+
+      <p className="lp-sr" aria-live="polite">
+        {announce}
+      </p>
+    </aside>
+  )
+}

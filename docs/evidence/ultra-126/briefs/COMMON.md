@@ -32,6 +32,8 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   (the founder's checkout) and never commit to `main`.
 - Your branch: `feat/ws6-ultra-<unit>`, based on `origin/integration/skill-ultra-126`.
 - Open your PR with `--base integration/skill-ultra-126` (draft is fine until review passes).
+- **Screenshots never go in git** (founder rule, 2026-11-18). Keep them outside the repo,
+  under `~/skill-heaven-wt/sessions/<lane>/`, and describe them in text in the handoff.
 - Never force-push, never delete branches, never merge your own PR. The orchestrator
   integrates after review.
 - Before the PR is final: `git fetch origin && git merge origin/integration/skill-ultra-126`
@@ -40,7 +42,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 ## Who runs the review (founder directive)
 
 - **Your lane runs its own Terra review** with `~/.pi/agent/bin/pi-reviewer`
-  (or the Pi native `reviewer`) from its own shell, and loops until
+  (or the Pi native `reviewer`, also `openai-codex` Terra) from its own shell, and loops until
   no blocking findings remain. The orchestrator does not run reviews. The lane
   lead reports to the orchestrator only when Terra has cleared the exact HEAD, or
   when the lane is BLOCKED.
@@ -53,7 +55,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 ## Reviewer invocation (founder directive, updated 2026-11-16)
 
 - **Run the reviewer from your own shell.** No herdr split and no visible pane are needed:
-  `~/.pi/agent/bin/pi-reviewer --cwd <worktree> --timeout 10800 --json --prompt-file <brief>`
+  `~/.pi/agent/bin/pi-reviewer --agent reviewer-shared --cwd <worktree> --timeout 10800 --json --prompt-file <brief>`
   (or the Pi native `reviewer` subagent). The reviewer now has `bash` and verifies
   claims itself (git diff, tests, typecheck, builds). Its agent definition limits shell
   use to verification: no commits, pushes, branch changes or config edits.
@@ -69,7 +71,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 - Reviewer: Terra High, independent context. Either the Pi native `reviewer`
   subagent (`openai-codex/gpt-6.1-terra:high`) or the centralized command
-  `~/.pi/agent/bin/pi-reviewer --cwd <worktree> --prompt-file <brief>`.
+  `~/.pi/agent/bin/pi-reviewer --agent reviewer-shared --cwd <worktree> --prompt-file <brief>`.
   No other model may act as final reviewer. No silent fallback: if Terra is
   unavailable, stop and report `BLOCKED: awaiting Terra`.
 - The reviewer must read the actual diff (`git diff origin/integration/skill-ultra-126...HEAD`),
@@ -100,15 +102,21 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
 
-## Pi team roster and escalation (founder rule, updated 2026-11-16)
+## Pi team roster and escalation (founder rule, updated 2026-11-18)
 
-- **Default worker: L2 Hydrogen.** Luna (L1), Terra (L3) and Sol (L4) share one
-  OpenAI quota pool; Hydrogen runs on a separate pool.
-- **L1 Luna only for very mechanical tasks** (renames, counting, formatting,
-  fixture generation). That is a de-escalation from the default and needs that reason.
-- Escalation from Hydrogen: **L3 `worker-terra` → L4 `worker-sol`**, one level at a time,
-  only after a recorded verification failure. Write the reason in the handoff. Sol is the
-  last resort; do not reuse Sol out of habit.
+- **Providers: `openai-codex` and `antigravity` only.** The `openai` provider is not
+  available; never spawn on it (no `openai/...` model ids).
+- **Lead: Gemini 4 Argon High** (`antigravity/gemini-4-argon:high`) orchestrates the lane.
+- **Default worker: L2 `worker-hydrogen`** (`antigravity/gemini-4-hydrogen`).
+- **L1 `worker-luna-shared`** (`openai-codex/gpt-6-luna:medium`) only for very mechanical
+  tasks (renames, counting, formatting, fixture generation). That is a de-escalation from
+  the default and needs that reason.
+- Escalation from Hydrogen: **L3 `worker-argon`** (`antigravity/gemini-4-argon:medium`)
+  **then L4 `worker-opus`** (`antigravity/claude-opus-5-5:medium`), one level at a time,
+  only after a recorded verification failure. Write the reason in the handoff. Opus is
+  the last resort; do not reuse it out of habit.
+- The reviewer stays Terra via `reviewer-shared` (`openai-codex`). Argon and Opus never
+  review.
 - Hydrogen in Pi: use the working route the founder set up (model
   `antigravity/gemini-4-hydrogen`, with extensions enabled), and confirm it with
   `subagent action:"plan"` before the first spawn.

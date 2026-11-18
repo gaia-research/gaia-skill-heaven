@@ -7,7 +7,7 @@
   "integrationBranch": "integration/skill-ultra-126",
   "integrationPr": "https://github.com/gaia-research/gaia-skill-heaven/pull/256",
   "baseMain": "6eb0507835f3295af8a7d2e2e8f4d03ceeddd60d",
-  "status": "EXECUTING: resumed on founder go (2026-11-18); U0b repair round 2 resuming",
+  "status": "EXECUTING (Pi team paused by founder: OpenAI week ~97%, Terra/Codex pool low); Hydrogen lanes on side work",
   "preflight": {
     "at": "2026-11-16",
     "env": "local (macOS), herdr present",
@@ -59,7 +59,7 @@
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
       "head": "72f6277",
       "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
-      "status": "repair round 2 resumed: indexed lookup + ownership claims committed locally (3d2d63f); re-running three-mode verification and Terra re-review"
+      "status": "paused by founder (Pi quota); lead interrupted in tab u0b-lead; branch pushed at 5d6b1b2, local HEAD 0c64224; three-mode verification and Terra re-review still owed"
     },
     {
       "id": "U1",
@@ -587,30 +587,104 @@
       "terra": "via U9 review",
       "outcome": "Written into briefs/U9.md",
       "risk": "The proof waits on founder time; U9 reports BLOCKED: awaiting founder proof run after phase 1."
+    },
+    {
+      "id": "D-016",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "integration",
+      "problem": "main gained dcc7fbd (#268 Lucia Refractions site design) after the integration base 6eb0507.",
+      "options": [
+        "Merge main into integration now",
+        "Wait until the end"
+      ],
+      "selected": "Merge main into integration now with --no-ff (1ed2ff2). It merged clean; typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+      "reason": "Keeps #256 mergeable and lets unit branches pick up main early; the change touches only packages/site.",
+      "authority": "Founder instruction (reconcile main), D-001",
+      "reversible": true,
+      "terra": "not needed (no campaign code changed)",
+      "outcome": "Pushed 1ed2ff2",
+      "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+    },
+    {
+      "id": "D-017",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "integration",
+      "problem": "Founder asked for #269 (/landing mobile plate framing) to land as a patch on main and for integration to be reconciled.",
+      "options": [
+        "Squash-merge #269 to main, then merge main into integration",
+        "Carry #269 inside integration only"
+      ],
+      "selected": "#269 squash-merged to main (301e051) on the founder's instruction; main merged into integration --no-ff (9547374). Typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+      "reason": "Founder instruction; the change touches only packages/site.",
+      "authority": "Founder instruction (merge #269 to main and reconcile)",
+      "reversible": true,
+      "terra": "not needed (no campaign code changed)",
+      "outcome": "Pushed 9547374",
+      "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+    },
+    {
+      "id": "D-018",
+      "kind": "founder",
+      "date": "2026-11-18",
+      "team": "Founder",
+      "unit": "campaign",
+      "problem": "OpenAI provider unavailable; Pi roster and evidence rules changed.",
+      "options": [
+        "Adopt the founder roster"
+      ],
+      "selected": "Pi lead: Gemini 4 Argon High (antigravity). L1 worker-luna-shared (openai-codex), L2 worker-hydrogen (default), L3 worker-argon medium, L4 worker-opus medium (antigravity). Providers openai-codex and antigravity only. Reviewer stays Terra via reviewer-shared. Screenshots never go in git.",
+      "reason": "Founder instruction",
+      "authority": "Founder",
+      "reversible": true,
+      "terra": "n/a",
+      "outcome": "COMMON.md roster and unit briefs U0b, U3-U7 updated",
+      "risk": "The paused U0b Sol lead is replaced by an Argon High lead resuming from the pushed branch and its handoff."
+    },
+    {
+      "id": "D-019",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "integration",
+      "problem": "#270 (#267 Safari fix) merged to main on the founder's go after the screenshots were removed.",
+      "options": [
+        "Merge main into integration now"
+      ],
+      "selected": "Screenshots removed from #270 (24 files, kept outside git); #270 squash-merged to main 13ddcf2; main merged into integration --no-ff (0318001). Typecheck green; suite 2612/2612 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+      "reason": "Founder instruction (merge after the Hydrogen cleanup); keeps #256 mergeable.",
+      "authority": "Founder instruction, D-001",
+      "reversible": true,
+      "terra": "not needed for the evidence-only delta (code reviewed by Terra at 1d24a8e)",
+      "outcome": "#267 closed",
+      "risk": "none for campaign code"
     }
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-18T00:30:00-08:00",
+  "updatedAt": "2026-11-18",
   "quota": {
-    "asOf": "2026-11-18T00:00:00-08:00",
+    "asOf": "2026-11-18T02:00:00-08:00",
     "pools": [
       {
         "pool": "openai",
         "covers": "Pi lead (Sol) + Luna/Terra/Sol workers",
-        "state": "available again (minimal Luna call answered, 2026-11-18)",
+        "state": "nearly exhausted: week ~97% (Pi statusline, 2026-11-18); Pi team paused by founder",
         "resetAt": null
       },
       {
         "pool": "openai-codex",
         "covers": "Terra reviewer (pi-reviewer)",
-        "state": "available; separate pool, unaffected",
+        "state": "available (founder 2026-11-18; reviewer-shared answered, model openai-codex/gpt-6.1-terra:high confirmed); lanes use --agent reviewer-shared (max_retries 0, fallback is the same model)",
         "resetAt": null
       },
       {
         "pool": "antigravity",
         "covers": "Hydrogen, Argon (agy lanes and Pi L2 default)",
-        "state": "available",
+        "state": "available (Agy ~4%); main lane pool while Pi is paused",
         "resetAt": null
       },
       {
@@ -625,6 +699,24 @@
         "state": "unknown",
         "resetAt": null
       }
-    ]
-  }
+    ],
+    "openai": {
+      "status": "unavailable",
+      "note": "provider not used (founder 2026-11-18)"
+    }
+  },
+  "sideWork": [
+    {
+      "id": "i267",
+      "issue": 267,
+      "title": "Safari compositing of Lucy Zero/Hell/Ultra",
+      "lane": "agy Hydrogen high, tab i267",
+      "branch": "fix/site-267-safari-lucy-composite",
+      "base": "main dcc7fbd",
+      "prTo": "main (draft, founder-reviewed visual)",
+      "status": "merged to main 13ddcf2 (2026-11-18); lane archived",
+      "pr": 270,
+      "head": "74cb9c4"
+    }
+  ]
 }

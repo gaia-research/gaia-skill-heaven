@@ -2,12 +2,13 @@
 //
 // In:  { id, blob }  Out: { id, bitmap: ImageBitmap | null }  (bitmap transferred)
 //
-// The bitmap holds exactly the bytes the WebGL2 runtime would upload from an
-// <img> with UNPACK_PREMULTIPLY_ALPHA_WEBGL: unpremultiplied decode, then a
-// rounded premultiply. createImageBitmap(premultiplyAlpha 'premultiply') would
-// truncate instead (1 LSB off on ~15% of channels, measured), so the
-// premultiply is done by a 1:1 `copy` draw into a canvas with smoothing off,
-// which rounds and copies texels verbatim on both the CPU and GPU raster paths.
+// Rive's WebGL2 renderer expects premultiplied-alpha textures. Per WebGL2 5.14,
+// UNPACK_PREMULTIPLY_ALPHA_WEBGL is ignored when texImage2D receives an
+// ImageBitmap, so the bitmap itself must carry premultiplied pixels.
+// Decoding directly with `premultiplyAlpha: 'premultiply'` preserves
+// premultiplied alpha across Chromium, Firefox, and Safari/WebKit (unlike
+// OffscreenCanvas.transferToImageBitmap(), which in WebKit drops premultiplication
+// and leaks unmasked RGB from transparent pixels into additive/screen shaders).
 // Requests are handled one at a time to bound memory.
 
 interface Req { id: number; blob: Blob }
@@ -18,19 +19,8 @@ interface Scope {
 const scope = self as unknown as Scope
 
 async function decode(blob: Blob): Promise<ImageBitmap | null> {
-  if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') return null
-  const raw = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'default' })
-  try {
-    const canvas = new OffscreenCanvas(raw.width, raw.height)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    ctx.globalCompositeOperation = 'copy'
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(raw, 0, 0)
-    return canvas.transferToImageBitmap()
-  } finally {
-    raw.close()
-  }
+  if (typeof createImageBitmap !== 'function') return null
+  return createImageBitmap(blob, { premultiplyAlpha: 'premultiply', colorSpaceConversion: 'default' })
 }
 
 let chain: Promise<void> = Promise.resolve()
