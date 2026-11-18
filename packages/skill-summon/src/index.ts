@@ -65,3 +65,58 @@ export type {
 export { GaiaService } from "./service.js";
 export type { GaiaServiceOptions } from "./service.js";
 export { VERSION } from "./version.js";
+export {
+  CAMPAIGN_DIR_NAME,
+  CAMPAIGN_TRACE_FILE,
+  CAMPAIGN_EVIDENCE_FILE,
+  CAMPAIGN_STATUS_FILE,
+  CAMPAIGN_GOAL_FILE,
+  CAMPAIGN_RECON_FILE,
+  CampaignStore,
+  parseCampaignGoalContract,
+  type CampaignGoalContract,
+  type CampaignStoreAppendResult,
+  type CampaignStoreLoadOptions,
+} from "./campaign/store.js";
+export {
+  buildCampaignDigest,
+  readSessionCampaignDigest,
+  executeStatus,
+  type CampaignDigest,
+  type CampaignRefusalError,
+  type CampaignStatusResult,
+} from "./campaign/ops/status.js";
+export {
+  normalizeGoalContractInput,
+  executeOpen,
+  type CampaignOpenResult,
+} from "./campaign/ops/open.js";
+export {
+  executeRecon,
+  readPersistedReconRecord,
+  type CampaignReconRecord,
+  type ReconGapRecord,
+  type ReconCandidateCard,
+  type ReconGapRefusal,
+  type ReconLaneClassification,
+  type ReconCandidateLaneLens,
+  type ReconFreshnessLens,
+  type ReconCandidateInstallabilityLens,
+  type ReconGapInstallabilityLens,
+  type ReconCandidateArborLens,
+  type ReconCandidateGraphLens,
+  type ReconGapArborLens,
+  type ReconGapGraphLens,
+  type CampaignReconResult,
+} from "./campaign/ops/recon.js";
+export {
+  CAMPAIGN_TOOL_NAME,
+  CAMPAIGN_TOOL_TITLE,
+  CAMPAIGN_TOOL_DESCRIPTION,
+  campaignInputSchema,
+  getCampaignToolInputJsonSchema,
+  measureCampaignToolStandingDose,
+  executeCampaignTool,
+  registerCampaignTool,
+  type CampaignToolStandingDose,
+} from "./campaign/tool.js";

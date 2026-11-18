@@ -1,4 +1,5 @@
-import { appendFile, lstat, mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { appendFile, lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -43,6 +44,123 @@ export const CAMPAIGN_DIR_NAME = "campaign";
 export const CAMPAIGN_TRACE_FILE = "trace.jsonl";
 export const CAMPAIGN_EVIDENCE_FILE = "evidence.jsonl";
 export const CAMPAIGN_STATUS_FILE = "status.json";
+export const CAMPAIGN_GOAL_FILE = "goal.json";
+export const CAMPAIGN_RECON_FILE = "recon.json";
+
+export type CampaignGoalContract = Readonly<{
+  goal: string;
+  workUniverse: readonly string[];
+  repositories: readonly string[];
+  acceptanceCommands: readonly string[];
+  humanOnlyOperations: readonly string[];
+  stopConditions: readonly string[];
+}>;
+
+const GOAL_CONTRACT_KEYS = [
+  "goal",
+  "workUniverse",
+  "repositories",
+  "acceptanceCommands",
+  "humanOnlyOperations",
+  "stopConditions",
+] as const;
+
+function parseNonEmptyTrimmedStringArray(arr: unknown): string[] | null {
+  if (!Array.isArray(arr) || Object.getPrototypeOf(arr) !== Array.prototype) {
+    return null;
+  }
+  if (Reflect.ownKeys(arr).length !== arr.length + 1) {
+    return null;
+  }
+  if (arr.length === 0) {
+    return null;
+  }
+  const result: string[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const d = Object.getOwnPropertyDescriptor(arr, String(i));
+    if (
+      !d ||
+      !Object.hasOwn(d, "value") ||
+      !d.enumerable ||
+      typeof d.value !== "string"
+    ) {
+      return null;
+    }
+    const trimmed = d.value.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+    result.push(trimmed);
+  }
+  return result;
+}
+
+export function parseCampaignGoalContract(
+  value: unknown,
+): CampaignGoalContract | null {
+  try {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return null;
+    }
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) {
+      return null;
+    }
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const allowed = new Set<string>(GOAL_CONTRACT_KEYS);
+    if (
+      Reflect.ownKeys(value).some(
+        (k) => typeof k !== "string" || !allowed.has(k),
+      )
+    ) {
+      return null;
+    }
+    for (const key of GOAL_CONTRACT_KEYS) {
+      const d = descriptors[key];
+      if (!d || !Object.hasOwn(d, "value") || d.enumerable !== true) {
+        return null;
+      }
+    }
+    const goalRaw = descriptors.goal!.value;
+    if (typeof goalRaw !== "string" || goalRaw.trim().length === 0) {
+      return null;
+    }
+    const workUniverse = parseNonEmptyTrimmedStringArray(
+      descriptors.workUniverse!.value,
+    );
+    const repositories = parseNonEmptyTrimmedStringArray(
+      descriptors.repositories!.value,
+    );
+    const acceptanceCommands = parseNonEmptyTrimmedStringArray(
+      descriptors.acceptanceCommands!.value,
+    );
+    const humanOnlyOperations = parseNonEmptyTrimmedStringArray(
+      descriptors.humanOnlyOperations!.value,
+    );
+    const stopConditions = parseNonEmptyTrimmedStringArray(
+      descriptors.stopConditions!.value,
+    );
+    if (
+      !workUniverse ||
+      !repositories ||
+      !acceptanceCommands ||
+      !humanOnlyOperations ||
+      !stopConditions
+    ) {
+      return null;
+    }
+    return immutableSnapshot({
+      goal: goalRaw.trim(),
+      workUniverse,
+      repositories,
+      acceptanceCommands,
+      humanOnlyOperations,
+      stopConditions,
+    });
+  } catch {
+    return null;
+  }
+}
 
 export type CampaignStoreAppendResult = Readonly<{
   state: CampaignState;
@@ -83,6 +201,8 @@ export class CampaignStore {
   readonly tracePath: string;
   readonly evidencePath: string;
   readonly statusPath: string;
+  readonly goalPath: string;
+  readonly reconPath: string;
 
   #initial: CampaignState;
   #state: CampaignState;
@@ -95,6 +215,8 @@ export class CampaignStore {
   #recordSha256: string | undefined;
   #options: CampaignVerificationOptions;
   #appendQueue: Promise<void> = Promise.resolve();
+  #goalContract: CampaignGoalContract | null = null;
+  #reconArtifact: unknown = null;
 
   private constructor(
     sessionRoot: string,
@@ -113,6 +235,8 @@ export class CampaignStore {
     this.tracePath = path.join(this.campaignDir, CAMPAIGN_TRACE_FILE);
     this.evidencePath = path.join(this.campaignDir, CAMPAIGN_EVIDENCE_FILE);
     this.statusPath = path.join(this.campaignDir, CAMPAIGN_STATUS_FILE);
+    this.goalPath = path.join(this.campaignDir, CAMPAIGN_GOAL_FILE);
+    this.reconPath = path.join(this.campaignDir, CAMPAIGN_RECON_FILE);
     this.#initial = initialCampaignState();
     this.#state = state;
     this.#lines = lines;
@@ -147,6 +271,172 @@ export class CampaignStore {
 
   get recordSha256(): string | undefined {
     return this.#recordSha256;
+  }
+
+  async saveGoalContract(
+    contract: CampaignGoalContract,
+  ): Promise<CampaignGoalContract> {
+    const parsed = parseCampaignGoalContract(contract);
+    if (!parsed) {
+      throw new Error("Invalid campaign goal contract.");
+    }
+    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.goalPath,
+      "Campaign goal contract",
+    );
+    const tmpPath = path.join(
+      this.campaignDir,
+      `.${CAMPAIGN_GOAL_FILE}.tmp-${process.pid}-${randomUUID()}`,
+    );
+    let renamed = false;
+    try {
+      await writeFile(tmpPath, `${JSON.stringify(parsed, null, 2)}\n`, {
+        encoding: "utf8",
+        mode: 0o600,
+        flag: "wx",
+      });
+      try {
+        const targetStat = await lstat(this.goalPath);
+        if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
+          throw new Error(
+            `Campaign goal contract must be a regular file: ${this.goalPath}`,
+          );
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+          throw error;
+        }
+      }
+      await rename(tmpPath, this.goalPath);
+      renamed = true;
+    } finally {
+      if (!renamed) {
+        await rm(tmpPath, { force: true }).catch(() => {});
+      }
+    }
+    this.#goalContract = parsed;
+    return parsed;
+  }
+
+  async loadGoalContract(): Promise<CampaignGoalContract | null> {
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.goalPath,
+      "Campaign goal contract",
+    );
+    let stat;
+    try {
+      stat = await lstat(this.goalPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return this.#goalContract;
+      }
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(
+        `Campaign goal contract must be a regular file: ${this.goalPath}`,
+      );
+    }
+    const raw = await readFile(this.goalPath, "utf8");
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(raw) as unknown;
+    } catch (error) {
+      throw new Error(
+        `Invalid campaign goal contract JSON at ${this.goalPath}: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+    const parsed = parseCampaignGoalContract(parsedJson);
+    if (!parsed) {
+      throw new Error(
+        `Invalid campaign goal contract shape at ${this.goalPath}.`,
+      );
+    }
+    this.#goalContract = parsed;
+    return parsed;
+  }
+
+  async saveReconArtifact<T>(record: T): Promise<T> {
+    const serialized = JSON.stringify(record, null, 2);
+    if (serialized === undefined) {
+      throw new Error("Campaign recon artifact is not JSON-serializable.");
+    }
+    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.reconPath,
+      "Campaign recon artifact",
+    );
+    const tmpPath = path.join(
+      this.campaignDir,
+      `.${CAMPAIGN_RECON_FILE}.tmp-${process.pid}-${randomUUID()}`,
+    );
+    let renamed = false;
+    try {
+      await writeFile(tmpPath, `${serialized}\n`, {
+        encoding: "utf8",
+        mode: 0o600,
+        flag: "wx",
+      });
+      try {
+        const targetStat = await lstat(this.reconPath);
+        if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
+          throw new Error(
+            `Campaign recon artifact must be a regular file: ${this.reconPath}`,
+          );
+        }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+          throw error;
+        }
+      }
+      await rename(tmpPath, this.reconPath);
+      renamed = true;
+    } finally {
+      if (!renamed) {
+        await rm(tmpPath, { force: true }).catch(() => {});
+      }
+    }
+    this.#reconArtifact = record;
+    return record;
+  }
+
+  async loadReconArtifact(): Promise<unknown | null> {
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.reconPath,
+      "Campaign recon artifact",
+    );
+    let stat;
+    try {
+      stat = await lstat(this.reconPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return this.#reconArtifact;
+      }
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(
+        `Campaign recon artifact must be a regular file: ${this.reconPath}`,
+      );
+    }
+    const raw = await readFile(this.reconPath, "utf8");
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw) as unknown;
+    } catch (error) {
+      throw new Error(
+        `Invalid campaign recon artifact JSON at ${this.reconPath}: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+    this.#reconArtifact = parsed;
+    return parsed;
   }
 
   static async load(
@@ -381,7 +671,13 @@ export class CampaignStore {
 
   async #assertDiskMatchesMemory(): Promise<void> {
     if (!this.#hasTrace) {
-      for (const target of [this.tracePath, this.evidencePath, this.statusPath]) {
+      for (const target of [
+        this.tracePath,
+        this.evidencePath,
+        this.statusPath,
+        this.goalPath,
+        this.reconPath,
+      ]) {
         try {
           await lstat(target);
         } catch (error) {
@@ -634,6 +930,8 @@ async function readCampaignRawSnapshot(
   const tracePath = path.join(campaignDir, CAMPAIGN_TRACE_FILE);
   const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
   const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
+  const goalPath = path.join(campaignDir, CAMPAIGN_GOAL_FILE);
+  const reconPath = path.join(campaignDir, CAMPAIGN_RECON_FILE);
 
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
@@ -648,6 +946,8 @@ async function readCampaignRawSnapshot(
         anyArtifactExists: await anyCampaignArtifactExists([
           evidencePath,
           statusPath,
+          goalPath,
+          reconPath,
         ]),
       };
     }

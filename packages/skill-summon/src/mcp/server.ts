@@ -1,4 +1,5 @@
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
+import { registerCampaignTool } from "../campaign/tool.js";
 import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
 import {
   ErrorCode,
@@ -39,6 +40,11 @@ export type CreateSkillSummonMcpServerOptions = {
    * from SKILL_HEAVEN_ZERO_CUTS; see ../zero-cut.ts.
    */
   zeroCut?: ZeroCut;
+  /**
+   * Register the `campaign` tool (D-002: off by default so the bundled binary
+   * does not expose it until U3).
+   */
+  enableCampaignTool?: boolean;
 };
 
 const SKILL_LIST_PAGE_SIZE = 64;
@@ -193,6 +199,7 @@ export function createSkillSummonMcpServer({
   describeSkill,
   readSkillResource,
   zeroCut = "temporary",
+  enableCampaignTool = false,
 }: CreateSkillSummonMcpServerOptions): McpServer {
   const cutsAll = zeroCut === "all";
   const server = new McpServer(
@@ -444,6 +451,10 @@ export function createSkillSummonMcpServer({
       }
     },
   );
+
+  if (enableCampaignTool === true) {
+    registerCampaignTool(server, { service, getSession, zeroCut });
+  }
 
   return server;
 }
