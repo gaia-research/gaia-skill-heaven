@@ -50,8 +50,8 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   when the lane is BLOCKED.
 - **Antigravity escalation:** start on Gemini 4 Hydrogen. If Hydrogen is stuck in a
   review loop (the same blocking finding survives two repair rounds), escalate the
-  repair to **Opus** (see "Pi team roster and escalation"; Argon is unavailable since
-  2026-11-19) and record the escalation in your handoff. Terra stays the reviewer;
+  repair to **Opus medium through `agy`** (see "Lane roster and escalation"; Argon is
+  retired) and record the escalation in your handoff. Terra stays the reviewer;
   Opus never reviews.
 
 ## Reviewer invocation (founder directive, updated 2026-11-16)
@@ -104,7 +104,27 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
   files (Pi JSONL, agy transcripts) to `~/skill-heaven-wt/sessions/<lane>/` and
   then closes the tab.
 
-## Pi team roster and escalation (founder rule, updated 2026-11-19)
+## Lane roster and escalation (founder rule, official 2026-11-19)
+
+Applies to every lane dispatched after U4 (U5, U6, U7, U9, the D-025 review lane and any
+repair lane). U4 finishes on the Pi team below.
+
+- **One `agy` lane per unit, Gemini 4 Hydrogen xhigh**
+  (`agy --model gemini-4-hydrogen-xhigh --dangerously-skip-permissions`). There is no Pi
+  team: no Pi lead, no Pi workers, no Luna. The lane implements its own work.
+- **Argon is retired.** Never use any `gemini-4-argon` model.
+- **Escalation is reserved: Claude Opus 5.5 medium through `agy`**
+  (`agy --model claude-opus-5-5-medium --dangerously-skip-permissions`). Use it only after
+  a recorded verification failure (the same blocking finding survives two of your repair
+  rounds). If you cannot invoke it as a subagent, open it in a **separate pane split
+  inside your own herdr tab**, give it a self-contained repair brief, and close that pane
+  when it reports. Record the escalation and its reason in the handoff. Opus never
+  reviews.
+- **The reviewer stays Terra** via `pi-reviewer --agent reviewer-shared` (`openai-codex`),
+  run from your own shell. That is a review tool, not a Pi team.
+- If a requested model or effort is unavailable, report it; never substitute another.
+
+## Pi team roster (U4 only; superseded for later lanes)
 
 - **Providers: `openai-codex` and `antigravity` only.** The `openai` provider is not
   available; never spawn on it (no `openai/...` model ids).
@@ -134,7 +154,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 ## Subagent limits (founder rule)
 
-- Pi subagent spawns: **never set max turns.** Timeouts practically unlimited:
+- Any subagent or reviewer spawn: **never set max turns.** Timeouts practically unlimited:
   **≥ 7200 s (2 h)** per spawn. Same for `pi-reviewer --timeout 7200` or more.
   A worker killed mid-task by a short limit forces the expensive lead to redo
   the work; that is what this rule prevents.
