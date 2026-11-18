@@ -3,6 +3,11 @@
 - **Reviewed SHA:** `c9d1cb64e46f65b18517a949957a7ed6e2eb59f9`
 - **Reviewer agent + model:** `reviewer-shared` (`openai-codex/gpt-6.1-terra:high`, thinking `high`)
 - **Exit code:** 0
+
+> **Provenance note (runner receipt):** Executed via `~/.pi/agent/bin/pi-reviewer --agent reviewer-shared --cwd <worktree> --timeout 10800 --json` from persisted Pi lead session `01a1efe7-02bf-71af-b864-09f11a9b86a3` (`2026-11-18T19:27:27Z`). The `pi-reviewer --json` receipt records `status: "completed"`, `exit_code: 0`, `agent: "reviewer-shared"`, `model: "openai-codex/gpt-6.1-terra:high"`, `thinking: "high"`, and `tools: "read,grep,find,ls,bash"`. Because `pi-reviewer` invokes `pi -p --no-session --model openai-codex/gpt-6.1-terra:high --thinking high`, the inner reviewer model cannot observe its own runtime `--model` / `--thinking` flags (explaining why its verbatim body below states `"runtime model identity was not exposed"`). Terra's verbatim output follows unchanged below the divider.
+
+---
+
 ## Status
 
 **clean**
