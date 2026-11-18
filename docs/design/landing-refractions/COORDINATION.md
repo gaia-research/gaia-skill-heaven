@@ -25,7 +25,7 @@ ASSET-ID | revision | brief SHA | expected inputs | desired output | review crit
 Example:
 
 ```
-LR-G01-A | r1 | 0fff50e1 | wing-left.png@<sha8>, wing-right.png@<sha8>, lucy-canon.json@<sha8> | 8 shards, WebP+alpha, 768px long edge, shards.json | ASSET-MANIFEST.json#LR-G01 acceptance 1–6 | ISSUE
+LR-G01-A | r1 | 77bbf6ab | wing-left.png@<sha8>, wing-right.png@<sha8>, lucy-canon.json@<sha8> | 8 shards, WebP+alpha, 768px long edge, shards.json | ASSET-MANIFEST.json#LR-G01 acceptance 1–6 | ISSUE
 ```
 
 `requested action` is one of `ISSUE` · `RETAKE` (always a new candidate id) · `HOLD` · `CANCEL`.
@@ -54,9 +54,9 @@ and attaches its bounded delta brief. **Never an unrecorded retry.**
 **gate 2: founder approval** from the gallery, recorded verbatim on the PR (`FOUNDER APPROVED:
 <ASSET-ID> <date>`). The promotion commit cites both.
 
-## Staging (D-08, proposed)
+## Staging (D-08, ruled by the founder 2026-11-18)
 
-- **Proposed:** the private repository `gaia-research/lucy`, on a branch
+- **Ruled:** the private repository `gaia-research/lucy`, on a branch
   `staging/landing-refractions` that is never merged. Paths are
   `staging/landing-refractions/<ASSET-ID>/<revision>/`, holding raw PNGs, intermediates, WebPs,
   receipts and the gallery page source. It is Lucy-scoped, private, already in use for Lucy
@@ -64,7 +64,7 @@ and attaches its bounded delta brief. **Never an unrecorded retry.**
 - **Not used:** the private lore repository. It is a writers' room, not an asset warehouse.
 - **Never:** this public repository, until gate 2.
 - Hydrogen confirms in preflight that the branch accepts the binary sizes (LFS or not) and that
-  every agent involved can read it. Founder confirms the scope extension of that repository.
+  every agent involved can read it. The founder approved this scope extension of that repository (D-08).
 
 ## Hydrogen preflight — what "pass" means
 

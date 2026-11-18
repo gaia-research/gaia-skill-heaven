@@ -4,7 +4,7 @@
   "status": "DRAFT — no job is issued until Hydrogen's preflight passes and the design lead posts an ISSUE request on the PR",
   "brief": {
     "path": "docs/design/landing-refractions/DESIGN-BRIEF.md",
-    "sha256": "0fff50e10877ab0561439d0d5a12022f817b847a034167aa34a837892e075972",
+    "sha256": "77bbf6abddbd1168efacdb12229b8e4301266716bb2fb1113490b7e87ecf2317",
     "note": "Requests quote this hash. If the brief changes, the hash in each request changes with it and old requests are void."
   },
   "contract": {

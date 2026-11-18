@@ -233,9 +233,9 @@ The terminal's internal scoped Hell flip is untouched and independent.
 
 | Width | Stage | Notes |
 |---|---|---|
-| ≥ 1100px | Fixed right stage, 46vw, feathered left edge | Panels overlap it as glass |
-| 700–1099px | Arrival plate (16:10 crop), portrait shards in terminal and ladder | No fixed layer |
-| < 700px | Full-bleed arrival plate (master, `object-position` on face/ribbon), portrait shards | 16px side gutter, no horizontal scroll |
+| ≥ 1180px | Fixed right stage, 40vw (440–720px), solid feather over its first 28% | The document ends over the feather, never on Hell's paper |
+| 700–1179px | Full-bleed arrival plate; her reflection in the terminal case | No fixed layer |
+| < 700px | Full-bleed arrival plate (the master cropped high on face and ribbon) | 16px side gutter, no horizontal scroll |
 
 ---
 
@@ -365,11 +365,13 @@ waits on them.
 
 | ID | Date | Decision | Owner | Status |
 |---|---|---|---|---|
-| D-01 | 2026-11-18 | Study A, Prism Stage, recommended | Design lead | Awaiting founder |
+| D-01 | 2026-11-18 | Study A, Prism Stage | Founder | **Ruled: "A · Prism Stage (Recommended)"** |
 | D-02 | 2026-11-18 | Prototype ships procedural stand-ins; generated assets swap in only after both gates | Design lead | Decided |
-| D-03 | 2026-11-18 | "The tear points" leader line | Founder | Open, off by default (`?tear=1`) |
+| D-03 | 2026-11-18 | "The tear points" leader line | Founder | **Ruled: "Off, preview via ?tear=1 (Recommended)"** |
 | D-04 | 2026-11-18 | §02 duplicate install collapses to a disclosure strip | Founder | Open |
 | D-05 | 2026-11-18 | Further copy cuts (list in the PR) | Founder | Open |
 | D-06 | 2026-11-18 | F-01/F-02 truth drift in terminal and reach lists | Founder | Open, recorded only |
 | D-07 | 2026-11-18 | Phase 2: Lucy alive (Rive `LucyLive`) on the stage instead of static masters | Founder | Open |
-| D-08 | 2026-11-18 | Private staging location for unapproved art | Hydrogen + founder | Proposed: `gaia-research/lucy` branch `staging/landing-refractions` |
+| D-09 | 2026-11-18 | One position on the line: casting her from a non-rung control moves the ladder to where that band opens (`zero · low · high · ultra`) unless it already reads inside that band | Design lead | Decided (DESIGN.md: a session cannot hold two positions) |
+| D-10 | 2026-11-18 | Desktop stage at ≥1180px, 40vw; the document ends over the stage's solid feather (first prototype pass put Hell text on paper) | Design lead | Decided |
+| D-08 | 2026-11-18 | Private staging location for unapproved art | Founder | **Ruled: "lucy repo staging branch (Recommended)"** — `gaia-research/lucy`, branch `staging/landing-refractions`; Hydrogen verifies size/LFS/access |
