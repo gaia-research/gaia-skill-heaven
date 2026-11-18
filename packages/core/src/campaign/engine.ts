@@ -1,7 +1,7 @@
 import { createRuntimeAdapter, createRuntimeEvent, initialSteeringState, stepSteering } from "../steering.js";
 import type { SteeringState, SteeringStep } from "../steering.js";
-import { canReceiptCloseUnit } from "./receipts.js";
-import { CampaignStates as S, CampaignDecisions as D, CampaignPhases as P, CampaignSignals, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions, TERMINAL_STATES, CAMPAIGN_SCHEMA_IDS } from "./vocabulary.js";
+import { canReceiptCloseUnit, parseVerifyReceipt } from "./receipts.js";
+import { CampaignStates as S, CampaignDecisions as D, CampaignPhases as P, CampaignSignals, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions, ReceiptStatuses, TERMINAL_STATES, CAMPAIGN_SCHEMA_IDS } from "./vocabulary.js";
 import { immutableSnapshot, isValidCharterForRecon, parseCampaignEvent, parseCampaignState, parseCampaignRecord } from "./schema.js";
 import type { CampaignState, CampaignEventDescriptor, CampaignStep, CampaignReplay, CampaignTraceEntry, CampaignTraceRecord, CampaignVerification, CampaignVerificationOptions, CampaignOperatorCommand, EngineCommand, OperatorEventCapability, EngineEventCapability, OperatorCampaignEvent, EngineCampaignEvent, CampaignCharter } from "./types.js";
 
@@ -145,13 +145,23 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
             if (state.approved && (state.state === S.executing || state.state === S.convergence)) {
               if (event.closesUnit === true) {
                 const unitInQueue = event.workUnit !== undefined && state.queue.some((q) => q.id === event.workUnit);
-                const acceptanceCommands = state.charter?.acceptanceCommands ?? [];
-                if (
-                  !event.passed ||
-                  !unitInQueue ||
-                  !canReceiptCloseUnit(event.receipt, event.workUnit!, acceptanceCommands)
-                ) {
+                if (!event.passed || !unitInQueue) {
                   break;
+                }
+                if (state.charter?.acceptanceCommands !== undefined) {
+                  if (!canReceiptCloseUnit(event.receipt, event.workUnit!, state.charter.acceptanceCommands)) {
+                    break;
+                  }
+                } else {
+                  const parsedReceipt = parseVerifyReceipt(event.receipt);
+                  if (
+                    !parsedReceipt ||
+                    parsedReceipt.unitId !== event.workUnit ||
+                    parsedReceipt.exitCode !== 0 ||
+                    (parsedReceipt.status === ReceiptStatuses.replayed && parsedReceipt.replayedExitCode !== 0)
+                  ) {
+                    break;
+                  }
                 }
               }
               const type = event.passed ? "behavioral-recovery" : "behavioral-failure";

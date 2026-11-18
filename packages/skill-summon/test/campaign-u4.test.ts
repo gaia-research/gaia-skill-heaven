@@ -1,0 +1,818 @@
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { readFile, rm, symlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  AgentOps,
+  CAMPAIGN_SCHEMA_IDS,
+  CampaignDecisions,
+  CampaignStates,
+  ElicitationActions,
+  MULTIPLEXER_ENV_VARS,
+  OperatorDecisionChoices,
+  OperatorVerbs,
+  ReceiptStatuses,
+  UnitReportOutcomes,
+  WorkUnitStates,
+  buildWorkUnitQueue,
+  createCampaignOperatorAdapter,
+  createCampaignOperatorEvent,
+  selectNextWorkUnit,
+  type CampaignCharter,
+} from "skill-zero";
+
+import {
+  CAMPAIGN_DIR_NAME,
+  CAMPAIGN_RECEIPTS_FILE,
+  CAMPAIGN_UNITS_FILE,
+  CampaignStore,
+  GaiaService,
+  InMemoryGaiaRegistrySource,
+  createSkillSummonMcpServer,
+  executeCampaignTool,
+  executeCheckpoint,
+  executeNext,
+  executeOpen,
+  executeOperatorDecide,
+  executePropose,
+  executeRecon,
+  executeReport,
+  executeStatus,
+  measureCampaignToolStandingDose,
+  type GaiaRegistryDocuments,
+} from "../src/index.js";
+import { openSession, type SummonSession } from "../src/summon/session.js";
+import { authorityHits } from "../../../plugins/skill-heaven/scripts/render-ladder.mjs";
+
+const REPO_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+);
+
+function makeDocuments(): GaiaRegistryDocuments {
+  return {
+    generic: {
+      generatedAt: "2026-11-15T00:00:00.000Z",
+      skills: [
+        {
+          id: "security-audit",
+          name: "Security Audit",
+          type: "basic",
+          description: "Audit code for security vulnerabilities and injection.",
+          prerequisites: [],
+          derivatives: [],
+          evidence: [],
+          status: "active",
+        },
+        {
+          id: "typecheck-guard",
+          name: "Typecheck Guard",
+          type: "basic",
+          description: "Verify TypeScript compilation and static invariants.",
+          prerequisites: [],
+          derivatives: [],
+          evidence: [],
+          status: "active",
+        },
+      ],
+    },
+    named: {
+      generatedAt: "2026-11-15",
+      buckets: {
+        "security-audit": [
+          {
+            id: "audit/security-review",
+            name: "Security Review",
+            contributor: "audit",
+            genericSkillRef: "security-audit",
+            status: "named",
+            description: "Audit code for security vulnerabilities and injection.",
+            catalogRef: "audit-security-review",
+            tags: ["security", "audit", "review"],
+            links: {
+              github:
+                "https://github.com/gaia-research/skill-security/blob/main/SKILL.md",
+            },
+            evidence: [],
+            invocation: "model",
+          },
+        ],
+        "typecheck-guard": [
+          {
+            id: "qa/typecheck-guard",
+            name: "Typecheck Guard",
+            contributor: "qa",
+            genericSkillRef: "typecheck-guard",
+            status: "named",
+            description: "Verify TypeScript compilation and static invariants.",
+            catalogRef: "qa-typecheck-guard",
+            tags: ["typescript", "verify", "guard"],
+            links: {
+              github:
+                "https://github.com/gaia-research/skill-qa/blob/main/SKILL.md",
+            },
+            evidence: [],
+            invocation: "model",
+          },
+        ],
+      },
+    },
+  };
+}
+
+function makeService() {
+  return new GaiaService(new InMemoryGaiaRegistrySource(makeDocuments()), {
+    now: () => new Date("2026-11-16T12:00:00Z"),
+  });
+}
+
+const VALID_GOAL_CONTRACT = {
+  goal: "Execute U4 work units with attested receipts and steering isolation",
+  workUniverse: ["packages/core/src/campaign", "packages/skill-summon/src/campaign"],
+  repositories: ["gaia-research/gaia-skill-heaven"],
+  acceptanceCommands: ["npm run typecheck", "npm test"],
+  humanOnlyOperations: ["merge", "release"],
+  stopConditions: ["any failed verification check"],
+};
+
+function cleanEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  for (const key of MULTIPLEXER_ENV_VARS) {
+    env[key] = undefined;
+  }
+  return env;
+}
+
+function walkFiles(dir: string, exts: readonly string[]): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const st = statSync(full);
+    if (st.isDirectory()) {
+      if (entry === "node_modules" || entry === ".git" || entry === "dist") {
+        continue;
+      }
+      out.push(...walkFiles(full, exts));
+    } else if (exts.some((ext) => entry.endsWith(ext))) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+describe("U4 store persistence, next/report/checkpoint ops, and steering wiring", () => {
+  let session: SummonSession;
+  let savedSummonSession: string | undefined;
+  const closeCallbacks: Array<() => Promise<void>> = [];
+
+  beforeEach(async () => {
+    savedSummonSession = process.env.SKILL_SUMMON_SESSION;
+    session = await openSession();
+    process.env.SKILL_SUMMON_SESSION = session.root;
+  });
+
+  afterEach(async () => {
+    if (savedSummonSession === undefined) {
+      delete process.env.SKILL_SUMMON_SESSION;
+    } else {
+      process.env.SKILL_SUMMON_SESSION = savedSummonSession;
+    }
+    while (closeCallbacks.length > 0) {
+      const fn = closeCallbacks.pop()!;
+      await fn().catch(() => {});
+    }
+    await rm(session.root, { recursive: true, force: true });
+  });
+
+  async function setupApprovedCampaign(options?: {
+    recoverLimit?: number;
+    reopenLimit?: number;
+  }) {
+    const service = makeService();
+    const env = cleanEnv();
+    const opened = await executeOpen(session, VALID_GOAL_CONTRACT);
+    expect(opened.ok).toBe(true);
+
+    const recon = await executeRecon(service, session, {
+      gaps: ["security audit", "typescript verify"],
+    });
+    expect(recon.ok).toBe(true);
+    if (!recon.ok) throw new Error("recon failed");
+
+    const cardRefs = recon.recon.gaps.map((g) => g.candidates[0]!.cardRef);
+    const proposed = await executePropose(
+      session,
+      {
+        reconId: recon.recon.reconId,
+        arsenal: cardRefs,
+        phases: ["phase-1", "phase-2"],
+        recoverLimit: options?.recoverLimit ?? 1,
+        reopenLimit: options?.reopenLimit ?? 1,
+        sessionRetention: 3,
+      },
+      { env },
+    );
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) throw new Error("propose failed");
+
+    const decided = await executeOperatorDecide(session, {
+      elicit: async () => ({
+        action: ElicitationActions.accept,
+        content: { decision: OperatorDecisionChoices.approve },
+      }),
+      env,
+    });
+    expect(decided.ok).toBe(true);
+    if (!decided.ok) throw new Error("decide failed");
+    return { service, env, recon, proposed, decided };
+  }
+
+  async function setupCharterWithAcceptanceCommands(bounds: {
+    recoverLimit: number;
+    reopenLimit: number;
+  }) {
+    const service = makeService();
+    const env = cleanEnv();
+    await executeOpen(session, VALID_GOAL_CONTRACT);
+    const recon = await executeRecon(service, session, {
+      gaps: ["security audit", "typescript verify"],
+    });
+    if (!recon.ok) throw new Error("recon failed");
+
+    const store = await CampaignStore.load(session.root);
+    const opCap = createCampaignOperatorAdapter();
+
+    const charter: CampaignCharter = {
+      schema: CAMPAIGN_SCHEMA_IDS.charter,
+      revision: 1,
+      goal: VALID_GOAL_CONTRACT.goal,
+      allowedSkills: ["audit/security-review", "qa/typecheck-guard"],
+      queue: [
+        {
+          id: "u1",
+          skill: "audit/security-review",
+          reconCitation: recon.recon.citations[0]!,
+          phase: "p1",
+        },
+        {
+          id: "u2",
+          skill: "qa/typecheck-guard",
+          reconCitation: recon.recon.citations[0]!,
+          phase: "p2",
+          dependsOn: ["u1"],
+        },
+      ],
+      recoverLimit: bounds.recoverLimit,
+      reopenLimit: bounds.reopenLimit,
+      sessionRetention: 5,
+      clauses: ["verify-command"],
+      acceptanceCommands: VALID_GOAL_CONTRACT.acceptanceCommands,
+    };
+
+    await store.append({
+      channel: "agent",
+      op: AgentOps.propose,
+      charter,
+    });
+    await store.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: OperatorVerbs.decide,
+        action: "approve",
+        charterRevision: 1,
+        attribution: "terminal-input, unauthenticated",
+        operatorChannel: "mcp-elicitation",
+        multiplexed: false,
+      }),
+    );
+    return { recon, charter };
+  }
+
+  it("runs full E2E flow: open -> recon -> propose -> decide -> next -> report -> checkpoint", async () => {
+    await setupApprovedCampaign();
+
+    const firstNext = await executeNext(session);
+    expect(firstNext.ok).toBe(true);
+    if (!firstNext.ok) return;
+    expect(firstNext.unit).not.toBeNull();
+    expect(firstNext.unit!.state).toBe(WorkUnitStates.active);
+    expect(firstNext.checkpointWritten).toBe(false);
+    expect(authorityHits(firstNext.digest.text)).toEqual([]);
+
+    const unitId = firstNext.unit!.id;
+
+    // Unlisted verify command is refused (INV-U15) without modifying unit or trace
+    const unlisted = await executeReport(session, {
+      unitId,
+      outcome: UnitReportOutcomes.pass,
+      command: "rm -rf /tmp/evil",
+      output: "ok",
+    });
+    expect(unlisted.ok).toBe(false);
+    expect(unlisted.refused).toBe(true);
+    if (!unlisted.ok) {
+      expect(unlisted.error.code).toBe("unlisted-verify-command");
+    }
+
+    // Passing report with charter-named command
+    const passed = await executeReport(session, {
+      unitId,
+      outcome: UnitReportOutcomes.pass,
+      command: "npm run typecheck",
+      output: "typecheck clean",
+    });
+    expect(passed.ok).toBe(true);
+    if (!passed.ok) return;
+    expect(passed.decision).toBe(CampaignDecisions.close);
+    expect(passed.unit?.state).toBe(WorkUnitStates.done);
+    expect(passed.receipt?.status).toBe(ReceiptStatuses.attested);
+    expect(authorityHits(passed.digest.text)).toEqual([]);
+
+    // Receipt text never claims work is good
+    const store = await CampaignStore.load(session.root);
+    const receipts = await store.loadReceipts();
+    expect(receipts).toHaveLength(1);
+    expect(JSON.stringify(receipts[0])).not.toMatch(/\bgood\b|\bsucceeded\b/i);
+
+    // Checkpoint writes a CHECKPOINT entry in trace.jsonl
+    const cp = await executeCheckpoint(session);
+    expect(cp.ok).toBe(true);
+    if (!cp.ok) return;
+    expect(cp.checkpointWritten).toBe(true);
+    expect(cp.entry?.decision).toBe(CampaignDecisions.checkpoint);
+    expect(cp.entry?.signal).toBe("checkpoint-request");
+    expect(authorityHits(cp.digest.text)).toEqual([]);
+  });
+
+  it("enforces recover -> reopen -> convergence at charter bounds (0/0, 0/2, 2/0)", async () => {
+    // 0/0 bounds: immediate convergence on first failure
+    {
+      const s0 = await openSession();
+      try {
+        const origRoot = session;
+        session = s0;
+        await setupCharterWithAcceptanceCommands({ recoverLimit: 0, reopenLimit: 0 });
+        const n = await executeNext(s0);
+        expect(n.ok && n.unit?.id).toBe("u1");
+        const r = await executeReport(s0, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "fail 1",
+          exitCode: 1,
+        });
+        expect(r.ok).toBe(true);
+        if (r.ok) {
+          expect(r.decision).toBe(CampaignDecisions.convergence);
+          expect(r.unit?.state).toBe(WorkUnitStates.needsHuman);
+        }
+        session = origRoot;
+      } finally {
+        await rm(s0.root, { recursive: true, force: true });
+      }
+    }
+
+    // 0/2 bounds: 0 recovers, 2 reopens, then convergence
+    {
+      const s02 = await openSession();
+      try {
+        const origRoot = session;
+        session = s02;
+        await setupCharterWithAcceptanceCommands({ recoverLimit: 0, reopenLimit: 2 });
+        await executeNext(s02);
+
+        const f1 = await executeReport(s02, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f1",
+        });
+        expect(f1.ok && f1.decision).toBe(CampaignDecisions.reopen);
+        await executeReport(s02, { unitId: "u1", outcome: UnitReportOutcomes.resume });
+
+        const f2 = await executeReport(s02, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f2",
+        });
+        expect(f2.ok && f2.decision).toBe(CampaignDecisions.reopen);
+        await executeReport(s02, { unitId: "u1", outcome: UnitReportOutcomes.resume });
+
+        const f3 = await executeReport(s02, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f3",
+        });
+        expect(f3.ok && f3.decision).toBe(CampaignDecisions.convergence);
+        if (f3.ok) expect(f3.unit?.state).toBe(WorkUnitStates.needsHuman);
+        session = origRoot;
+      } finally {
+        await rm(s02.root, { recursive: true, force: true });
+      }
+    }
+
+    // 2/0 bounds: 2 recovers, 0 reopens, then convergence
+    {
+      const s20 = await openSession();
+      try {
+        const origRoot = session;
+        session = s20;
+        await setupCharterWithAcceptanceCommands({ recoverLimit: 2, reopenLimit: 0 });
+        await executeNext(s20);
+
+        const f1 = await executeReport(s20, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f1",
+        });
+        expect(f1.ok && f1.decision).toBe(CampaignDecisions.recover);
+        await executeReport(s20, { unitId: "u1", outcome: UnitReportOutcomes.resume });
+
+        const f2 = await executeReport(s20, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f2",
+        });
+        expect(f2.ok && f2.decision).toBe(CampaignDecisions.recover);
+        await executeReport(s20, { unitId: "u1", outcome: UnitReportOutcomes.resume });
+
+        const f3 = await executeReport(s20, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "f3",
+        });
+        expect(f3.ok && f3.decision).toBe(CampaignDecisions.convergence);
+        if (f3.ok) expect(f3.unit?.state).toBe(WorkUnitStates.needsHuman);
+        session = origRoot;
+      } finally {
+        await rm(s20.root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("blocked unit does not stop independent units (PR-9) and respects dependency -> phase -> tie-break order", async () => {
+    const service = makeService();
+    const env = cleanEnv();
+    await executeOpen(session, VALID_GOAL_CONTRACT);
+    const recon = await executeRecon(service, session, {
+      gaps: ["security audit", "typescript verify"],
+    });
+    if (!recon.ok) throw new Error("recon failed");
+
+    const store = await CampaignStore.load(session.root);
+    const opCap = createCampaignOperatorAdapter();
+
+    const charter: CampaignCharter = {
+      schema: CAMPAIGN_SCHEMA_IDS.charter,
+      revision: 1,
+      goal: VALID_GOAL_CONTRACT.goal,
+      allowedSkills: ["audit/security-review", "qa/typecheck-guard"],
+      queue: [
+        {
+          id: "dep-child",
+          skill: "qa/typecheck-guard",
+          reconCitation: recon.recon.citations[0]!,
+          phase: "p1",
+          dependsOn: ["u-a"],
+        },
+        {
+          id: "u-b",
+          skill: "qa/typecheck-guard",
+          reconCitation: recon.recon.citations[0]!,
+          phase: "p2",
+        },
+        {
+          id: "u-a",
+          skill: "audit/security-review",
+          reconCitation: recon.recon.citations[0]!,
+          phase: "p1",
+        },
+      ],
+      recoverLimit: 1,
+      reopenLimit: 1,
+      sessionRetention: 5,
+      clauses: ["verify-command"],
+      acceptanceCommands: VALID_GOAL_CONTRACT.acceptanceCommands,
+    };
+
+    await store.append({
+      channel: "agent",
+      op: AgentOps.propose,
+      charter,
+    });
+    await store.append(
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: OperatorVerbs.decide,
+        action: "approve",
+        charterRevision: 1,
+        attribution: "terminal-input, unauthenticated",
+        operatorChannel: "mcp-elicitation",
+        multiplexed: false,
+      }),
+    );
+
+    // First ready unit: u-a (depth 0, phase p1; dep-child has depth 1)
+    const n1 = await executeNext(session);
+    expect(n1.ok && n1.unit?.id).toBe("u-a");
+
+    // Block u-a
+    const blk = await executeReport(session, {
+      unitId: "u-a",
+      outcome: UnitReportOutcomes.block,
+      reason: "Waiting on external fixture",
+    });
+    expect(blk.ok && blk.unit?.state).toBe(WorkUnitStates.blocked);
+
+    // Independent unit u-b is still selectable while dep-child waits on u-a
+    const n2 = await executeNext(session);
+    expect(n2.ok && n2.unit?.id).toBe("u-b");
+    expect(n2.ok && n2.queueCounts.waitingOnDependencies).toBe(1);
+    expect(n2.ok && n2.queueCounts.blocked).toBe(1);
+
+    // Complete u-b
+    const passB = await executeReport(session, {
+      unitId: "u-b",
+      outcome: UnitReportOutcomes.pass,
+      command: "npm run typecheck",
+      output: "ok",
+    });
+    expect(passB.ok && passB.unit?.state).toBe(WorkUnitStates.done);
+  });
+
+  it("derives working rung from steering via trace/replay and isolates retrieval signals (INV-U3, K4)", async () => {
+    await setupCharterWithAcceptanceCommands({ recoverLimit: 3, reopenLimit: 1 });
+    await executeNext(session);
+
+    const storeBefore = await CampaignStore.load(session.root);
+    const initialRung = storeBefore.state.steering.rung;
+
+    // Retrieval refusal never emits behavioral-failure or raises steering rung
+    const refusalRes = await executeReport(session, {
+      unitId: "u1",
+      outcome: UnitReportOutcomes.retrievalRefusal,
+    });
+    expect(refusalRes.ok).toBe(true);
+    if (refusalRes.ok) {
+      expect(refusalRes.decision).toBe(CampaignDecisions.hold);
+      expect(refusalRes.steering.rung).toBe(initialRung);
+      expect(refusalRes.unit?.retrievalRefusalCount).toBe(1);
+      expect(refusalRes.unit?.recoverCount).toBe(0);
+    }
+
+    // Forbidden retrieval keys are rejected without touching steering or units
+    for (const key of [
+      "score",
+      "margin",
+      "noMatch",
+      "matchKind",
+      "retrieval",
+      "ranking",
+      "classified",
+      "nameMatchesQuery",
+      "filtered",
+      "cards",
+      "previewed",
+    ]) {
+      const bad = await executeReport(session, {
+        unitId: "u1",
+        outcome: UnitReportOutcomes.fail,
+        command: "npm test",
+        output: "fail",
+        [key]: key === "noMatch" ? true : 0.9,
+      });
+      expect(bad.ok).toBe(false);
+      expect(bad.refused).toBe(true);
+      if (!bad.ok) {
+        expect(bad.error.code).toBe("retrieval-signal-rejected");
+      }
+    }
+
+    // Behavioral failure drives steering through stepSteering and persists in trace
+    const f1 = await executeReport(session, {
+      unitId: "u1",
+      outcome: UnitReportOutcomes.fail,
+      command: "npm test",
+      output: "fail 1",
+    });
+    expect(f1.ok).toBe(true);
+    if (f1.ok) {
+      expect(f1.entry?.signal).toBe("behavioral-failure");
+      expect(f1.steering.rung).not.toBe(initialRung);
+    }
+
+    // Replay from disk matches state.steering.rung
+    const reloaded = await CampaignStore.load(session.root);
+    expect(reloaded.corrupted).toBe(false);
+    expect(reloaded.state.steering.rung).toBe(
+      f1.ok ? f1.state.steering.rung : initialRung,
+    );
+  });
+
+  it("regroups without checkpoint before decisions and writes CHECKPOINT after decisions", async () => {
+    const service = makeService();
+    const env = cleanEnv();
+    await executeOpen(session, VALID_GOAL_CONTRACT);
+    const recon = await executeRecon(service, session, {
+      gaps: ["security audit", "typescript verify"],
+    });
+    if (!recon.ok) throw new Error("recon failed");
+
+    const cardRefs = recon.recon.gaps.map((g) => g.candidates[0]!.cardRef);
+    const proposed = await executePropose(
+      session,
+      {
+        reconId: recon.recon.reconId,
+        arsenal: cardRefs,
+        recoverLimit: 1,
+        reopenLimit: 1,
+        sessionRetention: 3,
+      },
+      { env },
+    );
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) return;
+
+    const unitIds = proposed.state.queue.map((q) => q.id);
+    // Pre-decisions regroup via next: no checkpoint written
+    const preNext = await executeNext(session, {
+      batches: [{ id: "batch-pre", unitIds }],
+    });
+    expect(preNext.ok).toBe(true);
+    if (preNext.ok) {
+      expect(preNext.checkpointWritten).toBe(false);
+      expect(preNext.unit).toBeNull();
+      expect(preNext.queue.batches).toHaveLength(1);
+    }
+    const storePre = await CampaignStore.load(session.root);
+    expect(
+      storePre.trace.some((e) => e.decision === CampaignDecisions.checkpoint),
+    ).toBe(false);
+
+    // Approve
+    await executeOperatorDecide(session, {
+      elicit: async () => ({
+        action: ElicitationActions.accept,
+        content: { decision: OperatorDecisionChoices.approve },
+      }),
+      env,
+    });
+
+    // Post-decisions regroup via next: writes CHECKPOINT entry
+    const postNext = await executeNext(session, {
+      batches: [{ id: "batch-post", unitIds }],
+    });
+    expect(postNext.ok).toBe(true);
+    if (postNext.ok) {
+      expect(postNext.checkpointWritten).toBe(true);
+      expect(postNext.checkpointEntry?.decision).toBe(
+        CampaignDecisions.checkpoint,
+      );
+      expect(postNext.unit?.state).toBe(WorkUnitStates.active);
+    }
+    const storePost = await CampaignStore.load(session.root);
+    expect(
+      storePost.trace.some((e) => e.decision === CampaignDecisions.checkpoint),
+    ).toBe(true);
+  });
+
+  it("handles orphan units.json / receipts.jsonl and symlinked artifacts fail-safe", async () => {
+    // Orphan units.json without trace.jsonl -> FAILED_SAFE
+    const campaignDir = path.join(session.root, CAMPAIGN_DIR_NAME);
+    await executeOpen(session, VALID_GOAL_CONTRACT);
+    await rm(path.join(campaignDir, "trace.jsonl"));
+    await writeFile(path.join(campaignDir, CAMPAIGN_UNITS_FILE), "{}\n", "utf8");
+    const orphanStore = await CampaignStore.load(session.root);
+    expect(orphanStore.corrupted).toBe(true);
+    expect(orphanStore.state.state).toBe(CampaignStates.failedSafe);
+
+    // Symlinked receipts.jsonl -> loadReceipts throws
+    const s2 = await openSession();
+    try {
+      await executeOpen(s2, VALID_GOAL_CONTRACT);
+      const s2Dir = path.join(s2.root, CAMPAIGN_DIR_NAME);
+      const outside = path.join(s2.root, "outside.jsonl");
+      await writeFile(outside, "", "utf8");
+      await symlink(outside, path.join(s2Dir, CAMPAIGN_RECEIPTS_FILE));
+      const store2 = await CampaignStore.load(s2.root);
+      await expect(store2.loadReceipts()).rejects.toThrow();
+    } finally {
+      await rm(s2.root, { recursive: true, force: true });
+    }
+  });
+
+  it("wires next, report, and checkpoint through MCP server and passes authority checks", async () => {
+    const service = makeService();
+    const env = cleanEnv();
+    const mcpContext = {
+      service,
+      getSession: async () => session,
+      elicit: async () => ({
+        action: ElicitationActions.accept,
+        content: { decision: OperatorDecisionChoices.approve },
+      }),
+      env,
+    };
+
+    await executeCampaignTool(mcpContext, {
+      op: AgentOps.open,
+      ...VALID_GOAL_CONTRACT,
+    });
+    const reconRes = await executeCampaignTool(mcpContext, {
+      op: AgentOps.recon,
+      gaps: ["security audit"],
+    });
+    const reconStructured = reconRes.structuredContent as {
+      recon: { reconId: string; gaps: Array<{ candidates: Array<{ cardRef: string }> }> };
+    };
+    await executeCampaignTool(mcpContext, {
+      op: AgentOps.propose,
+      reconId: reconStructured.recon.reconId,
+      arsenal: [reconStructured.recon.gaps[0]!.candidates[0]!.cardRef],
+      recoverLimit: 1,
+      reopenLimit: 1,
+      sessionRetention: 3,
+    });
+    await executeCampaignTool(mcpContext, {
+      op: OperatorVerbs.decide,
+    });
+
+    const server = createSkillSummonMcpServer({
+      service,
+      version: "0.0.0",
+    });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    const client = new Client({ name: "u4-mcp-test", version: "1.0.0" });
+    await client.connect(clientTransport);
+    closeCallbacks.push(async () => {
+      await client.close();
+      await server.close();
+    });
+
+    const nextRes = await client.callTool({
+      name: "campaign",
+      arguments: { op: AgentOps.next },
+    });
+    expect(nextRes.isError).not.toBe(true);
+    const nextStructured = nextRes.structuredContent as {
+      unit: { id: string } | null;
+      digest: { text: string };
+    };
+    expect(nextStructured.unit).not.toBeNull();
+    expect(authorityHits(nextStructured.digest.text)).toEqual([]);
+
+    const reportRes = await client.callTool({
+      name: "campaign",
+      arguments: {
+        op: AgentOps.report,
+        unitId: nextStructured.unit!.id,
+        outcome: UnitReportOutcomes.pass,
+        command: "npm test",
+        output: "all good",
+      },
+    });
+    expect(reportRes.isError).not.toBe(true);
+    const reportStructured = reportRes.structuredContent as {
+      digest: { text: string };
+    };
+    expect(authorityHits(reportStructured.digest.text)).toEqual([]);
+
+    const cpRes = await client.callTool({
+      name: "campaign",
+      arguments: { op: OperatorVerbs.checkpoint },
+    });
+    expect(cpRes.isError).not.toBe(true);
+    const cpStructured = cpRes.structuredContent as {
+      checkpointWritten: boolean;
+      digest: { text: string };
+    };
+    expect(cpStructured.checkpointWritten).toBe(true);
+    expect(authorityHits(cpStructured.digest.text)).toEqual([]);
+
+    // Standing dose check
+    expect(measureCampaignToolStandingDose().standingTokens).toBe(1098);
+
+    // Forbidden-word check across U4 source and tests
+    const forbiddenWord = ["rat", "ify"].join("");
+    const filesToCheck = [
+      ...walkFiles(path.join(REPO_ROOT, "packages/skill-summon/src/campaign"), [".ts"]),
+      path.join(REPO_ROOT, "packages/skill-summon/test/campaign-u4.test.ts"),
+    ];
+    for (const file of filesToCheck) {
+      const content = readFileSync(file, "utf8");
+      expect(content.toLowerCase()).not.toContain(forbiddenWord);
+    }
+  });
+});

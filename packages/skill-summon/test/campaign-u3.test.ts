@@ -667,7 +667,7 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
 
     it("campaign tool standing dose stays within budget and bundled MCP binary lists summon and campaign", async () => {
       const dose = measureCampaignToolStandingDose();
-      expect(dose.standingTokens).toBe(825);
+      expect(dose.standingTokens).toBe(1098);
 
       const env: Record<string, string> = {};
       for (const [k, v] of Object.entries(process.env)) {

@@ -12,6 +12,7 @@ import {
   createCampaignOperatorEvent,
   formatCampaignEvidenceLine,
   formatCampaignTraceLine,
+  formatVerifyReceiptLine,
   immutableSnapshot,
   initialCampaignState,
   parseCampaignCharter,
@@ -19,6 +20,9 @@ import {
   parseCampaignEvidenceLines,
   parseCampaignManifest,
   parseCampaignTraceLines,
+  parseVerifyReceipt,
+  parseVerifyReceiptLines,
+  parseWorkUnitQueueState,
   replayCampaign,
   serializeCampaignRecord,
   stepCampaign,
@@ -39,6 +43,8 @@ import {
   type OperatorEventCapability,
   type PersistedCampaignEvidenceLine,
   type PersistedCampaignTraceLine,
+  type VerifyReceipt,
+  type WorkUnitQueueState,
 } from "skill-zero";
 
 import { assertConfinedPath } from "../summon/session.js";
@@ -58,6 +64,8 @@ export const CAMPAIGN_GOAL_FILE = "goal.json";
 export const CAMPAIGN_RECON_FILE = "recon.json";
 export const CAMPAIGN_CHARTER_FILE = "charter.json";
 export const CAMPAIGN_OPERATOR_LOG_FILE = "operator.jsonl";
+export const CAMPAIGN_UNITS_FILE = "units.json";
+export const CAMPAIGN_RECEIPTS_FILE = "receipts.jsonl";
 export const CAMPAIGN_GOAL_STAGE_FILE = ".goal.stage.json";
 export const CAMPAIGN_RECON_STAGE_FILE = ".recon.stage.json";
 export const CAMPAIGN_CHARTER_STAGE_FILE = ".charter.stage.json";
@@ -375,6 +383,8 @@ export class CampaignStore {
   readonly reconPath: string;
   readonly charterPath: string;
   readonly operatorLogPath: string;
+  readonly unitsPath: string;
+  readonly receiptsPath: string;
   readonly goalStagePath: string;
   readonly reconStagePath: string;
   readonly charterStagePath: string;
@@ -418,6 +428,8 @@ export class CampaignStore {
     this.reconPath = path.join(this.campaignDir, CAMPAIGN_RECON_FILE);
     this.charterPath = path.join(this.campaignDir, CAMPAIGN_CHARTER_FILE);
     this.operatorLogPath = path.join(this.campaignDir, CAMPAIGN_OPERATOR_LOG_FILE);
+    this.unitsPath = path.join(this.campaignDir, CAMPAIGN_UNITS_FILE);
+    this.receiptsPath = path.join(this.campaignDir, CAMPAIGN_RECEIPTS_FILE);
     this.goalStagePath = path.join(this.campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
     this.reconStagePath = path.join(this.campaignDir, CAMPAIGN_RECON_STAGE_FILE);
     this.charterStagePath = path.join(this.campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
@@ -800,6 +812,219 @@ export class CampaignStore {
     this.#reconArtifact = disk.reconArtifact;
     this.#charterStrategy = disk.charterStrategy;
     return disk.charterStrategy;
+  }
+
+  async loadUnitsState(): Promise<WorkUnitQueueState | null> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.unitsPath,
+      "Campaign work units",
+    );
+    let stat;
+    try {
+      stat = await lstat(this.unitsPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return null;
+      }
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(
+        `Campaign work units must be a regular file: ${this.unitsPath}`,
+      );
+    }
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.unitsPath,
+      "Campaign work units",
+    );
+    const raw = await readFile(this.unitsPath, "utf8");
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(raw) as unknown;
+    } catch {
+      throw new Error("Campaign work units failed verification: invalid JSON.");
+    }
+    const parsed = parseWorkUnitQueueState(parsedJson);
+    if (!parsed) {
+      throw new Error(
+        "Campaign work units failed verification: invalid work unit queue state.",
+      );
+    }
+    return parsed;
+  }
+
+  async saveUnitsState(
+    queueState: WorkUnitQueueState,
+  ): Promise<WorkUnitQueueState> {
+    const run = this.#appendQueue.then(() =>
+      this.#saveUnitsStateSerialized(queueState),
+    );
+    this.#appendQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  async #saveUnitsStateSerialized(
+    queueState: WorkUnitQueueState,
+  ): Promise<WorkUnitQueueState> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    const parsed = parseWorkUnitQueueState(queueState);
+    if (!parsed) {
+      throw new Error("Invalid work unit queue state.");
+    }
+    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.unitsPath,
+      "Campaign work units",
+    );
+    await assertRegularOrMissingTarget(
+      this.sessionRoot,
+      this.unitsPath,
+      "Campaign work units",
+    );
+    const claim = await acquireCampaignStoreClaimForRoot(this.sessionRoot);
+    if (claim.status !== "acquired") {
+      throw new Error(
+        `Refusing to save work units: campaign store ownership claim is ${claim.status}`,
+      );
+    }
+    try {
+      await assertRegularOrMissingTarget(
+        this.sessionRoot,
+        this.unitsPath,
+        "Campaign work units",
+      );
+      await writeAtomicJsonArtifact(
+        this.sessionRoot,
+        this.campaignDir,
+        this.unitsPath,
+        `.${CAMPAIGN_UNITS_FILE}`,
+        "Campaign work units",
+        `${JSON.stringify(parsed, null, 2)}\n`,
+      );
+      return parsed;
+    } finally {
+      await claim.release();
+    }
+  }
+
+  async loadReceipts(): Promise<readonly VerifyReceipt[]> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.receiptsPath,
+      "Campaign receipts",
+    );
+    let stat;
+    try {
+      stat = await lstat(this.receiptsPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return [];
+      }
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error(
+        `Campaign receipts must be a regular file: ${this.receiptsPath}`,
+      );
+    }
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.receiptsPath,
+      "Campaign receipts",
+    );
+    const raw = await readFile(this.receiptsPath, "utf8");
+    const parsed = parseVerifyReceiptLines(raw);
+    if (!parsed.ok) {
+      throw new Error(
+        `Campaign receipts failed verification: ${parsed.error}`,
+      );
+    }
+    return parsed.lines;
+  }
+
+  async appendReceipt(receipt: VerifyReceipt): Promise<VerifyReceipt> {
+    const run = this.#appendQueue.then(() =>
+      this.#appendReceiptSerialized(receipt),
+    );
+    this.#appendQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  async #appendReceiptSerialized(
+    receipt: VerifyReceipt,
+  ): Promise<VerifyReceipt> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    const parsed = parseVerifyReceipt(receipt);
+    if (!parsed) {
+      throw new Error("Invalid verify receipt.");
+    }
+    await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
+    await assertConfinedPath(
+      this.sessionRoot,
+      this.receiptsPath,
+      "Campaign receipts",
+    );
+    await assertRegularOrMissingTarget(
+      this.sessionRoot,
+      this.receiptsPath,
+      "Campaign receipts",
+    );
+    const claim = await acquireCampaignStoreClaimForRoot(this.sessionRoot);
+    if (claim.status !== "acquired") {
+      throw new Error(
+        `Refusing to append receipt: campaign store ownership claim is ${claim.status}`,
+      );
+    }
+    try {
+      await assertConfinedPath(
+        this.sessionRoot,
+        this.receiptsPath,
+        "Campaign receipts",
+      );
+      await assertRegularOrMissingTarget(
+        this.sessionRoot,
+        this.receiptsPath,
+        "Campaign receipts",
+      );
+      await appendFile(
+        this.receiptsPath,
+        `${formatVerifyReceiptLine(parsed)}\n`,
+        {
+          encoding: "utf8",
+          flag: "a",
+        },
+      );
+      return parsed;
+    } finally {
+      await claim.release();
+    }
   }
 
   async appendOperatorLog(entry: Readonly<Record<string, unknown>>): Promise<void> {
@@ -1498,6 +1723,8 @@ async function readCampaignRawSnapshot(
   const goalPath = path.join(campaignDir, CAMPAIGN_GOAL_FILE);
   const reconPath = path.join(campaignDir, CAMPAIGN_RECON_FILE);
   const charterPath = path.join(campaignDir, CAMPAIGN_CHARTER_FILE);
+  const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+  const receiptsPath = path.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
   const goalStagePath = path.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
   const reconStagePath = path.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
   const charterStagePath = path.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
@@ -1518,6 +1745,8 @@ async function readCampaignRawSnapshot(
           goalPath,
           reconPath,
           charterPath,
+          unitsPath,
+          receiptsPath,
         ]),
       };
     }
