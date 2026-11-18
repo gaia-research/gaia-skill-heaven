@@ -1,4 +1,4 @@
-import { access, lstat, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { access, chmod, lstat, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
   initialCampaignState,
+  isValidCharterForRecon,
   tokenize,
 } from "skill-zero";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -20,6 +21,7 @@ import {
   CAMPAIGN_TOOL_NAME,
   CampaignStore,
   createSkillSummonMcpServer,
+  executeCampaignTool,
   executeRecon,
   GaiaService,
   getCampaignToolInputJsonSchema,
@@ -886,6 +888,349 @@ describe("U1 campaign tool (open, recon, status)", () => {
         const content = await readFile(file, "utf8");
         expect(content.toLowerCase(), file).not.toContain("ratify");
       }
+    });
+  });
+
+  describe("7. U1 repair verification (Findings 1-6)", () => {
+    it("Finding 1 & 3: atomic open and recon leave trace untouched on artifact write failure and allow subsequent retry", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+
+      const campaignDir = path.join(session!.root, "campaign");
+      await mkdir(campaignDir);
+      await chmod(campaignDir, 0o500);
+
+      try {
+        const failedOpen = await client.callTool({
+          name: "campaign",
+          arguments: VALID_OPEN_INPUT,
+        });
+        expect(failedOpen.isError).toBe(true);
+        expect(
+          (failedOpen.structuredContent as Record<string, unknown>).error,
+        ).toMatchObject({ code: "invalid-goal-artifact" });
+        expect(
+          (failedOpen.structuredContent as Record<string, unknown>).state,
+        ).toMatchObject({ state: CampaignStates.unarmed });
+        await expect(
+          access(path.join(campaignDir, "trace.jsonl")),
+        ).rejects.toThrow();
+      } finally {
+        await chmod(campaignDir, 0o700);
+      }
+
+      const retryOpen = await client.callTool({
+        name: "campaign",
+        arguments: VALID_OPEN_INPUT,
+      });
+      expect(retryOpen.isError).not.toBe(true);
+      expect(
+        (retryOpen.structuredContent as Record<string, unknown>).state,
+      ).toMatchObject({ state: CampaignStates.recon });
+
+      const reconPath = path.join(campaignDir, "recon.json");
+      await mkdir(reconPath);
+      const failedRecon = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(failedRecon.isError).toBe(true);
+      expect(
+        (failedRecon.structuredContent as Record<string, unknown>).error,
+      ).toMatchObject({ code: "invalid-recon-artifact" });
+
+      const storeAfterFailedRecon = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(storeAfterFailedRecon.state.state).toBe(CampaignStates.recon);
+      expect(storeAfterFailedRecon.trace).toHaveLength(1);
+
+      await rm(reconPath, { recursive: true, force: true });
+      const retryRecon = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(retryRecon.isError).not.toBe(true);
+      const storeAfterRetry = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(storeAfterRetry.trace).toHaveLength(2);
+    });
+
+    it("Finding 1 & 2: incomplete open (deleted goal.json) fails closed into FAILED_SAFE across load, status, open, and recon", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+
+      const storeBefore = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      await rm(storeBefore.goalPath, { force: true });
+
+      const loaded = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loaded.corrupted).toBe(true);
+      expect(loaded.state.state).toBe(CampaignStates.failedSafe);
+
+      for (const args of [
+        { op: "status" },
+        VALID_OPEN_INPUT,
+        { op: "recon", gaps: ["automated testing"] },
+      ]) {
+        const res = await client.callTool({ name: "campaign", arguments: args });
+        expect(res.isError).toBe(true);
+        const sc = res.structuredContent as Record<string, unknown>;
+        expect(sc.error).toMatchObject({ code: "campaign-corrupted" });
+        expect(sc.state).toMatchObject({ state: CampaignStates.failedSafe });
+      }
+    });
+
+    it("Finding 2: tampering with goal.json or recon.json fails closed into FAILED_SAFE", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+      await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+
+      const store = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+
+      // Tamper with recon.json candidate card
+      const reconRaw = JSON.parse(await readFile(store.reconPath, "utf8")) as {
+        reconId: string;
+        gaps: Array<{ candidates: Array<{ name: string }> }>;
+        records: Record<string, { gaps: Array<{ candidates: Array<{ name: string }> }> }>;
+      };
+      const originalReconText = await readFile(store.reconPath, "utf8");
+      reconRaw.gaps[0]!.candidates[0]!.name = "Tampered Name";
+      reconRaw.records[reconRaw.reconId]!.gaps[0]!.candidates[0]!.name = "Tampered Name";
+      await writeFile(store.reconPath, `${JSON.stringify(reconRaw, null, 2)}\n`, "utf8");
+
+      const loadedTamperedRecon = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loadedTamperedRecon.corrupted).toBe(true);
+      expect(loadedTamperedRecon.state.state).toBe(CampaignStates.failedSafe);
+      await expect(readPersistedReconRecord(session!.root)).rejects.toThrow();
+
+      const statusTamperedRecon = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusTamperedRecon.isError).toBe(true);
+      expect(
+        (statusTamperedRecon.structuredContent as Record<string, unknown>).error,
+      ).toMatchObject({ code: "campaign-corrupted" });
+
+      // Restore recon.json, then tamper with goal.json
+      await writeFile(store.reconPath, originalReconText, "utf8");
+      const goalRaw = JSON.parse(await readFile(store.goalPath, "utf8")) as {
+        humanOnlyOperations: string[];
+      };
+      goalRaw.humanOnlyOperations = [];
+      goalRaw.humanOnlyOperations.push("tampered-op");
+      await writeFile(store.goalPath, `${JSON.stringify(goalRaw, null, 2)}\n`, "utf8");
+
+      const loadedTamperedGoal = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loadedTamperedGoal.corrupted).toBe(true);
+      expect(loadedTamperedGoal.state.state).toBe(CampaignStates.failedSafe);
+
+      const statusTamperedGoal = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusTamperedGoal.isError).toBe(true);
+      expect(
+        (statusTamperedGoal.structuredContent as Record<string, unknown>).error,
+      ).toMatchObject({ code: "campaign-corrupted" });
+    });
+
+    it("Finding 4: multiple recon calls preserve all recon records by ID and retain earlier citations", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+
+      const r1 = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      const sc1 = r1.structuredContent as unknown as CampaignReconResult;
+      if (!sc1.ok) throw new Error("Expected recon 1 to succeed");
+      expect(sc1.recon.reconId).toBe("recon-1");
+
+      const r2 = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["code review"] },
+      });
+      const sc2 = r2.structuredContent as unknown as CampaignReconResult;
+      if (!sc2.ok) throw new Error("Expected recon 2 to succeed");
+      expect(sc2.recon.reconId).toBe("recon-2");
+
+      const persisted1 = await readPersistedReconRecord(session!.root, "recon-1");
+      const persisted2 = await readPersistedReconRecord(session!.root, "recon-2");
+      const persistedLatest = await readPersistedReconRecord(session!.root);
+
+      expect(persisted1?.reconId).toBe("recon-1");
+      expect(persisted1?.gaps[0]?.candidates.length).toBeGreaterThan(0);
+      expect(persisted2?.reconId).toBe("recon-2");
+      expect(persisted2?.gaps[0]?.candidates[0]?.id).toBe("example/reviewer");
+      expect(persistedLatest?.reconId).toBe("recon-2");
+      expect(persistedLatest?.records?.["recon-1"]).toBeDefined();
+      expect(persistedLatest?.records?.["recon-2"]).toBeDefined();
+
+      // Earlier citations remain in state.recon so a charter citing recon-1 passes isValidCharterForRecon
+      const firstCardRef = persisted1!.gaps[0]!.candidates[0]!.cardRef;
+      const firstSkillId = persisted1!.gaps[0]!.candidates[0]!.id;
+      expect(sc2.state.recon?.citations).toContain(firstCardRef);
+      expect(sc2.state.recon?.citations).toContain(firstSkillId);
+      expect(
+        isValidCharterForRecon(
+          sc2.state.recon,
+          {
+            schema: CAMPAIGN_SCHEMA_IDS.charter,
+            revision: 1,
+            goal: VALID_OPEN_INPUT.goal,
+            allowedSkills: [firstSkillId],
+            queue: [
+              {
+                id: "wu-1",
+                skill: firstSkillId,
+                reconCitation: firstCardRef,
+              },
+            ],
+            recoverLimit: 1,
+            reopenLimit: 1,
+            sessionRetention: 1,
+            clauses: ["clause-1"],
+          },
+          1,
+        ),
+      ).toBe(true);
+    });
+
+    it("Finding 5: zeroCut=all and error fallback report actual state or UNAVAILABLE, never fabricated UNARMED", async () => {
+      const normalClient = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await normalClient.callTool({
+        name: "campaign",
+        arguments: VALID_OPEN_INPUT,
+      });
+
+      const zeroCutClient = await connectServer({
+        service: makeService(),
+        zeroCut: "all",
+        enableCampaignTool: true,
+      });
+      const zeroCutCall = await zeroCutClient.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(zeroCutCall.isError).toBe(true);
+      const zeroCutSc = zeroCutCall.structuredContent as Record<string, unknown>;
+      expect(zeroCutSc.state).toMatchObject({ state: CampaignStates.recon });
+      expect(zeroCutSc.digest).toMatchObject({ state: CampaignStates.recon });
+
+      // Broken/unreadable session root -> state=null and digest.state="UNAVAILABLE"
+      const brokenResult = await executeCampaignTool(
+        {
+          service: makeService(),
+          getSession: async () => {
+            throw new Error("Session root unavailable");
+          },
+          zeroCut: "all",
+        },
+        { op: "recon", gaps: ["automated testing"] },
+      );
+      expect(brokenResult.isError).toBe(true);
+      expect(brokenResult.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: null,
+        status: null,
+        digest: {
+          schema: CAMPAIGN_SCHEMA_IDS.status,
+          state: "UNAVAILABLE",
+        },
+      });
+
+      const catchResult = await executeCampaignTool(
+        {
+          service: makeService(),
+          getSession: async () => {
+            throw new Error("Session exploded");
+          },
+        },
+        { op: "status" },
+      );
+      expect(catchResult.isError).toBe(true);
+      expect(catchResult.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: null,
+        status: null,
+        digest: {
+          schema: CAMPAIGN_SCHEMA_IDS.status,
+          state: "UNAVAILABLE",
+        },
+        error: {
+          code: "campaign-tool-error",
+        },
+      });
+    });
+
+    it("Finding 6: malformed MCP calls return structured refusal + digest while preserving 418-token standing dose", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+
+      const malformedPayloads: Array<Record<string, unknown>> = [
+        {},
+        { op: 123 },
+        { op: "recon", gaps: 123 },
+        { op: "open", goal: 123, workUniverse: "not-array" },
+      ];
+
+      for (const payload of malformedPayloads) {
+        const res = await client.callTool({
+          name: "campaign",
+          arguments: payload,
+        });
+        expect(res.isError).toBe(true);
+        const sc = res.structuredContent as Record<string, unknown>;
+        expect(sc.ok).toBe(false);
+        expect(sc.refused).toBe(true);
+        expect(sc.digest).toMatchObject({
+          schema: CAMPAIGN_SCHEMA_IDS.status,
+          state: CampaignStates.unarmed,
+        });
+      }
+
+      const tools = await client.listTools();
+      const campaignTool = tools.tools.find(
+        (t) => t.name === CAMPAIGN_TOOL_NAME,
+      );
+      expect(campaignTool).toBeDefined();
+      expect(getCampaignToolInputJsonSchema()).toEqual(
+        campaignTool!.inputSchema,
+      );
+      expect(measureCampaignToolStandingDose().standingTokens).toBe(418);
     });
   });
 });

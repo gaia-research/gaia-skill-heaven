@@ -14275,7 +14275,8 @@ function formatCampaignEvidenceLine(line) {
     seq: line.seq,
     authorizedPrivileged: line.authorizedPrivileged,
     eventSha256: line.eventSha256,
-    recordSha256: line.recordSha256
+    recordSha256: line.recordSha256,
+    ...line.artifactSha256 !== void 0 ? { artifactSha256: line.artifactSha256 } : {}
   });
 }
 function isSha256Hex(v) {
@@ -14286,10 +14287,16 @@ function parsePlainEvidenceLineObject(rawObj, expectedSeq) {
   const proto = Object.getPrototypeOf(rawObj);
   if (proto !== Object.prototype && proto !== null) return null;
   const keys = Reflect.ownKeys(rawObj);
-  if (keys.length !== 4) return null;
+  if (keys.length !== 4 && keys.length !== 5) return null;
   for (const required2 of ["seq", "authorizedPrivileged", "eventSha256", "recordSha256"]) {
     const desc = Object.getOwnPropertyDescriptor(rawObj, required2);
     if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable) return null;
+  }
+  if (keys.length === 5) {
+    const desc = Object.getOwnPropertyDescriptor(rawObj, "artifactSha256");
+    if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable || !isSha256Hex(rawObj.artifactSha256)) {
+      return null;
+    }
   }
   if (rawObj.seq !== expectedSeq || typeof rawObj.authorizedPrivileged !== "boolean" || !isSha256Hex(rawObj.eventSha256) || !isSha256Hex(rawObj.recordSha256)) {
     return null;
@@ -14298,7 +14305,8 @@ function parsePlainEvidenceLineObject(rawObj, expectedSeq) {
     seq: expectedSeq,
     authorizedPrivileged: rawObj.authorizedPrivileged,
     eventSha256: rawObj.eventSha256,
-    recordSha256: rawObj.recordSha256
+    recordSha256: rawObj.recordSha256,
+    ...keys.length === 5 ? { artifactSha256: rawObj.artifactSha256 } : {}
   });
 }
 function parseCampaignEvidenceLines(raw) {
@@ -18572,6 +18580,22 @@ var CAMPAIGN_EVIDENCE_FILE = "evidence.jsonl";
 var CAMPAIGN_STATUS_FILE = "status.json";
 var CAMPAIGN_GOAL_FILE = "goal.json";
 var CAMPAIGN_RECON_FILE = "recon.json";
+function computeGoalContractSha256(contract) {
+  return campaignSha256Hex(canonicalCampaignJson(contract));
+}
+function computeReconCoreSha256(record4) {
+  return campaignSha256Hex(
+    canonicalCampaignJson({
+      schema: record4.schema,
+      reconId: record4.reconId,
+      gaps: record4.gaps,
+      findings: record4.findings
+    })
+  );
+}
+function formatReconSha256Citation(reconId, sha2563) {
+  return `recon-sha256:${reconId}:${sha2563}`;
+}
 var GOAL_CONTRACT_KEYS = [
   "goal",
   "workUniverse",
@@ -18681,7 +18705,7 @@ var CampaignStore = class _CampaignStore {
   #appendQueue = Promise.resolve();
   #goalContract = null;
   #reconArtifact = null;
-  constructor(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError) {
+  constructor(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError, goalContract = null, reconArtifact = null) {
     this.sessionRoot = sessionRoot;
     this.campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
     this.tracePath = path3.join(this.campaignDir, CAMPAIGN_TRACE_FILE);
@@ -18699,6 +18723,8 @@ var CampaignStore = class _CampaignStore {
     this.#error = error2;
     this.#recordSha256 = recordSha256;
     this.#options = options;
+    this.#goalContract = goalContract;
+    this.#reconArtifact = reconArtifact;
   }
   get state() {
     return this.#state;
@@ -18765,43 +18791,30 @@ var CampaignStore = class _CampaignStore {
     return parsed;
   }
   async loadGoalContract() {
-    await assertConfinedPath(
-      this.sessionRoot,
-      this.goalPath,
-      "Campaign goal contract"
-    );
-    let stat5;
-    try {
-      stat5 = await lstat2(this.goalPath);
-    } catch (error2) {
-      if (error2.code === "ENOENT") {
-        return this.#goalContract;
-      }
-      throw error2;
-    }
-    if (stat5.isSymbolicLink() || !stat5.isFile()) {
+    if (this.#corrupted) {
       throw new Error(
-        `Campaign goal contract must be a regular file: ${this.goalPath}`
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE)."
       );
     }
-    const raw = await readFile(this.goalPath, "utf8");
-    let parsedJson;
-    try {
-      parsedJson = JSON.parse(raw);
-    } catch (error2) {
-      throw new Error(
-        `Invalid campaign goal contract JSON at ${this.goalPath}: ${error2 instanceof Error ? error2.message : String(error2)}`,
-        { cause: error2 }
-      );
+    if (!this.#hasTrace) {
+      return null;
     }
-    const parsed = parseCampaignGoalContract(parsedJson);
-    if (!parsed) {
-      throw new Error(
-        `Invalid campaign goal contract shape at ${this.goalPath}.`
-      );
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
     }
-    this.#goalContract = parsed;
-    return parsed;
+    if (disk.kind === "absent") {
+      this.#goalContract = null;
+      this.#reconArtifact = null;
+      return null;
+    }
+    this.#goalContract = disk.goalContract;
+    this.#reconArtifact = disk.reconArtifact;
+    return disk.goalContract;
   }
   async saveReconArtifact(record4) {
     const serialized = JSON.stringify(record4, null, 2);
@@ -18846,41 +18859,43 @@ var CampaignStore = class _CampaignStore {
         });
       }
     }
-    this.#reconArtifact = record4;
+    const parsedEnvelope = parsePersistedReconArtifactStore(record4);
+    if (parsedEnvelope) {
+      this.#reconArtifact = parsedEnvelope;
+    }
     return record4;
   }
-  async loadReconArtifact() {
-    await assertConfinedPath(
-      this.sessionRoot,
-      this.reconPath,
-      "Campaign recon artifact"
-    );
-    let stat5;
-    try {
-      stat5 = await lstat2(this.reconPath);
-    } catch (error2) {
-      if (error2.code === "ENOENT") {
-        return this.#reconArtifact;
-      }
-      throw error2;
-    }
-    if (stat5.isSymbolicLink() || !stat5.isFile()) {
+  async loadReconArtifact(reconId) {
+    if (this.#corrupted) {
       throw new Error(
-        `Campaign recon artifact must be a regular file: ${this.reconPath}`
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE)."
       );
     }
-    const raw = await readFile(this.reconPath, "utf8");
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (error2) {
-      throw new Error(
-        `Invalid campaign recon artifact JSON at ${this.reconPath}: ${error2 instanceof Error ? error2.message : String(error2)}`,
-        { cause: error2 }
-      );
+    if (!this.#hasTrace) {
+      return null;
     }
-    this.#reconArtifact = parsed;
-    return parsed;
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
+    }
+    if (disk.kind === "absent") {
+      this.#goalContract = null;
+      this.#reconArtifact = null;
+      return null;
+    }
+    this.#goalContract = disk.goalContract;
+    this.#reconArtifact = disk.reconArtifact;
+    if (!disk.reconArtifact) {
+      return null;
+    }
+    if (reconId !== void 0) {
+      return disk.reconArtifact.records[reconId] ?? null;
+    }
+    return disk.reconArtifact;
   }
   static async load(sessionRoot, options = {}) {
     const refreshStatus = options.refreshStatus ?? true;
@@ -18982,15 +18997,29 @@ var CampaignStore = class _CampaignStore {
       await claim.release();
     }
   }
-  async append(event2) {
-    const run = this.#appendQueue.then(() => this.#appendSerialized(event2));
+  async openCampaign(goalContract) {
+    return this.append(
+      { channel: "agent", op: AgentOps.open },
+      { goalContract, requireGoalContractOnOpen: true }
+    );
+  }
+  async appendRecon(reconRecord, traceRecon) {
+    return this.append(
+      { channel: "agent", op: AgentOps.recon, recon: traceRecon },
+      { reconRecord }
+    );
+  }
+  async append(event2, options) {
+    const run = this.#appendQueue.then(
+      () => this.#appendSerialized(event2, options)
+    );
     this.#appendQueue = run.then(
       () => void 0,
       () => void 0
     );
     return run;
   }
-  async #appendSerialized(event2) {
+  async #appendSerialized(event2, options) {
     if (this.#corrupted) {
       throw new Error(
         `Refusing to append to corrupted campaign trace (${this.#error ?? "FAILED_SAFE"})`
@@ -19033,12 +19062,32 @@ var CampaignStore = class _CampaignStore {
         events: nextLines.map((item) => item.event),
         trace: nextLines.map((item) => item.entry)
       };
+      let validatedGoal;
+      let validatedReconRecord;
+      let artifactSha256;
+      if (options?.goalContract !== void 0 && step.entry.accepted) {
+        const parsedGoal = parseCampaignGoalContract(options.goalContract);
+        if (!parsedGoal) {
+          throw new Error("Invalid campaign goal contract.");
+        }
+        validatedGoal = parsedGoal;
+        artifactSha256 = computeGoalContractSha256(parsedGoal);
+      }
+      if (options?.reconRecord !== void 0 && step.entry.accepted) {
+        const parsedRecon = parseSingleReconRecord(options.reconRecord);
+        if (!parsedRecon) {
+          throw new Error("Invalid campaign recon record.");
+        }
+        validatedReconRecord = parsedRecon;
+        artifactSha256 = computeReconCoreSha256(parsedRecon);
+      }
       const authorizedPrivileged = (step.entry.channel === "operator" || step.entry.channel === "engine") && step.entry.accepted === true;
       const evidenceLine = {
         seq,
         authorizedPrivileged,
         eventSha256: campaignSha256Hex(canonicalCampaignJson(descriptor)),
-        recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord))
+        recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord)),
+        ...artifactSha256 !== void 0 ? { artifactSha256 } : {}
       };
       const status = toControllerStatus(step.state, step.entry);
       await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
@@ -19050,6 +19099,65 @@ var CampaignStore = class _CampaignStore {
       );
       await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
       await assertSessionClaimActive(claim, this.sessionRoot, "campaign append");
+      let priorGoal;
+      let priorRecon;
+      let nextReconEnvelope;
+      if (validatedGoal !== void 0) {
+        priorGoal = await capturePriorArtifactBytes(
+          this.sessionRoot,
+          this.goalPath,
+          "Campaign goal contract"
+        );
+        await writeAtomicJsonArtifact(
+          this.sessionRoot,
+          this.campaignDir,
+          this.goalPath,
+          `.${CAMPAIGN_GOAL_FILE}`,
+          "Campaign goal contract",
+          `${JSON.stringify(validatedGoal, null, 2)}
+`
+        );
+      }
+      if (validatedReconRecord !== void 0) {
+        priorRecon = await capturePriorArtifactBytes(
+          this.sessionRoot,
+          this.reconPath,
+          "Campaign recon artifact"
+        );
+        const existingRecords = extractExistingReconRecords(priorRecon.raw);
+        const nextRecords = {
+          ...existingRecords,
+          [validatedReconRecord.reconId]: validatedReconRecord
+        };
+        nextReconEnvelope = {
+          schema: CAMPAIGN_SCHEMA_IDS.recon,
+          reconId: validatedReconRecord.reconId,
+          gaps: validatedReconRecord.gaps,
+          findings: validatedReconRecord.findings,
+          citations: validatedReconRecord.citations,
+          records: nextRecords
+        };
+        try {
+          await writeAtomicJsonArtifact(
+            this.sessionRoot,
+            this.campaignDir,
+            this.reconPath,
+            `.${CAMPAIGN_RECON_FILE}`,
+            "Campaign recon artifact",
+            `${JSON.stringify(nextReconEnvelope, null, 2)}
+`
+          );
+        } catch (error2) {
+          if (priorGoal !== void 0) {
+            await restorePriorArtifactBytes(this.goalPath, priorGoal).catch(
+              () => {
+              }
+            );
+          }
+          throw error2;
+        }
+      }
+      let traceMutated = false;
       try {
         await appendFile(
           this.tracePath,
@@ -19057,6 +19165,7 @@ var CampaignStore = class _CampaignStore {
 `,
           { encoding: "utf8", flag: "a" }
         );
+        traceMutated = true;
         await appendFile(
           this.evidencePath,
           `${formatCampaignEvidenceLine(evidenceLine)}
@@ -19070,9 +19179,30 @@ var CampaignStore = class _CampaignStore {
           "utf8"
         );
       } catch (error2) {
+        if (!traceMutated) {
+          if (priorGoal !== void 0) {
+            await restorePriorArtifactBytes(this.goalPath, priorGoal).catch(
+              () => {
+              }
+            );
+          }
+          if (priorRecon !== void 0) {
+            await restorePriorArtifactBytes(this.reconPath, priorRecon).catch(
+              () => {
+              }
+            );
+          }
+          throw error2;
+        }
         this.#corrupted = true;
         this.#error = `Partial write failure during campaign append: ${error2 instanceof Error ? error2.message : String(error2)}`;
         throw error2;
+      }
+      if (validatedGoal !== void 0) {
+        this.#goalContract = validatedGoal;
+      }
+      if (nextReconEnvelope !== void 0) {
+        this.#reconArtifact = nextReconEnvelope;
       }
       this.#state = step.state;
       this.#lines = nextLines;
@@ -19136,7 +19266,7 @@ var CampaignStore = class _CampaignStore {
       );
     }
   }
-  static createLoaded(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError) {
+  static createLoaded(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError, goalContract = null, reconArtifact = null) {
     return new _CampaignStore(
       sessionRoot,
       state2,
@@ -19147,7 +19277,9 @@ var CampaignStore = class _CampaignStore {
       error2,
       recordSha256,
       options,
-      evidenceError
+      evidenceError,
+      goalContract,
+      reconArtifact
     );
   }
 };
@@ -19208,7 +19340,9 @@ async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus
     void 0,
     verified.recordSha256,
     verificationOptions,
-    hasCompleteEvidence ? void 0 : verified.evidenceError
+    hasCompleteEvidence ? void 0 : verified.evidenceError,
+    verified.goalContract,
+    verified.reconArtifact
   );
 }
 function metaSnapshot(stat5) {
@@ -19222,11 +19356,23 @@ function metaSnapshot(stat5) {
 function metaSnapshotsEqual(a, b) {
   return a.dev === b.dev && a.ino === b.ino && a.size === b.size && a.mtimeMs === b.mtimeMs;
 }
+function optionalArtifactSnapshotsEqual(a, b) {
+  if (!a.exists || !b.exists) {
+    return a.exists === b.exists;
+  }
+  if (a.nonRegular || b.nonRegular) {
+    return a.nonRegular === b.nonRegular;
+  }
+  return metaSnapshotsEqual(a.stat, b.stat) && a.raw === b.raw;
+}
 function snapshotsEqual(a, b) {
   if (!a.traceExists || !b.traceExists) {
     return a.traceExists === b.traceExists && !a.traceExists && !b.traceExists && a.anyArtifactExists === b.anyArtifactExists;
   }
   if (!metaSnapshotsEqual(a.traceStat, b.traceStat) || a.traceRaw !== b.traceRaw) {
+    return false;
+  }
+  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon)) {
     return false;
   }
   if (a.evidenceExists !== b.evidenceExists) {
@@ -19239,6 +19385,28 @@ function snapshotsEqual(a, b) {
     return a.evidenceNonRegular === b.evidenceNonRegular;
   }
   return metaSnapshotsEqual(a.evidenceStat, b.evidenceStat) && a.evidenceRaw === b.evidenceRaw;
+}
+async function readOptionalArtifactSnapshot(sessionRoot, targetPath, label) {
+  let stat5;
+  try {
+    stat5 = await lstat2(targetPath);
+  } catch (error2) {
+    if (error2.code === "ENOENT") {
+      return { exists: false };
+    }
+    throw error2;
+  }
+  if (stat5.isSymbolicLink() || !stat5.isFile()) {
+    return { exists: true, nonRegular: true };
+  }
+  await assertConfinedPath(sessionRoot, targetPath, label);
+  const raw = await readFile(targetPath, "utf8");
+  return {
+    exists: true,
+    nonRegular: false,
+    stat: metaSnapshot(stat5),
+    raw
+  };
 }
 async function readCampaignRawSnapshot(sessionRoot) {
   const campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
@@ -19270,6 +19438,16 @@ async function readCampaignRawSnapshot(sessionRoot) {
     throw new Error(`Campaign trace must be a regular file: ${tracePath}`);
   }
   const traceRaw = await readFile(tracePath, "utf8");
+  const goal = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    goalPath,
+    "Campaign goal contract"
+  );
+  const recon2 = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    reconPath,
+    "Campaign recon artifact"
+  );
   let evidenceStat;
   try {
     evidenceStat = await lstat2(evidencePath);
@@ -19279,7 +19457,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
         traceExists: true,
         traceStat: metaSnapshot(traceStat),
         traceRaw,
-        evidenceExists: false
+        evidenceExists: false,
+        goal,
+        recon: recon2
       };
     }
     throw error2;
@@ -19290,7 +19470,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
       traceStat: metaSnapshot(traceStat),
       traceRaw,
       evidenceExists: true,
-      evidenceNonRegular: true
+      evidenceNonRegular: true,
+      goal,
+      recon: recon2
     };
   }
   const evidenceRaw = await readFile(evidencePath, "utf8");
@@ -19301,7 +19483,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
     evidenceExists: true,
     evidenceNonRegular: false,
     evidenceStat: metaSnapshot(evidenceStat),
-    evidenceRaw
+    evidenceRaw,
+    goal,
+    recon: recon2
   };
 }
 async function verifyReadOnlyConsistentSnapshot(sessionRoot, options = {}) {
@@ -19488,12 +19672,23 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
       };
     }
   }
+  const artifactCheck = verifyBoundArtifacts(
+    parsedTrace.lines,
+    evidenceLines,
+    snap.goal,
+    snap.recon
+  );
+  if (!artifactCheck.ok) {
+    return { kind: "failed_safe", error: artifactCheck.error };
+  }
   return {
     kind: "valid",
     state: verification.record.final,
     lines: [...parsedTrace.lines],
     recordSha256: actualRecordSha,
     hasEvidence: standalone.ok,
+    goalContract: artifactCheck.goalContract,
+    reconArtifact: artifactCheck.reconArtifact,
     ...standalone.ok ? {} : {
       evidenceError: standalone.kind === "absent" ? "historical campaign evidence is absent" : `historical campaign evidence is inconsistent (${standalone.error})`
     }
@@ -19545,6 +19740,267 @@ async function ensureConfinedCampaignDir(sessionRoot, campaignDir) {
     await mkdir3(campaignDir);
   }
   await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
+}
+function isPlainRecordObject(v) {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+function isStringArray(v) {
+  return Array.isArray(v) && v.every((item) => typeof item === "string");
+}
+function parseSingleReconRecord(v) {
+  if (!isPlainRecordObject(v)) return null;
+  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray(v.findings) || !isStringArray(v.citations)) {
+    return null;
+  }
+  return v;
+}
+function parsePersistedReconArtifactStore(v) {
+  if (!isPlainRecordObject(v)) return null;
+  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray(v.findings) || !isStringArray(v.citations) || !isPlainRecordObject(v.records)) {
+    return null;
+  }
+  const records = {};
+  for (const [key, entry] of Object.entries(v.records)) {
+    const parsedEntry = parseSingleReconRecord(entry);
+    if (!parsedEntry || parsedEntry.reconId !== key) {
+      return null;
+    }
+    records[key] = parsedEntry;
+  }
+  return {
+    schema: CAMPAIGN_SCHEMA_IDS.recon,
+    reconId: v.reconId,
+    gaps: v.gaps,
+    findings: v.findings,
+    citations: v.citations,
+    records
+  };
+}
+function extractExistingReconRecords(raw) {
+  if (raw === null) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    const store = parsePersistedReconArtifactStore(parsed);
+    if (store) {
+      return { ...store.records };
+    }
+    const single = parseSingleReconRecord(parsed);
+    if (single) {
+      return { [single.reconId]: single };
+    }
+  } catch {
+  }
+  return {};
+}
+var RECON_SHA256_CITATION_RE = /^recon-sha256:([^:]+):([0-9a-f]{64})$/;
+function verifyBoundArtifacts(lines, evidenceLines, goalSnap, reconSnap) {
+  let goalContract = null;
+  const openLine = lines.find(
+    (line) => line.event?.channel === "agent" && line.event.op === AgentOps.open && line.entry.accepted === true
+  );
+  const openEv = openLine && evidenceLines ? evidenceLines[openLine.seq] : void 0;
+  if (openEv?.artifactSha256 !== void 0 || goalSnap.exists) {
+    if (!openLine || !goalSnap.exists || goalSnap.nonRegular) {
+      return {
+        ok: false,
+        error: "Campaign goal contract is missing or invalid"
+      };
+    }
+    let parsedGoalJson;
+    try {
+      parsedGoalJson = JSON.parse(goalSnap.raw);
+    } catch {
+      return {
+        ok: false,
+        error: "Campaign goal contract shape is invalid"
+      };
+    }
+    const parsedGoal = parseCampaignGoalContract(parsedGoalJson);
+    if (!parsedGoal) {
+      return {
+        ok: false,
+        error: "Campaign goal contract shape is invalid"
+      };
+    }
+    if (openEv?.artifactSha256 === void 0 || computeGoalContractSha256(parsedGoal) !== openEv.artifactSha256) {
+      return {
+        ok: false,
+        error: "Campaign goal contract commitment mismatch"
+      };
+    }
+    goalContract = parsedGoal;
+  }
+  const reconLines = lines.filter(
+    (line) => line.event?.channel === "agent" && line.event.op === AgentOps.recon && line.entry.accepted === true
+  );
+  const committedById = /* @__PURE__ */ new Map();
+  const evidenceReconHashes = [];
+  for (const line of reconLines) {
+    const ev = evidenceLines?.[line.seq];
+    if (ev?.artifactSha256 !== void 0) {
+      evidenceReconHashes.push({ seq: line.seq, sha256: ev.artifactSha256 });
+    }
+    if (line.event?.channel === "agent" && line.event.op === AgentOps.recon) {
+      for (const citation of line.event.recon.citations) {
+        const match = RECON_SHA256_CITATION_RE.exec(citation);
+        if (match) {
+          const id = match[1];
+          const sha = match[2];
+          const prev = committedById.get(id);
+          if (prev !== void 0 && prev !== sha) {
+            return {
+              ok: false,
+              error: `Conflicting recon commitments for ${id}`
+            };
+          }
+          committedById.set(id, sha);
+        }
+      }
+    }
+  }
+  let reconArtifact = null;
+  if (committedById.size > 0 || evidenceReconHashes.length > 0 || reconSnap.exists && !reconSnap.nonRegular) {
+    if (!reconSnap.exists || reconSnap.nonRegular) {
+      return {
+        ok: false,
+        error: "Campaign recon artifact is missing or invalid"
+      };
+    }
+    let parsedReconJson;
+    try {
+      parsedReconJson = JSON.parse(reconSnap.raw);
+    } catch {
+      return {
+        ok: false,
+        error: "Campaign recon artifact shape is invalid"
+      };
+    }
+    const parsedEnvelope = parsePersistedReconArtifactStore(parsedReconJson);
+    if (!parsedEnvelope) {
+      return {
+        ok: false,
+        error: "Campaign recon artifact shape is invalid"
+      };
+    }
+    for (const [reconId, expectedSha256] of committedById.entries()) {
+      const rec = parsedEnvelope.records[reconId];
+      const validated = rec ? parseSingleReconRecord(rec) : null;
+      if (!validated || computeReconCoreSha256(validated) !== expectedSha256) {
+        return {
+          ok: false,
+          error: `Campaign recon artifact commitment mismatch for ${reconId}`
+        };
+      }
+    }
+    const recordHashes = /* @__PURE__ */ new Set();
+    for (const key of Object.keys(parsedEnvelope.records)) {
+      if (!committedById.has(key)) {
+        return {
+          ok: false,
+          error: `Uncommitted recon record ${key} in recon.json`
+        };
+      }
+      const validated = parseSingleReconRecord(parsedEnvelope.records[key]);
+      if (validated) {
+        recordHashes.add(computeReconCoreSha256(validated));
+      }
+    }
+    for (const item of evidenceReconHashes) {
+      if (!recordHashes.has(item.sha256)) {
+        return {
+          ok: false,
+          error: "Campaign recon evidence commitment mismatch"
+        };
+      }
+    }
+    const latestReconLine = reconLines.at(-1);
+    const latestEvSha = latestReconLine ? evidenceLines?.[latestReconLine.seq]?.artifactSha256 : void 0;
+    const topRecord = parsedEnvelope.records[parsedEnvelope.reconId];
+    const validatedTop = topRecord ? parseSingleReconRecord(topRecord) : null;
+    if (!validatedTop || canonicalCampaignJson({
+      schema: parsedEnvelope.schema,
+      reconId: parsedEnvelope.reconId,
+      gaps: parsedEnvelope.gaps,
+      findings: parsedEnvelope.findings,
+      citations: parsedEnvelope.citations
+    }) !== canonicalCampaignJson({
+      schema: validatedTop.schema,
+      reconId: validatedTop.reconId,
+      gaps: validatedTop.gaps,
+      findings: validatedTop.findings,
+      citations: validatedTop.citations
+    })) {
+      return {
+        ok: false,
+        error: "Campaign recon top-level envelope does not match latest record"
+      };
+    }
+    if (latestEvSha !== void 0 && computeReconCoreSha256(validatedTop) !== latestEvSha) {
+      return {
+        ok: false,
+        error: "Campaign recon evidence commitment mismatch"
+      };
+    }
+    reconArtifact = parsedEnvelope;
+  }
+  return { ok: true, goalContract, reconArtifact };
+}
+async function capturePriorArtifactBytes(sessionRoot, targetPath, label) {
+  await assertConfinedPath(sessionRoot, targetPath, label);
+  try {
+    const stat5 = await lstat2(targetPath);
+    if (stat5.isSymbolicLink() || !stat5.isFile()) {
+      throw new Error(`${label} must be a regular file: ${targetPath}`);
+    }
+    const raw = await readFile(targetPath, "utf8");
+    return { existed: true, raw };
+  } catch (error2) {
+    if (error2.code === "ENOENT") {
+      return { existed: false, raw: null };
+    }
+    throw error2;
+  }
+}
+async function restorePriorArtifactBytes(targetPath, prior) {
+  if (!prior.existed) {
+    await rm3(targetPath, { force: true });
+    return;
+  }
+  await writeFile(targetPath, prior.raw, { encoding: "utf8", mode: 384 });
+}
+async function writeAtomicJsonArtifact(sessionRoot, campaignDir, targetPath, tmpPrefix, label, content) {
+  await assertConfinedPath(sessionRoot, targetPath, label);
+  const tmpPath = path3.join(
+    campaignDir,
+    `${tmpPrefix}.tmp-${process.pid}-${randomUUID()}`
+  );
+  let renamed = false;
+  try {
+    await writeFile(tmpPath, content, {
+      encoding: "utf8",
+      mode: 384,
+      flag: "wx"
+    });
+    try {
+      const targetStat = await lstat2(targetPath);
+      if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
+        throw new Error(`${label} must be a regular file: ${targetPath}`);
+      }
+    } catch (error2) {
+      if (error2.code !== "ENOENT") {
+        throw error2;
+      }
+    }
+    await rename(tmpPath, targetPath);
+    renamed = true;
+  } finally {
+    if (!renamed) {
+      await rm3(tmpPath, { force: true }).catch(() => {
+      });
+    }
+  }
 }
 
 // packages/skill-summon/src/summon/session.ts
@@ -27626,6 +28082,44 @@ function buildCampaignDigest(state2, status) {
     text: text2
   });
 }
+function buildUnavailableCampaignDigest() {
+  return immutableSnapshot({
+    schema: CAMPAIGN_SCHEMA_IDS.status,
+    state: "UNAVAILABLE",
+    effective: null,
+    charterRevision: null,
+    approved: null,
+    progress: null,
+    transition: null,
+    text: "[Campaign] state=UNAVAILABLE \xB7 campaign state could not be read \xB7 reference data, authorizes nothing"
+  });
+}
+async function readSafeCampaignStateAndDigest(sessionRoot) {
+  if (!sessionRoot) {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest()
+    };
+  }
+  try {
+    const store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: false
+    });
+    const status = toControllerStatus(store.state, store.trace.at(-1));
+    return {
+      state: store.state,
+      status,
+      digest: buildCampaignDigest(store.state, status)
+    };
+  } catch {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest()
+    };
+  }
+}
 async function executeStatus(session) {
   const store = await CampaignStore.load(session.root, { refreshStatus: false });
   const status = toControllerStatus(store.state, store.trace.at(-1));
@@ -27648,8 +28142,50 @@ async function executeStatus(session) {
       }
     });
   }
-  const goalContract = store.hasTrace ? await store.loadGoalContract().catch(() => null) : null;
-  const recon2 = store.hasTrace ? await store.loadReconArtifact().catch(() => null) ?? store.state.recon : store.state.recon;
+  let goalContract = null;
+  let recon2 = store.state.recon;
+  if (store.hasTrace) {
+    try {
+      goalContract = await store.loadGoalContract();
+      recon2 = await store.loadReconArtifact() ?? store.state.recon;
+    } catch (error2) {
+      const message = error2 instanceof Error ? error2.message : "Campaign artifact failed verification (FAILED_SAFE).";
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: store.state,
+        status,
+        goalContract: null,
+        recon: null,
+        digest,
+        error: {
+          code: "campaign-corrupted",
+          message,
+          retryable: false
+        }
+      });
+    }
+    if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: store.state,
+        status,
+        goalContract: null,
+        recon: null,
+        digest,
+        error: {
+          code: "campaign-corrupted",
+          message: "Campaign trace is in active/RECON state without a committed goal contract (FAILED_SAFE).",
+          retryable: false
+        }
+      });
+    }
+  }
   return immutableSnapshot({
     ok: true,
     refused: false,
@@ -27732,16 +28268,38 @@ async function executeOpen(session, rawInput) {
     });
   }
   if (store.state.state !== CampaignStates.unarmed) {
-    const appended2 = await store.append({ channel: "agent", op: AgentOps.open });
+    const existingGoal = store.hasTrace ? await store.loadGoalContract().catch(() => null) : null;
+    if (store.hasTrace && existingGoal === null) {
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe
+      });
+      const failedStatus = toControllerStatus(failedState);
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.open,
+        state: failedState,
+        status: failedStatus,
+        goalContract: null,
+        digest: buildCampaignDigest(failedState, failedStatus),
+        error: {
+          code: "campaign-corrupted",
+          message: "Campaign trace is in RECON/active state without a committed goal contract (FAILED_SAFE).",
+          retryable: false
+        }
+      });
+    }
+    const appended = await store.append({ channel: "agent", op: AgentOps.open });
     return immutableSnapshot({
       ok: false,
       refused: true,
       op: AgentOps.open,
-      state: appended2.state,
-      entry: appended2.entry,
-      status: appended2.status,
-      goalContract: await store.loadGoalContract().catch(() => null),
-      digest: buildCampaignDigest(appended2.state, appended2.status),
+      state: appended.state,
+      entry: appended.entry,
+      status: appended.status,
+      goalContract: existingGoal,
+      digest: buildCampaignDigest(appended.state, appended.status),
       error: {
         code: "invalid-campaign-state",
         message: "Campaign open is refused because a campaign is already active or terminated in this session.",
@@ -27803,21 +28361,32 @@ async function executeOpen(session, rawInput) {
       }
     });
   }
-  const appended = await store.append({ channel: "agent", op: AgentOps.open });
-  let savedContract;
   try {
-    savedContract = await store.saveGoalContract(normalized.contract);
-  } catch (error2) {
-    const message = error2 instanceof Error ? error2.message : String(error2);
+    const appended = await store.openCampaign(normalized.contract);
     return immutableSnapshot({
-      ok: false,
-      refused: true,
+      ok: true,
+      refused: false,
       op: AgentOps.open,
       state: appended.state,
       entry: appended.entry,
       status: appended.status,
+      goalContract: normalized.contract,
+      digest: buildCampaignDigest(appended.state, appended.status)
+    });
+  } catch (error2) {
+    const message = error2 instanceof Error ? error2.message : String(error2);
+    const current = await readSafeCampaignStateAndDigest(session.root);
+    const state2 = current.state ?? store.state;
+    const status = current.status ?? toControllerStatus(state2, store.trace.at(-1));
+    const digest = buildCampaignDigest(state2, status);
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.open,
+      state: state2,
+      status,
       goalContract: null,
-      digest: buildCampaignDigest(appended.state, appended.status),
+      digest,
       error: {
         code: "invalid-goal-artifact",
         message,
@@ -27825,20 +28394,10 @@ async function executeOpen(session, rawInput) {
       }
     });
   }
-  return immutableSnapshot({
-    ok: true,
-    refused: false,
-    op: AgentOps.open,
-    state: appended.state,
-    entry: appended.entry,
-    status: appended.status,
-    goalContract: savedContract,
-    digest: buildCampaignDigest(appended.state, appended.status)
-  });
 }
 
 // packages/skill-summon/src/campaign/ops/recon.ts
-import { lstat as lstat8, readFile as readFile7 } from "node:fs/promises";
+import { lstat as lstat8 } from "node:fs/promises";
 
 // packages/skill-summon/src/trust.ts
 function trustFields(skill) {
@@ -29222,8 +29781,7 @@ function errorMessage6(error2) {
 var NO_CAPABILITY_NOTE = "No capability found for this gap. This is a recorded gap outcome, not a signal to explore.";
 async function executeRecon(service, session, rawInput, options = {}) {
   if (options.zeroCut === "all") {
-    const initial = initialCampaignState();
-    const status = toControllerStatus(initial);
+    const safe = await readSafeCampaignStateAndDigest(session.root);
     return Object.freeze({
       ok: false,
       refused: true,
@@ -29233,9 +29791,9 @@ async function executeRecon(service, session, rawInput, options = {}) {
         message: ZERO_CUT_REFUSAL,
         retryable: false
       }),
-      state: initial,
-      status,
-      digest: buildCampaignDigest(initial, status)
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest
     });
   }
   const parsed = parseReconInput(rawInput);
@@ -29287,6 +29845,27 @@ async function executeRecon(service, session, rawInput, options = {}) {
       state: store.state,
       status: currentStatus,
       digest: currentDigest
+    });
+  }
+  const goalContract = await store.loadGoalContract().catch(() => null);
+  if (goalContract === null) {
+    const failedState = immutableSnapshot({
+      ...store.state,
+      state: CampaignStates.failedSafe
+    });
+    const failedStatus = toControllerStatus(failedState);
+    return Object.freeze({
+      ok: false,
+      refused: true,
+      op: AgentOps.recon,
+      error: Object.freeze({
+        code: "campaign-corrupted",
+        message: "Campaign trace is in RECON state without a committed goal contract (FAILED_SAFE).",
+        retryable: false
+      }),
+      state: failedState,
+      status: failedStatus,
+      digest: buildCampaignDigest(failedState, failedStatus)
     });
   }
   const { gaps, surface, source, limit } = parsed.value;
@@ -29385,11 +29964,38 @@ async function executeRecon(service, session, rawInput, options = {}) {
   }
   const frozenGaps = Object.freeze(gapRecords);
   const findings = Object.freeze(frozenGaps.map(formatGapFinding));
-  const citations = Object.freeze(collectReconCitations(reconId, frozenGaps));
+  const currentCitations = collectReconCitations(reconId, frozenGaps);
+  const coreSha256 = computeReconCoreSha256({
+    schema: CAMPAIGN_SCHEMA_IDS.recon,
+    reconId,
+    gaps: frozenGaps,
+    findings
+  });
+  const shaCitation = formatReconSha256Citation(reconId, coreSha256);
+  const reconRecord = Object.freeze({
+    schema: CAMPAIGN_SCHEMA_IDS.recon,
+    reconId,
+    gaps: frozenGaps,
+    findings,
+    citations: Object.freeze(dedupeStrings([...currentCitations, shaCitation]))
+  });
+  const mergedTraceFindings = Object.freeze(
+    dedupeStrings([
+      ...store.state.recon?.findings ?? [],
+      ...findings
+    ])
+  );
+  const mergedTraceCitations = Object.freeze(
+    dedupeStrings([
+      ...store.state.recon?.citations ?? [],
+      ...currentCitations,
+      shaCitation
+    ])
+  );
   const traceRecon = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
-    findings,
-    citations
+    findings: mergedTraceFindings,
+    citations: mergedTraceCitations
   });
   try {
     await assertConfinedPath(
@@ -29425,19 +30031,26 @@ async function executeRecon(service, session, rawInput, options = {}) {
       })
     });
   }
-  const appended = await store.append({
-    channel: "agent",
-    op: AgentOps.recon,
-    recon: traceRecon
-  });
-  const reconRecord = Object.freeze({
-    schema: CAMPAIGN_SCHEMA_IDS.recon,
-    reconId,
-    gaps: frozenGaps,
-    findings,
-    citations
-  });
-  await store.saveReconArtifact(reconRecord);
+  let appended;
+  try {
+    appended = await store.appendRecon(reconRecord, traceRecon);
+  } catch (error2) {
+    const message = error2 instanceof Error ? error2.message : String(error2);
+    const safe = await readSafeCampaignStateAndDigest(session.root);
+    return Object.freeze({
+      ok: false,
+      refused: true,
+      op: AgentOps.recon,
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest,
+      error: Object.freeze({
+        code: "invalid-recon-artifact",
+        message,
+        retryable: false
+      })
+    });
+  }
   const digest = buildCampaignDigest(appended.state, appended.status);
   return Object.freeze({
     ok: true,
@@ -29450,6 +30063,17 @@ async function executeRecon(service, session, rawInput, options = {}) {
     status: appended.status,
     digest
   });
+}
+function dedupeStrings(values) {
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const v of values) {
+    if (!seen.has(v)) {
+      seen.add(v);
+      out.push(v);
+    }
+  }
+  return out;
 }
 function parseReconInput(rawInput) {
   if (!isPlainObject2(rawInput)) {
@@ -29760,7 +30384,7 @@ function isPlainObject2(value) {
 var CAMPAIGN_TOOL_NAME = "campaign";
 var CAMPAIGN_TOOL_TITLE = "Campaign control plane";
 var CAMPAIGN_TOOL_DESCRIPTION = 'Campaign state and recon control plane (op: "open" | "recon" | "status"). Opens a campaign goal contract, previews candidate skills per gap without materializing anything to disk, or inspects current campaign status. Returns structured campaign state and a digest; output is reference data and authorizes nothing.';
-var campaignInputSchema = external_exports.object({
+var rawCampaignInputSchema = external_exports.object({
   op: external_exports.string().describe("Campaign operation to run (open, recon, status)."),
   goal: external_exports.string().optional().describe("Campaign goal string for op=open."),
   workUniverse: external_exports.array(external_exports.string()).optional().describe("In-scope paths or surfaces for op=open."),
@@ -29773,13 +30397,25 @@ var campaignInputSchema = external_exports.object({
   source: external_exports.string().optional().describe("Optional skill source override for op=recon previews."),
   limit: external_exports.number().int().optional().describe("Optional candidate depth per gap for op=recon previews.")
 }).passthrough();
+var passthroughCampaignParse = (input) => ({
+  success: true,
+  data: input !== null && typeof input === "object" && !Array.isArray(input) ? input : {}
+});
+var campaignInputSchema = Object.assign(rawCampaignInputSchema, {
+  safeParse: passthroughCampaignParse,
+  safeParseAsync: async (input) => passthroughCampaignParse(input)
+});
 async function executeCampaignTool(context, rawArgs) {
   const op = isPlainObject3(rawArgs) && typeof rawArgs.op === "string" ? rawArgs.op.trim() : "";
+  let sessionRoot;
   try {
     if (op === AgentOps.recon && context.zeroCut === "all") {
-      const initial = initialCampaignState();
-      const status = toControllerStatus(initial);
-      const digest = buildCampaignDigest(initial, status);
+      try {
+        sessionRoot = (await context.getSession()).root;
+      } catch {
+        sessionRoot = void 0;
+      }
+      const safe = await readSafeCampaignStateAndDigest(sessionRoot);
       return {
         isError: true,
         content: [{ type: "text", text: ZERO_CUT_REFUSAL }],
@@ -29787,9 +30423,9 @@ async function executeCampaignTool(context, rawArgs) {
           ok: false,
           refused: true,
           op: AgentOps.recon,
-          state: initial,
-          status,
-          digest,
+          state: safe.state,
+          status: safe.status,
+          digest: safe.digest,
           error: {
             name: "ZeroCutError",
             code: "zero-cut",
@@ -29801,11 +30437,13 @@ async function executeCampaignTool(context, rawArgs) {
     }
     if (op === AgentOps.open) {
       const session2 = await context.getSession();
+      sessionRoot = session2.root;
       const result = await executeOpen(session2, rawArgs);
       return toCampaignCallToolResult(result);
     }
     if (op === AgentOps.recon) {
       const session2 = await context.getSession();
+      sessionRoot = session2.root;
       const result = await executeRecon(context.service, session2, rawArgs, {
         zeroCut: context.zeroCut
       });
@@ -29813,10 +30451,12 @@ async function executeCampaignTool(context, rawArgs) {
     }
     if (op === AgentOps.status) {
       const session2 = await context.getSession();
+      sessionRoot = session2.root;
       const result = await executeStatus(session2);
       return toCampaignCallToolResult(result);
     }
     const session = await context.getSession();
+    sessionRoot = session.root;
     const statusResult = await executeStatus(session);
     const structuredContent = {
       ok: false,
@@ -29840,16 +30480,21 @@ async function executeCampaignTool(context, rawArgs) {
     };
   } catch (error2) {
     const message = error2 instanceof Error ? error2.message : String(error2);
-    const initial = initialCampaignState();
-    const status = toControllerStatus(initial);
-    const fallbackDigest = buildCampaignDigest(initial, status);
+    if (!sessionRoot) {
+      try {
+        sessionRoot = (await context.getSession()).root;
+      } catch {
+        sessionRoot = void 0;
+      }
+    }
+    const safe = await readSafeCampaignStateAndDigest(sessionRoot);
     const structuredContent = {
       ok: false,
       refused: true,
       op: op || "unknown",
-      state: initial,
-      status,
-      digest: fallbackDigest,
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest,
       error: {
         name: error2 instanceof Error ? error2.name : "Error",
         code: "campaign-tool-error",

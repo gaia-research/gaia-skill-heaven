@@ -1,12 +1,11 @@
-import { lstat, readFile } from "node:fs/promises";
-import path from "node:path";
+import { lstat } from "node:fs/promises";
 
 import {
   AgentOps,
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
   EDGE_ABSENCE_MEANING,
-  initialCampaignState,
+  immutableSnapshot,
   toControllerStatus,
   type ArborClaim,
   type ArborCompositionReport,
@@ -22,14 +21,16 @@ import {
 } from "skill-zero";
 
 import {
-  CAMPAIGN_DIR_NAME,
-  CAMPAIGN_RECON_FILE,
   CampaignStore,
+  computeReconCoreSha256,
+  formatReconSha256Citation,
 } from "../store.js";
 import {
   buildCampaignDigest,
+  readSafeCampaignStateAndDigest,
   type CampaignDigest,
   type CampaignRefusalError,
+  type CampaignUnavailableDigest,
 } from "./status.js";
 import type { GaiaService } from "../../service.js";
 import { displayField } from "../../summon/card.js";
@@ -192,6 +193,7 @@ export type CampaignReconRecord = Readonly<{
   gaps: readonly ReconGapRecord[];
   findings: readonly string[];
   citations: readonly string[];
+  records?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 }>;
 
 export type CampaignReconResult =
@@ -211,9 +213,9 @@ export type CampaignReconResult =
       refused: true;
       op: typeof AgentOps.recon;
       error: CampaignRefusalError;
-      state: CampaignState;
-      status: ControllerStatus;
-      digest: CampaignDigest;
+      state: CampaignState | null;
+      status: ControllerStatus | null;
+      digest: CampaignDigest | CampaignUnavailableDigest;
     }>;
 
 type ParsedReconInput = Readonly<{
@@ -235,8 +237,7 @@ export async function executeRecon(
   } = {},
 ): Promise<CampaignReconResult> {
   if (options.zeroCut === "all") {
-    const initial = initialCampaignState();
-    const status = toControllerStatus(initial);
+    const safe = await readSafeCampaignStateAndDigest(session.root);
     return Object.freeze({
       ok: false,
       refused: true,
@@ -246,9 +247,9 @@ export async function executeRecon(
         message: ZERO_CUT_REFUSAL,
         retryable: false,
       }),
-      state: initial,
-      status,
-      digest: buildCampaignDigest(initial, status),
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest,
     });
   }
 
@@ -304,6 +305,29 @@ export async function executeRecon(
       state: store.state,
       status: currentStatus,
       digest: currentDigest,
+    });
+  }
+
+  const goalContract = await store.loadGoalContract().catch(() => null);
+  if (goalContract === null) {
+    const failedState = immutableSnapshot({
+      ...store.state,
+      state: CampaignStates.failedSafe,
+    });
+    const failedStatus = toControllerStatus(failedState);
+    return Object.freeze({
+      ok: false,
+      refused: true,
+      op: AgentOps.recon,
+      error: Object.freeze({
+        code: "campaign-corrupted",
+        message:
+          "Campaign trace is in RECON state without a committed goal contract (FAILED_SAFE).",
+        retryable: false,
+      }),
+      state: failedState,
+      status: failedStatus,
+      digest: buildCampaignDigest(failedState, failedStatus),
     });
   }
 
@@ -411,12 +435,41 @@ export async function executeRecon(
 
   const frozenGaps = Object.freeze(gapRecords);
   const findings = Object.freeze(frozenGaps.map(formatGapFinding));
-  const citations = Object.freeze(collectReconCitations(reconId, frozenGaps));
+  const currentCitations = collectReconCitations(reconId, frozenGaps);
+  const coreSha256 = computeReconCoreSha256({
+    schema: CAMPAIGN_SCHEMA_IDS.recon,
+    reconId,
+    gaps: frozenGaps,
+    findings,
+  });
+  const shaCitation = formatReconSha256Citation(reconId, coreSha256);
+
+  const reconRecord: CampaignReconRecord = Object.freeze({
+    schema: CAMPAIGN_SCHEMA_IDS.recon,
+    reconId,
+    gaps: frozenGaps,
+    findings,
+    citations: Object.freeze(dedupeStrings([...currentCitations, shaCitation])),
+  });
+
+  const mergedTraceFindings = Object.freeze(
+    dedupeStrings([
+      ...(store.state.recon?.findings ?? []),
+      ...findings,
+    ]),
+  );
+  const mergedTraceCitations = Object.freeze(
+    dedupeStrings([
+      ...(store.state.recon?.citations ?? []),
+      ...currentCitations,
+      shaCitation,
+    ]),
+  );
 
   const traceRecon: CampaignRecon = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
-    findings,
-    citations,
+    findings: mergedTraceFindings,
+    citations: mergedTraceCitations,
   });
 
   try {
@@ -454,21 +507,26 @@ export async function executeRecon(
     });
   }
 
-  const appended = await store.append({
-    channel: "agent",
-    op: AgentOps.recon,
-    recon: traceRecon,
-  });
-
-  const reconRecord: CampaignReconRecord = Object.freeze({
-    schema: CAMPAIGN_SCHEMA_IDS.recon,
-    reconId,
-    gaps: frozenGaps,
-    findings,
-    citations,
-  });
-
-  await store.saveReconArtifact(reconRecord);
+  let appended;
+  try {
+    appended = await store.appendRecon(reconRecord, traceRecon);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const safe = await readSafeCampaignStateAndDigest(session.root);
+    return Object.freeze({
+      ok: false,
+      refused: true,
+      op: AgentOps.recon,
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest,
+      error: Object.freeze({
+        code: "invalid-recon-artifact",
+        message,
+        retryable: false,
+      }),
+    });
+  }
 
   const digest = buildCampaignDigest(appended.state, appended.status);
   return Object.freeze({
@@ -486,39 +544,33 @@ export async function executeRecon(
 
 export async function readPersistedReconRecord(
   sessionRoot: string,
+  reconId?: string,
 ): Promise<CampaignReconRecord | null> {
-  const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
-  const reconPath = path.join(campaignDir, CAMPAIGN_RECON_FILE);
-  await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
-  await assertConfinedPath(sessionRoot, reconPath, "Campaign recon record");
-
-  let targetStat;
-  try {
-    targetStat = await lstat(reconPath);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return null;
-    }
-    throw error;
+  const store = await CampaignStore.load(sessionRoot, {
+    refreshStatus: false,
+  });
+  if (store.corrupted) {
+    throw new Error(
+      store.error ?? "Campaign store is corrupted (FAILED_SAFE).",
+    );
   }
-
-  if (targetStat.isSymbolicLink() || !targetStat.isFile()) {
-    throw new Error(`Campaign recon record must be a regular file: ${reconPath}`);
-  }
-
-  const raw = await readFile(reconPath, "utf8");
-  const parsed: unknown = JSON.parse(raw);
-  if (!isPlainObject(parsed)) return null;
-  if (
-    parsed.schema !== CAMPAIGN_SCHEMA_IDS.recon ||
-    typeof parsed.reconId !== "string" ||
-    !Array.isArray(parsed.gaps) ||
-    !Array.isArray(parsed.findings) ||
-    !Array.isArray(parsed.citations)
-  ) {
+  const artifact = await store.loadReconArtifact(reconId);
+  if (!artifact) {
     return null;
   }
-  return Object.freeze(parsed as CampaignReconRecord);
+  return Object.freeze(artifact as CampaignReconRecord);
+}
+
+function dedupeStrings(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of values) {
+    if (!seen.has(v)) {
+      seen.add(v);
+      out.push(v);
+    }
+  }
+  return out;
 }
 
 function parseReconInput(

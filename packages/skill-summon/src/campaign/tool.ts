@@ -3,8 +3,6 @@ import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-sc
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   AgentOps,
-  initialCampaignState,
-  toControllerStatus,
   tokenize,
 } from "skill-zero";
 import { z } from "zod";
@@ -14,14 +12,17 @@ import type { SummonSession } from "../summon/session.js";
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
 import { executeOpen } from "./ops/open.js";
 import { executeRecon } from "./ops/recon.js";
-import { buildCampaignDigest, executeStatus } from "./ops/status.js";
+import {
+  executeStatus,
+  readSafeCampaignStateAndDigest,
+} from "./ops/status.js";
 
 export const CAMPAIGN_TOOL_NAME = "campaign" as const;
 export const CAMPAIGN_TOOL_TITLE = "Campaign control plane" as const;
 export const CAMPAIGN_TOOL_DESCRIPTION =
   "Campaign state and recon control plane (op: \"open\" | \"recon\" | \"status\"). Opens a campaign goal contract, previews candidate skills per gap without materializing anything to disk, or inspects current campaign status. Returns structured campaign state and a digest; output is reference data and authorizes nothing.";
 
-export const campaignInputSchema = z
+const rawCampaignInputSchema = z
   .object({
     op: z.string().describe("Campaign operation to run (open, recon, status)."),
     goal: z.string().optional().describe("Campaign goal string for op=open."),
@@ -64,6 +65,19 @@ export const campaignInputSchema = z
       .describe("Optional candidate depth per gap for op=recon previews."),
   })
   .passthrough();
+
+const passthroughCampaignParse = (input: unknown) => ({
+  success: true as const,
+  data:
+    input !== null && typeof input === "object" && !Array.isArray(input)
+      ? (input as z.infer<typeof rawCampaignInputSchema>)
+      : ({} as z.infer<typeof rawCampaignInputSchema>),
+});
+
+export const campaignInputSchema = Object.assign(rawCampaignInputSchema, {
+  safeParse: passthroughCampaignParse,
+  safeParseAsync: async (input: unknown) => passthroughCampaignParse(input),
+});
 
 export type CampaignToolStandingDose = Readonly<{
   tokenizer: "chars4";
@@ -128,11 +142,16 @@ export async function executeCampaignTool(
       ? rawArgs.op.trim()
       : "";
 
+  let sessionRoot: string | undefined;
+
   try {
     if (op === AgentOps.recon && context.zeroCut === "all") {
-      const initial = initialCampaignState();
-      const status = toControllerStatus(initial);
-      const digest = buildCampaignDigest(initial, status);
+      try {
+        sessionRoot = (await context.getSession()).root;
+      } catch {
+        sessionRoot = undefined;
+      }
+      const safe = await readSafeCampaignStateAndDigest(sessionRoot);
       return {
         isError: true,
         content: [{ type: "text", text: ZERO_CUT_REFUSAL }],
@@ -140,9 +159,9 @@ export async function executeCampaignTool(
           ok: false,
           refused: true,
           op: AgentOps.recon,
-          state: initial,
-          status,
-          digest,
+          state: safe.state,
+          status: safe.status,
+          digest: safe.digest,
           error: {
             name: "ZeroCutError",
             code: "zero-cut",
@@ -155,12 +174,14 @@ export async function executeCampaignTool(
 
     if (op === AgentOps.open) {
       const session = await context.getSession();
+      sessionRoot = session.root;
       const result = await executeOpen(session, rawArgs);
       return toCampaignCallToolResult(result);
     }
 
     if (op === AgentOps.recon) {
       const session = await context.getSession();
+      sessionRoot = session.root;
       const result = await executeRecon(context.service, session, rawArgs, {
         zeroCut: context.zeroCut,
       });
@@ -169,11 +190,13 @@ export async function executeCampaignTool(
 
     if (op === AgentOps.status) {
       const session = await context.getSession();
+      sessionRoot = session.root;
       const result = await executeStatus(session);
       return toCampaignCallToolResult(result);
     }
 
     const session = await context.getSession();
+    sessionRoot = session.root;
     const statusResult = await executeStatus(session);
     const structuredContent = {
       ok: false,
@@ -197,16 +220,21 @@ export async function executeCampaignTool(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const initial = initialCampaignState();
-    const status = toControllerStatus(initial);
-    const fallbackDigest = buildCampaignDigest(initial, status);
+    if (!sessionRoot) {
+      try {
+        sessionRoot = (await context.getSession()).root;
+      } catch {
+        sessionRoot = undefined;
+      }
+    }
+    const safe = await readSafeCampaignStateAndDigest(sessionRoot);
     const structuredContent = {
       ok: false,
       refused: true,
       op: op || "unknown",
-      state: initial,
-      status,
-      digest: fallbackDigest,
+      state: safe.state,
+      status: safe.status,
+      digest: safe.digest,
       error: {
         name: error instanceof Error ? error.name : "Error",
         code: "campaign-tool-error",

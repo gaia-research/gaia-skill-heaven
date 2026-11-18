@@ -23,6 +23,17 @@ export type CampaignDigest = Readonly<{
   text: string;
 }>;
 
+export type CampaignUnavailableDigest = Readonly<{
+  schema: typeof CAMPAIGN_SCHEMA_IDS.status;
+  state: "UNAVAILABLE";
+  effective: null;
+  charterRevision: null;
+  approved: null;
+  progress: null;
+  transition: null;
+  text: string;
+}>;
+
 export type CampaignRefusalError = Readonly<{
   code: string;
   message: string;
@@ -95,6 +106,59 @@ export function buildCampaignDigest(
   });
 }
 
+export function buildUnavailableCampaignDigest(): CampaignUnavailableDigest {
+  return immutableSnapshot({
+    schema: CAMPAIGN_SCHEMA_IDS.status,
+    state: "UNAVAILABLE" as const,
+    effective: null,
+    charterRevision: null,
+    approved: null,
+    progress: null,
+    transition: null,
+    text: "[Campaign] state=UNAVAILABLE · campaign state could not be read · reference data, authorizes nothing",
+  });
+}
+
+export async function readSafeCampaignStateAndDigest(
+  sessionRoot: string | undefined,
+): Promise<
+  | Readonly<{
+      state: CampaignState;
+      status: ControllerStatus;
+      digest: CampaignDigest;
+    }>
+  | Readonly<{
+      state: null;
+      status: null;
+      digest: CampaignUnavailableDigest;
+    }>
+> {
+  if (!sessionRoot) {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest(),
+    };
+  }
+  try {
+    const store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: false,
+    });
+    const status = toControllerStatus(store.state, store.trace.at(-1));
+    return {
+      state: store.state,
+      status,
+      digest: buildCampaignDigest(store.state, status),
+    };
+  } catch {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest(),
+    };
+  }
+}
+
 export async function readSessionCampaignDigest(
   sessionRoot: string,
 ): Promise<CampaignDigest | null> {
@@ -133,12 +197,55 @@ export async function executeStatus(session: {
     });
   }
 
-  const goalContract = store.hasTrace
-    ? await store.loadGoalContract().catch(() => null)
-    : null;
-  const recon = store.hasTrace
-    ? ((await store.loadReconArtifact().catch(() => null)) ?? store.state.recon)
-    : store.state.recon;
+  let goalContract: CampaignGoalContract | null = null;
+  let recon: unknown = store.state.recon;
+  if (store.hasTrace) {
+    try {
+      goalContract = await store.loadGoalContract();
+      recon = (await store.loadReconArtifact()) ?? store.state.recon;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Campaign artifact failed verification (FAILED_SAFE).";
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: store.state,
+        status,
+        goalContract: null,
+        recon: null,
+        digest,
+        error: {
+          code: "campaign-corrupted",
+          message,
+          retryable: false,
+        },
+      });
+    }
+
+    if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: store.state,
+        status,
+        goalContract: null,
+        recon: null,
+        digest,
+        error: {
+          code: "campaign-corrupted",
+          message:
+            "Campaign trace is in active/RECON state without a committed goal contract (FAILED_SAFE).",
+          retryable: false,
+        },
+      });
+    }
+  }
 
   return immutableSnapshot({
     ok: true,

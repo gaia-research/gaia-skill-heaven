@@ -20,6 +20,7 @@ import {
 } from "../store.js";
 import {
   buildCampaignDigest,
+  readSafeCampaignStateAndDigest,
   type CampaignDigest,
   type CampaignRefusalError,
 } from "./status.js";
@@ -134,6 +135,31 @@ export async function executeOpen(
   }
 
   if (store.state.state !== CampaignStates.unarmed) {
+    const existingGoal = store.hasTrace
+      ? await store.loadGoalContract().catch(() => null)
+      : null;
+    if (store.hasTrace && existingGoal === null) {
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe,
+      });
+      const failedStatus = toControllerStatus(failedState);
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.open,
+        state: failedState,
+        status: failedStatus,
+        goalContract: null,
+        digest: buildCampaignDigest(failedState, failedStatus),
+        error: {
+          code: "campaign-corrupted",
+          message:
+            "Campaign trace is in RECON/active state without a committed goal contract (FAILED_SAFE).",
+          retryable: false,
+        },
+      });
+    }
     const appended = await store.append({ channel: "agent", op: AgentOps.open });
     return immutableSnapshot({
       ok: false,
@@ -142,7 +168,7 @@ export async function executeOpen(
       state: appended.state,
       entry: appended.entry,
       status: appended.status,
-      goalContract: await store.loadGoalContract().catch(() => null),
+      goalContract: existingGoal,
       digest: buildCampaignDigest(appended.state, appended.status),
       error: {
         code: "invalid-campaign-state",
@@ -209,21 +235,32 @@ export async function executeOpen(
     });
   }
 
-  const appended = await store.append({ channel: "agent", op: AgentOps.open });
-  let savedContract: CampaignGoalContract;
   try {
-    savedContract = await store.saveGoalContract(normalized.contract);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const appended = await store.openCampaign(normalized.contract);
     return immutableSnapshot({
-      ok: false,
-      refused: true,
+      ok: true,
+      refused: false,
       op: AgentOps.open,
       state: appended.state,
       entry: appended.entry,
       status: appended.status,
-      goalContract: null,
+      goalContract: normalized.contract,
       digest: buildCampaignDigest(appended.state, appended.status),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const current = await readSafeCampaignStateAndDigest(session.root);
+    const state = current.state ?? store.state;
+    const status = current.status ?? toControllerStatus(state, store.trace.at(-1));
+    const digest = buildCampaignDigest(state, status);
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.open,
+      state,
+      status,
+      goalContract: null,
+      digest,
       error: {
         code: "invalid-goal-artifact",
         message,
@@ -231,15 +268,4 @@ export async function executeOpen(
       },
     });
   }
-
-  return immutableSnapshot({
-    ok: true,
-    refused: false,
-    op: AgentOps.open,
-    state: appended.state,
-    entry: appended.entry,
-    status: appended.status,
-    goalContract: savedContract,
-    digest: buildCampaignDigest(appended.state, appended.status),
-  });
 }
