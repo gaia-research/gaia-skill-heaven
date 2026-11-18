@@ -25,6 +25,7 @@ const LucyAtmosphere = await load<Component>("src/lucy-scene/atmosphere/LucyAtmo
 const LucyLive = await load<Component>("src/lucy-scene/LucyLive.tsx", "LucyLive");
 const LucyScene = await load<Component>("src/lucy-scene/LucyScene.tsx", "LucyScene");
 const SCENE_STATES = await load<readonly string[]>("src/lucy-scene/scene.ts", "SCENE_STATES");
+const stripDropShadow = await load<(filter: string | undefined) => string | undefined>("src/lucy-scene/rive/LucyRiveFigure.tsx", "stripDropShadow");
 const site = (rel: string) => readFileSync(join(REPO, "packages", "site", rel), "utf8");
 const code = (rel: string) =>
   site(rel)
@@ -203,5 +204,32 @@ describe("the dependency stays narrow", () => {
     for (const f of [ATMOSPHERE, CONDUCTOR, SCENE]) {
       expect(code(f), f).not.toMatch(/<canvas|createElement\(['"]canvas|getContext\(|webgl/i);
     }
+  });
+});
+
+describe("Safari/WebKit compositing contracts (#267)", () => {
+  it("predecodes sidecar PNGs with premultiplyAlpha: 'premultiply' without OffscreenCanvas transferToImageBitmap", () => {
+    const worker = code("src/lucy-scene/rive/predecode.worker.ts");
+    expect(worker).toMatch(/premultiplyAlpha:\s*['"]premultiply['"]/);
+    expect(worker).not.toContain("transferToImageBitmap");
+    expect(worker).not.toContain("OffscreenCanvas");
+  });
+
+  it("strips CSS drop-shadow(...) with nested rgba() parens from live Rive wrappers while keeping other filters intact", () => {
+    expect(stripDropShadow("saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))"))
+      .toBe("saturate(1.06) brightness(1.03)");
+    expect(stripDropShadow("drop-shadow(0 0 26px rgba(255,210,74,0.42))")).toBe("none");
+    expect(stripDropShadow("drop-shadow(0 0 4px #000) blur(2px) drop-shadow(0 0 8px rgba(0,0,0,0.5))"))
+      .toBe("blur(2px)");
+    expect(stripDropShadow("grayscale(1) brightness(1.55) contrast(1.06)")).toBe("grayscale(1) brightness(1.55) contrast(1.06)");
+    expect(stripDropShadow("none")).toBe("none");
+    expect(stripDropShadow(undefined)).toBeUndefined();
+  });
+
+  it("applies stripDropShadow to LucyRiveFigure while leaving static <img> fallback filters intact", () => {
+    const figure = code("src/lucy-scene/rive/LucyRiveFigure.tsx");
+    expect(figure).toContain("stripDropShadow(figureStyle.filter)");
+    const hero = code("src/variations/VariationHeroA.tsx");
+    expect(hero).toMatch(/filter:\s*isCurrent\s*\?\s*v\.lucyFilter\s*:\s*['"]none['"]/);
   });
 });
