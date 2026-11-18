@@ -240,21 +240,240 @@ function resolveAmendedBound(
   return { ok: true, value: (pVal ?? aVal)! };
 }
 
+const AMENDMENT_KEYS = [
+  "goal",
+  "recoverLimit",
+  "recoverBound",
+  "reopenLimit",
+  "reopenBound",
+  "sessionRetention",
+  "pauseWindow",
+  "allowedSkills",
+  "clauses",
+  "checkpoints",
+  "stops",
+  "authority",
+  "queue",
+] as const;
+
+function hasAmendmentFields(
+  amendment: OperatorCharterAmendment | Record<string, unknown> | undefined,
+): amendment is OperatorCharterAmendment | Record<string, unknown> {
+  if (!isPlainObject(amendment)) return false;
+  return AMENDMENT_KEYS.some(
+    (key) => Object.hasOwn(amendment, key) && amendment[key] !== undefined,
+  );
+}
+
+function parseStringListOrArray(v: unknown): unknown {
+  if (v === undefined || v === null) return undefined;
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    if (v.trim().length === 0) return undefined;
+    return v
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return v;
+}
+
+function parseBoundOrString(v: unknown): unknown {
+  if (v === undefined || v === null) return undefined;
+  if (typeof v === "string") {
+    const trimmed = v.trim();
+    if (trimmed.length === 0) return undefined;
+    if (/^\d+$/.test(trimmed)) return Number(trimmed);
+    return v;
+  }
+  return v;
+}
+
+function mergeOperatorAmendment(
+  optionsAmendment: OperatorCharterAmendment | Record<string, unknown> | undefined,
+  content: Record<string, unknown>,
+): Record<string, unknown> {
+  const base: Record<string, unknown> = isPlainObject(optionsAmendment)
+    ? { ...optionsAmendment }
+    : {};
+  const opFields: Record<string, unknown> = {};
+
+  if (Object.hasOwn(content, "goal") && content.goal !== undefined) {
+    if (typeof content.goal === "string") {
+      if (content.goal.trim().length > 0) {
+        opFields.goal = content.goal.trim();
+      }
+    } else {
+      opFields.goal = content.goal;
+    }
+  }
+
+  const recoverLimit = parseBoundOrString(content.recoverLimit);
+  if (recoverLimit !== undefined) {
+    opFields.recoverLimit = recoverLimit;
+    if (content.recoverBound === undefined) delete base.recoverBound;
+  }
+  const recoverBound = parseBoundOrString(content.recoverBound);
+  if (recoverBound !== undefined) {
+    opFields.recoverBound = recoverBound;
+    if (content.recoverLimit === undefined) delete base.recoverLimit;
+  }
+
+  const reopenLimit = parseBoundOrString(content.reopenLimit);
+  if (reopenLimit !== undefined) {
+    opFields.reopenLimit = reopenLimit;
+    if (content.reopenBound === undefined) delete base.reopenBound;
+  }
+  const reopenBound = parseBoundOrString(content.reopenBound);
+  if (reopenBound !== undefined) {
+    opFields.reopenBound = reopenBound;
+    if (content.reopenLimit === undefined) delete base.reopenLimit;
+  }
+
+  const sessionRetention = parseBoundOrString(content.sessionRetention);
+  if (sessionRetention !== undefined) {
+    opFields.sessionRetention = sessionRetention;
+    if (content.pauseWindow === undefined) delete base.pauseWindow;
+  }
+  const pauseWindow = parseBoundOrString(content.pauseWindow);
+  if (pauseWindow !== undefined) {
+    opFields.pauseWindow = pauseWindow;
+    if (content.sessionRetention === undefined) delete base.sessionRetention;
+  }
+
+  for (const listKey of ["allowedSkills", "clauses", "checkpoints", "stops"] as const) {
+    if (Object.hasOwn(content, listKey)) {
+      const parsed = parseStringListOrArray(content[listKey]);
+      if (parsed !== undefined) {
+        opFields[listKey] = parsed;
+      }
+    }
+  }
+
+  if (Object.hasOwn(content, "queue") && content.queue !== undefined) {
+    opFields.queue = content.queue;
+  }
+
+  if (
+    Object.hasOwn(content, "authority") &&
+    content.authority !== undefined &&
+    !isPlainObject(content.authority)
+  ) {
+    opFields.authority = content.authority;
+  } else {
+    const baseAuth = isPlainObject(base.authority) ? base.authority : {};
+    const contentAuth = isPlainObject(content.authority) ? content.authority : {};
+    const opAuto = parseStringListOrArray(
+      content.automatic !== undefined ? content.automatic : contentAuth.automatic,
+    );
+    const opHumanOnly = parseStringListOrArray(
+      content.humanOnly !== undefined ? content.humanOnly : contentAuth.humanOnly,
+    );
+    if (
+      opAuto !== undefined ||
+      opHumanOnly !== undefined ||
+      isPlainObject(base.authority) ||
+      isPlainObject(content.authority)
+    ) {
+      opFields.authority = {
+        ...baseAuth,
+        ...contentAuth,
+        ...(opAuto !== undefined ? { automatic: opAuto } : {}),
+        ...(opHumanOnly !== undefined ? { humanOnly: opHumanOnly } : {}),
+      };
+    }
+  }
+
+  return {
+    ...base,
+    ...opFields,
+  };
+}
+
+function hasOperatorAmendmentOverrides(
+  content: Record<string, unknown>,
+): boolean {
+  if (Object.hasOwn(content, "goal") && content.goal !== undefined) {
+    if (typeof content.goal !== "string" || content.goal.trim().length > 0) {
+      return true;
+    }
+  }
+  for (const boundKey of [
+    "recoverLimit",
+    "recoverBound",
+    "reopenLimit",
+    "reopenBound",
+    "sessionRetention",
+    "pauseWindow",
+  ] as const) {
+    if (parseBoundOrString(content[boundKey]) !== undefined) {
+      return true;
+    }
+  }
+  for (const listKey of [
+    "allowedSkills",
+    "clauses",
+    "checkpoints",
+    "stops",
+  ] as const) {
+    if (
+      Object.hasOwn(content, listKey) &&
+      parseStringListOrArray(content[listKey]) !== undefined
+    ) {
+      return true;
+    }
+  }
+  if (Object.hasOwn(content, "queue") && content.queue !== undefined) {
+    return true;
+  }
+  if (Object.hasOwn(content, "authority") && content.authority !== undefined) {
+    if (!isPlainObject(content.authority)) {
+      return true;
+    }
+    if (
+      parseStringListOrArray(content.authority.automatic) !== undefined ||
+      parseStringListOrArray(content.authority.humanOnly) !== undefined
+    ) {
+      return true;
+    }
+  }
+  if (
+    parseStringListOrArray(content.automatic) !== undefined ||
+    parseStringListOrArray(content.humanOnly) !== undefined
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function buildElicitationPrompt(
   charter: CampaignCharter,
   shortDigest: string,
+  rendered: string,
   opEnv: OperatorEnvironment,
   defaultChoice: OperatorDecisionChoice,
+  candidateAmendment?: {
+    nextCharter: CampaignCharter;
+    nextStrategy: PersistedCampaignCharterStrategy;
+    nextRendered: string;
+  },
 ): ElicitationFormRequest {
+  const candidateSection = candidateAmendment
+    ? `\n\nProposed Amendment (r${candidateAmendment.nextCharter.revision}, resulting shortDigest: ${candidateAmendment.nextStrategy.shortDigest}):\n${candidateAmendment.nextRendered}\n\nTo confirm this proposed amendment, type its resulting short digest (${candidateAmendment.nextStrategy.shortDigest}) in 'digest' (or enter replacement amendment fields directly in the form).`
+    : "";
+  const digestOptions = candidateAmendment
+    ? `${shortDigest} or ${candidateAmendment.nextStrategy.shortDigest}`
+    : shortDigest;
   const digestInstruction =
     opEnv.multiplexed && opEnv.optIn
-      ? `\nMultiplexed opt-in is active: type the charter short digest (${shortDigest}) in 'digest' to confirm.`
+      ? `\n\nMultiplexed opt-in is active: type the charter short digest (${digestOptions}) in 'digest' to confirm.`
       : "";
   const message =
     `Campaign charter decision (r${charter.revision})\n` +
-    `Goal: ${charter.goal}\n` +
     `Short digest: ${shortDigest}\n` +
-    `Channel: ${opEnv.channel} · Attribution: ${opEnv.attribution} · Multiplexed: ${opEnv.multiplexed}` +
+    `Channel: ${opEnv.channel} · Attribution: ${opEnv.attribution} · Multiplexed: ${opEnv.multiplexed}\n\n` +
+    rendered +
+    candidateSection +
     digestInstruction;
 
   const properties: Record<string, unknown> = {
@@ -269,14 +488,69 @@ function buildElicitationPrompt(
       ],
       default: defaultChoice,
     },
+    goal: {
+      type: "string",
+      title: "Amended goal",
+      description: "Optional replacement goal (used when decision is amend).",
+    },
+    recoverLimit: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended recoverLimit",
+      description: "Optional non-negative integer recoverLimit (used when decision is amend).",
+    },
+    reopenLimit: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended reopenLimit",
+      description: "Optional non-negative integer reopenLimit (used when decision is amend).",
+    },
+    sessionRetention: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended sessionRetention",
+      description: "Optional non-negative integer sessionRetention (used when decision is amend).",
+    },
+    allowedSkills: {
+      type: "string",
+      title: "Amended allowedSkills",
+      description: "Optional comma- or newline-separated skill IDs (used when decision is amend).",
+    },
+    clauses: {
+      type: "string",
+      title: "Amended clauses",
+      description: "Optional comma- or newline-separated charter clauses (used when decision is amend).",
+    },
+    checkpoints: {
+      type: "string",
+      title: "Amended checkpoints",
+      description: "Optional comma- or newline-separated checkpoints (used when decision is amend).",
+    },
+    stops: {
+      type: "string",
+      title: "Amended stops",
+      description: "Optional comma- or newline-separated stop conditions (used when decision is amend).",
+    },
+    automatic: {
+      type: "string",
+      title: "Amended automatic authority",
+      description: "Optional comma- or newline-separated automatic operations (used when decision is amend).",
+    },
+    humanOnly: {
+      type: "string",
+      title: "Amended humanOnly authority",
+      description: "Optional comma- or newline-separated human-only operations (used when decision is amend).",
+    },
   };
   const required = ["decision"];
 
-  if (opEnv.multiplexed && opEnv.optIn) {
+  if (candidateAmendment !== undefined || (opEnv.multiplexed && opEnv.optIn)) {
     properties.digest = {
       type: "string",
       title: "Charter short digest",
-      description: `Type ${shortDigest} to confirm.`,
+      description: candidateAmendment
+        ? `Type ${candidateAmendment.nextStrategy.shortDigest} to confirm the proposed amendment (or ${shortDigest} if approving current charter).`
+        : `Type ${shortDigest} to confirm.`,
     };
     required.push("digest");
   }
@@ -500,6 +774,8 @@ function applyAmendment(
     goal: baseCharter.goal,
     phases: [...currentStrategy.charterTemplate.phases],
     arsenal: [...currentStrategy.charterTemplate.arsenal],
+    allowedSkills: [...baseCharter.allowedSkills],
+    queue: [...baseCharter.queue],
     authority: nextAuthority,
     recoverLimit: baseCharter.recoverLimit,
     reopenLimit: baseCharter.reopenLimit,
@@ -666,7 +942,47 @@ async function runOperatorDecisionFlow(
     });
   }
 
-  // Check 3: MCP elicitation prompt.
+  // Check 3: Pre-compute candidate amendment (if options.amendment has fields) before elicitation.
+  let reconRaw: Awaited<ReturnType<typeof store.loadReconArtifact>> = null;
+  let candidateAmendment:
+    | {
+        nextCharter: CampaignCharter;
+        nextStrategy: PersistedCampaignCharterStrategy;
+        nextRendered: string;
+      }
+    | undefined;
+
+  if (hasAmendmentFields(options.amendment)) {
+    reconRaw = await store.loadReconArtifact(strategy.reconId);
+    if (!reconRaw) {
+      return simpleRefuse(
+        "unknown-recon-record",
+        `No committed recon record found for "${strategy.reconId}".`,
+      );
+    }
+    const precomputed = applyAmendment(
+      strategy,
+      store.state,
+      reconRaw as unknown as CampaignReconRecordInput,
+      options.amendment,
+    );
+    if (!precomputed.ok) {
+      return simpleRefuse(precomputed.code, precomputed.message);
+    }
+    const nextRendered = renderControlStrategy({
+      charterTemplate: precomputed.nextStrategy.charterTemplate,
+      manifest: precomputed.nextStrategy.manifest,
+      multiplexed: opEnv.multiplexed,
+      optIn: opEnv.optIn,
+    });
+    candidateAmendment = {
+      nextCharter: precomputed.nextCharter,
+      nextStrategy: precomputed.nextStrategy,
+      nextRendered,
+    };
+  }
+
+  // MCP elicitation prompt.
   const defaultChoice =
     mode === OperatorVerbs.amend
       ? OperatorDecisionChoices.amend
@@ -674,8 +990,10 @@ async function runOperatorDecisionFlow(
   const promptRequest = buildElicitationPrompt(
     store.state.charter,
     strategy.shortDigest,
+    rendered,
     opEnv,
     defaultChoice,
+    candidateAmendment,
   );
 
   let response: ElicitationResponse;
@@ -734,56 +1052,54 @@ async function runOperatorDecisionFlow(
     );
   }
 
-  // Check 4 (FD-11 / D-010): Under multiplexed opt-in, typed digest must match shortDigest.
-  if (opEnv.multiplexed && opEnv.optIn) {
-    const content = isPlainObject(response.content) ? response.content : {};
-    const rawDigest =
-      content.digest ?? content.charterDigest ?? content.shortDigest;
-    const typed = typeof rawDigest === "string" ? rawDigest.trim() : "";
-    if (
-      typed.length === 0 ||
-      (typed !== strategy.shortDigest && typed !== strategy.charterSha256)
-    ) {
-      const operatorEntry: OperatorLogEntry = immutableSnapshot({
-        seq: store.trace.length,
-        op: mode,
-        charterRevision: store.state.charterRevision,
-        charterSha256: strategy.charterSha256,
-        shortDigest: strategy.shortDigest,
-        attribution: opEnv.attribution,
-        channel: opEnv.channel,
-        multiplexed: true,
-        optIn: true,
-        elicitationAction: ElicitationActions.accept,
-        accepted: false,
-        refused: true,
-        reason: "invalid-charter-digest",
-        recordedAt: new Date().toISOString(),
-      });
-      await store.appendOperatorLog(operatorEntry);
-      return immutableSnapshot({
-        ok: false,
-        refused: true,
-        noDecision: true,
-        reason: "invalid-charter-digest",
-        elicitationAction: ElicitationActions.accept,
-        operatorEntry,
-        rendered,
-        state: store.state,
-        status: currentStatus,
-        digest: currentDigest,
-        error: {
-          code: "invalid-charter-digest",
-          message:
-            "The typed charter digest did not match the presented charter short digest.",
-          retryable: false,
-        },
-      });
-    }
-  }
-
-  // Check 5: Decision choice on accept.
   const content = isPlainObject(response.content) ? response.content : {};
+  const rawDigest =
+    content.digest ??
+    content.amendmentDigest ??
+    content.charterDigest ??
+    content.shortDigest;
+  const typedDigest = typeof rawDigest === "string" ? rawDigest.trim() : "";
+
+  const refuseInvalidDigest = async (
+    message: string,
+  ): Promise<OperatorDecisionResult> => {
+    const operatorEntry: OperatorLogEntry = immutableSnapshot({
+      seq: store.trace.length,
+      op: mode,
+      charterRevision: store.state.charterRevision,
+      charterSha256: strategy.charterSha256,
+      shortDigest: strategy.shortDigest,
+      attribution: opEnv.attribution,
+      channel: opEnv.channel,
+      multiplexed: opEnv.multiplexed,
+      optIn: opEnv.optIn,
+      elicitationAction: ElicitationActions.accept,
+      accepted: false,
+      refused: true,
+      reason: "invalid-charter-digest",
+      recordedAt: new Date().toISOString(),
+    });
+    await store.appendOperatorLog(operatorEntry);
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      noDecision: true,
+      reason: "invalid-charter-digest",
+      elicitationAction: ElicitationActions.accept,
+      operatorEntry,
+      rendered,
+      state: store.state,
+      status: currentStatus,
+      digest: currentDigest,
+      error: {
+        code: "invalid-charter-digest",
+        message,
+        retryable: false,
+      },
+    });
+  };
+
+  // Check 4: Decision choice on accept.
   const rawChoice =
     content.decision ??
     content.action ??
@@ -885,6 +1201,17 @@ async function runOperatorDecisionFlow(
   }
 
   if (rawChoice === OperatorDecisionChoices.approve) {
+    if (opEnv.multiplexed && opEnv.optIn) {
+      const matchesCurrent =
+        typedDigest.length > 0 &&
+        (typedDigest === strategy.shortDigest ||
+          typedDigest === strategy.charterSha256);
+      if (!matchesCurrent) {
+        return refuseInvalidDigest(
+          "The typed charter digest did not match the presented charter short digest.",
+        );
+      }
+    }
     if (store.state.state !== CampaignStates.decisions) {
       return simpleRefuse(
         "invalid-campaign-state",
@@ -946,26 +1273,58 @@ async function runOperatorDecisionFlow(
   }
 
   // rawChoice === OperatorDecisionChoices.amend
-  const reconRaw = await store.loadReconArtifact(strategy.reconId);
-  if (!reconRaw) {
+  const resolvedReconRaw =
+    reconRaw ?? (await store.loadReconArtifact(strategy.reconId));
+  if (!resolvedReconRaw) {
     return simpleRefuse(
       "unknown-recon-record",
       `No committed recon record found for "${strategy.reconId}".`,
     );
   }
 
-  const mergedAmendment: Record<string, unknown> = {
-    ...(isPlainObject(content) ? content : {}),
-    ...(options.amendment ?? {}),
-  };
+  const mergedAmendment = mergeOperatorAmendment(options.amendment, content);
   const amended = applyAmendment(
     strategy,
     store.state,
-    reconRaw as unknown as CampaignReconRecordInput,
+    resolvedReconRaw as unknown as CampaignReconRecordInput,
     mergedAmendment,
   );
   if (!amended.ok) {
     return simpleRefuse(amended.code, amended.message);
+  }
+
+  // Check 5 (FD-11 / D-010 & options.amendment confirmation gate):
+  // Model-proposed options.amendment can NEVER be applied without explicit digest confirmation.
+  const operatorOverrodeFields = hasOperatorAmendmentOverrides(content);
+  const matchesCurrent =
+    typedDigest.length > 0 &&
+    (typedDigest === strategy.shortDigest ||
+      typedDigest === strategy.charterSha256);
+  const matchesCandidate =
+    candidateAmendment !== undefined &&
+    typedDigest.length > 0 &&
+    (typedDigest === candidateAmendment.nextStrategy.shortDigest ||
+      typedDigest === candidateAmendment.nextStrategy.charterSha256);
+  const matchesAmended =
+    typedDigest.length > 0 &&
+    (typedDigest === amended.nextStrategy.shortDigest ||
+      typedDigest === amended.nextStrategy.charterSha256);
+
+  if (candidateAmendment !== undefined) {
+    const confirmed = operatorOverrodeFields
+      ? matchesCandidate || matchesAmended || matchesCurrent
+      : matchesCandidate;
+    if (!confirmed) {
+      return refuseInvalidDigest(
+        "Proposed amendment requires typing the resulting charter short digest shown in the prompt to confirm.",
+      );
+    }
+  } else if (opEnv.multiplexed && opEnv.optIn) {
+    if (!matchesCurrent && !matchesAmended) {
+      return refuseInvalidDigest(
+        "The typed charter digest did not match the presented charter short digest.",
+      );
+    }
   }
 
   try {

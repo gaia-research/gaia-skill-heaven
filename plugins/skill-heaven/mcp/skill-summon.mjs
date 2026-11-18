@@ -30327,6 +30327,21 @@ function renderControlStrategyLines(input) {
       }
     }
   }
+  const allowedSkills = charterTemplate.allowedSkills ?? [...new Set(charterTemplate.arsenal.map((item) => item.skillId))];
+  lines.push(
+    `  AllowedSkills: ${allowedSkills.length > 0 ? allowedSkills.map((s) => displayField(s)).join(", ") : "none"}`
+  );
+  const queue2 = charterTemplate.queue ?? [];
+  if (queue2.length === 0) {
+    lines.push("  Queue (0 item(s)): none");
+  } else {
+    lines.push(`  Queue (${queue2.length} item(s)):`);
+    for (const q of queue2) {
+      lines.push(
+        `    - ${displayField(q.id)} \xB7 skill ${displayField(q.skill)} \xB7 reconCitation ${displayField(q.reconCitation)}`
+      );
+    }
+  }
   lines.push("  What runs automatically:");
   if (charterTemplate.authority.automatic.length === 0) {
     lines.push("    - (none)");
@@ -30355,6 +30370,14 @@ function renderControlStrategyLines(input) {
   lines.push(
     `  Stops: ${charterTemplate.stops.length > 0 ? charterTemplate.stops.map((s) => displayField(s)).join(", ") : "none"}`
   );
+  if (charterTemplate.clauses.length === 0) {
+    lines.push("  Clauses (0 item(s)): none");
+  } else {
+    lines.push(`  Clauses (${charterTemplate.clauses.length} item(s)):`);
+    for (const clause of charterTemplate.clauses) {
+      lines.push(`    - ${displayField(clause)}`);
+    }
+  }
   lines.push("  Absent lenses (not measured / not published; never 0):");
   let absentCount = 0;
   for (const entry of validatedManifest.entries) {
@@ -30464,13 +30487,184 @@ function resolveAmendedBound(primary, alias, fallback, primaryName, aliasName) {
   }
   return { ok: true, value: pVal ?? aVal };
 }
-function buildElicitationPrompt(charter2, shortDigest, opEnv, defaultChoice) {
+var AMENDMENT_KEYS = [
+  "goal",
+  "recoverLimit",
+  "recoverBound",
+  "reopenLimit",
+  "reopenBound",
+  "sessionRetention",
+  "pauseWindow",
+  "allowedSkills",
+  "clauses",
+  "checkpoints",
+  "stops",
+  "authority",
+  "queue"
+];
+function hasAmendmentFields(amendment) {
+  if (!isPlainObject2(amendment)) return false;
+  return AMENDMENT_KEYS.some(
+    (key) => Object.hasOwn(amendment, key) && amendment[key] !== void 0
+  );
+}
+function parseStringListOrArray(v) {
+  if (v === void 0 || v === null) return void 0;
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    if (v.trim().length === 0) return void 0;
+    return v.split(/[\n,]+/).map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  return v;
+}
+function parseBoundOrString(v) {
+  if (v === void 0 || v === null) return void 0;
+  if (typeof v === "string") {
+    const trimmed = v.trim();
+    if (trimmed.length === 0) return void 0;
+    if (/^\d+$/.test(trimmed)) return Number(trimmed);
+    return v;
+  }
+  return v;
+}
+function mergeOperatorAmendment(optionsAmendment, content) {
+  const base = isPlainObject2(optionsAmendment) ? { ...optionsAmendment } : {};
+  const opFields = {};
+  if (Object.hasOwn(content, "goal") && content.goal !== void 0) {
+    if (typeof content.goal === "string") {
+      if (content.goal.trim().length > 0) {
+        opFields.goal = content.goal.trim();
+      }
+    } else {
+      opFields.goal = content.goal;
+    }
+  }
+  const recoverLimit = parseBoundOrString(content.recoverLimit);
+  if (recoverLimit !== void 0) {
+    opFields.recoverLimit = recoverLimit;
+    if (content.recoverBound === void 0) delete base.recoverBound;
+  }
+  const recoverBound = parseBoundOrString(content.recoverBound);
+  if (recoverBound !== void 0) {
+    opFields.recoverBound = recoverBound;
+    if (content.recoverLimit === void 0) delete base.recoverLimit;
+  }
+  const reopenLimit = parseBoundOrString(content.reopenLimit);
+  if (reopenLimit !== void 0) {
+    opFields.reopenLimit = reopenLimit;
+    if (content.reopenBound === void 0) delete base.reopenBound;
+  }
+  const reopenBound = parseBoundOrString(content.reopenBound);
+  if (reopenBound !== void 0) {
+    opFields.reopenBound = reopenBound;
+    if (content.reopenLimit === void 0) delete base.reopenLimit;
+  }
+  const sessionRetention = parseBoundOrString(content.sessionRetention);
+  if (sessionRetention !== void 0) {
+    opFields.sessionRetention = sessionRetention;
+    if (content.pauseWindow === void 0) delete base.pauseWindow;
+  }
+  const pauseWindow = parseBoundOrString(content.pauseWindow);
+  if (pauseWindow !== void 0) {
+    opFields.pauseWindow = pauseWindow;
+    if (content.sessionRetention === void 0) delete base.sessionRetention;
+  }
+  for (const listKey of ["allowedSkills", "clauses", "checkpoints", "stops"]) {
+    if (Object.hasOwn(content, listKey)) {
+      const parsed = parseStringListOrArray(content[listKey]);
+      if (parsed !== void 0) {
+        opFields[listKey] = parsed;
+      }
+    }
+  }
+  if (Object.hasOwn(content, "queue") && content.queue !== void 0) {
+    opFields.queue = content.queue;
+  }
+  if (Object.hasOwn(content, "authority") && content.authority !== void 0 && !isPlainObject2(content.authority)) {
+    opFields.authority = content.authority;
+  } else {
+    const baseAuth = isPlainObject2(base.authority) ? base.authority : {};
+    const contentAuth = isPlainObject2(content.authority) ? content.authority : {};
+    const opAuto = parseStringListOrArray(
+      content.automatic !== void 0 ? content.automatic : contentAuth.automatic
+    );
+    const opHumanOnly = parseStringListOrArray(
+      content.humanOnly !== void 0 ? content.humanOnly : contentAuth.humanOnly
+    );
+    if (opAuto !== void 0 || opHumanOnly !== void 0 || isPlainObject2(base.authority) || isPlainObject2(content.authority)) {
+      opFields.authority = {
+        ...baseAuth,
+        ...contentAuth,
+        ...opAuto !== void 0 ? { automatic: opAuto } : {},
+        ...opHumanOnly !== void 0 ? { humanOnly: opHumanOnly } : {}
+      };
+    }
+  }
+  return {
+    ...base,
+    ...opFields
+  };
+}
+function hasOperatorAmendmentOverrides(content) {
+  if (Object.hasOwn(content, "goal") && content.goal !== void 0) {
+    if (typeof content.goal !== "string" || content.goal.trim().length > 0) {
+      return true;
+    }
+  }
+  for (const boundKey of [
+    "recoverLimit",
+    "recoverBound",
+    "reopenLimit",
+    "reopenBound",
+    "sessionRetention",
+    "pauseWindow"
+  ]) {
+    if (parseBoundOrString(content[boundKey]) !== void 0) {
+      return true;
+    }
+  }
+  for (const listKey of [
+    "allowedSkills",
+    "clauses",
+    "checkpoints",
+    "stops"
+  ]) {
+    if (Object.hasOwn(content, listKey) && parseStringListOrArray(content[listKey]) !== void 0) {
+      return true;
+    }
+  }
+  if (Object.hasOwn(content, "queue") && content.queue !== void 0) {
+    return true;
+  }
+  if (Object.hasOwn(content, "authority") && content.authority !== void 0) {
+    if (!isPlainObject2(content.authority)) {
+      return true;
+    }
+    if (parseStringListOrArray(content.authority.automatic) !== void 0 || parseStringListOrArray(content.authority.humanOnly) !== void 0) {
+      return true;
+    }
+  }
+  if (parseStringListOrArray(content.automatic) !== void 0 || parseStringListOrArray(content.humanOnly) !== void 0) {
+    return true;
+  }
+  return false;
+}
+function buildElicitationPrompt(charter2, shortDigest, rendered, opEnv, defaultChoice, candidateAmendment) {
+  const candidateSection = candidateAmendment ? `
+
+Proposed Amendment (r${candidateAmendment.nextCharter.revision}, resulting shortDigest: ${candidateAmendment.nextStrategy.shortDigest}):
+${candidateAmendment.nextRendered}
+
+To confirm this proposed amendment, type its resulting short digest (${candidateAmendment.nextStrategy.shortDigest}) in 'digest' (or enter replacement amendment fields directly in the form).` : "";
+  const digestOptions = candidateAmendment ? `${shortDigest} or ${candidateAmendment.nextStrategy.shortDigest}` : shortDigest;
   const digestInstruction = opEnv.multiplexed && opEnv.optIn ? `
-Multiplexed opt-in is active: type the charter short digest (${shortDigest}) in 'digest' to confirm.` : "";
+
+Multiplexed opt-in is active: type the charter short digest (${digestOptions}) in 'digest' to confirm.` : "";
   const message = `Campaign charter decision (r${charter2.revision})
-Goal: ${charter2.goal}
 Short digest: ${shortDigest}
-Channel: ${opEnv.channel} \xB7 Attribution: ${opEnv.attribution} \xB7 Multiplexed: ${opEnv.multiplexed}` + digestInstruction;
+Channel: ${opEnv.channel} \xB7 Attribution: ${opEnv.attribution} \xB7 Multiplexed: ${opEnv.multiplexed}
+
+` + rendered + candidateSection + digestInstruction;
   const properties = {
     decision: {
       type: "string",
@@ -30482,14 +30676,67 @@ Channel: ${opEnv.channel} \xB7 Attribution: ${opEnv.attribution} \xB7 Multiplexe
         OperatorDecisionChoices.decline
       ],
       default: defaultChoice
+    },
+    goal: {
+      type: "string",
+      title: "Amended goal",
+      description: "Optional replacement goal (used when decision is amend)."
+    },
+    recoverLimit: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended recoverLimit",
+      description: "Optional non-negative integer recoverLimit (used when decision is amend)."
+    },
+    reopenLimit: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended reopenLimit",
+      description: "Optional non-negative integer reopenLimit (used when decision is amend)."
+    },
+    sessionRetention: {
+      type: "integer",
+      minimum: 0,
+      title: "Amended sessionRetention",
+      description: "Optional non-negative integer sessionRetention (used when decision is amend)."
+    },
+    allowedSkills: {
+      type: "string",
+      title: "Amended allowedSkills",
+      description: "Optional comma- or newline-separated skill IDs (used when decision is amend)."
+    },
+    clauses: {
+      type: "string",
+      title: "Amended clauses",
+      description: "Optional comma- or newline-separated charter clauses (used when decision is amend)."
+    },
+    checkpoints: {
+      type: "string",
+      title: "Amended checkpoints",
+      description: "Optional comma- or newline-separated checkpoints (used when decision is amend)."
+    },
+    stops: {
+      type: "string",
+      title: "Amended stops",
+      description: "Optional comma- or newline-separated stop conditions (used when decision is amend)."
+    },
+    automatic: {
+      type: "string",
+      title: "Amended automatic authority",
+      description: "Optional comma- or newline-separated automatic operations (used when decision is amend)."
+    },
+    humanOnly: {
+      type: "string",
+      title: "Amended humanOnly authority",
+      description: "Optional comma- or newline-separated human-only operations (used when decision is amend)."
     }
   };
   const required2 = ["decision"];
-  if (opEnv.multiplexed && opEnv.optIn) {
+  if (candidateAmendment !== void 0 || opEnv.multiplexed && opEnv.optIn) {
     properties.digest = {
       type: "string",
       title: "Charter short digest",
-      description: `Type ${shortDigest} to confirm.`
+      description: candidateAmendment ? `Type ${candidateAmendment.nextStrategy.shortDigest} to confirm the proposed amendment (or ${shortDigest} if approving current charter).` : `Type ${shortDigest} to confirm.`
     };
     required2.push("digest");
   }
@@ -30682,6 +30929,8 @@ function applyAmendment(currentStrategy, currentState, reconRecord, amendment) {
     goal: baseCharter.goal,
     phases: [...currentStrategy.charterTemplate.phases],
     arsenal: [...currentStrategy.charterTemplate.arsenal],
+    allowedSkills: [...baseCharter.allowedSkills],
+    queue: [...baseCharter.queue],
     authority: nextAuthority,
     recoverLimit: baseCharter.recoverLimit,
     reopenLimit: baseCharter.reopenLimit,
@@ -30814,12 +31063,45 @@ async function runOperatorDecisionFlow(session, mode, options) {
       }
     });
   }
+  let reconRaw = null;
+  let candidateAmendment;
+  if (hasAmendmentFields(options.amendment)) {
+    reconRaw = await store.loadReconArtifact(strategy.reconId);
+    if (!reconRaw) {
+      return simpleRefuse(
+        "unknown-recon-record",
+        `No committed recon record found for "${strategy.reconId}".`
+      );
+    }
+    const precomputed = applyAmendment(
+      strategy,
+      store.state,
+      reconRaw,
+      options.amendment
+    );
+    if (!precomputed.ok) {
+      return simpleRefuse(precomputed.code, precomputed.message);
+    }
+    const nextRendered2 = renderControlStrategy({
+      charterTemplate: precomputed.nextStrategy.charterTemplate,
+      manifest: precomputed.nextStrategy.manifest,
+      multiplexed: opEnv.multiplexed,
+      optIn: opEnv.optIn
+    });
+    candidateAmendment = {
+      nextCharter: precomputed.nextCharter,
+      nextStrategy: precomputed.nextStrategy,
+      nextRendered: nextRendered2
+    };
+  }
   const defaultChoice = mode === OperatorVerbs.amend ? OperatorDecisionChoices.amend : OperatorDecisionChoices.approve;
   const promptRequest = buildElicitationPrompt(
     store.state.charter,
     strategy.shortDigest,
+    rendered,
     opEnv,
-    defaultChoice
+    defaultChoice,
+    candidateAmendment
   );
   let response;
   try {
@@ -30865,48 +31147,45 @@ async function runOperatorDecisionFlow(session, mode, options) {
       `Unsupported elicitation action: ${String(response.action)}.`
     );
   }
-  if (opEnv.multiplexed && opEnv.optIn) {
-    const content2 = isPlainObject2(response.content) ? response.content : {};
-    const rawDigest = content2.digest ?? content2.charterDigest ?? content2.shortDigest;
-    const typed = typeof rawDigest === "string" ? rawDigest.trim() : "";
-    if (typed.length === 0 || typed !== strategy.shortDigest && typed !== strategy.charterSha256) {
-      const operatorEntry2 = immutableSnapshot({
-        seq: store.trace.length,
-        op: mode,
-        charterRevision: store.state.charterRevision,
-        charterSha256: strategy.charterSha256,
-        shortDigest: strategy.shortDigest,
-        attribution: opEnv.attribution,
-        channel: opEnv.channel,
-        multiplexed: true,
-        optIn: true,
-        elicitationAction: ElicitationActions.accept,
-        accepted: false,
-        refused: true,
-        reason: "invalid-charter-digest",
-        recordedAt: (/* @__PURE__ */ new Date()).toISOString()
-      });
-      await store.appendOperatorLog(operatorEntry2);
-      return immutableSnapshot({
-        ok: false,
-        refused: true,
-        noDecision: true,
-        reason: "invalid-charter-digest",
-        elicitationAction: ElicitationActions.accept,
-        operatorEntry: operatorEntry2,
-        rendered,
-        state: store.state,
-        status: currentStatus,
-        digest: currentDigest,
-        error: {
-          code: "invalid-charter-digest",
-          message: "The typed charter digest did not match the presented charter short digest.",
-          retryable: false
-        }
-      });
-    }
-  }
   const content = isPlainObject2(response.content) ? response.content : {};
+  const rawDigest = content.digest ?? content.amendmentDigest ?? content.charterDigest ?? content.shortDigest;
+  const typedDigest = typeof rawDigest === "string" ? rawDigest.trim() : "";
+  const refuseInvalidDigest = async (message) => {
+    const operatorEntry2 = immutableSnapshot({
+      seq: store.trace.length,
+      op: mode,
+      charterRevision: store.state.charterRevision,
+      charterSha256: strategy.charterSha256,
+      shortDigest: strategy.shortDigest,
+      attribution: opEnv.attribution,
+      channel: opEnv.channel,
+      multiplexed: opEnv.multiplexed,
+      optIn: opEnv.optIn,
+      elicitationAction: ElicitationActions.accept,
+      accepted: false,
+      refused: true,
+      reason: "invalid-charter-digest",
+      recordedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    await store.appendOperatorLog(operatorEntry2);
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      noDecision: true,
+      reason: "invalid-charter-digest",
+      elicitationAction: ElicitationActions.accept,
+      operatorEntry: operatorEntry2,
+      rendered,
+      state: store.state,
+      status: currentStatus,
+      digest: currentDigest,
+      error: {
+        code: "invalid-charter-digest",
+        message,
+        retryable: false
+      }
+    });
+  };
   const rawChoice = content.decision ?? content.action ?? content.choice ?? (mode === OperatorVerbs.amend ? OperatorDecisionChoices.amend : void 0);
   if (rawChoice !== OperatorDecisionChoices.approve && rawChoice !== OperatorDecisionChoices.amend && rawChoice !== OperatorDecisionChoices.decline) {
     return simpleRefuse(
@@ -30996,6 +31275,14 @@ async function runOperatorDecisionFlow(session, mode, options) {
     });
   }
   if (rawChoice === OperatorDecisionChoices.approve) {
+    if (opEnv.multiplexed && opEnv.optIn) {
+      const matchesCurrent2 = typedDigest.length > 0 && (typedDigest === strategy.shortDigest || typedDigest === strategy.charterSha256);
+      if (!matchesCurrent2) {
+        return refuseInvalidDigest(
+          "The typed charter digest did not match the presented charter short digest."
+        );
+      }
+    }
     if (store.state.state !== CampaignStates.decisions) {
       return simpleRefuse(
         "invalid-campaign-state",
@@ -31054,25 +31341,40 @@ async function runOperatorDecisionFlow(session, mode, options) {
       )
     });
   }
-  const reconRaw = await store.loadReconArtifact(strategy.reconId);
-  if (!reconRaw) {
+  const resolvedReconRaw = reconRaw ?? await store.loadReconArtifact(strategy.reconId);
+  if (!resolvedReconRaw) {
     return simpleRefuse(
       "unknown-recon-record",
       `No committed recon record found for "${strategy.reconId}".`
     );
   }
-  const mergedAmendment = {
-    ...isPlainObject2(content) ? content : {},
-    ...options.amendment ?? {}
-  };
+  const mergedAmendment = mergeOperatorAmendment(options.amendment, content);
   const amended = applyAmendment(
     strategy,
     store.state,
-    reconRaw,
+    resolvedReconRaw,
     mergedAmendment
   );
   if (!amended.ok) {
     return simpleRefuse(amended.code, amended.message);
+  }
+  const operatorOverrodeFields = hasOperatorAmendmentOverrides(content);
+  const matchesCurrent = typedDigest.length > 0 && (typedDigest === strategy.shortDigest || typedDigest === strategy.charterSha256);
+  const matchesCandidate = candidateAmendment !== void 0 && typedDigest.length > 0 && (typedDigest === candidateAmendment.nextStrategy.shortDigest || typedDigest === candidateAmendment.nextStrategy.charterSha256);
+  const matchesAmended = typedDigest.length > 0 && (typedDigest === amended.nextStrategy.shortDigest || typedDigest === amended.nextStrategy.charterSha256);
+  if (candidateAmendment !== void 0) {
+    const confirmed = operatorOverrodeFields ? matchesCandidate || matchesAmended || matchesCurrent : matchesCandidate;
+    if (!confirmed) {
+      return refuseInvalidDigest(
+        "Proposed amendment requires typing the resulting charter short digest shown in the prompt to confirm."
+      );
+    }
+  } else if (opEnv.multiplexed && opEnv.optIn) {
+    if (!matchesCurrent && !matchesAmended) {
+      return refuseInvalidDigest(
+        "The typed charter digest did not match the presented charter short digest."
+      );
+    }
   }
   try {
     await assertConfinedPath(
@@ -31882,6 +32184,8 @@ function buildCharterTemplate(reconRecord, input, fallbackGoal, fallbackStops, f
     goal: baseCharter.goal,
     phases: [...phases],
     arsenal: arsenalItems,
+    allowedSkills: [...baseCharter.allowedSkills],
+    queue: [...baseCharter.queue],
     authority: authority2,
     recoverLimit: baseCharter.recoverLimit,
     reopenLimit: baseCharter.reopenLimit,
@@ -33892,10 +34196,12 @@ function isPlainObject4(value) {
 // packages/skill-summon/src/campaign/tool.ts
 var CAMPAIGN_TOOL_NAME = "campaign";
 var CAMPAIGN_TOOL_TITLE = "Campaign control plane";
-var CAMPAIGN_TOOL_DESCRIPTION = 'Campaign state and recon control plane (op: "open" | "recon" | "status"). Opens a campaign goal contract, previews candidate skills per gap without materializing anything to disk, or inspects current campaign status. Returns structured campaign state and a digest; output is reference data and authorizes nothing.';
+var CAMPAIGN_TOOL_DESCRIPTION = 'Campaign control plane (op: "open" | "recon" | "propose" | "decide" | "amend" | "status"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation to decide or amend, or inspects campaign status. Returns structured state and digest; output is reference data and authorizes nothing.';
 var rawCampaignInputSchema = external_exports.object({
-  op: external_exports.string().describe("Campaign operation to run (open, recon, status)."),
-  goal: external_exports.string().optional().describe("Campaign goal string for op=open."),
+  op: external_exports.string().describe(
+    "Campaign operation (open, recon, propose, decide, amend, status)."
+  ),
+  goal: external_exports.string().optional().describe("Campaign goal string for op=open, op=propose, or op=amend."),
   workUniverse: external_exports.array(external_exports.string()).optional().describe("In-scope paths or surfaces for op=open."),
   repositories: external_exports.array(external_exports.string()).optional().describe("Target repositories for op=open."),
   acceptanceCommands: external_exports.array(external_exports.string()).optional().describe("Verification commands for op=open."),
@@ -33904,7 +34210,31 @@ var rawCampaignInputSchema = external_exports.object({
   gaps: external_exports.array(external_exports.string()).optional().describe("Capability gap queries to preview for op=recon."),
   surface: external_exports.enum(["any", "heaven", "hell"]).optional().describe("Optional lane filter for op=recon previews."),
   source: external_exports.string().optional().describe("Optional skill source override for op=recon previews."),
-  limit: external_exports.number().int().optional().describe("Optional candidate depth per gap for op=recon previews.")
+  limit: external_exports.number().int().optional().describe("Optional candidate depth per gap for op=recon previews."),
+  reconId: external_exports.string().optional().describe("Recon ID cited by op=propose."),
+  arsenal: external_exports.array(
+    external_exports.union([
+      external_exports.string(),
+      external_exports.object({
+        cardRef: external_exports.string(),
+        phase: external_exports.string().optional(),
+        id: external_exports.string().optional(),
+        skill: external_exports.string().optional()
+      })
+    ])
+  ).optional().describe("Recon-cited cardRefs or items for op=propose."),
+  phases: external_exports.array(external_exports.string()).optional().describe("Campaign phases for op=propose."),
+  allowedSkills: external_exports.array(external_exports.string()).optional().describe("Allowed skill IDs for op=propose or op=amend."),
+  recoverLimit: external_exports.number().int().optional().describe("Max recovery attempts for op=propose or op=amend."),
+  reopenLimit: external_exports.number().int().optional().describe("Max reopen attempts for op=propose or op=amend."),
+  sessionRetention: external_exports.number().int().optional().describe("Pause window session retention for op=propose or op=amend."),
+  authority: external_exports.object({
+    automatic: external_exports.array(external_exports.string()).optional(),
+    humanOnly: external_exports.array(external_exports.string()).optional()
+  }).optional().describe("Automatic vs human-only operations for op=propose or op=amend."),
+  checkpoints: external_exports.array(external_exports.string()).optional().describe("Charter checkpoints for op=propose or op=amend."),
+  stops: external_exports.array(external_exports.string()).optional().describe("Charter stop conditions for op=propose or op=amend."),
+  clauses: external_exports.array(external_exports.string()).optional().describe("Charter clauses for op=propose or op=amend.")
 }).passthrough();
 var passthroughCampaignParse = (input) => ({
   success: true,

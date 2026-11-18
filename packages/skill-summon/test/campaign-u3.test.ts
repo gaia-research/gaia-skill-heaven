@@ -20,6 +20,7 @@ import {
 } from "skill-zero";
 
 import {
+  CAMPAIGN_TOOL_DESCRIPTION,
   CampaignStore,
   GaiaService,
   InMemoryGaiaRegistrySource,
@@ -31,6 +32,7 @@ import {
   executePropose,
   executeRecon,
   executeStatus,
+  getCampaignToolInputJsonSchema,
   measureCampaignToolStandingDose,
   renderControlStrategy,
   type GaiaRegistryDocuments,
@@ -627,7 +629,7 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
 
     it("campaign tool standing dose stays within budget and bundled MCP binary lists summon and campaign", async () => {
       const dose = measureCampaignToolStandingDose();
-      expect(dose.standingTokens).toBe(418);
+      expect(dose.standingTokens).toBe(825);
 
       const env: Record<string, string> = {};
       for (const [k, v] of Object.entries(process.env)) {
@@ -833,10 +835,19 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
     it("editing authority.humanOnly and authority.automatic in amend updates the charter template at revision n+1", async () => {
       await openReconAndPropose();
       const amendRes = await executeOperatorAmend(session, {
-        elicit: async () => ({
-          action: ElicitationActions.accept,
-          content: { decision: OperatorDecisionChoices.amend },
-        }),
+        elicit: async (request) => {
+          const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
+            request.message,
+          );
+          expect(match?.[1]).toBeTruthy();
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              digest: match![1],
+            },
+          };
+        },
         amendment: {
           authority: {
             automatic: ["local commits only"],
@@ -854,6 +865,253 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
           "deploy-prod",
           "release",
         ]);
+      }
+    });
+
+    it("Finding 1: elicitation request.message embeds full rendered control strategy (phases, arsenal, allowedSkills, queue, clauses, authority, bounds, stops, checkpoints, absent lenses, attribution)", async () => {
+      const { proposeRes } = await openReconAndPropose();
+      let capturedMessage = "";
+      const decideRes = await executeOperatorDecide(session, {
+        elicit: async (request) => {
+          capturedMessage = request.message;
+          return {
+            action: ElicitationActions.accept,
+            content: { decision: OperatorDecisionChoices.approve },
+          };
+        },
+      });
+      expect(decideRes.ok).toBe(true);
+      expect(capturedMessage).toContain(proposeRes.shortDigest);
+      expect(capturedMessage).toContain("Phases:");
+      expect(capturedMessage).toContain("Arsenal by phase");
+      expect(capturedMessage).toContain("AllowedSkills:");
+      expect(capturedMessage).toContain("Queue (");
+      expect(capturedMessage).toContain("Clauses (");
+      expect(capturedMessage).toContain("What runs automatically:");
+      expect(capturedMessage).toContain("What needs the person:");
+      expect(capturedMessage).toContain("recoverLimit=2");
+      expect(capturedMessage).toContain("reopenLimit=1");
+      expect(capturedMessage).toContain("sessionRetention=3");
+      expect(capturedMessage).toContain("Checkpoints:");
+      expect(capturedMessage).toContain("Stops:");
+      expect(capturedMessage).toContain("Absent lenses");
+      expect(capturedMessage).toContain(`channel: ${OPERATOR_CHANNEL_MCP_ELICITATION}`);
+      expect(capturedMessage).toContain(`attribution: ${OPERATOR_ATTRIBUTION}`);
+    });
+
+    it("Finding 2: amend displays proposed r<n+1> amendment and resulting shortDigest in elicitation prompt, and operator response.content overrides options.amendment", async () => {
+      await openReconAndPropose();
+      let capturedMessage = "";
+      let capturedSchemaProps: Record<string, unknown> = {};
+      let capturedRequired: string[] = [];
+
+      const amendRes = await executeOperatorAmend(session, {
+        elicit: async (request) => {
+          capturedMessage = request.message;
+          capturedSchemaProps = (request.requestedSchema.properties ?? {}) as Record<
+            string,
+            unknown
+          >;
+          capturedRequired = (request.requestedSchema.required ?? []) as string[];
+          const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
+            request.message,
+          );
+          expect(match?.[1]).toBeTruthy();
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              digest: match![1],
+              goal: "Operator-entered goal overrides model amendment",
+              recoverLimit: 5,
+              automatic: "operator-only-auto",
+              humanOnly: "merge, release, operator-gate",
+            },
+          };
+        },
+        amendment: {
+          goal: "Model-suggested goal should be overridden",
+          recoverLimit: 99,
+          reopenLimit: 4,
+          authority: {
+            automatic: ["model-suggested-auto"],
+            humanOnly: ["model-suggested-human"],
+          },
+        },
+      });
+
+      expect(amendRes.ok).toBe(true);
+      expect(capturedMessage).toContain("Proposed Amendment (r2, resulting shortDigest:");
+      expect(capturedMessage).toContain("To confirm this proposed amendment, type its resulting short digest");
+      expect(capturedMessage).toContain("Model-suggested goal should be overridden");
+      expect(capturedMessage).toContain("recoverLimit=99");
+      expect(capturedSchemaProps).toHaveProperty("digest");
+      expect(capturedRequired).toContain("digest");
+      expect(capturedSchemaProps).toHaveProperty("goal");
+      expect(capturedSchemaProps).toHaveProperty("recoverLimit");
+      expect(capturedSchemaProps).toHaveProperty("reopenLimit");
+      expect(capturedSchemaProps).toHaveProperty("sessionRetention");
+      expect(capturedSchemaProps).toHaveProperty("allowedSkills");
+      expect(capturedSchemaProps).toHaveProperty("clauses");
+      expect(capturedSchemaProps).toHaveProperty("checkpoints");
+      expect(capturedSchemaProps).toHaveProperty("stops");
+      expect(capturedSchemaProps).toHaveProperty("automatic");
+      expect(capturedSchemaProps).toHaveProperty("humanOnly");
+
+      if (amendRes.ok) {
+        expect(amendRes.state.charterRevision).toBe(2);
+        expect(amendRes.charter?.goal).toBe(
+          "Operator-entered goal overrides model amendment",
+        );
+        expect(amendRes.charter?.recoverLimit).toBe(5);
+        expect(amendRes.charter?.reopenLimit).toBe(4);
+        expect(amendRes.charterTemplate?.authority.automatic).toEqual([
+          "operator-only-auto",
+        ]);
+        expect(amendRes.charterTemplate?.authority.humanOnly).toEqual([
+          "merge",
+          "release",
+          "operator-gate",
+        ]);
+      }
+    });
+
+    it("Finding 3: campaign tool description and JSON schema advertise U1-U3 operations and fields cleanly", () => {
+      for (const op of ["open", "recon", "propose", "decide", "amend", "status"]) {
+        expect(CAMPAIGN_TOOL_DESCRIPTION).toContain(op);
+      }
+      const schema = getCampaignToolInputJsonSchema();
+      const props = (schema.properties ?? {}) as Record<string, { description?: string }>;
+      expect(props.op?.description).toContain("propose");
+      expect(props.op?.description).toContain("decide");
+      expect(props.op?.description).toContain("amend");
+
+      for (const field of [
+        "reconId",
+        "arsenal",
+        "phases",
+        "allowedSkills",
+        "recoverLimit",
+        "reopenLimit",
+        "sessionRetention",
+        "authority",
+        "checkpoints",
+        "stops",
+        "clauses",
+      ]) {
+        expect(props).toHaveProperty(field);
+      }
+
+      const schemaJson = JSON.stringify(schema);
+      expect(authorityHits(CAMPAIGN_TOOL_DESCRIPTION)).toEqual([]);
+      expect(authorityHits(schemaJson)).toEqual([]);
+      expect(CAMPAIGN_TOOL_DESCRIPTION.toLowerCase()).not.toContain("ratify");
+      expect(schemaJson.toLowerCase()).not.toContain("ratify");
+      expect(CAMPAIGN_TOOL_DESCRIPTION).not.toContain(OPERATOR_MULTIPLEXED_OPT_IN_ENV);
+      expect(schemaJson).not.toContain(OPERATOR_MULTIPLEXED_OPT_IN_ENV);
+    });
+
+    it("options.amendment confirmation gate: requires resulting shortDigest, rejects missing/old/wrong digest, and rejects approve with candidate digest", async () => {
+      const { proposeRes } = await openReconAndPropose();
+
+      // 1. Non-multiplexed: prompt includes Proposed Amendment + digest in properties & required,
+      //    and refuses if content.digest is missing.
+      let capturedMessage = "";
+      let capturedRequired: string[] = [];
+      let candidateShortDigest = "";
+      const missingDigestRes = await executeOperatorAmend(session, {
+        elicit: async (request) => {
+          capturedMessage = request.message;
+          capturedRequired = (request.requestedSchema.required ?? []) as string[];
+          expect(request.requestedSchema.properties).toHaveProperty("digest");
+          const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
+            request.message,
+          );
+          candidateShortDigest = match?.[1] ?? "";
+          return {
+            action: ElicitationActions.accept,
+            content: { decision: OperatorDecisionChoices.amend },
+          };
+        },
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(capturedMessage).toContain(
+        `Proposed Amendment (r2, resulting shortDigest: ${candidateShortDigest}):`,
+      );
+      expect(capturedMessage).toContain("recoverLimit=9");
+      expect(capturedRequired).toContain("digest");
+      expect(candidateShortDigest).toMatch(/^[0-9a-f]{12}$/);
+      expect(candidateShortDigest).not.toBe(proposeRes.shortDigest);
+      expect(missingDigestRes.ok).toBe(false);
+      expect(missingDigestRes.refused).toBe(true);
+      if (!missingDigestRes.ok) {
+        expect(missingDigestRes.error?.code).toBe("invalid-charter-digest");
+      }
+      expect(missingDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(missingDigestRes.state.charterRevision).toBe(1);
+
+      // 2. Refuses if content.digest is the old r1 shortDigest instead of the resulting r2 shortDigest.
+      const oldDigestRes = await executeOperatorAmend(session, {
+        elicit: async () => ({
+          action: ElicitationActions.accept,
+          content: {
+            decision: OperatorDecisionChoices.amend,
+            digest: proposeRes.shortDigest,
+          },
+        }),
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(oldDigestRes.ok).toBe(false);
+      expect(oldDigestRes.refused).toBe(true);
+      if (!oldDigestRes.ok) {
+        expect(oldDigestRes.error?.code).toBe("invalid-charter-digest");
+      }
+      expect(oldDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(oldDigestRes.state.charterRevision).toBe(1);
+
+      // 3. Under multiplexed opt-in, choosing approve with candidateAmendment's digest (not r1's) is refused.
+      const approveWithCandidateDigestRes = await executeOperatorAmend(session, {
+        elicit: async () => ({
+          action: ElicitationActions.accept,
+          content: {
+            decision: OperatorDecisionChoices.approve,
+            digest: candidateShortDigest,
+          },
+        }),
+        amendment: { recoverLimit: 9 },
+        env: {
+          TMUX: "/tmp/tmux-1000/default,1,0",
+          [OPERATOR_MULTIPLEXED_OPT_IN_ENV]: OPERATOR_MULTIPLEXED_OPT_IN_VALUE,
+        },
+      });
+      expect(approveWithCandidateDigestRes.ok).toBe(false);
+      expect(approveWithCandidateDigestRes.refused).toBe(true);
+      if (!approveWithCandidateDigestRes.ok) {
+        expect(approveWithCandidateDigestRes.error?.code).toBe("invalid-charter-digest");
+      }
+      expect(approveWithCandidateDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(approveWithCandidateDigestRes.state.charterRevision).toBe(1);
+
+      // 4. Succeeds when content.digest matches the resulting r2 shortDigest.
+      const confirmedRes = await executeOperatorAmend(session, {
+        elicit: async () => ({
+          action: ElicitationActions.accept,
+          content: {
+            decision: OperatorDecisionChoices.amend,
+            digest: candidateShortDigest,
+          },
+        }),
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(confirmedRes.ok).toBe(true);
+      expect(confirmedRes.state.state).toBe(CampaignStates.decisions);
+      expect(confirmedRes.state.charterRevision).toBe(2);
+      expect(confirmedRes.state.charter?.recoverLimit).toBe(9);
+      if (confirmedRes.ok) {
+        expect(confirmedRes.shortDigest).toBe(candidateShortDigest);
       }
     });
   });

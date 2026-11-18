@@ -255,3 +255,22 @@ Reproducible verification command:
 ```bash
 npx vitest run packages/skill-summon/test/campaign-u1.test.ts
 ```
+
+## U3 standing dose
+
+Standalone standing dose of the `campaign` MCP tool definition (`{ name, description, inputSchema }`) after publishing the U1–U3 operations (`open`, `recon`, `propose`, `decide`, `amend`, `status`) and charter proposal/amendment fields, measured with the vendored `chars4` tokenizer (`tokenize(text, "chars4")` in `packages/core/src/vendor/census-pure.ts`):
+
+- **Standing dose (`chars4`):** `825` tokens
+
+| Component | Chars | `chars4` tokens |
+| --- | ---: | ---: |
+| `name` | 8 | 2 |
+| `description` | 356 | 89 |
+| `inputSchema` (JSON) | 2883 | 720 |
+| Full `{ name, description, inputSchema }` definition (JSON) | 3302 | 825 |
+
+Reproducible verification command:
+
+```bash
+npx vitest run packages/skill-summon/test/campaign-u1.test.ts packages/skill-summon/test/campaign-u3.test.ts
+```

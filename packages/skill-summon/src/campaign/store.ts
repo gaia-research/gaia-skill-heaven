@@ -28,6 +28,7 @@ import {
   type CampaignEvent,
   type CampaignManifest,
   type CampaignOperatorCommand,
+  type CampaignQueueItem,
   type CampaignRecon,
   type CampaignState,
   type CampaignTraceEntry,
@@ -85,6 +86,8 @@ export type CampaignCharterTemplate = Readonly<{
   goal: string;
   phases: readonly string[];
   arsenal: readonly CampaignCharterArsenalItem[];
+  allowedSkills: readonly string[];
+  queue: readonly CampaignQueueItem[];
   authority: CampaignCharterAuthoritySplit;
   recoverLimit: number;
   reopenLimit: number;

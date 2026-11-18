@@ -572,6 +572,25 @@ export function renderControlStrategyLines(
     }
   }
 
+  const allowedSkills =
+    charterTemplate.allowedSkills ??
+    [...new Set(charterTemplate.arsenal.map((item) => item.skillId))];
+  lines.push(
+    `  AllowedSkills: ${allowedSkills.length > 0 ? allowedSkills.map((s) => displayField(s)).join(", ") : "none"}`,
+  );
+
+  const queue = charterTemplate.queue ?? [];
+  if (queue.length === 0) {
+    lines.push("  Queue (0 item(s)): none");
+  } else {
+    lines.push(`  Queue (${queue.length} item(s)):`);
+    for (const q of queue) {
+      lines.push(
+        `    - ${displayField(q.id)} · skill ${displayField(q.skill)} · reconCitation ${displayField(q.reconCitation)}`,
+      );
+    }
+  }
+
   lines.push("  What runs automatically:");
   if (charterTemplate.authority.automatic.length === 0) {
     lines.push("    - (none)");
@@ -603,6 +622,14 @@ export function renderControlStrategyLines(
   lines.push(
     `  Stops: ${charterTemplate.stops.length > 0 ? charterTemplate.stops.map((s) => displayField(s)).join(", ") : "none"}`,
   );
+  if (charterTemplate.clauses.length === 0) {
+    lines.push("  Clauses (0 item(s)): none");
+  } else {
+    lines.push(`  Clauses (${charterTemplate.clauses.length} item(s)):`);
+    for (const clause of charterTemplate.clauses) {
+      lines.push(`    - ${displayField(clause)}`);
+    }
+  }
 
   lines.push("  Absent lenses (not measured / not published; never 0):");
   let absentCount = 0;

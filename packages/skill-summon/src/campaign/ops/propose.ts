@@ -709,6 +709,8 @@ export function buildCharterTemplate(
     goal: baseCharter.goal,
     phases: [...phases],
     arsenal: arsenalItems,
+    allowedSkills: [...baseCharter.allowedSkills],
+    queue: [...baseCharter.queue],
     authority,
     recoverLimit: baseCharter.recoverLimit,
     reopenLimit: baseCharter.reopenLimit,
