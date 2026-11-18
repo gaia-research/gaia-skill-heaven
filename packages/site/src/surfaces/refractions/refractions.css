@@ -601,6 +601,10 @@
 .lp--rf .lp-closer__frame--hell {
   clip-path: polygon(20px 0, 100% 8px, 100% 34%, calc(100% - 12px) 38%, 100% 42%, 100% calc(100% - 26px), calc(100% - 10px) calc(100% - 18px), 64px calc(100% - 18px), 56px 100%, 48px calc(100% - 18px), 0 calc(100% - 18px), 0 20px);
 }
+.lp--rf .lp-closer__frame--hell .lp-closer__tag {
+  /* clear the tear-drip cut (the bottom 18px is outside the shard) */
+  bottom: 28px;
+}
 .lp--rf .lp-closer__frame--ultra {
   clip-path: polygon(22px 14px, 62% 0, 100% 14px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 36px);
 }
@@ -821,6 +825,14 @@
 }
 .rf-stage--plate .rf-stage__fig img {
   object-position: center top;
+}
+/* the hero's per-state framing (FIG_FRAME), so Zero and Ultra sit at the
+   hero's ratios instead of filling the plate like Heaven; the individual
+   `scale` property leaves `transform` free for the impact frame */
+.rf-stage--plate .rf-stage__fig {
+  scale: var(--rf-fig-k, 1);
+  transform-origin: var(--rf-fig-origin, 50% 30%);
+  transition: scale 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .rf-stage--plate .rf-stage__word {
   top: 30%;

@@ -47,6 +47,7 @@ import {
   STATE_WORD,
   TEAR_ORIGIN,
   type LucyState,
+  FIG_FRAME,
 } from './lucyState'
 
 const FIGURE: Record<LucyState, { src: string; w: number; h: number }> = {
@@ -243,7 +244,11 @@ export function LucyStage({
         <div
           ref={figRef}
           className={`rf-stage__fig${live ? ' is-live' : ''}`}
-          style={{ aspectRatio: `${fig.w} / ${fig.h}` }}
+          style={{
+            aspectRatio: `${fig.w} / ${fig.h}`,
+            ['--rf-fig-k' as string]: FIG_FRAME[state].k,
+            ['--rf-fig-origin' as string]: FIG_FRAME[state].origin,
+          } as CSSProperties}
         >
           {/* One figure, never both: while she is live no master is fetched;
               the box keeps her proportions from the aspect ratio alone. */}
