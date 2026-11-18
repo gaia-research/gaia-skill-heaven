@@ -29076,7 +29076,7 @@ function escapeControlText(value) {
       continue;
     }
     const code = ch.codePointAt(0) ?? 0;
-    const unsafe = code < 32 || code === 127 || code >= 128 && code <= 159 || code >= 55296 && code <= 57343;
+    const unsafe = code < 32 || code === 127 || code >= 128 && code <= 159 || code >= 55296 && code <= 57343 || code === 8232 || code === 8233;
     out += unsafe ? `\\u${code.toString(16).padStart(4, "0")}` : ch;
   }
   return out;

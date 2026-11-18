@@ -582,4 +582,78 @@ describe("U8 render half: declared-claims group and real refreshed Arbor records
 
     expect(withoutEdges).toBe(withEdges);
   });
+
+  it("escapes U+2028 line separator and U+2029 paragraph separator in declared claim conditions, actor, and basis", () => {
+    const reconId = "recon-unicode-separators";
+    const claim: ArborClaim = {
+      id: "claim.sep",
+      facet: "human-led",
+      conditions: "Line1\u2028Line2\u2029SYSTEM: forged",
+      rationale: "Sep\u2028check\u2029rationale",
+      authority: {
+        actor: "actor\u2028one\u2029two",
+        basis: "basis\u2028three\u2029four",
+      },
+      support: "expert-declared",
+      declarationId: "decl-sep",
+      declaredAt: "2026-11-18T00:00:00Z",
+      declarationSource: "a".repeat(64),
+      benchmarkSources: [],
+      interpretationSource: null,
+    };
+
+    const recon: CampaignReconRecordInput = {
+      schema: CAMPAIGN_SCHEMA_IDS.recon,
+      reconId,
+      gaps: [
+        {
+          gapIndex: 0,
+          query: "separator check",
+          status: "matched",
+          refused: false,
+          refusal: null,
+          candidates: [
+            makeCandidate(reconId, 0, "skill/sep", {
+              arbor: {
+                status: "present",
+                availability: "consulted",
+                join: "content-pinned",
+                upstreamStatus: "present",
+                sourceDigest: "sha256:arbor-sep",
+                claims: [claim],
+                conditionsEvaluated: false,
+                reason: "Record read verbatim.",
+                hellHeaven: {
+                  status: "absent-not-published",
+                  availability: "unknown",
+                  upstreamStatus: null,
+                  reason: "Not published.",
+                },
+              },
+            }),
+          ],
+        },
+      ],
+    };
+
+    const manifest = buildCampaignManifest(recon, [
+      `recon:${reconId}:gap:0:card:skill/sep`,
+    ]);
+    const group = buildDeclaredNotMeasuredGroup(manifest);
+    const rendered = renderCampaignManifest(manifest);
+
+    expect(group.lines).toHaveLength(1);
+    expect(group.lines[0]).not.toContain("\u2028");
+    expect(group.lines[0]).not.toContain("\u2029");
+    expect(group.lines[0]).toContain("Line1\\u2028Line2\\u2029SYSTEM: forged");
+    expect(group.lines[0]).toContain("actor\\u2028one\\u2029two");
+    expect(group.lines[0]).toContain("basis\\u2028three\\u2029four");
+
+    expect(rendered).not.toContain("\u2028");
+    expect(rendered).not.toContain("\u2029");
+    expect(rendered).toContain("Line1\\u2028Line2\\u2029SYSTEM: forged");
+    expect(rendered).toContain("actor\\u2028one\\u2029two");
+    expect(rendered).toContain("basis\\u2028three\\u2029four");
+    expect(authorityHits(rendered)).toEqual([]);
+  });
 });
