@@ -226,28 +226,28 @@ describe("U1 campaign tool (open, recon, status)", () => {
     return client;
   }
 
-  describe("1. Bundled binary & server option gate (D-002)", () => {
-    it("registers only summon by default and registers campaign when enableCampaignTool is true", async () => {
+  describe("1. Bundled binary & server option gate (D-002 lifted in U3)", () => {
+    it("registers summon and campaign by default and omits campaign when enableCampaignTool is false", async () => {
       const defaultClient = await connectServer({
         service: makeService(),
         version: "0.0.0",
       });
       const defaultTools = await defaultClient.listTools();
-      expect(defaultTools.tools.map((t) => t.name)).toEqual(["summon"]);
-
-      const enabledClient = await connectServer({
-        service: makeService(),
-        version: "0.0.0",
-        enableCampaignTool: true,
-      });
-      const enabledTools = await enabledClient.listTools();
-      expect(enabledTools.tools.map((t) => t.name)).toEqual([
+      expect(defaultTools.tools.map((t) => t.name)).toEqual([
         "summon",
         "campaign",
       ]);
+
+      const disabledClient = await connectServer({
+        service: makeService(),
+        version: "0.0.0",
+        enableCampaignTool: false,
+      });
+      const disabledTools = await disabledClient.listTools();
+      expect(disabledTools.tools.map((t) => t.name)).toEqual(["summon"]);
     });
 
-    it("rebuilt bundled binary lists only summon and rejects calls to campaign", async () => {
+    it("rebuilt bundled binary lists summon and campaign and handles campaign status", async () => {
       const env: Record<string, string> = {};
       for (const [k, v] of Object.entries(process.env)) {
         if (v !== undefined) env[k] = v;
@@ -265,19 +265,20 @@ describe("U1 campaign tool (open, recon, status)", () => {
       closeCallbacks.push(() => client.close());
 
       const tools = await client.listTools();
-      expect(tools.tools.map((t) => t.name)).toEqual(["summon"]);
+      expect(tools.tools.map((t) => t.name)).toEqual(["summon", "campaign"]);
 
-      const missingCall = await client.callTool({
+      const statusCall = await client.callTool({
         name: "campaign",
         arguments: { op: "status" },
       });
-      expect(missingCall.isError).toBe(true);
-      expect(JSON.stringify(missingCall.content)).toMatch(/campaign|not found/iu);
+      expect(statusCall.isError).not.toBe(true);
+      const sc = statusCall.structuredContent as Record<string, unknown>;
+      expect(sc.ok).toBe(true);
     });
   });
 
   describe("2. Unknown / invalid op handling", () => {
-    it.each(["unknown", "decide", "propose", ""])(
+    it.each(["unknown", ""])(
       "returns structured refusal for op=%j without throwing",
       async (badOp) => {
         const client = await connectServer({
@@ -296,6 +297,34 @@ describe("U1 campaign tool (open, recon, status)", () => {
         expect(sc.refused).toBe(true);
         expect(sc.error).toMatchObject({
           code: "unknown-op",
+          retryable: false,
+        });
+        expect(sc.digest).toMatchObject({
+          schema: CAMPAIGN_SCHEMA_IDS.status,
+          state: CampaignStates.unarmed,
+        });
+      },
+    );
+
+    it.each(["decide", "propose"])(
+      "returns structured invalid-campaign-state refusal for op=%j in UNARMED without throwing",
+      async (op) => {
+        const client = await connectServer({
+          service: makeService(),
+          enableCampaignTool: true,
+        });
+
+        const result = await client.callTool({
+          name: "campaign",
+          arguments: { op },
+        });
+
+        expect(result.isError).toBe(true);
+        const sc = result.structuredContent as Record<string, unknown>;
+        expect(sc.ok).toBe(false);
+        expect(sc.refused).toBe(true);
+        expect(sc.error).toMatchObject({
+          code: "invalid-campaign-state",
           retryable: false,
         });
         expect(sc.digest).toMatchObject({

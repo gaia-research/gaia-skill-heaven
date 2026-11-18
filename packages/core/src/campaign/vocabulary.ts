@@ -34,6 +34,25 @@ export const EngineOps = Object.freeze({
   verify: "verify", complete: "complete", policyStop: "policy-stop", block: "block", fail: "fail", sessionEnd: "session-end",
 } as const);
 export const DecisionActions = Object.freeze({ approve: "approve", decline: "decline" } as const);
+export const OPERATOR_ATTRIBUTION = "terminal-input, unauthenticated" as const;
+export const OPERATOR_CHANNEL_MCP_ELICITATION = "mcp-elicitation" as const;
+export const MULTIPLEXER_ENV_VARS = Object.freeze(["HERDR_ENV", "HERDR_SOCKET_PATH", "TMUX"] as const);
+export const OPERATOR_MULTIPLEXED_OPT_IN_ENV = "SKILL_ULTRA_MULTIPLEXED_DECISIONS" as const;
+export const OPERATOR_MULTIPLEXED_OPT_IN_VALUE = "accept-risk" as const;
+export const ElicitationActions = Object.freeze({ accept: "accept", decline: "decline", cancel: "cancel" } as const);
+export const OperatorDecisionChoices = Object.freeze({
+  approve: DecisionActions.approve,
+  amend: OperatorVerbs.amend,
+  decline: DecisionActions.decline,
+} as const);
+export const UltraSubcommands = Object.freeze({
+  decide: OperatorVerbs.decide,
+  amend: OperatorVerbs.amend,
+  answer: OperatorVerbs.answer,
+  status: AgentOps.status,
+  stop: OperatorVerbs.stop,
+} as const);
+export const ULTRA_SUBCOMMANDS = Object.freeze(Object.values(UltraSubcommands));
 export const CAMPAIGN_STATES = Object.freeze(Object.values(CampaignStates));
 export const CAMPAIGN_DECISIONS = Object.freeze(Object.values(CampaignDecisions));
 export const OPERATOR_VERBS = Object.freeze(Object.values(OperatorVerbs));
@@ -61,6 +80,9 @@ export type AgentOp = typeof AGENT_OPS[number];
 export type CampaignChannel = typeof CAMPAIGN_CHANNELS[number];
 export type CampaignSignal = typeof CAMPAIGN_SIGNALS[number];
 export type CampaignPhase = typeof CAMPAIGN_PHASES[number];
+export type ElicitationAction = typeof ElicitationActions[keyof typeof ElicitationActions];
+export type OperatorDecisionChoice = typeof OperatorDecisionChoices[keyof typeof OperatorDecisionChoices];
+export type UltraSubcommand = typeof ULTRA_SUBCOMMANDS[number];
 export const CAMPAIGN_SCHEMA_IDS = Object.freeze({
   trace: "skill-heaven/campaign-trace/v1",
   charter: "skill-heaven/campaign-charter/v1",

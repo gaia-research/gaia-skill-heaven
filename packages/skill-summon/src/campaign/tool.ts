@@ -3,6 +3,8 @@ import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-sc
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   AgentOps,
+  ElicitationActions,
+  OperatorVerbs,
   tokenize,
 } from "skill-zero";
 import { z } from "zod";
@@ -10,7 +12,13 @@ import { z } from "zod";
 import type { GaiaService } from "../service.js";
 import type { SummonSession } from "../summon/session.js";
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
+import {
+  executeOperatorAmend,
+  executeOperatorDecide,
+  type ElicitationClient,
+} from "./operator.js";
 import { executeOpen } from "./ops/open.js";
+import { executePropose } from "./ops/propose.js";
 import { executeRecon } from "./ops/recon.js";
 import {
   executeStatus,
@@ -131,6 +139,8 @@ export type CampaignToolContext = Readonly<{
   service: GaiaService;
   getSession: () => Promise<SummonSession>;
   zeroCut?: ZeroCut;
+  elicit?: ElicitationClient;
+  env?: NodeJS.ProcessEnv;
 }>;
 
 export async function executeCampaignTool(
@@ -195,6 +205,39 @@ export async function executeCampaignTool(
       return toCampaignCallToolResult(result);
     }
 
+    if (op === AgentOps.propose) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const result = await executePropose(session, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === OperatorVerbs.decide) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const elicit: ElicitationClient =
+        context.elicit ?? (async () => ({ action: ElicitationActions.cancel }));
+      const result = await executeOperatorDecide(session, {
+        elicit,
+        env: context.env,
+      });
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === OperatorVerbs.amend) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const elicit: ElicitationClient =
+        context.elicit ?? (async () => ({ action: ElicitationActions.cancel }));
+      const amendment = isPlainObject(rawArgs) ? rawArgs : undefined;
+      const result = await executeOperatorAmend(session, {
+        elicit,
+        env: context.env,
+        amendment,
+      });
+      return toCampaignCallToolResult(result);
+    }
+
     const session = await context.getSession();
     sessionRoot = session.root;
     const statusResult = await executeStatus(session);
@@ -256,6 +299,23 @@ export function registerCampaignTool(
   server: McpServer,
   context: CampaignToolContext,
 ): void {
+  const elicit: ElicitationClient =
+    context.elicit ??
+    (async (request) => {
+      const res = await server.server.elicitInput({
+        mode: "form",
+        message: request.message,
+        requestedSchema: request.requestedSchema as {
+          type: "object";
+          properties: Record<string, never>;
+        },
+      });
+      return {
+        action: res.action,
+        ...(res.content ? { content: res.content as Record<string, unknown> } : {}),
+      };
+    });
+
   server.registerTool(
     CAMPAIGN_TOOL_NAME,
     {
@@ -269,7 +329,7 @@ export function registerCampaignTool(
         openWorldHint: false,
       },
     },
-    (args) => executeCampaignTool(context, args),
+    (args) => executeCampaignTool({ ...context, elicit }, args),
   );
 }
 

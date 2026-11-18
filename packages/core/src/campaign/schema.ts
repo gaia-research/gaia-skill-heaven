@@ -1,5 +1,22 @@
 import { STEERING_RUNGS, SEARCH_STATES } from "../steering.js";
-import { CampaignStates as S, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions as D, CAMPAIGN_SCHEMA_IDS, CAMPAIGN_STATES, CAMPAIGN_DECISIONS, CAMPAIGN_CHANNELS, CAMPAIGN_PHASES, CAMPAIGN_SIGNALS, AGENT_OPS, OPERATOR_VERBS, ENGINE_OPS } from "./vocabulary.js";
+import {
+  CampaignStates as S,
+  AgentOps as A,
+  OperatorVerbs as O,
+  EngineOps as E,
+  DecisionActions as D,
+  CAMPAIGN_SCHEMA_IDS,
+  CAMPAIGN_STATES,
+  CAMPAIGN_DECISIONS,
+  CAMPAIGN_CHANNELS,
+  CAMPAIGN_PHASES,
+  CAMPAIGN_SIGNALS,
+  AGENT_OPS,
+  OPERATOR_VERBS,
+  ENGINE_OPS,
+  OPERATOR_ATTRIBUTION,
+  OPERATOR_CHANNEL_MCP_ELICITATION,
+} from "./vocabulary.js";
 import type { CampaignCharter, CampaignRecon, CampaignTraceEntry, CampaignTraceRecord, CampaignState, CampaignEventDescriptor, ConvergenceIncident, ControllerStatus } from "./types.js";
 export { CAMPAIGN_SCHEMA_IDS };
 export { parseCampaignManifest, isValidManifestForRecon } from "./manifest.js";
@@ -101,23 +118,47 @@ const event: Check = v => {
     }
   }
   if (c.value === "operator") {
+    const provenanceFields = {
+      attribution: schema(OPERATOR_ATTRIBUTION),
+      operatorChannel: schema(OPERATOR_CHANNEL_MCP_ELICITATION),
+      multiplexed: bool,
+      optIn: bool,
+    };
+    const provenanceOptional = ["attribution", "operatorChannel", "multiplexed", "optIn"] as const;
     switch (o.value) {
-      case O.decide: return object(v, { ...base, action: member(Object.values(D)), charterRevision: nat });
-      case O.amend: return object(v, { ...base, charter });
-      case O.answer: return object(v, { ...base, incidentId: text, answer: text });
-      case O.checkpoint: case O.stop: return object(v, base);
+      case O.decide: return object(v, { ...base, ...provenanceFields, action: member(Object.values(D)), charterRevision: nat }, provenanceOptional);
+      case O.amend: return object(v, { ...base, ...provenanceFields, charter }, provenanceOptional);
+      case O.answer: return object(v, { ...base, ...provenanceFields, incidentId: text, answer: text }, provenanceOptional);
+      case O.checkpoint: case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
   }
   if (c.value === "engine" && ENGINE_OPS.includes(o.value)) return object(v, o.value === E.verify ? { ...base, passed: bool, clause: text } : { ...base, clause: text });
   return false;
 };
-const trace: Check = v => object(v, {
-  seq: nat, from: stateName, to: stateName, trigger: member([...allOps, "none"]),
-  decision: member(CAMPAIGN_DECISIONS), signal: member(CAMPAIGN_SIGNALS),
-  charterRevision: nat, charterClause: nullable(text), skills: strings,
-  phase: member(CAMPAIGN_PHASES), workUnit: nullable(text), personRequired: bool,
-  channel: member(CAMPAIGN_CHANNELS), accepted: bool,
-});
+const trace: Check = v => {
+  if (!object(v, {
+    seq: nat, from: stateName, to: stateName, trigger: member([...allOps, "none"]),
+    decision: member(CAMPAIGN_DECISIONS), signal: member(CAMPAIGN_SIGNALS),
+    charterRevision: nat, charterClause: nullable(text), skills: strings,
+    phase: member(CAMPAIGN_PHASES), workUnit: nullable(text), personRequired: bool,
+    channel: member(CAMPAIGN_CHANNELS), accepted: bool,
+    attribution: schema(OPERATOR_ATTRIBUTION),
+    operatorChannel: schema(OPERATOR_CHANNEL_MCP_ELICITATION),
+    multiplexed: bool,
+    optIn: bool,
+  }, ["attribution", "operatorChannel", "multiplexed", "optIn"])) return false;
+  const entry = v as CampaignTraceEntry;
+  if (
+    entry.channel !== "operator" &&
+    (entry.attribution !== undefined ||
+      entry.operatorChannel !== undefined ||
+      entry.multiplexed !== undefined ||
+      entry.optIn !== undefined)
+  ) {
+    return false;
+  }
+  return true;
+};
 const record: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.trace), initial: state, final: state,
   events: array(nullable(event)), trace: array(trace),
