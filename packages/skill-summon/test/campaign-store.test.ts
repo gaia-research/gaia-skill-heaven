@@ -1,4 +1,6 @@
-import { constants } from "node:fs";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { constants, type Dir } from "node:fs";
+import type { FileHandle } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -6,6 +8,9 @@ import { vi } from "vitest";
 
 const hookState = vi.hoisted(() => {
   return {
+    onOp: undefined as
+      | ((op: string, args: readonly unknown[]) => void)
+      | undefined,
     beforeOp: undefined as
       | ((op: string, args: readonly unknown[]) => Promise<void> | void)
       | undefined,
@@ -30,42 +35,170 @@ vi.mock("node:fs/promises", async () => {
   const actual = await vi.importActual<typeof import("node:fs/promises")>(
     "node:fs/promises",
   );
+  const runAsyncHooked = async <T>(
+    name: string,
+    args: readonly unknown[],
+    run: () => Promise<T>,
+  ): Promise<T> => {
+    hookState.onOp?.(name, args);
+    if (hookState.beforeOp) {
+      await hookState.beforeOp(name, args);
+    }
+    try {
+      const result = await run();
+      if (hookState.afterOp) {
+        await hookState.afterOp(name, args, result);
+      }
+      return result;
+    } catch (error) {
+      if (hookState.afterError) {
+        await hookState.afterError(name, args, error);
+      }
+      throw error;
+    }
+  };
+
   const wrap = <T extends (...args: never[]) => Promise<unknown>>(
     name: string,
     fn: T,
   ): T =>
-    vi.fn(async (...args: Parameters<T>) => {
-      if (hookState.beforeOp) {
-        await hookState.beforeOp(name, args as readonly unknown[]);
-      }
-      try {
-        const result = await fn(...args);
-        if (hookState.afterOp) {
-          await hookState.afterOp(name, args as readonly unknown[], result);
-        }
-        return result;
-      } catch (error) {
-        if (hookState.afterError) {
-          await hookState.afterError(name, args as readonly unknown[], error);
-        }
-        throw error;
-      }
+    vi.fn(async (...args: Parameters<T>) =>
+      runAsyncHooked(name, args as readonly unknown[], () => fn(...args)),
+    ) as unknown as T;
+
+  const wrapSync = <T extends (...args: never[]) => unknown>(
+    name: string,
+    fn: T,
+  ): T =>
+    vi.fn((...args: Parameters<T>) => {
+      hookState.onOp?.(name, args as readonly unknown[]);
+      return fn(...args);
     }) as unknown as T;
+
+  const instrumentFileHandle = (
+    handle: FileHandle,
+    targetPath: unknown,
+  ): FileHandle => {
+    const asyncMethods = [
+      "read",
+      "readFile",
+      "readv",
+      "stat",
+      "appendFile",
+      "chmod",
+      "chown",
+      "truncate",
+      "utimes",
+      "write",
+      "writeFile",
+      "writev",
+    ] as const;
+    for (const method of asyncMethods) {
+      const orig = handle[method];
+      if (typeof orig !== "function") continue;
+      const bound = orig.bind(handle) as (...mArgs: unknown[]) => Promise<unknown>;
+      Object.defineProperty(handle, method, {
+        configurable: true,
+        writable: true,
+        value: async (...mArgs: unknown[]) =>
+          runAsyncHooked(
+            `fileHandle.${method}`,
+            [targetPath, ...mArgs],
+            () => bound(...mArgs),
+          ),
+      });
+    }
+
+    const syncMethods = [
+      "createReadStream",
+      "readLines",
+      "readableWebStream",
+      "createWriteStream",
+    ] as const;
+    for (const method of syncMethods) {
+      const orig = handle[method];
+      if (typeof orig !== "function") continue;
+      const bound = orig.bind(handle) as (...mArgs: unknown[]) => unknown;
+      Object.defineProperty(handle, method, {
+        configurable: true,
+        writable: true,
+        value: (...mArgs: unknown[]) => {
+          hookState.onOp?.(`fileHandle.${method}`, [targetPath, ...mArgs]);
+          return bound(...mArgs);
+        },
+      });
+    }
+    return handle;
+  };
+
+  const wrapOpen = vi.fn(
+    async (...args: Parameters<typeof actual.open>) =>
+      runAsyncHooked("open", args as readonly unknown[], async () => {
+        const handle = await actual.open(...args);
+        return instrumentFileHandle(handle, args[0]);
+      }),
+  ) as unknown as typeof actual.open;
+
+  const wrapOpendir = vi.fn(
+    async (...args: Parameters<typeof actual.opendir>) =>
+      runAsyncHooked("opendir", args as readonly unknown[], async () => {
+        const dir: Dir = await actual.opendir(...args);
+        const origRead = dir.read.bind(dir) as (
+          ...rArgs: unknown[]
+        ) => unknown;
+        Object.defineProperty(dir, "read", {
+          configurable: true,
+          writable: true,
+          value: (...rArgs: unknown[]) => {
+            if (typeof rArgs[0] === "function") {
+              hookState.onOp?.("dir.read", [args[0], ...rArgs]);
+              return origRead(...rArgs);
+            }
+            return runAsyncHooked(
+              "dir.read",
+              [args[0], ...rArgs],
+              () => origRead(...rArgs) as Promise<unknown>,
+            );
+          },
+        });
+        return dir;
+      }),
+  ) as unknown as typeof actual.opendir;
 
   return {
     ...actual,
+    access: wrap("access", actual.access),
     appendFile: wrap("appendFile", actual.appendFile),
+    chmod: wrap("chmod", actual.chmod),
+    chown: wrap("chown", actual.chown),
+    copyFile: wrap("copyFile", actual.copyFile),
+    cp: wrap("cp", actual.cp),
+    glob: wrapSync("glob", actual.glob),
+    ...(typeof actual.lchmod === "function"
+      ? { lchmod: wrap("lchmod", actual.lchmod) }
+      : {}),
+    lchown: wrap("lchown", actual.lchown),
+    link: wrap("link", actual.link),
     lstat: wrap("lstat", actual.lstat),
+    lutimes: wrap("lutimes", actual.lutimes),
     mkdir: wrap("mkdir", actual.mkdir),
     mkdtemp: wrap("mkdtemp", actual.mkdtemp),
-    open: wrap("open", actual.open),
+    open: wrapOpen,
+    opendir: wrapOpendir,
     readFile: wrap("readFile", actual.readFile),
     readdir: wrap("readdir", actual.readdir),
+    readlink: wrap("readlink", actual.readlink),
     realpath: wrap("realpath", actual.realpath),
     rename: wrap("rename", actual.rename),
     rm: wrap("rm", actual.rm),
+    rmdir: wrap("rmdir", actual.rmdir),
     stat: wrap("stat", actual.stat),
+    statfs: wrap("statfs", actual.statfs),
+    symlink: wrap("symlink", actual.symlink),
+    truncate: wrap("truncate", actual.truncate),
     unlink: wrap("unlink", actual.unlink),
+    utimes: wrap("utimes", actual.utimes),
+    watch: wrapSync("watch", actual.watch),
     writeFile: wrap("writeFile", actual.writeFile),
   };
 });
@@ -76,6 +209,7 @@ import {
   lstat,
   mkdir,
   mkdtemp,
+  open,
   readdir,
   readFile,
   realpath,
@@ -131,13 +265,131 @@ function deferred<T = void>(): {
   return { promise, resolve, reject };
 }
 
+const opContext = new AsyncLocalStorage<symbol>();
+
+type RecordedFsOp = {
+  op: string;
+  target: string;
+};
+
+function isMutatingFsOp(op: string, args: readonly unknown[]): boolean {
+  if (
+    op === "appendFile" ||
+    op === "chmod" ||
+    op === "chown" ||
+    op === "copyFile" ||
+    op === "cp" ||
+    op === "lchmod" ||
+    op === "lchown" ||
+    op === "link" ||
+    op === "lutimes" ||
+    op === "mkdir" ||
+    op === "mkdtemp" ||
+    op === "rename" ||
+    op === "rm" ||
+    op === "rmdir" ||
+    op === "symlink" ||
+    op === "truncate" ||
+    op === "unlink" ||
+    op === "utimes" ||
+    op === "writeFile" ||
+    op === "fileHandle.appendFile" ||
+    op === "fileHandle.chmod" ||
+    op === "fileHandle.chown" ||
+    op === "fileHandle.truncate" ||
+    op === "fileHandle.utimes" ||
+    op === "fileHandle.write" ||
+    op === "fileHandle.writeFile" ||
+    op === "fileHandle.writev" ||
+    op === "fileHandle.createWriteStream"
+  ) {
+    return true;
+  }
+  if (op === "open") {
+    const flags = args[1];
+    if (typeof flags === "string") {
+      return /[wa+x]/u.test(flags);
+    }
+    if (typeof flags === "number") {
+      return (
+        (flags &
+          (constants.O_WRONLY |
+            constants.O_RDWR |
+            constants.O_CREAT |
+            constants.O_TRUNC |
+            constants.O_APPEND)) !==
+        0
+      );
+    }
+  }
+  return false;
+}
+
+function isReadOrMetadataFsOp(op: string): boolean {
+  return (
+    op === "access" ||
+    op === "copyFile" ||
+    op === "cp" ||
+    op === "glob" ||
+    op === "lstat" ||
+    op === "open" ||
+    op === "opendir" ||
+    op === "dir.read" ||
+    op === "readFile" ||
+    op === "readdir" ||
+    op === "readlink" ||
+    op === "realpath" ||
+    op === "stat" ||
+    op === "statfs" ||
+    op === "fileHandle.read" ||
+    op === "fileHandle.readFile" ||
+    op === "fileHandle.readv" ||
+    op === "fileHandle.stat" ||
+    op === "fileHandle.createReadStream" ||
+    op === "fileHandle.readLines" ||
+    op === "fileHandle.readableWebStream"
+  );
+}
+
+function createPreviewOpRecorder(previewToken: symbol) {
+  let afterBarrier = false;
+  const mutatingOps: RecordedFsOp[] = [];
+  const postBarrierReads: RecordedFsOp[] = [];
+
+  return {
+    markAfterBarrier(): void {
+      afterBarrier = true;
+    },
+    isAfterBarrier(): boolean {
+      return afterBarrier;
+    },
+    mutatingOps,
+    postBarrierReads,
+    record(op: string, args: readonly unknown[]): void {
+      if (opContext.getStore() !== previewToken) return;
+      const entry: RecordedFsOp = {
+        op,
+        target: String(args[0] ?? ""),
+      };
+      if (isMutatingFsOp(op, args)) {
+        mutatingOps.push(entry);
+      }
+      if (afterBarrier && isReadOrMetadataFsOp(op)) {
+        postBarrierReads.push(entry);
+      }
+    },
+  };
+}
+
 beforeEach(() => {
+  hookState.onOp = undefined;
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
   hookState.afterError = undefined;
 });
 
 afterEach(async () => {
+  hookState.onOp = undefined;
   hookState.beforeOp = undefined;
   hookState.afterOp = undefined;
   hookState.afterError = undefined;
@@ -1493,40 +1745,9 @@ process.stdin.on("data", async (chunk) => {
     // Interleaving 3b: read-only preview completes BOTH snapshots and the FINAL claim check
     // (claimAfter === "absent"), then pauses BEFORE delivering that captured snapshot while
     // a concurrent append commits seq 2 (`propose` -> `decisions`). Preview MUST return the
-    // CAPTURED old coherent snapshot (seq 0..1, `recon`), perform zero reads after pause and
-    // zero projection/disk writes, and leave the committed seq 2 `status.json` intact.
-    const isMutatingOp = (op: string, args: readonly unknown[]): boolean => {
-      if (
-        op === "appendFile" ||
-        op === "writeFile" ||
-        op === "mkdir" ||
-        op === "mkdtemp" ||
-        op === "rename" ||
-        op === "rm" ||
-        op === "unlink"
-      ) {
-        return true;
-      }
-      if (op === "open") {
-        const flags = args[1];
-        if (typeof flags === "string") {
-          return /[wa+x]/u.test(flags);
-        }
-        if (typeof flags === "number") {
-          return (
-            (flags &
-              (constants.O_WRONLY |
-                constants.O_RDWR |
-                constants.O_CREAT |
-                constants.O_TRUNC |
-                constants.O_APPEND)) !==
-            0
-          );
-        }
-      }
-      return false;
-    };
-
+    // CAPTURED old coherent snapshot (seq 0..1, `recon`), perform zero FS reads/opens/handle-reads
+    // after the final claim-check barrier and zero projection/disk writes, and leave the
+    // committed seq 2 `status.json` intact.
     const parentTemp3b = await mkdtemp(
       path.join(tmpdir(), "skill-summon-ro-postclaim-"),
     );
@@ -1545,25 +1766,20 @@ process.stdin.on("data", async (chunk) => {
     const preAppendRecordSha3b = storeWriter3b.recordSha256;
     expect(preAppendRecordSha3b).toMatch(/^[0-9a-f]{64}$/u);
 
+    const previewToken3b = Symbol("preview-3b");
+    const writerToken3b = Symbol("writer-3b");
+    const recorder3b = createPreviewOpRecorder(previewToken3b);
     const pausedAfterFinalClaim3b = deferred();
     const releaseAfterFinalClaim3b = deferred();
     let finalClaimChecks3b = 0;
-    let pausedPostClaimOnce3b = false;
-    let writerRunning3b = false;
-    const previewWriteOps3b: string[] = [];
-    const previewReadsAfterPause3b: string[] = [];
 
-    hookState.beforeOp = (op, args) => {
-      if (writerRunning3b) return;
-      if (isMutatingOp(op, args)) {
-        previewWriteOps3b.push(op);
-      }
-      if (pausedPostClaimOnce3b && op === "readFile") {
-        previewReadsAfterPause3b.push(String(args[0]));
-      }
+    hookState.onOp = (op, args) => {
+      recorder3b.record(op, args);
     };
     hookState.afterError = async (op, args, error) => {
-      if (writerRunning3b || pausedPostClaimOnce3b) return;
+      if (opContext.getStore() !== previewToken3b || recorder3b.isAfterBarrier()) {
+        return;
+      }
       if (
         op === "lstat" &&
         args[0] === claimsDir3b &&
@@ -1571,46 +1787,56 @@ process.stdin.on("data", async (chunk) => {
       ) {
         finalClaimChecks3b++;
         if (finalClaimChecks3b === 3) {
-          pausedPostClaimOnce3b = true;
+          recorder3b.markAfterBarrier();
           pausedAfterFinalClaim3b.resolve();
           await releaseAfterFinalClaim3b.promise;
         }
       }
     };
 
-    const previewPostClaimPromise3b = CampaignStore.load(root3b, {
-      refreshStatus: false,
-    });
-    await pausedAfterFinalClaim3b.promise;
-    expect(finalClaimChecks3b).toBe(3);
+    let previewPostClaimPromise3b: Promise<CampaignStore> | undefined;
+    try {
+      previewPostClaimPromise3b = opContext.run(previewToken3b, () =>
+        CampaignStore.load(root3b, { refreshStatus: false }),
+      );
+      await pausedAfterFinalClaim3b.promise;
+      expect(finalClaimChecks3b).toBe(3);
 
-    writerRunning3b = true;
-    const committed3b = await storeWriter3b.append({
-      channel: "agent",
-      op: "propose",
-      charter: makeCharter(1),
-    });
-    expect(committed3b.entry.seq).toBe(2);
-    expect(committed3b.state.state).toBe(CampaignStates.decisions);
-    const postAppendStatus3b = await readFile(seed3b.statusPath, "utf8");
-    writerRunning3b = false;
+      const committed3b = await opContext.run(writerToken3b, () =>
+        storeWriter3b.append({
+          channel: "agent",
+          op: "propose",
+          charter: makeCharter(1),
+        }),
+      );
+      expect(committed3b.entry.seq).toBe(2);
+      expect(committed3b.state.state).toBe(CampaignStates.decisions);
+      const postAppendStatus3b = await readFile(seed3b.statusPath, "utf8");
 
-    releaseAfterFinalClaim3b.resolve();
-    const previewCaptured3b = await previewPostClaimPromise3b;
-    hookState.beforeOp = undefined;
-    hookState.afterError = undefined;
+      releaseAfterFinalClaim3b.resolve();
+      const previewCaptured3b = await previewPostClaimPromise3b;
 
-    expect(previewCaptured3b.corrupted).toBe(false);
-    expect(previewCaptured3b.trace.map((e) => e.seq)).toEqual([0, 1]);
-    expect(previewCaptured3b.state.state).toBe(CampaignStates.recon);
-    expect(previewCaptured3b.recordSha256).toBe(preAppendRecordSha3b);
-    expect(previewWriteOps3b).toEqual([]);
-    expect(previewReadsAfterPause3b).toEqual([]);
-    expect(await readFile(seed3b.statusPath, "utf8")).toBe(postAppendStatus3b);
+      expect(previewCaptured3b.corrupted).toBe(false);
+      expect(previewCaptured3b.trace.map((e) => e.seq)).toEqual([0, 1]);
+      expect(previewCaptured3b.state.state).toBe(CampaignStates.recon);
+      expect(previewCaptured3b.recordSha256).toBe(preAppendRecordSha3b);
+      expect(recorder3b.mutatingOps).toEqual([]);
+      expect(recorder3b.postBarrierReads).toEqual([]);
+      expect(await readFile(seed3b.statusPath, "utf8")).toBe(postAppendStatus3b);
+    } finally {
+      releaseAfterFinalClaim3b.resolve();
+      await Promise.allSettled(
+        previewPostClaimPromise3b ? [previewPostClaimPromise3b] : [],
+      );
+      hookState.onOp = undefined;
+      hookState.beforeOp = undefined;
+      hookState.afterError = undefined;
+    }
 
     // Interleaving 3c: paused after FINAL claim check while a concurrent append leaves
     // trace.jsonl (3 lines) and evidence.jsonl (2 lines) TORN on disk -> preview still
-    // delivers its captured coherent [0, 1] snapshot rather than rereading torn files.
+    // delivers its captured coherent [0, 1] snapshot with zero post-barrier FS reads/opens/
+    // handle-reads and zero writes, rather than rereading torn files.
     const parentTemp3c = await mkdtemp(
       path.join(tmpdir(), "skill-summon-ro-torn-postclaim-"),
     );
@@ -1628,33 +1854,35 @@ process.stdin.on("data", async (chunk) => {
     const storeWriter3c = await CampaignStore.load(root3c);
     const preAppendRecordSha3c = storeWriter3c.recordSha256;
 
+    const previewToken3c = Symbol("preview-3c");
+    const writerToken3c = Symbol("writer-3c");
+    const recorder3c = createPreviewOpRecorder(previewToken3c);
     const pausedAfterFinalClaim3c = deferred();
     const releaseAfterFinalClaim3c = deferred();
     const tornWriterPaused3c = deferred();
     const releaseTornWriter3c = deferred();
     let finalClaimChecks3c = 0;
-    let pausedPostClaimOnce3c = false;
-    let writerActive3c = false;
-    const previewWriteOps3c: string[] = [];
-    const previewReadsAfterPause3c: string[] = [];
+    let pausedTornWriterOnce3c = false;
 
+    hookState.onOp = (op, args) => {
+      recorder3c.record(op, args);
+    };
     hookState.beforeOp = async (op, args) => {
-      if (writerActive3c) {
-        if (op === "appendFile" && args[0] === seed3c.evidencePath) {
-          tornWriterPaused3c.resolve();
-          await releaseTornWriter3c.promise;
-        }
-        return;
-      }
-      if (isMutatingOp(op, args)) {
-        previewWriteOps3c.push(op);
-      }
-      if (pausedPostClaimOnce3c && op === "readFile") {
-        previewReadsAfterPause3c.push(String(args[0]));
+      if (
+        !pausedTornWriterOnce3c &&
+        opContext.getStore() === writerToken3c &&
+        op === "appendFile" &&
+        args[0] === seed3c.evidencePath
+      ) {
+        pausedTornWriterOnce3c = true;
+        tornWriterPaused3c.resolve();
+        await releaseTornWriter3c.promise;
       }
     };
     hookState.afterError = async (op, args, error) => {
-      if (writerActive3c || pausedPostClaimOnce3c) return;
+      if (opContext.getStore() !== previewToken3c || recorder3c.isAfterBarrier()) {
+        return;
+      }
       if (
         op === "lstat" &&
         args[0] === claimsDir3c &&
@@ -1662,52 +1890,62 @@ process.stdin.on("data", async (chunk) => {
       ) {
         finalClaimChecks3c++;
         if (finalClaimChecks3c === 3) {
-          pausedPostClaimOnce3c = true;
+          recorder3c.markAfterBarrier();
           pausedAfterFinalClaim3c.resolve();
           await releaseAfterFinalClaim3c.promise;
         }
       }
     };
 
-    const previewPostClaimPromise3c = CampaignStore.load(root3c, {
-      refreshStatus: false,
-    });
-    await pausedAfterFinalClaim3c.promise;
+    let previewPostClaimPromise3c: Promise<CampaignStore> | undefined;
+    let tornAppendPromise3c: ReturnType<CampaignStore["append"]> | undefined;
+    try {
+      previewPostClaimPromise3c = opContext.run(previewToken3c, () =>
+        CampaignStore.load(root3c, { refreshStatus: false }),
+      );
+      await pausedAfterFinalClaim3c.promise;
+      expect(finalClaimChecks3c).toBe(3);
 
-    writerActive3c = true;
-    const tornAppendPromise3c = storeWriter3c.append({
-      channel: "agent",
-      op: "propose",
-      charter: makeCharter(1),
-    });
-    await tornWriterPaused3c.promise;
-    writerActive3c = false;
+      tornAppendPromise3c = opContext.run(writerToken3c, () =>
+        storeWriter3c.append({
+          channel: "agent",
+          op: "propose",
+          charter: makeCharter(1),
+        }),
+      );
+      await tornWriterPaused3c.promise;
 
-    // Confirm files are genuinely torn on disk right when preview resumes.
-    writerActive3c = true;
-    expect(
-      (await readFile(seed3c.tracePath, "utf8")).trimEnd().split("\n"),
-    ).toHaveLength(3);
-    expect(
-      (await readFile(seed3c.evidencePath, "utf8")).trimEnd().split("\n"),
-    ).toHaveLength(2);
-    writerActive3c = false;
+      // Confirm files are genuinely torn on disk right when preview resumes.
+      expect(
+        (await readFile(seed3c.tracePath, "utf8")).trimEnd().split("\n"),
+      ).toHaveLength(3);
+      expect(
+        (await readFile(seed3c.evidencePath, "utf8")).trimEnd().split("\n"),
+      ).toHaveLength(2);
 
-    releaseAfterFinalClaim3c.resolve();
-    const previewCaptured3c = await previewPostClaimPromise3c;
+      releaseAfterFinalClaim3c.resolve();
+      const previewCaptured3c = await previewPostClaimPromise3c;
 
-    expect(previewCaptured3c.corrupted).toBe(false);
-    expect(previewCaptured3c.trace.map((e) => e.seq)).toEqual([0, 1]);
-    expect(previewCaptured3c.state.state).toBe(CampaignStates.recon);
-    expect(previewCaptured3c.recordSha256).toBe(preAppendRecordSha3c);
-    expect(previewWriteOps3c).toEqual([]);
-    expect(previewReadsAfterPause3c).toEqual([]);
+      expect(previewCaptured3c.corrupted).toBe(false);
+      expect(previewCaptured3c.trace.map((e) => e.seq)).toEqual([0, 1]);
+      expect(previewCaptured3c.state.state).toBe(CampaignStates.recon);
+      expect(previewCaptured3c.recordSha256).toBe(preAppendRecordSha3c);
+      expect(recorder3c.mutatingOps).toEqual([]);
+      expect(recorder3c.postBarrierReads).toEqual([]);
 
-    writerActive3c = true;
-    releaseTornWriter3c.resolve();
-    await tornAppendPromise3c;
-    hookState.beforeOp = undefined;
-    hookState.afterError = undefined;
+      releaseTornWriter3c.resolve();
+      await tornAppendPromise3c;
+    } finally {
+      releaseAfterFinalClaim3c.resolve();
+      releaseTornWriter3c.resolve();
+      await Promise.allSettled([
+        ...(previewPostClaimPromise3c ? [previewPostClaimPromise3c] : []),
+        ...(tornAppendPromise3c ? [tornAppendPromise3c] : []),
+      ]);
+      hookState.onOp = undefined;
+      hookState.beforeOp = undefined;
+      hookState.afterError = undefined;
+    }
 
     const stableAfter3c = await CampaignStore.load(root3c, {
       refreshStatus: false,
@@ -1755,6 +1993,100 @@ process.stdin.on("data", async (chunk) => {
         claimBorrow: {} as CampaignStoreClaimBorrow,
       }),
     ).rejects.toThrow(/invalid ownership claim borrow/u);
+  });
+
+  it("records post-barrier node:fs/promises and already-open FileHandle reads without counting concurrent writer or fixture reads", async () => {
+    const root = await makeTempSessionRoot();
+    const probePath = path.join(root, "recorder-probe.txt");
+    const expectedText = "hello-handle-probe\n";
+    await writeFile(probePath, expectedText, "utf8");
+
+    const previewToken = Symbol("recorder-preview");
+    const writerToken = Symbol("recorder-writer");
+    const recorder = createPreviewOpRecorder(previewToken);
+    hookState.onOp = (op, args) => {
+      recorder.record(op, args);
+    };
+
+    const preOpenedHandle = await opContext.run(previewToken, () =>
+      open(probePath),
+    );
+    expect(recorder.postBarrierReads).toEqual([]);
+    expect(recorder.mutatingOps).toEqual([]);
+
+    try {
+      recorder.markAfterBarrier();
+
+      // Exercise real FileHandle reads (including on an already-open default handle),
+      // stream path, default-flag open(), readFile(), and metadata lstat() under previewToken,
+      // alongside writer/fixture reads that must not be attributed to preview.
+      const [handleBytes, handleChunk, vecRead, handleStat, defaultOpen] =
+        await opContext.run(previewToken, async () => {
+          const st = await preOpenedHandle.stat();
+          const buf = Buffer.alloc(5);
+          const r = await preOpenedHandle.read(buf, 0, 5, 0);
+          const v = await preOpenedHandle.readv([Buffer.alloc(5)], 0);
+          const full = await preOpenedHandle.readFile("utf8");
+          let streamed = "";
+          for await (const chunk of preOpenedHandle.createReadStream({
+            start: 0,
+            end: 4,
+            encoding: "utf8",
+            autoClose: false,
+          })) {
+            streamed += String(chunk);
+          }
+          const reopened = await open(probePath);
+          const topRead = await readFile(probePath, "utf8");
+          const topStat = await lstat(probePath);
+          return [
+            full,
+            { buf: buf.subarray(0, r.bytesRead).toString("utf8"), streamed },
+            v.bytesRead,
+            { size: st.size, topSize: topStat.size, topRead },
+            reopened,
+          ] as const;
+        });
+
+      try {
+        expect(handleBytes).toBe(expectedText);
+        expect(handleChunk).toEqual({ buf: "hello", streamed: "hello" });
+        expect(vecRead).toBe(5);
+        expect(handleStat).toEqual({
+          size: expectedText.length,
+          topSize: expectedText.length,
+          topRead: expectedText,
+        });
+      } finally {
+        await defaultOpen.close();
+      }
+
+      // Concurrent writer and fixture reads outside previewToken must be excluded.
+      expect(
+        await opContext.run(writerToken, () => readFile(probePath, "utf8")),
+      ).toBe(expectedText);
+      expect(await readFile(probePath, "utf8")).toBe(expectedText);
+
+      const observedOps = recorder.postBarrierReads.map((e) => e.op);
+      expect(observedOps).toContain("fileHandle.stat");
+      expect(observedOps).toContain("fileHandle.read");
+      expect(observedOps).toContain("fileHandle.readv");
+      expect(observedOps).toContain("fileHandle.readFile");
+      expect(observedOps).toContain("fileHandle.createReadStream");
+      expect(observedOps).toContain("open");
+      expect(observedOps).toContain("readFile");
+      expect(observedOps).toContain("lstat");
+      expect(
+        recorder.postBarrierReads.filter((e) => e.op === "readFile"),
+      ).toEqual([{ op: "readFile", target: probePath }]);
+      expect(
+        recorder.postBarrierReads.every((e) => e.target === probePath),
+      ).toBe(true);
+      expect(recorder.mutatingOps).toEqual([]);
+    } finally {
+      await preOpenedHandle.close();
+      hookState.onOp = undefined;
+    }
   });
 
   it("rejects append before any disk mutation when callback masks present-but-inconsistent sidecar or sidecar becomes inconsistent post-load", async () => {

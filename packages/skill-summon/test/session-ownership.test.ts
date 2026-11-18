@@ -79,6 +79,7 @@ vi.mock("node:fs/promises", async () => {
     open: wrap("open", actual.open),
     readFile: wrap("readFile", actual.readFile),
     readdir: wrap("readdir", actual.readdir),
+    readlink: wrap("readlink", actual.readlink),
     realpath: wrap("realpath", actual.realpath),
     rename: wrap("rename", actual.rename),
     rm: wrap("rm", actual.rm),
@@ -96,6 +97,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  readlink,
   rm,
   symlink,
   writeFile,
@@ -2144,48 +2146,100 @@ process.stdin.on("data", async (chunk) => {
     );
 
     // Physical replacement case 1: DIFFERENT regular inode replacement while original token is still live.
-    // Pin the old inode with an open handle so POSIX cannot immediately reuse the inode number.
+    // Pin the old inode with an open handle across both rejection and release so POSIX cannot reuse
+    // the inode number, and verify replacement inode/dev/type/bytes remain untouched both after stale
+    // borrow rejection and after releasing the ORIGINAL claim before fixture cleanup removes it.
+    const replacementPayload = JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      purpose: "forged",
+    });
     const pinnedOldHandle = await open(claimA.claimPath, "r");
     try {
       const oldStat = await pinnedOldHandle.stat();
       const replacementTmp = path.join(realA, ".claim-inode-replacement.tmp");
-      await writeFile(
-        replacementTmp,
-        JSON.stringify({ version: 1, pid: process.pid, purpose: "forged" }),
-        "utf8",
-      );
+      await writeFile(replacementTmp, replacementPayload, "utf8");
       const newStat = await lstat(replacementTmp);
+      expect(newStat.isSymbolicLink()).toBe(false);
+      expect(newStat.isFile()).toBe(true);
       expect(newStat.ino).not.toBe(oldStat.ino);
       await rename(replacementTmp, claimA.claimPath);
+
       await expect(
         CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
       ).rejects.toThrow(/no longer active on disk/u);
+      const afterRejectStat = await lstat(claimA.claimPath);
+      expect(afterRejectStat.isSymbolicLink()).toBe(false);
+      expect(afterRejectStat.isFile()).toBe(true);
+      expect(afterRejectStat.dev).toBe(newStat.dev);
+      expect(afterRejectStat.ino).toBe(newStat.ino);
+      expect(afterRejectStat.ino).not.toBe(oldStat.ino);
+      expect(await readFile(claimA.claimPath, "utf8")).toBe(replacementPayload);
+
+      await claimA.release();
+      const afterReleaseStat = await lstat(claimA.claimPath);
+      expect(afterReleaseStat.isSymbolicLink()).toBe(false);
+      expect(afterReleaseStat.isFile()).toBe(true);
+      expect(afterReleaseStat.dev).toBe(newStat.dev);
+      expect(afterReleaseStat.ino).toBe(newStat.ino);
+      expect(afterReleaseStat.ino).not.toBe(oldStat.ino);
+      expect(await readFile(claimA.claimPath, "utf8")).toBe(replacementPayload);
+
+      await expect(
+        CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+      ).rejects.toThrow(/no longer active/u);
+      expect(() => createCampaignStoreClaimBorrow(claimA)).toThrow(
+        /invalid or released/u,
+      );
     } finally {
       await pinnedOldHandle.close();
     }
+    await rm(claimA.claimPath);
 
-    // Physical replacement case 2: symlink replacement pointing outside while original token is still live,
-    // rejecting borrow AND preserving the outside sentinel across both load and release.
+    // Physical replacement case 2: acquire a fresh live claim/token, replace with symlink pointing
+    // outside, and verify rejection, symlink identity/target, and outside sentinel across both load
+    // and release of that fresh claim.
+    const claimSymlink = await acquireRootLocalClaimForRealRoot(realA, "campaign");
+    expect(claimSymlink.status).toBe("acquired");
+    if (claimSymlink.status !== "acquired") return;
+    const borrowSymlink = createCampaignStoreClaimBorrow(claimSymlink);
+    expect(
+      (await CampaignStore.load(seededA.root, { claimBorrow: borrowSymlink }))
+        .corrupted,
+    ).toBe(false);
+
     const outsideDir = await makeTempRoot();
     const outsideSentinel = path.join(outsideDir, "outside-claim-sentinel.json");
     const sentinelPayload = JSON.stringify({ sentinel: "must-remain-intact" });
     await writeFile(outsideSentinel, sentinelPayload, "utf8");
-    await rm(claimA.claimPath);
-    await symlink(outsideSentinel, claimA.claimPath, "file");
+    await rm(claimSymlink.claimPath);
+    await symlink(outsideSentinel, claimSymlink.claimPath, "file");
+    const symlinkBeforeStat = await lstat(claimSymlink.claimPath);
+    expect(symlinkBeforeStat.isSymbolicLink()).toBe(true);
+
     await expect(
-      CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+      CampaignStore.load(seededA.root, { claimBorrow: borrowSymlink }),
     ).rejects.toThrow(/no longer active on disk/u);
+    const symlinkAfterRejectStat = await lstat(claimSymlink.claimPath);
+    expect(symlinkAfterRejectStat.isSymbolicLink()).toBe(true);
+    expect(symlinkAfterRejectStat.dev).toBe(symlinkBeforeStat.dev);
+    expect(symlinkAfterRejectStat.ino).toBe(symlinkBeforeStat.ino);
+    expect(await readlink(claimSymlink.claimPath)).toBe(outsideSentinel);
     expect(await readFile(outsideSentinel, "utf8")).toBe(sentinelPayload);
 
-    // Release invalidates borrow permanently without following or mutating the replacement symlink target.
-    await claimA.release();
+    // Release invalidates borrow permanently without deleting/replacing the symlink or mutating its target.
+    await claimSymlink.release();
+    const symlinkAfterReleaseStat = await lstat(claimSymlink.claimPath);
+    expect(symlinkAfterReleaseStat.isSymbolicLink()).toBe(true);
+    expect(symlinkAfterReleaseStat.dev).toBe(symlinkBeforeStat.dev);
+    expect(symlinkAfterReleaseStat.ino).toBe(symlinkBeforeStat.ino);
+    expect(await readlink(claimSymlink.claimPath)).toBe(outsideSentinel);
     expect(await readFile(outsideSentinel, "utf8")).toBe(sentinelPayload);
-    expect((await lstat(claimA.claimPath)).isSymbolicLink()).toBe(true);
-    await rm(claimA.claimPath);
+    await rm(claimSymlink.claimPath);
     await expect(
-      CampaignStore.load(seededA.root, { claimBorrow: borrowA }),
+      CampaignStore.load(seededA.root, { claimBorrow: borrowSymlink }),
     ).rejects.toThrow(/no longer active/u);
-    expect(() => createCampaignStoreClaimBorrow(claimA)).toThrow(
+    expect(() => createCampaignStoreClaimBorrow(claimSymlink)).toThrow(
       /invalid or released/u,
     );
 
