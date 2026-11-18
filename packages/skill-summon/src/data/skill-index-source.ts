@@ -226,6 +226,7 @@ function toProjectionSkill(skill: NamedSkill): ProjectionSkill {
     ...(skill.level ? { level: skill.level } : {}),
     ...(skill.status ? { status: skill.status } : {}),
     ...(skill.invocation ? { invocation: skill.invocation } : {}),
+    ...(skill.denyListClass ? { denyListClass: skill.denyListClass } : {}),
     ...(skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {}),
     ...(skill.trustMagnitude === undefined ? {} : { trustMagnitude: skill.trustMagnitude }),
     ...(skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {}),

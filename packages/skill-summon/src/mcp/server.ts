@@ -1,3 +1,21 @@
+import { lstat } from "node:fs/promises";
+import path from "node:path";
+import {
+  AgentOps,
+  CampaignGateDecisions,
+  CampaignStates,
+  toControllerStatus,
+  type CampaignStateName,
+  type CampaignTraceEntry,
+} from "skill-zero";
+import { CAMPAIGN_DIR_NAME, CampaignStore } from "../campaign/store.js";
+import { buildCampaignDigest, type CampaignDigest } from "../campaign/ops/status.js";
+import {
+  evaluateSummonGate,
+  resolveActiveWorkUnit,
+  resolveGateCard,
+  type SummonGateDecision,
+} from "../campaign/gate.js";
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
 import { registerCampaignTool } from "../campaign/tool.js";
 import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
@@ -14,7 +32,12 @@ import { z } from "zod";
 import type { GaiaService } from "../service.js";
 import type { NamedSkill } from "../domain/types.js";
 import { resolveSession, type SummonSession } from "../summon/session.js";
-import { summon, type SummonOutcome } from "../summon/summon.js";
+import {
+  summon,
+  type SummonGateCandidate,
+  type SummonGateCheckResult,
+  type SummonOutcome,
+} from "../summon/summon.js";
 import { VERSION } from "../version.js";
 import {
   buildInternalEntries,
@@ -182,6 +205,7 @@ const summonOutputSchema = z.object({
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),
+  digest: z.unknown().optional(),
 });
 
 /**
@@ -416,6 +440,82 @@ export function createSkillSummonMcpServer({
       if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
+        const store = await loadExistingCampaignStore(session.root);
+        const hasCampaign =
+          store !== null &&
+          (store.hasTrace || store.state.state !== CampaignStates.unarmed);
+
+        if (!hasCampaign) {
+          const outcome = await summon(service, session, {
+            query,
+            ...(limit === undefined ? {} : { limit }),
+            ...(surface === undefined ? {} : { surface }),
+            ...(source === undefined ? {} : { source }),
+            ...(preview === undefined ? {} : { preview }),
+            ...(decision === undefined ? {} : { decision }),
+            ...(live === undefined ? {} : { live }),
+          });
+          const linkSkills = await resolveOutcomeLinks(service, outcome, describeSkill);
+          return toolResult(outcome, linkSkills);
+        }
+
+        const charterStrategy = !store.corrupted
+          ? await store.loadCharterStrategy()
+          : null;
+        const unitsState = !store.corrupted ? await store.loadUnitsState() : null;
+        const unitInProgress = unitsState
+          ? resolveActiveWorkUnit(unitsState, store.trace)
+          : null;
+        const gateUnit = unitInProgress
+          ? { id: unitInProgress.id, state: unitInProgress.state }
+          : null;
+        const requestPath =
+          (surface ?? "hell") === "any" ? "person-requested" : "automatic";
+        const unplannedSkillIds = new Set<string>();
+        type GateRefusalState = {
+          decision: Extract<SummonGateDecision, { allowed: false }>;
+          skillId: string;
+        };
+        const refusals: {
+          primary: GateRefusalState | null;
+          fallback: GateRefusalState | null;
+        } = { primary: null, fallback: null };
+
+        const evaluateCandidate = (
+          candidate: SummonGateCandidate,
+          isPrimary: boolean,
+        ): SummonGateCheckResult => {
+          const skillId = candidate.doc?.id ?? candidate.skill?.id;
+          if (!skillId) return { allow: true };
+          const card = resolveGateCard({
+            skillId,
+            doc: candidate.doc ?? null,
+            skill: candidate.skill ?? null,
+            arbor: candidate.arbor,
+            manifest: charterStrategy?.manifest ?? null,
+          });
+          const gateDecision = evaluateSummonGate({
+            hasCampaign: true,
+            campaignState: store.state,
+            unit: gateUnit,
+            card,
+            requestPath,
+            manifest: charterStrategy?.manifest ?? null,
+          });
+          if (gateDecision.decision === CampaignGateDecisions.refuse) {
+            if (isPrimary) {
+              refusals.primary = { decision: gateDecision, skillId };
+            } else {
+              refusals.fallback ??= { decision: gateDecision, skillId };
+            }
+            return { allow: false, reason: gateDecision.reason };
+          }
+          if (gateDecision.unplanned) {
+            unplannedSkillIds.add(skillId);
+          }
+          return { allow: true };
+        };
+
         const outcome = await summon(service, session, {
           query,
           ...(limit === undefined ? {} : { limit }),
@@ -424,27 +524,79 @@ export function createSkillSummonMcpServer({
           ...(preview === undefined ? {} : { preview }),
           ...(decision === undefined ? {} : { decision }),
           ...(live === undefined ? {} : { live }),
+          onBeforeMaterialize: ({ topRanked, noMatch, candidates, filtered }) => {
+            const topId = topRanked?.doc?.id ?? topRanked?.skill?.id;
+            const topWasFiltered =
+              topId !== undefined &&
+              filtered.some((item) => (item.doc?.id ?? item.skill?.id) === topId);
+            if (topRanked && topWasFiltered) {
+              const topCard = resolveGateCard({
+                skillId: topId,
+                doc: topRanked.doc ?? null,
+                skill: topRanked.skill ?? null,
+                arbor: topRanked.arbor,
+                manifest: charterStrategy?.manifest ?? null,
+              });
+              const topExcluded =
+                store.state.charter?.excludedSkills?.includes(topId) ?? false;
+              if (
+                (requestPath === "automatic" &&
+                  (topCard.lane === "human-led" || topCard.denyListClass !== null)) ||
+                topExcluded
+              ) {
+                return evaluateCandidate(topRanked, true);
+              }
+            }
+            const primary =
+              candidates[0] ??
+              (noMatch?.reason === "all_filtered" ? filtered[0] : undefined);
+            if (!primary) return { allow: true };
+            return evaluateCandidate(primary, true);
+          },
+          canMaterializeSkill: (candidate) => evaluateCandidate(candidate, false),
         });
-        // Resource links are optional enrichment. A successful summon must
-        // remain successful when the metadata source is unavailable; in that
-        // case the structured outcome is returned without links.
-        let linkSkills: NamedSkill[] = [];
-        // No links are possible for a refusal or preview, and committed-index
-        // outcomes must remain offline even when a resident payload exists.
-        // Fetched outcomes may enrich only after a successful materialization.
-        if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
-          try {
-            const entries = await buildInternalEntries(
-              await service.namedSkills(),
-              describeSkill,
-            );
-            linkSkills = entries.map((entry) => entry.skill);
-          } catch {
-            // Do not turn a valid fetched result into a tool error just because
-            // optional metadata enrichment could not be completed.
-          }
+
+        const activeRefusal =
+          refusals.primary ??
+          (outcome.summoned.length === 0 ? refusals.fallback : null);
+        if (activeRefusal !== null) {
+          return gateRefusalResult(
+            activeRefusal.decision,
+            digestFromStore(store),
+            activeRefusal.skillId,
+            store.state.state,
+          );
         }
-        return toolResult(outcome, linkSkills);
+
+        const materializedUnplanned = [
+          ...new Set(
+            outcome.summoned
+              .map((installed) => installed.id)
+              .filter((id) => unplannedSkillIds.has(id)),
+          ),
+        ];
+
+        let digest: CampaignDigest;
+        if (materializedUnplanned.length > 0 && !store.corrupted) {
+          const writeStore = await CampaignStore.load(session.root);
+          const appended = await writeStore.append({
+            channel: "agent",
+            op: AgentOps.summon,
+            unplanned: true,
+            skills: materializedUnplanned,
+            ...(unitInProgress ? { workUnit: unitInProgress.id } : {}),
+          });
+          digest = buildCampaignDigest(
+            appended.state,
+            appended.status,
+            latestAcceptedOperatorEntry(writeStore.trace),
+          );
+        } else {
+          digest = digestFromStore(store);
+        }
+
+        const linkSkills = await resolveOutcomeLinks(service, outcome, describeSkill);
+        return toolResult(outcome, linkSkills, digest);
       } catch (error) {
         return toolError(error);
       }
@@ -458,17 +610,114 @@ export function createSkillSummonMcpServer({
   return server;
 }
 
+async function resolveOutcomeLinks(
+  service: GaiaService,
+  outcome: SummonOutcome,
+  describeSkill: DescribeSkill | undefined,
+): Promise<NamedSkill[]> {
+  // Resource links are optional enrichment. A successful summon must remain
+  // successful when the metadata source is unavailable, and committed-index
+  // outcomes must stay offline even when a resident payload exists.
+  if (outcome.summoned.length === 0 || outcome.ranking.indexOrigin === "committed") {
+    return [];
+  }
+  try {
+    const entries = await buildInternalEntries(
+      await service.namedSkills(),
+      describeSkill,
+    );
+    return entries.map((entry) => entry.skill);
+  } catch {
+    return [];
+  }
+}
+
+async function loadExistingCampaignStore(
+  sessionRoot: string,
+): Promise<CampaignStore | null> {
+  try {
+    await lstat(path.join(sessionRoot, CAMPAIGN_DIR_NAME));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+  return CampaignStore.load(sessionRoot, { refreshStatus: false });
+}
+
+function latestAcceptedOperatorEntry(
+  trace: readonly CampaignTraceEntry[],
+): CampaignTraceEntry | undefined {
+  for (let i = trace.length - 1; i >= 0; i--) {
+    const entry = trace[i];
+    if (entry && entry.channel === "operator" && entry.accepted) {
+      return entry;
+    }
+  }
+  return undefined;
+}
+
+function digestFromStore(store: CampaignStore): CampaignDigest {
+  const lastEntry = store.trace.at(-1);
+  const status = toControllerStatus(
+    store.state,
+    lastEntry && lastEntry.to === store.state.state ? lastEntry : undefined,
+  );
+  return buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperatorEntry(store.trace),
+  );
+}
+
+function gateRefusalResult(
+  decision: Extract<SummonGateDecision, { allowed: false }>,
+  digest: CampaignDigest,
+  skillId: string,
+  campaignState: CampaignStateName,
+): CallToolResult {
+  return {
+    content: [
+      { type: "text", text: decision.reason },
+      { type: "text", text: digest.text },
+    ],
+    structuredContent: {
+      error: {
+        name: "CampaignGateRefusal",
+        code: decision.code,
+        message: decision.reason,
+        skillId,
+        campaignState,
+        retryable: false,
+      },
+      gate: {
+        decision: decision.decision,
+        code: decision.code,
+        reason: decision.reason,
+        skillId,
+        campaignState,
+      },
+      digest,
+    },
+    isError: true,
+  };
+}
+
 function toolResult(
   value: SummonOutcome,
   linkSkills: readonly NamedSkill[] = [],
+  digest: CampaignDigest | null = null,
 ): CallToolResult {
+  const payload = digest === null ? value : { ...value, digest };
   const content: ContentBlock[] = [
-    { type: "text", text: JSON.stringify(value, null, 2) },
+    { type: "text", text: JSON.stringify(payload, null, 2) },
+    ...(digest === null ? [] : [{ type: "text" as const, text: digest.text }]),
     ...resourceLinks(value, linkSkills),
   ];
   return {
     content,
-    structuredContent: { ...value },
+    structuredContent: { ...payload },
   };
 }
 

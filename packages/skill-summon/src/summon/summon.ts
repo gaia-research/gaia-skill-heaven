@@ -60,6 +60,24 @@ const DEFAULT_LIMIT = 1;
 // depth the product never ruled out. `limit` must still be a positive integer;
 // that is a well-formedness check, not a policy.
 
+export type SummonGateCandidate = {
+  doc: IndexedSkill | undefined;
+  skill: NamedSkill | undefined;
+  arbor: ArborSubjectReport;
+};
+
+export type SummonBeforeMaterializeContext = {
+  preview: boolean;
+  noMatch: Decision["noMatch"];
+  topRanked: SummonGateCandidate | undefined;
+  candidates: readonly SummonGateCandidate[];
+  filtered: readonly SummonGateCandidate[];
+};
+
+export type SummonGateCheckResult =
+  | { allow: true }
+  | { allow: false; reason?: string | undefined };
+
 export type SummonOptions = {
   query: string;
   limit?: number | undefined;
@@ -86,6 +104,14 @@ export type SummonOptions = {
   jevClient?: JevClient | undefined;
   /** Opt-in to live Jev System One semantic evaluation. */
   live?: boolean | undefined;
+  /** Pre-materialization campaign gate hook evaluated once before install work. */
+  onBeforeMaterialize?:
+    | ((ctx: SummonBeforeMaterializeContext) => SummonGateCheckResult)
+    | undefined;
+  /** Per-skill gate check for suite components and fallback candidates. */
+  canMaterializeSkill?:
+    | ((candidate: SummonGateCandidate) => SummonGateCheckResult)
+    | undefined;
 };
 
 /** One ranked candidate, disclosed without being installed (SPEC §5.1 `preview`). */
@@ -223,6 +249,9 @@ type InstallContext = {
   index: SkillIndex;
   /** Arbor disclosure for one candidate id. Never affects what is installed. */
   arborFor: (skillId: string, delivery?: ArborDeliveryContext) => ArborSubjectReport;
+  canMaterializeSkill?:
+    | ((candidate: SummonGateCandidate) => SummonGateCheckResult)
+    | undefined;
 };
 
 type InstallOutcome = {
@@ -256,6 +285,8 @@ export async function summon(
     decision: requestedDecision,
     jevClient,
     live,
+    onBeforeMaterialize,
+    canMaterializeSkill,
   }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
@@ -291,10 +322,11 @@ export async function summon(
     decisionMode === "classic"
       ? createDecisionBackend("classic")
       : createDecisionBackend(decisionMode, { client: jevClient ?? getSharedJevClient(), live });
+  const rankedHits = new Bm25fRanker(resolved.index).rank(trimmedQuery);
   const decision = await backend.decide({
     index: resolved.index,
     query: trimmedQuery,
-    ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
+    ranked: rankedHits,
     surface,
     source: resolved.source,
     live,
@@ -373,6 +405,62 @@ export async function summon(
     bandOptions,
   );
 
+  if (!preview && onBeforeMaterialize) {
+    const registryById = new Map(registry.map((item) => [item.id, item]));
+    const docById = new Map(resolved.index.docs.map((doc) => [doc.id, doc]));
+    const topDoc = rankedHits[0]?.doc;
+    const topRanked: SummonGateCandidate | undefined = topDoc
+      ? {
+          doc: topDoc,
+          skill: registryById.get(topDoc.id),
+          arbor: arborFor(topDoc.id, "not-materialized"),
+        }
+      : undefined;
+    const candidatesToGate: SummonGateCandidate[] = decision.admitted.map((hit) => ({
+      doc: hit.doc,
+      skill: registryById.get(hit.doc.id),
+      arbor: arborFor(hit.doc.id, "not-materialized"),
+    }));
+    const filteredToGate: SummonGateCandidate[] = [];
+    for (const f of decision.filtered) {
+      const doc = docById.get(f.id);
+      if (doc) {
+        filteredToGate.push({
+          doc,
+          skill: registryById.get(doc.id),
+          arbor: arborFor(doc.id, "not-materialized"),
+        });
+      }
+    }
+    const gateCheck = onBeforeMaterialize({
+      preview,
+      noMatch: decision.noMatch,
+      topRanked,
+      candidates: candidatesToGate,
+      filtered: filteredToGate,
+    });
+    if (!gateCheck.allow) {
+      return {
+        query: trimmedQuery,
+        surface,
+        source: resolved.source,
+        summoned: [],
+        previewed: [],
+        noMatch: decision.noMatch,
+        filtered: decision.filtered,
+        margin: decision.admitted.length > 0 ? decision.margin : 0,
+        composition: compositionFor([]),
+        skipped: [],
+        suites: [],
+        sessionRoot: session.root,
+        ranking,
+        arbor,
+        cards: [],
+        totalSeconds: elapsedSeconds(runStartedAt),
+      };
+    }
+  }
+
   if (decision.noMatch) {
     const outcome: SummonOutcome = {
       query: trimmedQuery,
@@ -446,6 +534,7 @@ export async function summon(
     surface,
     index: resolved.index,
     arborFor,
+    canMaterializeSkill,
   };
   const summoned: InstalledSkill[] = [];
   const skipped: SkippedCandidate[] = [];
@@ -641,6 +730,27 @@ function disclosureById(decision: Decision, query: string): Map<string, Retrieva
 }
 
 /** The index carries everything install needs; nothing else has to be fetched. */
+/** Enforces per-skill campaign gate before materializing suite components or fallbacks. */
+function checkMaterializeGate(
+  skill: NamedSkill,
+  doc: IndexedSkill | undefined,
+  ctx: InstallContext,
+): InstallOutcome | null {
+  if (!ctx.canMaterializeSkill) return null;
+  const check = ctx.canMaterializeSkill({
+    doc,
+    skill,
+    arbor: ctx.arborFor(skill.id, "not-materialized"),
+  });
+  if (check.allow) return null;
+  return {
+    ok: false,
+    installed: [],
+    suites: [],
+    reason: check.reason ?? `Skill '${skill.id}' refused by campaign gate`,
+  };
+}
+
 function toNamedSkill(doc: IndexedSkill): NamedSkill {
   return {
     id: doc.id,
@@ -661,6 +771,7 @@ function toNamedSkill(doc: IndexedSkill): NamedSkill {
     ...(doc.installability ? { installability: doc.installability } : {}),
     ...(doc.trust.trustNumber === undefined ? {} : { trustMagnitude: doc.trust.trustNumber }),
     ...(doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {}),
+    ...(doc.denyListClass ? { denyListClass: doc.denyListClass } : {}),
     ...(doc.registryOnly ? { installable: false } : {}),
   };
 }
@@ -753,6 +864,9 @@ async function installSkill(
       };
     }
   }
+
+  const gateOutcome = checkMaterializeGate(resolved, doc, ctx);
+  if (gateOutcome) return gateOutcome;
 
   const suiteComponents = resolved.suiteComponents ?? [];
   if (suiteComponents.length > 0) {
@@ -958,6 +1072,9 @@ async function installSingle(
       };
     }
   }
+
+  const gateOutcome = checkMaterializeGate(skill, doc, ctx);
+  if (gateOutcome) return gateOutcome;
 
   if (skill.installable === false) {
     return {

@@ -3269,8 +3269,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path12) {
-      let input = path12;
+    function removeDotSegments(path13) {
+      let input = path13;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3344,11 +3344,11 @@ var require_utils = __commonJS({
       }
       return output.join("");
     }
-    function removeDotSegmentsRelative(path12) {
-      if (path12 === "" || path12[0] === "/") {
-        return removeDotSegments(path12);
+    function removeDotSegmentsRelative(path13) {
+      if (path13 === "" || path13[0] === "/") {
+        return removeDotSegments(path13);
       }
-      const segments = path12.split("/");
+      const segments = path13.split("/");
       const last = segments.length - 1;
       const output = [];
       let trailingDirectory = false;
@@ -3711,8 +3711,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path12 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path12 && path12 !== "/" ? path12 : void 0;
+        const path13 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path13 && path13 !== "/" ? path13 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7460,10 +7460,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path12) {
-  if (!path12)
+function getElementAtPath(obj, path13) {
+  if (!path13)
     return obj;
-  return path12.reduce((acc, key) => acc?.[key], obj);
+  return path13.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -7783,11 +7783,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path12, issues) {
+function prefixIssues(path13, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path12);
+    iss.path.unshift(path13);
     return iss;
   });
 }
@@ -13454,6 +13454,7 @@ var AgentOps = Object.freeze({
   next: "next",
   report: "report",
   incident: "incident",
+  summon: "summon",
   status: "status"
 });
 var EngineOps = Object.freeze({
@@ -13511,7 +13512,8 @@ var CAMPAIGN_SIGNALS = Object.freeze([
   "completed",
   "blocked",
   "failed-safe",
-  "person-required"
+  "person-required",
+  "unplanned"
 ]);
 var CampaignPhases = Object.freeze({
   recon: "recon",
@@ -13520,7 +13522,7 @@ var CampaignPhases = Object.freeze({
   convergence: "convergence",
   terminal: "terminal"
 });
-var CampaignSignals = Object.freeze({ answer: "answer", personRequired: "person-required" });
+var CampaignSignals = Object.freeze({ answer: "answer", personRequired: "person-required", unplanned: "unplanned" });
 var CAMPAIGN_PHASES = Object.freeze(Object.values(CampaignPhases));
 var TERMINAL_STATES = Object.freeze([
   CampaignStates.completed,
@@ -13566,6 +13568,34 @@ var UnitReportOutcomes = Object.freeze({
   retrievalRefusal: "retrieval-refusal"
 });
 var UNIT_REPORT_OUTCOMES = Object.freeze(Object.values(UnitReportOutcomes));
+var PublishDenyListClasses = Object.freeze({
+  publishToExternalChannels: "publish-to-external-channels",
+  secretBearingWrites: "secret-bearing-writes",
+  destructiveInfraMutation: "destructive-infra-mutation",
+  schemaQueueMigrations: "schema-queue-migrations"
+});
+var PUBLISH_CLASS_DENY_LIST = Object.freeze(Object.values(PublishDenyListClasses));
+var CampaignGateDecisions = Object.freeze({
+  allow: "allow",
+  allowUnplanned: "allow-unplanned",
+  refuse: "refuse"
+});
+var CAMPAIGN_GATE_DECISIONS = Object.freeze(Object.values(CampaignGateDecisions));
+var CampaignGateRefusalCodes = Object.freeze({
+  humanLedAutomatic: "human-led-automatic",
+  publishDenyList: "publish-deny-list",
+  charterExcluded: "charter-excluded",
+  notExecuting: "campaign-not-executing",
+  unitWaitingOnPerson: "unit-waiting-on-person"
+});
+var CAMPAIGN_GATE_REFUSAL_CODES = Object.freeze(Object.values(CampaignGateRefusalCodes));
+var CAMPAIGN_GATE_REFUSAL_TEXT = Object.freeze({
+  [CampaignGateRefusalCodes.humanLedAutomatic]: "Refused: human-led skills cannot be summoned on the automatic path during a campaign; explicit user invocation is required.",
+  [CampaignGateRefusalCodes.publishDenyList]: "Refused: skills in the publish-class deny-list cannot be summoned on the automatic path during a campaign; explicit user invocation is required.",
+  [CampaignGateRefusalCodes.charterExcluded]: "Refused: this skill is excluded by the campaign charter.",
+  [CampaignGateRefusalCodes.notExecuting]: "Refused: automatic campaign summon is allowed only while the campaign is in EXECUTING.",
+  [CampaignGateRefusalCodes.unitWaitingOnPerson]: "Refused: automatic campaign summon is blocked while the active work unit is waiting on a person."
+});
 
 // packages/core/src/steering.ts
 var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
@@ -14856,13 +14886,14 @@ var charter = (v) => object2(v, {
   revision: nat2,
   goal: text2,
   allowedSkills: strings,
+  excludedSkills: strings,
   queue,
   recoverLimit: nat2,
   reopenLimit: nat2,
   sessionRetention: nat2,
   clauses: strings,
   acceptanceCommands: strings
-}, ["acceptanceCommands"]);
+}, ["acceptanceCommands", "excludedSkills"]);
 var verifyReceipt = (v) => {
   if (!object2(v, {
     schema: schema(CAMPAIGN_SCHEMA_IDS.receipt),
@@ -14898,6 +14929,13 @@ function isValidCharterForRecon(recon2, value, revision) {
   if (!recon2 || !Number.isSafeInteger(revision) || revision < 1) return false;
   if (value.revision !== revision || value.clauses.length === 0 || value.queue.length === 0) return false;
   const ids = new Set(value.queue.map((q) => q.id));
+  if (value.excludedSkills !== void 0) {
+    if (new Set(value.excludedSkills).size !== value.excludedSkills.length) return false;
+    const excluded = new Set(value.excludedSkills);
+    if (value.allowedSkills.some((s) => excluded.has(s)) || value.queue.some((q) => excluded.has(q.skill))) {
+      return false;
+    }
+  }
   return ids.size === value.queue.length && new Set(value.allowedSkills).size === value.allowedSkills.length && value.queue.every((q) => value.allowedSkills.includes(q.skill) && recon2.citations.includes(q.reconCitation));
 }
 var state = (v) => {
@@ -14952,6 +14990,8 @@ var event = (v) => {
         return object2(v, { ...base, charter });
       case AgentOps.incident:
         return object2(v, { ...base, incident });
+      case AgentOps.summon:
+        return object2(v, { ...base, unplanned: bool2, skills: strings, workUnit: text2 }, ["unplanned", "skills", "workUnit"]);
     }
   }
   if (c.value === "operator") {
@@ -15163,6 +15203,18 @@ function evaluate(state2, event2, authorized, seq) {
             signal = "work-reported";
           }
           break;
+        case AgentOps.summon:
+          if (state2.state === CampaignStates.executing && state2.approved && event2.unplanned === true && event2.skills !== void 0 && event2.skills.length > 0) {
+            const excluded = state2.charter?.excludedSkills ?? [];
+            if (event2.skills.some((s) => excluded.includes(s))) {
+              signal = "policy-refusal";
+            } else {
+              accepted = true;
+              decision = CampaignDecisions.explore;
+              signal = CampaignSignals.unplanned;
+            }
+          }
+          break;
         case AgentOps.status:
           break;
       }
@@ -15269,7 +15321,7 @@ function evaluate(state2, event2, authorized, seq) {
   if (accepted && event2?.channel === "agent" && event2.op === AgentOps.propose) clause = "recon.citations";
   if (accepted && event2?.channel === "agent" && (event2.op === AgentOps.incident || event2.op === AgentOps.next)) clause = "allowedSkills";
   const incidentAction = event2?.channel === "agent" && event2.op === AgentOps.next || event2?.channel === "operator" && event2.op === OperatorVerbs.answer;
-  const skills = event2?.channel === "agent" && event2.op === AgentOps.incident ? event2.incident.skills : event2 && "charter" in event2 ? event2.charter.queue.map((q) => q.skill) : state2.state === CampaignStates.convergence && incidentAction ? state2.incident?.skills ?? [] : [];
+  const skills = event2?.channel === "agent" && event2.op === AgentOps.incident ? event2.incident.skills : event2?.channel === "agent" && event2.op === AgentOps.summon ? event2.skills ?? [] : event2 && "charter" in event2 ? event2.charter.queue.map((q) => q.skill) : state2.state === CampaignStates.convergence && incidentAction ? state2.incident?.skills ?? [] : [];
   const personRequired = event2?.channel === "operator" || pendingPerson(state2) || pendingPerson(next);
   const provenance = event2?.channel === "operator" ? {
     ...event2.attribution !== void 0 ? { attribution: event2.attribution } : {},
@@ -15277,7 +15329,7 @@ function evaluate(state2, event2, authorized, seq) {
     ...event2.multiplexed !== void 0 ? { multiplexed: event2.multiplexed } : {},
     ...event2.optIn !== void 0 ? { optIn: event2.optIn } : {}
   } : {};
-  const workUnit = event2?.channel === "engine" && event2.op === EngineOps.verify || event2?.channel === "agent" && (event2.op === AgentOps.next || event2.op === AgentOps.report) ? event2.workUnit ?? null : null;
+  const workUnit = event2?.channel === "engine" && event2.op === EngineOps.verify || event2?.channel === "agent" && (event2.op === AgentOps.next || event2.op === AgentOps.report || event2.op === AgentOps.summon) ? event2.workUnit ?? null : null;
   const entry = immutableSnapshot({
     seq,
     from: state2.state,
@@ -16894,6 +16946,9 @@ function assertSkillIndex(value) {
     if (!isInvocation(doc.invocation)) {
       throw new SkillIndexError(`Indexed skill ${id} has an invalid invocation.`);
     }
+    if (doc.denyListClass !== void 0 && (typeof doc.denyListClass !== "string" || !PUBLISH_CLASS_DENY_LIST.includes(doc.denyListClass))) {
+      throw new SkillIndexError(`Indexed skill ${id} has an invalid denyListClass.`);
+    }
     requiredBoolean(doc, "installable", `Indexed skill ${id}`);
     stringArray(doc.suiteComponents, `Indexed skill ${id}.suiteComponents`);
     requiredBoolean(doc, "registryOnly", `Indexed skill ${id}`);
@@ -17168,6 +17223,7 @@ function toIndexedSkill(skill, expansion, classified) {
     tags: [...skill.tags ?? []],
     links: typeof links.github === "string" ? { github: links.github } : {},
     invocation: readInvocation(skill.invocation),
+    ...skill.denyListClass !== void 0 && PUBLISH_CLASS_DENY_LIST.includes(skill.denyListClass) ? { denyListClass: skill.denyListClass } : {},
     installable: isInstallableLink(links),
     suiteComponents: [...skill.suiteComponents ?? []],
     registryOnly: skill.installable === false,
@@ -19478,18 +19534,18 @@ function readArborPublication(documents) {
     };
   }
   const runtimes = /* @__PURE__ */ new Map();
-  for (const { path: path12, document } of documents.runtimes) {
+  for (const { path: path13, document } of documents.runtimes) {
     try {
-      assertArborRuntime(document, path12);
+      assertArborRuntime(document, path13);
     } catch (error2) {
-      problems.push({ where: path12, detail: describe(error2) });
+      problems.push({ where: path13, detail: describe(error2) });
       continue;
     }
     const claimsLens = document.lenses.claims;
     if (claimsLens.profile !== null) {
       let quarantine = null;
       try {
-        assertArborProfile(claimsLens.profile, `${path12} lenses.claims.profile`);
+        assertArborProfile(claimsLens.profile, `${path13} lenses.claims.profile`);
         const embedded = claimsLens.profile.skill;
         if (embedded.id !== document.subject.id) {
           quarantine = `embedded profile is for skill '${embedded.id}' but the aggregate's subject is '${document.subject.id}'; the lens was quarantined and no claim was consumed`;
@@ -19500,7 +19556,7 @@ function readArborPublication(documents) {
         quarantine = describe(error2);
       }
       if (quarantine !== null) {
-        problems.push({ where: `${path12} lenses.claims.profile`, detail: quarantine });
+        problems.push({ where: `${path13} lenses.claims.profile`, detail: quarantine });
         runtimes.set(subjectKey(document.subject), {
           ...document,
           lenses: {
@@ -19515,7 +19571,7 @@ function readArborPublication(documents) {
       const governed = claim.interpretationSource !== null;
       if (governed === (claim.support === "expert-declared")) {
         problems.push({
-          where: `${path12} lenses.claims.profile claim '${claim.id}'`,
+          where: `${path13} lenses.claims.profile claim '${claim.id}'`,
           detail: governed ? "support is 'expert-declared' but a governed interpretationSource is present" : `support is '${claim.support}' with no interpretationSource; only a governed interpretation may set it`
         });
       }
@@ -23019,7 +23075,7 @@ function parsePersistedCharterStrategy(v) {
   }
   if (!isPlainRecordObject(v.charterTemplate)) return null;
   const tmpl = v.charterTemplate;
-  if (tmpl.schema !== CAMPAIGN_SCHEMA_IDS.charter || tmpl.revision !== charter2.revision || tmpl.reconId !== v.reconId || tmpl.charterSha256 !== v.charterSha256 || tmpl.shortDigest !== v.shortDigest) {
+  if (tmpl.schema !== CAMPAIGN_SCHEMA_IDS.charter || tmpl.revision !== charter2.revision || tmpl.reconId !== v.reconId || tmpl.charterSha256 !== v.charterSha256 || tmpl.shortDigest !== v.shortDigest || canonicalCampaignJson(tmpl.excludedSkills ?? null) !== canonicalCampaignJson(charter2.excludedSkills ?? null)) {
     return null;
   }
   return v;
@@ -25335,8 +25391,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path12, errorMaps, issueData } = params;
-  const fullPath = [...path12, ...issueData.path || []];
+  const { data, path: path13, errorMaps, issueData } = params;
+  const fullPath = [...path13, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -25452,11 +25508,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path12, key) {
+  constructor(parent, value, path13, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path12;
+    this._path = path13;
     this._key = key;
   }
   get path() {
@@ -29352,6 +29408,7 @@ function toProjectionSkill(skill) {
     ...skill.level ? { level: skill.level } : {},
     ...skill.status ? { status: skill.status } : {},
     ...skill.invocation ? { invocation: skill.invocation } : {},
+    ...skill.denyListClass ? { denyListClass: skill.denyListClass } : {},
     ...skill.overallTrustGrade ? { overallTrustGrade: skill.overallTrustGrade } : {},
     ...skill.trustMagnitude === void 0 ? {} : { trustMagnitude: skill.trustMagnitude },
     ...skill.suiteComponents?.length ? { suiteComponents: skill.suiteComponents } : {},
@@ -29807,10 +29864,10 @@ function loadArborIdentityContext() {
   cached2 ??= readIdentityFromDisk();
   return cached2;
 }
-async function readArborIdentityFile(path12) {
-  const directory = dirname3(path12);
+async function readArborIdentityFile(path13) {
+  const directory = dirname3(path13);
   try {
-    const bytes = await readConfinedFile(directory, path12);
+    const bytes = await readConfinedFile(directory, path13);
     const digest = createHash5("sha256").update(bytes).digest("hex");
     let parsed;
     try {
@@ -30251,6 +30308,359 @@ function localPath(value) {
   return fileURLToPath3(url);
 }
 
+// packages/skill-summon/src/mcp/server.ts
+import { lstat as lstat12 } from "node:fs/promises";
+import path12 from "node:path";
+
+// packages/skill-summon/src/campaign/ops/status.ts
+function displayStateToken(token) {
+  return token === CampaignStates.unarmed ? "IDLE" : token;
+}
+function buildCampaignDigest(state2, status, latestOperatorEntry) {
+  const projected = status ?? toControllerStatus(state2);
+  const effective = projected.effective ?? state2.steering.rung;
+  const progressText = projected.progress ? ` \xB7 progress=${projected.progress.completed}/${projected.progress.total}` : "";
+  const transitionText = projected.transition ? ` \xB7 transition=${displayStateToken(projected.transition.from)}->${displayStateToken(projected.transition.to)} (${projected.transition.reason})` : "";
+  const operatorProvenanceText = latestOperatorEntry?.channel === "operator" ? `${latestOperatorEntry.multiplexed !== void 0 ? ` \xB7 multiplexed=${latestOperatorEntry.multiplexed}` : ""}${latestOperatorEntry.optIn === true ? " \xB7 optIn=true" : ""}` : "";
+  const text3 = `[Campaign] state=${displayStateToken(projected.state)} \xB7 effective=${effective} \xB7 charter=r${state2.charterRevision} (${state2.approved ? "approved" : "unapproved"})${progressText}${transitionText}${operatorProvenanceText} \xB7 reference data, authorizes nothing`;
+  return immutableSnapshot({
+    schema: CAMPAIGN_SCHEMA_IDS.status,
+    state: projected.state,
+    effective,
+    charterRevision: state2.charterRevision,
+    approved: state2.approved,
+    ...latestOperatorEntry?.channel === "operator" && latestOperatorEntry.multiplexed !== void 0 ? { multiplexed: latestOperatorEntry.multiplexed } : {},
+    ...latestOperatorEntry?.channel === "operator" && latestOperatorEntry.optIn === true ? { optIn: true } : {},
+    progress: projected.progress ? {
+      completed: projected.progress.completed,
+      total: projected.progress.total
+    } : null,
+    transition: projected.transition ? {
+      from: projected.transition.from,
+      to: projected.transition.to,
+      reason: projected.transition.reason
+    } : null,
+    text: text3
+  });
+}
+function buildUnavailableCampaignDigest() {
+  return immutableSnapshot({
+    schema: CAMPAIGN_SCHEMA_IDS.status,
+    state: "UNAVAILABLE",
+    effective: null,
+    charterRevision: null,
+    approved: null,
+    progress: null,
+    transition: null,
+    text: "[Campaign] state=UNAVAILABLE \xB7 campaign state could not be read \xB7 reference data, authorizes nothing"
+  });
+}
+async function readSafeCampaignStateAndDigest(sessionRoot) {
+  if (!sessionRoot) {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest()
+    };
+  }
+  try {
+    const store = await CampaignStore.load(sessionRoot, {
+      refreshStatus: false
+    });
+    const status = toControllerStatus(store.state, store.trace.at(-1));
+    const latestAcceptedOperator = [...store.trace].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
+    return {
+      state: store.state,
+      status,
+      digest: buildCampaignDigest(store.state, status, latestAcceptedOperator)
+    };
+  } catch {
+    return {
+      state: null,
+      status: null,
+      digest: buildUnavailableCampaignDigest()
+    };
+  }
+}
+async function executeStatus(session) {
+  const store = await CampaignStore.load(session.root, { refreshStatus: false });
+  const status = toControllerStatus(store.state, store.trace.at(-1));
+  const latestAcceptedOperator = [...store.trace].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
+  const digest = buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperator
+  );
+  if (store.corrupted) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.status,
+      hasCampaign: store.hasTrace,
+      state: store.state,
+      status,
+      goalContract: null,
+      recon: null,
+      digest,
+      error: {
+        code: "campaign-corrupted",
+        message: store.error ?? "Campaign trace failed verification (FAILED_SAFE).",
+        retryable: false
+      }
+    });
+  }
+  let goalContract = null;
+  let recon2 = store.state.recon;
+  if (store.hasTrace) {
+    try {
+      goalContract = await store.loadGoalContract();
+      recon2 = await store.loadReconArtifact() ?? store.state.recon;
+    } catch (error2) {
+      const message = error2 instanceof Error ? error2.message : "Campaign artifact failed verification (FAILED_SAFE).";
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe
+      });
+      const failedStatus = toControllerStatus(failedState);
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: failedState,
+        status: failedStatus,
+        goalContract: null,
+        recon: null,
+        digest: buildCampaignDigest(failedState, failedStatus),
+        error: {
+          code: "campaign-corrupted",
+          message,
+          retryable: false
+        }
+      });
+    }
+    if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe
+      });
+      const failedStatus = toControllerStatus(failedState);
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.status,
+        hasCampaign: true,
+        state: failedState,
+        status: failedStatus,
+        goalContract: null,
+        recon: null,
+        digest: buildCampaignDigest(failedState, failedStatus),
+        error: {
+          code: "campaign-corrupted",
+          message: "Campaign trace is in active/RECON state without a committed goal contract (FAILED_SAFE).",
+          retryable: false
+        }
+      });
+    }
+  }
+  return immutableSnapshot({
+    ok: true,
+    refused: false,
+    op: AgentOps.status,
+    hasCampaign: store.hasTrace,
+    state: store.state,
+    status,
+    goalContract,
+    recon: recon2,
+    digest
+  });
+}
+
+// packages/skill-summon/src/campaign/gate.ts
+var DENY_LIST_SET = new Set(PUBLISH_CLASS_DENY_LIST);
+function refuseGate(code) {
+  return Object.freeze({
+    decision: CampaignGateDecisions.refuse,
+    allowed: false,
+    unplanned: false,
+    passthrough: false,
+    code,
+    reason: CAMPAIGN_GATE_REFUSAL_TEXT[code]
+  });
+}
+function isPublishDenyListed(denyListClass) {
+  return typeof denyListClass === "string" && DENY_LIST_SET.has(denyListClass);
+}
+function isSkillInManifest(skillId, campaignState, manifest) {
+  if (campaignState.charter) {
+    return campaignState.charter.allowedSkills.includes(skillId);
+  }
+  return manifest?.entries.some((entry) => entry.id === skillId) ?? false;
+}
+function evaluateSummonGate(input) {
+  if (!input.hasCampaign || input.campaignState === null) {
+    return Object.freeze({
+      decision: CampaignGateDecisions.allow,
+      allowed: true,
+      unplanned: false,
+      passthrough: true,
+      code: "no-live-campaign",
+      reason: null
+    });
+  }
+  const manifestEntry = input.manifest?.entries.find(
+    (entry) => entry.id === input.card.skillId
+  );
+  const effectiveLane = manifestEntry?.convergenceOnly === true || manifestEntry?.lane.lane === "human-led" ? "human-led" : input.card.lane;
+  if (input.requestPath === "automatic" && effectiveLane === "human-led") {
+    return refuseGate(CampaignGateRefusalCodes.humanLedAutomatic);
+  }
+  if (input.requestPath === "automatic" && isPublishDenyListed(input.card.denyListClass)) {
+    return refuseGate(CampaignGateRefusalCodes.publishDenyList);
+  }
+  const excludedSkills = input.campaignState.charter?.excludedSkills ?? [];
+  if (excludedSkills.includes(input.card.skillId)) {
+    return refuseGate(CampaignGateRefusalCodes.charterExcluded);
+  }
+  if (input.requestPath === "automatic") {
+    if (input.campaignState.state !== CampaignStates.executing || !input.campaignState.approved) {
+      return refuseGate(CampaignGateRefusalCodes.notExecuting);
+    }
+    if (input.unit?.state === WorkUnitStates.needsHuman) {
+      return refuseGate(CampaignGateRefusalCodes.unitWaitingOnPerson);
+    }
+  }
+  if (input.requestPath === "person-requested") {
+    return Object.freeze({
+      decision: CampaignGateDecisions.allow,
+      allowed: true,
+      unplanned: false,
+      passthrough: false,
+      code: "person-requested",
+      reason: null
+    });
+  }
+  if (isSkillInManifest(input.card.skillId, input.campaignState, input.manifest)) {
+    return Object.freeze({
+      decision: CampaignGateDecisions.allow,
+      allowed: true,
+      unplanned: false,
+      passthrough: false,
+      code: "in-manifest",
+      reason: null
+    });
+  }
+  return Object.freeze({
+    decision: CampaignGateDecisions.allowUnplanned,
+    allowed: true,
+    unplanned: true,
+    passthrough: false,
+    code: "unplanned-model-led",
+    reason: null
+  });
+}
+function classifyCardLane(params) {
+  const { doc, skill, arbor, manifestEntry } = params;
+  const frontmatterDisableModel = skill?.frontmatter?.["disable-model-invocation"] === true || skill?.frontmatter?.["disable-model-invocation"] === "true";
+  if (doc?.invocation === "human" || skill?.invocation === "human" || frontmatterDisableModel || manifestEntry?.convergenceOnly === true || manifestEntry?.lane.lane === "human-led") {
+    return "human-led";
+  }
+  if (arbor?.lenses?.claims?.availability === "consulted" && arbor.claims.length > 0) {
+    const hasHuman = arbor.claims.some((claim) => claim.facet === "human-led");
+    const hasModel = arbor.claims.some((claim) => claim.facet === "model-led");
+    if (hasHuman && !hasModel) {
+      return "human-led";
+    }
+  }
+  if (doc?.invocation === "model" || skill?.invocation === "model" || manifestEntry?.lane.lane === "model-led" || arbor?.claims.some((claim) => claim.facet === "model-led")) {
+    return "model-led";
+  }
+  return "unclassified";
+}
+function asDenyListClass(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return DENY_LIST_SET.has(trimmed) ? trimmed : null;
+}
+var HAS_DRY_RUN_OR_READONLY_GUARD = /\b(dry[- ]run|plan[- ]preview|read[- ]only|audit[- ]only|never writes?|no mutation|with verifiable undo|canonical down[- ]migrations?)\b/i;
+var EXTERNAL_PUBLISH_RE = /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+)?emails?|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish\s+(?:to\s+external|announcements?|social|newsletters?)|publish-to-external-channels)\b/i;
+var SECRET_BEARING_WRITE_RE = /\b(write|persist|commit|embed|store|append|export)\s+(?:discovered\s+|raw\s+)?(?:credentials?|secrets?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)\b/i;
+var DESTRUCTIVE_INFRA_RE = /\b(drop(?:ping)?\s+(?:databases?|tables?|queues?|dns|storage)|terraform\s+(?:destroy|apply)|delete\s+(?:production\s+)?(?:database|dns|bucket|cluster)|destructive[- ]infra[- ]mutation)\b/i;
+var IRREVERSIBLE_MIGRATION_RE = /\b(irreversible\s+(?:schema|queue)\s+migrations?|schema[- ]queue[- ]migrations?)\b/i;
+function classifyPublishDenyListClass(params) {
+  const { doc, skill } = params;
+  const explicit = asDenyListClass(doc?.denyListClass) ?? asDenyListClass(skill?.denyListClass) ?? asDenyListClass(skill?.frontmatter?.["deny-list-class"]) ?? asDenyListClass(skill?.frontmatter?.["publish-class"]) ?? asDenyListClass(skill?.frontmatter?.["denyListClass"]);
+  if (explicit) return explicit;
+  const allTags = [...doc?.tags ?? [], ...skill?.tags ?? []];
+  for (const tag of allTags) {
+    const direct = asDenyListClass(tag);
+    if (direct) return direct;
+    const prefixed = tag.replace(/^(?:publish-class|deny-list):/u, "");
+    const fromPrefix = asDenyListClass(prefixed);
+    if (fromPrefix) return fromPrefix;
+  }
+  const corpus = [
+    doc?.id ?? skill?.id ?? "",
+    doc?.name ?? skill?.name ?? "",
+    doc?.genericSkillRef ?? skill?.genericSkillRef ?? "",
+    ...allTags,
+    doc?.description ?? skill?.description ?? ""
+  ].join(" ");
+  if (EXTERNAL_PUBLISH_RE.test(corpus) && !HAS_DRY_RUN_OR_READONLY_GUARD.test(corpus)) {
+    return PublishDenyListClasses.publishToExternalChannels;
+  }
+  if (SECRET_BEARING_WRITE_RE.test(corpus)) {
+    return PublishDenyListClasses.secretBearingWrites;
+  }
+  if (DESTRUCTIVE_INFRA_RE.test(corpus) && !HAS_DRY_RUN_OR_READONLY_GUARD.test(corpus)) {
+    return PublishDenyListClasses.destructiveInfraMutation;
+  }
+  if (IRREVERSIBLE_MIGRATION_RE.test(corpus) && !HAS_DRY_RUN_OR_READONLY_GUARD.test(corpus)) {
+    return PublishDenyListClasses.schemaQueueMigrations;
+  }
+  return null;
+}
+function resolveGateCard(params) {
+  const manifestEntry = params.manifest?.entries.find(
+    (entry) => entry.id === params.skillId
+  );
+  return Object.freeze({
+    skillId: params.skillId,
+    lane: classifyCardLane({
+      doc: params.doc,
+      skill: params.skill,
+      arbor: params.arbor,
+      manifestEntry
+    }),
+    denyListClass: classifyPublishDenyListClass({
+      doc: params.doc,
+      skill: params.skill
+    })
+  });
+}
+var IN_PROGRESS_UNIT_STATES = /* @__PURE__ */ new Set([
+  WorkUnitStates.active,
+  WorkUnitStates.verifying,
+  WorkUnitStates.recovering,
+  WorkUnitStates.reopened
+]);
+function resolveActiveWorkUnit(unitsState, trace2) {
+  if (!unitsState) return null;
+  for (let i = trace2.length - 1; i >= 0; i--) {
+    const workUnitId = trace2[i]?.workUnit;
+    if (!workUnitId) continue;
+    const unit = unitsState.units.find((u) => u.id === workUnitId);
+    if (unit && (IN_PROGRESS_UNIT_STATES.has(unit.state) || unit.state === WorkUnitStates.needsHuman)) {
+      return unit;
+    }
+  }
+  const active = unitsState.units.find(
+    (u) => IN_PROGRESS_UNIT_STATES.has(u.state)
+  );
+  if (active) return active;
+  return unitsState.units.find((u) => u.state === WorkUnitStates.needsHuman) ?? null;
+}
+
 // packages/skill-summon/src/zero-cut.ts
 var ZERO_CUT_ENV = "SKILL_HEAVEN_ZERO_CUTS";
 function zeroCutFromEnv(env = process.env) {
@@ -30391,11 +30801,11 @@ function normalizeObjectSchema(schema2) {
   }
   return void 0;
 }
-function getDotPath(path12) {
-  if (path12.length === 0) {
+function getDotPath(path13) {
+  if (path13.length === 0) {
     return "object root";
   }
-  return path12.reduce((acc, seg, index) => {
+  return path13.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -31796,170 +32206,6 @@ function parseWithCompat(schema2, data) {
 // packages/skill-summon/src/campaign/operator.ts
 import { lstat as lstat5 } from "node:fs/promises";
 
-// packages/skill-summon/src/campaign/ops/status.ts
-function displayStateToken(token) {
-  return token === CampaignStates.unarmed ? "IDLE" : token;
-}
-function buildCampaignDigest(state2, status, latestOperatorEntry) {
-  const projected = status ?? toControllerStatus(state2);
-  const effective = projected.effective ?? state2.steering.rung;
-  const progressText = projected.progress ? ` \xB7 progress=${projected.progress.completed}/${projected.progress.total}` : "";
-  const transitionText = projected.transition ? ` \xB7 transition=${displayStateToken(projected.transition.from)}->${displayStateToken(projected.transition.to)} (${projected.transition.reason})` : "";
-  const operatorProvenanceText = latestOperatorEntry?.channel === "operator" ? `${latestOperatorEntry.multiplexed !== void 0 ? ` \xB7 multiplexed=${latestOperatorEntry.multiplexed}` : ""}${latestOperatorEntry.optIn === true ? " \xB7 optIn=true" : ""}` : "";
-  const text3 = `[Campaign] state=${displayStateToken(projected.state)} \xB7 effective=${effective} \xB7 charter=r${state2.charterRevision} (${state2.approved ? "approved" : "unapproved"})${progressText}${transitionText}${operatorProvenanceText} \xB7 reference data, authorizes nothing`;
-  return immutableSnapshot({
-    schema: CAMPAIGN_SCHEMA_IDS.status,
-    state: projected.state,
-    effective,
-    charterRevision: state2.charterRevision,
-    approved: state2.approved,
-    ...latestOperatorEntry?.channel === "operator" && latestOperatorEntry.multiplexed !== void 0 ? { multiplexed: latestOperatorEntry.multiplexed } : {},
-    ...latestOperatorEntry?.channel === "operator" && latestOperatorEntry.optIn === true ? { optIn: true } : {},
-    progress: projected.progress ? {
-      completed: projected.progress.completed,
-      total: projected.progress.total
-    } : null,
-    transition: projected.transition ? {
-      from: projected.transition.from,
-      to: projected.transition.to,
-      reason: projected.transition.reason
-    } : null,
-    text: text3
-  });
-}
-function buildUnavailableCampaignDigest() {
-  return immutableSnapshot({
-    schema: CAMPAIGN_SCHEMA_IDS.status,
-    state: "UNAVAILABLE",
-    effective: null,
-    charterRevision: null,
-    approved: null,
-    progress: null,
-    transition: null,
-    text: "[Campaign] state=UNAVAILABLE \xB7 campaign state could not be read \xB7 reference data, authorizes nothing"
-  });
-}
-async function readSafeCampaignStateAndDigest(sessionRoot) {
-  if (!sessionRoot) {
-    return {
-      state: null,
-      status: null,
-      digest: buildUnavailableCampaignDigest()
-    };
-  }
-  try {
-    const store = await CampaignStore.load(sessionRoot, {
-      refreshStatus: false
-    });
-    const status = toControllerStatus(store.state, store.trace.at(-1));
-    const latestAcceptedOperator = [...store.trace].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
-    return {
-      state: store.state,
-      status,
-      digest: buildCampaignDigest(store.state, status, latestAcceptedOperator)
-    };
-  } catch {
-    return {
-      state: null,
-      status: null,
-      digest: buildUnavailableCampaignDigest()
-    };
-  }
-}
-async function executeStatus(session) {
-  const store = await CampaignStore.load(session.root, { refreshStatus: false });
-  const status = toControllerStatus(store.state, store.trace.at(-1));
-  const latestAcceptedOperator = [...store.trace].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
-  const digest = buildCampaignDigest(
-    store.state,
-    status,
-    latestAcceptedOperator
-  );
-  if (store.corrupted) {
-    return immutableSnapshot({
-      ok: false,
-      refused: true,
-      op: AgentOps.status,
-      hasCampaign: store.hasTrace,
-      state: store.state,
-      status,
-      goalContract: null,
-      recon: null,
-      digest,
-      error: {
-        code: "campaign-corrupted",
-        message: store.error ?? "Campaign trace failed verification (FAILED_SAFE).",
-        retryable: false
-      }
-    });
-  }
-  let goalContract = null;
-  let recon2 = store.state.recon;
-  if (store.hasTrace) {
-    try {
-      goalContract = await store.loadGoalContract();
-      recon2 = await store.loadReconArtifact() ?? store.state.recon;
-    } catch (error2) {
-      const message = error2 instanceof Error ? error2.message : "Campaign artifact failed verification (FAILED_SAFE).";
-      const failedState = immutableSnapshot({
-        ...store.state,
-        state: CampaignStates.failedSafe
-      });
-      const failedStatus = toControllerStatus(failedState);
-      return immutableSnapshot({
-        ok: false,
-        refused: true,
-        op: AgentOps.status,
-        hasCampaign: true,
-        state: failedState,
-        status: failedStatus,
-        goalContract: null,
-        recon: null,
-        digest: buildCampaignDigest(failedState, failedStatus),
-        error: {
-          code: "campaign-corrupted",
-          message,
-          retryable: false
-        }
-      });
-    }
-    if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
-      const failedState = immutableSnapshot({
-        ...store.state,
-        state: CampaignStates.failedSafe
-      });
-      const failedStatus = toControllerStatus(failedState);
-      return immutableSnapshot({
-        ok: false,
-        refused: true,
-        op: AgentOps.status,
-        hasCampaign: true,
-        state: failedState,
-        status: failedStatus,
-        goalContract: null,
-        recon: null,
-        digest: buildCampaignDigest(failedState, failedStatus),
-        error: {
-          code: "campaign-corrupted",
-          message: "Campaign trace is in active/RECON state without a committed goal contract (FAILED_SAFE).",
-          retryable: false
-        }
-      });
-    }
-  }
-  return immutableSnapshot({
-    ok: true,
-    refused: false,
-    op: AgentOps.status,
-    hasCampaign: store.hasTrace,
-    state: store.state,
-    status,
-    goalContract,
-    recon: recon2,
-    digest
-  });
-}
-
 // packages/skill-summon/src/trust.ts
 function trustFields(skill) {
   const fields = { ...skill.trust ?? {} };
@@ -32218,6 +32464,11 @@ function renderControlStrategyLines(input) {
   lines.push(
     `  AllowedSkills: ${allowedSkills.length > 0 ? allowedSkills.map((s) => displayField(s)).join(", ") : "none"}`
   );
+  if (charterTemplate.excludedSkills && charterTemplate.excludedSkills.length > 0) {
+    lines.push(
+      `  ExcludedSkills: ${charterTemplate.excludedSkills.map((s) => displayField(s)).join(", ")}`
+    );
+  }
   const queue2 = charterTemplate.queue ?? [];
   if (queue2.length === 0) {
     lines.push("  Queue (0 item(s)): none");
@@ -32382,6 +32633,7 @@ var AMENDMENT_KEYS = [
   "sessionRetention",
   "pauseWindow",
   "allowedSkills",
+  "excludedSkills",
   "clauses",
   "checkpoints",
   "stops",
@@ -32455,7 +32707,7 @@ function mergeOperatorAmendment(optionsAmendment, content) {
     opFields.pauseWindow = pauseWindow;
     if (content.sessionRetention === void 0) delete base.sessionRetention;
   }
-  for (const listKey of ["allowedSkills", "clauses", "checkpoints", "stops"]) {
+  for (const listKey of ["allowedSkills", "excludedSkills", "clauses", "checkpoints", "stops"]) {
     if (Object.hasOwn(content, listKey)) {
       const parsed = parseStringListOrArray(content[listKey]);
       if (parsed !== void 0) {
@@ -32511,6 +32763,7 @@ function hasOperatorAmendmentOverrides(content) {
   }
   for (const listKey of [
     "allowedSkills",
+    "excludedSkills",
     "clauses",
     "checkpoints",
     "stops"
@@ -32590,6 +32843,11 @@ Channel: ${opEnv.channel} \xB7 Attribution: ${opEnv.attribution} \xB7 Multiplexe
       type: "string",
       title: "Amended allowedSkills",
       description: "Optional comma- or newline-separated skill IDs (used when decision is amend)."
+    },
+    excludedSkills: {
+      type: "string",
+      title: "Amended excludedSkills",
+      description: "Optional comma- or newline-separated excluded skill IDs (used when decision is amend)."
     },
     clauses: {
       type: "string",
@@ -32831,11 +33089,32 @@ function applyAmendment(currentStrategy, currentState, reconRecord, amendment) {
     }
     nextAllowedSkills = deduped;
   }
+  let nextExcludedSkills = currentCharter.excludedSkills ?? [];
+  if (amendment.excludedSkills !== void 0) {
+    const parsed = parseNonEmptyStringArray(
+      amendment.excludedSkills,
+      "excludedSkills"
+    );
+    if (!parsed.ok) {
+      return { ok: false, code: "invalid-amendment", message: parsed.message };
+    }
+    nextExcludedSkills = [...new Set(parsed.value)];
+  }
+  for (const skill of nextExcludedSkills) {
+    if (nextAllowedSkills.includes(skill) || currentState.queue.some((q) => q.skill === skill)) {
+      return {
+        ok: false,
+        code: "charter-exclusion-conflict",
+        message: `Excluded skill "${skill}" cannot also appear in allowedSkills or queue.`
+      };
+    }
+  }
   const baseCharter = {
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: nextRevision,
     goal: nextGoal,
     allowedSkills: [...nextAllowedSkills],
+    ...nextExcludedSkills.length > 0 ? { excludedSkills: [...nextExcludedSkills] } : {},
     queue: [...currentState.queue],
     recoverLimit: recover.value,
     reopenLimit: reopen.value,
@@ -32850,6 +33129,7 @@ function applyAmendment(currentStrategy, currentState, reconRecord, amendment) {
     phases: [...currentStrategy.charterTemplate.phases],
     arsenal: [...currentStrategy.charterTemplate.arsenal],
     allowedSkills: [...baseCharter.allowedSkills],
+    ...nextExcludedSkills.length > 0 ? { excludedSkills: [...nextExcludedSkills] } : {},
     queue: [...baseCharter.queue],
     authority: nextAuthority,
     recoverLimit: baseCharter.recoverLimit,
@@ -33515,6 +33795,31 @@ function isPlainObject6(value) {
 function getLatestAcceptedOperator(trace2) {
   return [...trace2].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
 }
+function collectUnplannedSummonsSinceLastCheckpoint(trace2) {
+  let startIndex = 0;
+  for (let i = trace2.length - 1; i >= 0; i--) {
+    const entry = trace2[i];
+    if (entry.channel === "operator" && entry.trigger === OperatorVerbs.checkpoint && entry.accepted) {
+      startIndex = i + 1;
+      break;
+    }
+  }
+  const unplanned = [];
+  for (let i = startIndex; i < trace2.length; i++) {
+    const entry = trace2[i];
+    if (entry.accepted && entry.signal === CampaignSignals.unplanned) {
+      unplanned.push(
+        Object.freeze({
+          seq: entry.seq,
+          skills: Object.freeze([...entry.skills]),
+          workUnit: entry.workUnit,
+          charterRevision: entry.charterRevision
+        })
+      );
+    }
+  }
+  return Object.freeze(unplanned);
+}
 async function loadOrInitializeWorkUnitQueue(store) {
   const existing = await store.loadUnitsState();
   if (existing) {
@@ -33653,6 +33958,7 @@ async function executeCheckpoint(session, rawArgs) {
       });
     }
   }
+  const unplannedSummons = collectUnplannedSummonsSinceLastCheckpoint(store.trace);
   const unitsSha256 = updatedQueue ? campaignSha256Hex(canonicalCampaignJson(updatedQueue)) : void 0;
   const event2 = createCampaignOperatorEvent(operatorAdapter, {
     channel: "operator",
@@ -33674,6 +33980,7 @@ async function executeCheckpoint(session, rawArgs) {
     op: OperatorVerbs.checkpoint,
     checkpointWritten: true,
     ...updatedQueue ? { queue: updatedQueue } : {},
+    unplannedSummons,
     entry: appended.entry,
     state: appended.state,
     status: appended.status,
@@ -33790,6 +34097,7 @@ async function executeNext(session, rawArgs) {
   let currentDigest = digest;
   let checkpointWritten = false;
   let checkpointEntry;
+  let unplannedSummons;
   if (hasBatches) {
     const checkpointResult = await executeCheckpoint(session, {
       batches: rawBatches
@@ -33809,6 +34117,7 @@ async function executeNext(session, rawArgs) {
     }
     checkpointWritten = checkpointResult.checkpointWritten;
     checkpointEntry = checkpointResult.entry;
+    unplannedSummons = checkpointResult.unplannedSummons;
     currentState = checkpointResult.state;
     currentStatus = checkpointResult.status;
     currentDigest = checkpointResult.digest;
@@ -33866,6 +34175,7 @@ async function executeNext(session, rawArgs) {
       queueCounts: updatedCounts,
       checkpointWritten,
       ...checkpointEntry ? { checkpointEntry } : {},
+      ...unplannedSummons !== void 0 ? { unplannedSummons } : {},
       state: appended.state,
       status: appended.status,
       digest: nextDigest
@@ -33897,6 +34207,7 @@ async function executeNext(session, rawArgs) {
     queueCounts: selection.counts,
     checkpointWritten,
     ...checkpointEntry ? { checkpointEntry } : {},
+    ...unplannedSummons !== void 0 ? { unplannedSummons } : {},
     state: finalState,
     status: finalStatus,
     digest: finalDigest
@@ -34372,6 +34683,13 @@ function parseCharterProposalInput(rawArgs) {
   if (!allowedSkills.ok) {
     return { ok: false, code: "invalid-proposal-input", message: allowedSkills.error };
   }
+  const excludedSkills = parseOptionalStringArray(
+    source.excludedSkills,
+    "excludedSkills"
+  );
+  if (!excludedSkills.ok) {
+    return { ok: false, code: "invalid-proposal-input", message: excludedSkills.error };
+  }
   const checkpoints = parseOptionalStringArray(source.checkpoints, "checkpoints");
   if (!checkpoints.ok) {
     return { ok: false, code: "invalid-proposal-input", message: checkpoints.error };
@@ -34438,6 +34756,7 @@ function parseCharterProposalInput(rawArgs) {
       ...phases.value !== void 0 ? { phases: phases.value } : {},
       arsenal: Object.freeze(arsenal),
       ...allowedSkills.value !== void 0 ? { allowedSkills: allowedSkills.value } : {},
+      ...excludedSkills.value !== void 0 ? { excludedSkills: excludedSkills.value } : {},
       recoverLimit: recover.value,
       reopenLimit: reopen.value,
       sessionRetention: retention.value,
@@ -34570,6 +34889,16 @@ function buildCharterTemplate(reconRecord, input, fallbackGoal, fallbackStops, f
       };
     }
   }
+  const excludedSkills = input.excludedSkills ? [...new Set(input.excludedSkills)] : [];
+  for (const skill of excludedSkills) {
+    if (selectedSkillIds.has(skill) || allowedSkills.includes(skill)) {
+      return {
+        ok: false,
+        code: "charter-exclusion-conflict",
+        message: `Excluded skill "${skill}" cannot also appear in allowedSkills or queue.`
+      };
+    }
+  }
   const manifestResult = tryBuildCampaignManifest(reconRecord, selectedCardRefs);
   if (!manifestResult.ok) {
     return {
@@ -34599,6 +34928,7 @@ function buildCharterTemplate(reconRecord, input, fallbackGoal, fallbackStops, f
     revision: 1,
     goal: goal.trim(),
     allowedSkills,
+    ...excludedSkills.length > 0 ? { excludedSkills } : {},
     queue: queueItems,
     recoverLimit: input.recoverLimit,
     reopenLimit: input.reopenLimit,
@@ -34624,6 +34954,7 @@ function buildCharterTemplate(reconRecord, input, fallbackGoal, fallbackStops, f
     phases: [...phases],
     arsenal: arsenalItems,
     allowedSkills: [...baseCharter.allowedSkills],
+    ...excludedSkills.length > 0 ? { excludedSkills: [...excludedSkills] } : {},
     queue: [...baseCharter.queue],
     authority: authority2,
     recoverLimit: baseCharter.recoverLimit,
@@ -34936,7 +35267,7 @@ async function verifyProvenance(root, expected, digests, problems) {
   const record4 = file.value;
   const upstream = record4.upstream;
   const commit = record4.commit;
-  const path12 = record4.path;
+  const path13 = record4.path;
   const capturedAt = record4.capturedAt;
   if (typeof upstream !== "string" || upstream.length === 0) {
     return reject("provenance.upstream must be a non-empty string");
@@ -34944,7 +35275,7 @@ async function verifyProvenance(root, expected, digests, problems) {
   if (typeof commit !== "string" || !/^[a-f0-9]{40}$/u.test(commit)) {
     return reject("provenance.commit must be a 40-character commit id");
   }
-  if (typeof path12 !== "string" || path12.length === 0) {
+  if (typeof path13 !== "string" || path13.length === 0) {
     return reject("provenance.path must be a non-empty string");
   }
   if (typeof capturedAt !== "string" || capturedAt.length === 0) {
@@ -34992,7 +35323,7 @@ async function verifyProvenance(root, expected, digests, problems) {
     }
   }
   return {
-    provenance: { upstream, commit, path: path12, capturedAt, files: Object.fromEntries(declared) },
+    provenance: { upstream, commit, path: path13, capturedAt, files: Object.fromEntries(declared) },
     rejected: false
   };
 }
@@ -35309,7 +35640,9 @@ async function summon(service, session, {
   taskSignals,
   decision: requestedDecision,
   jevClient,
-  live
+  live,
+  onBeforeMaterialize,
+  canMaterializeSkill
 }) {
   const runStartedAt = startTiming();
   const trimmedQuery = query.trim();
@@ -35326,10 +35659,11 @@ async function summon(service, session, {
   const rawDecision = requestedDecision ?? process.env.SKILL_HEAVEN_DECISION ?? process.env.SKILL_DECISION_BACKEND ?? "classic";
   const decisionMode = rawDecision === "classic" || rawDecision === "jev" || rawDecision === "compare" ? rawDecision : "classic";
   const backend = decisionMode === "classic" ? createDecisionBackend("classic") : createDecisionBackend(decisionMode, { client: jevClient ?? getSharedJevClient(), live });
+  const rankedHits = new Bm25fRanker(resolved.index).rank(trimmedQuery);
   const decision = await backend.decide({
     index: resolved.index,
     query: trimmedQuery,
-    ranked: new Bm25fRanker(resolved.index).rank(trimmedQuery),
+    ranked: rankedHits,
     surface,
     source: resolved.source,
     live
@@ -35383,6 +35717,59 @@ async function summon(service, session, {
     additions,
     bandOptions
   );
+  if (!preview && onBeforeMaterialize) {
+    const registryById = new Map(registry2.map((item) => [item.id, item]));
+    const docById = new Map(resolved.index.docs.map((doc) => [doc.id, doc]));
+    const topDoc = rankedHits[0]?.doc;
+    const topRanked = topDoc ? {
+      doc: topDoc,
+      skill: registryById.get(topDoc.id),
+      arbor: arborFor(topDoc.id, "not-materialized")
+    } : void 0;
+    const candidatesToGate = decision.admitted.map((hit) => ({
+      doc: hit.doc,
+      skill: registryById.get(hit.doc.id),
+      arbor: arborFor(hit.doc.id, "not-materialized")
+    }));
+    const filteredToGate = [];
+    for (const f of decision.filtered) {
+      const doc = docById.get(f.id);
+      if (doc) {
+        filteredToGate.push({
+          doc,
+          skill: registryById.get(doc.id),
+          arbor: arborFor(doc.id, "not-materialized")
+        });
+      }
+    }
+    const gateCheck = onBeforeMaterialize({
+      preview,
+      noMatch: decision.noMatch,
+      topRanked,
+      candidates: candidatesToGate,
+      filtered: filteredToGate
+    });
+    if (!gateCheck.allow) {
+      return {
+        query: trimmedQuery,
+        surface,
+        source: resolved.source,
+        summoned: [],
+        previewed: [],
+        noMatch: decision.noMatch,
+        filtered: decision.filtered,
+        margin: decision.admitted.length > 0 ? decision.margin : 0,
+        composition: compositionFor([]),
+        skipped: [],
+        suites: [],
+        sessionRoot: session.root,
+        ranking,
+        arbor,
+        cards: [],
+        totalSeconds: elapsedSeconds(runStartedAt)
+      };
+    }
+  }
   if (decision.noMatch) {
     const outcome2 = {
       query: trimmedQuery,
@@ -35450,7 +35837,8 @@ async function summon(service, session, {
     disclosures,
     surface,
     index: resolved.index,
-    arborFor
+    arborFor,
+    canMaterializeSkill
   };
   const summoned = [];
   const skipped = [];
@@ -35578,6 +35966,21 @@ function disclosureById(decision, query) {
     ])
   );
 }
+function checkMaterializeGate(skill, doc, ctx) {
+  if (!ctx.canMaterializeSkill) return null;
+  const check2 = ctx.canMaterializeSkill({
+    doc,
+    skill,
+    arbor: ctx.arborFor(skill.id, "not-materialized")
+  });
+  if (check2.allow) return null;
+  return {
+    ok: false,
+    installed: [],
+    suites: [],
+    reason: check2.reason ?? `Skill '${skill.id}' refused by campaign gate`
+  };
+}
 function toNamedSkill(doc) {
   return {
     id: doc.id,
@@ -35598,6 +36001,7 @@ function toNamedSkill(doc) {
     ...doc.installability ? { installability: doc.installability } : {},
     ...doc.trust.trustNumber === void 0 ? {} : { trustMagnitude: doc.trust.trustNumber },
     ...doc.trust.grade ? { overallTrustGrade: doc.trust.grade } : {},
+    ...doc.denyListClass ? { denyListClass: doc.denyListClass } : {},
     ...doc.registryOnly ? { installable: false } : {}
   };
 }
@@ -35668,6 +36072,8 @@ async function installSkill(ref, ctx, visited, viaSuite) {
       };
     }
   }
+  const gateOutcome = checkMaterializeGate(resolved, doc, ctx);
+  if (gateOutcome) return gateOutcome;
   const suiteComponents = resolved.suiteComponents ?? [];
   if (suiteComponents.length > 0) {
     return installSuite(resolved, suiteComponents, ctx, visited, viaSuite);
@@ -35807,6 +36213,8 @@ async function installSingle(skill, ctx, viaSuite) {
       };
     }
   }
+  const gateOutcome = checkMaterializeGate(skill, doc, ctx);
+  if (gateOutcome) return gateOutcome;
   if (skill.installable === false) {
     return {
       ok: false,
@@ -40611,7 +41019,8 @@ var summonOutputSchema = external_exports.object({
     note: external_exports.string()
   }),
   cards: external_exports.array(external_exports.string()),
-  totalSeconds: external_exports.number()
+  totalSeconds: external_exports.number(),
+  digest: external_exports.unknown().optional()
 });
 function createSkillSummonMcpServer({
   service,
@@ -40787,6 +41196,59 @@ function createSkillSummonMcpServer({
       if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
+        const store = await loadExistingCampaignStore(session.root);
+        const hasCampaign = store !== null && (store.hasTrace || store.state.state !== CampaignStates.unarmed);
+        if (!hasCampaign) {
+          const outcome2 = await summon(service, session, {
+            query,
+            ...limit === void 0 ? {} : { limit },
+            ...surface === void 0 ? {} : { surface },
+            ...source === void 0 ? {} : { source },
+            ...preview === void 0 ? {} : { preview },
+            ...decision === void 0 ? {} : { decision },
+            ...live === void 0 ? {} : { live }
+          });
+          const linkSkills2 = await resolveOutcomeLinks(service, outcome2, describeSkill);
+          return toolResult(outcome2, linkSkills2);
+        }
+        const charterStrategy = !store.corrupted ? await store.loadCharterStrategy() : null;
+        const unitsState = !store.corrupted ? await store.loadUnitsState() : null;
+        const unitInProgress = unitsState ? resolveActiveWorkUnit(unitsState, store.trace) : null;
+        const gateUnit = unitInProgress ? { id: unitInProgress.id, state: unitInProgress.state } : null;
+        const requestPath = (surface ?? "hell") === "any" ? "person-requested" : "automatic";
+        const unplannedSkillIds = /* @__PURE__ */ new Set();
+        const refusals = { primary: null, fallback: null };
+        const evaluateCandidate = (candidate, isPrimary) => {
+          const skillId = candidate.doc?.id ?? candidate.skill?.id;
+          if (!skillId) return { allow: true };
+          const card = resolveGateCard({
+            skillId,
+            doc: candidate.doc ?? null,
+            skill: candidate.skill ?? null,
+            arbor: candidate.arbor,
+            manifest: charterStrategy?.manifest ?? null
+          });
+          const gateDecision = evaluateSummonGate({
+            hasCampaign: true,
+            campaignState: store.state,
+            unit: gateUnit,
+            card,
+            requestPath,
+            manifest: charterStrategy?.manifest ?? null
+          });
+          if (gateDecision.decision === CampaignGateDecisions.refuse) {
+            if (isPrimary) {
+              refusals.primary = { decision: gateDecision, skillId };
+            } else {
+              refusals.fallback ??= { decision: gateDecision, skillId };
+            }
+            return { allow: false, reason: gateDecision.reason };
+          }
+          if (gateDecision.unplanned) {
+            unplannedSkillIds.add(skillId);
+          }
+          return { allow: true };
+        };
         const outcome = await summon(service, session, {
           query,
           ...limit === void 0 ? {} : { limit },
@@ -40794,20 +41256,63 @@ function createSkillSummonMcpServer({
           ...source === void 0 ? {} : { source },
           ...preview === void 0 ? {} : { preview },
           ...decision === void 0 ? {} : { decision },
-          ...live === void 0 ? {} : { live }
+          ...live === void 0 ? {} : { live },
+          onBeforeMaterialize: ({ topRanked, noMatch, candidates, filtered }) => {
+            const topId = topRanked?.doc?.id ?? topRanked?.skill?.id;
+            const topWasFiltered = topId !== void 0 && filtered.some((item) => (item.doc?.id ?? item.skill?.id) === topId);
+            if (topRanked && topWasFiltered) {
+              const topCard = resolveGateCard({
+                skillId: topId,
+                doc: topRanked.doc ?? null,
+                skill: topRanked.skill ?? null,
+                arbor: topRanked.arbor,
+                manifest: charterStrategy?.manifest ?? null
+              });
+              const topExcluded = store.state.charter?.excludedSkills?.includes(topId) ?? false;
+              if (requestPath === "automatic" && (topCard.lane === "human-led" || topCard.denyListClass !== null) || topExcluded) {
+                return evaluateCandidate(topRanked, true);
+              }
+            }
+            const primary = candidates[0] ?? (noMatch?.reason === "all_filtered" ? filtered[0] : void 0);
+            if (!primary) return { allow: true };
+            return evaluateCandidate(primary, true);
+          },
+          canMaterializeSkill: (candidate) => evaluateCandidate(candidate, false)
         });
-        let linkSkills = [];
-        if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
-          try {
-            const entries = await buildInternalEntries(
-              await service.namedSkills(),
-              describeSkill
-            );
-            linkSkills = entries.map((entry) => entry.skill);
-          } catch {
-          }
+        const activeRefusal = refusals.primary ?? (outcome.summoned.length === 0 ? refusals.fallback : null);
+        if (activeRefusal !== null) {
+          return gateRefusalResult(
+            activeRefusal.decision,
+            digestFromStore(store),
+            activeRefusal.skillId,
+            store.state.state
+          );
         }
-        return toolResult(outcome, linkSkills);
+        const materializedUnplanned = [
+          ...new Set(
+            outcome.summoned.map((installed) => installed.id).filter((id) => unplannedSkillIds.has(id))
+          )
+        ];
+        let digest;
+        if (materializedUnplanned.length > 0 && !store.corrupted) {
+          const writeStore = await CampaignStore.load(session.root);
+          const appended = await writeStore.append({
+            channel: "agent",
+            op: AgentOps.summon,
+            unplanned: true,
+            skills: materializedUnplanned,
+            ...unitInProgress ? { workUnit: unitInProgress.id } : {}
+          });
+          digest = buildCampaignDigest(
+            appended.state,
+            appended.status,
+            latestAcceptedOperatorEntry(writeStore.trace)
+          );
+        } else {
+          digest = digestFromStore(store);
+        }
+        const linkSkills = await resolveOutcomeLinks(service, outcome, describeSkill);
+        return toolResult(outcome, linkSkills, digest);
       } catch (error2) {
         return toolError(error2);
       }
@@ -40818,14 +41323,89 @@ function createSkillSummonMcpServer({
   }
   return server;
 }
-function toolResult(value, linkSkills = []) {
+async function resolveOutcomeLinks(service, outcome, describeSkill) {
+  if (outcome.summoned.length === 0 || outcome.ranking.indexOrigin === "committed") {
+    return [];
+  }
+  try {
+    const entries = await buildInternalEntries(
+      await service.namedSkills(),
+      describeSkill
+    );
+    return entries.map((entry) => entry.skill);
+  } catch {
+    return [];
+  }
+}
+async function loadExistingCampaignStore(sessionRoot) {
+  try {
+    await lstat12(path12.join(sessionRoot, CAMPAIGN_DIR_NAME));
+  } catch (error2) {
+    if (error2.code === "ENOENT") {
+      return null;
+    }
+    throw error2;
+  }
+  return CampaignStore.load(sessionRoot, { refreshStatus: false });
+}
+function latestAcceptedOperatorEntry(trace2) {
+  for (let i = trace2.length - 1; i >= 0; i--) {
+    const entry = trace2[i];
+    if (entry && entry.channel === "operator" && entry.accepted) {
+      return entry;
+    }
+  }
+  return void 0;
+}
+function digestFromStore(store) {
+  const lastEntry = store.trace.at(-1);
+  const status = toControllerStatus(
+    store.state,
+    lastEntry && lastEntry.to === store.state.state ? lastEntry : void 0
+  );
+  return buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperatorEntry(store.trace)
+  );
+}
+function gateRefusalResult(decision, digest, skillId, campaignState) {
+  return {
+    content: [
+      { type: "text", text: decision.reason },
+      { type: "text", text: digest.text }
+    ],
+    structuredContent: {
+      error: {
+        name: "CampaignGateRefusal",
+        code: decision.code,
+        message: decision.reason,
+        skillId,
+        campaignState,
+        retryable: false
+      },
+      gate: {
+        decision: decision.decision,
+        code: decision.code,
+        reason: decision.reason,
+        skillId,
+        campaignState
+      },
+      digest
+    },
+    isError: true
+  };
+}
+function toolResult(value, linkSkills = [], digest = null) {
+  const payload = digest === null ? value : { ...value, digest };
   const content = [
-    { type: "text", text: JSON.stringify(value, null, 2) },
+    { type: "text", text: JSON.stringify(payload, null, 2) },
+    ...digest === null ? [] : [{ type: "text", text: digest.text }],
     ...resourceLinks(value, linkSkills)
   ];
   return {
     content,
-    structuredContent: { ...value }
+    structuredContent: { ...payload }
   };
 }
 function resourceLinks(value, linkSkills) {

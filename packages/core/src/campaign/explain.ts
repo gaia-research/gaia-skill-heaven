@@ -20,6 +20,8 @@ export function explainCampaignTransition(
 ): string {
   const description = decision === D.hold && signal === CampaignSignals.personRequired
     ? "Automatic continuation was refused; an operator answer is required."
-    : `${descriptions[decision]}${personPending ? " An operator answer is required." : ""}`;
+    : signal === CampaignSignals.unplanned
+      ? "An unplanned model-led skill was summoned during execution."
+      : `${descriptions[decision]}${personPending ? " An operator answer is required." : ""}`;
   return `${description} ${from} → ${to} (${signal}).`;
 }

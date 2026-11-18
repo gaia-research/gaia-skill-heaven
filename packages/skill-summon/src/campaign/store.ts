@@ -101,6 +101,7 @@ export type CampaignCharterTemplate = Readonly<{
   phases: readonly string[];
   arsenal: readonly CampaignCharterArsenalItem[];
   allowedSkills: readonly string[];
+  excludedSkills?: readonly string[];
   queue: readonly CampaignQueueItem[];
   authority: CampaignCharterAuthoritySplit;
   recoverLimit: number;
@@ -3027,7 +3028,9 @@ function parsePersistedCharterStrategy(
     tmpl.revision !== charter.revision ||
     tmpl.reconId !== v.reconId ||
     tmpl.charterSha256 !== v.charterSha256 ||
-    tmpl.shortDigest !== v.shortDigest
+    tmpl.shortDigest !== v.shortDigest ||
+    canonicalCampaignJson(tmpl.excludedSkills ?? null) !==
+      canonicalCampaignJson(charter.excludedSkills ?? null)
   ) {
     return null;
   }

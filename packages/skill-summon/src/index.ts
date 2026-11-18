@@ -124,10 +124,25 @@ export {
   type CampaignStatusResult,
 } from "./campaign/ops/status.js";
 export {
+  collectUnplannedSummonsSinceLastCheckpoint,
   executeCheckpoint,
   loadOrInitializeWorkUnitQueue,
   type CampaignCheckpointResult,
+  type UnplannedSummonSummary,
 } from "./campaign/ops/checkpoint.js";
+export {
+  classifyCardLane,
+  classifyPublishDenyListClass,
+  evaluateSummonGate,
+  resolveActiveWorkUnit,
+  resolveGateCard,
+  type GateCardLane,
+  type GateRequestPath,
+  type SummonGateCard,
+  type SummonGateDecision,
+  type SummonGateInput,
+  type SummonGateUnit,
+} from "./campaign/gate.js";
 export {
   executeNext,
   type CampaignNextResult,

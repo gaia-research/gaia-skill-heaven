@@ -578,6 +578,11 @@ export function renderControlStrategyLines(
   lines.push(
     `  AllowedSkills: ${allowedSkills.length > 0 ? allowedSkills.map((s) => displayField(s)).join(", ") : "none"}`,
   );
+  if (charterTemplate.excludedSkills && charterTemplate.excludedSkills.length > 0) {
+    lines.push(
+      `  ExcludedSkills: ${charterTemplate.excludedSkills.map((s) => displayField(s)).join(", ")}`,
+    );
+  }
 
   const queue = charterTemplate.queue ?? [];
   if (queue.length === 0) {

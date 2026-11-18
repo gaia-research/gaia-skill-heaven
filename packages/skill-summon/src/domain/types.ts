@@ -1,4 +1,4 @@
-import type { InstallabilityAssessment } from "skill-zero";
+import type { InstallabilityAssessment, PublishDenyListClass } from "skill-zero";
 
 export const TREE_CONTRACT_VERSION = "gaia-public-v1" as const;
 
@@ -52,6 +52,8 @@ export type NamedSkill = {
   genericSkillRef?: string | undefined;
   /** Human-led = Skill Heaven; model-led = Skill Hell; any = tree did not classify it. */
   invocation?: SkillInvocation | undefined;
+  /** Optional T8 publish-class deny-list category. */
+  denyListClass?: PublishDenyListClass | undefined;
   origin?: "tree" | "fleet" | undefined;
   status: string;
   level?: string | undefined;
