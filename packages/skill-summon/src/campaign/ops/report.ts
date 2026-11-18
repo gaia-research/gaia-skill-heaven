@@ -1,5 +1,6 @@
 import {
   AgentOps,
+  CAMPAIGN_SCHEMA_IDS,
   CampaignDecisions,
   CampaignStates,
   EngineOps,
@@ -7,7 +8,9 @@ import {
   WorkUnitStates,
   activateWorkUnit,
   blockWorkUnit,
+  campaignSha256Hex,
   canReceiptCloseUnit,
+  canonicalCampaignJson,
   createAttestedReceipt,
   createCampaignEngineAdapter,
   createCampaignEngineEvent,
@@ -22,6 +25,7 @@ import {
   type CampaignState,
   type CampaignTraceEntry,
   type ControllerStatus,
+  type ConvergenceIncident,
   type SteeringState,
   type UnitReportOutcome,
   type VerifyReceipt,
@@ -203,6 +207,9 @@ export async function executeReport(
     rawArgs.retrievalRefusal === true
   ) {
     let updatedUnit: WorkUnitRecord | undefined;
+    let currentState = store.state;
+    let currentStatus = status;
+    let currentDigest = digest;
     if (unitId) {
       const queue = await store.loadUnitsState();
       if (queue) {
@@ -210,7 +217,26 @@ export async function executeReport(
         if (target) {
           const refused = recordRetrievalRefusal(target);
           updatedUnit = refused.unit;
-          await store.saveUnitsState(updateWorkUnitInQueue(queue, refused.unit));
+          const updatedQueue = updateWorkUnitInQueue(queue, refused.unit);
+          const unitsSha256 = campaignSha256Hex(
+            canonicalCampaignJson(updatedQueue),
+          );
+          const appended = await store.append(
+            {
+              channel: "agent",
+              op: AgentOps.report,
+              workUnit: unitId,
+              unitsSha256,
+            },
+            { unitsState: updatedQueue },
+          );
+          currentState = appended.state;
+          currentStatus = appended.status;
+          currentDigest = buildCampaignDigest(
+            appended.state,
+            appended.status,
+            latestAcceptedOperator,
+          );
         }
       }
     }
@@ -222,10 +248,10 @@ export async function executeReport(
       outcome: UnitReportOutcomes.retrievalRefusal,
       decision: CampaignDecisions.hold,
       ...(updatedUnit ? { unit: updatedUnit } : {}),
-      steering: store.state.steering,
-      state: store.state,
-      status,
-      digest,
+      steering: currentState.steering,
+      state: currentState,
+      status: currentStatus,
+      digest: currentDigest,
     });
   }
 
@@ -387,6 +413,20 @@ export async function executeReport(
       ? "verify-command"
       : store.state.charter.clauses[0]!;
 
+    const updatedQueue = updateWorkUnitInQueue(queue, unitResult.unit);
+
+    const convergenceIncident: ConvergenceIncident | undefined =
+      outcome === UnitReportOutcomes.fail &&
+      unitResult.decision === CampaignDecisions.convergence
+        ? {
+            schema: CAMPAIGN_SCHEMA_IDS.incident,
+            id: `convergence-${unitId}-r${store.state.charterRevision}-s${store.trace.length}`,
+            description: `Work unit "${unitId}" exhausted recover (${unitResult.unit.recoverCount}/${queue.bounds.recoverLimit}) and reopen (${unitResult.unit.reopenCount}/${queue.bounds.reopenLimit}) bounds.`,
+            skills: [unit.skill],
+            requiresPerson: true,
+          }
+        : undefined;
+
     const event = createCampaignEngineEvent(engineAdapter, {
       channel: "engine",
       op: EngineOps.verify,
@@ -395,11 +435,13 @@ export async function executeReport(
       workUnit: unitId,
       receipt,
       ...(outcome === UnitReportOutcomes.pass ? { closesUnit: true } : {}),
+      ...(convergenceIncident !== undefined ? { convergenceIncident } : {}),
     });
 
-    const appended = await store.append(event);
-    await store.saveUnitsState(updateWorkUnitInQueue(queue, unitResult.unit));
-    await store.appendReceipt(receipt);
+    const appended = await store.append(event, {
+      unitsState: updatedQueue,
+      receipt,
+    });
 
     const nextDigest = buildCampaignDigest(
       appended.state,
@@ -471,7 +513,22 @@ export async function executeReport(
     );
   }
 
-  await store.saveUnitsState(updateWorkUnitInQueue(queue, nextUnit));
+  const updatedQueue = updateWorkUnitInQueue(queue, nextUnit);
+  const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(updatedQueue));
+  const appended = await store.append(
+    {
+      channel: "agent",
+      op: AgentOps.report,
+      workUnit: unitId,
+      unitsSha256,
+    },
+    { unitsState: updatedQueue },
+  );
+  const nextDigest = buildCampaignDigest(
+    appended.state,
+    appended.status,
+    latestAcceptedOperator,
+  );
   return immutableSnapshot({
     ok: true,
     refused: false,
@@ -479,9 +536,10 @@ export async function executeReport(
     outcome,
     decision: CampaignDecisions.hold,
     unit: nextUnit,
-    steering: store.state.steering,
-    state: store.state,
-    status,
-    digest,
+    steering: appended.state.steering,
+    state: appended.state,
+    entry: appended.entry,
+    status: appended.status,
+    digest: nextDigest,
   });
 }

@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { readFile, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -18,14 +19,18 @@ import {
   UnitReportOutcomes,
   WorkUnitStates,
   buildWorkUnitQueue,
+  campaignSha256Hex,
+  canonicalCampaignJson,
   createCampaignOperatorAdapter,
   createCampaignOperatorEvent,
+  formatVerifyReceiptLine,
   selectNextWorkUnit,
   type CampaignCharter,
 } from "skill-zero";
 
 import {
   CAMPAIGN_DIR_NAME,
+  CAMPAIGN_EVIDENCE_FILE,
   CAMPAIGN_RECEIPTS_FILE,
   CAMPAIGN_UNITS_FILE,
   CampaignStore,
@@ -44,6 +49,10 @@ import {
   measureCampaignToolStandingDose,
   type GaiaRegistryDocuments,
 } from "../src/index.js";
+import {
+  CAMPAIGN_RECEIPTS_STAGE_FILE,
+  CAMPAIGN_UNITS_STAGE_FILE,
+} from "../src/campaign/store.js";
 import { openSession, type SummonSession } from "../src/summon/session.js";
 import { authorityHits } from "../../../plugins/skill-heaven/scripts/render-ladder.mjs";
 
@@ -814,5 +823,385 @@ describe("U4 store persistence, next/report/checkpoint ops, and steering wiring"
       const content = readFileSync(file, "utf8");
       expect(content.toLowerCase()).not.toContain(forbiddenWord);
     }
+  });
+
+  it("Finding 3: fails closed (FAILED_SAFE) when units.json or receipts.jsonl is deleted or tampered", async () => {
+    // 1. Deleting units.json after work started -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        await executeNext(s);
+        const unitsPath = path.join(s.root, CAMPAIGN_DIR_NAME, CAMPAIGN_UNITS_FILE);
+        expect(existsSync(unitsPath)).toBe(true);
+        await rm(unitsPath);
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        expect(reloaded.error).toMatch(/missing/i);
+        await expect(reloaded.loadUnitsState()).rejects.toThrow();
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 2. Replacing units.json with modified bounds (recoverLimit: 99) -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign({ recoverLimit: 1, reopenLimit: 1 });
+        await executeNext(s);
+        const unitsPath = path.join(s.root, CAMPAIGN_DIR_NAME, CAMPAIGN_UNITS_FILE);
+        const raw = JSON.parse(await readFile(unitsPath, "utf8")) as Record<string, unknown>;
+        const tampered = {
+          ...raw,
+          bounds: { recoverLimit: 99, reopenLimit: 1 },
+        };
+        await writeFile(unitsPath, `${JSON.stringify(tampered, null, 2)}\n`, "utf8");
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 3. Replacing units.json with fake done units -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        await executeNext(s);
+        const unitsPath = path.join(s.root, CAMPAIGN_DIR_NAME, CAMPAIGN_UNITS_FILE);
+        const raw = JSON.parse(await readFile(unitsPath, "utf8")) as {
+          units: Array<Record<string, unknown>>;
+        };
+        const tampered = {
+          ...raw,
+          units: raw.units.map((u, idx) =>
+            idx === 0 ? { ...u, state: WorkUnitStates.done } : u,
+          ),
+        };
+        await writeFile(unitsPath, `${JSON.stringify(tampered, null, 2)}\n`, "utf8");
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(true);
+        expect(reloaded.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 4. Deleting or tampering receipts.jsonl after verification -> FAILED_SAFE
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        const n = await executeNext(s);
+        expect(n.ok && n.unit).toBeTruthy();
+        await executeReport(s, {
+          unitId: n.ok && n.unit ? n.unit.id : "u1",
+          outcome: UnitReportOutcomes.pass,
+          command: "npm test",
+          output: "ok",
+        });
+
+        const receiptsPath = path.join(
+          s.root,
+          CAMPAIGN_DIR_NAME,
+          CAMPAIGN_RECEIPTS_FILE,
+        );
+        const originalReceipts = await readFile(receiptsPath, "utf8");
+
+        // Tamper command in receipts.jsonl
+        const parsedLine = JSON.parse(originalReceipts.trim()) as Record<string, unknown>;
+        await writeFile(
+          receiptsPath,
+          `${JSON.stringify({ ...parsedLine, command: "echo tampered" })}\n`,
+          "utf8",
+        );
+        const tamperedStore = await CampaignStore.load(s.root);
+        expect(tamperedStore.corrupted).toBe(true);
+        expect(tamperedStore.state.state).toBe(CampaignStates.failedSafe);
+
+        // Delete receipts.jsonl
+        await rm(receiptsPath);
+        const missingStore = await CampaignStore.load(s.root);
+        expect(missingStore.corrupted).toBe(true);
+        expect(missingStore.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("Finding 4: reconciles staged units/receipts after interrupted rename, binds checkpoint+units atomically, and fails closed on missing evidence", async () => {
+    // 1. Simulate interruption after trace.jsonl + evidence.jsonl append (leaving .units.stage.json and .receipts.stage.jsonl)
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        const n = await executeNext(s);
+        expect(n.ok && n.unit).toBeTruthy();
+        const unitId = n.ok && n.unit ? n.unit.id : "";
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+        const receiptsPath = path.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
+        const unitsStagePath = path.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+        const receiptsStagePath = path.join(
+          campaignDir,
+          CAMPAIGN_RECEIPTS_STAGE_FILE,
+        );
+
+        // Snapshot pre-report units.json (where unit is active)
+        const preReportUnitsRaw = await readFile(unitsPath, "utf8");
+
+        // Complete report normally, then move new units/receipts back to stage files
+        // and restore stale units.json + delete receipts.jsonl to simulate crash before rename.
+        const rep = await executeReport(s, {
+          unitId,
+          outcome: UnitReportOutcomes.pass,
+          command: "npm test",
+          output: "ok",
+        });
+        expect(rep.ok).toBe(true);
+
+        const postReportUnitsRaw = await readFile(unitsPath, "utf8");
+        const postReportReceiptsRaw = await readFile(receiptsPath, "utf8");
+        await writeFile(unitsStagePath, postReportUnitsRaw, "utf8");
+        await writeFile(receiptsStagePath, postReportReceiptsRaw, "utf8");
+        await writeFile(unitsPath, preReportUnitsRaw, "utf8");
+        await rm(receiptsPath);
+
+        // Reload reconciles stage files atomically without double-counting
+        const recovered = await CampaignStore.load(s.root);
+        expect(recovered.corrupted).toBe(false);
+        expect(recovered.state.completed).toBe(1);
+        const units = await recovered.loadUnitsState();
+        expect(units?.units.filter((u) => u.state === WorkUnitStates.done)).toHaveLength(1);
+        const receipts = await recovered.loadReceipts();
+        expect(receipts).toHaveLength(1);
+        expect(existsSync(unitsStagePath)).toBe(false);
+        expect(existsSync(receiptsStagePath)).toBe(false);
+
+        // Retrying report on already-done unit is refused (no double-counting)
+        const retry = await executeReport(s, {
+          unitId,
+          outcome: UnitReportOutcomes.pass,
+          command: "npm test",
+          output: "ok",
+        });
+        expect(retry.ok).toBe(false);
+        if (!retry.ok) {
+          expect(retry.error.code).toBe("invalid-work-unit-state");
+        }
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+
+    // 2. Post-decision regrouping writes checkpoint + unitsSha256 in the same evidence line
+    // and missing evidence.jsonl after privileged E.verify/O.checkpoint fails closed.
+    {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupApprovedCampaign();
+        const store0 = await CampaignStore.load(s.root);
+        const unitIds = store0.state.queue.map((q) => q.id);
+
+        const cp = await executeCheckpoint(s, {
+          batches: [{ id: "atomic-batch", unitIds }],
+        });
+        expect(cp.ok).toBe(true);
+        if (cp.ok) {
+          expect(cp.checkpointWritten).toBe(true);
+          expect(cp.queue?.batches[0]?.id).toBe("atomic-batch");
+        }
+
+        const campaignDir = path.join(s.root, CAMPAIGN_DIR_NAME);
+        const evidenceRaw = await readFile(
+          path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE),
+          "utf8",
+        );
+        const evidenceLines = evidenceRaw
+          .trim()
+          .split("\n")
+          .map((l) => JSON.parse(l) as Record<string, unknown>);
+        const lastEv = evidenceLines.at(-1)!;
+        expect(lastEv.authorizedPrivileged).toBe(true);
+        expect(lastEv.unitsSha256).toBe(
+          campaignSha256Hex(canonicalCampaignJson(cp.ok ? cp.queue : null)),
+        );
+
+        // Removing evidence.jsonl fails closed (FAILED_SAFE)
+        await rm(path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE));
+        const noEvStore = await CampaignStore.load(s.root);
+        expect(noEvStore.corrupted).toBe(true);
+        expect(noEvStore.state.state).toBe(CampaignStates.failedSafe);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("Finding 5: exhausting bounds (0/0, 0/2, 2/0, 1/1) transitions persisted campaign state to CONVERGENCE with requiresPerson and raised steering rung", async () => {
+    const cases: Array<{ recoverLimit: number; reopenLimit: number }> = [
+      { recoverLimit: 0, reopenLimit: 0 },
+      { recoverLimit: 0, reopenLimit: 2 },
+      { recoverLimit: 2, reopenLimit: 0 },
+      { recoverLimit: 1, reopenLimit: 1 },
+    ];
+
+    for (const bounds of cases) {
+      const s = await openSession();
+      try {
+        const orig = session;
+        session = s;
+        await setupCharterWithAcceptanceCommands(bounds);
+        const initialStore = await CampaignStore.load(s.root);
+        const initialRung = initialStore.state.steering.rung;
+
+        const n = await executeNext(s);
+        expect(n.ok && n.unit?.id).toBe("u1");
+
+        const totalRecoverAndReopen = bounds.recoverLimit + bounds.reopenLimit;
+        for (let i = 0; i < totalRecoverAndReopen; i++) {
+          const stepFail = await executeReport(s, {
+            unitId: "u1",
+            outcome: UnitReportOutcomes.fail,
+            command: "npm test",
+            output: `fail-${i + 1}`,
+          });
+          expect(stepFail.ok).toBe(true);
+          if (stepFail.ok) {
+            expect(stepFail.decision).not.toBe(CampaignDecisions.convergence);
+          }
+          const resumed = await executeReport(s, {
+            unitId: "u1",
+            outcome: UnitReportOutcomes.resume,
+          });
+          expect(resumed.ok).toBe(true);
+        }
+
+        const finalFail = await executeReport(s, {
+          unitId: "u1",
+          outcome: UnitReportOutcomes.fail,
+          command: "npm test",
+          output: "final-exhaustion",
+        });
+        expect(finalFail.ok).toBe(true);
+        if (finalFail.ok) {
+          expect(finalFail.decision).toBe(CampaignDecisions.convergence);
+          expect(finalFail.unit?.state).toBe(WorkUnitStates.needsHuman);
+          expect(finalFail.state.state).toBe(CampaignStates.convergence);
+          expect(finalFail.state.incident?.requiresPerson).toBe(true);
+        }
+
+        const reloaded = await CampaignStore.load(s.root);
+        expect(reloaded.corrupted).toBe(false);
+        expect(reloaded.state.state).toBe(CampaignStates.convergence);
+        expect(reloaded.state.incident?.requiresPerson).toBe(true);
+        expect(reloaded.state.steering.rung).not.toBe(initialRung);
+        session = orig;
+      } finally {
+        await rm(s.root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("upgrades receipts via --campaign-replay-receipts and reloads CampaignStore without FAILED_SAFE", async () => {
+    const deterministicCmd = `node -e "console.log('verified-ok')"`;
+    const service = makeService();
+    const env = cleanEnv();
+    const goalWithCmd = {
+      ...VALID_GOAL_CONTRACT,
+      acceptanceCommands: [deterministicCmd],
+    };
+    await executeOpen(session, goalWithCmd);
+    const recon = await executeRecon(service, session, {
+      gaps: ["security audit"],
+    });
+    if (!recon.ok) throw new Error("recon failed");
+
+    const cardRef = recon.recon.gaps[0]!.candidates[0]!.cardRef;
+    const proposed = await executePropose(
+      session,
+      {
+        reconId: recon.recon.reconId,
+        arsenal: [cardRef],
+        recoverLimit: 1,
+        reopenLimit: 1,
+        sessionRetention: 3,
+      },
+      { env },
+    );
+    expect(proposed.ok).toBe(true);
+
+    await executeOperatorDecide(session, {
+      elicit: async () => ({
+        action: ElicitationActions.accept,
+        content: { decision: OperatorDecisionChoices.approve },
+      }),
+      env,
+    });
+
+    const n = await executeNext(session);
+    expect(n.ok && n.unit).toBeTruthy();
+    const unitId = n.ok && n.unit ? n.unit.id : "";
+
+    const rep = await executeReport(session, {
+      unitId,
+      outcome: UnitReportOutcomes.pass,
+      command: deterministicCmd,
+      output: "verified-ok\n",
+    });
+    expect(rep.ok).toBe(true);
+
+    const storeBefore = await CampaignStore.load(session.root);
+    const bin = path.resolve(REPO_ROOT, "packages/core/bin/skill-zero.mjs");
+    const cliResult = spawnSync(
+      process.execPath,
+      [bin, "--campaign-replay-receipts", storeBefore.tracePath],
+      { encoding: "utf8" },
+    );
+    expect(cliResult.status).toBe(0);
+    const cliJson = JSON.parse(cliResult.stdout) as {
+      valid: boolean;
+      upgraded: number;
+      receipts: Array<{ status: string; replayedExitCode?: number }>;
+    };
+    expect(cliJson.valid).toBe(true);
+    expect(cliJson.upgraded).toBe(1);
+    expect(cliJson.receipts[0]?.status).toBe(ReceiptStatuses.replayed);
+    expect(cliJson.receipts[0]?.replayedExitCode).toBe(0);
+
+    const storeAfter = await CampaignStore.load(session.root);
+    expect(storeAfter.corrupted).toBe(false);
+    expect(storeAfter.state.state).toBe(CampaignStates.executing);
+    const receiptsAfter = await storeAfter.loadReceipts();
+    expect(receiptsAfter).toHaveLength(1);
+    expect(receiptsAfter[0]?.status).toBe(ReceiptStatuses.replayed);
+    expect(receiptsAfter[0]?.replayedExitCode).toBe(0);
   });
 });

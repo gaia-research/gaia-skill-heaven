@@ -1,7 +1,10 @@
 import {
+  AgentOps,
   CampaignStates,
   OperatorVerbs,
   buildWorkUnitQueue,
+  campaignSha256Hex,
+  canonicalCampaignJson,
   createCampaignOperatorAdapter,
   createCampaignOperatorEvent,
   immutableSnapshot,
@@ -135,7 +138,7 @@ export async function executeCheckpoint(
     try {
       const { queue } = await loadOrInitializeWorkUnitQueue(store);
       const regrouped = regroupWorkUnits(queue, rawBatches!, false);
-      regroupedQueue = await store.saveUnitsState(regrouped.queue);
+      regroupedQueue = regrouped.queue;
     } catch (error) {
       return immutableSnapshot({
         ok: false,
@@ -156,15 +159,26 @@ export async function executeCheckpoint(
       });
     }
 
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
+    const appended = await store.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { unitsState: regroupedQueue },
+    );
+    const nextDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator,
+    );
+
     return immutableSnapshot({
       ok: true,
       refused: false,
       op: OperatorVerbs.checkpoint,
       checkpointWritten: false,
       queue: regroupedQueue,
-      state: store.state,
-      status,
-      digest,
+      state: appended.state,
+      status: appended.status,
+      digest: nextDigest,
     });
   }
 
@@ -194,7 +208,7 @@ export async function executeCheckpoint(
     try {
       const { queue } = await loadOrInitializeWorkUnitQueue(store);
       const regrouped = regroupWorkUnits(queue, rawBatches!, true);
-      updatedQueue = await store.saveUnitsState(regrouped.queue);
+      updatedQueue = regrouped.queue;
     } catch (error) {
       return immutableSnapshot({
         ok: false,
@@ -220,7 +234,10 @@ export async function executeCheckpoint(
     channel: "operator",
     op: OperatorVerbs.checkpoint,
   });
-  const appended = await store.append(event);
+  const appended = await store.append(
+    event,
+    updatedQueue ? { unitsState: updatedQueue } : undefined,
+  );
   const nextDigest = buildCampaignDigest(
     appended.state,
     appended.status,

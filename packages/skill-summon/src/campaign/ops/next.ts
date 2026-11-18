@@ -2,6 +2,8 @@ import {
   AgentOps,
   CampaignStates,
   activateWorkUnit,
+  campaignSha256Hex,
+  canonicalCampaignJson,
   immutableSnapshot,
   regroupWorkUnits,
   selectNextWorkUnit,
@@ -111,7 +113,7 @@ export async function executeNext(
     try {
       const { queue } = await loadOrInitializeWorkUnitQueue(store);
       const regrouped = regroupWorkUnits(queue, rawBatches!, false);
-      regroupedQueue = await store.saveUnitsState(regrouped.queue);
+      regroupedQueue = regrouped.queue;
     } catch (error) {
       return immutableSnapshot({
         ok: false,
@@ -133,6 +135,16 @@ export async function executeNext(
       });
     }
 
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
+    const appended = await store.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { unitsState: regroupedQueue },
+    );
+    const nextDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator,
+    );
     const counts = selectNextWorkUnit(regroupedQueue).counts;
     return immutableSnapshot({
       ok: true,
@@ -142,9 +154,9 @@ export async function executeNext(
       queue: regroupedQueue,
       queueCounts: counts,
       checkpointWritten: false,
-      state: store.state,
-      status,
-      digest,
+      state: appended.state,
+      status: appended.status,
+      digest: nextDigest,
     });
   }
 
@@ -233,38 +245,66 @@ export async function executeNext(
   if (selection.next !== null) {
     const activatedUnit = activateWorkUnit(selection.next);
     const updatedQueue = updateWorkUnitInQueue(queue, activatedUnit);
-    const savedQueue = await activeStore.saveUnitsState(updatedQueue);
-    const updatedCounts = selectNextWorkUnit(savedQueue).counts;
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(updatedQueue));
+    const appended = await activeStore.append(
+      {
+        channel: "agent",
+        op: AgentOps.next,
+        workUnit: activatedUnit.id,
+        unitsSha256,
+      },
+      { unitsState: updatedQueue },
+    );
+    const nextDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator,
+    );
+    const updatedCounts = selectNextWorkUnit(updatedQueue).counts;
     return immutableSnapshot({
       ok: true,
       refused: false,
       op: AgentOps.next,
       unit: activatedUnit,
-      queue: savedQueue,
+      queue: updatedQueue,
       queueCounts: updatedCounts,
       checkpointWritten,
       ...(checkpointEntry ? { checkpointEntry } : {}),
-      state: currentState,
-      status: currentStatus,
-      digest: currentDigest,
+      state: appended.state,
+      status: appended.status,
+      digest: nextDigest,
     });
   }
 
-  const finalQueue = initializedNow
-    ? await activeStore.saveUnitsState(queue)
-    : queue;
+  let finalState = currentState;
+  let finalStatus = currentStatus;
+  let finalDigest = currentDigest;
+  if (initializedNow) {
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(queue));
+    const appended = await activeStore.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { unitsState: queue },
+    );
+    finalState = appended.state;
+    finalStatus = appended.status;
+    finalDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator,
+    );
+  }
 
   return immutableSnapshot({
     ok: true,
     refused: false,
     op: AgentOps.next,
     unit: null,
-    queue: finalQueue,
+    queue,
     queueCounts: selection.counts,
     checkpointWritten,
     ...(checkpointEntry ? { checkpointEntry } : {}),
-    state: currentState,
-    status: currentStatus,
-    digest: currentDigest,
+    state: finalState,
+    status: finalStatus,
+    digest: finalDigest,
   });
 }
