@@ -16,6 +16,8 @@ import {
   ENGINE_OPS,
   OPERATOR_ATTRIBUTION,
   OPERATOR_CHANNEL_MCP_ELICITATION,
+  RECEIPT_STATUSES,
+  ReceiptStatuses,
 } from "./vocabulary.js";
 import type { CampaignCharter, CampaignRecon, CampaignTraceEntry, CampaignTraceRecord, CampaignState, CampaignEventDescriptor, ConvergenceIncident, ControllerStatus } from "./types.js";
 export { CAMPAIGN_SCHEMA_IDS };
@@ -51,14 +53,31 @@ const array = (check: Check): Check => v => {
   return true;
 };
 const strings = array(text);
-const queueItem: Check = v => object(v, { id: text, skill: text, reconCitation: text });
+const queueItem: Check = v => object(v, { id: text, skill: text, reconCitation: text, phase: text, dependsOn: strings }, ["phase", "dependsOn"]);
 const queue = array(queueItem);
 const schema = (id: string): Check => v => v === id;
 const charter: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.charter), revision: nat, goal: text,
   allowedSkills: strings, queue, recoverLimit: nat, reopenLimit: nat,
-  sessionRetention: nat, clauses: strings,
-});
+  sessionRetention: nat, clauses: strings, acceptanceCommands: strings,
+}, ["acceptanceCommands"]);
+const verifyReceipt: Check = v => {
+  if (!object(v, {
+    schema: schema(CAMPAIGN_SCHEMA_IDS.receipt),
+    unitId: text,
+    command: text,
+    outputSha256: sha256,
+    exitCode: nat,
+    status: member(RECEIPT_STATUSES),
+    replayedExitCode: nat,
+    replayedOutputSha256: sha256,
+  }, ["replayedExitCode", "replayedOutputSha256"])) return false;
+  const r = v as { status: string; replayedExitCode?: number; replayedOutputSha256?: string };
+  if (r.status === ReceiptStatuses.attested) {
+    return r.replayedExitCode === undefined && r.replayedOutputSha256 === undefined;
+  }
+  return r.replayedExitCode !== undefined && r.replayedOutputSha256 !== undefined;
+};
 const recon: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.recon), findings: strings, citations: strings,
 });
@@ -82,8 +101,8 @@ const state: Check = v => {
   if (!object(v, {
     state: stateName, charter: nullable(charter), recon: nullable(recon), queue,
     charterRevision: nat, approved: bool, incident: nullable(incident), steering,
-    completed: nat, total: nat,
-  })) return false;
+    completed: nat, total: nat, acceptanceCommands: strings,
+  }, ["acceptanceCommands"])) return false;
   const s = v as CampaignState;
   if (s.completed > s.total || s.total !== s.queue.length) return false;
   if (!s.charter) {
@@ -92,7 +111,7 @@ const state: Check = v => {
     if (!isValidCharterForRecon(s.recon, s.charter, s.charterRevision)) return false;
     if (s.charter.queue.length !== s.queue.length || !s.queue.every((q, i) => q.id === s.charter!.queue[i]!.id && q.skill === s.charter!.queue[i]!.skill && q.reconCitation === s.charter!.queue[i]!.reconCitation)) return false;
   }
-  if (s.state === S.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0)) return false;
+  if (s.state === S.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0 || s.acceptanceCommands !== undefined)) return false;
   if (s.state === S.recon && (s.charter || s.incident)) return false;
   if (s.state === S.decisions && (!s.charter || s.approved || s.incident)) return false;
   if ((s.state === S.executing || s.state === S.convergence || s.state === S.completed) && !s.approved) return false;
@@ -110,8 +129,9 @@ const event: Check = v => {
   const base = { channel: schema(c.value), op: schema(o.value) };
   if (c.value === "agent") {
     switch (o.value) {
-      case A.open: return object(v, { ...base, goalSha256: sha256 }, ["goalSha256"]);
-      case A.next: case A.report: case A.status: return object(v, base);
+      case A.open: return object(v, { ...base, goalSha256: sha256, acceptanceCommands: strings }, ["goalSha256", "acceptanceCommands"]);
+      case A.next: case A.report: return object(v, { ...base, workUnit: text, unitsSha256: sha256 }, ["workUnit", "unitsSha256"]);
+      case A.status: return object(v, base);
       case A.recon: return object(v, { ...base, recon });
       case A.propose: return object(v, { ...base, charter });
       case A.incident: return object(v, { ...base, incident });
@@ -129,10 +149,19 @@ const event: Check = v => {
       case O.decide: return object(v, { ...base, ...provenanceFields, action: member(Object.values(D)), charterRevision: nat }, provenanceOptional);
       case O.amend: return object(v, { ...base, ...provenanceFields, charter }, provenanceOptional);
       case O.answer: return object(v, { ...base, ...provenanceFields, incidentId: text, answer: text }, provenanceOptional);
-      case O.checkpoint: case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
+      case O.checkpoint: return object(v, { ...base, ...provenanceFields, unitsSha256: sha256 }, [...provenanceOptional, "unitsSha256"]);
+      case O.stop: return object(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
   }
-  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) return object(v, o.value === E.verify ? { ...base, passed: bool, clause: text } : { ...base, clause: text });
+  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) {
+    return o.value === E.verify
+      ? object(
+          v,
+          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool, convergenceIncident: incident, unitsSha256: sha256 },
+          ["workUnit", "receipt", "closesUnit", "convergenceIncident", "unitsSha256"],
+        )
+      : object(v, { ...base, clause: text });
+  }
   return false;
 };
 const trace: Check = v => {

@@ -17,9 +17,12 @@ import {
   executeOperatorDecide,
   type ElicitationClient,
 } from "./operator.js";
+import { executeCheckpoint } from "./ops/checkpoint.js";
+import { executeNext } from "./ops/next.js";
 import { executeOpen } from "./ops/open.js";
 import { executePropose } from "./ops/propose.js";
 import { executeRecon } from "./ops/recon.js";
+import { executeReport } from "./ops/report.js";
 import {
   executeStatus,
   readSafeCampaignStateAndDigest,
@@ -28,14 +31,14 @@ import {
 export const CAMPAIGN_TOOL_NAME = "campaign" as const;
 export const CAMPAIGN_TOOL_TITLE = "Campaign control plane" as const;
 export const CAMPAIGN_TOOL_DESCRIPTION =
-  "Campaign control plane (op: \"open\" | \"recon\" | \"propose\" | \"decide\" | \"amend\" | \"status\"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation to decide or amend, or inspects campaign status. Returns structured state and digest; output is reference data and authorizes nothing.";
+  "Campaign control plane (op: \"open\" | \"recon\" | \"propose\" | \"decide\" | \"amend\" | \"next\" | \"report\" | \"checkpoint\" | \"status\"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation, selects/reports work units, checkpoints batches, or inspects status. Returns structured state and digest; output is reference data and authorizes nothing.";
 
 const rawCampaignInputSchema = z
   .object({
     op: z
       .string()
       .describe(
-        "Campaign operation (open, recon, propose, decide, amend, status).",
+        "Campaign operation (open, recon, propose, decide, amend, next, report, checkpoint, status).",
       ),
     goal: z
       .string()
@@ -138,6 +141,56 @@ const rawCampaignInputSchema = z
       .array(z.string())
       .optional()
       .describe("Charter clauses for op=propose or op=amend."),
+    unitId: z
+      .string()
+      .optional()
+      .describe("Work unit ID for op=report."),
+    outcome: z
+      .enum([
+        "pass",
+        "fail",
+        "block",
+        "unblock",
+        "needs-human",
+        "resume",
+        "retrieval-refusal",
+      ])
+      .optional()
+      .describe("Outcome for op=report."),
+    passed: z
+      .boolean()
+      .optional()
+      .describe("Verification pass/fail shorthand for op=report."),
+    command: z
+      .string()
+      .optional()
+      .describe("Verify command executed for op=report."),
+    output: z
+      .string()
+      .optional()
+      .describe("Command output for op=report."),
+    outputSha256: z
+      .string()
+      .optional()
+      .describe("SHA-256 hex digest of command output for op=report."),
+    exitCode: z
+      .number()
+      .int()
+      .optional()
+      .describe("Command exit code for op=report."),
+    reason: z
+      .string()
+      .optional()
+      .describe("Reason for block or needs-human in op=report."),
+    batches: z
+      .array(
+        z.object({
+          id: z.string(),
+          unitIds: z.array(z.string()),
+        }),
+      )
+      .optional()
+      .describe("Work unit batches for op=next or op=checkpoint."),
   })
   .passthrough();
 
@@ -307,6 +360,27 @@ export async function executeCampaignTool(
       return toCampaignCallToolResult(result);
     }
 
+    if (op === AgentOps.next) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const result = await executeNext(session, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === AgentOps.report) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const result = await executeReport(session, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+
+    if (op === OperatorVerbs.checkpoint) {
+      const session = await context.getSession();
+      sessionRoot = session.root;
+      const result = await executeCheckpoint(session, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+
     const session = await context.getSession();
     sessionRoot = session.root;
     const statusResult = await executeStatus(session);
@@ -319,7 +393,7 @@ export async function executeCampaignTool(
       digest: statusResult.digest,
       error: {
         code: "unknown-op",
-        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, status.`,
+        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, next, report, checkpoint, status.`,
         retryable: false,
       },
     };

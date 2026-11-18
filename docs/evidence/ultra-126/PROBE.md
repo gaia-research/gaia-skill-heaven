@@ -274,3 +274,22 @@ Reproducible verification command:
 ```bash
 npx vitest run packages/skill-summon/test/campaign-u1.test.ts packages/skill-summon/test/campaign-u3.test.ts
 ```
+
+## U4 standing dose
+
+Standalone standing dose of the `campaign` MCP tool definition (`{ name, description, inputSchema }`) after publishing the U4 operations (`next`, `report`, `checkpoint`) and work-unit/receipt/batch fields, measured with the vendored `chars4` tokenizer (`tokenize(text, "chars4")` in `packages/core/src/vendor/census-pure.ts`):
+
+- **Standing dose (`chars4`):** `1098` tokens
+
+| Component | Chars | `chars4` tokens |
+| --- | ---: | ---: |
+| `name` | 8 | 2 |
+| `description` | 412 | 103 |
+| `inputSchema` (JSON) | 3913 | 978 |
+| Full `{ name, description, inputSchema }` definition (JSON) | 4394 | 1098 |
+
+Reproducible verification command:
+
+```bash
+npx vitest run packages/skill-summon/test/campaign-u1.test.ts packages/skill-summon/test/campaign-u3.test.ts packages/skill-summon/test/campaign-u4.test.ts
+```

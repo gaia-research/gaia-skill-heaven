@@ -852,7 +852,7 @@ describe("U1 campaign tool (open, recon, status)", () => {
       });
       expect(dose.definitionJson).toBe(liveDefJson);
       expect(dose.standingTokens).toBe(tokenize(liveDefJson, "chars4"));
-      expect(dose.standingTokens).toBe(825);
+      expect(dose.standingTokens).toBe(1098);
     });
 
     it("passes authorityHits() across tool description, schema, all CampaignStates digests, and recon outputs", async () => {
@@ -1232,7 +1232,7 @@ describe("U1 campaign tool (open, recon, status)", () => {
       });
     });
 
-    it("Finding 6: malformed MCP calls return structured refusal + digest while preserving 825-token standing dose", async () => {
+    it("Finding 6: malformed MCP calls return structured refusal + digest while preserving 1098-token standing dose", async () => {
       const client = await connectServer({
         service: makeService(),
         enableCampaignTool: true,
@@ -1268,7 +1268,7 @@ describe("U1 campaign tool (open, recon, status)", () => {
       expect(getCampaignToolInputJsonSchema()).toEqual(
         campaignTool!.inputSchema,
       );
-      expect(measureCampaignToolStandingDose().standingTokens).toBe(825);
+      expect(measureCampaignToolStandingDose().standingTokens).toBe(1098);
     });
   });
 

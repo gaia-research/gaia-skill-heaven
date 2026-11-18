@@ -118,6 +118,7 @@ export type PersistedCampaignEvidenceLine = Readonly<{
   eventSha256: string;
   recordSha256: string;
   artifactSha256?: string;
+  unitsSha256?: string;
 }>;
 
 export type ParsedCampaignEvidenceLines =
@@ -135,6 +136,7 @@ export function formatCampaignEvidenceLine(line: PersistedCampaignEvidenceLine):
     eventSha256: line.eventSha256,
     recordSha256: line.recordSha256,
     ...(line.artifactSha256 !== undefined ? { artifactSha256: line.artifactSha256 } : {}),
+    ...(line.unitsSha256 !== undefined ? { unitsSha256: line.unitsSha256 } : {}),
   });
 }
 
@@ -142,25 +144,31 @@ function isSha256Hex(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 }
 
+const EVIDENCE_ALLOWED_KEYS = new Set([
+  "seq",
+  "authorizedPrivileged",
+  "eventSha256",
+  "recordSha256",
+  "artifactSha256",
+  "unitsSha256",
+]);
+
 function parsePlainEvidenceLineObject(rawObj: unknown, expectedSeq: number): PersistedCampaignEvidenceLine | null {
   if (!isObject(rawObj)) return null;
   const proto = Object.getPrototypeOf(rawObj);
   if (proto !== Object.prototype && proto !== null) return null;
   const keys = Reflect.ownKeys(rawObj);
-  if (keys.length !== 4 && keys.length !== 5) return null;
+  if (keys.some((k) => typeof k !== "string" || !EVIDENCE_ALLOWED_KEYS.has(k))) return null;
   for (const required of ["seq", "authorizedPrivileged", "eventSha256", "recordSha256"] as const) {
     const desc = Object.getOwnPropertyDescriptor(rawObj, required);
     if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable) return null;
   }
-  if (keys.length === 5) {
-    const desc = Object.getOwnPropertyDescriptor(rawObj, "artifactSha256");
-    if (
-      !desc ||
-      !Object.hasOwn(desc, "value") ||
-      !desc.enumerable ||
-      !isSha256Hex(rawObj.artifactSha256)
-    ) {
-      return null;
+  for (const optional of ["artifactSha256", "unitsSha256"] as const) {
+    if (Object.hasOwn(rawObj, optional)) {
+      const desc = Object.getOwnPropertyDescriptor(rawObj, optional);
+      if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable || !isSha256Hex(desc.value)) {
+        return null;
+      }
     }
   }
   if (
@@ -176,7 +184,8 @@ function parsePlainEvidenceLineObject(rawObj: unknown, expectedSeq: number): Per
     authorizedPrivileged: rawObj.authorizedPrivileged,
     eventSha256: rawObj.eventSha256,
     recordSha256: rawObj.recordSha256,
-    ...(keys.length === 5 ? { artifactSha256: rawObj.artifactSha256 as string } : {}),
+    ...(Object.hasOwn(rawObj, "artifactSha256") ? { artifactSha256: rawObj.artifactSha256 as string } : {}),
+    ...(Object.hasOwn(rawObj, "unitsSha256") ? { unitsSha256: rawObj.unitsSha256 as string } : {}),
   });
 }
 

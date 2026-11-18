@@ -1,4 +1,5 @@
 import type { SteeringState, SteeringRung } from "../steering.js";
+import type { VerifyReceipt } from "./receipts.js";
 import {
   AgentOps as A,
   OperatorVerbs as O,
@@ -13,6 +14,8 @@ export type CampaignQueueItem = Readonly<{
   id: string;
   skill: string;
   reconCitation: string;
+  phase?: string;
+  dependsOn?: readonly string[];
 }>;
 export type CampaignCharter = Readonly<{
   schema: string;
@@ -24,6 +27,7 @@ export type CampaignCharter = Readonly<{
   reopenLimit: number;
   sessionRetention: number;
   clauses: readonly string[];
+  acceptanceCommands?: readonly string[];
 }>;
 export type CampaignRecon = Readonly<{
   schema: string;
@@ -53,11 +57,13 @@ export type CampaignState = Readonly<{
   steering: SteeringState;
   completed: number;
   total: number;
+  acceptanceCommands?: readonly string[];
 }>;
 
 export type AgentCampaignEvent =
-  | Readonly<{ channel: "agent"; op: typeof A.open; goalSha256?: string }>
-  | Readonly<{ channel: "agent"; op: typeof A.next | typeof A.report | typeof A.status }>
+  | Readonly<{ channel: "agent"; op: typeof A.open; goalSha256?: string; acceptanceCommands?: readonly string[] }>
+  | Readonly<{ channel: "agent"; op: typeof A.next | typeof A.report; workUnit?: string; unitsSha256?: string }>
+  | Readonly<{ channel: "agent"; op: typeof A.status }>
   | Readonly<{ channel: "agent"; op: typeof A.recon; recon: CampaignRecon }>
   | Readonly<{ channel: "agent"; op: typeof A.propose; charter: CampaignCharter }>
   | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>;
@@ -71,10 +77,21 @@ export type CampaignOperatorCommand = (
   | Readonly<{ channel: "operator"; op: typeof O.decide; action: typeof D[keyof typeof D]; charterRevision: number }>
   | Readonly<{ channel: "operator"; op: typeof O.amend; charter: CampaignCharter }>
   | Readonly<{ channel: "operator"; op: typeof O.answer; incidentId: string; answer: string }>
-  | Readonly<{ channel: "operator"; op: typeof O.checkpoint | typeof O.stop }>
+  | Readonly<{ channel: "operator"; op: typeof O.checkpoint; unitsSha256?: string }>
+  | Readonly<{ channel: "operator"; op: typeof O.stop }>
 ) & OperatorProvenanceFields;
 export type EngineCommand =
-  | Readonly<{ channel: "engine"; op: typeof E.verify; passed: boolean; clause: string }>
+  | Readonly<{
+      channel: "engine";
+      op: typeof E.verify;
+      passed: boolean;
+      clause: string;
+      workUnit?: string;
+      receipt?: VerifyReceipt;
+      closesUnit?: boolean;
+      convergenceIncident?: ConvergenceIncident;
+      unitsSha256?: string;
+    }>
   | Readonly<{ channel: "engine"; op: Exclude<typeof E[keyof typeof E], typeof E.verify>; clause: string }>;
 
 /** These are data claims, not authority. Parsing never produces a live event. */

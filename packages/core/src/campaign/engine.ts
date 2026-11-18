@@ -1,4 +1,6 @@
 import { createRuntimeAdapter, createRuntimeEvent, initialSteeringState, stepSteering } from "../steering.js";
+import type { SteeringState, SteeringStep } from "../steering.js";
+import { canReceiptCloseUnit } from "./receipts.js";
 import { CampaignStates as S, CampaignDecisions as D, CampaignPhases as P, CampaignSignals, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions, TERMINAL_STATES, CAMPAIGN_SCHEMA_IDS } from "./vocabulary.js";
 import { immutableSnapshot, isValidCharterForRecon, parseCampaignEvent, parseCampaignState, parseCampaignRecord } from "./schema.js";
 import type { CampaignState, CampaignEventDescriptor, CampaignStep, CampaignReplay, CampaignTraceEntry, CampaignTraceRecord, CampaignVerification, CampaignVerificationOptions, CampaignOperatorCommand, EngineCommand, OperatorEventCapability, EngineEventCapability, OperatorCampaignEvent, EngineCampaignEvent, CampaignCharter } from "./types.js";
@@ -39,6 +41,13 @@ export function createCampaignEngineEvent(capability: EngineEventCapability, com
   engineEvents.add(parsed);
   return parsed as EngineCampaignEvent;
 }
+export function stepCampaignSteering(steeringState: SteeringState, passed: boolean): SteeringStep {
+  if (typeof passed !== "boolean") {
+    throw new Error("stepCampaignSteering requires a boolean passed outcome");
+  }
+  const type = passed ? "behavioral-recovery" : "behavioral-failure";
+  return stepSteering(steeringState, createRuntimeEvent(steeringAdapter, type));
+}
 export function initialCampaignState(): CampaignState {
   return immutableSnapshot({ state: S.unarmed, charter: null, recon: null, queue: [], charterRevision: 0, approved: false, incident: null, steering: initialSteeringState(), completed: 0, total: 0 });
 }
@@ -78,7 +87,16 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
     if (event.channel === "agent") {
       switch (event.op) {
         case A.open:
-          if (state.state === S.unarmed) change({ state: S.recon }, D.recon, "open-request");
+          if (state.state === S.unarmed) {
+            change(
+              {
+                state: S.recon,
+                ...(event.acceptanceCommands !== undefined ? { acceptanceCommands: event.acceptanceCommands } : {}),
+              },
+              D.recon,
+              "open-request",
+            );
+          }
           break;
         case A.recon:
           if (state.state === S.recon && event.recon.citations.length > 0) change({ recon: event.recon }, D.recon, "recon-complete");
@@ -90,14 +108,34 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
           if (state.state === S.executing && state.approved && event.incident.skills.every(s => state.charter!.allowedSkills.includes(s))) change({ state: S.convergence, incident: event.incident }, D.convergence, "incident-reported");
           break;
         case A.next:
-          if (state.state === S.convergence && state.incident && state.approved) {
+          if (event.workUnit !== undefined || event.unitsSha256 !== undefined) {
+            if (state.state === S.executing && state.approved) {
+              accepted = true;
+              decision = D.explore;
+              signal = "work-ready";
+            } else if (state.state === S.decisions && !state.approved && state.charter !== null && event.unitsSha256 !== undefined && event.workUnit === undefined) {
+              accepted = true;
+              decision = D.decisions;
+              signal = "work-ready";
+            } else if (state.state === S.convergence && state.incident && state.approved) {
+              if (state.incident.requiresPerson) signal = CampaignSignals.personRequired;
+              else change({ state: S.executing, incident: null }, D.explore, "work-ready");
+            }
+          } else if (state.state === S.convergence && state.incident && state.approved) {
             if (state.incident.requiresPerson) signal = CampaignSignals.personRequired;
             else change({ state: S.executing, incident: null }, D.explore, "work-ready");
           }
           break;
         // Work-unit scheduling and receipts belong to U4. These observations
         // deliberately do not advance progress or infer campaign completion.
-        case A.report: case A.status: break;
+        case A.report:
+          if ((event.workUnit !== undefined || event.unitsSha256 !== undefined) && state.state === S.executing && state.approved) {
+            accepted = true;
+            decision = D.hold;
+            signal = "work-reported";
+          }
+          break;
+        case A.status: break;
       }
     } else if (authorized && event.channel === "operator") {
       if (event.multiplexed === true && event.optIn !== true) {
@@ -134,10 +172,58 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
         switch (event.op) {
           case E.verify:
             if (state.approved && (state.state === S.executing || state.state === S.convergence)) {
+              if (event.convergenceIncident !== undefined) {
+                if (
+                  event.passed ||
+                  event.closesUnit === true ||
+                  state.state !== S.executing ||
+                  !event.convergenceIncident.skills.every((s) => state.charter!.allowedSkills.includes(s))
+                ) {
+                  break;
+                }
+                const result = stepSteering(state.steering, createRuntimeEvent(steeringAdapter, "behavioral-failure"));
+                change(
+                  {
+                    state: S.convergence,
+                    incident: event.convergenceIncident,
+                    steering: result.state,
+                  },
+                  D.convergence,
+                  "behavioral-failure",
+                );
+                break;
+              }
+              if (event.closesUnit === true) {
+                const unitInQueue = event.workUnit !== undefined && state.queue.some((q) => q.id === event.workUnit);
+                if (!event.passed || !unitInQueue) {
+                  break;
+                }
+                const namedCommands = state.charter?.acceptanceCommands ?? state.acceptanceCommands ?? [];
+                if (!canReceiptCloseUnit(event.receipt, event.workUnit!, namedCommands)) {
+                  break;
+                }
+              }
               const type = event.passed ? "behavioral-recovery" : "behavioral-failure";
               const result = stepSteering(state.steering, createRuntimeEvent(steeringAdapter, type));
-              if (result.decision === "hold") { accepted = true; signal = type; }
-              else change({ steering: result.state }, event.passed ? D.recover : D.explore, type);
+              const nextCompleted =
+                event.closesUnit === true && state.completed < state.total ? state.completed + 1 : state.completed;
+              if (result.decision === "hold") {
+                if (nextCompleted !== state.completed) {
+                  change({ completed: nextCompleted }, D.recover, type);
+                } else {
+                  accepted = true;
+                  signal = type;
+                }
+              } else {
+                change(
+                  {
+                    steering: result.state,
+                    ...(nextCompleted !== state.completed ? { completed: nextCompleted } : {}),
+                  },
+                  event.passed ? D.recover : D.explore,
+                  type,
+                );
+              }
             }
             break;
           case E.complete:
@@ -171,10 +257,15 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
           ...(event.optIn !== undefined ? { optIn: event.optIn } : {}),
         }
       : {};
+  const workUnit =
+    (event?.channel === "engine" && event.op === E.verify) ||
+    (event?.channel === "agent" && (event.op === A.next || event.op === A.report))
+      ? (event.workUnit ?? null)
+      : null;
   const entry: CampaignTraceEntry = immutableSnapshot({
     seq, from: state.state, to: next.state, trigger: event?.op ?? "none", decision, signal,
     charterRevision: next.charterRevision, charterClause: accepted ? clause : null, skills,
-    phase: phase(next), workUnit: null, personRequired, channel: event?.channel ?? "none", accepted,
+    phase: phase(next), workUnit, personRequired, channel: event?.channel ?? "none", accepted,
     ...provenance,
   });
   return Object.freeze({ state: next, entry });

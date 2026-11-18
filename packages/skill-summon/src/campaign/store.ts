@@ -6,12 +6,16 @@ import {
   AgentOps,
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
+  EngineOps,
   OperatorVerbs,
+  ReceiptStatuses,
+  WorkUnitStates,
   campaignSha256Hex,
   canonicalCampaignJson,
   createCampaignOperatorEvent,
   formatCampaignEvidenceLine,
   formatCampaignTraceLine,
+  formatVerifyReceiptLine,
   immutableSnapshot,
   initialCampaignState,
   parseCampaignCharter,
@@ -19,6 +23,9 @@ import {
   parseCampaignEvidenceLines,
   parseCampaignManifest,
   parseCampaignTraceLines,
+  parseVerifyReceipt,
+  parseVerifyReceiptLines,
+  parseWorkUnitQueueState,
   replayCampaign,
   serializeCampaignRecord,
   stepCampaign,
@@ -39,6 +46,8 @@ import {
   type OperatorEventCapability,
   type PersistedCampaignEvidenceLine,
   type PersistedCampaignTraceLine,
+  type VerifyReceipt,
+  type WorkUnitQueueState,
 } from "skill-zero";
 
 import { assertConfinedPath } from "../summon/session.js";
@@ -58,9 +67,14 @@ export const CAMPAIGN_GOAL_FILE = "goal.json";
 export const CAMPAIGN_RECON_FILE = "recon.json";
 export const CAMPAIGN_CHARTER_FILE = "charter.json";
 export const CAMPAIGN_OPERATOR_LOG_FILE = "operator.jsonl";
+export const CAMPAIGN_UNITS_FILE = "units.json";
+export const CAMPAIGN_RECEIPTS_FILE = "receipts.jsonl";
 export const CAMPAIGN_GOAL_STAGE_FILE = ".goal.stage.json";
 export const CAMPAIGN_RECON_STAGE_FILE = ".recon.stage.json";
 export const CAMPAIGN_CHARTER_STAGE_FILE = ".charter.stage.json";
+export const CAMPAIGN_UNITS_STAGE_FILE = ".units.stage.json";
+export const CAMPAIGN_RECEIPTS_STAGE_FILE = ".receipts.stage.jsonl";
+export const CAMPAIGN_TX_STAGE_FILE = ".tx.stage.json";
 
 export type CampaignCharterArsenalItem = Readonly<{
   gapIndex: number;
@@ -336,6 +350,8 @@ export type CampaignStoreAppendOptions = Readonly<{
   reconRecord?: Readonly<Record<string, unknown>>;
   charterStrategy?: PersistedCampaignCharterStrategy;
   requireGoalContractOnOpen?: boolean;
+  unitsState?: WorkUnitQueueState;
+  receipt?: VerifyReceipt;
 }>;
 
 export type CampaignStoreLoadOptions = CampaignVerificationOptions & {
@@ -375,9 +391,14 @@ export class CampaignStore {
   readonly reconPath: string;
   readonly charterPath: string;
   readonly operatorLogPath: string;
+  readonly unitsPath: string;
+  readonly receiptsPath: string;
   readonly goalStagePath: string;
   readonly reconStagePath: string;
   readonly charterStagePath: string;
+  readonly unitsStagePath: string;
+  readonly receiptsStagePath: string;
+  readonly txStagePath: string;
 
   #initial: CampaignState;
   #state: CampaignState;
@@ -418,9 +439,14 @@ export class CampaignStore {
     this.reconPath = path.join(this.campaignDir, CAMPAIGN_RECON_FILE);
     this.charterPath = path.join(this.campaignDir, CAMPAIGN_CHARTER_FILE);
     this.operatorLogPath = path.join(this.campaignDir, CAMPAIGN_OPERATOR_LOG_FILE);
+    this.unitsPath = path.join(this.campaignDir, CAMPAIGN_UNITS_FILE);
+    this.receiptsPath = path.join(this.campaignDir, CAMPAIGN_RECEIPTS_FILE);
     this.goalStagePath = path.join(this.campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
     this.reconStagePath = path.join(this.campaignDir, CAMPAIGN_RECON_STAGE_FILE);
     this.charterStagePath = path.join(this.campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
+    this.unitsStagePath = path.join(this.campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+    this.receiptsStagePath = path.join(this.campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+    this.txStagePath = path.join(this.campaignDir, CAMPAIGN_TX_STAGE_FILE);
     this.#initial = initialCampaignState();
     this.#state = state;
     this.#lines = lines;
@@ -739,7 +765,12 @@ export class CampaignStore {
     }
     const goalSha256 = computeGoalContractSha256(validatedGoal);
     return this.append(
-      { channel: "agent", op: AgentOps.open, goalSha256 },
+      {
+        channel: "agent",
+        op: AgentOps.open,
+        goalSha256,
+        acceptanceCommands: validatedGoal.acceptanceCommands,
+      },
       { goalContract: validatedGoal, requireGoalContractOnOpen: true },
     );
   }
@@ -800,6 +831,52 @@ export class CampaignStore {
     this.#reconArtifact = disk.reconArtifact;
     this.#charterStrategy = disk.charterStrategy;
     return disk.charterStrategy;
+  }
+
+  async loadUnitsState(): Promise<WorkUnitQueueState | null> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    if (!this.#hasTrace) {
+      return null;
+    }
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize,
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
+    }
+    if (disk.kind === "absent") {
+      return null;
+    }
+    return disk.unitsState;
+  }
+
+  async loadReceipts(): Promise<readonly VerifyReceipt[]> {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE).",
+      );
+    }
+    if (!this.#hasTrace) {
+      return [];
+    }
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize,
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
+    }
+    if (disk.kind === "absent") {
+      return [];
+    }
+    return disk.receipts;
   }
 
   async appendOperatorLog(entry: Readonly<Record<string, unknown>>): Promise<void> {
@@ -922,7 +999,10 @@ export class CampaignStore {
       let validatedGoal: CampaignGoalContract | undefined;
       let validatedReconRecord: ValidatedReconRecord | undefined;
       let validatedCharterStrategy: PersistedCampaignCharterStrategy | undefined;
+      let validatedUnitsState: WorkUnitQueueState | undefined;
+      let validatedReceipt: VerifyReceipt | undefined;
       let artifactSha256: string | undefined;
+      let unitsSha256: string | undefined;
 
       if (options?.goalContract !== undefined && step.entry.accepted) {
         const parsedGoal = parseCampaignGoalContract(options.goalContract);
@@ -953,6 +1033,36 @@ export class CampaignStore {
         artifactSha256 = computeCharterCoreSha256(parsedStrategy);
       }
 
+      if (options?.unitsState !== undefined && step.entry.accepted) {
+        const parsedUnits = parseWorkUnitQueueState(options.unitsState);
+        if (!parsedUnits) {
+          throw new Error("Invalid work unit queue state.");
+        }
+        const unitsCheck = validateUnitsStateAgainstCampaignState(
+          parsedUnits,
+          step.state,
+        );
+        if (!unitsCheck.ok) {
+          throw new Error(unitsCheck.error);
+        }
+        validatedUnitsState = parsedUnits;
+        unitsSha256 = campaignSha256Hex(canonicalCampaignJson(parsedUnits));
+        const descriptorUnitsSha256 = getDescriptorUnitsSha256(descriptor);
+        if (descriptorUnitsSha256 !== unitsSha256) {
+          throw new Error(
+            "Event must carry matching unitsSha256 when persisting work unit queue state.",
+          );
+        }
+      }
+
+      if (options?.receipt !== undefined && step.entry.accepted) {
+        const parsedReceipt = parseVerifyReceipt(options.receipt);
+        if (!parsedReceipt) {
+          throw new Error("Invalid verify receipt.");
+        }
+        validatedReceipt = parsedReceipt;
+      }
+
       const authorizedPrivileged =
         (step.entry.channel === "operator" || step.entry.channel === "engine") &&
         step.entry.accepted === true;
@@ -962,6 +1072,7 @@ export class CampaignStore {
         eventSha256: campaignSha256Hex(canonicalCampaignJson(descriptor)),
         recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord)),
         ...(artifactSha256 !== undefined ? { artifactSha256 } : {}),
+        ...(unitsSha256 !== undefined ? { unitsSha256 } : {}),
       };
 
       const status = toControllerStatus(step.state, step.entry);
@@ -1046,6 +1157,110 @@ export class CampaignStore {
         );
       }
 
+      if (validatedUnitsState !== undefined) {
+        await assertRegularOrMissingTarget(
+          this.sessionRoot,
+          this.unitsPath,
+          "Campaign work units",
+        );
+        try {
+          await writeAtomicJsonArtifact(
+            this.sessionRoot,
+            this.campaignDir,
+            this.unitsStagePath,
+            `.${CAMPAIGN_UNITS_STAGE_FILE}`,
+            "Campaign work units stage",
+            `${JSON.stringify(validatedUnitsState, null, 2)}\n`,
+          );
+        } catch (error) {
+          if (validatedGoal !== undefined) {
+            await rm(this.goalStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedReconRecord !== undefined) {
+            await rm(this.reconStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedCharterStrategy !== undefined) {
+            await rm(this.charterStagePath, { force: true }).catch(() => {});
+          }
+          throw error;
+        }
+      }
+
+      if (validatedReceipt !== undefined) {
+        try {
+          const priorReceipts = await capturePriorArtifactBytes(
+            this.sessionRoot,
+            this.receiptsPath,
+            "Campaign receipts",
+          );
+          const existingReceipts = priorReceipts.existed
+            ? parseVerifyReceiptLines(priorReceipts.raw)
+            : ({ ok: true, lines: [] } as const);
+          if (!existingReceipts.ok) {
+            throw new Error(
+              `Campaign receipts failed verification: ${existingReceipts.error}`,
+            );
+          }
+          const nextReceiptLines = [
+            ...existingReceipts.lines,
+            validatedReceipt,
+          ];
+          const nextReceiptsContent = `${nextReceiptLines
+            .map((r) => formatVerifyReceiptLine(r))
+            .join("\n")}\n`;
+          await writeAtomicJsonArtifact(
+            this.sessionRoot,
+            this.campaignDir,
+            this.receiptsStagePath,
+            `.${CAMPAIGN_RECEIPTS_STAGE_FILE}`,
+            "Campaign receipts stage",
+            nextReceiptsContent,
+          );
+        } catch (error) {
+          if (validatedGoal !== undefined) {
+            await rm(this.goalStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedReconRecord !== undefined) {
+            await rm(this.reconStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedCharterStrategy !== undefined) {
+            await rm(this.charterStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedUnitsState !== undefined) {
+            await rm(this.unitsStagePath, { force: true }).catch(() => {});
+          }
+          throw error;
+        }
+      }
+
+      try {
+        await writeAtomicJsonArtifact(
+          this.sessionRoot,
+          this.campaignDir,
+          this.txStagePath,
+          `.${CAMPAIGN_TX_STAGE_FILE}`,
+          "Campaign transaction stage",
+          `${JSON.stringify(evidenceLine, null, 2)}\n`,
+        );
+      } catch (error) {
+        if (validatedGoal !== undefined) {
+          await rm(this.goalStagePath, { force: true }).catch(() => {});
+        }
+        if (validatedReconRecord !== undefined) {
+          await rm(this.reconStagePath, { force: true }).catch(() => {});
+        }
+        if (validatedCharterStrategy !== undefined) {
+          await rm(this.charterStagePath, { force: true }).catch(() => {});
+        }
+        if (validatedUnitsState !== undefined) {
+          await rm(this.unitsStagePath, { force: true }).catch(() => {});
+        }
+        if (validatedReceipt !== undefined) {
+          await rm(this.receiptsStagePath, { force: true }).catch(() => {});
+        }
+        throw error;
+      }
+
       let traceMutated = false;
       try {
         await appendFile(
@@ -1068,13 +1283,21 @@ export class CampaignStore {
         if (validatedCharterStrategy !== undefined) {
           await rename(this.charterStagePath, this.charterPath);
         }
+        if (validatedUnitsState !== undefined) {
+          await rename(this.unitsStagePath, this.unitsPath);
+        }
+        if (validatedReceipt !== undefined) {
+          await rename(this.receiptsStagePath, this.receiptsPath);
+        }
         await writeFile(
           this.statusPath,
           `${JSON.stringify(status, null, 2)}\n`,
           "utf8",
         );
+        await rm(this.txStagePath, { force: true });
       } catch (error) {
         if (!traceMutated) {
+          await rm(this.txStagePath, { force: true }).catch(() => {});
           if (validatedGoal !== undefined) {
             await rm(this.goalStagePath, { force: true }).catch(() => {});
           }
@@ -1083,6 +1306,12 @@ export class CampaignStore {
           }
           if (validatedCharterStrategy !== undefined) {
             await rm(this.charterStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedUnitsState !== undefined) {
+            await rm(this.unitsStagePath, { force: true }).catch(() => {});
+          }
+          if (validatedReceipt !== undefined) {
+            await rm(this.receiptsStagePath, { force: true }).catch(() => {});
           }
           throw error;
         }
@@ -1122,6 +1351,8 @@ export class CampaignStore {
         this.goalPath,
         this.reconPath,
         this.charterPath,
+        this.unitsPath,
+        this.receiptsPath,
       ]) {
         try {
           await lstat(target);
@@ -1138,6 +1369,9 @@ export class CampaignStore {
       await rm(this.goalStagePath, { force: true }).catch(() => {});
       await rm(this.reconStagePath, { force: true }).catch(() => {});
       await rm(this.charterStagePath, { force: true }).catch(() => {});
+      await rm(this.unitsStagePath, { force: true }).catch(() => {});
+      await rm(this.receiptsStagePath, { force: true }).catch(() => {});
+      await rm(this.txStagePath, { force: true }).catch(() => {});
       return;
     }
 
@@ -1177,6 +1411,8 @@ export class CampaignStore {
       disk.promoteGoalStage,
       disk.promoteReconStage,
       disk.promoteCharterStage,
+      disk.promoteUnitsStage,
+      disk.promoteReceiptsStage,
       disk.recoveredTrailingEvidenceLine,
     );
   }
@@ -1233,6 +1469,15 @@ async function buildLoadedStore(
       await rm(path.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE), {
         force: true,
       }).catch(() => {});
+      await rm(path.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE), {
+        force: true,
+      }).catch(() => {});
+      await rm(path.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE), {
+        force: true,
+      }).catch(() => {});
+      await rm(path.join(campaignDir, CAMPAIGN_TX_STAGE_FILE), {
+        force: true,
+      }).catch(() => {});
     }
     return CampaignStore["createLoaded"](
       sessionRoot,
@@ -1280,6 +1525,8 @@ async function buildLoadedStore(
       verified.promoteGoalStage,
       verified.promoteReconStage,
       verified.promoteCharterStage,
+      verified.promoteUnitsStage,
+      verified.promoteReceiptsStage,
       verified.recoveredTrailingEvidenceLine,
     );
     const expectedStatus = toControllerStatus(
@@ -1321,9 +1568,13 @@ type OnDiskVerificationResult =
       goalContract: CampaignGoalContract | null;
       reconArtifact: PersistedReconArtifactStore | null;
       charterStrategy: PersistedCampaignCharterStrategy | null;
+      unitsState: WorkUnitQueueState | null;
+      receipts: readonly VerifyReceipt[];
       promoteGoalStage: boolean;
       promoteReconStage: boolean;
       promoteCharterStage: boolean;
+      promoteUnitsStage: boolean;
+      promoteReceiptsStage: boolean;
       recoveredTrailingEvidenceLine?: PersistedCampaignEvidenceLine;
     };
 
@@ -1352,9 +1603,14 @@ type CampaignRawSnapshot =
       goal: OptionalArtifactSnapshot;
       recon: OptionalArtifactSnapshot;
       charter: OptionalArtifactSnapshot;
+      units: OptionalArtifactSnapshot;
+      receipts: OptionalArtifactSnapshot;
       goalStage: OptionalArtifactSnapshot;
       reconStage: OptionalArtifactSnapshot;
       charterStage: OptionalArtifactSnapshot;
+      unitsStage: OptionalArtifactSnapshot;
+      receiptsStage: OptionalArtifactSnapshot;
+      txStage: OptionalArtifactSnapshot;
     }
   | {
       traceExists: true;
@@ -1365,9 +1621,14 @@ type CampaignRawSnapshot =
       goal: OptionalArtifactSnapshot;
       recon: OptionalArtifactSnapshot;
       charter: OptionalArtifactSnapshot;
+      units: OptionalArtifactSnapshot;
+      receipts: OptionalArtifactSnapshot;
       goalStage: OptionalArtifactSnapshot;
       reconStage: OptionalArtifactSnapshot;
       charterStage: OptionalArtifactSnapshot;
+      unitsStage: OptionalArtifactSnapshot;
+      receiptsStage: OptionalArtifactSnapshot;
+      txStage: OptionalArtifactSnapshot;
     }
   | {
       traceExists: true;
@@ -1380,9 +1641,14 @@ type CampaignRawSnapshot =
       goal: OptionalArtifactSnapshot;
       recon: OptionalArtifactSnapshot;
       charter: OptionalArtifactSnapshot;
+      units: OptionalArtifactSnapshot;
+      receipts: OptionalArtifactSnapshot;
       goalStage: OptionalArtifactSnapshot;
       reconStage: OptionalArtifactSnapshot;
       charterStage: OptionalArtifactSnapshot;
+      unitsStage: OptionalArtifactSnapshot;
+      receiptsStage: OptionalArtifactSnapshot;
+      txStage: OptionalArtifactSnapshot;
     };
 
 function metaSnapshot(stat: {
@@ -1440,9 +1706,14 @@ function snapshotsEqual(
     !optionalArtifactSnapshotsEqual(a.goal, b.goal) ||
     !optionalArtifactSnapshotsEqual(a.recon, b.recon) ||
     !optionalArtifactSnapshotsEqual(a.charter, b.charter) ||
+    !optionalArtifactSnapshotsEqual(a.units, b.units) ||
+    !optionalArtifactSnapshotsEqual(a.receipts, b.receipts) ||
     !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) ||
     !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage) ||
-    !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage)
+    !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage) ||
+    !optionalArtifactSnapshotsEqual(a.unitsStage, b.unitsStage) ||
+    !optionalArtifactSnapshotsEqual(a.receiptsStage, b.receiptsStage) ||
+    !optionalArtifactSnapshotsEqual(a.txStage, b.txStage)
   ) {
     return false;
   }
@@ -1498,9 +1769,14 @@ async function readCampaignRawSnapshot(
   const goalPath = path.join(campaignDir, CAMPAIGN_GOAL_FILE);
   const reconPath = path.join(campaignDir, CAMPAIGN_RECON_FILE);
   const charterPath = path.join(campaignDir, CAMPAIGN_CHARTER_FILE);
+  const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+  const receiptsPath = path.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
   const goalStagePath = path.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
   const reconStagePath = path.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
   const charterStagePath = path.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
+  const unitsStagePath = path.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+  const receiptsStagePath = path.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+  const txStagePath = path.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
 
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
@@ -1518,6 +1794,8 @@ async function readCampaignRawSnapshot(
           goalPath,
           reconPath,
           charterPath,
+          unitsPath,
+          receiptsPath,
         ]),
       };
     }
@@ -1544,6 +1822,16 @@ async function readCampaignRawSnapshot(
     charterPath,
     "Campaign charter strategy",
   );
+  const units = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    unitsPath,
+    "Campaign work units",
+  );
+  const receipts = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    receiptsPath,
+    "Campaign receipts",
+  );
   const goalStage = await readOptionalArtifactSnapshot(
     sessionRoot,
     goalStagePath,
@@ -1559,6 +1847,21 @@ async function readCampaignRawSnapshot(
     charterStagePath,
     "Campaign charter stage",
   );
+  const unitsStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    unitsStagePath,
+    "Campaign work units stage",
+  );
+  const receiptsStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    receiptsStagePath,
+    "Campaign receipts stage",
+  );
+  const txStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    txStagePath,
+    "Campaign transaction stage",
+  );
 
   let evidenceStat;
   try {
@@ -1573,9 +1876,14 @@ async function readCampaignRawSnapshot(
         goal,
         recon,
         charter,
+        units,
+        receipts,
         goalStage,
         reconStage,
         charterStage,
+        unitsStage,
+        receiptsStage,
+        txStage,
       };
     }
     throw error;
@@ -1591,9 +1899,14 @@ async function readCampaignRawSnapshot(
       goal,
       recon,
       charter,
+      units,
+      receipts,
       goalStage,
       reconStage,
       charterStage,
+      unitsStage,
+      receiptsStage,
+      txStage,
     };
   }
 
@@ -1609,9 +1922,14 @@ async function readCampaignRawSnapshot(
     goal,
     recon,
     charter,
+    units,
+    receipts,
     goalStage,
     reconStage,
     charterStage,
+    unitsStage,
+    receiptsStage,
+    txStage,
   };
 }
 
@@ -1759,6 +2077,119 @@ function validateStandaloneEvidence(
   return { ok: true };
 }
 
+function getDescriptorUnitsSha256(
+  descriptor: ReturnType<typeof parseCampaignEvent>,
+): string | undefined {
+  if (!descriptor) {
+    return undefined;
+  }
+  if (
+    descriptor.channel === "agent" &&
+    (descriptor.op === AgentOps.next || descriptor.op === AgentOps.report)
+  ) {
+    return descriptor.unitsSha256;
+  }
+  if (
+    descriptor.channel === "operator" &&
+    descriptor.op === OperatorVerbs.checkpoint
+  ) {
+    return descriptor.unitsSha256;
+  }
+  if (
+    descriptor.channel === "engine" &&
+    descriptor.op === EngineOps.verify
+  ) {
+    return descriptor.unitsSha256;
+  }
+  return undefined;
+}
+
+function getTraceEventUnitsSha256(
+  line: PersistedCampaignTraceLine,
+): string | undefined {
+  if (line.entry.accepted !== true) {
+    return undefined;
+  }
+  return getDescriptorUnitsSha256(line.event);
+}
+
+const TX_STAGE_SHA256_RE = /^[0-9a-f]{64}$/;
+
+type ParsedTxStage = Readonly<{
+  seq: number;
+  authorizedPrivileged: boolean;
+  eventSha256: string;
+  recordSha256: string;
+  artifactSha256?: string;
+  unitsSha256?: string;
+}>;
+
+function parseTxStageSnapshot(
+  snap: OptionalArtifactSnapshot,
+): ParsedTxStage | null {
+  if (!snap.exists || snap.nonRegular) {
+    return null;
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(snap.raw) as unknown;
+  } catch {
+    return null;
+  }
+  if (!isPlainRecordObject(raw)) {
+    return null;
+  }
+  const allowed = new Set([
+    "seq",
+    "authorizedPrivileged",
+    "eventSha256",
+    "recordSha256",
+    "artifactSha256",
+    "unitsSha256",
+  ]);
+  if (
+    Reflect.ownKeys(raw).some((k) => typeof k !== "string" || !allowed.has(k))
+  ) {
+    return null;
+  }
+  if (
+    typeof raw.seq !== "number" ||
+    !Number.isSafeInteger(raw.seq) ||
+    raw.seq < 0 ||
+    typeof raw.authorizedPrivileged !== "boolean" ||
+    typeof raw.eventSha256 !== "string" ||
+    !TX_STAGE_SHA256_RE.test(raw.eventSha256) ||
+    typeof raw.recordSha256 !== "string" ||
+    !TX_STAGE_SHA256_RE.test(raw.recordSha256)
+  ) {
+    return null;
+  }
+  if (
+    raw.artifactSha256 !== undefined &&
+    (typeof raw.artifactSha256 !== "string" ||
+      !TX_STAGE_SHA256_RE.test(raw.artifactSha256))
+  ) {
+    return null;
+  }
+  if (
+    raw.unitsSha256 !== undefined &&
+    (typeof raw.unitsSha256 !== "string" ||
+      !TX_STAGE_SHA256_RE.test(raw.unitsSha256))
+  ) {
+    return null;
+  }
+  return {
+    seq: raw.seq,
+    authorizedPrivileged: raw.authorizedPrivileged,
+    eventSha256: raw.eventSha256,
+    recordSha256: raw.recordSha256,
+    ...(raw.artifactSha256 !== undefined
+      ? { artifactSha256: raw.artifactSha256 }
+      : {}),
+    ...(raw.unitsSha256 !== undefined ? { unitsSha256: raw.unitsSha256 } : {}),
+  };
+}
+
 function tryRecoverPendingStagedEvidenceLine(
   snap: Extract<CampaignRawSnapshot, { traceExists: true }>,
   parsedLines: readonly PersistedCampaignTraceLine[],
@@ -1792,6 +2223,131 @@ function tryRecoverPendingStagedEvidenceLine(
   if (
     lastLine.seq !== seq ||
     lastLine.entry.accepted !== true ||
+    lastLine.event === null ||
+    lastLine.event.channel !== lastLine.entry.channel
+  ) {
+    return undefined;
+  }
+
+  const isU4RecoverableOp =
+    (lastLine.event.channel === "agent" &&
+      (lastLine.event.op === AgentOps.next ||
+        lastLine.event.op === AgentOps.report)) ||
+    (lastLine.event.channel === "operator" &&
+      lastLine.event.op === OperatorVerbs.checkpoint) ||
+    (lastLine.event.channel === "engine" &&
+      lastLine.event.op === EngineOps.verify);
+
+  if (isU4RecoverableOp) {
+    const txStage = parseTxStageSnapshot(snap.txStage);
+    if (!txStage) {
+      return undefined;
+    }
+    const expectedAuthorizedPrivileged =
+      (lastLine.entry.channel === "operator" ||
+        lastLine.entry.channel === "engine") &&
+      lastLine.entry.accepted === true;
+    const expectedEventSha256 = campaignSha256Hex(
+      canonicalCampaignJson(lastLine.event),
+    );
+    if (
+      txStage.seq !== seq ||
+      txStage.authorizedPrivileged !== expectedAuthorizedPrivileged ||
+      txStage.eventSha256 !== expectedEventSha256 ||
+      txStage.artifactSha256 !== undefined
+    ) {
+      return undefined;
+    }
+
+    const recoverAuthorize = (
+      event: CampaignOperatorCommand | EngineCommand,
+      index: number,
+    ): boolean => {
+      if (index === seq) {
+        return (
+          txStage.authorizedPrivileged === true &&
+          txStage.eventSha256 ===
+            campaignSha256Hex(canonicalCampaignJson(event))
+        );
+      }
+      const ev = existingEvidenceLines?.[index];
+      if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+      return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event));
+    };
+
+    const verification = verifyCampaignTraceLines(parsedLines, {
+      authorize: recoverAuthorize,
+    });
+    if (!verification.valid) {
+      return undefined;
+    }
+    const expectedRecordSha256 = campaignSha256Hex(
+      serializeCampaignRecord(verification.record),
+    );
+    if (txStage.recordSha256 !== expectedRecordSha256) {
+      return undefined;
+    }
+
+    const traceUnitsSha256 = getTraceEventUnitsSha256(lastLine);
+    if (txStage.unitsSha256 !== traceUnitsSha256) {
+      return undefined;
+    }
+    if (traceUnitsSha256 !== undefined) {
+      const checkedUnits = parseAndVerifyUnitsSnapshot(
+        snap.unitsStage,
+        traceUnitsSha256,
+        verification.record.final,
+      );
+      if (!checkedUnits.ok) {
+        return undefined;
+      }
+    } else if (snap.unitsStage.exists) {
+      return undefined;
+    }
+
+    const hasReceiptOnLastLine =
+      lastLine.event.channel === "engine" &&
+      lastLine.event.op === EngineOps.verify &&
+      lastLine.event.receipt !== undefined;
+    if (hasReceiptOnLastLine) {
+      const expectedTraceReceipts: VerifyReceipt[] = [];
+      for (const line of parsedLines) {
+        if (
+          line.entry.accepted === true &&
+          line.event?.channel === "engine" &&
+          line.event.op === EngineOps.verify &&
+          line.event.receipt !== undefined
+        ) {
+          const parsedReceipt = parseVerifyReceipt(line.event.receipt);
+          if (!parsedReceipt) {
+            return undefined;
+          }
+          expectedTraceReceipts.push(parsedReceipt);
+        }
+      }
+      const checkedReceipts = verifyReceiptsSnapshot(
+        snap.receiptsStage,
+        expectedTraceReceipts,
+      );
+      if (!checkedReceipts.ok) {
+        return undefined;
+      }
+    } else if (snap.receiptsStage.exists) {
+      return undefined;
+    }
+
+    return Object.freeze({
+      seq,
+      authorizedPrivileged: expectedAuthorizedPrivileged,
+      eventSha256: expectedEventSha256,
+      recordSha256: expectedRecordSha256,
+      ...(traceUnitsSha256 !== undefined
+        ? { unitsSha256: traceUnitsSha256 }
+        : {}),
+    });
+  }
+
+  if (
     lastLine.entry.channel !== "agent" ||
     lastLine.event?.channel !== "agent"
   ) {
@@ -2026,11 +2582,29 @@ function verifyCampaignRawSnapshot(
   if (!artifactCheck.ok) {
     return { kind: "failed_safe", error: artifactCheck.error };
   }
+  const unitsAndReceiptsCheck = verifyBoundUnitsAndReceipts(
+    parsedTrace.lines,
+    evidenceLines,
+    verification.record.final,
+    snap.units,
+    snap.receipts,
+    snap.unitsStage,
+    snap.receiptsStage,
+  );
+  if (!unitsAndReceiptsCheck.ok) {
+    return { kind: "failed_safe", error: unitsAndReceiptsCheck.error };
+  }
+
+  const hasPendingStageForRecovery =
+    artifactCheck.promoteGoalStage ||
+    artifactCheck.promoteReconStage ||
+    artifactCheck.promoteCharterStage ||
+    unitsAndReceiptsCheck.promoteUnitsStage ||
+    unitsAndReceiptsCheck.promoteReceiptsStage ||
+    (snap.txStage.exists && !snap.txStage.nonRegular);
   if (
     recoveredTrailingEvidenceLine !== undefined &&
-    !artifactCheck.promoteGoalStage &&
-    !artifactCheck.promoteReconStage &&
-    !artifactCheck.promoteCharterStage
+    !hasPendingStageForRecovery
   ) {
     return {
       kind: "failed_safe",
@@ -2047,9 +2621,13 @@ function verifyCampaignRawSnapshot(
     goalContract: artifactCheck.goalContract,
     reconArtifact: artifactCheck.reconArtifact,
     charterStrategy: artifactCheck.charterStrategy,
+    unitsState: unitsAndReceiptsCheck.unitsState,
+    receipts: unitsAndReceiptsCheck.receipts,
     promoteGoalStage: artifactCheck.promoteGoalStage,
     promoteReconStage: artifactCheck.promoteReconStage,
     promoteCharterStage: artifactCheck.promoteCharterStage,
+    promoteUnitsStage: unitsAndReceiptsCheck.promoteUnitsStage,
+    promoteReceiptsStage: unitsAndReceiptsCheck.promoteReceiptsStage,
     ...(recoveredTrailingEvidenceLine !== undefined
       ? { recoveredTrailingEvidenceLine }
       : {}),
@@ -2874,6 +3452,8 @@ async function reconcileStagedArtifacts(
   promoteGoalStage: boolean,
   promoteReconStage: boolean,
   promoteCharterStage: boolean,
+  promoteUnitsStage: boolean,
+  promoteReceiptsStage: boolean,
   recoveredTrailingEvidenceLine?: PersistedCampaignEvidenceLine,
 ): Promise<void> {
   const evidencePath = path.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
@@ -2883,6 +3463,11 @@ async function reconcileStagedArtifacts(
   const reconPath = path.join(campaignDir, CAMPAIGN_RECON_FILE);
   const charterStagePath = path.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
   const charterPath = path.join(campaignDir, CAMPAIGN_CHARTER_FILE);
+  const unitsStagePath = path.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+  const unitsPath = path.join(campaignDir, CAMPAIGN_UNITS_FILE);
+  const receiptsStagePath = path.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+  const receiptsPath = path.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
+  const txStagePath = path.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
 
   if (recoveredTrailingEvidenceLine !== undefined) {
     await assertRegularOrMissingTarget(
@@ -2944,6 +3529,375 @@ async function reconcileStagedArtifacts(
   } else {
     await rm(charterStagePath, { force: true }).catch(() => {});
   }
+
+  if (promoteUnitsStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      unitsPath,
+      "Campaign work units",
+    );
+    await rename(unitsStagePath, unitsPath);
+  } else {
+    await rm(unitsStagePath, { force: true }).catch(() => {});
+  }
+
+  if (promoteReceiptsStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      receiptsPath,
+      "Campaign receipts",
+    );
+    await rename(receiptsStagePath, receiptsPath);
+  } else {
+    await rm(receiptsStagePath, { force: true }).catch(() => {});
+  }
+
+  await rm(txStagePath, { force: true }).catch(() => {});
+}
+
+function validateUnitsStateAgainstCampaignState(
+  units: WorkUnitQueueState,
+  state: CampaignState,
+): { ok: true } | { ok: false; error: string } {
+  if (state.charter === null) {
+    return {
+      ok: false,
+      error: "Campaign work units cannot exist without a charter",
+    };
+  }
+  if (
+    units.bounds.recoverLimit !== state.charter.recoverLimit ||
+    units.bounds.reopenLimit !== state.charter.reopenLimit
+  ) {
+    return {
+      ok: false,
+      error: "Campaign work units bounds do not match charter",
+    };
+  }
+  if (units.units.length !== state.charter.queue.length) {
+    return {
+      ok: false,
+      error: "Campaign work units length does not match charter queue",
+    };
+  }
+  for (let i = 0; i < state.charter.queue.length; i++) {
+    const qItem = state.charter.queue[i]!;
+    const unit = units.units[i]!;
+    if (
+      unit.id !== qItem.id ||
+      unit.skill !== qItem.skill ||
+      unit.reconCitation !== qItem.reconCitation
+    ) {
+      return {
+        ok: false,
+        error: `Campaign work unit at ${i} does not match charter queue`,
+      };
+    }
+  }
+  const doneCount = units.units.filter(
+    (u) => u.state === WorkUnitStates.done,
+  ).length;
+  if (doneCount !== state.completed) {
+    return {
+      ok: false,
+      error: `Campaign work units done count (${doneCount}) does not match verified completed count (${state.completed})`,
+    };
+  }
+  return { ok: true };
+}
+
+function parseAndVerifyUnitsSnapshot(
+  snap: OptionalArtifactSnapshot,
+  expectedSha256: string,
+  finalState: CampaignState,
+): { ok: true; unitsState: WorkUnitQueueState } | { ok: false; error: string } {
+  if (!snap.exists || snap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign work units file is missing or invalid",
+    };
+  }
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(snap.raw) as unknown;
+  } catch {
+    return {
+      ok: false,
+      error: "Campaign work units failed verification: invalid JSON",
+    };
+  }
+  const parsedUnits = parseWorkUnitQueueState(parsedJson);
+  if (!parsedUnits) {
+    return {
+      ok: false,
+      error: "Campaign work units failed verification: invalid work unit queue state",
+    };
+  }
+  const actualSha = campaignSha256Hex(canonicalCampaignJson(parsedUnits));
+  if (actualSha !== expectedSha256) {
+    return {
+      ok: false,
+      error: "Campaign work units commitment mismatch",
+    };
+  }
+  const stateCheck = validateUnitsStateAgainstCampaignState(
+    parsedUnits,
+    finalState,
+  );
+  if (!stateCheck.ok) {
+    return stateCheck;
+  }
+  return { ok: true, unitsState: parsedUnits };
+}
+
+function verifyReceiptsSnapshot(
+  snap: OptionalArtifactSnapshot,
+  expectedTraceReceipts: readonly VerifyReceipt[],
+): { ok: true; receipts: readonly VerifyReceipt[] } | { ok: false; error: string } {
+  if (!snap.exists || snap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign receipts file is missing or invalid",
+    };
+  }
+  const parsed = parseVerifyReceiptLines(snap.raw);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      error: `Campaign receipts failed verification: ${parsed.error}`,
+    };
+  }
+  if (parsed.lines.length !== expectedTraceReceipts.length) {
+    return {
+      ok: false,
+      error: `Campaign receipts count (${parsed.lines.length}) does not match verified trace (${expectedTraceReceipts.length})`,
+    };
+  }
+  for (let i = 0; i < expectedTraceReceipts.length; i++) {
+    const r = parsed.lines[i]!;
+    const tr = expectedTraceReceipts[i]!;
+    const matchesBase =
+      r.schema === tr.schema &&
+      r.unitId === tr.unitId &&
+      r.command === tr.command &&
+      r.outputSha256 === tr.outputSha256 &&
+      r.exitCode === tr.exitCode;
+    const matchesReplayed =
+      r.status !== ReceiptStatuses.replayed ||
+      (r.replayedExitCode === tr.exitCode &&
+        r.replayedOutputSha256 === tr.outputSha256);
+    if (!matchesBase || !matchesReplayed) {
+      return {
+        ok: false,
+        error: `Campaign receipt at ${i} does not match verified trace event`,
+      };
+    }
+  }
+  return { ok: true, receipts: parsed.lines };
+}
+
+function verifyBoundUnitsAndReceipts(
+  lines: readonly PersistedCampaignTraceLine[],
+  evidenceLines: readonly PersistedCampaignEvidenceLine[] | undefined,
+  finalState: CampaignState,
+  unitsSnap: OptionalArtifactSnapshot,
+  receiptsSnap: OptionalArtifactSnapshot,
+  unitsStageSnap: OptionalArtifactSnapshot,
+  receiptsStageSnap: OptionalArtifactSnapshot,
+):
+  | {
+      ok: true;
+      unitsState: WorkUnitQueueState | null;
+      receipts: readonly VerifyReceipt[];
+      promoteUnitsStage: boolean;
+      promoteReceiptsStage: boolean;
+    }
+  | { ok: false; error: string } {
+  let latestTraceUnitsSha256: string | undefined;
+  for (const line of lines) {
+    const traceUnitsSha = getTraceEventUnitsSha256(line);
+    if (traceUnitsSha !== undefined) {
+      const evUnitsSha = evidenceLines?.[line.seq]?.unitsSha256;
+      if (evUnitsSha !== traceUnitsSha) {
+        return {
+          ok: false,
+          error: `Campaign work units commitment mismatch between trace and evidence at ${line.seq}`,
+        };
+      }
+      latestTraceUnitsSha256 = traceUnitsSha;
+    }
+  }
+
+  if (evidenceLines) {
+    for (let i = 0; i < evidenceLines.length; i++) {
+      const evUnitsSha = evidenceLines[i]!.unitsSha256;
+      if (evUnitsSha !== undefined) {
+        const line = lines[i];
+        const traceUnitsSha = line ? getTraceEventUnitsSha256(line) : undefined;
+        if (traceUnitsSha !== evUnitsSha) {
+          return {
+            ok: false,
+            error: `Campaign work units commitment mismatch between evidence and trace at ${i}`,
+          };
+        }
+      }
+    }
+  }
+
+  const latestUnitsSha256 = latestTraceUnitsSha256;
+
+  let unitsState: WorkUnitQueueState | null = null;
+  let promoteUnitsStage = false;
+
+  if (latestUnitsSha256 !== undefined) {
+    if (!unitsSnap.exists) {
+      if (unitsStageSnap.exists && !unitsStageSnap.nonRegular) {
+        const staged = parseAndVerifyUnitsSnapshot(
+          unitsStageSnap,
+          latestUnitsSha256,
+          finalState,
+        );
+        if (!staged.ok) {
+          return {
+            ok: false,
+            error: "Campaign work units missing after initialization",
+          };
+        }
+        unitsState = staged.unitsState;
+        promoteUnitsStage = true;
+      } else {
+        return {
+          ok: false,
+          error: "Campaign work units missing after initialization",
+        };
+      }
+    } else {
+      const primary = parseAndVerifyUnitsSnapshot(
+        unitsSnap,
+        latestUnitsSha256,
+        finalState,
+      );
+      if (primary.ok) {
+        unitsState = primary.unitsState;
+      } else if (unitsStageSnap.exists && !unitsStageSnap.nonRegular) {
+        const staged = parseAndVerifyUnitsSnapshot(
+          unitsStageSnap,
+          latestUnitsSha256,
+          finalState,
+        );
+        if (staged.ok) {
+          unitsState = staged.unitsState;
+          promoteUnitsStage = true;
+        } else {
+          return primary;
+        }
+      } else {
+        return primary;
+      }
+    }
+  } else if (unitsSnap.exists) {
+    return {
+      ok: false,
+      error: "Campaign work units exist without trace commitment",
+    };
+  }
+
+  const expectedTraceReceipts: VerifyReceipt[] = [];
+  for (const line of lines) {
+    if (
+      line.entry.accepted === true &&
+      line.event?.channel === "engine" &&
+      line.event.op === EngineOps.verify &&
+      line.event.receipt !== undefined
+    ) {
+      const parsedReceipt = parseVerifyReceipt(line.event.receipt);
+      if (!parsedReceipt) {
+        return {
+          ok: false,
+          error: `Malformed receipt in trace at ${line.seq}`,
+        };
+      }
+      expectedTraceReceipts.push(parsedReceipt);
+    }
+  }
+
+  let receipts: readonly VerifyReceipt[] = [];
+  let promoteReceiptsStage = false;
+
+  if (expectedTraceReceipts.length === 0) {
+    if (receiptsSnap.exists) {
+      if (receiptsSnap.nonRegular) {
+        return {
+          ok: false,
+          error: "Campaign receipts must be a regular file",
+        };
+      }
+      const parsed = parseVerifyReceiptLines(receiptsSnap.raw);
+      if (!parsed.ok) {
+        return {
+          ok: false,
+          error: `Campaign receipts failed verification: ${parsed.error}`,
+        };
+      }
+      if (parsed.lines.length > 0) {
+        return {
+          ok: false,
+          error: "Campaign receipts exist without verified trace events",
+        };
+      }
+    }
+  } else {
+    if (!receiptsSnap.exists) {
+      if (receiptsStageSnap.exists && !receiptsStageSnap.nonRegular) {
+        const staged = verifyReceiptsSnapshot(
+          receiptsStageSnap,
+          expectedTraceReceipts,
+        );
+        if (!staged.ok) {
+          return {
+            ok: false,
+            error: "Campaign receipts missing after verification",
+          };
+        }
+        receipts = staged.receipts;
+        promoteReceiptsStage = true;
+      } else {
+        return {
+          ok: false,
+          error: "Campaign receipts missing after verification",
+        };
+      }
+    } else {
+      const primary = verifyReceiptsSnapshot(
+        receiptsSnap,
+        expectedTraceReceipts,
+      );
+      if (primary.ok) {
+        receipts = primary.receipts;
+      } else if (receiptsStageSnap.exists && !receiptsStageSnap.nonRegular) {
+        const staged = verifyReceiptsSnapshot(
+          receiptsStageSnap,
+          expectedTraceReceipts,
+        );
+        if (staged.ok) {
+          receipts = staged.receipts;
+          promoteReceiptsStage = true;
+        } else {
+          return primary;
+        }
+      } else {
+        return primary;
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    unitsState,
+    receipts,
+    promoteUnitsStage,
+    promoteReceiptsStage,
+  };
 }
 
 async function writeAtomicJsonArtifact(

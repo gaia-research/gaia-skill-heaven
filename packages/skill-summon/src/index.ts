@@ -74,6 +74,8 @@ export {
   CAMPAIGN_RECON_FILE,
   CAMPAIGN_CHARTER_FILE,
   CAMPAIGN_OPERATOR_LOG_FILE,
+  CAMPAIGN_UNITS_FILE,
+  CAMPAIGN_RECEIPTS_FILE,
   CampaignStore,
   computeCharterCoreSha256,
   computeCharterStrategySha256,
@@ -121,6 +123,19 @@ export {
   type CampaignRefusalError,
   type CampaignStatusResult,
 } from "./campaign/ops/status.js";
+export {
+  executeCheckpoint,
+  loadOrInitializeWorkUnitQueue,
+  type CampaignCheckpointResult,
+} from "./campaign/ops/checkpoint.js";
+export {
+  executeNext,
+  type CampaignNextResult,
+} from "./campaign/ops/next.js";
+export {
+  executeReport,
+  type CampaignReportResult,
+} from "./campaign/ops/report.js";
 export {
   normalizeGoalContractInput,
   executeOpen,

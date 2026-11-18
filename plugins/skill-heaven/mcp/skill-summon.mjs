@@ -13536,8 +13536,36 @@ var CAMPAIGN_SCHEMA_IDS = Object.freeze({
   recon: "skill-heaven/campaign-recon/v1",
   manifest: "skill-heaven/campaign-manifest/v1",
   incident: "skill-heaven/convergence-incident/v1",
-  status: "skill-heaven/controller-status/v1"
+  status: "skill-heaven/controller-status/v1",
+  receipt: "skill-heaven/verify-receipt/v1",
+  units: "skill-heaven/work-units/v1"
 });
+var WorkUnitStates = Object.freeze({
+  ready: "ready",
+  active: "active",
+  verifying: "verifying",
+  recovering: "recovering",
+  reopened: "reopened",
+  done: "done",
+  needsHuman: "needs-human",
+  blocked: "blocked"
+});
+var WORK_UNIT_STATES = Object.freeze(Object.values(WorkUnitStates));
+var ReceiptStatuses = Object.freeze({
+  attested: "attested",
+  replayed: "replayed"
+});
+var RECEIPT_STATUSES = Object.freeze(Object.values(ReceiptStatuses));
+var UnitReportOutcomes = Object.freeze({
+  pass: "pass",
+  fail: "fail",
+  block: "block",
+  unblock: "unblock",
+  needsHuman: "needs-human",
+  resume: "resume",
+  retrievalRefusal: "retrieval-refusal"
+});
+var UNIT_REPORT_OUTCOMES = Object.freeze(Object.values(UnitReportOutcomes));
 
 // packages/core/src/steering.ts
 var STEERING_RUNGS = ["low", "med", "high", "xhigh", "max"];
@@ -14820,7 +14848,7 @@ var array2 = (check2) => (v) => {
   return true;
 };
 var strings = array2(text2);
-var queueItem = (v) => object2(v, { id: text2, skill: text2, reconCitation: text2 });
+var queueItem = (v) => object2(v, { id: text2, skill: text2, reconCitation: text2, phase: text2, dependsOn: strings }, ["phase", "dependsOn"]);
 var queue = array2(queueItem);
 var schema = (id) => (v) => v === id;
 var charter = (v) => object2(v, {
@@ -14832,8 +14860,26 @@ var charter = (v) => object2(v, {
   recoverLimit: nat2,
   reopenLimit: nat2,
   sessionRetention: nat2,
-  clauses: strings
-});
+  clauses: strings,
+  acceptanceCommands: strings
+}, ["acceptanceCommands"]);
+var verifyReceipt = (v) => {
+  if (!object2(v, {
+    schema: schema(CAMPAIGN_SCHEMA_IDS.receipt),
+    unitId: text2,
+    command: text2,
+    outputSha256: sha256,
+    exitCode: nat2,
+    status: member2(RECEIPT_STATUSES),
+    replayedExitCode: nat2,
+    replayedOutputSha256: sha256
+  }, ["replayedExitCode", "replayedOutputSha256"])) return false;
+  const r = v;
+  if (r.status === ReceiptStatuses.attested) {
+    return r.replayedExitCode === void 0 && r.replayedOutputSha256 === void 0;
+  }
+  return r.replayedExitCode !== void 0 && r.replayedOutputSha256 !== void 0;
+};
 var recon = (v) => object2(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.recon),
   findings: strings,
@@ -14865,8 +14911,9 @@ var state = (v) => {
     incident: nullable3(incident),
     steering,
     completed: nat2,
-    total: nat2
-  })) return false;
+    total: nat2,
+    acceptanceCommands: strings
+  }, ["acceptanceCommands"])) return false;
   const s = v;
   if (s.completed > s.total || s.total !== s.queue.length) return false;
   if (!s.charter) {
@@ -14875,7 +14922,7 @@ var state = (v) => {
     if (!isValidCharterForRecon(s.recon, s.charter, s.charterRevision)) return false;
     if (s.charter.queue.length !== s.queue.length || !s.queue.every((q, i) => q.id === s.charter.queue[i].id && q.skill === s.charter.queue[i].skill && q.reconCitation === s.charter.queue[i].reconCitation)) return false;
   }
-  if (s.state === CampaignStates.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0)) return false;
+  if (s.state === CampaignStates.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0 || s.acceptanceCommands !== void 0)) return false;
   if (s.state === CampaignStates.recon && (s.charter || s.incident)) return false;
   if (s.state === CampaignStates.decisions && (!s.charter || s.approved || s.incident)) return false;
   if ((s.state === CampaignStates.executing || s.state === CampaignStates.convergence || s.state === CampaignStates.completed) && !s.approved) return false;
@@ -14893,9 +14940,10 @@ var event = (v) => {
   if (c.value === "agent") {
     switch (o.value) {
       case AgentOps.open:
-        return object2(v, { ...base, goalSha256: sha256 }, ["goalSha256"]);
+        return object2(v, { ...base, goalSha256: sha256, acceptanceCommands: strings }, ["goalSha256", "acceptanceCommands"]);
       case AgentOps.next:
       case AgentOps.report:
+        return object2(v, { ...base, workUnit: text2, unitsSha256: sha256 }, ["workUnit", "unitsSha256"]);
       case AgentOps.status:
         return object2(v, base);
       case AgentOps.recon:
@@ -14922,11 +14970,18 @@ var event = (v) => {
       case OperatorVerbs.answer:
         return object2(v, { ...base, ...provenanceFields, incidentId: text2, answer: text2 }, provenanceOptional);
       case OperatorVerbs.checkpoint:
+        return object2(v, { ...base, ...provenanceFields, unitsSha256: sha256 }, [...provenanceOptional, "unitsSha256"]);
       case OperatorVerbs.stop:
         return object2(v, { ...base, ...provenanceFields }, provenanceOptional);
     }
   }
-  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) return object2(v, o.value === EngineOps.verify ? { ...base, passed: bool2, clause: text2 } : { ...base, clause: text2 });
+  if (c.value === "engine" && ENGINE_OPS.includes(o.value)) {
+    return o.value === EngineOps.verify ? object2(
+      v,
+      { ...base, passed: bool2, clause: text2, workUnit: text2, receipt: verifyReceipt, closesUnit: bool2, convergenceIncident: incident, unitsSha256: sha256 },
+      ["workUnit", "receipt", "closesUnit", "convergenceIncident", "unitsSha256"]
+    ) : object2(v, { ...base, clause: text2 });
+  }
   return false;
 };
 var trace = (v) => {
@@ -14984,8 +15039,12 @@ var isCampaignDecision = member2(CAMPAIGN_DECISIONS);
 var isCampaignOp = member2(allOps);
 var isCampaignSignal = member2(CAMPAIGN_SIGNALS);
 
+// packages/core/src/campaign/trace-format.ts
+import { createHash } from "node:crypto";
+
 // packages/core/src/campaign/engine.ts
 var operatorCapabilities = /* @__PURE__ */ new WeakSet();
+var engineCapabilities = /* @__PURE__ */ new WeakSet();
 var operatorEvents = /* @__PURE__ */ new WeakSet();
 var engineEvents = /* @__PURE__ */ new WeakSet();
 var steeringAdapter = createRuntimeAdapter();
@@ -14995,11 +15054,23 @@ function createCampaignOperatorAdapter() {
   operatorCapabilities.add(token);
   return token;
 }
+function createCampaignEngineAdapter() {
+  const token = Object.freeze({});
+  engineCapabilities.add(token);
+  return token;
+}
 function createCampaignOperatorEvent(capability, command) {
   if (!isObject2(capability) || !operatorCapabilities.has(capability)) throw new Error("A live operator adapter is required");
   const parsed = parseCampaignEvent(command);
   if (!parsed || parsed.channel !== "operator") throw new Error("Invalid operator command");
   operatorEvents.add(parsed);
+  return parsed;
+}
+function createCampaignEngineEvent(capability, command) {
+  if (!isObject2(capability) || !engineCapabilities.has(capability)) throw new Error("A live engine adapter is required");
+  const parsed = parseCampaignEvent(command);
+  if (!parsed || parsed.channel !== "engine") throw new Error("Invalid engine command");
+  engineEvents.add(parsed);
   return parsed;
 }
 function initialCampaignState() {
@@ -15044,7 +15115,16 @@ function evaluate(state2, event2, authorized, seq) {
     if (event2.channel === "agent") {
       switch (event2.op) {
         case AgentOps.open:
-          if (state2.state === CampaignStates.unarmed) change({ state: CampaignStates.recon }, CampaignDecisions.recon, "open-request");
+          if (state2.state === CampaignStates.unarmed) {
+            change(
+              {
+                state: CampaignStates.recon,
+                ...event2.acceptanceCommands !== void 0 ? { acceptanceCommands: event2.acceptanceCommands } : {}
+              },
+              CampaignDecisions.recon,
+              "open-request"
+            );
+          }
           break;
         case AgentOps.recon:
           if (state2.state === CampaignStates.recon && event2.recon.citations.length > 0) change({ recon: event2.recon }, CampaignDecisions.recon, "recon-complete");
@@ -15056,7 +15136,20 @@ function evaluate(state2, event2, authorized, seq) {
           if (state2.state === CampaignStates.executing && state2.approved && event2.incident.skills.every((s) => state2.charter.allowedSkills.includes(s))) change({ state: CampaignStates.convergence, incident: event2.incident }, CampaignDecisions.convergence, "incident-reported");
           break;
         case AgentOps.next:
-          if (state2.state === CampaignStates.convergence && state2.incident && state2.approved) {
+          if (event2.workUnit !== void 0 || event2.unitsSha256 !== void 0) {
+            if (state2.state === CampaignStates.executing && state2.approved) {
+              accepted = true;
+              decision = CampaignDecisions.explore;
+              signal = "work-ready";
+            } else if (state2.state === CampaignStates.decisions && !state2.approved && state2.charter !== null && event2.unitsSha256 !== void 0 && event2.workUnit === void 0) {
+              accepted = true;
+              decision = CampaignDecisions.decisions;
+              signal = "work-ready";
+            } else if (state2.state === CampaignStates.convergence && state2.incident && state2.approved) {
+              if (state2.incident.requiresPerson) signal = CampaignSignals.personRequired;
+              else change({ state: CampaignStates.executing, incident: null }, CampaignDecisions.explore, "work-ready");
+            }
+          } else if (state2.state === CampaignStates.convergence && state2.incident && state2.approved) {
             if (state2.incident.requiresPerson) signal = CampaignSignals.personRequired;
             else change({ state: CampaignStates.executing, incident: null }, CampaignDecisions.explore, "work-ready");
           }
@@ -15064,6 +15157,12 @@ function evaluate(state2, event2, authorized, seq) {
         // Work-unit scheduling and receipts belong to U4. These observations
         // deliberately do not advance progress or infer campaign completion.
         case AgentOps.report:
+          if ((event2.workUnit !== void 0 || event2.unitsSha256 !== void 0) && state2.state === CampaignStates.executing && state2.approved) {
+            accepted = true;
+            decision = CampaignDecisions.hold;
+            signal = "work-reported";
+          }
+          break;
         case AgentOps.status:
           break;
       }
@@ -15099,12 +15198,52 @@ function evaluate(state2, event2, authorized, seq) {
         switch (event2.op) {
           case EngineOps.verify:
             if (state2.approved && (state2.state === CampaignStates.executing || state2.state === CampaignStates.convergence)) {
+              if (event2.convergenceIncident !== void 0) {
+                if (event2.passed || event2.closesUnit === true || state2.state !== CampaignStates.executing || !event2.convergenceIncident.skills.every((s) => state2.charter.allowedSkills.includes(s))) {
+                  break;
+                }
+                const result2 = stepSteering(state2.steering, createRuntimeEvent(steeringAdapter, "behavioral-failure"));
+                change(
+                  {
+                    state: CampaignStates.convergence,
+                    incident: event2.convergenceIncident,
+                    steering: result2.state
+                  },
+                  CampaignDecisions.convergence,
+                  "behavioral-failure"
+                );
+                break;
+              }
+              if (event2.closesUnit === true) {
+                const unitInQueue = event2.workUnit !== void 0 && state2.queue.some((q) => q.id === event2.workUnit);
+                if (!event2.passed || !unitInQueue) {
+                  break;
+                }
+                const namedCommands = state2.charter?.acceptanceCommands ?? state2.acceptanceCommands ?? [];
+                if (!canReceiptCloseUnit(event2.receipt, event2.workUnit, namedCommands)) {
+                  break;
+                }
+              }
               const type = event2.passed ? "behavioral-recovery" : "behavioral-failure";
               const result = stepSteering(state2.steering, createRuntimeEvent(steeringAdapter, type));
+              const nextCompleted = event2.closesUnit === true && state2.completed < state2.total ? state2.completed + 1 : state2.completed;
               if (result.decision === "hold") {
-                accepted = true;
-                signal = type;
-              } else change({ steering: result.state }, event2.passed ? CampaignDecisions.recover : CampaignDecisions.explore, type);
+                if (nextCompleted !== state2.completed) {
+                  change({ completed: nextCompleted }, CampaignDecisions.recover, type);
+                } else {
+                  accepted = true;
+                  signal = type;
+                }
+              } else {
+                change(
+                  {
+                    steering: result.state,
+                    ...nextCompleted !== state2.completed ? { completed: nextCompleted } : {}
+                  },
+                  event2.passed ? CampaignDecisions.recover : CampaignDecisions.explore,
+                  type
+                );
+              }
             }
             break;
           case EngineOps.complete:
@@ -15138,6 +15277,7 @@ function evaluate(state2, event2, authorized, seq) {
     ...event2.multiplexed !== void 0 ? { multiplexed: event2.multiplexed } : {},
     ...event2.optIn !== void 0 ? { optIn: event2.optIn } : {}
   } : {};
+  const workUnit = event2?.channel === "engine" && event2.op === EngineOps.verify || event2?.channel === "agent" && (event2.op === AgentOps.next || event2.op === AgentOps.report) ? event2.workUnit ?? null : null;
   const entry = immutableSnapshot({
     seq,
     from: state2.state,
@@ -15149,7 +15289,7 @@ function evaluate(state2, event2, authorized, seq) {
     charterClause: accepted ? clause : null,
     skills,
     phase: phase(next),
-    workUnit: null,
+    workUnit,
     personRequired,
     channel: event2?.channel ?? "none",
     accepted,
@@ -15211,35 +15351,7 @@ function verifyCampaignRecord(input, options = {}) {
   return equal(state2, record4.final) ? { valid: true, record: record4 } : { valid: false, error: "Final state mismatch" };
 }
 
-// packages/core/src/campaign/explain.ts
-var descriptions = {
-  [CampaignDecisions.hold]: "No campaign change was applied.",
-  [CampaignDecisions.explore]: "The campaign continued execution or exploration.",
-  [CampaignDecisions.recover]: "The working rung converged after a verification pass.",
-  [CampaignDecisions.reopen]: "The campaign reopened a path.",
-  [CampaignDecisions.checkpoint]: "The operator recorded a checkpoint.",
-  [CampaignDecisions.close]: "The runtime reported campaign completion.",
-  [CampaignDecisions.stop]: "The campaign ended.",
-  [CampaignDecisions.recon]: "The campaign gathered reconnaissance.",
-  [CampaignDecisions.decisions]: "The campaign awaits an operator decision.",
-  [CampaignDecisions.convergence]: "The campaign entered convergence."
-};
-
-// packages/core/src/campaign/status.ts
-function toControllerStatus(state2, transition) {
-  if (!parseCampaignState(state2)) throw new Error("Invalid campaign state");
-  if (transition && (!parseCampaignTraceEntry(transition) || transition.to !== state2.state)) throw new Error("Invalid transition");
-  return immutableSnapshot({
-    schema: CAMPAIGN_SCHEMA_IDS.status,
-    state: state2.state,
-    effective: state2.steering.rung,
-    ...state2.total > 0 ? { progress: { completed: state2.completed, total: state2.total } } : {},
-    ...transition ? { transition: { from: transition.from, to: transition.to, reason: transition.trigger } } : {}
-  });
-}
-
 // packages/core/src/campaign/trace-format.ts
-import { createHash } from "node:crypto";
 var isObject3 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 function canonicalCampaignJson(value) {
   const sort = (v) => Array.isArray(v) ? v.map(sort) : isObject3(v) ? Object.fromEntries(
@@ -15317,26 +15429,37 @@ function formatCampaignEvidenceLine(line) {
     authorizedPrivileged: line.authorizedPrivileged,
     eventSha256: line.eventSha256,
     recordSha256: line.recordSha256,
-    ...line.artifactSha256 !== void 0 ? { artifactSha256: line.artifactSha256 } : {}
+    ...line.artifactSha256 !== void 0 ? { artifactSha256: line.artifactSha256 } : {},
+    ...line.unitsSha256 !== void 0 ? { unitsSha256: line.unitsSha256 } : {}
   });
 }
 function isSha256Hex(v) {
   return typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 }
+var EVIDENCE_ALLOWED_KEYS = /* @__PURE__ */ new Set([
+  "seq",
+  "authorizedPrivileged",
+  "eventSha256",
+  "recordSha256",
+  "artifactSha256",
+  "unitsSha256"
+]);
 function parsePlainEvidenceLineObject(rawObj, expectedSeq) {
   if (!isObject3(rawObj)) return null;
   const proto = Object.getPrototypeOf(rawObj);
   if (proto !== Object.prototype && proto !== null) return null;
   const keys = Reflect.ownKeys(rawObj);
-  if (keys.length !== 4 && keys.length !== 5) return null;
+  if (keys.some((k) => typeof k !== "string" || !EVIDENCE_ALLOWED_KEYS.has(k))) return null;
   for (const required2 of ["seq", "authorizedPrivileged", "eventSha256", "recordSha256"]) {
     const desc = Object.getOwnPropertyDescriptor(rawObj, required2);
     if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable) return null;
   }
-  if (keys.length === 5) {
-    const desc = Object.getOwnPropertyDescriptor(rawObj, "artifactSha256");
-    if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable || !isSha256Hex(rawObj.artifactSha256)) {
-      return null;
+  for (const optional2 of ["artifactSha256", "unitsSha256"]) {
+    if (Object.hasOwn(rawObj, optional2)) {
+      const desc = Object.getOwnPropertyDescriptor(rawObj, optional2);
+      if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable || !isSha256Hex(desc.value)) {
+        return null;
+      }
     }
   }
   if (rawObj.seq !== expectedSeq || typeof rawObj.authorizedPrivileged !== "boolean" || !isSha256Hex(rawObj.eventSha256) || !isSha256Hex(rawObj.recordSha256)) {
@@ -15347,7 +15470,8 @@ function parsePlainEvidenceLineObject(rawObj, expectedSeq) {
     authorizedPrivileged: rawObj.authorizedPrivileged,
     eventSha256: rawObj.eventSha256,
     recordSha256: rawObj.recordSha256,
-    ...keys.length === 5 ? { artifactSha256: rawObj.artifactSha256 } : {}
+    ...Object.hasOwn(rawObj, "artifactSha256") ? { artifactSha256: rawObj.artifactSha256 } : {},
+    ...Object.hasOwn(rawObj, "unitsSha256") ? { unitsSha256: rawObj.unitsSha256 } : {}
   });
 }
 function parseCampaignEvidenceLines(raw) {
@@ -15373,6 +15497,994 @@ function parseCampaignEvidenceLines(raw) {
     lines.push(line);
   }
   return { ok: true, lines };
+}
+
+// packages/core/src/campaign/receipts.ts
+var SHA256_HEX_PATTERN = /^[0-9a-f]{64}$/;
+function isNonEmptyText(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function isNonNegativeSafeInt(value) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+function isSha256Hex2(value) {
+  return typeof value === "string" && SHA256_HEX_PATTERN.test(value);
+}
+function isPlainObject2(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function freezeReceipt(receipt) {
+  return Object.freeze({
+    schema: receipt.schema,
+    unitId: receipt.unitId,
+    command: receipt.command,
+    outputSha256: receipt.outputSha256,
+    exitCode: receipt.exitCode,
+    status: receipt.status,
+    ...receipt.replayedExitCode !== void 0 ? { replayedExitCode: receipt.replayedExitCode } : {},
+    ...receipt.replayedOutputSha256 !== void 0 ? { replayedOutputSha256: receipt.replayedOutputSha256 } : {}
+  });
+}
+function computeOutputDigest(output) {
+  if (typeof output !== "string") {
+    throw new Error("Receipt output must be a string");
+  }
+  return campaignSha256Hex(output);
+}
+function createAttestedReceipt(input) {
+  if (!isPlainObject2(input)) {
+    throw new Error("Receipt input must be a plain object");
+  }
+  if (!isNonEmptyText(input.unitId)) {
+    throw new Error("Receipt unitId must be a non-empty string");
+  }
+  if (!isNonEmptyText(input.command)) {
+    throw new Error("Receipt command must be a non-empty string");
+  }
+  if (!isNonNegativeSafeInt(input.exitCode)) {
+    throw new Error("Receipt exitCode must be a non-negative safe integer");
+  }
+  let digest;
+  if (input.output !== void 0) {
+    if (typeof input.output !== "string") {
+      throw new Error("Receipt output must be a string");
+    }
+    digest = computeOutputDigest(input.output);
+    if (input.outputSha256 !== void 0 && input.outputSha256 !== digest) {
+      throw new Error("Receipt outputSha256 does not match output digest");
+    }
+  } else if (isSha256Hex2(input.outputSha256)) {
+    digest = input.outputSha256;
+  } else {
+    throw new Error("Receipt requires output or a valid outputSha256 digest");
+  }
+  return freezeReceipt({
+    schema: CAMPAIGN_SCHEMA_IDS.receipt,
+    unitId: input.unitId,
+    command: input.command,
+    outputSha256: digest,
+    exitCode: input.exitCode,
+    status: ReceiptStatuses.attested
+  });
+}
+function parseVerifyReceipt(value) {
+  try {
+    if (!isPlainObject2(value)) return null;
+    const allowed = /* @__PURE__ */ new Set([
+      "schema",
+      "unitId",
+      "command",
+      "outputSha256",
+      "exitCode",
+      "status",
+      "replayedExitCode",
+      "replayedOutputSha256"
+    ]);
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const keys = Reflect.ownKeys(value);
+    if (keys.some((k) => typeof k !== "string" || !allowed.has(k))) return null;
+    for (const key of keys) {
+      const d = descriptors[key];
+      if (!d || !Object.hasOwn(d, "value") || d.enumerable !== true) return null;
+    }
+    const required2 = ["schema", "unitId", "command", "outputSha256", "exitCode", "status"];
+    for (const key of required2) {
+      if (!Object.hasOwn(value, key)) return null;
+    }
+    if (value.schema !== CAMPAIGN_SCHEMA_IDS.receipt) return null;
+    if (!isNonEmptyText(value.unitId)) return null;
+    if (!isNonEmptyText(value.command)) return null;
+    if (!isSha256Hex2(value.outputSha256)) return null;
+    if (!isNonNegativeSafeInt(value.exitCode)) return null;
+    if (typeof value.status !== "string" || !RECEIPT_STATUSES.includes(value.status)) {
+      return null;
+    }
+    const hasReplayedExit = Object.hasOwn(value, "replayedExitCode");
+    const hasReplayedDigest = Object.hasOwn(value, "replayedOutputSha256");
+    if (value.status === ReceiptStatuses.attested) {
+      if (hasReplayedExit || hasReplayedDigest) return null;
+      return freezeReceipt({
+        schema: CAMPAIGN_SCHEMA_IDS.receipt,
+        unitId: value.unitId,
+        command: value.command,
+        outputSha256: value.outputSha256,
+        exitCode: value.exitCode,
+        status: ReceiptStatuses.attested
+      });
+    }
+    if (!hasReplayedExit || !hasReplayedDigest) return null;
+    if (!isNonNegativeSafeInt(value.replayedExitCode) || !isSha256Hex2(value.replayedOutputSha256)) {
+      return null;
+    }
+    return freezeReceipt({
+      schema: CAMPAIGN_SCHEMA_IDS.receipt,
+      unitId: value.unitId,
+      command: value.command,
+      outputSha256: value.outputSha256,
+      exitCode: value.exitCode,
+      status: ReceiptStatuses.replayed,
+      replayedExitCode: value.replayedExitCode,
+      replayedOutputSha256: value.replayedOutputSha256
+    });
+  } catch {
+    return null;
+  }
+}
+function formatVerifyReceiptLine(receipt) {
+  const parsed = parseVerifyReceipt(receipt);
+  if (!parsed) {
+    throw new Error("Invalid verify receipt");
+  }
+  return JSON.stringify(parsed);
+}
+function parseVerifyReceiptLines(raw) {
+  if (typeof raw !== "string") {
+    return { ok: false, error: "Receipt log must be a string" };
+  }
+  if (raw === "") return { ok: true, lines: [] };
+  const normalized = raw.endsWith("\r\n") ? raw.slice(0, -2) : raw.endsWith("\n") ? raw.slice(0, -1) : raw;
+  const rawLines = normalized.split("\n");
+  const lines = [];
+  for (let i = 0; i < rawLines.length; i++) {
+    const lineText = rawLines[i];
+    if (lineText.length === 0) {
+      return { ok: false, error: `Empty receipt line at ${i}` };
+    }
+    let parsedJson;
+    try {
+      parsedJson = JSON.parse(lineText);
+    } catch {
+      return { ok: false, error: `Malformed JSON at receipt line ${i}` };
+    }
+    const receipt = parseVerifyReceipt(parsedJson);
+    if (!receipt) {
+      return { ok: false, error: `Invalid verify receipt at line ${i}` };
+    }
+    lines.push(receipt);
+  }
+  return { ok: true, lines: Object.freeze(lines) };
+}
+function isCharterNamedVerifyCommand(command, charterCommands) {
+  if (!isNonEmptyText(command) || !Array.isArray(charterCommands) || charterCommands.length === 0) {
+    return false;
+  }
+  const trimmed = command.trim();
+  return charterCommands.some((candidate) => isNonEmptyText(candidate) && candidate.trim() === trimmed);
+}
+function canReceiptCloseUnit(receipt, unitId, charterCommands) {
+  if (!isNonEmptyText(unitId)) return false;
+  const parsed = parseVerifyReceipt(receipt);
+  if (!parsed) return false;
+  if (parsed.unitId !== unitId) return false;
+  if (parsed.exitCode !== 0) return false;
+  if (parsed.status === ReceiptStatuses.replayed && parsed.replayedExitCode !== 0) return false;
+  return isCharterNamedVerifyCommand(parsed.command, charterCommands);
+}
+
+// packages/core/src/campaign/units.ts
+var WORK_UNIT_TRANSITIONS = Object.freeze({
+  [WorkUnitStates.ready]: Object.freeze([
+    WorkUnitStates.active,
+    WorkUnitStates.blocked,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.active]: Object.freeze([
+    WorkUnitStates.verifying,
+    WorkUnitStates.blocked,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.verifying]: Object.freeze([
+    WorkUnitStates.done,
+    WorkUnitStates.recovering,
+    WorkUnitStates.reopened,
+    WorkUnitStates.blocked,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.recovering]: Object.freeze([
+    WorkUnitStates.active,
+    WorkUnitStates.reopened,
+    WorkUnitStates.blocked,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.reopened]: Object.freeze([
+    WorkUnitStates.active,
+    WorkUnitStates.blocked,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.needsHuman]: Object.freeze([
+    WorkUnitStates.ready,
+    WorkUnitStates.active,
+    WorkUnitStates.blocked
+  ]),
+  [WorkUnitStates.blocked]: Object.freeze([
+    WorkUnitStates.ready,
+    WorkUnitStates.active,
+    WorkUnitStates.needsHuman
+  ]),
+  [WorkUnitStates.done]: Object.freeze([])
+});
+function isNonEmptyText2(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function isNonNegativeSafeInt2(value) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+function isPlainObject3(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function isStringArray(value) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return false;
+  if (Reflect.ownKeys(value).length !== value.length + 1) return false;
+  for (let i = 0; i < value.length; i++) {
+    const d = Object.getOwnPropertyDescriptor(value, String(i));
+    if (!d || !Object.hasOwn(d, "value") || !d.enumerable || !isNonEmptyText2(d.value)) {
+      return false;
+    }
+  }
+  return true;
+}
+function freezeWorkUnit(unit) {
+  return Object.freeze({
+    id: unit.id,
+    skill: unit.skill,
+    reconCitation: unit.reconCitation,
+    state: unit.state,
+    phase: unit.phase,
+    dependsOn: Object.freeze([...unit.dependsOn]),
+    charterIndex: unit.charterIndex,
+    batchId: unit.batchId,
+    recoverCount: unit.recoverCount,
+    reopenCount: unit.reopenCount,
+    retrievalRefusalCount: unit.retrievalRefusalCount,
+    lastReceipt: unit.lastReceipt ? parseVerifyReceipt(unit.lastReceipt) : null,
+    blockedReason: unit.blockedReason,
+    humanReason: unit.humanReason
+  });
+}
+function requireValidUnit(unit) {
+  const parsed = parseWorkUnitRecord(unit);
+  if (!parsed) {
+    throw new Error("Invalid work unit record");
+  }
+  return parsed;
+}
+function validateWorkUnitBounds(bounds) {
+  if (!isPlainObject3(bounds)) {
+    throw new Error("WorkUnitBounds must be a plain object");
+  }
+  if (!Object.hasOwn(bounds, "recoverLimit") || !Object.hasOwn(bounds, "reopenLimit")) {
+    throw new Error("WorkUnitBounds requires recoverLimit and reopenLimit");
+  }
+  if (!isNonNegativeSafeInt2(bounds.recoverLimit) || !isNonNegativeSafeInt2(bounds.reopenLimit)) {
+    throw new Error("WorkUnitBounds recoverLimit and reopenLimit must be non-negative safe integers");
+  }
+  return Object.freeze({
+    recoverLimit: bounds.recoverLimit,
+    reopenLimit: bounds.reopenLimit
+  });
+}
+function canTransitionWorkUnit(from, to) {
+  if (!WORK_UNIT_STATES.includes(from)) return false;
+  if (!WORK_UNIT_STATES.includes(to)) return false;
+  return WORK_UNIT_TRANSITIONS[from].includes(to);
+}
+function createWorkUnit(input) {
+  if (!isPlainObject3(input)) {
+    throw new Error("createWorkUnit input must be a plain object");
+  }
+  if (!isNonEmptyText2(input.id)) {
+    throw new Error("Work unit id must be a non-empty string");
+  }
+  if (!isNonEmptyText2(input.skill)) {
+    throw new Error("Work unit skill must be a non-empty string");
+  }
+  if (!isNonEmptyText2(input.reconCitation)) {
+    throw new Error("Work unit reconCitation must be a non-empty string");
+  }
+  const phase2 = input.phase === void 0 ? null : input.phase;
+  if (phase2 !== null && !isNonEmptyText2(phase2)) {
+    throw new Error("Work unit phase must be null or a non-empty string");
+  }
+  const dependsOn = input.dependsOn === void 0 ? [] : input.dependsOn;
+  if (!isStringArray(dependsOn)) {
+    throw new Error("Work unit dependsOn must be an array of non-empty strings");
+  }
+  if (new Set(dependsOn).size !== dependsOn.length) {
+    throw new Error("Work unit dependsOn must not contain duplicates");
+  }
+  if (dependsOn.includes(input.id)) {
+    throw new Error("Work unit cannot depend on itself");
+  }
+  const charterIndex = input.charterIndex === void 0 ? 0 : input.charterIndex;
+  if (!isNonNegativeSafeInt2(charterIndex)) {
+    throw new Error("Work unit charterIndex must be a non-negative safe integer");
+  }
+  const batchId = input.batchId === void 0 ? null : input.batchId;
+  if (batchId !== null && !isNonEmptyText2(batchId)) {
+    throw new Error("Work unit batchId must be null or a non-empty string");
+  }
+  const state2 = input.state === void 0 ? WorkUnitStates.ready : input.state;
+  if (!WORK_UNIT_STATES.includes(state2)) {
+    throw new Error(`Invalid work unit state: ${String(state2)}`);
+  }
+  return freezeWorkUnit({
+    id: input.id,
+    skill: input.skill,
+    reconCitation: input.reconCitation,
+    state: state2,
+    phase: phase2,
+    dependsOn,
+    charterIndex,
+    batchId,
+    recoverCount: 0,
+    reopenCount: 0,
+    retrievalRefusalCount: 0,
+    lastReceipt: null,
+    blockedReason: null,
+    humanReason: null
+  });
+}
+function activateWorkUnit(unit) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.ready && valid.state !== WorkUnitStates.recovering && valid.state !== WorkUnitStates.reopened) {
+    throw new Error(`Cannot activate work unit from state ${valid.state}`);
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: WorkUnitStates.active
+  });
+}
+function beginVerifyWorkUnit(unit) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.active) {
+    throw new Error(`Cannot begin verification from state ${valid.state}`);
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: WorkUnitStates.verifying
+  });
+}
+function completeWorkUnit(unit, receipt, charterCommands) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.verifying) {
+    throw new Error(`Cannot complete work unit from state ${valid.state}`);
+  }
+  if (!canReceiptCloseUnit(receipt, valid.id, charterCommands)) {
+    throw new Error("Work unit can only close on an attested passing receipt for a charter-named verify command");
+  }
+  const parsedReceipt = parseVerifyReceipt(receipt);
+  return freezeWorkUnit({
+    ...valid,
+    state: WorkUnitStates.done,
+    lastReceipt: parsedReceipt,
+    blockedReason: null,
+    humanReason: null
+  });
+}
+function failWorkUnitVerification(unit, bounds, receipt) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.verifying) {
+    throw new Error(`Cannot fail verification from state ${valid.state}`);
+  }
+  const validBounds = validateWorkUnitBounds(bounds);
+  let nextReceipt = valid.lastReceipt;
+  if (receipt !== void 0 && receipt !== null) {
+    const parsed = parseVerifyReceipt(receipt);
+    if (!parsed || parsed.unitId !== valid.id) {
+      throw new Error("Invalid verification receipt for work unit");
+    }
+    nextReceipt = parsed;
+  }
+  if (valid.recoverCount < validBounds.recoverLimit) {
+    return Object.freeze({
+      unit: freezeWorkUnit({
+        ...valid,
+        state: WorkUnitStates.recovering,
+        recoverCount: valid.recoverCount + 1,
+        lastReceipt: nextReceipt
+      }),
+      decision: CampaignDecisions.recover
+    });
+  }
+  if (valid.reopenCount < validBounds.reopenLimit) {
+    return Object.freeze({
+      unit: freezeWorkUnit({
+        ...valid,
+        state: WorkUnitStates.reopened,
+        reopenCount: valid.reopenCount + 1,
+        lastReceipt: nextReceipt
+      }),
+      decision: CampaignDecisions.reopen
+    });
+  }
+  return Object.freeze({
+    unit: freezeWorkUnit({
+      ...valid,
+      state: WorkUnitStates.needsHuman,
+      lastReceipt: nextReceipt,
+      humanReason: valid.humanReason ?? "Verification bounds exhausted"
+    }),
+    decision: CampaignDecisions.convergence
+  });
+}
+function reportUnitVerification(unit, input) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.active && valid.state !== WorkUnitStates.verifying) {
+    throw new Error(`Cannot report verification from state ${valid.state}`);
+  }
+  if (!isPlainObject3(input)) {
+    throw new Error("reportUnitVerification input must be a plain object");
+  }
+  const verifyingUnit = valid.state === WorkUnitStates.active ? beginVerifyWorkUnit(valid) : valid;
+  if (input.outcome === UnitReportOutcomes.pass) {
+    const doneUnit = completeWorkUnit(verifyingUnit, input.receipt, input.charterCommands);
+    return Object.freeze({
+      unit: doneUnit,
+      decision: CampaignDecisions.close
+    });
+  }
+  if (input.outcome === UnitReportOutcomes.fail) {
+    const receipt = input.receipt === void 0 || input.receipt === null ? null : parseVerifyReceipt(input.receipt);
+    if (input.receipt !== void 0 && input.receipt !== null && !receipt) {
+      throw new Error("Invalid failure receipt");
+    }
+    return failWorkUnitVerification(verifyingUnit, input.bounds, receipt);
+  }
+  throw new Error(`Unsupported report outcome: ${String(input.outcome)}`);
+}
+function blockWorkUnit(unit, reason) {
+  const valid = requireValidUnit(unit);
+  if (!canTransitionWorkUnit(valid.state, WorkUnitStates.blocked)) {
+    throw new Error(`Cannot block work unit from state ${valid.state}`);
+  }
+  if (!isNonEmptyText2(reason)) {
+    throw new Error("Blocking a work unit requires a non-empty reason");
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: WorkUnitStates.blocked,
+    blockedReason: reason.trim()
+  });
+}
+function unblockWorkUnit(unit, target = WorkUnitStates.ready) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.blocked) {
+    throw new Error(`Cannot unblock work unit from state ${valid.state}`);
+  }
+  if (!canTransitionWorkUnit(WorkUnitStates.blocked, target)) {
+    throw new Error(`Cannot unblock work unit to state ${target}`);
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: target,
+    blockedReason: null
+  });
+}
+function markWorkUnitNeedsHuman(unit, reason) {
+  const valid = requireValidUnit(unit);
+  if (!canTransitionWorkUnit(valid.state, WorkUnitStates.needsHuman)) {
+    throw new Error(`Cannot mark work unit needs-human from state ${valid.state}`);
+  }
+  if (!isNonEmptyText2(reason)) {
+    throw new Error("Marking work unit needs-human requires a non-empty reason");
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: WorkUnitStates.needsHuman,
+    humanReason: reason.trim()
+  });
+}
+function resumeWorkUnitFromHuman(unit, target = WorkUnitStates.ready) {
+  const valid = requireValidUnit(unit);
+  if (valid.state !== WorkUnitStates.needsHuman) {
+    throw new Error(`Cannot resume work unit from human from state ${valid.state}`);
+  }
+  if (!canTransitionWorkUnit(WorkUnitStates.needsHuman, target)) {
+    throw new Error(`Cannot resume work unit from human to state ${target}`);
+  }
+  return freezeWorkUnit({
+    ...valid,
+    state: target,
+    humanReason: null
+  });
+}
+function recordRetrievalRefusal(unit) {
+  const valid = requireValidUnit(unit);
+  return Object.freeze({
+    unit: freezeWorkUnit({
+      ...valid,
+      retrievalRefusalCount: valid.retrievalRefusalCount + 1
+    }),
+    decision: CampaignDecisions.hold
+  });
+}
+function parseWorkUnitRecord(value) {
+  try {
+    if (!isPlainObject3(value)) return null;
+    const required2 = [
+      "id",
+      "skill",
+      "reconCitation",
+      "state",
+      "phase",
+      "dependsOn",
+      "charterIndex",
+      "batchId",
+      "recoverCount",
+      "reopenCount",
+      "retrievalRefusalCount",
+      "lastReceipt",
+      "blockedReason",
+      "humanReason"
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const keys = Reflect.ownKeys(value);
+    if (keys.length !== required2.length) return null;
+    if (keys.some((k) => typeof k !== "string" || !required2.includes(k))) return null;
+    for (const key of required2) {
+      const d = descriptors[key];
+      if (!d || !Object.hasOwn(d, "value") || d.enumerable !== true) return null;
+    }
+    if (!isNonEmptyText2(value.id)) return null;
+    if (!isNonEmptyText2(value.skill)) return null;
+    if (!isNonEmptyText2(value.reconCitation)) return null;
+    if (typeof value.state !== "string" || !WORK_UNIT_STATES.includes(value.state)) {
+      return null;
+    }
+    if (value.phase !== null && !isNonEmptyText2(value.phase)) return null;
+    if (!isStringArray(value.dependsOn)) return null;
+    if (new Set(value.dependsOn).size !== value.dependsOn.length) return null;
+    if (value.dependsOn.includes(value.id)) return null;
+    if (!isNonNegativeSafeInt2(value.charterIndex)) return null;
+    if (value.batchId !== null && !isNonEmptyText2(value.batchId)) return null;
+    if (!isNonNegativeSafeInt2(value.recoverCount)) return null;
+    if (!isNonNegativeSafeInt2(value.reopenCount)) return null;
+    if (!isNonNegativeSafeInt2(value.retrievalRefusalCount)) return null;
+    let lastReceipt = null;
+    if (value.lastReceipt !== null) {
+      lastReceipt = parseVerifyReceipt(value.lastReceipt);
+      if (!lastReceipt || lastReceipt.unitId !== value.id) return null;
+    }
+    if (value.blockedReason !== null && !isNonEmptyText2(value.blockedReason)) return null;
+    if (value.humanReason !== null && !isNonEmptyText2(value.humanReason)) return null;
+    return freezeWorkUnit({
+      id: value.id,
+      skill: value.skill,
+      reconCitation: value.reconCitation,
+      state: value.state,
+      phase: value.phase,
+      dependsOn: value.dependsOn,
+      charterIndex: value.charterIndex,
+      batchId: value.batchId,
+      recoverCount: value.recoverCount,
+      reopenCount: value.reopenCount,
+      retrievalRefusalCount: value.retrievalRefusalCount,
+      lastReceipt,
+      blockedReason: value.blockedReason,
+      humanReason: value.humanReason
+    });
+  } catch {
+    return null;
+  }
+}
+
+// packages/core/src/campaign/queue.ts
+function isNonEmptyText3(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function isNonNegativeSafeInt3(value) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+function isPlainObject4(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function isStringArray2(value) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return false;
+  if (Reflect.ownKeys(value).length !== value.length + 1) return false;
+  for (let i = 0; i < value.length; i++) {
+    const d = Object.getOwnPropertyDescriptor(value, String(i));
+    if (!d || !Object.hasOwn(d, "value") || !d.enumerable || !isNonEmptyText3(d.value)) {
+      return false;
+    }
+  }
+  return true;
+}
+function freezeBatch(batch) {
+  return Object.freeze({
+    id: batch.id,
+    unitIds: Object.freeze([...batch.unitIds])
+  });
+}
+function freezeQueueState(state2) {
+  return Object.freeze({
+    schema: state2.schema,
+    bounds: Object.freeze({
+      recoverLimit: state2.bounds.recoverLimit,
+      reopenLimit: state2.bounds.reopenLimit
+    }),
+    phases: Object.freeze([...state2.phases]),
+    units: Object.freeze([...state2.units]),
+    batches: Object.freeze(state2.batches.map(freezeBatch)),
+    decisionsApproved: state2.decisionsApproved,
+    checkpointCount: state2.checkpointCount
+  });
+}
+function computeDependencyDepths(units) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const unit of units) {
+    if (byId.has(unit.id)) {
+      throw new Error(`Duplicate work unit id: ${unit.id}`);
+    }
+    byId.set(unit.id, unit);
+  }
+  for (const unit of units) {
+    for (const depId of unit.dependsOn) {
+      if (!byId.has(depId)) {
+        throw new Error(`Work unit "${unit.id}" depends on unknown unit "${depId}"`);
+      }
+      if (depId === unit.id) {
+        throw new Error(`Work unit "${unit.id}" cannot depend on itself`);
+      }
+    }
+  }
+  const depths = /* @__PURE__ */ new Map();
+  const visiting = /* @__PURE__ */ new Set();
+  const visit = (id) => {
+    const cached4 = depths.get(id);
+    if (cached4 !== void 0) return cached4;
+    if (visiting.has(id)) {
+      throw new Error(`Dependency cycle detected involving work unit "${id}"`);
+    }
+    visiting.add(id);
+    const unit = byId.get(id);
+    let maxDepDepth = -1;
+    for (const depId of unit.dependsOn) {
+      const depDepth = visit(depId);
+      if (depDepth > maxDepDepth) {
+        maxDepDepth = depDepth;
+      }
+    }
+    visiting.delete(id);
+    const depth = maxDepDepth + 1;
+    depths.set(id, depth);
+    return depth;
+  };
+  for (const unit of units) {
+    visit(unit.id);
+  }
+  return depths;
+}
+function compareUtf16(a, b) {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+function buildWorkUnitQueue(charter2, options = {}) {
+  if (!isPlainObject4(charter2)) {
+    throw new Error("Charter must be a plain object");
+  }
+  const bounds = validateWorkUnitBounds({
+    recoverLimit: charter2.recoverLimit,
+    reopenLimit: charter2.reopenLimit
+  });
+  if (!Array.isArray(charter2.queue) || charter2.queue.length === 0) {
+    throw new Error("Charter queue must be a non-empty array");
+  }
+  const explicitPhases = options.phases;
+  if (explicitPhases !== void 0) {
+    if (!isStringArray2(explicitPhases) || new Set(explicitPhases).size !== explicitPhases.length) {
+      throw new Error("Queue phases must be unique non-empty strings");
+    }
+  }
+  const itemIds = /* @__PURE__ */ new Set();
+  const units = [];
+  const discoveredPhases = [];
+  for (let i = 0; i < charter2.queue.length; i++) {
+    const item = charter2.queue[i];
+    if (!isNonEmptyText3(item.id)) {
+      throw new Error(`Charter queue item at index ${i} has invalid id`);
+    }
+    if (itemIds.has(item.id)) {
+      throw new Error(`Duplicate charter queue item id: ${item.id}`);
+    }
+    itemIds.add(item.id);
+    const phase2 = options.itemPhases?.[item.id] ?? item.phase ?? null;
+    if (phase2 !== null) {
+      if (!isNonEmptyText3(phase2)) {
+        throw new Error(`Invalid phase for work unit "${item.id}"`);
+      }
+      if (explicitPhases !== void 0 && !explicitPhases.includes(phase2)) {
+        throw new Error(`Work unit "${item.id}" references unknown phase "${phase2}"`);
+      }
+      if (explicitPhases === void 0 && !discoveredPhases.includes(phase2)) {
+        discoveredPhases.push(phase2);
+      }
+    }
+    const dependsOn = options.dependencies?.[item.id] ?? item.dependsOn ?? [];
+    units.push(
+      createWorkUnit({
+        id: item.id,
+        skill: item.skill,
+        reconCitation: item.reconCitation,
+        phase: phase2,
+        dependsOn,
+        charterIndex: i
+      })
+    );
+  }
+  computeDependencyDepths(units);
+  const phases = explicitPhases !== void 0 ? [...explicitPhases] : discoveredPhases;
+  const decisionsApproved = options.decisionsApproved ?? false;
+  if (typeof decisionsApproved !== "boolean") {
+    throw new Error("decisionsApproved must be a boolean");
+  }
+  return freezeQueueState({
+    schema: CAMPAIGN_SCHEMA_IDS.units,
+    bounds,
+    phases,
+    units,
+    batches: [],
+    decisionsApproved,
+    checkpointCount: 0
+  });
+}
+function orderReadyWorkUnits(queueState) {
+  const parsed = parseWorkUnitQueueState(queueState);
+  if (!parsed) {
+    throw new Error("Invalid work unit queue state");
+  }
+  const depths = computeDependencyDepths(parsed.units);
+  const byId = new Map(parsed.units.map((u) => [u.id, u]));
+  const phaseOrder = new Map(parsed.phases.map((p, idx) => [p, idx]));
+  const fallbackPhaseIndex = parsed.phases.length;
+  const readyUnits = parsed.units.filter((unit) => {
+    if (unit.state !== WorkUnitStates.ready) return false;
+    return unit.dependsOn.every((depId) => byId.get(depId)?.state === WorkUnitStates.done);
+  });
+  readyUnits.sort((a, b) => {
+    const depthDiff = depths.get(a.id) - depths.get(b.id);
+    if (depthDiff !== 0) return depthDiff;
+    const phaseA = a.phase !== null ? phaseOrder.get(a.phase) ?? fallbackPhaseIndex : fallbackPhaseIndex;
+    const phaseB = b.phase !== null ? phaseOrder.get(b.phase) ?? fallbackPhaseIndex : fallbackPhaseIndex;
+    if (phaseA !== phaseB) return phaseA - phaseB;
+    const indexDiff = a.charterIndex - b.charterIndex;
+    if (indexDiff !== 0) return indexDiff;
+    return compareUtf16(a.id, b.id);
+  });
+  return Object.freeze(readyUnits);
+}
+function selectNextWorkUnit(queueState) {
+  const parsed = parseWorkUnitQueueState(queueState);
+  if (!parsed) {
+    throw new Error("Invalid work unit queue state");
+  }
+  const orderedReady = orderReadyWorkUnits(parsed);
+  const readyCount = parsed.units.filter((u) => u.state === WorkUnitStates.ready).length;
+  const counts = Object.freeze({
+    total: parsed.units.length,
+    ready: readyCount,
+    active: parsed.units.filter((u) => u.state === WorkUnitStates.active).length,
+    verifying: parsed.units.filter((u) => u.state === WorkUnitStates.verifying).length,
+    recovering: parsed.units.filter((u) => u.state === WorkUnitStates.recovering).length,
+    reopened: parsed.units.filter((u) => u.state === WorkUnitStates.reopened).length,
+    done: parsed.units.filter((u) => u.state === WorkUnitStates.done).length,
+    blocked: parsed.units.filter((u) => u.state === WorkUnitStates.blocked).length,
+    needsHuman: parsed.units.filter((u) => u.state === WorkUnitStates.needsHuman).length,
+    waitingOnDependencies: readyCount - orderedReady.length
+  });
+  return Object.freeze({
+    next: orderedReady[0] ?? null,
+    orderedReady,
+    counts
+  });
+}
+function regroupWorkUnits(queueState, batches, approved) {
+  const parsed = parseWorkUnitQueueState(queueState);
+  if (!parsed) {
+    throw new Error("Invalid work unit queue state");
+  }
+  if (typeof approved !== "boolean") {
+    throw new Error("approved must be a boolean");
+  }
+  if (!Array.isArray(batches)) {
+    throw new Error("batches must be an array");
+  }
+  const knownUnitIds = new Set(parsed.units.map((u) => u.id));
+  const seenBatchIds = /* @__PURE__ */ new Set();
+  const unitToBatch = /* @__PURE__ */ new Map();
+  const normalizedBatches = [];
+  for (const batch of batches) {
+    if (!isPlainObject4(batch) || !isNonEmptyText3(batch.id) || !isStringArray2(batch.unitIds) || batch.unitIds.length === 0) {
+      throw new Error("Each batch must have a non-empty id and non-empty unitIds array");
+    }
+    if (seenBatchIds.has(batch.id)) {
+      throw new Error(`Duplicate batch id: ${batch.id}`);
+    }
+    seenBatchIds.add(batch.id);
+    for (const unitId of batch.unitIds) {
+      if (!knownUnitIds.has(unitId)) {
+        throw new Error(`Batch "${batch.id}" references unknown unit "${unitId}"`);
+      }
+      if (unitToBatch.has(unitId)) {
+        throw new Error(`Unit "${unitId}" is assigned to multiple batches`);
+      }
+      unitToBatch.set(unitId, batch.id);
+    }
+    normalizedBatches.push(freezeBatch({ id: batch.id, unitIds: batch.unitIds }));
+  }
+  const updatedUnits = parsed.units.map(
+    (unit) => Object.freeze({
+      ...unit,
+      batchId: unitToBatch.get(unit.id) ?? null
+    })
+  );
+  const nextCheckpointCount = approved ? parsed.checkpointCount + 1 : parsed.checkpointCount;
+  const nextQueue = freezeQueueState({
+    ...parsed,
+    units: updatedUnits,
+    batches: normalizedBatches,
+    decisionsApproved: approved ? true : parsed.decisionsApproved,
+    checkpointCount: nextCheckpointCount
+  });
+  if (!approved) {
+    return Object.freeze({
+      queue: nextQueue,
+      checkpointRequired: false,
+      checkpoint: null
+    });
+  }
+  return Object.freeze({
+    queue: nextQueue,
+    checkpointRequired: true,
+    checkpoint: Object.freeze({
+      decision: CampaignDecisions.checkpoint,
+      signal: "checkpoint-request",
+      checkpointCount: nextCheckpointCount,
+      batchIds: Object.freeze(normalizedBatches.map((b) => b.id))
+    })
+  });
+}
+function updateWorkUnitInQueue(queueState, updatedUnit) {
+  const parsedQueue = parseWorkUnitQueueState(queueState);
+  if (!parsedQueue) {
+    throw new Error("Invalid work unit queue state");
+  }
+  const parsedUnit = parseWorkUnitRecord(updatedUnit);
+  if (!parsedUnit) {
+    throw new Error("Invalid work unit record");
+  }
+  const index = parsedQueue.units.findIndex((u) => u.id === parsedUnit.id);
+  if (index === -1) {
+    throw new Error(`Work unit "${parsedUnit.id}" not found in queue`);
+  }
+  const nextUnits = parsedQueue.units.map((u, i) => i === index ? parsedUnit : u);
+  return freezeQueueState({
+    ...parsedQueue,
+    units: nextUnits
+  });
+}
+function parseWorkUnitQueueState(value) {
+  try {
+    if (!isPlainObject4(value)) return null;
+    const required2 = [
+      "schema",
+      "bounds",
+      "phases",
+      "units",
+      "batches",
+      "decisionsApproved",
+      "checkpointCount"
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const keys = Reflect.ownKeys(value);
+    if (keys.length !== required2.length) return null;
+    if (keys.some((k) => typeof k !== "string" || !required2.includes(k))) return null;
+    for (const key of required2) {
+      const d = descriptors[key];
+      if (!d || !Object.hasOwn(d, "value") || d.enumerable !== true) return null;
+    }
+    if (value.schema !== CAMPAIGN_SCHEMA_IDS.units) return null;
+    const bounds = validateWorkUnitBounds(value.bounds);
+    if (!isStringArray2(value.phases) || new Set(value.phases).size !== value.phases.length) return null;
+    if (typeof value.decisionsApproved !== "boolean") return null;
+    if (!isNonNegativeSafeInt3(value.checkpointCount)) return null;
+    if (!Array.isArray(value.units) || Object.getPrototypeOf(value.units) !== Array.prototype) return null;
+    if (Reflect.ownKeys(value.units).length !== value.units.length + 1) return null;
+    const units = [];
+    for (let i = 0; i < value.units.length; i++) {
+      const d = Object.getOwnPropertyDescriptor(value.units, String(i));
+      if (!d || !Object.hasOwn(d, "value") || !d.enumerable) return null;
+      const parsedUnit = parseWorkUnitRecord(d.value);
+      if (!parsedUnit) return null;
+      units.push(parsedUnit);
+    }
+    computeDependencyDepths(units);
+    const knownUnitIds = new Set(units.map((u) => u.id));
+    if (!Array.isArray(value.batches) || Object.getPrototypeOf(value.batches) !== Array.prototype) return null;
+    if (Reflect.ownKeys(value.batches).length !== value.batches.length + 1) return null;
+    const batches = [];
+    const seenBatchIds = /* @__PURE__ */ new Set();
+    const seenBatchUnits = /* @__PURE__ */ new Set();
+    for (let i = 0; i < value.batches.length; i++) {
+      const d = Object.getOwnPropertyDescriptor(value.batches, String(i));
+      if (!d || !Object.hasOwn(d, "value") || !d.enumerable || !isPlainObject4(d.value)) return null;
+      const b = d.value;
+      const bKeys = Reflect.ownKeys(b);
+      if (bKeys.length !== 2 || !Object.hasOwn(b, "id") || !Object.hasOwn(b, "unitIds")) return null;
+      if (!isNonEmptyText3(b.id) || seenBatchIds.has(b.id)) return null;
+      if (!isStringArray2(b.unitIds) || b.unitIds.length === 0) return null;
+      seenBatchIds.add(b.id);
+      for (const unitId of b.unitIds) {
+        if (!knownUnitIds.has(unitId) || seenBatchUnits.has(unitId)) return null;
+        seenBatchUnits.add(unitId);
+      }
+      batches.push({ id: b.id, unitIds: b.unitIds });
+    }
+    return freezeQueueState({
+      schema: CAMPAIGN_SCHEMA_IDS.units,
+      bounds,
+      phases: value.phases,
+      units,
+      batches,
+      decisionsApproved: value.decisionsApproved,
+      checkpointCount: value.checkpointCount
+    });
+  } catch {
+    return null;
+  }
+}
+
+// packages/core/src/campaign/explain.ts
+var descriptions = {
+  [CampaignDecisions.hold]: "No campaign change was applied.",
+  [CampaignDecisions.explore]: "The campaign continued execution or exploration.",
+  [CampaignDecisions.recover]: "The working rung converged after a verification pass.",
+  [CampaignDecisions.reopen]: "The campaign reopened a path.",
+  [CampaignDecisions.checkpoint]: "The operator recorded a checkpoint.",
+  [CampaignDecisions.close]: "The runtime reported campaign completion.",
+  [CampaignDecisions.stop]: "The campaign ended.",
+  [CampaignDecisions.recon]: "The campaign gathered reconnaissance.",
+  [CampaignDecisions.decisions]: "The campaign awaits an operator decision.",
+  [CampaignDecisions.convergence]: "The campaign entered convergence."
+};
+
+// packages/core/src/campaign/status.ts
+function toControllerStatus(state2, transition) {
+  if (!parseCampaignState(state2)) throw new Error("Invalid campaign state");
+  if (transition && (!parseCampaignTraceEntry(transition) || transition.to !== state2.state)) throw new Error("Invalid transition");
+  return immutableSnapshot({
+    schema: CAMPAIGN_SCHEMA_IDS.status,
+    state: state2.state,
+    effective: state2.steering.rung,
+    ...state2.total > 0 ? { progress: { completed: state2.completed, total: state2.total } } : {},
+    ...transition ? { transition: { from: transition.from, to: transition.to, reason: transition.trigger } } : {}
+  });
 }
 
 // packages/core/src/retrieval/installability.ts
@@ -19676,9 +20788,14 @@ var CAMPAIGN_GOAL_FILE = "goal.json";
 var CAMPAIGN_RECON_FILE = "recon.json";
 var CAMPAIGN_CHARTER_FILE = "charter.json";
 var CAMPAIGN_OPERATOR_LOG_FILE = "operator.jsonl";
+var CAMPAIGN_UNITS_FILE = "units.json";
+var CAMPAIGN_RECEIPTS_FILE = "receipts.jsonl";
 var CAMPAIGN_GOAL_STAGE_FILE = ".goal.stage.json";
 var CAMPAIGN_RECON_STAGE_FILE = ".recon.stage.json";
 var CAMPAIGN_CHARTER_STAGE_FILE = ".charter.stage.json";
+var CAMPAIGN_UNITS_STAGE_FILE = ".units.stage.json";
+var CAMPAIGN_RECEIPTS_STAGE_FILE = ".receipts.stage.jsonl";
+var CAMPAIGN_TX_STAGE_FILE = ".tx.stage.json";
 function stripSelfCharterShaClause(revision, clauses) {
   const prefix = `charter-sha256:r${revision}:`;
   return clauses.filter((c) => !c.startsWith(prefix));
@@ -19829,9 +20946,14 @@ var CampaignStore = class _CampaignStore {
   reconPath;
   charterPath;
   operatorLogPath;
+  unitsPath;
+  receiptsPath;
   goalStagePath;
   reconStagePath;
   charterStagePath;
+  unitsStagePath;
+  receiptsStagePath;
+  txStagePath;
   #initial;
   #state;
   #lines;
@@ -19856,9 +20978,14 @@ var CampaignStore = class _CampaignStore {
     this.reconPath = path3.join(this.campaignDir, CAMPAIGN_RECON_FILE);
     this.charterPath = path3.join(this.campaignDir, CAMPAIGN_CHARTER_FILE);
     this.operatorLogPath = path3.join(this.campaignDir, CAMPAIGN_OPERATOR_LOG_FILE);
+    this.unitsPath = path3.join(this.campaignDir, CAMPAIGN_UNITS_FILE);
+    this.receiptsPath = path3.join(this.campaignDir, CAMPAIGN_RECEIPTS_FILE);
     this.goalStagePath = path3.join(this.campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
     this.reconStagePath = path3.join(this.campaignDir, CAMPAIGN_RECON_STAGE_FILE);
     this.charterStagePath = path3.join(this.campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
+    this.unitsStagePath = path3.join(this.campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+    this.receiptsStagePath = path3.join(this.campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+    this.txStagePath = path3.join(this.campaignDir, CAMPAIGN_TX_STAGE_FILE);
     this.#initial = initialCampaignState();
     this.#state = state2;
     this.#lines = lines;
@@ -20151,7 +21278,12 @@ var CampaignStore = class _CampaignStore {
     }
     const goalSha256 = computeGoalContractSha256(validatedGoal);
     return this.append(
-      { channel: "agent", op: AgentOps.open, goalSha256 },
+      {
+        channel: "agent",
+        op: AgentOps.open,
+        goalSha256,
+        acceptanceCommands: validatedGoal.acceptanceCommands
+      },
       { goalContract: validatedGoal, requireGoalContractOnOpen: true }
     );
   }
@@ -20198,6 +21330,50 @@ var CampaignStore = class _CampaignStore {
     this.#reconArtifact = disk.reconArtifact;
     this.#charterStrategy = disk.charterStrategy;
     return disk.charterStrategy;
+  }
+  async loadUnitsState() {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE)."
+      );
+    }
+    if (!this.#hasTrace) {
+      return null;
+    }
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
+    }
+    if (disk.kind === "absent") {
+      return null;
+    }
+    return disk.unitsState;
+  }
+  async loadReceipts() {
+    if (this.#corrupted) {
+      throw new Error(
+        this.#error ?? "Campaign store is corrupted (FAILED_SAFE)."
+      );
+    }
+    if (!this.#hasTrace) {
+      return [];
+    }
+    const disk = await verifyOnDiskState(this.sessionRoot, {
+      authorize: this.#options.authorize
+    });
+    if (disk.kind === "failed_safe") {
+      this.#corrupted = true;
+      this.#error = disk.error;
+      throw new Error(disk.error);
+    }
+    if (disk.kind === "absent") {
+      return [];
+    }
+    return disk.receipts;
   }
   async appendOperatorLog(entry) {
     const run = this.#appendQueue.then(
@@ -20303,7 +21479,10 @@ var CampaignStore = class _CampaignStore {
       let validatedGoal;
       let validatedReconRecord;
       let validatedCharterStrategy;
+      let validatedUnitsState;
+      let validatedReceipt;
       let artifactSha256;
+      let unitsSha256;
       if (options?.goalContract !== void 0 && step.entry.accepted) {
         const parsedGoal = parseCampaignGoalContract(options.goalContract);
         if (!parsedGoal) {
@@ -20330,13 +21509,42 @@ var CampaignStore = class _CampaignStore {
         validatedCharterStrategy = parsedStrategy;
         artifactSha256 = computeCharterCoreSha256(parsedStrategy);
       }
+      if (options?.unitsState !== void 0 && step.entry.accepted) {
+        const parsedUnits = parseWorkUnitQueueState(options.unitsState);
+        if (!parsedUnits) {
+          throw new Error("Invalid work unit queue state.");
+        }
+        const unitsCheck = validateUnitsStateAgainstCampaignState(
+          parsedUnits,
+          step.state
+        );
+        if (!unitsCheck.ok) {
+          throw new Error(unitsCheck.error);
+        }
+        validatedUnitsState = parsedUnits;
+        unitsSha256 = campaignSha256Hex(canonicalCampaignJson(parsedUnits));
+        const descriptorUnitsSha256 = getDescriptorUnitsSha256(descriptor);
+        if (descriptorUnitsSha256 !== unitsSha256) {
+          throw new Error(
+            "Event must carry matching unitsSha256 when persisting work unit queue state."
+          );
+        }
+      }
+      if (options?.receipt !== void 0 && step.entry.accepted) {
+        const parsedReceipt = parseVerifyReceipt(options.receipt);
+        if (!parsedReceipt) {
+          throw new Error("Invalid verify receipt.");
+        }
+        validatedReceipt = parsedReceipt;
+      }
       const authorizedPrivileged = (step.entry.channel === "operator" || step.entry.channel === "engine") && step.entry.accepted === true;
       const evidenceLine = {
         seq,
         authorizedPrivileged,
         eventSha256: campaignSha256Hex(canonicalCampaignJson(descriptor)),
         recordSha256: campaignSha256Hex(serializeCampaignRecord(nextRecord)),
-        ...artifactSha256 !== void 0 ? { artifactSha256 } : {}
+        ...artifactSha256 !== void 0 ? { artifactSha256 } : {},
+        ...unitsSha256 !== void 0 ? { unitsSha256 } : {}
       };
       const status = toControllerStatus(step.state, step.entry);
       await ensureConfinedCampaignDir(this.sessionRoot, this.campaignDir);
@@ -20418,6 +21626,118 @@ var CampaignStore = class _CampaignStore {
 `
         );
       }
+      if (validatedUnitsState !== void 0) {
+        await assertRegularOrMissingTarget(
+          this.sessionRoot,
+          this.unitsPath,
+          "Campaign work units"
+        );
+        try {
+          await writeAtomicJsonArtifact(
+            this.sessionRoot,
+            this.campaignDir,
+            this.unitsStagePath,
+            `.${CAMPAIGN_UNITS_STAGE_FILE}`,
+            "Campaign work units stage",
+            `${JSON.stringify(validatedUnitsState, null, 2)}
+`
+          );
+        } catch (error2) {
+          if (validatedGoal !== void 0) {
+            await rm3(this.goalStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedReconRecord !== void 0) {
+            await rm3(this.reconStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedCharterStrategy !== void 0) {
+            await rm3(this.charterStagePath, { force: true }).catch(() => {
+            });
+          }
+          throw error2;
+        }
+      }
+      if (validatedReceipt !== void 0) {
+        try {
+          const priorReceipts = await capturePriorArtifactBytes(
+            this.sessionRoot,
+            this.receiptsPath,
+            "Campaign receipts"
+          );
+          const existingReceipts = priorReceipts.existed ? parseVerifyReceiptLines(priorReceipts.raw) : { ok: true, lines: [] };
+          if (!existingReceipts.ok) {
+            throw new Error(
+              `Campaign receipts failed verification: ${existingReceipts.error}`
+            );
+          }
+          const nextReceiptLines = [
+            ...existingReceipts.lines,
+            validatedReceipt
+          ];
+          const nextReceiptsContent = `${nextReceiptLines.map((r) => formatVerifyReceiptLine(r)).join("\n")}
+`;
+          await writeAtomicJsonArtifact(
+            this.sessionRoot,
+            this.campaignDir,
+            this.receiptsStagePath,
+            `.${CAMPAIGN_RECEIPTS_STAGE_FILE}`,
+            "Campaign receipts stage",
+            nextReceiptsContent
+          );
+        } catch (error2) {
+          if (validatedGoal !== void 0) {
+            await rm3(this.goalStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedReconRecord !== void 0) {
+            await rm3(this.reconStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedCharterStrategy !== void 0) {
+            await rm3(this.charterStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedUnitsState !== void 0) {
+            await rm3(this.unitsStagePath, { force: true }).catch(() => {
+            });
+          }
+          throw error2;
+        }
+      }
+      try {
+        await writeAtomicJsonArtifact(
+          this.sessionRoot,
+          this.campaignDir,
+          this.txStagePath,
+          `.${CAMPAIGN_TX_STAGE_FILE}`,
+          "Campaign transaction stage",
+          `${JSON.stringify(evidenceLine, null, 2)}
+`
+        );
+      } catch (error2) {
+        if (validatedGoal !== void 0) {
+          await rm3(this.goalStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedReconRecord !== void 0) {
+          await rm3(this.reconStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedCharterStrategy !== void 0) {
+          await rm3(this.charterStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedUnitsState !== void 0) {
+          await rm3(this.unitsStagePath, { force: true }).catch(() => {
+          });
+        }
+        if (validatedReceipt !== void 0) {
+          await rm3(this.receiptsStagePath, { force: true }).catch(() => {
+          });
+        }
+        throw error2;
+      }
       let traceMutated = false;
       try {
         await appendFile(
@@ -20442,14 +21762,23 @@ var CampaignStore = class _CampaignStore {
         if (validatedCharterStrategy !== void 0) {
           await rename(this.charterStagePath, this.charterPath);
         }
+        if (validatedUnitsState !== void 0) {
+          await rename(this.unitsStagePath, this.unitsPath);
+        }
+        if (validatedReceipt !== void 0) {
+          await rename(this.receiptsStagePath, this.receiptsPath);
+        }
         await writeFile(
           this.statusPath,
           `${JSON.stringify(status, null, 2)}
 `,
           "utf8"
         );
+        await rm3(this.txStagePath, { force: true });
       } catch (error2) {
         if (!traceMutated) {
+          await rm3(this.txStagePath, { force: true }).catch(() => {
+          });
           if (validatedGoal !== void 0) {
             await rm3(this.goalStagePath, { force: true }).catch(() => {
             });
@@ -20460,6 +21789,14 @@ var CampaignStore = class _CampaignStore {
           }
           if (validatedCharterStrategy !== void 0) {
             await rm3(this.charterStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedUnitsState !== void 0) {
+            await rm3(this.unitsStagePath, { force: true }).catch(() => {
+            });
+          }
+          if (validatedReceipt !== void 0) {
+            await rm3(this.receiptsStagePath, { force: true }).catch(() => {
             });
           }
           throw error2;
@@ -20496,7 +21833,9 @@ var CampaignStore = class _CampaignStore {
         this.statusPath,
         this.goalPath,
         this.reconPath,
-        this.charterPath
+        this.charterPath,
+        this.unitsPath,
+        this.receiptsPath
       ]) {
         try {
           await lstat2(target);
@@ -20515,6 +21854,12 @@ var CampaignStore = class _CampaignStore {
       await rm3(this.reconStagePath, { force: true }).catch(() => {
       });
       await rm3(this.charterStagePath, { force: true }).catch(() => {
+      });
+      await rm3(this.unitsStagePath, { force: true }).catch(() => {
+      });
+      await rm3(this.receiptsStagePath, { force: true }).catch(() => {
+      });
+      await rm3(this.txStagePath, { force: true }).catch(() => {
       });
       return;
     }
@@ -20551,6 +21896,8 @@ var CampaignStore = class _CampaignStore {
       disk.promoteGoalStage,
       disk.promoteReconStage,
       disk.promoteCharterStage,
+      disk.promoteUnitsStage,
+      disk.promoteReceiptsStage,
       disk.recoveredTrailingEvidenceLine
     );
   }
@@ -20585,6 +21932,18 @@ async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus
       }).catch(() => {
       });
       await rm3(path3.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+      await rm3(path3.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+      await rm3(path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+      await rm3(path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE), {
         force: true
       }).catch(() => {
       });
@@ -20633,6 +21992,8 @@ async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus
       verified.promoteGoalStage,
       verified.promoteReconStage,
       verified.promoteCharterStage,
+      verified.promoteUnitsStage,
+      verified.promoteReceiptsStage,
       verified.recoveredTrailingEvidenceLine
     );
     const expectedStatus = toControllerStatus(
@@ -20685,7 +22046,7 @@ function snapshotsEqual(a, b) {
   if (!metaSnapshotsEqual(a.traceStat, b.traceStat) || a.traceRaw !== b.traceRaw) {
     return false;
   }
-  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon) || !optionalArtifactSnapshotsEqual(a.charter, b.charter) || !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) || !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage) || !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage)) {
+  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon) || !optionalArtifactSnapshotsEqual(a.charter, b.charter) || !optionalArtifactSnapshotsEqual(a.units, b.units) || !optionalArtifactSnapshotsEqual(a.receipts, b.receipts) || !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) || !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage) || !optionalArtifactSnapshotsEqual(a.charterStage, b.charterStage) || !optionalArtifactSnapshotsEqual(a.unitsStage, b.unitsStage) || !optionalArtifactSnapshotsEqual(a.receiptsStage, b.receiptsStage) || !optionalArtifactSnapshotsEqual(a.txStage, b.txStage)) {
     return false;
   }
   if (a.evidenceExists !== b.evidenceExists) {
@@ -20729,9 +22090,14 @@ async function readCampaignRawSnapshot(sessionRoot) {
   const goalPath = path3.join(campaignDir, CAMPAIGN_GOAL_FILE);
   const reconPath = path3.join(campaignDir, CAMPAIGN_RECON_FILE);
   const charterPath = path3.join(campaignDir, CAMPAIGN_CHARTER_FILE);
+  const unitsPath = path3.join(campaignDir, CAMPAIGN_UNITS_FILE);
+  const receiptsPath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
   const goalStagePath = path3.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
   const reconStagePath = path3.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
   const charterStagePath = path3.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
+  const unitsStagePath = path3.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+  const receiptsStagePath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+  const txStagePath = path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
   let traceStat;
@@ -20746,7 +22112,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
           statusPath,
           goalPath,
           reconPath,
-          charterPath
+          charterPath,
+          unitsPath,
+          receiptsPath
         ])
       };
     }
@@ -20771,6 +22139,16 @@ async function readCampaignRawSnapshot(sessionRoot) {
     charterPath,
     "Campaign charter strategy"
   );
+  const units = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    unitsPath,
+    "Campaign work units"
+  );
+  const receipts = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    receiptsPath,
+    "Campaign receipts"
+  );
   const goalStage = await readOptionalArtifactSnapshot(
     sessionRoot,
     goalStagePath,
@@ -20786,6 +22164,21 @@ async function readCampaignRawSnapshot(sessionRoot) {
     charterStagePath,
     "Campaign charter stage"
   );
+  const unitsStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    unitsStagePath,
+    "Campaign work units stage"
+  );
+  const receiptsStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    receiptsStagePath,
+    "Campaign receipts stage"
+  );
+  const txStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    txStagePath,
+    "Campaign transaction stage"
+  );
   let evidenceStat;
   try {
     evidenceStat = await lstat2(evidencePath);
@@ -20799,9 +22192,14 @@ async function readCampaignRawSnapshot(sessionRoot) {
         goal,
         recon: recon2,
         charter: charter2,
+        units,
+        receipts,
         goalStage,
         reconStage,
-        charterStage
+        charterStage,
+        unitsStage,
+        receiptsStage,
+        txStage
       };
     }
     throw error2;
@@ -20816,9 +22214,14 @@ async function readCampaignRawSnapshot(sessionRoot) {
       goal,
       recon: recon2,
       charter: charter2,
+      units,
+      receipts,
       goalStage,
       reconStage,
-      charterStage
+      charterStage,
+      unitsStage,
+      receiptsStage,
+      txStage
     };
   }
   const evidenceRaw = await readFile(evidencePath, "utf8");
@@ -20833,9 +22236,14 @@ async function readCampaignRawSnapshot(sessionRoot) {
     goal,
     recon: recon2,
     charter: charter2,
+    units,
+    receipts,
     goalStage,
     reconStage,
-    charterStage
+    charterStage,
+    unitsStage,
+    receiptsStage,
+    txStage
   };
 }
 async function verifyReadOnlyConsistentSnapshot(sessionRoot, options = {}) {
@@ -20953,6 +22361,70 @@ function validateStandaloneEvidence(lines, evidenceLines) {
   }
   return { ok: true };
 }
+function getDescriptorUnitsSha256(descriptor) {
+  if (!descriptor) {
+    return void 0;
+  }
+  if (descriptor.channel === "agent" && (descriptor.op === AgentOps.next || descriptor.op === AgentOps.report)) {
+    return descriptor.unitsSha256;
+  }
+  if (descriptor.channel === "operator" && descriptor.op === OperatorVerbs.checkpoint) {
+    return descriptor.unitsSha256;
+  }
+  if (descriptor.channel === "engine" && descriptor.op === EngineOps.verify) {
+    return descriptor.unitsSha256;
+  }
+  return void 0;
+}
+function getTraceEventUnitsSha256(line) {
+  if (line.entry.accepted !== true) {
+    return void 0;
+  }
+  return getDescriptorUnitsSha256(line.event);
+}
+var TX_STAGE_SHA256_RE = /^[0-9a-f]{64}$/;
+function parseTxStageSnapshot(snap) {
+  if (!snap.exists || snap.nonRegular) {
+    return null;
+  }
+  let raw;
+  try {
+    raw = JSON.parse(snap.raw);
+  } catch {
+    return null;
+  }
+  if (!isPlainRecordObject(raw)) {
+    return null;
+  }
+  const allowed = /* @__PURE__ */ new Set([
+    "seq",
+    "authorizedPrivileged",
+    "eventSha256",
+    "recordSha256",
+    "artifactSha256",
+    "unitsSha256"
+  ]);
+  if (Reflect.ownKeys(raw).some((k) => typeof k !== "string" || !allowed.has(k))) {
+    return null;
+  }
+  if (typeof raw.seq !== "number" || !Number.isSafeInteger(raw.seq) || raw.seq < 0 || typeof raw.authorizedPrivileged !== "boolean" || typeof raw.eventSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.eventSha256) || typeof raw.recordSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.recordSha256)) {
+    return null;
+  }
+  if (raw.artifactSha256 !== void 0 && (typeof raw.artifactSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.artifactSha256))) {
+    return null;
+  }
+  if (raw.unitsSha256 !== void 0 && (typeof raw.unitsSha256 !== "string" || !TX_STAGE_SHA256_RE.test(raw.unitsSha256))) {
+    return null;
+  }
+  return {
+    seq: raw.seq,
+    authorizedPrivileged: raw.authorizedPrivileged,
+    eventSha256: raw.eventSha256,
+    recordSha256: raw.recordSha256,
+    ...raw.artifactSha256 !== void 0 ? { artifactSha256: raw.artifactSha256 } : {},
+    ...raw.unitsSha256 !== void 0 ? { unitsSha256: raw.unitsSha256 } : {}
+  };
+}
 function tryRecoverPendingStagedEvidenceLine(snap, parsedLines, existingEvidenceLines) {
   if (parsedLines.length === 0) {
     return void 0;
@@ -20975,7 +22447,89 @@ function tryRecoverPendingStagedEvidenceLine(snap, parsedLines, existingEvidence
     }
   }
   const lastLine = parsedLines[seq];
-  if (lastLine.seq !== seq || lastLine.entry.accepted !== true || lastLine.entry.channel !== "agent" || lastLine.event?.channel !== "agent") {
+  if (lastLine.seq !== seq || lastLine.entry.accepted !== true || lastLine.event === null || lastLine.event.channel !== lastLine.entry.channel) {
+    return void 0;
+  }
+  const isU4RecoverableOp = lastLine.event.channel === "agent" && (lastLine.event.op === AgentOps.next || lastLine.event.op === AgentOps.report) || lastLine.event.channel === "operator" && lastLine.event.op === OperatorVerbs.checkpoint || lastLine.event.channel === "engine" && lastLine.event.op === EngineOps.verify;
+  if (isU4RecoverableOp) {
+    const txStage = parseTxStageSnapshot(snap.txStage);
+    if (!txStage) {
+      return void 0;
+    }
+    const expectedAuthorizedPrivileged = (lastLine.entry.channel === "operator" || lastLine.entry.channel === "engine") && lastLine.entry.accepted === true;
+    const expectedEventSha256 = campaignSha256Hex(
+      canonicalCampaignJson(lastLine.event)
+    );
+    if (txStage.seq !== seq || txStage.authorizedPrivileged !== expectedAuthorizedPrivileged || txStage.eventSha256 !== expectedEventSha256 || txStage.artifactSha256 !== void 0) {
+      return void 0;
+    }
+    const recoverAuthorize = (event2, index) => {
+      if (index === seq) {
+        return txStage.authorizedPrivileged === true && txStage.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event2));
+      }
+      const ev = existingEvidenceLines?.[index];
+      if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+      return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event2));
+    };
+    const verification2 = verifyCampaignTraceLines(parsedLines, {
+      authorize: recoverAuthorize
+    });
+    if (!verification2.valid) {
+      return void 0;
+    }
+    const expectedRecordSha256 = campaignSha256Hex(
+      serializeCampaignRecord(verification2.record)
+    );
+    if (txStage.recordSha256 !== expectedRecordSha256) {
+      return void 0;
+    }
+    const traceUnitsSha256 = getTraceEventUnitsSha256(lastLine);
+    if (txStage.unitsSha256 !== traceUnitsSha256) {
+      return void 0;
+    }
+    if (traceUnitsSha256 !== void 0) {
+      const checkedUnits = parseAndVerifyUnitsSnapshot(
+        snap.unitsStage,
+        traceUnitsSha256,
+        verification2.record.final
+      );
+      if (!checkedUnits.ok) {
+        return void 0;
+      }
+    } else if (snap.unitsStage.exists) {
+      return void 0;
+    }
+    const hasReceiptOnLastLine = lastLine.event.channel === "engine" && lastLine.event.op === EngineOps.verify && lastLine.event.receipt !== void 0;
+    if (hasReceiptOnLastLine) {
+      const expectedTraceReceipts = [];
+      for (const line of parsedLines) {
+        if (line.entry.accepted === true && line.event?.channel === "engine" && line.event.op === EngineOps.verify && line.event.receipt !== void 0) {
+          const parsedReceipt = parseVerifyReceipt(line.event.receipt);
+          if (!parsedReceipt) {
+            return void 0;
+          }
+          expectedTraceReceipts.push(parsedReceipt);
+        }
+      }
+      const checkedReceipts = verifyReceiptsSnapshot(
+        snap.receiptsStage,
+        expectedTraceReceipts
+      );
+      if (!checkedReceipts.ok) {
+        return void 0;
+      }
+    } else if (snap.receiptsStage.exists) {
+      return void 0;
+    }
+    return Object.freeze({
+      seq,
+      authorizedPrivileged: expectedAuthorizedPrivileged,
+      eventSha256: expectedEventSha256,
+      recordSha256: expectedRecordSha256,
+      ...traceUnitsSha256 !== void 0 ? { unitsSha256: traceUnitsSha256 } : {}
+    });
+  }
+  if (lastLine.entry.channel !== "agent" || lastLine.event?.channel !== "agent") {
     return void 0;
   }
   let artifactSha256;
@@ -21158,7 +22712,20 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
   if (!artifactCheck.ok) {
     return { kind: "failed_safe", error: artifactCheck.error };
   }
-  if (recoveredTrailingEvidenceLine !== void 0 && !artifactCheck.promoteGoalStage && !artifactCheck.promoteReconStage && !artifactCheck.promoteCharterStage) {
+  const unitsAndReceiptsCheck = verifyBoundUnitsAndReceipts(
+    parsedTrace.lines,
+    evidenceLines,
+    verification.record.final,
+    snap.units,
+    snap.receipts,
+    snap.unitsStage,
+    snap.receiptsStage
+  );
+  if (!unitsAndReceiptsCheck.ok) {
+    return { kind: "failed_safe", error: unitsAndReceiptsCheck.error };
+  }
+  const hasPendingStageForRecovery = artifactCheck.promoteGoalStage || artifactCheck.promoteReconStage || artifactCheck.promoteCharterStage || unitsAndReceiptsCheck.promoteUnitsStage || unitsAndReceiptsCheck.promoteReceiptsStage || snap.txStage.exists && !snap.txStage.nonRegular;
+  if (recoveredTrailingEvidenceLine !== void 0 && !hasPendingStageForRecovery) {
     return {
       kind: "failed_safe",
       error: "Campaign trailing evidence recovery requires an unpromoted stage artifact"
@@ -21173,9 +22740,13 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
     goalContract: artifactCheck.goalContract,
     reconArtifact: artifactCheck.reconArtifact,
     charterStrategy: artifactCheck.charterStrategy,
+    unitsState: unitsAndReceiptsCheck.unitsState,
+    receipts: unitsAndReceiptsCheck.receipts,
     promoteGoalStage: artifactCheck.promoteGoalStage,
     promoteReconStage: artifactCheck.promoteReconStage,
     promoteCharterStage: artifactCheck.promoteCharterStage,
+    promoteUnitsStage: unitsAndReceiptsCheck.promoteUnitsStage,
+    promoteReceiptsStage: unitsAndReceiptsCheck.promoteReceiptsStage,
     ...recoveredTrailingEvidenceLine !== void 0 ? { recoveredTrailingEvidenceLine } : {},
     ...standalone.ok ? {} : {
       evidenceError: standalone.kind === "absent" ? "historical campaign evidence is absent" : `historical campaign evidence is inconsistent (${standalone.error})`
@@ -21234,19 +22805,19 @@ function isPlainRecordObject(v) {
   const proto = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
 }
-function isStringArray(v) {
+function isStringArray3(v) {
   return Array.isArray(v) && v.every((item) => typeof item === "string");
 }
 function parseSingleReconRecord(v) {
   if (!isPlainRecordObject(v)) return null;
-  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray(v.findings) || !isStringArray(v.citations)) {
+  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray3(v.findings) || !isStringArray3(v.citations)) {
     return null;
   }
   return v;
 }
 function parsePersistedReconArtifactStore(v) {
   if (!isPlainRecordObject(v)) return null;
-  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray(v.findings) || !isStringArray(v.citations) || !isPlainRecordObject(v.records)) {
+  if (v.schema !== CAMPAIGN_SCHEMA_IDS.recon || typeof v.reconId !== "string" || v.reconId.length === 0 || !Array.isArray(v.gaps) || !isStringArray3(v.findings) || !isStringArray3(v.citations) || !isPlainRecordObject(v.records)) {
     return null;
   }
   const records = {};
@@ -21756,7 +23327,7 @@ async function assertRegularOrMissingTarget(sessionRoot, targetPath, label) {
     }
   }
 }
-async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalStage, promoteReconStage, promoteCharterStage, recoveredTrailingEvidenceLine) {
+async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalStage, promoteReconStage, promoteCharterStage, promoteUnitsStage, promoteReceiptsStage, recoveredTrailingEvidenceLine) {
   const evidencePath = path3.join(campaignDir, CAMPAIGN_EVIDENCE_FILE);
   const goalStagePath = path3.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
   const goalPath = path3.join(campaignDir, CAMPAIGN_GOAL_FILE);
@@ -21764,6 +23335,11 @@ async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalSta
   const reconPath = path3.join(campaignDir, CAMPAIGN_RECON_FILE);
   const charterStagePath = path3.join(campaignDir, CAMPAIGN_CHARTER_STAGE_FILE);
   const charterPath = path3.join(campaignDir, CAMPAIGN_CHARTER_FILE);
+  const unitsStagePath = path3.join(campaignDir, CAMPAIGN_UNITS_STAGE_FILE);
+  const unitsPath = path3.join(campaignDir, CAMPAIGN_UNITS_FILE);
+  const receiptsStagePath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_STAGE_FILE);
+  const receiptsPath = path3.join(campaignDir, CAMPAIGN_RECEIPTS_FILE);
+  const txStagePath = path3.join(campaignDir, CAMPAIGN_TX_STAGE_FILE);
   if (recoveredTrailingEvidenceLine !== void 0) {
     await assertRegularOrMissingTarget(
       sessionRoot,
@@ -21825,6 +23401,317 @@ async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalSta
     await rm3(charterStagePath, { force: true }).catch(() => {
     });
   }
+  if (promoteUnitsStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      unitsPath,
+      "Campaign work units"
+    );
+    await rename(unitsStagePath, unitsPath);
+  } else {
+    await rm3(unitsStagePath, { force: true }).catch(() => {
+    });
+  }
+  if (promoteReceiptsStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      receiptsPath,
+      "Campaign receipts"
+    );
+    await rename(receiptsStagePath, receiptsPath);
+  } else {
+    await rm3(receiptsStagePath, { force: true }).catch(() => {
+    });
+  }
+  await rm3(txStagePath, { force: true }).catch(() => {
+  });
+}
+function validateUnitsStateAgainstCampaignState(units, state2) {
+  if (state2.charter === null) {
+    return {
+      ok: false,
+      error: "Campaign work units cannot exist without a charter"
+    };
+  }
+  if (units.bounds.recoverLimit !== state2.charter.recoverLimit || units.bounds.reopenLimit !== state2.charter.reopenLimit) {
+    return {
+      ok: false,
+      error: "Campaign work units bounds do not match charter"
+    };
+  }
+  if (units.units.length !== state2.charter.queue.length) {
+    return {
+      ok: false,
+      error: "Campaign work units length does not match charter queue"
+    };
+  }
+  for (let i = 0; i < state2.charter.queue.length; i++) {
+    const qItem = state2.charter.queue[i];
+    const unit = units.units[i];
+    if (unit.id !== qItem.id || unit.skill !== qItem.skill || unit.reconCitation !== qItem.reconCitation) {
+      return {
+        ok: false,
+        error: `Campaign work unit at ${i} does not match charter queue`
+      };
+    }
+  }
+  const doneCount = units.units.filter(
+    (u) => u.state === WorkUnitStates.done
+  ).length;
+  if (doneCount !== state2.completed) {
+    return {
+      ok: false,
+      error: `Campaign work units done count (${doneCount}) does not match verified completed count (${state2.completed})`
+    };
+  }
+  return { ok: true };
+}
+function parseAndVerifyUnitsSnapshot(snap, expectedSha256, finalState) {
+  if (!snap.exists || snap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign work units file is missing or invalid"
+    };
+  }
+  let parsedJson;
+  try {
+    parsedJson = JSON.parse(snap.raw);
+  } catch {
+    return {
+      ok: false,
+      error: "Campaign work units failed verification: invalid JSON"
+    };
+  }
+  const parsedUnits = parseWorkUnitQueueState(parsedJson);
+  if (!parsedUnits) {
+    return {
+      ok: false,
+      error: "Campaign work units failed verification: invalid work unit queue state"
+    };
+  }
+  const actualSha = campaignSha256Hex(canonicalCampaignJson(parsedUnits));
+  if (actualSha !== expectedSha256) {
+    return {
+      ok: false,
+      error: "Campaign work units commitment mismatch"
+    };
+  }
+  const stateCheck = validateUnitsStateAgainstCampaignState(
+    parsedUnits,
+    finalState
+  );
+  if (!stateCheck.ok) {
+    return stateCheck;
+  }
+  return { ok: true, unitsState: parsedUnits };
+}
+function verifyReceiptsSnapshot(snap, expectedTraceReceipts) {
+  if (!snap.exists || snap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign receipts file is missing or invalid"
+    };
+  }
+  const parsed = parseVerifyReceiptLines(snap.raw);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      error: `Campaign receipts failed verification: ${parsed.error}`
+    };
+  }
+  if (parsed.lines.length !== expectedTraceReceipts.length) {
+    return {
+      ok: false,
+      error: `Campaign receipts count (${parsed.lines.length}) does not match verified trace (${expectedTraceReceipts.length})`
+    };
+  }
+  for (let i = 0; i < expectedTraceReceipts.length; i++) {
+    const r = parsed.lines[i];
+    const tr = expectedTraceReceipts[i];
+    const matchesBase = r.schema === tr.schema && r.unitId === tr.unitId && r.command === tr.command && r.outputSha256 === tr.outputSha256 && r.exitCode === tr.exitCode;
+    const matchesReplayed = r.status !== ReceiptStatuses.replayed || r.replayedExitCode === tr.exitCode && r.replayedOutputSha256 === tr.outputSha256;
+    if (!matchesBase || !matchesReplayed) {
+      return {
+        ok: false,
+        error: `Campaign receipt at ${i} does not match verified trace event`
+      };
+    }
+  }
+  return { ok: true, receipts: parsed.lines };
+}
+function verifyBoundUnitsAndReceipts(lines, evidenceLines, finalState, unitsSnap, receiptsSnap, unitsStageSnap, receiptsStageSnap) {
+  let latestTraceUnitsSha256;
+  for (const line of lines) {
+    const traceUnitsSha = getTraceEventUnitsSha256(line);
+    if (traceUnitsSha !== void 0) {
+      const evUnitsSha = evidenceLines?.[line.seq]?.unitsSha256;
+      if (evUnitsSha !== traceUnitsSha) {
+        return {
+          ok: false,
+          error: `Campaign work units commitment mismatch between trace and evidence at ${line.seq}`
+        };
+      }
+      latestTraceUnitsSha256 = traceUnitsSha;
+    }
+  }
+  if (evidenceLines) {
+    for (let i = 0; i < evidenceLines.length; i++) {
+      const evUnitsSha = evidenceLines[i].unitsSha256;
+      if (evUnitsSha !== void 0) {
+        const line = lines[i];
+        const traceUnitsSha = line ? getTraceEventUnitsSha256(line) : void 0;
+        if (traceUnitsSha !== evUnitsSha) {
+          return {
+            ok: false,
+            error: `Campaign work units commitment mismatch between evidence and trace at ${i}`
+          };
+        }
+      }
+    }
+  }
+  const latestUnitsSha256 = latestTraceUnitsSha256;
+  let unitsState = null;
+  let promoteUnitsStage = false;
+  if (latestUnitsSha256 !== void 0) {
+    if (!unitsSnap.exists) {
+      if (unitsStageSnap.exists && !unitsStageSnap.nonRegular) {
+        const staged = parseAndVerifyUnitsSnapshot(
+          unitsStageSnap,
+          latestUnitsSha256,
+          finalState
+        );
+        if (!staged.ok) {
+          return {
+            ok: false,
+            error: "Campaign work units missing after initialization"
+          };
+        }
+        unitsState = staged.unitsState;
+        promoteUnitsStage = true;
+      } else {
+        return {
+          ok: false,
+          error: "Campaign work units missing after initialization"
+        };
+      }
+    } else {
+      const primary = parseAndVerifyUnitsSnapshot(
+        unitsSnap,
+        latestUnitsSha256,
+        finalState
+      );
+      if (primary.ok) {
+        unitsState = primary.unitsState;
+      } else if (unitsStageSnap.exists && !unitsStageSnap.nonRegular) {
+        const staged = parseAndVerifyUnitsSnapshot(
+          unitsStageSnap,
+          latestUnitsSha256,
+          finalState
+        );
+        if (staged.ok) {
+          unitsState = staged.unitsState;
+          promoteUnitsStage = true;
+        } else {
+          return primary;
+        }
+      } else {
+        return primary;
+      }
+    }
+  } else if (unitsSnap.exists) {
+    return {
+      ok: false,
+      error: "Campaign work units exist without trace commitment"
+    };
+  }
+  const expectedTraceReceipts = [];
+  for (const line of lines) {
+    if (line.entry.accepted === true && line.event?.channel === "engine" && line.event.op === EngineOps.verify && line.event.receipt !== void 0) {
+      const parsedReceipt = parseVerifyReceipt(line.event.receipt);
+      if (!parsedReceipt) {
+        return {
+          ok: false,
+          error: `Malformed receipt in trace at ${line.seq}`
+        };
+      }
+      expectedTraceReceipts.push(parsedReceipt);
+    }
+  }
+  let receipts = [];
+  let promoteReceiptsStage = false;
+  if (expectedTraceReceipts.length === 0) {
+    if (receiptsSnap.exists) {
+      if (receiptsSnap.nonRegular) {
+        return {
+          ok: false,
+          error: "Campaign receipts must be a regular file"
+        };
+      }
+      const parsed = parseVerifyReceiptLines(receiptsSnap.raw);
+      if (!parsed.ok) {
+        return {
+          ok: false,
+          error: `Campaign receipts failed verification: ${parsed.error}`
+        };
+      }
+      if (parsed.lines.length > 0) {
+        return {
+          ok: false,
+          error: "Campaign receipts exist without verified trace events"
+        };
+      }
+    }
+  } else {
+    if (!receiptsSnap.exists) {
+      if (receiptsStageSnap.exists && !receiptsStageSnap.nonRegular) {
+        const staged = verifyReceiptsSnapshot(
+          receiptsStageSnap,
+          expectedTraceReceipts
+        );
+        if (!staged.ok) {
+          return {
+            ok: false,
+            error: "Campaign receipts missing after verification"
+          };
+        }
+        receipts = staged.receipts;
+        promoteReceiptsStage = true;
+      } else {
+        return {
+          ok: false,
+          error: "Campaign receipts missing after verification"
+        };
+      }
+    } else {
+      const primary = verifyReceiptsSnapshot(
+        receiptsSnap,
+        expectedTraceReceipts
+      );
+      if (primary.ok) {
+        receipts = primary.receipts;
+      } else if (receiptsStageSnap.exists && !receiptsStageSnap.nonRegular) {
+        const staged = verifyReceiptsSnapshot(
+          receiptsStageSnap,
+          expectedTraceReceipts
+        );
+        if (staged.ok) {
+          receipts = staged.receipts;
+          promoteReceiptsStage = true;
+        } else {
+          return primary;
+        }
+      } else {
+        return primary;
+      }
+    }
+  }
+  return {
+    ok: true,
+    unitsState,
+    receipts,
+    promoteUnitsStage,
+    promoteReceiptsStage
+  };
 }
 async function writeAtomicJsonArtifact(sessionRoot, campaignDir, targetPath, tmpPrefix, label, content) {
   await assertConfinedPath(sessionRoot, targetPath, label);
@@ -30430,7 +32317,7 @@ function inspectOperatorEnvironment(env = process.env) {
     detectedMultiplexerVars: Object.freeze(detectedVars)
   });
 }
-function isPlainObject2(v) {
+function isPlainObject5(v) {
   if (!v || typeof v !== "object" || Array.isArray(v)) return false;
   const proto = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
@@ -30502,7 +32389,7 @@ var AMENDMENT_KEYS = [
   "queue"
 ];
 function hasAmendmentFields(amendment) {
-  if (!isPlainObject2(amendment)) return false;
+  if (!isPlainObject5(amendment)) return false;
   return AMENDMENT_KEYS.some(
     (key) => Object.hasOwn(amendment, key) && amendment[key] !== void 0
   );
@@ -30527,7 +32414,7 @@ function parseBoundOrString(v) {
   return v;
 }
 function mergeOperatorAmendment(optionsAmendment, content) {
-  const base = isPlainObject2(optionsAmendment) ? { ...optionsAmendment } : {};
+  const base = isPlainObject5(optionsAmendment) ? { ...optionsAmendment } : {};
   const opFields = {};
   if (Object.hasOwn(content, "goal") && content.goal !== void 0) {
     if (typeof content.goal === "string") {
@@ -30579,18 +32466,18 @@ function mergeOperatorAmendment(optionsAmendment, content) {
   if (Object.hasOwn(content, "queue") && content.queue !== void 0) {
     opFields.queue = content.queue;
   }
-  if (Object.hasOwn(content, "authority") && content.authority !== void 0 && !isPlainObject2(content.authority)) {
+  if (Object.hasOwn(content, "authority") && content.authority !== void 0 && !isPlainObject5(content.authority)) {
     opFields.authority = content.authority;
   } else {
-    const baseAuth = isPlainObject2(base.authority) ? base.authority : {};
-    const contentAuth = isPlainObject2(content.authority) ? content.authority : {};
+    const baseAuth = isPlainObject5(base.authority) ? base.authority : {};
+    const contentAuth = isPlainObject5(content.authority) ? content.authority : {};
     const opAuto = parseStringListOrArray(
       content.automatic !== void 0 ? content.automatic : contentAuth.automatic
     );
     const opHumanOnly = parseStringListOrArray(
       content.humanOnly !== void 0 ? content.humanOnly : contentAuth.humanOnly
     );
-    if (opAuto !== void 0 || opHumanOnly !== void 0 || isPlainObject2(base.authority) || isPlainObject2(content.authority)) {
+    if (opAuto !== void 0 || opHumanOnly !== void 0 || isPlainObject5(base.authority) || isPlainObject5(content.authority)) {
       opFields.authority = {
         ...baseAuth,
         ...contentAuth,
@@ -30636,7 +32523,7 @@ function hasOperatorAmendmentOverrides(content) {
     return true;
   }
   if (Object.hasOwn(content, "authority") && content.authority !== void 0) {
-    if (!isPlainObject2(content.authority)) {
+    if (!isPlainObject5(content.authority)) {
       return true;
     }
     if (parseStringListOrArray(content.authority.automatic) !== void 0 || parseStringListOrArray(content.authority.humanOnly) !== void 0) {
@@ -30868,7 +32755,7 @@ function applyAmendment(currentStrategy, currentState, reconRecord, amendment) {
   }
   let nextAuthority = currentStrategy.charterTemplate.authority;
   if (amendment.authority !== void 0) {
-    if (!isPlainObject2(amendment.authority)) {
+    if (!isPlainObject5(amendment.authority)) {
       return {
         ok: false,
         code: "invalid-amendment",
@@ -31180,7 +33067,7 @@ async function runOperatorDecisionFlow(session, mode, options) {
       `Unsupported elicitation action: ${String(response.action)}.`
     );
   }
-  const content = isPlainObject2(response.content) ? response.content : {};
+  const content = isPlainObject5(response.content) ? response.content : {};
   const rawDigest = content.digest ?? content.amendmentDigest ?? content.charterDigest ?? content.shortDigest;
   const typedDigest = typeof rawDigest === "string" ? rawDigest.trim() : "";
   const refuseInvalidDigest = async (message) => {
@@ -31459,7 +33346,7 @@ async function runOperatorDecisionFlow(session, mode, options) {
           `Unsupported elicitation action: ${String(confirmResponse.action)}.`
         );
       }
-      const confirmContent = isPlainObject2(confirmResponse.content) ? confirmResponse.content : {};
+      const confirmContent = isPlainObject5(confirmResponse.content) ? confirmResponse.content : {};
       const confirmChoice = confirmContent.decision ?? confirmContent.action ?? confirmContent.choice ?? OperatorDecisionChoices.amend;
       if (confirmChoice === OperatorDecisionChoices.decline) {
         const operatorEntry2 = immutableSnapshot({
@@ -31614,6 +33501,406 @@ async function executeOperatorDecide(session, options) {
 }
 async function executeOperatorAmend(session, options) {
   return runOperatorDecisionFlow(session, OperatorVerbs.amend, options);
+}
+
+// packages/skill-summon/src/campaign/ops/checkpoint.ts
+var operatorAdapter = createCampaignOperatorAdapter();
+function isPlainObject6(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function getLatestAcceptedOperator(trace2) {
+  return [...trace2].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
+}
+async function loadOrInitializeWorkUnitQueue(store) {
+  const existing = await store.loadUnitsState();
+  if (existing) {
+    return { queue: existing, initialized: false };
+  }
+  const charter2 = store.state.charter;
+  if (!charter2) {
+    throw new Error("Campaign has no charter.");
+  }
+  const charterStrategy = await store.loadCharterStrategy();
+  const arsenal = charterStrategy?.charterTemplate.arsenal;
+  const itemPhases = {};
+  if (arsenal) {
+    for (let i = 0; i < charter2.queue.length; i++) {
+      const qItem = charter2.queue[i];
+      const matched = (arsenal[i]?.skillId === qItem.skill ? arsenal[i] : void 0) ?? arsenal.find((a) => a.skillId === qItem.skill);
+      if (matched?.phase) {
+        itemPhases[qItem.id] = matched.phase;
+      }
+    }
+  }
+  const phases = charterStrategy?.charterTemplate.phases;
+  const queue2 = buildWorkUnitQueue(charter2, {
+    ...phases && phases.length > 0 ? { phases } : {},
+    ...Object.keys(itemPhases).length > 0 ? { itemPhases } : {},
+    decisionsApproved: store.state.approved
+  });
+  return { queue: queue2, initialized: true };
+}
+async function executeCheckpoint(session, rawArgs) {
+  const store = await CampaignStore.load(session.root);
+  const status = toControllerStatus(store.state, store.trace.at(-1));
+  const latestAcceptedOperator = getLatestAcceptedOperator(store.trace);
+  const digest = buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperator
+  );
+  if (store.corrupted) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: OperatorVerbs.checkpoint,
+      checkpointWritten: false,
+      state: store.state,
+      status,
+      digest,
+      error: {
+        code: "campaign-corrupted",
+        message: store.error ?? "Campaign trace failed verification (FAILED_SAFE).",
+        retryable: false
+      }
+    });
+  }
+  const hasBatches = isPlainObject6(rawArgs) && rawArgs.batches !== void 0;
+  const rawBatches = hasBatches ? rawArgs.batches : void 0;
+  if (!store.state.approved && store.state.charter !== null && hasBatches) {
+    let regroupedQueue;
+    try {
+      const { queue: queue2 } = await loadOrInitializeWorkUnitQueue(store);
+      const regrouped = regroupWorkUnits(queue2, rawBatches, false);
+      regroupedQueue = regrouped.queue;
+    } catch (error2) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: OperatorVerbs.checkpoint,
+        checkpointWritten: false,
+        state: store.state,
+        status,
+        digest,
+        error: {
+          code: "invalid-batches",
+          message: error2 instanceof Error ? error2.message : "Invalid batches for pre-decisions regrouping.",
+          retryable: false
+        }
+      });
+    }
+    const unitsSha2562 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
+    const appended2 = await store.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256: unitsSha2562 },
+      { unitsState: regroupedQueue }
+    );
+    const nextDigest2 = buildCampaignDigest(
+      appended2.state,
+      appended2.status,
+      latestAcceptedOperator
+    );
+    return immutableSnapshot({
+      ok: true,
+      refused: false,
+      op: OperatorVerbs.checkpoint,
+      checkpointWritten: false,
+      queue: regroupedQueue,
+      state: appended2.state,
+      status: appended2.status,
+      digest: nextDigest2
+    });
+  }
+  if (!store.state.approved || store.state.state !== CampaignStates.executing && store.state.state !== CampaignStates.convergence) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: OperatorVerbs.checkpoint,
+      checkpointWritten: false,
+      state: store.state,
+      status,
+      digest,
+      error: {
+        code: "campaign-not-executing",
+        message: `Cannot checkpoint in state ${store.state.state} (approved=${store.state.approved}).`,
+        retryable: false
+      }
+    });
+  }
+  let updatedQueue;
+  if (hasBatches) {
+    try {
+      const { queue: queue2 } = await loadOrInitializeWorkUnitQueue(store);
+      const regrouped = regroupWorkUnits(queue2, rawBatches, true);
+      updatedQueue = regrouped.queue;
+    } catch (error2) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: OperatorVerbs.checkpoint,
+        checkpointWritten: false,
+        state: store.state,
+        status,
+        digest,
+        error: {
+          code: "invalid-batches",
+          message: error2 instanceof Error ? error2.message : "Invalid batches for checkpoint regrouping.",
+          retryable: false
+        }
+      });
+    }
+  }
+  const unitsSha256 = updatedQueue ? campaignSha256Hex(canonicalCampaignJson(updatedQueue)) : void 0;
+  const event2 = createCampaignOperatorEvent(operatorAdapter, {
+    channel: "operator",
+    op: OperatorVerbs.checkpoint,
+    ...unitsSha256 !== void 0 ? { unitsSha256 } : {}
+  });
+  const appended = await store.append(
+    event2,
+    updatedQueue ? { unitsState: updatedQueue } : void 0
+  );
+  const nextDigest = buildCampaignDigest(
+    appended.state,
+    appended.status,
+    latestAcceptedOperator
+  );
+  return immutableSnapshot({
+    ok: true,
+    refused: false,
+    op: OperatorVerbs.checkpoint,
+    checkpointWritten: true,
+    ...updatedQueue ? { queue: updatedQueue } : {},
+    entry: appended.entry,
+    state: appended.state,
+    status: appended.status,
+    digest: nextDigest
+  });
+}
+
+// packages/skill-summon/src/campaign/ops/next.ts
+function isPlainObject7(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function getLatestAcceptedOperator2(trace2) {
+  return [...trace2].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
+}
+async function executeNext(session, rawArgs) {
+  const store = await CampaignStore.load(session.root);
+  const status = toControllerStatus(store.state, store.trace.at(-1));
+  const latestAcceptedOperator = getLatestAcceptedOperator2(store.trace);
+  const digest = buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperator
+  );
+  if (store.corrupted) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.next,
+      unit: null,
+      checkpointWritten: false,
+      state: store.state,
+      status,
+      digest,
+      error: {
+        code: "campaign-corrupted",
+        message: store.error ?? "Campaign trace failed verification (FAILED_SAFE).",
+        retryable: false
+      }
+    });
+  }
+  const hasBatches = isPlainObject7(rawArgs) && rawArgs.batches !== void 0;
+  const rawBatches = hasBatches ? rawArgs.batches : void 0;
+  if (!store.state.approved && store.state.charter !== null && hasBatches) {
+    let regroupedQueue;
+    try {
+      const { queue: queue3 } = await loadOrInitializeWorkUnitQueue(store);
+      const regrouped = regroupWorkUnits(queue3, rawBatches, false);
+      regroupedQueue = regrouped.queue;
+    } catch (error2) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.next,
+        unit: null,
+        checkpointWritten: false,
+        state: store.state,
+        status,
+        digest,
+        error: {
+          code: "invalid-batches",
+          message: error2 instanceof Error ? error2.message : "Invalid batches for pre-decisions regrouping.",
+          retryable: false
+        }
+      });
+    }
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(regroupedQueue));
+    const appended = await store.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { unitsState: regroupedQueue }
+    );
+    const nextDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator
+    );
+    const counts = selectNextWorkUnit(regroupedQueue).counts;
+    return immutableSnapshot({
+      ok: true,
+      refused: false,
+      op: AgentOps.next,
+      unit: null,
+      queue: regroupedQueue,
+      queueCounts: counts,
+      checkpointWritten: false,
+      state: appended.state,
+      status: appended.status,
+      digest: nextDigest
+    });
+  }
+  if (store.state.state !== CampaignStates.executing || !store.state.approved || store.state.charter === null) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.next,
+      unit: null,
+      checkpointWritten: false,
+      state: store.state,
+      status,
+      digest,
+      error: {
+        code: "campaign-not-executing",
+        message: `Cannot select next work unit in state ${store.state.state} (approved=${store.state.approved}).`,
+        retryable: false
+      }
+    });
+  }
+  let activeStore = store;
+  let currentState = store.state;
+  let currentStatus = status;
+  let currentDigest = digest;
+  let checkpointWritten = false;
+  let checkpointEntry;
+  if (hasBatches) {
+    const checkpointResult = await executeCheckpoint(session, {
+      batches: rawBatches
+    });
+    if (!checkpointResult.ok) {
+      return immutableSnapshot({
+        ok: false,
+        refused: true,
+        op: AgentOps.next,
+        unit: null,
+        checkpointWritten: false,
+        state: checkpointResult.state,
+        status: checkpointResult.status,
+        digest: checkpointResult.digest,
+        error: checkpointResult.error
+      });
+    }
+    checkpointWritten = checkpointResult.checkpointWritten;
+    checkpointEntry = checkpointResult.entry;
+    currentState = checkpointResult.state;
+    currentStatus = checkpointResult.status;
+    currentDigest = checkpointResult.digest;
+    activeStore = await CampaignStore.load(session.root);
+  }
+  let queue2;
+  let initializedNow = false;
+  try {
+    const loaded = await loadOrInitializeWorkUnitQueue(activeStore);
+    queue2 = loaded.queue;
+    initializedNow = loaded.initialized;
+  } catch (error2) {
+    return immutableSnapshot({
+      ok: false,
+      refused: true,
+      op: AgentOps.next,
+      unit: null,
+      checkpointWritten: false,
+      state: currentState,
+      status: currentStatus,
+      digest: currentDigest,
+      error: {
+        code: "campaign-corrupted",
+        message: error2 instanceof Error ? error2.message : "Failed to load or initialize work unit queue.",
+        retryable: false
+      }
+    });
+  }
+  const selection = selectNextWorkUnit(queue2);
+  if (selection.next !== null) {
+    const activatedUnit = activateWorkUnit(selection.next);
+    const updatedQueue = updateWorkUnitInQueue(queue2, activatedUnit);
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(updatedQueue));
+    const appended = await activeStore.append(
+      {
+        channel: "agent",
+        op: AgentOps.next,
+        workUnit: activatedUnit.id,
+        unitsSha256
+      },
+      { unitsState: updatedQueue }
+    );
+    const nextDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator
+    );
+    const updatedCounts = selectNextWorkUnit(updatedQueue).counts;
+    return immutableSnapshot({
+      ok: true,
+      refused: false,
+      op: AgentOps.next,
+      unit: activatedUnit,
+      queue: updatedQueue,
+      queueCounts: updatedCounts,
+      checkpointWritten,
+      ...checkpointEntry ? { checkpointEntry } : {},
+      state: appended.state,
+      status: appended.status,
+      digest: nextDigest
+    });
+  }
+  let finalState = currentState;
+  let finalStatus = currentStatus;
+  let finalDigest = currentDigest;
+  if (initializedNow) {
+    const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(queue2));
+    const appended = await activeStore.append(
+      { channel: "agent", op: AgentOps.next, unitsSha256 },
+      { unitsState: queue2 }
+    );
+    finalState = appended.state;
+    finalStatus = appended.status;
+    finalDigest = buildCampaignDigest(
+      appended.state,
+      appended.status,
+      latestAcceptedOperator
+    );
+  }
+  return immutableSnapshot({
+    ok: true,
+    refused: false,
+    op: AgentOps.next,
+    unit: null,
+    queue: queue2,
+    queueCounts: selection.counts,
+    checkpointWritten,
+    ...checkpointEntry ? { checkpointEntry } : {},
+    state: finalState,
+    status: finalStatus,
+    digest: finalDigest
+  });
 }
 
 // packages/skill-summon/src/campaign/ops/open.ts
@@ -31833,7 +34120,7 @@ var CHARTER_AUTHORITY_SPLIT_TEMPLATE = Object.freeze({
   ])
 });
 var CARD_REF_RE = /^recon:([^:]+):gap:(\d+):card:(.+)$/;
-function isPlainObject3(v) {
+function isPlainObject8(v) {
   if (!v || typeof v !== "object" || Array.isArray(v)) return false;
   const proto = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
@@ -31916,7 +34203,7 @@ function normalizeArsenalItem(raw, index) {
     }
     return { ok: true, item: { cardRef: trimmed } };
   }
-  if (!isPlainObject3(raw)) {
+  if (!isPlainObject8(raw)) {
     return {
       ok: false,
       code: "invalid-arsenal-entry",
@@ -31966,14 +34253,14 @@ function normalizeArsenalItem(raw, index) {
   };
 }
 function parseCharterProposalInput(rawArgs) {
-  if (!isPlainObject3(rawArgs)) {
+  if (!isPlainObject8(rawArgs)) {
     return {
       ok: false,
       code: "invalid-proposal-input",
       message: "Proposal input must be a plain object."
     };
   }
-  const nestedCharter = isPlainObject3(rawArgs.charter) ? rawArgs.charter : void 0;
+  const nestedCharter = isPlainObject8(rawArgs.charter) ? rawArgs.charter : void 0;
   const source = nestedCharter ? { ...nestedCharter, ...rawArgs } : rawArgs;
   if (Object.hasOwn(rawArgs, "reconId") && (rawArgs.reconId === null || rawArgs.reconId === "")) {
     return {
@@ -32106,7 +34393,7 @@ function parseCharterProposalInput(rawArgs) {
   }
   let authority2;
   if (source.authority !== void 0) {
-    if (!isPlainObject3(source.authority)) {
+    if (!isPlainObject8(source.authority)) {
       return {
         ok: false,
         code: "invalid-proposal-input",
@@ -34041,7 +36328,7 @@ function dedupeStrings(values) {
   return out;
 }
 function parseReconInput(rawInput) {
-  if (!isPlainObject4(rawInput)) {
+  if (!isPlainObject9(rawInput)) {
     return { ok: false, error: "Recon input must be a plain object." };
   }
   const rawGaps = rawInput.gaps;
@@ -34337,7 +36624,7 @@ function collectReconCitations(reconId, gaps) {
   }
   return citations;
 }
-function isPlainObject4(value) {
+function isPlainObject9(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
@@ -34345,13 +36632,409 @@ function isPlainObject4(value) {
   return proto === Object.prototype || proto === null;
 }
 
+// packages/skill-summon/src/campaign/ops/report.ts
+var engineAdapter = createCampaignEngineAdapter();
+var FORBIDDEN_RETRIEVAL_KEYS = /* @__PURE__ */ new Set([
+  "score",
+  "margin",
+  "noMatch",
+  "matchKind",
+  "retrieval",
+  "ranking",
+  "classified",
+  "nameMatchesQuery",
+  "filtered",
+  "cards",
+  "previewed"
+]);
+function isPlainObject10(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+function findForbiddenRetrievalKey(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findForbiddenRetrievalKey(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  for (const [key, nested] of Object.entries(value)) {
+    if (FORBIDDEN_RETRIEVAL_KEYS.has(key)) {
+      return key;
+    }
+    const found = findForbiddenRetrievalKey(nested);
+    if (found) return found;
+  }
+  return null;
+}
+function getLatestAcceptedOperator3(trace2) {
+  return [...trace2].reverse().find((entry) => entry.channel === "operator" && entry.accepted);
+}
+function refuseReport(state2, status, digest, code, message) {
+  return immutableSnapshot({
+    ok: false,
+    refused: true,
+    op: AgentOps.report,
+    state: state2,
+    status,
+    digest,
+    error: {
+      code,
+      message,
+      retryable: false
+    }
+  });
+}
+async function executeReport(session, rawArgs) {
+  const store = await CampaignStore.load(session.root);
+  const status = toControllerStatus(store.state, store.trace.at(-1));
+  const latestAcceptedOperator = getLatestAcceptedOperator3(store.trace);
+  const digest = buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperator
+  );
+  if (store.corrupted) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "campaign-corrupted",
+      store.error ?? "Campaign trace failed verification (FAILED_SAFE)."
+    );
+  }
+  const forbiddenKey = findForbiddenRetrievalKey(rawArgs);
+  if (forbiddenKey !== null) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "retrieval-signal-rejected",
+      `Refusing report: retrieval-derived signal "${forbiddenKey}" cannot drive campaign steering or work-unit state.`
+    );
+  }
+  if (store.state.state !== CampaignStates.executing || !store.state.approved || store.state.charter === null) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "campaign-not-executing",
+      `Cannot report work unit in state ${store.state.state} (approved=${store.state.approved}).`
+    );
+  }
+  if (!isPlainObject10(rawArgs)) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "invalid-report-args",
+      "Report arguments must be a plain object."
+    );
+  }
+  const unitId = typeof rawArgs.unitId === "string" && rawArgs.unitId.trim().length > 0 ? rawArgs.unitId.trim() : void 0;
+  if (rawArgs.outcome === UnitReportOutcomes.retrievalRefusal || rawArgs.retrievalRefusal === true) {
+    let updatedUnit;
+    let currentState = store.state;
+    let currentStatus = status;
+    let currentDigest = digest;
+    if (unitId) {
+      const queue3 = await store.loadUnitsState();
+      if (queue3) {
+        const target = queue3.units.find((u) => u.id === unitId);
+        if (target) {
+          const refused = recordRetrievalRefusal(target);
+          updatedUnit = refused.unit;
+          const updatedQueue2 = updateWorkUnitInQueue(queue3, refused.unit);
+          const unitsSha2562 = campaignSha256Hex(
+            canonicalCampaignJson(updatedQueue2)
+          );
+          const appended2 = await store.append(
+            {
+              channel: "agent",
+              op: AgentOps.report,
+              workUnit: unitId,
+              unitsSha256: unitsSha2562
+            },
+            { unitsState: updatedQueue2 }
+          );
+          currentState = appended2.state;
+          currentStatus = appended2.status;
+          currentDigest = buildCampaignDigest(
+            appended2.state,
+            appended2.status,
+            latestAcceptedOperator
+          );
+        }
+      }
+    }
+    return immutableSnapshot({
+      ok: true,
+      refused: false,
+      op: AgentOps.report,
+      outcome: UnitReportOutcomes.retrievalRefusal,
+      decision: CampaignDecisions.hold,
+      ...updatedUnit ? { unit: updatedUnit } : {},
+      steering: currentState.steering,
+      state: currentState,
+      status: currentStatus,
+      digest: currentDigest
+    });
+  }
+  let outcome;
+  if (typeof rawArgs.outcome === "string") {
+    outcome = rawArgs.outcome;
+  } else if (typeof rawArgs.passed === "boolean") {
+    outcome = rawArgs.passed ? UnitReportOutcomes.pass : UnitReportOutcomes.fail;
+  }
+  if (!outcome) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "invalid-report-outcome",
+      "Report requires outcome or boolean passed."
+    );
+  }
+  if (!unitId) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "missing-unit-id",
+      "Report requires a non-empty unitId."
+    );
+  }
+  const queue2 = await store.loadUnitsState();
+  if (!queue2) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "work-unit-not-found",
+      `Work unit "${unitId}" not found: units.json has not been initialized.`
+    );
+  }
+  const unit = queue2.units.find((u) => u.id === unitId);
+  if (!unit) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "work-unit-not-found",
+      `Work unit "${unitId}" not found in queue.`
+    );
+  }
+  if (outcome === UnitReportOutcomes.pass || outcome === UnitReportOutcomes.fail) {
+    if (unit.state !== WorkUnitStates.active && unit.state !== WorkUnitStates.verifying) {
+      return refuseReport(
+        store.state,
+        status,
+        digest,
+        "invalid-work-unit-state",
+        `Cannot report verification for work unit "${unitId}" in state ${unit.state}.`
+      );
+    }
+    const command = typeof rawArgs.command === "string" ? rawArgs.command.trim() : "";
+    if (!command) {
+      return refuseReport(
+        store.state,
+        status,
+        digest,
+        "invalid-verify-command",
+        "Verification report requires a non-empty command string."
+      );
+    }
+    let exitCode;
+    if (outcome === UnitReportOutcomes.pass) {
+      if (rawArgs.exitCode !== void 0 && rawArgs.exitCode !== 0) {
+        return refuseReport(
+          store.state,
+          status,
+          digest,
+          "invalid-exit-code",
+          "Passing verification report requires exitCode === 0."
+        );
+      }
+      exitCode = 0;
+    } else {
+      exitCode = rawArgs.exitCode === void 0 ? 1 : Number(rawArgs.exitCode);
+      if (!Number.isSafeInteger(exitCode) || exitCode < 1) {
+        return refuseReport(
+          store.state,
+          status,
+          digest,
+          "invalid-exit-code",
+          "Failing verification report requires a positive integer exitCode."
+        );
+      }
+    }
+    let receipt;
+    try {
+      receipt = createAttestedReceipt({
+        unitId,
+        command,
+        ...typeof rawArgs.output === "string" ? { output: rawArgs.output } : {},
+        ...typeof rawArgs.outputSha256 === "string" ? { outputSha256: rawArgs.outputSha256 } : {},
+        exitCode
+      });
+    } catch (error2) {
+      return refuseReport(
+        store.state,
+        status,
+        digest,
+        "invalid-receipt",
+        error2 instanceof Error ? error2.message : "Invalid verification receipt."
+      );
+    }
+    const goalContract = await store.loadGoalContract();
+    const charterCommands = store.state.charter.acceptanceCommands ?? goalContract?.acceptanceCommands ?? [];
+    if (outcome === UnitReportOutcomes.pass && !canReceiptCloseUnit(receipt, unitId, charterCommands)) {
+      return refuseReport(
+        store.state,
+        status,
+        digest,
+        "unlisted-verify-command",
+        `Refusing to close work unit "${unitId}": command ${JSON.stringify(command)} is not in the charter's acceptanceCommands.`
+      );
+    }
+    const unitResult = reportUnitVerification(unit, {
+      outcome,
+      bounds: queue2.bounds,
+      charterCommands,
+      receipt
+    });
+    const clause = store.state.charter.clauses.includes("verify-command") ? "verify-command" : store.state.charter.clauses[0];
+    const updatedQueue2 = updateWorkUnitInQueue(queue2, unitResult.unit);
+    const convergenceIncident = outcome === UnitReportOutcomes.fail && unitResult.decision === CampaignDecisions.convergence ? {
+      schema: CAMPAIGN_SCHEMA_IDS.incident,
+      id: `convergence-${unitId}-r${store.state.charterRevision}-s${store.trace.length}`,
+      description: `Work unit "${unitId}" exhausted recover (${unitResult.unit.recoverCount}/${queue2.bounds.recoverLimit}) and reopen (${unitResult.unit.reopenCount}/${queue2.bounds.reopenLimit}) bounds.`,
+      skills: [unit.skill],
+      requiresPerson: true
+    } : void 0;
+    const unitsSha2562 = campaignSha256Hex(canonicalCampaignJson(updatedQueue2));
+    const event2 = createCampaignEngineEvent(engineAdapter, {
+      channel: "engine",
+      op: EngineOps.verify,
+      passed: outcome === UnitReportOutcomes.pass,
+      clause,
+      workUnit: unitId,
+      receipt,
+      ...outcome === UnitReportOutcomes.pass ? { closesUnit: true } : {},
+      ...convergenceIncident !== void 0 ? { convergenceIncident } : {},
+      unitsSha256: unitsSha2562
+    });
+    const appended2 = await store.append(event2, {
+      unitsState: updatedQueue2,
+      receipt
+    });
+    const nextDigest2 = buildCampaignDigest(
+      appended2.state,
+      appended2.status,
+      latestAcceptedOperator
+    );
+    return immutableSnapshot({
+      ok: true,
+      refused: false,
+      op: AgentOps.report,
+      outcome,
+      decision: unitResult.decision,
+      unit: unitResult.unit,
+      receipt,
+      steering: appended2.state.steering,
+      state: appended2.state,
+      entry: appended2.entry,
+      status: appended2.status,
+      digest: nextDigest2
+    });
+  }
+  let nextUnit;
+  try {
+    if (outcome === UnitReportOutcomes.block) {
+      const reason = typeof rawArgs.reason === "string" ? rawArgs.reason : "";
+      nextUnit = blockWorkUnit(unit, reason);
+    } else if (outcome === UnitReportOutcomes.unblock) {
+      nextUnit = unblockWorkUnit(unit);
+    } else if (outcome === UnitReportOutcomes.needsHuman) {
+      const reason = typeof rawArgs.reason === "string" ? rawArgs.reason : "";
+      nextUnit = markWorkUnitNeedsHuman(unit, reason);
+    } else if (outcome === UnitReportOutcomes.resume) {
+      if (unit.state === WorkUnitStates.recovering || unit.state === WorkUnitStates.reopened) {
+        nextUnit = activateWorkUnit(unit);
+      } else if (unit.state === WorkUnitStates.needsHuman) {
+        nextUnit = resumeWorkUnitFromHuman(unit);
+      } else {
+        return refuseReport(
+          store.state,
+          status,
+          digest,
+          "invalid-work-unit-state",
+          `Cannot resume work unit "${unitId}" from state ${unit.state}.`
+        );
+      }
+    } else {
+      return refuseReport(
+        store.state,
+        status,
+        digest,
+        "invalid-report-outcome",
+        `Unsupported report outcome: ${String(outcome)}.`
+      );
+    }
+  } catch (error2) {
+    return refuseReport(
+      store.state,
+      status,
+      digest,
+      "invalid-work-unit-transition",
+      error2 instanceof Error ? error2.message : "Invalid work unit state transition."
+    );
+  }
+  const updatedQueue = updateWorkUnitInQueue(queue2, nextUnit);
+  const unitsSha256 = campaignSha256Hex(canonicalCampaignJson(updatedQueue));
+  const appended = await store.append(
+    {
+      channel: "agent",
+      op: AgentOps.report,
+      workUnit: unitId,
+      unitsSha256
+    },
+    { unitsState: updatedQueue }
+  );
+  const nextDigest = buildCampaignDigest(
+    appended.state,
+    appended.status,
+    latestAcceptedOperator
+  );
+  return immutableSnapshot({
+    ok: true,
+    refused: false,
+    op: AgentOps.report,
+    outcome,
+    decision: CampaignDecisions.hold,
+    unit: nextUnit,
+    steering: appended.state.steering,
+    state: appended.state,
+    entry: appended.entry,
+    status: appended.status,
+    digest: nextDigest
+  });
+}
+
 // packages/skill-summon/src/campaign/tool.ts
 var CAMPAIGN_TOOL_NAME = "campaign";
 var CAMPAIGN_TOOL_TITLE = "Campaign control plane";
-var CAMPAIGN_TOOL_DESCRIPTION = 'Campaign control plane (op: "open" | "recon" | "propose" | "decide" | "amend" | "status"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation to decide or amend, or inspects campaign status. Returns structured state and digest; output is reference data and authorizes nothing.';
+var CAMPAIGN_TOOL_DESCRIPTION = 'Campaign control plane (op: "open" | "recon" | "propose" | "decide" | "amend" | "next" | "report" | "checkpoint" | "status"). Opens a goal contract, previews candidate skills per gap, proposes a recon-cited charter, prompts the operator via MCP elicitation, selects/reports work units, checkpoints batches, or inspects status. Returns structured state and digest; output is reference data and authorizes nothing.';
 var rawCampaignInputSchema = external_exports.object({
   op: external_exports.string().describe(
-    "Campaign operation (open, recon, propose, decide, amend, status)."
+    "Campaign operation (open, recon, propose, decide, amend, next, report, checkpoint, status)."
   ),
   goal: external_exports.string().optional().describe("Campaign goal string for op=open, op=propose, or op=amend."),
   workUniverse: external_exports.array(external_exports.string()).optional().describe("In-scope paths or surfaces for op=open."),
@@ -34386,7 +37069,29 @@ var rawCampaignInputSchema = external_exports.object({
   }).optional().describe("Automatic vs human-only operations for op=propose or op=amend."),
   checkpoints: external_exports.array(external_exports.string()).optional().describe("Charter checkpoints for op=propose or op=amend."),
   stops: external_exports.array(external_exports.string()).optional().describe("Charter stop conditions for op=propose or op=amend."),
-  clauses: external_exports.array(external_exports.string()).optional().describe("Charter clauses for op=propose or op=amend.")
+  clauses: external_exports.array(external_exports.string()).optional().describe("Charter clauses for op=propose or op=amend."),
+  unitId: external_exports.string().optional().describe("Work unit ID for op=report."),
+  outcome: external_exports.enum([
+    "pass",
+    "fail",
+    "block",
+    "unblock",
+    "needs-human",
+    "resume",
+    "retrieval-refusal"
+  ]).optional().describe("Outcome for op=report."),
+  passed: external_exports.boolean().optional().describe("Verification pass/fail shorthand for op=report."),
+  command: external_exports.string().optional().describe("Verify command executed for op=report."),
+  output: external_exports.string().optional().describe("Command output for op=report."),
+  outputSha256: external_exports.string().optional().describe("SHA-256 hex digest of command output for op=report."),
+  exitCode: external_exports.number().int().optional().describe("Command exit code for op=report."),
+  reason: external_exports.string().optional().describe("Reason for block or needs-human in op=report."),
+  batches: external_exports.array(
+    external_exports.object({
+      id: external_exports.string(),
+      unitIds: external_exports.array(external_exports.string())
+    })
+  ).optional().describe("Work unit batches for op=next or op=checkpoint.")
 }).passthrough();
 var passthroughCampaignParse = (input) => ({
   success: true,
@@ -34397,7 +37102,7 @@ var campaignInputSchema = Object.assign(rawCampaignInputSchema, {
   safeParseAsync: async (input) => passthroughCampaignParse(input)
 });
 async function executeCampaignTool(context, rawArgs) {
-  const op = isPlainObject5(rawArgs) && typeof rawArgs.op === "string" ? rawArgs.op.trim() : "";
+  const op = isPlainObject11(rawArgs) && typeof rawArgs.op === "string" ? rawArgs.op.trim() : "";
   let sessionRoot;
   try {
     if (op === AgentOps.recon && context.zeroCut === "all") {
@@ -34468,12 +37173,30 @@ async function executeCampaignTool(context, rawArgs) {
       const session2 = await context.getSession();
       sessionRoot = session2.root;
       const elicit = context.elicit ?? (async () => ({ action: ElicitationActions.cancel }));
-      const amendment = isPlainObject5(rawArgs) ? rawArgs : void 0;
+      const amendment = isPlainObject11(rawArgs) ? rawArgs : void 0;
       const result = await executeOperatorAmend(session2, {
         elicit,
         env: context.env,
         amendment
       });
+      return toCampaignCallToolResult(result);
+    }
+    if (op === AgentOps.next) {
+      const session2 = await context.getSession();
+      sessionRoot = session2.root;
+      const result = await executeNext(session2, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+    if (op === AgentOps.report) {
+      const session2 = await context.getSession();
+      sessionRoot = session2.root;
+      const result = await executeReport(session2, rawArgs);
+      return toCampaignCallToolResult(result);
+    }
+    if (op === OperatorVerbs.checkpoint) {
+      const session2 = await context.getSession();
+      sessionRoot = session2.root;
+      const result = await executeCheckpoint(session2, rawArgs);
       return toCampaignCallToolResult(result);
     }
     const session = await context.getSession();
@@ -34488,7 +37211,7 @@ async function executeCampaignTool(context, rawArgs) {
       digest: statusResult.digest,
       error: {
         code: "unknown-op",
-        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, status.`,
+        message: `Unsupported or unknown campaign op: ${JSON.stringify(op)}. Supported ops: open, recon, propose, decide, amend, next, report, checkpoint, status.`,
         retryable: false
       }
     };
@@ -34568,7 +37291,7 @@ function toCampaignCallToolResult(result) {
     structuredContent: { ...result }
   };
 }
-function isPlainObject5(value) {
+function isPlainObject11(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
@@ -35538,7 +38261,7 @@ var Protocol = class {
     };
   }
 };
-function isPlainObject6(value) {
+function isPlainObject12(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 function mergeCapabilities(base, additional) {
@@ -35549,7 +38272,7 @@ function mergeCapabilities(base, additional) {
     if (addValue === void 0)
       continue;
     const baseValue = result[k];
-    if (isPlainObject6(baseValue) && isPlainObject6(addValue)) {
+    if (isPlainObject12(baseValue) && isPlainObject12(addValue)) {
       result[k] = { ...baseValue, ...addValue };
     } else {
       result[k] = addValue;
