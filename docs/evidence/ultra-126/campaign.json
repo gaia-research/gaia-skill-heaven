@@ -181,7 +181,7 @@
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/259",
       "head": "ec17b57",
       "terra": "prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.",
-      "status": "prep done; render half waits for U2; merge after U2",
+      "status": "integrated (fb58864; PR #259; Terra PASS on 7da7e22 over the whole U8 diff)",
       "tests": "1844 passed + 1 skipped; typecheck clean (at 4db4faf/ec17b57)"
     },
     {
@@ -718,6 +718,25 @@
       "terra": "PASS (reviews/U2-a97b762.md)",
       "outcome": "U3 dispatched; U8 render half unblocked",
       "risk": "none new"
+    },
+    {
+      "id": "D-023",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U8",
+      "problem": "U8 lane reported READY FOR REVIEW at 6de2bc7 (PR #259), prep and render halves.",
+      "options": [
+        "Accept and merge into integration",
+        "Send back"
+      ],
+      "selected": "Accepted. Terra PASS on 7da7e22 after one CHANGES REQUIRED round (U+2028/U+2029 escaping); reviewer verified Tree pins, 22 subjects, 3 declared edges, 0 pairs, 24 provenance hashes. 7da7e22..HEAD evidence-only. Orchestrator checks: typecheck 0; 2773/2773 unset, fixed and inherited; builds with no drift; authority regression only extended; no private paths or images. scripts/release-acceptance.mjs not run: it installs public main via a logged-in claude, so it cannot test this branch. Merged --no-ff (fb58864); integration suite 2773/2773 unset and fixed.",
+      "reason": "All acceptance checks met.",
+      "authority": "D-001",
+      "reversible": true,
+      "terra": "PASS (reviews/u8-7da7e22.md)",
+      "outcome": "#253 closes when #256 lands on main",
+      "risk": "U3 extends render.ts; it must merge integration before its next review. release-acceptance's live phases run only after the founder's merge to main."
     }
   ],
   "blockers": [],

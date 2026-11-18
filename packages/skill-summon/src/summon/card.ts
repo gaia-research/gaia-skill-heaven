@@ -40,7 +40,9 @@ export function escapeControlText(value: unknown): string {
       code < 0x20 ||
       code === 0x7f ||
       (code >= 0x80 && code <= 0x9f) ||
-      (code >= 0xd800 && code <= 0xdfff);
+      (code >= 0xd800 && code <= 0xdfff) ||
+      code === 0x2028 ||
+      code === 0x2029;
     out += unsafe ? `\\u${code.toString(16).padStart(4, "0")}` : ch;
   }
   return out;

@@ -697,7 +697,7 @@ tbody tr:last-child td {
         <td class="nowrap"><a href="https://github.com/gaia-research/gaia-skill-heaven/pull/259" target="_blank" rel="noopener noreferrer">#259</a></td>
         <td class="nowrap"><code class="sha" title="ec17b57">ec17b57</code></td>
         <td class="nowrap"><span class="pill pill-neutral">prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.</span></td>
-        <td class="nowrap"><span class="pill pill-neutral">prep done; render half waits for U2; merge after U2</span></td>
+        <td class="nowrap"><span class="pill pill-neutral">integrated (fb58864; PR #259; Terra PASS on 7da7e22 over the whole U8 diff)</span></td>
       </tr>
       <tr>
         <td class="mono nowrap"><strong>U9</strong></td>
@@ -1943,6 +1943,55 @@ tbody tr:last-child td {
             <div class="field-row">
               <dt>risk</dt>
               <dd><span>none new</span></dd>
+            </div>
+        </dl>
+      </article>
+      <article class="decision-card delegated-card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="pill pill-active">D-023</span>
+            <span class="tag">unit: U8</span>
+            <span class="tag">A (Opus orchestrator)</span>
+          </div>
+          <span class="muted mono">2026-11-18</span>
+        </div>
+        <dl class="card-fields">
+          
+            <div class="field-row">
+              <dt>problem</dt>
+              <dd><span>U8 lane reported READY FOR REVIEW at 6de2bc7 (PR #259), prep and render halves.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>options</dt>
+              <dd><ul class="compact-list"><li><span>Accept and merge into integration</span></li><li><span>Send back</span></li></ul></dd>
+            </div>
+            <div class="field-row">
+              <dt>selected</dt>
+              <dd><span>Accepted. Terra PASS on 7da7e22 after one CHANGES REQUIRED round (U+2028/U+2029 escaping); reviewer verified Tree pins, 22 subjects, 3 declared edges, 0 pairs, 24 provenance hashes. 7da7e22..HEAD evidence-only. Orchestrator checks: typecheck 0; 2773/2773 unset, fixed and inherited; builds with no drift; authority regression only extended; no private paths or images. scripts/release-acceptance.mjs not run: it installs public main via a logged-in claude, so it cannot test this branch. Merged --no-ff (fb58864); integration suite 2773/2773 unset and fixed.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reason</dt>
+              <dd><span>All acceptance checks met.</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>authority</dt>
+              <dd><span>D-001</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>reversible</dt>
+              <dd><span>true</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>terra</dt>
+              <dd><span>PASS (reviews/u8-7da7e22.md)</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>outcome</dt>
+              <dd><span>#253 closes when #256 lands on main</span></dd>
+            </div>
+            <div class="field-row">
+              <dt>risk</dt>
+              <dd><span>U3 extends render.ts; it must merge integration before its next review. release-acceptance&#39;s live phases run only after the founder&#39;s merge to main.</span></dd>
             </div>
         </dl>
       </article>

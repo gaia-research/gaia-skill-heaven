@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -10,9 +11,13 @@ import {
   buildCampaignManifest,
   type CampaignReconRecordInput,
 } from "../packages/core/src/index.js";
+import { executeOpen } from "../packages/skill-summon/src/campaign/ops/open.js";
+import { executeRecon } from "../packages/skill-summon/src/campaign/ops/recon.js";
 import { renderCampaignManifest } from "../packages/skill-summon/src/campaign/render.js";
+import { InMemoryGaiaRegistrySource } from "../packages/skill-summon/src/data/source.js";
+import { GaiaService } from "../packages/skill-summon/src/service.js";
 import { renderSummonCard } from "../packages/skill-summon/src/summon/card.js";
-import type { InstalledSkill } from "../packages/skill-summon/src/summon/session.js";
+import { openSession, type InstalledSkill } from "../packages/skill-summon/src/summon/session.js";
 import type { RankingDisclosure } from "../packages/skill-summon/src/summon/summon.js";
 import {
   AUTHORITY_PHRASES,
@@ -699,6 +704,66 @@ describe("Issue #85 — command, skill, and card copy is reference data (#85)", 
       expect(lines("Path:")).toEqual([]);
       expect(lines("⛔")).toEqual([]);
       expect(lines("Note:")).toHaveLength(1);
+    });
+
+    it("emits zero authority phrases on manifests built from refreshed real Arbor records and Declared, not measured group", async () => {
+      const savedClaude = process.env.CLAUDE_CODE_SESSION_ID;
+      const savedSummon = process.env.SKILL_SUMMON_SESSION;
+      delete process.env.CLAUDE_CODE_SESSION_ID;
+      delete process.env.SKILL_SUMMON_SESSION;
+      const session = await openSession();
+      try {
+        const openRes = await executeOpen(session, {
+          goal: "Authority regression on real Arbor manifest",
+          workUniverse: ["packages/skill-summon"],
+          repositories: ["gaia-research/gaia-skill-heaven"],
+          acceptanceCommands: ["npm test"],
+          humanOnlyOperations: ["merge"],
+          stopConditions: ["all tests pass"],
+        });
+        expect(openRes.ok).toBe(true);
+
+        const service = new GaiaService(
+          new InMemoryGaiaRegistrySource({
+            generic: { generatedAt: "2026-09-08T00:00:00Z", skills: [] },
+            named: { generatedAt: "2026-09-08T00:00:00Z", buckets: {} },
+          }),
+          { sourceUrl: "https://gaiaskilltree.com", now: () => new Date("2026-11-18T00:00:00Z") },
+        );
+        const reconRes = await executeRecon(service, session, {
+          gaps: [
+            "garrytan/context-save",
+            "garrytan/context-restore",
+            "obra/systematic-debugging",
+            "mattpocock/grilling",
+            "obra/receiving-code-review",
+          ],
+          surface: "any",
+          limit: 1,
+        });
+        expect(reconRes.ok).toBe(true);
+        if (!reconRes.ok) throw new Error("expected recon to succeed");
+
+        const selections = reconRes.recon.gaps.map((g) => g.candidates[0]!.cardRef);
+        const manifest = buildCampaignManifest(reconRes.recon, selections);
+        const rendered = renderCampaignManifest(manifest);
+
+        expect(rendered).toContain('Group [declared-not-measured]: "Declared, not measured"');
+        expect(rendered).toContain(
+          "convergence-point candidate (proposed to the person; never auto-invoked)",
+        );
+        expect(rendered).toContain(
+          "unverified hypothesis (declared; not observed or governed)",
+        );
+        expect(authorityHits(rendered)).toEqual([]);
+      } finally {
+        await session.close();
+        await rm(session.root, { recursive: true, force: true });
+        if (savedClaude === undefined) delete process.env.CLAUDE_CODE_SESSION_ID;
+        else process.env.CLAUDE_CODE_SESSION_ID = savedClaude;
+        if (savedSummon === undefined) delete process.env.SKILL_SUMMON_SESSION;
+        else process.env.SKILL_SUMMON_SESSION = savedSummon;
+      }
     });
   });
 });

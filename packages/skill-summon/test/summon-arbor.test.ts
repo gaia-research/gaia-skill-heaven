@@ -155,6 +155,17 @@ async function writePublication(
       schema: "gaia.arbor-runtime/v1",
       subject: pin,
       inputDigest: "d".repeat(64),
+      applicability: {
+        applicable: true,
+        identityVersion: "gaia.arbor-behavioral-identity/v1",
+        behavioralSha256: "b".repeat(64),
+        canonical: "behavior-equivalent",
+        instruction: {
+          status: "immutable-ref",
+          refKind: "commit",
+          baselineSha256: "c".repeat(64),
+        },
+      },
       lenses: {
         claims: subject.claims
           ? {
@@ -272,10 +283,15 @@ describe("the committed Arbor publication", () => {
     expect(publication.state).toBe("loaded");
     expect(publication.provenance?.upstream).toMatch(/gaia-skill-tree/u);
     expect(publication.provenance?.commit).toMatch(/^[a-f0-9]{40}$/u);
-    // REAL current state, not a fixture: upstream publishes one governed,
-    // single-skill subject and no interaction edges.
-    expect(publication.subjects.map((subject) => subject.id)).toEqual(["obra/receiving-code-review"]);
-    expect(publication.edgeIndex?.edges).toEqual([]);
+    // REAL current state, not a fixture: upstream publishes 22 subjects and
+    // 3 `expert-declared` interaction edges (`pairsEvaluated: 0`).
+    expect(publication.subjects).toHaveLength(22);
+    expect(publication.subjects.map((subject) => subject.id)).toContain("obra/receiving-code-review");
+    expect(publication.edgeIndex?.edges).toHaveLength(3);
+    expect(publication.edgeIndex?.coverage).toEqual({
+      pairsEvaluated: 0,
+      absenceMeaning: "not-evaluated",
+    });
     expect(publication.problems).toEqual([]);
   });
 
@@ -318,12 +334,12 @@ describe("summon discloses its behavioral lenses", () => {
       surface: "any",
     });
     expect(outcome.arbor.publicationState).toBe("loaded");
-    expect(outcome.arbor.subjectsPublished).toBe(1);
+    expect(outcome.arbor.subjectsPublished).toBe(22);
     expect(outcome.composition).toMatchObject({
       mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
       deliveryVerified: false,
       publication: {
-        state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
+        state: "loaded", subjectsPublished: 22, edgesPublished: 3, matchedEdges: 0, problems: [],
       },
       interactions: [],
     });
@@ -333,7 +349,7 @@ describe("summon discloses its behavioral lenses", () => {
       absenceMeaning: "not-evaluated",
     });
     expect(outcome.arbor.corpus.canonical).toBe(true);
-    expect(outcome.arbor.note).toMatch(/1 published subject\(s\), 0 interaction edge\(s\)\. Absence of a record means not-evaluated/u);
+    expect(outcome.arbor.note).toMatch(/22 published subject\(s\), 3 interaction edge\(s\)\. Absence of a record means not-evaluated/u);
     expect(outcome.previewed.length).toBeGreaterThan(0);
     for (const preview of outcome.previewed) {
       // Nothing is published, so the honest answer for every candidate is that
@@ -812,7 +828,7 @@ describe("the public wire", () => {
       expect(structured.composition).toMatchObject({
         mode: "relevance-only", selectionChanged: false, conditionsEvaluated: false,
         publication: {
-          state: "loaded", subjectsPublished: 1, edgesPublished: 0, matchedEdges: 0, problems: [],
+          state: "loaded", subjectsPublished: 22, edgesPublished: 3, matchedEdges: 0, problems: [],
         },
       });
     } finally {
@@ -1039,39 +1055,42 @@ describe("the real governed record reaches the runtime (Lane E)", () => {
   const QUERY = "receiving code review";
   const SIGNALS = ["adjudicate a plausible code-review suggestion", "state-specific nullability"];
 
-  it("joins the candidate to the governed, inconclusive claim", async () => {
+  it("joins the candidate content-pinned and fails closed on inapplicable runtime", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any",
     });
     const candidate = outcome.previewed.find((preview) => preview.id === SKILL);
     expect(candidate, `${SKILL} must be previewed for "${QUERY}"`).toBeTruthy();
     expect(candidate!.arbor.join).toBe("content-pinned");
-    expect(candidate!.arbor.claims).toHaveLength(1);
-    expect(candidate!.arbor.claims[0]).toMatchObject({
-      support: "inconclusive", interpretationSource: INTERPRETATION,
+    expect(candidate!.arbor.applicability).toMatchObject({
+      applicable: false,
+      canonical: "behavior-equivalent",
+      instruction: { status: "mutable-ref-unobserved", refKind: "mutable" },
     });
+    expect(candidate!.arbor.lenses.claims.availability).toBe("unknown");
+    expect(candidate!.arbor.claims).toEqual([]);
   });
 
-  it("discloses the evidence as inconclusive and abstains when the caller declared no task", async () => {
+  it("discloses inapplicable evidence as absent and abstains when the caller declared no task", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any",
     });
     const band = outcome.composition.band;
     expect(band.direction).toBeNull();
-    expect(band.abstained).toBe("conditions-unverified");
+    expect(band.abstained).toBe("no-governed-claim");
     expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
-      state: "evidence-inconclusive", governedCount: 1, support: ["inconclusive"], matched: false,
+      state: "evidence-absent", governedCount: 0, support: [], matched: false,
     });
   });
 
-  it("abstains BECAUSE the evidence is inconclusive when the task matches the claim", async () => {
+  it("abstains with no-governed-claim when the runtime is inapplicable even if task signals match", async () => {
     const outcome = await summon(committedService(), await session(), {
       query: QUERY, preview: true, surface: "any", taskSignals: SIGNALS,
     });
     const band = outcome.composition.band;
-    expect(band).toMatchObject({ direction: null, abstained: "evidence-inconclusive", relevanceUntouched: true });
+    expect(band).toMatchObject({ direction: null, abstained: "no-governed-claim", relevanceUntouched: true });
     expect(band.members.find((member) => member.id === SKILL)).toMatchObject({
-      state: "evidence-inconclusive", matched: true,
+      state: "evidence-absent", matched: false,
     });
   });
 
@@ -1095,6 +1114,6 @@ describe("the real governed record reaches the runtime (Lane E)", () => {
     });
     expect(shape(withRecord)).toEqual(shape(withoutRecord));
     expect(withoutRecord.composition.band.abstained).toBe("no-governed-claim");
-    expect(withRecord.composition.band.abstained).toBe("evidence-inconclusive");
+    expect(withRecord.composition.band.abstained).toBe("no-governed-claim");
   });
 });
