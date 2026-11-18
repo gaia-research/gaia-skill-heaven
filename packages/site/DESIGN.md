@@ -247,6 +247,15 @@ is built from glass that her state cuts.
   `?lucy=static`. A cut animates the figure in place (Web Animations), so the
   rig is never remounted and owns its own transition; the scene root wraps the
   figure, so she pauses whenever the stage steps aside.
+- **One Lucy per visit** (founder, 2026-11-18: "Lucy Rive default, but if user
+  skipped rive assets loading page (should show up once someone goes to the
+  site) then static. Similar behavior to the home page. Nothing shoud be loaded
+  twice."). The entrance shows once per page load, on whichever page the
+  visitor reaches first (`/` or `/landing`, desktop). Its outcome holds for the
+  visit (`src/lucy-scene/session.ts`): live means later pages go live without
+  it; Skip means the masters everywhere. The figure's bytes are fetched once
+  and shared between pages (`src/lucy-scene/rive/sharedFetch.ts`); a Skip stops
+  any download still in flight; while she is live no master is fetched.
 - **One state, many hands.** `data-lucy` on the root is cast by the hero
   handoff (`?tab=`, or `?section=doors` → Zero), a sampler tab (click only,
   never the auto-run), a rung, a direction card, and her own switch. The

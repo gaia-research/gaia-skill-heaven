@@ -50,6 +50,11 @@ import '../styles/system.css'
 import './landing.css'
 import './refractions/refractions.css'
 import { LucyStage } from './refractions/LucyStage'
+import { Entrance } from '../lucy-scene/entrance/Entrance'
+import { useEntrance } from '../lucy-scene/entrance/useEntrance'
+import { lucyVisit, setLucyVisit } from '../lucy-scene/session'
+import type { LucyLoadProgress } from '../lucy-scene/rive/createLucyCharacter'
+import { HEAVEN_POSTER_READY } from '../variations/hero/heroAssets'
 import { lucyFromLocation, lucyFromSampler, type LucyState } from './refractions/lucyState'
 import { SlashReel } from './SlashReel'
 import { HarnessMark } from '../harnessMarks'
@@ -909,7 +914,14 @@ export default function Landing() {
   const lucyStatic = useMemo(() => new URLSearchParams(location.search).get('lucy') === 'static', [location.search])
   const [riveFailed, setRiveFailed] = useState(false)
   const onRiveFailed = useCallback(() => setRiveFailed(true), [])
-  const lucyLive = !lucyStatic && !riveFailed && !prefersReducedMotion()
+  // The visit's Lucy (owner, 2026-11-18; src/lucy-scene/session.ts): live by
+  // default; a Skip on the entrance, here or on the hero, keeps the masters
+  // for the rest of the visit. The entrance shows once, on the first page
+  // the visitor reaches with the live figure.
+  const [lucyStill, setLucyStill] = useState(() => lucyVisit() === 'static')
+  const [visitedLive] = useState(() => lucyVisit() === 'live')
+  const [riveKey, setRiveKey] = useState(0)
+  const lucyLive = !lucyStatic && !riveFailed && !lucyStill && !prefersReducedMotion()
   const pickSampler = useCallback(
     (mode: SamplerMode) => {
       selectSampler(mode)
@@ -928,6 +940,56 @@ export default function Landing() {
     mq.addEventListener?.('change', sync)
     return () => mq.removeEventListener?.('change', sync)
   }, [])
+  // Byte and readiness progress from the figure, throttled to ~10 Hz.
+  const [lucyProgress, setLucyProgress] = useState<LucyLoadProgress | null>(null)
+  const progressPending = useRef<LucyLoadProgress | null>(null)
+  const progressTimer = useRef(0)
+  const onLucyProgress = useCallback((p: LucyLoadProgress) => {
+    progressPending.current = p
+    if (progressTimer.current) return
+    progressTimer.current = window.setTimeout(() => {
+      progressTimer.current = 0
+      if (progressPending.current) setLucyProgress(progressPending.current)
+    }, 100)
+  }, [])
+  useEffect(() => () => window.clearTimeout(progressTimer.current), [])
+  const [posterReady, setPosterReady] = useState(false)
+  useEffect(() => {
+    let on = true
+    void HEAVEN_POSTER_READY.then(() => on && setPosterReady(true))
+    return () => {
+      on = false
+    }
+  }, [])
+  const onEntranceCut = useCallback((kind: 'live' | 'static') => {
+    setLucyVisit(kind)
+    if (kind === 'static') setLucyStill(true)
+  }, [])
+  const entrance = useEntrance({
+    enabled: wideStage && lucyLive && !visitedLive,
+    progress: lucyProgress,
+    failed: riveFailed,
+    posterReady,
+    onCut: onEntranceCut,
+  })
+  const retryRive = useCallback(() => {
+    setRiveFailed(false)
+    setLucyProgress(null)
+    setRiveKey((k) => k + 1)
+  }, [])
+  const lpRef = useRef<HTMLDivElement>(null)
+  // While the entrance is up the page is neither reachable nor announced.
+  useEffect(() => {
+    const root = lpRef.current
+    if (!root) return
+    if (entrance.visible) {
+      root.setAttribute('inert', '')
+      root.setAttribute('aria-hidden', 'true')
+    } else {
+      root.removeAttribute('inert')
+      root.removeAttribute('aria-hidden')
+    }
+  }, [entrance.visible])
   const headRef = useRef<HTMLElement>(null)
   const closerRef = useRef<HTMLElement>(null)
   const footRef = useRef<HTMLElement>(null)
@@ -1067,7 +1129,8 @@ export default function Landing() {
   }, [])
 
   return (
-    <div className="lp lp--rf" data-lucy={lucy} onClick={onLpAnchorClick}>
+    <>
+    <div ref={lpRef} className="lp lp--rf" data-lucy={lucy} onClick={onLpAnchorClick}>
       {/* Lucia Refractions: the faint sheen that crosses the whole page (Heaven, Ultra) */}
       <div className="rf-sheen" aria-hidden="true" />
       {wideStage ? (
@@ -1078,8 +1141,11 @@ export default function Landing() {
           arrival={arrival}
           released={released}
           tear={tearPreview}
+          key={riveKey}
           live={lucyLive}
           onLiveFailed={onRiveFailed}
+          onLiveProgress={onLucyProgress}
+          liveVeil={visitedLive}
         />
       ) : null}
       {/* ---------------------------------------------------------------- nav */}
@@ -2198,6 +2264,8 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    {entrance.visible && <Entrance entrance={entrance} progress={lucyProgress} onRetry={retryRive} />}
+    </>
   )
 }
 

@@ -24,6 +24,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { LucyScene } from '../../lucy-scene/LucyScene'
 import { LucyAtmosphere } from '../../lucy-scene/atmosphere/LucyAtmosphere'
 import { LucyRiveFigure } from '../../lucy-scene/rive/LucyRiveFigure'
+import type { LucyLoadProgress } from '../../lucy-scene/rive/createLucyCharacter'
 import lucyZero from '../../assets/lucy/v5/delivery/lucy-zero.webp'
 import lucyHeaven from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
 import lucyHell from '../../assets/lucy/v5/delivery/lucy-hell.webp'
@@ -102,6 +103,10 @@ export interface LucyStageProps {
   live?: boolean
   /** Rive cannot run in this session (no WebGL2, download or runtime failure). */
   onLiveFailed?: () => void
+  /** Byte/readiness progress from the live figure (feeds the entrance). */
+  onLiveProgress?: (p: LucyLoadProgress) => void
+  /** The small in-figure veil while loading; off when the entrance covers the page. */
+  liveVeil?: boolean
 }
 
 export function LucyStage({
@@ -113,6 +118,8 @@ export function LucyStage({
   tear = false,
   live = false,
   onLiveFailed,
+  onLiveProgress,
+  liveVeil = true,
 }: LucyStageProps) {
   const [cut, setCut] = useState(0)
   const [announce, setAnnounce] = useState('')
@@ -134,7 +141,10 @@ export function LucyStage({
   }, [state])
 
   // Warm the other three masters once the page is idle, so a cut never waits.
+  // Not while she is live: the masters would compete with the figure file
+  // (they load when the stage falls back to them).
   useEffect(() => {
+    if (live) return undefined
     const warm = () => {
       for (const s of LUCY_STATES) {
         const img = new Image()
@@ -148,7 +158,7 @@ export function LucyStage({
     return () => {
       if (!idle) window.clearTimeout(handle)
     }
-  }, [])
+  }, [live])
 
   const fig = FIGURE[state]
   const origin = tear ? TEAR_ORIGIN[state] : undefined
@@ -177,23 +187,27 @@ export function LucyStage({
           className={`rf-stage__fig${live ? ' is-live' : ''}`}
           style={{ aspectRatio: `${fig.w} / ${fig.h}` }}
         >
-          <img
-            src={fig.src}
-            alt={STATE_ALT[state]}
-            width={fig.w}
-            height={fig.h}
-            decoding="async"
-            fetchPriority={variant === 'stage' && !live ? 'high' : 'auto'}
-            draggable={false}
-          />
+          {/* One figure, never both: while she is live no master is fetched;
+              the box keeps her proportions from the aspect ratio alone. */}
           {live ? (
             <LucyRiveFigure
               state={state}
               figureStyle={{ filter: LIVE_FILTER[state] }}
               onFailed={onLiveFailed ?? (() => {})}
-              veil
+              onProgress={onLiveProgress}
+              veil={liveVeil}
             />
-          ) : null}
+          ) : (
+            <img
+              src={fig.src}
+              alt={STATE_ALT[state]}
+              width={fig.w}
+              height={fig.h}
+              decoding="async"
+              fetchPriority={variant === 'stage' ? 'high' : 'auto'}
+              draggable={false}
+            />
+          )}
           {origin ? (
             <i
               className="rf-tear"
