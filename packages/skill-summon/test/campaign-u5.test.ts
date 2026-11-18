@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { ElicitRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   AgentOps,
@@ -61,8 +62,11 @@ import {
   executeOperatorDecide,
   executePropose,
   executeRecon,
+  isExternalUnreviewedSource,
   resolveGateCard,
+  type ElicitationClient,
   type GaiaRegistryDocuments,
+  type SummonRequestProvenanceResolver,
 } from "../src/index.js";
 import { executeNext } from "../src/campaign/ops/next.js";
 import { SUMMON_LOG_FILE } from "../src/summon/log.js";
@@ -290,9 +294,36 @@ async function buildFixtureDocs(namespace: string): Promise<GaiaRegistryDocument
       dir: "unplanned",
       id: "example/unplanned-skill",
       name: "Unplanned Helper",
-      description: "Unplanned model-led helper unplanned-token-beta.",
-      tags: ["unplanned-token-beta", "utility"],
+      description:
+        "Unplanned model-led helper unplanned-token-beta multi-unplanned-shared.",
+      tags: ["unplanned-token-beta", "multi-unplanned-shared", "utility"],
       invocation: "model" as const,
+      denyListClass: undefined,
+      body: undefined,
+    },
+    {
+      dir: "unplanned-two",
+      id: "example/unplanned-second-skill",
+      name: "Unplanned Second Helper",
+      description:
+        "Second unplanned model-led helper unplanned-second-token multi-unplanned-shared.",
+      tags: ["unplanned-second-token", "multi-unplanned-shared", "utility"],
+      invocation: "model" as const,
+      denyListClass: undefined,
+      body: undefined,
+    },
+    {
+      dir: "unplanned-suite",
+      id: "example/unplanned-suite-skill",
+      name: "Unplanned Suite Helper",
+      description:
+        "Suite bundling unplanned components unplanned-suite-token.",
+      tags: ["unplanned-suite-token", "utility"],
+      invocation: "model" as const,
+      suiteComponents: [
+        "example/unplanned-skill",
+        "example/unplanned-second-skill",
+      ],
       denyListClass: undefined,
       body: undefined,
     },
@@ -459,6 +490,11 @@ function makeService(docs: GaiaRegistryDocuments): GaiaService {
 async function connectLiveServer(
   docs: GaiaRegistryDocuments,
   clientName: string,
+  options: {
+    resolveSummonRequestPath?: SummonRequestProvenanceResolver;
+    elicit?: ElicitationClient;
+    clientElicitation?: boolean;
+  } = {},
 ): Promise<{
   service: GaiaService;
   client: Client;
@@ -469,8 +505,17 @@ async function connectLiveServer(
     service,
     version: "0.0.0",
     enableCampaignTool: true,
+    ...(options.resolveSummonRequestPath
+      ? { resolveSummonRequestPath: options.resolveSummonRequestPath }
+      : {}),
+    ...(options.elicit ? { elicit: options.elicit } : {}),
   });
-  const client = new Client({ name: clientName, version: "1.0.0" });
+  const client = new Client(
+    { name: clientName, version: "1.0.0" },
+    options.clientElicitation
+      ? { capabilities: { elicitation: { form: {} } } }
+      : {},
+  );
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const close = async () => {
@@ -926,12 +971,69 @@ describe("U5 summon gate under a campaign", () => {
     expect(
       matches.get("favorchurch/resend-conference-emails-carefully-with-smtp"),
     ).toBe(PublishDenyListClasses.publishToExternalChannels);
+    expect(matches.get("favorchurch/triage-conference")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("favorchurch/ticket-transfer")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("wheresryan22/anatomy")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
     expect(matches.get("xquik-dev/hermes-tweet")).toBe(
       PublishDenyListClasses.publishToExternalChannels,
     );
+    expect(matches.get("garrytan/remote-mcp")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("mattpocock/to-spec")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("firecrawl/firecrawl-build-onboarding")).toBe(
+      PublishDenyListClasses.secretBearingWrites,
+    );
+    expect(matches.get("garrytan/setup-deploy")).toBe(
+      PublishDenyListClasses.secretBearingWrites,
+    );
     expect(matches.has("garrytan/careful")).toBe(false);
     expect(matches.has("addy-osmani/doubt-driven-development")).toBe(false);
-    expect(matches.size).toBe(2);
+    expect(matches.has("garrytan/draft-in-voice")).toBe(false);
+    expect(matches.has("garrytan/document-release")).toBe(false);
+    expect(matches.size).toBe(23);
+
+    // Unknown external fetched source without reviewed catalog / denyListClass fails safe on automatic path
+    expect(
+      isExternalUnreviewedSource({
+        skillId: "thirdparty/harmless-sounding-sync",
+        indexOrigin: "fetched",
+        source: "https://external-fleet.invalid/skills.json",
+        canonical: false,
+      }),
+    ).toBe(true);
+    expect(
+      isExternalUnreviewedSource({
+        skillId: "thirdparty/harmless-sounding-sync",
+        indexOrigin: "committed",
+        source: "https://github.com/gaia-research/gaia-skill-tree",
+        canonical: true,
+      }),
+    ).toBe(false);
+    const externalCard = resolveGateCard({
+      skillId: "thirdparty/harmless-sounding-sync",
+      doc: { ...built.docs[0]!, id: "thirdparty/harmless-sounding-sync" },
+      externalUnreviewedSource: true,
+    });
+    const externalAutoDecision = evaluateSummonGate({
+      hasCampaign: true,
+      campaignState: makeSyntheticState(CampaignStates.executing, true),
+      unit: { id: "wu-1", state: WorkUnitStates.active },
+      card: externalCard,
+      requestPath: "automatic",
+    });
+    expect(externalAutoDecision.decision).toBe(CampaignGateDecisions.refuse);
+    if (!externalAutoDecision.allowed) {
+      expect(externalAutoDecision.code).toBe(CampaignGateRefusalCodes.publishDenyList);
+    }
     expect(
       classifyCardLane({
         skill: { invocation: "any", frontmatter: { "disable-model-invocation": true } },
@@ -1208,41 +1310,33 @@ describe("U5 summon gate under a campaign", () => {
       (postAmendExcluded.structuredContent as { error: { code: string } }).error.code,
     ).toBe(CampaignGateRefusalCodes.charterExcluded);
 
-    // Person-requested human-led + deny-listed skills ARE permitted on explicit /summon
-    const personHuman = await server.client.callTool({
+    // Untrusted caller passing surface: "any" without out-of-band human provenance MUST stay on automatic path and be refused
+    const spoofedHuman = await server.client.callTool({
       name: "summon",
       arguments: { query: "human-token-delta", surface: "any" },
     });
-    expect(personHuman.isError).toBeFalsy();
+    expect(spoofedHuman.isError).toBe(true);
     expect(
-      (personHuman.structuredContent as { summoned: Array<{ id: string }> }).summoned.map(
-        (s) => s.id,
-      ),
-    ).toEqual(["example/human-led-skill"]);
+      (spoofedHuman.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.humanLedAutomatic);
 
-    const personPublish = await server.client.callTool({
+    const spoofedPublish = await server.client.callTool({
       name: "summon",
       arguments: { query: "publish-email-token-epsilon", surface: "any" },
     });
-    expect(personPublish.isError).toBeFalsy();
+    expect(spoofedPublish.isError).toBe(true);
     expect(
-      (personPublish.structuredContent as { summoned: Array<{ id: string }> }).summoned.map(
-        (s) => s.id,
-      ),
-    ).toEqual(["example/publish-email-skill"]);
+      (spoofedPublish.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.publishDenyList);
 
-    // Verify summon-log never recorded any refused automatic calls (only person-requested publish succeeded)
+    // Verify summon-log never recorded any refused calls (including spoofed surface: "any")
     const logLines = (await readFile(path.join(sessionRoot, SUMMON_LOG_FILE), "utf8"))
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as { query: string; surface: string });
     expect(logLines.some((l) => l.query === "excluded-token-gamma")).toBe(false);
-    expect(logLines.some((l) => l.query === "human-token-delta" && l.surface !== "any")).toBe(
-      false,
-    );
-    expect(
-      logLines.some((l) => l.query === "publish-email-token-epsilon" && l.surface !== "any"),
-    ).toBe(false);
+    expect(logLines.some((l) => l.query === "human-token-delta")).toBe(false);
+    expect(logLines.some((l) => l.query === "publish-email-token-epsilon")).toBe(false);
     expect(logLines.some((l) => l.query === "publish-infra-token-eta")).toBe(false);
   });
 
@@ -1462,5 +1556,292 @@ describe("U5 summon gate under a campaign", () => {
     const h2 = campaignSha256Hex(canonicalCampaignJson(c2));
     expect(h1).not.toBe(h2);
     expect(stepCampaign).toBeTypeOf("function");
+  });
+
+  it("derives person-requested path only from trusted MCP elicitation or host provenance, never bare surface: any", async () => {
+    const ns = requireNamespace();
+    const docs = await buildFixtureDocs(ns);
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-trusted-provenance";
+
+    // 1. Elicitation-capable MCP client: cancel/wrong confirm refuses; matching skillId confirms person-requested (still refuses charter-excluded without even eliciting)
+    let mode: "decline" | "wrong-id" | "confirm" = "decline";
+    let elicitCount = 0;
+    const elicited = await connectLiveServer(docs, "u5-elicit-client", {
+      clientElicitation: true,
+    });
+    elicited.client.setRequestHandler(ElicitRequestSchema, async (req) => {
+      elicitCount++;
+      expect(authorityHits(req.params.message)).toEqual([]);
+      if (mode === "decline") {
+        return { action: ElicitationActions.decline };
+      }
+      if (mode === "wrong-id") {
+        return {
+          action: ElicitationActions.accept,
+          content: { confirmSkillId: "example/wrong-skill" },
+        };
+      }
+      const match = /Enter "([^"]+)" to confirm/u.exec(req.params.message);
+      return {
+        action: ElicitationActions.accept,
+        content: { confirmSkillId: match?.[1] ?? "" },
+      };
+    });
+
+    const init = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const sessionRoot = (init.structuredContent as { sessionRoot: string }).sessionRoot;
+    await seedCampaign(sessionRoot, elicited.service, { targetState: "EXECUTING" });
+
+    // Declining elicitation keeps automatic path -> refused
+    const declinedRes = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "human-token-delta", surface: "any" },
+    });
+    expect(declinedRes.isError).toBe(true);
+    expect(
+      (declinedRes.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.humanLedAutomatic);
+    expect(elicitCount).toBe(1);
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
+
+    // Wrong confirmation skillId -> refused
+    mode = "wrong-id";
+    const wrongIdRes = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "publish-email-token-epsilon", surface: "any" },
+    });
+    expect(wrongIdRes.isError).toBe(true);
+    expect(
+      (wrongIdRes.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.publishDenyList);
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
+
+    // Charter-excluded NEVER prompts or allows via elicitation
+    mode = "confirm";
+    const beforeExcludedCount = elicitCount;
+    const excludedRes = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "excluded-token-gamma", surface: "any" },
+    });
+    expect(excludedRes.isError).toBe(true);
+    expect(
+      (excludedRes.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.charterExcluded);
+    expect(elicitCount).toBe(beforeExcludedCount);
+
+    // Confirming exact skillId permits human-led & publish-deny-list on person-requested path
+    const confirmedHuman = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "human-token-delta", surface: "any" },
+    });
+    expect(confirmedHuman.isError).toBeFalsy();
+    expect(
+      (confirmedHuman.structuredContent as { summoned: Array<{ id: string }> }).summoned.map(
+        (s) => s.id,
+      ),
+    ).toEqual(["example/human-led-skill"]);
+
+    const confirmedPublish = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "publish-email-token-epsilon", surface: "any" },
+    });
+    expect(confirmedPublish.isError).toBeFalsy();
+    expect(
+      (confirmedPublish.structuredContent as { summoned: Array<{ id: string }> }).summoned.map(
+        (s) => s.id,
+      ),
+    ).toEqual(["example/publish-email-skill"]);
+
+    // 2. Out-of-band host provenance resolver overrides bare surface argument
+    await elicited.close();
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-host-provenance";
+    let allowHostPerson = false;
+    const hostServer = await connectLiveServer(docs, "u5-host-prov", {
+      resolveSummonRequestPath: () =>
+        allowHostPerson ? "person-requested" : "automatic",
+    });
+    const hostInit = await hostServer.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const hostRoot = (hostInit.structuredContent as { sessionRoot: string }).sessionRoot;
+    await seedCampaign(hostRoot, hostServer.service, { targetState: "EXECUTING" });
+
+    const hostDenied = await hostServer.client.callTool({
+      name: "summon",
+      arguments: { query: "publish-secret-token-zeta", surface: "any" },
+    });
+    expect(hostDenied.isError).toBe(true);
+    expect(
+      (hostDenied.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.publishDenyList);
+
+    allowHostPerson = true;
+    const hostAllowed = await hostServer.client.callTool({
+      name: "summon",
+      arguments: { query: "publish-secret-token-zeta", surface: "any" },
+    });
+    expect(hostAllowed.isError).toBeFalsy();
+    expect(
+      (hostAllowed.structuredContent as { summoned: Array<{ id: string }> }).summoned.map(
+        (s) => s.id,
+      ),
+    ).toEqual(["example/secret-write-skill"]);
+  });
+
+  it("revalidates fresh state under exclusive lock so concurrent stop, amend exclusion, or needs-human cannot be bypassed (TOCTOU)", async () => {
+    const ns = requireNamespace();
+    const docs = await buildFixtureDocs(ns);
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-toctou-race";
+
+    const server = await connectLiveServer(docs, "u5-toctou-client");
+    const init = await server.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const sessionRoot = (init.structuredContent as { sessionRoot: string }).sessionRoot;
+    await seedCampaign(sessionRoot, server.service, { targetState: "EXECUTING" });
+
+    // Pause async retrieval right before summon acquires the exclusive materialization lock,
+    // while a concurrent operator stop executes during retrieval.
+    const originalNamedSkills = server.service.skillIndex.bind(server.service);
+    let releaseRetrieval!: () => void;
+    let enteredRetrieval!: () => void;
+    const inRetrieval = new Promise<void>((r) => {
+      enteredRetrieval = r;
+    });
+    const gateRetrieval = new Promise<void>((r) => {
+      releaseRetrieval = r;
+    });
+
+    let interceptedOnce = false;
+    server.service.skillIndex = async (override) => {
+      const idx = await originalNamedSkills(override);
+      if (!interceptedOnce) {
+        interceptedOnce = true;
+        enteredRetrieval();
+        await gateRetrieval;
+      }
+      return idx;
+    };
+
+    const pendingSummon = server.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha" },
+    });
+
+    await inRetrieval;
+    // Concurrent campaign STOP lands after pre-retrieval snapshot was read as EXECUTING
+    const concurrentStore = await CampaignStore.load(sessionRoot);
+    const opCap = createCampaignOperatorAdapter();
+    await concurrentStore.append(
+      createCampaignOperatorEvent(opCap, { channel: "operator", op: OperatorVerbs.stop }),
+    );
+    releaseRetrieval();
+
+    const summonOutcome = await pendingSummon;
+    expect(summonOutcome.isError).toBe(true);
+    expect(
+      summonOutcome.structuredContent as {
+        error: { code: string };
+        digest: { state: string };
+      },
+    ).toMatchObject({
+      error: { code: CampaignGateRefusalCodes.notExecuting },
+      digest: { state: CampaignStates.stoppedByUser },
+    });
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
+  });
+
+  it("writes one A.summon unplanned entry per materialized unplanned skill across multi-result limit>1 and suites", async () => {
+    const ns = requireNamespace();
+    const docs = await buildFixtureDocs(ns);
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-multi-unplanned";
+
+    const server = await connectLiveServer(docs, "u5-multi-unplanned-client");
+    const init = await server.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const sessionRoot = (init.structuredContent as { sessionRoot: string }).sessionRoot;
+    await seedCampaign(sessionRoot, server.service, { targetState: "EXECUTING" });
+
+    // Multi-result automatic summon (limit=2) materializes two unplanned model-led skills -> 2 separate entries
+    const multiRes = await server.client.callTool({
+      name: "summon",
+      arguments: { query: "multi-unplanned-shared", limit: 2 },
+    });
+    expect(multiRes.isError).toBeFalsy();
+    const multiSc = multiRes.structuredContent as {
+      summoned: Array<{ id: string }>;
+      digest: { state: string };
+    };
+    const summonedIds = multiSc.summoned.map((s) => s.id).sort();
+    expect(summonedIds).toEqual([
+      "example/unplanned-second-skill",
+      "example/unplanned-skill",
+    ]);
+
+    const store1 = await CampaignStore.load(sessionRoot);
+    const unplanned1 = store1.trace.filter(
+      (entry) => entry.signal === CampaignSignals.unplanned,
+    );
+    expect(unplanned1).toHaveLength(2);
+    expect(unplanned1.map((e) => e.skills).flat().sort()).toEqual(summonedIds);
+    for (const entry of unplanned1) {
+      expect(entry.skills).toHaveLength(1);
+      expect(entry.trigger).toBe(AgentOps.summon);
+      expect(entry.accepted).toBe(true);
+    }
+
+    // Verify full JSONL replay & checkpoint surfaces both distinct entries cleanly
+    const traceRaw = await readFile(
+      path.join(sessionRoot, "campaign", "trace.jsonl"),
+      "utf8",
+    );
+    const parsedLines = parseCampaignTraceLines(traceRaw);
+    expect(parsedLines.ok).toBe(true);
+    if (parsedLines.ok) {
+      const verified = verifyCampaignTraceLines(parsedLines.lines, {
+        authorize: () => true,
+      });
+      expect(verified.valid).toBe(true);
+      if (verified.valid) {
+        expect(verified.record.final).toEqual(store1.state);
+      }
+    }
+
+    const cpMulti = await executeCheckpoint({ root: sessionRoot });
+    expect(cpMulti.ok).toBe(true);
+    if (cpMulti.ok) {
+      expect(cpMulti.unplannedSummons).toHaveLength(2);
+      expect(
+        cpMulti.unplannedSummons!.flatMap((u) => u.skills).sort(),
+      ).toEqual(summonedIds);
+    }
+
+    const cpCleared = await executeCheckpoint({ root: sessionRoot });
+    expect(cpCleared.ok).toBe(true);
+    if (cpCleared.ok) {
+      expect(cpCleared.unplannedSummons).toEqual([]);
+    }
+
+    // Suite containing unplanned root + 2 unplanned components emits 1 entry per materialized unplanned id
+    const suiteRes = await server.client.callTool({
+      name: "summon",
+      arguments: { query: "unplanned-suite-token" },
+    });
+    expect(suiteRes.isError).toBeFalsy();
+    const store2 = await CampaignStore.load(sessionRoot);
+    const unplanned2 = store2.trace.filter(
+      (entry) => entry.signal === CampaignSignals.unplanned,
+    );
+    expect(unplanned2.length).toBeGreaterThanOrEqual(4);
+    for (const entry of unplanned2) {
+      expect(entry.skills).toHaveLength(1);
+    }
   });
 });

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { appendFile, lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 
 import {
   AgentOps,
@@ -56,8 +57,53 @@ import {
   assertCampaignStoreClaimBorrowActive,
   assertSessionClaimActive,
   isCampaignClaimPresentReadOnly,
+  type AcquiredSessionClaim,
   type CampaignStoreClaimBorrow,
 } from "../summon/session-ownership.js";
+
+const gateTransactionQueues = new Map<string, Promise<void>>();
+
+/** Serializes concurrent gate-then-materialize calls per root within this process. */
+async function runWithGateTransactionQueue<T>(
+  sessionRoot: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const key = path.resolve(sessionRoot);
+  const prev = gateTransactionQueues.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const next = prev.then(() => gate);
+  gateTransactionQueues.set(key, next);
+  await prev;
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (gateTransactionQueues.get(key) === next) {
+      gateTransactionQueues.delete(key);
+    }
+  }
+}
+
+async function acquireClaimWithBoundedWait(
+  sessionRoot: string,
+): Promise<AcquiredSessionClaim> {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const claim = await acquireCampaignStoreClaimForRoot(sessionRoot);
+    if (claim.status === "acquired") return claim;
+    if (claim.status !== "busy") {
+      throw new Error(
+        `Refusing campaign gate transaction: campaign store ownership claim is ${claim.status}`,
+      );
+    }
+    await sleep(10);
+  }
+  throw new Error(
+    "Refusing campaign gate transaction: campaign store ownership claim remained busy.",
+  );
+}
 
 export const CAMPAIGN_DIR_NAME = "campaign";
 export const CAMPAIGN_TRACE_FILE = "trace.jsonl";
@@ -757,6 +803,64 @@ export class CampaignStore {
     }
   }
 
+  /**
+   * Serializes campaign gate verification, skill materialization, and resulting
+   * unplanned trace appends under the cross-process campaign store ownership
+   * claim when `campaign/` exists, revalidating fresh disk state under lock.
+   */
+  static async withExclusiveGateTransaction<T>(
+    sessionRoot: string,
+    fn: (tx: {
+      store: CampaignStore | null;
+      appendHeld:
+        | ((
+            event: CampaignEvent | unknown,
+            options?: CampaignStoreAppendOptions,
+          ) => Promise<CampaignStoreAppendResult>)
+        | null;
+    }) => Promise<T>,
+  ): Promise<T> {
+    return runWithGateTransactionQueue(sessionRoot, async () => {
+      const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
+      const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
+      try {
+        await lstat(campaignDir);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          return fn({ store: null, appendHeld: null });
+        }
+        throw error;
+      }
+
+      await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
+      const claim = await acquireClaimWithBoundedWait(sessionRoot);
+      try {
+        const verified = await verifyOnDiskState(sessionRoot, {});
+        if (verified.kind !== "absent") {
+          await assertSessionClaimActive(
+            claim,
+            sessionRoot,
+            "campaign gate transaction",
+          );
+        }
+        const store = await buildLoadedStore(
+          sessionRoot,
+          statusPath,
+          verified,
+          true,
+          {},
+        );
+        return await fn({
+          store,
+          appendHeld: (event, appendOptions) =>
+            store.#appendWithClaim(claim, event, appendOptions),
+        });
+      } finally {
+        await claim.release();
+      }
+    });
+  }
+
   async openCampaign(
     goalContract: CampaignGoalContract,
   ): Promise<CampaignStoreAppendResult> {
@@ -945,10 +1049,7 @@ export class CampaignStore {
     return run;
   }
 
-  async #appendSerialized(
-    event: CampaignEvent | unknown,
-    options?: CampaignStoreAppendOptions,
-  ): Promise<CampaignStoreAppendResult> {
+  async #assertAppendPreconditions(): Promise<void> {
     if (this.#corrupted) {
       throw new Error(
         `Refusing to append to corrupted campaign trace (${this.#error ?? "FAILED_SAFE"})`,
@@ -968,6 +1069,13 @@ export class CampaignStore {
       "Campaign evidence",
     );
     await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
+  }
+
+  async #appendSerialized(
+    event: CampaignEvent | unknown,
+    options?: CampaignStoreAppendOptions,
+  ): Promise<CampaignStoreAppendResult> {
+    await this.#assertAppendPreconditions();
 
     const claim = await acquireCampaignStoreClaimForRoot(this.sessionRoot);
     if (claim.status !== "acquired") {
@@ -975,9 +1083,20 @@ export class CampaignStore {
         `Refusing to append: campaign store ownership claim is ${claim.status}`,
       );
     }
-
     try {
-      await this.#assertDiskMatchesMemory();
+      return await this.#appendWithClaim(claim, event, options);
+    } finally {
+      await claim.release();
+    }
+  }
+
+  async #appendWithClaim(
+    claim: AcquiredSessionClaim,
+    event: CampaignEvent | unknown,
+    options?: CampaignStoreAppendOptions,
+  ): Promise<CampaignStoreAppendResult> {
+    await this.#assertAppendPreconditions();
+    await this.#assertDiskMatchesMemory();
 
       const seq = this.#lines.length;
       const step = stepCampaign(this.#state, event, seq);
@@ -1338,9 +1457,6 @@ export class CampaignStore {
       this.#recordSha256 = evidenceLine.recordSha256;
 
       return { state: step.state, entry: step.entry, status };
-    } finally {
-      await claim.release();
-    }
   }
 
   async #assertDiskMatchesMemory(): Promise<void> {

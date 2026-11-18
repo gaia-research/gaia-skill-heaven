@@ -72,6 +72,8 @@ export type SummonBeforeMaterializeContext = {
   topRanked: SummonGateCandidate | undefined;
   candidates: readonly SummonGateCandidate[];
   filtered: readonly SummonGateCandidate[];
+  ranking: RankingDisclosure;
+  arbor: SummonArborDisclosure;
 };
 
 export type SummonGateCheckResult =
@@ -104,13 +106,23 @@ export type SummonOptions = {
   jevClient?: JevClient | undefined;
   /** Opt-in to live Jev System One semantic evaluation. */
   live?: boolean | undefined;
+  /** Serializes gate validation, skill materialization, and trace append cleanly. */
+  withMaterializationLock?:
+    | ((fn: () => Promise<SummonOutcome>) => Promise<SummonOutcome>)
+    | undefined;
   /** Pre-materialization campaign gate hook evaluated once before install work. */
   onBeforeMaterialize?:
-    | ((ctx: SummonBeforeMaterializeContext) => SummonGateCheckResult)
+    | ((
+        ctx: SummonBeforeMaterializeContext,
+      ) => SummonGateCheckResult | Promise<SummonGateCheckResult>)
     | undefined;
   /** Per-skill gate check for suite components and fallback candidates. */
   canMaterializeSkill?:
     | ((candidate: SummonGateCandidate) => SummonGateCheckResult)
+    | undefined;
+  /** Post-materialization hook invoked inside the lock before release. */
+  onAfterMaterialize?:
+    | ((outcome: SummonOutcome) => void | Promise<void>)
     | undefined;
 };
 
@@ -285,8 +297,10 @@ export async function summon(
     decision: requestedDecision,
     jevClient,
     live,
+    withMaterializationLock,
     onBeforeMaterialize,
     canMaterializeSkill,
+    onAfterMaterialize,
   }: SummonOptions,
 ): Promise<SummonOutcome> {
   const runStartedAt = startTiming();
@@ -405,86 +419,31 @@ export async function summon(
     bandOptions,
   );
 
-  if (!preview && onBeforeMaterialize) {
-    const registryById = new Map(registry.map((item) => [item.id, item]));
-    const docById = new Map(resolved.index.docs.map((doc) => [doc.id, doc]));
-    const topDoc = rankedHits[0]?.doc;
-    const topRanked: SummonGateCandidate | undefined = topDoc
-      ? {
-          doc: topDoc,
-          skill: registryById.get(topDoc.id),
-          arbor: arborFor(topDoc.id, "not-materialized"),
-        }
-      : undefined;
-    const candidatesToGate: SummonGateCandidate[] = decision.admitted.map((hit) => ({
-      doc: hit.doc,
-      skill: registryById.get(hit.doc.id),
-      arbor: arborFor(hit.doc.id, "not-materialized"),
-    }));
-    const filteredToGate: SummonGateCandidate[] = [];
-    for (const f of decision.filtered) {
-      const doc = docById.get(f.id);
-      if (doc) {
-        filteredToGate.push({
-          doc,
-          skill: registryById.get(doc.id),
-          arbor: arborFor(doc.id, "not-materialized"),
-        });
-      }
-    }
-    const gateCheck = onBeforeMaterialize({
-      preview,
-      noMatch: decision.noMatch,
-      topRanked,
-      candidates: candidatesToGate,
-      filtered: filteredToGate,
-    });
-    if (!gateCheck.allow) {
-      return {
-        query: trimmedQuery,
-        surface,
-        source: resolved.source,
-        summoned: [],
-        previewed: [],
-        noMatch: decision.noMatch,
-        filtered: decision.filtered,
-        margin: decision.admitted.length > 0 ? decision.margin : 0,
-        composition: compositionFor([]),
-        skipped: [],
-        suites: [],
-        sessionRoot: session.root,
-        ranking,
-        arbor,
-        cards: [],
-        totalSeconds: elapsedSeconds(runStartedAt),
-      };
-    }
-  }
-
-  if (decision.noMatch) {
-    const outcome: SummonOutcome = {
-      query: trimmedQuery,
-      surface,
-      source: resolved.source,
-      summoned: [],
-      previewed: [],
-      noMatch: decision.noMatch,
-      filtered: decision.filtered,
-      margin: 0,
-      composition: compositionFor([]),
-      skipped: [],
-      suites: [],
-      sessionRoot: session.root,
-      ranking,
-      arbor,
-      cards: [],
-      totalSeconds: elapsedSeconds(runStartedAt),
-    };
-    await appendSummonLog(session, outcome);
-    return outcome;
-  }
+  const noMatchOutcome = (): SummonOutcome => ({
+    query: trimmedQuery,
+    surface,
+    source: resolved.source,
+    summoned: [],
+    previewed: [],
+    noMatch: decision.noMatch,
+    filtered: decision.filtered,
+    margin: 0,
+    composition: compositionFor([]),
+    skipped: [],
+    suites: [],
+    sessionRoot: session.root,
+    ranking,
+    arbor,
+    cards: [],
+    totalSeconds: elapsedSeconds(runStartedAt),
+  });
 
   if (preview) {
+    if (decision.noMatch) {
+      const outcome = noMatchOutcome();
+      await appendSummonLog(session, outcome);
+      return outcome;
+    }
     // Rank and disclose, no disk write. A flag rather than a second tool,
     // because agent tool-selection accuracy degrades as the surface grows
     // (SPEC §5.1).
@@ -523,64 +482,123 @@ export async function summon(
     return outcome;
   }
 
-  const candidates = decision.admitted.map((hit) => hit.doc);
-
-  const ctx: InstallContext = {
-    session,
-    registry,
-    payloadCache: new PayloadCache(),
-    ranking,
-    disclosures,
-    surface,
-    index: resolved.index,
-    arborFor,
-    canMaterializeSkill,
-  };
-  const summoned: InstalledSkill[] = [];
-  const skipped: SkippedCandidate[] = [];
-  const suites: SuiteAttempt[] = [];
-  let successCount = 0;
-
-  for (const candidate of candidates) {
-    if (successCount >= limit) break;
-
-    const outcome = await installSkill(candidate.id, ctx, new Set());
-    summoned.push(...outcome.installed);
-    suites.push(...outcome.suites);
-
-    if (outcome.ok) {
-      successCount++;
-    } else {
-      skipped.push({
-        id: candidate.id,
-        name: candidate.name,
-        reason: outcome.reason ?? "install failed",
+  const executeMaterializePhase = async (): Promise<SummonOutcome> => {
+    if (onBeforeMaterialize) {
+      const registryById = new Map(registry.map((item) => [item.id, item]));
+      const docById = new Map(resolved.index.docs.map((doc) => [doc.id, doc]));
+      const topDoc = rankedHits[0]?.doc;
+      const topRanked: SummonGateCandidate | undefined = topDoc
+        ? {
+            doc: topDoc,
+            skill: registryById.get(topDoc.id),
+            arbor: arborFor(topDoc.id, "not-materialized"),
+          }
+        : undefined;
+      const candidatesToGate: SummonGateCandidate[] = decision.admitted.map((hit) => ({
+        doc: hit.doc,
+        skill: registryById.get(hit.doc.id),
+        arbor: arborFor(hit.doc.id, "not-materialized"),
+      }));
+      const filteredToGate: SummonGateCandidate[] = [];
+      for (const f of decision.filtered) {
+        const doc = docById.get(f.id);
+        if (doc) {
+          filteredToGate.push({
+            doc,
+            skill: registryById.get(doc.id),
+            arbor: arborFor(doc.id, "not-materialized"),
+          });
+        }
+      }
+      const gateCheck = await onBeforeMaterialize({
+        preview,
+        noMatch: decision.noMatch,
+        topRanked,
+        candidates: candidatesToGate,
+        filtered: filteredToGate,
+        ranking,
+        arbor,
       });
+      if (!gateCheck.allow) {
+        return {
+          ...noMatchOutcome(),
+          margin: decision.admitted.length > 0 ? decision.margin : 0,
+        };
+      }
     }
-  }
 
-  const outcome: SummonOutcome = {
-    query: trimmedQuery,
-    surface,
-    source: resolved.source,
-    summoned,
-    previewed: [],
-    noMatch: null,
-    filtered: decision.filtered,
-    margin: decision.margin,
-    skipped,
-    suites,
-    sessionRoot: session.root,
-    ranking,
-    arbor,
-    composition: compositionFor(summoned.map((skill) => ({
-      role: "materialized", report: skill.arbor ?? arborFor(skill.id, "delivered-unverified"),
-    }))),
-    cards: summoned.map((skill) => skill.card),
-    totalSeconds: elapsedSeconds(runStartedAt),
+    if (decision.noMatch) {
+      const outcome = noMatchOutcome();
+      await appendSummonLog(session, outcome);
+      return outcome;
+    }
+
+    const candidates = decision.admitted.map((hit) => hit.doc);
+
+    const ctx: InstallContext = {
+      session,
+      registry,
+      payloadCache: new PayloadCache(),
+      ranking,
+      disclosures,
+      surface,
+      index: resolved.index,
+      arborFor,
+      canMaterializeSkill,
+    };
+    const summoned: InstalledSkill[] = [];
+    const skipped: SkippedCandidate[] = [];
+    const suites: SuiteAttempt[] = [];
+    let successCount = 0;
+
+    for (const candidate of candidates) {
+      if (successCount >= limit) break;
+
+      const outcome = await installSkill(candidate.id, ctx, new Set());
+      summoned.push(...outcome.installed);
+      suites.push(...outcome.suites);
+
+      if (outcome.ok) {
+        successCount++;
+      } else {
+        skipped.push({
+          id: candidate.id,
+          name: candidate.name,
+          reason: outcome.reason ?? "install failed",
+        });
+      }
+    }
+
+    const outcome: SummonOutcome = {
+      query: trimmedQuery,
+      surface,
+      source: resolved.source,
+      summoned,
+      previewed: [],
+      noMatch: null,
+      filtered: decision.filtered,
+      margin: decision.margin,
+      skipped,
+      suites,
+      sessionRoot: session.root,
+      ranking,
+      arbor,
+      composition: compositionFor(summoned.map((skill) => ({
+        role: "materialized", report: skill.arbor ?? arborFor(skill.id, "delivered-unverified"),
+      }))),
+      cards: summoned.map((skill) => skill.card),
+      totalSeconds: elapsedSeconds(runStartedAt),
+    };
+    await appendSummonLog(session, outcome);
+    if (onAfterMaterialize) {
+      await onAfterMaterialize(outcome);
+    }
+    return outcome;
   };
-  await appendSummonLog(session, outcome);
-  return outcome;
+
+  return withMaterializationLock
+    ? withMaterializationLock(executeMaterializePhase)
+    : executeMaterializePhase();
 }
 
 function disclose(

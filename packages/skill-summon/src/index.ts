@@ -49,7 +49,10 @@ export * from "./domain/types.js";
 export { createSkillSummonMcpServer } from "./mcp/server.js";
 export { ZERO_CUT_ENV, ZERO_CUT_REFUSAL, normalizeZeroCut, zeroCutFromEnv } from "./zero-cut.js";
 export type { ZeroCut } from "./zero-cut.js";
-export type { CreateSkillSummonMcpServerOptions } from "./mcp/server.js";
+export type {
+  CreateSkillSummonMcpServerOptions,
+  SummonRequestProvenanceResolver,
+} from "./mcp/server.js";
 export {
   SKILLS_EXTENSION_ID,
   SKILL_RESOURCE_TEMPLATE,
@@ -134,6 +137,7 @@ export {
   classifyCardLane,
   classifyPublishDenyListClass,
   evaluateSummonGate,
+  isExternalUnreviewedSource,
   resolveActiveWorkUnit,
   resolveGateCard,
   type GateCardLane,

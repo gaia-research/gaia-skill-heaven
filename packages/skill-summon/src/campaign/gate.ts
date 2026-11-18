@@ -28,6 +28,8 @@ export type SummonGateCard = Readonly<{
   skillId: string;
   lane: GateCardLane;
   denyListClass?: PublishDenyListClass | null;
+  /** True when retrieved from an unreviewed external source rather than committed/memory catalog. */
+  externalUnreviewedSource?: boolean;
 }>;
 
 export type SummonGateUnit = Readonly<{
@@ -142,10 +144,11 @@ export function evaluateSummonGate(
     return refuseGate(CampaignGateRefusalCodes.humanLedAutomatic);
   }
 
-  // Rule 3: Publish-class deny-list -> refuse on the automatic path in every state (K3, T8).
+  // Rule 3: Publish-class deny-list or unreviewed external source -> refuse on automatic path (K3, T8).
   if (
     input.requestPath === "automatic" &&
-    isPublishDenyListed(input.card.denyListClass)
+    (isPublishDenyListed(input.card.denyListClass) ||
+      input.card.externalUnreviewedSource === true)
   ) {
     return refuseGate(CampaignGateRefusalCodes.publishDenyList);
   }
@@ -253,14 +256,64 @@ function asDenyListClass(value: unknown): PublishDenyListClass | null {
   return DENY_LIST_SET.has(trimmed) ? (trimmed as PublishDenyListClass) : null;
 }
 
+const COMMITTED_PUBLISH_DENY_LIST: Readonly<Record<string, PublishDenyListClass>> =
+  Object.freeze({
+    "favorchurch/resend-conference-emails-carefully-with-smtp":
+      PublishDenyListClasses.publishToExternalChannels,
+    "favorchurch/ticket-transfer":
+      PublishDenyListClasses.publishToExternalChannels,
+    "favorchurch/triage-conference":
+      PublishDenyListClasses.publishToExternalChannels,
+    "xquik-dev/hermes-tweet":
+      PublishDenyListClasses.publishToExternalChannels,
+    "wheresryan22/anatomy":
+      PublishDenyListClasses.publishToExternalChannels,
+    "garrytan/remote-mcp":
+      PublishDenyListClasses.publishToExternalChannels,
+    "garrytan/land-and-deploy":
+      PublishDenyListClasses.publishToExternalChannels,
+    "garrytan/ship":
+      PublishDenyListClasses.publishToExternalChannels,
+    "gsd-build/gsd-ship":
+      PublishDenyListClasses.publishToExternalChannels,
+    "intelligentcode-ai/release":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mattpocock/to-spec":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mattpocock/to-tickets":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mattpocock/triage":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mbtiongson1/gaia-audit":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mbtiongson1/gaia-wiki-sync":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/github-release-management":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/github-suite":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/flow-nexus-platform":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/skill-builder":
+      PublishDenyListClasses.publishToExternalChannels,
+    "firecrawl/firecrawl-build-onboarding":
+      PublishDenyListClasses.secretBearingWrites,
+    "garrytan/setup-deploy":
+      PublishDenyListClasses.secretBearingWrites,
+    "mattpocock/wizard":
+      PublishDenyListClasses.secretBearingWrites,
+    "gooseworks/browser-automation-notte":
+      PublishDenyListClasses.secretBearingWrites,
+  });
+
 const HAS_DRY_RUN_OR_READONLY_GUARD =
-  /\b(dry[- ]run|plan[- ]preview|read[- ]only|audit[- ]only|never writes?|no mutation|with verifiable undo|canonical down[- ]migrations?)\b/i;
+  /\b(dry[- ]run|plan[- ]preview|read[- ]only|audit[- ]only|never writes?|no mutation|with verifiable undo|canonical down[- ]migrations?|never auto[- ]posts)\b/i;
 
 const EXTERNAL_PUBLISH_RE =
-  /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+)?emails?|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish\s+(?:to\s+external|announcements?|social|newsletters?)|publish-to-external-channels)\b/i;
+  /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+|confirmation\s+)?(?:emails?|replies)|draft\/send\s+replies|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish(?:es|ing)?\s+(?:it\s+)?(?:to\s+(?:external|the\s+[^\n.]*(?:gallery|issue\s+tracker)|[^\n.]*community\s+gallery)|structured\s+issues|announcements?|social|newsletters?|over\s+mcp)|github\s+release\s+creation|release\s+note\s+publishing|app\s+store\s+deployment|payment\s+processing|publish-to-external-channels)\b/i;
 
 const SECRET_BEARING_WRITE_RE =
-  /\b(write|persist|commit|embed|store|append|export)\s+(?:discovered\s+|raw\s+)?(?:credentials?|secrets?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)\b/i;
+  /\b((?:write|persist|commit|embed|store|append|export|creat(?:e|ing)|set(?:ting)?\s+up|configur(?:e|ing)|manag(?:ed|ing))\s+(?:discovered\s+|raw\s+|firecrawl\s+|ci\s+)?(?:credentials?|secrets?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)|secret-bearing-writes)\b/i;
 
 const DESTRUCTIVE_INFRA_RE =
   /\b(drop(?:ping)?\s+(?:databases?|tables?|queues?|dns|storage)|terraform\s+(?:destroy|apply)|delete\s+(?:production\s+)?(?:database|dns|bucket|cluster)|destructive[- ]infra[- ]mutation)\b/i;
@@ -293,6 +346,11 @@ export function classifyPublishDenyListClass(params: {
     asDenyListClass(skill?.frontmatter?.["publish-class"]) ??
     asDenyListClass(skill?.frontmatter?.["denyListClass"]);
   if (explicit) return explicit;
+
+  const skillId = doc?.id ?? skill?.id;
+  if (skillId && Object.hasOwn(COMMITTED_PUBLISH_DENY_LIST, skillId)) {
+    return COMMITTED_PUBLISH_DENY_LIST[skillId]!;
+  }
 
   const allTags = [...(doc?.tags ?? []), ...(skill?.tags ?? [])];
   for (const tag of allTags) {
@@ -333,12 +391,35 @@ export function classifyPublishDenyListClass(params: {
   return null;
 }
 
+export function isExternalUnreviewedSource(params: {
+  skillId: string;
+  indexOrigin?: "committed" | "fetched" | null;
+  source?: string | null;
+  canonical?: boolean | null;
+  hasReviewedDenyListClass?: boolean;
+}): boolean {
+  if (params.indexOrigin === "committed" || params.canonical === true) {
+    return false;
+  }
+  if (params.source?.startsWith("memory://")) {
+    return false;
+  }
+  if (Object.hasOwn(COMMITTED_PUBLISH_DENY_LIST, params.skillId)) {
+    return false;
+  }
+  if (params.hasReviewedDenyListClass) {
+    return false;
+  }
+  return params.indexOrigin === "fetched";
+}
+
 export function resolveGateCard(params: {
   skillId: string;
   doc?: IndexedSkill | null;
   skill?: NamedSkill | null;
   arbor?: ArborSubjectReport | null;
   manifest?: CampaignManifest | null;
+  externalUnreviewedSource?: boolean;
 }): SummonGateCard {
   const manifestEntry = params.manifest?.entries.find(
     (entry) => entry.id === params.skillId,
@@ -355,6 +436,7 @@ export function resolveGateCard(params: {
       doc: params.doc,
       skill: params.skill,
     }),
+    ...(params.externalUnreviewedSource ? { externalUnreviewedSource: true } : {}),
   });
 }
 
