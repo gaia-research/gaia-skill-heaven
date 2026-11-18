@@ -14,6 +14,7 @@ import { LucyRiveFigure, prefersReducedMotion } from '../lucy-scene/rive/LucyRiv
 import type { LucyLoadProgress } from '../lucy-scene/rive/createLucyCharacter'
 import { Entrance } from '../lucy-scene/entrance/Entrance'
 import { useEntrance } from '../lucy-scene/entrance/useEntrance'
+import { lucyVisit, setLucyVisit } from '../lucy-scene/session'
 import { LucyScene } from '../lucy-scene/LucyScene'
 import './variation-hero.css'
 
@@ -125,7 +126,11 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // Skip on the entrance (owner, 2026-11-04): straight to the WebP masters,
   // no session flag. It takes the same path as a Rive failure, so the canvas
   // is gone before the masters show — never two figures on one page.
-  const [lucyStill, setLucyStill] = useState(false)
+  // The visit's choice carries across pages (src/lucy-scene/session.ts): a
+  // Skip on /landing keeps the hero on the masters, and an entrance already
+  // passed on /landing is not shown again here.
+  const [lucyStill, setLucyStill] = useState(() => lucyVisit() === 'static')
+  const [visitedLive] = useState(() => lucyVisit() === 'live')
   // `?entrance=off` keeps the small in-figure veil for review.
   const [entranceOff] = useState(() => sceneReviewFlag('entrance'))
   // Retry after a failure remounts the figure.
@@ -193,15 +198,16 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
   // The entrance: the loading screen in front of the hero while the live
   // figure arrives (Gateway, owner's pick 2026-11-04). It reads the figure's
   // progress and cuts when READY; Skip hands the session to the masters.
-  const [entered, setEntered] = useState(false)
+  const [entered, setEntered] = useState(visitedLive)
   const onEntranceCut = useCallback((kind: 'live' | 'static') => {
+    setLucyVisit(kind)
     if (kind === 'static') setLucyStill(true)
     setEntered(true)
   }, [])
   const entrance = useEntrance({
     // With Lucy switched off for review there is no figure to wait for, so the
     // entrance would never lift and the room could not be inspected alone.
-    enabled: riveOn && !entranceOff && !lucyOff,
+    enabled: riveOn && !entranceOff && !lucyOff && !visitedLive,
     progress: lucyProgress,
     failed: riveFailed,
     posterReady,
@@ -563,7 +569,7 @@ export function VariationHeroA({ assetSet }: VariationHeroProps) {
             state={v.lucyState}
             onFailed={onRiveFailed}
             onProgress={onLucyProgress}
-            veil={entranceOff}
+            veil={entranceOff || visitedLive}
             figureStyle={{
               transform: `scale(calc(${(Number(v.mLucy) * v.figZoom).toFixed(3)} * var(--lucy-user-zoom, 1)))`,
               transformOrigin: v.figOrigin,

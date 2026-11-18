@@ -23,6 +23,7 @@
 // names so the tiers cannot be classified, the whole state loads as one tier
 // (the owner's stated fallback); nothing guesses.
 import { Alignment, Fit, Layout, Rive, RuntimeLoader, decodeImage, type ImageAsset } from '@rive-app/webgl2'
+import { fetchShared } from './sharedFetch'
 import riveWasmUrl from '@rive-app/webgl2/rive.wasm?url'
 import type { LucyCharacter } from '../LucyLive'
 import type { SceneState } from '../scene'
@@ -89,30 +90,8 @@ export function planSidecars(base: string): Sidecar[] {
   return out.sort((a, b) => rank(a) - rank(b) || b.bytes - a.bytes)
 }
 
-/** Fetch a URL with byte progress. */
-async function fetchWithProgress(url: string, signal: AbortSignal, priority: 'high' | 'low', onBytes: (n: number) => void): Promise<Uint8Array> {
-  const res = await fetch(url, { signal, priority } as RequestInit)
-  if (!res.ok) throw new Error(`${url}: ${res.status}`)
-  if (!res.body) {
-    const buf = new Uint8Array(await res.arrayBuffer())
-    onBytes(buf.byteLength)
-    return buf
-  }
-  const reader = res.body.getReader()
-  const chunks: Uint8Array[] = []
-  let size = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    chunks.push(value)
-    size += value.byteLength
-    onBytes(value.byteLength)
-  }
-  const buf = new Uint8Array(size)
-  let o = 0
-  for (const c of chunks) { buf.set(c, o); o += c.byteLength }
-  return buf
-}
+/** A Skip stopped the shared download: the visit is static, not failed. */
+const isAbort = (e: unknown) => (e as { name?: string } | null)?.name === 'AbortError'
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
@@ -217,14 +196,14 @@ export function createLucyCharacter(
       active++
       const key = `sidecar:${s.name}`
       const already = counted.get(key) ?? 0
-      fetchWithProgress(s.url, abort.signal, loaded ? 'high' : 'low', (n) => { if (already === 0) addBytes(key, n); report() })
+      fetchShared(s.url, abort.signal, loaded ? 'high' : 'low', (n) => { if (already === 0) addBytes(key, n); report() })
         .then((buf) => {
           if (destroyed) return
           buffers.set(s.name, buf)
           if (!bitmaps.has(s.name)) bitmaps.set(s.name, predecoder.decode(buf))
           tryBind(s)
         })
-        .catch((e) => { if (!destroyed && !abort.signal.aborted) opts.onError(e) })
+        .catch((e) => { if (!destroyed && !abort.signal.aborted && !isAbort(e)) opts.onError(e) })
         .finally(() => { active--; pump() })
     }
   }
@@ -235,9 +214,9 @@ export function createLucyCharacter(
     pump()
     let buf: Uint8Array
     try {
-      buf = await fetchWithProgress(opts.base + LUCY_LIVE.riv, abort.signal, 'high', (n) => { addBytes('riv', n); report() })
+      buf = await fetchShared(opts.base + LUCY_LIVE.riv, abort.signal, 'high', (n) => { addBytes('riv', n); report() })
     } catch (e) {
-      if (!destroyed && !abort.signal.aborted) opts.onError(e)
+      if (!destroyed && !abort.signal.aborted && !isAbort(e)) opts.onError(e)
       return
     }
     if (destroyed) return
