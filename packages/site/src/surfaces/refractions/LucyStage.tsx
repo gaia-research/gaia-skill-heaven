@@ -23,6 +23,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { LucyScene } from '../../lucy-scene/LucyScene'
 import { LucyAtmosphere } from '../../lucy-scene/atmosphere/LucyAtmosphere'
+import { LucyRiveFigure } from '../../lucy-scene/rive/LucyRiveFigure'
 import lucyZero from '../../assets/lucy/v5/delivery/lucy-zero.webp'
 import lucyHeaven from '../../assets/lucy/v5/delivery/lucy-heaven.webp'
 import lucyHell from '../../assets/lucy/v5/delivery/lucy-hell.webp'
@@ -64,6 +65,21 @@ const FRONT: Record<LucyState, { x: number; y: number; w: number; h: number; r: 
   ],
 }
 
+/** The hero's own per-state treatment of the live figure (useHeroEngine), so the seam holds. */
+const LIVE_FILTER: Record<LucyState, string> = {
+  zero: 'grayscale(1) brightness(1.55) contrast(1.06)',
+  heaven: 'none',
+  hell: 'none',
+  ultra: 'saturate(1.06) brightness(1.03) drop-shadow(0 0 26px rgba(255,210,74,0.42))',
+}
+
+/** The impact frame: 46ms, steps(3), shear + translate, at most 8px. */
+const IMPACT: Keyframe[] = [
+  { transform: 'translate(-6px, 0) skewX(-3deg)' },
+  { transform: 'translate(8px, -2px) skewX(2deg)' },
+  { transform: 'none' },
+]
+
 function reducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
@@ -78,14 +94,34 @@ export interface LucyStageProps {
   released?: boolean
   /** Founder-gated preview of "the tear points" (D-03). */
   tear?: boolean
+  /**
+   * D-07: the live Rive character (LucyLive) instead of the static master.
+   * Rive supersedes the masters on the desktop stage; the masters stay the
+   * phone plate, the reduced-motion path, `?lucy=static`, and the fallback.
+   */
+  live?: boolean
+  /** Rive cannot run in this session (no WebGL2, download or runtime failure). */
+  onLiveFailed?: () => void
 }
 
-export function LucyStage({ state, onState, variant, arrival = true, released = false, tear = false }: LucyStageProps) {
+export function LucyStage({
+  state,
+  onState,
+  variant,
+  arrival = true,
+  released = false,
+  tear = false,
+  live = false,
+  onLiveFailed,
+}: LucyStageProps) {
   const [cut, setCut] = useState(0)
   const [announce, setAnnounce] = useState('')
   const first = useRef(true)
+  const figRef = useRef<HTMLDivElement>(null)
 
   // Every cast after the first frame is a cut: impact frame + streak + announce.
+  // The figure is animated in place (never remounted), so a live Rive
+  // character keeps running and owns its own state transition.
   useEffect(() => {
     if (first.current) {
       first.current = false
@@ -94,6 +130,7 @@ export function LucyStage({ state, onState, variant, arrival = true, released = 
     setAnnounce(STATE_ANNOUNCE[state])
     if (reducedMotion()) return
     setCut((n) => n + 1)
+    figRef.current?.animate?.(IMPACT, { duration: 46, easing: 'steps(3, end)' })
   }, [state])
 
   // Warm the other three masters once the page is idle, so a cut never waits.
@@ -125,56 +162,67 @@ export function LucyStage({ state, onState, variant, arrival = true, released = 
       style={{ '--rf-ground': STAGE_GROUND[state] } as CSSProperties}
       aria-label="Lucy, the line's figure"
     >
-      <LucyScene state={state} held={released} className="rf-stage__scene" aria-hidden="true">
+      {/* The scene root wraps everything that animates, so the atmosphere and
+          the live figure both read its data-scene-running (offscreen, hidden
+          tab, released) instead of running observers of their own. */}
+      <LucyScene state={state} held={released} className="rf-stage__scene">
         <LucyAtmosphere state={state} />
+
+        <div className="rf-stage__word" aria-hidden="true">
+          <span className="rf-stage__word-ghost">{STATE_WORD[state]}</span>
+        </div>
+
+        <div
+          ref={figRef}
+          className={`rf-stage__fig${live ? ' is-live' : ''}`}
+          style={{ aspectRatio: `${fig.w} / ${fig.h}` }}
+        >
+          <img
+            src={fig.src}
+            alt={STATE_ALT[state]}
+            width={fig.w}
+            height={fig.h}
+            decoding="async"
+            fetchPriority={variant === 'stage' && !live ? 'high' : 'auto'}
+            draggable={false}
+          />
+          {live ? (
+            <LucyRiveFigure
+              state={state}
+              figureStyle={{ filter: LIVE_FILTER[state] }}
+              onFailed={onLiveFailed ?? (() => {})}
+              veil
+            />
+          ) : null}
+          {origin ? (
+            <i
+              className="rf-tear"
+              aria-hidden="true"
+              style={{ left: `${origin.x * 100}%`, top: `${origin.y * 100}%` }}
+            />
+          ) : null}
+        </div>
+
+        <div className="rf-stage__front" aria-hidden="true">
+          {FRONT[state].map((g, i) => (
+            <i
+              key={`${state}-${i}`}
+              className="rf-glass"
+              style={{
+                left: `${g.x}%`,
+                top: `${g.y}%`,
+                width: `${g.w}%`,
+                height: `${g.h}%`,
+                transform: `rotate(${g.r}deg)`,
+                ['--rf-i' as string]: i,
+              } as CSSProperties}
+            />
+          ))}
+        </div>
+
+        {cut > 0 ? <i key={`streak-${cut}`} className="rf-stage__streak" aria-hidden="true" /> : null}
+        {cut > 0 ? <i key={`flash-${cut}`} className="rf-stage__flash" aria-hidden="true" /> : null}
       </LucyScene>
-
-      <div className="rf-stage__word" aria-hidden="true">
-        <span className="rf-stage__word-ghost">{STATE_WORD[state]}</span>
-      </div>
-
-      <div
-        key={`cut-${cut}`}
-        className={`rf-stage__fig${cut > 0 ? ' is-cut' : ''}`}
-        style={{ aspectRatio: `${fig.w} / ${fig.h}` }}
-      >
-        <img
-          src={fig.src}
-          alt={STATE_ALT[state]}
-          width={fig.w}
-          height={fig.h}
-          decoding="async"
-          fetchPriority={variant === 'stage' ? 'high' : 'auto'}
-          draggable={false}
-        />
-        {origin ? (
-          <i
-            className="rf-tear"
-            aria-hidden="true"
-            style={{ left: `${origin.x * 100}%`, top: `${origin.y * 100}%` }}
-          />
-        ) : null}
-      </div>
-
-      <div className="rf-stage__front" aria-hidden="true">
-        {FRONT[state].map((g, i) => (
-          <i
-            key={`${state}-${i}`}
-            className="rf-glass"
-            style={{
-              left: `${g.x}%`,
-              top: `${g.y}%`,
-              width: `${g.w}%`,
-              height: `${g.h}%`,
-              transform: `rotate(${g.r}deg)`,
-              ['--rf-i' as string]: i,
-            } as CSSProperties}
-          />
-        ))}
-      </div>
-
-      {cut > 0 ? <i key={`streak-${cut}`} className="rf-stage__streak" aria-hidden="true" /> : null}
-      {cut > 0 ? <i key={`flash-${cut}`} className="rf-stage__flash" aria-hidden="true" /> : null}
 
       <div className="rf-switch" role="group" aria-label="Lucy's state — play her directly">
         {LUCY_STATES.map((s) => (

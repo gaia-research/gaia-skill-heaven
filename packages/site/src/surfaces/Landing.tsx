@@ -903,6 +903,13 @@ export default function Landing() {
   // selectSampler exactly as before, and the cast happens beside it.
   const [lucy, setLucy] = useState<LucyState>(() => lucyFromLocation(location.search, location.state))
   const tearPreview = useMemo(() => new URLSearchParams(location.search).get('tear') === '1', [location.search])
+  // D-07 (founder): Rive supersedes the masters on the desktop stage; both are
+  // kept so the interaction can be chosen. `?lucy=static` shows the masters.
+  // Phones (the plate) and reduced motion always use the masters.
+  const lucyStatic = useMemo(() => new URLSearchParams(location.search).get('lucy') === 'static', [location.search])
+  const [riveFailed, setRiveFailed] = useState(false)
+  const onRiveFailed = useCallback(() => setRiveFailed(true), [])
+  const lucyLive = !lucyStatic && !riveFailed && !prefersReducedMotion()
   const pickSampler = useCallback(
     (mode: SamplerMode) => {
       selectSampler(mode)
@@ -1071,6 +1078,8 @@ export default function Landing() {
           arrival={arrival}
           released={released}
           tear={tearPreview}
+          live={lucyLive}
+          onLiveFailed={onRiveFailed}
         />
       ) : null}
       {/* ---------------------------------------------------------------- nav */}
@@ -1128,9 +1137,7 @@ export default function Landing() {
               </h1>
               <p className="lp-lede">
                 Install the plugin in a harness you already use. <b>Core</b> gives you <code>{MECHANIC.floor}</code>
-                {' '}and the entropy controls, with no console. <b>Core + Console</b> adds the independently removable
-                console your harness genuinely supports — a native pane where available, a truthful
-                readout where not. The launcher is separate and optional.
+                {' '}and the entropy controls; <b>Core + Console</b> adds the console your harness supports.
               </p>
               <div className="lp-profile-cta">
                 <a className="sh-cta" href="#/start">Choose Core or add Console <span aria-hidden="true">→</span></a>
@@ -1211,7 +1218,9 @@ export default function Landing() {
         <div className="lp-start sh-panel">
           <div className="lp-start__head">
             <span className="sh-label">TWO PLUGIN PROFILES</span>
-            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console. The console’s native form varies by client; some provide a developer readout rather than a pane.</p>
+            {/* D-05 cut 2, adjusted: this is the one place the page states that the
+                console is independently removable (#47), so the fact stays, in one sentence. */}
+            <p><b>Core</b> is the runtime: summon and entropy controls. <b>Core + Console</b> adds the independently removable, harness-specific console.</p>
             <a className="sh-cta" href="#/console">Preview the six harness projections <span aria-hidden="true">→</span></a>
           </div>
           <div className="lp-start__head">
@@ -1366,17 +1375,12 @@ export default function Landing() {
             />
           </div>
         </div>
-        <p className="lp-fineprint">
-          LAUNCHER DELIVERY · Source-delivered through <code>install.sh</code> (or <code>install.ps1</code> on Windows). To load into an existing session without launchers, use the <b>Agent Plugin</b> route at the top of this section — <a href="#/start">the install page</a> has the exact steps per harness.
-        </p>
       </section>
 
       {/* ------------------------------------------------------------------ 02 */}
       <section className="lp-section" id="run">
         <SectionHead n="02" title="DEMO" />
-        <p className="lp-section__lede">
-          Watch the live multi-agent simulation below, or mount <code>{MECHANIC.floor}</code> into your existing session with the portable Agent Plugin.
-        </p>
+        <p className="lp-section__lede">Watch it run.</p>
 
         {/* In-Session Delivery / Plugin Install Panels — the page's third copy of
             the install route, one click away instead of always open (D-04). */}
@@ -1671,7 +1675,6 @@ export default function Landing() {
               <span className="lp-beat__badge">PERMANENT</span>
             </div>
             <h4 className="lp-beat__title">Installing is permanent.</h4>
-            <p>It is a diff you own forever. Loads on every turn whether needed or not.</p>
           </div>
           <div className="lp-beat lp-beat--violet">
             <div className="lp-beat__head">
@@ -1679,7 +1682,6 @@ export default function Landing() {
               <span className="lp-beat__badge">DISPOSABLE</span>
             </div>
             <h4 className="lp-beat__title">Summoning is borrowed.</h4>
-            <p>The loadout lives exclusively for this one active process session.</p>
           </div>
           <div className="lp-beat lp-beat--mint">
             <div className="lp-beat__head">
@@ -1687,7 +1689,6 @@ export default function Landing() {
               <span className="lp-beat__badge">CLEAN TREE</span>
             </div>
             <h4 className="lp-beat__title">Nothing left behind.</h4>
-            <p>The tree on disk remains 100% byte-identical after the session exits.</p>
           </div>
         </div>
 
@@ -1822,7 +1823,6 @@ export default function Landing() {
       {/* ------------------------------------------------------------------ 04 */}
       <section className="lp-section" id="directions">
         <SectionHead n="04" title="HEAVEN OR HELL?" />
-        <p className="lp-section__lede">Here’s how you choose.</p>
 
         {/* 1. Skill Zero & /summon in its own dedicated area */}
         <div

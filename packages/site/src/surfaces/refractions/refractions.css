@@ -663,6 +663,11 @@
   object-position: right bottom;
   user-select: none;
 }
+/* D-07: while Lucy is live no master shows (the hero's rule); the master image
+   element stays for its accessible name and returns if Rive fails */
+.rf-stage__fig.is-live img {
+  opacity: 0;
+}
 .rf-stage[data-state='zero'] .rf-stage__fig img {
   /* the hero's own Zero wash (useHeroEngine) */
   filter: grayscale(1) brightness(1.55) contrast(1.06);
@@ -705,10 +710,8 @@
   background: linear-gradient(170deg, rgba(255, 244, 174, 0.62), rgba(255, 210, 74, 0.26) 45%, rgba(200, 30, 30, 0.05));
 }
 
-/* the cut: impact frame on the stage only, then one streak at ribbon height */
-.rf-stage__fig.is-cut {
-  animation: rf-shear var(--sh-impact, 46ms) steps(3, end) 1;
-}
+/* the cut: impact frame on the stage only (Web Animations on the figure, so a
+   live Rive character is never remounted), then one streak at ribbon height */
 .rf-stage__flash {
   position: absolute;
   inset: 0;
@@ -957,11 +960,6 @@
 
 /* ── keyframes ─────────────────────────────────────────────────────────── */
 
-@keyframes rf-shear {
-  0% { transform: translate(-6px, 0) skewX(-3deg); }
-  50% { transform: translate(8px, -2px) skewX(2deg); }
-  100% { transform: none; }
-}
 @keyframes rf-flash {
   0% { opacity: 0.92; }
   100% { opacity: 0; }
@@ -999,7 +997,6 @@
   .rf-sheen {
     display: none;
   }
-  .rf-stage__fig.is-cut,
   .rf-stage__flash,
   .rf-stage__streak,
   .rf-tear {
