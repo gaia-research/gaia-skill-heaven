@@ -1480,4 +1480,172 @@ describe("U1 campaign tool (open, recon, status)", () => {
       });
     });
   });
+
+  describe("9. Round 3 review repair verification (U1-868c6df Findings 1-2)", () => {
+    it("Finding 1: recovers interruption immediately after trace.jsonl append (before evidence.jsonl append) for both open and subsequent recon", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+
+      const openRes = await client.callTool({
+        name: "campaign",
+        arguments: VALID_OPEN_INPUT,
+      });
+      expect(openRes.isError).not.toBe(true);
+
+      const storeAfterOpen = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      const goalStagePath = storeAfterOpen.goalStagePath;
+      const reconStagePath = storeAfterOpen.reconStagePath;
+
+      // Simulate open interrupted right after trace.jsonl append (before evidence.jsonl and before goalStage promotion)
+      await rename(storeAfterOpen.goalPath, goalStagePath);
+      await rm(storeAfterOpen.evidencePath, { force: true });
+
+      const recoveredOpenStore = await CampaignStore.load(session!.root);
+      expect(recoveredOpenStore.corrupted).toBe(false);
+      expect(recoveredOpenStore.state.state).toBe(CampaignStates.recon);
+      await expect(access(storeAfterOpen.goalPath)).resolves.toBeUndefined();
+      await expect(access(storeAfterOpen.evidencePath)).resolves.toBeUndefined();
+      await expect(access(goalStagePath)).rejects.toThrow();
+
+      // Subsequent recon #1 succeeds after recovering open's evidence + goal stage
+      const recon1Res = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(recon1Res.isError).not.toBe(true);
+      const recon1Snapshot = await readFile(storeAfterOpen.reconPath, "utf8");
+
+      // Execute recon #2, then rewind to the exact boundary right after trace.jsonl append
+      // (trace has 3 lines, evidence has 2 lines, recon.json still has recon-1, .recon.stage.json has recon-1 + recon-2)
+      const recon2Res = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["code review"] },
+      });
+      expect(recon2Res.isError).not.toBe(true);
+
+      await rename(storeAfterOpen.reconPath, reconStagePath);
+      await writeFile(storeAfterOpen.reconPath, recon1Snapshot, "utf8");
+      const evLines = (
+        await readFile(storeAfterOpen.evidencePath, "utf8")
+      )
+        .trim()
+        .split("\n");
+      expect(evLines).toHaveLength(3);
+      await writeFile(
+        storeAfterOpen.evidencePath,
+        `${evLines.slice(0, 2).join("\n")}\n`,
+        "utf8",
+      );
+
+      const recoveredReconStore = await CampaignStore.load(session!.root);
+      expect(recoveredReconStore.corrupted).toBe(false);
+      expect(recoveredReconStore.state.state).toBe(CampaignStates.recon);
+      expect(recoveredReconStore.trace).toHaveLength(3);
+      await expect(access(reconStagePath)).rejects.toThrow();
+
+      const recoveredEvLines = (
+        await readFile(storeAfterOpen.evidencePath, "utf8")
+      )
+        .trim()
+        .split("\n");
+      expect(recoveredEvLines).toHaveLength(3);
+
+      const latestRecon = await readPersistedReconRecord(session!.root);
+      expect(latestRecon?.reconId).toBe("recon-2");
+      expect(latestRecon?.records?.["recon-1"]).toBeDefined();
+      expect(latestRecon?.records?.["recon-2"]).toBeDefined();
+
+      // Subsequent recon #3 succeeds cleanly
+      const recon3Res = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(recon3Res.isError).not.toBe(true);
+      const latestAfterR3 = await readPersistedReconRecord(session!.root);
+      expect(latestAfterR3?.reconId).toBe("recon-3");
+    });
+
+    it("Finding 2: coordinated evidence.jsonl deletion and top-level recon.json rollback to an older record fails closed into FAILED_SAFE", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+      await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["code review"] },
+      });
+
+      const store = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+
+      const reconEnvelope = JSON.parse(
+        await readFile(store.reconPath, "utf8"),
+      ) as {
+        schema: string;
+        reconId: string;
+        gaps: unknown[];
+        findings: string[];
+        citations: string[];
+        records: Record<
+          string,
+          {
+            schema: string;
+            reconId: string;
+            gaps: unknown[];
+            findings: string[];
+            citations: string[];
+          }
+        >;
+      };
+      const olderRecord = reconEnvelope.records["recon-1"]!;
+      expect(olderRecord).toBeDefined();
+      expect(reconEnvelope.records["recon-2"]).toBeDefined();
+
+      const rolledBackEnvelope = {
+        schema: reconEnvelope.schema,
+        reconId: olderRecord.reconId,
+        gaps: olderRecord.gaps,
+        findings: olderRecord.findings,
+        citations: olderRecord.citations,
+        records: reconEnvelope.records,
+      };
+
+      await rm(store.evidencePath, { force: true });
+      await writeFile(
+        store.reconPath,
+        `${JSON.stringify(rolledBackEnvelope, null, 2)}\n`,
+        "utf8",
+      );
+
+      const loaded = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loaded.corrupted).toBe(true);
+      expect(loaded.state.state).toBe(CampaignStates.failedSafe);
+      await expect(readPersistedReconRecord(session!.root)).rejects.toThrow();
+
+      const statusRes = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusRes.isError).toBe(true);
+      expect(statusRes.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: { state: CampaignStates.failedSafe },
+        digest: { state: CampaignStates.failedSafe },
+        error: { code: "campaign-corrupted" },
+      });
+    });
+  });
 });
