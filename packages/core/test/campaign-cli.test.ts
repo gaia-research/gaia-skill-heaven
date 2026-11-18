@@ -379,6 +379,10 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const engCap = createCampaignEngineAdapter();
     const sentinel = join(dir, "ran.txt");
     const cmd = `printf 'ran' > ${JSON.stringify(sentinel)}`;
+    const localCharter: CampaignCharter = {
+      ...charter,
+      acceptanceCommands: [cmd],
+    };
     const receipt = createAttestedReceipt({
       unitId: "u1",
       command: cmd,
@@ -389,7 +393,7 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const { tracePath, evidencePath } = writePersistedTrace(dir, [
       { channel: "agent", op: "open" },
       { channel: "agent", op: "recon", recon },
-      { channel: "agent", op: "propose", charter },
+      { channel: "agent", op: "propose", charter: localCharter },
       createCampaignOperatorEvent(opCap, {
         channel: "operator",
         op: "decide",
@@ -439,6 +443,10 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const matchingCmd = "printf 'ok-match\\n'";
     const mismatchedDigestCmd = "printf 'actual-output\\n'";
     const mismatchedExitCmd = "exit 3";
+    const localCharter: CampaignCharter = {
+      ...charter,
+      acceptanceCommands: [matchingCmd],
+    };
 
     const rMatch = createAttestedReceipt({
       unitId: "u1",
@@ -462,7 +470,7 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const { tracePath } = writePersistedTrace(dir, [
       { channel: "agent", op: "open" },
       { channel: "agent", op: "recon", recon },
-      { channel: "agent", op: "propose", charter },
+      { channel: "agent", op: "propose", charter: localCharter },
       createCampaignOperatorEvent(opCap, {
         channel: "operator",
         op: "decide",
@@ -477,6 +485,22 @@ describe("campaign CLI --campaign-replay-receipts", () => {
         workUnit: "u1",
         closesUnit: true,
         receipt: rMatch,
+      }),
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "verify",
+        passed: false,
+        clause: "verify-command",
+        workUnit: "u1",
+        receipt: rMismatchDigest,
+      }),
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "verify",
+        passed: false,
+        clause: "verify-command",
+        workUnit: "u1",
+        receipt: rMismatchExit,
       }),
     ]);
 
@@ -538,6 +562,10 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const dir = makeTempDir();
     const opCap = createCampaignOperatorAdapter();
     const engCap = createCampaignEngineAdapter();
+    const localCharter: CampaignCharter = {
+      ...charter,
+      acceptanceCommands: ["printf 'embedded-ok'"],
+    };
 
     const embeddedMatch = createAttestedReceipt({
       unitId: "u1",
@@ -555,7 +583,7 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     const { tracePath } = writePersistedTrace(dir, [
       { channel: "agent", op: "open" },
       { channel: "agent", op: "recon", recon },
-      { channel: "agent", op: "propose", charter },
+      { channel: "agent", op: "propose", charter: localCharter },
       createCampaignOperatorEvent(opCap, {
         channel: "operator",
         op: "decide",
@@ -596,5 +624,96 @@ describe("campaign CLI --campaign-replay-receipts", () => {
     expect(out.receipts[0].status).toBe(ReceiptStatuses.attested);
     expect(out.receipts[1].status).toBe(ReceiptStatuses.replayed);
     expect(existsSync(join(dir, "receipts.jsonl"))).toBe(false);
+  });
+
+  it("rejects mismatched, extra, missing, or unaccepted-event sidecar receipts.jsonl before running any command", () => {
+    const dir = makeTempDir();
+    const opCap = createCampaignOperatorAdapter();
+    const engCap = createCampaignEngineAdapter();
+    const sentinel = join(dir, "injected-ran.txt");
+    const safeCmd = "printf 'safe'";
+    const injectedCmd = `printf 'injected' > ${JSON.stringify(sentinel)}`;
+    const localCharter: CampaignCharter = {
+      ...charter,
+      acceptanceCommands: [safeCmd],
+    };
+
+    const acceptedReceipt = createAttestedReceipt({
+      unitId: "u1",
+      command: safeCmd,
+      output: "safe",
+      exitCode: 0,
+    });
+    const injectedReceipt = createAttestedReceipt({
+      unitId: "u1",
+      command: injectedCmd,
+      output: "",
+      exitCode: 0,
+    });
+
+    // Include one accepted E.verify and one refused (unaccepted) E.verify with injectedReceipt
+    const { tracePath } = writePersistedTrace(dir, [
+      { channel: "agent", op: "open" },
+      { channel: "agent", op: "recon", recon },
+      { channel: "agent", op: "propose", charter: localCharter },
+      createCampaignOperatorEvent(opCap, {
+        channel: "operator",
+        op: "decide",
+        action: "approve",
+        charterRevision: 1,
+      }),
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "verify",
+        passed: true,
+        clause: "verify-command",
+        workUnit: "u1",
+        closesUnit: true,
+        receipt: acceptedReceipt,
+      }),
+      // Unaccepted E.verify (closesUnit: true with unnamed command)
+      createCampaignEngineEvent(engCap, {
+        channel: "engine",
+        op: "verify",
+        passed: true,
+        clause: "verify-command",
+        workUnit: "u1",
+        closesUnit: true,
+        receipt: injectedReceipt,
+      }),
+    ]);
+
+    const receiptsPath = join(dir, "receipts.jsonl");
+
+    // 1. Modified command in receipts.jsonl
+    writeFileSync(receiptsPath, `${formatVerifyReceiptLine(injectedReceipt)}\n`, "utf8");
+    const rModified = spawnSync(process.execPath, [bin, "--campaign-replay-receipts", tracePath], {
+      encoding: "utf8",
+    });
+    expect(rModified.status).toBe(2);
+    expect(rModified.stderr).toContain("invalid campaign receipts");
+    expect(existsSync(sentinel)).toBe(false);
+
+    // 2. Extra receipt in receipts.jsonl (including one matching an unaccepted trace event)
+    writeFileSync(
+      receiptsPath,
+      `${formatVerifyReceiptLine(acceptedReceipt)}\n${formatVerifyReceiptLine(injectedReceipt)}\n`,
+      "utf8",
+    );
+    const rExtra = spawnSync(process.execPath, [bin, "--campaign-replay-receipts", tracePath], {
+      encoding: "utf8",
+    });
+    expect(rExtra.status).toBe(2);
+    expect(rExtra.stderr).toContain("invalid campaign receipts");
+    expect(existsSync(sentinel)).toBe(false);
+
+    // 3. Missing receipt (empty receipts.jsonl when trace has 1 accepted verify receipt)
+    writeFileSync(receiptsPath, "", "utf8");
+    const rMissing = spawnSync(process.execPath, [bin, "--campaign-replay-receipts", tracePath], {
+      encoding: "utf8",
+    });
+    expect(rMissing.status).toBe(2);
+    expect(rMissing.stderr).toContain("invalid campaign receipts");
+    expect(existsSync(sentinel)).toBe(false);
   });
 });

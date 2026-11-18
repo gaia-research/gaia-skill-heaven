@@ -29,11 +29,13 @@ import {
   createWorkUnit,
   escalateRecoveringToReopen,
   failWorkUnitVerification,
+  formatCampaignEvidenceLine,
   formatVerifyReceiptLine,
   initialSteeringState,
   isCharterNamedVerifyCommand,
   markWorkUnitNeedsHuman,
   orderReadyWorkUnits,
+  parseCampaignEvidenceLines,
   parseVerifyReceipt,
   parseVerifyReceiptLines,
   parseWorkUnitQueueState,
@@ -723,5 +725,186 @@ describe("U4 engine steering wiring and retrieval isolation (INV-U3, K4)", () =>
 
       expect(() => stepCampaignSteering(steeringStart, value as unknown as boolean)).toThrow();
     }
+  });
+
+  it("refuses E.verify { closesUnit: true } when neither charter nor open defines acceptanceCommands (strict INV-U15)", () => {
+    const charterNoCmds = makeCharter({ acceptanceCommands: undefined });
+    delete (charterNoCmds as Record<string, unknown>).acceptanceCommands;
+    const setup = setupCampaign(charterNoCmds);
+    const executing = replayCampaign([...setup]).final;
+    const receipt = createAttestedReceipt({
+      unitId: "unit-a",
+      command: "npm test",
+      output: "ok",
+      exitCode: 0,
+    });
+    const closeAttempt = engine({
+      op: E.verify,
+      passed: true,
+      clause: "verify-command",
+      workUnit: "unit-a",
+      receipt,
+      closesUnit: true,
+    });
+
+    // Direct stepCampaign refusal
+    const step = stepCampaign(executing, closeAttempt);
+    expect(step.entry.accepted).toBe(false);
+    expect(step.entry.decision).toBe(D.hold);
+    expect(step.state.completed).toBe(0);
+    expect(step.state).toBe(executing);
+
+    // Trace verification rejects a forged record claiming closesUnit: true was accepted without acceptanceCommands
+    const replayed = replayCampaign([...setup, closeAttempt], {
+      authorize: (ev) => ev.channel === "operator" || ev.channel === "engine",
+    });
+    expect(replayed.trace[4]!.accepted).toBe(false);
+    expect(replayed.final.completed).toBe(0);
+
+    const forgedRecord = JSON.parse(JSON.stringify(replayed.record));
+    forgedRecord.trace[4].accepted = true;
+    forgedRecord.trace[4].decision = D.recover;
+    forgedRecord.trace[4].signal = "behavioral-recovery";
+    forgedRecord.final.completed = 1;
+    const verification = verifyCampaignRecord(forgedRecord, {
+      authorize: (ev) => ev.channel === "operator" || ev.channel === "engine",
+    });
+    expect(verification.valid).toBe(false);
+
+    // Fallback to A.open acceptanceCommands works when charter omits acceptanceCommands
+    const openWithCmds: AgentCampaignEvent = {
+      channel: "agent",
+      op: A.open,
+      acceptanceCommands: ["npm test"],
+    };
+    const executingWithOpenCmds = replayCampaign([
+      openWithCmds,
+      setup[1],
+      setup[2],
+      operator({ op: O.decide, action: Actions.approve, charterRevision: 1 }),
+    ]).final;
+    const acceptedStep = stepCampaign(executingWithOpenCmds, closeAttempt);
+    expect(acceptedStep.entry.accepted).toBe(true);
+    expect(acceptedStep.state.completed).toBe(1);
+  });
+
+  it("transitions to CONVERGENCE on E.verify with convergenceIncident while stepping steering", () => {
+    const charter = makeCharter();
+    const executing = replayCampaign([...setupCampaign(charter)]).final;
+    const convIncident = {
+      schema: IDs.incident,
+      id: "inc-bounds-exhausted",
+      description: "Bounds exhausted after retries",
+      skills: ["skill-a"],
+      requiresPerson: true,
+    };
+
+    const step = stepCampaign(
+      executing,
+      engine({
+        op: E.verify,
+        passed: false,
+        clause: "verify-command",
+        workUnit: "unit-a",
+        convergenceIncident: convIncident,
+      }),
+    );
+    expect(step.entry.accepted).toBe(true);
+    expect(step.entry.decision).toBe(D.convergence);
+    expect(step.entry.signal).toBe("behavioral-failure");
+    expect(step.entry.personRequired).toBe(true);
+    expect(step.state.state).toBe(S.convergence);
+    expect(step.state.incident).toEqual(convIncident);
+    expect(step.state.steering.rung).toBe("high");
+
+    // Refuses invalid convergenceIncident combinations (passed: true, closesUnit: true, or disallowed skill)
+    for (const invalid of [
+      engine({ op: E.verify, passed: true, clause: "verify-command", convergenceIncident: convIncident }),
+      engine({ op: E.verify, passed: false, clause: "verify-command", closesUnit: true, convergenceIncident: convIncident }),
+      engine({
+        op: E.verify,
+        passed: false,
+        clause: "verify-command",
+        convergenceIncident: { ...convIncident, skills: ["excluded-skill"] },
+      }),
+    ]) {
+      const refused = stepCampaign(executing, invalid);
+      expect(refused.entry.accepted).toBe(false);
+      expect(refused.entry.decision).toBe(D.hold);
+      expect(refused.state).toBe(executing);
+    }
+  });
+
+  it("supports optional unitsSha256 on evidence lines and workUnit/unitsSha256 on A.next / A.report", () => {
+    const shaA = "a".repeat(64);
+    const shaB = "b".repeat(64);
+    const line4 = formatCampaignEvidenceLine({
+      seq: 0,
+      authorizedPrivileged: false,
+      eventSha256: shaA,
+      recordSha256: shaB,
+    });
+    expect(Object.keys(JSON.parse(line4))).toEqual([
+      "seq",
+      "authorizedPrivileged",
+      "eventSha256",
+      "recordSha256",
+    ]);
+
+    const lineUnits = formatCampaignEvidenceLine({
+      seq: 1,
+      authorizedPrivileged: true,
+      eventSha256: shaA,
+      recordSha256: shaB,
+      unitsSha256: shaA,
+    });
+    const lineBoth = formatCampaignEvidenceLine({
+      seq: 2,
+      authorizedPrivileged: false,
+      eventSha256: shaA,
+      recordSha256: shaB,
+      artifactSha256: shaB,
+      unitsSha256: shaA,
+    });
+    const parsed = parseCampaignEvidenceLines(`${line4}\n${lineUnits}\n${lineBoth}\n`);
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.lines[1]?.unitsSha256).toBe(shaA);
+      expect(parsed.lines[2]?.artifactSha256).toBe(shaB);
+      expect(parsed.lines[2]?.unitsSha256).toBe(shaA);
+    }
+
+    const charter = makeCharter();
+    const decisions = replayCampaign([...setupCampaign(charter).slice(0, 3)]).final;
+    const preDecisionRegroup = stepCampaign(decisions, {
+      channel: "agent",
+      op: A.next,
+      unitsSha256: shaA,
+    });
+    expect(preDecisionRegroup.entry.accepted).toBe(true);
+    expect(preDecisionRegroup.entry.decision).toBe(D.decisions);
+    expect(preDecisionRegroup.entry.signal).toBe("work-ready");
+
+    const executing = replayCampaign([...setupCampaign(charter)]).final;
+    const nextUnit = stepCampaign(executing, {
+      channel: "agent",
+      op: A.next,
+      workUnit: "unit-a",
+      unitsSha256: shaA,
+    });
+    expect(nextUnit.entry.accepted).toBe(true);
+    expect(nextUnit.entry.decision).toBe(D.explore);
+    expect(nextUnit.entry.workUnit).toBe("unit-a");
+
+    const reportUnit = stepCampaign(executing, {
+      channel: "agent",
+      op: A.report,
+      workUnit: "unit-a",
+      unitsSha256: shaB,
+    });
+    expect(reportUnit.entry.accepted).toBe(true);
+    expect(reportUnit.entry.decision).toBe(D.hold);
+    expect(reportUnit.entry.signal).toBe("work-reported");
+    expect(reportUnit.entry.workUnit).toBe("unit-a");
   });
 });

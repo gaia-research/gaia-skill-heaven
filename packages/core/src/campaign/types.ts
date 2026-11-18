@@ -57,11 +57,13 @@ export type CampaignState = Readonly<{
   steering: SteeringState;
   completed: number;
   total: number;
+  acceptanceCommands?: readonly string[];
 }>;
 
 export type AgentCampaignEvent =
-  | Readonly<{ channel: "agent"; op: typeof A.open; goalSha256?: string }>
-  | Readonly<{ channel: "agent"; op: typeof A.next | typeof A.report | typeof A.status }>
+  | Readonly<{ channel: "agent"; op: typeof A.open; goalSha256?: string; acceptanceCommands?: readonly string[] }>
+  | Readonly<{ channel: "agent"; op: typeof A.next | typeof A.report; workUnit?: string; unitsSha256?: string }>
+  | Readonly<{ channel: "agent"; op: typeof A.status }>
   | Readonly<{ channel: "agent"; op: typeof A.recon; recon: CampaignRecon }>
   | Readonly<{ channel: "agent"; op: typeof A.propose; charter: CampaignCharter }>
   | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>;
@@ -86,6 +88,7 @@ export type EngineCommand =
       workUnit?: string;
       receipt?: VerifyReceipt;
       closesUnit?: boolean;
+      convergenceIncident?: ConvergenceIncident;
     }>
   | Readonly<{ channel: "engine"; op: Exclude<typeof E[keyof typeof E], typeof E.verify>; clause: string }>;
 

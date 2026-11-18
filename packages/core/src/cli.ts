@@ -32,6 +32,7 @@ import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
   EngineOps,
+  ReceiptStatuses,
   campaignSha256Hex,
   canonicalCampaignJson,
   computeOutputDigest,
@@ -436,16 +437,48 @@ export function main(argv: string[]): number {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
 
-    if (!hasSiblingReceipts) {
-      for (const event of record.events) {
-        if (event && event.channel === "engine" && event.op === EngineOps.verify && event.receipt !== undefined) {
-          const parsedReceipt = parseVerifyReceipt(event.receipt);
-          if (!parsedReceipt) {
-            throw new Error("invalid campaign receipts: malformed receipt in verify event");
-          }
-          receipts.push(parsedReceipt);
+    const traceReceipts: VerifyReceipt[] = [];
+    for (let i = 0; i < record.events.length; i++) {
+      const event = record.events[i];
+      if (
+        record.trace[i]?.accepted === true &&
+        event &&
+        event.channel === "engine" &&
+        event.op === EngineOps.verify &&
+        event.receipt !== undefined
+      ) {
+        const parsedReceipt = parseVerifyReceipt(event.receipt);
+        if (!parsedReceipt) {
+          throw new Error("invalid campaign receipts: malformed receipt in verify event");
+        }
+        traceReceipts.push(parsedReceipt);
+      }
+    }
+
+    if (hasSiblingReceipts) {
+      if (receipts.length !== traceReceipts.length) {
+        throw new Error(
+          `invalid campaign receipts: count (${receipts.length}) does not match accepted verify events (${traceReceipts.length})`,
+        );
+      }
+      for (let i = 0; i < traceReceipts.length; i++) {
+        const r = receipts[i]!;
+        const tr = traceReceipts[i]!;
+        const matchesBase =
+          r.schema === tr.schema &&
+          r.unitId === tr.unitId &&
+          r.command === tr.command &&
+          r.outputSha256 === tr.outputSha256 &&
+          r.exitCode === tr.exitCode;
+        const matchesReplayed =
+          r.status !== ReceiptStatuses.replayed ||
+          (r.replayedExitCode === tr.exitCode && r.replayedOutputSha256 === tr.outputSha256);
+        if (!matchesBase || !matchesReplayed) {
+          throw new Error(`invalid campaign receipts: receipt at ${i} does not match verified trace event`);
         }
       }
+    } else {
+      receipts = traceReceipts;
     }
 
     let upgraded = 0;

@@ -101,8 +101,8 @@ const state: Check = v => {
   if (!object(v, {
     state: stateName, charter: nullable(charter), recon: nullable(recon), queue,
     charterRevision: nat, approved: bool, incident: nullable(incident), steering,
-    completed: nat, total: nat,
-  })) return false;
+    completed: nat, total: nat, acceptanceCommands: strings,
+  }, ["acceptanceCommands"])) return false;
   const s = v as CampaignState;
   if (s.completed > s.total || s.total !== s.queue.length) return false;
   if (!s.charter) {
@@ -111,7 +111,7 @@ const state: Check = v => {
     if (!isValidCharterForRecon(s.recon, s.charter, s.charterRevision)) return false;
     if (s.charter.queue.length !== s.queue.length || !s.queue.every((q, i) => q.id === s.charter!.queue[i]!.id && q.skill === s.charter!.queue[i]!.skill && q.reconCitation === s.charter!.queue[i]!.reconCitation)) return false;
   }
-  if (s.state === S.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0)) return false;
+  if (s.state === S.unarmed && (s.charter || s.recon || s.incident || s.completed !== 0 || s.acceptanceCommands !== undefined)) return false;
   if (s.state === S.recon && (s.charter || s.incident)) return false;
   if (s.state === S.decisions && (!s.charter || s.approved || s.incident)) return false;
   if ((s.state === S.executing || s.state === S.convergence || s.state === S.completed) && !s.approved) return false;
@@ -129,8 +129,9 @@ const event: Check = v => {
   const base = { channel: schema(c.value), op: schema(o.value) };
   if (c.value === "agent") {
     switch (o.value) {
-      case A.open: return object(v, { ...base, goalSha256: sha256 }, ["goalSha256"]);
-      case A.next: case A.report: case A.status: return object(v, base);
+      case A.open: return object(v, { ...base, goalSha256: sha256, acceptanceCommands: strings }, ["goalSha256", "acceptanceCommands"]);
+      case A.next: case A.report: return object(v, { ...base, workUnit: text, unitsSha256: sha256 }, ["workUnit", "unitsSha256"]);
+      case A.status: return object(v, base);
       case A.recon: return object(v, { ...base, recon });
       case A.propose: return object(v, { ...base, charter });
       case A.incident: return object(v, { ...base, incident });
@@ -155,8 +156,8 @@ const event: Check = v => {
     return o.value === E.verify
       ? object(
           v,
-          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool },
-          ["workUnit", "receipt", "closesUnit"],
+          { ...base, passed: bool, clause: text, workUnit: text, receipt: verifyReceipt, closesUnit: bool, convergenceIncident: incident },
+          ["workUnit", "receipt", "closesUnit", "convergenceIncident"],
         )
       : object(v, { ...base, clause: text });
   }
