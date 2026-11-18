@@ -610,9 +610,9 @@
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-18T01:30:00-08:00",
+  "updatedAt": "2026-11-18T02:00:00-08:00",
   "quota": {
-    "asOf": "2026-11-18T01:30:00-08:00",
+    "asOf": "2026-11-18T02:00:00-08:00",
     "pools": [
       {
         "pool": "openai",
@@ -623,7 +623,7 @@
       {
         "pool": "openai-codex",
         "covers": "Terra reviewer (pi-reviewer)",
-        "state": "low (founder: Codex almost out); Terra reviews may block on quota",
+        "state": "available (founder 2026-11-18; reviewer-shared answered, model openai-codex/gpt-6.1-terra:high confirmed); lanes use --agent reviewer-shared (max_retries 0, fallback is the same model)",
         "resetAt": null
       },
       {

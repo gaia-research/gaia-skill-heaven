@@ -53,7 +53,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 ## Reviewer invocation (founder directive, updated 2026-11-16)
 
 - **Run the reviewer from your own shell.** No herdr split and no visible pane are needed:
-  `~/.pi/agent/bin/pi-reviewer --cwd <worktree> --timeout 10800 --json --prompt-file <brief>`
+  `~/.pi/agent/bin/pi-reviewer --agent reviewer-shared --cwd <worktree> --timeout 10800 --json --prompt-file <brief>`
   (or the Pi native `reviewer` subagent). The reviewer now has `bash` and verifies
   claims itself (git diff, tests, typecheck, builds). Its agent definition limits shell
   use to verification: no commits, pushes, branch changes or config edits.
@@ -69,7 +69,7 @@ sends you to a section; the plan is `docs/plans/2026-11-15-skill-ultra-campaign-
 
 - Reviewer: Terra High, independent context. Either the Pi native `reviewer`
   subagent (`openai-codex/gpt-6.1-terra:high`) or the centralized command
-  `~/.pi/agent/bin/pi-reviewer --cwd <worktree> --prompt-file <brief>`.
+  `~/.pi/agent/bin/pi-reviewer --agent reviewer-shared --cwd <worktree> --prompt-file <brief>`.
   No other model may act as final reviewer. No silent fallback: if Terra is
   unavailable, stop and report `BLOCKED: awaiting Terra`.
 - The reviewer must read the actual diff (`git diff origin/integration/skill-ultra-126...HEAD`),
