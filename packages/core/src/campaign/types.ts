@@ -23,13 +23,11 @@ export type CampaignRecon = Readonly<{
   findings: readonly string[];
   citations: readonly string[];
 }>;
-export type CampaignManifest = Readonly<{
-  schema: string;
-  campaignId: string;
-  sessionId: string;
-  charterRevision: number;
-  queue: readonly CampaignQueueItem[];
-}>;
+export type {
+  CampaignManifest,
+  CampaignManifestEntry,
+  CampaignManifestGap,
+} from "./manifest.js";
 export type ConvergenceIncident = Readonly<{
   schema: string;
   id: string;

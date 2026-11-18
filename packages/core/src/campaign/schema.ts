@@ -1,7 +1,8 @@
 import { STEERING_RUNGS, SEARCH_STATES } from "../steering.js";
 import { CampaignStates as S, AgentOps as A, OperatorVerbs as O, EngineOps as E, DecisionActions as D, CAMPAIGN_SCHEMA_IDS, CAMPAIGN_STATES, CAMPAIGN_DECISIONS, CAMPAIGN_CHANNELS, CAMPAIGN_PHASES, CAMPAIGN_SIGNALS, AGENT_OPS, OPERATOR_VERBS, ENGINE_OPS } from "./vocabulary.js";
-import type { CampaignCharter, CampaignManifest, CampaignRecon, CampaignTraceEntry, CampaignTraceRecord, CampaignState, CampaignEventDescriptor, ConvergenceIncident, ControllerStatus } from "./types.js";
+import type { CampaignCharter, CampaignRecon, CampaignTraceEntry, CampaignTraceRecord, CampaignState, CampaignEventDescriptor, ConvergenceIncident, ControllerStatus } from "./types.js";
 export { CAMPAIGN_SCHEMA_IDS };
+export { parseCampaignManifest, isValidManifestForRecon } from "./manifest.js";
 type Rec = Record<string, unknown>;
 type Check = (v: unknown) => boolean;
 const str: Check = v => typeof v === "string";
@@ -43,10 +44,6 @@ const charter: Check = v => object(v, {
 });
 const recon: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.recon), findings: strings, citations: strings,
-});
-const manifest: Check = v => object(v, {
-  schema: schema(CAMPAIGN_SCHEMA_IDS.manifest), campaignId: text, sessionId: text,
-  charterRevision: nat, queue,
 });
 const incident: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.incident), id: text, description: text,
@@ -146,7 +143,6 @@ function parse<T>(v: unknown, check: Check): T | null {
 }
 export const parseCampaignCharter = (v: unknown) => parse<CampaignCharter>(v, charter);
 export const parseCampaignRecon = (v: unknown) => parse<CampaignRecon>(v, recon);
-export const parseCampaignManifest = (v: unknown) => parse<CampaignManifest>(v, manifest);
 export const parseConvergenceIncident = (v: unknown) => parse<ConvergenceIncident>(v, incident);
 export const parseCampaignState = (v: unknown) => parse<CampaignState>(v, state);
 export const parseCampaignEvent = (v: unknown) => parse<CampaignEventDescriptor>(v, event);
