@@ -30421,8 +30421,7 @@ function inspectOperatorEnvironment(env = process.env) {
   });
   const multiplexed = detectedVars.length > 0;
   const rawOptIn = env[OPERATOR_MULTIPLEXED_OPT_IN_ENV];
-  const normalizedOptIn = typeof rawOptIn === "string" ? rawOptIn.trim().toLowerCase() : "";
-  const optIn = normalizedOptIn === OPERATOR_MULTIPLEXED_OPT_IN_VALUE || normalizedOptIn === "1" || normalizedOptIn === "true";
+  const optIn = rawOptIn === OPERATOR_MULTIPLEXED_OPT_IN_VALUE;
   return Object.freeze({
     attribution: OPERATOR_ATTRIBUTION,
     channel: OPERATOR_CHANNEL_MCP_ELICITATION,

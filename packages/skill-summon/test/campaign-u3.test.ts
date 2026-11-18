@@ -33,6 +33,7 @@ import {
   executeRecon,
   executeStatus,
   getCampaignToolInputJsonSchema,
+  inspectOperatorEnvironment,
   measureCampaignToolStandingDose,
   renderControlStrategy,
   type GaiaRegistryDocuments,
@@ -431,6 +432,43 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
         if (!res.ok) {
           expect(res.reason).toBe("multiplexed-fail-closed");
           expect(res.error?.message).not.toContain(OPERATOR_MULTIPLEXED_OPT_IN_ENV);
+        }
+      },
+    );
+
+    it.each(["1", "true", "yes", "Accept-Risk "])(
+      "multiplexed env with non-exact opt-in (%j) fails closed and reports optIn: false",
+      async (optInValue) => {
+        const { proposeRes } = await openReconAndPropose();
+        const env = {
+          HERDR_ENV: "1",
+          [OPERATOR_MULTIPLEXED_OPT_IN_ENV]: optInValue,
+        };
+        expect(inspectOperatorEnvironment(env)).toMatchObject({
+          multiplexed: true,
+          optIn: false,
+        });
+
+        let elicitCalled = false;
+        const res = await executeOperatorDecide(session, {
+          elicit: async () => {
+            elicitCalled = true;
+            return {
+              action: ElicitationActions.accept,
+              content: {
+                decision: OperatorDecisionChoices.approve,
+                digest: proposeRes.shortDigest,
+              },
+            };
+          },
+          env,
+        });
+        expect(elicitCalled).toBe(false);
+        expect(res.ok).toBe(false);
+        expect(res.refused).toBe(true);
+        expect(res.state.state).toBe(CampaignStates.decisions);
+        if (!res.ok) {
+          expect(res.reason).toBe("multiplexed-fail-closed");
         }
       },
     );
