@@ -606,11 +606,30 @@
       "terra": "not needed (no campaign code changed)",
       "outcome": "Pushed 1ed2ff2",
       "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
+    },
+    {
+      "id": "D-017",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "integration",
+      "problem": "Founder asked for #269 (/landing mobile plate framing) to land as a patch on main and for integration to be reconciled.",
+      "options": [
+        "Squash-merge #269 to main, then merge main into integration",
+        "Carry #269 inside integration only"
+      ],
+      "selected": "#269 squash-merged to main (301e051) on the founder's instruction; main merged into integration --no-ff (9547374). Typecheck green; suite 2609/2609 with CLAUDE_CODE_SESSION_ID unset and fixed.",
+      "reason": "Founder instruction; the change touches only packages/site.",
+      "authority": "Founder instruction (merge #269 to main and reconcile)",
+      "reversible": true,
+      "terra": "not needed (no campaign code changed)",
+      "outcome": "Pushed 9547374",
+      "risk": "Open unit branches (U0b, U8, P1) should merge integration before their next review."
     }
   ],
   "blockers": [],
   "awaitingFounder": [],
-  "updatedAt": "2026-11-18T02:00:00-08:00",
+  "updatedAt": "2026-11-18",
   "quota": {
     "asOf": "2026-11-18T02:00:00-08:00",
     "pools": [
@@ -655,7 +674,9 @@
       "branch": "fix/site-267-safari-lucy-composite",
       "base": "main dcc7fbd",
       "prTo": "main (draft, founder-reviewed visual)",
-      "status": "dispatched 2026-11-18"
+      "status": "PR #270 draft to main; Terra 0 blocking; typecheck/tests/site build green; founder reports it works; awaiting founder merge (~9.2 MB evidence PNGs)",
+      "pr": 270,
+      "head": "8e7ee69"
     }
   ]
 }
