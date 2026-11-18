@@ -8,6 +8,7 @@ const str: Check = v => typeof v === "string";
 const text: Check = v => typeof v === "string" && v.trim().length > 0;
 const bool: Check = v => typeof v === "boolean";
 const nat: Check = v => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
+const sha256: Check = v => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 const member = (values: readonly string[]): Check => v => typeof v === "string" && values.includes(v);
 const nullable = (check: Check): Check => v => v === null || check(v);
 /** Reject accessors, inherited records, symbol/non-enumerable extras and sparse/extended arrays. */
@@ -95,7 +96,8 @@ const event: Check = v => {
   const base = { channel: schema(c.value), op: schema(o.value) };
   if (c.value === "agent") {
     switch (o.value) {
-      case A.open: case A.next: case A.report: case A.status: return object(v, base);
+      case A.open: return object(v, { ...base, goalSha256: sha256 }, ["goalSha256"]);
+      case A.next: case A.report: case A.status: return object(v, base);
       case A.recon: return object(v, { ...base, recon });
       case A.propose: return object(v, { ...base, charter });
       case A.incident: return object(v, { ...base, incident });

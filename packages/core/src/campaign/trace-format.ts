@@ -117,6 +117,7 @@ export type PersistedCampaignEvidenceLine = Readonly<{
   authorizedPrivileged: boolean;
   eventSha256: string;
   recordSha256: string;
+  artifactSha256?: string;
 }>;
 
 export type ParsedCampaignEvidenceLines =
@@ -133,6 +134,7 @@ export function formatCampaignEvidenceLine(line: PersistedCampaignEvidenceLine):
     authorizedPrivileged: line.authorizedPrivileged,
     eventSha256: line.eventSha256,
     recordSha256: line.recordSha256,
+    ...(line.artifactSha256 !== undefined ? { artifactSha256: line.artifactSha256 } : {}),
   });
 }
 
@@ -145,10 +147,21 @@ function parsePlainEvidenceLineObject(rawObj: unknown, expectedSeq: number): Per
   const proto = Object.getPrototypeOf(rawObj);
   if (proto !== Object.prototype && proto !== null) return null;
   const keys = Reflect.ownKeys(rawObj);
-  if (keys.length !== 4) return null;
+  if (keys.length !== 4 && keys.length !== 5) return null;
   for (const required of ["seq", "authorizedPrivileged", "eventSha256", "recordSha256"] as const) {
     const desc = Object.getOwnPropertyDescriptor(rawObj, required);
     if (!desc || !Object.hasOwn(desc, "value") || !desc.enumerable) return null;
+  }
+  if (keys.length === 5) {
+    const desc = Object.getOwnPropertyDescriptor(rawObj, "artifactSha256");
+    if (
+      !desc ||
+      !Object.hasOwn(desc, "value") ||
+      !desc.enumerable ||
+      !isSha256Hex(rawObj.artifactSha256)
+    ) {
+      return null;
+    }
   }
   if (
     rawObj.seq !== expectedSeq ||
@@ -163,6 +176,7 @@ function parsePlainEvidenceLineObject(rawObj: unknown, expectedSeq: number): Per
     authorizedPrivileged: rawObj.authorizedPrivileged,
     eventSha256: rawObj.eventSha256,
     recordSha256: rawObj.recordSha256,
+    ...(keys.length === 5 ? { artifactSha256: rawObj.artifactSha256 as string } : {}),
   });
 }
 
