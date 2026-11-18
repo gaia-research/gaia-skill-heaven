@@ -59,7 +59,7 @@
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/265",
       "head": "72f6277",
       "terra": "source PASS at c26d9b5 after 5 blocking rounds; invalidated by the defect below; re-review pending",
-      "status": "paused by founder (Pi quota); lead interrupted in tab u0b-lead; branch pushed at 5d6b1b2, local HEAD 0c64224; three-mode verification and Terra re-review still owed"
+      "status": "integrated (5af657a; Terra PASS on 3fa0286; Argon High lead under D-018)"
     },
     {
       "id": "U1",
@@ -68,13 +68,13 @@
         "U0b"
       ],
       "tier": "standard",
-      "team": null,
+      "team": "B (Pi)",
       "worker": null,
       "branch": "feat/ws6-ultra-u1",
       "pr": null,
       "head": null,
       "terra": "pending",
-      "status": "waiting"
+      "status": "dispatched 2026-11-18 (Pi, Argon High lead, tab u1-lead)"
     },
     {
       "id": "U2",
@@ -661,6 +661,25 @@
       "terra": "not needed for the evidence-only delta (code reviewed by Terra at 1d24a8e)",
       "outcome": "#267 closed",
       "risk": "none for campaign code"
+    },
+    {
+      "id": "D-020",
+      "kind": "delegated",
+      "date": "2026-11-18",
+      "team": "A (Opus orchestrator)",
+      "unit": "U0b",
+      "problem": "U0b lead reported READY FOR REVIEW at 5bde00b.",
+      "options": [
+        "Accept and merge into integration",
+        "Send back"
+      ],
+      "selected": "Accepted. Terra PASS on 3fa0286 (both residual test-proof gaps closed; integration merge clean); 3fa0286..HEAD evidence-only. Orchestrator checks: typecheck 0; 2716/2716 with CLAUDE_CODE_SESSION_ID unset, fixed and inherited; build:mcp/status/console with no drift; privacy scan found one private path in the handoff, redacted (1d550aa). Merged --no-ff (5af657a); integration suite 2716/2716 unset and fixed.",
+      "reason": "All acceptance checks met.",
+      "authority": "D-001",
+      "reversible": true,
+      "terra": "PASS (reviews/U0b-3fa0286.md)",
+      "outcome": "U1 unblocked and dispatched",
+      "risk": "The earlier Terra pass on 3fa0286 was incomplete (no new findings); the final bounded pass is the PASS of record."
     }
   ],
   "blockers": [],
