@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { ledgerState, agyState, jsonLines, readBounded, MAX_BYTES, unknownState } from "../src/reader.js";
-import { harnessById, HARNESS_PATHS, buildConsoleView, renderConsoleText } from "../../status/src/index.js";
+import { harnessById, HARNESS_PATHS, buildConsoleView, renderConsoleText, renderStatusSegments, toPlain, recordSelection, describeStatus } from "../../status/src/index.js";
 import { build } from "esbuild";
 import { visibleWidth } from "@earendil-works/pi-tui";
 
@@ -88,6 +88,209 @@ describe("bounded, exact-session readers", () => {
     const target = join(steps, "4", "output.txt"); symlinkSync(outside, target);
     writeFileSync(path, [summon, { type: "GENERIC", status: "DONE", content: "saved to: " + pathToFileURL(target).href }].map(x => JSON.stringify(x)).join("\n"));
     expect(() => agyState(path)).toThrow("escapes");
+  });
+
+  it("consumes optional exact campaign/status.json and renders reported progress without inferring success", () => {
+    const root = temp();
+    writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
+    writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n");
+    const noCampaign = ledgerState(root);
+    expect(noCampaign.status.controller).toEqual({ kind: "not-selected" });
+    expect(noCampaign.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+    expect(noCampaign.status.skills).toBe(1);
+    expect(noCampaign.status.summons).toBe(1);
+
+    mkdirSync(join(root, "campaign"), { recursive: true });
+    writeFileSync(
+      join(root, "campaign", "status.json"),
+      JSON.stringify({
+        schema: "skill-heaven/controller-status/v1",
+        state: "CONVERGENCE",
+        effective: "low",
+        progress: { completed: 2, total: 5 },
+      }),
+    );
+    const withCampaign = ledgerState(root);
+    expect(withCampaign.status.skills).toBe(1);
+    expect(withCampaign.status.summons).toBe(1);
+    expect(withCampaign.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+    expect(withCampaign.selectedFrom).toBeNull();
+    expect(withCampaign.status.controller).toEqual({
+      kind: "reported",
+      source: "campaign",
+      state: "CONVERGENCE",
+      effective: "low",
+      progress: { completed: 2, total: 5 },
+    });
+    const rendered = toPlain(renderStatusSegments(withCampaign.status, "full"));
+    expect(rendered).toBe("◇ entropy ‹‹ [NATIVE] ›› · 1 skill / 1 summon · CONVERGENCE · now LOW ‹ · 2/5 · +Synthetic Skill");
+    expect(describeStatus(withCampaign.status)).toContain("Reported campaign status: convergence, working at low (2/5).");
+    const consoleText = renderConsoleText(buildConsoleView(withCampaign, harnessById("codex")), { details: true });
+    expect(consoleText).toContain("CONVERGENCE · now LOW ‹ · 2/5");
+    expect(consoleText).not.toContain("[ULTRA]");
+    expect(consoleText).not.toContain("rung ULTRA");
+    expect(consoleText).toContain("campaign        CONVERGENCE · now LOW · 2/5  reported");
+  });
+
+  it("fails closed on malformed campaign/status.json while preserving no-campaign counters", () => {
+    for (const payload of [
+      "{malformed",
+      JSON.stringify({ schema: "skill-heaven/controller-status@0", state: "CONVERGENCE", progress: { completed: 1, total: 2 } }),
+      JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "RECON", extra: true }),
+      JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "EXECUTING", progress: { completed: 5, total: 2 } }),
+    ]) {
+      const root = temp();
+      writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
+      writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n");
+      mkdirSync(join(root, "campaign"), { recursive: true });
+      writeFileSync(join(root, "campaign", "status.json"), payload);
+
+      const state = ledgerState(root);
+      expect(state.status.controller).toEqual({ kind: "not-selected" });
+      expect(state.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+      expect(state.status.skills).toBe(1);
+      expect(state.status.summons).toBe(1);
+    }
+  });
+
+  it("bounds campaign/status.json reads and rejects symlink escapes", () => {
+    const rootLarge = temp();
+    writeFileSync(join(rootLarge, "session.json"), JSON.stringify({ skills: result.summoned }));
+    writeFileSync(join(rootLarge, "summon-log.jsonl"), "");
+    mkdirSync(join(rootLarge, "campaign"), { recursive: true });
+    writeFileSync(join(rootLarge, "campaign", "status.json"), Buffer.alloc(MAX_BYTES + 1));
+    expect(() => ledgerState(rootLarge)).toThrow("bound");
+
+    const rootFileEscape = temp();
+    writeFileSync(join(rootFileEscape, "session.json"), JSON.stringify({ skills: result.summoned }));
+    writeFileSync(join(rootFileEscape, "summon-log.jsonl"), "");
+    mkdirSync(join(rootFileEscape, "campaign"), { recursive: true });
+    const outside = join(temp(), "outside.json");
+    writeFileSync(outside, JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "RECON" }));
+    symlinkSync(outside, join(rootFileEscape, "campaign", "status.json"));
+    expect(() => ledgerState(rootFileEscape)).toThrow("escapes");
+
+    const rootDirEscape = temp();
+    writeFileSync(join(rootDirEscape, "session.json"), JSON.stringify({ skills: result.summoned }));
+    writeFileSync(join(rootDirEscape, "summon-log.jsonl"), "");
+    const outsideDir = temp();
+    writeFileSync(join(outsideDir, "status.json"), JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "RECON" }));
+    symlinkSync(outsideDir, join(rootDirEscape, "campaign"));
+    expect(() => ledgerState(rootDirEscape)).toThrow("escapes");
+  });
+
+  it("renders RECON/progress in a fresh no-summon session without summon-log.jsonl", () => {
+    const root = temp();
+    writeFileSync(join(root, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(root, "campaign"), { recursive: true });
+    writeFileSync(
+      join(root, "campaign", "status.json"),
+      JSON.stringify({
+        schema: "skill-heaven/controller-status/v1",
+        state: "RECON",
+        progress: { completed: 0, total: 3 },
+      }),
+    );
+
+    const state = ledgerState(root);
+    expect(state.entries).toEqual([]);
+    expect(state.selectedFrom).toBeNull();
+    expect(state.status.skills).toBe(0);
+    expect(state.status.summons).toBe(0);
+    expect(state.status.lastArrival).toBeNull();
+    expect(state.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+    expect(state.status.controller).toEqual({
+      kind: "reported",
+      source: "campaign",
+      state: "RECON",
+      progress: { completed: 0, total: 3 },
+    });
+    expect(toPlain(renderStatusSegments(state.status, "full"))).toBe(
+      "◇ entropy ‹‹ [NATIVE] ›› · 0 skills / 0 summons · RECON · 0/3",
+    );
+    const consoleText = renderConsoleText(buildConsoleView(state, harnessById("codex")), { details: true });
+    expect(consoleText).toContain("RECON · 0/3");
+    expect(consoleText).not.toContain("[ULTRA]");
+  });
+
+  it("terminal or stale reported campaign does not force Ultra or overwrite reading/source or command selection", () => {
+    for (const terminalState of ["STOP", "CLOSE", "FAILED_SAFE"] as const) {
+      const root = temp();
+      writeFileSync(join(root, "session.json"), JSON.stringify({ skills: result.summoned }));
+      writeFileSync(join(root, "summon-log.jsonl"), JSON.stringify({ query: "synthetic", surface: "any", chosen: [{ id: "synthetic" }] }) + "\n");
+      mkdirSync(join(root, "campaign"), { recursive: true });
+      writeFileSync(
+        join(root, "campaign", "status.json"),
+        JSON.stringify({
+          schema: "skill-heaven/controller-status/v1",
+          state: terminalState,
+          progress: { completed: 2, total: 5 },
+        }),
+      );
+
+      const state = ledgerState(root);
+      expect(state.status.reading).toEqual({ kind: "native", source: "no-launcher" });
+      expect(state.selectedFrom).toBeNull();
+      expect(state.status.controller).toEqual({
+        kind: "reported",
+        source: "campaign",
+        state: terminalState,
+        progress: { completed: 2, total: 5 },
+      });
+      const rendered = toPlain(renderStatusSegments(state.status, "full"));
+      expect(rendered).toBe(`◇ entropy ‹‹ [NATIVE] ›› · 1 skill / 1 summon · ${terminalState} · 2/5 · +Synthetic Skill`);
+      expect(rendered).not.toContain("[ULTRA]");
+
+      const selected = recordSelection(state, { kind: "selected", rung: "low", source: "observed-command" }, "/skill-heaven low");
+      expect(selected.status.reading).toEqual({ kind: "selected", rung: "low", source: "observed-command" });
+      expect(selected.selectedFrom).toBe("/skill-heaven low");
+      expect(selected.status.controller).toEqual({
+        kind: "reported",
+        source: "campaign",
+        state: terminalState,
+        progress: { completed: 2, total: 5 },
+      });
+      expect(toPlain(renderStatusSegments(selected.status, "full"))).toBe(
+        `◇ entropy ‹‹ [LOW] ›› · 1 skill / 1 summon · ${terminalState} · 2/5 · +Synthetic Skill`,
+      );
+    }
+  });
+
+  it("preserves ENOENT when neither campaign nor log exists and never suppresses log errors", () => {
+    const rootMissing = temp();
+    writeFileSync(join(rootMissing, "session.json"), JSON.stringify({ skills: [] }));
+    expect(() => ledgerState(rootMissing)).toThrow(/ENOENT/);
+
+    const rootMalformedCampaign = temp();
+    writeFileSync(join(rootMalformedCampaign, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootMalformedCampaign, "campaign"), { recursive: true });
+    writeFileSync(join(rootMalformedCampaign, "campaign", "status.json"), "{malformed");
+    expect(() => ledgerState(rootMalformedCampaign)).toThrow(/ENOENT/);
+
+    const validCampaign = JSON.stringify({ schema: "skill-heaven/controller-status/v1", state: "RECON" });
+
+    const rootMalformedLog = temp();
+    writeFileSync(join(rootMalformedLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootMalformedLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootMalformedLog, "campaign", "status.json"), validCampaign);
+    writeFileSync(join(rootMalformedLog, "summon-log.jsonl"), "{partial");
+    expect(() => ledgerState(rootMalformedLog)).toThrow("incomplete source");
+
+    const rootOversizedLog = temp();
+    writeFileSync(join(rootOversizedLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootOversizedLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootOversizedLog, "campaign", "status.json"), validCampaign);
+    writeFileSync(join(rootOversizedLog, "summon-log.jsonl"), Buffer.alloc(MAX_BYTES + 1));
+    expect(() => ledgerState(rootOversizedLog)).toThrow("bound");
+
+    const rootSymlinkLog = temp();
+    writeFileSync(join(rootSymlinkLog, "session.json"), JSON.stringify({ skills: [] }));
+    mkdirSync(join(rootSymlinkLog, "campaign"), { recursive: true });
+    writeFileSync(join(rootSymlinkLog, "campaign", "status.json"), validCampaign);
+    const outsideLog = join(temp(), "outside-log.jsonl");
+    writeFileSync(outsideLog, "");
+    symlinkSync(outsideLog, join(rootSymlinkLog, "summon-log.jsonl"));
+    expect(() => ledgerState(rootSymlinkLog)).toThrow("escapes");
   });
 });
 

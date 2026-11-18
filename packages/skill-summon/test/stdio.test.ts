@@ -32,6 +32,8 @@ describe("skill-summon-mcp stdio executable", () => {
   let session: SummonSession;
 
   beforeEach(async () => {
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.SKILL_SUMMON_SESSION;
     session = await openSession();
     fixtureServer = createServer((request, response) => {
       response.setHeader("content-type", "application/json");
@@ -97,6 +99,8 @@ describe("skill-summon-mcp stdio executable", () => {
   });
 
   afterEach(async () => {
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.SKILL_SUMMON_SESSION;
     await client?.close();
     await new Promise<void>((resolveClose, reject) => {
       fixtureServer.close((error) => (error ? reject(error) : resolveClose()));
@@ -126,7 +130,7 @@ describe("skill-summon-mcp stdio executable", () => {
     await client.connect(transport);
 
     const tools = await client.listTools();
-    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon"]);
+    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon", "campaign"]);
 
     const result = await client.callTool({
       name: "summon",

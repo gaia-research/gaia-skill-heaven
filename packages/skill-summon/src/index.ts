@@ -65,3 +65,130 @@ export type {
 export { GaiaService } from "./service.js";
 export type { GaiaServiceOptions } from "./service.js";
 export { VERSION } from "./version.js";
+export {
+  CAMPAIGN_DIR_NAME,
+  CAMPAIGN_TRACE_FILE,
+  CAMPAIGN_EVIDENCE_FILE,
+  CAMPAIGN_STATUS_FILE,
+  CAMPAIGN_GOAL_FILE,
+  CAMPAIGN_RECON_FILE,
+  CAMPAIGN_CHARTER_FILE,
+  CAMPAIGN_OPERATOR_LOG_FILE,
+  CAMPAIGN_UNITS_FILE,
+  CAMPAIGN_RECEIPTS_FILE,
+  CampaignStore,
+  computeCharterCoreSha256,
+  computeCharterStrategySha256,
+  formatCharterSha256Clause,
+  parseCampaignGoalContract,
+  stripSelfCharterShaClause,
+  type CampaignCharterArsenalItem,
+  type CampaignCharterAuthoritySplit,
+  type CampaignCharterTemplate,
+  type CampaignGoalContract,
+  type CampaignStoreAppendResult,
+  type CampaignStoreLoadOptions,
+  type PersistedCampaignCharterStrategy,
+} from "./campaign/store.js";
+export {
+  CHARTER_AUTHORITY_SPLIT_TEMPLATE,
+  buildCharterTemplate,
+  executePropose,
+  parseCharterProposalInput,
+  type CampaignProposeResult,
+  type CharterArsenalProposalItem,
+  type CharterProposalInput,
+} from "./campaign/ops/propose.js";
+export {
+  executeOperatorAmend,
+  executeOperatorAnswer,
+  executeOperatorCheckpoint,
+  executeOperatorDecide,
+  executeOperatorStop,
+  inspectOperatorEnvironment,
+  type ElicitationClient,
+  type ElicitationFormRequest,
+  type ElicitationResponse,
+  type OperatorCharterAmendment,
+  type OperatorDecisionOptions,
+  type OperatorDecisionResult,
+  type OperatorEnvironment,
+  type OperatorLogEntry,
+} from "./campaign/operator.js";
+export {
+  buildCampaignDigest,
+  readSessionCampaignDigest,
+  executeStatus,
+  type CampaignDigest,
+  type CampaignRefusalError,
+  type CampaignStatusResult,
+} from "./campaign/ops/status.js";
+export {
+  executeCheckpoint,
+  loadOrInitializeWorkUnitQueue,
+  type CampaignCheckpointResult,
+} from "./campaign/ops/checkpoint.js";
+export {
+  executeNext,
+  type CampaignNextResult,
+} from "./campaign/ops/next.js";
+export {
+  executeReport,
+  type CampaignReportResult,
+} from "./campaign/ops/report.js";
+export {
+  normalizeGoalContractInput,
+  executeOpen,
+  type CampaignOpenResult,
+} from "./campaign/ops/open.js";
+export {
+  executeRecon,
+  readPersistedReconRecord,
+  type CampaignReconRecord,
+  type ReconGapRecord,
+  type ReconCandidateCard,
+  type ReconGapRefusal,
+  type ReconLaneClassification,
+  type ReconCandidateLaneLens,
+  type ReconFreshnessLens,
+  type ReconCandidateInstallabilityLens,
+  type ReconGapInstallabilityLens,
+  type ReconCandidateArborLens,
+  type ReconCandidateGraphLens,
+  type ReconGapArborLens,
+  type ReconGapGraphLens,
+  type CampaignReconResult,
+} from "./campaign/ops/recon.js";
+export {
+  CONTROL_STRATEGY_GROUP_ID,
+  CONTROL_STRATEGY_GROUP_TITLE,
+  DECLARED_NOT_MEASURED_GROUP_ID,
+  DECLARED_NOT_MEASURED_GROUP_TITLE,
+  buildControlStrategyGroup,
+  buildDeclaredNotMeasuredGroup,
+  createManifestRenderGroup,
+  renderCampaignManifest,
+  renderCampaignManifestLines,
+  renderControlStrategy,
+  renderControlStrategyLines,
+  renderManifestEntry,
+  renderManifestEntryLenses,
+  renderManifestGap,
+  renderManifestGroup,
+  withManifestGroup,
+  type ControlStrategyRenderInput,
+  type ManifestGroupBuilder,
+  type ManifestRenderGroup,
+  type RenderCampaignManifestOptions,
+} from "./campaign/render.js";
+export {
+  CAMPAIGN_TOOL_NAME,
+  CAMPAIGN_TOOL_TITLE,
+  CAMPAIGN_TOOL_DESCRIPTION,
+  campaignInputSchema,
+  getCampaignToolInputJsonSchema,
+  measureCampaignToolStandingDose,
+  executeCampaignTool,
+  registerCampaignTool,
+  type CampaignToolStandingDose,
+} from "./campaign/tool.js";

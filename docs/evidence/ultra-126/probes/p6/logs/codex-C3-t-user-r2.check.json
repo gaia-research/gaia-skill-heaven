@@ -1,0 +1,62 @@
+{
+  "threadId": "01a1e1ae-fa0f-7d61-9163-d4d985a13268",
+  "rollout": {
+    "rolloutFile": "rollout-2026-11-16T08-08-23-01a1e1ae-fa0f-7d61-9163-d4d985a13268.jsonl",
+    "sessionMeta": {
+      "session_id": "01a1e1ae-fa0f-7d61-9163-d4d985a13268",
+      "originator": "codex-tui",
+      "cli_version": "0.169.0",
+      "source": "cli",
+      "model_provider": "openai"
+    },
+    "turns": [
+      {
+        "turn_id": "01a1e1ae-ffa3-7633-8a51-e4e102664d8f",
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "approval_policy": "on-request",
+        "approvals_reviewer": "user",
+        "sandbox_policy": {
+          "type": "workspace-write",
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      }
+    ],
+    "skillLoadedInRollout": false,
+    "preexecMarkerInRollout": false
+  },
+  "cmdJsonExists": false,
+  "mcp": {
+    "envNames": [],
+    "envValues": {},
+    "initializeParams": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {
+        "experimental": {
+          "codex/auth-change": {}
+        },
+        "extensions": {
+          "openai/elicitation": {}
+        },
+        "elicitation": {
+          "form": {},
+          "url": {}
+        }
+      },
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.169.0"
+      }
+    },
+    "toolsCallMeta": [],
+    "toolsCallNames": [],
+    "elicitationRequests": [],
+    "elicitationResponses": [],
+    "elicitationTimeouts": [],
+    "operatorDecideCalled": false,
+    "operatorDecideCount": 0
+  }
+}

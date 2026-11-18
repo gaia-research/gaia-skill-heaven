@@ -1,6 +1,6 @@
 ---
 description: "Ultra crown rung reference: caller picks direction and depth."
-allowed-tools: Bash(node:*), mcp__skill-summon__summon
+allowed-tools: Bash(node:*), mcp__skill-summon__summon, mcp__skill-summon__campaign
 ---
 
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/render-ladder.mjs" ultra --intent-stdin <<'SKILL_HEAVEN_ARGS_EOF'
@@ -31,6 +31,24 @@ validated host-runtime event or an explicit lifecycle reopen control. Retrieval
 refusal and ranking scores are not behavioral evidence; absent or malformed
 events hold. The core `skill-zero` package exposes the caller contract and a
 replayable trace.
+
+When the block reports a provisioned campaign goal or subcommand
+(`/skill-ultra <goal>`, `decide`, `amend`, `status`, `stop`, and `answer` wired
+in U6), treat it under the same boundary. Under `/skill-ultra <goal>`, when a
+campaign handshake fits the user's request and permissions already held, the
+`campaign` tool runs `op: "open"` (goal contract), `op: "recon"` (deterministic
+`preview: true` per gap, materializing nothing), and `op: "propose"` (citing a
+recon record where every arsenal entry traces to a card in that record, with
+explicit `recoverLimit`, `reopenLimit`, and `sessionRetention` bounds and no
+compiled default), then presents the rendered control strategy at `DECISIONS`.
+Under `decide` or `amend`, the `campaign` tool (`op: "decide"` or
+`op: "amend"`) requests the person's decision (`approve`, `amend` at revision
+`n+1` keeping the queue, or `decline`) over MCP elicitation
+(`channel: "mcp-elicitation"`, `attribution: "terminal-input, unauthenticated"`),
+where elicitation `cancel` or `decline` leaves `DECISIONS` unchanged and
+multiplexed environments fail closed by default. Under `status`, `op: "status"`
+reports the current state and digest; `stop` and `answer` (wired in U6) use
+the operator channel.
 
 Honor source invocation metadata: fleet skills marked
 `disable-model-invocation: true` are human-led and stay out of the model-led

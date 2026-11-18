@@ -90,6 +90,17 @@ export function runtime(overrides: {
     schema: "gaia.arbor-runtime/v1",
     subject,
     inputDigest: digest("d"),
+    applicability: {
+      applicable: true,
+      identityVersion: "gaia.arbor-behavioral-identity/v1",
+      behavioralSha256: digest("b"),
+      canonical: "behavior-equivalent",
+      instruction: {
+        status: "immutable-ref",
+        refKind: "commit",
+        baselineSha256: digest("c"),
+      },
+    },
     lenses: {
       claims:
         overrides.claims ??

@@ -152,23 +152,28 @@ plan exists to avoid.
 
 ## Lane G — The interaction graph
 
-**Owner:** `gaia-skill-tree` · **Entry:** open · **Blocks:** the behavior-aware
+**Owner:** `gaia-skill-tree` · **Entry:** contracts + projection delivered upstream; empirical data open · **Blocks:** the behavior-aware
 half of Lane S
 
-Arbor's four ratified contracts are all per-skill. The interaction graph —
-`stabilizes`, `amplifies`, `conflicts`, `recovers`, `compresses-after`,
-`unlocks`, `duplicates` — is specified in ENDGAME §8 and has **no contract and
-no published projection**. It is the dominant Arbor structure and the thing
-Skill Hell needs to mean more than a longer list.
+The interaction graph — `stabilizes`, `amplifies`, `conflicts`, `recovers`,
+`compresses-after`, `unlocks`, `duplicates` — is specified in ENDGAME §8.
+Upstream (`gaia-skill-tree`, `registry/arbor/README.md` item 5) now ships the
+edge contract chain (`gaia.arbor-edge-declaration/v1`, `gaia.arbor-edge-observation/v1`,
+`gaia.arbor-edge-interpretation/v1`, `gaia.arbor-edge/v1`, and
+`gaia.arbor-edge-index/v1` covering all seven kinds) and publishes
+`docs/graph/arbor/edges.json`. At the pinned Arbor I seed revision, the
+published projection holds **3 `expert-declared` edges** (`duplicates`,
+`unlocks`, `recovers`, `observationSources: []`, `interpretationSource: null`)
+with `pairsEvaluated: 0` and `absenceMeaning: "not-evaluated"`.
 
 ### Work
 
-| # | Item |
-|---|---|
-| G1 | An edge contract, alongside the existing four, rejecting prestige recursively as they do |
-| G2 | Edge provenance on the same declaration → observation → governed interpretation axis. An edge is a claim under conditions, not a fact |
-| G3 | Separation from Yggdrasil fusion enforced structurally, not by convention (SPEC INV-9) |
-| G4 | A published projection consumers can read |
+| # | Item | Status |
+|---|---|---|
+| G1 | An edge contract, alongside the existing four, rejecting prestige recursively as they do | Delivered upstream (`gaia.arbor-edge/v1`, `gaia.arbor-edge-index/v1`) |
+| G2 | Edge provenance on the same declaration → observation → governed interpretation axis. An edge is a claim under conditions, not a fact | Delivered upstream (3 `expert-declared` edges; `pairsEvaluated: 0`) |
+| G3 | Separation from Yggdrasil fusion enforced structurally, not by convention (SPEC INV-9) | Delivered upstream (`arbor.py` rejects structural keys; `structuralOverlap: "not-evaluated"`) |
+| G4 | A published projection consumers can read | Delivered upstream (`docs/graph/arbor/edges.json`, consumed by `packages/core/src/arbor/consume.ts`) |
 
 ### Why it is not in this repository
 
@@ -177,7 +182,9 @@ consumer — the precise mistake this replan corrects. Recorded as SPEC Q1.
 
 ### Degraded state
 
-Until G4 exists, composition is relevance-only and discloses it (SPEC §5.1).
+G1–G4 are delivered as contracts and a projection, but `pairsEvaluated` is still `0`
+(no edge has an observation or governed interpretation yet). Composition remains
+relevance-only and discloses declared edges as unverified hypotheses (SPEC §5.1).
 Acceptable, indefinitely.
 
 ---

@@ -1,0 +1,16 @@
+{
+  "door": "agy",
+  "cell": "C3-t-rr",
+  "run": 1,
+  "settingsOverride": {
+    "toolPermission": "request-review",
+    "permissions": {
+      "allow": []
+    }
+  },
+  "mode": "auto",
+  "promptRaised": true,
+  "userDeclinedShown": true,
+  "operatorDecideCalled": false,
+  "toolsCallSentToServer": false
+}

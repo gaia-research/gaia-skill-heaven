@@ -65,9 +65,13 @@ describe("skill-summon MCP protocol", () => {
   // into the shared OS temp directory across runs.
   let session: SummonSession | undefined;
   let previousSessionEnv: string | undefined;
+  let previousHarnessIdEnv: string | undefined;
 
   beforeEach(async () => {
     previousSessionEnv = process.env.SKILL_SUMMON_SESSION;
+    previousHarnessIdEnv = process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.CLAUDE_CODE_SESSION_ID;
+    delete process.env.SKILL_SUMMON_SESSION;
     session = await openSession();
     process.env.SKILL_SUMMON_SESSION = session.root;
   });
@@ -78,6 +82,8 @@ describe("skill-summon MCP protocol", () => {
     session = undefined;
     if (previousSessionEnv === undefined) delete process.env.SKILL_SUMMON_SESSION;
     else process.env.SKILL_SUMMON_SESSION = previousSessionEnv;
+    if (previousHarnessIdEnv === undefined) delete process.env.CLAUDE_CODE_SESSION_ID;
+    else process.env.CLAUDE_CODE_SESSION_ID = previousHarnessIdEnv;
   });
 
   it("registers summon and only summon", async () => {
@@ -96,7 +102,7 @@ describe("skill-summon MCP protocol", () => {
     );
 
     const tools = await client.listTools();
-    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon"]);
+    expect(tools.tools.map((tool) => tool.name)).toEqual(["summon", "campaign"]);
   });
 
   // #85: server instructions are copied verbatim into client context, so they
@@ -304,7 +310,7 @@ describe("skill-summon MCP protocol", () => {
       );
 
       const tools = await client.listTools();
-      expect(tools.tools).toHaveLength(1);
+      expect(tools.tools).toHaveLength(2);
     },
   );
 });

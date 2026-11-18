@@ -17,6 +17,7 @@
 
 import {
   ARBOR_LENSES,
+  type ArborApplicability,
   type ArborClaim,
   type ArborEdge,
   type ArborLensName,
@@ -137,6 +138,8 @@ export type ArborSubjectReport = {
   join: ArborJoin;
   /** The published subject this candidate was pinned to, when proven. */
   matchedSubject: ArborSubjectRef | null;
+  /** Upstream behavioral applicability for the pinned runtime, or null when unpinned. */
+  applicability: ArborApplicability | null;
   lenses: Record<ArborLensName, ArborLensReport>;
   lensesConsulted: ArborLensName[];
   lensesAbsent: ArborLensName[];
@@ -267,6 +270,7 @@ export function consumeArbor(
       runtime?.lenses[lens],
       candidate.identityNote,
       payloadUnreadable,
+      runtime?.applicability,
     );
   }
 
@@ -314,6 +318,7 @@ export function consumeArbor(
     canonicalSource: candidate.canonicalSource,
     join,
     matchedSubject,
+    applicability: runtime?.applicability ?? null,
     lenses,
     lensesConsulted,
     lensesAbsent,
@@ -332,6 +337,7 @@ export function consumeArbor(
       interactions.length,
       candidate.delivery ?? "not-materialized",
       candidate.identityNote,
+      runtime?.applicability,
     ),
   };
 }
@@ -363,6 +369,7 @@ function reportLens(
   upstream: { status: ArborLensStatus; sourceDigest: string | null } | undefined,
   identityNote: string | undefined,
   payloadUnreadable = false,
+  applicability?: ArborApplicability,
 ): ArborLensReport {
   if (join !== "content-pinned" || upstream === undefined) {
     return {
@@ -385,6 +392,17 @@ function reportLens(
         reason:
           "upstream reports a record for this subject, but its payload was not usable — " +
           "it either failed the pinned contract or does not belong to this subject; nothing was read from it",
+      };
+    }
+    if (applicability && !applicability.applicable) {
+      return {
+        lens,
+        availability: "unknown",
+        upstreamStatus: upstream.status,
+        sourceDigest: upstream.sourceDigest,
+        reason:
+          `upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, ` +
+          `instruction: ${applicability.instruction.status}); no record was treated as applicable evidence`,
       };
     }
     return {
@@ -456,6 +474,7 @@ function subjectNote(
   edgeCount: number,
   delivery: ArborDeliveryContext,
   identityNote: string | undefined,
+  applicability?: ArborApplicability,
 ): string {
   const parts = [
     `lenses — consulted: ${consulted.length > 0 ? consulted.join(", ") : "none"}`,
@@ -464,6 +483,9 @@ function subjectNote(
   ];
   let note = `${parts.join(" · ")}. ${joinNote(join)}`;
   if (join === "identity-unproven" && identityNote) note += ` (${identityNote})`;
+  if (applicability && !applicability.applicable) {
+    note += ` Upstream marks this runtime inapplicable (canonical: ${applicability.canonical}, instruction: ${applicability.instruction.status}); its claims are not treated as applicable evidence.`;
+  }
   if (claimCount > 0) {
     note += ` ${claimCount} claim(s) carried verbatim with their stated conditions; those conditions are NOT evaluated here, so applicability to this task is unknown.`;
   }

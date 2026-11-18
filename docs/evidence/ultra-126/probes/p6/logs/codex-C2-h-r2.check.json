@@ -1,0 +1,32 @@
+{
+  "threadId": "01a1e1a9-487f-72e0-9ebd-bb17934a22da",
+  "rollout": {
+    "rolloutFile": "rollout-2026-11-16T08-02-10-01a1e1a9-487f-72e0-9ebd-bb17934a22da.jsonl",
+    "sessionMeta": {
+      "session_id": "01a1e1a9-487f-72e0-9ebd-bb17934a22da",
+      "originator": "codex_exec",
+      "cli_version": "0.169.0",
+      "source": "exec",
+      "model_provider": "openai"
+    },
+    "turns": [
+      {
+        "turn_id": "01a1e1a9-4aa7-7de2-b497-83da0bcf39ec",
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "approval_policy": "on-request",
+        "approvals_reviewer": "auto_review",
+        "sandbox_policy": {
+          "type": "workspace-write",
+          "network_access": false,
+          "exclude_tmpdir_env_var": false,
+          "exclude_slash_tmp": false
+        }
+      }
+    ],
+    "skillLoadedInRollout": true,
+    "preexecMarkerInRollout": true
+  },
+  "cmdJsonExists": false,
+  "assistantOutput": "I can\u2019t run tools to execute the skill\u2019s command. I can\u2019t report a `P6_PREEXEC_STDOUT` line from tool output."
+}

@@ -1,7 +1,9 @@
 // skill-zero CLI (working name — OPEN item 8; flag vocabulary provisional
 // pending N4/N5). See README for the full surface.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { compile, DEFAULT_CLAUDE_MECHANISM, HARNESSES, LEVEL_ALIASES, MECHANISMS, POSTURE_ALIASES, POSTURES, SUMMON_ONLY_LEVELS, floorOf, type CompileInput, type Harness, type Mechanism, type Posture } from "./compile.js";
 import { exec, harnessVersion } from "./exec.js";
 import { assembleRecord, type RecordOpts } from "./record.js";
@@ -26,6 +28,29 @@ import {
   stepSteering,
   verifySteeringRecord,
 } from "./steering.js";
+import {
+  CAMPAIGN_SCHEMA_IDS,
+  CampaignStates,
+  EngineOps,
+  ReceiptStatuses,
+  campaignSha256Hex,
+  canonicalCampaignJson,
+  computeOutputDigest,
+  explainCampaignTransition,
+  formatVerifyReceiptLine,
+  parseCampaignEvidenceLines,
+  parseCampaignTraceInput,
+  parseVerifyReceipt,
+  parseVerifyReceiptLines,
+  serializeCampaignRecord,
+  upgradeReceiptOnReplay,
+  verifyCampaignRecord,
+  verifyCampaignTraceLines,
+  type CampaignOperatorCommand,
+  type CampaignTraceRecord,
+  type EngineCommand,
+  type VerifyReceipt,
+} from "./campaign/index.js";
 
 interface CliArgs {
   posture: Posture;
@@ -56,6 +81,9 @@ interface CliArgs {
   steeringState?: string;
   steeringPolicy?: string;
   steeringVerify?: string;
+  campaignVerify?: string;
+  campaignExplain?: string;
+  campaignReplayReceipts?: string;
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -101,6 +129,9 @@ export function parseArgs(argv: string[]): CliArgs {
   let steeringState: string | undefined;
   let steeringPolicy: string | undefined;
   let steeringVerify: string | undefined;
+  let campaignVerify: string | undefined;
+  let campaignExplain: string | undefined;
+  let campaignReplayReceipts: string | undefined;
   const suppliedFlags = new Set<string>();
 
   const need = (flag: string, i: number): string => {
@@ -176,6 +207,9 @@ export function parseArgs(argv: string[]): CliArgs {
     else if (a === "--steering-state") steeringState = need(a, ++i);
     else if (a === "--steering-policy") steeringPolicy = need(a, ++i);
     else if (a === "--steering-verify") steeringVerify = need(a, ++i);
+    else if (a === "--campaign-verify") campaignVerify = need(a, ++i);
+    else if (a === "--campaign-explain") campaignExplain = need(a, ++i);
+    else if (a === "--campaign-replay-receipts") campaignReplayReceipts = need(a, ++i);
     else throw new Error(`unknown arg: ${a}`);
   }
 
@@ -207,6 +241,23 @@ export function parseArgs(argv: string[]): CliArgs {
     }
     if (steeringVerify === undefined && steeringEvent === undefined) {
       throw new Error("--steering-state and --steering-policy require --steering-event");
+    }
+  }
+
+  const campaignRequested = campaignVerify !== undefined || campaignExplain !== undefined || campaignReplayReceipts !== undefined;
+  if (campaignRequested) {
+    const campaignFlags = new Set(["--campaign-verify", "--campaign-explain", "--campaign-replay-receipts"]);
+    const unrelated = [...suppliedFlags].filter((flag) => !campaignFlags.has(flag));
+    if (unrelated.length > 0) {
+      throw new Error("campaign flags are standalone; do not combine them with launch, record, telemetry, or steering flags");
+    }
+    const activeCampaignFlags = [
+      campaignVerify !== undefined ? "--campaign-verify" : null,
+      campaignExplain !== undefined ? "--campaign-explain" : null,
+      campaignReplayReceipts !== undefined ? "--campaign-replay-receipts" : null,
+    ].filter((x): x is string => x !== null);
+    if (activeCampaignFlags.length > 1) {
+      throw new Error(`${activeCampaignFlags.join(" and ")} cannot be combined`);
     }
   }
 
@@ -302,11 +353,194 @@ export function parseArgs(argv: string[]): CliArgs {
     ...(steeringState === undefined ? {} : { steeringState }),
     ...(steeringPolicy === undefined ? {} : { steeringPolicy }),
     ...(steeringVerify === undefined ? {} : { steeringVerify }),
+    ...(campaignVerify === undefined ? {} : { campaignVerify }),
+    ...(campaignExplain === undefined ? {} : { campaignExplain }),
+    ...(campaignReplayReceipts === undefined ? {} : { campaignReplayReceipts }),
   };
+}
+
+function verifyCampaignTraceFile(tracePath: string): CampaignTraceRecord {
+  const raw = readFileSync(tracePath, "utf8");
+  const parsed = parseCampaignTraceInput(raw);
+  if (!parsed.ok) throw new Error(`invalid campaign trace: ${parsed.error}`);
+  if (parsed.kind === "record") {
+    const verification = verifyCampaignRecord(parsed.record);
+    if (!verification.valid) throw new Error(`invalid campaign trace: ${verification.error}`);
+    return verification.record;
+  }
+
+  const evidencePath = join(dirname(tracePath), "evidence.jsonl");
+  let authorize: ((event: CampaignOperatorCommand | EngineCommand, index: number) => boolean) | undefined;
+  let expectedLastRecordSha: string | undefined;
+  try {
+    const stat = lstatSync(evidencePath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      throw new Error("invalid campaign trace: sibling evidence.jsonl must be a regular file");
+    }
+    const parsedEvidence = parseCampaignEvidenceLines(readFileSync(evidencePath, "utf8"));
+    if (!parsedEvidence.ok) throw new Error(`invalid campaign trace: ${parsedEvidence.error}`);
+    if (parsedEvidence.lines.length !== parsed.lines.length) {
+      throw new Error(`invalid campaign trace: evidence length (${parsedEvidence.lines.length}) does not match trace length (${parsed.lines.length})`);
+    }
+    authorize = (event, index) => {
+      const ev = parsedEvidence.lines[index];
+      if (!ev || ev.seq !== index || !ev.authorizedPrivileged) return false;
+      return ev.eventSha256 === campaignSha256Hex(canonicalCampaignJson(event));
+    };
+    if (parsed.lines.length > 0) {
+      expectedLastRecordSha = parsedEvidence.lines[parsed.lines.length - 1]!.recordSha256;
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+
+  const verification = verifyCampaignTraceLines(parsed.lines, { authorize });
+  if (!verification.valid) throw new Error(`invalid campaign trace: ${verification.error}`);
+  if (expectedLastRecordSha !== undefined) {
+    const actualSha = campaignSha256Hex(serializeCampaignRecord(verification.record));
+    if (actualSha !== expectedLastRecordSha) {
+      throw new Error("invalid campaign trace: record commitment mismatch");
+    }
+  }
+  return verification.record;
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
+  if (args.campaignVerify !== undefined) {
+    const record = verifyCampaignTraceFile(args.campaignVerify);
+    console.log(JSON.stringify({
+      valid: true,
+      schema: record.schema,
+      state: record.final.state,
+      traceLength: record.trace.length,
+    }, null, 2));
+    return 0;
+  }
+  if (args.campaignReplayReceipts !== undefined) {
+    const record = verifyCampaignTraceFile(args.campaignReplayReceipts);
+    const receiptsPath = join(dirname(args.campaignReplayReceipts), "receipts.jsonl");
+    let hasSiblingReceipts = false;
+    let receipts: VerifyReceipt[] = [];
+    try {
+      const stat = lstatSync(receiptsPath);
+      if (stat.isSymbolicLink() || !stat.isFile()) {
+        throw new Error("invalid campaign receipts: sibling receipts.jsonl must be a regular file");
+      }
+      hasSiblingReceipts = true;
+      const parsedReceipts = parseVerifyReceiptLines(readFileSync(receiptsPath, "utf8"));
+      if (!parsedReceipts.ok) {
+        throw new Error(`invalid campaign receipts: ${parsedReceipts.error}`);
+      }
+      receipts = [...parsedReceipts.lines];
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+
+    const traceReceipts: VerifyReceipt[] = [];
+    for (let i = 0; i < record.events.length; i++) {
+      const event = record.events[i];
+      if (
+        record.trace[i]?.accepted === true &&
+        event &&
+        event.channel === "engine" &&
+        event.op === EngineOps.verify &&
+        event.receipt !== undefined
+      ) {
+        const parsedReceipt = parseVerifyReceipt(event.receipt);
+        if (!parsedReceipt) {
+          throw new Error("invalid campaign receipts: malformed receipt in verify event");
+        }
+        traceReceipts.push(parsedReceipt);
+      }
+    }
+
+    if (hasSiblingReceipts) {
+      if (receipts.length !== traceReceipts.length) {
+        throw new Error(
+          `invalid campaign receipts: count (${receipts.length}) does not match accepted verify events (${traceReceipts.length})`,
+        );
+      }
+      for (let i = 0; i < traceReceipts.length; i++) {
+        const r = receipts[i]!;
+        const tr = traceReceipts[i]!;
+        const matchesBase =
+          r.schema === tr.schema &&
+          r.unitId === tr.unitId &&
+          r.command === tr.command &&
+          r.outputSha256 === tr.outputSha256 &&
+          r.exitCode === tr.exitCode;
+        const matchesReplayed =
+          r.status !== ReceiptStatuses.replayed ||
+          (r.replayedExitCode === tr.exitCode && r.replayedOutputSha256 === tr.outputSha256);
+        if (!matchesBase || !matchesReplayed) {
+          throw new Error(`invalid campaign receipts: receipt at ${i} does not match verified trace event`);
+        }
+      }
+    } else if (traceReceipts.length > 0) {
+      throw new Error(
+        "invalid campaign receipts: missing sibling receipts.jsonl for verified trace with receipts",
+      );
+    }
+
+    let upgraded = 0;
+    let unchanged = 0;
+    const updatedReceipts: VerifyReceipt[] = [];
+    for (const receipt of receipts) {
+      const run = spawnSync("/bin/sh", ["-c", receipt.command], { encoding: "utf8" });
+      const output = (run.stdout ?? "") + (run.stderr ?? "");
+      const outputSha256 = computeOutputDigest(output);
+      const exitCode = typeof run.status === "number" ? run.status : 1;
+      const result = upgradeReceiptOnReplay(receipt, {
+        command: receipt.command,
+        outputSha256,
+        exitCode,
+      });
+      if (result.upgraded) {
+        upgraded++;
+      } else {
+        unchanged++;
+      }
+      updatedReceipts.push(result.receipt);
+    }
+
+    if (hasSiblingReceipts) {
+      const content = updatedReceipts.length === 0
+        ? ""
+        : `${updatedReceipts.map((r) => formatVerifyReceiptLine(r)).join("\n")}\n`;
+      writeFileSync(receiptsPath, content, "utf8");
+    }
+
+    console.log(JSON.stringify({
+      valid: true,
+      schema: CAMPAIGN_SCHEMA_IDS.receipt,
+      total: updatedReceipts.length,
+      upgraded,
+      unchanged,
+      receipts: updatedReceipts,
+    }, null, 2));
+    return 0;
+  }
+  if (args.campaignExplain !== undefined) {
+    const raw = readFileSync(args.campaignExplain, "utf8");
+    const parsed = parseCampaignTraceInput(raw);
+    if (!parsed.ok) throw new Error(`invalid campaign trace: ${parsed.error}`);
+    const entries = parsed.kind === "record" ? parsed.record.trace : parsed.lines.map((line) => line.entry);
+    for (const entry of entries) {
+      const personPending =
+        entry.to === CampaignStates.decisions ||
+        (entry.to === CampaignStates.convergence && entry.personRequired);
+      const explanation = explainCampaignTransition(
+        entry.from,
+        entry.to,
+        entry.decision,
+        entry.signal,
+        personPending,
+      );
+      console.log(`[${entry.seq}] ${explanation}`);
+    }
+    return 0;
+  }
   if (args.steeringVerify !== undefined) {
     const verification = verifySteeringRecord(JSON.parse(readFileSync(args.steeringVerify, "utf8")) as unknown);
     if (!verification.valid) throw new Error(`invalid steering record: ${verification.error}`);

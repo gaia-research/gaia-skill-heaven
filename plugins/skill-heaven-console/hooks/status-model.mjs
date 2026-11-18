@@ -153,7 +153,7 @@ function controllerSegments(controller, opts = { progress: true }) {
 function statusLevels(status, mode) {
   if (mode === "off") return [];
   const ultra = isUltra(status);
-  const controller = ultra ? status.controller : { kind: "not-selected" };
+  const controller = ultra || status.controller.kind === "reported" ? status.controller : { kind: "not-selected" };
   const skills = [SEP, seg(skillsText(status.skills, false), "ink")];
   const summons = status.summons === null ? [] : [seg(" / ", "dim"), seg(`${status.summons} ${status.summons === 1 ? "summon" : "summons"}`, "dim")];
   const arrival = status.lastArrival ? [SEP, seg(`+${sanitizeDisplay(status.lastArrival, 32)}`, "ink")] : [];
@@ -288,12 +288,16 @@ function describeStatus(status) {
   parts.push(
     status.skills === null ? "Skills in this session: unknown." : `${status.skills} ${status.skills === 1 ? "skill" : "skills"} materialized in this session.`
   );
+  const c = status.controller;
   if (isUltra(status)) {
-    const c = status.controller;
     if (c.kind === "unavailable") parts.push("Ultra controller: unavailable; nothing is choosing for you yet.");
     else if (c.kind === "reported" || c.kind === "fixture") {
       parts.push(`Ultra controller: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}.`);
     }
+  } else if (c.kind === "reported") {
+    const label = c.source === "campaign" ? "Reported campaign status" : "Reported controller";
+    const progress = c.progress ? ` (${c.progress.completed}/${c.progress.total})` : "";
+    parts.push(`${label}: ${sanitizeDisplay(c.state, 24).toLowerCase()}${c.effective ? `, working at ${c.effective}` : ""}${progress}.`);
   }
   if (status.fixture || status.controller.kind === "fixture") parts.unshift("Fixture, design state only.");
   return parts.join(" ");
@@ -377,7 +381,7 @@ function selectionFromCommand(text) {
 function withReading(status, reading) {
   const ultra = reading.kind === "selected" && reading.rung === "ultra";
   const boot = status.boot ?? (status.reading.kind === "selected" || status.reading.kind === "unknown" ? void 0 : status.reading);
-  const controller = ultra ? status.controller.kind === "reported" ? status.controller : { kind: "unavailable" } : { kind: "not-selected" };
+  const controller = ultra ? status.controller.kind === "reported" ? status.controller : { kind: "unavailable" } : status.controller.kind === "reported" && status.controller.source === "campaign" ? status.controller : { kind: "not-selected" };
   return { ...status, reading, controller, ...boot ? { boot } : {} };
 }
 function skillsFromSessionManifest(manifest) {
@@ -646,9 +650,9 @@ function controllerFromSteeringEntry(entry) {
     ...from && explanation && entry.changed === true ? { transition: { from: from.toUpperCase(), to: state, reason: explanation } } : {}
   };
 }
-var PROPOSED_CONTROLLER_SCHEMA = "skill-heaven/controller-status@0";
+var CONTROLLER_STATUS_SCHEMA = "skill-heaven/controller-status/v1";
 function controllerFromCampaignStatus(value) {
-  if (!isRec(value) || value.schema !== PROPOSED_CONTROLLER_SCHEMA) return null;
+  if (!isRec(value) || value.schema !== CONTROLLER_STATUS_SCHEMA) return null;
   const allowed = /* @__PURE__ */ new Set(["schema", "state", "effective", "progress", "transition"]);
   if (Object.keys(value).some((k) => !allowed.has(k))) return null;
   if (typeof value.state !== "string" || !/^[A-Z][A-Z0-9 ·_-]{0,31}$/.test(value.state)) return null;
@@ -659,7 +663,8 @@ function controllerFromCampaignStatus(value) {
   }
   if (value.progress !== void 0) {
     const p = value.progress;
-    if (!isRec(p) || !Number.isInteger(p.completed) || !Number.isInteger(p.total)) return null;
+    if (!isRec(p) || Object.keys(p).some((k) => k !== "completed" && k !== "total")) return null;
+    if (!Number.isSafeInteger(p.completed) || !Number.isSafeInteger(p.total)) return null;
     const completed = p.completed;
     const total = p.total;
     if (completed < 0 || total < 1 || completed > total) return null;
@@ -667,7 +672,8 @@ function controllerFromCampaignStatus(value) {
   }
   if (value.transition !== void 0) {
     const t = value.transition;
-    if (!isRec(t) || typeof t.from !== "string" || typeof t.to !== "string" || typeof t.reason !== "string") return null;
+    if (!isRec(t) || Object.keys(t).some((k) => k !== "from" && k !== "to" && k !== "reason")) return null;
+    if (typeof t.from !== "string" || t.from.length === 0 || typeof t.to !== "string" || t.to.length === 0 || typeof t.reason !== "string" || t.reason.length === 0) return null;
     out.transition = { from: t.from, to: t.to, reason: t.reason };
   }
   return out;
@@ -1487,6 +1493,15 @@ function scopeView(state, harness) {
       value: rung === null ? rungObservable ? "none \u2014 no rung selected in this session" : "unknown \u2014 this host does not let the console see which rung command you typed" : ultra ? "rung ULTRA \xB7 controller unavailable" : `rung ${rung.toUpperCase()} \u2014 observed from ${state.selectedFrom ?? "a rung command"} \xB7 not enforced`,
       evidence: rung === null ? "unknown" : "observed"
     },
+    ...state.status.controller.kind === "reported" ? [{
+      label: state.status.controller.source === "campaign" ? "campaign" : "controller",
+      value: [
+        sanitizeDisplay(state.status.controller.state, 24),
+        state.status.controller.effective ? `now ${state.status.controller.effective.toUpperCase()}` : null,
+        state.status.controller.progress ? `${state.status.controller.progress.completed}/${state.status.controller.progress.total}` : null
+      ].filter(Boolean).join(" \xB7 "),
+      evidence: "reported"
+    }] : [],
     { label: "allowed", value: "/summon by hand: yes \xB7 zero cut: temporary (default)", evidence: "reported" },
     {
       label: "keep small",
@@ -1793,6 +1808,7 @@ export {
   CHIP_MEANING,
   CLOSE_CALL_MARGIN,
   CONSOLE_SURFACES,
+  CONTROLLER_STATUS_SCHEMA,
   DEFAULT_FIELD_LIMIT,
   DEFAULT_PLAN_PATHS,
   EVIDENCE_LEGEND,
@@ -1805,7 +1821,6 @@ export {
   MAX_SKILLS_PER_ENTRY,
   PROFILES,
   PROFILE_PITCH,
-  PROPOSED_CONTROLLER_SCHEMA,
   ROLE_COLORS,
   RUNGS,
   RUNG_BAND,

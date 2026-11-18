@@ -1,0 +1,18 @@
+  "$HERDR_PANE_ID" Down Enter and (b) call probe_elicit. The Bash call
+  answers the probe's prompt for you.
+
+⏺ Calling p1, running 1 shell command · 24s…
+  ⎿  $ sleep 6; herdr pane send-text "$HERDR_PANE_ID" ALPHA; herdr pane
+     send-keys "$HERDR_PANE_ID" Down Enter
+
+❯ ALPHA
+
+─────────────────────────────────────────────────────────────────────────
+  MCP server “p1” requests your input
+  P1 operator check: type the word ALPHA
+
+  ❯ * word: Type something…
+
+    Accept    Decline
+
+  Esc to cancel · ↑/↓ to navigate · Backspace to unset

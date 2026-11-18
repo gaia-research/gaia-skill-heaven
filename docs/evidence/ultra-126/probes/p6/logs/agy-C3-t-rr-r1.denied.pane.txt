@@ -1,0 +1,25 @@
+
+      ▄▀▀▄        Antigravity CLI 1.5.9
+     ▀▀▀▀▀▀       <REDACTED_EMAIL> (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 4 Hydrogen (Low)
+   ▄▀▀    ▀▀▄     /tmp/p6-agy-c3-rr-r1.ZN8QHo
+  ▄▀▀      ▀▀▄
+
+────────────────────────────────────────────────────────────
+> Reply READY.
+
+  READY.
+
+────────────────────────────────────────────────────────────
+> Call the p6_p6/operator_decide MCP tool with note="c3-t-rr-r1" now, then reply OK.
+
+● p6_p6/operator_decide({"note":"c3-t-rr-r1"}) (ctrl+o to expand)
+
+MCP
+  ⎿  User declined the tool call
+
+  ⎿  Interrupted · What should Antigravity CLI do instead?
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+? for shortcuts                                                                                                       auto · Gemini 4 Hydrogen · low

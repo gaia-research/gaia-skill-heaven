@@ -51,7 +51,7 @@ import { PayloadCache } from "./payload-cache.js";
 import { type RankingSummary, type SummonSurface } from "./rank.js";
 import { appendSummonLog } from "./log.js";
 import { elapsedSeconds, startTiming } from "./timing.js";
-import { assertConfinedPath, reapSessions } from "./session.js";
+import { assertConfinedPath } from "./session.js";
 import type { InstalledSkill, RetrievalDisclosure, SummonSession } from "./session.js";
 
 const DEFAULT_LIMIT = 1;
@@ -272,7 +272,6 @@ export async function summon(
   // The session root exists before anything else so that a `noMatch` and a
   // `preview` are logged too — the Ultra controller needs the gaps that
   // returned nothing at least as much as the ones that returned a skill.
-  await reapSessions({ excludeRoots: [session.root] });
   await session.ensureRoots();
 
   // Offline-first: the committed index is the read path (SPEC §2.2). Only an

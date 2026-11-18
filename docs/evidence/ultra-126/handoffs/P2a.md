@@ -1,0 +1,40 @@
+# Handoff: P2a
+
+- **Unit:** P2a (Claude Code session identity and MCP server lifetime; part of U7's P2)
+- **Owning team / worker:** Team C, Antigravity (`Gemini 4 Hydrogen`)
+- **Model / effort / harness:**
+  - Lead/author: `Gemini 4 Hydrogen` (Antigravity CLI)
+  - Model under test: `claude-haiku-5-5` on Claude Code `2.1.325 (Claude Code)` (`~/.local/bin/claude`)
+  - Reviewer: `reviewer` (Terra High via `~/.pi/agent/bin/pi-reviewer`)
+- **Branch:** `feat/ws6-ultra-u7-p2a`
+- **Reviewed probe HEAD SHA:** `ab4413bae085f424e6a19b082dc688c5e1a90fa0`
+- **PR URL:** (see final reply / `gh pr create` below)
+- **Files changed:**
+  - `docs/evidence/ultra-126/PROBE-P2a.md`
+  - `docs/evidence/ultra-126/probes/p2a/server.mjs`
+  - `docs/evidence/ultra-126/probes/p2a/logs/tui-run1.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/tui-run2.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/tui-run3.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/headless-run1.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/headless-run2.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/headless-run3.jsonl`
+  - `docs/evidence/ultra-126/probes/p2a/logs/compact-events.jsonl`
+  - `docs/evidence/ultra-126/reviews/P2a-a370e3c.md`
+  - `docs/evidence/ultra-126/reviews/P2a-ab4413b.md`
+  - `docs/evidence/ultra-126/handoffs/P2a.md`
+- **Implementation summary:**
+  - Built zero-dependency stdio MCP server `docs/evidence/ultra-126/probes/p2a/server.mjs` logging `{ts, pid, ppid, CLAUDE_CODE_SESSION_ID, argv}` (with `$HOME` sanitized to `~`), `SIGTERM`/`SIGINT`/`stdin_end` exit events, and `p2a_ping` tool calls to `$P2A_LOG`.
+  - Executed all 6 probe cells (`A-fresh`, `A-compact`, `A-resume`, `A-continue`, `A-fork`, `A-headless`) with `n = 3` each in visible herdr pane `w31:p15` (tab `w31:tC`), using disposable `/tmp` session directories and `--strict-mcp-config`.
+  - Recorded all raw signals in `docs/evidence/ultra-126/PROBE-P2a.md` with `### Interpretation (orchestrator)` left `pending`.
+- **Commands and tests run with actual results:**
+  - `npm test`: `107 passed | 1 skipped (108)` test files (`windows-installer.test.ts` skipped on macOS), `2609 passed | 1 skipped (2610)` tests.
+  - `npm run typecheck`: `tsc --noEmit -p tsconfig.json` exited `0`.
+  - `grep -rn "marcotiongson" docs/evidence/ultra-126/probes/p2a/`: no private paths found.
+- **Security considerations:** No private absolute paths or environment variables other than `CLAUDE_CODE_SESSION_ID` are logged or committed. All runs used disposable `/tmp` directories and `--strict-mcp-config` without modifying `~/.claude`.
+- **Known limitations:** `compact-events.jsonl` extracts only the timestamped `compact_boundary` markers from Claude Code's session JSONL alongside observed TUI `Compacted (ctrl+o to see full summary)` completion.
+- **Outstanding issues:** None.
+- **Dependency changes:** None.
+- **Review files and final verdict:**
+  - [`P2a-a370e3c.md`](../reviews/P2a-a370e3c.md) — `REQUEST_CHANGES` (blocking: `A-compact` needed timestamped compaction evidence)
+  - [`P2a-ab4413b.md`](../reviews/P2a-ab4413b.md) — `APPROVE` (blocking findings: `no`)
+- **Next recommended action:** Orchestrator reviews `PROBE-P2a.md` and fills `### Interpretation (orchestrator)` for U0b re-attach design, then merges PR into `integration/skill-ultra-126`.

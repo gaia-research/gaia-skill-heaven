@@ -163,8 +163,8 @@ describe("zero cut — the server", () => {
     expect(counters).toEqual({ reader: 0, describe: 0 });
   });
 
-  it("still lists exactly one tool, so the cut is visible as a refusal rather than an absence", async () => {
+  it("still lists both tools, so the cut is visible as a refusal rather than an absence", async () => {
     const { client } = await connect("all");
-    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["summon"]);
+    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["summon", "campaign"]);
   });
 });

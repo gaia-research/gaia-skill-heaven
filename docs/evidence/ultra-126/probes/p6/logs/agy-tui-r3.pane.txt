@@ -1,0 +1,35 @@
+
+      ▄▀▀▄        Antigravity CLI 1.5.9
+     ▀▀▀▀▀▀       <REDACTED_EMAIL> (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 4 Hydrogen (Low)
+   ▄▀▀    ▀▀▄     /tmp/p6-agy-tui3.qUP5yo
+  ▄▀▀      ▀▀▄
+────────────────────────────────────────────────────────────
+> Reply READY.
+
+  READY.
+────────────────────────────────────────────────────────────
+> Call the p6_p6/probe_elicit MCP tool now, then reply DONE.
+
+2.4k in | 81 out | 39 thinking
+● p6_p6/probe_elicit({}) (ctrl+o to expand)
+
+  DONE.
+
+────────────────────────────────────────────────────────────
+> /probe-decide
+
+  NONE
+
+────────────────────────────────────────────────────────────
+> Call the p6_p6/operator_decide MCP tool with note="c3-t-r3" now, then reply OK3.
+
+2.3k in | 98 out | 46 thinking
+● p6_p6/operator_decide({"note":"c3-t-r3"}) (ctrl+o to expand)
+
+  OK3.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+? for shortcuts                                                                                                       auto · Gemini 4 Hydrogen · low
