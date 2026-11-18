@@ -971,6 +971,15 @@ describe("U5 summon gate under a campaign", () => {
     expect(
       matches.get("favorchurch/resend-conference-emails-carefully-with-smtp"),
     ).toBe(PublishDenyListClasses.publishToExternalChannels);
+    expect(matches.get("favorchurch/export-attendees")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("favorchurch/update-unique-churches")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("favorchurch/financial-assistance")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
     expect(matches.get("favorchurch/triage-conference")).toBe(
       PublishDenyListClasses.publishToExternalChannels,
     );
@@ -986,10 +995,55 @@ describe("U5 summon gate under a campaign", () => {
     expect(matches.get("garrytan/remote-mcp")).toBe(
       PublishDenyListClasses.publishToExternalChannels,
     );
+    expect(matches.get("garrytan/gstack-upgrade")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("garrytan/skillify")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("gaia-research/fuse")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("hikari9/office-submit")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("huggingface/hf-cli")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("intelligentcode-ai/devops-engineer")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
     expect(matches.get("mattpocock/to-spec")).toBe(
       PublishDenyListClasses.publishToExternalChannels,
     );
+    expect(matches.get("mattpocock/wayfinder")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("mbtiongson1/gaia-bot-curate")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("mbtiongson1/gaia-curate")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("ruvnet/flow-nexus")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("ruvnet/github-multi-repo")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("ruvnet/github-project-management")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
+    expect(matches.get("ruvnet/ruflo")).toBe(
+      PublishDenyListClasses.publishToExternalChannels,
+    );
     expect(matches.get("firecrawl/firecrawl-build-onboarding")).toBe(
+      PublishDenyListClasses.secretBearingWrites,
+    );
+    expect(matches.get("firecrawl/firecrawl-skills")).toBe(
+      PublishDenyListClasses.secretBearingWrites,
+    );
+    expect(matches.get("garrytan/setup-browser-cookies")).toBe(
       PublishDenyListClasses.secretBearingWrites,
     );
     expect(matches.get("garrytan/setup-deploy")).toBe(
@@ -999,7 +1053,55 @@ describe("U5 summon gate under a campaign", () => {
     expect(matches.has("addy-osmani/doubt-driven-development")).toBe(false);
     expect(matches.has("garrytan/draft-in-voice")).toBe(false);
     expect(matches.has("garrytan/document-release")).toBe(false);
-    expect(matches.size).toBe(23);
+    expect(matches.size).toBe(41);
+
+    // Heuristic regression coverage for non-catalog external write/publish descriptions
+    expect(
+      classifyPublishDenyListClass({
+        doc: {
+          id: "synthetic/sheets-exporter",
+          name: "Sheets Exporter",
+          description:
+            "Syncing and exporting attendee data into Google Sheets masterlist.",
+          tags: ["export", "sheets"],
+          genericSkillRef: "automation",
+        },
+      }),
+    ).toBe(PublishDenyListClasses.publishToExternalChannels);
+    expect(
+      classifyPublishDenyListClass({
+        doc: {
+          id: "synthetic/hf-uploader",
+          name: "Model Uploader",
+          description: "Upload trained weights and datasets to Hugging Face.",
+          tags: ["ml"],
+          genericSkillRef: "automation",
+        },
+      }),
+    ).toBe(PublishDenyListClasses.publishToExternalChannels);
+    expect(
+      classifyPublishDenyListClass({
+        doc: {
+          id: "synthetic/cookie-saver",
+          name: "Cookie Saver",
+          description: "Configure and set up session cookies for browser tests.",
+          tags: ["browser"],
+          genericSkillRef: "testing",
+        },
+      }),
+    ).toBe(PublishDenyListClasses.secretBearingWrites);
+    expect(
+      classifyPublishDenyListClass({
+        doc: {
+          id: "synthetic/readonly-inspector",
+          name: "Read-only Inspector",
+          description:
+            "Audit-only dry-run report without mutation or exporting to Google Sheets.",
+          tags: ["audit"],
+          genericSkillRef: "testing",
+        },
+      }),
+    ).toBeNull();
 
     // Unknown external fetched source without reviewed catalog / denyListClass fails safe on automatic path
     expect(
@@ -1843,5 +1945,136 @@ describe("U5 summon gate under a campaign", () => {
     for (const entry of unplanned2) {
       expect(entry.skills).toHaveLength(1);
     }
+  });
+
+  it("never triggers interactive elicitation for excluded human-led or publish-deny-list skills", async () => {
+    const ns = requireNamespace();
+    const docs = await buildFixtureDocs(ns);
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-excluded-no-elicit";
+
+    let elicitCount = 0;
+    const elicited = await connectLiveServer(docs, "u5-excluded-elicit-client", {
+      clientElicitation: true,
+    });
+    elicited.client.setRequestHandler(ElicitRequestSchema, async (req) => {
+      elicitCount++;
+      const match = /Enter "([^"]+)" to confirm/u.exec(req.params.message);
+      return {
+        action: ElicitationActions.accept,
+        content: { confirmSkillId: match?.[1] ?? "" },
+      };
+    });
+
+    const init = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const sessionRoot = (init.structuredContent as { sessionRoot: string }).sessionRoot;
+    await seedCampaign(sessionRoot, elicited.service, {
+      targetState: "EXECUTING",
+      excludedSkills: [
+        "example/excluded-skill",
+        "example/human-led-skill",
+        "example/publish-email-skill",
+      ],
+    });
+
+    const excludedHuman = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "human-token-delta", surface: "any" },
+    });
+    expect(excludedHuman.isError).toBe(true);
+    expect(
+      (excludedHuman.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.humanLedAutomatic);
+    expect(elicitCount).toBe(0);
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
+
+    const excludedPublish = await elicited.client.callTool({
+      name: "summon",
+      arguments: { query: "publish-email-token-epsilon", surface: "any" },
+    });
+    expect(excludedPublish.isError).toBe(true);
+    expect(
+      (excludedPublish.structuredContent as { error: { code: string } }).error.code,
+    ).toBe(CampaignGateRefusalCodes.publishDenyList);
+    expect(elicitCount).toBe(0);
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
+  });
+
+  it("holds the cross-process campaign claim even when campaign/ does not exist yet and serializes concurrent campaign creation", async () => {
+    const ns = requireNamespace();
+    const docs = await buildFixtureDocs(ns);
+    process.env.CLAUDE_CODE_SESSION_ID = "u5-absent-campaign-race";
+
+    const server = await connectLiveServer(docs, "u5-absent-race-client");
+    const init = await server.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha", preview: true },
+    });
+    const sessionRoot = (init.structuredContent as { sessionRoot: string }).sessionRoot;
+    const session = await SummonSession.loadAt(sessionRoot, ns);
+
+    // 1. Holding withExclusiveGateTransaction when campaign/ does not yet exist
+    // holds the cross-process ownership claim so concurrent campaign creation is blocked.
+    await expect(access(path.join(sessionRoot, "campaign"))).rejects.toThrow();
+    await CampaignStore.withExclusiveGateTransaction(sessionRoot, async (tx) => {
+      expect(tx.store).toBeNull();
+      expect(tx.appendHeld).toBeNull();
+      await expect(CampaignStore.load(sessionRoot)).rejects.toThrow(
+        /ownership claim is busy/i,
+      );
+      await expect(executeOpen(session, VALID_GOAL_CONTRACT)).rejects.toThrow(
+        /ownership claim is busy/i,
+      );
+      await expect(access(path.join(sessionRoot, "campaign"))).rejects.toThrow();
+    });
+
+    // 2. Concurrent campaign open during absent-campaign summon retrieval wins the
+    // claim first and causes summon's locked transaction to see RECON and refuse.
+    const originalSkillIndex = server.service.skillIndex.bind(server.service);
+    let enteredRetrieval!: () => void;
+    let releaseRetrieval!: () => void;
+    const inRetrieval = new Promise<void>((r) => {
+      enteredRetrieval = r;
+    });
+    const gateRetrieval = new Promise<void>((r) => {
+      releaseRetrieval = r;
+    });
+
+    let paused = false;
+    server.service.skillIndex = async (override) => {
+      const idx = await originalSkillIndex(override);
+      if (!paused) {
+        paused = true;
+        enteredRetrieval();
+        await gateRetrieval;
+      }
+      return idx;
+    };
+
+    const pendingSummon = server.client.callTool({
+      name: "summon",
+      arguments: { query: "planned-token-alpha" },
+    });
+
+    await inRetrieval;
+    const opened = await executeOpen(session, VALID_GOAL_CONTRACT);
+    expect(opened.ok).toBe(true);
+    expect(opened.state.state).toBe(CampaignStates.recon);
+    releaseRetrieval();
+
+    const racedRes = await pendingSummon;
+    expect(racedRes.isError).toBe(true);
+    expect(
+      racedRes.structuredContent as {
+        error: { code: string };
+        digest: { state: string };
+      },
+    ).toMatchObject({
+      error: { code: CampaignGateRefusalCodes.notExecuting },
+      digest: { state: CampaignStates.recon },
+    });
+    expect(await listInstalledSkillDirs(sessionRoot)).toEqual([]);
   });
 });

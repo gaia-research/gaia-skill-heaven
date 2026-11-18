@@ -607,8 +607,8 @@ async function ensureConfinedDirectory(root: string, target: string): Promise<vo
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     await mkdir(target);
+    await assertConfinedPath(root, target, "Session directory");
   }
-  await assertConfinedPath(root, target, "Session directory");
 }
 
 type ReattachWithClaimOutcome =

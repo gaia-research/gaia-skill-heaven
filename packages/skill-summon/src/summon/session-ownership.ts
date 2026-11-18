@@ -432,7 +432,11 @@ export async function hasExistingExternalSessionClaimForRealRoot(
 ): Promise<boolean> {
   const claimsDir = sessionClaimDir(tempRoot);
   try {
-    await lstat(claimsDir);
+    await assertConfinedPrivateMetadataDir(
+      tempRoot,
+      claimsDir,
+      "Session claim directory",
+    );
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return false;
@@ -440,26 +444,10 @@ export async function hasExistingExternalSessionClaimForRealRoot(
     return true;
   }
 
-  try {
-    await assertConfinedPrivateMetadataDir(
-      tempRoot,
-      claimsDir,
-      "Session claim directory",
-    );
-  } catch {
-    return true;
-  }
-
   const claimPath = path.join(
     claimsDir,
     `${sessionClaimKey(realSessionRoot)}.claim`,
   );
-  try {
-    await assertConfinedPath(claimsDir, claimPath, "Session ownership claim");
-  } catch {
-    return true;
-  }
-
   try {
     await lstat(claimPath);
     return true;

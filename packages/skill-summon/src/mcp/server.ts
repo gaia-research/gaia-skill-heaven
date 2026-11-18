@@ -589,9 +589,13 @@ export function createSkillSummonMcpServer({
               requestPath: requestPathForSkill,
               manifest: txActive.charterStrategy?.manifest ?? null,
             });
+            const isCharterExcluded =
+              txActive.store.state.charter?.excludedSkills?.includes(skillId) ??
+              false;
             if (gateDecision.decision === CampaignGateDecisions.refuse) {
               if (
                 isPrimary &&
+                !isCharterExcluded &&
                 confirmedPersonSkillId === null &&
                 !resolveSummonRequestPath &&
                 surface === "any" &&

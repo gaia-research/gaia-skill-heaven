@@ -256,25 +256,43 @@ function asDenyListClass(value: unknown): PublishDenyListClass | null {
   return DENY_LIST_SET.has(trimmed) ? (trimmed as PublishDenyListClass) : null;
 }
 
+/**
+ * Reviewed T8 publish-class / secret-write classification covering the committed
+ * 400-skill catalog (`plugins/skill-heaven/data/skill-index.json`).
+ */
 const COMMITTED_PUBLISH_DENY_LIST: Readonly<Record<string, PublishDenyListClass>> =
   Object.freeze({
+    "favorchurch/export-attendees":
+      PublishDenyListClasses.publishToExternalChannels,
+    "favorchurch/financial-assistance":
+      PublishDenyListClasses.publishToExternalChannels,
     "favorchurch/resend-conference-emails-carefully-with-smtp":
       PublishDenyListClasses.publishToExternalChannels,
     "favorchurch/ticket-transfer":
       PublishDenyListClasses.publishToExternalChannels,
     "favorchurch/triage-conference":
       PublishDenyListClasses.publishToExternalChannels,
-    "xquik-dev/hermes-tweet":
+    "favorchurch/update-unique-churches":
       PublishDenyListClasses.publishToExternalChannels,
-    "wheresryan22/anatomy":
+    "gaia-research/fuse":
       PublishDenyListClasses.publishToExternalChannels,
-    "garrytan/remote-mcp":
+    "garrytan/gstack-upgrade":
       PublishDenyListClasses.publishToExternalChannels,
     "garrytan/land-and-deploy":
       PublishDenyListClasses.publishToExternalChannels,
+    "garrytan/remote-mcp":
+      PublishDenyListClasses.publishToExternalChannels,
     "garrytan/ship":
       PublishDenyListClasses.publishToExternalChannels,
+    "garrytan/skillify":
+      PublishDenyListClasses.publishToExternalChannels,
     "gsd-build/gsd-ship":
+      PublishDenyListClasses.publishToExternalChannels,
+    "hikari9/office-submit":
+      PublishDenyListClasses.publishToExternalChannels,
+    "huggingface/hf-cli":
+      PublishDenyListClasses.publishToExternalChannels,
+    "intelligentcode-ai/devops-engineer":
       PublishDenyListClasses.publishToExternalChannels,
     "intelligentcode-ai/release":
       PublishDenyListClasses.publishToExternalChannels,
@@ -284,25 +302,47 @@ const COMMITTED_PUBLISH_DENY_LIST: Readonly<Record<string, PublishDenyListClass>
       PublishDenyListClasses.publishToExternalChannels,
     "mattpocock/triage":
       PublishDenyListClasses.publishToExternalChannels,
+    "mattpocock/wayfinder":
+      PublishDenyListClasses.publishToExternalChannels,
     "mbtiongson1/gaia-audit":
       PublishDenyListClasses.publishToExternalChannels,
+    "mbtiongson1/gaia-bot-curate":
+      PublishDenyListClasses.publishToExternalChannels,
+    "mbtiongson1/gaia-curate":
+      PublishDenyListClasses.publishToExternalChannels,
     "mbtiongson1/gaia-wiki-sync":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/flow-nexus":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/flow-nexus-platform":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/github-multi-repo":
+      PublishDenyListClasses.publishToExternalChannels,
+    "ruvnet/github-project-management":
       PublishDenyListClasses.publishToExternalChannels,
     "ruvnet/github-release-management":
       PublishDenyListClasses.publishToExternalChannels,
     "ruvnet/github-suite":
       PublishDenyListClasses.publishToExternalChannels,
-    "ruvnet/flow-nexus-platform":
+    "ruvnet/ruflo":
       PublishDenyListClasses.publishToExternalChannels,
     "ruvnet/skill-builder":
       PublishDenyListClasses.publishToExternalChannels,
+    "wheresryan22/anatomy":
+      PublishDenyListClasses.publishToExternalChannels,
+    "xquik-dev/hermes-tweet":
+      PublishDenyListClasses.publishToExternalChannels,
     "firecrawl/firecrawl-build-onboarding":
+      PublishDenyListClasses.secretBearingWrites,
+    "firecrawl/firecrawl-skills":
+      PublishDenyListClasses.secretBearingWrites,
+    "garrytan/setup-browser-cookies":
       PublishDenyListClasses.secretBearingWrites,
     "garrytan/setup-deploy":
       PublishDenyListClasses.secretBearingWrites,
-    "mattpocock/wizard":
-      PublishDenyListClasses.secretBearingWrites,
     "gooseworks/browser-automation-notte":
+      PublishDenyListClasses.secretBearingWrites,
+    "mattpocock/wizard":
       PublishDenyListClasses.secretBearingWrites,
   });
 
@@ -310,10 +350,10 @@ const HAS_DRY_RUN_OR_READONLY_GUARD =
   /\b(dry[- ]run|plan[- ]preview|read[- ]only|audit[- ]only|never writes?|no mutation|with verifiable undo|canonical down[- ]migrations?|never auto[- ]posts)\b/i;
 
 const EXTERNAL_PUBLISH_RE =
-  /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+|confirmation\s+)?(?:emails?|replies)|draft\/send\s+replies|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish(?:es|ing)?\s+(?:it\s+)?(?:to\s+(?:external|the\s+[^\n.]*(?:gallery|issue\s+tracker)|[^\n.]*community\s+gallery)|structured\s+issues|announcements?|social|newsletters?|over\s+mcp)|github\s+release\s+creation|release\s+note\s+publishing|app\s+store\s+deployment|payment\s+processing|publish-to-external-channels)\b/i;
+  /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+|confirmation\s+)?(?:emails?|replies)|draft\/send\s+replies|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish(?:es|ing)?\s+(?:it\s+)?(?:to\s+(?:external|the\s+[^\n.]*(?:gallery|issue\s+tracker)|[^\n.]*community\s+gallery)|structured\s+issues|announcements?|social|newsletters?|over\s+mcp)|(?:sync(?:ing)?\s+and\s+)?export(?:ing)?[^\n.]*(?:google\s+sheets?|masterlist|external)|updat(?:e|ing)[^\n.]*google\s+sheets?|upload(?:ing)?[^\n.]*(?:repos?|to\s+hugging\s*face)|(?:open(?:s|ing)?|creat(?:e|es|ing)|fil(?:e|es|ing))[^\n.]*\b(?:pull\s+requests?|prs?)\b|github\s+release\s+creation|release\s+note\s+publishing|app\s+store\s+deployment|payment\s+processing|publish-to-external-channels)\b/i;
 
 const SECRET_BEARING_WRITE_RE =
-  /\b((?:write|persist|commit|embed|store|append|export|creat(?:e|ing)|set(?:ting)?\s+up|configur(?:e|ing)|manag(?:ed|ing))\s+(?:discovered\s+|raw\s+|firecrawl\s+|ci\s+)?(?:credentials?|secrets?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)|secret-bearing-writes)\b/i;
+  /\b((?:write|persist|commit|embed|store|append|export|creat(?:e|ing)|set(?:ting)?\s+up|configur(?:e|ing)|manag(?:ed|ing)|inject(?:s|ing)?)\s+(?:discovered\s+|raw\s+|pre-authenticated\s+|firecrawl\s+|ci\s+)?(?:credentials?|secrets?|session\s+cookies?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)|secret-bearing-writes)\b/i;
 
 const DESTRUCTIVE_INFRA_RE =
   /\b(drop(?:ping)?\s+(?:databases?|tables?|queues?|dns|storage)|terraform\s+(?:destroy|apply)|delete\s+(?:production\s+)?(?:database|dns|bucket|cluster)|destructive[- ]infra[- ]mutation)\b/i;

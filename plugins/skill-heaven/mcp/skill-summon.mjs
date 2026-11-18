@@ -20624,31 +20624,21 @@ async function acquireRootLocalClaimForRealRoot(realSessionRoot, purpose) {
 async function hasExistingExternalSessionClaimForRealRoot(realSessionRoot, tempRoot) {
   const claimsDir = sessionClaimDir(tempRoot);
   try {
-    await lstat(claimsDir);
+    await assertConfinedPrivateMetadataDir(
+      tempRoot,
+      claimsDir,
+      "Session claim directory"
+    );
   } catch (error2) {
     if (error2.code === "ENOENT") {
       return false;
     }
     return true;
   }
-  try {
-    await assertConfinedPrivateMetadataDir(
-      tempRoot,
-      claimsDir,
-      "Session claim directory"
-    );
-  } catch {
-    return true;
-  }
   const claimPath = path2.join(
     claimsDir,
     `${sessionClaimKey(realSessionRoot)}.claim`
   );
-  try {
-    await assertConfinedPath(claimsDir, claimPath, "Session ownership claim");
-  } catch {
-    return true;
-  }
   try {
     await lstat(claimPath);
     return true;
@@ -21366,23 +21356,28 @@ var CampaignStore = class _CampaignStore {
   /**
    * Serializes campaign gate verification, skill materialization, and resulting
    * unplanned trace appends under the cross-process campaign store ownership
-   * claim when `campaign/` exists, revalidating fresh disk state under lock.
+   * claim (including when `campaign/` does not yet exist), revalidating fresh
+   * disk state under lock.
    */
   static async withExclusiveGateTransaction(sessionRoot, fn) {
     return runWithGateTransactionQueue(sessionRoot, async () => {
       const campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
       const statusPath = path3.join(campaignDir, CAMPAIGN_STATUS_FILE);
-      try {
-        await lstat2(campaignDir);
-      } catch (error2) {
-        if (error2.code === "ENOENT") {
-          return fn({ store: null, appendHeld: null });
-        }
-        throw error2;
-      }
-      await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
       const claim = await acquireClaimWithBoundedWait(sessionRoot);
       try {
+        let campaignExists = false;
+        try {
+          await lstat2(campaignDir);
+          campaignExists = true;
+        } catch (error2) {
+          if (error2.code !== "ENOENT") {
+            throw error2;
+          }
+        }
+        if (!campaignExists) {
+          return await fn({ store: null, appendHeld: null });
+        }
+        await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
         const verified = await verifyOnDiskState(sessionRoot, {});
         if (verified.kind !== "absent") {
           await assertSessionClaimActive(
@@ -24221,8 +24216,8 @@ async function ensureConfinedDirectory(root, target) {
   } catch (error2) {
     if (error2.code !== "ENOENT") throw error2;
     await mkdir4(target);
+    await assertConfinedPath(root, target, "Session directory");
   }
-  await assertConfinedPath(root, target, "Session directory");
 }
 function isConcurrentRemovalErrorOrCause(error2) {
   if (isConcurrentRemoval(error2)) return true;
@@ -30670,33 +30665,51 @@ function asDenyListClass(value) {
   return DENY_LIST_SET.has(trimmed) ? trimmed : null;
 }
 var COMMITTED_PUBLISH_DENY_LIST = Object.freeze({
+  "favorchurch/export-attendees": PublishDenyListClasses.publishToExternalChannels,
+  "favorchurch/financial-assistance": PublishDenyListClasses.publishToExternalChannels,
   "favorchurch/resend-conference-emails-carefully-with-smtp": PublishDenyListClasses.publishToExternalChannels,
   "favorchurch/ticket-transfer": PublishDenyListClasses.publishToExternalChannels,
   "favorchurch/triage-conference": PublishDenyListClasses.publishToExternalChannels,
-  "xquik-dev/hermes-tweet": PublishDenyListClasses.publishToExternalChannels,
-  "wheresryan22/anatomy": PublishDenyListClasses.publishToExternalChannels,
-  "garrytan/remote-mcp": PublishDenyListClasses.publishToExternalChannels,
+  "favorchurch/update-unique-churches": PublishDenyListClasses.publishToExternalChannels,
+  "gaia-research/fuse": PublishDenyListClasses.publishToExternalChannels,
+  "garrytan/gstack-upgrade": PublishDenyListClasses.publishToExternalChannels,
   "garrytan/land-and-deploy": PublishDenyListClasses.publishToExternalChannels,
+  "garrytan/remote-mcp": PublishDenyListClasses.publishToExternalChannels,
   "garrytan/ship": PublishDenyListClasses.publishToExternalChannels,
+  "garrytan/skillify": PublishDenyListClasses.publishToExternalChannels,
   "gsd-build/gsd-ship": PublishDenyListClasses.publishToExternalChannels,
+  "hikari9/office-submit": PublishDenyListClasses.publishToExternalChannels,
+  "huggingface/hf-cli": PublishDenyListClasses.publishToExternalChannels,
+  "intelligentcode-ai/devops-engineer": PublishDenyListClasses.publishToExternalChannels,
   "intelligentcode-ai/release": PublishDenyListClasses.publishToExternalChannels,
   "mattpocock/to-spec": PublishDenyListClasses.publishToExternalChannels,
   "mattpocock/to-tickets": PublishDenyListClasses.publishToExternalChannels,
   "mattpocock/triage": PublishDenyListClasses.publishToExternalChannels,
+  "mattpocock/wayfinder": PublishDenyListClasses.publishToExternalChannels,
   "mbtiongson1/gaia-audit": PublishDenyListClasses.publishToExternalChannels,
+  "mbtiongson1/gaia-bot-curate": PublishDenyListClasses.publishToExternalChannels,
+  "mbtiongson1/gaia-curate": PublishDenyListClasses.publishToExternalChannels,
   "mbtiongson1/gaia-wiki-sync": PublishDenyListClasses.publishToExternalChannels,
+  "ruvnet/flow-nexus": PublishDenyListClasses.publishToExternalChannels,
+  "ruvnet/flow-nexus-platform": PublishDenyListClasses.publishToExternalChannels,
+  "ruvnet/github-multi-repo": PublishDenyListClasses.publishToExternalChannels,
+  "ruvnet/github-project-management": PublishDenyListClasses.publishToExternalChannels,
   "ruvnet/github-release-management": PublishDenyListClasses.publishToExternalChannels,
   "ruvnet/github-suite": PublishDenyListClasses.publishToExternalChannels,
-  "ruvnet/flow-nexus-platform": PublishDenyListClasses.publishToExternalChannels,
+  "ruvnet/ruflo": PublishDenyListClasses.publishToExternalChannels,
   "ruvnet/skill-builder": PublishDenyListClasses.publishToExternalChannels,
+  "wheresryan22/anatomy": PublishDenyListClasses.publishToExternalChannels,
+  "xquik-dev/hermes-tweet": PublishDenyListClasses.publishToExternalChannels,
   "firecrawl/firecrawl-build-onboarding": PublishDenyListClasses.secretBearingWrites,
+  "firecrawl/firecrawl-skills": PublishDenyListClasses.secretBearingWrites,
+  "garrytan/setup-browser-cookies": PublishDenyListClasses.secretBearingWrites,
   "garrytan/setup-deploy": PublishDenyListClasses.secretBearingWrites,
-  "mattpocock/wizard": PublishDenyListClasses.secretBearingWrites,
-  "gooseworks/browser-automation-notte": PublishDenyListClasses.secretBearingWrites
+  "gooseworks/browser-automation-notte": PublishDenyListClasses.secretBearingWrites,
+  "mattpocock/wizard": PublishDenyListClasses.secretBearingWrites
 });
 var HAS_DRY_RUN_OR_READONLY_GUARD = /\b(dry[- ]run|plan[- ]preview|read[- ]only|audit[- ]only|never writes?|no mutation|with verifiable undo|canonical down[- ]migrations?|never auto[- ]posts)\b/i;
-var EXTERNAL_PUBLISH_RE = /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+|confirmation\s+)?(?:emails?|replies)|draft\/send\s+replies|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish(?:es|ing)?\s+(?:it\s+)?(?:to\s+(?:external|the\s+[^\n.]*(?:gallery|issue\s+tracker)|[^\n.]*community\s+gallery)|structured\s+issues|announcements?|social|newsletters?|over\s+mcp)|github\s+release\s+creation|release\s+note\s+publishing|app\s+store\s+deployment|payment\s+processing|publish-to-external-channels)\b/i;
-var SECRET_BEARING_WRITE_RE = /\b((?:write|persist|commit|embed|store|append|export|creat(?:e|ing)|set(?:ting)?\s+up|configur(?:e|ing)|manag(?:ed|ing))\s+(?:discovered\s+|raw\s+|firecrawl\s+|ci\s+)?(?:credentials?|secrets?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)|secret-bearing-writes)\b/i;
+var EXTERNAL_PUBLISH_RE = /\b(transactional[- ]email|send(?:ing)?\s+(?:conference\s+|confirmation\s+)?(?:emails?|replies)|draft\/send\s+replies|resend.*emails?|smtp|post(?:ing)?\s+(?:to\s+)?(?:x\.com|twitter|slack|discord|social|mastodon|bluesky|linkedin)|(?:x\/twitter|twitter)[^\n.]*write\s+actions?|publish(?:es|ing)?\s+(?:it\s+)?(?:to\s+(?:external|the\s+[^\n.]*(?:gallery|issue\s+tracker)|[^\n.]*community\s+gallery)|structured\s+issues|announcements?|social|newsletters?|over\s+mcp)|(?:sync(?:ing)?\s+and\s+)?export(?:ing)?[^\n.]*(?:google\s+sheets?|masterlist|external)|updat(?:e|ing)[^\n.]*google\s+sheets?|upload(?:ing)?[^\n.]*(?:repos?|to\s+hugging\s*face)|(?:open(?:s|ing)?|creat(?:e|es|ing)|fil(?:e|es|ing))[^\n.]*\b(?:pull\s+requests?|prs?)\b|github\s+release\s+creation|release\s+note\s+publishing|app\s+store\s+deployment|payment\s+processing|publish-to-external-channels)\b/i;
+var SECRET_BEARING_WRITE_RE = /\b((?:write|persist|commit|embed|store|append|export|creat(?:e|ing)|set(?:ting)?\s+up|configur(?:e|ing)|manag(?:ed|ing)|inject(?:s|ing)?)\s+(?:discovered\s+|raw\s+|pre-authenticated\s+|firecrawl\s+|ci\s+)?(?:credentials?|secrets?|session\s+cookies?|api[- ]?keys?|private[- ]?keys?|access[- ]?tokens?)|secret-bearing-writes)\b/i;
 var DESTRUCTIVE_INFRA_RE = /\b(drop(?:ping)?\s+(?:databases?|tables?|queues?|dns|storage)|terraform\s+(?:destroy|apply)|delete\s+(?:production\s+)?(?:database|dns|bucket|cluster)|destructive[- ]infra[- ]mutation)\b/i;
 var IRREVERSIBLE_MIGRATION_RE = /\b(irreversible\s+(?:schema|queue)\s+migrations?|schema[- ]queue[- ]migrations?)\b/i;
 function classifyPublishDenyListClass(params) {
@@ -41403,8 +41416,9 @@ function createSkillSummonMcpServer({
               requestPath: requestPathForSkill,
               manifest: txActive.charterStrategy?.manifest ?? null
             });
+            const isCharterExcluded = txActive.store.state.charter?.excludedSkills?.includes(skillId) ?? false;
             if (gateDecision.decision === CampaignGateDecisions.refuse) {
-              if (isPrimary && confirmedPersonSkillId === null && !resolveSummonRequestPath && surface === "any" && effectiveElicit !== void 0 && gateDecision.code !== CampaignGateRefusalCodes.charterExcluded) {
+              if (isPrimary && !isCharterExcluded && confirmedPersonSkillId === null && !resolveSummonRequestPath && surface === "any" && effectiveElicit !== void 0 && gateDecision.code !== CampaignGateRefusalCodes.charterExcluded) {
                 pendingElicitation = {
                   skillId,
                   lane: card.lane,

@@ -806,7 +806,8 @@ export class CampaignStore {
   /**
    * Serializes campaign gate verification, skill materialization, and resulting
    * unplanned trace appends under the cross-process campaign store ownership
-   * claim when `campaign/` exists, revalidating fresh disk state under lock.
+   * claim (including when `campaign/` does not yet exist), revalidating fresh
+   * disk state under lock.
    */
   static async withExclusiveGateTransaction<T>(
     sessionRoot: string,
@@ -823,18 +824,22 @@ export class CampaignStore {
     return runWithGateTransactionQueue(sessionRoot, async () => {
       const campaignDir = path.join(sessionRoot, CAMPAIGN_DIR_NAME);
       const statusPath = path.join(campaignDir, CAMPAIGN_STATUS_FILE);
-      try {
-        await lstat(campaignDir);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          return fn({ store: null, appendHeld: null });
-        }
-        throw error;
-      }
-
-      await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
       const claim = await acquireClaimWithBoundedWait(sessionRoot);
       try {
+        let campaignExists = false;
+        try {
+          await lstat(campaignDir);
+          campaignExists = true;
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            throw error;
+          }
+        }
+        if (!campaignExists) {
+          return await fn({ store: null, appendHeld: null });
+        }
+
+        await assertConfinedPath(sessionRoot, campaignDir, "Campaign directory");
         const verified = await verifyOnDiskState(sessionRoot, {});
         if (verified.kind !== "absent") {
           await assertSessionClaimActive(
