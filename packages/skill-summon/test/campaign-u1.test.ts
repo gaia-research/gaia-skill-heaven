@@ -1,4 +1,4 @@
-import { access, chmod, lstat, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { access, chmod, lstat, mkdir, mkdtemp, readdir, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,11 +9,20 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import {
   CAMPAIGN_SCHEMA_IDS,
   CampaignStates,
+  formatCampaignEvidenceLine,
   initialCampaignState,
   isValidCharterForRecon,
+  parseCampaignEvidenceLines,
   tokenize,
 } from "skill-zero";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import {
+  CAMPAIGN_GOAL_STAGE_FILE,
+  CAMPAIGN_RECON_STAGE_FILE,
+  computeGoalContractSha256,
+  parseCampaignGoalContract,
+} from "../src/campaign/store.js";
 
 import {
   buildCampaignDigest,
@@ -1231,6 +1240,244 @@ describe("U1 campaign tool (open, recon, status)", () => {
         campaignTool!.inputSchema,
       );
       expect(measureCampaignToolStandingDose().standingTokens).toBe(418);
+    });
+  });
+
+  describe("8. Round 2 review repair verification (U1-2958995 Findings 1-4)", () => {
+    it("Finding 1: coordinated tampering of goal.json and evidence.jsonl artifactSha256 fails closed via trace.jsonl goalSha256", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+
+      const store = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+
+      const goalOnDisk = JSON.parse(
+        await readFile(store.goalPath, "utf8"),
+      ) as Record<string, unknown>;
+      const tamperedGoal = parseCampaignGoalContract({
+        ...goalOnDisk,
+        humanOnlyOperations: ["tampered-bypass"],
+      });
+      if (!tamperedGoal) throw new Error("Expected valid tampered goal shape");
+      await writeFile(
+        store.goalPath,
+        `${JSON.stringify(tamperedGoal, null, 2)}\n`,
+        "utf8",
+      );
+
+      const evRaw = await readFile(store.evidencePath, "utf8");
+      const parsedEv = parseCampaignEvidenceLines(evRaw);
+      if (!parsedEv.ok) throw new Error("Expected valid evidence lines");
+      const updatedEv = parsedEv.lines.map((line, idx) =>
+        idx === 0
+          ? {
+              ...line,
+              artifactSha256: computeGoalContractSha256(tamperedGoal),
+            }
+          : line,
+      );
+      await writeFile(
+        store.evidencePath,
+        `${updatedEv.map((l) => formatCampaignEvidenceLine(l)).join("\n")}\n`,
+        "utf8",
+      );
+
+      const loaded = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loaded.corrupted).toBe(true);
+      expect(loaded.state.state).toBe(CampaignStates.failedSafe);
+
+      const statusRes = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusRes.isError).toBe(true);
+      expect(statusRes.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: { state: CampaignStates.failedSafe },
+        digest: { state: CampaignStates.failedSafe },
+        error: { code: "campaign-corrupted" },
+      });
+    });
+
+    it("Finding 2: deleting both goal.json and evidence.jsonl fails closed into FAILED_SAFE across load and status", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+
+      const store = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      await rm(store.goalPath, { force: true });
+      await rm(store.evidencePath, { force: true });
+
+      const loaded = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loaded.corrupted).toBe(true);
+      expect(loaded.state.state).toBe(CampaignStates.failedSafe);
+
+      const statusRes = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusRes.isError).toBe(true);
+      expect(statusRes.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: { state: CampaignStates.failedSafe },
+        digest: { state: CampaignStates.failedSafe },
+        error: { code: "campaign-corrupted" },
+      });
+    });
+
+    it("Finding 3: two-phase staging recovers from pre-trace and post-trace interruption boundaries", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      const campaignDir = path.join(session!.root, "campaign");
+      const goalStagePath = path.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
+      const reconStagePath = path.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
+
+      // Boundary A: interrupted open after .goal.stage.json is staged, before trace.jsonl exists
+      await mkdir(campaignDir, { recursive: true });
+      await writeFile(
+        goalStagePath,
+        `${JSON.stringify(VALID_OPEN_INPUT, null, 2)}\n`,
+        "utf8",
+      );
+      const afterBoundaryA = await CampaignStore.load(session!.root);
+      expect(afterBoundaryA.corrupted).toBe(false);
+      expect(afterBoundaryA.hasTrace).toBe(false);
+      expect(afterBoundaryA.state.state).toBe(CampaignStates.unarmed);
+      await expect(access(goalStagePath)).rejects.toThrow();
+
+      // Retry open succeeds
+      const openRes = await client.callTool({
+        name: "campaign",
+        arguments: VALID_OPEN_INPUT,
+      });
+      expect(openRes.isError).not.toBe(true);
+
+      // Run recon-1
+      const recon1Res = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+      expect(recon1Res.isError).not.toBe(true);
+
+      // Boundary B: interrupted recon-2 after .recon.stage.json is staged, before trace.jsonl append
+      const storeAfterR1 = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      const recon1Raw = JSON.parse(
+        await readFile(storeAfterR1.reconPath, "utf8"),
+      ) as Record<string, unknown>;
+      const uncommittedRecon2 = {
+        ...recon1Raw,
+        reconId: "recon-2",
+        records: {
+          ...(recon1Raw.records as Record<string, unknown>),
+          "recon-2": {
+            schema: CAMPAIGN_SCHEMA_IDS.recon,
+            reconId: "recon-2",
+            gaps: [],
+            findings: ["uncommitted"],
+            citations: ["uncommitted"],
+          },
+        },
+      };
+      await writeFile(
+        reconStagePath,
+        `${JSON.stringify(uncommittedRecon2, null, 2)}\n`,
+        "utf8",
+      );
+
+      const afterBoundaryB = await CampaignStore.load(session!.root);
+      expect(afterBoundaryB.corrupted).toBe(false);
+      expect(afterBoundaryB.state.state).toBe(CampaignStates.recon);
+      expect(afterBoundaryB.trace).toHaveLength(2);
+      await expect(access(reconStagePath)).rejects.toThrow();
+      const preservedR1 = await readPersistedReconRecord(session!.root, "recon-1");
+      expect(preservedR1?.reconId).toBe("recon-1");
+
+      // Retry recon-2 succeeds
+      const recon2Res = await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["code review"] },
+      });
+      expect(recon2Res.isError).not.toBe(true);
+
+      // Boundary C: interrupted after trace.jsonl + evidence.jsonl committed, before stage promotion
+      await rename(storeAfterR1.goalPath, goalStagePath);
+      await rename(storeAfterR1.reconPath, reconStagePath);
+
+      const afterBoundaryC = await CampaignStore.load(session!.root);
+      expect(afterBoundaryC.corrupted).toBe(false);
+      expect(afterBoundaryC.state.state).toBe(CampaignStates.recon);
+      await expect(access(storeAfterR1.goalPath)).resolves.toBeUndefined();
+      await expect(access(storeAfterR1.reconPath)).resolves.toBeUndefined();
+      await expect(access(goalStagePath)).rejects.toThrow();
+      await expect(access(reconStagePath)).rejects.toThrow();
+      const recoveredR2 = await readPersistedReconRecord(session!.root, "recon-2");
+      expect(recoveredR2?.reconId).toBe("recon-2");
+    });
+
+    it("Finding 4: tampering with citations in recon.json fails closed into FAILED_SAFE", async () => {
+      const client = await connectServer({
+        service: makeService(),
+        enableCampaignTool: true,
+      });
+      await client.callTool({ name: "campaign", arguments: VALID_OPEN_INPUT });
+      await client.callTool({
+        name: "campaign",
+        arguments: { op: "recon", gaps: ["automated testing"] },
+      });
+
+      const store = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      const reconRaw = JSON.parse(await readFile(store.reconPath, "utf8")) as {
+        reconId: string;
+        citations: string[];
+        records: Record<string, { citations: string[] }>;
+      };
+      reconRaw.citations = [...reconRaw.citations, "forged:citation"];
+      reconRaw.records[reconRaw.reconId]!.citations = [...reconRaw.citations];
+      await writeFile(
+        store.reconPath,
+        `${JSON.stringify(reconRaw, null, 2)}\n`,
+        "utf8",
+      );
+
+      const loaded = await CampaignStore.load(session!.root, {
+        refreshStatus: false,
+      });
+      expect(loaded.corrupted).toBe(true);
+      expect(loaded.state.state).toBe(CampaignStates.failedSafe);
+      await expect(readPersistedReconRecord(session!.root)).rejects.toThrow();
+
+      const statusRes = await client.callTool({
+        name: "campaign",
+        arguments: { op: "status" },
+      });
+      expect(statusRes.isError).toBe(true);
+      expect(statusRes.structuredContent).toMatchObject({
+        ok: false,
+        refused: true,
+        state: { state: CampaignStates.failedSafe },
+        digest: { state: CampaignStates.failedSafe },
+        error: { code: "campaign-corrupted" },
+      });
     });
   });
 });

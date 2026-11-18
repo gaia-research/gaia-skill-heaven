@@ -208,16 +208,21 @@ export async function executeStatus(session: {
         error instanceof Error
           ? error.message
           : "Campaign artifact failed verification (FAILED_SAFE).";
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe,
+      });
+      const failedStatus = toControllerStatus(failedState);
       return immutableSnapshot({
         ok: false,
         refused: true,
         op: AgentOps.status,
         hasCampaign: true,
-        state: store.state,
-        status,
+        state: failedState,
+        status: failedStatus,
         goalContract: null,
         recon: null,
-        digest,
+        digest: buildCampaignDigest(failedState, failedStatus),
         error: {
           code: "campaign-corrupted",
           message,
@@ -227,16 +232,21 @@ export async function executeStatus(session: {
     }
 
     if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe,
+      });
+      const failedStatus = toControllerStatus(failedState);
       return immutableSnapshot({
         ok: false,
         refused: true,
         op: AgentOps.status,
         hasCampaign: true,
-        state: store.state,
-        status,
+        state: failedState,
+        status: failedStatus,
         goalContract: null,
         recon: null,
-        digest,
+        digest: buildCampaignDigest(failedState, failedStatus),
         error: {
           code: "campaign-corrupted",
           message:

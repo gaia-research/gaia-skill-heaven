@@ -51,7 +51,8 @@ export type CampaignState = Readonly<{
 }>;
 
 export type AgentCampaignEvent =
-  | Readonly<{ channel: "agent"; op: typeof A.open | typeof A.next | typeof A.report | typeof A.status }>
+  | Readonly<{ channel: "agent"; op: typeof A.open; goalSha256?: string }>
+  | Readonly<{ channel: "agent"; op: typeof A.next | typeof A.report | typeof A.status }>
   | Readonly<{ channel: "agent"; op: typeof A.recon; recon: CampaignRecon }>
   | Readonly<{ channel: "agent"; op: typeof A.propose; charter: CampaignCharter }>
   | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>;

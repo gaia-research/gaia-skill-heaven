@@ -24,6 +24,7 @@ import {
   CampaignStore,
   computeReconCoreSha256,
   formatReconSha256Citation,
+  stripSelfReconShaCitation,
 } from "../store.js";
 import {
   buildCampaignDigest,
@@ -436,20 +437,31 @@ export async function executeRecon(
   const frozenGaps = Object.freeze(gapRecords);
   const findings = Object.freeze(frozenGaps.map(formatGapFinding));
   const currentCitations = collectReconCitations(reconId, frozenGaps);
+  const baseCitations = Object.freeze(
+    stripSelfReconShaCitation(
+      reconId,
+      dedupeStrings([
+        ...(store.state.recon?.citations ?? []),
+        ...currentCitations,
+      ]),
+    ),
+  );
   const coreSha256 = computeReconCoreSha256({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     reconId,
     gaps: frozenGaps,
     findings,
+    citations: baseCitations,
   });
   const shaCitation = formatReconSha256Citation(reconId, coreSha256);
+  const citations = Object.freeze(dedupeStrings([...baseCitations, shaCitation]));
 
   const reconRecord: CampaignReconRecord = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     reconId,
     gaps: frozenGaps,
     findings,
-    citations: Object.freeze(dedupeStrings([...currentCitations, shaCitation])),
+    citations,
   });
 
   const mergedTraceFindings = Object.freeze(
@@ -458,18 +470,11 @@ export async function executeRecon(
       ...findings,
     ]),
   );
-  const mergedTraceCitations = Object.freeze(
-    dedupeStrings([
-      ...(store.state.recon?.citations ?? []),
-      ...currentCitations,
-      shaCitation,
-    ]),
-  );
 
   const traceRecon: CampaignRecon = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     findings: mergedTraceFindings,
-    citations: mergedTraceCitations,
+    citations,
   });
 
   try {

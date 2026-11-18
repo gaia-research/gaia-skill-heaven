@@ -13799,6 +13799,7 @@ function hasExactlyKeys(value, required2) {
 var text = (v) => typeof v === "string" && v.trim().length > 0;
 var bool = (v) => typeof v === "boolean";
 var nat = (v) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
+var sha256 = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 var member = (values) => (v) => typeof v === "string" && values.includes(v);
 var nullable2 = (check2) => (v) => v === null || check2(v);
 function object2(v, fields, optional2 = []) {
@@ -13895,6 +13896,7 @@ var event = (v) => {
   if (c.value === "agent") {
     switch (o.value) {
       case AgentOps.open:
+        return object2(v, { ...base, goalSha256: sha256 }, ["goalSha256"]);
       case AgentOps.next:
       case AgentOps.report:
       case AgentOps.status:
@@ -14895,11 +14897,11 @@ function allProjectionSkills(projection) {
   }
   return [...byId.values()];
 }
-function sha256(bytes) {
+function sha2562(bytes) {
   return `sha256:${createHash2("sha256").update(bytes).digest("hex")}`;
 }
 function expansionFingerprint(skill) {
-  return sha256(
+  return sha2562(
     JSON.stringify([
       skill.id,
       skill.name,
@@ -16963,7 +16965,7 @@ function assertArborProfile(value, label = "Arbor profile") {
   ]);
   constant(profile, "schema", ARBOR_PROFILE_SCHEMA, label);
   subjectRef(profile.skill, `${label}.skill`);
-  sha2562(profile, "inputDigest", label);
+  sha2563(profile, "inputDigest", label);
   const sources = closedRecord(profile.sources, `${label}.sources`, [
     "declarations",
     "benchmarkReceipts",
@@ -17000,7 +17002,7 @@ function assertArborClaim(value, label) {
   enumeration(claim, "support", PROJECTED_SUPPORT, label);
   pattern(claim, "declarationId", RECORD_ID, label);
   dateTime(claim, "declaredAt", label);
-  sha2562(claim, "declarationSource", label);
+  sha2563(claim, "declarationSource", label);
   digestList(claim.benchmarkSources, `${label}.benchmarkSources`);
   sha256OrNull(claim, "interpretationSource", label);
 }
@@ -17021,18 +17023,18 @@ function assertArborEdge(value, label = "Arbor edge") {
     "pairApplicable"
   ]);
   constant(edge, "schema", ARBOR_EDGE_SCHEMA, label);
-  sha2562(edge, "edgeKey", label);
+  sha2563(edge, "edgeKey", label);
   const pair = closedRecord(edge.pair, `${label}.pair`, ["from", "to"]);
   subjectRef(pair.from, `${label}.pair.from`);
   subjectRef(pair.to, `${label}.pair.to`);
   const target = closedRecord(edge.target, `${label}.target`, ["declarationSha256", "claimId"]);
-  sha2562(target, "declarationSha256", `${label}.target`);
+  sha2563(target, "declarationSha256", `${label}.target`);
   pattern(target, "claimId", RECORD_ID, `${label}.target`);
   enumeration(edge, "relation", ARBOR_RELATIONS, label);
   nonEmpty(edge, "conditions", label);
   authority(edge.authority, `${label}.authority`);
   enumeration(edge, "support", PROJECTED_SUPPORT, label);
-  sha2562(edge, "declarationSource", label);
+  sha2563(edge, "declarationSource", label);
   digestList(edge.observationSources, `${label}.observationSources`);
   sha256OrNull(edge, "interpretationSource", label);
   constant(edge, "structuralOverlap", EDGE_STRUCTURAL_OVERLAP, label);
@@ -17057,7 +17059,7 @@ function assertArborRuntime(value, label = "Arbor runtime") {
   const runtime = closedRecord(value, label, ["schema", "subject", "inputDigest", "lenses"]);
   constant(runtime, "schema", ARBOR_RUNTIME_SCHEMA, label);
   subjectRef(runtime.subject, `${label}.subject`);
-  sha2562(runtime, "inputDigest", label);
+  sha2563(runtime, "inputDigest", label);
   const lenses = closedRecord(runtime.lenses, `${label}.lenses`, [
     "claims",
     "hellHeaven",
@@ -17144,12 +17146,12 @@ function pattern(record4, key, expression, label) {
   }
   return value;
 }
-function sha2562(record4, key, label) {
+function sha2563(record4, key, label) {
   return pattern(record4, key, SHA256, label);
 }
 function sha256OrNull(record4, key, label) {
   if (record4[key] === null) return;
-  sha2562(record4, key, label);
+  sha2563(record4, key, label);
 }
 function objectOrNull(record4, key, label) {
   const value = record4[key];
@@ -17230,7 +17232,7 @@ function nonNegativeInteger2(record4, key, label) {
 function subjectRef(value, label) {
   const subject = closedRecord(value, label, ["id", "contentSha256"]);
   pattern(subject, "id", SKILL_ID2, label);
-  sha2562(subject, "contentSha256", label);
+  sha2563(subject, "contentSha256", label);
 }
 function authority(value, label) {
   const record4 = closedRecord(value, label, ["actor", "basis"]);
@@ -18580,8 +18582,14 @@ var CAMPAIGN_EVIDENCE_FILE = "evidence.jsonl";
 var CAMPAIGN_STATUS_FILE = "status.json";
 var CAMPAIGN_GOAL_FILE = "goal.json";
 var CAMPAIGN_RECON_FILE = "recon.json";
+var CAMPAIGN_GOAL_STAGE_FILE = ".goal.stage.json";
+var CAMPAIGN_RECON_STAGE_FILE = ".recon.stage.json";
 function computeGoalContractSha256(contract) {
   return campaignSha256Hex(canonicalCampaignJson(contract));
+}
+function stripSelfReconShaCitation(reconId, citations) {
+  const prefix = `recon-sha256:${reconId}:`;
+  return citations.filter((c) => !c.startsWith(prefix));
 }
 function computeReconCoreSha256(record4) {
   return campaignSha256Hex(
@@ -18589,12 +18597,13 @@ function computeReconCoreSha256(record4) {
       schema: record4.schema,
       reconId: record4.reconId,
       gaps: record4.gaps,
-      findings: record4.findings
+      findings: record4.findings,
+      citations: stripSelfReconShaCitation(record4.reconId, record4.citations)
     })
   );
 }
-function formatReconSha256Citation(reconId, sha2563) {
-  return `recon-sha256:${reconId}:${sha2563}`;
+function formatReconSha256Citation(reconId, sha2564) {
+  return `recon-sha256:${reconId}:${sha2564}`;
 }
 var GOAL_CONTRACT_KEYS = [
   "goal",
@@ -18692,6 +18701,8 @@ var CampaignStore = class _CampaignStore {
   statusPath;
   goalPath;
   reconPath;
+  goalStagePath;
+  reconStagePath;
   #initial;
   #state;
   #lines;
@@ -18713,6 +18724,8 @@ var CampaignStore = class _CampaignStore {
     this.statusPath = path3.join(this.campaignDir, CAMPAIGN_STATUS_FILE);
     this.goalPath = path3.join(this.campaignDir, CAMPAIGN_GOAL_FILE);
     this.reconPath = path3.join(this.campaignDir, CAMPAIGN_RECON_FILE);
+    this.goalStagePath = path3.join(this.campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
+    this.reconStagePath = path3.join(this.campaignDir, CAMPAIGN_RECON_STAGE_FILE);
     this.#initial = initialCampaignState();
     this.#state = state2;
     this.#lines = lines;
@@ -18998,9 +19011,14 @@ var CampaignStore = class _CampaignStore {
     }
   }
   async openCampaign(goalContract) {
+    const validatedGoal = parseCampaignGoalContract(goalContract);
+    if (!validatedGoal) {
+      throw new Error("Invalid campaign goal contract.");
+    }
+    const goalSha256 = computeGoalContractSha256(validatedGoal);
     return this.append(
-      { channel: "agent", op: AgentOps.open },
-      { goalContract, requireGoalContractOnOpen: true }
+      { channel: "agent", op: AgentOps.open, goalSha256 },
+      { goalContract: validatedGoal, requireGoalContractOnOpen: true }
     );
   }
   async appendRecon(reconRecord, traceRecon) {
@@ -19099,11 +19117,9 @@ var CampaignStore = class _CampaignStore {
       );
       await assertConfinedPath(this.sessionRoot, this.statusPath, "Campaign status");
       await assertSessionClaimActive(claim, this.sessionRoot, "campaign append");
-      let priorGoal;
-      let priorRecon;
       let nextReconEnvelope;
       if (validatedGoal !== void 0) {
-        priorGoal = await capturePriorArtifactBytes(
+        await assertRegularOrMissingTarget(
           this.sessionRoot,
           this.goalPath,
           "Campaign goal contract"
@@ -19111,15 +19127,15 @@ var CampaignStore = class _CampaignStore {
         await writeAtomicJsonArtifact(
           this.sessionRoot,
           this.campaignDir,
-          this.goalPath,
-          `.${CAMPAIGN_GOAL_FILE}`,
-          "Campaign goal contract",
+          this.goalStagePath,
+          `.${CAMPAIGN_GOAL_STAGE_FILE}`,
+          "Campaign goal stage",
           `${JSON.stringify(validatedGoal, null, 2)}
 `
         );
       }
       if (validatedReconRecord !== void 0) {
-        priorRecon = await capturePriorArtifactBytes(
+        const priorRecon = await capturePriorArtifactBytes(
           this.sessionRoot,
           this.reconPath,
           "Campaign recon artifact"
@@ -19141,18 +19157,16 @@ var CampaignStore = class _CampaignStore {
           await writeAtomicJsonArtifact(
             this.sessionRoot,
             this.campaignDir,
-            this.reconPath,
-            `.${CAMPAIGN_RECON_FILE}`,
-            "Campaign recon artifact",
+            this.reconStagePath,
+            `.${CAMPAIGN_RECON_STAGE_FILE}`,
+            "Campaign recon stage",
             `${JSON.stringify(nextReconEnvelope, null, 2)}
 `
           );
         } catch (error2) {
-          if (priorGoal !== void 0) {
-            await restorePriorArtifactBytes(this.goalPath, priorGoal).catch(
-              () => {
-              }
-            );
+          if (validatedGoal !== void 0) {
+            await rm3(this.goalStagePath, { force: true }).catch(() => {
+            });
           }
           throw error2;
         }
@@ -19172,6 +19186,12 @@ var CampaignStore = class _CampaignStore {
 `,
           { encoding: "utf8", flag: "a" }
         );
+        if (validatedGoal !== void 0) {
+          await rename(this.goalStagePath, this.goalPath);
+        }
+        if (validatedReconRecord !== void 0) {
+          await rename(this.reconStagePath, this.reconPath);
+        }
         await writeFile(
           this.statusPath,
           `${JSON.stringify(status, null, 2)}
@@ -19180,17 +19200,13 @@ var CampaignStore = class _CampaignStore {
         );
       } catch (error2) {
         if (!traceMutated) {
-          if (priorGoal !== void 0) {
-            await restorePriorArtifactBytes(this.goalPath, priorGoal).catch(
-              () => {
-              }
-            );
+          if (validatedGoal !== void 0) {
+            await rm3(this.goalStagePath, { force: true }).catch(() => {
+            });
           }
-          if (priorRecon !== void 0) {
-            await restorePriorArtifactBytes(this.reconPath, priorRecon).catch(
-              () => {
-              }
-            );
+          if (validatedReconRecord !== void 0) {
+            await rm3(this.reconStagePath, { force: true }).catch(() => {
+            });
           }
           throw error2;
         }
@@ -19236,6 +19252,10 @@ var CampaignStore = class _CampaignStore {
           `Refusing to append: ${this.#error} (${target})`
         );
       }
+      await rm3(this.goalStagePath, { force: true }).catch(() => {
+      });
+      await rm3(this.reconStagePath, { force: true }).catch(() => {
+      });
       return;
     }
     const disk = await verifyOnDiskState(this.sessionRoot, {
@@ -19265,6 +19285,12 @@ var CampaignStore = class _CampaignStore {
         `Refusing to append: ${disk.evidenceError ?? "historical campaign evidence is absent"}`
       );
     }
+    await reconcileStagedArtifacts(
+      this.sessionRoot,
+      this.campaignDir,
+      disk.promoteGoalStage,
+      disk.promoteReconStage
+    );
   }
   static createLoaded(sessionRoot, state2, lines, hasTrace, hasCompleteEvidence, corrupted, error2, recordSha256, options = {}, evidenceError, goalContract = null, reconArtifact = null) {
     return new _CampaignStore(
@@ -19284,7 +19310,18 @@ var CampaignStore = class _CampaignStore {
   }
 };
 async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus, verificationOptions) {
+  const campaignDir = path3.join(sessionRoot, CAMPAIGN_DIR_NAME);
   if (verified.kind === "absent") {
+    if (refreshStatus) {
+      await rm3(path3.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+      await rm3(path3.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE), {
+        force: true
+      }).catch(() => {
+      });
+    }
     return CampaignStore["createLoaded"](
       sessionRoot,
       initialCampaignState(),
@@ -19323,6 +19360,12 @@ async function buildLoadedStore(sessionRoot, statusPath, verified, refreshStatus
     );
   }
   if (refreshStatus) {
+    await reconcileStagedArtifacts(
+      sessionRoot,
+      campaignDir,
+      verified.promoteGoalStage,
+      verified.promoteReconStage
+    );
     const expectedStatus = toControllerStatus(
       verified.state,
       verified.lines.at(-1)?.entry
@@ -19372,7 +19415,7 @@ function snapshotsEqual(a, b) {
   if (!metaSnapshotsEqual(a.traceStat, b.traceStat) || a.traceRaw !== b.traceRaw) {
     return false;
   }
-  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon)) {
+  if (!optionalArtifactSnapshotsEqual(a.goal, b.goal) || !optionalArtifactSnapshotsEqual(a.recon, b.recon) || !optionalArtifactSnapshotsEqual(a.goalStage, b.goalStage) || !optionalArtifactSnapshotsEqual(a.reconStage, b.reconStage)) {
     return false;
   }
   if (a.evidenceExists !== b.evidenceExists) {
@@ -19415,6 +19458,8 @@ async function readCampaignRawSnapshot(sessionRoot) {
   const statusPath = path3.join(campaignDir, CAMPAIGN_STATUS_FILE);
   const goalPath = path3.join(campaignDir, CAMPAIGN_GOAL_FILE);
   const reconPath = path3.join(campaignDir, CAMPAIGN_RECON_FILE);
+  const goalStagePath = path3.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
+  const reconStagePath = path3.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
   await assertConfinedPath(sessionRoot, tracePath, "Campaign trace");
   await assertConfinedPath(sessionRoot, evidencePath, "Campaign evidence");
   let traceStat;
@@ -19448,6 +19493,16 @@ async function readCampaignRawSnapshot(sessionRoot) {
     reconPath,
     "Campaign recon artifact"
   );
+  const goalStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    goalStagePath,
+    "Campaign goal stage"
+  );
+  const reconStage = await readOptionalArtifactSnapshot(
+    sessionRoot,
+    reconStagePath,
+    "Campaign recon stage"
+  );
   let evidenceStat;
   try {
     evidenceStat = await lstat2(evidencePath);
@@ -19459,7 +19514,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
         traceRaw,
         evidenceExists: false,
         goal,
-        recon: recon2
+        recon: recon2,
+        goalStage,
+        reconStage
       };
     }
     throw error2;
@@ -19472,7 +19529,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
       evidenceExists: true,
       evidenceNonRegular: true,
       goal,
-      recon: recon2
+      recon: recon2,
+      goalStage,
+      reconStage
     };
   }
   const evidenceRaw = await readFile(evidencePath, "utf8");
@@ -19485,7 +19544,9 @@ async function readCampaignRawSnapshot(sessionRoot) {
     evidenceStat: metaSnapshot(evidenceStat),
     evidenceRaw,
     goal,
-    recon: recon2
+    recon: recon2,
+    goalStage,
+    reconStage
   };
 }
 async function verifyReadOnlyConsistentSnapshot(sessionRoot, options = {}) {
@@ -19676,7 +19737,9 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
     parsedTrace.lines,
     evidenceLines,
     snap.goal,
-    snap.recon
+    snap.recon,
+    snap.goalStage,
+    snap.reconStage
   );
   if (!artifactCheck.ok) {
     return { kind: "failed_safe", error: artifactCheck.error };
@@ -19689,6 +19752,8 @@ function verifyCampaignRawSnapshot(snap, options = {}) {
     hasEvidence: standalone.ok,
     goalContract: artifactCheck.goalContract,
     reconArtifact: artifactCheck.reconArtifact,
+    promoteGoalStage: artifactCheck.promoteGoalStage,
+    promoteReconStage: artifactCheck.promoteReconStage,
     ...standalone.ok ? {} : {
       evidenceError: standalone.kind === "absent" ? "historical campaign evidence is absent" : `historical campaign evidence is inconsistent (${standalone.error})`
     }
@@ -19795,47 +19860,197 @@ function extractExistingReconRecords(raw) {
   return {};
 }
 var RECON_SHA256_CITATION_RE = /^recon-sha256:([^:]+):([0-9a-f]{64})$/;
-function verifyBoundArtifacts(lines, evidenceLines, goalSnap, reconSnap) {
+function parseGoalSnapshotForCommitments(snap, openEventGoalSha, openEvidenceGoalSha) {
+  if (!snap.exists || snap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign goal contract is missing or invalid"
+    };
+  }
+  let parsedGoalJson;
+  try {
+    parsedGoalJson = JSON.parse(snap.raw);
+  } catch {
+    return {
+      ok: false,
+      error: "Campaign goal contract shape is invalid"
+    };
+  }
+  const parsedGoal = parseCampaignGoalContract(parsedGoalJson);
+  if (!parsedGoal) {
+    return {
+      ok: false,
+      error: "Campaign goal contract shape is invalid"
+    };
+  }
+  const actualSha = computeGoalContractSha256(parsedGoal);
+  if (openEventGoalSha === void 0 && openEvidenceGoalSha === void 0 || openEventGoalSha !== void 0 && actualSha !== openEventGoalSha || openEvidenceGoalSha !== void 0 && actualSha !== openEvidenceGoalSha) {
+    return {
+      ok: false,
+      error: "Campaign goal contract commitment mismatch"
+    };
+  }
+  return { ok: true, goalContract: parsedGoal };
+}
+function validateReconEnvelopeSnapshot(reconSnap, committedById, traceCitationsById, evidenceReconHashes, reconLines, evidenceLines) {
+  if (!reconSnap.exists || reconSnap.nonRegular) {
+    return {
+      ok: false,
+      error: "Campaign recon artifact is missing or invalid"
+    };
+  }
+  let parsedReconJson;
+  try {
+    parsedReconJson = JSON.parse(reconSnap.raw);
+  } catch {
+    return {
+      ok: false,
+      error: "Campaign recon artifact shape is invalid"
+    };
+  }
+  const parsedEnvelope = parsePersistedReconArtifactStore(parsedReconJson);
+  if (!parsedEnvelope) {
+    return {
+      ok: false,
+      error: "Campaign recon artifact shape is invalid"
+    };
+  }
+  for (const [reconId, expectedSha256] of committedById.entries()) {
+    const rec = parsedEnvelope.records[reconId];
+    const validated = rec ? parseSingleReconRecord(rec) : null;
+    if (!validated) {
+      return {
+        ok: false,
+        error: `Campaign recon artifact commitment mismatch for ${reconId}`
+      };
+    }
+    const selfShaPrefix = `recon-sha256:${reconId}:`;
+    const selfShaCitations = validated.citations.filter(
+      (c) => c.startsWith(selfShaPrefix)
+    );
+    if (selfShaCitations.length !== 1 || !validated.citations.includes(
+      formatReconSha256Citation(reconId, expectedSha256)
+    ) || computeReconCoreSha256(validated) !== expectedSha256) {
+      return {
+        ok: false,
+        error: `Campaign recon artifact commitment mismatch for ${reconId}`
+      };
+    }
+    const expectedTraceCitations = traceCitationsById.get(reconId);
+    if (expectedTraceCitations !== void 0 && canonicalCampaignJson(validated.citations) !== canonicalCampaignJson(expectedTraceCitations)) {
+      return {
+        ok: false,
+        error: `Campaign recon citations mismatch for ${reconId}`
+      };
+    }
+  }
+  const recordHashes = /* @__PURE__ */ new Set();
+  for (const key of Object.keys(parsedEnvelope.records)) {
+    if (!committedById.has(key)) {
+      return {
+        ok: false,
+        error: `Uncommitted recon record ${key} in recon.json`
+      };
+    }
+    const validated = parseSingleReconRecord(parsedEnvelope.records[key]);
+    if (validated) {
+      recordHashes.add(computeReconCoreSha256(validated));
+    }
+  }
+  for (const item of evidenceReconHashes) {
+    if (!recordHashes.has(item.sha256)) {
+      return {
+        ok: false,
+        error: "Campaign recon evidence commitment mismatch"
+      };
+    }
+  }
+  const latestReconLine = reconLines.at(-1);
+  const latestEvSha = latestReconLine ? evidenceLines?.[latestReconLine.seq]?.artifactSha256 : void 0;
+  const topRecord = parsedEnvelope.records[parsedEnvelope.reconId];
+  const validatedTop = topRecord ? parseSingleReconRecord(topRecord) : null;
+  if (!validatedTop || canonicalCampaignJson({
+    schema: parsedEnvelope.schema,
+    reconId: parsedEnvelope.reconId,
+    gaps: parsedEnvelope.gaps,
+    findings: parsedEnvelope.findings,
+    citations: parsedEnvelope.citations
+  }) !== canonicalCampaignJson({
+    schema: validatedTop.schema,
+    reconId: validatedTop.reconId,
+    gaps: validatedTop.gaps,
+    findings: validatedTop.findings,
+    citations: validatedTop.citations
+  })) {
+    return {
+      ok: false,
+      error: "Campaign recon top-level envelope does not match latest record"
+    };
+  }
+  if (latestEvSha !== void 0 && computeReconCoreSha256(validatedTop) !== latestEvSha) {
+    return {
+      ok: false,
+      error: "Campaign recon evidence commitment mismatch"
+    };
+  }
+  return { ok: true, reconArtifact: parsedEnvelope };
+}
+function verifyBoundArtifacts(lines, evidenceLines, goalSnap, reconSnap, goalStageSnap = { exists: false }, reconStageSnap = { exists: false }) {
   let goalContract = null;
+  let promoteGoalStage = false;
+  let promoteReconStage = false;
   const openLine = lines.find(
     (line) => line.event?.channel === "agent" && line.event.op === AgentOps.open && line.entry.accepted === true
   );
   const openEv = openLine && evidenceLines ? evidenceLines[openLine.seq] : void 0;
-  if (openEv?.artifactSha256 !== void 0 || goalSnap.exists) {
-    if (!openLine || !goalSnap.exists || goalSnap.nonRegular) {
+  const openEventGoalSha = openLine?.event?.channel === "agent" && openLine.event.op === AgentOps.open ? openLine.event.goalSha256 : void 0;
+  const openEvidenceGoalSha = openEv?.artifactSha256;
+  if (openEventGoalSha !== void 0 && openEvidenceGoalSha !== void 0 && openEventGoalSha !== openEvidenceGoalSha) {
+    return {
+      ok: false,
+      error: "Campaign goal contract commitment mismatch between trace and evidence"
+    };
+  }
+  if (openEventGoalSha !== void 0 || openEvidenceGoalSha !== void 0 || goalSnap.exists) {
+    if (!openLine) {
       return {
         ok: false,
         error: "Campaign goal contract is missing or invalid"
       };
     }
-    let parsedGoalJson;
-    try {
-      parsedGoalJson = JSON.parse(goalSnap.raw);
-    } catch {
+    if (goalSnap.exists) {
+      const checked = parseGoalSnapshotForCommitments(
+        goalSnap,
+        openEventGoalSha,
+        openEvidenceGoalSha
+      );
+      if (!checked.ok) {
+        return checked;
+      }
+      goalContract = checked.goalContract;
+    } else if (goalStageSnap.exists) {
+      const checkedStage = parseGoalSnapshotForCommitments(
+        goalStageSnap,
+        openEventGoalSha,
+        openEvidenceGoalSha
+      );
+      if (!checkedStage.ok) {
+        return checkedStage;
+      }
+      goalContract = checkedStage.goalContract;
+      promoteGoalStage = true;
+    } else {
       return {
         ok: false,
-        error: "Campaign goal contract shape is invalid"
+        error: "Campaign goal contract is missing or invalid"
       };
     }
-    const parsedGoal = parseCampaignGoalContract(parsedGoalJson);
-    if (!parsedGoal) {
-      return {
-        ok: false,
-        error: "Campaign goal contract shape is invalid"
-      };
-    }
-    if (openEv?.artifactSha256 === void 0 || computeGoalContractSha256(parsedGoal) !== openEv.artifactSha256) {
-      return {
-        ok: false,
-        error: "Campaign goal contract commitment mismatch"
-      };
-    }
-    goalContract = parsedGoal;
   }
   const reconLines = lines.filter(
     (line) => line.event?.channel === "agent" && line.event.op === AgentOps.recon && line.entry.accepted === true
   );
   const committedById = /* @__PURE__ */ new Map();
+  const traceCitationsById = /* @__PURE__ */ new Map();
   const evidenceReconHashes = [];
   for (const line of reconLines) {
     const ev = evidenceLines?.[line.seq];
@@ -19843,6 +20058,7 @@ function verifyBoundArtifacts(lines, evidenceLines, goalSnap, reconSnap) {
       evidenceReconHashes.push({ seq: line.seq, sha256: ev.artifactSha256 });
     }
     if (line.event?.channel === "agent" && line.event.op === AgentOps.recon) {
+      const newIdsForLine = [];
       for (const citation of line.event.recon.citations) {
         const match = RECON_SHA256_CITATION_RE.exec(citation);
         if (match) {
@@ -19855,97 +20071,61 @@ function verifyBoundArtifacts(lines, evidenceLines, goalSnap, reconSnap) {
               error: `Conflicting recon commitments for ${id}`
             };
           }
-          committedById.set(id, sha);
+          if (prev === void 0) {
+            committedById.set(id, sha);
+            newIdsForLine.push(id);
+          }
+        }
+      }
+      if (newIdsForLine.length === 1) {
+        traceCitationsById.set(newIdsForLine[0], line.event.recon.citations);
+      } else {
+        for (const id of newIdsForLine) {
+          if (id === `recon-${line.seq}`) {
+            traceCitationsById.set(id, line.event.recon.citations);
+          }
         }
       }
     }
   }
   let reconArtifact = null;
   if (committedById.size > 0 || evidenceReconHashes.length > 0 || reconSnap.exists && !reconSnap.nonRegular) {
-    if (!reconSnap.exists || reconSnap.nonRegular) {
-      return {
-        ok: false,
-        error: "Campaign recon artifact is missing or invalid"
-      };
-    }
-    let parsedReconJson;
-    try {
-      parsedReconJson = JSON.parse(reconSnap.raw);
-    } catch {
-      return {
-        ok: false,
-        error: "Campaign recon artifact shape is invalid"
-      };
-    }
-    const parsedEnvelope = parsePersistedReconArtifactStore(parsedReconJson);
-    if (!parsedEnvelope) {
-      return {
-        ok: false,
-        error: "Campaign recon artifact shape is invalid"
-      };
-    }
-    for (const [reconId, expectedSha256] of committedById.entries()) {
-      const rec = parsedEnvelope.records[reconId];
-      const validated = rec ? parseSingleReconRecord(rec) : null;
-      if (!validated || computeReconCoreSha256(validated) !== expectedSha256) {
-        return {
-          ok: false,
-          error: `Campaign recon artifact commitment mismatch for ${reconId}`
-        };
+    const primary = validateReconEnvelopeSnapshot(
+      reconSnap,
+      committedById,
+      traceCitationsById,
+      evidenceReconHashes,
+      reconLines,
+      evidenceLines
+    );
+    if (primary.ok) {
+      reconArtifact = primary.reconArtifact;
+    } else if (reconStageSnap.exists && !reconStageSnap.nonRegular) {
+      const staged = validateReconEnvelopeSnapshot(
+        reconStageSnap,
+        committedById,
+        traceCitationsById,
+        evidenceReconHashes,
+        reconLines,
+        evidenceLines
+      );
+      if (staged.ok) {
+        reconArtifact = staged.reconArtifact;
+        promoteReconStage = true;
+      } else {
+        return primary;
       }
+    } else {
+      return primary;
     }
-    const recordHashes = /* @__PURE__ */ new Set();
-    for (const key of Object.keys(parsedEnvelope.records)) {
-      if (!committedById.has(key)) {
-        return {
-          ok: false,
-          error: `Uncommitted recon record ${key} in recon.json`
-        };
-      }
-      const validated = parseSingleReconRecord(parsedEnvelope.records[key]);
-      if (validated) {
-        recordHashes.add(computeReconCoreSha256(validated));
-      }
-    }
-    for (const item of evidenceReconHashes) {
-      if (!recordHashes.has(item.sha256)) {
-        return {
-          ok: false,
-          error: "Campaign recon evidence commitment mismatch"
-        };
-      }
-    }
-    const latestReconLine = reconLines.at(-1);
-    const latestEvSha = latestReconLine ? evidenceLines?.[latestReconLine.seq]?.artifactSha256 : void 0;
-    const topRecord = parsedEnvelope.records[parsedEnvelope.reconId];
-    const validatedTop = topRecord ? parseSingleReconRecord(topRecord) : null;
-    if (!validatedTop || canonicalCampaignJson({
-      schema: parsedEnvelope.schema,
-      reconId: parsedEnvelope.reconId,
-      gaps: parsedEnvelope.gaps,
-      findings: parsedEnvelope.findings,
-      citations: parsedEnvelope.citations
-    }) !== canonicalCampaignJson({
-      schema: validatedTop.schema,
-      reconId: validatedTop.reconId,
-      gaps: validatedTop.gaps,
-      findings: validatedTop.findings,
-      citations: validatedTop.citations
-    })) {
-      return {
-        ok: false,
-        error: "Campaign recon top-level envelope does not match latest record"
-      };
-    }
-    if (latestEvSha !== void 0 && computeReconCoreSha256(validatedTop) !== latestEvSha) {
-      return {
-        ok: false,
-        error: "Campaign recon evidence commitment mismatch"
-      };
-    }
-    reconArtifact = parsedEnvelope;
   }
-  return { ok: true, goalContract, reconArtifact };
+  return {
+    ok: true,
+    goalContract,
+    reconArtifact,
+    promoteGoalStage,
+    promoteReconStage
+  };
 }
 async function capturePriorArtifactBytes(sessionRoot, targetPath, label) {
   await assertConfinedPath(sessionRoot, targetPath, label);
@@ -19963,12 +20143,46 @@ async function capturePriorArtifactBytes(sessionRoot, targetPath, label) {
     throw error2;
   }
 }
-async function restorePriorArtifactBytes(targetPath, prior) {
-  if (!prior.existed) {
-    await rm3(targetPath, { force: true });
-    return;
+async function assertRegularOrMissingTarget(sessionRoot, targetPath, label) {
+  await assertConfinedPath(sessionRoot, targetPath, label);
+  try {
+    const stat5 = await lstat2(targetPath);
+    if (stat5.isSymbolicLink() || !stat5.isFile()) {
+      throw new Error(`${label} must be a regular file: ${targetPath}`);
+    }
+  } catch (error2) {
+    if (error2.code !== "ENOENT") {
+      throw error2;
+    }
   }
-  await writeFile(targetPath, prior.raw, { encoding: "utf8", mode: 384 });
+}
+async function reconcileStagedArtifacts(sessionRoot, campaignDir, promoteGoalStage, promoteReconStage) {
+  const goalStagePath = path3.join(campaignDir, CAMPAIGN_GOAL_STAGE_FILE);
+  const goalPath = path3.join(campaignDir, CAMPAIGN_GOAL_FILE);
+  const reconStagePath = path3.join(campaignDir, CAMPAIGN_RECON_STAGE_FILE);
+  const reconPath = path3.join(campaignDir, CAMPAIGN_RECON_FILE);
+  if (promoteGoalStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      goalPath,
+      "Campaign goal contract"
+    );
+    await rename(goalStagePath, goalPath);
+  } else {
+    await rm3(goalStagePath, { force: true }).catch(() => {
+    });
+  }
+  if (promoteReconStage) {
+    await assertRegularOrMissingTarget(
+      sessionRoot,
+      reconPath,
+      "Campaign recon artifact"
+    );
+    await rename(reconStagePath, reconPath);
+  } else {
+    await rm3(reconStagePath, { force: true }).catch(() => {
+    });
+  }
 }
 async function writeAtomicJsonArtifact(sessionRoot, campaignDir, targetPath, tmpPrefix, label, content) {
   await assertConfinedPath(sessionRoot, targetPath, label);
@@ -25571,7 +25785,7 @@ function indexFromSnapshot(snapshot, sourceUrl) {
       ...awaitingClassification.length > 0 ? { awaitingClassification: awaitingClassification.map(toProjectionSkill) } : {}
     },
     source: sourceUrl,
-    sourceDigest: sha256(JSON.stringify(named)),
+    sourceDigest: sha2562(JSON.stringify(named)),
     builderVersion: "runtime-fetch",
     generatedAt: snapshot.named.generatedAt ?? snapshot.source.fetchedAt
   });
@@ -28150,16 +28364,21 @@ async function executeStatus(session) {
       recon2 = await store.loadReconArtifact() ?? store.state.recon;
     } catch (error2) {
       const message = error2 instanceof Error ? error2.message : "Campaign artifact failed verification (FAILED_SAFE).";
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe
+      });
+      const failedStatus = toControllerStatus(failedState);
       return immutableSnapshot({
         ok: false,
         refused: true,
         op: AgentOps.status,
         hasCampaign: true,
-        state: store.state,
-        status,
+        state: failedState,
+        status: failedStatus,
         goalContract: null,
         recon: null,
-        digest,
+        digest: buildCampaignDigest(failedState, failedStatus),
         error: {
           code: "campaign-corrupted",
           message,
@@ -28168,16 +28387,21 @@ async function executeStatus(session) {
       });
     }
     if (store.state.state !== CampaignStates.unarmed && goalContract === null) {
+      const failedState = immutableSnapshot({
+        ...store.state,
+        state: CampaignStates.failedSafe
+      });
+      const failedStatus = toControllerStatus(failedState);
       return immutableSnapshot({
         ok: false,
         refused: true,
         op: AgentOps.status,
         hasCampaign: true,
-        state: store.state,
-        status,
+        state: failedState,
+        status: failedStatus,
         goalContract: null,
         recon: null,
-        digest,
+        digest: buildCampaignDigest(failedState, failedStatus),
         error: {
           code: "campaign-corrupted",
           message: "Campaign trace is in active/RECON state without a committed goal contract (FAILED_SAFE).",
@@ -28795,9 +29019,9 @@ async function materializeSkillDir(sourceDir, destDir) {
   await rejectSymlinks(destDir);
   const materializeSeconds = elapsedSeconds(startedAt);
   const skillContent = await readFile5(path7.join(destDir, "SKILL.md"));
-  const sha2563 = createHash7("sha256").update(skillContent).digest("hex");
+  const sha2564 = createHash7("sha256").update(skillContent).digest("hex");
   const fileCount = await countFiles(destDir);
-  return { path: destDir, materializeSeconds, fileCount, sha256: sha2563 };
+  return { path: destDir, materializeSeconds, fileCount, sha256: sha2564 };
 }
 async function rejectSymlinks(dir) {
   const root = await lstat6(dir);
@@ -29965,19 +30189,30 @@ async function executeRecon(service, session, rawInput, options = {}) {
   const frozenGaps = Object.freeze(gapRecords);
   const findings = Object.freeze(frozenGaps.map(formatGapFinding));
   const currentCitations = collectReconCitations(reconId, frozenGaps);
+  const baseCitations = Object.freeze(
+    stripSelfReconShaCitation(
+      reconId,
+      dedupeStrings([
+        ...store.state.recon?.citations ?? [],
+        ...currentCitations
+      ])
+    )
+  );
   const coreSha256 = computeReconCoreSha256({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     reconId,
     gaps: frozenGaps,
-    findings
+    findings,
+    citations: baseCitations
   });
   const shaCitation = formatReconSha256Citation(reconId, coreSha256);
+  const citations = Object.freeze(dedupeStrings([...baseCitations, shaCitation]));
   const reconRecord = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     reconId,
     gaps: frozenGaps,
     findings,
-    citations: Object.freeze(dedupeStrings([...currentCitations, shaCitation]))
+    citations
   });
   const mergedTraceFindings = Object.freeze(
     dedupeStrings([
@@ -29985,17 +30220,10 @@ async function executeRecon(service, session, rawInput, options = {}) {
       ...findings
     ])
   );
-  const mergedTraceCitations = Object.freeze(
-    dedupeStrings([
-      ...store.state.recon?.citations ?? [],
-      ...currentCitations,
-      shaCitation
-    ])
-  );
   const traceRecon = Object.freeze({
     schema: CAMPAIGN_SCHEMA_IDS.recon,
     findings: mergedTraceFindings,
-    citations: mergedTraceCitations
+    citations
   });
   try {
     await assertConfinedPath(
