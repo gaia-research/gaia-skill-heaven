@@ -15169,9 +15169,18 @@ function evaluate(state2, event2, authorized, seq) {
             if (state2.approved && (state2.state === CampaignStates.executing || state2.state === CampaignStates.convergence)) {
               if (event2.closesUnit === true) {
                 const unitInQueue = event2.workUnit !== void 0 && state2.queue.some((q) => q.id === event2.workUnit);
-                const acceptanceCommands = state2.charter?.acceptanceCommands ?? [];
-                if (!event2.passed || !unitInQueue || !canReceiptCloseUnit(event2.receipt, event2.workUnit, acceptanceCommands)) {
+                if (!event2.passed || !unitInQueue) {
                   break;
+                }
+                if (state2.charter?.acceptanceCommands !== void 0) {
+                  if (!canReceiptCloseUnit(event2.receipt, event2.workUnit, state2.charter.acceptanceCommands)) {
+                    break;
+                  }
+                } else {
+                  const parsedReceipt = parseVerifyReceipt(event2.receipt);
+                  if (!parsedReceipt || parsedReceipt.unitId !== event2.workUnit || parsedReceipt.exitCode !== 0 || parsedReceipt.status === ReceiptStatuses.replayed && parsedReceipt.replayedExitCode !== 0) {
+                    break;
+                  }
                 }
               }
               const type = event2.passed ? "behavioral-recovery" : "behavioral-failure";
