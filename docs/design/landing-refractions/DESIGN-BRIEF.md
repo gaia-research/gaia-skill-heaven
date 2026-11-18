@@ -363,15 +363,27 @@ waits on them.
 
 ## 10. Decision log
 
+### 10.1 The six copy cuts (D-05, ruled `all`)
+
+1. Arrival lede → "Install the plugin in a harness you already use. Core gives you /summon and the entropy controls; Core + Console adds the console your harness supports."
+2. §01 "Two plugin profiles" paragraph → shortened to one sentence, not removed: it is the only place the page says the console is independently removable (guarded by `test/site-start.test.ts`, #47). Its link stays.
+3. §01 launcher fine print → removed (the launcher panel note already says it).
+4. §02 lede → "Watch it run."
+5. §03 beat cards → titles and badges only.
+6. §04 lede "Here's how you choose." → removed.
+
+### 10.2 Log
+
 | ID | Date | Decision | Owner | Status |
 |---|---|---|---|---|
 | D-01 | 2026-11-18 | Study A, Prism Stage | Founder | **Ruled: "A · Prism Stage (Recommended)"** |
 | D-02 | 2026-11-18 | Prototype ships procedural stand-ins; generated assets swap in only after both gates | Design lead | Decided |
 | D-03 | 2026-11-18 | "The tear points" leader line | Founder | **Ruled: "Off, preview via ?tear=1 (Recommended)"** |
-| D-04 | 2026-11-18 | §02 duplicate install collapses to a disclosure strip | Founder | Open |
-| D-05 | 2026-11-18 | Further copy cuts (list in the PR) | Founder | Open |
-| D-06 | 2026-11-18 | F-01/F-02 truth drift in terminal and reach lists | Founder | Open, recorded only |
-| D-07 | 2026-11-18 | Phase 2: Lucy alive (Rive `LucyLive`) on the stage instead of static masters | Founder | Open |
+| D-04 | 2026-11-18 | §02 duplicate install collapses to a disclosure strip | Founder | **Ruled: `disclosure`** |
+| D-05 | 2026-11-18 | Six further copy cuts (§10.1) | Founder | **Ruled: `all`** — applied in round 2 |
+| D-06 | 2026-11-18 | F-01/F-02 truth drift in terminal and reach lists | Founder | **Ruled: `leave`** — the illustrative label stands; F-01/F-02 accepted |
+| D-07 | 2026-11-18 | Lucy alive (Rive `LucyLive`) on the stage | Founder | **Ruled: `live-desktop`** — "Rive supersedes masters, create both and ill decide the interaction". Live is the desktop default; `?lucy=static` keeps the masters; phones and reduced motion stay static |
 | D-09 | 2026-11-18 | One position on the line: casting her from a non-rung control moves the ladder to where that band opens (`zero · low · high · ultra`) unless it already reads inside that band | Design lead | Decided (DESIGN.md: a session cannot hold two positions) |
 | D-10 | 2026-11-18 | Desktop stage at ≥1180px, 40vw; the document ends over the stage's solid feather (first prototype pass put Hell text on paper) | Design lead | Decided |
+| D-11 | 2026-11-18 | ISSUE-1: the four paid calls | Founder | **Ruled: `four`** — "Preflight fails, but image generation is available. Sol Xhigh team will do this in Codex, with luna and terra and reviewer terra. No sol worker. Send prompt on how to communicate, that prompt will be the starting gun." Overrides `LR-PREFLIGHT` BLOCKED; the first receipt carries the model and alpha proof |
 | D-08 | 2026-11-18 | Private staging location for unapproved art | Founder | **Ruled: "lucy repo staging branch (Recommended)"** — `gaia-research/lucy`, branch `staging/landing-refractions`; Hydrogen verifies size/LFS/access |

@@ -11,7 +11,9 @@ links to the private staging location.
 |---|---|---|
 | **Cloud design lead** | The design system, the page, every design verdict, retake briefs, and integration | Pixels |
 | **Pi Hydrogen** | Preflight: proves the generation and deterministic pipeline end to end on a dry run, and confirms the staging location | Art direction, verdicts |
-| **Pi Sol (asset lead)** | Producing the issued candidates exactly as briefed, receipts, and the founder gallery | Art direction, the design system, promotion into the site |
+| **Sol XHigh lead (Codex)** | Orchestrating production of the issued candidates; staging; receipts; the gallery source. No worker role of its own (D-11) | Art direction, the design system, promotion into the site |
+| **luna, terra (Codex workers)** | One issued candidate each, exactly as briefed, with deterministic processing and a receipt | Choosing prompts beyond the brief, retries |
+| **terra (Codex reviewer)** | Checking every candidate against its acceptance criteria before it is reported `READY FOR REVIEW` | Design verdicts |
 | **Founder** | Asset approval (gate 2), every open decision `D-xx`, merge | — |
 
 ## Message formats (copy exactly; one line, pipe-separated)
@@ -25,7 +27,7 @@ ASSET-ID | revision | brief SHA | expected inputs | desired output | review crit
 Example:
 
 ```
-LR-G01-A | r1 | 77bbf6ab | wing-left.png@<sha8>, wing-right.png@<sha8>, lucy-canon.json@<sha8> | 8 shards, WebP+alpha, 768px long edge, shards.json | ASSET-MANIFEST.json#LR-G01 acceptance 1–6 | ISSUE
+LR-G01-A | r1 | 24b294f9 | wing-left.png@<sha8>, wing-right.png@<sha8>, lucy-canon.json@<sha8> | 8 shards, WebP+alpha, 768px long edge, shards.json | ASSET-MANIFEST.json#LR-G01 acceptance 1–6 | ISSUE
 ```
 
 `requested action` is one of `ISSUE` · `RETAKE` (always a new candidate id) · `HOLD` · `CANCEL`.
@@ -81,6 +83,23 @@ and attaches its bounded delta brief. **Never an unrecorded retry.**
 5. A preflight report is posted on the PR in the response format, using the id `LR-PREFLIGHT`.
 
 No `LR-G*` job is issued before `LR-PREFLIGHT | … | PASS`.
+
+**Founder override (D-11, 2026-11-18).** `LR-PREFLIGHT` reported BLOCKED: the endpoint was reachable, but
+gpt-image-2.6 authorization and the Sol route were unverified, and staging was pending D-08. The founder
+authorized the four unconditional calls regardless. The preflight checks therefore move into the first job:
+
+- the first candidate's receipt states the model **as the endpoint reports it**. Anything other than gpt-image-2.6 is `BLOCKED (model)`, and the remaining calls stop;
+- that candidate runs the full matte-guard and alpha audit before anything is reported;
+- the Sol lead creates `staging/landing-refractions` in `gaia-research/lucy` (D-08) before the first upload, and reports the branch, its privacy and whether LFS is used.
+
+## Founder gallery (gate 2) when production runs in Codex
+
+Codex cannot publish claude.ai pages. The Sol lead therefore writes the gallery **source** into staging at
+`staging/landing-refractions/gallery/`: one contact sheet per candidate on charcoal, paper, black, white and
+checker, plus `gallery.json` listing each candidate's id, hashes, receipt path and acceptance results. The
+design lead mirrors it into a private claude.ai gallery page with one approval card per candidate, and no card
+is pre-selected. The founder approves there or on this PR (`FOUNDER APPROVED: <ASSET-ID> <date>`), and the
+design lead records the ruling verbatim on the PR before any promotion.
 
 ## Monitoring
 

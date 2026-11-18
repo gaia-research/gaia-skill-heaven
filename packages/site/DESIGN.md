@@ -239,6 +239,14 @@ is built from glass that her state cuts.
   never prints text on Hell's paper. Below 1180px she opens the page as a
   full-bleed plate. The stage steps aside (opacity, then hidden) when the
   closing triptych or the footer is in view, so she is never shown twice.
+- **Lucy is alive on the desktop stage** (founder ruling D-07: "Rive supersedes
+  masters, create both and ill decide the interaction"). The hero's own
+  `LucyRiveFigure` runs inside the stage's figure box with the hero's per-state
+  treatment; while she is live no master shows. The masters remain the phone
+  plate, the reduced-motion path, the fallback when Rive cannot run, and
+  `?lucy=static`. A cut animates the figure in place (Web Animations), so the
+  rig is never remounted and owns its own transition; the scene root wraps the
+  figure, so she pauses whenever the stage steps aside.
 - **One state, many hands.** `data-lucy` on the root is cast by the hero
   handoff (`?tab=`, or `?section=doors` → Zero), a sampler tab (click only,
   never the auto-run), a rung, a direction card, and her own switch. The
@@ -273,7 +281,7 @@ is built from glass that her state cuts.
 |---|---|
 | — | Arrival — the seam: her stage beside the headline; compact LIVE chip; dose readout as a glass instrument |
 | 01 | Install in your harness — portable plugin first, Claude compatibility flow, standalone launcher secondary |
-| 02 | Demo — the third install copy as a one-line disclosure (D-04); the terminal in a glass case |
+| 02 | Demo — "Watch it run."; the third install copy as a one-line disclosure (D-04, ruled); the terminal in a glass case |
 | 03 | Skills live in your session — unchanged behaviour and copy; glass only |
 | 04 | Heaven or Hell? — the peak: a rung re-casts her and re-cuts the page; Ultra says "provisioned · controller unavailable" |
 | 05 | Three names, one Gaia |
