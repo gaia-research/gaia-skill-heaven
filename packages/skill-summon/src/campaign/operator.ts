@@ -565,6 +565,48 @@ function buildElicitationPrompt(
   };
 }
 
+function buildAmendmentConfirmationPrompt(
+  currentCharter: CampaignCharter,
+  currentShortDigest: string,
+  opEnv: OperatorEnvironment,
+  resultingCharter: CampaignCharter,
+  resultingStrategy: PersistedCampaignCharterStrategy,
+  resultingRendered: string,
+): ElicitationFormRequest {
+  const message =
+    `Campaign charter amendment confirmation (r${currentCharter.revision} -> r${resultingCharter.revision})\n` +
+    `Previous short digest: ${currentShortDigest}\n` +
+    `Channel: ${opEnv.channel} · Attribution: ${opEnv.attribution} · Multiplexed: ${opEnv.multiplexed}\n\n` +
+    `Resulting Amended Charter (r${resultingCharter.revision}, resulting shortDigest: ${resultingStrategy.shortDigest}):\n` +
+    `${resultingRendered}\n\n` +
+    `To confirm this resulting amended charter, type its resulting short digest (${resultingStrategy.shortDigest}) in 'digest'.`;
+
+  return {
+    message,
+    requestedSchema: {
+      type: "object",
+      properties: {
+        decision: {
+          type: "string",
+          title: "Decision",
+          description: "Choose amend or decline.",
+          enum: [
+            OperatorDecisionChoices.amend,
+            OperatorDecisionChoices.decline,
+          ],
+          default: OperatorDecisionChoices.amend,
+        },
+        digest: {
+          type: "string",
+          title: "Resulting charter short digest",
+          description: `Type ${resultingStrategy.shortDigest} to confirm the resulting amended charter.`,
+        },
+      },
+      required: ["decision", "digest"],
+    },
+  };
+}
+
 function applyAmendment(
   currentStrategy: PersistedCampaignCharterStrategy,
   currentState: CampaignState,
@@ -1295,7 +1337,6 @@ async function runOperatorDecisionFlow(
 
   // Check 5 (FD-11 / D-010 & options.amendment confirmation gate):
   // Model-proposed options.amendment can NEVER be applied without explicit digest confirmation.
-  const operatorOverrodeFields = hasOperatorAmendmentOverrides(content);
   const matchesCurrent =
     typedDigest.length > 0 &&
     (typedDigest === strategy.shortDigest ||
@@ -1311,13 +1352,173 @@ async function runOperatorDecisionFlow(
       typedDigest === amended.nextStrategy.charterSha256);
 
   if (candidateAmendment !== undefined) {
-    const confirmed = operatorOverrodeFields
-      ? matchesCandidate || matchesAmended || matchesCurrent
-      : matchesCandidate;
-    if (!confirmed) {
+    if (!matchesCandidate) {
       return refuseInvalidDigest(
         "Proposed amendment requires typing the resulting charter short digest shown in the prompt to confirm.",
       );
+    }
+
+    if (
+      amended.nextStrategy.charterSha256 !==
+      candidateAmendment.nextStrategy.charterSha256
+    ) {
+      // Operator edits produced a materially different resulting charter than the displayed candidate.
+      // Present and confirm the resulting merged charter before applying.
+      const resultingRendered = renderControlStrategy({
+        charterTemplate: amended.nextStrategy.charterTemplate,
+        manifest: amended.nextStrategy.manifest,
+        multiplexed: opEnv.multiplexed,
+        optIn: opEnv.optIn,
+      });
+      const confirmPrompt = buildAmendmentConfirmationPrompt(
+        store.state.charter,
+        strategy.shortDigest,
+        opEnv,
+        amended.nextCharter,
+        amended.nextStrategy,
+        resultingRendered,
+      );
+
+      let confirmResponse: ElicitationResponse;
+      try {
+        confirmResponse = await options.elicit(confirmPrompt);
+      } catch {
+        confirmResponse = { action: ElicitationActions.cancel };
+      }
+
+      if (
+        confirmResponse.action === ElicitationActions.cancel ||
+        confirmResponse.action === ElicitationActions.decline
+      ) {
+        const operatorEntry: OperatorLogEntry = immutableSnapshot({
+          seq: store.trace.length,
+          op: mode,
+          decision:
+            confirmResponse.action === ElicitationActions.decline
+              ? OperatorDecisionChoices.decline
+              : "cancel",
+          charterRevision: store.state.charterRevision,
+          charterSha256: strategy.charterSha256,
+          shortDigest: strategy.shortDigest,
+          attribution: opEnv.attribution,
+          channel: opEnv.channel,
+          multiplexed: opEnv.multiplexed,
+          optIn: opEnv.optIn,
+          elicitationAction: confirmResponse.action,
+          accepted: false,
+          refused: false,
+          reason: `elicitation-${confirmResponse.action}`,
+          recordedAt: new Date().toISOString(),
+        });
+        await store.appendOperatorLog(operatorEntry);
+        return immutableSnapshot({
+          ok: false,
+          refused: false,
+          noDecision: true,
+          elicitationAction: confirmResponse.action,
+          decision:
+            confirmResponse.action === ElicitationActions.decline
+              ? OperatorDecisionChoices.decline
+              : "cancel",
+          operatorEntry,
+          rendered,
+          state: store.state,
+          status: currentStatus,
+          digest: currentDigest,
+        });
+      }
+
+      if (confirmResponse.action !== ElicitationActions.accept) {
+        return simpleRefuse(
+          "invalid-elicitation-action",
+          `Unsupported elicitation action: ${String(confirmResponse.action)}.`,
+        );
+      }
+
+      const confirmContent = isPlainObject(confirmResponse.content)
+        ? confirmResponse.content
+        : {};
+      const confirmChoice =
+        confirmContent.decision ??
+        confirmContent.action ??
+        confirmContent.choice ??
+        OperatorDecisionChoices.amend;
+
+      if (confirmChoice === OperatorDecisionChoices.decline) {
+        const operatorEntry: OperatorLogEntry = immutableSnapshot({
+          seq: store.trace.length,
+          op: mode,
+          decision: OperatorDecisionChoices.decline,
+          charterRevision: store.state.charterRevision,
+          charterSha256: strategy.charterSha256,
+          shortDigest: strategy.shortDigest,
+          attribution: opEnv.attribution,
+          channel: opEnv.channel,
+          multiplexed: opEnv.multiplexed,
+          optIn: opEnv.optIn,
+          elicitationAction: ElicitationActions.accept,
+          accepted: false,
+          refused: false,
+          reason: "operator-declined-approval",
+          recordedAt: new Date().toISOString(),
+        });
+        await store.appendOperatorLog(operatorEntry);
+        return immutableSnapshot({
+          ok: false,
+          refused: false,
+          noDecision: true,
+          elicitationAction: ElicitationActions.accept,
+          decision: OperatorDecisionChoices.decline,
+          operatorEntry,
+          rendered,
+          state: store.state,
+          status: currentStatus,
+          digest: currentDigest,
+        });
+      }
+
+      if (confirmChoice !== OperatorDecisionChoices.amend) {
+        return refuseInvalidDigest(
+          "Resulting amended charter requires confirming with decision 'amend' and the presented short digest.",
+        );
+      }
+
+      if (hasOperatorAmendmentOverrides(confirmContent)) {
+        const remerged = mergeOperatorAmendment(mergedAmendment, confirmContent);
+        const reapplied = applyAmendment(
+          strategy,
+          store.state,
+          resolvedReconRaw as unknown as CampaignReconRecordInput,
+          remerged,
+        );
+        if (
+          !reapplied.ok ||
+          reapplied.nextStrategy.charterSha256 !==
+            amended.nextStrategy.charterSha256
+        ) {
+          return refuseInvalidDigest(
+            "Resulting amended charter cannot be modified during confirmation; confirm the presented short digest.",
+          );
+        }
+      }
+
+      const rawConfirmDigest =
+        confirmContent.digest ??
+        confirmContent.amendmentDigest ??
+        confirmContent.charterDigest ??
+        confirmContent.shortDigest;
+      const confirmTypedDigest =
+        typeof rawConfirmDigest === "string" ? rawConfirmDigest.trim() : "";
+      const confirmMatchesAmended =
+        confirmTypedDigest.length > 0 &&
+        (confirmTypedDigest === amended.nextStrategy.shortDigest ||
+          confirmTypedDigest === amended.nextStrategy.charterSha256);
+
+      if (!confirmMatchesAmended) {
+        return refuseInvalidDigest(
+          "Resulting amended charter requires typing its presented short digest to confirm.",
+        );
+      }
     }
   } else if (opEnv.multiplexed && opEnv.optIn) {
     if (!matchesCurrent && !matchesAmended) {

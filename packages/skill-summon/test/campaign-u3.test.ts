@@ -902,17 +902,22 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
     it("Finding 2: amend displays proposed r<n+1> amendment and resulting shortDigest in elicitation prompt, and operator response.content overrides options.amendment", async () => {
       await openReconAndPropose();
       let capturedMessage = "";
+      let capturedConfirmMessage = "";
       let capturedSchemaProps: Record<string, unknown> = {};
       let capturedRequired: string[] = [];
 
       const amendRes = await executeOperatorAmend(session, {
         elicit: async (request) => {
-          capturedMessage = request.message;
-          capturedSchemaProps = (request.requestedSchema.properties ?? {}) as Record<
-            string,
-            unknown
-          >;
-          capturedRequired = (request.requestedSchema.required ?? []) as string[];
+          if (capturedMessage === "") {
+            capturedMessage = request.message;
+            capturedSchemaProps = (request.requestedSchema.properties ?? {}) as Record<
+              string,
+              unknown
+            >;
+            capturedRequired = (request.requestedSchema.required ?? []) as string[];
+          } else {
+            capturedConfirmMessage = request.message;
+          }
           const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
             request.message,
           );
@@ -945,6 +950,10 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
       expect(capturedMessage).toContain("To confirm this proposed amendment, type its resulting short digest");
       expect(capturedMessage).toContain("Model-suggested goal should be overridden");
       expect(capturedMessage).toContain("recoverLimit=99");
+      expect(capturedConfirmMessage).toContain("Resulting Amended Charter (r2, resulting shortDigest:");
+      expect(capturedConfirmMessage).toContain("Operator-entered goal overrides model amendment");
+      expect(capturedConfirmMessage).toContain("recoverLimit=5");
+      expect(capturedConfirmMessage).toContain("reopenLimit=4");
       expect(capturedSchemaProps).toHaveProperty("digest");
       expect(capturedRequired).toContain("digest");
       expect(capturedSchemaProps).toHaveProperty("goal");
@@ -1112,6 +1121,147 @@ describe("U3 charter, decisions step, and MCP elicitation operator channel", () 
       expect(confirmedRes.state.charter?.recoverLimit).toBe(9);
       if (confirmedRes.ok) {
         expect(confirmedRes.shortDigest).toBe(candidateShortDigest);
+      }
+    });
+
+    it("refuses operator override paired with old charter digest or unconfirmed candidate digest, and requires confirming the presented resulting charter digest", async () => {
+      const { proposeRes } = await openReconAndPropose();
+
+      // 1. Operator override (goal) paired with the OLD current r1 charter digest on initial elicitation is refused.
+      let candidateShortDigest = "";
+      const overrideWithOldDigestRes = await executeOperatorAmend(session, {
+        elicit: async (request) => {
+          const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
+            request.message,
+          );
+          candidateShortDigest = match?.[1] ?? "";
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              goal: "Operator Goal Override",
+              digest: proposeRes.shortDigest,
+            },
+          };
+        },
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(overrideWithOldDigestRes.ok).toBe(false);
+      expect(overrideWithOldDigestRes.refused).toBe(true);
+      if (!overrideWithOldDigestRes.ok) {
+        expect(overrideWithOldDigestRes.reason).toBe("invalid-charter-digest");
+        expect(overrideWithOldDigestRes.error?.code).toBe("invalid-charter-digest");
+      }
+      expect(overrideWithOldDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(overrideWithOldDigestRes.state.charterRevision).toBe(1);
+      expect(overrideWithOldDigestRes.state.charter?.recoverLimit).toBe(2);
+
+      // 2. Operator override paired with old digest or un-overridden candidate digest on confirmation prompt is refused.
+      let confirmPromptCalls = 0;
+      const overrideConfirmWithOldDigestRes = await executeOperatorAmend(session, {
+        elicit: async () => {
+          confirmPromptCalls += 1;
+          if (confirmPromptCalls === 1) {
+            return {
+              action: ElicitationActions.accept,
+              content: {
+                decision: OperatorDecisionChoices.amend,
+                goal: "Operator Goal Override",
+                digest: candidateShortDigest,
+              },
+            };
+          }
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              digest: proposeRes.shortDigest,
+            },
+          };
+        },
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(confirmPromptCalls).toBe(2);
+      expect(overrideConfirmWithOldDigestRes.ok).toBe(false);
+      expect(overrideConfirmWithOldDigestRes.refused).toBe(true);
+      if (!overrideConfirmWithOldDigestRes.ok) {
+        expect(overrideConfirmWithOldDigestRes.reason).toBe("invalid-charter-digest");
+      }
+      expect(overrideConfirmWithOldDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(overrideConfirmWithOldDigestRes.state.charterRevision).toBe(1);
+
+      let candidateConfirmCalls = 0;
+      const overrideConfirmWithCandidateDigestRes = await executeOperatorAmend(session, {
+        elicit: async () => {
+          candidateConfirmCalls += 1;
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              goal: "Operator Goal Override",
+              digest: candidateShortDigest,
+            },
+          };
+        },
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(candidateConfirmCalls).toBe(2);
+      expect(overrideConfirmWithCandidateDigestRes.ok).toBe(false);
+      expect(overrideConfirmWithCandidateDigestRes.refused).toBe(true);
+      if (!overrideConfirmWithCandidateDigestRes.ok) {
+        expect(overrideConfirmWithCandidateDigestRes.reason).toBe("invalid-charter-digest");
+      }
+      expect(overrideConfirmWithCandidateDigestRes.state.state).toBe(CampaignStates.decisions);
+      expect(overrideConfirmWithCandidateDigestRes.state.charterRevision).toBe(1);
+
+      // 3. Succeeds when the confirmation elicitation presents the resulting merged charter and operator confirms its resulting shortDigest.
+      const seenPrompts: string[] = [];
+      let resultingShortDigest = "";
+      const confirmedOverrideRes = await executeOperatorAmend(session, {
+        elicit: async (request) => {
+          seenPrompts.push(request.message);
+          const match = /resulting shortDigest: ([0-9a-f]{12})/.exec(
+            request.message,
+          );
+          expect(match?.[1]).toBeTruthy();
+          if (seenPrompts.length === 1) {
+            return {
+              action: ElicitationActions.accept,
+              content: {
+                decision: OperatorDecisionChoices.amend,
+                goal: "Operator Goal Override",
+                digest: match![1],
+              },
+            };
+          }
+          resultingShortDigest = match![1]!;
+          return {
+            action: ElicitationActions.accept,
+            content: {
+              decision: OperatorDecisionChoices.amend,
+              digest: resultingShortDigest,
+            },
+          };
+        },
+        amendment: { recoverLimit: 9 },
+        env: {},
+      });
+      expect(seenPrompts).toHaveLength(2);
+      expect(seenPrompts[1]).toContain("Resulting Amended Charter (r2, resulting shortDigest:");
+      expect(seenPrompts[1]).toContain("Operator Goal Override");
+      expect(seenPrompts[1]).toContain("recoverLimit=9");
+      expect(resultingShortDigest).not.toBe(proposeRes.shortDigest);
+      expect(resultingShortDigest).not.toBe(candidateShortDigest);
+      expect(confirmedOverrideRes.ok).toBe(true);
+      expect(confirmedOverrideRes.state.state).toBe(CampaignStates.decisions);
+      expect(confirmedOverrideRes.state.charterRevision).toBe(2);
+      expect(confirmedOverrideRes.state.charter?.goal).toBe("Operator Goal Override");
+      expect(confirmedOverrideRes.state.charter?.recoverLimit).toBe(9);
+      if (confirmedOverrideRes.ok) {
+        expect(confirmedOverrideRes.shortDigest).toBe(resultingShortDigest);
       }
     });
   });
