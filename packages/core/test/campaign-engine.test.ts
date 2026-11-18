@@ -6,6 +6,7 @@ import {
   initialCampaignState, stepCampaign, replayCampaign, verifyCampaignRecord, verifyCampaignTraceLines, serializeCampaignRecord,
   createCampaignOperatorAdapter, createCampaignOperatorEvent, createCampaignEngineAdapter, createCampaignEngineEvent,
   parseCampaignCharter, parseCampaignRecon, parseCampaignManifest, parseConvergenceIncident,
+  buildCampaignManifest,
   parseCampaignState, parseCampaignEvent, parseCampaignTraceEntry, parseCampaignRecord, parseControllerStatus,
   toControllerStatus, explainCampaignTransition,
   type CampaignState, type CampaignCharter, type CampaignOperatorCommand, type EngineCommand,
@@ -413,9 +414,93 @@ function corruptions(value: unknown): unknown[] {
   }
   return results;
 }
+const manifestFixture = buildCampaignManifest(
+  {
+    schema: IDs.recon,
+    reconId: "recon-0",
+    gaps: [
+      {
+        gapIndex: 0,
+        query: "synthetic gap",
+        status: "matched",
+        refused: false,
+        refusal: null,
+        candidates: [
+          {
+            cardRef: "recon:recon-0:gap:0:card:skill-a",
+            id: "skill-a",
+            name: "skill-a",
+            title: "Skill A",
+            description: "Synthetic skill A",
+            source: "tree",
+            sourceUrl: "https://example.com/skill-a",
+            card: "[Preview] skill-a",
+            retrieval: {
+              score: 0.9,
+              margin: 0.4,
+              matchKind: "ranked",
+              classified: true,
+              nameMatchesQuery: true,
+            },
+            lane: {
+              status: "present",
+              invocation: "model",
+              lane: "model-led",
+              convergenceOnly: false,
+            },
+            installability: {
+              status: "absent-not-configured",
+              state: "unknown",
+              reason: "Not configured",
+              applicability: "unknown",
+              applicabilityReason: "Not evaluated",
+              observationDigest: null,
+              observedAt: null,
+            },
+            arbor: {
+              status: "absent-no-accepted-record",
+              availability: "absent",
+              join: "content-pinned",
+              upstreamStatus: "absent-no-accepted-record",
+              sourceDigest: null,
+              claims: [],
+              conditionsEvaluated: false,
+              reason: "No accepted record",
+              hellHeaven: {
+                status: "absent-not-published",
+                availability: "unknown",
+                upstreamStatus: null,
+                reason: "Not published",
+              },
+            },
+            graph: {
+              status: "absent-no-edges",
+              availability: "absent",
+              join: "content-pinned",
+              upstreamStatus: "absent-no-accepted-record",
+              sourceDigest: null,
+              absenceMeaning: "not-evaluated",
+              relations: [],
+              reason: "No edges",
+            },
+            freshness: {
+              status: "present",
+              indexGeneratedAt: "2026-01-01T00:00:00Z",
+              indexAgeDays: null,
+              stale: false,
+              indexOrigin: "committed",
+              source: "tree",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  ["recon:recon-0:gap:0:card:skill-a"],
+);
 const parserCases: [string, unknown, (v: unknown) => unknown][] = [
   ["charter", charter(), parseCampaignCharter], ["recon", recon, parseCampaignRecon],
-  ["manifest", { schema: IDs.manifest, campaignId: "campaign-a", sessionId: "session-a", charterRevision: 1, queue: charter().queue }, parseCampaignManifest],
+  ["manifest", manifestFixture, parseCampaignManifest],
   ["incident", incident(), parseConvergenceIncident], ["state", convergence, parseCampaignState],
   ["event", proposal, parseCampaignEvent], ["entry", stepCampaign(decisions, approve()).entry, parseCampaignTraceEntry],
   ["record", replayCampaign(setup()).record, parseCampaignRecord],

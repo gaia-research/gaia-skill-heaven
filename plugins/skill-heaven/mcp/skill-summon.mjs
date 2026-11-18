@@ -13795,6 +13795,163 @@ function hasExactlyKeys(value, required2) {
   return keys.length === required2.length && keys.every((key) => typeof key === "string" && required2.includes(key));
 }
 
+// packages/core/src/arbor/contract.ts
+var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
+var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
+var ARBOR_EDGE_SCHEMA = "gaia.arbor-edge/v1";
+var ARBOR_EDGE_INDEX_SCHEMA = "gaia.arbor-edge-index/v1";
+var ARBOR_RUNTIME_INDEX_SCHEMA = "gaia.arbor-runtime-index/v1";
+var PROJECTED_SUPPORT = [
+  "expert-declared",
+  "benchmark-confirmed",
+  "benchmark-qualified",
+  "benchmark-revised",
+  "inconclusive"
+];
+var ARBOR_FACETS = ["human-led", "model-led"];
+var ARBOR_RELATIONS = [
+  "stabilizes",
+  "amplifies",
+  "conflicts",
+  "recovers",
+  "compresses-after",
+  "unlocks",
+  "duplicates"
+];
+var ARBOR_LENS_STATUS = [
+  "present",
+  "absent-no-accepted-record",
+  "absent-subject-version-mismatch",
+  "absent-superseded",
+  "unavailable-unsupported-payload"
+];
+var EDGE_ABSENCE_MEANING = "not-evaluated";
+var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
+var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
+
+// packages/core/src/campaign/manifest.ts
+var CAMPAIGN_MANIFEST_SCHEMA = CAMPAIGN_SCHEMA_IDS.manifest;
+var CAMPAIGN_MANIFEST_KEYS = Object.freeze([
+  "schema",
+  "reconId",
+  "gaps",
+  "entries"
+]);
+var CAMPAIGN_MANIFEST_GAP_KEYS = Object.freeze([
+  "gapIndex",
+  "query",
+  "status",
+  "refused",
+  "refusal",
+  "selectedCardRefs"
+]);
+var CAMPAIGN_MANIFEST_ENTRY_KEYS = Object.freeze([
+  "reconId",
+  "gapIndex",
+  "gap",
+  "cardRef",
+  "id",
+  "name",
+  "title",
+  "description",
+  "source",
+  "sourceUrl",
+  "card",
+  "convergenceOnly",
+  "retrieval",
+  "lane",
+  "installability",
+  "arbor",
+  "graph",
+  "freshness"
+]);
+var CAMPAIGN_MANIFEST_LENS_KEYS = Object.freeze([
+  "retrieval",
+  "lane",
+  "installability",
+  "arbor",
+  "graph",
+  "freshness"
+]);
+var MANIFEST_RETRIEVAL_RANKED_KEYS = Object.freeze([
+  "score",
+  "margin",
+  "matchKind",
+  "classified",
+  "nameMatchesQuery"
+]);
+var MANIFEST_RETRIEVAL_EXACT_KEYS = Object.freeze([
+  "score",
+  "margin",
+  "matchKind",
+  "matchedBy",
+  "classified",
+  "nameMatchesQuery"
+]);
+var MANIFEST_RETRIEVAL_ABSENT_KEYS = Object.freeze([
+  "status",
+  "reason"
+]);
+var MANIFEST_LANE_LENS_KEYS = Object.freeze([
+  "status",
+  "invocation",
+  "lane",
+  "convergenceOnly"
+]);
+var MANIFEST_INSTALLABILITY_LENS_KEYS = Object.freeze([
+  "status",
+  "state",
+  "reason",
+  "applicability",
+  "applicabilityReason",
+  "observationDigest",
+  "observedAt"
+]);
+var MANIFEST_ARBOR_LENS_KEYS = Object.freeze([
+  "status",
+  "availability",
+  "join",
+  "upstreamStatus",
+  "sourceDigest",
+  "claims",
+  "conditionsEvaluated",
+  "reason",
+  "hellHeaven"
+]);
+var MANIFEST_ARBOR_HELL_HEAVEN_KEYS = Object.freeze([
+  "status",
+  "availability",
+  "upstreamStatus",
+  "reason"
+]);
+var MANIFEST_GRAPH_LENS_KEYS = Object.freeze([
+  "status",
+  "availability",
+  "join",
+  "upstreamStatus",
+  "sourceDigest",
+  "absenceMeaning",
+  "relations",
+  "reason"
+]);
+var MANIFEST_FRESHNESS_PRESENT_KEYS = Object.freeze([
+  "status",
+  "indexGeneratedAt",
+  "indexAgeDays",
+  "stale",
+  "indexOrigin",
+  "source"
+]);
+var MANIFEST_FRESHNESS_ABSENT_KEYS = Object.freeze([
+  "status",
+  "indexGeneratedAt",
+  "indexAgeDays",
+  "stale",
+  "indexOrigin",
+  "source",
+  "reason"
+]);
+
 // packages/core/src/campaign/schema.ts
 var text = (v) => typeof v === "string" && v.trim().length > 0;
 var bool = (v) => typeof v === "boolean";
@@ -16912,40 +17069,6 @@ function createDecisionBackend(modeOrOptions, maybeOptions) {
     }
   }
 }
-
-// packages/core/src/arbor/contract.ts
-var ARBOR_PROFILE_SCHEMA = "gaia.arbor-profile/v1";
-var ARBOR_RUNTIME_SCHEMA = "gaia.arbor-runtime/v1";
-var ARBOR_EDGE_SCHEMA = "gaia.arbor-edge/v1";
-var ARBOR_EDGE_INDEX_SCHEMA = "gaia.arbor-edge-index/v1";
-var ARBOR_RUNTIME_INDEX_SCHEMA = "gaia.arbor-runtime-index/v1";
-var PROJECTED_SUPPORT = [
-  "expert-declared",
-  "benchmark-confirmed",
-  "benchmark-qualified",
-  "benchmark-revised",
-  "inconclusive"
-];
-var ARBOR_FACETS = ["human-led", "model-led"];
-var ARBOR_RELATIONS = [
-  "stabilizes",
-  "amplifies",
-  "conflicts",
-  "recovers",
-  "compresses-after",
-  "unlocks",
-  "duplicates"
-];
-var ARBOR_LENS_STATUS = [
-  "present",
-  "absent-no-accepted-record",
-  "absent-subject-version-mismatch",
-  "absent-superseded",
-  "unavailable-unsupported-payload"
-];
-var EDGE_ABSENCE_MEANING = "not-evaluated";
-var EDGE_STRUCTURAL_OVERLAP = "not-evaluated";
-var ARBOR_LENSES = ["claims", "hellHeaven", "interactions"];
 
 // packages/core/src/arbor/validate.ts
 var ArborContractError = class extends Error {

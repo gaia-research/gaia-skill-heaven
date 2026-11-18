@@ -110,6 +110,22 @@ export {
   type CampaignReconResult,
 } from "./campaign/ops/recon.js";
 export {
+  DECLARED_NOT_MEASURED_GROUP_ID,
+  DECLARED_NOT_MEASURED_GROUP_TITLE,
+  buildDeclaredNotMeasuredGroup,
+  createManifestRenderGroup,
+  renderCampaignManifest,
+  renderCampaignManifestLines,
+  renderManifestEntry,
+  renderManifestEntryLenses,
+  renderManifestGap,
+  renderManifestGroup,
+  withManifestGroup,
+  type ManifestGroupBuilder,
+  type ManifestRenderGroup,
+  type RenderCampaignManifestOptions,
+} from "./campaign/render.js";
+export {
   CAMPAIGN_TOOL_NAME,
   CAMPAIGN_TOOL_TITLE,
   CAMPAIGN_TOOL_DESCRIPTION,
