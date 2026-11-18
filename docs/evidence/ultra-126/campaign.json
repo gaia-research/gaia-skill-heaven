@@ -181,7 +181,7 @@
       "pr": "https://github.com/gaia-research/gaia-skill-heaven/pull/259",
       "head": "ec17b57",
       "terra": "prep half: blocking finding (inapplicable record consumed) fixed and re-reviewed at 4db4faf; metadata repair ec17b57 not yet reviewed. Re-review at final U8 HEAD after the render half.",
-      "status": "prep done; render half waits for U2; merge after U2",
+      "status": "render half dispatched 2026-11-18 (Team C agy Hydrogen high, tab u8-render); full Terra review owed on the whole diff",
       "tests": "1844 passed + 1 skipped; typecheck clean (at 4db4faf/ec17b57)"
     },
     {
