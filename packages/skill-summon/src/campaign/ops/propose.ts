@@ -70,6 +70,7 @@ export type CharterProposalInput = Readonly<{
   phases?: readonly string[];
   arsenal: readonly CharterArsenalProposalItem[];
   allowedSkills?: readonly string[];
+  excludedSkills?: readonly string[];
   recoverLimit: number;
   reopenLimit: number;
   sessionRetention: number;
@@ -407,6 +408,14 @@ export function parseCharterProposalInput(
     return { ok: false, code: "invalid-proposal-input", message: allowedSkills.error };
   }
 
+  const excludedSkills = parseOptionalStringArray(
+    source.excludedSkills,
+    "excludedSkills",
+  );
+  if (!excludedSkills.ok) {
+    return { ok: false, code: "invalid-proposal-input", message: excludedSkills.error };
+  }
+
   const checkpoints = parseOptionalStringArray(source.checkpoints, "checkpoints");
   if (!checkpoints.ok) {
     return { ok: false, code: "invalid-proposal-input", message: checkpoints.error };
@@ -478,6 +487,7 @@ export function parseCharterProposalInput(
       ...(phases.value !== undefined ? { phases: phases.value } : {}),
       arsenal: Object.freeze(arsenal),
       ...(allowedSkills.value !== undefined ? { allowedSkills: allowedSkills.value } : {}),
+      ...(excludedSkills.value !== undefined ? { excludedSkills: excludedSkills.value } : {}),
       recoverLimit: recover.value,
       reopenLimit: reopen.value,
       sessionRetention: retention.value,
@@ -647,6 +657,19 @@ export function buildCharterTemplate(
     }
   }
 
+  const excludedSkills = input.excludedSkills
+    ? [...new Set(input.excludedSkills)]
+    : [];
+  for (const skill of excludedSkills) {
+    if (selectedSkillIds.has(skill) || allowedSkills.includes(skill)) {
+      return {
+        ok: false,
+        code: "charter-exclusion-conflict",
+        message: `Excluded skill "${skill}" cannot also appear in allowedSkills or queue.`,
+      };
+    }
+  }
+
   const manifestResult = tryBuildCampaignManifest(reconRecord, selectedCardRefs);
   if (!manifestResult.ok) {
     return {
@@ -679,6 +702,7 @@ export function buildCharterTemplate(
     revision: 1,
     goal: goal.trim(),
     allowedSkills,
+    ...(excludedSkills.length > 0 ? { excludedSkills } : {}),
     queue: queueItems,
     recoverLimit: input.recoverLimit,
     reopenLimit: input.reopenLimit,
@@ -710,6 +734,7 @@ export function buildCharterTemplate(
     phases: [...phases],
     arsenal: arsenalItems,
     allowedSkills: [...baseCharter.allowedSkills],
+    ...(excludedSkills.length > 0 ? { excludedSkills: [...excludedSkills] } : {}),
     queue: [...baseCharter.queue],
     authority,
     recoverLimit: baseCharter.recoverLimit,

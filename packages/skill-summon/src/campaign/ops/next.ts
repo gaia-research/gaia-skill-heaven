@@ -22,6 +22,7 @@ import { CampaignStore } from "../store.js";
 import {
   executeCheckpoint,
   loadOrInitializeWorkUnitQueue,
+  type UnplannedSummonSummary,
 } from "./checkpoint.js";
 import {
   buildCampaignDigest,
@@ -39,6 +40,7 @@ export type CampaignNextResult =
       queueCounts: QueueSummaryCounts;
       checkpointWritten: boolean;
       checkpointEntry?: CampaignTraceEntry;
+      unplannedSummons?: readonly UnplannedSummonSummary[];
       state: CampaignState;
       status: ControllerStatus;
       digest: CampaignDigest;
@@ -188,6 +190,7 @@ export async function executeNext(
   let currentDigest = digest;
   let checkpointWritten = false;
   let checkpointEntry: CampaignTraceEntry | undefined;
+  let unplannedSummons: readonly UnplannedSummonSummary[] | undefined;
 
   if (hasBatches) {
     const checkpointResult = await executeCheckpoint(session, {
@@ -208,6 +211,7 @@ export async function executeNext(
     }
     checkpointWritten = checkpointResult.checkpointWritten;
     checkpointEntry = checkpointResult.entry;
+    unplannedSummons = checkpointResult.unplannedSummons;
     currentState = checkpointResult.state;
     currentStatus = checkpointResult.status;
     currentDigest = checkpointResult.digest;
@@ -270,6 +274,7 @@ export async function executeNext(
       queueCounts: updatedCounts,
       checkpointWritten,
       ...(checkpointEntry ? { checkpointEntry } : {}),
+      ...(unplannedSummons !== undefined ? { unplannedSummons } : {}),
       state: appended.state,
       status: appended.status,
       digest: nextDigest,
@@ -303,6 +308,7 @@ export async function executeNext(
     queueCounts: selection.counts,
     checkpointWritten,
     ...(checkpointEntry ? { checkpointEntry } : {}),
+    ...(unplannedSummons !== undefined ? { unplannedSummons } : {}),
     state: finalState,
     status: finalStatus,
     digest: finalDigest,

@@ -135,6 +135,24 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
             signal = "work-reported";
           }
           break;
+        case A.summon:
+          if (
+            state.state === S.executing &&
+            state.approved &&
+            event.unplanned === true &&
+            event.skills !== undefined &&
+            event.skills.length > 0
+          ) {
+            const excluded = state.charter?.excludedSkills ?? [];
+            if (event.skills.some((s) => excluded.includes(s))) {
+              signal = "policy-refusal";
+            } else {
+              accepted = true;
+              decision = D.explore;
+              signal = CampaignSignals.unplanned;
+            }
+          }
+          break;
         case A.status: break;
       }
     } else if (authorized && event.channel === "operator") {
@@ -245,6 +263,7 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
   const incidentAction = event?.channel === "agent" && event.op === A.next
     || event?.channel === "operator" && event.op === O.answer;
   const skills = event?.channel === "agent" && event.op === A.incident ? event.incident.skills
+    : event?.channel === "agent" && event.op === A.summon ? (event.skills ?? [])
     : event && "charter" in event ? event.charter.queue.map(q => q.skill)
     : state.state === S.convergence && incidentAction ? state.incident?.skills ?? [] : [];
   const personRequired = event?.channel === "operator" || pendingPerson(state) || pendingPerson(next);
@@ -259,7 +278,7 @@ function evaluate(state: CampaignState, event: CampaignEventDescriptor | null, a
       : {};
   const workUnit =
     (event?.channel === "engine" && event.op === E.verify) ||
-    (event?.channel === "agent" && (event.op === A.next || event.op === A.report))
+    (event?.channel === "agent" && (event.op === A.next || event.op === A.report || event.op === A.summon))
       ? (event.workUnit ?? null)
       : null;
   const entry: CampaignTraceEntry = immutableSnapshot({

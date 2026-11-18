@@ -15,6 +15,7 @@ import {
   type SkillIndex,
 } from "./schema.js";
 import type { InstallabilityAssessment } from "./installability.js";
+import { PUBLISH_CLASS_DENY_LIST, type PublishDenyListClass } from "../campaign/vocabulary.js";
 
 /** The subset of the upstream named projection the index is built from. */
 export type ProjectionSkill = {
@@ -29,6 +30,7 @@ export type ProjectionSkill = {
   level?: string | undefined;
   status?: string | undefined;
   invocation?: string | undefined;
+  denyListClass?: PublishDenyListClass | undefined;
   overallTrustGrade?: string | undefined;
   trustMagnitude?: number | undefined;
   links?: Record<string, unknown> | undefined;
@@ -278,6 +280,10 @@ function toIndexedSkill(
     tags: [...(skill.tags ?? [])],
     links: typeof links.github === "string" ? { github: links.github } : {},
     invocation: readInvocation(skill.invocation),
+    ...(skill.denyListClass !== undefined &&
+    (PUBLISH_CLASS_DENY_LIST as readonly string[]).includes(skill.denyListClass)
+      ? { denyListClass: skill.denyListClass }
+      : {}),
     installable: isInstallableLink(links),
     suiteComponents: [...(skill.suiteComponents ?? [])],
     registryOnly: skill.installable === false,

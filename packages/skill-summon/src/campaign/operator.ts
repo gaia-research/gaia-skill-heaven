@@ -75,6 +75,7 @@ export type OperatorCharterAmendment = Readonly<{
   sessionRetention?: number;
   pauseWindow?: number;
   allowedSkills?: readonly string[];
+  excludedSkills?: readonly string[];
   clauses?: readonly string[];
   checkpoints?: readonly string[];
   stops?: readonly string[];
@@ -244,6 +245,7 @@ const AMENDMENT_KEYS = [
   "sessionRetention",
   "pauseWindow",
   "allowedSkills",
+  "excludedSkills",
   "clauses",
   "checkpoints",
   "stops",
@@ -336,7 +338,7 @@ function mergeOperatorAmendment(
     if (content.sessionRetention === undefined) delete base.sessionRetention;
   }
 
-  for (const listKey of ["allowedSkills", "clauses", "checkpoints", "stops"] as const) {
+  for (const listKey of ["allowedSkills", "excludedSkills", "clauses", "checkpoints", "stops"] as const) {
     if (Object.hasOwn(content, listKey)) {
       const parsed = parseStringListOrArray(content[listKey]);
       if (parsed !== undefined) {
@@ -407,6 +409,7 @@ function hasOperatorAmendmentOverrides(
   }
   for (const listKey of [
     "allowedSkills",
+    "excludedSkills",
     "clauses",
     "checkpoints",
     "stops",
@@ -510,6 +513,11 @@ function buildElicitationPrompt(
       type: "string",
       title: "Amended allowedSkills",
       description: "Optional comma- or newline-separated skill IDs (used when decision is amend).",
+    },
+    excludedSkills: {
+      type: "string",
+      title: "Amended excludedSkills",
+      description: "Optional comma- or newline-separated excluded skill IDs (used when decision is amend).",
     },
     clauses: {
       type: "string",
@@ -792,11 +800,36 @@ function applyAmendment(
     nextAllowedSkills = deduped;
   }
 
+  let nextExcludedSkills = currentCharter.excludedSkills ?? [];
+  if (amendment.excludedSkills !== undefined) {
+    const parsed = parseNonEmptyStringArray(
+      amendment.excludedSkills,
+      "excludedSkills",
+    );
+    if (!parsed.ok) {
+      return { ok: false, code: "invalid-amendment", message: parsed.message };
+    }
+    nextExcludedSkills = [...new Set(parsed.value)];
+  }
+  for (const skill of nextExcludedSkills) {
+    if (
+      nextAllowedSkills.includes(skill) ||
+      currentState.queue.some((q) => q.skill === skill)
+    ) {
+      return {
+        ok: false,
+        code: "charter-exclusion-conflict",
+        message: `Excluded skill "${skill}" cannot also appear in allowedSkills or queue.`,
+      };
+    }
+  }
+
   const baseCharter: CampaignCharter = {
     schema: CAMPAIGN_SCHEMA_IDS.charter,
     revision: nextRevision,
     goal: nextGoal,
     allowedSkills: [...nextAllowedSkills],
+    ...(nextExcludedSkills.length > 0 ? { excludedSkills: [...nextExcludedSkills] } : {}),
     queue: [...currentState.queue],
     recoverLimit: recover.value,
     reopenLimit: reopen.value,
@@ -812,6 +845,7 @@ function applyAmendment(
     phases: [...currentStrategy.charterTemplate.phases],
     arsenal: [...currentStrategy.charterTemplate.arsenal],
     allowedSkills: [...baseCharter.allowedSkills],
+    ...(nextExcludedSkills.length > 0 ? { excludedSkills: [...nextExcludedSkills] } : {}),
     queue: [...baseCharter.queue],
     authority: nextAuthority,
     recoverLimit: baseCharter.recoverLimit,

@@ -1,3 +1,28 @@
+import { lstat } from "node:fs/promises";
+import path from "node:path";
+import {
+  AgentOps,
+  CampaignGateDecisions,
+  CampaignGateRefusalCodes,
+  CampaignStates,
+  ElicitationActions,
+  toControllerStatus,
+  type CampaignStateName,
+  type CampaignTraceEntry,
+  type SummonSurface,
+} from "skill-zero";
+import { CAMPAIGN_DIR_NAME, CampaignStore } from "../campaign/store.js";
+import type { ElicitationClient } from "../campaign/operator.js";
+import { buildCampaignDigest, type CampaignDigest } from "../campaign/ops/status.js";
+import {
+  evaluateSummonGate,
+  isExternalUnreviewedSource,
+  resolveActiveWorkUnit,
+  resolveGateCard,
+  type GateCardLane,
+  type GateRequestPath,
+  type SummonGateDecision,
+} from "../campaign/gate.js";
 import { ZERO_CUT_REFUSAL, type ZeroCut } from "../zero-cut.js";
 import { registerCampaignTool } from "../campaign/tool.js";
 import type { CallToolResult, ContentBlock } from "@modelcontextprotocol/sdk/types.js";
@@ -14,7 +39,12 @@ import { z } from "zod";
 import type { GaiaService } from "../service.js";
 import type { NamedSkill } from "../domain/types.js";
 import { resolveSession, type SummonSession } from "../summon/session.js";
-import { summon, type SummonOutcome } from "../summon/summon.js";
+import {
+  summon,
+  type SummonGateCandidate,
+  type SummonGateCheckResult,
+  type SummonOutcome,
+} from "../summon/summon.js";
 import { VERSION } from "../version.js";
 import {
   buildInternalEntries,
@@ -25,6 +55,11 @@ import {
   type DescribeSkill,
   type ReadSkillResource,
 } from "./skills.js";
+
+export type SummonRequestProvenanceResolver = (ctx: {
+  query: string;
+  surface: SummonSurface | undefined;
+}) => GateRequestPath | Promise<GateRequestPath>;
 
 export type CreateSkillSummonMcpServerOptions = {
   service: GaiaService;
@@ -44,6 +79,13 @@ export type CreateSkillSummonMcpServerOptions = {
    * Register the `campaign` tool (D-002 gate lifted in U3: on by default).
    */
   enableCampaignTool?: boolean;
+  /**
+   * Optional out-of-band per-request provenance resolver from the embedding host.
+   * Caller-supplied `surface` arguments never establish person provenance on their own.
+   */
+  resolveSummonRequestPath?: SummonRequestProvenanceResolver | undefined;
+  /** Optional out-of-band elicitation client for explicit user confirmation. */
+  elicit?: ElicitationClient | undefined;
 };
 
 const SKILL_LIST_PAGE_SIZE = 64;
@@ -182,6 +224,7 @@ const summonOutputSchema = z.object({
   }),
   cards: z.array(z.string()),
   totalSeconds: z.number(),
+  digest: z.unknown().optional(),
 });
 
 /**
@@ -199,6 +242,8 @@ export function createSkillSummonMcpServer({
   readSkillResource,
   zeroCut = "temporary",
   enableCampaignTool = true,
+  resolveSummonRequestPath,
+  elicit: configuredElicit,
 }: CreateSkillSummonMcpServerOptions): McpServer {
   const cutsAll = zeroCut === "all";
   const server = new McpServer(
@@ -416,7 +461,7 @@ export function createSkillSummonMcpServer({
       if (cutsAll) return zeroCutResult();
       try {
         const session = await getSession();
-        const outcome = await summon(service, session, {
+        const summonArgs = {
           query,
           ...(limit === undefined ? {} : { limit }),
           ...(surface === undefined ? {} : { surface }),
@@ -424,27 +469,380 @@ export function createSkillSummonMcpServer({
           ...(preview === undefined ? {} : { preview }),
           ...(decision === undefined ? {} : { decision }),
           ...(live === undefined ? {} : { live }),
-        });
-        // Resource links are optional enrichment. A successful summon must
-        // remain successful when the metadata source is unavailable; in that
-        // case the structured outcome is returned without links.
-        let linkSkills: NamedSkill[] = [];
-        // No links are possible for a refusal or preview, and committed-index
-        // outcomes must remain offline even when a resident payload exists.
-        // Fetched outcomes may enrich only after a successful materialization.
-        if (outcome.summoned.length > 0 && outcome.ranking.indexOrigin !== "committed") {
+        };
+
+        if (preview === true) {
+          const preStore = await loadExistingCampaignStore(session.root);
+          const hasPreCampaign =
+            preStore !== null &&
+            (preStore.hasTrace || preStore.state.state !== CampaignStates.unarmed);
+          const outcome = await summon(service, session, summonArgs);
+          const linkSkills = await resolveOutcomeLinks(service, outcome, describeSkill);
+          return toolResult(
+            outcome,
+            linkSkills,
+            hasPreCampaign && preStore ? digestFromStore(preStore) : null,
+          );
+        }
+
+        // Trusted base request path comes only from out-of-band host provenance
+        // or interactive user elicitation confirmation — never from caller-supplied `surface`.
+        const trustedBaseRequestPath: GateRequestPath = resolveSummonRequestPath
+          ? await resolveSummonRequestPath({ query, surface })
+          : "automatic";
+
+        const effectiveElicit: ElicitationClient | undefined =
+          configuredElicit ??
+          (server.server.getClientCapabilities()?.elicitation !== undefined
+            ? async (request) => {
+                const res = await server.server.elicitInput({
+                  mode: "form",
+                  message: request.message,
+                  requestedSchema: request.requestedSchema as {
+                    type: "object";
+                    properties: Record<string, never>;
+                  },
+                });
+                return {
+                  action: res.action,
+                  ...(res.content
+                    ? { content: res.content as Record<string, unknown> }
+                    : {}),
+                };
+              }
+            : undefined);
+
+        type GateRefusalState = {
+          decision: Extract<SummonGateDecision, { allowed: false }>;
+          skillId: string;
+        };
+        type PendingPersonElicitation = {
+          skillId: string;
+          lane: GateCardLane;
+          campaignState: CampaignStateName;
+          automaticDecision: Extract<SummonGateDecision, { allowed: false }>;
+        };
+
+        const runLockedSummon = async (confirmedPersonSkillId: string | null) => {
+          const unplannedSkillIds = new Set<string>();
+          const refusals: {
+            primary: GateRefusalState | null;
+            fallback: GateRefusalState | null;
+          } = { primary: null, fallback: null };
+          let pendingElicitation: PendingPersonElicitation | null = null;
+          let txDigest: CampaignDigest | null = null;
+          let txCampaignState: CampaignStateName = CampaignStates.unarmed;
+          let txHasCampaign = false;
+
+          let txActive: {
+            store: CampaignStore;
+            charterStrategy: Awaited<ReturnType<CampaignStore["loadCharterStrategy"]>>;
+            unitsState: Awaited<ReturnType<CampaignStore["loadUnitsState"]>>;
+            unitInProgress: ReturnType<typeof resolveActiveWorkUnit>;
+            gateUnit: { id: string; state: ReturnType<typeof resolveActiveWorkUnit> extends infer U ? U extends { state: infer S } ? S : never : never } | null;
+            appendHeld: NonNullable<
+              Parameters<Parameters<typeof CampaignStore.withExclusiveGateTransaction>[1]>[0]["appendHeld"]
+            > | null;
+          } | null = null;
+          let txMeta: {
+            indexOrigin: "committed" | "fetched";
+            source: string;
+            canonical: boolean;
+          } | null = null;
+
+          const evaluateLockedCandidate = (
+            candidate: SummonGateCandidate,
+            isPrimary: boolean,
+          ): SummonGateCheckResult => {
+            if (!txActive) return { allow: true };
+            const skillId = candidate.doc?.id ?? candidate.skill?.id;
+            if (!skillId) return { allow: true };
+
+            const externalUnreviewedSource = isExternalUnreviewedSource({
+              skillId,
+              indexOrigin: txMeta?.indexOrigin ?? null,
+              source: txMeta?.source ?? null,
+              canonical: txMeta?.canonical ?? null,
+              hasReviewedDenyListClass: Boolean(
+                candidate.doc?.denyListClass ?? candidate.skill?.denyListClass,
+              ),
+            });
+            const card = resolveGateCard({
+              skillId,
+              doc: candidate.doc ?? null,
+              skill: candidate.skill ?? null,
+              arbor: candidate.arbor,
+              manifest: txActive.charterStrategy?.manifest ?? null,
+              externalUnreviewedSource,
+            });
+            const requestPathForSkill: GateRequestPath =
+              trustedBaseRequestPath === "person-requested" ||
+              (confirmedPersonSkillId !== null && confirmedPersonSkillId === skillId)
+                ? "person-requested"
+                : "automatic";
+
+            const gateDecision = evaluateSummonGate({
+              hasCampaign: true,
+              campaignState: txActive.store.state,
+              unit: txActive.gateUnit,
+              card,
+              requestPath: requestPathForSkill,
+              manifest: txActive.charterStrategy?.manifest ?? null,
+            });
+            const isCharterExcluded =
+              txActive.store.state.charter?.excludedSkills?.includes(skillId) ??
+              false;
+            if (gateDecision.decision === CampaignGateDecisions.refuse) {
+              if (
+                isPrimary &&
+                !isCharterExcluded &&
+                confirmedPersonSkillId === null &&
+                !resolveSummonRequestPath &&
+                surface === "any" &&
+                effectiveElicit !== undefined &&
+                gateDecision.code !== CampaignGateRefusalCodes.charterExcluded
+              ) {
+                pendingElicitation = {
+                  skillId,
+                  lane: card.lane,
+                  campaignState: txActive.store.state.state,
+                  automaticDecision: gateDecision,
+                };
+                return { allow: false, reason: gateDecision.reason };
+              }
+              if (isPrimary) {
+                refusals.primary = { decision: gateDecision, skillId };
+              } else {
+                refusals.fallback ??= { decision: gateDecision, skillId };
+              }
+              return { allow: false, reason: gateDecision.reason };
+            }
+            if (gateDecision.unplanned) {
+              unplannedSkillIds.add(skillId);
+            }
+            return { allow: true };
+          };
+
+          const outcome = await summon(service, session, {
+            ...summonArgs,
+            withMaterializationLock: (runInstall) =>
+              CampaignStore.withExclusiveGateTransaction(
+                session.root,
+                async ({ store, appendHeld }) => {
+                  const hasCampaign =
+                    store !== null &&
+                    (store.hasTrace || store.state.state !== CampaignStates.unarmed);
+                  txHasCampaign = hasCampaign;
+                  if (!hasCampaign || store === null) {
+                    txActive = null;
+                    txDigest = null;
+                    txCampaignState = CampaignStates.unarmed;
+                    return runInstall();
+                  }
+
+                  const charterStrategy = !store.corrupted
+                    ? await store.loadCharterStrategy()
+                    : null;
+                  const unitsState = !store.corrupted
+                    ? await store.loadUnitsState()
+                    : null;
+                  const unitInProgress = unitsState
+                    ? resolveActiveWorkUnit(unitsState, store.trace)
+                    : null;
+                  const gateUnit = unitInProgress
+                    ? { id: unitInProgress.id, state: unitInProgress.state }
+                    : null;
+
+                  txCampaignState = store.state.state;
+                  txDigest = digestFromStore(store);
+                  txActive = {
+                    store,
+                    charterStrategy,
+                    unitsState,
+                    unitInProgress,
+                    gateUnit,
+                    appendHeld,
+                  };
+                  try {
+                    return await runInstall();
+                  } finally {
+                    txActive = null;
+                  }
+                },
+              ),
+            onBeforeMaterialize: ({
+              topRanked,
+              noMatch,
+              candidates,
+              filtered,
+              ranking,
+              arbor,
+            }) => {
+              txMeta = {
+                indexOrigin: ranking.indexOrigin,
+                source: ranking.source,
+                canonical: arbor.corpus.canonical,
+              };
+              if (!txActive) return { allow: true };
+
+              const topId = topRanked?.doc?.id ?? topRanked?.skill?.id;
+              const topWasFiltered =
+                topId !== undefined &&
+                filtered.some((item) => (item.doc?.id ?? item.skill?.id) === topId);
+              if (topRanked && topWasFiltered) {
+                const topCard = resolveGateCard({
+                  skillId: topId,
+                  doc: topRanked.doc ?? null,
+                  skill: topRanked.skill ?? null,
+                  arbor: topRanked.arbor,
+                  manifest: txActive.charterStrategy?.manifest ?? null,
+                });
+                const topExcluded =
+                  txActive.store.state.charter?.excludedSkills?.includes(topId) ??
+                  false;
+                const topPath: GateRequestPath =
+                  trustedBaseRequestPath === "person-requested" ||
+                  (confirmedPersonSkillId !== null &&
+                    confirmedPersonSkillId === topId)
+                    ? "person-requested"
+                    : "automatic";
+                if (
+                  (topPath === "automatic" &&
+                    (topCard.lane === "human-led" || topCard.denyListClass !== null)) ||
+                  topExcluded
+                ) {
+                  return evaluateLockedCandidate(topRanked, true);
+                }
+              }
+
+              const primary =
+                candidates[0] ??
+                (noMatch?.reason === "all_filtered" ? filtered[0] : undefined);
+              if (!primary) return { allow: true };
+              return evaluateLockedCandidate(primary, true);
+            },
+            canMaterializeSkill: (candidate) =>
+              evaluateLockedCandidate(candidate, false),
+            onAfterMaterialize: async (installedOutcome) => {
+              if (!txActive || txActive.store.corrupted || !txActive.appendHeld) {
+                return;
+              }
+              const materializedUnplanned = [
+                ...new Set(
+                  installedOutcome.summoned
+                    .map((installed) => installed.id)
+                    .filter((id) => unplannedSkillIds.has(id)),
+                ),
+              ];
+              if (materializedUnplanned.length === 0) {
+                txDigest = digestFromStore(txActive.store);
+                return;
+              }
+              let latestAppended: Awaited<ReturnType<NonNullable<typeof txActive.appendHeld>>> | null =
+                null;
+              for (const skillId of materializedUnplanned) {
+                latestAppended = await txActive.appendHeld({
+                  channel: "agent",
+                  op: AgentOps.summon,
+                  unplanned: true,
+                  skills: [skillId],
+                  ...(txActive.unitInProgress
+                    ? { workUnit: txActive.unitInProgress.id }
+                    : {}),
+                });
+              }
+              if (latestAppended) {
+                txDigest = buildCampaignDigest(
+                  latestAppended.state,
+                  latestAppended.status,
+                  latestAcceptedOperatorEntry(txActive.store.trace),
+                );
+              }
+            },
+          });
+
+          return {
+            outcome,
+            refusals,
+            pendingElicitation: pendingElicitation as PendingPersonElicitation | null,
+            txDigest,
+            txCampaignState,
+            txHasCampaign,
+          };
+        };
+
+        let attempt = await runLockedSummon(null);
+        if (attempt.pendingElicitation !== null && effectiveElicit !== undefined) {
+          const pending = attempt.pendingElicitation;
+          let confirmed = false;
           try {
-            const entries = await buildInternalEntries(
-              await service.namedSkills(),
-              describeSkill,
-            );
-            linkSkills = entries.map((entry) => entry.skill);
+            const response = await effectiveElicit({
+              message:
+                `Explicit person confirmation required to summon "${pending.skillId}" ` +
+                `(lane=${pending.lane}, state=${pending.campaignState}). ` +
+                `Enter "${pending.skillId}" to confirm.`,
+              requestedSchema: {
+                type: "object",
+                properties: {
+                  confirmSkillId: {
+                    type: "string",
+                    title: "Skill ID",
+                    description: `Enter "${pending.skillId}" to confirm explicit person-requested summon.`,
+                  },
+                },
+                required: ["confirmSkillId"],
+              },
+            });
+            confirmed =
+              response.action === ElicitationActions.accept &&
+              response.content?.confirmSkillId === pending.skillId;
           } catch {
-            // Do not turn a valid fetched result into a tool error just because
-            // optional metadata enrichment could not be completed.
+            confirmed = false;
+          }
+          if (confirmed) {
+            attempt = await runLockedSummon(pending.skillId);
+          } else {
+            attempt = {
+              ...attempt,
+              pendingElicitation: null,
+              refusals: {
+                primary: {
+                  decision: pending.automaticDecision,
+                  skillId: pending.skillId,
+                },
+                fallback: attempt.refusals.fallback,
+              },
+            };
           }
         }
-        return toolResult(outcome, linkSkills);
+
+        if (!attempt.txHasCampaign || attempt.txDigest === null) {
+          const linkSkills = await resolveOutcomeLinks(
+            service,
+            attempt.outcome,
+            describeSkill,
+          );
+          return toolResult(attempt.outcome, linkSkills);
+        }
+
+        const activeRefusal =
+          attempt.refusals.primary ??
+          (attempt.outcome.summoned.length === 0 ? attempt.refusals.fallback : null);
+        if (activeRefusal !== null) {
+          return gateRefusalResult(
+            activeRefusal.decision,
+            attempt.txDigest,
+            activeRefusal.skillId,
+            attempt.txCampaignState,
+          );
+        }
+
+        const linkSkills = await resolveOutcomeLinks(
+          service,
+          attempt.outcome,
+          describeSkill,
+        );
+        return toolResult(attempt.outcome, linkSkills, attempt.txDigest);
       } catch (error) {
         return toolError(error);
       }
@@ -452,23 +850,125 @@ export function createSkillSummonMcpServer({
   );
 
   if (enableCampaignTool === true) {
-    registerCampaignTool(server, { service, getSession, zeroCut });
+    registerCampaignTool(server, {
+      service,
+      getSession,
+      zeroCut,
+      ...(configuredElicit ? { elicit: configuredElicit } : {}),
+    });
   }
 
   return server;
 }
 
+async function resolveOutcomeLinks(
+  service: GaiaService,
+  outcome: SummonOutcome,
+  describeSkill: DescribeSkill | undefined,
+): Promise<NamedSkill[]> {
+  // Resource links are optional enrichment. A successful summon must remain
+  // successful when the metadata source is unavailable, and committed-index
+  // outcomes must stay offline even when a resident payload exists.
+  if (outcome.summoned.length === 0 || outcome.ranking.indexOrigin === "committed") {
+    return [];
+  }
+  try {
+    const entries = await buildInternalEntries(
+      await service.namedSkills(),
+      describeSkill,
+    );
+    return entries.map((entry) => entry.skill);
+  } catch {
+    return [];
+  }
+}
+
+async function loadExistingCampaignStore(
+  sessionRoot: string,
+): Promise<CampaignStore | null> {
+  try {
+    await lstat(path.join(sessionRoot, CAMPAIGN_DIR_NAME));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+  return CampaignStore.load(sessionRoot, { refreshStatus: false });
+}
+
+function latestAcceptedOperatorEntry(
+  trace: readonly CampaignTraceEntry[],
+): CampaignTraceEntry | undefined {
+  for (let i = trace.length - 1; i >= 0; i--) {
+    const entry = trace[i];
+    if (entry && entry.channel === "operator" && entry.accepted) {
+      return entry;
+    }
+  }
+  return undefined;
+}
+
+function digestFromStore(store: CampaignStore): CampaignDigest {
+  const lastEntry = store.trace.at(-1);
+  const status = toControllerStatus(
+    store.state,
+    lastEntry && lastEntry.to === store.state.state ? lastEntry : undefined,
+  );
+  return buildCampaignDigest(
+    store.state,
+    status,
+    latestAcceptedOperatorEntry(store.trace),
+  );
+}
+
+function gateRefusalResult(
+  decision: Extract<SummonGateDecision, { allowed: false }>,
+  digest: CampaignDigest,
+  skillId: string,
+  campaignState: CampaignStateName,
+): CallToolResult {
+  return {
+    content: [
+      { type: "text", text: decision.reason },
+      { type: "text", text: digest.text },
+    ],
+    structuredContent: {
+      error: {
+        name: "CampaignGateRefusal",
+        code: decision.code,
+        message: decision.reason,
+        skillId,
+        campaignState,
+        retryable: false,
+      },
+      gate: {
+        decision: decision.decision,
+        code: decision.code,
+        reason: decision.reason,
+        skillId,
+        campaignState,
+      },
+      digest,
+    },
+    isError: true,
+  };
+}
+
 function toolResult(
   value: SummonOutcome,
   linkSkills: readonly NamedSkill[] = [],
+  digest: CampaignDigest | null = null,
 ): CallToolResult {
+  const payload = digest === null ? value : { ...value, digest };
   const content: ContentBlock[] = [
-    { type: "text", text: JSON.stringify(value, null, 2) },
+    { type: "text", text: JSON.stringify(payload, null, 2) },
+    ...(digest === null ? [] : [{ type: "text" as const, text: digest.text }]),
     ...resourceLinks(value, linkSkills),
   ];
   return {
     content,
-    structuredContent: { ...value },
+    structuredContent: { ...payload },
   };
 }
 

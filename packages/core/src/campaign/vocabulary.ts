@@ -28,7 +28,7 @@ export const OperatorVerbs = Object.freeze({
   decide: "decide", amend: "amend", answer: "answer", checkpoint: "checkpoint", stop: "stop",
 } as const);
 export const AgentOps = Object.freeze({
-  open: "open", recon: "recon", propose: "propose", next: "next", report: "report", incident: "incident", status: "status",
+  open: "open", recon: "recon", propose: "propose", next: "next", report: "report", incident: "incident", summon: "summon", status: "status",
 } as const);
 export const EngineOps = Object.freeze({
   verify: "verify", complete: "complete", policyStop: "policy-stop", block: "block", fail: "fail", sessionEnd: "session-end",
@@ -62,12 +62,12 @@ export const CAMPAIGN_CHANNELS = Object.freeze(["operator", "agent", "engine", "
 export const CAMPAIGN_SIGNALS = Object.freeze([
   "none", "invalid-input", "open-request", "recon-complete", "proposal", "decision", "amendment", "answer",
   "checkpoint-request", "stop-request", "work-ready", "work-reported", "incident-reported", "policy-refusal",
-  "session-ended", "behavioral-failure", "behavioral-recovery", "completed", "blocked", "failed-safe", "person-required",
+  "session-ended", "behavioral-failure", "behavioral-recovery", "completed", "blocked", "failed-safe", "person-required", "unplanned",
 ] as const);
 export const CampaignPhases = Object.freeze({
   recon: "recon", decisions: "decisions", execution: "execution", convergence: "convergence", terminal: "terminal",
 } as const);
-export const CampaignSignals = Object.freeze({ answer: "answer", personRequired: "person-required" } as const);
+export const CampaignSignals = Object.freeze({ answer: "answer", personRequired: "person-required", unplanned: "unplanned" } as const);
 export const CAMPAIGN_PHASES = Object.freeze(Object.values(CampaignPhases));
 export const TERMINAL_STATES = Object.freeze([
   CampaignStates.completed, CampaignStates.stoppedByUser, CampaignStates.stoppedByPolicy,
@@ -125,3 +125,44 @@ export const UnitReportOutcomes = Object.freeze({
 } as const);
 export const UNIT_REPORT_OUTCOMES = Object.freeze(Object.values(UnitReportOutcomes));
 export type UnitReportOutcome = typeof UNIT_REPORT_OUTCOMES[number];
+
+/** T8 rung-independent publish-class deny-list categories. */
+export const PublishDenyListClasses = Object.freeze({
+  publishToExternalChannels: "publish-to-external-channels",
+  secretBearingWrites: "secret-bearing-writes",
+  destructiveInfraMutation: "destructive-infra-mutation",
+  schemaQueueMigrations: "schema-queue-migrations",
+} as const);
+export const PUBLISH_CLASS_DENY_LIST = Object.freeze(Object.values(PublishDenyListClasses));
+export type PublishDenyListClass = typeof PUBLISH_CLASS_DENY_LIST[number];
+
+export const CampaignGateDecisions = Object.freeze({
+  allow: "allow",
+  allowUnplanned: "allow-unplanned",
+  refuse: "refuse",
+} as const);
+export const CAMPAIGN_GATE_DECISIONS = Object.freeze(Object.values(CampaignGateDecisions));
+export type CampaignGateDecision = typeof CAMPAIGN_GATE_DECISIONS[number];
+
+export const CampaignGateRefusalCodes = Object.freeze({
+  humanLedAutomatic: "human-led-automatic",
+  publishDenyList: "publish-deny-list",
+  charterExcluded: "charter-excluded",
+  notExecuting: "campaign-not-executing",
+  unitWaitingOnPerson: "unit-waiting-on-person",
+} as const);
+export const CAMPAIGN_GATE_REFUSAL_CODES = Object.freeze(Object.values(CampaignGateRefusalCodes));
+export type CampaignGateRefusalCode = typeof CAMPAIGN_GATE_REFUSAL_CODES[number];
+
+export const CAMPAIGN_GATE_REFUSAL_TEXT: Readonly<Record<CampaignGateRefusalCode, string>> = Object.freeze({
+  [CampaignGateRefusalCodes.humanLedAutomatic]:
+    "Refused: human-led skills cannot be summoned on the automatic path during a campaign; explicit user invocation is required.",
+  [CampaignGateRefusalCodes.publishDenyList]:
+    "Refused: skills in the publish-class deny-list cannot be summoned on the automatic path during a campaign; explicit user invocation is required.",
+  [CampaignGateRefusalCodes.charterExcluded]:
+    "Refused: this skill is excluded by the campaign charter.",
+  [CampaignGateRefusalCodes.notExecuting]:
+    "Refused: automatic campaign summon is allowed only while the campaign is in EXECUTING.",
+  [CampaignGateRefusalCodes.unitWaitingOnPerson]:
+    "Refused: automatic campaign summon is blocked while the active work unit is waiting on a person.",
+});

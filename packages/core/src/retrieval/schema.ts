@@ -6,6 +6,7 @@
 // fetches refresh it into the session root; they are never on the critical
 // path of a summon (SPEC §2.2, INTENT §3).
 
+import { PUBLISH_CLASS_DENY_LIST, type PublishDenyListClass } from "../campaign/vocabulary.js";
 import { assertInstallabilityAssessment } from "./installability.js";
 import type { InstallabilityAssessment } from "./installability.js";
 
@@ -65,6 +66,8 @@ export type IndexedSkill = {
   tags: string[];
   links: { github?: string | undefined };
   invocation: "any" | "model" | "human";
+  /** Optional T8 publish-class deny-list classification published by source metadata. */
+  denyListClass?: PublishDenyListClass | undefined;
   /**
    * Legacy index hint derived from the source projection. Production summon
    * decisions use `installability` when present; this field is retained for
@@ -227,6 +230,13 @@ export function assertSkillIndex(value: unknown): asserts value is SkillIndex {
     optionalString(links, "github", `Indexed skill ${id}.links`);
     if (!isInvocation(doc.invocation)) {
       throw new SkillIndexError(`Indexed skill ${id} has an invalid invocation.`);
+    }
+    if (
+      doc.denyListClass !== undefined &&
+      (typeof doc.denyListClass !== "string" ||
+        !(PUBLISH_CLASS_DENY_LIST as readonly string[]).includes(doc.denyListClass))
+    ) {
+      throw new SkillIndexError(`Indexed skill ${id} has an invalid denyListClass.`);
     }
     requiredBoolean(doc, "installable", `Indexed skill ${id}`);
     stringArray(doc.suiteComponents, `Indexed skill ${id}.suiteComponents`);

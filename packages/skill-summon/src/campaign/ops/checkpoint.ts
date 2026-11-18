@@ -1,5 +1,6 @@
 import {
   AgentOps,
+  CampaignSignals,
   CampaignStates,
   OperatorVerbs,
   buildWorkUnitQueue,
@@ -26,6 +27,13 @@ import {
 
 const operatorAdapter = createCampaignOperatorAdapter();
 
+export type UnplannedSummonSummary = Readonly<{
+  seq: number;
+  skills: readonly string[];
+  workUnit: string | null;
+  charterRevision: number;
+}>;
+
 export type CampaignCheckpointResult =
   | Readonly<{
       ok: true;
@@ -33,6 +41,7 @@ export type CampaignCheckpointResult =
       op: typeof OperatorVerbs.checkpoint;
       checkpointWritten: boolean;
       queue?: WorkUnitQueueState;
+      unplannedSummons?: readonly UnplannedSummonSummary[];
       entry?: CampaignTraceEntry;
       state: CampaignState;
       status: ControllerStatus;
@@ -63,6 +72,38 @@ function getLatestAcceptedOperator(
   return [...trace]
     .reverse()
     .find((entry) => entry.channel === "operator" && entry.accepted);
+}
+
+export function collectUnplannedSummonsSinceLastCheckpoint(
+  trace: readonly CampaignTraceEntry[],
+): readonly UnplannedSummonSummary[] {
+  let startIndex = 0;
+  for (let i = trace.length - 1; i >= 0; i--) {
+    const entry = trace[i]!;
+    if (
+      entry.channel === "operator" &&
+      entry.trigger === OperatorVerbs.checkpoint &&
+      entry.accepted
+    ) {
+      startIndex = i + 1;
+      break;
+    }
+  }
+  const unplanned: UnplannedSummonSummary[] = [];
+  for (let i = startIndex; i < trace.length; i++) {
+    const entry = trace[i]!;
+    if (entry.accepted && entry.signal === CampaignSignals.unplanned) {
+      unplanned.push(
+        Object.freeze({
+          seq: entry.seq,
+          skills: Object.freeze([...entry.skills]),
+          workUnit: entry.workUnit,
+          charterRevision: entry.charterRevision,
+        }),
+      );
+    }
+  }
+  return Object.freeze(unplanned);
 }
 
 export async function loadOrInitializeWorkUnitQueue(
@@ -230,6 +271,7 @@ export async function executeCheckpoint(
     }
   }
 
+  const unplannedSummons = collectUnplannedSummonsSinceLastCheckpoint(store.trace);
   const unitsSha256 = updatedQueue
     ? campaignSha256Hex(canonicalCampaignJson(updatedQueue))
     : undefined;
@@ -254,6 +296,7 @@ export async function executeCheckpoint(
     op: OperatorVerbs.checkpoint,
     checkpointWritten: true,
     ...(updatedQueue ? { queue: updatedQueue } : {}),
+    unplannedSummons,
     entry: appended.entry,
     state: appended.state,
     status: appended.status,

@@ -22,6 +22,7 @@ export type CampaignCharter = Readonly<{
   revision: number;
   goal: string;
   allowedSkills: readonly string[];
+  excludedSkills?: readonly string[];
   queue: readonly CampaignQueueItem[];
   recoverLimit: number;
   reopenLimit: number;
@@ -66,7 +67,8 @@ export type AgentCampaignEvent =
   | Readonly<{ channel: "agent"; op: typeof A.status }>
   | Readonly<{ channel: "agent"; op: typeof A.recon; recon: CampaignRecon }>
   | Readonly<{ channel: "agent"; op: typeof A.propose; charter: CampaignCharter }>
-  | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>;
+  | Readonly<{ channel: "agent"; op: typeof A.incident; incident: ConvergenceIncident }>
+  | Readonly<{ channel: "agent"; op: typeof A.summon; unplanned?: boolean; skills?: readonly string[]; workUnit?: string }>;
 export type OperatorProvenanceFields = Readonly<{
   attribution?: typeof OPERATOR_ATTRIBUTION;
   operatorChannel?: typeof OPERATOR_CHANNEL_MCP_ELICITATION;

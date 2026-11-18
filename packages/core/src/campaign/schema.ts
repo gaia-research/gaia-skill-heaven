@@ -58,9 +58,9 @@ const queue = array(queueItem);
 const schema = (id: string): Check => v => v === id;
 const charter: Check = v => object(v, {
   schema: schema(CAMPAIGN_SCHEMA_IDS.charter), revision: nat, goal: text,
-  allowedSkills: strings, queue, recoverLimit: nat, reopenLimit: nat,
+  allowedSkills: strings, excludedSkills: strings, queue, recoverLimit: nat, reopenLimit: nat,
   sessionRetention: nat, clauses: strings, acceptanceCommands: strings,
-}, ["acceptanceCommands"]);
+}, ["acceptanceCommands", "excludedSkills"]);
 const verifyReceipt: Check = v => {
   if (!object(v, {
     schema: schema(CAMPAIGN_SCHEMA_IDS.receipt),
@@ -91,6 +91,13 @@ export function isValidCharterForRecon(recon: CampaignRecon | null, value: Campa
   if (!recon || !Number.isSafeInteger(revision) || revision < 1) return false;
   if (value.revision !== revision || value.clauses.length === 0 || value.queue.length === 0) return false;
   const ids = new Set(value.queue.map(q => q.id));
+  if (value.excludedSkills !== undefined) {
+    if (new Set(value.excludedSkills).size !== value.excludedSkills.length) return false;
+    const excluded = new Set(value.excludedSkills);
+    if (value.allowedSkills.some(s => excluded.has(s)) || value.queue.some(q => excluded.has(q.skill))) {
+      return false;
+    }
+  }
   return (
     ids.size === value.queue.length &&
     new Set(value.allowedSkills).size === value.allowedSkills.length &&
@@ -135,6 +142,7 @@ const event: Check = v => {
       case A.recon: return object(v, { ...base, recon });
       case A.propose: return object(v, { ...base, charter });
       case A.incident: return object(v, { ...base, incident });
+      case A.summon: return object(v, { ...base, unplanned: bool, skills: strings, workUnit: text }, ["unplanned", "skills", "workUnit"]);
     }
   }
   if (c.value === "operator") {
